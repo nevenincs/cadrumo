@@ -16,8 +16,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from enum import StrEnum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
@@ -78,11 +79,24 @@ class LedgerFilingSnapshot(BaseModel):
     fingerprint_field_set_version: int = 1
 
 
+class FiledRegisterState(StrEnum):
+    """How a sealed revision's recorded asset-register state compares with the register now.
+
+    ``UNAVAILABLE`` means the comparison could not run, which proves neither drift
+    nor currency.
+    """
+
+    CURRENT = "current"
+    CHANGED = "changed"
+    UNAVAILABLE = "unavailable"
+
+
 class LedgerFilingStalenessVerdict(BaseModel):
-    """Drift between a filed snapshot and the current ledger state.
+    """Drift between a filed snapshot and the current ledger and asset-register state.
 
     Attributes:
-        is_stale: True when any contributor changed or was removed.
+        is_stale: True when any contributor changed or was removed, or the
+            asset register no longer yields what the revision recorded.
         changed: Contributor ids whose live fingerprint differs from the snapshot.
         removed: Contributor ids absent from the live catalogue.
         unchanged: Contributor ids whose live fingerprint matches the snapshot.
@@ -95,6 +109,10 @@ class LedgerFilingStalenessVerdict(BaseModel):
             from ``is_stale`` and non-blocking -- a narrow comparison is not
             evidence of drift, and reporting it as drift would restate every
             historical filing at once.
+        register_state: The asset-register comparison, read as a state: the
+            sealed revision itself never changes.
+        register_change_count: Claims, schedules and bajas that differ between
+            the revision's record and the register now.
     """
 
     model_config = _STRICT_FROZEN
@@ -104,6 +122,8 @@ class LedgerFilingStalenessVerdict(BaseModel):
     removed: tuple[TransactionId, ...] = ()
     unchanged: tuple[TransactionId, ...] = ()
     covers_current_fact_set: bool = True
+    register_state: FiledRegisterState = FiledRegisterState.CURRENT
+    register_change_count: NonNegativeInt = 0
 
 
 def snapshot_fingerprint(rows: tuple[LedgerRowFingerprint, ...]) -> SnapshotId:

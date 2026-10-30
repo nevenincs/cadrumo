@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.buckets.event import BucketEventType, bucket_event_order_key
+from ..aggregation.ledger_filing_snapshot import FiledRegisterReader, stale_filed_revisions
 from .action_ports import LedgerActionPorts
 from .attachment_review import list_attachment_review_queue
 from .confirmation_record import load_confirmation_records
@@ -32,6 +33,7 @@ if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEventHistoryCatalogue
     from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.modelos.calculation_revision import CalculationRevision
+    from ...domain.modelos.ledger_filing_snapshot import LedgerFilingStalenessVerdict
     from ...domain.modelos.work_unit import WorkUnitCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
@@ -42,6 +44,7 @@ def read_ledger_workspace_projection(
     ports: LedgerActionPorts,
     calculation_revisions: Mapping[str, CalculationRevision],
     work_units: WorkUnitCatalogue,
+    register_reader: FiledRegisterReader,
     transactions: TransactionCatalogue | None = None,
     invoices: InvoiceCatalogue | None = None,
 ) -> LedgerWorkspaceProjectionV1:
@@ -65,6 +68,12 @@ def read_ledger_workspace_projection(
     catalogue = transactions if transactions is not None else ports.transaction_repository.load()
     invoice_catalogue = invoices if invoices is not None else ports.invoice_repository.load()
     events = ports.bucket_event_repository.load()
+
+    def read_filing_staleness(
+        *, revisions: Mapping[str, CalculationRevision], catalogue: TransactionCatalogue
+    ) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
+        return stale_filed_revisions(revisions=revisions, catalogue=catalogue, register_reader=register_reader)
+
     return project_ledger_workspace(
         summary=summarize_manual_transactions(
             bucket_id=bucket_id,
@@ -84,6 +93,7 @@ def read_ledger_workspace_projection(
         work_units=work_units,
         evidence_pending_review=_evidence_pending_review(bucket_id=bucket_id, ports=ports, events=events),
         last_import_count=_last_import_count(events),
+        filing_staleness_reader=read_filing_staleness,
     )
 
 

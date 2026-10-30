@@ -7,12 +7,17 @@ from typing import ClassVar, cast, override
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
-from ....application.ledger.workspace import LedgerInvoiceReconciliationRefV1, LedgerWorkspaceArea
+from ....application.ledger.workspace import (
+    LedgerAffectedDeclarationRefV1,
+    LedgerInvoiceReconciliationRefV1,
+    LedgerWorkspaceArea,
+)
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.invoice_link import LinkInconsistencyDirection
+from ....domain.modelos.ledger_filing_snapshot import FiledRegisterState
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from ..operations.outcome import unknown_outcome_of
@@ -35,6 +40,11 @@ DIRECTION_STATE_LOCALE_KEYS: dict[str, str] = {
     LinkInconsistencyDirection.INVOICE_ONLY.value: "tui.ledger.reconciliation.direction_state.invoice_only",
     LinkInconsistencyDirection.TRANSACTION_ONLY.value: "tui.ledger.reconciliation.direction_state.transaction_only",
 }
+
+
+def _register_cell(row: LedgerAffectedDeclarationRefV1) -> str:
+    """State the asset-register comparison beside the ledger counts; an unread register is not a zero."""
+    return "?" if row.register_state is FiledRegisterState.UNAVAILABLE else str(row.register_change_count)
 
 
 class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
@@ -194,7 +204,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             table.add_row(
                 str(row.modelo),
                 str(row.period),
-                f"{row.changed_count}/{row.removed_count}",
+                f"{row.changed_count}/{row.removed_count}/{_register_cell(row)}",
                 key=str(row.calculation_revision_id),
             )
 

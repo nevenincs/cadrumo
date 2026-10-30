@@ -13,6 +13,7 @@ from typing import Never, SupportsIndex, override
 
 from pydantic import SecretStr
 
+from ...domain.modelos.ledger_filing_snapshot import FiledRegisterState
 from ...domain.modelos.work_unit import WorkUnitState
 from ..aeat_sync.workspace import (
     AeatSyncNotificationReadState,
@@ -150,6 +151,7 @@ def _ledger_evidence_documents(
             identity_basis=SecretStr(row.calculation_revision_id),
         )
         for row in projection.affected_declarations
+        if row.changed_count or row.removed_count or row.register_state is FiledRegisterState.CHANGED
     )
 
 

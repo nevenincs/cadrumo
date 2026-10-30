@@ -247,6 +247,7 @@ def test_native_human_cli_reads_encrypted_ledger_status_history_view_and_track(
                 catalogue,
             )
             stale = read_stale_ledger_filings(
+                register_reader=lambda revision: revision.activity_asset_consumption,
                 bucket_id=bucket_id,
                 revisions=ports.calculation_repository.load(operation=authority_operation).revisions,
                 work_units=ports.work_unit_repository.load(),

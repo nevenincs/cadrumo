@@ -223,11 +223,18 @@ def test_stale_filed_revisions_flags_only_drifted_finalized_revisions(*, operati
     rev = _verified_revision("303", source_ids=ids, snapshot=snap, operation=operation)
     revisions = {rev.calculation_revision_id: rev}
     # Unchanged ledger -> nothing flagged.
-    assert stale_filed_revisions(revisions=revisions, catalogue=cat) == ()
+    assert (
+        stale_filed_revisions(
+            revisions=revisions, catalogue=cat, register_reader=lambda revision: revision.activity_asset_consumption
+        )
+        == ()
+    )
     # A material edit to a contributor -> the filed revision is flagged stale.
     edited = _tx("row-a", category_id="software")
     drifted = TransactionCatalogue.from_transactions((edited,))
-    flagged = stale_filed_revisions(revisions=revisions, catalogue=drifted)
+    flagged = stale_filed_revisions(
+        revisions=revisions, catalogue=drifted, register_reader=lambda revision: revision.activity_asset_consumption
+    )
     assert len(flagged) == 1
     assert flagged[0][0].calculation_revision_id == rev.calculation_revision_id
     assert flagged[0][1].changed == ids

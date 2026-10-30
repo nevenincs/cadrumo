@@ -637,6 +637,7 @@ def _full_scan_status(period: Period | None, operation: PinnedAuthorityOperation
         else ()
     )
     stale = read_stale_ledger_filings(
+        register_reader=lambda revision: revision.activity_asset_consumption,
         bucket_id=_BUCKET,
         revisions=repositories.calculation.load(operation=operation).revisions,
         work_units=repositories.work_unit.load(),

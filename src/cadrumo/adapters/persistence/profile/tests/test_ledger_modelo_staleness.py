@@ -207,7 +207,11 @@ def test_modifying_contributing_row_surfaces_staleness_not_silent(*, operation: 
 
     # The system-level sweep names the stale revision + the contributors a
     # recalculation must re-consume (the recompute trigger signal).
-    findings = stale_filed_revisions(revisions={revision.calculation_revision_id: revision}, catalogue=drifted)
+    findings = stale_filed_revisions(
+        revisions={revision.calculation_revision_id: revision},
+        catalogue=drifted,
+        register_reader=lambda revision: revision.activity_asset_consumption,
+    )
     assert len(findings) == 1
     found_revision, found_verdict = findings[0]
     assert found_revision.calculation_revision_id == revision.calculation_revision_id

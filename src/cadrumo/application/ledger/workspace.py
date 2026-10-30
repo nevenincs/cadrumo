@@ -36,7 +36,7 @@ from ...domain.invoices.service import (
 )
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.ledger_filing_snapshot import LedgerFilingStalenessVerdict
+from ...domain.modelos.ledger_filing_snapshot import FiledRegisterState, LedgerFilingStalenessVerdict
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -200,14 +200,16 @@ class LedgerAffectedDeclarationRefV1(BaseModel):
     calculation_revision_id: CalculationRevisionId
     changed_count: NonNegativeInt
     removed_count: NonNegativeInt
+    register_state: FiledRegisterState = FiledRegisterState.CURRENT
+    register_change_count: NonNegativeInt = 0
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _period_matches_year(self) -> LedgerAffectedDeclarationRefV1:
         if self.period.filing_year != self.filing_year:
             raise ValueError("affected declaration period must match its filing year")
-        if self.changed_count + self.removed_count == 0:
-            raise ValueError("an affected declaration must carry Ledger drift")
+        if self.changed_count + self.removed_count == 0 and self.register_state is FiledRegisterState.CURRENT:
+            raise ValueError("an affected declaration must carry Ledger or register drift")
         return self
 
 
@@ -274,24 +276,13 @@ class LedgerLinkConsistencyReaderProtocol(Protocol):
         ...
 
 
-def _canonical_filing_staleness_reader(
-    *,
-    revisions: Mapping[str, CalculationRevision],
-    catalogue: TransactionCatalogue,
-) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
-    """Reach the existing pure implementation behind this public door."""
-    from ..aggregation.ledger_filing_snapshot import stale_filed_revisions
-
-    return stale_filed_revisions(revisions=revisions, catalogue=catalogue)
-
-
 def project_affected_declaration_reconciliations(
     *,
     bucket_id: str,
     revisions: Mapping[str, CalculationRevision],
     transactions: TransactionCatalogue,
     work_units: WorkUnitCatalogue,
-    staleness_reader: LedgerFilingStalenessReaderProtocol = _canonical_filing_staleness_reader,
+    staleness_reader: LedgerFilingStalenessReaderProtocol,
 ) -> tuple[LedgerAffectedDeclarationRefV1, ...]:
     """Project local Ledger drift onto natural declaration addresses.
 
@@ -317,6 +308,8 @@ def project_affected_declaration_reconciliations(
                 calculation_revision_id=revision.calculation_revision_id,
                 changed_count=len(verdict.changed),
                 removed_count=len(verdict.removed),
+                register_state=verdict.register_state,
+                register_change_count=verdict.register_change_count,
             )
         )
     return tuple(
@@ -522,9 +515,9 @@ def project_ledger_workspace(
     work_units: WorkUnitCatalogue,
     evidence_pending_review: int | None,
     last_import_count: int | None,
+    filing_staleness_reader: LedgerFilingStalenessReaderProtocol,
     invoice_reconciliation_reader: LedgerInvoiceReconciliationReaderProtocol = suggest_reconciliations,
     link_consistency_reader: LedgerLinkConsistencyReaderProtocol = verify_link_consistency,
-    filing_staleness_reader: LedgerFilingStalenessReaderProtocol = _canonical_filing_staleness_reader,
 ) -> LedgerWorkspaceProjectionV1:
     """Build one deterministic, frontend-neutral snapshot from canonical facts.
 

@@ -508,6 +508,8 @@ class PublicLedgerAffectedDeclarationRefV1(BaseModel):
     calculation_revision_id: str
     changed_count: int
     removed_count: int
+    register_state: str = "current"
+    register_change_count: int = 0
 
 
 class PublicSearchGenerationStateV1(BaseModel):

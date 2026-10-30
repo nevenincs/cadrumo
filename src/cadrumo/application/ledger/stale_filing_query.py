@@ -24,7 +24,8 @@ from typing import TYPE_CHECKING, Any, Protocol
 from pydantic import BaseModel, NonNegativeInt
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..aggregation.ledger_filing_snapshot import stale_filed_revisions
+from ...domain.modelos.ledger_filing_snapshot import FiledRegisterState
+from ..aggregation.ledger_filing_snapshot import FiledRegisterReader, stale_filed_revisions
 
 type StaleRevisionDetectorV1 = Callable[..., tuple[tuple[Any, Any], ...]]
 
@@ -59,6 +60,9 @@ class LedgerStaleFilingV1(BaseModel):
     #: a narrow comparison is not evidence of drift, and treating it as drift
     #: would restate every historical filing at once.
     covers_current_fact_set: bool = True
+    #: The asset-register comparison, apart from the ledger counts.
+    register_state: FiledRegisterState = FiledRegisterState.CURRENT
+    register_change_count: NonNegativeInt = 0
 
 
 class StaleFilingPeriodV1(Protocol):
@@ -102,6 +106,7 @@ def read_stale_ledger_filings(
     revisions: Mapping[str, CalculationRevision],
     work_units: StaleFilingWorkUnitLookupV1,
     transactions: TransactionCatalogue,
+    register_reader: FiledRegisterReader,
     detector: StaleRevisionDetectorV1 = stale_filed_revisions,
 ) -> tuple[LedgerStaleFilingV1, ...]:
     """Report this bucket's finalized filings that no longer match the ledger.
@@ -115,6 +120,7 @@ def read_stale_ledger_filings(
         revisions: The calculation revisions to consider.
         work_units: The work units the revisions are addressed through.
         transactions: The live ledger the snapshots are re-evaluated against.
+        register_reader: The current asset-register view of one revision.
         detector: The staleness decision, injectable so the ownership join can
             be exercised without reproducing a drifted snapshot.
 
@@ -126,7 +132,7 @@ def read_stale_ledger_filings(
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     findings: list[LedgerStaleFilingV1] = []
-    for revision, verdict in detector(revisions=revisions, catalogue=transactions):
+    for revision, verdict in detector(revisions=revisions, catalogue=transactions, register_reader=register_reader):
         work_unit = work_units.get(revision.work_unit_id)
         if work_unit is None or work_unit.bucket_id != bucket_id:
             continue
@@ -140,6 +146,8 @@ def read_stale_ledger_filings(
                 changed_count=len(verdict.changed),
                 removed_count=len(verdict.removed),
                 covers_current_fact_set=verdict.covers_current_fact_set,
+                register_state=verdict.register_state,
+                register_change_count=verdict.register_change_count,
             )
         )
     return tuple(findings)

@@ -10,6 +10,7 @@ from pydantic import BaseModel, NonNegativeInt, field_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ..modelo.filed_register_reader import filed_register_reader
 from ..modelo.verification_repository_ports import VerificationRepositoryBundleFactory
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
@@ -208,11 +209,18 @@ class LedgerStatusExecutor:
                 bucket_id=bucket_id, period=period, ports=ports, catalogue=transactions, preflight=preflight
             )
             readiness = ledger_readiness_issues(preflight, transactions) if preflight is not None else ()
+            work_units = repositories.work_unit.load()
             stale = read_stale_ledger_filings(
                 bucket_id=bucket_id,
                 revisions=repositories.calculation.load(operation=operation).revisions,
-                work_units=repositories.work_unit.load(),
+                work_units=work_units,
                 transactions=transactions,
+                register_reader=filed_register_reader(
+                    bucket_id=bucket_id,
+                    work_units=work_units,
+                    ports=repositories.ledger_membership_ports,
+                    operation=operation,
+                ),
             )
             return LedgerStatusProjection.from_report(report, readiness_issues=readiness, stale_filings=stale)
 

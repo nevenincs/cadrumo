@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
+from ....domain.modelos.ledger_filing_snapshot import FiledRegisterState
 from ....domain.transactions.models import TransactionCatalogue
 from ..stale_filing_query import LedgerStaleFilingV1, read_stale_ledger_filings
 
@@ -65,6 +66,8 @@ class _Verdict:
         # Defaults to True as the real verdict does, so the coverage signal has
         # to be asked for explicitly by the one test that is about it.
         self.covers_current_fact_set = covers_current_fact_set
+        self.register_state = FiledRegisterState.CURRENT
+        self.register_change_count = 0
 
 
 class _Revision:
@@ -81,8 +84,8 @@ def _detector(findings: tuple[tuple[_Revision, _Verdict], ...]) -> Callable[...,
     injected rather than patched because a patch mutates a production module.
     """
 
-    def _fixed(*, revisions: object, catalogue: object) -> tuple[tuple[Any, Any], ...]:
-        del revisions, catalogue
+    def _fixed(*, revisions: object, catalogue: object, register_reader: object) -> tuple[tuple[Any, Any], ...]:
+        del revisions, catalogue, register_reader
         return findings
 
     return _fixed
@@ -97,6 +100,7 @@ def test_a_drifted_filing_owned_by_this_bucket_is_reported() -> None:
         revisions={},
         work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_BUCKET)}),
         transactions=TransactionCatalogue(),
+        register_reader=lambda _revision: None,
         detector=_detector(((revision, _Verdict(changed=("a",), removed=())),)),
     )
 
@@ -122,6 +126,7 @@ def test_a_filing_owned_by_another_bucket_is_excluded() -> None:
         revisions={},
         work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_OTHER_BUCKET)}),
         transactions=TransactionCatalogue(),
+        register_reader=lambda _revision: None,
         detector=_detector(((revision, _Verdict(changed=("a",), removed=())),)),
     )
 
@@ -137,6 +142,7 @@ def test_a_revision_whose_work_unit_is_missing_is_excluded() -> None:
         revisions={},
         work_units=_WorkUnits({}),
         transactions=TransactionCatalogue(),
+        register_reader=lambda _revision: None,
         detector=_detector(((revision, _Verdict(changed=("a",), removed=())),)),
     )
 
@@ -157,6 +163,7 @@ def test_a_narrower_comparison_is_reported_without_becoming_a_second_drift() -> 
         revisions={},
         work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_BUCKET)}),
         transactions=TransactionCatalogue(),
+        register_reader=lambda _revision: None,
         detector=_detector(
             ((revision, _Verdict(changed=("a",), removed=(), covers_current_fact_set=False)),),
         ),
@@ -176,6 +183,7 @@ def test_changed_and_removed_counts_are_carried_separately() -> None:
         revisions={},
         work_units=_WorkUnits({"wu-1": _WorkUnit(bucket_id=_BUCKET)}),
         transactions=TransactionCatalogue(),
+        register_reader=lambda _revision: None,
         detector=_detector(((revision, _Verdict(changed=("a", "b"), removed=("c",))),)),
     )
 
@@ -191,6 +199,7 @@ def test_no_drift_reports_nothing() -> None:
         revisions={},
         work_units=_WorkUnits({}),
         transactions=TransactionCatalogue(),
+        register_reader=lambda _revision: None,
         detector=_detector(()),
     )
 

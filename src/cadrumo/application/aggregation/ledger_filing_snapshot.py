@@ -34,7 +34,7 @@ for drift evaluation.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date, datetime
 from typing import Final
 
@@ -43,8 +43,10 @@ from pydantic import ValidationError
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.ids import LEGAL_REFS_ADAPTER, SOURCE_REFS_ADAPTER, LegalRefId, SourceRefId
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.calculation_revision_sources import ActivityAssetConsumption
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.ledger_filing_snapshot import (
+    FiledRegisterState,
     LedgerEvidenceRow,
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
@@ -429,34 +431,68 @@ def evaluate_ledger_filing_staleness(
     )
 
 
+type FiledRegisterReader = Callable[[CalculationRevision], ActivityAssetConsumption | None]
+"""Read what the asset register yields now for a revision's coordinates; ``None`` when that cannot be read."""
+
+
+def _register_change_count(recorded: ActivityAssetConsumption, current: ActivityAssetConsumption) -> int:
+    return (
+        len(set(recorded.claim_ids) ^ set(current.claim_ids))
+        + len(set(recorded.schedule_fingerprints) ^ set(current.schedule_fingerprints))
+        + len(set(recorded.disposal_revision_ids) ^ set(current.disposal_revision_ids))
+    )
+
+
 def stale_filed_revisions(
     *,
     revisions: Mapping[str, CalculationRevision],
     catalogue: TransactionCatalogue,
+    register_reader: FiledRegisterReader,
 ) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
-    """Return finalized snapshot-backed revisions whose ledger drifted.
+    """Return finalized revisions whose ledger or asset register moved, or whose register cannot be read.
 
     Each item pairs a :class:`CalculationRevision` with its
-    :class:`LedgerFilingStalenessVerdict`. Scans verified/filed revisions
-    carrying a ``ledger_filing_snapshot`` and re-evaluates each against the
-    live catalogue. A revision with no snapshot or a non-finalized
-    state is skipped. Pure given its inputs.
+    :class:`LedgerFilingStalenessVerdict`. The ledger is compared when the revision
+    carries a ``ledger_filing_snapshot``. The register is compared for every sealed
+    revision, because a filing that rested on no claim goes stale when one is recorded.
+    Nothing is written: a sealed revision stays as filed and the difference is a state
+    of this read.
 
     Args:
         revisions: A mapping of :class:`CalculationRevision` files.
         catalogue: The live :class:`TransactionCatalogue`.
+        register_reader: The current register view of one revision.
     """
     findings: list[tuple[CalculationRevision, LedgerFilingStalenessVerdict]] = []
     for revision in revisions.values():
-        if revision.state not in SEALED_REVISION_STATES or revision.ledger_filing_snapshot is None:
+        if revision.state not in SEALED_REVISION_STATES:
             continue
-        verdict = evaluate_ledger_filing_staleness(revision.ledger_filing_snapshot, catalogue)
+        snapshot = revision.ledger_filing_snapshot
+        verdict = (
+            LedgerFilingStalenessVerdict(is_stale=False)
+            if snapshot is None
+            else evaluate_ledger_filing_staleness(snapshot, catalogue)
+        )
+        current = register_reader(revision)
+        if current is None:
+            findings.append((revision, verdict.model_copy(update={"register_state": FiledRegisterState.UNAVAILABLE})))
+            continue
+        changes = _register_change_count(revision.activity_asset_consumption, current)
+        if changes:
+            verdict = verdict.model_copy(
+                update={
+                    "is_stale": True,
+                    "register_state": FiledRegisterState.CHANGED,
+                    "register_change_count": changes,
+                },
+            )
         if verdict.is_stale:
             findings.append((revision, verdict))
     return tuple(findings)
 
 
 __all__ = [
+    "FiledRegisterReader",
     "assert_evidence_covers_snapshot",
     "compute_ledger_filing_evidence",
     "compute_ledger_filing_snapshot",

@@ -600,6 +600,8 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
                 # was sound but narrower than today's fact set, not that
                 # anything additional drifted.
                 f"covers_current_fact_set={str(finding.covers_current_fact_set).lower()}",
+                f"register={finding.register_state.value}",
+                f"register_changes={finding.register_change_count}",
             )
         )
         for finding in stale_filings

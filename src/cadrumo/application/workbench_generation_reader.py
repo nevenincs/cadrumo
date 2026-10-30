@@ -123,6 +123,7 @@ _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.sna
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .aggregation.ledger_filing_snapshot import FiledRegisterReader
     from .ledger.action_ports import LedgerActionPorts
 
 _FILING_HISTORY_KINDS: Final[frozenset[DeclarationsLifecycleKind]] = frozenset(
@@ -376,6 +377,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
     ledger_action_ports: LedgerActionPorts | None = None
     """Outer-composed ledger ports for this profile, when the ledger is bound."""
+    filed_register_reader: Callable[[WorkUnitCatalogue], FiledRegisterReader] | None = None
+    """Compares sealed revisions with the asset register; unbound, that comparison reads as unavailable."""
     capture_memory: WorkbenchCaptureMemory | None = None
     calendar_aeat_reader: Callable[[], CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]] | None = None
     """The session's reusable capture work; every capture recomputes everything without one."""
@@ -850,11 +853,13 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             return None
         from .ledger.workspace_reader import read_ledger_workspace_projection
 
+        register_reader = self.filed_register_reader
         return read_ledger_workspace_projection(
             bucket_id=self.profile_id,
             ports=ports,
             calculation_revisions=calculation_revisions,
             work_units=work_units,
+            register_reader=(lambda _revision: None) if register_reader is None else register_reader(work_units),
             transactions=sources[0],
             invoices=sources[1],
         )

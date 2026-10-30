@@ -84,8 +84,10 @@ def _secure_read_door(
     from ..adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationRecordRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.modelo.filed_register_reader import filed_register_reader
     from ..application.user_profile.profile_record_repository import ProfileRecordRepository
     from ..core.time.clock import now
+    from .adapter_composition_work_ports import build_ledger_membership_ports
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
     from .calendar_evidence_composition import compose_calendar_aeat_reader
     from .censal_readback_composition import read_stored_censal_observation
@@ -117,6 +119,16 @@ def _secure_read_door(
             invoice_repository=ledger_action_ports.invoice_repository,
             bucket_event_repository=ledger_action_ports.bucket_event_repository,
             ledger_action_ports=ledger_action_ports,
+            filed_register_reader=lambda work_units: filed_register_reader(
+                bucket_id=profile_id,
+                work_units=work_units,
+                ports=build_ledger_membership_ports(
+                    bucket_id=profile_id,
+                    transaction_repository=ledger_action_ports.transaction_repository,
+                    objects=objects,
+                ),
+                operation=operation,
+            ),
             verification_repository=calculation_binding.verification_repository(),
             reconciliation_reader=lambda: tuple(ModeloReconciliationRecordRepository(objects=objects).iter_records()),
             notification_custody_reader=_notification_custody_reader(profile_id),

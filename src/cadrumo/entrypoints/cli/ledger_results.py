@@ -642,6 +642,8 @@ class LedgerStaleFilingPayload(OutputSchema):
     changed_count: NonNegativeInt
     removed_count: NonNegativeInt
     covers_current_fact_set: bool = True
+    register_state: str = "current"
+    register_change_count: NonNegativeInt = 0
 
 
 class LedgerStatusResult(OutputSchema):
