@@ -102,6 +102,7 @@ def _asset_revision_json() -> str:
             "basis": {
                 "stage": "business_allocated",
                 "basis_amount": "1000.00",
+                "non_deductible_iva": "0.00",
                 "prior_allocation_provenance": "synthetic acceptance allocation",
             },
             "in_service_date": "2025-01-01",

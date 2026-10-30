@@ -125,7 +125,11 @@ from ..adapter_composition_ports import build_bienes_inversion_repository, build
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import modelo_operation_test_support
-from .activity_asset_operation_test_support import activity_asset_revision, seed_activity_asset
+from .activity_asset_operation_test_support import (
+    activity_asset_revision,
+    seed_acquisition_transaction,
+    seed_activity_asset,
+)
 from .aggregate_operation_test_support import aggregate_conformance_command
 from .invoice_evidence_operation_test_support import prepare_invoice_evidence_conformance_case
 from .invoice_withholding_operation_test_support import seed_invoice_withholding_conformance_case
@@ -1427,7 +1431,12 @@ def _payload(
             subject_ref = profile_operation_subject(str(profile_id))
             values = {
                 "profile_id": profile_id,
-                "revision": ActivityAssetRevisionSnapshot.from_domain(activity_asset_revision("conformance-create")),
+                "revision": ActivityAssetRevisionSnapshot.from_domain(
+                    activity_asset_revision(
+                        "conformance-create",
+                        acquisition_transaction_id=seed_acquisition_transaction(profile_id, operation=operation),
+                    )
+                ),
             }
         case (
             "ledger.actividad-asset.inspect"
@@ -1451,6 +1460,7 @@ def _payload(
                 values["revision"] = ActivityAssetRevisionSnapshot.from_domain(
                     activity_asset_revision(
                         asset_seed.revision.asset_id,
+                        acquisition_transaction_id=asset_seed.acquisition_transaction_id,
                         revision_number=2,
                         supersedes_revision_id=asset_seed.revision.revision_id,
                     )

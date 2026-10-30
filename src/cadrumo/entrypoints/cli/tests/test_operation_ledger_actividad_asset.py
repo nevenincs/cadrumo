@@ -91,6 +91,7 @@ def _revision(*, number: int = 1, supersedes: str | None = None) -> ActivityAsse
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=Decimal("300.00"),
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="bridge allocation",
         ),
         in_service_date=date(2025, 1, 1),

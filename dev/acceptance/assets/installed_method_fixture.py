@@ -29,6 +29,7 @@ METHOD_REVISION_JSON = json.dumps(
         "basis": {
             "stage": "business_allocated",
             "basis_amount": "2000.00",
+            "non_deductible_iva": "0.00",
             "prior_allocation_provenance": "synthetic installed TUI allocation",
         },
         "in_service_date": "2025-01-01",
@@ -55,6 +56,7 @@ def method_correction_json(*, supersedes_revision_id: str) -> str:
     document["basis"] = {
         "stage": "business_allocated",
         "basis_amount": "1800.00",
+        "non_deductible_iva": "0.00",
         "prior_allocation_provenance": "synthetic corrected TUI allocation",
     }
     return json.dumps(document, separators=(",", ":"))

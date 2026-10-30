@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Protocol
 
 from ...domain.renta.actividad_asset.claims import AmortizationClaim
 from ...domain.renta.actividad_asset.election import DirectEstimationRegime
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ...domain.transactions.models import TransactionCatalogue
 from ...domain.user_profile.plantilla_media import PlantillaMediaYear
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 
@@ -32,6 +34,14 @@ class ActivityAssetHistoryRepository(Protocol):
         ...
 
 
+class AcquisitionLedgerReader(Protocol):
+    """Read the profile ledger rows an asset revision names as its acquisition."""
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        """Return the addressed rows; an absent identifier is omitted."""
+        ...
+
+
 class TaxpayerModalityReader(Protocol):
     """Read the taxpayer profile's direct-estimation modality."""
 
@@ -48,4 +58,9 @@ class TaxpayerWorkforceReader(Protocol):
         ...
 
 
-__all__ = ["ActivityAssetHistoryRepository", "TaxpayerModalityReader", "TaxpayerWorkforceReader"]
+__all__ = [
+    "AcquisitionLedgerReader",
+    "ActivityAssetHistoryRepository",
+    "TaxpayerModalityReader",
+    "TaxpayerWorkforceReader",
+]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
+from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..application.actividad_asset.activity_asset_contracts import ActivityAssetOperationPorts
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from .adapter_composition_ports import build_pinned_profile_read_ports
@@ -14,5 +15,6 @@ def build_activity_asset_operation_ports(
     """Bind both canonical history and profile reads to the worker profile."""
     return ActivityAssetOperationPorts(
         history_repository=ActividadAssetHistoryRepository(bucket_id=bucket_id),
+        ledger=TransactionCatalogueRepository(bucket_id=bucket_id),
         profile_path_values=build_pinned_profile_read_ports(bucket_id=bucket_id, operation=operation).path_values,
     )

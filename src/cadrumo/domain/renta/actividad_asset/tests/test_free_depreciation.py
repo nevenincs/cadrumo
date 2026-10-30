@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ..claims import AmortizationClaim, effective_free_depreciation_claims, record_claim
 from ..election import (
@@ -59,6 +60,7 @@ def _revision(
     asset_id: str = "low-value-tool",
     *,
     basis: Decimal = Decimal("300.00"),
+    non_deductible_iva: Decimal = Decimal("0"),
     election: ActivityAssetAmortizationElection | None = None,
 ) -> ActivityAssetRevision:
     return ActivityAssetRevision(
@@ -74,6 +76,7 @@ def _revision(
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=basis,
+            non_deductible_iva=non_deductible_iva,
             prior_allocation_provenance="reviewed business allocation",
         ),
         in_service_date=date(2025, 1, 1),
@@ -150,9 +153,6 @@ def test_explicit_election_preserves_evidence_and_forecast_does_not_consume_annu
 
 def test_unit_threshold_new_material_and_explicit_amount_fail_closed() -> None:
     revision = _revision()
-    over_threshold = _revision(election=_election(unit_value=Decimal("300.01")))
-    with pytest.raises(ActividadAssetUnsupportedError, match="unit acquisition value"):
-        _schedule(over_threshold)
     with pytest.raises(ActividadAssetValidationError, match="remaining lawful basis"):
         _schedule(revision, requested=Decimal("300.01"))
     with pytest.raises(ActividadAssetIncompleteError, match="elected amount"):
@@ -162,6 +162,42 @@ def test_unit_threshold_new_material_and_explicit_amount_fail_closed() -> None:
     late = revision.model_copy(update={"in_service_date": date(2024, 1, 1)})
     with pytest.raises(ActividadAssetUnsupportedError, match="placed in service"):
         _schedule(late)
+
+
+def test_unit_value_is_price_plus_non_deductible_iva_against_the_300_euro_threshold() -> None:
+    exactly_300 = _revision(basis=Decimal("300.00"), election=_election(unit_value=Decimal("300.00")))
+    assert _schedule(exactly_300).amount == Decimal("300.00")
+
+    one_cent_over = _revision(basis=Decimal("300.01"), election=_election(unit_value=Decimal("300.01")))
+    with pytest.raises(ActividadAssetUnsupportedError, match="unit acquisition value"):
+        _schedule(one_cent_over, requested=Decimal("300.01"))
+
+    # 280.00 price plus 25.00 non-deductible IVA is 305.00, above the threshold.
+    price_plus_iva = _revision(
+        basis=Decimal("280.00"),
+        non_deductible_iva=Decimal("25.00"),
+        election=_election(unit_value=Decimal("305.00")),
+    )
+    assert price_plus_iva.basis.acquisition_cost() == Decimal("305.00")
+    with pytest.raises(ActividadAssetUnsupportedError, match="unit acquisition value"):
+        _schedule(price_plus_iva, requested=Decimal("305.00"))
+
+    # 250.00 price plus 25.00 non-deductible IVA is 275.00, within the threshold.
+    within = _revision(
+        basis=Decimal("250.00"),
+        non_deductible_iva=Decimal("25.00"),
+        election=_election(unit_value=Decimal("275.00")),
+    )
+    assert _schedule(within, requested=Decimal("275.00")).amount == Decimal("275.00")
+
+
+def test_stated_unit_value_that_omits_non_deductible_iva_cannot_form_a_revision() -> None:
+    with pytest.raises(ValidationError, match="price plus non-deductible IVA"):
+        _revision(
+            basis=Decimal("280.00"),
+            non_deductible_iva=Decimal("25.00"),
+            election=_election(unit_value=Decimal("280.00")),
+        )
 
 
 def test_effective_claims_enforce_exact_cap_without_request_order_or_retry_consumption() -> None:

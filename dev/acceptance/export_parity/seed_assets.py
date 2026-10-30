@@ -23,13 +23,46 @@ from .seed_state import SeedState
 class AssetSeedStage(SeedState):
     """Own the installed seed assets behavior."""
 
+    def _prior_acquisition(self, asset: ActivityAsset, *, stage: str) -> str:
+        """Record the payment of a carried-in asset on its in-service date; the register needs a ledger row."""
+        description = f"Synthetic prior acquisition {asset.asset_id}"
+        existing = self._stored_transaction(description)
+        if existing is not None:
+            return existing
+        iva = asset.basis * Decimal("0.21")
+        added = self._result(
+            (
+                "app",
+                "ledger",
+                "add",
+                "--date",
+                asset.in_service.isoformat(),
+                "--amount",
+                _money(asset.basis + iva),
+                "--direction",
+                "OUTGOING",
+                "--description",
+                description,
+                "--classification",
+                "BUSINESS",
+                "--taxable-base",
+                _money(asset.basis),
+                "--iva-rate",
+                "0.21",
+                "--iva-amount",
+                _money(iva),
+            ),
+            stage=f"{stage}.acquisition",
+        )
+        return str(added["transaction_id"])
+
     def _asset(self, asset: ActivityAsset, *, carried_in: bool = False) -> None:
         """Register one asset; a carried-in asset predates the store and brings its accumulated history."""
         stage = f"asset.{asset.asset_id}"
         if carried_in:
-            # Acquired in a year this store does not hold: its purchase is outside the
-            # ledger, so the register names a stable synthetic acquisition reference.
-            transaction_id = hashlib.sha256(f"prior-acquisition:{asset.asset_id}".encode("ascii")).hexdigest()
+            # Acquired before the first seeded year: the register still names a ledger payment,
+            # so that payment is recorded on its own date first.
+            transaction_id = self._prior_acquisition(asset, stage=stage)
             evidence_id = f"synthetic-prior-{asset.asset_id}"
         else:
             transaction_id = self.receipt.identifiers[f"tx:asset-{asset.asset_id}"]
@@ -50,6 +83,7 @@ class AssetSeedStage(SeedState):
             "basis": {
                 "stage": "business_allocated",
                 "basis_amount": _money(asset.basis),
+                "non_deductible_iva": "0.00",
                 "prior_allocation_provenance": "synthetic export-parity allocation",
             },
             "in_service_date": asset.in_service.isoformat(),

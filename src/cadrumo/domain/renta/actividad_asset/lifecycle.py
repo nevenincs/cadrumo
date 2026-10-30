@@ -34,6 +34,7 @@ class AcquisitionShape(StrEnum):
     ANCILLARY_COST = "ancillary_cost"
     PRODUCED = "produced"
     HISTORICAL_WITHOUT_EVIDENCE = "historical_without_evidence"
+    FINANCIAL_LEASE_UNEXERCISED = "financial_lease_unexercised"
 
 
 class OwnershipMode(StrEnum):
@@ -107,12 +108,23 @@ class ActivityAssetBasis(BaseModel):
     ordinary-asset business-use share.  A business-allocated basis is the
     final amount, names the prior allocation source, and accepts no further
     percentage facts.
+
+    The amortizable cost is the price plus the IVA the taxpayer cannot deduct
+    at acquisition.  ``basis_amount`` is the
+    price alone and ``non_deductible_iva`` is that IVA, stated explicitly even
+    when it is zero.  The IVA joins the cost once, before the stage's
+    allocation fact applies, so it follows the same share as the price.  In a
+    whole-property basis it joins the construction cost, because land is not
+    amortized and the IVA of the sale attaches to the building.  A later
+    regularization of deducted IVA (LIVA arts. 107 to 110) has no field here
+    and changes neither the basis nor the schedule.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     stage: AssetBasisStage
     basis_amount: Decimal
+    non_deductible_iva: Decimal
     is_property: bool = False
     construction_cost: Decimal | None = None
     land_cost: Decimal | None = None
@@ -125,6 +137,7 @@ class ActivityAssetBasis(BaseModel):
 
     @field_validator(
         "basis_amount",
+        "non_deductible_iva",
         "construction_cost",
         "land_cost",
         "office_area",
@@ -233,14 +246,23 @@ class ActivityAssetBasis(BaseModel):
         if value is None or not Decimal("0") < value <= Decimal("1"):
             raise ValueError(message)
 
+    def acquisition_cost(self) -> Decimal:
+        """Return the price plus non-deductible IVA, before any allocation fact.
+
+        This is the precio de adquisicion of the element: the value the
+        EUR 300 test of LIS art. 12.3.e compares, and the amount the stage's
+        allocation fact then reduces to the deductible basis.
+        """
+        return self.basis_amount + self.non_deductible_iva
+
     def deductible_basis(self) -> Decimal:
         """Return final depreciation basis without reapplying any allocation fact."""
         if self.stage is AssetBasisStage.BUSINESS_ALLOCATED:
-            return self.basis_amount
+            return self.acquisition_cost()
         if self.stage is AssetBasisStage.TAXPAYER_OWNED:
             if self.business_use_share is None:  # defensive: validator proves unreachable
                 raise ActividadAssetValidationError("ordinary asset lacks business_use_share")
-            return self.basis_amount * self.business_use_share
+            return self.acquisition_cost() * self.business_use_share
         if (
             self.construction_cost is None
             or self.ownership_share is None
@@ -248,7 +270,8 @@ class ActivityAssetBasis(BaseModel):
             or self.total_area is None
         ):
             raise ActividadAssetValidationError("whole-property basis lacks allocation components")
-        return self.construction_cost * self.ownership_share * self.office_area / self.total_area
+        building_cost = self.construction_cost + self.non_deductible_iva
+        return building_cost * self.ownership_share * self.office_area / self.total_area
 
 
 class ActivityAssetRevision(BaseModel):
@@ -292,6 +315,7 @@ class ActivityAssetRevision(BaseModel):
     def _validate_revision_shape(self) -> Self:
         _validate_revision_lineage(self)
         _validate_primary_purchase(self)
+        _validate_low_value_unit_value(self)
         _validate_service_dates(self)
         _validate_residual_basis(self)
         _validate_building_construction_date(self)
@@ -318,8 +342,28 @@ def _validate_revision_lineage(revision: ActivityAssetRevision) -> None:
 
 
 def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
+    if revision.acquisition_shape is AcquisitionShape.FINANCIAL_LEASE_UNEXERCISED:
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.financial_lease_unexercised",
+            context={"legal_reference": "LIS art. 106"},
+        )
     if revision.acquisition_shape is not AcquisitionShape.PRIMARY_PURCHASE:
         raise ValueError("initial activity-asset support requires one primary purchase transaction")
+
+
+def _validate_low_value_unit_value(revision: ActivityAssetRevision) -> None:
+    """Keep the EUR 300 unit value equal to the acquisition cost the basis states.
+
+    The unit value is the precio de adquisicion, price plus non-deductible IVA
+    and never deductible IVA, so it has one source: the basis.  The election restates it
+    only as evidence the schedule reads, and a restatement that differs cannot
+    be admitted.
+    """
+    low_value = revision.amortization.low_value
+    if low_value is not None and low_value.unit_acquisition_value != revision.basis.acquisition_cost():
+        raise ValueError(
+            "low-value unit_acquisition_value must equal the price plus non-deductible IVA of the basis",
+        )
 
 
 def _validate_service_dates(revision: ActivityAssetRevision) -> None:

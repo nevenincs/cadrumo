@@ -17,7 +17,6 @@ from ...application.operations.public_scalar import PublicDecimal, project_scala
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
-from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection
@@ -138,6 +137,7 @@ class ActivityAssetBasisSnapshot(BaseModel):
 
     stage: AssetBasisStage
     basis_amount: PublicDecimal
+    non_deductible_iva: PublicDecimal
     is_property: bool = False
     construction_cost: PublicDecimal | None = None
     land_cost: PublicDecimal | None = None
@@ -153,6 +153,7 @@ class ActivityAssetBasisSnapshot(BaseModel):
         """Copy a canonical basis into its public decimal representation."""
         decimal_names = (
             "basis_amount",
+            "non_deductible_iva",
             "construction_cost",
             "land_cost",
             "ownership_share",
@@ -171,6 +172,7 @@ class ActivityAssetBasisSnapshot(BaseModel):
         return ActivityAssetBasis(
             stage=self.stage,
             basis_amount=Decimal(self.basis_amount.decimal),
+            non_deductible_iva=Decimal(self.non_deductible_iva.decimal),
             is_property=self.is_property,
             construction_cost=_decimal(self.construction_cost),
             land_cost=_decimal(self.land_cost),
@@ -442,8 +444,6 @@ class AmortizationClaimSnapshot(BaseModel):
     source_reference: str = Field(min_length=1, max_length=2048)
     creating_operation: str = Field(min_length=1, max_length=256)
     supersedes_claim_id: Hex64Str | None = None
-    calculation_revision_id: CalculationRevisionId | None = None
-    filing_revision_id: Hex64Str | None = None
     method: AmortizationMethod = AmortizationMethod.LINEAR
     free_depreciation_election_reference: ElectionReference | None = None
     free_depreciation_new_material_evidence_reference: EvidenceReference | None = None

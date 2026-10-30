@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from ..election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod, DirectEstimationRegime
-from ..errors import ActividadAssetIncompleteError, ActividadAssetValidationError
+from ..errors import ActividadAssetIncompleteError, ActividadAssetUnsupportedError, ActividadAssetValidationError
 from ..lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -44,6 +44,7 @@ def _property_basis(**overrides: object) -> ActivityAssetBasis:
     payload: dict[str, object] = {
         "stage": AssetBasisStage.WHOLE_PROPERTY,
         "basis_amount": Decimal("100000"),
+        "non_deductible_iva": Decimal("0"),
         "is_property": True,
         "construction_cost": Decimal("80000"),
         "land_cost": Decimal("20000"),
@@ -60,6 +61,7 @@ def _ordinary_basis(**overrides: object) -> ActivityAssetBasis:
     payload: dict[str, object] = {
         "stage": AssetBasisStage.TAXPAYER_OWNED,
         "basis_amount": Decimal("1000"),
+        "non_deductible_iva": Decimal("0"),
         "business_use_share": Decimal("0.8"),
     }
     payload.update(overrides)
@@ -143,6 +145,7 @@ def test_ordinary_material_and_intangible_assets_do_not_need_property_facts() ->
     already_allocated = ActivityAssetBasis(
         stage=AssetBasisStage.BUSINESS_ALLOCATED,
         basis_amount=Decimal("800"),
+        non_deductible_iva=Decimal("0"),
         prior_allocation_provenance="transaction allocation revision 4",
     )
     material = _revision(basis=ordinary)
@@ -156,6 +159,7 @@ def test_ordinary_material_and_intangible_assets_do_not_need_property_facts() ->
         ActivityAssetBasis(
             stage=AssetBasisStage.TAXPAYER_OWNED,
             basis_amount=Decimal("1000"),
+            non_deductible_iva=Decimal("0"),
             business_use_share=Decimal("1"),
             construction_cost=Decimal("800"),
         )
@@ -163,6 +167,7 @@ def test_ordinary_material_and_intangible_assets_do_not_need_property_facts() ->
         ActivityAssetBasis(
             stage=AssetBasisStage.TAXPAYER_OWNED,
             basis_amount=Decimal("1000"),
+            non_deductible_iva=Decimal("0"),
             is_property=True,
             construction_cost=Decimal("800"),
             land_cost=Decimal("200"),
@@ -170,7 +175,11 @@ def test_ordinary_material_and_intangible_assets_do_not_need_property_facts() ->
             total_area=Decimal("100"),
         )
     with pytest.raises(ValidationError, match="prior_allocation_provenance"):
-        ActivityAssetBasis(stage=AssetBasisStage.BUSINESS_ALLOCATED, basis_amount=Decimal("800"))
+        ActivityAssetBasis(
+            stage=AssetBasisStage.BUSINESS_ALLOCATED,
+            basis_amount=Decimal("800"),
+            non_deductible_iva=Decimal("0"),
+        )
 
 
 def test_spousal_property_and_missing_opening_history_fail_closed() -> None:
@@ -290,5 +299,96 @@ def test_an_authority_resolved_for_another_election_is_refused() -> None:
             _authority(other),
             covered_from=date(2025, 1, 1),
             covered_until=date(2026, 1, 1),
+            history=_NO_HISTORY,
+        )
+
+
+def test_non_deductible_iva_joins_the_cost_once_before_each_stage_allocation() -> None:
+    ordinary = _ordinary_basis(non_deductible_iva=Decimal("210"))
+    already_allocated = ActivityAssetBasis(
+        stage=AssetBasisStage.BUSINESS_ALLOCATED,
+        basis_amount=Decimal("800"),
+        non_deductible_iva=Decimal("168"),
+        prior_allocation_provenance="transaction allocation revision 4",
+    )
+    building = _property_basis(non_deductible_iva=Decimal("8000"))
+
+    # (1,000 + 210) x 0.8, 800 + 168 already allocated, (80,000 + 8,000) x 0.5 x 20/100.
+    assert ordinary.deductible_basis() == Decimal("968.0")
+    assert already_allocated.deductible_basis() == Decimal("968")
+    assert building.deductible_basis() == Decimal("8800")
+    assert ordinary.acquisition_cost() == Decimal("1210")
+    assert building.acquisition_cost() == Decimal("108000")
+    # The price keeps its own field and the land stays outside the amortizable base.
+    assert building.basis_amount == building.construction_cost + building.land_cost
+
+
+def test_non_deductible_iva_is_a_required_fact_and_zero_is_stated_explicitly() -> None:
+    payload = _ordinary_basis().model_dump()
+    del payload["non_deductible_iva"]
+    with pytest.raises(ValidationError, match="non_deductible_iva"):
+        ActivityAssetBasis.model_validate(payload)
+    with pytest.raises(ValidationError, match="finite non-negative"):
+        _ordinary_basis(non_deductible_iva=Decimal("-0.01"))
+    assert _ordinary_basis(non_deductible_iva=Decimal("0")).deductible_basis() == Decimal("800.0")
+
+
+def test_amortizable_basis_and_the_annual_charge_carry_the_non_deductible_iva() -> None:
+    revision = _revision(
+        basis=_ordinary_basis(non_deductible_iva=Decimal("210")),
+        residual_value=Decimal("68"),
+    )
+
+    charge = schedule_charge(
+        revision,
+        _authority(revision),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        history=_NO_HISTORY,
+    )
+
+    # 968 less residual 68 is 900 amortizable; 900 x 10% is 90.00.
+    assert revision.amortizable_basis() == Decimal("900.0")
+    assert charge.amount == Decimal("90.00")
+
+
+def test_an_unexercised_financial_lease_is_refused_with_its_statutory_route() -> None:
+    with pytest.raises(ValidationError, match="financial_lease_unexercised"):
+        _revision(acquisition_shape=AcquisitionShape.FINANCIAL_LEASE_UNEXERCISED)
+
+
+def test_later_afectacion_amortizes_from_in_service_date_on_the_full_acquisition_value() -> None:
+    # The element was bought and used privately before 2025-07-01; no private year is deemed amortized.
+    revision = _revision(
+        in_service_date=date(2025, 7, 1),
+        basis=_ordinary_basis(business_use_share=Decimal("1")),
+    )
+
+    first_year = schedule_charge(
+        revision,
+        _authority(revision),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        history=_NO_HISTORY,
+    )
+    next_year = schedule_charge(
+        revision,
+        _authority(revision, tax_year=2026),
+        covered_from=date(2026, 1, 1),
+        covered_until=date(2027, 1, 1),
+        history=AssetScheduleHistory(accumulated_before_tax_year=first_year.amount),
+    )
+
+    # 1,000 x 10% x 184/365 = 50.41 from 1 July; the next year is the full 100.00 with only that
+    # charge deducted from the base, so nothing was taken for the private years.
+    assert first_year.amount == Decimal("50.41")
+    assert next_year.amount == Decimal("100.00")
+    assert revision.opening_history.accumulated_amount == Decimal("0")
+    with pytest.raises(ActividadAssetUnsupportedError, match="no amortizable in-service days"):
+        schedule_charge(
+            revision,
+            _authority(revision, tax_year=2024),
+            covered_from=date(2024, 1, 1),
+            covered_until=date(2025, 1, 1),
             history=_NO_HISTORY,
         )

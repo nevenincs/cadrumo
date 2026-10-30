@@ -31,7 +31,7 @@ from .operation_dtos import (
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
 )
-from .ports import ActivityAssetHistoryRepository
+from .ports import AcquisitionLedgerReader, ActivityAssetHistoryRepository
 
 ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.create"
 
@@ -82,9 +82,10 @@ ActivityAssetRefusalCode = Literal[
 
 @dataclass(frozen=True, slots=True)
 class ActivityAssetOperationPorts:
-    """Canonical encrypted history and pinned-schema profile read ports."""
+    """Canonical encrypted history, ledger and pinned-schema profile read ports."""
 
     history_repository: ActivityAssetHistoryRepository
+    ledger: AcquisitionLedgerReader
     profile_path_values: ProfilePathValuesReadPort
 
 

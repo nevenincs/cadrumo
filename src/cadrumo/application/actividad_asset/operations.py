@@ -22,8 +22,9 @@ from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, Direct
 from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
+from .acquisition_ledger import require_acquisition_in_ledger
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from .ports import ActivityAssetHistoryRepository, TaxpayerModalityReader
+from .ports import AcquisitionLedgerReader, ActivityAssetHistoryRepository, TaxpayerModalityReader
 from .service import ActivityAssetHistoryService
 
 
@@ -61,11 +62,13 @@ class ActivityAssetOperations:
         self,
         *,
         repository: ActivityAssetHistoryRepository,
+        ledger: AcquisitionLedgerReader,
         forecast_operation: ActivityAssetForecastOperation,
         taxpayer_modality: TaxpayerModalityReader,
     ) -> None:
-        """Bind the operations to one bucket-scoped history and taxpayer profile."""
+        """Bind the operations to one bucket-scoped history, ledger and taxpayer profile."""
         self._service = ActivityAssetHistoryService(repository=repository)
+        self._ledger = ledger
         self._forecast_operation = forecast_operation
         self._taxpayer_modality = taxpayer_modality
 
@@ -76,6 +79,7 @@ class ActivityAssetOperations:
         history = self._service.reopen()
         if any(item.asset_id == revision.asset_id for item in history.revisions):
             raise ActividadAssetValidationError("activity asset already exists")
+        require_acquisition_in_ledger(revision, self._ledger)
         return self._service.append_revision(revision)
 
     def inspect(self, asset_id: str) -> tuple[ActivityAssetRevision, ...]:
@@ -93,6 +97,7 @@ class ActivityAssetOperations:
             or revision.supersedes_revision_id != current.revision_id
         ):
             raise ActividadAssetValidationError("asset correction must supersede the current revision")
+        require_acquisition_in_ledger(revision, self._ledger)
         return self._service.append_revision(revision)
 
     def forecast(

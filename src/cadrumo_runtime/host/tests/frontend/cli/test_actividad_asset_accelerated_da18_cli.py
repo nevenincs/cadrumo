@@ -106,13 +106,31 @@ def _seed_direct_normal_profile(root: Path, profile_id: str) -> None:
     )
 
 
-def _electric_van(asset_id: str, in_service: date) -> str:
+def _van_payment(asset_id: str, in_service: date) -> str:
+    """Record the bank payment of the van, 30,000.00 base plus 6,300.00 IVA, and return its ledger id."""
+    invoked = invoke_cached_cli(
+        [
+            *("--format", "json", "app", "ledger", "add"),
+            *("--date", in_service.isoformat(), "--amount", "36300.00", "--direction", "OUTGOING"),
+            *("--description", f"Compra de furgoneta {asset_id}", "--classification", "BUSINESS"),
+            *("--taxable-base", str(_BASIS), "--iva-rate", "0.21", "--iva-amount", "6300.00"),
+        ],
+    )
+    assert invoked.exit_code == 0, invoked.output
+    payload = unwrap_schema_envelope(invoked.output)
+    assert isinstance(payload, dict)
+    transaction = payload["transaction"]
+    assert isinstance(transaction, dict)
+    return str(transaction["transaction_id"])
+
+
+def _electric_van(asset_id: str, in_service: date, transaction_id: str) -> str:
     """Return the create-command JSON of a new battery-electric van used only for the activity."""
     return ActivityAssetRevision(
         asset_id=asset_id,
         revision_number=1,
         acquisition=AcquisitionLineageReference(
-            observed_transaction_id="a" * 64,
+            observed_transaction_id=transaction_id,
             invoice_evidence_id=f"factura-{asset_id}",
             evidence_fingerprint="b" * 64,
         ),
@@ -121,6 +139,7 @@ def _electric_van(asset_id: str, in_service: date) -> str:
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=_BASIS,
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="furgoneta afecta al 100% a la actividad",
         ),
         residual_value=Decimal("0"),
@@ -157,8 +176,12 @@ def test_an_electric_vehicle_under_the_accelerated_regime_refuses_in_every_langu
     with runtime_cli_profile(tmp_path=tmp_path, label="accelerated da18") as profile:
         _seed_direct_normal_profile(profile.storage_root, profile.bucket_id)
         for asset_id, in_service in (("van-2023", date(2023, 3, 1)), ("van-2024", date(2024, 3, 1))):
+            payment = _van_payment(asset_id, in_service)
             created = invoke_cached_cli(
-                ["--format", "json", "app", "ledger", "actividad-asset", "create", _electric_van(asset_id, in_service)],
+                [
+                    *("--format", "json", "app", "ledger", "actividad-asset", "create"),
+                    _electric_van(asset_id, in_service, payment),
+                ],
             )
             assert created.exit_code == 0, created.output
         refusals = {language: _forecast("van-2023", 2023, language=language) for language in _LANGUAGES}

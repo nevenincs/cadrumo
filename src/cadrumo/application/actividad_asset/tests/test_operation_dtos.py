@@ -55,6 +55,7 @@ def _revision() -> ActivityAssetRevision:
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=Decimal("300.00"),
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="reviewed test allocation",
         ),
         in_service_date=date(2025, 1, 1),

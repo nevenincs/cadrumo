@@ -37,6 +37,8 @@ from ...application.actividad_asset.history import ActivityAssetHistory
 from ...application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ...application.actividad_asset.ports import ActivityAssetHistoryRepository as ActivityAssetHistoryPort
 from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
+from ...application.ledger.models import ManualLedgerTransactionCommand
+from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_directa_normal_token
@@ -63,8 +65,10 @@ from ...domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.user_profile.values import UserProfileFact
 from ..actividad_asset_composition import build_activity_asset_operation_ports
+from ..ledger_action_composition import compose_ledger_action_ports
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,11 +79,30 @@ class ActivityAssetSeed:
     revision: ActivityAssetRevision
     forecast: ScheduledAmortizationCharge
     claim: AmortizationClaim | None
+    acquisition_transaction_id: str
+
+
+def seed_acquisition_transaction(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> str:
+    """Persist the EUR 300.00 payment an asset revision names as its acquisition; return its ledger id."""
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=str(profile_id),
+            booked_date=date(2025, 1, 1),
+            amount=Decimal("300.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="activity-asset conformance acquisition",
+            business_classification=BusinessClassification.BUSINESS,
+            actor="activity-asset-conformance",
+        ),
+        ports=compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation),
+    )
+    return created.ref.transaction_id
 
 
 def activity_asset_revision(
     asset_id: str,
     *,
+    acquisition_transaction_id: str,
     revision_number: int = 1,
     supersedes_revision_id: str | None = None,
 ) -> ActivityAssetRevision:
@@ -89,7 +112,7 @@ def activity_asset_revision(
         revision_number=revision_number,
         supersedes_revision_id=supersedes_revision_id,
         acquisition=AcquisitionLineageReference(
-            observed_transaction_id="a" * 64,
+            observed_transaction_id=acquisition_transaction_id,
             invoice_evidence_id=f"conformance-invoice-{asset_id}",
             evidence_fingerprint="b" * 64,
         ),
@@ -98,6 +121,7 @@ def activity_asset_revision(
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=Decimal("300.00"),
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="conformance reviewed allocation",
         ),
         in_service_date=date(2025, 1, 1),
@@ -133,7 +157,8 @@ def seed_activity_asset(
     )
     ports = build_activity_asset_operation_ports(bucket_id=str(profile_id), operation=operation)
     repository = ports.history_repository
-    revision = activity_asset_revision(asset_id)
+    acquisition_transaction_id = seed_acquisition_transaction(profile_id, operation=operation)
+    revision = activity_asset_revision(asset_id, acquisition_transaction_id=acquisition_transaction_id)
     history = repository.append_revision(revision)
     forecast = forecast_activity_asset_charge(
         revision,
@@ -158,7 +183,13 @@ def seed_activity_asset(
             creating_operation="activity-asset-conformance.seed",
         )
         repository.record_claim(claim)
-    return ActivityAssetSeed(repository=repository, revision=revision, forecast=forecast, claim=claim)
+    return ActivityAssetSeed(
+        repository=repository,
+        revision=revision,
+        forecast=forecast,
+        claim=claim,
+        acquisition_transaction_id=acquisition_transaction_id,
+    )
 
 
 def assert_activity_asset_conformance_result(
@@ -304,5 +335,6 @@ __all__ = [
     "ActivityAssetSeed",
     "activity_asset_revision",
     "assert_activity_asset_conformance_result",
+    "seed_acquisition_transaction",
     "seed_activity_asset",
 ]

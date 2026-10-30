@@ -127,6 +127,7 @@ def _activity_asset_operations(
 
     return ActivityAssetOperations(
         repository=ports.history_repository,
+        ledger=ports.ledger,
         forecast_operation=forecast,
         taxpayer_modality=taxpayer_modality,
     )

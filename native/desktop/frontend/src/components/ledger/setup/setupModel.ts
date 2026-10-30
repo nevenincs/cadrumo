@@ -392,7 +392,7 @@ export function revisionSkeleton(): JsonObject {
     },
     acquisition_shape: null,
     asset_kind: null,
-    basis: { stage: null, basis_amount: null },
+    basis: { stage: null, basis_amount: null, non_deductible_iva: null },
     residual_value: null,
     in_service_date: null,
     opening_history: { status: null },

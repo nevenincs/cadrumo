@@ -61,6 +61,7 @@ def activity_asset_revision(asset_id: str) -> ActivityAssetRevision:
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=Decimal("2000"),
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="ledger allocation source",
         ),
         in_service_date=date(2025, 1, 1),

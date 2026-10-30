@@ -285,6 +285,7 @@ def _register_machine(transaction_id: str) -> None:
             "basis": {
                 "stage": "business_allocated",
                 "basis_amount": str(_BASE),
+                "non_deductible_iva": "0.00",
                 "prior_allocation_provenance": "compra afecta al 100% a la actividad",
             },
             "in_service_date": _ACQUIRED_ON.isoformat(),
