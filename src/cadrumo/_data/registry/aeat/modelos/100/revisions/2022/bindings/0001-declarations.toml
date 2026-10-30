@@ -588,10 +588,11 @@ required_text = ["Concepto y ámbito de aplicación del método de estimación d
 [[revisions."2022".bindings.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "rendimiento neto"]
-# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
-# 0208. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
-# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
-# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0208-deductible.
+# Modelo 100 first-slice deductible-expense aggregation into casilla 0208, the
+# amortization of material fixed assets. No ledger category routes to this
+# casilla: the activity-asset register is its only source, and the
+# ledger_renta_gastos_estimacion_directa_aggregation source carries the register's
+# effective material claims here over the full ejercicio (period 0A).
 [[revisions."2022".bindings]]
 id = "renta-ledger-expense-0208-deductible"
 provider = { kind = "ledger_renta_gastos_estimacion_directa_aggregation", modelo = "100", period = "0A", target_casilla_id = "0208", fact = "deductible_amount_sum" }
