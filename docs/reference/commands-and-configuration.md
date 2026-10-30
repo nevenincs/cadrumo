@@ -27,8 +27,8 @@ separate and [the how-to guides](../how-to/index.md) for task sequences.
 | `CADRUMO_*` / `cadrumo_*` | Cadrumo product | Local state, output, providers, profiles, credentials storage, and product behavior |
 | `AEAT_*` / `aeat_*` | AEAT integration | Sede endpoints and paths, bundled manual and normative corpus roots, and the language of authority terminology |
 
-Examples of product controls include `CADRUMO_LOCAL_STORAGE_ROOT`,
-`CADRUMO_SECRET_STORE_DIR`, and `CADRUMO_OUTPUT_LANGUAGE`. For the output
+Examples of product controls include `CADRUMO_STORAGE_ROOT` and
+`CADRUMO_OUTPUT_LANGUAGE`. For the output
 language and its precedence, see
 [Choose the output language](../how-to/profile-setup.md#choose-the-output-language).
 Every variable is listed in [Environment overrides](environment-overrides.md).

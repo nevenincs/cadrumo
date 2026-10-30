@@ -5,18 +5,18 @@ authority referenced by the filing and live-read boundaries on this page.
 
 ## Local state layout
 
-`CADRUMO_LOCAL_STORAGE_ROOT` selects the root of Cadrumo-owned local state. The
-default depends on how Cadrumo runs:
+`CADRUMO_STORAGE_ROOT` selects the root of Cadrumo-owned local state. It is an
+absolute path; every other location is a relative path beneath it. When it is
+unset or empty, the default is a per-user location:
 
 | Platform | Default storage root |
 | --- | --- |
-| Windows | `%LOCALAPPDATA%/cadrumo/storage` |
-| Linux | `$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage` |
-| macOS | `~/Library/Application Support/cadrumo/storage` |
+| Windows | `%LOCALAPPDATA%\cadrumo` |
+| Linux | `$XDG_DATA_HOME/cadrumo`, or `~/.local/share/cadrumo` |
+| macOS | `~/Library/Application Support/cadrumo` |
 
-The root is the same whether Cadrumo runs from a source checkout or an
-installed distribution. Running from a checkout does not move it: set
-`CADRUMO_LOCAL_STORAGE_ROOT` to put the tree inside the checkout.
+Set `CADRUMO_STORAGE_ROOT` to an absolute path to keep the tree elsewhere.
+Cadrumo refuses a relative root.
 
 Cadrumo creates the root and the directories below it when a command that
 uses them runs. The state-free surfaces (`--help`, `--version`, and a bare
@@ -29,8 +29,7 @@ blobs under `data/`, the `custody/` envelopes that hold the wrapped data key
 for the passphrase and the recovery code, `manifest.toml`,
 `profile.commit.v1.json`, `.lock`, and an `output-language.hint` file.
 Session and login-throttle state live under `<root>/keystore/<bucket-id>/`. Tokens, logs,
-secrets, blobs, and audit paths derive from the same product root unless an
-explicit Cadrumo setting overrides them.
+secrets, blobs, and audit paths all live beneath the same root.
 
 Google Drive mirroring uses a Cadrumo-owned `cadrumo-vault/` folder. A former
 `aeat-vault/` folder is not adopted.

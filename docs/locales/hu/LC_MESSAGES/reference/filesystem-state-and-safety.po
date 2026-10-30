@@ -38,12 +38,15 @@ msgstr "Helyi állapot elrendezése"
 
 #: ../../reference/filesystem-state-and-safety.md:8
 msgid ""
-"`CADRUMO_LOCAL_STORAGE_ROOT` selects the root of Cadrumo-owned local "
-"state. The default depends on how Cadrumo runs:"
+"`CADRUMO_STORAGE_ROOT` selects the root of Cadrumo-owned local state. "
+"It is an absolute path; every other location is a relative path "
+"beneath it. When it is unset or empty, the default is a per-user "
+"location:"
 msgstr ""
-"A `CADRUMO_LOCAL_STORAGE_ROOT` választja ki a Cadrumo tulajdonában lévő "
-"helyi állapot gyökerét. Az alapértelmezés attól függ, hogyan fut a "
-"Cadrumo:"
+"A `CADRUMO_STORAGE_ROOT` választja ki a Cadrumo tulajdonában lévő "
+"helyi állapot gyökerét. Ez egy abszolút útvonal; minden más hely "
+"ehhez képest relatív útvonal. Ha nincs beállítva vagy üres, az "
+"alapértelmezés egy felhasználónkénti hely:"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Platform"
@@ -58,35 +61,32 @@ msgid "Windows"
 msgstr "Windows"
 
 #: ../../reference/filesystem-state-and-safety.md
-msgid "`%LOCALAPPDATA%/cadrumo/storage`"
-msgstr "`%LOCALAPPDATA%/cadrumo/storage`"
+msgid "`%LOCALAPPDATA%\\cadrumo`"
+msgstr "`%LOCALAPPDATA%\\cadrumo`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Linux"
 msgstr "Linux"
 
 #: ../../reference/filesystem-state-and-safety.md
-msgid "`$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage`"
-msgstr "`$XDG_DATA_HOME/cadrumo/storage`, vagy `~/.local/share/cadrumo/storage`"
+msgid "`$XDG_DATA_HOME/cadrumo`, or `~/.local/share/cadrumo`"
+msgstr "`$XDG_DATA_HOME/cadrumo`, vagy `~/.local/share/cadrumo`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "macOS"
 msgstr "macOS"
 
 #: ../../reference/filesystem-state-and-safety.md
-msgid "`~/Library/Application Support/cadrumo/storage`"
-msgstr "`~/Library/Application Support/cadrumo/storage`"
+msgid "`~/Library/Application Support/cadrumo`"
+msgstr "`~/Library/Application Support/cadrumo`"
 
 #: ../../reference/filesystem-state-and-safety.md:17
 msgid ""
-"The root is the same whether Cadrumo runs from a source checkout or an "
-"installed distribution. Running from a checkout does not move it: set "
-"`CADRUMO_LOCAL_STORAGE_ROOT` to put the tree inside the checkout."
+"Set `CADRUMO_STORAGE_ROOT` to an absolute path to keep the tree "
+"elsewhere. Cadrumo refuses a relative root."
 msgstr ""
-"A gyökér ugyanaz, akár a Cadrumo forráskódból fut, akár telepített "
-"csomagként. A forráskódból való futtatás nem mozdítja el: állítsd be a "
-"`CADRUMO_LOCAL_STORAGE_ROOT` változót, hogy a fát a munkamásolatba "
-"helyezd."
+"Állítsd a `CADRUMO_STORAGE_ROOT` változót abszolút útvonalra, ha a "
+"fát máshol szeretnéd tartani. A Cadrumo elutasít egy relatív gyökeret."
 
 #: ../../reference/filesystem-state-and-safety.md:21
 msgid ""
@@ -102,24 +102,24 @@ msgstr ""
 
 #: ../../reference/filesystem-state-and-safety.md:26
 msgid ""
-"Profile state is bucket-scoped under `<root>/buckets/<bucket-id>/`. The "
-"bucket contains `db/cadrumo.db`, encrypted blobs under `data/`, the "
-"`custody/` envelopes that hold the wrapped data key for the passphrase "
-"and the recovery code, `manifest.toml`, `profile.commit.v1.json`, "
-"`.lock`, and an `output-language.hint` file. Session and login-throttle "
-"state live under `<root>/keystore/<bucket-id>/`. Tokens, logs, secrets, "
-"blobs, and audit paths derive from the same product root unless an "
-"explicit Cadrumo setting overrides them."
+"Profile state is bucket-scoped under `<root>/buckets/<bucket-id>/`. "
+"The bucket contains `db/cadrumo.db`, encrypted blobs under `data/`, "
+"the `custody/` envelopes that hold the wrapped data key for the "
+"passphrase and the recovery code, `manifest.toml`, "
+"`profile.commit.v1.json`, `.lock`, and an `output-language.hint` "
+"file. Session and login-throttle state live under "
+"`<root>/keystore/<bucket-id>/`. Tokens, logs, secrets, blobs, and "
+"audit paths all live beneath the same root."
 msgstr ""
-"A profilállapot bucket-hatókörű a `<root>/buckets/<bucket-id>/` alatt. A "
-"bucket tartalmazza a `db/cadrumo.db` fájlt, a `data/` alatti titkosított "
-"blobokat, a `custody/` borítékokat, amelyek a jelmondathoz és a "
-"helyreállítási kódhoz tartozó becsomagolt adatkulcsot őrzik, a "
-"`manifest.toml`, a `profile.commit.v1.json` és a `.lock` fájlt, valamint "
-"egy `output-language.hint` fájlt. A munkamenet- és a bejelentkezés-"
-"korlátozási állapot a `<root>/keystore/<bucket-id>/` alatt él. A tokenek,"
-" naplók, titkok, blobok és auditútvonalak ugyanabból a termékgyökérből "
-"származnak, hacsak egy kifejezett Cadrumo-beállítás felül nem írja őket."
+"A profilállapot bucket-hatókörű a `<root>/buckets/<bucket-id>/` "
+"alatt. A bucket tartalmazza a `db/cadrumo.db` fájlt, a `data/` alatti "
+"titkosított blobokat, a `custody/` borítékokat, amelyek a "
+"jelmondathoz és a helyreállítási kódhoz tartozó becsomagolt "
+"adatkulcsot őrzik, a `manifest.toml`, a `profile.commit.v1.json` és a "
+"`.lock` fájlt, valamint egy `output-language.hint` fájlt. A "
+"munkamenet- és a bejelentkezés-korlátozási állapot a "
+"`<root>/keystore/<bucket-id>/` alatt él. A tokenek, naplók, titkok, "
+"blobok és auditútvonalak mind ugyanazon gyökér alatt találhatók."
 
 #: ../../reference/filesystem-state-and-safety.md:35
 msgid ""

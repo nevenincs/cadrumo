@@ -155,8 +155,11 @@ msgid "`Cadrumo` or the canonical identifier in the identity table"
 msgstr "`Cadrumo` vagy a kanonikus azonosító az azonosságtáblában"
 
 #: ../../reference/identity-and-naming.md
-msgid "Cadrumo CLI, Cadrumo profile, `cadrumo` package, `CADRUMO_LOCAL_STORAGE_ROOT`"
-msgstr "Cadrumo CLI, Cadrumo-profil, `cadrumo` csomag, `CADRUMO_LOCAL_STORAGE_ROOT`"
+msgid ""
+"Cadrumo CLI, Cadrumo profile, `cadrumo` package, "
+"`CADRUMO_STORAGE_ROOT`"
+msgstr ""
+"Cadrumo CLI, Cadrumo-profil, `cadrumo` csomag, `CADRUMO_STORAGE_ROOT`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Spanish tax authority"

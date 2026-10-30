@@ -26,7 +26,7 @@ Python import alias.
 
 | Referent | Use | Examples |
 | --- | --- | --- |
-| Cadrumo product | `Cadrumo` or the canonical identifier in the identity table | Cadrumo CLI, Cadrumo profile, `cadrumo` package, `CADRUMO_LOCAL_STORAGE_ROOT` |
+| Cadrumo product | `Cadrumo` or the canonical identifier in the identity table | Cadrumo CLI, Cadrumo profile, `cadrumo` package, `CADRUMO_STORAGE_ROOT` |
 | Spanish tax authority | `AEAT` | AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, AEAT taxonomy |
 
 AEAT is an external authority and counterparty, not the application name. Authority-owned

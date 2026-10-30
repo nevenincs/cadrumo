@@ -69,12 +69,12 @@ and development configuration: every user workflow works without them through
 prompts, command flags, and `aeat config` commands. Set an override only when
 you administer a deployment and know why the default does not fit.
 
-An annotated template with the same variables lives at `env/.env.example` in
-the repository. The application itself reads only the process environment;
-`env/.env` is not a production source. For local development and the test
-suite, the repository's `conftest.py` bridges `env/.env` into the process
-environment before tests run, filling only variables not already set; a
-value already present in your shell always wins.
+The application reads only the process environment. `CADRUMO_STORAGE_ROOT`, an
+absolute path, is the one variable that controls where it stores anything:
+every other location is a relative path beneath it. When it is unset or empty,
+the per-user default applies: `%LOCALAPPDATA%\\cadrumo` on Windows,
+`$XDG_DATA_HOME/cadrumo` or `~/.local/share/cadrumo` on Linux, and
+`~/Library/Application Support/cadrumo` on macOS.
 
 | Variable | Type | Default | What it controls |
 | --- | --- | --- | --- |
@@ -411,10 +411,6 @@ def render_environment_reference(declaration: ApplicationEnvironment | None = No
         rows.append(
             f"| `{name.upper()}` | {_type_cell(field)} | {_default_cell(field, language)} | {_escape(description)} |",
         )
-    rows.append(
-        "| `CADRUMO_STORAGE_ROOT` | Path | (derived) | Shared storage root; defaults to the repository's "
-        "var/storage. CADRUMO_LOCAL_STORAGE_ROOT overrides it for the local backend. |"
-    )
     rows.sort()
     footer = "\n" + docs_chrome("docs.cli.env.secrets_note", language) + "\n"
     package = render_installed_package(load(REPO_ROOT) if declaration is None else declaration, environment_names)

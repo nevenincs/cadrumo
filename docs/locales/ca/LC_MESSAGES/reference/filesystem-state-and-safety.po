@@ -38,12 +38,15 @@ msgstr "Disposició de l'estat local"
 
 #: ../../reference/filesystem-state-and-safety.md:8
 msgid ""
-"`CADRUMO_LOCAL_STORAGE_ROOT` selects the root of Cadrumo-owned local "
-"state. The default depends on how Cadrumo runs:"
+"`CADRUMO_STORAGE_ROOT` selects the root of Cadrumo-owned local state. "
+"It is an absolute path; every other location is a relative path "
+"beneath it. When it is unset or empty, the default is a per-user "
+"location:"
 msgstr ""
-"`CADRUMO_LOCAL_STORAGE_ROOT` selecciona l'arrel de l'estat local "
-"propietat de Cadrumo. El valor per defecte depèn de com s'executa "
-"Cadrumo:"
+"`CADRUMO_STORAGE_ROOT` selecciona l'arrel de l'estat local propietat "
+"de Cadrumo. És una ruta absoluta; qualsevol altra ubicació és una "
+"ruta relativa dins d'aquesta arrel. Si no està definida o és buida, "
+"el valor per defecte és una ubicació per usuari:"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Platform"
@@ -58,35 +61,32 @@ msgid "Windows"
 msgstr "Windows"
 
 #: ../../reference/filesystem-state-and-safety.md
-msgid "`%LOCALAPPDATA%/cadrumo/storage`"
-msgstr "`%LOCALAPPDATA%/cadrumo/storage`"
+msgid "`%LOCALAPPDATA%\\cadrumo`"
+msgstr "`%LOCALAPPDATA%\\cadrumo`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Linux"
 msgstr "Linux"
 
 #: ../../reference/filesystem-state-and-safety.md
-msgid "`$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage`"
-msgstr "`$XDG_DATA_HOME/cadrumo/storage`, o `~/.local/share/cadrumo/storage`"
+msgid "`$XDG_DATA_HOME/cadrumo`, or `~/.local/share/cadrumo`"
+msgstr "`$XDG_DATA_HOME/cadrumo`, o `~/.local/share/cadrumo`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "macOS"
 msgstr "macOS"
 
 #: ../../reference/filesystem-state-and-safety.md
-msgid "`~/Library/Application Support/cadrumo/storage`"
-msgstr "`~/Library/Application Support/cadrumo/storage`"
+msgid "`~/Library/Application Support/cadrumo`"
+msgstr "`~/Library/Application Support/cadrumo`"
 
 #: ../../reference/filesystem-state-and-safety.md:17
 msgid ""
-"The root is the same whether Cadrumo runs from a source checkout or an "
-"installed distribution. Running from a checkout does not move it: set "
-"`CADRUMO_LOCAL_STORAGE_ROOT` to put the tree inside the checkout."
+"Set `CADRUMO_STORAGE_ROOT` to an absolute path to keep the tree "
+"elsewhere. Cadrumo refuses a relative root."
 msgstr ""
-"L'arrel és la mateixa tant si Cadrumo s'executa des d'una còpia de "
-"treball del codi com des d'una distribució instal·lada. Executar-lo des "
-"d'una còpia de treball no la mou: defineix `CADRUMO_LOCAL_STORAGE_ROOT` "
-"per situar l'arbre dins de la còpia de treball."
+"Defineix `CADRUMO_STORAGE_ROOT` com una ruta absoluta per mantenir "
+"l'arbre en un altre lloc. Cadrumo rebutja una arrel relativa."
 
 #: ../../reference/filesystem-state-and-safety.md:21
 msgid ""
@@ -102,25 +102,25 @@ msgstr ""
 
 #: ../../reference/filesystem-state-and-safety.md:26
 msgid ""
-"Profile state is bucket-scoped under `<root>/buckets/<bucket-id>/`. The "
-"bucket contains `db/cadrumo.db`, encrypted blobs under `data/`, the "
-"`custody/` envelopes that hold the wrapped data key for the passphrase "
-"and the recovery code, `manifest.toml`, `profile.commit.v1.json`, "
-"`.lock`, and an `output-language.hint` file. Session and login-throttle "
-"state live under `<root>/keystore/<bucket-id>/`. Tokens, logs, secrets, "
-"blobs, and audit paths derive from the same product root unless an "
-"explicit Cadrumo setting overrides them."
+"Profile state is bucket-scoped under `<root>/buckets/<bucket-id>/`. "
+"The bucket contains `db/cadrumo.db`, encrypted blobs under `data/`, "
+"the `custody/` envelopes that hold the wrapped data key for the "
+"passphrase and the recovery code, `manifest.toml`, "
+"`profile.commit.v1.json`, `.lock`, and an `output-language.hint` "
+"file. Session and login-throttle state live under "
+"`<root>/keystore/<bucket-id>/`. Tokens, logs, secrets, blobs, and "
+"audit paths all live beneath the same root."
 msgstr ""
-"L'estat del perfil té l'àmbit del bucket sota `<root>/buckets/<bucket-"
-"id>/`. El bucket conté `db/cadrumo.db`, blobs xifrats sota `data/`, els "
-"sobres `custody/` que guarden la clau de dades embolcallada per a la "
-"frase de contrasenya i el codi de recuperació, `manifest.toml`, "
-"`profile.commit.v1.json`, `.lock` i un fitxer `output-language.hint`. "
-"L'estat de sessió i de limitació d'intents d'inici de sessió es troba "
-"sota `<root>/keystore/<bucket-id>/`. Els testimonis, els registres, els "
-"secrets, els blobs i les rutes d'auditoria deriven de la mateixa arrel "
-"del producte tret que una configuració explícita de Cadrumo els "
-"substitueixi."
+"L'estat del perfil té l'àmbit del bucket sota "
+"`<root>/buckets/<bucket-id>/`. El bucket conté `db/cadrumo.db`, blobs "
+"xifrats sota `data/`, els sobres `custody/` que guarden la clau de "
+"dades embolcallada per a la frase de contrasenya i el codi de "
+"recuperació, `manifest.toml`, `profile.commit.v1.json`, `.lock` i un "
+"fitxer `output-language.hint`. L'estat de sessió i de limitació "
+"d'intents d'inici de sessió es troba sota "
+"`<root>/keystore/<bucket-id>/`. Els testimonis, els registres, els "
+"secrets, els blobs i les rutes d'auditoria es troben tots dins de la "
+"mateixa arrel."
 
 #: ../../reference/filesystem-state-and-safety.md:35
 msgid ""
