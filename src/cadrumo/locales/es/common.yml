@@ -4621,6 +4621,7 @@ ledger:
       new: Nuevo
       used: Usado
     acquisition_shape:
+      acquired_outside_ledger: Adquirido fuera del libro, con su documento
       ancillary_cost: Gasto accesorio de un elemento
       financial_lease_unexercised: Arrendamiento financiero, opción de compra sin
         ejercer
@@ -4637,6 +4638,7 @@ ledger:
       whole_property: Inmueble completo
     claim_state:
       claimed: Registrada
+      edition_unavailable: Sin edición para este año
       missing: Sin registrar
       not_due: Nada que registrar
       partial: Registrada en parte
@@ -4645,6 +4647,9 @@ ledger:
       claim_gap: Año con amortización sin registrar
       exemption_not_computed: Exención de la ganancia no calculada
       minimum_exceeded_deduction: Deducción superior a la amortización mínima
+      minimum_unresolved: 'Amortización mínima no disponible para este año: ninguna
+        edición lo cubre, así que la reducción del coste puede quedar por debajo de
+        la real'
       no_minimum_authority: Sin amortización mínima publicada para este año
     disposal_reason:
       destruction: Destrucción
@@ -4664,7 +4669,6 @@ ledger:
         al doble del coeficiente lineal máximo, no libertad de amortización. Ese régimen
         todavía no se calcula, así que la libertad de amortización que elegiste no
         genera ningún cargo.
-      edition_unavailable: Sin edición para este año
         al doble del coeficiente lineal máximo, no libertad de amortización. Ese régimen
         no se calcula, por lo que la elección %{method} no genera ningún cargo.
       acquisition_cost_exceeds_payment: El coste indicado %{cost} (precio %{price}
@@ -4672,13 +4676,12 @@ ledger:
         la transacción de adquisición.
       acquisition_currency_unconverted: La transacción de adquisición está en %{currency}
         y no tiene conversión a EUR.
+      acquisition_evidence_reference_required: Indica el documento que acredita esta
+        adquisición.
       acquisition_iva_exceeds_transaction_iva: El IVA no deducible indicado %{non_deductible_iva}
         supera los %{iva_amount} de IVA de la transacción de adquisición.
       acquisition_price_exceeds_base: El precio indicado %{price} supera la base de
         %{taxable_base} de la transacción de adquisición.
-      minimum_unresolved: 'Amortización mínima no disponible para este año: ninguna
-        edición lo cubre, así que la reducción del coste puede quedar por debajo de
-        la real'
       acquisition_transaction_missing: Una transacción de adquisición que indicaste
         no está en el libro mayor.
       acquisition_transaction_not_payment: Una transacción de adquisición que indicaste
@@ -4731,6 +4734,10 @@ ledger:
         servicio en ese ejercicio.
       creation_requires_first_revision: Esto cambió desde que lo abriste. Actualiza
         e inténtalo de nuevo.
+      declared_acquisition_after_service: La fecha de adquisición no puede ser posterior
+        a la entrada en funcionamiento del elemento.
+      declared_acquisition_date_required: Un elemento adquirido fuera del libro necesita
+        su fecha de adquisición.
       disposal_already_recorded: Este elemento ya tiene una baja con fecha %{disposal_date}.
         Cámbiala con una corrección.
       disposal_amount_invalid: Los importes de la baja deben ser cifras en euros no

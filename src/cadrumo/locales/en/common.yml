@@ -4546,6 +4546,7 @@ ledger:
       new: New
       used: Used
     acquisition_shape:
+      acquired_outside_ledger: Acquired outside the ledger, with its document
       ancillary_cost: Ancillary cost of an element
       financial_lease_unexercised: Financial lease, option not exercised
       historical_without_evidence: Historical, without evidence
@@ -4561,6 +4562,7 @@ ledger:
       whole_property: Whole property
     claim_state:
       claimed: Claimed
+      edition_unavailable: No edition for this year
       missing: Not claimed
       not_due: Nothing to claim
       partial: Partly claimed
@@ -4569,6 +4571,8 @@ ledger:
       claim_gap: Year with depreciation not recorded
       exemption_not_computed: Gain exemption not computed
       minimum_exceeded_deduction: Deduction above the minimum amortization
+      minimum_unresolved: 'Minimum amortization not available for this year: no edition
+        covers it, so the reduction of cost may be understated'
       no_minimum_authority: No minimum amortization published for this year
     disposal_reason:
       destruction: Destruction
@@ -4577,7 +4581,6 @@ ledger:
       sale: Sale
       scrapping: Scrapping
       theft: Theft
-      edition_unavailable: No edition for this year
       withdrawal: Withdrawal from the activity
     document_kind:
       customs_document: Customs document
@@ -4591,10 +4594,10 @@ ledger:
       acquisition_cost_exceeds_payment: The stated cost %{cost} (price %{price} plus
         non-deductible IVA %{non_deductible_iva}) exceeds the %{paid} EUR the acquisition
         transaction paid.
-      minimum_unresolved: 'Minimum amortization not available for this year: no edition
-        covers it, so the reduction of cost may be understated'
       acquisition_currency_unconverted: The acquisition transaction is in %{currency}
         and has no EUR conversion.
+      acquisition_evidence_reference_required: Name the document that proves this
+        acquisition.
       acquisition_iva_exceeds_transaction_iva: The stated non-deductible IVA %{non_deductible_iva}
         exceeds the %{iva_amount} IVA of the acquisition transaction.
       acquisition_price_exceeds_base: The stated price %{price} exceeds the %{taxable_base}
@@ -4648,6 +4651,10 @@ ledger:
         in that tax year.
       creation_requires_first_revision: This changed since you opened it. Refresh
         and try again.
+      declared_acquisition_after_service: The acquisition date cannot be later than
+        the date the element entered service.
+      declared_acquisition_date_required: An element acquired outside the ledger needs
+        its acquisition date.
       disposal_already_recorded: This element already has a baja dated %{disposal_date}.
         Change it with a correction.
       claim_superseded_replay: This claim was already replaced by a correction and

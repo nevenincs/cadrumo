@@ -4618,11 +4618,11 @@ ledger:
       new: Nou
       used: Usat
     acquisition_shape:
+      acquired_outside_ledger: Adquirit fora del llibre, amb el seu document
       ancillary_cost: Cost accessori d'un element
       financial_lease_unexercised: Arrendament financer, opció de compra sense exercir
       historical_without_evidence: Històric, sense justificant
       primary_purchase: Compra
-      edition_unavailable: Sense edició per a aquest any
       produced: Producció pròpia
       split_payment: Compra pagada en diversos pagaments
     asset_kind:
@@ -4634,9 +4634,7 @@ ledger:
       whole_property: Immoble complet
     claim_state:
       claimed: Registrada
-      minimum_unresolved: 'Amortització mínima no disponible per a aquest any: cap
-        edició no el cobreix, de manera que la reducció del cost pot quedar per sota
-        de la real'
+      edition_unavailable: Sense edició per a aquest any
       missing: Sense registrar
       not_due: Res a registrar
       partial: Registrada en part
@@ -4645,6 +4643,9 @@ ledger:
       claim_gap: Any amb amortització sense registrar
       exemption_not_computed: Exempció del guany no calculada
       minimum_exceeded_deduction: Deducció superior a l'amortització mínima
+      minimum_unresolved: 'Amortització mínima no disponible per a aquest any: cap
+        edició no el cobreix, de manera que la reducció del cost pot quedar per sota
+        de la real'
       no_minimum_authority: Sense amortització mínima publicada per a aquest any
     disposal_reason:
       destruction: Destrucció
@@ -4669,6 +4670,8 @@ ledger:
         la transacció d'adquisició.
       acquisition_currency_unconverted: La transacció d'adquisició és en %{currency}
         i no té conversió a EUR.
+      acquisition_evidence_reference_required: Indica el document que acredita aquesta
+        adquisició.
       acquisition_iva_exceeds_transaction_iva: L'IVA no deduïble indicat %{non_deductible_iva}
         supera els %{iva_amount} d'IVA de la transacció d'adquisició.
       acquisition_price_exceeds_base: El preu indicat %{price} supera la base de %{taxable_base}
@@ -4729,6 +4732,10 @@ ledger:
         en aquest exercici.
       creation_requires_first_revision: Això ha canviat des que ho vas obrir. Actualitza
         i torna-ho a provar.
+      declared_acquisition_after_service: La data d'adquisició no pot ser posterior
+        a l'entrada en funcionament de l'element.
+      declared_acquisition_date_required: Un element adquirit fora del llibre necessita
+        la seva data d'adquisició.
       disposal_already_recorded: Aquest element ja té una baixa amb data %{disposal_date}.
         Canvia-la amb una correcció.
       disposal_amount_invalid: Els imports de la baixa han de ser xifres en euros

@@ -4597,6 +4597,7 @@ ledger:
       new: Új
       used: Használt
     acquisition_shape:
+      acquired_outside_ledger: A naplón kívül beszerzett, bizonylattal
       ancillary_cost: Egy eszköz járulékos költsége
       financial_lease_unexercised: Pénzügyi lízing, a vételi opció még nem él
       historical_without_evidence: Múltbeli, bizonylat nélkül
@@ -4604,7 +4605,6 @@ ledger:
       produced: Saját előállítás
       split_payment: Részletekben fizetett vásárlás
     asset_kind:
-      edition_unavailable: Nincs kiadás erre az évre
       intangible: Immateriális eszköz
       material: Tárgyi eszköz
     basis_stage:
@@ -4613,17 +4613,18 @@ ledger:
       whole_property: Teljes ingatlan
     claim_state:
       claimed: Elszámolva
+      edition_unavailable: Nincs kiadás erre az évre
       missing: Nincs elszámolva
       not_due: Nincs mit elszámolni
       partial: Részben elszámolva
-      minimum_unresolved: 'Erre az évre nem érhető el a minimális értékcsökkenés:
-        egyetlen kiadás sem fedi le, ezért a bekerülési érték csökkentése alacsonyabb
-        lehet a valósnál'
       superseded: Elszámolva, javítva
     disposal_finding:
       claim_gap: Elszámolatlan értékcsökkenési leírású év
       exemption_not_computed: A nyereség mentessége nincs kiszámítva
       minimum_exceeded_deduction: A minimális értékcsökkenési leírást meghaladó levonás
+      minimum_unresolved: 'Erre az évre nem érhető el a minimális értékcsökkenés:
+        egyetlen kiadás sem fedi le, ezért a bekerülési érték csökkentése alacsonyabb
+        lehet a valósnál'
       no_minimum_authority: Ehhez az évhez nincs közzétett minimális értékcsökkenési
         leírás
     disposal_reason:
@@ -4649,6 +4650,7 @@ ledger:
         által kifizetett %{paid} EUR-t.'
       acquisition_currency_unconverted: A beszerzési tranzakció %{currency} pénznemű,
         és nincs EUR-átváltása.
+      acquisition_evidence_reference_required: Add meg a beszerzést igazoló bizonylatot.
       acquisition_iva_exceeds_transaction_iva: A megadott le nem vonható áfa (%{non_deductible_iva})
         meghaladja a beszerzési tranzakció %{iva_amount} összegű áfáját.
       acquisition_price_exceeds_base: A megadott ár (%{price}) meghaladja a beszerzési
@@ -4711,6 +4713,10 @@ ledger:
         töltött nap abban az adóévben.
       creation_requires_first_revision: Ez megváltozott, mióta megnyitottad. Frissíts,
         és próbáld újra.
+      declared_acquisition_after_service: A beszerzés dátuma nem lehet későbbi az
+        eszköz üzembe helyezésénél.
+      declared_acquisition_date_required: A naplón kívül beszerzett eszközhöz meg
+        kell adni a beszerzés dátumát.
       disposal_already_recorded: Ennek az eszköznek már van kivezetése %{disposal_date}
         dátummal. Helyesbítéssel módosítsd.
       disposal_amount_invalid: A kivezetés összegei nem negatív, legfeljebb két tizedesjegyű
