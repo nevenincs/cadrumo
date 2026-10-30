@@ -13,6 +13,10 @@ fn the_window_names_no_profile_directory_or_account_secret() {
         ("ledger.list", json!({"profile_id":"another"})),
         ("ledger.evidence.add", json!({"source_directory":"C:\\"})),
         (
+            "ledger.inventory.evidence.add",
+            json!({"source_directory":"C:\\"}),
+        ),
+        (
             "ledger.own_account",
             json!({"action":"update","own_account_id":"acc-01","iban":"ES00"}),
         ),
@@ -91,17 +95,13 @@ fn file_tokens_become_paths_only_where_the_definition_reads_a_file() {
     assert_eq!(import["verify_source"], Value::Null);
     assert!(!import.contains_key("source_directory"));
 
-    let mut add = object(json!({"source_path":receipt}));
-    let folders = substitute(
-        &files,
-        &session,
-        definition("ledger.evidence.add"),
-        &mut add,
-    )
-    .unwrap();
-    assert_eq!(folders, [root.to_str().unwrap()]);
-    assert_eq!(add["source_path"], text(root.join("receipt.pdf")));
-    assert_eq!(add["source_directory"], text(root.clone()));
+    for id in ["ledger.evidence.add", "ledger.inventory.evidence.add"] {
+        let mut add = object(json!({"source_path":receipt}));
+        let folders = substitute(&files, &session, definition(id), &mut add).unwrap();
+        assert_eq!(folders, [root.to_str().unwrap()]);
+        assert_eq!(add["source_path"], text(root.join("receipt.pdf")));
+        assert_eq!(add["source_directory"], text(root.clone()));
+    }
 
     let mut book_import = object(json!({"source_path":book,"kind":"RECEIVED"}));
     substitute(
@@ -120,7 +120,17 @@ fn file_tokens_become_paths_only_where_the_definition_reads_a_file() {
             json!({"files":[root.join("statement.csv").to_str().unwrap()]}),
             "invalid",
         ),
+        (
+            "ledger.inventory.evidence.add",
+            json!({"source_path":root.join("receipt.pdf").to_str().unwrap()}),
+            "invalid",
+        ),
         // A token picked for another purpose.
+        (
+            "ledger.inventory.evidence.add",
+            json!({"source_path":statement.clone()}),
+            "invalid",
+        ),
         ("ledger.import", json!({"files":[book.clone()]}), "invalid"),
         (
             "ledger.evidence.add",

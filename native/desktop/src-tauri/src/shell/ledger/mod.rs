@@ -48,7 +48,7 @@ struct PathField {
     purpose: Purpose,
     shape: Shape,
 }
-const PATH_FIELDS: [PathField; 6] = [
+const PATH_FIELDS: [PathField; 7] = [
     PathField {
         definition: "ledger.evidence.add",
         field: "source_path",
@@ -80,6 +80,12 @@ const PATH_FIELDS: [PathField; 6] = [
         shape: Shape::Optional,
     },
     PathField {
+        definition: "ledger.inventory.evidence.add",
+        field: "source_path",
+        purpose: Purpose::Documents,
+        shape: Shape::One,
+    },
+    PathField {
         definition: "ledger.invoice.import",
         field: "source_path",
         purpose: Purpose::InvoiceBooks,
@@ -87,7 +93,11 @@ const PATH_FIELDS: [PathField; 6] = [
     },
 ];
 /// Definitions that also read the directory their sources are under.
-const SOURCE_DIRECTORY: [&str; 2] = ["ledger.evidence.add", "ledger.evidence.batch"];
+const SOURCE_DIRECTORY: [&str; 3] = [
+    "ledger.evidence.add",
+    "ledger.evidence.batch",
+    "ledger.inventory.evidence.add",
+];
 const EXPORT: &str = "ledger.export";
 /// An own account's change, JSON-escaped, within its contract's bounds.
 const SECRET_BODY_LIMIT: usize = 8 * 1024;

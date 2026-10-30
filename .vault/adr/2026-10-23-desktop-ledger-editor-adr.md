@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-ledger-editor'
 date: '2026-10-23'
-modified: '2026-10-24'
+modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:886f4dc828fa6b11f3b178d6799a28028d8ae90e5ff38cd444b97bc5874e28ad'
+body_hash: 'sha256:b08d53ea65a29b3a8ff9a07d4ff8482a861397f0f5e486a7744a3f062be596d3'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -86,6 +86,14 @@ Accepted under the owner's standing authorization for this feature. The P04.S17 
 - **A review waiting for its answer can be cancelled** (cooperative cancellation). It has written nothing yet, so cancelling it releases its subject with no effect. The page cancels a review it supersedes or abandons, and still never retries an unknown outcome.
 - **The host fills the subject from the request**, as it already does for work-unit subjects. It keeps following every operation it can still answer or observe, so ordinary reads never push a waiting review out of memory.
 - **Parity:** this is a registered-contract change, so the CLI, TUI and MCP get the same per-movement scope and cancellation.
+
+### Amendment 2026-10-30: admit the shipped inventory closing and evidence operations
+
+Accepted under the owner's standing authorization to complete ledger parity and repair the desktop contract gate. The shipped operation manifest and the CLI ledger inventory family include `ledger.inventory.closing-value.record` and `ledger.inventory.evidence.add`; both join the host's closed admitted list as writes. The frontend definition mirror and scenario write classes name the same operations, and the generated relay contract fixture retains the manifest's effect and subject facts.
+
+The concurrently shipped `ledger.inventory.options` joins the same closed list as a read, exposing canonical form vocabularies without a new effect or path input.
+
+Inventory evidence uses the existing document-pick custody path: the window supplies a document token in `source_path`, the host resolves it for the held session and supplies `source_directory`. Window-supplied paths, directories and tokens from another purpose remain refused. Runtime request validation and exact-profile authority continue to govern both operations.
 
 ## Rationale
 

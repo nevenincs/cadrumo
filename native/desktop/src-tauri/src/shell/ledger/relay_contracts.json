@@ -394,6 +394,14 @@
         "path": []
       }
     },
+    "ledger.inventory.closing-value.record": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.inventory.correct": {
       "may_write": true,
       "review": false,
@@ -411,6 +419,14 @@
       }
     },
     "ledger.inventory.describe": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.inventory.evidence.add": {
       "may_write": true,
       "review": false,
       "subject": {
@@ -452,6 +468,14 @@
     },
     "ledger.inventory.movement.reverse": {
       "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.inventory.options": {
+      "may_write": false,
       "review": false,
       "subject": {
         "kind": "profile",
