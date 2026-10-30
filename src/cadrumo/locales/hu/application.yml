@@ -85,7 +85,7 @@ application:
         refused_certificate_path_unset: 'Nem lehet bejelentkezni: még nem lett kiválasztva
           tanúsítványfájl. Futtasd a `cadrumo-runtime config auth configure --provider
           certificate --file ÚTVONAL` parancsot.'
-        refused_clave_movil_identity_unset: 'Nem lehet bejelentkezni Cl@ve Móvillel:
+        refused_clave_movil_identity_unset: 'Nem lehet bejelentkezni a Cl@ve Móvil használatával:
           még nincs konfigurálva DNI/NIE. A folytatás előtt konfigurálj egyet.'
         refused_live_tests_disabled: 'Az élő bejelentkezést a biztonsági kapu letiltja:
           az eszköz csak helyben épít és ellenőriz. Engedélyezd az élő teszteket,
