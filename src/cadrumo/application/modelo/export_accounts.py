@@ -43,13 +43,13 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from typing import NamedTuple
 
-from ...core.casilla_id import validated_casilla_id
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.time.clock import MADRID_TZ
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.m303_casilla_roles import m303_importe_rectificacion_casilla
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.modelos.calculation_revision import (
@@ -414,6 +414,7 @@ def build_export_producer_snapshot(
             resolved_result_disposition=resolved_result_disposition,
             prior_domiciliation_election=prior_domiciliation_election.election,
             amendment_evidence=amendment_evidence,
+            operation=operation,
         )
         model_profile, m303_filing_facts = _resolve_export_model_profile(
             modelo=modelo,
@@ -478,19 +479,30 @@ def m303_nota_three_requires_refund_account(
     revision: CalculationRevision,
     prior_domiciliation_election: PriorDomiciliationElection,
     amendment_evidence: AmendmentEvidence | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Read Nota 3 only for a rectificativa that keeps the prior domiciliation.
 
+    The rectified-amount box is the one the work unit's edition declares; an
+    edition that declares none has no Nota 3 account requirement.
+
     Takes ``revision`` as a :class:`CalculationRevision`.
     """
-    nota_three = (
-        str(work_unit.modelo) == Modelo("303").value
-        and amendment_evidence is not None
-        and amendment_evidence.is_rectificativa
-        and prior_domiciliation_election is PriorDomiciliationElection.KEEP
-        and revision.casilla_values.get(validated_casilla_id("111", surface="M303 Nota 3 account page")) is not None
+    if (
+        amendment_evidence is None
+        or not amendment_evidence.is_rectificativa
+        or prior_domiciliation_election is not PriorDomiciliationElection.KEEP
+    ):
+        return False
+    rectificacion_casilla = m303_importe_rectificacion_casilla(
+        operation.revision_for_context(
+            str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        )
     )
-    return nota_three
+    return rectificacion_casilla is not None and revision.casilla_values.get(rectificacion_casilla) is not None
 
 
 def _export_refund_account_is_missing(refund_account: RefundAccount | None) -> bool:
@@ -509,12 +521,13 @@ def _require_export_accounts(
     resolved_result_disposition: ResultDisposition | None,
     prior_domiciliation_election: PriorDomiciliationElection,
     amendment_evidence: AmendmentEvidence | None,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Refuse an export whose bank-account page has no account to carry.
 
     Returns whether Modelo 303 Nota 3 requires the refund account on the
     account page even though the disposition itself is not a refund: a
-    rectificativa stating casilla 111 under a kept prior domiciliation.
+    rectificativa stating the rectified amount under a kept prior domiciliation.
     """
     context: dict[str, object] = {"calculation_revision_id": command.calculation_revision_id}
     if resolved_result_disposition is ResultDisposition.DOMICILIACION:
@@ -523,7 +536,7 @@ def _require_export_accounts(
         require_admissible_charge_account(work_unit=work_unit, charge_account=charge_account)
         return False
     nota_three = m303_nota_three_requires_refund_account(
-        work_unit, revision, prior_domiciliation_election, amendment_evidence
+        work_unit, revision, prior_domiciliation_election, amendment_evidence, operation=operation
     )
     refund = resolved_result_disposition is not None and result_disposition_is_refund(resolved_result_disposition)
     if (refund or nota_three) and _export_refund_account_is_missing(refund_account):

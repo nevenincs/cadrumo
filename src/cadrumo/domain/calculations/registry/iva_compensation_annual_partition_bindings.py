@@ -18,6 +18,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import StandardPeriodCode
 from .errors import RegistryValidationError
 
 __all__ = [
@@ -27,7 +28,6 @@ __all__ = [
     "M303_COMPENSATION_PENDING_PRIOR_CASILLA",
     "M303_COMPENSATION_POSTERIOR_CASILLA",
     "M303_COMPENSATION_RESULTADO_CASILLA",
-    "M303_COMPENSATION_RESULTADO_FINAL_CASILLA",
     "M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA",
     "M390_COMPENSATION_LAST_PERIOD_CASILLA",
     "IvaCompensationAnnualPartition",
@@ -79,10 +79,6 @@ M303_COMPENSATION_PENDING_PRIOR_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores",
     surface="M303_COMPENSATION_PENDING_PRIOR_CASILLA",
 )
-M303_COMPENSATION_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id(
-    "71",
-    surface="M303_COMPENSATION_RESULTADO_FINAL_CASILLA",
-)
 M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97",
     surface="M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA",
@@ -99,7 +95,12 @@ _IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE_IDS: tuple[CasillaId, ...] = (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
 )
-_IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
+_IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS: tuple[str, ...] = (
+    StandardPeriodCode.Q1.value,
+    StandardPeriodCode.Q2.value,
+    StandardPeriodCode.Q3.value,
+    StandardPeriodCode.Q4.value,
+)
 
 
 class IvaCompensationAnnualPartitionProvider(BaseModel):
@@ -133,6 +134,6 @@ class IvaCompensationAnnualPartitionProvider(BaseModel):
     def _source_periods_are_full_year(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if value != _IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS:
             raise RegistryValidationError(
-                "iva_compensation_annual_partition selector must declare source_periods ('1T', '2T', '3T', '4T')",
+                "iva_compensation_annual_partition selector must declare every quarter of the year as source_periods",
             )
         return value

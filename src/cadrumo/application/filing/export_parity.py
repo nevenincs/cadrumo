@@ -64,21 +64,21 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
 from ...core.aggregation import BindingAggregationOp
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_requires_bank_account
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.export import fixed_width_record_casilla_ids
 from ...domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
+from ...domain.calculations.registry.m303_casilla_roles import m303_importe_rectificacion_casilla
 from ...domain.calculations.registry.rate_box_partition import (
     RateBoxPartition,
     rate_box_coverage_shortfalls,
 )
-from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -99,7 +99,6 @@ from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor
 #: domiciliación filing needs this page for its IBAN alone, and suppressing it
 #: there filed a direct-debit election with no account for AEAT to charge.
 _DID_PAGE_RECORD_TYPE = "domiciliacion"
-_M303_CASILLA_111: CasillaId = validated_casilla_id("111", surface="M303 Nota 3 DID predicate")
 _M303_RECTIFICATIVA_HEADER = FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA
 
 
@@ -108,18 +107,22 @@ def _m303_nota_three_requires_bank_account(
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
+    revision: ModeloRevision,
 ) -> bool:
     """Return whether M303 Nota 3 independently requires the DID page.
 
-    Casilla 111 is semantically present when it has a value, including zero;
-    truthiness would incorrectly collapse a stated zero into an absent field.
-    The typed cancellation election alone disables this Nota-3 requirement.
+    The rectified-amount box is what the edition declares under that role; only
+    Modelo 303 declares it, and not every edition does. It is semantically present
+    when it has a value, including zero; truthiness would incorrectly collapse a
+    stated zero into an absent field. The typed cancellation election alone
+    disables this Nota-3 requirement.
     """
+    rectificacion_casilla = m303_importe_rectificacion_casilla(revision)
     return (
-        draft.modelo == Modelo("303")
+        rectificacion_casilla is not None
         and headers.get(_M303_RECTIFICATIVA_HEADER) is True
         and prior_domiciliation_election is PriorDomiciliationElection.KEEP
-        and any(value.casilla_id == _M303_CASILLA_111 and value.value is not None for value in draft.values)
+        and any(value.casilla_id == rectificacion_casilla and value.value is not None for value in draft.values)
     )
 
 
@@ -128,6 +131,7 @@ def _did_page_required(
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
+    revision: ModeloRevision,
 ) -> bool:
     """Return whether this filing must include the DID bank-account page."""
     declaration_type = headers.get(FilingProducerKey.FILING_RESULT_DISPOSITION, "")
@@ -141,6 +145,7 @@ def _did_page_required(
         draft=draft,
         headers=headers,
         prior_domiciliation_election=prior_domiciliation_election,
+        revision=revision,
     )
 
 
@@ -150,14 +155,15 @@ def did_page_suppressed(
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
+    revision: ModeloRevision,
 ) -> bool:
     """Return whether a DID (bank-account) page record must be suppressed.
 
     The sole DID predicate is ``disposition_requires_bank_account OR Nota 3``.
-    Nota 3 means an M303 rectificativa with casilla 111 semantically present and
-    a ``KEEP`` prior-domiciliation election. It is independent of the current
-    disposition, while a selected ``CANCEL_OR_MODIFY`` disables only that added
-    path, never a DID page required by the current disposition.
+    Nota 3 means an M303 rectificativa with the rectified-amount box semantically
+    present and a ``KEEP`` prior-domiciliation election. It is independent of the
+    current disposition, while a selected ``CANCEL_OR_MODIFY`` disables only that
+    added path, never a DID page required by the current disposition.
 
     This function is shared by the renderer and parity derivations so they
     cannot disagree about which official record reaches disk.
@@ -171,6 +177,7 @@ def did_page_suppressed(
         draft=draft,
         headers=headers,
         prior_domiciliation_election=prior_domiciliation_election,
+        revision=revision,
     )
 
 
@@ -224,6 +231,7 @@ def boe_representable_casilla_ids(
                 draft=draft,
                 headers=headers,
                 prior_domiciliation_election=prior_domiciliation_election,
+                revision=schema_provider.get_snapshot(draft.modelo).revision,
             )
         ),
     )
@@ -311,7 +319,8 @@ def _rendered_row_binding_casilla_ids(
     schema_provider: RegistrySchemaAccessor,
 ) -> set[CasillaId]:
     """Return row-field casillas whose active binding value reaches a rendered record."""
-    bindings = {binding.id: binding for binding in schema_provider.get_snapshot(draft.modelo).revision.bindings}
+    revision = schema_provider.get_snapshot(draft.modelo).revision
+    bindings = {binding.id: binding for binding in revision.bindings}
     active_binding_ids = {
         value.binding_id for value in draft.binding_values if value.value is not None and value.value != ""
     }
@@ -322,6 +331,7 @@ def _rendered_row_binding_casilla_ids(
             draft=draft,
             headers=headers,
             prior_domiciliation_election=prior_domiciliation_election,
+            revision=revision,
         ):
             continue
         rendered.update(
@@ -450,6 +460,7 @@ def assert_export_mirrors_manifest(
         draft=draft,
         headers=headers,
         prior_domiciliation_election=prior_domiciliation_election,
+        revision=schema_provider.get_snapshot(draft.modelo).revision,
     )
     representable = boe_representable_casilla_ids(
         layout,
@@ -581,6 +592,7 @@ def _declared_records_for_filing(
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
+    revision: ModeloRevision,
 ) -> tuple[ExportRecordDefinition, ...]:
     """Return layout records that reach this filing's disposition."""
     return tuple(
@@ -591,6 +603,7 @@ def _declared_records_for_filing(
             draft=draft,
             headers=headers,
             prior_domiciliation_election=prior_domiciliation_election,
+            revision=revision,
         )
     )
 
@@ -624,6 +637,7 @@ def _assert_record_order_fidelity(
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
+    revision: ModeloRevision,
 ) -> None:
     """Panic if the rendered record order drifts from the registry declaration order.
 
@@ -644,6 +658,7 @@ def _assert_record_order_fidelity(
         draft=draft,
         headers=headers,
         prior_domiciliation_election=prior_domiciliation_election,
+        revision=revision,
     )
     duplicate_orders = _duplicate_record_orders(declared)
     if duplicate_orders:
