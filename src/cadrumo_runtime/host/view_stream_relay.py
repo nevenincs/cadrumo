@@ -89,12 +89,11 @@ from cadrumo_client.transport.frame_io import (
 )
 from cadrumo_client.transport.view_stream import (
     VIEW_CHUNK_FRAME_KIND,
-    ViewChunkHeader,
     write_view_document,
 )
 
 from ..adapters.worker_transport import WorkerChannel
-from .view_stream_frames import read_window_frame, validate_worker_transfer
+from .view_stream_frames import read_window_frame, validate_image_chunk, validate_worker_transfer
 from .view_stream_state import PendingViewAttach, ViewAttachGrant, ViewWindowLeg, ViewWorkerLeg
 
 _LOGGER = get_logger(__name__)
@@ -555,13 +554,7 @@ class ViewStreamRelay:
                 )
                 if kind != VIEW_CHUNK_FRAME_KIND:
                     raise _violation("view_image_interleaved")
-                header = ViewChunkHeader.decode(payload)
-                if (
-                    header.sequence != announcement.sequence
-                    or header.image_length != announcement.byte_length
-                    or header.chunk_index != expected
-                ):
-                    raise _violation("view_chunk_order")
+                header = validate_image_chunk(payload, announcement, expected)
                 leg = self._send_to_window(leg, encode_frame(VIEW_CHUNK_FRAME_KIND, payload))
                 if header.last:
                     if leg is not None:
