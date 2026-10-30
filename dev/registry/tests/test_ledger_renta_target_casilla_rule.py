@@ -66,7 +66,7 @@ def test_every_published_edition_satisfies_the_rule(modelo: str, year: int, peri
 
 @pytest.mark.parametrize("year", _YEARS)
 def test_the_published_targets_are_the_boxes_the_forms_print(year: int) -> None:
-    """Read from the AEAT Modelo 100, 130 and 131 forms, not from the declaration."""
+    """The box numbers the earlier fixed checks named, not read from the declaration."""
     modelo_100 = _revision("100", year, "0A")
     assert renta_income_target_casilla(modelo_100, modelo="100") == "0171"
     assert renta_income_target_casilla(_revision("130", year, "1T"), modelo="130") == "01"

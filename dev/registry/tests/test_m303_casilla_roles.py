@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# Read from the AEAT Modelo 303 designs: box 71 states the result in every edition,
+# Box numbers carried from the earlier fixed checks: box 71 states the result in every edition,
 # and box 111 first appears in the edition applying from September and 3T of 2024.
 _COORDINATES = (
     (2022, "4T", "71", None),

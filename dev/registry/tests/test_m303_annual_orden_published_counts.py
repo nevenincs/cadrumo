@@ -1,8 +1,8 @@
 """The published annual Orden authority carries the tables each BOE Orden prints.
 
-The figures are counted from the annexes of the annual Ordenes (BOE): Orden
-HFP/1335/2021 for 2022, HFP/1172/2022 for 2023, HFP/1359/2023 for 2024, and the
-Ordenes for 2025 and 2026 enrolled in the bundled corpus.
+These figures are the fixed counts the annual Orden checks used to assert, and they
+match the manifest rows extracted from each pinned BOE Orden. They were not recounted
+by hand from the annexes for this test.
 """
 
 from __future__ import annotations
