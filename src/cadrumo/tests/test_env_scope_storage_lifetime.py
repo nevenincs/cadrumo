@@ -72,7 +72,7 @@ def test_a_minted_root_exists_while_it_is_held() -> None:
     """
     with isolated_aeat_env():
         settings = settings_without_env_file()
-        root = Path(settings.cadrumo_local_storage_root)
+        root = Path(settings.cadrumo_storage_root)
 
         assert root.is_dir()
         assert root.name.startswith("cadrumo-settings-")
@@ -84,7 +84,7 @@ def test_a_minted_root_exists_while_it_is_held() -> None:
 def test_release_removes_every_minted_root() -> None:
     """After release the directories are gone and nothing is still tracked."""
     with isolated_aeat_env():
-        roots = [Path(settings_without_env_file().cadrumo_local_storage_root) for _ in range(3)]
+        roots = [Path(settings_without_env_file().cadrumo_storage_root) for _ in range(3)]
 
     assert len(set(roots)) == 3, "each call must mint its own root, or isolation is shared"
     assert all(root.is_dir() for root in roots)
@@ -118,9 +118,9 @@ def test_a_caller_supplied_root_is_not_minted_or_released(tmp_path: Path) -> Non
     supplied.mkdir()
 
     with isolated_aeat_env():
-        settings = settings_without_env_file(cadrumo_local_storage_root=supplied)
+        settings = settings_without_env_file(cadrumo_storage_root=supplied)
 
-    assert Path(settings.cadrumo_local_storage_root) == supplied
+    assert Path(settings.cadrumo_storage_root) == supplied
     assert not _SETTINGS_STORAGE_DIRECTORIES, "a supplied root must not be tracked for removal"
 
     release_settings_storage_directories()
@@ -366,7 +366,7 @@ def test_the_mint_prefix_is_the_swept_prefix() -> None:
     comparing the constant with itself.
     """
     with isolated_aeat_env():
-        root = Path(settings_without_env_file().cadrumo_local_storage_root)
+        root = Path(settings_without_env_file().cadrumo_storage_root)
 
     assert root.name.startswith(SETTINGS_STEM)
     release_settings_storage_directories()

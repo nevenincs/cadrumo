@@ -238,7 +238,7 @@ def test_guardian_carries_only_explicit_storage_controls_to_its_worker(monkeypat
         macos_worker_guardian.os,
         "environ",
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": "/synthetic/root",
+            "CADRUMO_STORAGE_ROOT": "/synthetic/root",
             "CADRUMO_AUTHORITY_ROOT": "/synthetic/published-authority",
             "TMPDIR": "/synthetic/scratch",
             "PRIVATE_CREDENTIAL": "never-forwarded",
@@ -247,7 +247,7 @@ def test_guardian_carries_only_explicit_storage_controls_to_its_worker(monkeypat
     )
     assert _run() == 0
     assert kernel.launched[0][1]["env"] == _ENVIRONMENT | {
-        "CADRUMO_LOCAL_STORAGE_ROOT": "/synthetic/root",
+        "CADRUMO_STORAGE_ROOT": "/synthetic/root",
         "CADRUMO_AUTHORITY_ROOT": "/synthetic/published-authority",
         "TMPDIR": "/synthetic/scratch",
     }

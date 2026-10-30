@@ -27,7 +27,7 @@ _OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=F
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports(
     session=OperatorScopeSession(
         bucket_id=_BUCKET_A,
-        storage_root=load_settings().cadrumo_local_storage_root,
+        storage_root=load_settings().cadrumo_storage_root,
     ),
 )
 _NO_SESSION_PORTS = build_inward_operator_scope_ports(session=None)

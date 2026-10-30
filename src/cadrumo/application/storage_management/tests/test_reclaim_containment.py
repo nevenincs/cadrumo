@@ -66,7 +66,7 @@ class TestDerivedPreflight:
 
     @pytest.mark.parametrize("area", [StorageArea.LOGS, StorageArea.CACHE])
     def test_no_selected_target_contains_a_protected_declared_descendant(self, area: StorageArea, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             selected = {category: storage_path(category) for category in _targets(area)}
             protected = {
                 category: storage_path(category)
@@ -82,7 +82,7 @@ class TestDerivedPreflight:
 class TestFilesystemContainment:
     def test_reclaim_does_not_follow_a_link_outside_its_target(self, tmp_path) -> None:
         category = _targets(StorageArea.CACHE)[0]
-        with override_settings(cadrumo_local_storage_root=tmp_path / "storage"):
+        with override_settings(cadrumo_storage_root=tmp_path / "storage"):
             target = storage_path(category)
             target.mkdir(parents=True, exist_ok=True)
             outside = tmp_path / "outside"
@@ -103,7 +103,7 @@ class TestFilesystemContainment:
 
     def test_reclaim_refuses_a_declared_target_redirected_outside_storage(self, tmp_path) -> None:
         area = StorageArea.LOGS
-        with override_settings(cadrumo_local_storage_root=tmp_path / "storage"):
+        with override_settings(cadrumo_storage_root=tmp_path / "storage"):
             redirected_category, ordinary_category = _independent_directory_targets(area)
             redirected_target = storage_path(redirected_category)
             redirected_target.parent.mkdir(parents=True, exist_ok=True)
@@ -128,7 +128,7 @@ class TestFilesystemContainment:
 
     def test_reclaim_deletes_undeclared_nesting_beneath_a_selected_target(self, tmp_path) -> None:
         category = _targets(StorageArea.LOGS)[0]
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(category)
             nested = target / "undeclared" / "deep" / "entry.log"
             nested.parent.mkdir(parents=True, exist_ok=True)

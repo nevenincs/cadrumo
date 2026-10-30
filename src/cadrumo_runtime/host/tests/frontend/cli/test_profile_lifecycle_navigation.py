@@ -90,10 +90,10 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
     use create_profile_via_cli.
     """
     # isolated_profile_storage already set
-    # cadrumo_local_storage_root to tmp_path / "cadrumo-storage". Sign-in and
+    # cadrumo_storage_root to tmp_path / "cadrumo-storage". Sign-in and
     # every profile verb are hosted by the runtime, so native profile workers
     # serve the root, one connection per profile as on the desktop.
-    root = load_settings().cadrumo_local_storage_root
+    root = load_settings().cadrumo_storage_root
     with native_profile_view_server(root):
         yield root
 

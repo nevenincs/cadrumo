@@ -137,7 +137,7 @@ def _activated_engine(db_path: Path):
     dispose_engine()
     url = f"sqlite:///{db_path.as_posix()}"
     with override_settings(
-        cadrumo_local_storage_root=db_path.parent / "storage-root",
+        cadrumo_storage_root=db_path.parent / "storage-root",
         cadrumo_database_url=url,
     ) as settings:
         engine = create_engine_from_settings(settings)
@@ -346,7 +346,7 @@ def assert_secure_repository_contract[T: BaseModel](
     For each check the function:
 
       1. Disposes any cached process-default engine.
-      2. Rebinds ``CADRUMO_DATABASE_URL`` and ``CADRUMO_LOCAL_STORAGE_ROOT``
+      2. Rebinds ``CADRUMO_DATABASE_URL`` and ``CADRUMO_STORAGE_ROOT``
          through ``override_settings`` to a fresh SQLite file under ``tmp_path``.
       3. Builds a real engine for that URL and materialises the ORM
          schema.

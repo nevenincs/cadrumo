@@ -196,7 +196,7 @@ def test_enrolled_api_key_and_reference_read_only_their_profile_and_cannot_becom
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                with override_settings(cadrumo_local_storage_root=root, cadrumo_output_language="en"):
+                with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
                     shown = _invoke_api(
                         invoke_cli=run_cadrumo_cli,
                         profile_id=profile_id,

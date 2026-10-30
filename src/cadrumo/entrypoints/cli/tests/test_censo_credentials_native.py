@@ -104,9 +104,7 @@ def test_native_censo_password_setup_persists_for_next_invocation(
             requested_provider=provider.value,
             certificate_secret_backend_factory=build_certificate_secret_backend,
             operator_scope_ports=build_operator_scope_ports(),
-            # The fixture overrides its in-process secret store to a sibling
-            # directory; native workers use the canonical root-relative store.
-            settings=load_settings().model_copy(update={"cadrumo_secret_store_dir": profile.storage_root / "secrets"}),
+            settings=load_settings(),
         ) as snapshot:
             if provider is AuthProviderKind.CERTIFICATE:
                 assert snapshot.certificate_credentials is not None

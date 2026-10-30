@@ -363,7 +363,7 @@ def test_google_auth_producers_do_not_offer_interactive_profile_creation() -> No
 
 def test_active_profile_refusal_has_an_exact_operator_decision_verdict(tmp_path) -> None:
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
         resolve_active_profile()
@@ -384,7 +384,7 @@ def test_profile_record_session_refusal_has_an_exact_operator_decision_verdict(t
 
     with (
         override_settings(
-            cadrumo_local_storage_root=storage_root,
+            cadrumo_storage_root=storage_root,
             cadrumo_active_profile=profile_id,
         ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,

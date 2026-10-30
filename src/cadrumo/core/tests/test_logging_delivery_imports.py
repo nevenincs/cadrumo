@@ -100,8 +100,7 @@ def _run(tmp_path: Path, script: str, *arguments: str) -> dict[str, object]:
         ],
         env={
             **os.environ,
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),
-            "CADRUMO_LOG_DIR": str(tmp_path / "logs"),
+            "CADRUMO_STORAGE_ROOT": str(tmp_path / "root"),
             "CADRUMO_LOG_STDERR_LEVEL": "CRITICAL",
         },
         capture_output=True,

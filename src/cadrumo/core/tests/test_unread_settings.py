@@ -108,7 +108,7 @@ def test_a_name_outside_the_owned_families_is_left_to_its_owner(monkeypatch: pyt
 
 
 def test_the_unread_names_are_those_in_an_owned_family_that_no_setting_reads() -> None:
-    read = {"CADRUMO_LLM_DEFAULT_TIMEOUT_S", "CADRUMO_TOKEN_DIR"}
+    read = {"CADRUMO_LLM_DEFAULT_TIMEOUT_S", "CADRUMO_STORAGE_ROOT"}
 
     assert unread_setting_names(
         ["cadrumo_llm_gone", "CADRUMO_LLM_DEFAULT_TIMEOUT_S", "CADRUMO_UNRELATED", "CADRUMO_LLM_ALSO_GONE"], read

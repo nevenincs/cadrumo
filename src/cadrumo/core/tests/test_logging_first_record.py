@@ -18,6 +18,8 @@ import pytest
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.hang_guard import PROCESS_HANG_GUARD_SECONDS
 
+from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy_locations import storage_location
 from ..type_guards import is_object_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -109,12 +111,9 @@ _WARNING_LINE = rf"{_STAMP} \[WARNING\] cadrumo\.tests\.first_record: first reco
 def _run_probe(
     tmp_path: Path, mode: str, *, probe: str = _PROBE, kind: str = "project"
 ) -> tuple[dict[str, object], str, Path]:
-    log_dir = tmp_path / "logs"
-    env = {
-        **os.environ,
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),
-        "CADRUMO_LOG_DIR": str(log_dir),
-    }
+    storage_root = tmp_path / "root"
+    log_dir = storage_root / storage_location(StorageCategory.LOGS).relative_path()
+    env = {**os.environ, "CADRUMO_STORAGE_ROOT": str(storage_root)}
     if mode == "document-deferred":
         env["CADRUMO_LOG_STDERR_LEVEL"] = "WARNING"
     completed = run_audited_process(

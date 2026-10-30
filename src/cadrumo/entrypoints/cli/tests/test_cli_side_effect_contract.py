@@ -85,7 +85,7 @@ _PROBE = textwrap.dedent(
         return sorted(p.relative_to(root).as_posix() for p in root.rglob("*")) if root.exists() else []
 
     import_root = base / "import" / "state"
-    os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(import_root)
+    os.environ["CADRUMO_STORAGE_ROOT"] = str(import_root)
 
     import typer.main
     from click.testing import CliRunner
@@ -99,7 +99,7 @@ _PROBE = textwrap.dedent(
     for index, argv in enumerate(leaves):
         root = base / f"leaf-{index:03d}" / "state"
         before = scan(root)
-        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+        os.environ["CADRUMO_STORAGE_ROOT"] = str(root)
         CliRunner().invoke(command, argv)
         strayed = {}
         for earlier, seen in observed.items():
@@ -266,7 +266,7 @@ def test_the_probe_sees_state_a_writing_command_creates() -> None:
                 sys.executable,
                 "-c",
                 "import os, sys, json; from pathlib import Path; "
-                "root = sys.argv[1]; os.environ['CADRUMO_LOCAL_STORAGE_ROOT'] = root; "
+                "root = sys.argv[1]; os.environ['CADRUMO_STORAGE_ROOT'] = root; "
                 "from cadrumo.core.storage_materialization import ensure_storage_tree; ensure_storage_tree(); "
                 "base = Path(root); "
                 "print(json.dumps(sorted(p.relative_to(base).as_posix() for p in base.rglob('*'))))",

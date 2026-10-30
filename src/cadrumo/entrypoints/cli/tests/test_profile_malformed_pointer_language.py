@@ -25,15 +25,14 @@ def _profile_storage_env(*, storage_root: Path, tmp_path: Path) -> dict[str, str
     for name in (
         "CADRUMO_ACTIVE_PROFILE",
         "CADRUMO_DATABASE_URL",
-        "CADRUMO_LOCAL_STORAGE_ROOT",
+        "CADRUMO_STORAGE_ROOT",
         "CADRUMO_OUTPUT_LANGUAGE",
         "CADRUMO_SECRET_PASSPHRASE",
-        "CADRUMO_SECRET_STORE_DIR",
     ):
         env.pop(name, None)
     env.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
         },
     )

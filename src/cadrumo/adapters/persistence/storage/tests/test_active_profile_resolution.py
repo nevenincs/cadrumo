@@ -95,7 +95,7 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
             dangling_bytes = target.read_bytes()
 
             with (
-                override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator"),
+                override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile="operator"),
                 bound_profile_record_session(session),
             ):
                 state = WorkflowState()
@@ -112,7 +112,7 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
                 assert protected_health.repairable_by_clearing_pointer is False
                 assert target.read_bytes() == dangling_bytes
 
-            with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+            with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
                 exposed_health = assess_active_profile_health(operation=_authority_operation_for_test)
                 repaired = repair_active_profile_pointer(
                     clear_active=True, confirmed=True, operation=_authority_operation_for_test

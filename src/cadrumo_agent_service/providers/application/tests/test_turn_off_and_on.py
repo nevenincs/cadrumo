@@ -8,7 +8,6 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.core.storage_environment import StorageMode
 
 from ...domain.catalog import ProviderConsumer
 from ...domain.record import AssistantAuth, CredentialState, ProviderSettingsRecord
@@ -41,9 +40,7 @@ _KEY = "synthetic-profile-key"
 
 
 def _service(store: MemoryProviderSettingsStore) -> ProviderSettingsService:
-    return ProviderSettingsService(
-        store=store, catalog_source=StaticCatalogSource(), storage_mode=StorageMode.INSTALLED
-    )
+    return ProviderSettingsService(store=store, catalog_source=StaticCatalogSource())
 
 
 def _resolve(store: MemoryProviderSettingsStore, lane: str) -> object:

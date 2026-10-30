@@ -21,10 +21,8 @@ from ....tests.aeat_literal_fixtures import (
     REDACTION_INTERNAL_PATH_CANARY,
     aeat_url,
 )
-from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
 from ...redaction.tax_identity_admission import bind_tax_identity_admission
-from ...storage_taxonomy import StorageCategory
 from ..models import (
     ArgumentRecord,
     ArgumentSource,
@@ -86,7 +84,7 @@ def test_save_trace_redacts_sensitive_arguments(tmp_path: Path) -> None:
         ),
     )
 
-    with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+    with override_settings(cadrumo_storage_root=tmp_path):
         for trace, forbidden_fragments, required_fragments in cases:
             save_trace(trace)
             on_disk = (runs_dir() / trace.run_id / TRACE_FILENAME).read_text(encoding="utf-8")
@@ -101,7 +99,7 @@ def test_save_events_append_redacts_url_path(
     tmp_path: Path,
 ) -> None:
     """A URL with sensitive path on a NavigationPayload event must be host-only on disk."""
-    with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+    with override_settings(cadrumo_storage_root=tmp_path):
         event = RunEvent(
             run_id="0123456789abcdef",
             step_id="step-0",
@@ -131,7 +129,7 @@ def test_event_append_hashes_the_whole_account_without_identity_admission(tmp_pa
         timestamp=_FINISHED_AT,
         module=__name__,
     )
-    with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)), bind_tax_identity_admission(None):
+    with override_settings(cadrumo_storage_root=tmp_path), bind_tax_identity_admission(None):
         target = save_events_append(event.run_id, event)
     document = json.loads(target.read_text(encoding="utf-8"))
     expected = "sha256:" + hashlib.sha256(account.encode("utf-8")).hexdigest()[:8]

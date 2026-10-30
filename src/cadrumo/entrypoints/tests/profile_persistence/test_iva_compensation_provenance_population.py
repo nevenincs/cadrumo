@@ -86,6 +86,8 @@ from ....core.modelo import Modelo
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
@@ -526,7 +528,7 @@ def population(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Population
     ):
         ports = compose_filed_observation_persistence_ports(
             bucket_id=runtime_profile.bucket_id,
-            output_root=runtime_profile.settings.cadrumo_live_state_dir,
+            output_root=storage_path(StorageCategory.LIVE_STATE, settings=runtime_profile.settings),
             objects=runtime_profile.repository,
             operation=operation,
         )

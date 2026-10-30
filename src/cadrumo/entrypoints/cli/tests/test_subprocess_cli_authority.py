@@ -15,13 +15,13 @@ def test_authority_selector_survives_a_full_product_environment_scrub(
     """Keep the read-only authority selector while isolating storage settings."""
     authority_root = r"Y:\authority-snapshot"
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", authority_root)
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", r"Y:\ambient-storage")
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", r"Y:\ambient-storage")
     monkeypatch.setenv("CADRUMO_SECRET_PASSPHRASE", "ambient-secret")
 
     environment = subprocess_cli_env(strip_prefixes=("AEAT_", "PYTEST_", "CADRUMO_"))
 
     assert environment["CADRUMO_AUTHORITY_ROOT"] == authority_root
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" not in environment
+    assert "CADRUMO_STORAGE_ROOT" not in environment
     assert "CADRUMO_SECRET_PASSPHRASE" not in environment
 
 

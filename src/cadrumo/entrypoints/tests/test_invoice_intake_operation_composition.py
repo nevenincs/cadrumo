@@ -20,7 +20,6 @@ from ...application.invoices.creation_wizard import create_invoice_via_wizard
 from ...application.ledger.import_ports import LedgerImportReaderUnavailableError
 from ...application.operations.error_detail import build_operation_error_detail
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
-from ...core.config import override_settings
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.model_roles import ModelRole
 from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventType
@@ -144,11 +143,6 @@ def test_a_book_whose_mapping_reader_is_missing_refuses_with_its_typed_verdict(
     admissions: list[str] = []
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)),
-        override_settings(
-            cadrumo_llm_cache_dir=tmp_path / "cache",
-            cadrumo_llm_usage_dir=tmp_path / "usage",
-            cadrumo_llm_run_record_dir=tmp_path / "run-record",
-        ),
         serving_agent(lane=ON_HOST_LANE, lookup_refusal=refusal) as service,
     ):
         ports = build_invoice_intake_ports(

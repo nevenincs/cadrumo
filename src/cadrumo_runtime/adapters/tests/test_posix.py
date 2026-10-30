@@ -18,9 +18,11 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.core.config import load_settings
-from cadrumo.core.storage_environment import storage_directory
 from cadrumo.core.storage_materialization import ensure_storage_tree
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
 from cadrumo.tests.env_scope import derived_storage_settings
+from cadrumo.tests.process_support import runtime_namespace_base
 from cadrumo_client.contracts.contracts import ClientHello, EndpointPresence, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.transport import posix_endpoint
 from cadrumo_client.transport.frame_io import read_document
@@ -40,8 +42,7 @@ pytestmark = [
 @pytest.fixture
 def namespace() -> Iterator[Path]:
     # Unix socket path limits apply to the entire path, including pytest's name.
-    base = storage_directory("CADRUMO_RUNTIME_SOCKET_DIR", "runtime")
-    base.mkdir(parents=True, exist_ok=True, mode=0o700)
+    base = runtime_namespace_base()
     with tempfile.TemporaryDirectory(prefix="s-", dir=base) as root:
         yield Path(root) / "ipc"
 
@@ -269,7 +270,7 @@ def test_the_runtime_endpoint_creates_its_own_private_namespace_over_materialize
     with derived_storage_settings(root):
         settings = load_settings()
         ensure_storage_tree(settings)
-        runtime_namespace = settings.cadrumo_connection_socket_dir
+        runtime_namespace = storage_path(StorageCategory.CONNECTION_SOCKETS, settings=settings)
         assert not runtime_namespace.exists()
         endpoint = PosixEndpoint(storage_root=root, namespace=runtime_namespace)
         assert stat.S_IMODE(runtime_namespace.stat().st_mode) == 0o700
@@ -287,22 +288,16 @@ def test_the_runtime_endpoint_creates_its_own_private_namespace_over_materialize
             endpoint.close()
 
 
-@pytest.mark.parametrize("explicit_override", [False, True])
-def test_materialization_preserves_an_insecure_namespace_for_native_refusal(
-    namespace: Path, explicit_override: bool
-) -> None:
+def test_materialization_preserves_an_insecure_namespace_for_native_refusal(namespace: Path) -> None:
     """Provisioning never chmods a preexisting namespace into being trusted."""
     root = namespace.parent / "state"
-    runtime_namespace = namespace if explicit_override else root / "runtime"
+    runtime_namespace = root / storage_location(StorageCategory.CONNECTION_SOCKETS).relative_path()
     runtime_namespace.mkdir(parents=True, mode=0o755)
     runtime_namespace.chmod(0o755)
     sentinel = runtime_namespace / "operator-state"
     sentinel.write_bytes(b"preserve")
     with derived_storage_settings(root):
-        settings = load_settings()
-        if explicit_override:
-            settings = settings.model_copy(update={"cadrumo_connection_socket_dir": runtime_namespace})
-        ensure_storage_tree(settings)
+        ensure_storage_tree(load_settings())
         assert stat.S_IMODE(runtime_namespace.stat().st_mode) == 0o755
         assert sentinel.read_bytes() == b"preserve"
         with pytest.raises(RefusalError) as refused:
@@ -589,24 +584,25 @@ def test_deadline_bounds_partial_frame() -> None:
             right.close()
 
 
-def test_configured_socket_directory_separates_runtime_and_workers(
-    tmp_path: Path,
-    namespace: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("CADRUMO_RUNTIME_SOCKET_DIR", str(namespace))
+def test_the_root_connection_namespace_separates_runtime_and_workers(namespace: Path) -> None:
+    root = namespace.parent / "state"
+    root.mkdir(mode=0o700)
     worker_id = uuid4()
-    owner = PosixEndpoint(storage_root=tmp_path)
-    worker = PosixEndpoint(storage_root=tmp_path, worker_namespace=worker_id)
-    contender = PosixEndpoint(storage_root=tmp_path, worker_namespace=worker_id)
-    try:
-        owner.listen()
-        worker.listen()
-        with pytest.raises(RefusalError) as caught:
-            contender.listen()
-        assert caught.value.reason is RefusalCode.OWNER_BUSY
-        assert len(tuple(namespace.glob("*.sock"))) == 2
-    finally:
-        contender.close()
-        worker.close()
-        owner.close()
+    with derived_storage_settings(root):
+        expected_namespace = storage_path(StorageCategory.CONNECTION_SOCKETS).resolve()
+        owner = PosixEndpoint(storage_root=root)
+        worker = PosixEndpoint(storage_root=root, worker_namespace=worker_id)
+        contender = PosixEndpoint(storage_root=root, worker_namespace=worker_id)
+        try:
+            owner.listen()
+            worker.listen()
+            with pytest.raises(RefusalError) as caught:
+                contender.listen()
+            assert caught.value.reason is RefusalCode.OWNER_BUSY
+            assert owner._path.parent == worker._path.parent == expected_namespace
+            assert owner._path.name != worker._path.name
+            assert owner._path.is_socket() and worker._path.is_socket()
+        finally:
+            contender.close()
+            worker.close()
+            owner.close()

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core.config import Settings, override_settings
+from ......core.config import override_settings
 from ......tests.log_records import delivered_text
 from ...bucket.errors import BucketLockedError
 from ..active_session import (
@@ -94,7 +94,7 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
 
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path / "state",
+            cadrumo_storage_root=tmp_path / "state",
             cadrumo_database_url=f"sqlite:///{explicit_db.as_posix()}",
         ),
         caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.master_key.bucket_session"),
@@ -103,14 +103,6 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
 
     assert session.sealed is True
     assert str(tmp_path) not in delivered_text(caplog)
-
-
-def _settings_with_store(tmp_path: Path) -> Settings:
-    with override_settings(
-        cadrumo_local_storage_root=tmp_path / "state",
-        cadrumo_secret_store_dir=tmp_path / "fallback-store",
-    ) as settings:
-        return settings
 
 
 def _write_registered_bucket(root: Path, bucket_id: str) -> None:

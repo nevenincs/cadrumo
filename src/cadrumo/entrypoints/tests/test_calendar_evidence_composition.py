@@ -31,9 +31,10 @@ from ...application.overview.evidence import (
 from ...application.overview.home import HomeAvailability, HomeZoneState
 from ...application.overview.tests.calendar_test_support import profile
 from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.config import load_settings
 from ...core.hashing import sha256_hex
 from ...core.period import Period
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import ObligationStatus
 from ...tests.aeat_literal_fixtures import (
@@ -58,7 +59,7 @@ def _store_observation(
     wrong_revision: bool = False,
     captured_at: tuple[datetime, ...] = (_CAPTURED_AT,),
 ) -> FiledDeclaracionObservation:
-    store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+    store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
     body = _RAW_MARKER.encode("utf-8")
     artefacts = tuple(
         store.persist_artefact(
@@ -174,7 +175,7 @@ def test_an_unconfirmed_coordinate_does_not_erase_a_healthy_encrypted_neighbour(
         unconfirmed = _store_observation(
             operation, expediente="3032025Q2ABCDEFGH12345678", period="2T", wrong_revision=True
         )
-        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+        store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         assert len(store.list_observations()) == 2
         read = compose_calendar_aeat_reader(operation)
         outcome = read()
@@ -195,7 +196,7 @@ def test_an_empty_encrypted_history_is_never_captured_and_a_locked_read_is_unava
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+        store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         assert store.list_observations() == ()
         read = compose_calendar_aeat_reader(operation)
         outcome = read()
@@ -224,7 +225,7 @@ def test_a_later_successful_empty_read_preserves_confirmed_metadata_as_stale(
                 observation.modelo, observation.ejercicio, observation.period, observation.expediente_id
             ),
         )
-        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+        store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         assert store.list_observations() == ()
         outcome = read()
         assert outcome.state.availability is HomeAvailability.STALE

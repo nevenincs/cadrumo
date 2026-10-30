@@ -6,7 +6,7 @@ import threading
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
-from typing import override
+from typing import Any, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -30,7 +30,6 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileRepeatableRowUpdateOperationRequest,
 )
 from cadrumo.application.user_profile.view_operation import ProfileViewOperationProjection, ProfileViewPageKind
-from cadrumo.core.config import Settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.external_constants import OutputLanguage
@@ -165,13 +164,13 @@ async def test_onboarding_source_buttons_reach_the_runtime_handoff(
     client = _Client(uuid4())
     requests: list[AeatSyncOperationRequestV1] = []
     settings_threads: list[int] = []
-    load_settings = manager_client.load_settings
+    storage_path = manager_client.storage_path
 
-    def recorded_settings() -> Settings:
+    def recorded_storage_path(*args: Any, **kwargs: Any) -> Path:
         settings_threads.append(threading.get_ident())
-        return load_settings()
+        return storage_path(*args, **kwargs)
 
-    monkeypatch.setattr(manager_client, "load_settings", recorded_settings)
+    monkeypatch.setattr(manager_client, "storage_path", recorded_storage_path)
 
     async def handoff(request: AeatSyncOperationRequestV1, /) -> OperationControllerPort:
         requests.append(request)

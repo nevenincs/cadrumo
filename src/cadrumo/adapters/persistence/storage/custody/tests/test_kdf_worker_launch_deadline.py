@@ -49,7 +49,7 @@ def test_a_child_whose_creation_outlasts_the_deadline_still_attests_and_derives_
     monkeypatch.setattr(process_boundary, "_launch_worker_process", blocked_create)
     worker = _SupervisedKdfWorker(
         deadline=time.monotonic() + _BUDGET_SECONDS,
-        settings=Settings(cadrumo_local_storage_root=tmp_path),
+        settings=Settings(cadrumo_storage_root=tmp_path),
     )
 
     with worker:

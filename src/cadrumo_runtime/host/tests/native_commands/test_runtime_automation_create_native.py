@@ -123,7 +123,7 @@ def test_installed_create_waits_for_separate_human_decision_and_protects_candida
                 proposal = _proposal()
 
                 def invoke_create() -> Result:
-                    with override_settings(cadrumo_local_storage_root=root, cadrumo_output_language="en"):
+                    with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
                         return invoke_runtime_cli(
                             (
                                 "--format",

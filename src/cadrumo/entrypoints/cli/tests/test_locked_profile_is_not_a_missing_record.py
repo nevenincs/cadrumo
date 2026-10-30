@@ -135,7 +135,7 @@ def test_a_locked_profile_reports_a_lock_and_routes_the_operator_to_login(tmp_pa
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         _publish_in_a_separate_process(tmp_path)
 
-        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
             health = assess_active_profile_health(operation=_authority_operation_for_test)
 
         assert health.status == "profile_locked"
@@ -170,7 +170,7 @@ def test_a_locked_profile_reports_the_same_lock_when_the_caller_supplies_state(t
 
         _publish_in_a_separate_process(tmp_path)
 
-        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
             supplied = assess_active_profile_health(WorkflowState(), operation=_authority_operation_for_test)
             loaded = assess_active_profile_health(operation=_authority_operation_for_test)
 
@@ -188,7 +188,7 @@ def test_an_unlocked_profile_is_read_through_to_ready(tmp_path: Path) -> None:
         _publish_in_a_separate_process(tmp_path)
         _bind_real_custody_session(tmp_path)
 
-        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
             health = assess_active_profile_health(operation=_authority_operation_for_test)
 
         assert health.status == "ready"
@@ -201,7 +201,7 @@ def test_a_selector_with_no_committed_capsule_is_not_softened_into_a_lock(tmp_pa
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         write_pointer(tmp_path, BucketPointer.selected(bucket_id=PROFILE_ID, transition_revision=1))
 
-        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
             health = assess_active_profile_health(operation=_authority_operation_for_test)
 
         assert health.status == "dangling_pointer"
@@ -216,7 +216,7 @@ def test_a_record_destroyed_under_a_live_session_reports_unreadable_not_locked(t
         _bind_real_custody_session(tmp_path)
         _destroy_the_profile_record_row(tmp_path)
 
-        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
             health = assess_active_profile_health(operation=_authority_operation_for_test)
 
         assert health.status == "profile_record_unreadable"

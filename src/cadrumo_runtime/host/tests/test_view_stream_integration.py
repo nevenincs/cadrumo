@@ -83,7 +83,7 @@ from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import Settings, load_settings
-from cadrumo.core.logging import default_log_file_path
+from cadrumo.core.logging import flush_logging
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -521,7 +521,6 @@ async def _running_view(
         browser_session_factory=boundary.browser_session_factory(profile_name="sede-view-provider"),
         operator_scope_ports=world.operator_scope_ports,
         browser_resources_factory=BrowserRuntimeResourceScope,
-        provider_preflight=lambda _profile_id, _operation: None,
         view_browser_factory=_view_browser_factory(site),
         stream_opener=open_stream,
     )
@@ -888,8 +887,16 @@ async def test_a_scripted_session_streams_the_page_blocks_nothing_and_publishes_
 
         # The project's file sink, the operation journal and the view's settlement record are all there to scan.
 
-        product_log = default_log_file_path()
-
+        # The file sink is bound where this process first configured logging, which
+        # per-test storage roots do not move.
+        product_log = Path(
+            next(
+                sink.baseFilename
+                for sink in (getattr(handler, "sink", None) for handler in logging.getLogger().handlers)
+                if hasattr(sink, "baseFilename")
+            )
+        )
+        flush_logging()
         assert product_log.is_file()
 
         assert any(path.name.endswith(".json") for path in _files_under(journals))

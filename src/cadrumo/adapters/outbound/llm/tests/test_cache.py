@@ -22,6 +22,8 @@ import pytest
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider, RetiredLLMProvider
 from .....core.directory_scan import scan_directory
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from ....persistence.llm.cache import LLMCache
 from ..models import LLMRequest, LLMResponse, RecordedLLMProvider
 
@@ -163,10 +165,11 @@ def test_a_response_redaction_would_alter_is_never_replayed(tmp_path: Path) -> N
 
 
 def test_cache_default_root_uses_central_settings(tmp_path: Path) -> None:
-    """Direct cache construction must honor the centralized cache directory setting."""
+    """Direct cache construction must honor the centralized storage root."""
 
-    configured_root = tmp_path / "configured-cache"
-    with override_settings(cadrumo_llm_cache_dir=configured_root):
+    storage_root = tmp_path / "configured-storage"
+    configured_root = storage_root / storage_location(StorageCategory.LLM_CACHE).relative_path()
+    with override_settings(cadrumo_storage_root=storage_root):
         cache = LLMCache()
 
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")

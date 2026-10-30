@@ -8,7 +8,7 @@ recovery verb crashed with ``NoActiveBucketSessionError`` from the
 same cold-start gap it was meant to recover from.
 
 These tests invoke each repair verb against a fresh
-``CADRUMO_LOCAL_STORAGE_ROOT`` with no profile pointer, no encrypted
+``CADRUMO_STORAGE_ROOT`` with no profile pointer, no encrypted
 database, and no buckets directory, and assert a clean exit. A verb
 that re-introduces a session requirement, or that crashes on the
 absent per-bucket database URL, fails loudly here.

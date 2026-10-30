@@ -239,6 +239,26 @@ async def test_a_manual_cl_ve_permanente_login_with_empty_custody_publishes_and_
 
 
 @pytest.mark.asyncio
+async def test_a_missing_certificate_still_opens_a_real_signed_out_view(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with certificate_profile(tmp_path, operation):
+        certificate = load_settings().cadrumo_certificate_path
+        assert certificate is not None
+        certificate.unlink()
+        async with opened_http_boundary() as boundary:
+            boundary.configure("failure")
+            host = OperationHost()
+            async with _panel(boundary, host, operation, name="view-missing-certificate") as panel:
+                assert not panel.sign_in.signed_in
+                assert panel.sign_in.baseline.storage_state_sha256 is None
+                await panel.view.context.pages[0].wait_for_load_state("load")
+                panel.start()
+                assert panel.browsing is not None and not panel.browsing.done()
+                assert host.effects == []
+
+
+@pytest.mark.asyncio
 async def test_signed_out_loads_that_change_no_cookie_are_verified_once(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
@@ -458,8 +478,7 @@ async def test_the_cli_shows_a_qr_login_in_a_window_and_the_view_keeps_it_headle
 ) -> None:
     """A QR login needs a visible page: the CLI opens a headed browser, the view shows it in the panel."""
     qr_settings = Settings(
-        cadrumo_token_dir=tmp_path,
-        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_storage_root=tmp_path / "storage",
         cadrumo_clave_movil_dni_nie=SecretStr(CERTIFICATE_NIF),
         cadrumo_browser_headless=True,
         cadrumo_clave_prefer_non_qr=False,

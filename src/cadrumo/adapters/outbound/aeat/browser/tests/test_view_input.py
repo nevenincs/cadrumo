@@ -611,7 +611,7 @@ async def test_dialog_reaches_the_window_once_through_the_view_contexts_page_obs
     site = SyntheticSite()
     url = site.page(f"{_SEDE}/dialogs.html", _DIALOG_PAGE)
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_browser_headless=True,
         # A loopback port nothing listens on, so a request no route answers cannot leave the host.
         cadrumo_proxy_url="http://127.0.0.1:9",

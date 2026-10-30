@@ -70,7 +70,7 @@ def test_named_profile_view_uses_installed_runtime_and_preserves_cli_envelope(tm
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                with override_settings(cadrumo_local_storage_root=root, cadrumo_output_language="en"):
+                with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
                     shown = run_cadrumo_cli(
                         (
                             "--format",

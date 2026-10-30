@@ -801,7 +801,7 @@ async def test_wallet_diagnostic_dump_writes_only_redacted_structural_summary(tm
       </table>
     </body></html>
     """
-    settings = Settings(cadrumo_token_dir=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
     profile = Profile(name="wallet-diagnostic")
 
     async with (

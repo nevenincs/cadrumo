@@ -19,30 +19,23 @@ _PROFILE = UUID("7f5b1a6d-0c9e-4d8f-9a3b-2c1d0e9f8a7b")
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def test_linux_worker_receives_only_declared_storage_controls_and_managed_temp(
+def test_linux_worker_receives_the_pinned_storage_root_and_managed_temp(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "configured"))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "local"))
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", "worker-temp")
-    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", "components/playwright-test")
     monkeypatch.setenv("CADRUMO_LLM_OPENAI_API_KEY", "must-not-cross-worker-boundary")
     monkeypatch.setenv("PYTHONPATH", "must-not-cross-worker-boundary")
 
     storage_root = tmp_path / "worker-storage"
     environment = profile_worker._worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
 
-    temporary_root = storage_root / "worker-temp"
+    temporary_root = storage_root / "tmp"
     assert environment["PATH"] == "/usr/bin:/bin"
     assert environment["LANG"] == "C" and environment["LC_ALL"] == "C"
-    # The development root variable is not a product control; the pinned root replaces it.
-    assert "CADRUMO_STORAGE_ROOT" not in environment
     # The worker inherits the root it serves; it never re-resolves the parent's override.
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(storage_root.resolve())
-    assert environment["CADRUMO_TEMP_DIR"] == "worker-temp"
-    assert environment["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"] == "components/playwright-test"
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(storage_root.resolve())
     assert not any("OPENAI_API_KEY" in name or name == "PYTHONPATH" for name in environment)
     assert {environment[name] for name in ("TEMP", "TMP", "TMPDIR")} == {str(temporary_root.resolve())}
     assert temporary_root.is_dir()
@@ -67,7 +60,7 @@ def test_windows_worker_keeps_the_packaged_cache_pin_and_drops_credentials(
     assert environment[PROFILE_ROOT_VARIABLE] == str(profile_root(storage_root.resolve(), _PROFILE))
     assert environment["XDG_CACHE_HOME"] == str(tmp_path / "pinned-cache")
     assert environment["CADRUMO_AUTHORITY_ROOT"] == str(tmp_path / "authority")
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(storage_root.resolve())
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(storage_root.resolve())
     assert not any("OPENAI_API_KEY" in name for name in environment)
     # A setting of this command line that is not a location stays with the runtime.
     assert "CADRUMO_LOG_LEVEL" not in environment

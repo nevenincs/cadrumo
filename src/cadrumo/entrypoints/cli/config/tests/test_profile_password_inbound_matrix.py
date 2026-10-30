@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _invoke_create(tmp_path: Path, candidate: str, *, locale: str = "en"):
     with override_settings(
-        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_storage_root=tmp_path / "storage",
         cadrumo_secret_passphrase=None,
     ):
         return invoke_cached_cli(

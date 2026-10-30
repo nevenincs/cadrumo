@@ -88,7 +88,7 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
         ).revision.id,
     )
 
-    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+    with native_profile_view_server(load_settings().cadrumo_storage_root):
         validate = invoke_protected_profile(profile_name, "validate", profile_name)
         assert validate.exit_code == 2, validate.output
         assert "readiness\tblocked" in validate.output
@@ -171,7 +171,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
     )
     mirror_profile_output_language_hint(profile_id, OutputLanguage.EN)
 
-    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+    with native_profile_view_server(load_settings().cadrumo_storage_root):
         validate = invoke_protected_profile("pere-landlord", "validate", "pere-landlord")
         assert validate.exit_code == 0, validate.output
         assert "readiness\tready" in validate.output
@@ -268,7 +268,7 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
     )
     mirror_profile_output_language_hint(profile_id, OutputLanguage.EN)
 
-    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+    with native_profile_view_server(load_settings().cadrumo_storage_root):
         status = invoke_protected_profile("comunidad-sin-actividad", "status", json_output=True)
         assert status.exit_code == 0, status.output
         status_payload = _payload(status.output)
@@ -308,7 +308,7 @@ def test_economic_activity_m100_still_requires_the_direct_estimation_modality() 
     )
     mirror_profile_output_language_hint(profile_id, OutputLanguage.EN)
 
-    with native_profile_view_server(load_settings().cadrumo_local_storage_root):
+    with native_profile_view_server(load_settings().cadrumo_storage_root):
         work_create = _invoke_profile_cli(
             "autonomo-renta",
             ["app", "modelo", "work", "create", "--modelo", "100", "--year", "2025", "--period", "0A"],

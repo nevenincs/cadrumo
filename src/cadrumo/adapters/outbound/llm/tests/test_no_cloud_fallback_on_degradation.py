@@ -29,9 +29,6 @@ from .....core.directory_scan import scan_directory
 from .....core.errors.error_codes import build_error_envelope
 from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.run_records import LLMRunRecorder
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient, LLMRetryPolicy
 from ..consent import EvidenceConsentToken
 from ..errors import LLMConsentError, LLMError
@@ -68,15 +65,10 @@ def _failing_on_host_lane(code: ModelRunRefusalCode) -> Generator[RecordingModel
 def _client(tmp_path: Path, *, cloud_upload_permitted: bool = False) -> LLMClient:
     settings = EnvFileFreeSettings(
         cadrumo_evidence_cloud_upload_permitted=cloud_upload_permitted,
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
+        cadrumo_storage_root=tmp_path,
     )
     return LLMClient(
         settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
         retry_policy=_NO_RETRY,
     )
 

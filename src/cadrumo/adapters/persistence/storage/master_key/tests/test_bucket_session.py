@@ -357,8 +357,8 @@ def test_acquire_engine_does_not_build_a_route_it_will_discard(tmp_path: Path) -
     session = _open_session()
     builds = 0
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        settings = Settings(cadrumo_local_storage_root=tmp_path)
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
+        settings = Settings(cadrumo_storage_root=tmp_path)
 
         def _route() -> Settings:
             nonlocal builds

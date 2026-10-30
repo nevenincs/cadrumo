@@ -43,7 +43,7 @@ def test_resolve_modelo_repository_bucket_id_rejects_blank_explicit_bucket() -> 
 
 
 def test_resolve_modelo_repository_bucket_id_uses_active_profile_setting(tmp_path: Path) -> None:
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID):
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID):
         assert (
             resolve_repository_bucket_id(
                 None,
@@ -55,7 +55,7 @@ def test_resolve_modelo_repository_bucket_id_uses_active_profile_setting(tmp_pat
 
 def test_resolve_modelo_repository_bucket_id_rejects_missing_active_profile(tmp_path: Path) -> None:
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None),
         pytest.raises(WorkUnitPersistenceError) as raised,
     ):
         resolve_repository_bucket_id(None, error_type=WorkUnitPersistenceError)
@@ -71,7 +71,7 @@ def test_secure_objects_for_modelo_bucket_refuses_unready_runtime(tmp_path: Path
     # over the message matches the key rather than any rendered English, and
     # would pass just as readily on an unrelated storage refusal.
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID),
         pytest.raises(StorageValidationError) as raised,
     ):
         secure_object_repository_for_bucket(_ACTIVE_BUCKET_ID)

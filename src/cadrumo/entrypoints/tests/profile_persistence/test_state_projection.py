@@ -121,7 +121,7 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
     with ExitStack() as stack:
         stack.enter_context(
             override_settings(
-                cadrumo_local_storage_root=tmp_path,
+                cadrumo_storage_root=tmp_path,
                 cadrumo_active_profile=None,
                 cadrumo_secret_passphrase=SecretStr(_OPERATOR_CREDENTIAL_INPUT),
             ),
@@ -183,7 +183,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
-    storage_root = load_settings().cadrumo_local_storage_root
+    storage_root = load_settings().cadrumo_storage_root
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
     unlocked = unlock_profile_custody(material.envelope, _OPERATOR_CREDENTIAL_INPUT, sentinel=material.sentinel)
     instant = datetime.now(UTC)
@@ -812,7 +812,7 @@ def test_projection_profile_read_refuses_explicit_database_route(
 
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
             cadrumo_active_profile=profile_id,
             cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
         ),

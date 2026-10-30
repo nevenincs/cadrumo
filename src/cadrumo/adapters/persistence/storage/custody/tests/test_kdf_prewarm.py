@@ -35,7 +35,7 @@ def _kdf() -> ProfileCustodyKdfParameters:
 
 @pytest.fixture
 def settings(tmp_path: Path) -> Generator[Settings]:
-    with override_settings(cadrumo_local_storage_root=tmp_path) as settings:
+    with override_settings(cadrumo_storage_root=tmp_path) as settings:
         yield settings
 
 

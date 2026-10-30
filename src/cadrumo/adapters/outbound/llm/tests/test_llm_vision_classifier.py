@@ -25,8 +25,6 @@ from .....domain.transactions.llm import PromptSpec, prompt_spec_with_saturation
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.llm_vision_evidence_support import png_image
-from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..consent import EvidenceConsentToken
 from ..errors import LLMConfigError, LLMConsentError
@@ -70,16 +68,8 @@ def _spec(operation: PinnedAuthorityOperation) -> PromptSpec:
 def _classifier(
     tmp_path: Path, spec: PromptSpec, *, consent_token: EvidenceConsentToken | None = None
 ) -> VisionLLMClassifier:
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
-    client = LLMClient(
-        settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-    )
+    settings = EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
+    client = LLMClient(settings=settings)
     return VisionLLMClassifier(spec=spec, client=client, settings=settings, consent_token=consent_token)
 
 

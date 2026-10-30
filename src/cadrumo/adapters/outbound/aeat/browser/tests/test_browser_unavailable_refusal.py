@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 from playwright.async_api import async_playwright
 
+from ......application.browser_location import playwright_browsers_root
 from ......application.operations.error_detail import build_operation_error_detail
 from ......core.config import Settings, override_settings
 from ......core.errors.error_codes import (
@@ -50,32 +51,33 @@ def _assert_names_the_unavailable_browser(error: BrowserError) -> None:
     assert verdict.action is None
 
 
-async def _launch_refusal(empty_root: Path) -> BrowserError:
+def _settings_without_a_browser(tmp_path: Path) -> Settings:
+    """Settings whose storage root holds no browser build."""
+    return Settings(cadrumo_storage_root=tmp_path / "storage")
+
+
+async def _launch_refusal(settings: Settings) -> BrowserError:
     async with async_playwright() as playwright:
-        session = BrowserSession(
-            playwright,
-            Settings(cadrumo_playwright_browsers_dir=empty_root),
-            _profile("unavailable-refusal"),
-        )
+        session = BrowserSession(playwright, settings, _profile("unavailable-refusal"))
         with pytest.raises(BrowserError) as raised:
             await session.create_context()
         return raised.value
 
 
 def test_missing_bundled_chromium_is_refused_as_unavailable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    empty = tmp_path / "empty-cache"
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(empty))
+    settings = _settings_without_a_browser(tmp_path)
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(playwright_browsers_root(settings=settings)))
 
-    error = asyncio.run(_launch_refusal(empty))
+    error = asyncio.run(_launch_refusal(settings))
 
     _assert_names_the_unavailable_browser(error)
 
 
 def test_session_factory_refuses_at_launch_and_leaves_no_session_open(tmp_path: Path) -> None:
-    empty = tmp_path / "empty-cache"
+    settings = _settings_without_a_browser(tmp_path)
 
     async def attempt() -> BrowserError:
-        session = await create_browser_session(Settings(cadrumo_playwright_browsers_dir=empty), _profile("factory"))
+        session = await create_browser_session(settings, _profile("factory"))
         try:
             with pytest.raises(BrowserError) as raised:
                 await session.create_context()
@@ -88,9 +90,7 @@ def test_session_factory_refuses_at_launch_and_leaves_no_session_open(tmp_path: 
 
 @pytest.mark.asyncio
 async def test_page_factory_refuses_a_missing_browser_on_a_shared_runtime(tmp_path: Path) -> None:
-    empty = tmp_path / "empty-cache"
-    settings = Settings(cadrumo_playwright_browsers_dir=empty)
-    with override_settings(cadrumo_playwright_browsers_dir=empty):
+    with override_settings(cadrumo_storage_root=tmp_path / "storage") as settings:
         async with shared_playwright_runtime() as playwright:
             with pytest.raises(BrowserError) as raised:
                 async with opened_browser_page(playwright, settings, _profile("page-refusal")):
@@ -101,10 +101,10 @@ async def test_page_factory_refuses_a_missing_browser_on_a_shared_runtime(tmp_pa
 
 def test_the_rendered_refusal_is_its_sentence_alone(tmp_path: Path) -> None:
     """The failure mode and the browser profile stay internal; the verdict carries the condition."""
-    empty = tmp_path / "empty"
+    settings = _settings_without_a_browser(tmp_path)
 
     async def attempt() -> BrowserError:
-        session = await create_browser_session(Settings(cadrumo_playwright_browsers_dir=empty), _profile("internal"))
+        session = await create_browser_session(settings, _profile("internal"))
         try:
             with pytest.raises(BrowserError) as raised:
                 await session.create_context()

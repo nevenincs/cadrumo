@@ -14,8 +14,6 @@ import pytest
 from sqlalchemy import text
 
 from .....core.config import override_settings
-from .....core.storage_taxonomy import StorageCategory
-from .....tests.storage_scope import storage_overrides
 from ....persistence.storage.errors import RepositoryError
 from ....persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
@@ -45,9 +43,8 @@ def _records(version: str) -> tuple[OAuthToken, OAuthMetadata, DriveConfig]:
 def _read_in_fresh_process(tmp_path: Path, expected: str | None) -> None:
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path / "cadrumo-storage",
+            cadrumo_storage_root=tmp_path / "cadrumo-storage",
             cadrumo_active_profile=_PROFILE,
-            **storage_overrides(tmp_path, StorageCategory.SECRETS),
         ),
         open_test_profile_session(_PROFILE),
     ):

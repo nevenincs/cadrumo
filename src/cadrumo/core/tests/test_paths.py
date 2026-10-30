@@ -49,7 +49,7 @@ def test_a_relative_override_anchors_under_the_platform_user_data_root(tmp_path:
 
     This closes two defects in sequence. The first was anchoring every
     relative override at a naive repo-root walk, so an installed
-    distribution's relative ``CADRUMO_LOCAL_STORAGE_ROOT`` could resolve
+    distribution's relative ``CADRUMO_STORAGE_ROOT`` could resolve
     inside a virtualenv or an ephemeral package cache. The second was the
     fix's own shape: it branched on whether the process ran from a source
     checkout, which made a source-layout guess decide where operator data
@@ -124,20 +124,20 @@ def test_effective_storage_root_absolute_override_resolves_unchanged() -> None:
     from ..config import override_settings
 
     with override_settings() as settings:
-        absolute = settings.cadrumo_local_storage_root.parent / "explicit-override"
+        absolute = settings.cadrumo_storage_root.parent / "explicit-override"
         assert effective_storage_root(absolute) == absolute.resolve()
 
 
-def test_effective_storage_root_falls_back_to_the_settings_default_when_no_override_is_given() -> None:
-    """``root=None`` resolves ``Settings.cadrumo_local_storage_root``, not a fresh anchor."""
+def test_effective_storage_root_falls_back_to_the_settings_default_when_no_override_is_given(tmp_path: Path) -> None:
+    """``root=None`` resolves ``Settings.cadrumo_storage_root``, not a fresh anchor."""
     from ..config import override_settings
 
-    with override_settings(cadrumo_local_storage_root=Path("configured-root")) as settings:
-        assert effective_storage_root() == settings.cadrumo_local_storage_root
-        assert effective_storage_root(None) == settings.cadrumo_local_storage_root
+    with override_settings(cadrumo_storage_root=tmp_path / "configured-root") as settings:
+        assert effective_storage_root() == settings.cadrumo_storage_root
+        assert effective_storage_root(None) == settings.cadrumo_storage_root
 
 
-def test_effective_storage_root_prefers_an_explicit_settings_object_over_reloading() -> None:
+def test_effective_storage_root_prefers_an_explicit_settings_object_over_reloading(tmp_path: Path) -> None:
     """A caller-supplied ``settings=`` is read directly rather than triggering ``load_settings()`` again.
 
     Every one of the six converged call sites in ``config_reset_repository.py``
@@ -148,10 +148,10 @@ def test_effective_storage_root_prefers_an_explicit_settings_object_over_reloadi
     from ..config import override_settings
 
     with (
-        override_settings(cadrumo_local_storage_root=Path("caller-held-root")) as held_settings,
-        override_settings(cadrumo_local_storage_root=Path("ambient-root")),
+        override_settings(cadrumo_storage_root=tmp_path / "caller-held-root") as held_settings,
+        override_settings(cadrumo_storage_root=tmp_path / "ambient-root"),
     ):
-        assert effective_storage_root(settings=held_settings) == held_settings.cadrumo_local_storage_root
+        assert effective_storage_root(settings=held_settings) == held_settings.cadrumo_storage_root
 
 
 def test_effective_storage_root_override_wins_over_a_supplied_settings_object() -> None:
@@ -159,7 +159,7 @@ def test_effective_storage_root_override_wins_over_a_supplied_settings_object() 
     from ..config import override_settings
 
     with override_settings() as settings:
-        override_root = settings.cadrumo_local_storage_root.parent / "override-wins"
+        override_root = settings.cadrumo_storage_root.parent / "override-wins"
         assert effective_storage_root(override_root, settings=settings) == override_root.resolve()
 
 

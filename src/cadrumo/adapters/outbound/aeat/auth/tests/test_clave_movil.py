@@ -184,8 +184,7 @@ def test_fresh_login_browser_mode_matches_the_authentication_flow(
 ) -> None:
     """Non-QR honors headless configuration; QR retains its visible scan page."""
     configured = Settings(
-        cadrumo_token_dir=tmp_path,
-        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_storage_root=tmp_path / "storage",
         cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
         cadrumo_browser_headless=headless,
         cadrumo_clave_prefer_non_qr=non_qr,

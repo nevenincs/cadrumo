@@ -198,7 +198,7 @@ async def test_the_worker_serves_both_channels_inside_the_watchdog(
         served.append(_dump_path(default_log_file_path().parent).exists())
 
     monkeypatch.setattr(worker_service, "_serve", serve)
-    with override_settings(cadrumo_local_storage_root=tmp_path):
+    with override_settings(cadrumo_storage_root=tmp_path):
         await _serve_watched(
             cast(WorkerChannel, object()),
             cast(WorkerChannel, object()),

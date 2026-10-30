@@ -69,11 +69,9 @@ def run_protected_live_cli(root: Path, logs: Path, stage: str, arguments: Sequen
     startup.lpAttributeList = {"handle_list": [handle]}
     environment = {
         **os.environ,
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-        "CADRUMO_SECRET_STORE_DIR": str(root / "secrets"),
+        "CADRUMO_STORAGE_ROOT": str(root),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "CADRUMO_CLI_REVEAL_IDENTIFIERS": "1",
-        "CADRUMO_LOG_DIR": str(root / "logs"),
     }
     environment.pop("CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE", None)
     try:

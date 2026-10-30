@@ -195,7 +195,7 @@ def test_installed_cli_inspect_approve_and_decline_preserve_two_proof_channels(t
                 try:
                     pending = enrollment.submit(_proposal())
                     assert pending.stage is EnrollmentStage.REQUESTED
-                    with override_settings(cadrumo_local_storage_root=root, cadrumo_output_language="en"):
+                    with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
                         inspected = _cli(profile_id, "inspect", str(pending.request_id))
                         assert inspected.exit_code == 0, inspected.output
                         review = json.loads(inspected.stdout)["result"]["review"]

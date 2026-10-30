@@ -390,7 +390,7 @@ class _Worker(ProfileWorkerHumanAdmission):
         def run() -> None:
             with (
                 override_settings(
-                    cadrumo_local_storage_root=storage_root,
+                    cadrumo_storage_root=storage_root,
                     cadrumo_active_profile=str(identity.binding.profile_id),
                 ),
                 activate_session(oracle),

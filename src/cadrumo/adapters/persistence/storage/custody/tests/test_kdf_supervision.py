@@ -21,6 +21,8 @@ import pytest
 from ......application.user_profile.proof_cancellation import ProfileProofCancellation
 from ......core.config import Settings, override_settings
 from ......core.pid_liveness import pid_is_alive
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
 from .. import _kdf_worker_supervision as worker_supervision
 from .. import kdf_supervision
 from .._kdf_attestation import (
@@ -88,7 +90,7 @@ _SENTINEL_BYTES = (
 
 
 def _settings(tmp_path: Path) -> Settings:
-    return Settings(cadrumo_local_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=True)
+    return Settings(cadrumo_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=True)
 
 
 def _kdf(
@@ -174,7 +176,7 @@ with profile_kdf_lease(deadline=time.monotonic() + 30):
         stdin=asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
-        env={**os.environ, "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path)},
+        env={**os.environ, "CADRUMO_STORAGE_ROOT": str(tmp_path)},
     )
     try:
         assert holder.stdout is not None
@@ -235,7 +237,8 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle
         assert process is not None
         assert attestation is not None
         assert neutral_directory is not None
-        assert Path(neutral_directory.name).parent == settings.cadrumo_temp_dir
+        temporary_root = tmp_path / storage_location(StorageCategory.TEMPORARY_FILES).relative_path()
+        assert Path(neutral_directory.name).parent == temporary_root
         assert attestation["cwd"] != str(Path.cwd())
         environment_keys = attestation["environment_keys"]
         assert isinstance(environment_keys, list)
@@ -514,7 +517,7 @@ def test_real_supervised_calibration_returns_only_the_versioned_grid_or_fixed_fa
 
 
 def test_real_worker_times_the_derivation_alone_inside_the_sample(tmp_path: Path) -> None:
-    with override_settings(cadrumo_local_storage_root=tmp_path):
+    with override_settings(cadrumo_storage_root=tmp_path):
         started = time.monotonic()
         with _SupervisedKdfWorker(deadline=time.monotonic() + 60) as worker:
             derivation = worker.calibrate(_kdf(memory_mib=19, iterations=2, parallelism=1))
@@ -774,7 +777,7 @@ def _permit_is_free(settings: Settings) -> bool:
     if not kdf_supervision._KDF_THREAD_LEASE.acquire(blocking=False):
         return False
     try:
-        root = settings.cadrumo_local_storage_root.resolve(strict=True)
+        root = settings.cadrumo_storage_root.resolve(strict=True)
         descriptor = os.open(root / "profile-kdf.v1.lock", os.O_RDWR | getattr(os, "O_BINARY", 0))
         try:
             if sys.platform == "win32":

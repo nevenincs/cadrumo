@@ -1,17 +1,10 @@
 """Pytest fixtures for registry CLI tests.
 
-The ``"secrets"`` literal in the CLI env below is not an arbitrary injected
-value: it must agree with what :func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile`
-already minted the master key under, since that fixture derives
-``cadrumo_secret_store_dir`` from the real taxonomy accessor
-(``storage_overrides(tmp_path, StorageCategory.SECRETS)`` -> ``tmp_path /
-"secrets"``). The CLI subprocesses this env drives must independently compute
-the same location to unlock the profile the fixture already created; renaming
-it to a fictional segment breaks that handoff. The blob-store and audit-dir
-overrides carry no equivalent handoff constraint -- nothing else in this
-fixture derives or re-reads those locations -- so they are named
-``"probe-blobs"`` / ``"probe-audit"`` precisely to keep them out of the
-taxonomy vocabulary rather than pinned as if they were.
+Every storage member resolves beneath the storage root, so the one
+``CADRUMO_STORAGE_ROOT`` the CLI subprocesses below share with
+:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile`
+is all they need to find the secret store that fixture already minted the
+master key under and unlock the profile it created.
 """
 
 from __future__ import annotations
@@ -37,18 +30,11 @@ _SESSION_OPENED_AT = datetime(2099, 5, 28, 15, 55, tzinfo=UTC)
 @pytest.fixture(scope="module", autouse=True)
 def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
     tmp_path = tmp_path_factory.mktemp("registry-cli")
-    # Explicit directory overrides are the operator's to provision; the CLI
-    # validates them and never creates them.
-    for directory in ("probe-blobs", "probe-live-state"):
-        (tmp_path / directory).mkdir()
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         _set_cli_env(
             {
-                "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
+                "CADRUMO_STORAGE_ROOT": str(runtime.storage_root),
                 "CADRUMO_ACTIVE_PROFILE": runtime.bucket_id,
-                "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
-                "CADRUMO_BLOB_STORE_DIR": str(tmp_path / "probe-blobs"),
-                "CADRUMO_LIVE_STATE_DIR": str(tmp_path / "probe-live-state"),
                 "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
             },
@@ -62,7 +48,7 @@ def _isolated_secure_backend(tmp_path: Path) -> Iterator[None]:
     """Point encrypted SQL runtime at a per-test active bucket."""
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID) as settings,
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID) as settings,
         activate_session(_session()),
     ):
         dispose_engine(settings)

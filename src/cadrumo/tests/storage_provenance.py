@@ -82,7 +82,7 @@ def _root_bound_names(tree: ast.AST, spans: list[tuple[int, int, str]]) -> dict[
 
     A one-line rebind is the obvious way around a receiver-only walk::
 
-        root = settings.cadrumo_local_storage_root   # a plain read
+        root = settings.cadrumo_storage_root   # a plain read
         target = root / "buckets" / bucket_id        # a join the walk cannot see
 
     Both statements are individually unremarkable and together they produce a

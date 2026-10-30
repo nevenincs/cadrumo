@@ -15,6 +15,8 @@ from cadrumo.application.corpus_search.lexical_index import bundled_corpus_html_
 from cadrumo.application.corpus_search.models import RetrievalResponse
 from cadrumo.application.corpus_search.terminology import search_terminology
 from cadrumo.core.config import override_settings
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
@@ -41,8 +43,8 @@ def sample_corpus(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[P
         name = f"{stem}.html.extracted.json"
         shutil.copy2(bundled_corpus_html_root() / name, corpus_root / name)
     monkeypatch.setattr(corpus_runtime, "bundled_corpus_html_root", lambda: corpus_root)
-    with override_settings(cadrumo_corpus_search_cache_dir=tmp_path / "index"):
-        yield tmp_path / "index"
+    with override_settings(cadrumo_storage_root=tmp_path / "storage"):
+        yield storage_path(StorageCategory.CORPUS_SEARCH_CACHE)
 
 
 @pytest.mark.anyio

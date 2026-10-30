@@ -132,7 +132,7 @@ def _invoke_authenticated_profile(profile_name: str, args: list[str]) -> Result:
     """Invoke one profile worker command with the fixture's one-use password."""
     from cadrumo.core.config import load_settings
 
-    with native_cli_profile_server(load_settings().cadrumo_local_storage_root):
+    with native_cli_profile_server(load_settings().cadrumo_storage_root):
         result = invoke_cached_cli(
             ("--profile", profile_name, "--profile-secrets-stdin", *args),
             input=json.dumps({"profile_passphrase": _test_passphrase()}),

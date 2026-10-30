@@ -159,7 +159,7 @@ def _installed(
         )
         close_active_bucket_session()
         with (
-            scoped_env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(process_root or root)),
+            scoped_env_var("CADRUMO_STORAGE_ROOT", str(process_root or root)),
             serving_registered_runtime(
                 endpoint,
                 root,

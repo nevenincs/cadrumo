@@ -345,7 +345,7 @@ def test_an_api_key_session_runs_an_admitted_read_is_refused_another_and_reaches
         server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
+        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)

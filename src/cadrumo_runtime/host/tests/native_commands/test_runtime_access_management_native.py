@@ -153,7 +153,7 @@ def test_cli_session_lock_global_resume_and_key_denial_use_native_authority(tmp_
             try:
                 assert server.ready.wait(3)
                 with override_settings(
-                    cadrumo_local_storage_root=root,
+                    cadrumo_storage_root=root,
                     cadrumo_output_language="en",
                 ):
                     api = _api(profile_id, selected_secret)

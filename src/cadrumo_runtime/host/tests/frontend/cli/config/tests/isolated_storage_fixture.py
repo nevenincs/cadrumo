@@ -113,7 +113,7 @@ def live_cli_profile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterato
     """
     declare_operator_terminal(monkeypatch)
     overrides = {
-        "cadrumo_local_storage_root": tmp_path / "cadrumo-storage",
+        "cadrumo_storage_root": tmp_path / "cadrumo-storage",
         "cadrumo_secret_passphrase": CREDENTIAL_INPUT,
     }
     with override_settings(**overrides):

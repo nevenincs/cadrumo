@@ -119,7 +119,7 @@ def test_fresh_process_gate_bites_on_filesystem_materialization(tmp_path: Path) 
         tmp_path / "filesystem-injector",
         (
             "from pathlib import Path; import os; "
-            'marker = Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]) / "planted-materialization"; '
+            'marker = Path(os.environ["CADRUMO_STORAGE_ROOT"]) / "planted-materialization"; '
             'marker.mkdir(); (marker / "unexpected.txt").write_text("planted", encoding="utf-8")'
         ),
     )

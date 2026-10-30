@@ -348,14 +348,14 @@ def test_the_runtime_fills_exactly_the_gateway_slots_and_advertises_exactly_what
         AGENT_LOG_LEVEL_VARIABLE
     }
     assert {HOSTED_ROOT_VARIABLE, GATEWAY_PORT_VARIABLE, WORKER_PORT_VARIABLE} == AGENT_SLOTS
-    assert AGENT_SLOTS | {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_PROFILE_ROOT"} == GATEWAY_SLOTS
+    assert AGENT_SLOTS | {"CADRUMO_STORAGE_ROOT", "CADRUMO_PROFILE_ROOT"} == GATEWAY_SLOTS
     assert set(environment) >= GATEWAY_SLOTS
     assert not set(_RETIRED_PROGRAM_VARIABLES) & set(environment)
     assert not _RETIRED_INSTRUCTION_VARIABLES & set(environment)
     assert _RETIRED_RELAY_VARIABLE not in environment
     assert not (set(_RETIRED_PROGRAM_VARIABLES) | {_RETIRED_RELAY_VARIABLE}) & GATEWAY_SLOTS
     # The agent forwards the runtime's own root to what it starts, never the root the runtime itself received.
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(normalize_storage_path(tmp_path / "storage"))
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(normalize_storage_path(tmp_path / "storage"))
     assert environment[HOSTED_ROOT_VARIABLE] == str(agent_root)
     assert environment[GATEWAY_PORT_VARIABLE] == environment[WORKER_PORT_VARIABLE] == "0"
 

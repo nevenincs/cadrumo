@@ -28,13 +28,18 @@ def _secure_database(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+def _engine_root(tmp_path: Path) -> Path:
+    """Storage root the engine under test is configured with; nothing may create it."""
+    return tmp_path / "engine-storage"
+
+
 def _build_engine(tmp_path: Path) -> SubmissionEngine:
     """Compose the engine with production persistence, deadline, and auth boundaries."""
     return SubmissionEngine(
         auth_provider=clave_movil_provider(identity="12345678Z"),
         deadline_checker=deadline_checker(),
         repository=SubmissionRepository(),
-        settings=Settings(cadrumo_submissions_dir=tmp_path / "submissions"),
+        settings=Settings(cadrumo_storage_root=_engine_root(tmp_path)),
     )
 
 
@@ -69,4 +74,4 @@ def test_engine_exposes_no_remote_write_methods(tmp_path: Path) -> None:
 
     assert not hasattr(engine, "submit_draft")
     assert not hasattr(engine, "submit_amendment")
-    assert not (tmp_path / "submissions").exists()
+    assert not _engine_root(tmp_path).exists()

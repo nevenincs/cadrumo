@@ -113,7 +113,7 @@ def isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
     """Bind diagnostics tests to an isolated storage root by default."""
 
     storage_root = tmp_path / "diagnostics-storage"
-    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None) as settings:
+    with override_settings(cadrumo_storage_root=storage_root, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield
@@ -444,7 +444,7 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
 
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings:
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings:
         dispose_engine(settings)
         try:
             assert secure_object_unreadable_total(ports=_diagnostics_ports()) == 0
@@ -466,7 +466,7 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings,
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings,
         activate_session(bucket_session(_OTHER_BUCKET_ID)),
     ):
         dispose_engine(settings)
@@ -866,8 +866,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 def test_missing_log_parent_has_no_false_read_only_recovery_action(tmp_path: Path) -> None:
     """A log-tail command cannot repair a missing log directory."""
 
-    missing_log_dir = tmp_path / "not-created" / "logs"
-    with override_settings(cadrumo_log_dir=missing_log_dir):
+    with override_settings(cadrumo_storage_root=tmp_path / "not-created"):
         report = build_config_repair_report(ports=_diagnostics_ports())
     check = next(item for item in report.checks if item.name == "logging.file")
     assert check.status == "warn"

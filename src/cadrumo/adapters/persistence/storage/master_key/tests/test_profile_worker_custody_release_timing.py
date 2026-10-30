@@ -175,7 +175,7 @@ def _exercise(tmp_path: Path) -> None:
                 dek_epoch=UUID(bytes=base64.b64decode(envelope.dek_epoch)),
             ),
         )
-        with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(profile_id)):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(profile_id)):
             custody = ProfileWorkerCustody(identity, storage_root=root, monotonic=lambda: 0.0)
             try:
                 admitted = _lease(identity)

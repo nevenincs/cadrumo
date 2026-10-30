@@ -42,7 +42,7 @@ def _loaded_after(
         env.pop(name, None)
     env.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
             "CADRUMO_OUTPUT_LANGUAGE": "es",
         }

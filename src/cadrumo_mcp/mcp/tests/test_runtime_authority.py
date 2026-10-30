@@ -117,7 +117,7 @@ async def test_authority_is_refused_to_a_connection_with_no_key_and_no_runtime(t
     The runtime names the selected profile, so with none running the refusal
     is the runtime's typed unavailability, never a request to sign in.
     """
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
         adapter = RuntimeMcpAdapter(profile_id=None, client=None, requests_attendance=True)
         try:
             async with connected_server_and_client_session(build_server(adapter)) as client:

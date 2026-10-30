@@ -121,7 +121,7 @@ _HARNESS = (
                     passphrase_callback=lambda: payload["preauthenticate_secret"],
                     profile_decode_context=operation.profile_decode_context(),
                 )
-        before_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+        before_dispatch = durable_snapshot(settings.cadrumo_storage_root)
         asserted_closed = {
             descriptor: descriptor_identity(descriptor) for descriptor in payload.get("assert_closed_descriptors", [])
         }
@@ -161,7 +161,7 @@ _HARNESS = (
                 print("S13_DESCRIPTOR_OPEN", file=sys.stderr)
                 exit_code = exit_code or 97
         if payload.get("assert_dispatch_state_unchanged"):
-            after_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+            after_dispatch = durable_snapshot(settings.cadrumo_storage_root)
             if after_dispatch == before_dispatch:
                 print("S14_STATE_UNCHANGED", file=sys.stderr)
             else:
@@ -225,7 +225,7 @@ _WINDOWS_HANDLE_HARNESS = (
                     passphrase_callback=lambda: payload["preauthenticate_secret"],
                     profile_decode_context=operation.profile_decode_context(),
                 )
-        before_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+        before_dispatch = durable_snapshot(settings.cadrumo_storage_root)
         identities = {descriptor: descriptor_identity(descriptor) for descriptor in descriptors}
         sys.argv[:] = argv
         defer_logging_configuration()
@@ -265,7 +265,7 @@ _WINDOWS_HANDLE_HARNESS = (
                 print("S13_DESCRIPTOR_OPEN", file=sys.stderr)
                 exit_code = exit_code or 97
         if payload.get("assert_dispatch_state_unchanged"):
-            after_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+            after_dispatch = durable_snapshot(settings.cadrumo_storage_root)
             if after_dispatch == before_dispatch:
                 print("S14_STATE_UNCHANGED", file=sys.stderr)
             else:
@@ -291,7 +291,7 @@ def _settings(storage_root: Path, *, output_language: OutputLanguage = OutputLan
     authority_root = load_settings().cadrumo_authority_root
     return {
         "cadrumo_authority_root": None if authority_root is None else str(authority_root),
-        "cadrumo_local_storage_root": str(storage_root),
+        "cadrumo_storage_root": str(storage_root),
         "cadrumo_output_language": output_language.value,
     }
 

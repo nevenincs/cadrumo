@@ -21,7 +21,6 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.operator_surface.verb_input_contracts import cli_argv_for
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     m111_withholding_aggregate_arguments,
     m111_withholding_invoice_arguments,
@@ -30,7 +29,6 @@ from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.inventory import REPO_ROOT
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
-from cadrumo.tests.storage_scope import relocated_storage_path
 from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
@@ -42,21 +40,18 @@ _LOCALES = ("en", "es", "ca", "hu")
 _CONSOLE = REPO_ROOT / ".venv" / "Scripts" / "aeat.exe"
 
 
-def _console_environment(tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
+def _console_environment(tmp_path: Path) -> tuple[dict[str, str], Path]:
     """Build one subprocess-only encrypted profile environment."""
     storage_root = tmp_path / "cadrumo-storage"
-    secret_store_dir = relocated_storage_path(tmp_path, StorageCategory.SECRETS)
-    secret_store_dir.mkdir(parents=True, exist_ok=True)
     environment = subprocess_cli_env(
         strip_prefixes=("AEAT_", "PYTEST_", "CADRUMO_"),
         extra={
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-            "CADRUMO_SECRET_STORE_DIR": str(secret_store_dir),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             "CADRUMO_SECRET_PASSPHRASE": load_settings().cadrumo_dev_test_database_password.get_secret_value(),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
         },
     )
-    return environment, storage_root, secret_store_dir
+    return environment, storage_root
 
 
 @pytest.fixture(autouse=True)
@@ -234,15 +229,13 @@ def _register_profile(
 
     ``register_cli_profile`` is intentionally an in-process test setup door.
     The installed console is a fresh process, so both must receive the same
-    storage root and secret-store route.  Otherwise registration uses the
+    storage root.  Otherwise registration uses the
     suite's shared fallback database while the console correctly sees no
     active profile in this test's temporary route.
     """
-    storage_root = Path(environment["CADRUMO_LOCAL_STORAGE_ROOT"])
-    secret_store_dir = Path(environment["CADRUMO_SECRET_STORE_DIR"])
+    storage_root = Path(environment["CADRUMO_STORAGE_ROOT"])
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_storage_root=storage_root,
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):
@@ -306,12 +299,11 @@ def _create_calculable_m111_work(environment: dict[str, str]) -> str:
     return work_unit_id
 
 
-def _work_state(*, storage_root: Path, secret_store_dir: Path, work_unit_id: str) -> dict[str, Any]:
+def _work_state(*, storage_root: Path, work_unit_id: str) -> dict[str, Any]:
     """Load the persisted work-unit state through the production encrypted repository."""
     passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_storage_root=storage_root,
         cadrumo_secret_passphrase=passphrase,
     ) as settings:
         dispose_engine(settings)
@@ -337,12 +329,11 @@ def _work_state(*, storage_root: Path, secret_store_dir: Path, work_unit_id: str
             dispose_engine(settings)
 
 
-def _seed_discarded_work(*, storage_root: Path, secret_store_dir: Path, work_unit_id: str) -> None:
+def _seed_discarded_work(*, storage_root: Path, work_unit_id: str) -> None:
     """Use the canonical writer for a later calculation/refusal test's setup."""
     passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_storage_root=storage_root,
         cadrumo_secret_passphrase=passphrase,
     ) as settings:
         dispose_engine(settings)
@@ -373,7 +364,7 @@ def _assert_action_id(action: dict[str, Any], action_id: str) -> None:
 
 def test_installed_console_verify_calculate_retry_persists_verification(tmp_path: Path) -> None:
     require_os_credential_store()
-    environment, storage_root, secret_store_dir = _console_environment(tmp_path)
+    environment, storage_root = _console_environment(tmp_path)
     _create_natural_profile(environment)
     work_unit_id = _create_calculable_m111_work(environment)
     original = ["app", "modelo", "work", "verify", work_unit_id]
@@ -392,7 +383,6 @@ def test_installed_console_verify_calculate_retry_persists_verification(tmp_path
     assert (
         _work_state(
             storage_root=storage_root,
-            secret_store_dir=secret_store_dir,
             work_unit_id=work_unit_id,
         )["current_calculation_revision_id"]
         is not None
@@ -401,7 +391,7 @@ def test_installed_console_verify_calculate_retry_persists_verification(tmp_path
 
 def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path: Path) -> None:
     require_os_credential_store()
-    environment, storage_root, secret_store_dir = _console_environment(tmp_path)
+    environment, storage_root = _console_environment(tmp_path)
     _create_natural_profile(environment)
     work_unit_id = _create_calculable_m111_work(environment)
     original = ["app", "modelo", "work", "file", work_unit_id]
@@ -413,7 +403,7 @@ def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path:
     calculation_run, calculation_argv = _dispatch_action(environment, calculate_action)
     assert calculation_run.returncode == 0, calculation_argv
 
-    before_verify = _work_state(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
+    before_verify = _work_state(storage_root=storage_root, work_unit_id=work_unit_id)
     structural_digests: dict[str, str] = {}
     operation_ids: set[str] = set()
     verify_action: dict[str, Any] | None = None
@@ -437,10 +427,7 @@ def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path:
             verify_action = current_action
         else:
             assert current_action == verify_action
-        assert (
-            _work_state(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
-            == before_verify
-        )
+        assert _work_state(storage_root=storage_root, work_unit_id=work_unit_id) == before_verify
     assert len(set(structural_digests.values())) == 1
     assert verify_action is not None
     verify_run, verify_argv = _dispatch_action(environment, verify_action)
@@ -453,7 +440,6 @@ def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path:
     assert (
         _work_state(
             storage_root=storage_root,
-            secret_store_dir=secret_store_dir,
             work_unit_id=work_unit_id,
         )["filed_calculation_revision_id"]
         == filed["calculation_revision_id"]
@@ -462,7 +448,7 @@ def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path:
 
 def test_installed_console_required_bindings_action_is_decision_support_then_honest_retry(tmp_path: Path) -> None:
     require_os_credential_store()
-    environment, storage_root, secret_store_dir = _console_environment(tmp_path)
+    environment, storage_root = _console_environment(tmp_path)
     _create_legal_profile(environment)
     work_unit_id = _create_work_unit(
         environment,
@@ -472,7 +458,7 @@ def test_installed_console_required_bindings_action_is_decision_support_then_hon
         revision="2025-y-siguientes",
     )
     original = ["app", "modelo", "work", "calculate", work_unit_id]
-    before = _work_state(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
+    before = _work_state(storage_root=storage_root, work_unit_id=work_unit_id)
 
     initial_run = _run_console(environment, original)
     assert initial_run.returncode != 0
@@ -485,14 +471,12 @@ def test_installed_console_required_bindings_action_is_decision_support_then_hon
     assert retry_run.returncode != 0
     retry_action = _action_from_document(_document(retry_run))
     _assert_action_id(retry_action, "operator.modelo.bindings.list")
-    assert (
-        _work_state(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id) == before
-    )
+    assert _work_state(storage_root=storage_root, work_unit_id=work_unit_id) == before
 
 
 def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: Path) -> None:
     require_os_credential_store()
-    environment, storage_root, secret_store_dir = _console_environment(tmp_path)
+    environment, storage_root = _console_environment(tmp_path)
     _create_natural_profile(environment)
     work_unit_id = _create_work_unit(
         environment,
@@ -501,8 +485,8 @@ def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: 
         period="1T",
         revision="2019-y-siguientes",
     )
-    _seed_discarded_work(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
-    before = _work_state(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
+    _seed_discarded_work(storage_root=storage_root, work_unit_id=work_unit_id)
+    before = _work_state(storage_root=storage_root, work_unit_id=work_unit_id)
     structural_digests: dict[tuple[str, str], str] = {}
     operation_ids: set[str] = set()
 
@@ -538,10 +522,7 @@ def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: 
             retry = _run_console(environment, original)
             assert retry.returncode != 0
             assert _document(retry)["error"]["action"] == action
-            assert (
-                _work_state(storage_root=storage_root, secret_store_dir=secret_store_dir, work_unit_id=work_unit_id)
-                == before
-            )
+            assert _work_state(storage_root=storage_root, work_unit_id=work_unit_id) == before
 
     for verb in ("calculate", "verify", "file"):
         assert len({structural_digests[(verb, locale)] for locale in _LOCALES}) == 1

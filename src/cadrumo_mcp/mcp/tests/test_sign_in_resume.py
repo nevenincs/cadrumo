@@ -230,7 +230,7 @@ def _adapter(profile_id: UUID | None = None, surface: McpSurface = _FULL) -> Run
 def _selection(root: Path, profile_id: UUID | None) -> AbstractContextManager[Settings]:
     """Select ``profile_id`` for this installation, or nothing, over an empty storage root."""
     selected = None if profile_id is None else str(profile_id)
-    return override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=selected)
+    return override_settings(cadrumo_storage_root=root, cadrumo_active_profile=selected)
 
 
 def _told(code: str) -> dict[str, object]:

@@ -80,7 +80,7 @@ def test_receipt_admission_preserves_ambient_session_and_deadlines(
 ) -> None:
     profile_id = uuid4()
     opened = datetime.now(UTC)
-    with override_settings(cadrumo_local_storage_root=tmp_path):
+    with override_settings(cadrumo_storage_root=tmp_path):
         publish_test_profile_capsule(profile_id, label="Human", root=tmp_path)
         material = load_committed_profile_password_material(profile_id, root=tmp_path)
         dek = derive_test_bucket_key(str(profile_id), purpose="dek")
@@ -203,7 +203,7 @@ def test_receipt_admission_refuses_without_binding_custody(
 ) -> None:
     profile_id = uuid4()
     opened = datetime.now(UTC)
-    with override_settings(cadrumo_local_storage_root=tmp_path):
+    with override_settings(cadrumo_storage_root=tmp_path):
         publish_test_profile_capsule(profile_id, label="Refused receipt", root=tmp_path)
         material = load_committed_profile_password_material(profile_id, root=tmp_path)
         sign_in = committed_sign_in(tmp_path, profile_id)

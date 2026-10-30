@@ -41,7 +41,7 @@ def test_resolve_filing_repository_bucket_id_accepts_explicit_or_active_bucket(
     active_profile: str,
     expected: str,
 ) -> None:
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=active_profile):
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=active_profile):
         assert resolve_filing_repository_bucket_id(bucket_id) == expected
 
 
@@ -59,7 +59,7 @@ def test_resolve_filing_repository_bucket_id_rejects_missing_bucket(
     expected_reason: str,
 ) -> None:
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=active_profile),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=active_profile),
         pytest.raises(ModeloDraftError) as raised,
     ):
         resolve_filing_repository_bucket_id(explicit_bucket_id)
@@ -70,7 +70,7 @@ def test_resolve_filing_repository_bucket_id_rejects_missing_bucket(
 
 def test_secure_objects_for_filing_bucket_refuses_unready_runtime(tmp_path: Path) -> None:
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID),
         pytest.raises(StorageValidationError) as refusal,
     ):
         secure_object_repository_for_bucket(_ACTIVE_BUCKET_ID)

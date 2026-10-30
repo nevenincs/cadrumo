@@ -23,8 +23,6 @@ from .....domain.transactions.llm import PromptSpec, prompt_spec_with_every_spen
 from .....domain.transactions.models import Transaction
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..errors import LLMConsentError
 from ..text_classifier import TextLLMClassifier
@@ -46,16 +44,8 @@ def _transaction() -> Transaction:
 
 
 def _reader(tmp_path: Path, spec: PromptSpec) -> TextLLMClassifier:
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
-    client = LLMClient(
-        settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-    )
+    settings = EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
+    client = LLMClient(settings=settings)
     return TextLLMClassifier(spec=spec, settings=settings, client=client)
 
 

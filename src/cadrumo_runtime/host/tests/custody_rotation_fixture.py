@@ -80,9 +80,7 @@ def _refuses(custody: ProfileWorkerCustody, generation: int, code: AutomationCus
 def exercise(tmp_path: Path, mode: str) -> None:
     with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
-        with override_settings(
-            cadrumo_local_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)
-        ):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)):
             custody = ProfileWorkerCustody(identity, storage_root=root)
             lease = _lease(identity)
             custody.install(lease, bytearray(key))

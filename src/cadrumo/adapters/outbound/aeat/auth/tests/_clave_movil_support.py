@@ -41,8 +41,7 @@ def _settings_for(tmp_path: Path, **env: str) -> Settings:
     # operator who never chose one actually gets.
     route = env_overrides.get("cadrumo_clave_prefer_non_qr")
     return Settings(
-        cadrumo_token_dir=tmp_path,
-        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_storage_root=tmp_path / "storage",
         cadrumo_clave_prefer_non_qr=_DEFAULT_PREFER_NON_QR if route is None else route.lower() == "true",
         cadrumo_clave_movil_dni_nie=_secret_or_none(env_overrides.get("cadrumo_clave_movil_dni_nie")),
         cadrumo_clave_movil_dni_fecha=env_overrides.get("cadrumo_clave_movil_dni_fecha"),

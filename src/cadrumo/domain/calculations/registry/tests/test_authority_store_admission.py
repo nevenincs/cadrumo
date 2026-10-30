@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 @pytest.fixture(autouse=True)
 def _own_receipts(tmp_path: Path) -> Iterator[None]:
     """Keep admission receipts to a provisioned root of this test's own, so every case starts unproved."""
-    with override_settings(cadrumo_local_storage_root=tmp_path / "storage"):
+    with override_settings(cadrumo_storage_root=tmp_path / "storage"):
         ensure_storage_tree()
         yield
 
@@ -176,7 +176,7 @@ def test_a_storage_root_without_provisioned_caches_receives_no_receipt(
         (root / name).mkdir()
     descriptor, database = _copied_pair(tmp_path / "pair")
     hashed = _counting_hashes(monkeypatch)
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         SQLiteAuthorityReader(descriptor, max_connections=1).close()
         SQLiteAuthorityReader(descriptor, max_connections=1).close()
     assert sorted(path.name for path in root.iterdir()) == list(existing)

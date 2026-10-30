@@ -92,7 +92,6 @@ faulthandler.cancel_dump_traceback_later()
     environment.update(
         {
             "CADRUMO_AUTHORITY_ROOT": os.environ["CADRUMO_AUTHORITY_ROOT"],
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "TEMP": str(tmp_path),

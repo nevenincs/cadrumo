@@ -17,7 +17,6 @@ from typing import Any, Final, cast
 
 import pytest
 
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ... import service as service_module
@@ -80,7 +79,6 @@ def test_the_fallback_serves_the_agents_declared_document_unchanged_in_its_envel
     service._providers = ProviderSettingsService(
         store=MemoryProviderSettingsStore(),
         catalog_source=StaticCatalogSource(),
-        storage_mode=StorageMode.INSTALLED,
     )
     monkeypatch.setattr(
         service_module, "declared_provider_catalog_response", lambda: declared_catalog_envelope(document)

@@ -72,7 +72,7 @@ def test_the_snapshot_written_at_filing_makes_retention_assessable(tmp_path: Pat
     """Before the refresh the assessment refuses; after it, it answers."""
     from ....core.config import override_settings
 
-    with override_settings(cadrumo_local_storage_root=tmp_path):
+    with override_settings(cadrumo_storage_root=tmp_path):
         authority = FilingRetentionAuthority()
         identity = UUID(_BUCKET_ID)
 

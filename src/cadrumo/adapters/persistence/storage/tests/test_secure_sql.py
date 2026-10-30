@@ -84,7 +84,7 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
     isolated_root = tmp_path / "isolated-storage"
     isolated_database = isolated_root / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
 
-    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=_CONTROL_BUCKET_ID):
+    with override_settings(cadrumo_storage_root=storage_root, cadrumo_active_profile=_CONTROL_BUCKET_ID):
         dispose_engine()
         publish_test_profile_capsule(_CONTROL_BUCKET_ID, label="Contamination control", root=storage_root)
         try:

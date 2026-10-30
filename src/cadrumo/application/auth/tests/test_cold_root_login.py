@@ -39,7 +39,7 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
     cold_root = tmp_path / "cold-root"
 
     with override_settings(
-        cadrumo_local_storage_root=cold_root,
+        cadrumo_storage_root=cold_root,
         cadrumo_active_profile=None,
         cadrumo_certificate_path=certificate_path,
         cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),

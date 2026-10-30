@@ -123,7 +123,7 @@ def test_a_profile_wrapped_at_the_fallback_point_still_opens(tmp_path: Path) -> 
     dek, associated_data = _b64(_BASELINE["dek_b64"]), _b64(_BASELINE["associated_data_b64"])
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path),
+        override_settings(cadrumo_storage_root=tmp_path),
         _SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker,
     ):
         opened = worker.unwrap(
@@ -149,7 +149,7 @@ def test_the_current_worker_unwraps_baseline_wrapped_deks(tmp_path: Path, label:
     )
     dek, associated_data = _b64(_BASELINE["dek_b64"]), _b64(_BASELINE["associated_data_b64"])
 
-    with override_settings(cadrumo_local_storage_root=tmp_path):
+    with override_settings(cadrumo_storage_root=tmp_path):
         with _SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker:
             opened = worker.unwrap(
                 password=secret, kdf=kdf, wrapped_dek=wrapped, associated_data=associated_data, recovery=recovery

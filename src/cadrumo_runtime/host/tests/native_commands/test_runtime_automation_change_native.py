@@ -133,7 +133,7 @@ def test_installed_change_reconciles_without_forwarding_human_receipt(
                 assert server.ready.wait(3)
 
                 def invoke_change() -> Result:
-                    with override_settings(cadrumo_local_storage_root=root, cadrumo_output_language="en"):
+                    with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
                         return invoke_runtime_cli(
                             (
                                 "--format",

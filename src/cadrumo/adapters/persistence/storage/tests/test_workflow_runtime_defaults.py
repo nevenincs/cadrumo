@@ -23,7 +23,7 @@ def test_workflow_defaults_refuse_explicit_database_without_active_profile(tmp_p
     for repository_factory in repository_factories:
         explicit_db = tmp_path / f"{repository_factory.__name__}.db"
         with override_settings(
-            cadrumo_local_storage_root=tmp_path / "storage",
+            cadrumo_storage_root=tmp_path / "storage",
             cadrumo_active_profile=None,
             cadrumo_database_url=f"sqlite:///{explicit_db.as_posix()}",
         ) as settings:

@@ -28,9 +28,7 @@ pytestmark = [
 
 
 def test_attested_kdf_child_runs_above_normal_priority(tmp_path: Path) -> None:
-    worker = _SupervisedKdfWorker(
-        deadline=time.monotonic() + 60, settings=Settings(cadrumo_local_storage_root=tmp_path)
-    )
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 60, settings=Settings(cadrumo_storage_root=tmp_path))
     with worker:
         process = worker._process
         assert process is not None and process.poll() is None

@@ -134,7 +134,7 @@ async def _authority(
 ]:
     with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
         root, ((worker, key), _) = profiles
-        with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(worker.binding.profile_id)):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(worker.binding.profile_id)):
             custody = ProfileWorkerCustody(worker, storage_root=root)
             original = lease(worker)
             session = changed(

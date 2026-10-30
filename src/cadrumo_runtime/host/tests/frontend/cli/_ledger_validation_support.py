@@ -53,7 +53,7 @@ def open_bucket_session(tmp_path: Path) -> Generator[None]:
     """
     dispose_engine()
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
     ):
         try:

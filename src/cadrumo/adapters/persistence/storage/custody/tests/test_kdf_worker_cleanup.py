@@ -34,9 +34,7 @@ def running_worker(
     tmp_path: Path,
 ) -> Generator[tuple[_SupervisedKdfWorker, subprocess.Popen[bytes], _WindowsJob | None]]:
     """Keep independent exact-child ownership even if the regression clears its fields."""
-    worker = _SupervisedKdfWorker(
-        deadline=time.monotonic() + 30, settings=Settings(cadrumo_local_storage_root=tmp_path)
-    )
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     terminate = supervision._terminate_process_tree
     cleanup = worker._cleanup_neutral_directory
     process: subprocess.Popen[bytes] | None = None
@@ -66,9 +64,7 @@ def running_worker(
 
 @pytest.fixture
 def partial_worker(tmp_path: Path) -> Generator[_SupervisedKdfWorker]:
-    worker = _SupervisedKdfWorker(
-        deadline=time.monotonic() + 30, settings=Settings(cadrumo_local_storage_root=tmp_path)
-    )
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     request_read, worker._request_fd = os.pipe()
     close_fd(request_read)
     worker._result_fd, result_write = os.pipe()
@@ -218,9 +214,7 @@ def test_real_blocked_reader_cleanup_settles_child_before_descriptor_close(
         return launch_process([*command[:entry], "-c", source, *command[entry + 2 :]], launch_kwargs)
 
     monkeypatch.setattr(process_boundary, "_launch_worker_process", launch)
-    worker = _SupervisedKdfWorker(
-        deadline=time.monotonic() + 30, settings=Settings(cadrumo_local_storage_root=tmp_path)
-    )
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     process: subprocess.Popen[bytes] | None = None
     job: _WindowsJob | None = None
     reader_threads: list[threading.Thread] = []

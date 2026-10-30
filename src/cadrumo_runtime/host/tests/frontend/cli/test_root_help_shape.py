@@ -2,12 +2,12 @@
 
 The ``"logs"`` literal in
 ``test_installed_console_profile_create_honors_isolated_storage_env`` is
-deliberate: ``_console_env`` sets ``cadrumo_local_storage_root`` to
-``tmp_path / "storage"`` with no log-directory override, so
-``tmp_path / "storage" / "logs"`` is the real DEFAULT-derived location the
-``config repair logs`` command's own output must report -- not an injected
-value. That function does not use ``isolated_profile_storage_root``
-(used elsewhere in this file); it is self-contained on ``_console_env``.
+deliberate: ``_console_env`` sets ``cadrumo_storage_root`` to
+``tmp_path / "storage"``, so ``tmp_path / "storage" / "logs"`` is the
+location the root derives for logs, which the ``config repair logs`` command's
+own output must report -- not an injected value. That function does not use
+``isolated_profile_storage_root`` (used elsewhere in this file); it is
+self-contained on ``_console_env``.
 """
 
 from __future__ import annotations
@@ -71,10 +71,6 @@ def _option_row_count(output: str, option: str) -> int:
 
 def _console_env(tmp_path: Path) -> dict[str, str]:
     base_settings = Settings.model_validate({})
-    # Explicit directory overrides are the operator's to provision; the CLI
-    # validates them and never creates them.
-    for directory in ("probe-tokens", "probe-runs", "txs", "invoices", "probe-drafts", "storage/fallback-store"):
-        (tmp_path / directory).mkdir(parents=True, exist_ok=True)
     env = {key: value for key, value in os.environ.items() if not key.upper().startswith(("AEAT_", "CADRUMO_"))}
     setting_env = str.upper
     env.update(
@@ -82,13 +78,7 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
             setting_env("cadrumo_secret_passphrase"): (
                 base_settings.cadrumo_dev_test_database_password.get_secret_value()
             ),
-            setting_env("cadrumo_secret_store_dir"): str(tmp_path / "storage" / "fallback-store"),
-            setting_env("cadrumo_local_storage_root"): str(tmp_path / "storage"),
-            setting_env("cadrumo_token_dir"): str(tmp_path / "probe-tokens"),
-            setting_env("cadrumo_runs_dir"): str(tmp_path / "probe-runs"),
-            setting_env("cadrumo_financial_txs_dir"): str(tmp_path / "txs"),
-            setting_env("cadrumo_invoices_dir"): str(tmp_path / "invoices"),
-            setting_env("cadrumo_drafts_dir"): str(tmp_path / "probe-drafts"),
+            setting_env("cadrumo_storage_root"): str(tmp_path / "storage"),
             setting_env("cadrumo_output_language"): "en",
         },
     )
@@ -200,8 +190,8 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert config_json.exit_code == 0, config_json.output
     assert "aeat config - profile, auth, diagnostics" in config.output
     assert "aeat config profile create NAME" in config.output
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in config.output
-    assert "CADRUMO_SECRET_STORE_DIR" in config.output
+    assert "CADRUMO_STORAGE_ROOT" in config.output
+    assert "CADRUMO_SECRET_STORE_DIR" not in config.output
     assert "aeat config profile view [NAME]" in config.output
     # The retired spelling, asserted absent so a rename cannot reinstate it.
     # It is built by concatenation for the same reason the retired root verb
@@ -243,7 +233,7 @@ def test_curated_help_command_rows_resolve_in_real_typer_tree() -> None:
 def test_bare_invocation_preserves_selected_profile_with_missing_manifest() -> None:
     """A valid active pointer with no manifest is degraded state, not blank state."""
     write_pointer(
-        load_settings().cadrumo_local_storage_root,
+        load_settings().cadrumo_storage_root,
         BucketPointer.selected(bucket_id="11111111-1111-4111-8111-111111111111", transition_revision=1),
     )
 
@@ -384,7 +374,7 @@ def test_installed_console_help_does_not_adopt_former_product_state(tmp_path: Pa
     with sqlite3.connect(former_root / "aeat.db"):
         pass
     env = _console_env(tmp_path)
-    env["CADRUMO_LOCAL_STORAGE_ROOT"] = str(former_root)
+    env["CADRUMO_STORAGE_ROOT"] = str(former_root)
 
     result = _run_text_process([cli_executable, *arguments], env=env)
 
@@ -402,7 +392,7 @@ def test_installed_console_refuses_former_product_state_without_a_traceback(tmp_
     with sqlite3.connect(former_root / "aeat.db"):
         pass
     env = _console_env(tmp_path)
-    env["CADRUMO_LOCAL_STORAGE_ROOT"] = str(former_root)
+    env["CADRUMO_STORAGE_ROOT"] = str(former_root)
 
     result = _run_text_process([cli_executable, "config", "profile", "list"], env=env)
 
@@ -428,7 +418,7 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
     from cadrumo.core.config import load_settings, override_settings
 
     with override_settings(
-        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_storage_root=tmp_path / "storage",
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):

@@ -81,7 +81,7 @@ def _worker_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, image: 
         profile_id=profile_id,
     )
     assert environment == expected
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(root.resolve())
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(root.resolve())
     return environment
 
 

@@ -28,7 +28,7 @@ from __future__ import annotations
 import os
 import sys
 
-os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
+os.environ["CADRUMO_STORAGE_ROOT"] = sys.argv[1]
 sys.argv = ["aeat", *sys.argv[2:]]
 
 from cadrumo_runtime.host.frontend.cli.bootstrap import main
@@ -46,7 +46,7 @@ import json
 import os
 import sys
 
-os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
+os.environ["CADRUMO_STORAGE_ROOT"] = sys.argv[1]
 
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session, session_serves_bucket

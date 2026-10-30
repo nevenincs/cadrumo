@@ -28,8 +28,13 @@ logger = project.get_logger('cadrumo.tests.dispatch_probe')
 """
 
 
+def _storage_root(tmp_path: Path) -> Path:
+    return tmp_path / "root"
+
+
 def _log_directory(tmp_path: Path) -> Path:
-    return tmp_path / "logs"
+    """Return the directory a probe's diagnostics reach, beneath its storage root."""
+    return _storage_root(tmp_path) / storage_location(StorageCategory.LOGS).relative_path()
 
 
 def _log_file(tmp_path: Path) -> Path:
@@ -42,8 +47,7 @@ def _probe(tmp_path: Path, body: str) -> dict[str, float | int]:
         [sys.executable, "-c", _SETUP + body],
         env={
             **os.environ,
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),
-            "CADRUMO_LOG_DIR": str(_log_directory(tmp_path)),
+            "CADRUMO_STORAGE_ROOT": str(_storage_root(tmp_path)),
             "CADRUMO_LOG_STDERR_LEVEL": "WARNING",
         },
         capture_output=True,
@@ -96,8 +100,7 @@ print(json.dumps({{'returned': True, 'still_blocked': blocked()}}), flush=True)
         [sys.executable, "-I", "-c", script],
         env={
             **os.environ,
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),
-            "CADRUMO_LOG_DIR": str(_log_directory(tmp_path)),
+            "CADRUMO_STORAGE_ROOT": str(_storage_root(tmp_path)),
             "CADRUMO_LOG_STDERR_LEVEL": "WARNING",
         },
         capture_output=True,

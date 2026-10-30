@@ -46,8 +46,7 @@ _IDENTITY = "12345678Z"
 
 def _settings(tmp_path: Path, kind: AuthProviderKind) -> Settings:
     values: dict[str, object] = {
-        "cadrumo_local_storage_root": tmp_path / "storage",
-        "cadrumo_token_dir": tmp_path / ".tokens",
+        "cadrumo_storage_root": tmp_path / "storage",
         "cadrumo_browser_close_timeout_ms": 15_000,
     }
     if kind is AuthProviderKind.CERTIFICATE:

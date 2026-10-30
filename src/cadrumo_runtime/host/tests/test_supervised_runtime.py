@@ -23,6 +23,8 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import TypeAdapter
 
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.tests.process_support import fixture_arguments, launch_fixture, native_python
 from cadrumo_client.contracts.contracts import ClientHello, ExitReason
 from cadrumo_client.contracts.profile_access import SessionRequest
@@ -97,7 +99,7 @@ async def _supervised(
     environment = os.environ.copy()
     # Native IPC acceptance is independent of the test runner's desktop session.
     environment["CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE"] = "1"
-    environment["CADRUMO_LOG_DIR"] = str(root / "logs")
+    environment["CADRUMO_STORAGE_ROOT"] = str(root)
     arguments = (
         "--storage-root",
         str(root),
@@ -387,7 +389,8 @@ def _alive(pid: int) -> bool:
 
 
 def _log_text(root: Path) -> str:
-    return "".join(path.read_text(encoding="utf-8") for path in (root / "logs").rglob("*") if path.is_file())
+    logs = root / storage_location(StorageCategory.LOGS).relative_path()
+    return "".join(path.read_text(encoding="utf-8") for path in logs.rglob("*") if path.is_file())
 
 
 async def _published_result(root: Path) -> dict[str, object]:
@@ -416,7 +419,7 @@ def _end_descendants(pids: list[int]) -> None:
 async def test_descendants_and_stray_writes_cannot_reach_the_protocol_streams(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("CADRUMO_LOG_DIR", str(tmp_path / "logs"))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path))
     process = await launch_fixture(_STREAMS_FIXTURE, "streams", str(tmp_path))
     grandchildren: list[int] = []
     try:
@@ -444,7 +447,7 @@ async def test_descendants_and_stray_writes_cannot_reach_the_protocol_streams(
 async def test_an_unexpected_failure_reports_only_its_reason_code(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("CADRUMO_LOG_DIR", str(tmp_path / "logs"))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path))
     arguments = ("--storage-root", str(tmp_path), "--storage-identity", "0" * 64, "--expected-version", "synthetic")
     process = await launch_fixture(_STREAMS_FIXTURE, "failure", str(tmp_path), *arguments, "--supervised")
     try:
@@ -460,7 +463,7 @@ async def test_an_unexpected_failure_reports_only_its_reason_code(
 
 @pytest.mark.asyncio
 async def test_supervised_start_reaches_the_runtime_owner(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CADRUMO_LOG_DIR", str(tmp_path / "logs"))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path))
     arguments = ("--storage-root", str(tmp_path), "--storage-identity", "0" * 64, "--expected-version", "synthetic")
     process = await launch_fixture(_STREAMS_FIXTURE, "owner-reached", str(tmp_path), *arguments, "--supervised")
     try:

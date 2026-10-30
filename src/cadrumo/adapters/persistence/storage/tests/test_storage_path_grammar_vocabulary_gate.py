@@ -5,8 +5,8 @@ A :class:`~adapters.persistence.storage.StoragePathDefinition` grammar's
 ``_storage_path_grammar.py``'s ``_PLACEHOLDER_PATTERNS`` -- otherwise a real-write
 conformance test pinning that key fails with the compiler's own tooling error
 ("no declared regex fragment") instead of a genuine conformance verdict. This is
-exactly how ``secret_index`` shipped for a while: its grammar spelled
-``<cadrumo_secret_store_dir>``, a token nobody had declared a fragment for, so the
+exactly how ``secret_index`` shipped for a while: its grammar spelled a
+settings-field-shaped token that nobody had declared a fragment for, so the
 grammar was declared but unverifiable. This gate makes that class of gap a loud,
 named CI failure rather than a silent one discovered only when someone tries to
 pin the key.

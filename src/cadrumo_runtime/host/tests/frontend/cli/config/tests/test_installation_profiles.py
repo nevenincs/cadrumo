@@ -152,7 +152,7 @@ def _import_with_the_command(
     source: Path, root: Path, *, reveal_identifiers: bool, invoke_cli: Callable[..., Result]
 ) -> dict[str, object]:
     """Run ``config profile archive import`` against a storage root of its own and return what it printed."""
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         try:
             return command_result(
                 "config",

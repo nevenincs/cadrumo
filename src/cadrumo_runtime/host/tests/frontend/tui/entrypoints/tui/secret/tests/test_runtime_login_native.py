@@ -187,7 +187,7 @@ def test_cold_tui_global_lock_recovery_reactivates_only_explicit_grant(tmp_path:
             try:
                 assert server.ready.wait(3)
                 with (
-                    override_settings(cadrumo_local_storage_root=root, cadrumo_output_language="en"),
+                    override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"),
                     ExitStack() as clients,
                 ):
                     asyncio.run(_cold_tui_recovery(profile_id, selected_grant, subject.store, clients))

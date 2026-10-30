@@ -60,7 +60,7 @@ def test_constructor_database_url_classifies_as_explicit(tmp_path: Path) -> None
     ):
         db_path = tmp_path.joinpath(*db_path_parts)
         settings = Settings(
-            cadrumo_local_storage_root=tmp_path / "state",
+            cadrumo_storage_root=tmp_path / "state",
             cadrumo_database_url=f"sqlite:///{db_path.as_posix()}",
         )
 
@@ -73,7 +73,7 @@ def test_constructor_database_url_classifies_as_explicit(tmp_path: Path) -> None
 
 def test_active_bucket_database_route_is_detected(tmp_path: Path) -> None:
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_active_profile="bucket-a",
     )
 
@@ -86,7 +86,7 @@ def test_active_bucket_database_route_is_detected(tmp_path: Path) -> None:
 
 def test_pointer_resolved_bucket_database_route_is_detected(tmp_path: Path) -> None:
     write_pointer(tmp_path, BucketPointer.selected(bucket_id="pointer-bucket", transition_revision=1))
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     route = classify_storage_route(settings)
 
@@ -99,7 +99,7 @@ def test_corrupt_pointer_refuses_root_fallback(tmp_path: Path) -> None:
     pointer_file.write_text("not = valid = toml", encoding="utf-8")
 
     with pytest.raises(ActiveProfilePointerError) as exc_info:
-        Settings(cadrumo_local_storage_root=tmp_path)
+        Settings(cadrumo_storage_root=tmp_path)
 
     error = exc_info.value
     assert error.args == ("errors.integrity.integrity_active_profile_pointer",)
@@ -112,7 +112,7 @@ def test_corrupt_pointer_refuses_root_fallback(tmp_path: Path) -> None:
 
 
 def test_no_active_profile_classifies_root_fallback_database(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     route = classify_storage_route(settings)
 
@@ -127,7 +127,7 @@ def test_root_route_refuses_existing_former_database_without_touching_bytes(tmp_
     former_db.write_bytes(former_bytes)
 
     with pytest.raises(FormerProductStateError, match="will not read, move, copy, delete, migrate, or adopt"):
-        Settings(cadrumo_local_storage_root=tmp_path)
+        Settings(cadrumo_storage_root=tmp_path)
 
     assert former_db.read_bytes() == former_bytes
     assert not (tmp_path / "cadrumo.db").exists()
@@ -140,14 +140,14 @@ def test_bucket_route_refuses_existing_former_database_without_touching_bytes(tm
     former_db.write_bytes(former_bytes)
 
     with pytest.raises(FormerProductStateError, match="will not read, move, copy, delete, migrate, or adopt"):
-        Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator")
+        Settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile="operator")
 
     assert former_db.read_bytes() == former_bytes
     assert not (former_db.parent / "cadrumo.db").exists()
 
 
 def test_settings_for_active_profile_bucket_derives_non_explicit_bucket_route(tmp_path: Path) -> None:
-    source = Settings(cadrumo_local_storage_root=tmp_path / "state")
+    source = Settings(cadrumo_storage_root=tmp_path / "state")
 
     derived = settings_for_active_profile_bucket("operator", source)
     route = classify_storage_route(derived)
@@ -161,7 +161,7 @@ def test_settings_for_active_profile_bucket_derives_non_explicit_bucket_route(tm
 
 def test_settings_for_active_profile_bucket_rejects_explicit_database_url(tmp_path: Path) -> None:
     source = Settings(
-        cadrumo_local_storage_root=tmp_path / "state",
+        cadrumo_storage_root=tmp_path / "state",
         cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     )
 
@@ -170,14 +170,14 @@ def test_settings_for_active_profile_bucket_rejects_explicit_database_url(tmp_pa
 
 
 def test_settings_for_active_profile_bucket_rejects_blank_bucket_id(tmp_path: Path) -> None:
-    source = Settings(cadrumo_local_storage_root=tmp_path)
+    source = Settings(cadrumo_storage_root=tmp_path)
 
     with pytest.raises(CoreValidationError, match="bucket_id must not be blank"):
         settings_for_active_profile_bucket("   ", source)
 
 
 def test_one_settings_instance_reuses_its_classification(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="bucket-a")
+    settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile="bucket-a")
 
     assert classify_storage_route(settings) is classify_storage_route(settings)
 
@@ -186,17 +186,17 @@ def test_a_pointer_change_between_two_classifications_yields_the_new_route(tmp_p
     write_pointer(
         tmp_path, BucketPointer(selection="selected", bucket_id="bucket-a", transition_revision=1, schema_version=2)
     )
-    before = classify_storage_route(Settings(cadrumo_local_storage_root=tmp_path))
+    before = classify_storage_route(Settings(cadrumo_storage_root=tmp_path))
     write_pointer(
         tmp_path, BucketPointer(selection="selected", bucket_id="bucket-b", transition_revision=2, schema_version=2)
     )
-    after = classify_storage_route(Settings(cadrumo_local_storage_root=tmp_path))
+    after = classify_storage_route(Settings(cadrumo_storage_root=tmp_path))
 
     assert (before.bucket_id, after.bucket_id) == ("bucket-a", "bucket-b")
 
 
 def test_a_changed_route_field_on_the_same_instance_is_classified_afresh(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="bucket-a")
+    settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile="bucket-a")
     first = classify_storage_route(settings)
     moved = tmp_path / "buckets" / "bucket-b" / "db" / "cadrumo.db"
     object.__setattr__(settings, "cadrumo_database_url", f"sqlite:///{moved.as_posix()}")
@@ -211,11 +211,11 @@ def test_a_relative_root_is_classified_against_the_current_directory(
 ) -> None:
     database = tmp_path / "first" / "state" / "buckets" / "bucket-a" / "db" / "cadrumo.db"
     settings = Settings.model_construct(
-        cadrumo_local_storage_root=Path("state"),
+        cadrumo_storage_root=Path("state"),
         cadrumo_database_url=f"sqlite:///{database.as_posix()}",
     )
     # A derived route, not an operator-supplied URL.
-    object.__setattr__(settings, "__pydantic_fields_set__", {"cadrumo_local_storage_root"})
+    object.__setattr__(settings, "__pydantic_fields_set__", {"cadrumo_storage_root"})
     (tmp_path / "first").mkdir()
     (tmp_path / "second").mkdir()
 

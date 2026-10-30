@@ -29,11 +29,7 @@ _TOKEN = EvidenceConsentToken(surface="runtime:ledger.evidence.extract", evidenc
 
 
 def _proposer(tmp_path: Path, *, consent_token: EvidenceConsentToken | None = None) -> SupplyNatureProposer:
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
+    settings = EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
     return SupplyNatureProposer(client=LLMClient(settings=settings), settings=settings, consent_token=consent_token)
 
 

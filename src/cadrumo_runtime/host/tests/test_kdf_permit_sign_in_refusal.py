@@ -86,7 +86,7 @@ def test_a_sign_in_refused_for_a_taken_kdf_permit_leaves_the_worker_serving(tmp_
 
                     def hold_permit() -> None:
                         with (
-                            override_settings(cadrumo_local_storage_root=root),
+                            override_settings(cadrumo_storage_root=root),
                             profile_kdf_lease(deadline=time.monotonic() + 30),
                         ):
                             held.set()

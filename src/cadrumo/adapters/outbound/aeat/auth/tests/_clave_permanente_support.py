@@ -33,8 +33,7 @@ def _settings_for(tmp_path: Path, **env: str) -> Settings:
     unexpected = set(env_overrides) - expected_keys
     assert unexpected == set()
     return Settings(
-        cadrumo_token_dir=tmp_path,
-        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_storage_root=tmp_path / "storage",
         cadrumo_clave_permanente_dni_nie=_secret_or_none(env_overrides.get("cadrumo_clave_permanente_dni_nie")),
         cadrumo_clave_permanente_password=_secret_or_none(env_overrides.get("cadrumo_clave_permanente_password")),
     )

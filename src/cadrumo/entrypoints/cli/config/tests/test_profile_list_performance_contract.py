@@ -88,7 +88,7 @@ def _publish(root: Path, profile_id: UUID, label: str) -> None:
                 label=label,
             ).canonical_json_bytes()
         },
-        settings=Settings(cadrumo_local_storage_root=root),
+        settings=Settings(cadrumo_storage_root=root),
     )
 
 

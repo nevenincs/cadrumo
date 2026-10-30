@@ -398,16 +398,9 @@ class _Runtime:
 
 
 @contextmanager
-def _agent_refusing(tmp_path: Path, code: ModelRunRefusalCode) -> Generator[_Runtime]:
-    """Bind an agent service refusing every lookup with ``code``, with private LLM stores."""
-    with (
-        agent_refusing(code) as service,
-        override_settings(
-            cadrumo_llm_cache_dir=tmp_path / "llm-cache",
-            cadrumo_llm_usage_dir=tmp_path / "llm-usage",
-            cadrumo_llm_run_record_dir=tmp_path / "llm-runs",
-        ),
-    ):
+def _agent_refusing(code: ModelRunRefusalCode) -> Generator[_Runtime]:
+    """Bind an agent service refusing every lookup with ``code``."""
+    with agent_refusing(code) as service:
         yield _Runtime(settings=load_settings(), service=service)
 
 
@@ -816,7 +809,7 @@ def test_a_local_ai_consumer_refuses_typed_before_any_run(
 ) -> None:
     with (
         isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_BUCKET_ID),
-        _agent_refusing(tmp_path, code) as runtime,
+        _agent_refusing(code) as runtime,
     ):
         outcome = _outcome(lambda: driver(runtime))
         problems = _local_ai_gating_problems(outcome, runtime.posts, role, code)
@@ -957,7 +950,7 @@ def test_discovery_reports_an_exemption_that_no_longer_dispatches(tmp_path: Path
 
 def test_a_consumer_that_skips_the_check_or_answers_for_another_code_is_reported(tmp_path: Path) -> None:
     code = ModelRunRefusalCode.MODEL_NOT_INSTALLED
-    with _agent_refusing(tmp_path, code) as runtime:
+    with override_settings(cadrumo_storage_root=tmp_path), _agent_refusing(code) as runtime:
         client = LLMClient(settings=runtime.settings)
         request = LLMRequest(
             prompt="Read this.", provider_override=LLMProvider.AGENT, model_role=ModelRole.TEXT_EXTRACTION

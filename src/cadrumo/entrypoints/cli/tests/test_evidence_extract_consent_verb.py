@@ -43,6 +43,8 @@ from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.fixtures.settings import EnvFileFreeSettings
 
@@ -74,7 +76,7 @@ _SURFACE = "cli:ledger.evidence.extract"
 
 
 def _settings(tmp_path: Path, *, cloud_upload_permitted: bool, gestor_mode: bool = False) -> EnvFileFreeSettings:
-    """Build settings with the LLM stores inside ``tmp_path``.
+    """Build settings whose storage root, and so the LLM stores, sits inside ``tmp_path``.
 
     Every case binds a service that would answer, refusals included. An
     unreachable service is an accident that looks like a control: with no
@@ -82,9 +84,7 @@ def _settings(tmp_path: Path, *, cloud_upload_permitted: bool, gestor_mode: bool
     boundary that had stopped working.
     """
     return EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
+        cadrumo_storage_root=tmp_path,
         cadrumo_evidence_cloud_upload_permitted=cloud_upload_permitted,
         cadrumo_evidence_gestor_mode=gestor_mode,
     )
@@ -118,8 +118,8 @@ def _transcription() -> DocumentTranscription:
 def _client(settings: EnvFileFreeSettings) -> LLMClient:
     return LLMClient(
         settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
+        cache=LLMCache(root_dir=storage_path(StorageCategory.LLM_CACHE, settings=settings)),
+        usage_recorder=UsageRecorder(root_dir=storage_path(StorageCategory.LLM_USAGE, settings=settings)),
     )
 
 

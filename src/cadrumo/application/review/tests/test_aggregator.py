@@ -57,12 +57,7 @@ def _schema_version(modelo: str = "130") -> str:
 
 
 def _build_settings(tmp_path: Path) -> Settings:
-    return Settings(
-        cadrumo_financial_txs_dir=tmp_path / "transactions",
-        cadrumo_invoices_dir=tmp_path / "invoices",
-        cadrumo_attachments_dir=tmp_path / "attachments",
-        cadrumo_drafts_dir=tmp_path / "probe-drafts",
-    )
+    return Settings(cadrumo_storage_root=tmp_path)
 
 
 def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:

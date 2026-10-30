@@ -28,6 +28,8 @@ from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.config import load_settings
 from ...core.hashing import sha256_hex
 from ...core.period import Period
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from ...core.time.clock import frozen_clock
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
@@ -40,7 +42,7 @@ _CAPTURED_AT = datetime(2026, 10, 20, 9, 0, tzinfo=UTC)
 
 def _store_filed(operation: PinnedAuthorityOperation, *, modelo: str) -> None:
     """Persist one filed observation through the store the history capture writes to."""
-    store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+    store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
     period = Period.from_year_and_code(2026, "1T")
     expediente = f"{modelo}2026Q1SYNTHETIC0001"
     body = b"synthetic register row"

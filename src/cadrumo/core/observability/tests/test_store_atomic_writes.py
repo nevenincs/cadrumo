@@ -32,10 +32,8 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
 from ...directory_scan import scan_directory
-from ...storage_taxonomy import StorageCategory
 from ..errors import RunTracePersistenceError
 from ..models import RunOutcome, RunTrace
 from ..store import ENVELOPE_FILENAME, TRACE_FILENAME, runs_dir, save_envelope, save_trace
@@ -76,7 +74,7 @@ class TestSaveTraceReplacesAtomically:
     """`save_trace` swaps in a staged artifact instead of writing in place."""
 
     def test_prior_trace_inode_never_receives_the_new_artifact(self, tmp_path: Path) -> None:
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = runs_dir() / _RUN_ID / TRACE_FILENAME
             witness = _seed_prior_artifact(target)
 
@@ -89,7 +87,7 @@ class TestSaveTraceReplacesAtomically:
 
     def test_real_replace_failure_leaves_no_temporary_file(self, tmp_path: Path) -> None:
         """A directory occupying ``trace.json`` is a real ``os.replace`` refusal."""
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = runs_dir() / _RUN_ID / TRACE_FILENAME
             target.mkdir(parents=True, exist_ok=True)
             (target / "marker.txt").write_text("still a directory", encoding="utf-8")
@@ -106,7 +104,7 @@ class TestSaveEnvelopeReplacesAtomically:
     """`save_envelope` swaps in a staged artifact instead of writing in place."""
 
     def test_prior_envelope_inode_never_receives_the_new_artifact(self, tmp_path: Path) -> None:
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = runs_dir() / _RUN_ID / ENVELOPE_FILENAME
             witness = _seed_prior_artifact(target)
 
@@ -119,7 +117,7 @@ class TestSaveEnvelopeReplacesAtomically:
 
     def test_real_replace_failure_leaves_no_temporary_file(self, tmp_path: Path) -> None:
         """A directory occupying ``envelope.json`` is a real ``os.replace`` refusal."""
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = runs_dir() / _RUN_ID / ENVELOPE_FILENAME
             target.mkdir(parents=True, exist_ok=True)
             (target / "marker.txt").write_text("still a directory", encoding="utf-8")

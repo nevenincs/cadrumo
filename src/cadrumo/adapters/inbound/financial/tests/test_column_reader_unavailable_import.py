@@ -48,11 +48,7 @@ _UNKNOWN_FORMAT_FIXTURE = FIXTURES_DIR / "financial" / "tabular-dialects" / "exp
 @contextmanager
 def _composed_mapper(tmp_path: Path) -> Generator[None]:
     """Bind the production column-role resolver over the production client."""
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
+    settings = EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
 
     def resolve(table: NormalizedTable) -> ColumnRoleProposal | ColumnRoleReaderUnavailable | None:
         mapper = SemanticColumnRoleMapper(client=LLMClient(settings=settings), settings=settings)

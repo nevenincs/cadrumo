@@ -69,9 +69,7 @@ class InMemoryCertificateSecretBackendFactory:
         self._unreadable = True
 
     def __call__(self, *, bucket_id: str, settings: object) -> CertificateSecretBackend:
-        storage_scope = getattr(settings, "cadrumo_local_storage_root", None)
-        if storage_scope is None:
-            storage_scope = getattr(settings, "cadrumo_blob_store_dir", None)
+        storage_scope = getattr(settings, "cadrumo_storage_root", None)
         scope_key = f"{bucket_id}:{storage_scope}"
         values = self._values_by_bucket.setdefault(scope_key, {})
         operation_ids = self._operation_ids_by_bucket.setdefault(scope_key, {})

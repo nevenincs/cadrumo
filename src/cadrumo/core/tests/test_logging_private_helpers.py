@@ -29,7 +29,7 @@ def test_prepare_log_directory_reports_reason_when_path_uncreatable(tmp_path: Pa
     """A log directory routed under a real file cannot be created and reports why.
 
     Reproduces the class of failure the Windows PowerShell testimonial hit: an
-    ``CADRUMO_LOCAL_STORAGE_ROOT`` that resolves to an inaccessible / non-directory
+    ``CADRUMO_STORAGE_ROOT`` that resolves to an inaccessible / non-directory
     path. The helper must return a diagnostic reason string instead of letting
     the underlying ``OSError`` escape.
     """

@@ -30,7 +30,7 @@ def _selected_root_with_retired_database(tmp_path: Path) -> tuple[dict[str, str]
     storage.mkdir()
     retired = storage / "aeat.db"
     retired.write_bytes(_RETIRED_MARKER)
-    return {"CADRUMO_LOCAL_STORAGE_ROOT": str(storage)}, retired
+    return {"CADRUMO_STORAGE_ROOT": str(storage)}, retired
 
 
 def _assert_retired_state_untouched(retired: Path) -> None:

@@ -19,6 +19,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.directory_scan import iter_directory, scan_directory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _certificate_indexed_authority_for_test,
 )
@@ -317,7 +318,7 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
                 )
 
             settings = load_settings()
-            secret_blob_root = settings.cadrumo_blob_store_dir
+            secret_blob_root = storage_path(StorageCategory.BLOBS, settings=settings)
             assert any(path.is_file() for path in iter_directory(secret_blob_root, recursive=True))
             # The lock is acquired for whichever profile the pointer names, so the
             # pointer picks the subject here; the reset's own pointer is written

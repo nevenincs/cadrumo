@@ -87,7 +87,7 @@ def test_kernel_wait_joins_the_same_lock_held_by_an_older_runtime(
 
         def acquire() -> None:
             lease.acquire_kdf_file_lease(
-                current, deadline=time.monotonic() + 10, settings=Settings(cadrumo_local_storage_root=tmp_path)
+                current, deadline=time.monotonic() + 10, settings=Settings(cadrumo_storage_root=tmp_path)
             )
 
         with ThreadPoolExecutor(max_workers=1) as pool:
@@ -128,7 +128,7 @@ def test_timeout_settles_pending_kernel_lock_and_releases_no_late_lease(tmp_path
     try:
         with pytest.raises(ProfileCustodyRefusedError) as captured:
             lease.acquire_kdf_file_lease(
-                current, deadline=time.monotonic() + 0.1, settings=Settings(cadrumo_local_storage_root=tmp_path)
+                current, deadline=time.monotonic() + 0.1, settings=Settings(cadrumo_storage_root=tmp_path)
             )
         assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
         _old_lock(old, acquire=False)

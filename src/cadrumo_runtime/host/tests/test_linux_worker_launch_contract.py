@@ -165,10 +165,10 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
     launched: list[tuple[str, ...]] = []
     # A fixed parent environment keeps the launch contract independent of the operator's shell.
     inherited = {
-        "CADRUMO_LOCAL_STORAGE_ROOT": "/managed/storage",
+        "CADRUMO_STORAGE_ROOT": "/managed/storage",
         "CADRUMO_PROXY_PASSWORD_SECRET": "must-not-cross-worker-boundary",
     }
-    expected_environment = _ENVIRONMENT | {"CADRUMO_LOCAL_STORAGE_ROOT": "/managed/storage"}
+    expected_environment = _ENVIRONMENT | {"CADRUMO_STORAGE_ROOT": "/managed/storage"}
     native_stat = Path.stat
 
     def stat(path: Path, *, follow_symlinks: bool = True) -> os.stat_result:
@@ -247,12 +247,12 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
     assert closed == [52, 51]
 
 
-def test_guardian_forwards_only_storage_controls_to_the_contained_worker(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_guardian_forwards_only_the_storage_root_and_scratch_to_the_contained_worker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     inherited = {
         "CADRUMO_STORAGE_ROOT": "/managed/storage",
         "CADRUMO_AUTHORITY_ROOT": "/managed/published-authority",
-        "CADRUMO_TEMP_DIR": "tmp",
-        "CADRUMO_RUNTIME_SOCKET_DIR": "runtime",
         "CADRUMO_LLM_OPENAI_API_KEY": "must-not-cross-worker-boundary",
         "TEMP": "/managed/storage/tmp",
         "TMP": "/managed/storage/tmp",

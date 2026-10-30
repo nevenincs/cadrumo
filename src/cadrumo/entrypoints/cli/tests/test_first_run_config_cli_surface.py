@@ -22,7 +22,7 @@ from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-# Every case gets its own storage root. The ``CADRUMO_LOCAL_STORAGE_ROOT`` the
+# Every case gets its own storage root. The ``CADRUMO_STORAGE_ROOT`` the
 # runner env carries is not enough: in-process settings are held per
 # active-profile pointer, so a case that registers or selects a profile would
 # otherwise write that selection into the worker's shared root.
@@ -33,11 +33,7 @@ def _env(tmp_path: Path) -> dict[str, str]:
     return {
         "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-        "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
-        "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
-        "CADRUMO_INVOICES_DIR": str(tmp_path / "invoices"),
-        "CADRUMO_DRAFTS_DIR": str(tmp_path / "probe-drafts"),
+        "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
     }
 
 

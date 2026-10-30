@@ -53,11 +53,7 @@ def _png_image() -> MultimodalImageInput:
 
 def _settings(tmp_path: Path) -> EnvFileFreeSettings:
     """Settings whose LLM stores stay inside ``tmp_path``."""
-    return EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
+    return EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
 
 
 def _client(settings: EnvFileFreeSettings) -> LLMClient:

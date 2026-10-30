@@ -120,7 +120,7 @@ def _committed_capsule(
                 label="crash label",
             ).canonical_json_bytes(),
         },
-        settings=Settings(cadrumo_local_storage_root=root),
+        settings=Settings(cadrumo_storage_root=root),
         published_at=_INSTANT,
     )
 

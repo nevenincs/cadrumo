@@ -141,7 +141,7 @@ def test_installed_automation_list_projects_nonempty_exact_profile_and_denies_ap
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                with override_settings(cadrumo_local_storage_root=root, cadrumo_output_language="en"):
+                with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
                     listed = invoke_runtime_cli(
                         (
                             "--format",

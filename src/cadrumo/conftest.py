@@ -54,7 +54,7 @@ if "CADRUMO_TEST_RUN_SCRATCH" not in os.environ:
     tempfile.tempdir = str(_temporary_root)
 
 _COLLECTION_STORAGE_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
-os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
+os.environ["CADRUMO_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 """Process-private local-storage root set before child conftests import Cadrumo."""
 
 

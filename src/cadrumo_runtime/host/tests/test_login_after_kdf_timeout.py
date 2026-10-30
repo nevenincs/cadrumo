@@ -65,7 +65,7 @@ def test_a_refused_kdf_timeout_leaves_the_retry_status_and_listing_unblocked(tmp
 
         def hold_permit() -> None:
             # The same OS-released permit the worker's unwrap must take.
-            with profile_kdf_lease(settings=Settings(cadrumo_local_storage_root=root), deadline=time.monotonic() + 30):
+            with profile_kdf_lease(settings=Settings(cadrumo_storage_root=root), deadline=time.monotonic() + 30):
                 held.set()
                 release.wait()
 

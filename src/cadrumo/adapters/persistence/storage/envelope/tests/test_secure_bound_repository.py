@@ -132,7 +132,7 @@ def test_secure_bound_repository_default_refuses_active_profile_without_session(
 
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
             cadrumo_active_profile="9a1c4f2e-6d0b-4d7a-8b3e-1c5f7a2d9e04",
         ),
         pytest.raises(StorageValidationError) as raised,

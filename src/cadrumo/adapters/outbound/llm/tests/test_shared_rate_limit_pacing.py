@@ -21,9 +21,6 @@ import pytest
 
 from .....core.config_support import LLMProvider
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.run_records import LLMRunRecorder
-from ....persistence.llm.usage import UsageRecorder
 from .. import client as client_module
 from ..client import LLMClient, LLMRetryPolicy
 from ..errors import LLMRateLimitError
@@ -57,16 +54,9 @@ def _answering() -> ScriptedAdapter:
 
 
 def _client(tmp_path: Path, *, attempts: int = 1, budget_s: float = 30.0) -> LLMClient:
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
+    settings = EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
     return LLMClient(
         settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
         retry_policy=LLMRetryPolicy(
             max_attempts=attempts, initial_backoff_s=0.01, max_backoff_s=0.02, budget_s=budget_s
         ),

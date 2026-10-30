@@ -92,5 +92,5 @@ def test_no_production_module_walks_out_of_the_package() -> None:
     assert not offenders, (
         "production modules walking __file__ out of the cadrumo package "
         "(resolve operator paths through the application data root instead — "
-        f"Settings.cadrumo_local_storage_root): {offenders}"
+        f"Settings.cadrumo_storage_root): {offenders}"
     )

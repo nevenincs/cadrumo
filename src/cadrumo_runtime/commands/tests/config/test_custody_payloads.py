@@ -83,7 +83,6 @@ assert blocked.isdisjoint(sys.modules), blocked.intersection(sys.modules)
     environment.update(
         {
             "CADRUMO_AUTHORITY_ROOT": str(authority),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "TEMP": str(tmp_path),

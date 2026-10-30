@@ -26,7 +26,7 @@ def _resolved(name: str) -> LoginTarget | None:
 
 
 def _selected() -> str | None:
-    return read_pointer_selection(load_settings().cadrumo_local_storage_root).bucket_id
+    return read_pointer_selection(load_settings().cadrumo_storage_root).bucket_id
 
 
 def answer_login_targets_locally(monkeypatch: pytest.MonkeyPatch) -> None:

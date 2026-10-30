@@ -937,7 +937,7 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
             assert await click_when_laid_out(pilot, submit)
             assert credential.value == ""
 
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
+        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)

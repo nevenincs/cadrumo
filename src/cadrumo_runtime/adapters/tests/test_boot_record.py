@@ -10,7 +10,6 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ..boot_record import (
@@ -190,11 +189,10 @@ def test_only_a_native_package_root_names_a_package_directory(tmp_path: Path) ->
     root = tmp_path / "Cadrumo" / "1.2.3"
     (root / "data").mkdir(parents=True)
     interpreter = root / ("python.exe" if sys.platform == "win32" else "python")
-    assert runtime_package_directory(interpreter, mode=StorageMode.INSTALLED) is None
+    assert runtime_package_directory(interpreter) is None
     (root / "data" / "package-manifest.json").write_bytes(b"{}")
-    assert runtime_package_directory(interpreter, mode=StorageMode.INSTALLED) == str(root)
-    assert runtime_package_directory(interpreter, mode=StorageMode.DEVELOPMENT) is None
-    assert runtime_package_directory(Path("python"), mode=StorageMode.INSTALLED) is None
+    assert runtime_package_directory(interpreter) == str(root)
+    assert runtime_package_directory(Path("python")) is None
 
 
 def test_this_process_describes_itself_with_its_native_creation_stamp() -> None:

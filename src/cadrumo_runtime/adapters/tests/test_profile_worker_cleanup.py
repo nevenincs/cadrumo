@@ -524,7 +524,7 @@ def test_successful_construction_transfers_worker_after_both_listeners_retire(
 
         assert environment is not None
 
-        assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(tmp_path)
+        assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path)
 
         assert environment["PYDANTIC_DISABLE_PLUGINS"] == "__all__"
 

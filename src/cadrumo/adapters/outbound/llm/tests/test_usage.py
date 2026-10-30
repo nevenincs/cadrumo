@@ -14,6 +14,8 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from ....persistence.llm.usage import UsageRecorder
 from ..models import LLMResponse
 
@@ -48,10 +50,11 @@ def test_usage_recorder_round_trip(tmp_path: Path) -> None:
 
 
 def test_usage_default_root_uses_central_settings(tmp_path: Path) -> None:
-    """Direct usage-recorder construction must honor the centralized usage directory."""
+    """Direct usage-recorder construction must honor the centralized storage root."""
 
-    configured_root = tmp_path / "configured-usage"
-    with override_settings(cadrumo_llm_usage_dir=configured_root):
+    storage_root = tmp_path / "configured-storage"
+    configured_root = storage_root / storage_location(StorageCategory.LLM_USAGE).relative_path()
+    with override_settings(cadrumo_storage_root=storage_root):
         recorder = UsageRecorder()
 
     response = LLMResponse(

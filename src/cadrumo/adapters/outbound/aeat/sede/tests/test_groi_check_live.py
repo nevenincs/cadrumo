@@ -9,7 +9,7 @@ driver can be repaired before its next live run.
 
 The GROI surface is reachable under cl@ve-movil; the live test loads
 the persisted cl@ve-movil storage state, so a reasonably-fresh session
-must be present at ``settings.cadrumo_token_dir`` before the test runs.
+must be present in the tokens member of the storage root before the test runs.
 
 The drift detector ALSO runs an end-to-end verdict-parser sanity check
 against a known public NIF (Telefónica's A28015865, registered ROI

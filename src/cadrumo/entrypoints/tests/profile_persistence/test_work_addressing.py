@@ -633,7 +633,7 @@ def test_work_capture_pointer_limb_defeats_an_aba_return_to_the_same_bucket(
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
         _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         implicit_request = _capture_request(None)
-        root = load_settings().cadrumo_local_storage_root
+        root = load_settings().cadrumo_storage_root
         original = read_pointer(root)
         before = capture_modelo_work_resolution(implicit_request, catalogue_repository=repository)
 
@@ -658,7 +658,7 @@ def test_explicit_bucket_capture_excludes_the_pointer_limb(
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
         _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         explicit_request = _capture_request(profile.bucket_id)
-        root = load_settings().cadrumo_local_storage_root
+        root = load_settings().cadrumo_storage_root
         original = read_pointer(root)
         before = capture_modelo_work_resolution(explicit_request, catalogue_repository=repository)
 

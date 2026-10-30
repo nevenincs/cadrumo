@@ -122,7 +122,7 @@ def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_
         session = _create_current_profile(root=tmp_path)
         try:
             with (
-                override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_PROFILE_ID),
+                override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_PROFILE_ID),
                 bound_profile_record_session(session),
             ):
                 health = assess_active_profile_health(WorkflowState(), operation=_authority_operation_for_test)
@@ -150,7 +150,7 @@ def test_discovery_only_health_never_probes_private_record_even_when_session_is_
                 raise AssertionError("discovery-only status consulted private profile custody")
 
             with (
-                override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_PROFILE_ID),
+                override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_PROFILE_ID),
                 bound_profile_record_session(session),
                 monkeypatch.context() as local_patch,
             ):
@@ -191,7 +191,7 @@ def test_discovery_only_health_preserves_absent_and_dangling_discovery_without_p
             raise AssertionError("discovery-only status consulted private profile custody")
 
         with (
-            override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
+            override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None),
             monkeypatch.context() as local_patch,
         ):
             local_patch.setattr(
@@ -217,7 +217,7 @@ def test_inactive_current_capsule_routes_the_operator_to_login(tmp_path: Path) -
         try:
             with active_profile_pointer_transaction(tmp_path) as pointer_transaction:
                 pointer_transaction.clear()
-            with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+            with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
                 health = assess_active_profile_health(operation=_authority_operation_for_test)
 
             assert health.status == "none"
@@ -231,7 +231,7 @@ def test_inactive_current_capsule_routes_the_operator_to_login(tmp_path: Path) -
 
 def test_empty_storage_routes_the_operator_to_current_registration(tmp_path: Path) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with override_settings(cadrumo_local_storage_root=tmp_path / "empty", cadrumo_active_profile=None):
+        with override_settings(cadrumo_storage_root=tmp_path / "empty", cadrumo_active_profile=None):
             health = assess_active_profile_health(operation=_authority_operation_for_test)
 
         assert health.status == "none"
@@ -244,7 +244,7 @@ def test_empty_storage_routes_the_operator_to_current_registration(tmp_path: Pat
 def test_pointer_to_no_current_capsule_is_repaired_without_creating_a_bucket(tmp_path: Path) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         write_pointer(tmp_path, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
-        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
             before = assess_active_profile_health(operation=_authority_operation_for_test)
             repaired = repair_active_profile_pointer(
                 clear_active=True, confirmed=True, operation=_authority_operation_for_test
@@ -269,7 +269,7 @@ def test_pointer_to_malformed_current_marker_is_reported_as_capsule_integrity_no
         marker.write_bytes(malformed)
         write_pointer(tmp_path, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
 
-        with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
             before = assess_active_profile_health(operation=_authority_operation_for_test)
             repaired = repair_active_profile_pointer(
                 clear_active=True, confirmed=True, operation=_authority_operation_for_test
@@ -313,7 +313,8 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
         malformed_marker.write_bytes(b"malformed current marker")
         write_pointer(malformed_root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
 
-        secret_paths = tuple(root / "secrets" for root in (ready_root, absent_root, malformed_root, cold_root))
+        secrets_subpath = storage_location(StorageCategory.SECRETS).relative_path()
+        secret_paths = tuple(root / secrets_subpath for root in (ready_root, absent_root, malformed_root, cold_root))
         recovery_paths = (
             ready_root / _bucket_relative_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE),
             cold_root / _bucket_relative_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE),
@@ -365,28 +366,24 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
         try:
             profile_login_session_port().bind_session(ready_custody_session)
             with override_settings(
-                cadrumo_local_storage_root=ready_root,
-                cadrumo_secret_store_dir=ready_root / "secrets",
+                cadrumo_storage_root=ready_root,
                 cadrumo_active_profile=_PROFILE_ID,
             ):
                 ready = assess_active_profile_health(operation=_authority_operation_for_test)
             close_active_bucket_session()
 
             with override_settings(
-                cadrumo_local_storage_root=absent_root,
-                cadrumo_secret_store_dir=absent_root / "secrets",
+                cadrumo_storage_root=absent_root,
                 cadrumo_active_profile=None,
             ):
                 absent = assess_active_profile_health(operation=_authority_operation_for_test)
             with override_settings(
-                cadrumo_local_storage_root=malformed_root,
-                cadrumo_secret_store_dir=malformed_root / "secrets",
+                cadrumo_storage_root=malformed_root,
                 cadrumo_active_profile=None,
             ):
                 malformed = assess_active_profile_health(operation=_authority_operation_for_test)
             with override_settings(
-                cadrumo_local_storage_root=cold_root,
-                cadrumo_secret_store_dir=cold_root / "secrets",
+                cadrumo_storage_root=cold_root,
                 cadrumo_active_profile=_PROFILE_ID,
             ):
                 cold = assess_active_profile_health(operation=_authority_operation_for_test)

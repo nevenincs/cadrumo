@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
 from typing import Any, cast
 
 import pytest
 from typer._click.core import Context as ClickContext
 from typer.main import get_command
 
-from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.command_runtime_support import build_command_subtree
 
@@ -28,15 +25,6 @@ _live_read_origin, _isolated_backend = runtime_seeded_profile_backend_fixture(
     name="_isolated_backend",
     origin_name="_live_read_origin",
 )
-
-
-@pytest.fixture(autouse=True)
-def _isolated_live_state(_isolated_backend: None, tmp_path: Path) -> Iterator[None]:
-    """Keep the live-state directory private to each test, beside its own root."""
-    live_state_dir = tmp_path / "probe-live-state"
-    live_state_dir.mkdir(exist_ok=True)
-    with override_settings(cadrumo_live_state_dir=live_state_dir):
-        yield
 
 
 __all__ = ["_isolated_backend", "_live_read_origin"]

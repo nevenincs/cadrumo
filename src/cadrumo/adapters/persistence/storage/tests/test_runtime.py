@@ -48,7 +48,7 @@ _PRIVATE_BUCKET_ID = "80bc7e0d-f9dd-4be7-afc6-71d192074647"
 
 
 def _settings_for_bucket(root: Path, bucket_id: str) -> Settings:
-    return Settings(cadrumo_local_storage_root=root, cadrumo_active_profile=bucket_id)
+    return Settings(cadrumo_storage_root=root, cadrumo_active_profile=bucket_id)
 
 
 def _registered_settings(root: Path, bucket_id: str, *also: str) -> Settings:
@@ -164,7 +164,7 @@ def test_runtime_reports_unready_active_session_states(tmp_path: Path) -> None:
 
 
 def test_runtime_reports_root_fallback_route_as_unready(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     with activate_session(_session(_BUCKET_A_ID)):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -189,7 +189,7 @@ def test_runtime_repository_factory_refuses_route_and_session_bucket_mismatch(tm
 def test_runtime_reports_explicit_database_url_without_public_path_leak(tmp_path: Path) -> None:
     explicit_db = tmp_path / _PRIVATE_BUCKET_ID / "explicit.db"
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path / "state-root-private",
+        cadrumo_storage_root=tmp_path / "state-root-private",
         cadrumo_database_url=f"sqlite:///{explicit_db.as_posix()}",
     )
 
@@ -208,7 +208,7 @@ def test_runtime_reports_explicit_database_url_without_public_path_leak(tmp_path
 
 def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path) -> None:
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path / "state-root-private",
+        cadrumo_storage_root=tmp_path / "state-root-private",
         cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     )
 
@@ -232,7 +232,7 @@ def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path)
 
 
 def test_named_bucket_runtime_rejects_blank_bucket_with_localized_validation(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     with pytest.raises(StorageValidationError, match="bucket_id must not be blank") as excinfo:
         inspect_bucket_storage_runtime("   ", settings, now=_NOW)
@@ -245,7 +245,7 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
 
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
         ),
         activate_session(_session(_BUCKET_A_ID)),
     ):
@@ -284,7 +284,7 @@ def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path
 
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
         ),
         activate_session(_session(_BUCKET_A_ID)),
     ):
@@ -311,7 +311,7 @@ def test_runtime_bound_repository_refuses_write_after_session_bucket_changes(tmp
     object_key = "stale-session-write"
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -346,7 +346,7 @@ def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_cha
     hashed_object_key = b"h" * 32
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -380,7 +380,7 @@ def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_change
     object_key = WORKFLOW_STATE_NAMESPACE.object_key_grammar
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -421,7 +421,7 @@ def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_chang
     object_key = WORKFLOW_STATE_NAMESPACE.object_key_grammar
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
@@ -483,7 +483,7 @@ def test_runtime_repository_factory_refuses_unready_runtime(tmp_path: Path) -> N
 
 
 def test_cold_bootstrap_repository_is_available_before_profile_selection(tmp_path: Path) -> None:
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
         repository = secure_object_repository_for_cold_bootstrap_state()
 
     assert isinstance(repository, SecureObjectRepository)
@@ -491,7 +491,7 @@ def test_cold_bootstrap_repository_is_available_before_profile_selection(tmp_pat
 
 
 def test_default_route_repository_carries_namespace_registry_before_profile_selection(tmp_path: Path) -> None:
-    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None)
+    settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None)
 
     repository = secure_object_repository_for_active_bucket_or_default_route(settings)
 
@@ -501,7 +501,7 @@ def test_default_route_repository_carries_namespace_registry_before_profile_sele
 
 def test_active_bucket_repository_refusal_carries_typed_readiness_facts(tmp_path: Path) -> None:
     with override_settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_active_profile=None,
         cadrumo_output_language="en",
     ):
@@ -518,7 +518,7 @@ def test_active_bucket_repository_refusal_carries_typed_readiness_facts(tmp_path
 def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> None:
     with (
         override_settings(
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
             cadrumo_active_profile=_BUCKET_A_ID,
             cadrumo_output_language="en",
         ),
@@ -532,7 +532,7 @@ def test_cold_bootstrap_repository_refuses_settings_scoped_active_profile(
     tmp_path: Path,
 ) -> None:
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_active_profile=_BUCKET_A_ID,
         cadrumo_output_language=OutputLanguage.EN,
     )
@@ -570,7 +570,7 @@ def test_default_route_repository_refuses_pointer_scoped_active_profile_without_
     write_pointer(tmp_path, BucketPointer.selected(bucket_id=_BUCKET_A_ID, transition_revision=1))
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None),
         pytest.raises(StorageValidationError),
     ):
         secure_object_repository_for_active_bucket_or_default_route()

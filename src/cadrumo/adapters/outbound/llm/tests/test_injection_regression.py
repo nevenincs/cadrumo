@@ -64,8 +64,6 @@ from .....core.model_roles import ModelRole
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
-from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..invoice_field_contract import anchor_key_for_field
 from ..invoice_field_grounding import parse_invoice_extraction_response
@@ -139,16 +137,9 @@ def _complete_through_the_client(reply: str, tmp_path: Path) -> str:
     client path: the hostile content genuinely crosses the client and the agent
     adapter.
     """
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-    )
+    settings = EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
     with serving_agent(lane=ON_HOST_LANE, replies=(reply,)):
-        client = LLMClient(
-            settings=settings,
-            cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-            usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        )
+        client = LLMClient(settings=settings)
         request = LLMRequest(prompt="read this invoice", model_role=ModelRole.TEXT_EXTRACTION)
         return asyncio.run(client.complete(request)).text
 

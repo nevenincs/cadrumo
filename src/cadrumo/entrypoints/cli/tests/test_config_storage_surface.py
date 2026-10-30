@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 @pytest.fixture(autouse=True)
 def derived_storage_baseline(tmp_path: Path) -> Iterator[None]:
-    """Derive every category from the root under test, not from the runner's explicit paths."""
+    """Derive every category from the root under test, not from the runner's environment."""
     with derived_storage_settings(tmp_path / "ambient-storage"):
         yield
 
@@ -41,7 +41,7 @@ def _all_keys(value: object) -> set[str]:
 
 class TestListAggregatesByArea:
     def test_list_returns_exactly_the_four_stable_areas(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             envelope = _json_envelope(["config", "storage", "list"])
 
         rows = envelope["result"]["areas"]
@@ -49,7 +49,7 @@ class TestListAggregatesByArea:
         assert {row["disposition"] for row in rows} == {"durable", "reclaimable", "mixed"}
 
     def test_list_measures_area_occupancy_and_footprint(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             logs = storage_path(StorageCategory.LOGS)
             logs.mkdir(parents=True, exist_ok=True)
             (logs / "diagnostic.log").write_bytes(b"entry")
@@ -60,7 +60,7 @@ class TestListAggregatesByArea:
         assert by_area[StorageArea.LOGS.value]["footprint_bytes"] == 5
 
     def test_public_payload_contains_no_internal_taxonomy_fields(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             envelope = _json_envelope(["config", "storage", "list"])
 
         assert not {
@@ -73,7 +73,7 @@ class TestListAggregatesByArea:
         } & _all_keys(envelope["result"])
 
     def test_relocation_advisory_remains_visible(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             envelope = _json_envelope(["config", "storage", "list"])
 
         advisory = next(
@@ -84,7 +84,7 @@ class TestListAggregatesByArea:
 
 class TestShowUsesAreaVocabulary:
     def test_show_reports_one_aggregate_area(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             envelope = _json_envelope(["config", "storage", "view", StorageArea.CACHE.value])
 
         assert envelope["result"]["area"]["area"] == StorageArea.CACHE.value
@@ -92,7 +92,7 @@ class TestShowUsesAreaVocabulary:
         assert "category" not in _all_keys(envelope["result"])
 
     def test_unknown_area_failure_names_the_four_accepted_values(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             result = invoke_cached_cli(["config", "storage", "view", "not-an-area"])
 
         assert result.exit_code != 0
@@ -103,7 +103,7 @@ class TestShowUsesAreaVocabulary:
 
 class TestTextOutputIsReadable:
     def test_list_keeps_the_approved_table_and_wrapped_notice(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             result = invoke_cached_cli(["config", "storage", "list", "--output-language", "en"])
 
         assert result.exit_code == 0, semantic_cli_output(result)
@@ -120,7 +120,7 @@ class TestTextOutputIsReadable:
         assert all(line.startswith("      ") for line in notice_lines[1:])
 
     def test_show_uses_aligned_aggregate_fields(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             result = invoke_cached_cli(["config", "storage", "view", StorageArea.LOGS.value, "--output-language", "en"])
 
         assert result.exit_code == 0, semantic_cli_output(result)
@@ -130,7 +130,7 @@ class TestTextOutputIsReadable:
         assert "Category" not in result.output
 
     def test_init_noop_notice_remains_visible(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             assert invoke_cached_cli(["config", "storage", "init", "--output-language", "en"]).exit_code == 0
             second = invoke_cached_cli(["config", "storage", "init", "--output-language", "en"])
 
@@ -140,7 +140,7 @@ class TestTextOutputIsReadable:
         assert "Info:" in second.output
 
     def test_spanish_list_uses_one_coherent_output_language(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             result = invoke_cached_cli(["config", "storage", "list", "--output-language", "es"])
 
         assert result.exit_code == 0, semantic_cli_output(result)
@@ -154,7 +154,7 @@ class TestTextOutputIsReadable:
         assert "Lifecycle" not in result.output
 
     def test_spanish_durable_refusal_localizes_heading_reason_and_context(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(StorageCategory.BLOBS)
             target.mkdir(parents=True, exist_ok=True)
             (target / "durable.bin").write_bytes(b"preserve")
@@ -171,7 +171,7 @@ class TestTextOutputIsReadable:
         assert "the area contains durable state" not in result.output
 
     def test_spanish_unconfirmed_refusal_localizes_heading_and_context(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(StorageCategory.LLM_CACHE)
             target.mkdir(parents=True, exist_ok=True)
             (target / "cached.bin").write_bytes(b"rebuild")
@@ -188,7 +188,7 @@ class TestTextOutputIsReadable:
 
 class TestCheckKeepsInternalNodesPrivate:
     def test_check_issue_reports_area_without_category_or_node_kind(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             _json_envelope(["config", "storage", "init"])
             target = storage_path(StorageCategory.USAGE_RATIOS)
             target.mkdir(parents=True, exist_ok=True)
@@ -205,7 +205,7 @@ class TestCheckKeepsInternalNodesPrivate:
         assert issue["path"] == str(tmp_path)
 
     def test_text_check_groups_the_topology_neutral_issue(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             assert invoke_cached_cli(["config", "storage", "init"]).exit_code == 0
             storage_path(StorageCategory.USAGE_RATIOS).mkdir(parents=True, exist_ok=True)
             result = invoke_cached_cli(["config", "storage", "check", "--output-language", "en"])
@@ -220,7 +220,7 @@ class TestReclaimUsesAreaVocabulary:
     @pytest.mark.parametrize("area", [StorageArea.STATE, StorageArea.EXPORTS])
     def test_durable_area_refusal_keeps_content(self, area: StorageArea, tmp_path) -> None:
         category = StorageCategory.BLOBS if area is StorageArea.STATE else StorageCategory.SUBMISSIONS
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(category)
             target.mkdir(parents=True, exist_ok=True)
             marker = target / "operator.bin"
@@ -238,7 +238,7 @@ class TestReclaimUsesAreaVocabulary:
         assert area.value in semantic_cli_output(result)
 
     def test_unconfirmed_reclaim_deletes_nothing(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(StorageCategory.LLM_CACHE)
             target.mkdir(parents=True, exist_ok=True)
             marker = target / "cached.bin"
@@ -249,7 +249,7 @@ class TestReclaimUsesAreaVocabulary:
         assert marker.exists()
 
     def test_confirmed_cache_reclaim_reports_area_and_removes_regenerable_content(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             target = storage_path(StorageCategory.LLM_CACHE)
             target.mkdir(parents=True, exist_ok=True)
             (target / "cached.bin").write_bytes(b"regenerable")
@@ -284,7 +284,7 @@ class TestCheckSaysWhenThePermissionAxisWasNotExamined:
 
     def test_the_advisory_tracks_the_enforcement_flag(self, tmp_path) -> None:
         """DISCRIMINATING: a green report must disclose an unexamined axis."""
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             assert invoke_cached_cli(["config", "storage", "init"]).exit_code == 0
             result = invoke_cached_cli(["--format", "json", "config", "storage", "check"])
 
@@ -306,7 +306,7 @@ class TestCheckSaysWhenThePermissionAxisWasNotExamined:
         and this pins that reading one as the other is wrong wherever the axis
         is unenforced.
         """
-        with override_settings(cadrumo_local_storage_root=tmp_path):
+        with override_settings(cadrumo_storage_root=tmp_path):
             assert invoke_cached_cli(["config", "storage", "init"]).exit_code == 0
             result = invoke_cached_cli(["--format", "json", "config", "storage", "check"])
 

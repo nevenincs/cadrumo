@@ -134,7 +134,7 @@ class _BrowserWork:
 @contextmanager
 def _admitted_worker_composition() -> Generator[None]:
     """Keep canonical private worker composition and own the admitted browser thread."""
-    root = Path(load_settings().cadrumo_local_storage_root)
+    root = Path(load_settings().cadrumo_storage_root)
     config = json.loads((root / "windows-browser-config.json").read_text(encoding="utf-8"))
     directory = Path(config["directory"])
     work = _BrowserWork(directory)

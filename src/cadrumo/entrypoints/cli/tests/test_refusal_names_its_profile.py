@@ -29,7 +29,7 @@ _SANDBOX_NOTICE = "config.profile.sandbox.active_indicator"
 
 def _register_active_profile(storage_root: Path, label: str) -> None:
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):
@@ -57,7 +57,7 @@ def _refused_lookup(storage_root: Path, *, as_json: bool) -> subprocess.Complete
             "no-such-transaction",
         ),
         settings={
-            "cadrumo_local_storage_root": storage_root,
+            "cadrumo_storage_root": storage_root,
             "cadrumo_secret_passphrase": passphrase,
             "cadrumo_output_language": "en",
         },

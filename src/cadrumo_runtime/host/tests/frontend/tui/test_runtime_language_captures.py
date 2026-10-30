@@ -125,7 +125,7 @@ def test_canonical_invalidation_updates_initial_root_and_new_profile_panes_off_l
         operation_registry=_operations,
     )
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=""),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language=""),
         profile_output_language_precedence(),
     ):
         register_language_resolver()

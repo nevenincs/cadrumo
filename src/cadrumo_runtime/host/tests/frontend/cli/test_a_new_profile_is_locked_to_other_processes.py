@@ -37,7 +37,7 @@ _LABEL = "locked-to-other-processes"
 
 def _create_profile(storage_root: Path) -> None:
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):
@@ -54,7 +54,7 @@ def _list_in_a_fresh_process(
     with native_profile_view_server(storage_root, keychain_backend=keychain_backend):
         return run_cadrumo_subprocess(
             ("--format", "json", *root_options, "app", "ledger", "list"),
-            settings={"cadrumo_local_storage_root": storage_root, "cadrumo_output_language": "en"},
+            settings={"cadrumo_storage_root": storage_root, "cadrumo_output_language": "en"},
             bootstrap_module="cadrumo_runtime.host.frontend.cli.bootstrap",
             env_strip_prefixes=("AEAT_", "PYTEST_", "CADRUMO_"),
             extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},

@@ -145,7 +145,7 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
                     timeout=min(max(0.0, deadline - time.monotonic()), MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
                 )
 
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=3) as pool:
+        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=3) as pool:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)

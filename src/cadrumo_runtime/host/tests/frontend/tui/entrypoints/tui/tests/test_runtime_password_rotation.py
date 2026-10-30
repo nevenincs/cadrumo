@@ -197,7 +197,7 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
             assert root_app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.PASSWORD_CHANGED)
             stages.append("password-changed")
 
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
+        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)

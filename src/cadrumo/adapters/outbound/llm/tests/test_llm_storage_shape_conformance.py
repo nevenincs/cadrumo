@@ -26,8 +26,6 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
-from .....core.storage_taxonomy import StorageCategory
-from .....tests.storage_scope import storage_overrides
 from ....persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.tests.storage_path_grammar import assert_path_matches_grammar
@@ -55,7 +53,7 @@ def _response() -> LLMResponse:
 
 def test_the_usage_record_logical_path_matches_its_declared_shape(tmp_path: Path) -> None:
     root = tmp_path
-    with override_settings(**storage_overrides(tmp_path, StorageCategory.LLM_USAGE)):
+    with override_settings(cadrumo_storage_root=tmp_path):
         recorder = UsageRecorder()
         response = _response()
         record = recorder.build_record(response, prompt_id="translation_v1", caller="test-suite")
@@ -69,7 +67,7 @@ def test_the_usage_record_logical_path_matches_its_declared_shape(tmp_path: Path
 
 def test_the_run_record_logical_path_matches_its_declared_shape(tmp_path: Path) -> None:
     root = tmp_path
-    with override_settings(**storage_overrides(tmp_path, StorageCategory.LLM_RUN_RECORD)):
+    with override_settings(cadrumo_storage_root=tmp_path):
         recorder = LLMRunRecorder()
         record = LLMRunRecord(
             run_id="run-0001",

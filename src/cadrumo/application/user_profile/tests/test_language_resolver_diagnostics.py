@@ -57,7 +57,7 @@ def test_failed_language_hint_mirror_only_logs_error_class(
 ) -> None:
     monkeypatch.setattr(language_resolver, "write_profile_output_language_hint", _fail_with_private_message)
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path),
+        override_settings(cadrumo_storage_root=tmp_path),
         caplog.at_level(logging.DEBUG, logger=_LOGGER),
     ):
         language_resolver.mirror_profile_output_language_hint("a" * 32, OutputLanguage.CA)

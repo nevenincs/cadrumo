@@ -98,7 +98,7 @@ def test_creation_selects_the_profile_signed_out_under_the_confirmed_passphrase(
     # Nothing was signed in: no process holds the new profile's key.
     assert not has_active_bucket_session()
     profile_id = UUID(created.profile_id)
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         # The deletion preflight's facts are recorded as for any created profile.
         assert FilingRetentionAuthority().path(profile_id).is_file()
         assert LegalHoldCaseAuthority().path(profile_id).is_file()

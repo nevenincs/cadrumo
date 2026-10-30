@@ -87,7 +87,7 @@ def root(tmp_path: Path) -> Path:
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={"state/current.bin": b"synthetic encrypted payload"},
-        settings=Settings(cadrumo_local_storage_root=tmp_path),
+        settings=Settings(cadrumo_storage_root=tmp_path),
     )
     return tmp_path
 
@@ -131,7 +131,7 @@ def test_the_record_lives_in_the_keystore_and_carries_no_secret(root: Path) -> N
     custody = _custody(root)
     created = custody.establish().current
 
-    settings = Settings(cadrumo_local_storage_root=root)
+    settings = Settings(cadrumo_storage_root=root)
     assert custody.path == bucket_scoped_storage_path(
         StorageCategory.KEYSTORE_SIGN_IN_GENERATION,
         canonical_profile_bucket_id(_PROFILE_ID),
@@ -336,7 +336,7 @@ def test_the_record_is_a_protected_keystore_member_of_the_storage_taxonomy(tmp_p
     assert sign_in_generation_path(storage_root=tmp_path, profile_id=_PROFILE_ID) == bucket_scoped_storage_path(
         StorageCategory.KEYSTORE_SIGN_IN_GENERATION,
         canonical_profile_bucket_id(_PROFILE_ID),
-        settings=Settings(cadrumo_local_storage_root=tmp_path),
+        settings=Settings(cadrumo_storage_root=tmp_path),
     )
     declared = {definition.key: definition for definition in STORAGE_NAMESPACE_REGISTRY.paths}
     assert declared["sign_in_generation"].owner == "cadrumo.adapters.persistence.storage.custody"

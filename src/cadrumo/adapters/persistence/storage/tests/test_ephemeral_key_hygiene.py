@@ -250,7 +250,7 @@ def _call_overrides_temp_database_or_storage_settings(
             and any(name in rendered for name in temp_path_names)
         ):
             return True
-        if keyword.arg == "cadrumo_local_storage_root" and any(name in rendered for name in temp_path_names):
+        if keyword.arg == "cadrumo_storage_root" and any(name in rendered for name in temp_path_names):
             return True
     return False
 
@@ -266,7 +266,7 @@ def _call_sets_temp_storage_root_env(node: ast.AST) -> bool:
         return False
     if len(node.args) < 2:
         return False
-    if _literal_string(node.args[0]) != "CADRUMO_LOCAL_STORAGE_ROOT":
+    if _literal_string(node.args[0]) != "CADRUMO_STORAGE_ROOT":
         return False
     return "tmp_path" in ast.unparse(node.args[1])
 

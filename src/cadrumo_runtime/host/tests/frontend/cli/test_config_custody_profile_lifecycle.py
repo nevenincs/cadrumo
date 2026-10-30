@@ -85,7 +85,7 @@ def _run_cadrumo(
     return run_fresh_cli(
         args,
         settings={
-            "cadrumo_local_storage_root": str(storage_root),
+            "cadrumo_storage_root": str(storage_root),
             "cadrumo_secret_passphrase": resolved_passphrase,
             "cadrumo_output_language": "en",
         },
@@ -117,7 +117,7 @@ def _run_runtime(
             cwd=REPO_ROOT,
             env=subprocess_cli_env(
                 extra={
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+                    "CADRUMO_STORAGE_ROOT": str(storage_root),
                     "CADRUMO_OUTPUT_LANGUAGE": "en",
                     **(extra_env or {}),
                 }
@@ -140,7 +140,7 @@ def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
     root to the child, which reaches the profile through its own login.
     """
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):
@@ -173,7 +173,7 @@ def _assert_cli_logout_requires_human_proof(storage_root: Path) -> None:
 
 def _sign_out_password_authenticated_connection(storage_root: Path, profile_id: str) -> HumanSignedOut:
     """Exercise real keychainless sign-out on its own proven native connection."""
-    with override_settings(cadrumo_local_storage_root=storage_root):
+    with override_settings(cadrumo_storage_root=storage_root):
         proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value(), "utf-8")
         try:
             with asyncio.run(

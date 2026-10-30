@@ -189,7 +189,7 @@ def live_document(tmp_path: Path):
     # The reply the service gives the next read; each added document authors its own.
     reply = {"text": "{}"}
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         # The person's text selection stays on this computer and its catalogue
         # entry states no size, so no load is assessed and nothing leaves the host.
         serving_agent(lane=ON_HOST_LANE, answer=lambda _body: reply["text"]),

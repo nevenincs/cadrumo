@@ -57,7 +57,7 @@ def test_installed_client_accepts_only_the_matching_native_cohort(tmp_path: Path
     )
     authority_root = _publish_descriptor(tmp_path / "authority", "b" * 64 if cohort == "republished" else "a" * 64)
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_authority_root=authority_root),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_authority_root=authority_root),
         ThreadPoolExecutor(max_workers=1) as pool,
     ):
         running = pool.submit(host.serve)
@@ -97,7 +97,7 @@ def test_installed_client_accepts_only_the_matching_native_cohort(tmp_path: Path
 
 
 def test_unprovisioned_root_has_no_implicit_runtime_owner(tmp_path: Path) -> None:
-    with override_settings(cadrumo_local_storage_root=tmp_path), pytest.raises(RefusalError) as refusal:
+    with override_settings(cadrumo_storage_root=tmp_path), pytest.raises(RefusalError) as refusal:
         asyncio.run(
             open_installed_client(profile_id=uuid4(), frontend=OperationFrontendProjection.EXTERNAL_CLIENT, timeout=3)
         )

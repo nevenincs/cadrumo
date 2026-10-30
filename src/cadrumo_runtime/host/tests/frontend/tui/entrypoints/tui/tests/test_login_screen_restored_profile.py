@@ -113,7 +113,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
 
     root = tmp_path / "tui-root"
     assert (root / "buckets" / restored.profile_id).is_dir()
-    with override_settings(cadrumo_local_storage_root=str(root), cadrumo_output_language="en"):
+    with override_settings(cadrumo_storage_root=str(root), cadrumo_output_language="en"):
         choices = list(profile_login_choices())
         assert any(choice.profile_id == restored.profile_id for choice in choices)
         reset_test_profile_session()

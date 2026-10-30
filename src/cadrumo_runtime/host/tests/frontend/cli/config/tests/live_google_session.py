@@ -200,10 +200,8 @@ def main() -> None:
     os.environ.update(
         {
             "CADRUMO_AUTHORITY_ROOT": str(workspace / ".authority"),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-            "CADRUMO_SECRET_STORE_DIR": str(root / "secrets"),
+            "CADRUMO_STORAGE_ROOT": str(root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
-            "CADRUMO_LOG_DIR": str(root / "logs"),
         }
     )
     os.environ.pop("CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE", None)

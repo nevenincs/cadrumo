@@ -1,11 +1,11 @@
 """Shared collection-time process-private storage-root derivation.
 
 Both the repo-root ``conftest.py`` and ``src/cadrumo/conftest.py`` point
-``CADRUMO_LOCAL_STORAGE_ROOT`` at a process-private directory before imports
+``CADRUMO_STORAGE_ROOT`` at a process-private directory before imports
 resolve ``Settings``. That prevents collection-time imports from resolving an
 operator's application state. The collection root and frozen authority
-snapshot are siblings under ``CADRUMO_TEMP_DIR`` (defaulting below the
-configured Cadrumo storage root); this module provides their paths and a
+snapshot are siblings under the run's temporary directory
+(:func:`tempfile.gettempdir`); this module provides their paths and a
 best-effort cleanup so per-invocation directories do not accumulate.
 
 Pure-stdlib on purpose: importing this module must never resolve Settings,
@@ -22,11 +22,11 @@ import logging
 import os
 import shutil
 import sys
+import tempfile
 import time
 from pathlib import Path
 
 from ..core.directory_scan import scan_directory
-from ..core.storage_environment import prepare_temporary_directory
 
 _STEM = "cadrumo-pytest-"
 
@@ -345,7 +345,7 @@ def pytest_numbered_dir_root(temproot: Path | None = None) -> Path:
         user: str | None = getpass.getuser()
     except (OSError, ImportError, KeyError):
         user = None
-    root = temproot if temproot is not None else prepare_temporary_directory()
+    root = temproot if temproot is not None else Path(tempfile.gettempdir())
     return root / f"pytest-of-{user or 'unknown'}"
 
 
@@ -465,20 +465,61 @@ def reap_abandoned_numbered_dirs(root: Path, *, now: float | None = None) -> tup
 def collection_storage_root() -> Path:
     """Return this process's private collection-time storage root.
 
-    ``<CADRUMO_TEMP_DIR>/cadrumo-pytest-<pid>`` and process-private by construction
+    ``<gettempdir()>/cadrumo-pytest-<pid>`` and process-private by construction
     (keyed on the current PID), so concurrent pytest invocations, including
     parallel delegated clients sharing this worktree, never collide.
     """
-    return prepare_temporary_directory() / f"{_STEM}{os.getpid()}"
+    return Path(tempfile.gettempdir()) / f"{_STEM}{os.getpid()}"
 
 
 def authority_snapshot_root() -> Path:
     """Return this process's private directory for the frozen registry authority.
 
-    ``<CADRUMO_TEMP_DIR>/cadrumo-frozen-authority-<pid>``, beside the collection storage
+    ``<gettempdir()>/cadrumo-frozen-authority-<pid>``, beside the collection storage
     root and never inside it; :data:`AUTHORITY_SNAPSHOT_STEM` records why.
     """
-    return prepare_temporary_directory() / f"{AUTHORITY_SNAPSHOT_STEM}{os.getpid()}"
+    return Path(tempfile.gettempdir()) / f"{AUTHORITY_SNAPSHOT_STEM}{os.getpid()}"
+
+
+_LINKED_COMPONENTS: list[Path] = []
+"""Links this process created inside private roots; each is removed before its root is."""
+
+
+def link_installed_component(root: Path, member: str, installed: Path) -> None:
+    """Expose an installed component tree inside a private test root, best effort.
+
+    The storage root is the only control over where the product looks, so a
+    test root that needs the real browser build must contain it. The link
+    points at the operator's installed tree and is removed, never followed,
+    when the root is removed. Nothing happens when the installed tree is
+    absent, the member already exists, or the platform refuses the link.
+    """
+    if not installed.is_dir():
+        return
+    link = root / member
+    if link.exists() or link.is_symlink():
+        return
+    try:
+        link.parent.mkdir(parents=True, exist_ok=True)
+        if sys.platform == "win32":
+            import _winapi
+
+            _winapi.CreateJunction(str(installed), str(link))
+        else:
+            link.symlink_to(installed, target_is_directory=True)
+    except OSError:
+        return
+    _LINKED_COMPONENTS.append(link)
+
+
+def _unlink_components() -> None:
+    for link in _LINKED_COMPONENTS:
+        with contextlib.suppress(OSError):
+            if sys.platform == "win32":
+                link.rmdir()
+            else:
+                link.unlink()
+    _LINKED_COMPONENTS.clear()
 
 
 def _release_log_handlers_under(root: Path) -> None:
@@ -566,6 +607,7 @@ def register_collection_storage_root_cleanup(root: Path) -> None:
         reap_abandoned_numbered_dirs(pytest_numbered_dir_root(root.parent))
 
     def _cleanup() -> None:
+        _unlink_components()
         _release_log_handlers_under(root)
         shutil.rmtree(root, ignore_errors=True)
         shutil.rmtree(authority_snapshot_root(), ignore_errors=True)
@@ -588,7 +630,7 @@ def apply_collection_storage_root(*, overwrite: bool = False) -> Path:
 
     Args:
         overwrite: When ``True``, unconditionally overwrite
-            ``CADRUMO_LOCAL_STORAGE_ROOT`` (``src/cadrumo/conftest.py``'s
+            ``CADRUMO_STORAGE_ROOT`` (``src/cadrumo/conftest.py``'s
             historical behaviour). When ``False`` (default), only set it if
             unset (the repo-root ``conftest.py``'s historical
             ``os.environ.setdefault`` behaviour, since the root conftest loads
@@ -597,8 +639,8 @@ def apply_collection_storage_root(*, overwrite: bool = False) -> Path:
     """
     root = collection_storage_root()
     if overwrite:
-        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+        os.environ["CADRUMO_STORAGE_ROOT"] = str(root)
     else:
-        os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+        os.environ.setdefault("CADRUMO_STORAGE_ROOT", str(root))
     register_collection_storage_root_cleanup(root)
     return root

@@ -345,10 +345,10 @@ def test_workflow_run_persists_only_to_the_secure_database_object(
     why: "``runs_dir`` remains part of the API as a logical marker path for
     callers and tests, but no plaintext run file is written there." The
     Path ``WorkflowRunRepository.save`` returns is a caller-facing marker
-    built from that settings field, never something the method itself
+    built from the workflow-runs member, never something the method itself
     writes to; the only real write goes to the encrypted secure-object
     backend. The master-key rotation sweep used to list
-    ``cadrumo_workflow_runs_dir`` as a plan entry (a re-encryption target the
+    the workflow-runs member as a plan entry (a re-encryption target the
     directory could hold), which is why the category shares the architecture
     of the categories that sweep was the ONLY consumer of, despite declaring a
     different one; those siblings are now declared dormant, and this one is

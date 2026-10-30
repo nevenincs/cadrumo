@@ -241,7 +241,7 @@ def _launch_parent(tmp_path: Path, *, mode: str | None = None) -> subprocess.Pop
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "PYTHONPATH": str(source_root),
             "CADRUMO_AUTHORITY_ROOT": os.environ["CADRUMO_AUTHORITY_ROOT"],
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
+            "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
         },
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,

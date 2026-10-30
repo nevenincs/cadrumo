@@ -243,7 +243,7 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket(tmp_path:
     _register_operator_profile()
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path / "no-active", cadrumo_active_profile=None),
+        override_settings(cadrumo_storage_root=tmp_path / "no-active", cadrumo_active_profile=None),
         pytest.raises(AuthConfigureNoActiveBucketError) as excinfo,
     ):
         configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
@@ -713,9 +713,8 @@ def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) 
     cert_path.write_bytes(b"not a pkcs12 bundle")
     base_settings = load_settings()
     explicit_settings = Settings(
-        cadrumo_local_storage_root=base_settings.cadrumo_local_storage_root,
+        cadrumo_storage_root=base_settings.cadrumo_storage_root,
         cadrumo_active_profile=base_settings.cadrumo_active_profile,
-        cadrumo_secret_store_dir=base_settings.cadrumo_secret_store_dir,
         cadrumo_secret_passphrase=base_settings.cadrumo_secret_passphrase,
         cadrumo_certificate_path=cert_path,
     )

@@ -43,12 +43,12 @@ class _ActiveRouteSession:
         settings = load_settings()
         bucket_id = (settings.cadrumo_active_profile or "").strip()
         if not bucket_id:
-            bucket_id = observe_active_profile_pointer(settings.cadrumo_local_storage_root).bucket_id or ""
+            bucket_id = observe_active_profile_pointer(settings.cadrumo_storage_root).bucket_id or ""
         if not bucket_id:
             return None
         resolved = OperatorScopeSession(
             bucket_id=bucket_id,
-            storage_root=settings.cadrumo_local_storage_root,
+            storage_root=settings.cadrumo_storage_root,
         )
         if self.session == resolved:
             return self.session

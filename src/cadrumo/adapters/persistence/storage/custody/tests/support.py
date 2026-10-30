@@ -51,7 +51,7 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
     from ..capsule_records import ProfileCustodyCapsuleLabel
     from ..label_head_repository import ProfileLabelHeadRepository
 
-    resolved_root = root if root is not None else load_settings().cadrumo_local_storage_root
+    resolved_root = root if root is not None else load_settings().cadrumo_storage_root
     if resolved_root is None:
         raise RuntimeError("forging a capsule label requires a configured local storage root")
 

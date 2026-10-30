@@ -105,8 +105,7 @@ async def test_help_and_invalid_invocations_do_not_initialize_runtime(
         name = "cadrumo-runtime.exe" if sys.platform == "win32" else "cadrumo-runtime"
         command = [str(Path(sysconfig.get_path("scripts")) / name), *arguments]
     environment = os.environ.copy()
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(tmp_path / "absent-storage")
-    environment["CADRUMO_LOG_DIR"] = str(tmp_path / "absent-logs")
+    environment["CADRUMO_STORAGE_ROOT"] = str(tmp_path / "absent-storage")
     environment["CADRUMO_AUTHORITY_ROOT"] = str(tmp_path / "absent-authority")
     process = await asyncio.create_subprocess_exec(
         *command,

@@ -16,7 +16,6 @@ from typing import Protocol
 
 import pytest
 
-from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
 from ...directory_scan import scan_directory
 from ...storage_taxonomy import StorageCategory
@@ -79,7 +78,7 @@ class TestRunContextOutcome:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             with run_context(entrypoint="cadrumo test ok", arguments=()) as info:
                 run_id = info.run_id
             trace = load_trace(run_id)
@@ -91,7 +90,7 @@ class TestRunContextOutcome:
             (KeyboardInterrupt(), "cadrumo test int"),
         )
 
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             for exception, entrypoint in cases:
                 captured: dict[str, str] = {}
                 expected_error = (
@@ -115,7 +114,7 @@ class TestRunContextOutcome:
         tmp_path: Path,
     ) -> None:
         run_id = "1111111111111111"
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
+        with override_settings(cadrumo_storage_root=tmp_path) as settings:
             trace_path = storage_path(StorageCategory.RUNS, settings=settings) / run_id / TRACE_FILENAME
             with (
                 pytest.raises(RunTracePersistenceError) as excinfo,
@@ -132,7 +131,7 @@ class TestRunContextOutcome:
     ) -> None:
         run_id = "2222222222222222"
         with (
-            override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)),
+            override_settings(cadrumo_storage_root=tmp_path),
             pytest.raises(RuntimeError, match="primary failure"),
             run_context(entrypoint="cadrumo test body fail", arguments=(), run_id=run_id),
         ):
@@ -154,7 +153,7 @@ class TestRunContextRunIdValidation:
 
         bad_run_ids = ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789")
 
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             for bad_run_id in bad_run_ids:
                 before = scan_directory(tmp_path)
                 with (
@@ -171,7 +170,7 @@ class TestRunContextRunIdValidation:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             with run_context(
                 entrypoint="cadrumo test",
                 arguments=(),
@@ -187,7 +186,7 @@ class TestRunIdPropagation:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             chain: Callable[[str], None] = _SubmissionStep(_InboxStep(_StatusStep()))
             with run_context(entrypoint="cadrumo test chain", arguments=()) as info:
                 chain("alpha")
@@ -220,7 +219,7 @@ class TestRunSinkScrubbing:
         tmp_path: Path,
     ) -> None:
         """A NIF-shaped value in a GenericPayload field must not appear in plain text."""
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             with run_context(entrypoint="cadrumo test scrub nif", arguments=()) as info:
                 record_event(
                     RunEventKind.ASSERTION,
@@ -249,7 +248,7 @@ class TestRunSinkScrubbing:
         from .sink import JsonlRunSink
         from .sink_scope import attach_run_sink
 
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)
             attach_run_sink(sink)
             try:
@@ -266,7 +265,7 @@ class TestRunSinkScrubbing:
         tmp_path: Path,
     ) -> None:
         """Every JSONL line must deserialise cleanly after scrubbing is applied."""
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             with run_context(entrypoint="cadrumo test scrub json", arguments=()) as info:
                 record_event(
                     RunEventKind.NAVIGATION,

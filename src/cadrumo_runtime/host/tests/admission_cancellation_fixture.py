@@ -115,7 +115,7 @@ async def _exercise_composed(tmp_path: Path) -> None:
         root, ((identity, key), _) = profiles
         route = ExitStack()
         route.enter_context(
-            override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id))
+            override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id))
         )
         custody = ProfileWorkerCustody(identity, storage_root=root)
         session = lease(identity)
@@ -202,9 +202,7 @@ async def exercise_lazy_close(tmp_path: Path) -> None:
     """Open the publication during submit, then close it from the owning caller."""
     with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
-        with override_settings(
-            cadrumo_local_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)
-        ):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)):
             custody = ProfileWorkerCustody(identity, storage_root=root)
             session = lease(identity)
             custody.install(session, bytearray(key))

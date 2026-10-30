@@ -328,6 +328,6 @@ def test_insecure_storage_ancestor_refuses_before_any_bus_call(tmp_path: Path) -
     os.chmod(writable_ancestor, 0o777)  # noqa: S103 - deliberately unsafe refusal fixture
     root = writable_ancestor / "storage"
     assert writable_ancestor in root.parents and writable_ancestor.stat().st_mode & 0o022
-    with override_settings(cadrumo_local_storage_root=root), pytest.raises(RefusalError) as refused:
+    with override_settings(cadrumo_storage_root=root), pytest.raises(RefusalError) as refused:
         linux_gnome_lock.require_gnome_login_producer(posix_owner_uid())
     assert refused.value.reason is RefusalCode.UNAVAILABLE

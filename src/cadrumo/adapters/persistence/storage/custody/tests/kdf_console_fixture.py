@@ -42,7 +42,7 @@ def main() -> None:
         isolate_child_consoles()
     elif mode != "shared":
         raise ValueError("unknown KDF console fixture mode")
-    settings = Settings(cadrumo_local_storage_root=root)
+    settings = Settings(cadrumo_storage_root=root)
     # The ready handshake also proves the worker sits in its job object.
     with _SupervisedKdfWorker(deadline=time.monotonic() + 120, settings=settings) as worker:
         process = worker._process

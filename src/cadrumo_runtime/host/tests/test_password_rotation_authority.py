@@ -158,7 +158,7 @@ async def _authority(
         isolated = ProfileWorkerBindingOwner()
         patch.setattr(profile_worker_custody, "profile_worker_binding", isolated)
         patch.setattr(active_session, "profile_worker_binding", isolated)
-        with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(worker.binding.profile_id)):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(worker.binding.profile_id)):
             custody = WitnessCustody(worker, storage_root=root)
             original = lease(worker)
             session = changed(

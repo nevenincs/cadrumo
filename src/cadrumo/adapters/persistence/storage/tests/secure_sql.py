@@ -20,9 +20,8 @@ from .....application.user_profile.profile_record_repository import close_active
 from .....core.config import Settings, load_settings, override_settings
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.errors.hierarchy import CadrumoError
-from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_environment import STORAGE_ROOT
 from .....tests.env_scope import scoped_env_var
-from .....tests.storage_scope import storage_overrides
 from ..bucket.directory_layout import BucketPaths
 from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,
@@ -264,7 +263,7 @@ def isolated_sessionless_storage_root(*, tmp_path: Path) -> Generator[Path]:
     """
 
     storage_root = tmp_path / "cadrumo-storage"
-    with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None) as settings:
+    with override_settings(cadrumo_storage_root=storage_root, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield storage_root
@@ -279,7 +278,7 @@ def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
 
     Unlike :func:`isolated_sessionless_storage_root` (which nests the root
     under ``tmp_path / "cadrumo-storage"``), this fixture points
-    ``cadrumo_local_storage_root`` directly at ``tmp_path`` — the shape a
+    ``cadrumo_storage_root`` directly at ``tmp_path`` — the shape a
     cluster of lower-level repository and runtime test modules already relied
     on before this fixture was promoted as their single canonical source.
     Several of those modules also write ancillary fixture bytes (e.g. a
@@ -295,7 +294,7 @@ def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
         from ....adapters.persistence.storage.tests.secure_sql import isolated_storage_root as _isolated_storage
     """
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield
@@ -323,16 +322,10 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     tmp_path.mkdir(parents=True, exist_ok=True)
     storage_root = tmp_path / "cadrumo-storage"
     passphrase = load_settings().cadrumo_dev_test_database_password
-    secret_overrides = storage_overrides(tmp_path, StorageCategory.SECRETS)
-    for dependency in secret_overrides.values():
-        dependency.mkdir(parents=True, exist_ok=True)
-    socket_overrides = storage_overrides(storage_root, StorageCategory.CONNECTION_SOCKETS)
-    socket_field, socket_path = next(iter(socket_overrides.items()))
-    socket_path.mkdir(parents=True, exist_ok=True, mode=0o700)
     with (
-        scoped_env_var(socket_field.upper(), str(socket_path)),
+        scoped_env_var(STORAGE_ROOT.variable, str(storage_root)),
         override_settings(
-            cadrumo_local_storage_root=storage_root,
+            cadrumo_storage_root=storage_root,
             cadrumo_active_profile=None,
             cadrumo_secret_passphrase=passphrase,
             # Enrolment calibrates the KDF grid by MEASURING real supervised
@@ -344,11 +337,6 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
             # band's floor, so the wrap does not weaken and every derivation is
             # still a real Argon2id through the same supervised worker.
             cadrumo_profile_kdf_measure_calibration=False,
-            # Anchored on ``tmp_path``, not on the storage root, so the secret
-            # substrate stays a sibling of the bucket tree rather than nesting
-            # inside it -- the production custody split.
-            **secret_overrides,
-            **socket_overrides,
         ) as settings,
     ):
         dispose_engine(settings)
@@ -410,15 +398,8 @@ def isolated_runtime_profile(
     storage_root = tmp_path / "cadrumo-storage"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
-    # A relocated secrets directory is an operator-selected override, which the
-    # storage tree refuses to create on the operator's behalf; this helper is
-    # that operator, so it creates the location it declares.
-    secret_overrides = storage_overrides(tmp_path, StorageCategory.SECRETS)
-    for location in secret_overrides.values():
-        location.mkdir(parents=True, exist_ok=True)
-
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_active_profile=bucket_id,
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations, one child process per warmup and per sample. See
@@ -427,7 +408,6 @@ def isolated_runtime_profile(
         # floor, so no wrap weakens and the derivation stays real.
         cadrumo_profile_kdf_measure_calibration=False,
         cadrumo_secret_passphrase=passphrase,
-        **secret_overrides,
     ) as settings:
         dispose_engine(settings)
         session, paths = provision_test_profile_bucket_session(
@@ -529,7 +509,7 @@ def isolated_two_bucket_runtime(
     opened_at = datetime.now(UTC).replace(microsecond=0)
 
     with override_settings(
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_active_profile=primary_bucket_id,
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations, one child process per warmup and per sample. See
@@ -538,10 +518,6 @@ def isolated_two_bucket_runtime(
         # floor, so no wrap weakens and the derivation stays real.
         cadrumo_profile_kdf_measure_calibration=False,
         cadrumo_secret_passphrase=passphrase,
-        # One secret substrate for both buckets: the production shape is many
-        # buckets under one root sharing one master key, each with its own
-        # wrapped DEK.
-        **storage_overrides(tmp_path, StorageCategory.SECRETS),
     ) as settings:
         dispose_engine(settings)
         primary_session, primary_paths = provision_test_profile_bucket_session(
@@ -604,48 +580,12 @@ def isolated_cli_runtime_profile(
     bucket_id: str = _DEFAULT_RUNTIME_BUCKET_ID,
     label: str | None = None,
 ) -> Generator[TestRuntimeProfile]:
-    """Create a real runtime profile with CLI-adjacent directories isolated.
-
-    CLI work-unit tests need the active bucket database plus the
-    filesystem directories read from settings for runs, drafts, tokens,
-    financial transactions, and invoices. Keep that setup on the central
-    settings surface instead of per-test environment mutation.
-
-    The five are named by category, so the settings field and the leaf
-    directory both come from the taxonomy. Spelled by hand, they had already
-    drifted: this block pinned ``cadrumo_financial_txs_dir`` to ``txs`` while
-    the declared subpath is ``financial/transactions``, and nothing caught it,
-    because a fixture that only round-trips its own override agrees with any
-    name it is given.
-    """
-
-    overrides = storage_overrides(
-        tmp_path,
-        StorageCategory.RUNS,
-        StorageCategory.DRAFTS,
-        StorageCategory.TOKENS,
-        StorageCategory.FINANCIAL_TRANSACTIONS,
-        StorageCategory.INVOICES,
-    )
-    # Each is an operator-selected override, which the storage tree refuses to
-    # create on the operator's behalf; this helper is that operator, so it
-    # creates every location it declares, as isolated_runtime_profile does.
-    for location in overrides.values():
-        location.mkdir(parents=True, exist_ok=True)
-
-    with (
-        override_settings(**overrides),
-        isolated_runtime_profile(
-            tmp_path=tmp_path,
-            bucket_id=bucket_id,
-            label=label if label is not None else default_test_profile_label(bucket_id),
-        ) as profile,
-    ):
-        # The active session opened by ``isolated_runtime_profile`` already
-        # owns a valid engine for this bucket; disposing it here would strand
-        # the session's registered handle. The added directory overrides do
-        # not change the database route, so the engine stays valid for the
-        # CLI test and is disposed on the session's close.
+    """Create a real runtime profile with every storage member beneath its root."""
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=bucket_id,
+        label=label if label is not None else default_test_profile_label(bucket_id),
+    ) as profile:
         yield profile
 
 
@@ -665,7 +605,7 @@ def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
     run end to end, which is what most CLI-driven scenarios need.
 
     Every generated-output directory settings field derives its default from
-    ``cadrumo_local_storage_root`` (every root-derived member of
+    ``cadrumo_storage_root`` (every root-derived member of
     :data:`~core.STORAGE_TAXONOMY`), so isolating the root through
     :func:`isolated_profile_storage_root` alone relocates the whole family —
     tokens, drafts, runs, financial catalogues, and every sibling directory —

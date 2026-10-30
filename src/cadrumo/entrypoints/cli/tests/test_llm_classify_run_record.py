@@ -22,6 +22,8 @@ from cadrumo.adapters.persistence.llm.run_records import LLMRunRecorder
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.ledger.llm_classification import suggest_llm_classification
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import LLMClassifierError
@@ -90,7 +92,7 @@ def test_suggest_llm_classification_records_one_run_on_success(profile: TestRunt
             model="test-model",
         )
 
-        run_recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+        run_recorder = LLMRunRecorder(root_dir=storage_path(StorageCategory.LLM_RUN_RECORD, settings=profile.settings))
         assert run_recorder.load_records() == ()
         ports = compose_ledger_llm(bucket_id=_BUCKET_ID, settings=profile.settings).ports
 
@@ -126,7 +128,7 @@ def test_suggest_llm_classification_records_one_run_on_failure(profile: TestRunt
             model="test-model",
         )
 
-        run_recorder = LLMRunRecorder(root_dir=profile.settings.cadrumo_llm_run_record_dir)
+        run_recorder = LLMRunRecorder(root_dir=storage_path(StorageCategory.LLM_RUN_RECORD, settings=profile.settings))
         ports = compose_ledger_llm(bucket_id=_BUCKET_ID, settings=profile.settings).ports
 
         with pytest.raises(LLMClassifierError):

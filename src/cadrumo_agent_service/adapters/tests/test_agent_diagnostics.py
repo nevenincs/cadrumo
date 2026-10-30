@@ -13,6 +13,8 @@ import pytest
 
 from cadrumo.core import logging as project_logging
 from cadrumo.core.config import override_settings
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, eventually, finishes
 
 from ..agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
@@ -30,10 +32,10 @@ def log_file(tmp_path: Path) -> Iterator[Path]:
     try:
         project_logging._configured = False
         with override_settings(
-            cadrumo_log_dir=tmp_path / "logs", cadrumo_log_root_level="DEBUG", cadrumo_log_file_level="DEBUG"
+            cadrumo_storage_root=tmp_path, cadrumo_log_root_level="DEBUG", cadrumo_log_file_level="DEBUG"
         ):
             project_logging.configure_logging()
-            yield tmp_path / "logs" / "cadrumo.log"
+            yield storage_path(StorageCategory.LOGS) / "cadrumo.log"
     finally:
         project_logging._configured = False
         project_logging.configure_logging()
@@ -240,6 +242,6 @@ def test_an_agent_keeps_writing_while_the_application_log_is_stalled(log_file: P
         tail.release(timeout=HANG_GUARD_SECONDS)
         logger.removeHandler(stalled)
     eventually(
-        lambda: "agent_diagnostic_output_dropped" in _read(log_file),
+        lambda: log_file.is_file() and "agent_diagnostic_output_dropped" in _read(log_file),
         what="the report of the lines the stalled log lost",
     )

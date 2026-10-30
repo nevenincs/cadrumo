@@ -33,8 +33,6 @@ from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.inventory import FIXTURES_DIR
 from .....tests.pdf_fixtures import multi_page_text_pdf_bytes
-from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..preconditions import LLMPreconditionCondition
 from ..statement_reading import STATEMENT_READING_PROMPT_ID, StatementReader
@@ -48,19 +46,13 @@ _STATEMENT = FIXTURES_DIR / "financial" / "n26" / "n26-savings-2025-01.pdf"
 @contextmanager
 def _pdf_provider(tmp_path: Path) -> Generator[PdfStatementProvider]:
     """Bind the production reader on a real client, and a PDF provider that reads through it."""
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
+    settings = EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
 
     def factory() -> StatementReader:
         client = LLMClient(
             settings=settings,
             caller="cadrumo.adapters.outbound.llm.statement_reading",
             prompt_id=STATEMENT_READING_PROMPT_ID,
-            cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-            usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
         )
         return StatementReader(settings=settings, client=client)
 

@@ -10,7 +10,6 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ... import service_administration as service_module
@@ -94,7 +93,6 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, store: MemoryProvi
     service._providers = ProviderSettingsService(
         store=store,
         catalog_source=StaticCatalogSource(),
-        storage_mode=StorageMode.INSTALLED,
     )
     monkeypatch.setattr(service_module, "declared_provider_catalog_response", _declared)
     return service

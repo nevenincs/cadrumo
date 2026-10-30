@@ -235,7 +235,7 @@ def test_the_application_borrow_refuses_typed_without_reading_custody(
     # No capsule exists for this profile: a borrow that still read the custody
     # envelope would fail on it before reporting absence.
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path),
+        override_settings(cadrumo_storage_root=tmp_path),
         bind_profile_login_session_port(build_profile_login_session_port()),
         pytest.raises(ProfileReceiptRefusedError) as refused,
         borrow_receipt_proof(profile_id=profile_id),
@@ -383,7 +383,7 @@ def test_an_unreadable_proof_names_why_the_keychain_refused(tmp_path: Path, keyc
 def test_the_application_borrow_carries_the_keychain_reason(tmp_path: Path, keychain: _RecordingKeyring) -> None:
     keychain.failure = _NO_SUCH_LOGON_SESSION
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path),
+        override_settings(cadrumo_storage_root=tmp_path),
         bind_profile_login_session_port(build_profile_login_session_port()),
     ):
         assert keychain_unavailability() is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS

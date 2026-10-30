@@ -124,7 +124,7 @@ def test_corrupt_active_profile_pointer_projects_the_canonical_repair_action(tmp
     @command_error_boundary
     def inspect_pointer(json_out: bool = typer.Option(False, "--json")) -> None:
         del json_out
-        Settings(cadrumo_local_storage_root=tmp_path)
+        Settings(cadrumo_storage_root=tmp_path)
 
     result = invoke_typer_app(pointer_app, ["--json"], catch_exceptions=False)
 
@@ -424,7 +424,7 @@ def test_real_root_no_recovery_refusal_projects_the_closed_outcome(tmp_path: Pat
 def test_auth_acquisition_conflict_projects_factual_no_recovery_to_json(tmp_path: Path) -> None:
     """A real held auth lock reaches the CLI only through its typed verdict."""
     auth_app = typer.Typer()
-    settings = Settings(cadrumo_token_dir=tmp_path / "tokens")
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     @auth_app.command()
     @command_error_boundary

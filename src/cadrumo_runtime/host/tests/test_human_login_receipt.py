@@ -100,7 +100,7 @@ def _exercise(tmp_path: Path, mode: str) -> None:
     # which reaps any receipt minted by this child process.
     with pytest.MonkeyPatch.context() as patcher, profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
         root, ((identity, _), _) = profiles
-        with override_settings(cadrumo_local_storage_root=root):
+        with override_settings(cadrumo_storage_root=root):
             store = _Keyring(available=mode != "unavailable")
             patcher.setattr(acceleration_keychain, "_keyring", lambda: (store, _KeyringError, _KeyringError))
             custody = ProfileWorkerCustody(identity, storage_root=root)

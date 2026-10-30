@@ -35,7 +35,7 @@ _OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=F
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports(
     session=OperatorScopeSession(
         bucket_id=_BUCKET_A,
-        storage_root=load_settings().cadrumo_local_storage_root,
+        storage_root=load_settings().cadrumo_storage_root,
     ),
 )
 
@@ -57,7 +57,7 @@ def test_span_yields_the_target_when_its_custody_session_is_open() -> None:
 def test_span_yields_none_when_no_target_bucket_resolves(tmp_path: Path) -> None:
     """A cold root with no pointer and no override has no target to guard."""
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings,
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None) as settings,
         active_profile_storage_span(settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS) as bucket_id,
     ):
         assert bucket_id is None
@@ -105,7 +105,7 @@ def test_span_refuses_the_same_bucket_id_on_a_different_storage_root(
     """
     other_root = tmp_path / "second-root"
     with override_settings(
-        cadrumo_local_storage_root=other_root,
+        cadrumo_storage_root=other_root,
         cadrumo_active_profile=_BUCKET_A,
     ) as settings_other_root:
         pass
@@ -136,9 +136,9 @@ def test_span_refuses_a_pointer_target_whose_session_was_never_opened(
     this test writes it explicitly: the guard must fire on the bucket the
     pointer names, which is the route a real operator command follows.
     """
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
         write_pointer(
-            settings.cadrumo_local_storage_root,
+            settings.cadrumo_storage_root,
             BucketPointer.selected(bucket_id=_BUCKET_B, transition_revision=1),
         )
 

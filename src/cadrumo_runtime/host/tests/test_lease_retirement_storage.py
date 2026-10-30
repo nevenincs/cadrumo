@@ -37,7 +37,7 @@ def _exercise(tmp_path: Path) -> None:
     with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
         profile_id = str(identity.binding.profile_id)
-        with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=profile_id):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=profile_id):
             custody = ProfileWorkerCustody(identity, storage_root=root)
             admitted = lease(identity)
             custody.install(admitted, bytearray(key))

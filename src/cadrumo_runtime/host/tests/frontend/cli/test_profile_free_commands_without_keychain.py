@@ -37,7 +37,7 @@ def _run(
         return run_fresh_cli(
             args,
             settings={
-                "cadrumo_local_storage_root": str(storage_root),
+                "cadrumo_storage_root": str(storage_root),
                 "cadrumo_secret_passphrase": _passphrase(),
                 "cadrumo_output_language": "en",
             },
@@ -51,7 +51,7 @@ def _run(
 def active_profile_root(tmp_path: Path) -> Path:
     """Register a profile and leave it selected, as an operator's last login would."""
     with override_settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):

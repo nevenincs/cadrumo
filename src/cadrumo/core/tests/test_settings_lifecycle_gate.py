@@ -2,7 +2,7 @@
 
 A sibling property to :mod:`~tests.test_storage_provenance_gate`, and neither
 gate subsumes the other. The provenance gate matches the *join*: it fires
-whenever ``cadrumo_local_storage_root`` is joined onto by ``/``, ``joinpath``,
+whenever ``cadrumo_storage_root`` is joined onto by ``/``, ``joinpath``,
 ``glob``, ``rglob``, ``iterdir``, or a ``Path(...)`` wrapper, and it cannot see
 a location spelled out as a literal with no root in sight. This gate matches
 the *literal*: a shipped module or a test hand-typing the taxonomy's own
@@ -324,13 +324,6 @@ def chain_sites(module: str, tree: ast.AST) -> tuple[ChainSite, ...]:
 #: would make the assertion compare the taxonomy against itself.
 PERMITTED_PIN_MODULES: Final[frozenset[str]] = frozenset(
     {
-        # storage_overrides()/relocated_storage_path() ARE the accessors under
-        # test; the multi-segment expectation is the independent oracle their
-        # own docstrings describe.
-        "tests/test_storage_scope.py",
-        # "The directory names asserted below are deliberate literals... the
-        # expectation must come from outside the declaration."
-        "core/tests/test_ensure_storage_tree.py",
         # "The oracle is the filesystem, walked after the fact, compared
         # against an expectation derived from STORAGE_TAXONOMY... calling the
         # same iteration the materialiser calls would assert nothing at all."
@@ -340,9 +333,6 @@ PERMITTED_PIN_MODULES: Final[frozenset[str]] = frozenset(
         # let a Settings/classifier defect drift both sides in lockstep. Its
         # own module docstring justifies each pinned literal by name.
         "core/tests/test_storage_route_classification.py",
-        # "...each is the independent oracle for what its settings field
-        # defaults to when unoverridden, not scaffolding."
-        "core/tests/test_storage_substrate_state_root.py",
         # "This module owns the on-disk-name oracle, and owning it is the
         # point... Deriving the expectation from the taxonomy would turn
         # every assertion below into the taxonomy compared with itself."
@@ -361,25 +351,11 @@ PERMITTED_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
             "core/tests/test_storage_taxonomy_name_unification.py",
             "test_the_database_url_resolves_to_its_pre_migration_shape",
         ),
-        # An arbitrary operator-supplied override value for a relative-path
-        # env var, asserting anchor computation -- not the taxonomy's own
-        # declared subpath for INVOICES/ATTACHMENTS. The segments overlap
-        # with real category names by coincidence of a plausible-looking
-        # probe value, not because this asserts what those categories
-        # resolve to by default.
-        (
-            "core/tests/test_config.py",
-            "TestRepoRelativePathNormalisationCoverage.test_relative_audit_flagged_paths_resolve_under_project_root",
-        ),
         # Independent resolver oracles for the managed Playwright cache and
         # the repository-local storage-root default.
         (
             "application/tests/test_browser_location.py",
             "test_browsers_root_defaults_under_the_configured_storage_root",
-        ),
-        (
-            "core/tests/test_storage_environment.py",
-            "test_shared_root_relocates_settings_and_relative_refinements",
         ),
         # Independent oracle for the pywin32 generated cache: the reviewed
         # packaging patch documents this exact location, so the test pins it

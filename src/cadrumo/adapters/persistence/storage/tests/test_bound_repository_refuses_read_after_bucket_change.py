@@ -68,11 +68,11 @@ def test_a_bound_repository_refuses_to_read_once_the_session_serves_another_buck
     """DISCRIMINATING: the direction that would hand B's operator A's records."""
     for identity in (_BUCKET_A_ID, _BUCKET_B_ID):
         publish_registration_capsule(tmp_path, identity)
-    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID)
+    settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         repository = inspect_storage_runtime(settings, now=_NOW).secure_object_repository()
@@ -106,11 +106,11 @@ def test_the_same_repository_still_reads_under_its_own_bucket(tmp_path: Path) ->
     The payload asserted here is the one the leak test looks for.
     """
     publish_registration_capsule(tmp_path, _BUCKET_A_ID)
-    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID)
+    settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
         activate_session(_session(_BUCKET_A_ID)),
     ):
         repository = inspect_storage_runtime(settings, now=_NOW).secure_object_repository()

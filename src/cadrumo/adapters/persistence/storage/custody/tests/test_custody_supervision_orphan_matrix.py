@@ -123,7 +123,7 @@ def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and
     line, child_returncode = asyncio.run(
         _kill_orphan_child(
             [sys.executable, "-c", _ORPHAN_CHILD, str(tmp_path), str(envelope_path), _CREDENTIAL_INPUT],
-            env={**os.environ, "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path)},
+            env={**os.environ, "CADRUMO_STORAGE_ROOT": str(tmp_path)},
         ),
     )
     assert line, "supervised child produced no readiness line"
@@ -145,7 +145,7 @@ def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and
         envelope,
         _CREDENTIAL_INPUT,
         sentinel=sentinel,
-        settings=Settings(cadrumo_local_storage_root=tmp_path),
+        settings=Settings(cadrumo_storage_root=tmp_path),
         timeout_seconds=_RECOVERY_UNLOCK_DEADLINE_SECONDS,
     )
     assert unlock.dek == dek

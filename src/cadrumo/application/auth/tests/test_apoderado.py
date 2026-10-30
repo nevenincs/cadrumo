@@ -42,7 +42,7 @@ _SECONDARY_PROFILE_BUCKET_ID = "27272727-2727-4272-8272-272727272727"
 @pytest.fixture
 def isolated_settings(tmp_path: Path) -> Settings:
     """Provide explicit settings while the service uses an in-memory port fake."""
-    return Settings(cadrumo_local_storage_root=tmp_path)
+    return Settings(cadrumo_storage_root=tmp_path)
 
 
 @pytest.fixture
@@ -375,7 +375,7 @@ class TestSettingsRouting:
         svc = _service(isolated_settings, repository_factory=repository_factory)
         wrong_root = tmp_path / "wrong-storage-root"
 
-        with override_settings(cadrumo_local_storage_root=wrong_root, cadrumo_active_profile=_PROFILE_BUCKET_ID):
+        with override_settings(cadrumo_storage_root=wrong_root, cadrumo_active_profile=_PROFILE_BUCKET_ID):
             config = svc.configure(
                 bucket_id=_PROFILE_BUCKET_ID,
                 represented_nif="12345678Z",

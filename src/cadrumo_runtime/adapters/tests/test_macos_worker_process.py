@@ -767,7 +767,7 @@ def test_scope_refuses_off_darwin(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
 def test_job_definition_keeps_explicit_storage_controls_and_refuses_ambient_inputs(tmp_path: Path) -> None:
     """Storage routing survives env -i without allowing loader or ambient credential inputs."""
     environment = _ENVIRONMENT | {
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path),
+        "CADRUMO_STORAGE_ROOT": str(tmp_path),
         "CADRUMO_AUTHORITY_ROOT": str(tmp_path / "published-authority"),
         "TMPDIR": str(tmp_path / "scratch"),
     }
@@ -785,7 +785,7 @@ def test_job_definition_keeps_explicit_storage_controls_and_refuses_ambient_inpu
 
     definition = plistlib.loads(definition_for(environment))
     assert definition["EnvironmentVariables"] == environment
-    assert "CADRUMO_LOCAL_STORAGE_ROOT=" + str(tmp_path) in definition["ProgramArguments"]
+    assert "CADRUMO_STORAGE_ROOT=" + str(tmp_path) in definition["ProgramArguments"]
     assert "CADRUMO_AUTHORITY_ROOT=" + str(tmp_path / "published-authority") in definition["ProgramArguments"]
     assert "TMPDIR=" + str(tmp_path / "scratch") in definition["ProgramArguments"]
     for extra in ({"PYTHONPATH": "/untrusted"}, {"PRIVATE_CREDENTIAL": "secret"}, {"TMPDIR": "bad\0path"}):

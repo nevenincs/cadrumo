@@ -21,13 +21,11 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.redaction.rules import redact_for_cli_output
-from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
     validate_m184_member_share_sum,
 )
-from cadrumo.tests.storage_scope import storage_overrides
 from cadrumo.tests.subprocess_cli import run_cadrumo_subprocess
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
@@ -157,12 +155,10 @@ class TestRevisionViewSurfacesDetailRows:
             argv,
             bootstrap_module="cadrumo_runtime.host.frontend.cli.bootstrap",
             settings={
-                "cadrumo_local_storage_root": storage_root,
+                "cadrumo_storage_root": storage_root,
                 "cadrumo_output_language": "en",
                 "cadrumo_cli_reveal_identifiers": True,
                 "cadrumo_profile_kdf_measure_calibration": load_settings().cadrumo_profile_kdf_measure_calibration,
-                **storage_overrides(workspace, StorageCategory.SECRETS),
-                **storage_overrides(storage_root, StorageCategory.CONNECTION_SOCKETS),
             },
             stdin_payload=stdin_payload,
             timeout=None,

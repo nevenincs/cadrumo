@@ -20,9 +20,7 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.consent_ledger import EvidenceConsentLedger
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..consent import EvidenceConsentToken
 from ..errors import LLMConfigError, LLMConsentError, LLMContentionError, LLMProviderError
@@ -37,19 +35,13 @@ _TOKEN = EvidenceConsentToken(surface="runtime:ledger.evidence.extract", evidenc
 
 def _settings(tmp_path: Path, *, cloud_upload_permitted: bool = True) -> EnvFileFreeSettings:
     return EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
+        cadrumo_storage_root=tmp_path,
         cadrumo_evidence_cloud_upload_permitted=cloud_upload_permitted,
     )
 
 
 def _client(settings: EnvFileFreeSettings) -> LLMClient:
-    return LLMClient(
-        settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-    )
+    return LLMClient(settings=settings)
 
 
 def _request(**fields: object) -> LLMRequest:
@@ -297,8 +289,6 @@ def test_an_injected_port_wins_over_the_bound_one(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
     client = LLMClient(
         settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
         model_runs=injected,
     )
     with serving_agent() as bound:

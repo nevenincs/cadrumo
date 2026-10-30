@@ -26,10 +26,8 @@ import pytest
 
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
-from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
 from ...logging import DropOperatorDocumentEchoFilter, flush_logging, get_logger, operator_document_output
-from ...storage_taxonomy import StorageCategory
 from .run_scope import run_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -72,7 +70,7 @@ class TestRunContextLoggingFilter:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             logger = get_logger("cadrumo.core.observability.test_logging_filter")
             capture = _CaptureHandler()
             logging.getLogger().addHandler(capture)
@@ -128,7 +126,7 @@ class TestStderrRunEventFilter:
         from ..store import iter_events
         from .recorder import record_event
 
-        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+        with override_settings(cadrumo_storage_root=tmp_path):
             with run_context(entrypoint="cadrumo test stderr-filter", arguments=()) as info:
                 record_event(
                     RunEventKind.NAVIGATION,

@@ -84,8 +84,8 @@ def force_english_output() -> Iterator[None]:
 
 @pytest.fixture(autouse=True)
 def isolated_cadrumo_root(tmp_path: Path) -> Iterator[None]:
-    """Point Settings.cadrumo_local_storage_root at the test's temporary root."""
-    with temporary_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path)):
+    """Point Settings.cadrumo_storage_root at the test's temporary root."""
+    with temporary_env(CADRUMO_STORAGE_ROOT=str(tmp_path)):
         yield
 
 

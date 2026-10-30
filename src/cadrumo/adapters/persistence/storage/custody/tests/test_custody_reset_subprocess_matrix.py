@@ -175,7 +175,7 @@ def _child_env(root: Path) -> dict[str, str]:
         raise RuntimeError("the reset subprocess matrix requires a configured secret-store passphrase")
     return {
         **os.environ,
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
+        "CADRUMO_STORAGE_ROOT": str(root),
         "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         "CADRUMO_SECRET_PASSPHRASE": passphrase.get_secret_value(),
     }

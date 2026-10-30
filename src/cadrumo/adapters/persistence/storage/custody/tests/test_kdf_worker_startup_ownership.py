@@ -66,9 +66,7 @@ def test_partial_start_closes_every_acquired_descriptor_once(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    worker = _SupervisedKdfWorker(
-        deadline=time.monotonic() + 30, settings=Settings(cadrumo_local_storage_root=tmp_path)
-    )
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     primary = (
         KeyboardInterrupt("synthetic startup interruption") if interrupted else OSError("synthetic startup failure")
     )

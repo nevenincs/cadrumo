@@ -36,7 +36,7 @@ the crash funnel (the only honest way to observe a terminal traceback
 replacement).
 
 The ``"logs"`` literal is deliberate: the crash subprocess sets only
-``CADRUMO_LOCAL_STORAGE_ROOT``, no log-directory override, so
+``CADRUMO_STORAGE_ROOT``, no log-directory override, so
 ``state_root / "logs" / "cadrumo.log"`` is the real DEFAULT-derived
 diagnostic-log location, not an injected value.
 """
@@ -270,7 +270,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     state_root = tmp_path / "state"
     # The runner pins explicit category paths, and the child inherits them; the
     # log location under test is the one derived from the root alone.
-    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(state_root)):
+    with isolated_aeat_env(CADRUMO_STORAGE_ROOT=str(state_root)):
         child_environment = dict(os.environ)
     logged_run = as_text_completed_process(
         run_audited_process(

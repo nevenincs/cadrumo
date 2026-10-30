@@ -18,9 +18,7 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 from .....core.config_support import LLMProvider
 from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_records import LLMRunRecorder
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..errors import LLMProviderError
 from ..models import LLMRequest
@@ -32,21 +30,11 @@ _LANE_MODEL = f"{ON_HOST_LANE.provider_id}/{ON_HOST_LANE.transport}/{ON_HOST_LAN
 
 
 def _settings(tmp_path: Path) -> EnvFileFreeSettings:
-    return EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "probe-cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
+    return EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
 
 
 def _client(tmp_path: Path, *, run_recorder: LLMRunRecorder | None = None) -> LLMClient:
-    settings = _settings(tmp_path)
-    return LLMClient(
-        settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_record_recorder=run_recorder,
-    )
+    return LLMClient(settings=_settings(tmp_path), run_record_recorder=run_recorder)
 
 
 def _request() -> LLMRequest:

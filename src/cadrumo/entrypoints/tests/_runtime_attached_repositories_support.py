@@ -133,7 +133,7 @@ def _active_runtime(tmp_path: Path, bucket_id: str) -> Generator[None]:
     # capsule is published. Registering here is that publication, so every span
     # runs against a bucket directory an operator's profile could actually own.
     ensure_registered_bucket(tmp_path, bucket_id)
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=bucket_id) as settings:
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=bucket_id) as settings:
         dispose_engine(settings)
         with EphemeralBucketSession(key=_MASTER_KEY):
             try:

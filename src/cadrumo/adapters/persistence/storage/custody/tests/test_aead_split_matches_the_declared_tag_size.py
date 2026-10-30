@@ -58,7 +58,7 @@ def _sentinel(tmp_path: Path) -> ProfileCustodySentinelRecord:
             salt_b64=base64.b64encode(b"s" * 16).decode("ascii"),
             output_bytes=32,
         ),
-        settings=Settings(cadrumo_local_storage_root=tmp_path),
+        settings=Settings(cadrumo_storage_root=tmp_path),
     )
     return create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
 

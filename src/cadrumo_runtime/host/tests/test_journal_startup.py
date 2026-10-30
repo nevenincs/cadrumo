@@ -150,9 +150,7 @@ def test_native_worker_refuses_private_submit_when_startup_journal_is_unreadable
         )
 
         authority = BoundaryAuthority(deny_commit=False)
-        with override_settings(
-            cadrumo_local_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)
-        ):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)):
             worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
             try:
                 admitted = lease(identity)

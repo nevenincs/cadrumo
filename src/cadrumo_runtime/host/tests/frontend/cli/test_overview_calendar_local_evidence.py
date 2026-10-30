@@ -16,9 +16,10 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.config import load_settings
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -87,7 +88,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             )
         )
         artefact_body = b"modelo-303-2025-1T-justificante"
-        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+        store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         artefact = store.persist_artefact(
             ("303", 2025, Period.from_year_and_code(2025, "1T"), "12345678901234567890"),
             FiledDeclaracionArtefact(
@@ -242,7 +243,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
 def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justificante() -> None:
     pdf_bytes = (FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf").read_bytes()
     with open_test_profile_session(PRIMARY_PROFILE_ID):
-        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+        store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         artefact = store.persist_artefact(
             ("130", 2026, Period.from_year_and_code(2026, "1T"), "202613000010001A"),
             FiledDeclaracionArtefact(

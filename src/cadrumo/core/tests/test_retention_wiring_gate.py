@@ -18,16 +18,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CADRUMO_ROOT = Path(__file__).resolve().parents[2]
 
-# Each RETENTION-classified family (see test_settings_lifecycle_gate._RETENTION)
+# Each RETENTION-classified family (a storage category value, or a settings field)
 # mapped to the production module and the exact prune invocation token that must
 # appear as a call (beyond any definition) in that module.
 _RETENTION_WIRING: dict[str, tuple[str, str]] = {
     # The three LLM diagnostic stores are swept once per client construction
     # (LLMClient._sweep_retention_stores), not on every append.
-    "cadrumo_llm_cache_dir": ("adapters/outbound/llm/client.py", "self.cache.prune"),
-    "cadrumo_llm_usage_dir": ("adapters/outbound/llm/client.py", "self.usage_recorder.prune"),
-    "cadrumo_llm_run_record_dir": ("adapters/outbound/llm/client.py", "self.run_record_recorder.prune"),
-    "cadrumo_runs_dir": ("core/observability/store.py", "prune_run_traces("),
+    "llm-cache": ("adapters/outbound/llm/client.py", "self.cache.prune"),
+    "llm-usage": ("adapters/outbound/llm/client.py", "self.usage_recorder.prune"),
+    "llm-run-telemetry": ("adapters/outbound/llm/client.py", "self.run_record_recorder.prune"),
+    "runs": ("core/observability/store.py", "prune_run_traces("),
     "cadrumo_wallet_diagnostic_dump_dir": (
         "adapters/outbound/aeat/sede/iva_compensation_wallet.py",
         "prune_wallet_diagnostic_dumps(",

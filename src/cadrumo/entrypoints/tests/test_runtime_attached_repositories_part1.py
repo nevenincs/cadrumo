@@ -265,7 +265,7 @@ def test_current_runtime_defaults_refuse_missing_session(tmp_path: Path) -> None
     """
     for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
         with (
-            override_settings(cadrumo_local_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
+            override_settings(cadrumo_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
             pytest.raises((StorageValidationError, AuthDiagnosticPersistenceError)) as raised,
         ):
             operation()
@@ -279,7 +279,7 @@ def test_current_runtime_defaults_refuse_route_session_mismatch(tmp_path: Path) 
     """A session serving another bucket refuses with the mismatch code, not the absence one."""
     for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
         with (
-            override_settings(cadrumo_local_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
+            override_settings(cadrumo_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
             activate_session(_session(_BUCKET_B_ID)),
             pytest.raises((StorageValidationError, AuthDiagnosticPersistenceError)) as raised,
         ):
@@ -304,7 +304,7 @@ def test_diagnostics_secure_object_total_degrades_on_missing_session(
 ) -> None:
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID):
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID):
         # Pin the precondition through the typed refusal the probe swallows.
         # The degrade log renders the error's translation key, which is shared
         # by every unready state, so asserting on the log alone would not
@@ -328,7 +328,7 @@ def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID),
         activate_session(_session(_BUCKET_B_ID)),
     ):
         # See the sibling above: the route mismatch is what must be shown to

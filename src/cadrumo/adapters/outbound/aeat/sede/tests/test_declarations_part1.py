@@ -627,7 +627,7 @@ class TestSearchOptionSelection:
         self,
         tmp_path: Path,
     ) -> None:
-        settings = Settings(cadrumo_token_dir=tmp_path)
+        settings = Settings(cadrumo_storage_root=tmp_path)
         profile = Profile(name="test-declarations")
         async with (
             shared_playwright_runtime() as playwright,
@@ -722,7 +722,7 @@ class TestSearchOptionSelection:
         expected_index: int | None,
         lookalike: int,
     ) -> None:
-        settings = Settings(cadrumo_token_dir=tmp_path)
+        settings = Settings(cadrumo_storage_root=tmp_path)
         profile = Profile(name="test-declarations")
         async with (
             shared_playwright_runtime() as playwright,
@@ -746,7 +746,7 @@ class TestSearchOptionSelection:
 
     @pytest.mark.asyncio
     async def test_distinct_labels_for_one_code_are_refused_without_a_click(self, tmp_path: Path) -> None:
-        settings = Settings(cadrumo_token_dir=tmp_path)
+        settings = Settings(cadrumo_storage_root=tmp_path)
         profile = Profile(name="test-declarations")
         async with (
             shared_playwright_runtime() as playwright,
@@ -768,7 +768,7 @@ class TestSearchOptionSelection:
     @pytest.mark.asyncio
     async def test_real_register_modelos_select_by_code_including_the_twice_listed_one(self, tmp_path: Path) -> None:
         labels = _combobox_option_texts(aeat_sede_fixture("declaraciones-modelo-100-2022"))
-        settings = Settings(cadrumo_token_dir=tmp_path)
+        settings = Settings(cadrumo_storage_root=tmp_path)
         profile = Profile(name="test-declarations")
         async with (
             shared_playwright_runtime() as playwright,

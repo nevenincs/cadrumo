@@ -18,7 +18,7 @@ def test_unbound_profile_carries_only_the_failed_resolution_fact(tmp_path: Path)
     """The adapter surfaces the unresolved profile without a recovery transport."""
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None),
         pytest.raises(GoogleAuthProfileUnboundError) as exc_info,
     ):
         resolve_active_profile()

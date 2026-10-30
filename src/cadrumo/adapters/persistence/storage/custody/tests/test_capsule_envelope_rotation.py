@@ -67,7 +67,7 @@ _RECOVERY_SECRET = "-".join(("ABCDE", "FGHJK", "LMNPQ", "RSTUV", "WXYZ2", "34567
 
 
 def _settings(tmp_path: Path) -> Settings:
-    return Settings(cadrumo_local_storage_root=tmp_path / "state")
+    return Settings(cadrumo_storage_root=tmp_path / "state")
 
 
 def _kdf(salt: bytes = b"k" * 16) -> ProfileCustodyKdfParameters:

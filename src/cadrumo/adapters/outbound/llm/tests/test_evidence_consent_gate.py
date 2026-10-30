@@ -35,8 +35,6 @@ from .....core.model_roles import ModelRole
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..client import LLMClient as _ClientUnderInspection
 from ..consent import (
@@ -91,20 +89,14 @@ def _settings(
     accident, so a refusal below can only be the consent gate.
     """
     return EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
+        cadrumo_storage_root=tmp_path,
         cadrumo_evidence_cloud_upload_permitted=cloud_upload_permitted,
         cadrumo_evidence_gestor_mode=gestor_mode,
     )
 
 
 def _client(settings: EnvFileFreeSettings) -> LLMClient:
-    return LLMClient(
-        settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-    )
+    return LLMClient(settings=settings)
 
 
 @contextmanager

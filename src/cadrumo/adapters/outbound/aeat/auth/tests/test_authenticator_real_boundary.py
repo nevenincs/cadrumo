@@ -51,8 +51,7 @@ def _settings(tmp_path: Path) -> Settings:
     return Settings(
         cadrumo_certificate_path=_build_bundle(tmp_path),
         cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_INPUT),
-        cadrumo_token_dir=tmp_path / ".tokens",
-        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_storage_root=tmp_path / "storage",
         cadrumo_browser_close_timeout_ms=15_000,
     )
 

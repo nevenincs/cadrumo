@@ -38,8 +38,6 @@ from .....core.model_roles import ModelRole
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..errors import LLMConsentError
 from ..evidence_draft_text import TextInvoiceFieldExtractor
@@ -73,16 +71,8 @@ def _transcription(origin: FieldOrigin, *, name: str = "pdfplumber") -> Document
 def _extractor(
     tmp_path: Path, *, operation: PinnedAuthorityOperation, public_corpus: bool = False
 ) -> TextInvoiceFieldExtractor:
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
-    client = LLMClient(
-        settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-    )
+    settings = EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
+    client = LLMClient(settings=settings)
     return TextInvoiceFieldExtractor(client=client, operation=operation, settings=settings, public_corpus=public_corpus)
 
 

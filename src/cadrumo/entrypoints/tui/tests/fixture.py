@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 WORKSPACE_ENV_VAR = "CADRUMO_TUI_WORKSPACE"
 
-_STATE_ROOT = load_settings().cadrumo_local_storage_root / "development" / "tui"
+_STATE_ROOT = load_settings().cadrumo_storage_root / "development" / "tui"
 
 
 def workspace() -> Path:

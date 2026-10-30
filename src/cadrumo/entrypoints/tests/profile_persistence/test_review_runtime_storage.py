@@ -72,7 +72,7 @@ def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path
         draft = _ready_modelo_130_draft(operation=_authority_operation_for_test)
 
         with (
-            override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID),
+            override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID),
             pytest.raises(StorageValidationError) as refusal,
         ):
             compute_current_approval_basis(

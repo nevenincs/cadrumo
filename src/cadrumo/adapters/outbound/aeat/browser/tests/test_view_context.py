@@ -120,7 +120,7 @@ async def _view_context(
     tmp_path: Path, synthetic: _SyntheticPages
 ) -> AsyncGenerator[tuple[BrowserContext, _RecordingObserver]]:
     settings = Settings(
-        cadrumo_local_storage_root=tmp_path,
+        cadrumo_storage_root=tmp_path,
         cadrumo_browser_headless=True,
         cadrumo_proxy_url=_CLOSED_PROXY,
     )

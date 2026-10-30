@@ -76,7 +76,7 @@ def _run(
     """
     root_flags = ("--format", "json") if as_json else ()
     settings: dict[str, object] = {
-        "cadrumo_local_storage_root": storage_root,
+        "cadrumo_storage_root": storage_root,
         "cadrumo_output_language": "en",
     }
     if with_passphrase:
@@ -111,7 +111,7 @@ def _create_profile(storage_root: Path) -> str:
     from cadrumo.application.user_profile.registration import register_profile_with_credentials
     from cadrumo.core.config import override_settings
 
-    with override_settings(cadrumo_local_storage_root=storage_root):
+    with override_settings(cadrumo_storage_root=storage_root):
         outcome = register_profile_with_credentials(
             label="session-operator",
             passphrase=_CREDENTIAL_INPUT,

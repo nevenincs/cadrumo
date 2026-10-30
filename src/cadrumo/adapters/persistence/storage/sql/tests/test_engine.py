@@ -168,12 +168,12 @@ def test_engine_builds_against_derived_storage_root_fallback(tmp_path: Path) -> 
     engine against that fallback file. This is the engine-boundary
     counterpart of the config layer's database-URL derivation, and
     guards the operator cold-start path where only
-    ``cadrumo_local_storage_root`` is set.
+    ``cadrumo_storage_root`` is set.
     """
     storage_root = tmp_path / "derived-storage-root"
     settings = Settings(
         cadrumo_active_profile=None,
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
     )
     # "cadrumo.db" is the independent oracle for the fallback derivation:
     # ``Settings`` computes this same path via ``storage_path(StorageCategory

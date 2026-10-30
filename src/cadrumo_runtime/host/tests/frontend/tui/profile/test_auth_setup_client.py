@@ -169,7 +169,7 @@ async def test_held_auth_setup_reads_live_locale_on_open_and_after_save_preservi
     monkeypatch.setattr(aeat_auth_client, "configure_profile_authentication", configure)
     monkeypatch.setattr(aeat_auth_client, "read_sync_readiness", readiness)
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=""),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language=""),
         profile_output_language_precedence(),
     ):
         register_language_resolver()
@@ -218,7 +218,7 @@ def test_auth_overview_refuses_a_language_change_during_its_read(
         return current
 
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=""),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language=""),
         profile_output_language_precedence(),
     ):
         register_language_resolver()

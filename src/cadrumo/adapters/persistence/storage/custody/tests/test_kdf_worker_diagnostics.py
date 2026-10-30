@@ -46,9 +46,7 @@ def _kdf() -> ProfileCustodyKdfParameters:
 @pytest.fixture
 def simulated_worker(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> _SupervisedKdfWorker:
     """Inject transport boundaries; real child/crypto coverage stays in supervision tests."""
-    worker = _SupervisedKdfWorker(
-        deadline=time.monotonic() + 30, settings=Settings(cadrumo_local_storage_root=tmp_path)
-    )
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     frames = iter(
         ((KDF_FRAME_CONTROL, _PRIVATE.encode()), (KDF_FRAME_CONTROL, calibration_frame_bytes(derivation_ns=125)))
     )

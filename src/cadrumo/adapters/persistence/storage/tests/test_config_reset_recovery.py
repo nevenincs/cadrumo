@@ -1,14 +1,6 @@
 """Fresh-process recovery proofs for every durable config-reset boundary.
 
-The ``"secrets"`` literal in the crash-subprocess settings preamble is
-deliberate, not injected: the profile the crash subprocess must unlock is
-created beforehand via ``_isolated_reset_root`` (from ``.test_config_reset``),
-which wraps ``isolated_profile_storage_root`` -- deriving
-``cadrumo_secret_store_dir`` from the real taxonomy accessor
-(``storage_overrides(tmp_path, StorageCategory.SECRETS)`` -> ``tmp_path /
-"secrets"``). The subprocess must independently compute the same location to
-find the master key that setup already minted; renaming it breaks the
-handoff between the two processes.
+Parent and crash subprocess derive every storage member from the same root.
 """
 
 from __future__ import annotations
@@ -26,11 +18,9 @@ from cadrumo.adapters.persistence.storage.certificate_secret_backend import buil
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
-from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
-from cadrumo.tests.storage_scope import storage_env_overrides
 
 from .test_config_reset import (
     _OVERRIDE_REASON,
@@ -79,9 +69,8 @@ _SETTINGS_PREAMBLE = dedent(
     root = Path(sys.argv[1])
     settings = Settings(
         _env_file=None,
-        cadrumo_local_storage_root=root,
+        cadrumo_storage_root=root,
         cadrumo_active_profile=None,
-        cadrumo_secret_store_dir=root.parent / "secrets",
         cadrumo_secret_passphrase=DEV_TEST_DATABASE_PASSWORD,
         cadrumo_output_language="en",
     )
@@ -231,10 +220,7 @@ def _child_env(root: Path) -> dict[str, str]:
     env.update(
         {
             "CADRUMO_AUTHORITY_ROOT": str(authority_root),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-            # Anchored on the root's parent, so the secret substrate stays a
-            # sibling of the bucket tree rather than nesting inside it.
-            **storage_env_overrides(root.parent, StorageCategory.SECRETS),
+            "CADRUMO_STORAGE_ROOT": str(root),
             "CADRUMO_SECRET_PASSPHRASE": DEV_TEST_DATABASE_PASSWORD,
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",

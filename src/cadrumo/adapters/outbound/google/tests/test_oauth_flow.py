@@ -188,7 +188,7 @@ def test_profile_record_guard_refuses_a_missing_profile_bucket_pointer(tmp_path:
     with (
         override_settings(
             cadrumo_active_profile="missing-profile",
-            cadrumo_local_storage_root=tmp_path,
+            cadrumo_storage_root=tmp_path,
         ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
@@ -309,7 +309,7 @@ def test_login_flow_refuses_unavailable_profile_record_session_before_oauth_netw
 
     with (
         override_settings(
-            cadrumo_local_storage_root=storage_root,
+            cadrumo_storage_root=storage_root,
             cadrumo_active_profile=profile_id,
         ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,

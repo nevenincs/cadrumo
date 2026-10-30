@@ -37,7 +37,7 @@ def _run(storage_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
     env = {key: value for key, value in os.environ.items() if not key.startswith(("AEAT_", "PYTEST_"))}
     env.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",

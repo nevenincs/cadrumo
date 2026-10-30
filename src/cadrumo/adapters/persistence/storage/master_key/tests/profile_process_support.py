@@ -59,7 +59,7 @@ def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None
     # envelope these children write is wrapped at a strength production accepts.
     settings = Settings(
         _env_file=None,
-        cadrumo_local_storage_root=storage_root,
+        cadrumo_storage_root=storage_root,
         cadrumo_active_profile=None,
         cadrumo_profile_kdf_measure_calibration=False,
     )

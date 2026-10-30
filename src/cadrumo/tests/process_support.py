@@ -8,14 +8,14 @@ import sys
 from importlib.metadata import distribution
 from pathlib import Path
 
-from cadrumo.core.storage_environment import storage_directory
+from cadrumo.core.storage_environment import configured_storage_root
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 
 
 def runtime_namespace_base() -> Path:
     """Create the configured socket base for temporary integration namespaces."""
-    root = storage_directory("CADRUMO_RUNTIME_SOCKET_DIR", storage_location(StorageCategory.CONNECTION_SOCKETS).subpath)
+    root = configured_storage_root() / storage_location(StorageCategory.CONNECTION_SOCKETS).relative_path()
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
     return root
 

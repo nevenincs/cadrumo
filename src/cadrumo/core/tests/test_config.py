@@ -40,9 +40,9 @@ from ..config import (
     reset_settings_cache,
 )
 from ..config_support import StorageRouteKind
+from ..errors.hierarchy import CoreValidationError
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
-from .checkout import project_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
@@ -151,7 +151,7 @@ class TestEnvironmentSources:
             CADRUMO_CERTIFICATE_PATH="",
             CADRUMO_CERTIFICATE_PASSWORD_SECRET="",
         ):
-            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+            settings = settings_without_env_file(cadrumo_storage_root=tmp_path / "cadrumo-state")
         assert settings.cadrumo_certificate_path is None
         assert settings.cadrumo_certificate_password_secret is None
 
@@ -182,14 +182,8 @@ class TestEnvironmentSources:
             UNRELATED_CADRUMO_TYPO="1",
             CADRUMO_AUTH_PROVIDER="certificate",
         ):
-            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+            settings = settings_without_env_file(cadrumo_storage_root=tmp_path / "cadrumo-state")
         assert settings.cadrumo_auth_provider is AuthProviderKind.CERTIFICATE
-
-    def test_relative_env_paths_resolve_from_project_root(self, tmp_path: Path) -> None:
-        """Relative storage refinements follow the explicit storage root on every platform."""
-        with _isolated_aeat_env(CADRUMO_WORKFLOW_RUNS_DIR="env/workflow/runs"):
-            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        assert settings.cadrumo_workflow_runs_dir == tmp_path / "cadrumo-state" / "env" / "workflow" / "runs"
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional path env vars must normalize to ``None``."""
@@ -254,35 +248,17 @@ class TestRepoRelativePathNormalisationCoverage:
             "with a documented justification."
         )
 
-    def test_audit_flagged_drift_settings_are_normalised(self) -> None:
-        """Three Settings fields surfaced by a security audit MUST be normalised.
+    def test_the_storage_root_is_normalised(self) -> None:
+        """The one storage root setting MUST be normalised.
 
-        ``cadrumo_invoices_dir``, ``cadrumo_attachments_dir``, ``cadrumo_runs_dir``
-        all carry user-supplied filesystem paths that the rest of the
-        codebase joins with ``Path()``; without normalisation a relative
-        value would resolve against the process CWD and silently leak
-        files outside the configured local store.
+        Every storage member resolves beneath it, so a relative or unnormalised
+        value would resolve against the process CWD and silently leak files
+        outside the configured local store.
         """
         path_validator = self._validator_field_set("_normalize_repo_relative_paths")
-        for field_name in ("cadrumo_invoices_dir", "cadrumo_attachments_dir", "cadrumo_runs_dir"):
-            assert field_name in path_validator, (
-                f"{field_name} was flagged by the security audit as missing from "
-                "_normalize_repo_relative_paths but is still not in the validator. "
-                "Re-add it to the field tuple in src/cadrumo/config.py."
-            )
-
-    def test_relative_audit_flagged_paths_resolve_under_project_root(self, tmp_path: Path) -> None:
-        """Arbitrary relative storage refinements follow the explicit local root."""
-        with _isolated_aeat_env(
-            CADRUMO_INVOICES_DIR="var/probe-category/invoices",
-            CADRUMO_ATTACHMENTS_DIR="var/probe-category/attachments",
-            CADRUMO_RUNS_DIR="var/probe-runs",
-        ):
-            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        app_root = tmp_path / "cadrumo-state"
-        assert settings.cadrumo_invoices_dir == app_root / "var" / "probe-category" / "invoices"
-        assert settings.cadrumo_attachments_dir == app_root / "var" / "probe-category" / "attachments"
-        assert settings.cadrumo_runs_dir == app_root / "var" / "probe-runs"
+        assert "cadrumo_storage_root" in path_validator, (
+            "cadrumo_storage_root is missing from _normalize_repo_relative_paths in src/cadrumo/core/config.py."
+        )
 
 
 def _parse_env_example_kv() -> dict[str, str]:
@@ -306,9 +282,9 @@ def _parse_env_example_kv() -> dict[str, str]:
 
 
 class TestDatabaseUrlDerivation:
-    """``cadrumo_database_url`` must stay coherent with ``cadrumo_local_storage_root``.
+    """``cadrumo_database_url`` must stay coherent with ``cadrumo_storage_root``.
 
-    Setting ``CADRUMO_LOCAL_STORAGE_ROOT`` alone — with no explicit
+    Setting ``CADRUMO_STORAGE_ROOT`` alone — with no explicit
     ``CADRUMO_DATABASE_URL`` and no active profile — must never leave the
     URL empty. An empty URL made first-contact CLI commands exit-5 with
     a raw internal ``cadrumo_database_url is empty`` error instead of the
@@ -320,7 +296,7 @@ class TestDatabaseUrlDerivation:
         ``sqlite:///<root>/cadrumo.db`` fallback rather than staying empty."""
         storage_root = tmp_path / "aeat-state"
 
-        with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
+        with _isolated_aeat_env(CADRUMO_STORAGE_ROOT=storage_root.as_posix()):
             settings = settings_without_env_file()
 
         expected = (
@@ -334,7 +310,7 @@ class TestDatabaseUrlDerivation:
         explicit_url = f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}"
 
         with _isolated_aeat_env(
-            CADRUMO_LOCAL_STORAGE_ROOT=(tmp_path / "aeat-state").as_posix(),
+            CADRUMO_STORAGE_ROOT=(tmp_path / "aeat-state").as_posix(),
             CADRUMO_DATABASE_URL=explicit_url,
         ):
             settings = settings_without_env_file()
@@ -350,7 +326,7 @@ class TestDatabaseUrlDerivation:
         """
         storage_root = tmp_path / "aeat-state"
 
-        with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
+        with _isolated_aeat_env(CADRUMO_STORAGE_ROOT=storage_root.as_posix()):
             settings = settings_without_env_file(cadrumo_active_profile="acme")
 
         expected_database_file = (
@@ -388,7 +364,7 @@ class TestDatabaseUrlDerivation:
         override_token = config.settings_override.set(None)
         reset_settings_cache()
         try:
-            with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
+            with _isolated_aeat_env(CADRUMO_STORAGE_ROOT=storage_root.as_posix()):
                 settings = load_settings()
         finally:
             reset_settings_cache()
@@ -397,45 +373,31 @@ class TestDatabaseUrlDerivation:
         assert calls == 1
         assert classify_storage_route(settings).bucket_id == "profile-a"
 
-    def test_load_settings_normalizes_a_relative_root_before_the_atomic_observation(
+    def test_load_settings_refuses_a_relative_root_before_any_pointer_read(
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """A relative root cannot reread B while constructing the cache entry for A.
-
-        The cache-key observation and the settings field anchor the relative
-        root through the same declaration, so both name one canonical root.
-        """
+        """A relative root is refused without anchoring it anywhere or reading a pointer."""
         from .. import bucket_pointer, config
 
-        relative_root = Path("relative-s168-root")
-        canonical_root = (project_root() / relative_root).resolve()
-        observed = [
-            BucketPointer.selected(bucket_id="profile-a", transition_revision=4),
-            BucketPointer.selected(bucket_id="profile-b", transition_revision=5),
-        ]
         calls = 0
 
-        def switch_after_observation(root: Path) -> BucketPointer:
+        def count_reads(root: Path) -> BucketPointer:
             nonlocal calls
-            assert root == canonical_root
-            selected = observed[min(calls, 1)]
             calls += 1
-            return selected
+            raise AssertionError(f"pointer read for {root}")
 
-        monkeypatch.setattr(bucket_pointer, "read_pointer", switch_after_observation)
+        monkeypatch.setattr(bucket_pointer, "read_pointer", count_reads)
         override_token = config.settings_override.set(None)
         reset_settings_cache()
         try:
-            with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=relative_root.as_posix()):
-                settings = load_settings()
+            with _isolated_aeat_env(CADRUMO_STORAGE_ROOT="relative-s168-root"), pytest.raises(CoreValidationError):
+                load_settings()
         finally:
             reset_settings_cache()
             config.settings_override.reset(override_token)
 
-        assert calls == 1
-        assert settings.cadrumo_local_storage_root == canonical_root
-        assert classify_storage_route(settings).bucket_id == "profile-a"
+        assert calls == 0
 
     def test_env_example_leaves_normal_profile_storage_on_the_bucket_route(self, tmp_path: Path) -> None:
         """The shipped environment template must not force a global database route.
@@ -453,7 +415,7 @@ class TestDatabaseUrlDerivation:
 
         with _isolated_aeat_env(**template_vars):
             settings = settings_without_env_file(
-                cadrumo_local_storage_root=storage_root,
+                cadrumo_storage_root=storage_root,
                 cadrumo_active_profile=bucket_id,
             )
 

@@ -24,7 +24,7 @@ def test_runtime_host_storage_producers_are_owned_and_live() -> None:
     sites = {
         site.key
         for path in modules
-        if "cadrumo_local_storage_root" in (source := path.read_text(encoding="utf-8"))
+        if "cadrumo_storage_root" in (source := path.read_text(encoding="utf-8"))
         for site in root_join_sites(path.relative_to(_HOST).as_posix(), ast.parse(source))
     }
     assert sites == _PERMITTED_PRODUCERS, (

@@ -28,7 +28,7 @@ def test_normal_authority_admission_retains_generation_and_log_fact_without_crea
     storage = tmp_path / "storage"
     caplog.set_level(logging.DEBUG, logger="cadrumo.application.cli_provisioning")
 
-    with override_settings(cadrumo_authority_root=descriptor_path.parent, cadrumo_local_storage_root=storage):
+    with override_settings(cadrumo_authority_root=descriptor_path.parent, cadrumo_storage_root=storage):
         admit_cli_authority()
         assert published_authority_generation() == descriptor.logical_generation
 
@@ -43,7 +43,7 @@ def test_malformed_authority_remains_a_refusal_without_materializing_storage(tmp
     (authority / "authority.current.json").write_bytes(payload)
     storage = tmp_path / "storage"
 
-    with override_settings(cadrumo_authority_root=authority, cadrumo_local_storage_root=storage):
+    with override_settings(cadrumo_authority_root=authority, cadrumo_storage_root=storage):
         with pytest.raises(AuthorityStoreError):
             admit_cli_authority()
         assert published_authority_generation() is None
@@ -55,7 +55,7 @@ def test_absent_authority_is_not_provisioned_or_replaced_by_packaged_authority(t
     authority = tmp_path / "absent-authority"
     storage = tmp_path / "storage"
 
-    with override_settings(cadrumo_authority_root=authority, cadrumo_local_storage_root=storage):
+    with override_settings(cadrumo_authority_root=authority, cadrumo_storage_root=storage):
         with pytest.raises(AuthorityDescriptorUnavailableError) as refusal:
             admit_cli_authority()
         assert published_authority_generation() is None

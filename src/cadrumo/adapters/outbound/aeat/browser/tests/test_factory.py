@@ -12,6 +12,8 @@ import pytest
 from ......application.auth.protocols import BrowserSessionPort
 from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
 from ...tests.process_support import playwright_driver_pid, wait_for_process_exit, wait_for_task_readiness
 from ..errors import BrowserError, BrowserPreconditionCondition
 from ..factory import (
@@ -254,9 +256,11 @@ async def test_launch_failure_is_a_factual_typed_safety_outcome(tmp_path: Path) 
     The Chromium working root names an existing file, so the real launch cannot
     make its working directory.
     """
-    working_root = tmp_path / "not-a-directory"
+    storage_root = tmp_path / "storage"
+    working_root = storage_root / storage_location(StorageCategory.CHROMIUM_DATA).relative_path()
+    working_root.parent.mkdir(parents=True)
     working_root.write_bytes(b"")
-    session = await create_browser_session(Settings(cadrumo_chromium_data_root=working_root), _profile("launch-hint"))
+    session = await create_browser_session(Settings(cadrumo_storage_root=storage_root), _profile("launch-hint"))
     try:
         with pytest.raises(BrowserError) as excinfo:
             await session.create_context()

@@ -1,6 +1,5 @@
 """Configured Chromium working roots preserve isolation and bounded lifetime."""
 
-import os
 from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
@@ -11,8 +10,10 @@ if TYPE_CHECKING:
 import psutil
 import pytest
 
-from ......application.browser_location import playwright_browsers_root
-from ......core.config import Settings, override_settings
+from ......core.config import Settings, load_settings, override_settings
+from ......core.errors.hierarchy import CoreValidationError
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location, storage_path
 from ..errors import BrowserError
 from ..factory import create_browser_session
 from ..profile import Profile
@@ -21,62 +22,42 @@ from ..session import BrowserSession
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def test_binary_cache_survives_private_storage_isolation(tmp_path: Path) -> None:
-    """Direct drivers and product launches use the same binary cache under every storage root."""
-    binary_root = Path(os.environ["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"])
-    assert binary_root.is_absolute()
-    assert Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"]) == binary_root
-    for name in ("first", "second"):
-        storage_root = tmp_path / name
-        settings = Settings(cadrumo_local_storage_root=storage_root)
-        assert playwright_browsers_root(settings=settings) == binary_root
-        assert settings.cadrumo_chromium_data_root == storage_root / "chromium-data"
-        # The binaries live outside every storage root.
-        assert not binary_root.is_relative_to(storage_root)
-
-
-@pytest.mark.parametrize("override", [None, "", "custom-browser-data", "absolute"])
-def test_root_follows_storage_policy_independently_of_cwd(tmp_path, monkeypatch, override):
+def test_root_follows_storage_policy_independently_of_cwd(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("CADRUMO_CHROMIUM_DATA_ROOT", raising=False)
-    if override == "absolute":
-        override = str(tmp_path / "custom-browser-data")
-    if override is not None:
-        monkeypatch.setenv("CADRUMO_CHROMIUM_DATA_ROOT", override)
     root = tmp_path / "application-storage"
-    if override:
-        override_path = Path(override)
-        expected = override_path.resolve() if override_path.is_absolute() else (root / override_path).resolve()
-    else:
-        expected = root / "chromium-data"
-    settings = Settings(cadrumo_local_storage_root=root)
-    assert settings.cadrumo_chromium_data_root == expected
+    expected = root / storage_location(StorageCategory.CHROMIUM_DATA).relative_path()
+    assert storage_path(StorageCategory.CHROMIUM_DATA, settings=Settings(cadrumo_storage_root=root)) == expected
+    # A root named relative to the cwd is refused, never anchored there.
+    with pytest.raises(CoreValidationError, match="must be an absolute directory") as refused:
+        Settings(cadrumo_storage_root=root.name)
+    assert refused.value.context is not None
+    assert refused.value.context["storage_root_refusal"] == "relative_override_installed"
     monkeypatch.chdir(tmp_path.parent)
-    assert Settings(cadrumo_local_storage_root=root).cadrumo_chromium_data_root == expected
+    assert storage_path(StorageCategory.CHROMIUM_DATA, settings=Settings(cadrumo_storage_root=root)) == expected
 
 
-def test_changing_storage_root_rederives_chromium_default(tmp_path):
-    with override_settings(cadrumo_local_storage_root=tmp_path / "first") as first:
-        assert first.cadrumo_chromium_data_root == tmp_path / "first" / "chromium-data"
-        with override_settings(cadrumo_local_storage_root=tmp_path / "second") as second:
-            assert second.cadrumo_chromium_data_root == tmp_path / "second" / "chromium-data"
-        with (
-            override_settings(cadrumo_chromium_data_root=tmp_path / "explicit"),
-            override_settings(cadrumo_local_storage_root=tmp_path / "third") as third,
-        ):
-            assert third.cadrumo_chromium_data_root == tmp_path / "explicit"
+def test_changing_storage_root_rederives_chromium_data(tmp_path):
+    chromium_data = storage_location(StorageCategory.CHROMIUM_DATA).relative_path()
+    with override_settings(cadrumo_storage_root=tmp_path / "first") as first:
+        assert storage_path(StorageCategory.CHROMIUM_DATA, settings=first) == tmp_path / "first" / chromium_data
+        with override_settings(cadrumo_storage_root=tmp_path / "second") as second:
+            assert storage_path(StorageCategory.CHROMIUM_DATA, settings=second) == tmp_path / "second" / chromium_data
+        assert storage_path(StorageCategory.CHROMIUM_DATA) == tmp_path / "first" / chromium_data
 
 
 @pytest.mark.asyncio
-async def test_working_profiles_are_isolated_and_removed(tmp_path: Path):
-    root = tmp_path / "chromium"
-    settings = Settings(cadrumo_chromium_data_root=root)
+async def test_working_profiles_are_isolated_and_removed():
+    # The installed browser build lives beneath the effective storage root, so a real launch runs there.
+    settings = load_settings()
+    root = storage_path(StorageCategory.CHROMIUM_DATA, settings=settings).resolve()
+    browsers_root = storage_path(StorageCategory.PLAYWRIGHT_BROWSERS, settings=settings).resolve()
+    existing = set(root.iterdir()) if root.exists() else set()
     first = await create_browser_session(settings, Profile(name="first"))
     second = await create_browser_session(settings, Profile(name="second"))
     try:
         first_context = await first.create_context()
         second_context = await second.create_context()
-        directories = list(root.iterdir())
+        directories = set(root.iterdir()) - existing
         assert len(directories) == 2
         for context in (first_context, second_context):
             assert context.browser is not None
@@ -84,7 +65,7 @@ async def test_working_profiles_are_isolated_and_removed(tmp_path: Path):
             processes = await cdp.send("SystemInfo.getProcessInfo")
             await cdp.detach()
             browser_pid = next(process["id"] for process in processes["processInfo"] if process["type"] == "browser")
-            assert Path(psutil.Process(browser_pid).exe()).is_relative_to(settings.cadrumo_playwright_browsers_dir)
+            assert Path(psutil.Process(browser_pid).exe()).resolve().is_relative_to(browsers_root)
             profile_arg = next(
                 arg for arg in psutil.Process(browser_pid).cmdline() if arg.startswith("--user-data-dir=")
             )
@@ -95,9 +76,9 @@ async def test_working_profiles_are_isolated_and_removed(tmp_path: Path):
         assert await first_context.cookies()
         assert await second_context.cookies() == []
         await first.close()
-        assert len(list(root.iterdir())) == 1
+        assert len(set(root.iterdir()) - existing) == 1
         await second.close()
-        assert list(root.iterdir()) == []
+        assert set(root.iterdir()) == existing
     finally:
         await first.close()
         await second.close()
@@ -105,9 +86,9 @@ async def test_working_profiles_are_isolated_and_removed(tmp_path: Path):
 
 @pytest.mark.asyncio
 async def test_chromium_child_data_paths_are_scoped_to_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    storage_root = tmp_path / "storage"
-    managed_root = storage_root / "chromium"
-    temporary_root = storage_root / "tmp"
+    settings = Settings(cadrumo_storage_root=tmp_path / "storage")
+    managed_root = storage_path(StorageCategory.CHROMIUM_DATA, settings=settings)
+    temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=settings)
     hostile_root = tmp_path / "hostile"
     path_variables = (
         "HOME",
@@ -136,11 +117,7 @@ async def test_chromium_child_data_paths_are_scoped_to_session(tmp_path: Path, m
 
     session = BrowserSession(
         playwright=cast("Playwright", SimpleNamespace(chromium=FakeChromium())),
-        settings=Settings(
-            cadrumo_local_storage_root=storage_root,
-            cadrumo_chromium_data_root=managed_root,
-            cadrumo_temp_dir=temporary_root,
-        ),
+        settings=settings,
         profile=Profile(name="isolated-environment"),
     )
     try:
@@ -170,9 +147,11 @@ async def test_chromium_child_data_paths_are_scoped_to_session(tmp_path: Path, m
 
 @pytest.mark.asyncio
 async def test_unusable_root_refuses_browser_launch(tmp_path: Path):
-    root = tmp_path / "file"
+    storage_root = tmp_path / "storage"
+    root = storage_root / storage_location(StorageCategory.CHROMIUM_DATA).relative_path()
+    root.parent.mkdir(parents=True)
     root.write_text("synthetic", encoding="utf-8")
-    session = await create_browser_session(Settings(cadrumo_chromium_data_root=root), Profile(name="invalid-root"))
+    session = await create_browser_session(Settings(cadrumo_storage_root=storage_root), Profile(name="invalid-root"))
     try:
         with pytest.raises(BrowserError) as error:
             await session.create_context()

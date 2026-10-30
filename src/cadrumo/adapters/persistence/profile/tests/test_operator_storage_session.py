@@ -40,6 +40,8 @@ from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
 )
@@ -391,19 +393,25 @@ def test_certificate_reset_clears_path_without_removing_other_provider(
         ]
 
 
-def test_reset_uses_token_directory_from_supplied_settings(
+def test_reset_clears_the_acquisition_lock_in_the_token_member_of_the_supplied_settings(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A supplied Settings object routes acquisition-lock cleanup to its token root."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    """A supplied Settings object routes acquisition-lock cleanup to the token member of its storage root."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         _create_profile(_PROFILE_A, provider="certificate", operation=operation)
-        token_dir = tmp_path / "target-tokens"
-        with override_settings(cadrumo_token_dir=token_dir) as settings, open_test_profile_session(_PROFILE_A):
+        with open_test_profile_session(_PROFILE_A):
+            settings = load_settings()
             lock_path = auth_acquisition_lock_path(
                 settings,
                 AuthProviderKind.CERTIFICATE,
                 bucket_id=_PROFILE_A,
             )
+            expected_lock = (
+                storage_root
+                / storage_location(StorageCategory.TOKENS).relative_path()
+                / f"{_PROFILE_A}-{AuthProviderKind.CERTIFICATE.value}-auth.lock"
+            )
+            assert lock_path == expected_lock
             with acquire_auth_acquisition_lock(
                 settings,
                 AuthProviderKind.CERTIFICATE,

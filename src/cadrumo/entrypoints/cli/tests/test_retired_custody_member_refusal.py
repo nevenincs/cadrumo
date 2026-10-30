@@ -55,7 +55,7 @@ def _stage_retired_custody_member(*, bucket_id: str) -> None:
     Writing a stub is therefore more truthful than reconstructing a schema that
     nothing reads any more.
     """
-    root = load_settings().cadrumo_local_storage_root
+    root = load_settings().cadrumo_storage_root
     assert root is not None
     paths = provision_bucket_directory(root, bucket_id)
     (paths.bucket_dir / "manifest.toml").write_text(

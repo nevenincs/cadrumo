@@ -86,7 +86,7 @@ def _publish(
                 label=label,
             ).canonical_json_bytes()
         },
-        settings=Settings(cadrumo_local_storage_root=root),
+        settings=Settings(cadrumo_storage_root=root),
     )
 
 

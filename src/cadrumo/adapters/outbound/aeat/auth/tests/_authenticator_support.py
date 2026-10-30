@@ -204,7 +204,7 @@ def _settings_factory():
     Delegates the async-context-safe ContextVar mutation to
     :func:`aeat-tests.settings_scope.settings_factory`, then wraps the
     generic factory with this module's certificate-bundle defaults
-    (path, passphrase, and token-dir derived from the bundle path).
+    (path and passphrase).
     Tests pass the bundle ``Path`` as the single
     positional argument; extra Settings overrides go through ``**``.
     """
@@ -219,7 +219,6 @@ def _settings_factory():
             overrides: dict[str, object] = {
                 "cadrumo_certificate_path": path,
                 "cadrumo_certificate_password_secret": CERTIFICATE_INPUT,
-                "cadrumo_token_dir": path.parent / ".tokens",
             }
             overrides.update(extra_overrides)
             return scoped(**overrides)

@@ -60,13 +60,8 @@ _CORRUPT_ROW_WRITTEN_AT = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
 
 
 def _build_settings(tmp_path: Path) -> Settings:
-    """Build a Settings instance with every disk root anchored at tmp_path."""
-    return Settings(
-        cadrumo_financial_txs_dir=tmp_path / "transactions",
-        cadrumo_invoices_dir=tmp_path / "invoices",
-        cadrumo_attachments_dir=tmp_path / "attachments",
-        cadrumo_drafts_dir=tmp_path / "probe-drafts",
-    )
+    """Build a Settings instance whose storage root is tmp_path."""
+    return Settings(cadrumo_storage_root=tmp_path)
 
 
 def _summary(text: str = "demo") -> tr:

@@ -12,9 +12,8 @@ A small set of tests legitimately need to manipulate *real*
   :mod:`aeat-tests.test_config` exercise the env-reading contract
   itself — validators must observe real env values, so a ContextVar
   override above the env layer would defeat the test.
-* The model-validator-derives-default tests in
-  :mod:`cadrumo.core.test_token_dir_state_root` must observe an unset
-  ``CADRUMO_TOKEN_DIR`` so the validator runs.
+* The storage-root tests in :mod:`cadrumo.core.test_config_state_root` must
+  observe an unset ``CADRUMO_STORAGE_ROOT`` so the per-user default resolves.
 * CLI runtime infrastructure that AEAT does not own (the pytest
   runner's ``PYTEST_CURRENT_TEST`` flag, Rich's ``COLUMNS`` width
   read, ``sys.argv``) is read directly by tightly scoped helpers in
@@ -126,13 +125,13 @@ def settings_without_env_file(**overrides: Any) -> Settings:
     raw keyword form.
     """
     if (
-        "cadrumo_local_storage_root" not in overrides
-        and "CADRUMO_LOCAL_STORAGE_ROOT" not in os.environ
-        and "cadrumo_local_storage_root" not in os.environ
+        "cadrumo_storage_root" not in overrides
+        and "CADRUMO_STORAGE_ROOT" not in os.environ
+        and "cadrumo_storage_root" not in os.environ
     ):
         temporary_directory = TemporaryDirectory(prefix=SETTINGS_STEM, dir=prepare_temporary_directory())
         _SETTINGS_STORAGE_DIRECTORIES.append(temporary_directory)
-        overrides = {**overrides, "cadrumo_local_storage_root": temporary_directory.name}
+        overrides = {**overrides, "cadrumo_storage_root": temporary_directory.name}
     return _EnvFileFreeSettings(**overrides)
 
 
@@ -192,25 +191,20 @@ def isolated_aeat_env(**overrides: str) -> Generator[None]:
 
 @contextmanager
 def derived_storage_settings(root: Path) -> Generator[None]:
-    """Resolve every storage category from ``root``, ignoring the runner's explicit paths.
+    """Resolve every storage category from ``root``, ignoring the runner's environment.
 
-    A pytest run pins category paths in the environment (the product log
-    directory and the temporary root among them), and an explicit category path
-    outranks the storage root. A test that only repoints the root therefore
-    still reads, measures, and writes the runner's own directories for those
-    categories. This clears every settings variable, names ``root`` as the
-    storage root, and installs a settings baseline whose categories are all
-    derived, so a later ``override_settings(cadrumo_local_storage_root=...)``
-    re-derives them under its new root.
+    This clears every settings variable, names ``root`` as the storage root,
+    and installs a settings baseline built from nothing else, so a later
+    ``override_settings(cadrumo_storage_root=...)`` moves every category with
+    its root.
 
     Use it for tests whose subject is the layout derived from a root, or that
-    write to or delete from a category. A test that needs one category
-    somewhere specific uses :mod:`cadrumo.tests.storage_scope` instead.
+    write to or delete from a category.
 
     Arguments:
         root: Storage root of the baseline. Nothing is created beneath it.
     """
-    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(root)):
+    with isolated_aeat_env(CADRUMO_STORAGE_ROOT=str(root)):
         token = settings_override.set(Settings(cadrumo_profile_kdf_measure_calibration=False))
         try:
             yield
@@ -405,7 +399,7 @@ def scoped_env_var(name: str, value: str | None) -> Generator[None]:
 
 #: The env slots a host pins when it re-points product storage at its own
 #: scratch directory, and therefore the slots a test harness must hand back.
-_PRODUCT_STORAGE_ENV_VARS: Final = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_LOG_DIR")
+_PRODUCT_STORAGE_ENV_VARS: Final = ("CADRUMO_STORAGE_ROOT",)
 
 
 @contextmanager
@@ -417,9 +411,7 @@ def scoped_product_storage_environment() -> Generator[None]:
     so a build never touches the workstation's real store or its shared log
     file. In a real build process that pin is correct and permanent. Inside a
     pytest worker the process outlives the test, so the pin becomes every later
-    test's environment: ``CADRUMO_LOG_DIR`` in particular then reads as an
-    explicit override, and a settings rebuild stops deriving that field from
-    the storage root at all.
+    test's environment and every settings rebuild resolves the host's root.
 
     Logging is rebuilt on exit as well as the variables restored, because the
     host also rebinds the rotating file handler; leaving it pointed at a torn

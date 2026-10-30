@@ -99,13 +99,12 @@ _TEST_LOG_ROOT = _temporary_output_override("CADRUMO_TEST_LOG_ROOT")
 os.environ["CADRUMO_TEST_LOG_ROOT"] = str(_TEST_LOG_ROOT)
 _pin_storage_override("CADRUMO_DOCS_BUILD_ROOT", "development/build/docs")
 _TEMP_BASE = prepare_temp_root()
-os.environ["CADRUMO_TEMP_DIR"] = str(_TEMP_BASE)
-# Browser binaries are installed assets shared by isolated test profiles.
-# Pin both the product probe and direct Playwright starts before private roots
-# replace the operator's storage root.
-os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(
-    _pin_storage_override("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", "components/playwright")
-)
+# Browser binaries are installed assets shared by isolated test profiles. Pin
+# where they are installed before private roots replace the operator's storage
+# root; a worker inherits the controller's pin instead of re-deriving it from
+# the controller's private root. The private root below links this tree in.
+if not os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "").strip():
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(resolve_storage_path("components/playwright", root=_BASE_STORAGE_ROOT))
 os.environ["CADRUMO_SCRATCH_BASE"] = str(_temporary_output_override("CADRUMO_SCRATCH_BASE"))
 
 # Relative cache/artifact refinements must remain anchored to the operator's
@@ -133,9 +132,7 @@ for _report_variable in ("CADRUMO_CI_REPORTS_DIR", "VAULTSPEC_CI_REPORTS"):
 
 # Keep Python bytecode separate from the interpreter's ambient cache setting
 # without rebinding environment variables used by machine-managed tools.
-sys.pycache_prefix = str(
-    storage_directory("CADRUMO_PYTHON_CACHE_DIR", "development/cache/pycache", root=_BASE_STORAGE_ROOT)
-)
+sys.pycache_prefix = str(_pin_storage_override("CADRUMO_PYTHON_CACHE_DIR", "development/cache/pycache"))
 
 # Python and stdlib temp files start under Cadrumo's configured temporary root.
 # The run logger narrows TEMP/TMP/TMPDIR to its own scratch immediately below.
@@ -148,20 +145,10 @@ tempfile.tempdir = str(_TEMP_BASE)
 from dev.test_runs import logging as _run_logging  # noqa: E402
 
 _run_logging.prepare_environment(_TEST_LOG_ROOT)
-# A configured product log path stays authoritative. Relative values were
-# resolved against the original root before test isolation; only a blank value
-# falls through to the per-run product-log default.
-if os.environ.get("CADRUMO_LOG_DIR", "").strip():
-    os.environ["CADRUMO_LOG_DIR"] = str(
-        storage_directory("CADRUMO_LOG_DIR", "development/logs", root=_BASE_STORAGE_ROOT)
-    )
-else:
-    os.environ.pop("CADRUMO_LOG_DIR", None)
-
 # Keep collection-time product data process-private under this run's scratch.
 # This value is set before importing any module that may resolve Settings.
 _PURE_STDLIB_COLLECTION_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
-os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(_PURE_STDLIB_COLLECTION_ROOT))
+os.environ["CADRUMO_STORAGE_ROOT"] = str(_PURE_STDLIB_COLLECTION_ROOT)
 
 _PURE_STDLIB_AUTHORITY_ROOT = Path(__file__).resolve().parent / ".authority"
 """This checkout's published authority, kept outside the packaged tree.
@@ -186,6 +173,9 @@ if not os.environ.get("CADRUMO_AUTHORITY_ROOT", "").strip():
     os.environ["CADRUMO_AUTHORITY_ROOT"] = str(_PURE_STDLIB_AUTHORITY_ROOT)
 
 _collection_storage_root = import_module("cadrumo.tests.collection_storage_root")
+_collection_storage_root.link_installed_component(
+    _PURE_STDLIB_COLLECTION_ROOT, "components/playwright", Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"])
+)
 collection_storage_root = _collection_storage_root.collection_storage_root
 register_collection_storage_root_cleanup = _collection_storage_root.register_collection_storage_root_cleanup
 

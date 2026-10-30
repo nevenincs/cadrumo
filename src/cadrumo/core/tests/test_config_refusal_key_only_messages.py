@@ -143,7 +143,7 @@ def test_storage_tree_occupancy_refusal_is_key_only(tmp_path: Path) -> None:
     root.mkdir()
     (root / "tokens").write_text("a file where a directory belongs", encoding="utf-8")
 
-    with override_settings(cadrumo_local_storage_root=str(root)), pytest.raises(CoreValidationError) as excinfo:
+    with override_settings(cadrumo_storage_root=str(root)), pytest.raises(CoreValidationError) as excinfo:
         ensure_storage_tree(load_settings())
 
     _assert_key_only(
@@ -172,7 +172,7 @@ def test_storage_tree_mkdir_failure_refusal_is_key_only(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with override_settings(cadrumo_local_storage_root=str(root)), pytest.raises(CoreValidationError) as excinfo:
+    with override_settings(cadrumo_storage_root=str(root)), pytest.raises(CoreValidationError) as excinfo:
         ensure_storage_tree(load_settings())
 
     context = excinfo.value.context

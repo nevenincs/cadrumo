@@ -260,7 +260,7 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
     selected = register_password_only_profile(root, label="rotation-target")
     other = register_password_only_profile(root, label="untouched-profile")
     selected_id, other_id = UUID(selected.profile_id), UUID(other.profile_id)
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         ProfileCapsuleLifecycle().select(selected.profile_id)
     selected_before = load_committed_profile_password_material(selected_id, root=root)
     other_before = load_committed_profile_password_material(other_id, root=root)
@@ -455,7 +455,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(
             extra={
                 "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
                 "PYTHONPATH": _base_interpreter_pythonpath(),
-                "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
+                "CADRUMO_STORAGE_ROOT": str(root),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
                 **_authority_root_environment(),
             },
@@ -542,7 +542,7 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
         extra={
             "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
             "PYTHONPATH": _base_interpreter_pythonpath(),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
+            "CADRUMO_STORAGE_ROOT": str(root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         },
@@ -651,7 +651,7 @@ def _assert_posix_recovery_descriptors_complete_real_headless_enrolment(tmp_path
         strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
         extra={
             "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
+            "CADRUMO_STORAGE_ROOT": str(root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         },
@@ -760,7 +760,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
             extra={
                 "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
                 "PYTHONPATH": _base_interpreter_pythonpath(),
-                "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
+                "CADRUMO_STORAGE_ROOT": str(root),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
                 **_authority_root_environment(),
             },

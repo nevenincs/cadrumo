@@ -54,7 +54,6 @@ assert not any(name.startswith('cadrumo.domain.') for name in sys.modules)
     environment = {key: value for key, value in os.environ.items() if key.upper() in allowed}
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "TEMP": str(tmp_path),

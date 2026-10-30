@@ -45,7 +45,6 @@ def _child_environment(root: Path, seed: str) -> dict[str, str]:
     environment = {key: value for key, value in os.environ.items() if key.upper() in _PLATFORM_VARIABLES}
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(root / "storage"),
             "CADRUMO_STORAGE_ROOT": str(root / "storage"),
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "PYTHONHASHSEED": seed,

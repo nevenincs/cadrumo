@@ -1,13 +1,7 @@
 """Opt-in live application workflow test for the AEAT IVA wallet capture.
 
-The ``"iva-wallet"`` literal joined onto ``cadrumo_live_state_dir`` mirrors
-``StorageCategory.LIVE_STATE_IVA_WALLET``'s declared subpath
-(``live-state/iva-wallet``). ``LIVE_STATE`` is operator-overridable, so this
-member -- like the ``SECRETS_MASTER_KEY`` family -- carries no
-``settings_field`` and is not safe to resolve via ``storage_path`` directly;
-production (``application/live/iva_remote_state.py``) reads the same bare
-leaf names off the accessor-derived root, and this test mirrors that
-sanctioned pattern rather than a taxonomy-accessor call.
+The capture root is ``StorageCategory.LIVE_STATE_IVA_WALLET`` resolved beneath
+the effective storage root, the declared ``live-state/iva-wallet`` subpath.
 """
 
 from __future__ import annotations
@@ -37,6 +31,8 @@ from ....application.user_profile.projections import record_to_path_values
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.config import load_settings
 from ....core.period import Period
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....tests.live_gate import requires_live_enabled
 from ...live_state_composition import compose_live_state
 
@@ -64,7 +60,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
     target_filing_period = Period.from_year_and_code(target_year, target_period)
     settings = load_settings()
     composition = compose_live_state(
-        output_root=settings.cadrumo_live_state_dir / "iva-wallet",
+        output_root=storage_path(StorageCategory.LIVE_STATE_IVA_WALLET, settings=settings),
         bucket_id=bucket_id,
         operation=published_authority_operation(),
     )

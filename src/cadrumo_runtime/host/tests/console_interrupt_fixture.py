@@ -99,7 +99,7 @@ def _interrupt(mode: str, root: Path) -> dict[str, object]:
     endpoint = WindowsEndpoint(storage_root=root)
     environment = fixture_environment()
     environment["CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE"] = "1"
-    environment["CADRUMO_LOG_DIR"] = str(root / "logs")
+    environment["CADRUMO_STORAGE_ROOT"] = str(root)
     supervised = mode == "supervised"
     result: dict[str, object] = {}
     with (root / "runtime.stderr").open("wb") as errors:

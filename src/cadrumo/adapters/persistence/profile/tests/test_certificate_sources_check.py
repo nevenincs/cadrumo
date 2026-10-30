@@ -724,43 +724,43 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
-            with override_settings(cadrumo_blob_store_dir=tmp_path / "route-b-explicit-blobs") as settings_b:
-                set_operator_certificate_source_secret(
-                    certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    name="selected",
-                    secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=_certificate_authority_operation_for_test,
-                )
-                select_operator_certificate_source(
-                    name="selected",
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=_certificate_authority_operation_for_test,
-                )
-                configure_operator_auth(
-                    AuthProviderKind.CERTIFICATE.value,
-                    certificate_path=cert_b,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                )
-                credentials_b = resolve_active_certificate_credentials(
-                    certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    settings=settings_b,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                )
-                provider_b = select_provider(
-                    AuthProviderKind.CERTIFICATE,
-                    settings=settings_b,
-                    certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                ).describe()
-                operator_test_b = run_operator_auth_test(
-                    certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    settings=settings_b,
-                    operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                )
+            settings_b = load_settings()
+            set_operator_certificate_source_secret(
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                name="selected",
+                secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_certificate_authority_operation_for_test,
+            )
+            select_operator_certificate_source(
+                name="selected",
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_certificate_authority_operation_for_test,
+            )
+            configure_operator_auth(
+                AuthProviderKind.CERTIFICATE.value,
+                certificate_path=cert_b,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            )
+            credentials_b = resolve_active_certificate_credentials(
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                settings=settings_b,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            )
+            provider_b = select_provider(
+                AuthProviderKind.CERTIFICATE,
+                settings=settings_b,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            ).describe()
+            operator_test_b = run_operator_auth_test(
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                settings=settings_b,
+                operator_probe_ports=_OPERATOR_PROBE_PORTS,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            )
 
-        assert settings_a.cadrumo_secret_store_dir != settings_b.cadrumo_secret_store_dir
+        assert settings_a.cadrumo_storage_root != settings_b.cadrumo_storage_root
         assert credentials_b.certificate_path == cert_b
         assert credentials_b.password is not None
         assert credentials_b.password.get_secret_value() == CERTIFICATE_BUNDLE_INPUT_B
@@ -796,7 +796,6 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
         root_b_fixture = tmp_path / "same-id-route-b"
         with (
             isolated_profile_storage_root(tmp_path=root_b_fixture),
-            override_settings(cadrumo_blob_store_dir=tmp_path / "same-id-route-b-blobs"),
             open_test_profile_session(_BUCKET_ID),
         ):
             _register_operator_profile()
@@ -834,7 +833,6 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
         root_a_fixture = tmp_path / "same-id-route-a"
         with (
             isolated_profile_storage_root(tmp_path=root_a_fixture),
-            override_settings(cadrumo_blob_store_dir=tmp_path / "same-id-route-a-blobs"),
             open_test_profile_session(_BUCKET_ID),
         ):
             _register_operator_profile()
@@ -1223,7 +1221,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
 
         settings = load_settings()
         write_pointer(
-            settings.cadrumo_local_storage_root,
+            settings.cadrumo_storage_root,
             BucketPointer.selected(bucket_id=_BUCKET_ID, transition_revision=1),
         )
         with override_settings(cadrumo_active_profile=None):
@@ -1236,7 +1234,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
                 assert snapshot.state is not None
                 assert snapshot.certificate_credentials is not None
                 write_pointer(
-                    settings.cadrumo_local_storage_root,
+                    settings.cadrumo_storage_root,
                     BucketPointer.selected(bucket_id=_BUCKET_B, transition_revision=2),
                 )
                 state_after_pointer_change = workflow_state_repository().load()

@@ -11,7 +11,6 @@ from pydantic import SecretStr
 
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.contracts.model_runs import (
     ModelRunAttachment,
     ModelRunBody,
@@ -103,7 +102,7 @@ def _harness(
     source = _catalog_source() if source is None else source
     gateway = _RecordingGateway()
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
-    settings = ProviderSettingsService(store=store, catalog_source=source, storage_mode=StorageMode.INSTALLED)
+    settings = ProviderSettingsService(store=store, catalog_source=source)
     runs = ModelRunService(
         model_list=model_list,
         resolver=resolver,

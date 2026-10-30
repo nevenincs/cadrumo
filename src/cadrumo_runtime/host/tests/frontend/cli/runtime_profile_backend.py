@@ -38,7 +38,6 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
-from cadrumo.tests.storage_scope import storage_overrides
 
 from .cli_runner import ProfileCliInvoker, bind_profile_cli, invoke_unbound_cli
 from .portable_human_cli_runtime import PortableHumanCliRuntime, portable_human_cli_runtime
@@ -135,24 +134,14 @@ def runtime_cli_profile(
     """Isolate a CLI world around one password-custodied profile whose operator runs every command.
 
     The command-line counterpart of the storage package's runtime profile: the
-    directories CLI work-unit commands read from settings are isolated beside
+    directories CLI work-unit commands read are isolated beneath
     the storage root, and the profile is registered with genuine password
     custody so its runtime admits the test's commands. Its session stays live
     in this process for the test's own setup reads and writes, which address
     the profile by the yielded ``bucket_id``.
     """
-    overrides = storage_overrides(
-        tmp_path,
-        StorageCategory.RUNS,
-        StorageCategory.DRAFTS,
-        StorageCategory.TOKENS,
-        StorageCategory.FINANCIAL_TRANSACTIONS,
-        StorageCategory.INVOICES,
-    )
-    for location in overrides.values():
-        location.mkdir(parents=True, exist_ok=True)
     with (
-        _isolated_world(tmp_path, overrides) as storage_root,
+        _isolated_world(tmp_path, None) as storage_root,
         operator_profile_bound_to_cli(storage_root=storage_root, label=label, facts=facts) as profile_id,
     ):
         settings = load_settings()

@@ -22,9 +22,6 @@ import pytest
 from .....core.config_support import LLMProvider
 from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
-from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.run_records import LLMRunRecorder
-from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient, LLMRetryPolicy, transport_retry_permitted
 from ..errors import (
     LLMCacheError,
@@ -52,16 +49,9 @@ _FAST_POLICY = LLMRetryPolicy(max_attempts=3, initial_backoff_s=0.02, max_backof
 
 
 def _client(tmp_path: Path, *, policy: LLMRetryPolicy | None = None) -> LLMClient:
-    settings = EnvFileFreeSettings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
-        cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_record_dir=tmp_path / "run-record",
-    )
+    settings = EnvFileFreeSettings(cadrumo_storage_root=tmp_path)
     return LLMClient(
         settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
         retry_policy=policy or _FAST_POLICY,
     )
 

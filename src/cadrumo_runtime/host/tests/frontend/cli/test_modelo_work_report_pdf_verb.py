@@ -358,7 +358,7 @@ def summary_path(tmp_path: Path, operation: PinnedAuthorityOperation, run_cadrum
         work_unit_id = _seed_current_sealed_revision(session=session, operation=operation)
         result = _summary(work_unit_id, output, session=session)
         assert result.exit_code == 0, result.output
-    with override_settings(cadrumo_local_storage_root=tmp_path / "document-only-storage"):
+    with override_settings(cadrumo_storage_root=tmp_path / "document-only-storage"):
         yield output
 
 

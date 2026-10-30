@@ -102,9 +102,7 @@ class _Running:
 
 @asynccontextmanager
 async def _view(tmp_path: Path, site: _Site) -> AsyncGenerator[_Running]:
-    settings = Settings(
-        cadrumo_local_storage_root=tmp_path, cadrumo_browser_headless=True, cadrumo_proxy_url=_CLOSED_PROXY
-    )
+    settings = Settings(cadrumo_storage_root=tmp_path, cadrumo_browser_headless=True, cadrumo_proxy_url=_CLOSED_PROXY)
     sink = RecordingViewSink()
     opening = SedeViewOpening(
         settings=settings,

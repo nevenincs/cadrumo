@@ -30,7 +30,7 @@ def test_fresh_state_uses_one_cadrumo_identity_across_persistence_boundaries(tmp
     """Fresh root, SQL, session, namespace, and archive identities agree."""
     platform_base = tmp_path / "platform-data"
     storage_root = platform_base / "cadrumo" / "storage"
-    settings = Settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None)
+    settings = Settings(cadrumo_storage_root=storage_root, cadrumo_active_profile=None)
     # "cadrumo.db" is the independent oracle for the on-disk byte-identity this
     # acceptance test defends -- the point is that the canonical product name
     # actually landed on disk, not that the accessor agrees with itself.
@@ -107,7 +107,7 @@ def test_former_states_are_refused_without_mutation_or_canonical_creation(tmp_pa
     database_root.mkdir()
     former_database.write_bytes(b"former-database-bytes")
     with pytest.raises(FormerProductStateError):
-        Settings(cadrumo_local_storage_root=database_root, cadrumo_active_profile=None)
+        Settings(cadrumo_storage_root=database_root, cadrumo_active_profile=None)
     assert former_database.read_bytes() == b"former-database-bytes"
     # "cadrumo.db" is the independent oracle again: the refusal must not
     # silently materialise the canonical fallback name beside the former one.

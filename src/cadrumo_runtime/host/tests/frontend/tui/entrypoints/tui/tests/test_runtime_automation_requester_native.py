@@ -213,7 +213,7 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
                 approval_client_closed[0] = human_owner.released
                 approval_stage[0] = "done"
 
-        with override_settings(cadrumo_local_storage_root=storage_root):
+        with override_settings(cadrumo_storage_root=storage_root):
             runtime_owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=20)
             resources: list[AsyncCloseable] = [runtime_owner]
             primary: BaseException | None = None
@@ -424,7 +424,7 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                     close_async_resources(human_owner, task_name="tui-approval-human-close", primary_error=primary)
                 )
 
-        with override_settings(cadrumo_local_storage_root=storage_root):
+        with override_settings(cadrumo_storage_root=storage_root):
             runtime_owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=20)
             resources: list[AsyncCloseable] = [runtime_owner]
             primary: BaseException | None = None

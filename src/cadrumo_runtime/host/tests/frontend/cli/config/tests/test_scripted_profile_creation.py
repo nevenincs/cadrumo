@@ -34,7 +34,7 @@ _CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
 
 def _storage_overrides(tmp_path: Path, *, passphrase: str | None) -> dict[str, object]:
     return {
-        "cadrumo_local_storage_root": tmp_path / "cadrumo-storage",
+        "cadrumo_storage_root": tmp_path / "cadrumo-storage",
         "cadrumo_secret_passphrase": passphrase,
     }
 
