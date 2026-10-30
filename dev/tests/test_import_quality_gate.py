@@ -306,181 +306,190 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
     assert "[INTERNAL_CHECKER]" in (result.stdout + result.stderr)
 
 
-@pytest.mark.parametrize(
-    ("name", "module", "source", "targets"),
+_GRAPH_DEFECTS = (
     (
-        (
-            "tax-cli-to-runtime-direct",
-            "cadrumo.entrypoints.cli.bad",
-            "from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
-            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
-        ),
-        (
-            "tax-cli-to-runtime-function-local",
-            "cadrumo.entrypoints.cli.bad",
-            "def load():\n    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n    return VALUE\n",
-            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
-        ),
-        (
-            "tax-cli-to-runtime-type-checking",
-            "cadrumo.entrypoints.cli.bad",
-            "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n"
-            "    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
-            ("cadrumo_runtime.host.frontend.cli.bootstrap",),
-        ),
-        (
-            "source-to-dev-production",
-            "cadrumo.core.bad",
-            "import dev.exit_codes\n",
-            (),
-        ),
-        (
-            "source-to-dev-test-module",
-            "cadrumo.core.tests.test_bad",
-            "import dev.exit_codes\n",
-            (),
-        ),
-        (
-            "source-to-dev-conftest",
-            "cadrumo.conftest",
-            "import dev.exit_codes\n",
-            (),
-        ),
-        (
-            "source-to-dev-function-local",
-            "cadrumo.domain.tests.test_bad",
-            "def load():\n    import dev.exit_codes\n\n    return dev.exit_codes\n",
-            (),
-        ),
-        (
-            "core-to-domain",
-            "cadrumo.core.bad",
-            "from ..domain.module import VALUE\n",
-            ("cadrumo.domain.module",),
-        ),
-        (
-            "core-to-application",
-            "cadrumo.core.bad",
-            "from ..application.module import VALUE\n",
-            ("cadrumo.application.module",),
-        ),
-        (
-            "core-to-adapter",
-            "cadrumo.core.bad",
-            "from ..adapters.module import VALUE\n",
-            ("cadrumo.adapters.module",),
-        ),
-        (
-            "core-to-entrypoint",
-            "cadrumo.core.bad",
-            "from ..entrypoints.module import VALUE\n",
-            ("cadrumo.entrypoints.module",),
-        ),
-        (
-            "harness-to-product-entrypoint",
-            "cadrumo_mcp.mcp.bad",
-            "import cadrumo.entrypoints.module\n",
-            ("cadrumo.entrypoints.module",),
-        ),
-        (
-            "agent-service-to-runtime-host",
-            "cadrumo_agent_service.host.bad",
-            "from cadrumo_runtime.host.module import VALUE\n",
-            ("cadrumo_runtime.host.module",),
-        ),
-        (
-            "agent-service-to-runtime-adapter",
-            "cadrumo_agent_service.adapters.bad",
-            "from cadrumo_runtime.adapters.module import VALUE\n",
-            ("cadrumo_runtime.adapters.module",),
-        ),
-        (
-            "agent-service-to-tax-entrypoint-function-local",
-            "cadrumo_agent_service.adapters.bad",
-            "def load():\n    import cadrumo.entrypoints.module\n\n    return cadrumo.entrypoints.module\n",
-            ("cadrumo.entrypoints.module",),
-        ),
-        (
-            "mcp-to-agent-service",
-            "cadrumo_mcp.mcp.bad",
-            "from cadrumo_agent_service.host.module import VALUE\n",
-            ("cadrumo_agent_service.host.module",),
-        ),
-        (
-            "domain-to-application",
-            "cadrumo.domain.bad",
-            "from ..application.module import VALUE\n",
-            ("cadrumo.application.module",),
-        ),
-        (
-            "domain-to-adapter",
-            "cadrumo.domain.bad",
-            "from ..adapters.module import VALUE\n",
-            ("cadrumo.adapters.module",),
-        ),
-        (
-            "application-to-concrete-adapter",
-            "cadrumo.application.bad",
-            "from ..adapters.concrete import VALUE\n",
-            ("cadrumo.adapters.concrete",),
-        ),
-        (
-            "adapter-to-harness",
-            "cadrumo.adapters.inbound.bad",
-            "import cadrumo_mcp.mcp.module\n",
-            ("cadrumo_mcp.mcp.module",),
-        ),
-        (
-            "non-entrypoint-to-entrypoint",
-            "cadrumo.adapters.bad",
-            "from ..entrypoints.feature import VALUE\n",
-            ("cadrumo.entrypoints.feature",),
-        ),
-        (
-            "cli-to-tui",
-            "cadrumo.entrypoints.cli.bad",
-            "from cadrumo.entrypoints.tui.feature import VALUE\n",
-            ("cadrumo.entrypoints.tui.feature",),
-        ),
-        (
-            "tui-to-cli",
-            "cadrumo.entrypoints.tui.bad",
-            "from cadrumo.entrypoints.cli.feature import VALUE\n",
-            ("cadrumo.entrypoints.cli.feature",),
-        ),
-        (
-            "owner-test-to-forbidden-layer",
-            "cadrumo.domain.tests.test_bad",
-            "from ...application.module import VALUE\n",
-            ("cadrumo.application.module",),
-        ),
-        (
-            "function-local-forbidden-import",
-            "cadrumo.domain.bad",
-            "def load():\n    from ..application.module import VALUE\n    return VALUE\n",
-            ("cadrumo.application.module",),
-        ),
-        (
-            "type-checking-forbidden-import",
-            "cadrumo.domain.bad",
-            "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from ..application.module import VALUE\n",
-            ("cadrumo.application.module",),
-        ),
+        "tax-cli-to-runtime-direct",
+        "cadrumo.entrypoints.cli.bad",
+        "from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+        ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+    ),
+    (
+        "tax-cli-to-runtime-function-local",
+        "cadrumo.entrypoints.cli.bad",
+        "def load():\n    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n    return VALUE\n",
+        ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+    ),
+    (
+        "tax-cli-to-runtime-type-checking",
+        "cadrumo.entrypoints.cli.bad",
+        "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n"
+        "    from cadrumo_runtime.host.frontend.cli.bootstrap import VALUE\n",
+        ("cadrumo_runtime.host.frontend.cli.bootstrap",),
+    ),
+    (
+        "source-to-dev-production",
+        "cadrumo.core.bad",
+        "import dev.exit_codes\n",
+        (),
+    ),
+    (
+        "source-to-dev-test-module",
+        "cadrumo.core.tests.test_bad",
+        "import dev.exit_codes\n",
+        (),
+    ),
+    (
+        "source-to-dev-conftest",
+        "cadrumo.conftest",
+        "import dev.exit_codes\n",
+        (),
+    ),
+    (
+        "source-to-dev-function-local",
+        "cadrumo.domain.tests.test_bad",
+        "def load():\n    import dev.exit_codes\n\n    return dev.exit_codes\n",
+        (),
+    ),
+    (
+        "core-to-domain",
+        "cadrumo.core.bad",
+        "from ..domain.module import VALUE\n",
+        ("cadrumo.domain.module",),
+    ),
+    (
+        "core-to-application",
+        "cadrumo.core.bad",
+        "from ..application.module import VALUE\n",
+        ("cadrumo.application.module",),
+    ),
+    (
+        "core-to-adapter",
+        "cadrumo.core.bad",
+        "from ..adapters.module import VALUE\n",
+        ("cadrumo.adapters.module",),
+    ),
+    (
+        "core-to-entrypoint",
+        "cadrumo.core.bad",
+        "from ..entrypoints.module import VALUE\n",
+        ("cadrumo.entrypoints.module",),
+    ),
+    (
+        "harness-to-product-entrypoint",
+        "cadrumo_mcp.mcp.bad",
+        "import cadrumo.entrypoints.module\n",
+        ("cadrumo.entrypoints.module",),
+    ),
+    (
+        "agent-service-to-runtime-host",
+        "cadrumo_agent_service.host.bad",
+        "from cadrumo_runtime.host.module import VALUE\n",
+        ("cadrumo_runtime.host.module",),
+    ),
+    (
+        "agent-service-to-runtime-adapter",
+        "cadrumo_agent_service.adapters.bad",
+        "from cadrumo_runtime.adapters.module import VALUE\n",
+        ("cadrumo_runtime.adapters.module",),
+    ),
+    (
+        "agent-service-to-tax-entrypoint-function-local",
+        "cadrumo_agent_service.adapters.bad",
+        "def load():\n    import cadrumo.entrypoints.module\n\n    return cadrumo.entrypoints.module\n",
+        ("cadrumo.entrypoints.module",),
+    ),
+    (
+        "mcp-to-agent-service",
+        "cadrumo_mcp.mcp.bad",
+        "from cadrumo_agent_service.host.module import VALUE\n",
+        ("cadrumo_agent_service.host.module",),
+    ),
+    (
+        "domain-to-application",
+        "cadrumo.domain.bad",
+        "from ..application.module import VALUE\n",
+        ("cadrumo.application.module",),
+    ),
+    (
+        "domain-to-adapter",
+        "cadrumo.domain.bad",
+        "from ..adapters.module import VALUE\n",
+        ("cadrumo.adapters.module",),
+    ),
+    (
+        "application-to-concrete-adapter",
+        "cadrumo.application.bad",
+        "from ..adapters.concrete import VALUE\n",
+        ("cadrumo.adapters.concrete",),
+    ),
+    (
+        "adapter-to-harness",
+        "cadrumo.adapters.inbound.bad",
+        "import cadrumo_mcp.mcp.module\n",
+        ("cadrumo_mcp.mcp.module",),
+    ),
+    (
+        "non-entrypoint-to-entrypoint",
+        "cadrumo.adapters.bad",
+        "from ..entrypoints.feature import VALUE\n",
+        ("cadrumo.entrypoints.feature",),
+    ),
+    (
+        "cli-to-tui",
+        "cadrumo.entrypoints.cli.bad",
+        "from cadrumo.entrypoints.tui.feature import VALUE\n",
+        ("cadrumo.entrypoints.tui.feature",),
+    ),
+    (
+        "tui-to-cli",
+        "cadrumo.entrypoints.tui.bad",
+        "from cadrumo.entrypoints.cli.feature import VALUE\n",
+        ("cadrumo.entrypoints.cli.feature",),
+    ),
+    (
+        "owner-test-to-forbidden-layer",
+        "cadrumo.domain.tests.test_bad",
+        "from ...application.module import VALUE\n",
+        ("cadrumo.application.module",),
+    ),
+    (
+        "function-local-forbidden-import",
+        "cadrumo.domain.bad",
+        "def load():\n    from ..application.module import VALUE\n    return VALUE\n",
+        ("cadrumo.application.module",),
+    ),
+    (
+        "type-checking-forbidden-import",
+        "cadrumo.domain.bad",
+        "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from ..application.module import VALUE\n",
+        ("cadrumo.application.module",),
     ),
 )
-def test_graph_defect_fails_through_real_gate(
-    tmp_path: Path,
-    name: str,
-    module: str,
-    source: str,
-    targets: tuple[str, ...],
-) -> None:
-    del name
+
+
+def test_every_graph_defect_fails_through_one_real_gate(tmp_path: Path) -> None:
+    """Plant every forbidden-edge kind under its own module and launch the real gate once.
+
+    The gate's cost is dominated by its launch, so the defect kinds share one
+    fixture; each must still appear as its own reported edge.
+    """
     root = _fixture_root(tmp_path)
-    for target in targets:
-        _write_module(root, target, "VALUE = 1\n")
-    _write_module(root, module, source)
-    _assert_graph_detection(root, module)
+    planted: list[str] = []
+    for index, (_name, module, source, targets) in enumerate(_GRAPH_DEFECTS):
+        for target in targets:
+            _write_module(root, target, "VALUE = 1\n")
+        # A conftest module is recognised by its exact name, so it cannot take a suffix.
+        unique = module if module.endswith(".conftest") else f"{module}_{index}"
+        _write_module(root, unique, source)
+        planted.append(unique)
+    returncode, output = _run_real_gate(root)
+    payload = _health_payload(output)
+    _assert_blocking_detection(returncode, output, payload)
+    broken = _section(payload, "graph_authority")["contracts_broken"]
+    assert isinstance(broken, int) and broken >= 1, output
+    graph_output = _component_block(output, "GRAPH_AUTHORITY")
+    for module in planted:
+        assert f"{module} -> " in graph_output, (module, output)
 
 
 def test_tax_runtime_transitive_import_fails_through_real_gate(tmp_path: Path) -> None:
@@ -541,196 +550,216 @@ def test_invalid_authority_config_fails_closed(tmp_path: Path) -> None:
     _assert_authority_refusal(root, "AUTHORITY_CONFIG")
 
 
-@pytest.mark.parametrize(
-    ("name", "module", "source", "target", "category"),
+_SUBORDINATE_DEFECTS = (
     (
+        "static-first-party-target-missing",
+        "dev.quality.consumer",
+        "import cadrumo.domain.missing\n",
+        "",
+        "STATIC_TARGET_UNRESOLVED",
+    ),
+    (
+        "unsupported-first-party-wildcard",
+        "dev.quality.consumer",
+        "from . import *\n",
+        "",
+        "UNSUPPORTED_IMPORT",
+    ),
+    (
+        "unsupported-relative-escape",
+        "cadrumo.core.consumer",
+        "from .... import VALUE\n",
+        "",
+        "UNSUPPORTED_IMPORT",
+    ),
+    (
+        "unsupported-dynamic-call",
+        "dev.quality.consumer",
+        "import importlib\nimportlib.import_module()\n",
+        "",
+        "UNSUPPORTED_DYNAMIC",
+    ),
+    (
+        "dunder-init-submodule",
+        "dev.quality.consumer",
+        "import cadrumo.domain.module.__init__\n",
+        "",
+        "DUNDER_INIT_SUBMODULE",
+    ),
+    (
+        "dunder-init-from-submodule",
+        "dev.quality.consumer",
+        "from cadrumo.domain.module.__init__ import VALUE\n",
+        "",
+        "DUNDER_INIT_SUBMODULE",
+    ),
+    (
+        "package-facade",
+        "dev.quality.consumer",
+        "from . import VALUE\n",
+        "",
+        "PACKAGE_FACADE",
+    ),
+    (
+        "forwarding-module",
+        "dev.quality.consumer",
+        "from .forward import VALUE\n",
+        "dev.quality.forward",
+        "FORWARDING_MODULE",
+    ),
+    (
+        "reexport-or-alias",
+        "dev.quality.consumer",
+        "from .reexport import VALUE_ALIAS\n",
+        "dev.quality.reexport",
+        "REEXPORT_OR_ALIAS",
+    ),
+    (
+        "active-package-initializer",
+        "dev.quality.consumer",
+        "from .module import VALUE\n",
+        "dev.quality.module",
+        "ACTIVE_INITIALIZER",
+    ),
+    (
+        "private-cross-package",
+        "dev.audit.consumer",
+        "from ..quality._private import VALUE\n",
+        "dev.quality._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "literal-dynamic-private-target",
+        "dev.quality.consumer",
+        "import importlib\nimportlib.import_module('cadrumo.domain._private')\n",
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "finite-computed-dynamic-private-target",
+        "dev.quality.consumer",
         (
-            "static-first-party-target-missing",
-            "dev.quality.consumer",
-            "import cadrumo.domain.missing\n",
-            "",
-            "STATIC_TARGET_UNRESOLVED",
+            "import importlib\n"
+            "target = 'cadrumo.domain._private' if True else 'third.party'\n"
+            "importlib.import_module(target)\n"
         ),
-        (
-            "unsupported-first-party-wildcard",
-            "dev.quality.consumer",
-            "from . import *\n",
-            "",
-            "UNSUPPORTED_IMPORT",
-        ),
-        (
-            "unsupported-relative-escape",
-            "cadrumo.core.consumer",
-            "from .... import VALUE\n",
-            "",
-            "UNSUPPORTED_IMPORT",
-        ),
-        (
-            "unsupported-dynamic-call",
-            "dev.quality.consumer",
-            "import importlib\nimportlib.import_module()\n",
-            "",
-            "UNSUPPORTED_DYNAMIC",
-        ),
-        (
-            "dunder-init-submodule",
-            "dev.quality.consumer",
-            "import cadrumo.domain.module.__init__\n",
-            "",
-            "DUNDER_INIT_SUBMODULE",
-        ),
-        (
-            "dunder-init-from-submodule",
-            "dev.quality.consumer",
-            "from cadrumo.domain.module.__init__ import VALUE\n",
-            "",
-            "DUNDER_INIT_SUBMODULE",
-        ),
-        (
-            "package-facade",
-            "dev.quality.consumer",
-            "from . import VALUE\n",
-            "",
-            "PACKAGE_FACADE",
-        ),
-        (
-            "forwarding-module",
-            "dev.quality.consumer",
-            "from .forward import VALUE\n",
-            "dev.quality.forward",
-            "FORWARDING_MODULE",
-        ),
-        (
-            "reexport-or-alias",
-            "dev.quality.consumer",
-            "from .reexport import VALUE_ALIAS\n",
-            "dev.quality.reexport",
-            "REEXPORT_OR_ALIAS",
-        ),
-        (
-            "active-package-initializer",
-            "dev.quality.consumer",
-            "from .module import VALUE\n",
-            "dev.quality.module",
-            "ACTIVE_INITIALIZER",
-        ),
-        (
-            "private-cross-package",
-            "dev.audit.consumer",
-            "from ..quality._private import VALUE\n",
-            "dev.quality._private",
-            "PRIVATE_CROSS_PACKAGE",
-        ),
-        (
-            "literal-dynamic-private-target",
-            "dev.quality.consumer",
-            "import importlib\nimportlib.import_module('cadrumo.domain._private')\n",
-            "cadrumo.domain._private",
-            "PRIVATE_CROSS_PACKAGE",
-        ),
-        (
-            "finite-computed-dynamic-private-target",
-            "dev.quality.consumer",
-            (
-                "import importlib\n"
-                "target = 'cadrumo.domain._private' if True else 'third.party'\n"
-                "importlib.import_module(target)\n"
-            ),
-            "cadrumo.domain._private",
-            "PRIVATE_CROSS_PACKAGE",
-        ),
-        (
-            "unresolved-computed-dynamic-target",
-            "dev.quality.consumer",
-            "import importlib\nimport os\ntarget = os.environ['MODULE']\nimportlib.import_module(target)\n",
-            "",
-            "UNRESOLVED_DYNAMIC_TARGET",
-        ),
-        (
-            "raw-first-party-import",
-            "dev.quality.consumer",
-            "__import__('cadrumo.domain.module')\n",
-            "cadrumo.domain.module",
-            "RAW_FIRST_PARTY_IMPORT",
-        ),
-        (
-            "raw-first-party-import-followed-by-another-call",
-            "dev.quality.consumer",
-            "value = __import__('cadrumo.domain.module')\nprint(value)\n",
-            "cadrumo.domain.module",
-            "RAW_FIRST_PARTY_IMPORT",
-        ),
-        (
-            "interpreter-code-payload-private-target",
-            "dev.quality.consumer",
-            "import subprocess, sys\nsubprocess.run([sys.executable, '-c', 'import cadrumo.domain._private'])\n",
-            "cadrumo.domain._private",
-            "PRIVATE_CROSS_PACKAGE",
-        ),
-        (
-            "interpreter-module-payload-missing-target",
-            "dev.quality.consumer",
-            "import subprocess, sys\nsubprocess.run([sys.executable, '-m', 'cadrumo.domain.missing'])\n",
-            "",
-            "STATIC_TARGET_UNRESOLVED",
-        ),
-        (
-            "run-module-private-target",
-            "dev.quality.consumer",
-            "import runpy\nrunpy.run_module('cadrumo.domain._private')\n",
-            "cadrumo.domain._private",
-            "PRIVATE_CROSS_PACKAGE",
-        ),
-        (
-            "literal-dynamic-first-party-target-missing",
-            "dev.quality.consumer",
-            "import importlib\nimportlib.import_module('cadrumo.domain.missing')\n",
-            "",
-            "DYNAMIC_TARGET_UNRESOLVED",
-        ),
-        (
-            "local-package-facade",
-            "dev.quality.consumer",
-            "def load():\n    from . import VALUE\n    return VALUE\n",
-            "",
-            "PACKAGE_FACADE",
-        ),
-        (
-            "type-checking-package-facade",
-            "dev.quality.consumer",
-            "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from . import VALUE\n",
-            "",
-            "PACKAGE_FACADE",
-        ),
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "unresolved-computed-dynamic-target",
+        "dev.quality.consumer",
+        "import importlib\nimport os\ntarget = os.environ['MODULE']\nimportlib.import_module(target)\n",
+        "",
+        "UNRESOLVED_DYNAMIC_TARGET",
+    ),
+    (
+        "raw-first-party-import",
+        "dev.quality.consumer",
+        "__import__('cadrumo.domain.module')\n",
+        "cadrumo.domain.module",
+        "RAW_FIRST_PARTY_IMPORT",
+    ),
+    (
+        "raw-first-party-import-followed-by-another-call",
+        "dev.quality.consumer",
+        "value = __import__('cadrumo.domain.module')\nprint(value)\n",
+        "cadrumo.domain.module",
+        "RAW_FIRST_PARTY_IMPORT",
+    ),
+    (
+        "interpreter-code-payload-private-target",
+        "dev.quality.consumer",
+        "import subprocess, sys\nsubprocess.run([sys.executable, '-c', 'import cadrumo.domain._private'])\n",
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "interpreter-module-payload-missing-target",
+        "dev.quality.consumer",
+        "import subprocess, sys\nsubprocess.run([sys.executable, '-m', 'cadrumo.domain.missing'])\n",
+        "",
+        "STATIC_TARGET_UNRESOLVED",
+    ),
+    (
+        "run-module-private-target",
+        "dev.quality.consumer",
+        "import runpy\nrunpy.run_module('cadrumo.domain._private')\n",
+        "cadrumo.domain._private",
+        "PRIVATE_CROSS_PACKAGE",
+    ),
+    (
+        "literal-dynamic-first-party-target-missing",
+        "dev.quality.consumer",
+        "import importlib\nimportlib.import_module('cadrumo.domain.missing')\n",
+        "",
+        "DYNAMIC_TARGET_UNRESOLVED",
+    ),
+    (
+        "local-package-facade",
+        "dev.quality.consumer",
+        "def load():\n    from . import VALUE\n    return VALUE\n",
+        "",
+        "PACKAGE_FACADE",
+    ),
+    (
+        "type-checking-package-facade",
+        "dev.quality.consumer",
+        "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from . import VALUE\n",
+        "",
+        "PACKAGE_FACADE",
     ),
 )
-def test_subordinate_defect_fails_through_real_gate(
-    tmp_path: Path,
-    name: str,
-    module: str,
-    source: str,
-    target: str,
-    category: str,
-) -> None:
-    del name
+
+
+def _plant_subordinate_defects(root: Path) -> dict[tuple[str, str], str]:
+    """Plant every subordinate defect kind under its own consumer module.
+
+    Returns the planted module for each (case name, category).
+    """
+    one = "VALUE = 1\n"
+    planted: dict[tuple[str, str], str] = {}
+    for index, (name, module, source, target, category) in enumerate(_SUBORDINATE_DEFECTS):
+        if target:
+            _write_module(root, target, one)
+        if category == "FORWARDING_MODULE":
+            _write_module(root, "dev.quality.module", one)
+            _write_module(root, "dev.quality.forward", "from .module import VALUE\n")
+        elif category == "REEXPORT_OR_ALIAS":
+            _write_module(root, "dev.quality.module", one)
+            _write_module(
+                root,
+                "dev.quality.reexport",
+                "from .module import VALUE\ndef local():\n    return VALUE\nVALUE_ALIAS = VALUE\n",
+            )
+        elif category == "ACTIVE_INITIALIZER":
+            _write_package(root, "dev.quality", "from .module import VALUE\n")
+            _write_module(root, "dev.quality.module", one)
+        unique = f"{module}_{index}"
+        _write_module(root, unique, source)
+        planted[(name, category)] = unique
+    return planted
+
+
+def test_every_subordinate_defect_fails_through_one_real_gate(tmp_path: Path) -> None:
+    """Launch the real gate once over a fixture holding every subordinate defect kind.
+
+    Each case sits in its own module so the reported findings stay attributable.
+    """
     root = _fixture_root(tmp_path)
-    if target:
-        _write_module(root, target, "VALUE = 1\n")
-    if category == "FORWARDING_MODULE":
-        _write_module(root, "dev.quality.module", "VALUE = 1\n")
-        _write_module(root, "dev.quality.forward", "from .module import VALUE\n")
-    elif category == "REEXPORT_OR_ALIAS":
-        _write_module(root, "dev.quality.module", "VALUE = 1\n")
-        _write_module(
-            root,
-            "dev.quality.reexport",
-            "from .module import VALUE\ndef local():\n    return VALUE\nVALUE_ALIAS = VALUE\n",
-        )
-    elif category == "ACTIVE_INITIALIZER":
-        _write_package(root, "dev.quality", "from .module import VALUE\n")
-        _write_module(root, "dev.quality.module", "VALUE = 1\n")
-    _write_module(root, module, source)
-    _assert_subordinate_detection(root, category)
+    planted = _plant_subordinate_defects(root)
+    returncode, output = _run_real_gate(root)
+    payload = _health_payload(output)
+    _assert_blocking_detection(returncode, output, payload)
+    by_code = _section(payload, "hard_findings")["by_code"]
+    block = _component_block(output, "SUBORDINATE_CHECKER")
+    assert isinstance(by_code, dict)
+    for (name, category), module in planted.items():
+        assert category in by_code, (name, output)
+        assert f"[{category}]" in block, (name, output)
+        # The initializer finding is reported at the package, not at the importer.
+        location = "dev/quality/__init__.py" if category == "ACTIVE_INITIALIZER" else module.rsplit(".", 1)[-1]
+        assert any(f"[{category}]" in line and location in line for line in block.splitlines()), (name, output)
 
 
 @pytest.mark.parametrize(
