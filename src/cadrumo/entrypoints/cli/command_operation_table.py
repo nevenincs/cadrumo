@@ -97,6 +97,7 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("app", "ledger", "inventory", "correct"), "ledger.inventory.correct"),
     (("app", "ledger", "inventory", "create"), "ledger.inventory.create"),
     (("app", "ledger", "inventory", "describe"), "ledger.inventory.describe"),
+    (("app", "ledger", "inventory", "evidence-add"), "ledger.inventory.evidence.add"),
     (("app", "ledger", "inventory", "inspect"), "ledger.inventory.inspect"),
     (("app", "ledger", "inventory", "list"), "ledger.inventory.list"),
     (("app", "ledger", "inventory", "movement", "add"), "ledger.inventory.movement.add"),

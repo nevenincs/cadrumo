@@ -9,6 +9,7 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Select, Static
 
+from .....application.inventory.registered_evidence_operation import InventoryEvidenceAddRequest
 from .....application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
@@ -297,6 +298,23 @@ def test_the_inventory_tool_attaches_to_the_overview() -> None:
     )
     assert tool.key == INVENTORY_TOOL_KEY
     assert isinstance(tool.build(controller), LedgerInventoryScreen)
+
+
+@pytest.mark.asyncio
+async def test_a_purchase_document_is_stored_with_no_inventory_chosen_and_no_digest_typed() -> None:
+    door = MemoryInventoryDoor()
+    screen = _screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _choose(pilot, screen, "inventory-action", "evidence_add")
+            screen.query_one("#inventory-evidence-path", Input).value = "invoice.pdf"
+            await _review_and_confirm(pilot, screen)
+            assert any(
+                isinstance(item, InventoryEvidenceAddRequest) and item.source_path == "invoice.pdf"
+                for item in door.requests
+            )
+            assert f"attachment:{'d' * 64}" in _text(screen, "#register-result")
 
 
 @pytest.mark.asyncio

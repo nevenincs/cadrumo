@@ -241,6 +241,10 @@ def compose_actividad_asset_registered_operations(inputs: OperationCompositionIn
 
 def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose inventory registered operation."""
+    from ..application.inventory.registered_evidence_operation import (
+        build_inventory_evidence_add_definition,
+        build_inventory_evidence_add_registration,
+    )
     from ..application.inventory.registered_operation import (
         build_inventory_closing_authority_record_definition,
         build_inventory_closing_authority_record_registration,
@@ -260,8 +264,10 @@ def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -
         build_inventory_valuation_preview_registration,
     )
     from .adapter_composition_ports import build_inventory_service_ports
+    from .adapter_composition_work_ports import build_ledger_evidence_ports
 
     caller = inputs.execution_caller_reader
+    evidence = build_inventory_evidence_add_definition(build_ledger_evidence_ports, execution_caller_reader=caller)
     listing = build_inventory_list_definition(build_inventory_service_ports)
     create = build_inventory_create_definition(build_inventory_service_ports, execution_caller_reader=caller)
     movement = build_inventory_movement_add_definition(build_inventory_service_ports, execution_caller_reader=caller)
@@ -277,7 +283,7 @@ def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -
     inspect = build_inventory_inspect_definition(build_inventory_service_ports)
     changes = build_inventory_ledger_change_definitions(build_inventory_service_ports, execution_caller_reader=caller)
     return built(
-        (listing, create, movement, valuation, closing, closing_value, inspect, *changes),
+        (listing, create, movement, valuation, closing, closing_value, inspect, evidence, *changes),
         (
             build_inventory_list_registration(listing),
             build_inventory_create_registration(create),
@@ -286,6 +292,7 @@ def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -
             build_inventory_closing_authority_record_registration(closing),
             build_inventory_closing_value_record_registration(closing_value),
             build_inventory_inspect_registration(inspect),
+            build_inventory_evidence_add_registration(evidence),
             *(build_inventory_ledger_change_registration(definition) for definition in changes),
         ),
     )

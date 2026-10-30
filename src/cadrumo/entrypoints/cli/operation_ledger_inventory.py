@@ -16,6 +16,11 @@ from cadrumo_client.commands.registered_operation_contracts import RegisteredOpe
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from ...application.inventory.registered_evidence_operation import (
+    INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+    InventoryEvidenceAddProjection,
+    InventoryEvidenceAddRequest,
+)
 from ...application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
@@ -66,6 +71,7 @@ from ...domain.contribuyente.inventory.corrections import (
 from .ledger_business_payloads import (
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
+    InventoryEvidenceAddResult,
     InventoryInspectResult,
     InventoryLedgerChangeResult,
     InventoryListResult,
@@ -409,6 +415,25 @@ def record_inventory_closing_authority(
     return _record_closing(ctx, request, definition_id=INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID)
 
 
+def add_inventory_evidence(ctx: typer.Context, *, request: InventoryEvidenceAddRequest) -> InventoryEvidenceAddResult:
+    """Store one purchase document through the exact profile worker."""
+    completed = _run(
+        ctx,
+        request,
+        definition_id=INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+        result_type=InventoryEvidenceAddProjection,
+        allow_refusal_detail=False,
+    )
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.UPDATED
+        or completed.refusal_code is not None
+    ):
+        raise invalid_completion_error(completed)
+    projection = completed.projection
+    return InventoryEvidenceAddResult(reference=projection.reference, content_digest=str(projection.content_digest))
+
+
 def record_inventory_closing_value(
     ctx: typer.Context,
     *,
@@ -462,6 +487,7 @@ def _record_closing(
 
 
 __all__ = [
+    "add_inventory_evidence",
     "add_inventory_movement",
     "apply_inventory_ledger_change",
     "create_inventory_ledger",

@@ -353,6 +353,8 @@ cli:
           des d'un fitxer.
         authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest
           registre d'existències.
+        evidence_add_help: "Desa un document de compra en aquest perfil i mostra la identitat amb què la compra l'anomena."
+        evidence_source_help: "El document de compra que vols desar: PDF, imatge o XML."
         closing_value_file_help: "Fitxer JSON amb les dades del valor de tancament."
         closing_value_file_invalid: "El fitxer del valor de tancament no és vàlid per a aquest inventari."
         closing_value_record_help: "Registra un valor de tancament a partir de dades senzilles: el valor, el mètode i els documents."

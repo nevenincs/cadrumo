@@ -12,6 +12,7 @@ or restoration keeps the fact it displaces; the screen shows that history.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Final, Protocol, override
 from uuid import UUID, uuid4
 
@@ -19,6 +20,10 @@ from pydantic import BaseModel
 from textual.app import ComposeResult
 from textual.widgets import Static
 
+from ....application.inventory.registered_evidence_operation import (
+    InventoryEvidenceAddProjection,
+    InventoryEvidenceAddRequest,
+)
 from ....application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
@@ -91,6 +96,7 @@ type InventoryRequestV1 = (
     | InventoryClosingAuthorityRecordRequest
     | InventoryInspectRequest
     | InventoryLedgerChangeRequest
+    | InventoryEvidenceAddRequest
 )
 """Every inventory change, each its own registered operation."""
 
@@ -107,6 +113,7 @@ _ACTION_LOCALE_KEYS: Final[dict[str, str]] = {
     "valuation_preview": "tui.ledger.registers.inventory.action.valuation_preview",
     "closing_authority": "tui.ledger.registers.inventory.action.closing_authority",
     "closing_value": "tui.ledger.registers.inventory.action.closing_value",
+    "evidence_add": "tui.ledger.registers.inventory.action.evidence_add",
     "inspect": "application.inventory.workbench.action.inspect",
     "describe": "application.inventory.workbench.action.describe",
     "correct": "application.inventory.workbench.action.correct",
@@ -154,6 +161,8 @@ _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "taxable_base": "tui.ledger.registers.inventory.field.taxable_base",
     "acquisition_cost": "tui.ledger.registers.inventory.field.acquisition_cost",
     "facts": "tui.ledger.registers.inventory.field.closing_value_facts",
+    "source_path": "tui.ledger.registers.inventory.field.evidence_file",
+    "source_directory": "tui.ledger.registers.inventory.field.evidence_folder",
     "authority_record": "tui.ledger.registers.inventory.field.authority_record",
     "correction_id": "application.inventory.workbench.field.correction_id",
     "target_movement_id": "application.inventory.workbench.field.target_movement_id",
@@ -175,6 +184,7 @@ _FIELDS: Final = (
     "inventory-acquisition-path",
     "inventory-authority-path",
     "inventory-closing-facts-path",
+    "inventory-evidence-path",
     "inventory-target-movement",
     "inventory-correction-reason",
     "inventory-retirement-reason",
@@ -198,6 +208,7 @@ _ACTION_FIELDS: Final[dict[str, frozenset[str]]] = {
     "valuation_preview": _SCOPE,
     "closing_authority": _SCOPE | {"inventory-authority-path"},
     "closing_value": _SCOPE | {"inventory-closing-facts-path"},
+    "evidence_add": frozenset({"inventory-evidence-path"}),
     "inspect": _SCOPE,
     "describe": _SCOPE | {"inventory-label", "inventory-description"},
     "correct": _SCOPE | {"inventory-correction-reason", "inventory-opening", "inventory-corrected-method"},
@@ -263,6 +274,10 @@ class LedgerInventoryDoorV1(Protocol):
         self, request: InventoryClosingValueRecordRequest
     ) -> InventoryClosingAuthorityOperationProjection:
         """Record one closing value from plain facts; a registered refusal is returned, not raised."""
+        ...
+
+    async def add_evidence(self, request: InventoryEvidenceAddRequest) -> InventoryEvidenceAddProjection:
+        """Store one purchase document and answer the identity a purchase names it by."""
         ...
 
     async def read_closing_value_facts(self, path: str) -> InventoryClosingValueFactsInput:
@@ -503,6 +518,7 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
         yield from labelled_input(_FIELD_LOCALE_KEYS["acquisition_cost"], "inventory-acquisition-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["authority_record"], "inventory-authority-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["facts"], "inventory-closing-facts-path")
+        yield from labelled_input(_FIELD_LOCALE_KEYS["source_path"], "inventory-evidence-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["target_movement_id"], "inventory-target-movement")
         yield from labelled_select(
             _FIELD_LOCALE_KEYS["reason"], "inventory-correction-reason", options["inventory-correction-reason"]
@@ -523,6 +539,15 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
     def on_select_changed(self) -> None:
         """Show only the fields the chosen request takes."""
         self._show_action_fields()
+
+    def _evidence_request(self) -> InventoryEvidenceAddRequest:
+        return InventoryEvidenceAddRequest(
+            profile_id=self.door.profile_id,
+            source_path=require_text(
+                self.input_value("#inventory-evidence-path"), field_key=_FIELD_LOCALE_KEYS["source_path"]
+            ),
+            source_directory=str(Path.cwd()),
+        )
 
     def _show_action_fields(self) -> None:
         show_fields(self, _FIELDS, _ACTION_FIELDS[self.select_value("#inventory-action")])
@@ -697,7 +722,7 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
     @override
     async def stage(self) -> tuple[BaseModel, str]:
         action = self.select_value("#inventory-action")
-        request, source = await self._request(action)
+        request, source = (self._evidence_request(), None) if action == "evidence_add" else await self._request(action)
         lines = [tr(_ACTION_LOCALE_KEYS[action]), request_summary(request, field_keys=_FIELD_LOCALE_KEYS)]
         if source is not None:
             lines.append(tr("tui.ledger.registers.inventory.source", path=source))
@@ -705,6 +730,14 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
 
     @override
     async def send(self, request: BaseModel) -> RegisterOutcomeV1:
+        if isinstance(request, InventoryEvidenceAddRequest):
+            held = await self.door.add_evidence(request)
+            return RegisterOutcomeV1(
+                lines=(
+                    tr("tui.ledger.registers.inventory.evidence_done"),
+                    tr("tui.ledger.registers.inventory.evidence_held", reference=held.reference),
+                )
+            )
         if isinstance(request, InventoryCreateRequest):
             outcome = inventory_outcome(await self.door.create(request))
         elif isinstance(request, InventoryInspectRequest):

@@ -214,6 +214,13 @@ class InventoryLedgerPayload(OutputSchema):
     history: list[InventoryHistoryEntryPayload] = []
 
 
+class InventoryEvidenceAddResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger inventory evidence-add``."""
+
+    reference: NonEmptyStr
+    content_digest: NonEmptyStr
+
+
 class InventoryListRowPayload(InventoryLedgerPayload):
     """One inventory summary row returned by the list command."""
 

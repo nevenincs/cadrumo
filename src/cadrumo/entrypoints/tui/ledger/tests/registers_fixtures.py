@@ -28,6 +28,10 @@ from .....application.bienes_inversion.registered_result_contracts import (
     BienInversionDisposalProjection,
     BienInversionRecordProjection,
 )
+from .....application.inventory.registered_evidence_operation import (
+    InventoryEvidenceAddProjection,
+    InventoryEvidenceAddRequest,
+)
 from .....application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryClosingAuthorityRecordProjection,
@@ -711,6 +715,15 @@ class MemoryInventoryDoor:
                 prior_closing_link_fingerprint="c" * 64,
                 changed=True,
             ),
+        )
+
+    async def add_evidence(self, request: InventoryEvidenceAddRequest) -> InventoryEvidenceAddProjection:
+        """Answer the identity a purchase would name this document by."""
+        self.requests.append(request)
+        return InventoryEvidenceAddProjection(
+            profile_id=request.profile_id,
+            reference=f"attachment:{'d' * 64}",
+            content_digest="d" * 64,
         )
 
     async def read_closing_value_facts(self, path: str) -> InventoryClosingValueFactsInput:

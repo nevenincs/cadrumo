@@ -355,6 +355,8 @@ cli:
           desde un fichero.
         authority_invalid: El objeto de autoridad de cierre no es válido para este
           registro de existencias.
+        evidence_add_help: "Guarda un documento de compra en este perfil y muestra la identidad con la que la compra lo nombra."
+        evidence_source_help: "El documento de compra que quieres guardar: PDF, imagen o XML."
         closing_value_file_help: "Archivo JSON con los datos del valor de cierre."
         closing_value_file_invalid: "El archivo del valor de cierre no es válido para este inventario."
         closing_value_record_help: "Registra un valor de cierre a partir de datos sencillos: el valor, el método y los documentos."

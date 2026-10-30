@@ -526,6 +526,27 @@ def _ingest_evidence_attachment(
     )
 
 
+def ingest_evidence_file(
+    *,
+    ports: LedgerEvidencePorts,
+    bucket_id: str,
+    source_path: str | Path,
+    source_directory: Path | None,
+    now: datetime,
+    actor: str,
+) -> ContentDigest:
+    """Admit one operator-chosen file and store its bytes in custody, with no invoice record."""
+    resolved, media_kind = _resolve_evidence_source(source_path, source_directory)
+    return _ingest_evidence_attachment(
+        ports=ports,
+        bucket_id=bucket_id,
+        resolved=resolved,
+        media_kind=media_kind,
+        now=now,
+        actor=actor,
+    )
+
+
 def _resolve_evidence_source(
     source_path: str | Path,
     source_directory: Path | None,

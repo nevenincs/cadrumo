@@ -7843,6 +7843,7 @@ tui:
       invalid_number: '%{field}: %{value} no es un número entero.'
       inventory:
         action:
+          evidence_add: "Guardar un documento de compra"
           closing_value: "Registrar un valor de cierre desde un archivo de datos"
           closing_authority: Registrar una autoridad de cierre
           create: Crear un inventario
@@ -7864,6 +7865,8 @@ tui:
           acquisition_cost: Archivo del coste de compra (solo compras)
           action: Petición
           actividad_id: Actividad
+          evidence_file: "Archivo del documento"
+          evidence_folder: "Carpeta desde la que parte la ruta del documento"
           closing_value_facts: "Archivo de datos del valor de cierre"
           authority_record: Archivo de la autoridad de cierre
           kind: Tipo de movimiento
@@ -7912,6 +7915,8 @@ tui:
             · %{movements} movimientos'
           valuation: 'Valoración de %{actividad} %{year} (%{method}): valor de cierre
             %{closing}, coste de las ventas %{cogs}.'
+        evidence_done: "Documento guardado."
+        evidence_held: "Nómbralo en la compra como: %{reference}"
         source: 'Leído de: %{path}'
         source_invalid: 'El archivo %{path} no es un registro válido: se han encontrado
           %{count} problemas.'

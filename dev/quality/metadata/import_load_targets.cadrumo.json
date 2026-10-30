@@ -766,6 +766,7 @@
         "cadrumo.application.inventory.errors",
         "cadrumo.application.inventory.ports",
         "cadrumo.application.inventory.registered_execution_result",
+        "cadrumo.application.inventory.registered_evidence_operation",
         "cadrumo.application.inventory.registered_executor",
         "cadrumo.application.inventory.registered_operation",
         "cadrumo.application.inventory.registered_projections",

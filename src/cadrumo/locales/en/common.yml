@@ -7669,6 +7669,7 @@ tui:
       invalid_number: '%{field}: %{value} is not a whole number.'
       inventory:
         action:
+          evidence_add: "Store a purchase document"
           closing_value: "Record a closing value from a facts file"
           closing_authority: Record a closing authority
           create: Create an inventory
@@ -7690,6 +7691,8 @@ tui:
           acquisition_cost: Purchase cost file (purchases only)
           action: Request
           actividad_id: Activity
+          evidence_file: "Document file"
+          evidence_folder: "Folder the document path starts from"
           closing_value_facts: "Closing value facts file"
           authority_record: Closing authority file
           kind: Movement kind
@@ -7738,6 +7741,8 @@ tui:
             %{movements} movements'
           valuation: 'Valuation for %{actividad} %{year} (%{method}): closing value
             %{closing}, cost of goods sold %{cogs}.'
+        evidence_done: "Document stored."
+        evidence_held: "Name it in the purchase as: %{reference}"
         source: 'Read from: %{path}'
         source_invalid: 'The file %{path} is not a valid record: %{count} problems
           found.'

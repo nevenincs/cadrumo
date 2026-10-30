@@ -8,6 +8,7 @@ from uuid import UUID
 import typer
 from pydantic import ValidationError
 
+from ...application.inventory.registered_evidence_operation import InventoryEvidenceAddRequest
 from ...application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
@@ -44,6 +45,7 @@ from .common import active_bucket_id_or_refuse as _inventory_bucket_id
 from .common import emit_envelope
 from .ledger_business_payloads import InventoryClosingAuthorityRecordResult
 from .operation_ledger_inventory import (
+    add_inventory_evidence,
     add_inventory_movement,
     apply_inventory_ledger_change,
     create_inventory_ledger,
@@ -412,6 +414,24 @@ def inventory_closing_authority_record(
     )
 
 
+def inventory_evidence_add(ctx: typer.Context, source_path: str) -> None:
+    """Store one purchase document in the profile's custody and print the identity a purchase names it by."""
+    result = add_inventory_evidence(
+        ctx,
+        request=InventoryEvidenceAddRequest(
+            profile_id=UUID(_inventory_bucket_id()),
+            source_path=source_path,
+            source_directory=str(Path.cwd()),
+        ),
+    )
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.evidence.add",
+        result=result,
+        lines=(f"reference\t{result.reference}", f"content_digest\t{result.content_digest}"),
+    )
+
+
 def inventory_closing_value_record(
     ctx: typer.Context,
     actividad_id: str,
@@ -452,6 +472,7 @@ __all__ = [
     "inventory_correct",
     "inventory_create",
     "inventory_describe",
+    "inventory_evidence_add",
     "inventory_inspect",
     "inventory_list",
     "inventory_movement_add",

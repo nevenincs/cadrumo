@@ -27,6 +27,11 @@ from cadrumo.application.bienes_inversion.registered_result_contracts import (
     BienesInversionDeclareProjection,
     BienesInversionListProjection,
 )
+from cadrumo.application.inventory.registered_evidence_operation import (
+    INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+    InventoryEvidenceAddProjection,
+    InventoryEvidenceAddRequest,
+)
 from cadrumo.application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
@@ -569,6 +574,29 @@ class RuntimeInventoryTuiDoorV1:
     async def read_acquisition_cost(self, path: str) -> InventoryAcquisitionCostRequest:
         """Read one typed purchase-cost file off the event loop and validate it as the command line does."""
         return await asyncio.to_thread(_read_acquisition_cost, path)
+
+    async def add_evidence(self, request: InventoryEvidenceAddRequest) -> InventoryEvidenceAddProjection:
+        """Store one purchase document and correlate the profile it answers for."""
+
+        def matches(
+            result: InventoryEvidenceAddProjection,
+            condition: OperationTerminalCondition,
+            terminal: OperationPublicProjectionV1,
+        ) -> bool:
+            return result.profile_id == request.profile_id and _outcome_matches(
+                refusal_code=None,
+                condition=condition,
+                terminal=terminal,
+                success_effect=OperationEffect.UPDATED,
+            )
+
+        return await self._session.run(
+            request,
+            definition_id=INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+            result_type=InventoryEvidenceAddProjection,
+            matches=matches,
+            refusal_detail=False,
+        )
 
     async def read_closing_value_facts(self, path: str) -> InventoryClosingValueFactsInput:
         """Read one typed file of closing-value facts off the event loop and validate it as the command line does."""

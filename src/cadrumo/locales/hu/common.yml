@@ -7795,6 +7795,7 @@ tui:
       invalid_number: '%{field}: a(z) %{value} nem egész szám.'
       inventory:
         action:
+          evidence_add: "Beszerzési dokumentum mentése"
           closing_value: "Záróérték rögzítése adatfájlból"
           closing_authority: Záró jóváhagyás rögzítése
           create: Készlet létrehozása
@@ -7816,6 +7817,8 @@ tui:
           acquisition_cost: Beszerzési költség fájlja (csak vásárlásnál)
           action: Kérés
           actividad_id: Tevékenység
+          evidence_file: "Dokumentumfájl"
+          evidence_folder: "A dokumentum útvonalának kiinduló mappája"
           closing_value_facts: "Záróérték adatfájlja"
           authority_record: Záró jóváhagyás fájlja
           kind: Mozgás fajtája
@@ -7863,6 +7866,8 @@ tui:
             %{movements} mozgás'
           valuation: '%{actividad} %{year} értékelése (%{method}): záró érték %{closing},
             eladott áruk beszerzési értéke %{cogs}.'
+        evidence_done: "A dokumentum elmentve."
+        evidence_held: "Így hivatkozz rá a beszerzésnél: %{reference}"
         source: 'Beolvasva innen: %{path}'
         source_invalid: 'A(z) %{path} fájl nem érvényes rekord: %{count} hiba található.'
         source_unreadable: A(z) %{path} fájl nem olvasható.

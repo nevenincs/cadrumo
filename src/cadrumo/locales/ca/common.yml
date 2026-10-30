@@ -7821,6 +7821,7 @@ tui:
       invalid_number: '%{field}: %{value} no és un nombre enter.'
       inventory:
         action:
+          evidence_add: "Desa un document de compra"
           closing_value: "Registra un valor de tancament des d'un fitxer de dades"
           closing_authority: Registra una autoritat de tancament
           create: Crea un inventari
@@ -7842,6 +7843,8 @@ tui:
           acquisition_cost: Fitxer del cost de compra (només compres)
           action: Petició
           actividad_id: Activitat
+          evidence_file: "Fitxer del document"
+          evidence_folder: "Carpeta des de la qual parteix el camí del document"
           closing_value_facts: "Fitxer de dades del valor de tancament"
           authority_record: Fitxer de l'autoritat de tancament
           kind: Tipus de moviment
@@ -7890,6 +7893,8 @@ tui:
             · %{movements} moviments'
           valuation: 'Valoració de %{actividad} %{year} (%{method}): valor de tancament
             %{closing}, cost de les vendes %{cogs}.'
+        evidence_done: "Document desat."
+        evidence_held: "Anomena'l a la compra com a: %{reference}"
         source: 'Llegit de: %{path}'
         source_invalid: 'El fitxer %{path} no és un registre vàlid: s''han trobat
           %{count} problemes.'

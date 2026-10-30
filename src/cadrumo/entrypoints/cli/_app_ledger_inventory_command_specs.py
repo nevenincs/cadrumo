@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
@@ -183,6 +183,39 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 __package__,
             ),
             identity="ledger.inventory.closing-value.record",
+        ),
+    ),
+    CommandSpec(
+        "app_ledger_inventory_evidence_add",
+        "app_ledger_inventory",
+        "evidence-add",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.inventory.evidence_add_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(
+            ArgumentSpec(
+                name="source_path",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.ledger.inventory.evidence_source_help"),
+                metavar=None,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+        ),
+        policy=_POLICY_4,
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_inventory_commands", "inventory_evidence_add", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_business_payloads", "InventoryEvidenceAddResult", __package__),
+            identity="ledger.inventory.evidence.add",
         ),
     ),
     CommandSpec(

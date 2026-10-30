@@ -332,6 +332,8 @@ cli:
           a file.
         authority_invalid: The closing-authority object is invalid for this inventory
           record book.
+        evidence_add_help: "Store a purchase document in this profile and show the identity a purchase names it by."
+        evidence_source_help: "The purchase document to store: PDF, image or XML."
         closing_value_file_help: "JSON file with the facts of the closing value."
         closing_value_file_invalid: "The closing value file is invalid for this inventory."
         closing_value_record_help: "Record a closing value from plain facts: the value, the method and the documents."
