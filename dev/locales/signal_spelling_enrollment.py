@@ -451,6 +451,10 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "ugrás",
             "szektorizált",
             "munkajegység",
+            # Hungarian ISO date masks use ÉÉÉÉ for the year component across
+            # CLI, wizard, profile and ledger prompts. This exact notation is
+            # not ordinary prose or a license for other repeated-letter forms.
+            "ÉÉÉÉ",
             # Direct Hungarian inflections of the product name and the AEAT
             # term "modelo" lengthen final o to ó (AkH. 216(a)). These are
             # the exact forms attested by the locale audit; do not infer other

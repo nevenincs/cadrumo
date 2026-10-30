@@ -1164,6 +1164,14 @@ def test_hungarian_summary_preset_and_prose_forms_are_exact_and_language_scoped(
         assert all(not is_project_spelling(locale, form) for form in forms)
 
 
+def test_hungarian_iso_year_mask_is_exact_and_language_scoped() -> None:
+    dictionaries = load_dictionaries(REPO_ROOT)
+    assert not dictionaries["hu"].lookup("ÉÉÉÉ")
+    assert is_project_spelling("hu", "ÉÉÉÉ")
+    assert not is_project_spelling("hu", "ÉÉÉÉÉ")
+    assert all(not is_project_spelling(locale, "ÉÉÉÉ") for locale in ("en", "es", "ca"))
+
+
 def test_spelling_enrollment_preserves_unknown_words() -> None:
     class EmptyDictionary:
         def lookup(self, word: str) -> bool:
