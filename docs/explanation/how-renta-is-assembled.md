@@ -15,12 +15,12 @@ with `aeat config profile create` as
 step-by-step preparation lives in
 [Prepare the annual Modelo 100 Renta declaration](../how-to/modelo-100.md).
 
-## One declaration, five source routes
+## One declaration, six source routes
 
 Modelo 100 is the largest form the tool prepares - the 2025 version defines
 over two thousand boxes (casillas) and two hundred formulas. Every value on it
 arrives through a declared data source. The listing calls each of these contracts
-a `binding`. The current Renta flow uses five broad routes. They are not the
+a `binding`. The current Renta flow uses six broad routes. They are not the
 complete list of source kinds for every modelo. List them for your
 filing year:
 
@@ -35,6 +35,10 @@ filing year:
 - **Stock inventory.** The closing-stock variation and stock purchases of an
   activity with stock. They come from your encrypted inventory register for the
   filing year, listed under the source `inventory`.
+- **Activity asset disposals.** Gains, losses, and excess amortisation
+  from disposals recorded in your activity asset register, plus the asset type
+  for a transferred activity asset. The listing labels these rows
+  `activity_asset_disposal`.
 
 Everything else - employment income details, capital income, deductions your records cannot know about - is a box you fill in yourself when it applies to you. The full inventory for your year:
 
