@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from functools import cached_property
 from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -22,6 +23,7 @@ from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
+from .identity_cache import CachedIdentityModel
 
 ElectionReference = Annotated[str, Field(min_length=1, max_length=256)]
 """Operator reference to an election or approval act an asset relies on."""
@@ -328,7 +330,7 @@ class RenewableSelfConsumptionEvidence(BaseModel):
         return self
 
 
-class ActivityAssetAmortizationElection(BaseModel):
+class ActivityAssetAmortizationElection(CachedIdentityModel):
     """Regime, table class, method and the facts the chosen method requires.
 
     The structural validator admits each optional fact only for the methods
@@ -453,7 +455,7 @@ class ActivityAssetAmortizationElection(BaseModel):
         if value is not None and self.method not in methods:
             raise ValueError(f"{field_name} is not a fact of the {self.method.value} method")
 
-    @property
+    @cached_property
     def fingerprint(self) -> str:
         """Return the stable identity used to judge a change of method."""
         absent_facts = {"used_original_price"} if self.used_original_price is None else set()

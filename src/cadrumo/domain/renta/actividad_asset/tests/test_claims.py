@@ -7,7 +7,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.hashing import content_hash_hex
 from ....calculations.registry.tests.published_authority import published_supported_filing_years
+from .. import claims as claims_module
 from ..claims import (
     AmortizationClaim,
     ClaimCoverageGap,
@@ -265,3 +267,41 @@ def test_select_effective_claims_applies_year_and_inclusive_cutoff() -> None:
     assert select_effective_claims(claims, tax_year=_YEAR) == (first, second)
     assert select_effective_claims(claims, tax_year=_YEAR, through=date(_YEAR, 3, 31)) == (first,)
     assert select_effective_claims(claims, tax_year=_YEAR, through=date(_YEAR, 3, 30)) == ()
+
+
+def test_a_claim_hashes_its_identity_once_per_instance(monkeypatch: pytest.MonkeyPatch) -> None:
+    hashed: list[object] = []
+
+    def counting(payload: object) -> str:
+        hashed.append(payload)
+        return content_hash_hex(payload)
+
+    monkeypatch.setattr(claims_module, "content_hash_hex", counting)
+    claim = _claim()
+
+    assert claim.claim_id == claim.claim_id
+    assert len(hashed) == 1
+    claims = (claim, _claim(covered_from=date(_YEAR, 4, 1), covered_until=date(_YEAR, 7, 1)))
+    for _ in range(3):
+        effective_claims(claims)
+    assert len(hashed) == 2
+
+
+def test_a_copy_with_a_changed_field_gets_its_own_identity() -> None:
+    claim = _claim()
+    cached_id = claim.claim_id
+
+    changed = claim.model_copy(update={"amount": Decimal("100.00")})
+
+    assert changed.claim_id != cached_id
+    assert changed.claim_id == _claim(amount=Decimal("100.00")).claim_id
+    assert claim.model_copy(deep=True).claim_id == cached_id
+
+
+def test_a_cached_identity_changes_neither_equality_nor_the_dump() -> None:
+    read, unread = _claim(), _claim()
+    dumped = unread.model_dump(mode="json")
+
+    assert read.claim_id == unread.claim_id
+    assert read == _claim()
+    assert read.model_dump(mode="json") == dumped

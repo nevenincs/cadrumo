@@ -11,12 +11,14 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from functools import cached_property
 from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
+from .identity_cache import CachedIdentityModel
 
 
 class AcquisitionDocumentKind(StrEnum):
@@ -55,7 +57,7 @@ class ActivityAssetDescriptorFacts(BaseModel):
         return self
 
 
-class ActivityAssetDescriptor(BaseModel):
+class ActivityAssetDescriptor(CachedIdentityModel):
     """One appended statement of an element's descriptive facts; the latest is current."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -64,7 +66,7 @@ class ActivityAssetDescriptor(BaseModel):
     descriptor_number: int = Field(ge=1)
     facts: ActivityAssetDescriptorFacts
 
-    @property
+    @cached_property
     def descriptor_id(self) -> str:
         """Return the identity of this statement, distinct even when an earlier wording returns."""
         return content_hash_hex(self.model_dump(mode="json"))

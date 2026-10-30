@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, timedelta
 from decimal import Decimal
+from functools import cached_property
 from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -23,6 +24,7 @@ from .election import (
     require_free_depreciation_facts,
 )
 from .errors import ActividadAssetClaimConflictError, ActividadAssetValidationError
+from .identity_cache import CachedIdentityModel
 from .lifecycle import ActivityAssetRevision, AssetKind
 from .schedule import AssetScheduleHistory, ScheduledAmortizationCharge
 
@@ -49,7 +51,7 @@ def m100_casilla_id(asset_kind: AssetKind) -> str:
     return MATERIAL_M100_CASILLA_ID if asset_kind is AssetKind.MATERIAL else INTANGIBLE_M100_CASILLA_ID
 
 
-class AmortizationClaim(BaseModel):
+class AmortizationClaim(CachedIdentityModel):
     """An immutable recorded charge, distinct from a recomputable forecast."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -104,7 +106,7 @@ class AmortizationClaim(BaseModel):
         )
         return self
 
-    @property
+    @cached_property
     def claim_id(self) -> str:
         """Return deterministic claim identity, including every replay discriminator.
 

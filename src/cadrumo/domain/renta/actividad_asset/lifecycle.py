@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from functools import cached_property
 from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -18,6 +19,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from .disposal import ActivityAssetDisposal
 from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
+from .identity_cache import CachedIdentityModel
 from .vehicle_affectation import VehicleAffectation
 
 
@@ -312,7 +314,7 @@ class ActivityAssetBasis(BaseModel):
         return building_cost * self.ownership_share * self.office_area / self.total_area
 
 
-class ActivityAssetRevision(BaseModel):
+class ActivityAssetRevision(CachedIdentityModel):
     """One immutable revision of an independently identified activity asset."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -366,7 +368,7 @@ class ActivityAssetRevision(BaseModel):
         """Return the allocated basis less residual value (RIS art. 3.2)."""
         return self.basis.deductible_basis() - self.residual_value
 
-    @property
+    @cached_property
     def revision_id(self) -> str:
         """Return the deterministic identity of this immutable revision.
 
