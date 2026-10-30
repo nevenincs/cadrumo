@@ -24,3 +24,15 @@ def test_export_oracle_overlays_one_asset_claim_on_the_proven_income_control() -
     assert oracle.m100_control_material == "0.00"
     assert oracle.m100_asset_material == "300.00"
     assert oracle.m100_intangible == "0.00"
+
+
+def test_export_oracle_accrues_the_element_by_days_to_each_quarter_end() -> None:
+    """Hand-worked: 300.00 x 90, 181, 273 and 365 days over 365, rounded to cents."""
+    oracle = _asset_overlay_oracle()
+
+    assert oracle.m130_asset_accrual_by_period == (
+        ("1T", "73.97"),
+        ("2T", "148.77"),
+        ("3T", "224.38"),
+        ("4T", "300.00"),
+    )

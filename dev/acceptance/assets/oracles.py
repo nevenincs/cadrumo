@@ -34,9 +34,17 @@ def first_year_machinery_constant_percentage(allocated_basis: Decimal) -> Decima
     )
 
 
+def accrued_through(*, annual_charge: Decimal, days_elapsed: int, days_in_year: int) -> Decimal:
+    """Share of a year's charge accrued after ``days_elapsed`` in-service days, rounded to cents."""
+    return (annual_charge * Decimal(days_elapsed) / Decimal(days_in_year)).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+
+
 __all__ = [
     "CONSTANT_PERCENTAGE_WEIGHTING_EIGHT_YEARS_OR_MORE",
     "MACHINERY_LINEAR_MAXIMUM",
+    "accrued_through",
     "first_year_constant_percentage_oracle",
     "first_year_machinery_constant_percentage",
 ]

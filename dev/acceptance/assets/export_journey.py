@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import cast
 
 from dev.acceptance.assets.acquisition_seed import seed_machine_acquisition
-from dev.acceptance.assets.oracles import first_year_machinery_constant_percentage
+from dev.acceptance.assets.oracles import accrued_through, first_year_machinery_constant_percentage
 from dev.acceptance.income_tax.cli_journey import (
     JourneyError,
     command_result,
@@ -32,6 +32,19 @@ from dev.acceptance.installed_cli import InstalledCli
 _YEAR = 2025
 _ASSET_AMOUNT = first_year_machinery_constant_percentage(Decimal("1000.00"))
 
+# Casilla 02 of each quarter carries the element's amortization accrued from 1 January
+# to the quarter's end, by days over the 365 days of 2025, rounded to cents. The annual
+# charge is 1,000.00 x 12% x 2.5 = 300.00 and the element is in service from 1 January:
+#   1T: 90 days (31 + 28 + 31)       300.00 x  90 / 365 =  27000 / 365 =  73.9726... -> 73.97
+#   2T: 181 days (90 + 30 + 31 + 30) 300.00 x 181 / 365 =  54300 / 365 = 148.7671... -> 148.77
+#   3T: 273 days (181 + 31 + 31 + 30) 300.00 x 273 / 365 = 81900 / 365 = 224.3835... -> 224.38
+#   4T: 365 days                     300.00 x 365 / 365 = 300.00
+_QUARTER_END_DAYS = {"1T": 90, "2T": 181, "3T": 273, "4T": 365}
+_QUARTER_ASSET_ACCRUAL = {
+    period: accrued_through(annual_charge=_ASSET_AMOUNT, days_elapsed=days, days_in_year=365)
+    for period, days in _QUARTER_END_DAYS.items()
+}
+
 
 @dataclass(frozen=True, slots=True)
 class AssetOverlayOracle:
@@ -40,6 +53,7 @@ class AssetOverlayOracle:
     control: IncomeTaxScenario
     m130_q4_control_expenses: str
     m130_q4_asset_expenses: str
+    m130_asset_accrual_by_period: tuple[tuple[str, str], ...]
     m100_control_total_expenses: str
     m100_asset_total_expenses: str
     m100_control_material: str = "0.00"
@@ -55,6 +69,9 @@ def _asset_overlay_oracle() -> AssetOverlayOracle:
         control=control,
         m130_q4_control_expenses=_money(q4.cumulative_expenses),
         m130_q4_asset_expenses=_money(q4.cumulative_expenses + _ASSET_AMOUNT),
+        m130_asset_accrual_by_period=tuple(
+            (quarter.period, _money(_QUARTER_ASSET_ACCRUAL[quarter.period])) for quarter in control.quarter_oracle
+        ),
         m100_control_total_expenses=_money(control.annual_oracle.deductible_expenses),
         m100_asset_total_expenses=_money(control.annual_oracle.deductible_expenses + _ASSET_AMOUNT),
     )
@@ -381,6 +398,7 @@ def run_asset_export_journey(
         cli.run(("app", "ledger", "actividad-asset", "filing-handoff", "--tax-year", "2025", "--m130-period", "4T"))
     )
     _assert_asset_claim_handoff(handoff, claim_id)
+    accrual = dict(oracle.m130_asset_accrual_by_period)
     for control_quarter in oracle.control.quarter_oracle[:-1]:
         report_stage(f"m130.{control_quarter.period}")
         _calculate_and_file_m130(
@@ -388,6 +406,7 @@ def run_asset_export_journey(
             period=control_quarter.period,
             control_income=_money(control_quarter.cumulative_income),
             control_expenses=_money(control_quarter.cumulative_expenses),
+            asset_expense_delta=accrual[control_quarter.period],
         )
     control_q4 = oracle.control.quarter_oracle[-1]
     report_stage("m130.4T")

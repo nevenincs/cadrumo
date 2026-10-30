@@ -26,7 +26,10 @@ from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings im
 )
 from ...calculations.registry.tests.registry_tree import full_published_modelo
 from ...categories.spending_category import SpendingCategory
-from ...categories.spending_category_catalogue import spending_category_tokens
+from ...categories.spending_category_catalogue import (
+    amortizable_spending_categories,
+    spending_category_tokens,
+)
 from .._first_slice_routing import (
     resolve_first_slice_expense_routing,
 )
@@ -37,13 +40,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _FILING_YEAR = 2025
 
 
+def _routable_categories(
+    authority: PinnedAuthorityOperation,
+    coordinate: date,
+) -> tuple[SpendingCategory, ...]:
+    """Return the categories the first slice routes: the activity-asset register carries the amortizable ones."""
+    amortizable = frozenset(amortizable_spending_categories(effective_date=coordinate, authority=authority))
+    return tuple(
+        category
+        for category in spending_category_tokens(effective_date=coordinate, authority=authority)
+        if category not in amortizable
+    )
+
+
 def _first_slice_expense_routing(operation: PinnedAuthorityOperation) -> dict[SpendingCategory, CasillaId]:
     return resolve_first_slice_expense_routing(
         category_type=SpendingCategory,
-        category_tokens=lambda selected_authority, coordinate: spending_category_tokens(
-            effective_date=coordinate,
-            authority=selected_authority,
-        ),
+        category_tokens=_routable_categories,
         casilla_factory=validated_casilla_id,
         model_code="100",
         fact_id="modelo-100-first-slice-expense-routing-mapping",
@@ -75,7 +88,6 @@ def test_first_slice_target_casillas_is_closed_set(operation: PinnedAuthorityOpe
             "0202",
             "0203",
             "0206",
-            "0208",
             "0217",
         },
     )
@@ -93,9 +105,11 @@ def test_every_spending_category_routes_to_a_first_slice_casilla(operation: Pinn
     """
 
     routing = _first_slice_expense_routing(operation)
-    categories = spending_category_tokens(effective_date=date(2025, 12, 31), authority=operation)
+    categories = _routable_categories(operation, date(2025, 12, 31))
     unrouted = [category for category in categories if category not in routing]
     assert unrouted == []
+    amortizable = amortizable_spending_categories(effective_date=date(2025, 12, 31), authority=operation)
+    assert not set(routing) & set(amortizable)
 
 
 def test_first_slice_routing_targets_exist_in_modelo_100_registry(operation: PinnedAuthorityOperation) -> None:
