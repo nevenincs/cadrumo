@@ -20,7 +20,7 @@ from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.tipos_actividad import TipoActividad
-from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection
+from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection, last_day_covered
 from ...domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
     ActivityAssetDisposalReason,
@@ -80,10 +80,20 @@ _CHARGE_DECIMAL_FIELDS: Final = (
 """Decimal facts of a scheduled charge or a recorded claim; only a forecast states its rate."""
 
 
+def _require_covered_through(covered_until: date, covered_through: date | None) -> None:
+    """Refuse a stated last covered day that is not the day before the exclusive boundary."""
+    if covered_through is not None and covered_through != last_day_covered(covered_until):
+        raise ValueError("covered_through is the day before covered_until")
+
+
 def _public_charge_fields(value: BaseModel) -> dict[str, object]:
     """Copy a domain charge field by field, carrying its decimals as public decimals."""
     data: dict[str, object] = {}
     data.update(value.model_dump(mode="python"))
+    covered_until = data["covered_until"]
+    if not isinstance(covered_until, date):
+        raise TypeError("charge covered_until must be a date")
+    data["covered_through"] = last_day_covered(covered_until)
     for name in _CHARGE_DECIMAL_FIELDS:
         if name in data:
             amount = data[name]
@@ -94,6 +104,7 @@ def _public_charge_fields(value: BaseModel) -> dict[str, object]:
 def _domain_charge_fields(snapshot: BaseModel) -> dict[str, object]:
     """Copy a charge snapshot field by field, restoring its public decimals."""
     data: dict[str, object] = {name: getattr(snapshot, name) for name in type(snapshot).model_fields}
+    data.pop("covered_through", None)
     for name in _CHARGE_DECIMAL_FIELDS:
         if name in data:
             amount = data[name]
@@ -582,6 +593,8 @@ class AmortizationClaimSnapshot(BaseModel):
     tax_year: FilingYear
     covered_from: date
     covered_until: date
+    covered_through: date | None = None
+    """The last day covered, for display; stated on output and, when sent back, the day before ``covered_until``."""
     amount: PublicDecimal
     schedule_fingerprint: Hex64Str
     authority_generation: str = Field(min_length=1, max_length=256)
@@ -607,6 +620,7 @@ class AmortizationClaimSnapshot(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _canonical(self) -> Self:
+        _require_covered_through(self.covered_until, self.covered_through)
         self.to_domain()
         return self
 
@@ -657,6 +671,8 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
     tax_year: FilingYear
     covered_from: date
     covered_until: date
+    covered_through: date | None = None
+    """The last day covered, for display; stated on output and, when sent back, the day before ``covered_until``."""
     service_days: int = Field(ge=0)
     calendar_days: int = Field(ge=365, le=366)
     amount: PublicDecimal
@@ -682,6 +698,7 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _canonical(self) -> Self:
+        _require_covered_through(self.covered_until, self.covered_through)
         self.to_domain()
         return self
 
