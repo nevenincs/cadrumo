@@ -205,7 +205,7 @@ adapters:
           namespace_blank: L'espai de noms d'emmagatzematge local no pot estar buit.
           namespace_create_path_too_long: 'L''emmagatzematge local no ha pogut crear
             l''espai de noms {namespace}: el camí supera el límit de longitud de camí
-            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
+            de Windows. Trasllada CADRUMO_STORAGE_ROOT a un camí més curt o
             activa LongPathsEnabled (consulta `aeat config storage check`).'
           namespace_create_permission: L'emmagatzematge local no ha pogut crear l'espai
             de noms {namespace}.
@@ -222,7 +222,7 @@ adapters:
             de l'objecte.
           payload_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             la càrrega de l''objecte: el camí supera el límit de longitud de camí
-            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
+            de Windows. Trasllada CADRUMO_STORAGE_ROOT a un camí més curt o
             activa LongPathsEnabled (consulta `aeat config storage check`).'
           payload_write_permission: L'emmagatzematge local no ha pogut escriure el
             payload de l'objecte.
@@ -234,7 +234,7 @@ adapters:
             de l'objecte.
           sidecar_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             el sidecar de l''objecte: el camí supera el límit de longitud de camí
-            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
+            de Windows. Trasllada CADRUMO_STORAGE_ROOT a un camí més curt o
             activa LongPathsEnabled (consulta `aeat config storage check`).'
           written_at_invalid: 'El camp written_at del sidecar local falta, no es pot
             interpretar o no indica zona horària: {actual_value}.'

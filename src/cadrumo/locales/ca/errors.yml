@@ -353,7 +353,7 @@ errors:
     error_sede_navigation: Ha fallat un pas de navegació en la Seu de l'AEAT.
     error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
     error_storage_bucket_path_too_long: El camí del directori del bucket supera el
-      límit MAX_PATH de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més
+      límit MAX_PATH de Windows. Trasllada CADRUMO_STORAGE_ROOT a un camí més
       curt o activa LongPathsEnabled (consulta `aeat config storage check`).
     error_storage_management: No s'ha pogut llegir ni alliberar l'arbre d'emmagatzematge
       local.

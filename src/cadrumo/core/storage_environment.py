@@ -1,8 +1,7 @@
 """Import-light storage root declaration shared by application and development bootstrap.
 
 :data:`STORAGE_ROOT` is this command line's declaration of its storage root:
-its variables and their precedence, the checkout default, the per-platform
-installed default, the relative-override rule and the refusals.
+its variable, the per-platform per-user default and the refusals.
 :func:`child_environment` builds the environment of a child this command line
 starts itself. Every other Python module reads these values instead of spelling
 a root variable or default.
@@ -11,10 +10,11 @@ A packaged image receives its environment from the package that built it, which
 pins the root before Python starts; Python then reads that pin and never
 re-resolves it. Nothing here declares what a package passes to its images.
 
-Mode is decided by where this module lives, never by the working directory,
-``sys.argv`` or a settings value: beside ``pyproject.toml`` in a source checkout
-is development, anywhere else is installed. Every process that imports the same
-package tree therefore gets the same answer, whichever executable started it.
+The root is an absolute ``CADRUMO_STORAGE_ROOT`` when one is set and the
+per-user, per-channel default otherwise. It is the one control over where the
+product stores anything: every member beneath it sits at a fixed relative
+subpath. Nothing here knows of the tree the product was built from, and nothing
+reads the working directory, ``sys.argv`` or a settings value to choose a root.
 
 The module stays import-light (standard library and the product identity only;
 its records are named tuples, as in :mod:`core.product_identity`)
@@ -30,7 +30,6 @@ import sys
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from enum import StrEnum
-from functools import cache
 from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
 from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
 
@@ -38,13 +37,6 @@ from .product_identity import PRODUCT_IDENTITY
 
 if TYPE_CHECKING:
     from uuid import UUID
-
-
-class StorageMode(StrEnum):
-    """Whether the running package is a source checkout or an installed tree."""
-
-    DEVELOPMENT = "development"
-    INSTALLED = "installed"
 
 
 class StoragePlatform(StrEnum):
@@ -55,20 +47,12 @@ class StoragePlatform(StrEnum):
     MACOS = "macos"
 
 
-class RelativeRootOverride(StrEnum):
-    """What a relative root override means in one mode."""
-
-    ANCHOR_AT_CHECKOUT = "anchor_at_checkout"
-    REFUSE = "refuse"
-
-
 class StorageRootRefusal(StrEnum):
     """Why a storage root cannot be resolved; the resolver never guesses instead."""
 
     RELATIVE_OVERRIDE_INSTALLED = "relative_override_installed"
     INSTALLED_BASE_UNAVAILABLE = "installed_base_unavailable"
     HOME_UNAVAILABLE = "home_unavailable"
-    CHECKOUT_UNAVAILABLE = "checkout_unavailable"
     UNSUPPORTED_PLATFORM = "unsupported_platform"
     NON_ABSOLUTE_PIN = "non_absolute_pin"
     INVALID_PATH_INPUT = "invalid_path_input"
@@ -90,10 +74,11 @@ STORAGE_PATH_RULES: Final[StoragePathRules] = StoragePathRules(True, True, True,
 class ChildEnvironmentProfile(StrEnum):
     """Which of this command line's settings a child it starts takes from its parent.
 
-    An ``OPERATOR`` child (a profile worker) takes the parent's location
-    settings, so it resolves the same locations. A ``STRICT`` child takes none
-    of them. Both take the parent's registry authority root, so parent and
-    child read one authority generation.
+    An ``OPERATOR`` child (a profile worker) takes the parent's proxy settings,
+    so the browser and network requests it starts follow the operator's route. A
+    ``STRICT`` child takes none of them. Both take the parent's registry
+    authority root, so parent and child read one authority generation, and both
+    are pinned to the storage root the launcher resolved.
     """
 
     OPERATOR = "operator"
@@ -121,41 +106,19 @@ class InstalledDefaultRule(NamedTuple):
 
 
 class StorageRootDeclaration(NamedTuple):
-    """The storage root anchor: variables, defaults, override and refusal rules.
+    """The storage root anchor: its variable, per-user defaults and refusal rules.
 
     The root is not a taxonomy member; every root-scoped member resolves
-    beneath it. ``variable`` is the settings-owned name a native host pins.
-    ``development_variable`` is the lower-precedence name honoured only in a
-    checkout. Blank values are unset in every mode.
+    beneath it. ``variable`` is the settings-owned name a native host pins and
+    the only root override; it must be absolute. A blank value is unset.
     """
 
     variable: str
-    development_variable: str
-    development_default: tuple[str, ...]
-    checkout_marker: str
-    checkout_module: tuple[str, ...]
     installed_defaults: tuple[InstalledDefaultRule, ...]
     product_directory: str
     stable_channel: str
     channel_separator: str
-    development_relative_override: RelativeRootOverride
-    installed_relative_override: RelativeRootOverride
     posix_directory_mode: int
-
-    @property
-    def precedence(self) -> tuple[str, ...]:
-        """Every root variable, highest precedence first."""
-        return (self.variable, self.development_variable)
-
-    def root_variables(self, mode: StorageMode) -> tuple[str, ...]:
-        """Root variables honoured in ``mode``, highest precedence first."""
-        return self.precedence if mode is StorageMode.DEVELOPMENT else (self.variable,)
-
-    def relative_override(self, mode: StorageMode) -> RelativeRootOverride:
-        """Return the declared meaning of a relative root override in ``mode``."""
-        if mode is StorageMode.DEVELOPMENT:
-            return self.development_relative_override
-        return self.installed_relative_override
 
     def installed_rule(self, platform: StoragePlatform) -> InstalledDefaultRule:
         """Return the installed default rule declared for ``platform``."""
@@ -169,11 +132,7 @@ class StorageRootDeclaration(NamedTuple):
 
 
 STORAGE_ROOT: Final[StorageRootDeclaration] = StorageRootDeclaration(
-    variable="CADRUMO_LOCAL_STORAGE_ROOT",
-    development_variable="CADRUMO_STORAGE_ROOT",
-    development_default=("var", "storage"),
-    checkout_marker="pyproject.toml",
-    checkout_module=("src", PRODUCT_IDENTITY.python_package, "core", "storage_environment.py"),
+    variable="CADRUMO_STORAGE_ROOT",
     installed_defaults=(
         InstalledDefaultRule(
             platform=StoragePlatform.WINDOWS,
@@ -197,8 +156,6 @@ STORAGE_ROOT: Final[StorageRootDeclaration] = StorageRootDeclaration(
     product_directory=PRODUCT_IDENTITY.python_package,
     stable_channel="stable",
     channel_separator="-",
-    development_relative_override=RelativeRootOverride.ANCHOR_AT_CHECKOUT,
-    installed_relative_override=RelativeRootOverride.REFUSE,
     posix_directory_mode=0o700,
 )
 """The one storage root declaration. Python resolves only the stable channel:
@@ -209,22 +166,12 @@ TEMPORARY_VARIABLES: Final[tuple[str, ...]] = ("TEMP", "TMP", "TMPDIR")
 """The names Python's :mod:`tempfile` reads; a child's scratch is pinned beneath its root through them."""
 
 
-class TemporaryFilesDeclaration(NamedTuple):
-    """Where the temporary-files member sits beneath the root, and the setting that overrides it."""
-
-    subpath: str
-    settings_field: str
-
-
-TEMPORARY_FILES: Final[TemporaryFilesDeclaration] = TemporaryFilesDeclaration(
-    subpath="tmp",
-    settings_field="cadrumo_temp_dir",
-)
-"""The temporary-files member's location, declared here rather than in the taxonomy.
+TEMPORARY_FILES_SUBPATH: Final[str] = "tmp"
+"""Where the temporary-files member sits beneath the root, declared here rather than in the taxonomy.
 
 Development bootstrap prepares the temporary root before any project
 dependency is installed, so this declaration must be readable without the
-taxonomy's models; the taxonomy member reads its subpath and setting from it."""
+taxonomy's models; the taxonomy member reads its subpath from it."""
 
 
 def _refuse(refusal: StorageRootRefusal, message: str) -> NoReturn:
@@ -243,34 +190,6 @@ def declared_platform(sys_platform: str | None = None) -> StoragePlatform | None
     if value.startswith("linux"):
         return StoragePlatform.LINUX
     return None
-
-
-class StorageModeEvidence(NamedTuple):
-    """The mode of one package tree and, in development, its checkout."""
-
-    mode: StorageMode
-    checkout: Path | None
-
-
-def detect_storage_mode(module_file: Path) -> StorageModeEvidence:
-    """Classify the package tree containing ``module_file``.
-
-    Development means ``module_file`` is the declared module path inside a
-    directory that also holds the checkout marker; anything else is installed.
-    """
-    source = module_file.resolve()
-    depth = len(STORAGE_ROOT.checkout_module)
-    if len(source.parents) >= depth:
-        root = source.parents[depth - 1]
-        if source == root.joinpath(*STORAGE_ROOT.checkout_module) and (root / STORAGE_ROOT.checkout_marker).is_file():
-            return StorageModeEvidence(StorageMode.DEVELOPMENT, root)
-    return StorageModeEvidence(StorageMode.INSTALLED, None)
-
-
-@cache
-def storage_mode() -> StorageModeEvidence:
-    """Return the mode of the package tree this process imported."""
-    return detect_storage_mode(Path(__file__))
 
 
 def _path_type(platform: StoragePlatform | None) -> type[PurePath]:
@@ -381,14 +300,9 @@ def _anchored_installed_default_root(
     )
 
 
-def configured_root_value(
-    environ: Mapping[str, str], mode: StorageMode, *, platform: StoragePlatform | None = None
-) -> str | None:
-    """Return the highest-precedence non-blank root override honoured in ``mode``."""
-    for name in STORAGE_ROOT.root_variables(mode):
-        if (value := _environment_value(environ, name, platform)) is not None:
-            return value
-    return None
+def configured_root_value(environ: Mapping[str, str], *, platform: StoragePlatform | None = None) -> str | None:
+    """Return the non-blank root override, or ``None`` when none is set."""
+    return _environment_value(environ, STORAGE_ROOT.variable, platform)
 
 
 def _expand_home(
@@ -427,66 +341,35 @@ def _home_base(platform: StoragePlatform | None, environ: Mapping[str, str], pat
 def _anchored_storage_root(
     *,
     platform: StoragePlatform | None,
-    mode: StorageMode,
     environ: Mapping[str, str],
-    checkout: PurePath | str | None = None,
     channel: str | None = None,
     path_type: type[PurePath] | None = None,
 ) -> PurePath:
     """Apply the declaration to explicit inputs; the pure resolver both runtimes mirror.
 
-    An absolute override wins in every mode. A relative override follows the
-    mode's declared rule. Without an override, development resolves the
-    checkout default and installed resolves the per-user default; a checkout
-    never carries a channel. Only the installed default needs a declared
-    ``platform``; ``None`` resolves a checkout on any operating system.
+    An absolute override wins; a relative one is refused. Without an override
+    the per-user default applies, which needs a declared ``platform``.
     ``path_type`` defaults to the platform's own path syntax; a host resolver
     passes its own.
     """
     path_type = _path_type(platform) if path_type is None else path_type
-    raw = configured_root_value(environ, mode, platform=platform)
+    raw = configured_root_value(environ, platform=platform)
     if raw is not None:
         candidate = _expand_home(raw, platform, environ, path_type)
-        if candidate.is_absolute():
-            return candidate
-        if STORAGE_ROOT.relative_override(mode) is RelativeRootOverride.REFUSE:
+        if not candidate.is_absolute():
             _refuse(
                 StorageRootRefusal.RELATIVE_OVERRIDE_INSTALLED,
-                f"{STORAGE_ROOT.variable} must be an absolute directory when Cadrumo is installed.",
+                f"{STORAGE_ROOT.variable} must be an absolute directory.",
             )
-        if candidate.drive or candidate.root:
-            _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "A relative root override cannot replace its checkout anchor.")
-        return _checkout_anchor(path_type, checkout) / candidate
-    if mode is StorageMode.DEVELOPMENT:
-        return _checkout_anchor(path_type, checkout).joinpath(*STORAGE_ROOT.development_default)
+        return candidate
     return _anchored_installed_default_root(platform, environ, channel=channel, path_type=path_type)
 
 
-def _checkout_anchor(path_type: type[PurePath], checkout: PurePath | str | None) -> PurePath:
-    if checkout is None:
-        _refuse(
-            StorageRootRefusal.CHECKOUT_UNAVAILABLE,
-            "A development storage root needs the source checkout that anchors it.",
-        )
-    anchor = path_type(_checked_path_value(str(checkout)))
-    if not anchor.is_absolute():
-        _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "The source checkout anchor must be absolute.")
-    return anchor
-
-
-def storage_root_for(
-    environ: Mapping[str, str],
-    evidence: StorageModeEvidence,
-    *,
-    sys_platform: str | None = None,
-) -> Path:
-    """Resolve this host's storage root for ``evidence`` and ``environ``."""
-    platform = declared_platform(sys_platform)
+def storage_root_for(environ: Mapping[str, str], *, sys_platform: str | None = None) -> Path:
+    """Resolve this host's storage root for ``environ``."""
     resolved = _anchored_storage_root(
-        platform=platform,
-        mode=evidence.mode,
+        platform=declared_platform(sys_platform),
         environ=environ,
-        checkout=evidence.checkout,
         path_type=_host_path_type(),
     )
     return normalize_storage_path(Path(resolved))
@@ -500,31 +383,16 @@ def host_installed_default_root(environ: Mapping[str, str], *, sys_platform: str
     )
 
 
-def configured_storage_root(
-    *,
-    environ: Mapping[str, str] | None = None,
-    repository_root: Path | None = None,
-) -> Path:
-    """Resolve the storage root for this process.
-
-    ``repository_root`` names a checkout explicitly, which selects development
-    mode; otherwise the mode of this package tree applies.
-    """
-    environment = os.environ if environ is None else environ
-    evidence = (
-        storage_mode() if repository_root is None else StorageModeEvidence(StorageMode.DEVELOPMENT, repository_root)
-    )
-    return storage_root_for(environment, evidence)
+def configured_storage_root(*, environ: Mapping[str, str] | None = None) -> Path:
+    """Resolve the storage root for this process, or for ``environ`` when given."""
+    return storage_root_for(os.environ if environ is None else environ)
 
 
 def storage_root_override(value: str | Path) -> Path:
-    """Validate and normalize one explicit root using this process's checkout/home evidence."""
-    evidence = storage_mode()
+    """Validate and normalize one explicit root; a relative root is refused."""
     anchored = _anchored_storage_root(
         platform=declared_platform(),
-        mode=evidence.mode,
         environ={**os.environ, STORAGE_ROOT.variable: str(value)},
-        checkout=evidence.checkout,
         path_type=_host_path_type(),
     )
     return normalize_storage_path(Path(anchored))
@@ -589,13 +457,8 @@ def storage_directory(environment_variable: str, default: str, *, root: Path | N
 def prepare_temporary_directory() -> Path:
     """Create the controlled scratch base for callers of tempfile APIs."""
     root = configured_storage_root()
-    value = (
-        _environment_value(os.environ, TEMPORARY_FILES.settings_field.upper(), declared_platform())
-        or TEMPORARY_FILES.subpath
-    )
-    temporary = resolve_storage_path(value, root=root, received=os.environ)
     ensure_storage_root(root)
-    return ensure_storage_root(temporary)
+    return ensure_storage_root(root / TEMPORARY_FILES_SUBPATH)
 
 
 def _own_setting_names() -> frozenset[str]:
@@ -612,7 +475,7 @@ def authority_root_setting_names() -> frozenset[str]:
 
 
 def relayed_setting_names() -> frozenset[str]:
-    """Return the settings an ``OPERATOR`` child takes from its parent: locations, authority root and proxy.
+    """Return the settings an ``OPERATOR`` child takes from its parent: storage root, authority root and proxy.
 
     The proxy settings reach the child so the browser and network requests it starts follow the
     operator's network route; the child withholds them from its own children
@@ -660,34 +523,6 @@ def _child_relay_settings(
         environment[name] = value
 
 
-def _child_temporary_root(
-    profile: ChildEnvironmentProfile,
-    resolved_root: Path,
-    environment_in: Mapping[str, str],
-    platform: StoragePlatform | None,
-) -> Path:
-    """Resolve the child's temporary directory and enforce explicit-member admission."""
-    from .storage_taxonomy import StorageCategory
-    from .storage_taxonomy_locations import storage_location
-
-    temporary = storage_location(StorageCategory.TEMPORARY_FILES)
-    temporary_value = temporary.relative_path().as_posix()
-    if temporary.settings_field is not None and profile is ChildEnvironmentProfile.OPERATOR:
-        temporary_value = (
-            _environment_value(environment_in, temporary.settings_field.upper(), platform) or temporary_value
-        )
-    temporary_root = resolve_storage_path(
-        temporary_value, root=resolved_root, received=environment_in, platform=platform
-    )
-    if (
-        not temporary.create_explicit_directory
-        and temporary_value != temporary.relative_path().as_posix()
-        and not temporary_root.is_dir()
-    ):
-        _refuse(StorageRootRefusal.FILESYSTEM_PATH_REFUSED, "An explicit storage member must already exist.")
-    return temporary_root
-
-
 def child_environment(
     profile: ChildEnvironmentProfile,
     root: Path,
@@ -718,7 +553,7 @@ def child_environment(
     prefix = PRODUCT_IDENTITY.environment_prefix
     environment = {name: value for name, value in ambient.items() if not (name.startswith(prefix) or name in own)}
     _child_relay_settings(profile, environment_in, environment)
-    temporary_root = _child_temporary_root(profile, resolved_root, environment_in, platform)
+    temporary_root = resolved_root / TEMPORARY_FILES_SUBPATH
     ensure_storage_root(resolved_root)
     ensure_storage_root(temporary_root)
     environment[STORAGE_ROOT.variable] = str(resolved_root)

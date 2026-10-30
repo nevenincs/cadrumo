@@ -51,6 +51,8 @@ from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
 from .....core.file_permissions import restrict_directory_permissions
 from .....core.logging import get_logger
 from .....core.operator_action_enums import NoRecoveryOutcome
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
 from .....core.time.clock import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ._site_health_probe import probe_response
@@ -310,7 +312,7 @@ class BrowserSession:
     async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
         """Launch Chromium with the profile's headless/proxy config; raise BrowserError on failure."""
         try:
-            root = self.settings.cadrumo_chromium_data_root
+            root = storage_path(StorageCategory.CHROMIUM_DATA, settings=self.settings)
             root.mkdir(parents=True, exist_ok=True, mode=0o700)
             self._working_directory = TemporaryDirectory(prefix="session-", dir=root)
             working_path = Path(self._working_directory.name).resolve()
@@ -328,9 +330,6 @@ class BrowserSession:
             }
             for directory in set(child_directories.values()):
                 directory.mkdir(mode=0o700)
-            from .....core.storage_taxonomy import StorageCategory
-            from .....core.storage_taxonomy_locations import storage_path
-
             temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=self.settings)
             temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
             child_environment: dict[str, str | float] = dict(os.environ)

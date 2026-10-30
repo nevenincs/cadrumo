@@ -38,7 +38,7 @@ def resolve_database_url_for_active_profile(
 
     When the field is left empty (the production default), this
     validator computes the per-bucket SQLite URL at
-    ``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/cadrumo.db``.
+    ``sqlite:///<cadrumo_storage_root>/buckets/<bucket-id>/db/cadrumo.db``.
     Tests that pass an explicit URL bypass the resolution — the
     validator only fires the computation when the field is empty.
 
@@ -48,14 +48,14 @@ def resolve_database_url_for_active_profile(
     1. ``settings.cadrumo_active_profile`` (the in-process override the
        ``--profile`` flag and ``override_settings`` write; no
        environment variable reaches it).
-    2. ``<cadrumo_local_storage_root>/active-profile`` plaintext
+    2. ``<cadrumo_storage_root>/active-profile`` plaintext
        pointer file written by ``profile create`` / ``config
        login``.
 
     When neither rung resolves, the field derives a root-level
-    fallback at ``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` so
+    fallback at ``sqlite:///<cadrumo_storage_root>/cadrumo.db`` so
     the two storage settings stay coherent: setting
-    ``CADRUMO_LOCAL_STORAGE_ROOT`` alone never leaves
+    ``CADRUMO_STORAGE_ROOT`` alone never leaves
     ``cadrumo_database_url`` empty. Cold-start commands still refuse
     before touching this fallback database — every profile-scoped
     path checks for an active profile first — so the fallback
@@ -81,11 +81,11 @@ def resolve_database_url_for_active_profile(
             captured = pointer_observation
             pointer = (
                 captured[1]
-                if captured is not None and captured[0] == settings.cadrumo_local_storage_root
-                else read_pointer(settings.cadrumo_local_storage_root)
+                if captured is not None and captured[0] == settings.cadrumo_storage_root
+                else read_pointer(settings.cadrumo_storage_root)
             )
         except (OSError, ValueError, TomlDecodeError) as exc:
-            pointer_file = pointer_path(settings.cadrumo_local_storage_root)
+            pointer_file = pointer_path(settings.cadrumo_storage_root)
             _LOGGER.debug(
                 "Invalid active-profile pointer at %s; refusing root storage fallback",
                 pointer_file,
@@ -98,7 +98,7 @@ def resolve_database_url_for_active_profile(
     from .storage_taxonomy_locations import bucket_scoped_storage_path, storage_path
 
     if not bucket_id:
-        refuse_former_product_database(settings.cadrumo_local_storage_root)
+        refuse_former_product_database(settings.cadrumo_storage_root)
         fallback_db_path = storage_path(StorageCategory.ROOT_FALLBACK_DATABASE, settings=settings)
         object.__setattr__(
             settings,
@@ -106,7 +106,7 @@ def resolve_database_url_for_active_profile(
             f"sqlite:///{fallback_db_path.as_posix()}",
         )
         return settings
-    refuse_former_product_database(settings.cadrumo_local_storage_root, bucket_id=bucket_id)
+    refuse_former_product_database(settings.cadrumo_storage_root, bucket_id=bucket_id)
     # The layout comes from the one core storage authority. This fallback
     # used to re-type it, unpinned against the code that actually
     # provisions a bucket, so a rename would have routed the cold-start
@@ -118,45 +118,6 @@ def resolve_database_url_for_active_profile(
         f"sqlite:///{bucket_db_path.as_posix()}",
     )
     return settings
-
-
-def resolve_output_dirs_under_storage_root(settings: Settings) -> Settings:
-    """Derive storage defaults and relative overrides beneath the effective root.
-
-    Absolute per-category overrides remain independently configurable.
-    The taxonomy declares the default members and their settings fields.
-    """
-    from .storage_taxonomy_locations import ROOT_DERIVED_STORAGE_LOCATIONS, STORAGE_TAXONOMY
-
-    for location in ROOT_DERIVED_STORAGE_LOCATIONS:
-        field_name = location.settings_field
-        if field_name is None:
-            continue
-        if field_name in settings.model_fields_set:
-            value = getattr(settings, field_name)
-            if isinstance(value, Path) and not value.is_absolute():
-                object.__setattr__(settings, field_name, _beneath_storage_root(settings, value))
-        else:
-            object.__setattr__(settings, field_name, settings.cadrumo_local_storage_root / location.relative_path())
-    for location in STORAGE_TAXONOMY.values():
-        if location.settings_field is None:
-            continue
-        value = getattr(settings, location.settings_field)
-        if isinstance(value, Path) and not value.is_absolute():
-            object.__setattr__(settings, location.settings_field, _beneath_storage_root(settings, value))
-    return settings
-
-
-def _beneath_storage_root(settings: Settings, value: Path) -> Path:
-    """Place a relative member below the storage root, refusing a drive- or root-relative spelling.
-
-    The storage resolver refuses those spellings, so a setting that rewrote them
-    would name a different location than every other reader of the same variable.
-    """
-    from .storage_environment import refuse_unanchored_storage_member
-
-    refuse_unanchored_storage_member(value)
-    return (settings.cadrumo_local_storage_root / value).resolve()
 
 
 def empty_optional_paths_are_none[ValueT](value: ValueT) -> ValueT | None:

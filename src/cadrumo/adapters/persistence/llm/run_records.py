@@ -57,6 +57,8 @@ from ....application.diagnostics_run_health_ports import (
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....core.time.clock import now
 from ....core.time.utc import UtcInstant
 from ...outbound.llm.errors import LLMCacheError
@@ -122,9 +124,9 @@ class LLMRunRecorder:
 
         Args:
             root_dir: Logical run-record partition; defaults to the
-                centralized ``cadrumo_llm_run_record_dir`` setting.
+                LLM run-record storage member.
         """
-        self.root_dir = root_dir or load_settings().cadrumo_llm_run_record_dir
+        self.root_dir = root_dir or storage_path(StorageCategory.LLM_RUN_RECORD, settings=load_settings())
 
     def record(self, record: LLMRunRecord) -> Path:
         """Append ``record`` to encrypted secure-object storage.

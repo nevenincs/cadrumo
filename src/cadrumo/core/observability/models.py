@@ -355,7 +355,7 @@ class RunTrace(BaseModel):
             time. Production reads no dotenv, so the Settings snapshot is
             the whole configuration surface.
         db_sha256: Fingerprint of the canonical application data root
-            (``Settings.cadrumo_local_storage_root``) at enter time.
+            (``Settings.cadrumo_storage_root``) at enter time.
         cert_fingerprint: SHA-256 of the configured PKCS#12 cert, or
             ``""`` when no cert is configured.
         outcome: Terminal run outcome; see :class:`RunOutcome`.

@@ -172,7 +172,7 @@ def _serve_connected_worker(
     with ExitStack() as composition:
         composition.enter_context(
             override_settings(
-                cadrumo_local_storage_root=options.storage_root,
+                cadrumo_storage_root=options.storage_root,
                 cadrumo_active_profile=str(identity.binding.profile_id),
             )
         )

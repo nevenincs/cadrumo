@@ -16,6 +16,8 @@ from typing import Any, cast
 
 from .....application.user_profile.proof_cancellation import ProfileProofCancellation
 from .....core.config import Settings, load_settings
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
 from ._kdf_cancellation import kdf_cancellation_pipe
 from ._kdf_codec import close_fd
 from ._kdf_lease_worker import KDF_LEASE_ACQUIRED, KDF_LEASE_WAITING
@@ -400,7 +402,7 @@ def _acquire_posix_lease(
         return
     except BlockingIOError:
         pass
-    temporary_root = (settings or load_settings()).cadrumo_temp_dir
+    temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=settings or load_settings())
     temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     with (
         tempfile.TemporaryDirectory(prefix="cadrumo-kdf-lease-", dir=temporary_root) as directory,

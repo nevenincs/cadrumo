@@ -43,6 +43,8 @@ from ...core.config_support import StorageRouteKind
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.logging import get_logger
 from ...core.secure_object_write import SecureObjectWrite
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from ...domain.buckets.event import BucketEvent
 from .errors import WorkflowError
 from .events import (
@@ -472,7 +474,7 @@ class WorkflowRunRepository:
     def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
         """Persist one workflow result in the secure object backend."""
         run_id = validate_run_id(result.run_id)
-        marker_dir = runs_dir or Settings().cadrumo_workflow_runs_dir
+        marker_dir = runs_dir or storage_path(StorageCategory.WORKFLOW_RUNS, settings=Settings())
         self._persistence.save_run(self._objects, result)
         return marker_dir / run_id
 

@@ -171,7 +171,7 @@ def effective_storage_root(
     """Return the effective Cadrumo storage root: a caller override, or the settings default.
 
     The single accessor for the "an explicit root override wins, otherwise
-    fall back to ``Settings.cadrumo_local_storage_root``" fallback that six
+    fall back to ``Settings.cadrumo_storage_root``" fallback that six
     call sites across ``application/user_profile`` and
     ``application/config_reset_repository.py`` each re-implemented inline.
     Comparing the six copies surfaced real drift, not just duplication: one
@@ -193,13 +193,13 @@ def effective_storage_root(
     the platform user-data root — one level above the settings default's own
     ``storage/`` — never under the current working directory and never
     nested under an already-derived storage root. ``root is None`` falls
-    back to ``Settings.cadrumo_local_storage_root``, which the settings
+    back to ``Settings.cadrumo_storage_root``, which the settings
     field validator already normalises identically on load, so no second
     resolve is spent on the common (no-override) path.
 
     Args:
         root: Optional caller-supplied storage-root override. ``None``
-            (the default) resolves ``Settings.cadrumo_local_storage_root``.
+            (the default) resolves ``Settings.cadrumo_storage_root``.
         settings: Optional already-resolved
             :class:`~cadrumo.core.config.Settings`, read only when ``root``
             is ``None``, so a caller that already holds a ``Settings``
@@ -219,7 +219,7 @@ def effective_storage_root(
     from .config import load_settings
 
     resolved_settings = settings if settings is not None else load_settings()
-    return resolved_settings.cadrumo_local_storage_root
+    return resolved_settings.cadrumo_storage_root
 
 
 def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:

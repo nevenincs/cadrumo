@@ -33,10 +33,11 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
-from cadrumo.core.config import load_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language, tr
 from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear, plantilla_media_years
 from cadrumo.entrypoints.tui.aeat_sync.models import AeatSyncOperationRequestV1
@@ -423,7 +424,7 @@ class ProfileManagerClientComposition:
             # Settings read the active-profile pointer from disk, so they are read on the worker thread too.
             handoff, _ = await asyncio.to_thread(
                 lambda: compose_runtime_aeat_sync_handoff(
-                    self.client, output_root=load_settings().cadrumo_filed_declarations_dir
+                    self.client, output_root=storage_path(StorageCategory.FILED_DECLARATIONS)
                 )
             )
             self._pin()

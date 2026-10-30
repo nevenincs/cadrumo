@@ -23,10 +23,11 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
-from cadrumo.core.config import load_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.logging import get_logger
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountSessionUnavailableError
 from cadrumo.entrypoints.tui.aeat_sync.routes import aeat_sync_screen_factory
@@ -456,7 +457,7 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         operation_handoff, operation_contracts = compose_runtime_aeat_sync_handoff(
             self._client,
-            output_root=load_settings().cadrumo_filed_declarations_dir,
+            output_root=storage_path(StorageCategory.FILED_DECLARATIONS),
         )
 
         def refresh_aeat_sync() -> AeatSyncWorkspaceProjectionV1:

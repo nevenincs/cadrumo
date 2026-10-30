@@ -26,7 +26,6 @@ from enum import StrEnum
 
 from pydantic import SecretStr
 
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo.core.time.clock import now
 
 from ..domain.catalog import ProviderCatalogEntry, ProviderConsumer, validate_https_base_url
@@ -85,14 +84,12 @@ class ProviderSettingsService:
         *,
         store: ProviderSettingsStore,
         catalog_source: ProviderCatalogSource,
-        storage_mode: StorageMode,
         clock: Callable[[], datetime] = now,
         cli_state_probe: Callable[[ProviderCatalogEntry], CliState] | None = None,
     ) -> None:
-        """Bind the service to one profile's store and the process's storage mode."""
+        """Bind the service to one profile's store and its catalog."""
         self._store = store
         self._catalog_source = catalog_source
-        self._storage_mode = storage_mode
         self._clock = clock
         self._cli_state_probe = cli_state_probe
 
@@ -106,7 +103,6 @@ class ProviderSettingsService:
         if isinstance(reads, StoreRefusal):
             return _refusal_for_store(reads.code)
         return ProviderSettingsStatus(
-            development=self._storage_mode is StorageMode.DEVELOPMENT,
             providers=tuple(
                 status_entry(
                     entry,

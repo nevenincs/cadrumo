@@ -6,7 +6,7 @@ CLI commands, application services) call to obtain a
 active profile. :class:`core.config.Settings` drives the choice:
 
 - ``cadrumo_storage_provider_kind`` selects the backend.
-- ``cadrumo_local_storage_root`` chooses the root directory for the local
+- ``cadrumo_storage_root`` chooses the root directory for the local
   backend.
 - The installation's :class:`~core.config_google_client.OAuthClient`,
   the profile's :class:`~adapters.outbound.google.records.OAuthToken` and the
@@ -19,7 +19,7 @@ Composition order:
 2. Read settings via :func:`~core.config.load_settings`.
 3. Dispatch on :class:`ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
    :class:`adapters.outbound.storage.local.LocalFileSystemProvider`
-   rooted at ``cadrumo_local_storage_root / profile``; ``GOOGLE_DRIVE`` calls
+   rooted at ``cadrumo_storage_root / profile``; ``GOOGLE_DRIVE`` calls
    :func:`build_google_credentials`, which hydrates the profile's desktop
    sign-in, then instantiates
    :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
@@ -224,7 +224,7 @@ def get_storage_provider(
         from ...persistence.storage.bucket.directory_layout import bucket_paths
         from .local import LocalFileSystemProvider
 
-        root = bucket_paths(settings_resolved.cadrumo_local_storage_root, profile).blobs_dir
+        root = bucket_paths(settings_resolved.cadrumo_storage_root, profile).blobs_dir
         return LocalFileSystemProvider(root)
 
     if kind is ProviderKind.GOOGLE_DRIVE:

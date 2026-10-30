@@ -192,7 +192,7 @@ adapters:
           namespace_blank: A helyi tárhely névtere nem lehet üres.
           namespace_create_path_too_long: 'A helyi tárhely nem tudta létrehozni a(z)
             {namespace} névteret: az útvonal hosszabb a Windows által megengedettnél.
-            Helyezd át a CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb
+            Helyezd át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb
             útvonalra, vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat
             config storage check`).'
           namespace_create_permission: 'A helyi tárhely nem tudta létrehozni a névteret:
@@ -209,7 +209,7 @@ adapters:
           payload_read_permission: A helyi tárhely nem tudta olvasni az objektum payloadját.
           payload_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
             tartalmát: az útvonal hosszabb a Windows által megengedettnél.
-            Helyezd át a CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
+            Helyezd át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb útvonalra,
             vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat config storage
             check`).'
           payload_write_permission: A helyi tárhely nem tudta írni az objektum payloadját.
@@ -219,7 +219,7 @@ adapters:
           sidecar_write_failed: A helyi tárhely nem tudta írni az objektum sidecarját.
           sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
             sidecar fájlját: az útvonal hosszabb a Windows által megengedettnél.
-            Helyezd át a CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
+            Helyezd át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb útvonalra,
             vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat config storage
             check`).'
           written_at_invalid: 'A helyi sidecar written_at mezője hiányzik, nem értelmezhető,

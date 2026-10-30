@@ -279,7 +279,7 @@ def _classify_effective_write_route(settings: Settings | None) -> StorageRouteCl
     ):
         from .user_profile.profile_pointer import observe_active_profile_pointer
 
-        pointer = observe_active_profile_pointer(resolved.cadrumo_local_storage_root)
+        pointer = observe_active_profile_pointer(resolved.cadrumo_storage_root)
         if pointer.bucket_id is not None:
             return classify_storage_route(settings_for_active_profile_bucket(pointer.bucket_id, resolved))
     return route

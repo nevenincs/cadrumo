@@ -767,7 +767,7 @@ def assess_active_profile_health(
         # Read strictly even where a corrupt pointer is otherwise read as no
         # selection: the command repairing it must see what it repairs.
         try:
-            read_pointer(settings.cadrumo_local_storage_root)
+            read_pointer(settings.cadrumo_storage_root)
         except ActiveProfilePointerError as exc:
             return _pointer_unreadable_health(total_keys=total_keys, error=exc)
     active_profile = resolve_active_bucket_id()
@@ -804,7 +804,7 @@ def repair_active_profile_pointer(
     if not clear_active or not confirmed or not before.repairable_by_clearing_pointer:
         return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
 
-    root = load_settings().cadrumo_local_storage_root
+    root = load_settings().cadrumo_storage_root
     with active_profile_pointer_transaction(root) as pointer_transaction:
         before = assess_active_profile_health(operation=operation)
         if not before.repairable_by_clearing_pointer:

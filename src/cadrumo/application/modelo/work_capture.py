@@ -100,7 +100,7 @@ def _work_capture_comparison_domain(*, bucket_id: str, implicit: bool) -> str:
     domain = content_hash_hex(
         {
             "owner": "application.modelo.work_addressing",
-            "storage_root": str(load_settings().cadrumo_local_storage_root),
+            "storage_root": str(load_settings().cadrumo_storage_root),
             "namespace": "modelo.work_unit_catalogue",
             "bucket_id": bucket_id,
             "implicit_pointer_limb": implicit,
@@ -118,7 +118,7 @@ def _work_pointer_limb() -> str:
     from ...core.config import load_settings
     from ...core.paths import path_stat_fingerprint
 
-    target = pointer_path(load_settings().cadrumo_local_storage_root)
+    target = pointer_path(load_settings().cadrumo_storage_root)
     try:
         return content_hash_hex(path_stat_fingerprint(target))
     except OSError:

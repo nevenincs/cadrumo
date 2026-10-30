@@ -17,8 +17,6 @@ See Also:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from pydantic import Field
 
 from .config_integration_fields import CadrumoIntegrationSettings
@@ -28,18 +26,6 @@ class CadrumoLlmSettings(CadrumoIntegrationSettings):
     """Settings for the LLM provider, its on-disk caches, and retention windows."""
 
     # ── LLM ─────────────────────────────────────────────────────────────────
-    cadrumo_llm_cache_dir: Path = Field(
-        default=Path("cache") / "llm-cache",
-        description="Directory for on-disk LLM cache entries",
-    )
-    cadrumo_llm_usage_dir: Path = Field(
-        default=Path("llm-usage"),
-        description="Directory for append-only LLM usage JSONL logs",
-    )
-    cadrumo_llm_run_record_dir: Path = Field(
-        default=Path("llm-run-telemetry"),
-        description="Directory for append-only local LLM run-timing record logs",
-    )
     cadrumo_llm_run_record_retention_days: int = Field(
         default=30,
         ge=1,

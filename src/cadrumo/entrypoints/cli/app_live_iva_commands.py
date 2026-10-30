@@ -444,12 +444,13 @@ def iva_wallet_pull_evidence_cmd(
     can therefore survive a wallet/cartera failure and vice versa. The command
     never performs AEAT filing, payment, or representative submission actions.
     """
-    from ...core.config import load_settings
+    from ...core.storage_taxonomy import StorageCategory
+    from ...core.storage_taxonomy_locations import storage_path
     from .operation_iva_remote_state_capture import read_iva_remote_state_capture_for_cli
 
     resolved_target_period = required_live_period_option(target_period, year=target_year)
     emit_live_auth_preflight(ctx)
-    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_iva_read_evidence_dir)
+    resolved_root = resolve_optional_root(output_root, lambda: storage_path(StorageCategory.IVA_READ_EVIDENCE))
     read = read_iva_remote_state_capture_for_cli(
         ctx,
         output_root=resolved_root,

@@ -16,7 +16,7 @@ from uuid import UUID, uuid4
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures, has_async_cleanup_failure
 from cadrumo.core.child_console import isolate_child_consoles
-from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.config import override_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
 from cadrumo.core.logging import configure_logging, flush_logging, get_logger, register_first_party_logger
 from cadrumo.core.startup_phase_log import startup_phase
@@ -72,14 +72,10 @@ def _accept_console_interrupts() -> None:
 def _configure_runtime_logging(root: Path) -> None:
     register_first_party_logger("cadrumo_runtime")
     register_first_party_logger("cadrumo_client")
-    # Respect explicit operator routing. Only handler creation sees the fallback
-    # after native owner/root verification.
-    settings = load_settings()
-    if "cadrumo_log_dir" in settings.model_fields_set:
+    # The log sits beneath the root native owner verification accepted, which an
+    # explicit runtime argument can place elsewhere than the ambient setting.
+    with override_settings(cadrumo_storage_root=root):
         configure_logging()
-    else:
-        with override_settings(cadrumo_log_dir=root / "logs"):
-            configure_logging()
 
 
 def _runtime_login_inventory(

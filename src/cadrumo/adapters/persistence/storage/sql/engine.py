@@ -281,7 +281,7 @@ def _engine_cache_key(settings: Settings) -> _EngineCacheKey:
     """
     route = classify_storage_route(settings)
     if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE and (route.bucket_id is not None and route.bucket_id):
-        root = str(settings.cadrumo_local_storage_root.expanduser().resolve())
+        root = str(settings.cadrumo_storage_root.expanduser().resolve())
         return ("bucket", root, route.bucket_id)
     return ("url", "", settings.cadrumo_database_url)
 

@@ -34,12 +34,9 @@ if TYPE_CHECKING:
     from ..workflow.state_models import WorkflowState
 
 _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
-    "cadrumo_local_storage_root",
+    "cadrumo_storage_root",
     "cadrumo_active_profile",
-    "cadrumo_secret_store_dir",
-    "cadrumo_blob_store_dir",
     "cadrumo_secret_passphrase",
-    "cadrumo_token_dir",
     "cadrumo_auth_provider",
     LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD,
     "cadrumo_certificate_path",
@@ -74,7 +71,7 @@ def auth_operator_settings_scope(settings: Settings | None) -> Generator[Setting
         for field in _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS
         if field in settings.model_fields_set
     }
-    for route_field in ("cadrumo_local_storage_root", "cadrumo_active_profile"):
+    for route_field in ("cadrumo_storage_root", "cadrumo_active_profile"):
         if route_field not in overrides:
             overrides[route_field] = getattr(load_settings(), route_field)
     with override_settings(**overrides) as scoped:
@@ -88,7 +85,7 @@ def active_bucket_id_from_settings(settings: Settings) -> str | None:
     override = (settings.cadrumo_active_profile or "").strip()
     if override:
         return override
-    return observe_active_profile_pointer(settings.cadrumo_local_storage_root).bucket_id
+    return observe_active_profile_pointer(settings.cadrumo_storage_root).bucket_id
 
 
 def _canonical_storage_root(root: Path) -> str:
@@ -111,8 +108,8 @@ def _is_explicitly_routed(
     if settings is None:
         return False
     return (
-        "cadrumo_local_storage_root" in settings.model_fields_set
-        and _canonical_storage_root(settings.cadrumo_local_storage_root) != ambient_storage_root
+        "cadrumo_storage_root" in settings.model_fields_set
+        and _canonical_storage_root(settings.cadrumo_storage_root) != ambient_storage_root
     ) or (
         "cadrumo_active_profile" in settings.model_fields_set
         and settings.cadrumo_active_profile != ambient_settings.cadrumo_active_profile
@@ -164,14 +161,14 @@ def active_profile_storage_span(
             but the ambient session does not serve it on the target root.
     """
     ambient_settings = load_settings()
-    ambient_storage_root = _canonical_storage_root(ambient_settings.cadrumo_local_storage_root)
+    ambient_storage_root = _canonical_storage_root(ambient_settings.cadrumo_storage_root)
     explicitly_routed = _is_explicitly_routed(
         settings,
         ambient_settings=ambient_settings,
         ambient_storage_root=ambient_storage_root,
     )
     with auth_operator_settings_scope(settings) as resolved_settings:
-        target_storage_root = _canonical_storage_root(resolved_settings.cadrumo_local_storage_root)
+        target_storage_root = _canonical_storage_root(resolved_settings.cadrumo_storage_root)
         bucket_id = target_bucket_id or active_bucket_id_from_settings(resolved_settings)
         if bucket_id is None:
             with nullcontext():
@@ -247,7 +244,7 @@ def auth_mutation_span(
     operator_scope_ports: OperatorScopePorts,
 ) -> Generator[None]:
     """Acquire or re-enter the canonical per-bucket auth mutation span."""
-    root = settings.cadrumo_local_storage_root.expanduser().resolve(strict=False)
+    root = settings.cadrumo_storage_root.expanduser().resolve(strict=False)
     current_pid = os.getpid()
     current_thread_id = threading.get_ident()
     ownership = getattr(_AUTH_MUTATION_OWNERSHIP, "current", None)

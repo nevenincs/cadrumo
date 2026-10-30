@@ -330,7 +330,7 @@ errors:
     error_sede_navigation: Az AEAT Sede navigációs lépése meghiúsult.
     error_storage_bucket: Hiba történt a tároló-bucket életciklusában.
     error_storage_bucket_path_too_long: A bucket könyvtár elérési útja meghaladja
-      a Windows MAX_PATH korlátját. Helyezd át a CADRUMO_LOCAL_STORAGE_ROOT beállítást
+      a Windows MAX_PATH korlátját. Helyezd át a CADRUMO_STORAGE_ROOT beállítást
       egy rövidebb útvonalra, vagy engedélyezd a LongPathsEnabled beállítást (lásd
       `aeat config storage check`).
     error_storage_management: A helyi tárolófát nem sikerült beolvasni vagy felszabadítani.

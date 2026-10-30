@@ -49,7 +49,7 @@ def _route_inputs(settings: Settings) -> tuple[object, ...]:
         database_url,
         None if database_path is None else os.path.abspath(database_path.expanduser()),
         "cadrumo_database_url" in settings.model_fields_set,
-        os.path.abspath(settings.cadrumo_local_storage_root.expanduser()),
+        os.path.abspath(settings.cadrumo_storage_root.expanduser()),
     )
 
 
@@ -62,7 +62,7 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
 
     Args:
         settings: The :class:`~core.config.Settings` instance whose
-            ``cadrumo_database_url`` and ``cadrumo_local_storage_root`` define the
+            ``cadrumo_database_url`` and ``cadrumo_storage_root`` define the
             route.
 
     Returns:
@@ -102,7 +102,7 @@ def _classify_storage_route(settings: Settings) -> StorageRouteClassification:
         )
     bucket_id = _bucket_id_for_route(
         database_path=database_path,
-        storage_root=settings.cadrumo_local_storage_root,
+        storage_root=settings.cadrumo_storage_root,
     )
     if bucket_id:
         return StorageRouteClassification(

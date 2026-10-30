@@ -19,8 +19,6 @@ from pathlib import Path
 from typing import Final
 from uuid import UUID
 
-from cadrumo.core.storage_environment import StorageMode, storage_mode
-
 from ..host.launcher_protocol import AgentLauncherRefusal
 
 AGENT_DIRECTORY: Final = "agent"
@@ -73,12 +71,12 @@ class AgentImage:
 
 
 def _located_program(variable: str, checkout_program: Path | None, received: Mapping[str, str] | None) -> Path:
-    """Return the absolute program a package variable names, or the checkout's own; refuse any other install."""
+    """Return the absolute program a package variable names, or the one beside this interpreter."""
     environment = os.environ if received is None else received
     declared = environment.get(variable)
     if declared is not None:
         program = Path(declared)
-    elif storage_mode().mode is StorageMode.DEVELOPMENT and checkout_program is not None:
+    elif checkout_program is not None:
         program = checkout_program
     else:
         raise AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_FAILED)

@@ -829,7 +829,7 @@ class _PersistenceProfileCustody:
 
         active = current_active_bucket_session()
         if database_file is None and session_serves_bucket(active, str(profile_id)):
-            settings = Settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(profile_id))
+            settings = Settings(cadrumo_storage_root=root, cadrumo_active_profile=str(profile_id))
             yield secure_object_repository_for_bucket(str(profile_id), settings)
             return
 

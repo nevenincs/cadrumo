@@ -195,10 +195,10 @@ class InstallationActExchange:
         two already agree the runtime's settings stand, as they do for a
         command run in the same installation.
         """
-        if load_settings().cadrumo_local_storage_root.resolve() == self.storage_root.resolve():
+        if load_settings().cadrumo_storage_root.resolve() == self.storage_root.resolve():
             yield
             return
-        with override_settings(cadrumo_local_storage_root=self.storage_root):
+        with override_settings(cadrumo_storage_root=self.storage_root):
             yield
 
     def changes_begin(self) -> None:

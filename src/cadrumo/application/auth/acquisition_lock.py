@@ -134,8 +134,11 @@ def auth_acquisition_lock_path(
 ) -> Path:
     """Return the profile/provider-scoped lock path."""
     from ...core.bucket_pointer import require_active_bucket_id
+    from ...core.storage_taxonomy import StorageCategory
+    from ...core.storage_taxonomy_locations import storage_path
 
-    return settings.cadrumo_token_dir / f"{bucket_id or require_active_bucket_id()}-{kind.value}-auth.lock"
+    token_dir = storage_path(StorageCategory.TOKENS, settings=settings)
+    return token_dir / f"{bucket_id or require_active_bucket_id()}-{kind.value}-auth.lock"
 
 
 def inspect_auth_acquisition_lock(

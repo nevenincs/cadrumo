@@ -131,7 +131,7 @@ def require_capture_output_root(output_root: Path) -> None:
     if refusal is None:
         settings = load_settings()
         configured = (
-            Path(settings.cadrumo_local_storage_root),
+            Path(settings.cadrumo_storage_root),
             *(storage_path(category, settings=settings) for category in _CAPTURE_ROOT_CATEGORIES),
         )
         containing = [root for root in configured if output_root.is_relative_to(root)]

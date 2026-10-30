@@ -36,6 +36,8 @@ from ....core.hashing import content_hash_hex
 from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....core.time.clock import now
 from .consent import agent_consent_binding
 from .errors import (
@@ -281,10 +283,12 @@ class LLMClient:
         from ...persistence.llm.usage import UsageRecorder
 
         self.settings = settings or Settings()
-        self.cache = cache or LLMCache(root_dir=self.settings.cadrumo_llm_cache_dir)
-        self.usage_recorder = usage_recorder or UsageRecorder(root_dir=self.settings.cadrumo_llm_usage_dir)
+        self.cache = cache or LLMCache(root_dir=storage_path(StorageCategory.LLM_CACHE, settings=self.settings))
+        self.usage_recorder = usage_recorder or UsageRecorder(
+            root_dir=storage_path(StorageCategory.LLM_USAGE, settings=self.settings)
+        )
         self.run_record_recorder = run_record_recorder or LLMRunRecorder(
-            root_dir=self.settings.cadrumo_llm_run_record_dir,
+            root_dir=storage_path(StorageCategory.LLM_RUN_RECORD, settings=self.settings),
         )
         # Not swept by _sweep_retention_stores below, and deliberately so: the
         # consent ledger is an audit trail a withdrawal reads, not a diagnostic

@@ -10,7 +10,7 @@ sat. This module is the single declaration all of them collapse onto: every
 application-chosen name lives here, in ``core``, and the adapter layer consumes
 it downward.
 
-Six axes ride on each member because a bare name cannot carry them:
+Five axes ride on each member because a bare name cannot carry them:
 
 - the literal POSIX relative subpath, verbatim as it exists on disk;
 - :class:`StorageNodeKind`, so file-versus-directory is a type-level fact rather
@@ -20,21 +20,22 @@ Six axes ride on each member because a bare name cannot carry them:
 - :class:`StorageScope`, because ``blobs`` and ``audit`` each legitimately name
   both a top-level category and a per-bucket subdirectory at a different depth,
   so members are identified by scope and name together;
-- :class:`StorageOverridePolicy`, so the guarantee that an operator cannot
-  relocate a keystore out from under the bucket it unlocks is declared data
-  rather than an accident of which module a constant sat in;
 - :class:`StorageLifecycle` and :class:`StorageGrouping`, the conceptual
   classifications that answer what may be reclaimed and what belongs together;
 - :class:`FingerprintParticipation`, an independent third axis that no union of
   the other two reproduces, governing what the drift fingerprint covers.
 
-The conceptual grouping has no effect on the resolved path. ``cache/`` is the
-sole on-disk category prefix and remains so: the encrypted-state substrate, the
-diagnostic logs, and the durable outputs keep bare, self-describing leaf names.
+No member is relocatable: the storage root is the one control over where the
+product stores anything, and every member resolves at its declared subpath
+beneath it, so an operator cannot move a keystore out from under the bucket it
+unlocks. The conceptual grouping has no effect on the resolved path. ``cache/``
+is the sole on-disk category prefix and remains so: the encrypted-state
+substrate, the diagnostic logs, and the durable outputs keep bare,
+self-describing leaf names.
 
 See Also:
     :class:`~core.config.Settings`
-        Central settings aggregate whose path fields these members name.
+        Central settings aggregate whose storage root these members resolve beneath.
     :func:`~core.storage_taxonomy_locations.storage_path`
         Resolver for a root-scoped member.
     :func:`~core.storage_taxonomy_locations.bucket_scoped_storage_path`
@@ -107,19 +108,6 @@ class StorageScope(StrEnum):
     KEYSTORE_RELATIVE = "keystore_relative"
 
 
-class StorageOverridePolicy(StrEnum):
-    """Whether an operator may relocate a member.
-
-    The bucket and keystore layout is deliberately fixed. An operator must not
-    be able to move a keystore out from under the bucket it unlocks, and that
-    guarantee is expressed here as data so it can be read and enforced, rather
-    than resting on which module a constant happened to sit in.
-    """
-
-    OPERATOR_OVERRIDABLE = "operator_overridable"
-    FIXED = "fixed"
-
-
 class StorageDefaultAnchor(StrEnum):
     """Physical default anchor; transient namespaces are owned by their endpoint."""
 
@@ -189,10 +177,10 @@ class FingerprintParticipation(StrEnum):
 
 
 STORAGE_ROOT_SETTINGS_FIELD: Final[str] = STORAGE_ROOT.variable.lower()
-"""The settings field naming the anchor every root-scoped member resolves against.
+"""The settings field naming the anchor every member resolves against.
 
 Derived from the root declaration in :mod:`core.storage_environment`, which
-owns the variable, its precedence and its defaults.
+owns the variable and its defaults.
 
 Neither a member nor an escape, and given its own name so it cannot be mistaken
 for either. It is not a member because the taxonomy declares locations
@@ -202,9 +190,6 @@ beneath it. It is therefore the anchor rather than a member.
 """
 
 _PROFILE_CAPSULE_ENVELOPE_LABEL = "profile-capsule.password-envelope"
-
-
-CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE: Final = "CADRUMO_RUNTIME_SOCKET_DIR"
 
 
 class StorageCategory(StrEnum):
@@ -330,16 +315,14 @@ class StorageLocation(BaseModel):
     node_kind: StorageNodeKind
     scope: StorageScope
     default_anchor: StorageDefaultAnchor = StorageDefaultAnchor.SCOPE
-    override_policy: StorageOverridePolicy
     lifecycle: StorageLifecycle
     grouping: StorageGrouping
     fingerprint_participation: FingerprintParticipation
 
-    create_explicit_directory: bool = False
-    """Preparation may create a missing explicit temporary-files override.
+    materialised: bool = False
+    """Whether root materialisation creates this member's directory (a file member's parent).
 
-    This narrow exception does not authorize creating other explicit members.
-    New directories use the root's private mode; existing modes remain unchanged.
+    Fixed layout that a bucket's lifecycle provisions is not materialised here.
     """
 
     runtime_owned: bool = False
@@ -351,37 +334,12 @@ class StorageLocation(BaseModel):
     than being created on the runtime's behalf.
     """
 
-    environment_variable: str | None = None
-    """Explicit environment name when it remains stable across settings renames."""
-
-    settings_field: str | None = None
-    """Flat :class:`~core.config.Settings` attribute holding the resolved path.
-
-    Members name their settings field rather than absorbing it. Path fields stay
-    flat, introspectable attributes on the settings model because the structural
-    gates discover their subject by walking ``Settings.model_fields``; a model
-    that hid them behind a nested object or a property would leave those gates
-    discovering nothing, which passes silently and covers nothing.
-    """
-
-    derives_settings_default: bool = False
-    """Whether settings validation computes this field's default from the root.
-
-    False for a member whose field is a deliberate opt-in override. The registry
-    disk cache is the worked case: its name is governed here, but its field must
-    stay absent by default because its resolver selects a shared temporary
-    location under pytest precisely by observing that the field is unset.
-    Governing the name and deriving the field are separate decisions.
-    """
-
     consumer_module: str | None = None
     """Production consumer path, relative to ``src/cadrumo`` or package-qualified under ``src``.
 
     Names the module, and a structural gate verifies the claim: that module must
-    contain a real reference to this member -- an attribute load of the bound
-    settings field, an attribute load of the category member, or the field name
-    as a non-docstring string constant, which is how the live-evidence roots are
-    reached. A name appearing in prose satisfies nothing.
+    contain a real reference to this member -- an attribute load of the category
+    member. A name appearing in prose satisfies nothing.
 
     The claim is deliberately consumption rather than write-reachability.
     Tracing statically from an attribute to a filesystem write produces a false
@@ -402,42 +360,6 @@ class StorageLocation(BaseModel):
     be rediscovered by an audit. Exactly one of this and
     :attr:`consumer_module` is set.
     """
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _temporary_creation_exception(self) -> StorageLocation:
-        """Limit missing explicit-directory preparation to the temporary member."""
-        if self.create_explicit_directory and (
-            self.category is not StorageCategory.TEMPORARY_FILES
-            or self.node_kind is not StorageNodeKind.DIRECTORY
-            or self.override_policy is not StorageOverridePolicy.OPERATOR_OVERRIDABLE
-        ):
-            raise ValueError("Explicit directory creation is the temporary-files preparation exception only")
-        return self
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _fixed_override_policy_forbids_a_settings_field(self) -> StorageLocation:
-        """Refuse a FIXED member that also exposes an operator-facing settings field.
-
-        The two claims contradict each other. ``FIXED`` asserts an operator
-        cannot relocate this member -- the guarantee that a keystore cannot be
-        moved out from under the bucket it unlocks. A ``settings_field`` is
-        precisely the field an operator overrides a location through. Today's
-        declarations happen to keep every ``FIXED`` member's field ``None``,
-        but "happens to" is not a guard: nothing before this validator stopped
-        a future ``FIXED`` member from also naming a ``settings_field``, which
-        would let a settings override silently defeat the immovability
-        ``FIXED`` exists to promise. Refusing the combination at declaration
-        time makes it unconstructable instead of merely absent so far.
-        """
-        if self.override_policy is StorageOverridePolicy.FIXED and self.settings_field is not None:
-            raise ValueError(
-                f"storage category {self.category.value!r} declares override_policy=FIXED and "
-                f"settings_field={self.settings_field!r}; a FIXED member must not expose an "
-                "operator-overridable settings field, or its immovability guarantee is not real",
-            )
-        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -471,6 +393,5 @@ __all__ = [
     "StorageLifecycle",
     "StorageLocation",
     "StorageNodeKind",
-    "StorageOverridePolicy",
     "StorageScope",
 ]

@@ -115,7 +115,7 @@ def collect_storage_area_inventory(*, settings: Settings | None = None) -> Stora
     internal = tuple(_inventory_row(category, resolved, active_bucket) for category in STORAGE_TAXONOMY)
     rows = tuple(_area_inventory_row(area, internal) for area in StorageArea)
     return StorageAreaInventoryReport(
-        storage_root=Path(resolved.cadrumo_local_storage_root),
+        storage_root=Path(resolved.cadrumo_storage_root),
         rows=rows,
     )
 
@@ -217,17 +217,15 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
     not its leaf -- and root permission drift.
     """
     resolved = settings if settings is not None else load_settings()
-    root = Path(resolved.cadrumo_local_storage_root)
+    root = Path(resolved.cadrumo_storage_root)
     issues = _storage_tree_root_issues(root)
     checked = 0
 
     for category, location in STORAGE_TAXONOMY.items():
-        if location.scope is not StorageScope.ROOT or location.settings_field is None:
+        if location.scope is not StorageScope.ROOT or not location.materialised:
             continue
         # The runtime creates what it owns when it starts; with none running its absence is no gap in the tree.
-        if location.runtime_owned or uses_external_transport(location, resolved):
-            continue
-        if getattr(resolved, location.settings_field, None) is None:
+        if location.runtime_owned or uses_external_transport(location):
             continue
         target = storage_path(category, settings=resolved)
         checked += 1
@@ -259,7 +257,7 @@ def materialise_storage_tree(*, settings: Settings | None = None) -> StorageInit
     and "clean" would mean deleting it.
     """
     resolved = settings if settings is not None else load_settings()
-    root = Path(resolved.cadrumo_local_storage_root)
+    root = Path(resolved.cadrumo_storage_root)
     before = _existing_declared_directories(resolved, root)
     ensure_storage_tree(resolved)
     after = _existing_declared_directories(resolved, root)
@@ -281,7 +279,7 @@ def _reclaim_candidates(
         for category, location in STORAGE_TAXONOMY.items()
         if location.grouping.value == area.value
         and location.lifecycle in RECLAIMABLE_LIFECYCLES
-        and not uses_external_transport(location, settings)
+        and not uses_external_transport(location)
     )
 
 
@@ -327,7 +325,7 @@ def reclaim_storage_area(
     candidates = _reclaim_candidates(area, resolved)
     _preflight_reclaim_targets(area, candidates, resolved)
     targets = _minimal_paths(path for _, _, path in candidates)
-    storage_root = Path(resolved.cadrumo_local_storage_root).resolve(strict=False)
+    storage_root = Path(resolved.cadrumo_storage_root).resolve(strict=False)
     for target in targets:
         _validate_reclaim_target(area, target, storage_root)
     entry_count = sum(_immediate_entry_count(path) for path in targets)
@@ -402,7 +400,7 @@ def _preflight_reclaim_targets(
         )
 
     root_members = _reclaim_root_members(settings)
-    storage_root = Path(settings.cadrumo_local_storage_root).resolve(strict=False)
+    storage_root = Path(settings.cadrumo_storage_root).resolve(strict=False)
     for category, location, target in candidates:
         _preflight_reclaim_candidate(area, (category, location, target), root_members, storage_root)
 
@@ -524,7 +522,7 @@ def _inventory_row(
     location = storage_location(category)
     path: Path | None = None
 
-    if uses_external_transport(location, settings):
+    if uses_external_transport(location):
         # Shared transport custody is not data-root occupancy. Do not enumerate
         # another installed channel's sockets or its persistent lock inodes.
         return _InventoryRow(

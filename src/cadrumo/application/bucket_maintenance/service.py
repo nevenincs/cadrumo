@@ -130,7 +130,7 @@ class BucketMaintenanceService:
         """
         from ...core.config import load_settings
 
-        root = self._root if self._root is not None else load_settings().cadrumo_local_storage_root
+        root = self._root if self._root is not None else load_settings().cadrumo_storage_root
         try:
             validated_bucket_deletion_paths(
                 root=root,

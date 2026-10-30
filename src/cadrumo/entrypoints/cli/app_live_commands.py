@@ -548,12 +548,13 @@ def _emit_single_filed_pull(
     limit: int | None,
 ) -> None:
     """Capture and emit one modelo/year filed-declaration report."""
-    from ...core.config import load_settings
+    from ...core.storage_taxonomy import StorageCategory
+    from ...core.storage_taxonomy_locations import storage_path
     from .app_live_filed_results import FiledCaptureResult
     from .operation_filed_single import read_filed_single_capture_for_cli
 
     resolved_period = live_period_option(period, year=year)
-    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
+    resolved_root = resolve_optional_root(output_root, lambda: storage_path(StorageCategory.FILED_DECLARATIONS))
     read = read_filed_single_capture_for_cli(
         ctx,
         modelo=modelo,
@@ -775,11 +776,12 @@ def filed_pull_sources_cmd(
     The emitted :class:`FiledCaptureSourcesResult` is local evidence only; the
     command does not submit or mutate AEAT state.
     """
-    from ...core.config import load_settings
+    from ...core.storage_taxonomy import StorageCategory
+    from ...core.storage_taxonomy_locations import storage_path
     from .app_live_filed_results import FiledCaptureSourcesResult
     from .operation_filed_source import read_filed_source_capture_for_cli
 
-    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
+    resolved_root = resolve_optional_root(output_root, lambda: storage_path(StorageCategory.FILED_DECLARATIONS))
     read = read_filed_source_capture_for_cli(
         ctx,
         modelo=modelo,

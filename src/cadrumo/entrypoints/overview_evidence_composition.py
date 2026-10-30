@@ -301,11 +301,12 @@ def local_calendar_filing_evidence(
         justificante_captures = _justificante_capture_snapshots(bucket_id)
         # Enrolled data-root location, not a hardcoded literal: this store holds
         # filed-declaration evidence and must move with the operator's
-        # CADRUMO_LOCAL_STORAGE_ROOT like every other durable output.
-        from ..core.config import load_settings
+        # CADRUMO_STORAGE_ROOT like every other durable output.
+        from ..core.storage_taxonomy import StorageCategory
+        from ..core.storage_taxonomy_locations import storage_path
 
         filed_observation_store = FiledDeclaracionObservationStore(
-            load_settings().cadrumo_filed_declarations_dir,
+            storage_path(StorageCategory.FILED_DECLARATIONS),
         )
         filed_declaration_observations, verified_filed_artefact_csvs = (
             _calendar_verified_filed_declaration_observations(

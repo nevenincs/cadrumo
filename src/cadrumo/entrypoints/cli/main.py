@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
-from ...core.storage_environment import STORAGE_ROOT, storage_directory
+from ...core.storage_environment import STORAGE_ROOT
 from ...core.type_guards import is_object_collection, is_object_dict
 from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 
@@ -251,17 +251,11 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
     from pathlib import Path
     from tempfile import TemporaryDirectory
 
-    from ...core.errors.hierarchy import InternalInvariantError
+    from ...core.storage_environment import configured_storage_root
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import storage_location
 
-    temporary_location = storage_location(StorageCategory.TEMPORARY_FILES)
-    if temporary_location.settings_field is None:
-        raise InternalInvariantError("temporary storage location must declare its environment setting")
-    temporary_base = storage_directory(
-        temporary_location.settings_field.upper(),
-        temporary_location.relative_path().as_posix(),
-    )
+    temporary_base = configured_storage_root() / storage_location(StorageCategory.TEMPORARY_FILES).relative_path()
     temporary_base.mkdir(parents=True, exist_ok=True, mode=0o700)
     with TemporaryDirectory(prefix="cadrumo-cli-metadata-", dir=temporary_base) as temporary_root:
         root = Path(temporary_root)

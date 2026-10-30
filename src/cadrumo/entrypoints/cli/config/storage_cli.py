@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 
-_ROOT_ENV_VAR: Final[str] = "CADRUMO_LOCAL_STORAGE_ROOT"
+_ROOT_ENV_VAR: Final[str] = "CADRUMO_STORAGE_ROOT"
 """Environment variable an operator sets to point the tree somewhere else.
 
 Named in the relocation advisory because the advisory's whole job is to hand the

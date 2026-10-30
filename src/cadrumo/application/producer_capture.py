@@ -131,7 +131,7 @@ class ProducerCaptureScope:
             {
                 "owner": self.owner,
                 "namespace": self.namespace,
-                "storage_root": str(load_settings().cadrumo_local_storage_root),
+                "storage_root": str(load_settings().cadrumo_storage_root),
                 "coordinate": dict(sorted((key, str(value)) for key, value in coordinate.items())),
                 "process_incarnation": _capture_process_nonce.hex(),
             }

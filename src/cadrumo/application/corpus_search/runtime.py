@@ -30,7 +30,7 @@ from ...core.directory_scan import scan_directory
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.locks import exclusive_file_lock
 from ...core.storage_taxonomy import StorageCategory
-from ...core.storage_taxonomy_locations import storage_location
+from ...core.storage_taxonomy_locations import storage_location, storage_path
 from ._retrieval import run_retrieval
 from .citation_lookup import bundled_citation_lookup
 from .lexical_index import build_lexical_index, bundled_corpus_html_root, iter_corpus_chunks
@@ -40,10 +40,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 # Bare filename, read off the taxonomy rather than an untethered string
-# literal. Still joined onto ``cadrumo_corpus_search_cache_dir`` exactly as
-# before -- the member carries no ``settings_field`` and is not safe to
-# resolve directly, because ``CORPUS_SEARCH_CACHE`` is operator-overridable
-# (see the member's declaration in ``core.storage_taxonomy``).
+# literal, joined onto the corpus-search cache directory.
 _INDEX_FILENAME = Path(storage_location(StorageCategory.CORPUS_SEARCH_INDEX).subpath).name
 
 _DEFAULT_LIMIT = 8
@@ -60,15 +57,11 @@ _METADATA_KEY = "corpus_identity"
 def corpus_search_dir(settings: Settings | None = None) -> Path:
     """Return the app-controlled corpus-search cache directory.
 
-    Read from the settings field rather than joined onto the storage root
-    here. A module-local subdirectory literal is invisible to the taxonomy:
-    no environment override could reach it, the tree materialiser could not
-    pre-create it, and a root override in a test would not redirect it -- so
-    this module carried its own ``mkdir`` to compensate for a directory
-    nothing else knew about.
+    Resolved through the taxonomy rather than joined onto the storage root
+    here, so the tree materialiser knows the directory and a root override
+    redirects it.
     """
-    resolved = settings or load_settings()
-    return resolved.cadrumo_corpus_search_cache_dir
+    return storage_path(StorageCategory.CORPUS_SEARCH_CACHE, settings=settings or load_settings())
 
 
 def corpus_index_path(settings: Settings | None = None) -> Path:

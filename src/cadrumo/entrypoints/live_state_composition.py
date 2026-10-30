@@ -139,7 +139,7 @@ from ..core.identity.tax_id import tax_id_identity_token
 from ..core.modelo import Modelo
 from ..core.period import Period
 from ..core.storage_taxonomy import StorageCategory
-from ..core.storage_taxonomy_locations import storage_location
+from ..core.storage_taxonomy_locations import storage_path
 from ..core.time.clock import now
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..domain.deadlines.models import TaxpayerProfile
@@ -152,8 +152,6 @@ from ..domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-
-_WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).subpath).name
 
 
 def preflight_filed_history_provider(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
@@ -378,7 +376,11 @@ def compose_live_state(
     resolved_bucket_id = (bucket_id or require_active_bucket_id()).strip()
     if not resolved_bucket_id:
         raise LiveApplicationError(translated_message="application.workflow.errors.no_active_profile_bucket")
-    resolved_root = Path(output_root) if output_root is not None else settings.cadrumo_live_state_dir / _WALLET_DIRNAME
+    resolved_root = (
+        Path(output_root)
+        if output_root is not None
+        else storage_path(StorageCategory.LIVE_STATE_IVA_WALLET, settings=settings)
+    )
     secure_objects = objects or secure_object_repository_for_bucket(resolved_bucket_id)
     filed_ports = compose_filed_observation_persistence_ports(
         bucket_id=resolved_bucket_id,
@@ -663,7 +665,7 @@ class AppIvaRemoteStatePort:
             taxpayer_nif=taxpayer_nif,
             settings=settings,
         )
-        root = output_root or settings.cadrumo_live_state_dir / _WALLET_DIRNAME
+        root = output_root or storage_path(StorageCategory.LIVE_STATE_IVA_WALLET, settings=settings)
         if effect_guard is not None:
             async with effect_guard():
                 return persist_and_reconcile_iva_compensation_wallet(

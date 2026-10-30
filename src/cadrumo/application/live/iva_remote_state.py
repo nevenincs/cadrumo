@@ -22,6 +22,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location as _storage_location
+from ...core.storage_taxonomy_locations import storage_path
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
@@ -44,7 +45,6 @@ from .remote_state_outcomes import evidence_ref as _evidence_ref
 from .remote_state_outcomes import surface_outcome as _surface_outcome
 from .session import SessionWriteReporter
 
-_LIVE_STATE_IVA_REMOTE_STATE_DIRNAME = Path(_storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE).subpath).name
 _IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME = Path(
     _storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY).subpath
 ).name
@@ -378,7 +378,7 @@ async def _capture_iva_remote_state_for_active_storage(
         if year_from > year_to:
             raise LiveApplicationInputError(translated_message="live.errors.year_range_invalid")
         _AeatAccessGate(settings).require_live_read()
-        store_root = output_root or settings.cadrumo_live_state_dir / _LIVE_STATE_IVA_REMOTE_STATE_DIRNAME
+        store_root = output_root or storage_path(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE, settings=settings)
         authentication = await _authenticate_remote_state(
             ports=ports,
             settings=settings,

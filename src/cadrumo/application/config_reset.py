@@ -125,12 +125,12 @@ def start_config_reset(
     operation_id = new_config_reset_operation_id()
     with (
         repository.operation_lock(operation_id),
-        active_profile_pointer_transaction(settings.cadrumo_local_storage_root) as pointer_transaction,
+        active_profile_pointer_transaction(settings.cadrumo_storage_root) as pointer_transaction,
     ):
         pointer_snapshot = _capture_pointer_snapshot(pointer_transaction.read())
         target_ids = set(
             list_profile_buckets(
-                root=settings.cadrumo_local_storage_root,
+                root=settings.cadrumo_storage_root,
             ),
         )
         if pointer_snapshot.record.bucket_id is not None:
@@ -141,7 +141,7 @@ def start_config_reset(
             raise _already_running_error(exc) from exc
         maintenance_service = BucketMaintenanceService(bucket_storage=bucket_storage)
         with maintenance_service.deletion_target_locks(
-            root=settings.cadrumo_local_storage_root,
+            root=settings.cadrumo_storage_root,
             bucket_ids=target_ids,
             wait_seconds=settings.cadrumo_file_lock_timeout_s,
         ):
@@ -244,7 +244,7 @@ def resume_config_reset(
         if operation.status is ConfigResetOperationStatus.COMPLETE:
             return operation
         with active_profile_pointer_transaction(
-            settings.cadrumo_local_storage_root,
+            settings.cadrumo_storage_root,
         ) as pointer_transaction:
             current_pointer = _capture_pointer_snapshot(pointer_transaction.read())
             lock_ids = tuple(
@@ -259,7 +259,7 @@ def resume_config_reset(
             )
             maintenance_service = BucketMaintenanceService(bucket_storage=bucket_storage)
             with maintenance_service.deletion_target_locks(
-                root=settings.cadrumo_local_storage_root,
+                root=settings.cadrumo_storage_root,
                 bucket_ids=lock_ids,
                 wait_seconds=settings.cadrumo_file_lock_timeout_s,
             ):
@@ -845,7 +845,7 @@ def _reconcile_pointer(
         repository.save(operation)
     active_bucket_id = operation.pointer_snapshot.record.bucket_id
     if active_bucket_id is not None and any(target.bucket_id == active_bucket_id for target in operation.targets):
-        with active_profile_pointer_transaction(load_settings().cadrumo_local_storage_root) as pointer_transaction:
+        with active_profile_pointer_transaction(load_settings().cadrumo_storage_root) as pointer_transaction:
             pointer_transaction.clear()
     for index in indexes:
         target = operation.targets[index]

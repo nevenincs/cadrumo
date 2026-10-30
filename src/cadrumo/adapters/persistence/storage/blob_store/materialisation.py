@@ -62,11 +62,14 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
     """
     with _factory_lock:
         from .....core.config import load_settings
+        from .....core.storage_taxonomy import StorageCategory
+        from .....core.storage_taxonomy_locations import storage_path
 
         resolved = settings if settings is not None else load_settings()
+        secret_store_dir = storage_path(StorageCategory.SECRETS, settings=resolved)
         route = (
-            os.path.normcase(str(Path(resolved.cadrumo_secret_store_dir).resolve())),
-            os.path.normcase(str(Path(resolved.cadrumo_blob_store_dir).resolve())),
+            os.path.normcase(str(secret_store_dir.resolve())),
+            os.path.normcase(str(storage_path(StorageCategory.BLOBS, settings=resolved).resolve())),
         )
         cached = _stores_by_route.get(route)
         if cached is not None:
@@ -79,18 +82,15 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
         # ``EncryptedBlobStore.root_dir`` is documented as "the directory
         # containing the blobs/ subtree" -- the PARENT of ``blobs/``, i.e.
         # the storage root -- and the store appends its own ``blobs``
-        # segment internally (``_shard_dir_for``). Passing
-        # ``cadrumo_blob_store_dir`` here (already ``<storage_root>/blobs``)
-        # doubled that segment: every blob landed at
-        # ``<storage_root>/blobs/blobs/<hex[:2]>/<hash>`` instead of the
-        # declared ``<storage_root>/blobs/<hex[:2]>/<hash>``. Passing the
-        # storage root honours the class's existing documented contract
-        # rather than redefining what ``root_dir`` means for every caller.
+        # segment internally (``_shard_dir_for``). Passing the blobs member
+        # here (already ``<storage_root>/blobs``) would double that segment:
+        # every blob would land at ``<storage_root>/blobs/blobs/<hex[:2]>/<hash>``
+        # instead of the declared ``<storage_root>/blobs/<hex[:2]>/<hash>``.
         from ..secret_store.store import SecretStore
 
-        blob_store = EncryptedBlobStore(root_dir=Path(resolved.cadrumo_local_storage_root))
+        blob_store = EncryptedBlobStore(root_dir=Path(resolved.cadrumo_storage_root))
         store = SecretStore(
-            store_dir=Path(resolved.cadrumo_secret_store_dir),
+            store_dir=secret_store_dir,
             blob_store=blob_store,
         )
         _stores_by_route[route] = store

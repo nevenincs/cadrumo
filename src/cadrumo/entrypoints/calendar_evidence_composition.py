@@ -25,7 +25,8 @@ def compose_calendar_aeat_reader(
     """Read retained official facts without contacting AEAT or requiring a linked receipt."""
     from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
     from ..application.calculations.revision_carry_gate import revision_carry_outcome
-    from ..core.config import load_settings
+    from ..core.storage_taxonomy import StorageCategory
+    from ..core.storage_taxonomy_locations import storage_path
 
     retained: tuple[OverviewCalendarEvent, ...] = ()
     retained_at: datetime | None = None
@@ -33,7 +34,7 @@ def compose_calendar_aeat_reader(
     def read() -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
         nonlocal retained, retained_at
         try:
-            store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+            store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
             observations = store.list_observations()
             if not observations:
                 return _calendar_no_observations(retained, retained_at)

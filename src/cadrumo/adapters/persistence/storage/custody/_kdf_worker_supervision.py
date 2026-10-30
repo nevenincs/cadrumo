@@ -19,6 +19,8 @@ from pydantic import ValidationError
 
 from .....application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from .....core.config import Settings, load_settings
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
 from ..crypto.aes_gcm import KEY_SIZE
 from ._kdf_attestation import (
     parse_ready_attestation as _parse_ready_attestation,
@@ -80,7 +82,7 @@ class _SupervisedKdfWorker(KdfWorkerObservation):
         self._absolute_deadline = absolute_deadline
         self._cancellation = cancellation
         self._readers: list[threading.Thread] = []
-        self._temporary_root = (settings or load_settings()).cadrumo_temp_dir
+        self._temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=settings or load_settings())
         self._process: subprocess.Popen[bytes] | None = None
         self._request_fd: int | None = None
         self._result_fd: int | None = None

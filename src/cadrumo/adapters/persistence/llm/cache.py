@@ -23,6 +23,8 @@ from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from ....core.logging import get_logger
 from ....core.redaction.rules import carries_redaction_placeholder, default_rules_for_class, redact_structured
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....core.time.clock import now
 from ....core.type_guards import is_object_dict
 from ...outbound.llm.errors import LLMCacheError
@@ -59,7 +61,7 @@ class LLMCache:
         Args:
             root_dir: Optional logical cache partition override.
         """
-        self.root_dir = root_dir or load_settings().cadrumo_llm_cache_dir
+        self.root_dir = root_dir or storage_path(StorageCategory.LLM_CACHE, settings=load_settings())
 
     def build_key(self, request: LLMRequest, provider: RecordedLLMProvider, model: str) -> CacheKey:
         """Derive a :class:`~llm.CacheKey` from the request.

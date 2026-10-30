@@ -91,7 +91,7 @@ class StorageRuntime(BaseModel):
         # single profile write performs.
         engine = active.acquire_engine(
             lambda: Settings(
-                cadrumo_local_storage_root=self.storage_root,
+                cadrumo_storage_root=self.storage_root,
                 cadrumo_active_profile=bucket_id,
             ),
         )
@@ -176,7 +176,7 @@ def inspect_storage_runtime(
         route_kind=route.kind,
         route_attached_to_active_bucket=route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE,
         route_has_database_path=route.database_path is not None,
-        storage_root=resolved.cadrumo_local_storage_root,
+        storage_root=resolved.cadrumo_storage_root,
         bucket_id=route.bucket_id if ready else None,
         active_session=session,
         readiness=StorageRuntimeReadiness(

@@ -60,10 +60,9 @@ from .resources.bundled_data import bundled_path
 from .storage_environment import (
     STORAGE_ROOT,
     configured_root_value,
-    storage_mode,
     storage_root_override,
 )
-from .storage_taxonomy import CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE, STORAGE_ROOT_SETTINGS_FIELD
+from .storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
 from .unread_settings import SETTINGS_OWNED_NAME_PREFIXES, require_no_unread_setting_names
 
 if TYPE_CHECKING:
@@ -134,7 +133,7 @@ def _normalize_storage_controls(env_vars: dict[str, str | None]) -> None:
             else:
                 env_vars.pop(key)
     variables = {name.upper(): value for name, value in env_vars.items() if isinstance(value, str)}
-    root = configured_root_value(variables, storage_mode().mode)
+    root = configured_root_value(variables)
     if root is not None:
         env_vars[STORAGE_ROOT.variable.lower()] = root
     else:
@@ -198,9 +197,10 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     provider selectors, but does not open secret stores, build outbound
     providers, or execute AEAT browser flows.
 
-    Validators keep derived paths coherent with ``cadrumo_local_storage_root`` and
-    derive ``cadrumo_database_url`` from either an explicit field, the active
-    profile, or the cold root fallback. Tests and CLI scopes should prefer
+    Every storage member resolves beneath ``cadrumo_storage_root`` (see
+    :func:`~cadrumo.core.storage_taxonomy_locations.storage_path`), and a
+    validator derives ``cadrumo_database_url`` from either an explicit field,
+    the active profile, or the cold root fallback. Tests and CLI scopes should prefer
     :func:`override_settings` over process-wide environment mutation whenever
     they are not explicitly testing environment parsing.
     """
@@ -250,18 +250,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         return init_settings, filtered_env_settings, file_secret_settings
 
     # ── Token Storage ───────────────────────────────────────────────────────
-    cadrumo_token_dir: Path = Field(
-        default=Path("tokens"),
-        description=(
-            "Directory for cached authentication token and lock files. The "
-            "the relative default here is a placeholder: when the field "
-            "is not explicitly set, the model validator roots it at "
-            "``<cadrumo_local_storage_root>/tokens`` so every profile store, "
-            "token and lock files included, lives under one state root. An "
-            "explicit ``CADRUMO_TOKEN_DIR`` override wins over the derived "
-            "default."
-        ),
-    )
 
     cadrumo_log_level: str = Field(
         default="",
@@ -290,17 +278,13 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
             "SQLAlchemy URL for the primary persistence backend. When empty, "
             "the model validator resolves the URL through the active-profile "
             "precedence chain to "
-            "``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/cadrumo.db``; "
+            "``sqlite:///<cadrumo_storage_root>/buckets/<bucket-id>/db/cadrumo.db``; "
             "with no active profile it derives a root-level fallback at "
-            "``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` so the URL is "
+            "``sqlite:///<cadrumo_storage_root>/cadrumo.db`` so the URL is "
             "never empty when the storage root is set. Tests that need a "
             "deterministic location supply this field explicitly; production "
             "reads the computed value."
         ),
-    )
-    cadrumo_secret_store_dir: Path = Field(
-        default=Path("secrets"),
-        description="Directory for the encrypted secret-store master-key file and ciphertext records",
     )
     cadrumo_dev_test_database_password: SecretStr = Field(
         default=SecretStr(DEV_TEST_DATABASE_PASSWORD),
@@ -320,15 +304,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         """Require an explicit literal-1 opt-in at the runtime owner."""
         return self.cadrumo_dev_runtime_session_override == "1"
 
-    cadrumo_blob_store_dir: Path = Field(
-        default=Path("blobs"),
-        description="Directory containing the encrypted blob store (content-addressed, classification-aware)",
-    )
-    cadrumo_live_state_dir: Path = Field(
-        default=Path("live-state"),
-        description="Directory for live AEAT state and remote-state evidence",
-    )
-
     # ── Outbound storage provider ───────────────────────────────────────────
     cadrumo_storage_provider_kind: str = Field(
         default="local_filesystem",
@@ -339,33 +314,15 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
             "through `cadrumo-runtime config google login`."
         ),
     )
-    cadrumo_local_storage_root: Path = Field(
+    cadrumo_storage_root: Path = Field(
         default_factory=default_storage_root,
         description=(
-            "Root directory for the LocalFileSystemProvider backend. Each namespace "
-            "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
-            "paired with a `.meta.json` sidecar. Defaults to var/storage in a source "
-            "checkout and to the per-user application-data directory when installed. "
-            "This backend refinement wins over the shared development root. Relative "
-            "roots anchor to the checkout and are refused when installed."
+            "The storage root: the one control over where Cadrumo stores anything. Every "
+            "storage member sits at a fixed relative subpath beneath it, and the "
+            "LocalFileSystemProvider backend keeps each namespace in a subdirectory of it. "
+            "It must be an absolute directory; a relative value is refused. Unset, it is "
+            "the per-user, per-channel application-data directory."
         ),
-    )
-    cadrumo_temp_dir: Path = Field(
-        default=Path("tmp"), description="Application temporary files beneath the storage root."
-    )
-    cadrumo_connection_socket_dir: Path = Field(
-        default=Path("runtime"),
-        validation_alias=AliasChoices(
-            CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE, "cadrumo_connection_socket_dir"
-        ),
-        description="Owner-only local connection sockets and locks beneath the storage root.",
-    )
-    cadrumo_playwright_browsers_dir: Path = Field(
-        default=Path("components/playwright"),
-        description="Managed Playwright browser binaries beneath the storage root.",
-    )
-    cadrumo_gnome_extensions_dir: Path = Field(
-        default=Path("integrations/gnome/extensions"), description="Explicit GNOME extension publication directory."
     )
 
     cadrumo_profile_kdf_measure_calibration: bool = Field(
@@ -443,18 +400,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     )
 
     # ── Diagnostic logging ──────────────────────────────────────────────────
-    cadrumo_log_dir: Path | None = Field(
-        default=None,
-        description=(
-            "Diagnostic-log root directory. The ``None`` default here is a "
-            "placeholder: when the field is not explicitly set, the model "
-            "validator roots it at ``<cadrumo_local_storage_root>/logs`` so the "
-            "diagnostic log lives under the one state root that "
-            "``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, isolating each workspace's "
-            "log. An explicit ``CADRUMO_LOG_DIR`` override wins over the "
-            "derived default."
-        ),
-    )
 
     # ── Master-key passphrase (live-write security perimeter) ───────────────
     cadrumo_secret_passphrase: SecretStr | None = Field(
@@ -479,24 +424,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         description="Root directory for the bundled legal normatives corpus",
     )
 
-    cadrumo_corpus_search_cache_dir: Path = Field(
-        default=Path("cache") / "corpus-search",
-        description=(
-            "Directory for the corpus-search lexical index (a SQLite database "
-            "built from bundled normative extractions and rebuilt when their "
-            "exact content identity changes)"
-        ),
-    )
-
     # ── Browser Automation ──────────────────────────────────────────────────
-    cadrumo_chromium_data_root: Path = Field(
-        default=Path("chromium-data"),
-        description=(
-            "Root for isolated Chromium working profiles. Defaults to chromium-data "
-            "under CADRUMO_LOCAL_STORAGE_ROOT. Relative overrides use the application-data anchor. "
-            "Saved authentication cookies and state remain in encrypted profile storage."
-        ),
-    )
 
     cadrumo_browser_headless: bool = Field(
         default=True,
@@ -750,30 +678,11 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     )
 
     # ── Submission engine ───────────────────────────────────────────────────
-    cadrumo_submissions_dir: Path = Field(
-        default=Path("submissions"),
-        description="Directory where ModeloPresentado JSON audit records are persisted",
-    )
 
     # ── Workflow engine ─────────────────────────────────────────────────────
-    cadrumo_workflow_runs_dir: Path = Field(
-        default=Path("workflow-runs"),
-        description="Directory where WorkflowResult JSON audit records are persisted",
-    )
     # ── Filing draft engine ─────────────────────────────────────────────────
-    cadrumo_drafts_dir: Path = Field(
-        default=Path("drafts"),
-        description="Directory where filing drafts are written as JSON files",
-    )
 
     # ── Observability ──────────────────────────────────────────────────────
-    cadrumo_runs_dir: Path = Field(
-        default=Path("runs"),
-        description=(
-            "Directory where run traces and JSONL event logs are persisted "
-            "(one subdirectory per run_id, containing trace.json + events.jsonl)"
-        ),
-    )
     cadrumo_runs_retention_days: int = Field(
         default=30,
         ge=1,
@@ -785,41 +694,12 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         description="Trace-store byte cap; after age pruning, remove oldest runs but always retain the newest",
     )
     # ── Justificante parser ─────────────────────────────────────────────────
-    cadrumo_justificantes_dir: Path = Field(
-        default=Path("justificantes"),
-        description="Directory where parsed justificante PDFs and metadata are stored",
-    )
-    cadrumo_filed_declarations_dir: Path = Field(
-        default=Path("filed-declarations"),
-        description=(
-            "Directory for filed-declaration observations captured from AEAT. "
-            "Derived under cadrumo_local_storage_root unless explicitly set."
-        ),
-    )
-    cadrumo_iva_compensation_history_dir: Path = Field(
-        default=Path("live") / "iva-compensation-history",
-        description=(
-            "Directory for Modelo 303 compensation-history capture reports. "
-            "Derived under cadrumo_local_storage_root unless explicitly set."
-        ),
-    )
-    cadrumo_iva_read_evidence_dir: Path = Field(
-        default=Path("live") / "iva-read-evidence",
-        description=(
-            "Directory for IVA remote-state read-evidence reports. "
-            "Derived under cadrumo_local_storage_root unless explicitly set."
-        ),
-    )
     cadrumo_justificante_parser_backend: JustificanteParserBackendSetting = Field(
         default=JustificanteParserBackendSetting.PDFPLUMBER,
         description="Parser backend for `cadrumo.adapters.inbound.justificante`",
     )
 
     # ── Filing history ──────────────────────────────────────────────────────
-    cadrumo_filing_history_dir: Path = Field(
-        default=Path("filing-history"),
-        description="Directory where the persisted ModeloHistory JSON file lives",
-    )
 
     # ── Introspection ───────────────────────────────────────────────────────
 
@@ -833,10 +713,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         return _config_validation.resolve_database_url_for_active_profile(
             self, pointer_observation=_settings_pointer_observation.get()
         )
-
-    @model_validator(mode="after")
-    def _resolve_output_dirs_under_storage_root(self) -> Settings:
-        return _config_validation.resolve_output_dirs_under_storage_root(self)
 
     @field_validator(
         "cadrumo_certificate_path",
@@ -893,7 +769,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
             environment_name
             for field_name in cls.model_fields
             for environment_name in cls._environment_names_for_field(field_name)
-        } | set(STORAGE_ROOT.precedence)
+        } | {STORAGE_ROOT.variable}
         return names - _NON_ENVIRONMENT_SELECTION_NAMES
 
     @classmethod
@@ -909,30 +785,14 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
 
     @classmethod
     def storage_env_var_names(cls) -> frozenset[str]:
-        """Return the location settings this command line reads: its root and its relocatable members.
+        """Return the one location setting this command line reads: its storage root.
 
-        These are the primary root variable and the settings field of every
-        operator-overridable taxonomy member; ``FIXED`` members carry no
-        variable, and the development root variable is honoured only in a
-        checkout. Development tool locations are not settings of this command
-        line; development tools bind them through
+        Every other location resolves at a fixed subpath beneath the root.
+        Development tool locations are not settings of this command line;
+        development tools bind them through
         :func:`~cadrumo.core.storage_environment.tool_storage_environment`.
         """
-        from .storage_taxonomy import StorageOverridePolicy
-        from .storage_taxonomy_locations import STORAGE_TAXONOMY
-
-        names = {STORAGE_ROOT.variable}
-        names.update(
-            environment_name
-            for location in STORAGE_TAXONOMY.values()
-            if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
-            and (location.settings_field is not None and location.settings_field)
-            for environment_name in (
-                location.environment_variable or location.settings_field.upper(),
-                *cls._environment_names_for_field(location.settings_field),
-            )
-        )
-        return frozenset(names)
+        return frozenset({STORAGE_ROOT.variable})
 
     @classmethod
     def proxy_env_var_names(cls, *, secret_fields: bool = True) -> frozenset[str]:
@@ -966,53 +826,19 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         return load_external_constants()
 
     @field_validator(
-        "cadrumo_token_dir",
-        "cadrumo_temp_dir",
-        "cadrumo_connection_socket_dir",
-        "cadrumo_playwright_browsers_dir",
-        "cadrumo_gnome_extensions_dir",
-        "cadrumo_chromium_data_root",
-        "cadrumo_usage_ratios_path",
-        "cadrumo_financial_txs_dir",
-        "cadrumo_invoices_dir",
-        "cadrumo_attachments_dir",
-        "cadrumo_local_storage_root",
-        "cadrumo_log_dir",
-        "cadrumo_secret_store_dir",
-        "cadrumo_blob_store_dir",
-        "cadrumo_live_state_dir",
+        "cadrumo_storage_root",
         "aeat_manuals_root",
         "aeat_normatives_root",
-        "cadrumo_corpus_search_cache_dir",
         "cadrumo_authority_root",
         "cadrumo_certificate_path",
-        "cadrumo_llm_cache_dir",
-        "cadrumo_llm_usage_dir",
-        "cadrumo_llm_run_record_dir",
-        "cadrumo_submissions_dir",
-        "cadrumo_workflow_runs_dir",
-        "cadrumo_drafts_dir",
-        "cadrumo_runs_dir",
-        "cadrumo_justificantes_dir",
-        "cadrumo_filing_history_dir",
         "cadrumo_wallet_diagnostic_dump_dir",
-        "cadrumo_filed_declarations_dir",
-        "cadrumo_iva_compensation_history_dir",
-        "cadrumo_iva_read_evidence_dir",
         mode="after",
     )
     @classmethod
     @override
     def _normalize_repo_relative_paths(cls, value: Path | None, info: ValidationInfo) -> Path | None:
-        from .storage_taxonomy_locations import STORAGE_TAXONOMY
-
         if info.field_name == STORAGE_ROOT_SETTINGS_FIELD and value is not None:
             return normalize_project_relative_path(storage_root_override(value))
-        if info.field_name in {location.settings_field for location in STORAGE_TAXONOMY.values()}:
-            if value is None:
-                return None
-            candidate = value.expanduser()
-            return candidate.resolve() if candidate.is_absolute() else candidate
         return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 
@@ -1157,33 +983,22 @@ def override_settings(**overrides: object) -> Generator[Settings]:
     ``model_fields_set`` to keep the distinction between explicit operator
     settings and computed defaults visible to route classification.
 
-    When the root itself is overridden, every derived field that the caller did
-    not set and the source had not set explicitly is dropped from the merged
-    dict so it re-derives under the NEW root. Without that, flattening through
-    ``model_dump`` turns each previously-derived absolute path into an explicit
-    value and the whole tree stays pinned to the old root -- a leak that does
-    not fail any single test, because each one still reads a path that exists.
-    The field set is taken from the taxonomy, so a member added there is
-    covered here the moment it lands.
+    Every storage member resolves beneath ``cadrumo_storage_root``, so
+    overriding the root moves them all; the database URL is the one derived
+    field that must be re-derived under the new root.
     """
-    from .storage_taxonomy_locations import ROOT_DERIVED_STORAGE_FIELDS
-
     current = load_settings()
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the
     # merged dict through ``model_validate`` so a malformed override
     # fails fast at entry, before the ContextVar is set.
     merged = current.model_dump()
-    route_overrides = {"cadrumo_active_profile", "cadrumo_local_storage_root"}
+    route_overrides = {"cadrumo_active_profile", "cadrumo_storage_root"}
     if (
         "cadrumo_database_url" not in overrides
         and "cadrumo_database_url" not in current.model_fields_set
         and route_overrides.intersection(overrides)
     ):
         merged.pop("cadrumo_database_url", None)
-    if "cadrumo_local_storage_root" in overrides:
-        for derived_field in ROOT_DERIVED_STORAGE_FIELDS:
-            if derived_field not in overrides and derived_field not in current.model_fields_set:
-                merged.pop(derived_field, None)
     merged.update(overrides)
     new_settings = Settings.model_validate(merged)
     # ``model_validate`` marks every key in the merged dict as set,

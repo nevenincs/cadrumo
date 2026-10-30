@@ -322,7 +322,7 @@ def resolve_active_bucket_id() -> str | None:
     override = (settings.cadrumo_active_profile or "").strip()
     if override:
         return override
-    return read_pointer_selection(settings.cadrumo_local_storage_root).bucket_id
+    return read_pointer_selection(settings.cadrumo_storage_root).bucket_id
 
 
 def require_active_bucket_id() -> str:

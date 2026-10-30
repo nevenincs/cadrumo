@@ -1,7 +1,7 @@
 """Filesystem persistence for run traces and JSONL event logs.
 
 One subdirectory per ``run_id`` under
-:attr:`core.config.Settings.cadrumo_runs_dir`, containing
+:attr:`~core.storage_taxonomy.StorageCategory.RUNS`, containing
 ``trace.json`` and ``events.jsonl``. Both files round-trip through the
 strict pydantic models in :mod:`core.observability.models`.
 
@@ -106,10 +106,7 @@ def runs_dir(settings: Settings | None = None) -> Path:
     """Return the configured runs directory. Resolution only; never creates it.
 
     Resolved through :func:`~core.storage_taxonomy_locations.storage_path` for
-    ``StorageCategory.RUNS`` rather than by reading ``cadrumo_runs_dir``
-    directly here. Both answer the same today, because the settings field is
-    what the accessor consults first -- but only one of them stays correct if
-    the member's resolution ever gains a case.
+    ``StorageCategory.RUNS``.
 
     A pure path resolver. Materialisation is a write-side concern: the one
     production writer (:func:`run_dir`) creates the full ``<runs_dir>/<run_id>``

@@ -1,7 +1,7 @@
 """Serve an explicitly configured storage root for the process that launched this runtime.
 
 The installed manager supervises only the canonical default root. A caller that
-selects another root with ``CADRUMO_LOCAL_STORAGE_ROOT`` owns that root's
+selects another root with ``CADRUMO_STORAGE_ROOT`` owns that root's
 runtime itself: it starts the process, reads one readiness line from standard
 output, and ends the runtime by closing standard input. A caller that exits
 closes that pipe too, so a runtime never outlives the owner of its root.
@@ -23,7 +23,6 @@ from cadrumo.core.storage_environment import (
     ensure_storage_root,
     host_installed_default_root,
     normalize_storage_path,
-    storage_mode,
 )
 from cadrumo_client.contracts.contracts import ExitReason, RefusalCode, RefusalError
 
@@ -50,7 +49,7 @@ def configured_storage_root() -> Path:
     belongs to the installed manager.
     """
     try:
-        if configured_root_value(os.environ, storage_mode().mode) is None:
+        if configured_root_value(os.environ) is None:
             raise RefusalError(RefusalCode.ROOT_MISMATCH)
         root = normalize_storage_path(effective_storage_root())
         # Refuse before creating anything, so a refused root is left untouched.

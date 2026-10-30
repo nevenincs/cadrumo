@@ -206,7 +206,7 @@ adapters:
             estar vacío.
           namespace_create_path_too_long: 'El almacenamiento local no pudo crear el
             espacio de nombres {namespace}: la ruta supera el límite de longitud de
-            ruta de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta
+            ruta de Windows. Traslade CADRUMO_STORAGE_ROOT a una ruta más corta
             o habilite LongPathsEnabled (véase `aeat config storage check`).'
           namespace_create_permission: El almacenamiento local no pudo crear el espacio
             de nombres {namespace}.
@@ -223,7 +223,7 @@ adapters:
             del objeto.
           payload_write_path_too_long: 'El almacenamiento local no pudo escribir la
             carga del objeto: la ruta supera el límite de longitud de ruta de Windows.
-            Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            Traslade CADRUMO_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
             (véase `aeat config storage check`).'
           payload_write_permission: El almacenamiento local no pudo escribir el payload
             del objeto.
@@ -235,7 +235,7 @@ adapters:
             del objeto.
           sidecar_write_path_too_long: 'El almacenamiento local no pudo escribir el
             sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows.
-            Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            Traslade CADRUMO_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
             (véase `aeat config storage check`).'
           written_at_invalid: 'El campo written_at del sidecar local falta, no se
             puede interpretar o no indica zona horaria: {actual_value}.'

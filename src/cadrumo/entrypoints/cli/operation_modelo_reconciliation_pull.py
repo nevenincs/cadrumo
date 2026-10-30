@@ -20,8 +20,9 @@ from ...application.modelo.reconciliation_pull_operation import (
     ModeloReconciliationPullRequest,
     reconciliation_pull_source_ref,
 )
-from ...core.config import load_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from .operation_filed_single import read_filed_single_capture_for_cli
 from .operation_justificante_capture import capture_justificante_for_cli
 from .operation_modelo_metadata import read_modelo_work_unit
@@ -84,7 +85,7 @@ def pull_modelo_reconciliation(
             ctx,
             modelo=str(unit.modelo),
             year=unit.filing_year,
-            output_root=load_settings().cadrumo_filed_declarations_dir,
+            output_root=storage_path(StorageCategory.FILED_DECLARATIONS),
             period=unit.period,
             expediente_id=None,
             limit=1,

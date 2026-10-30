@@ -291,16 +291,9 @@ class DropOperatorDocumentEchoFilter(logging.Filter):
 def default_log_file_path() -> Path:
     """Return the file path for non-interactive project logs.
 
-    Resolved through the taxonomy accessor rather than by reading
-    ``cadrumo_log_dir`` here. Both answer the same today, because the settings
-    field is what the accessor consults first -- but only one of them stays
-    correct if the member's resolution ever gains a case. A call site that
-    reads the field directly has quietly opted out of whatever the accessor
-    decides, and it does so invisibly, by continuing to work.
-
-    An explicit ``CADRUMO_LOG_DIR`` override still wins, and still keeps the
-    log isolated per workspace rather than mixing every session's records into
-    one system-wide file.
+    Resolved through the taxonomy accessor, so the log sits beneath the
+    storage root and stays isolated per root rather than mixing every
+    session's records into one system-wide file.
 
     The filename itself is read off the taxonomy's ``LOG_FILE`` member rather
     than declared as an untethered string literal here.
@@ -320,7 +313,7 @@ def _prepare_log_directory(log_file: Path) -> str | None:
     an :exc:`OSError`.
 
     File logging is a best-effort diagnostic channel, not the operator result
-    contract. An ``CADRUMO_LOCAL_STORAGE_ROOT`` / ``CADRUMO_LOG_DIR`` that the
+    contract. A ``CADRUMO_STORAGE_ROOT`` that the
     process cannot create — an inaccessible Windows path the operator's
     account may not write, a path routed under a non-directory, a
     ``PermissionError`` — MUST degrade to stderr-only logging rather than
@@ -436,7 +429,7 @@ def _configure_logging() -> None:
     persist them through secure-object repositories.
 
     When the diagnostic log directory cannot be created (an inaccessible
-    ``CADRUMO_LOCAL_STORAGE_ROOT`` / ``CADRUMO_LOG_DIR``), logging degrades to
+    ``CADRUMO_STORAGE_ROOT``), logging degrades to
     stderr-only and records an instructive diagnostic naming the likely
     remedy — it never crashes CLI startup with a raw traceback.
 
@@ -501,9 +494,9 @@ def _configure_logging() -> None:
         # import-time traceback this degrade replaces.
         logging.getLogger(__name__).error(
             "Diagnostic file logging disabled: cannot create the log directory %s (%s). "
-            "Continuing with stderr-only logging. Ensure CADRUMO_LOCAL_STORAGE_ROOT / CADRUMO_LOG_DIR "
+            "Continuing with stderr-only logging. Ensure CADRUMO_STORAGE_ROOT "
             "points at a path your account can write; on Windows check the folder's permissions, "
-            "run from a directory you own, or set CADRUMO_LOCAL_STORAGE_ROOT to a writable location.",
+            "run from a directory you own, or set CADRUMO_STORAGE_ROOT to a writable location.",
             log_file.parent,
             log_directory_failure,
         )
