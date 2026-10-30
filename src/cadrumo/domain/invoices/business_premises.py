@@ -2,22 +2,28 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
+from typing import override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ..calculations.registry.form_codes import RegistryCodedEnum
 from .errors import InvoiceValidationError
 
 
-class SituacionInmueble(StrEnum):
-    """Modelo 347 situation codes for the leased premises."""
+class SituacionInmueble(RegistryCodedEnum):
+    """Where the leased premises are, which the Modelo 347 situation code states."""
 
-    SPAIN_OTHER_THAN_BASQUE_NAVARRE = "1"
-    BASQUE_COUNTRY_OR_NAVARRE = "2"
-    SPAIN_WITHOUT_CATASTRAL_REFERENCE = "3"
-    ABROAD = "4"
+    SPAIN_OTHER_THAN_BASQUE_NAVARRE = "spain_other_than_basque_navarre"
+    BASQUE_COUNTRY_OR_NAVARRE = "basque_country_or_navarre"
+    SPAIN_WITHOUT_CATASTRAL_REFERENCE = "spain_without_catastral_reference"
+    ABROAD = "abroad"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return "modelo-347-premises-form-codes", "situacion_inmueble"
 
 
 SITUACIONES_CON_REFERENCIA_CATASTRAL = frozenset(
@@ -26,15 +32,15 @@ SITUACIONES_CON_REFERENCIA_CATASTRAL = frozenset(
 
 
 def require_situacion_inmueble(value: object) -> SituacionInmueble:
-    """Normalize one of the four situation codes, otherwise refuse it."""
+    """Normalize one declared situation, otherwise refuse it."""
     if isinstance(value, SituacionInmueble):
         return value
     if isinstance(value, str):
         try:
             return SituacionInmueble(value.strip())
         except ValueError as exc:
-            raise InvoiceValidationError("situacion_inmueble must be 1, 2, 3 or 4") from exc
-    raise InvoiceValidationError("situacion_inmueble must be 1, 2, 3 or 4")
+            raise InvoiceValidationError("situacion_inmueble must be a declared Modelo 347 situation") from exc
+    raise InvoiceValidationError("situacion_inmueble must be a declared Modelo 347 situation")
 
 
 class BusinessPremisesLease(BaseModel):
@@ -67,7 +73,7 @@ class BusinessPremisesLease(BaseModel):
             SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE,
             SituacionInmueble.ABROAD,
         }:
-            raise InvoiceValidationError("situaciones 3 and 4 cannot carry one")
+            raise InvoiceValidationError("a situation without a cadastral reference cannot carry one")
         return self
 
 

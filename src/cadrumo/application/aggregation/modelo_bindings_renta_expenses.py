@@ -51,6 +51,7 @@ from .activity_asset_expense_reconciliation import (
     amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
     dwelling_ownership_share,
+    issues_the_register_does_not_answer,
     refused_amortization_rows,
     refused_register_owned_rows,
     register_acquisition_transaction_ids,
@@ -76,7 +77,7 @@ from .renta_gasto_ledger import (
     aggregate_renta_gasto_ledger_from_repositories,
 )
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
-from .renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerExpenseAggregation
+from .renta_ledger_models import RentaLedgerExpenseAggregation
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -263,8 +264,10 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             effective_date=date(aggregation.period.filing_year, 12, 31),
         )
         register_owned = (*classification.withheld, *refused_owned)
-        owned_refused_ids = {row.transaction_id for row in refused_owned}
-        issues = _without_owned_refusals(aggregation.issues, owned_refused_ids)
+        issues = issues_the_register_does_not_answer(
+            aggregation.issues,
+            answered=(*refused_owned, *refused, *classification.unregistered),
+        )
         excluded_transaction_ids = classification.excluded_transaction_ids
         ledger_observations = tuple(
             observation
@@ -333,12 +336,6 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 resolved_binding_source=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
             ),
         )
-
-
-def _without_owned_refusals(
-    issues: Sequence[RentaLedgerAggregationIssue], owned_refused_ids: set[str]
-) -> tuple[RentaLedgerAggregationIssue, ...]:
-    return tuple(issue for issue in issues if issue.transaction_id not in owned_refused_ids)
 
 
 def _m100_unrouted_diagnostics(
@@ -543,8 +540,10 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
             effective_date=date(aggregation_period.filing_year, 12, 31),
         )
         register_owned = (*classification.withheld, *refused_owned)
-        owned_refused_ids = {row.transaction_id for row in refused_owned}
-        issues = tuple(issue for issue in aggregation.issues if issue.transaction_id not in owned_refused_ids)
+        issues = issues_the_register_does_not_answer(
+            aggregation.issues,
+            answered=(*refused_owned, *refused, *classification.unregistered),
+        )
         excluded_transaction_ids = classification.excluded_transaction_ids
         ledger_observations = tuple(
             observation

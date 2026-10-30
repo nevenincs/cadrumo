@@ -19,7 +19,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from .._export_xml_dictionary import _set_xml_dictionary_path, format_xml_dictionary_value
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 @pytest.mark.parametrize("boolean_value", (True, False))

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetClaimState,
@@ -35,7 +37,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from cadrumo.entrypoints.cli.actividad_asset_commands import _minimum_amortization_fields
+from cadrumo.entrypoints.cli.actividad_asset_commands import _correction_revision, _minimum_amortization_fields
 from cadrumo.entrypoints.cli.actividad_asset_receipts import claim_receipt, inspection_receipt
 from cadrumo.entrypoints.cli.command_operation_table import COMMAND_OPERATION_ROWS
 from cadrumo.entrypoints.cli.command_schema import command_schema_type
@@ -170,6 +172,16 @@ def test_activity_asset_inspection_payload_names_each_revision_a_correction_can_
 
     assert [revision["revision_id"] for revision in payload.revisions] == [first.revision_id, correction.revision_id]
     assert payload.revisions[1]["supersedes_revision_id"] == first.revision_id
+
+
+def test_a_correction_json_that_leaves_the_baja_out_is_refused_while_null_removes_it() -> None:
+    stated = json.loads(_revision().model_dump_json())
+    assert stated["disposal"] is None
+
+    assert _correction_revision(json.dumps(stated)).disposal is None
+    del stated["disposal"]
+    with pytest.raises(ValidationError, match="disposal"):
+        _correction_revision(json.dumps(stated))
 
 
 def test_activity_asset_claim_payload_includes_the_canonical_derived_claim_identity() -> None:

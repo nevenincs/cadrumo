@@ -27,7 +27,7 @@ def _m200_refund_account_values(selected: SelectedFilingAccount | None) -> dict[
         FilingProducerKey.M200_CUENTA_BANCARIA_MARCA_SEPA: (
             None
             if refund is None
-            else derive_sepa_marca(iban=refund.iban, bank_country_code=refund.bank_country_code).value
+            else derive_sepa_marca(iban=refund.iban, bank_country_code=refund.bank_country_code).code
         ),
         FilingProducerKey.M200_NUMERO_DE_CUENTA_IBAN: None if refund is None else refund.iban,
         FilingProducerKey.M200_CUENTA_BANCARIA_CODIGO_SWIFT_BIC: None if refund is None else refund.swift_bic,

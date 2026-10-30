@@ -50,7 +50,6 @@ from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.invoices.business_premises import business_premises_lease_from_inputs
 from ...domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -876,12 +875,10 @@ def _invoice_add_request(
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
         recargo_amount=public_amount(recargo, label="recargo"),
-        business_premises_lease=InvoiceAddBusinessPremisesLease.from_domain(
-            business_premises_lease_from_inputs(
-                lease_selected=arrendamiento_local_negocio,
-                situacion_inmueble=situacion_inmueble,
-                referencia_catastral=referencia_catastral,
-            )
+        business_premises_lease=InvoiceAddBusinessPremisesLease.from_inputs(
+            lease_selected=arrendamiento_local_negocio,
+            situacion_inmueble=situacion_inmueble,
+            referencia_catastral=referencia_catastral,
         ),
         lines=tuple(InvoiceAddLine.from_invoice_line(item) for item in structured_lines),
     )

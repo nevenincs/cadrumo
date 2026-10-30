@@ -32,6 +32,7 @@ from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.profile_read_ports import ProfilePathValuesReadPort
 from .activity_asset_read_models import ActivityAssetReasonFact
 from .operation_dtos import (
+    ActivityAssetCorrectionRevisionSnapshot,
     ActivityAssetDisposalSnapshot,
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
@@ -264,7 +265,7 @@ class ActivityAssetCorrectRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    revision: ActivityAssetRevisionSnapshot
+    revision: ActivityAssetCorrectionRevisionSnapshot
     superseding_claims: tuple[ActivityAssetSupersedingClaim, ...] = ()
 
 

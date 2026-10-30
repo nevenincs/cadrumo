@@ -438,7 +438,7 @@ def _m347_invoice_observation(
         situacion_inmueble=(
             None
             if invoice.business_premises_lease is None or invoice.business_premises_lease.situacion_inmueble is None
-            else invoice.business_premises_lease.situacion_inmueble.value
+            else invoice.business_premises_lease.situacion_inmueble.code
         ),
         referencia_catastral=(
             None if invoice.business_premises_lease is None else invoice.business_premises_lease.referencia_catastral

@@ -12,6 +12,7 @@ from textual.widgets import Button, Input, Select, Static
 from .....core.aggregation import IntracomOperationType
 from .....core.config import override_settings
 from .....core.i18n.render import lookup_translation
+from .....domain.invoices.business_premises import SituacionInmueble
 from .....domain.iva.schema import InvoiceKind
 from ...components.host import ScreenHostApp
 from ...tests.settling import settle
@@ -267,7 +268,9 @@ async def test_an_issued_business_premises_lease_reaches_the_add_door_with_its_p
             _header(screen)
             screen.query_one("#ledger-invoice-kind", Select).value = InvoiceKind.ISSUED.value
             screen.query_one("#ledger-invoice-lease", Select).value = str(True)
-            screen.query_one("#ledger-invoice-situacion-inmueble", Select).value = "1"
+            screen.query_one(
+                "#ledger-invoice-situacion-inmueble", Select
+            ).value = SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE.value
             _fill(screen, referencia_catastral="9872023VH5797S0001WX")
             _type_line(screen, _LINES[0])
             await settle(pilot)
@@ -284,7 +287,7 @@ async def test_an_issued_business_premises_lease_reaches_the_add_door_with_its_p
     (entry,) = door.entries
     assert entry.kind is InvoiceKind.ISSUED
     assert entry.arrendamiento_local_negocio is True
-    assert entry.situacion_inmueble == "1"
+    assert entry.situacion_inmueble is SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE
     assert entry.referencia_catastral == "9872023VH5797S0001WX"
 
 

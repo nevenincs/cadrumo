@@ -52,7 +52,7 @@ from ..own_account_operation import (
 from ..own_account_ports import OwnAccountRepositoryProtocol
 from ..transaction_repository import bind_transaction_catalogue_repository_factory
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE = UUID("7a1c0e52-3b64-4d85-9e96-0acc00000a01")
 _DESTINATION = UUID("7a1c0e52-3b64-4d85-9e96-0acc00000a02")

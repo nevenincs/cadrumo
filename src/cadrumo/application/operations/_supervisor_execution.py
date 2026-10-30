@@ -25,6 +25,7 @@ from ...core.operations import (
     OperationTerminalCondition,
 )
 from ...core.operator_progress import OperatorProgress, operator_progress_sink
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from . import _supervisor_snapshot
 from . import supervisor_context as _supervisor_context
@@ -217,23 +218,26 @@ class SupervisorExecutionMixin(SupervisorHost):
         )
         self._contexts[operation_id] = context
         executor = definition.executor_factory.create()
-        settlement = asyncio.create_task(
-            self._execute_and_settle(
-                operation_id=operation_id,
-                context=context,
-                executor=invoke_authorized(
-                    self._execution_authority,
-                    identity=running.identity,
-                    request=request,
-                    action=AccessAction.START,
-                    executor=lambda: run_with_model_runs(
-                        operation_model_run_port(self._execution_authority, running.identity),
-                        executor.execute(request, executor_context),
+        # The task copies this context, so everything it runs, threads included, reads
+        # governed facts and stored form codes from the generation this operation pinned.
+        with validating_governed_facts(self._authority_operation):
+            settlement = asyncio.create_task(
+                self._execute_and_settle(
+                    operation_id=operation_id,
+                    context=context,
+                    executor=invoke_authorized(
+                        self._execution_authority,
+                        identity=running.identity,
+                        request=request,
+                        action=AccessAction.START,
+                        executor=lambda: run_with_model_runs(
+                            operation_model_run_port(self._execution_authority, running.identity),
+                            executor.execute(request, executor_context),
+                        ),
                     ),
                 ),
-            ),
-            name=f"operation-settlement-{operation_id}",
-        )
+                name=f"operation-settlement-{operation_id}",
+            )
         self._settlement_tasks[operation_id] = settlement
         settlement.add_done_callback(self._settlement_completed)
         return running

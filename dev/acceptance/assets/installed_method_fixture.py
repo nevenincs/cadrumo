@@ -65,6 +65,7 @@ def method_correction_json(*, supersedes_revision_id: str, acquisition_transacti
     document = cast("dict[str, object]", raw_document)
     document["revision_number"] = 2
     document["supersedes_revision_id"] = supersedes_revision_id
+    document["disposal"] = None
     document["basis"] = {
         "stage": "business_allocated",
         "basis_amount": "1800.00",

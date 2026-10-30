@@ -39,16 +39,15 @@ def test_reviewed_span_checks_spanish_paraphrase_without_hiding_english_typo(tmp
         f"English commentary definately stays checked. {spanish}",
         LegalNoteLanguageSpan(text=spanish, language="es"),
     )
-    page = tmp_path / "legal.rst"
-    page.write_text(
-        render_legal_reference(tmp_path, records=(record,), language=OutputLanguage.EN).pages[0].rst,
-        encoding="utf-8",
-    )
+    rendered = render_legal_reference(tmp_path, records=(record,), language=OutputLanguage.EN).pages[0]
+    page = tmp_path / rendered.output_relpath
+    page.parent.mkdir(parents=True)
+    page.write_text(rendered.rst, encoding="utf-8")
     values: dict[str, dict[str, str]] = {}
     findings: list[dict[str, object]] = []
     inventory_generated_document_file(page, tmp_path, Counter(), findings, values)
 
-    assert not findings
+    assert not findings, findings
     assert spanish in values["es"].values()
     assert all(spanish not in text for text in values["en"].values())
     assert any("definately" in text for text in values["en"].values())

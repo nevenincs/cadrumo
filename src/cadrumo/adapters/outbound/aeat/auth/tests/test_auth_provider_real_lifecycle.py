@@ -189,12 +189,18 @@ async def test_public_close_waits_for_real_inflight_verification(
             completion_budget_s = (
                 sut.cadrumo_browser_navigation_timeout_ms + sut.cadrumo_browser_close_timeout_ms
             ) / 1000 + 5.0
+            # Readiness cannot expire before the provider's own navigation
+            # guard: Chromium may still be starting that navigation under load.
+            readiness_budget_s = sut.cadrumo_browser_navigation_timeout_ms / 1000 + 5.0
             boundary.configure("blocking")
             verify_task = asyncio.create_task(provider.verify(active))
             pending_tasks: list[asyncio.Task[object]] = [verify_task]
             try:
                 await wait_for_task_readiness(
-                    boundary.wait_until_blocked(), verify_task, after="blocked provider verification"
+                    boundary.wait_until_blocked(timeout_seconds=readiness_budget_s),
+                    verify_task,
+                    after="blocked provider verification",
+                    timeout_seconds=readiness_budget_s,
                 )
                 close_task = asyncio.create_task(provider.close())
                 pending_tasks.append(close_task)

@@ -26,7 +26,12 @@ from ..enums import IvaRate, PaymentStatus
 from ..errors import InvoiceValidationError
 from ..models import Invoice, InvoiceLine, derive_invoice_id
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_domain,
+    pytest.mark.usefixtures("operation"),
+    pytest.mark.usefixtures("operation"),
+]
 
 
 def _lease_invoice(
@@ -81,7 +86,7 @@ def test_an_issued_lease_keeps_its_premises_facts_and_canonicalises_the_referenc
     )
 
     assert invoice.business_premises_lease is not None
-    assert invoice.business_premises_lease.situacion_inmueble == "1"
+    assert invoice.business_premises_lease.situacion_inmueble is SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE
     assert invoice.business_premises_lease.referencia_catastral == "9872023VH5797S0001WX"
     assert invoice.invoice_id == derive_invoice_id(
         kind=invoice.kind,
@@ -151,9 +156,9 @@ def test_the_referencia_is_bounded_by_the_record_designs_25_positions() -> None:
 
 
 def test_only_the_four_record_design_codes_are_a_situacion() -> None:
-    assert [require_situacion_inmueble(code) for code in (" 1", "2", "3", "4 ")] == ["1", "2", "3", "4"]
+    assert [require_situacion_inmueble(code).code for code in (" 1", "2", "3", "4 ")] == ["1", "2", "3", "4"]
     for typed in ("0", "5", "uno", ""):
-        with pytest.raises(InvoiceValidationError, match="1, 2, 3 or 4"):
+        with pytest.raises(InvoiceValidationError, match="declared Modelo 347 situation"):
             require_situacion_inmueble(typed)
 
 

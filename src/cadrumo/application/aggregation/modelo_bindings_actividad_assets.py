@@ -6,7 +6,7 @@ recording anything (RIRPF art. 110.1.a); an element on a free method has no
 computable accrual, so it contributes its effective claims. Neither creates a
 charge. The register is the only route to the activity amortization boxes: a
 ledger row in an amortization category is acquisition evidence, withheld when the
-register owns it and a blocking note when it does not.
+register owns it and a non-blocking finding when it does not.
 """
 
 from __future__ import annotations
@@ -612,22 +612,27 @@ def activity_asset_disposal_excess_m131_findings(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Say that an excess reaches no Modelo 131 line, whose instructions are silent on it.
 
+    An excess that could not be worked out is said too, as Modelos 100 and 130 say it:
+    the income it could add is no less the filer's to account for.
+
     Returns:
         One non-blocking finding per excess.
     """
-    return tuple(
-        CalculationSourceDiagnostic(
-            reason="activity_asset_disposal_finding",
-            source_kind=resolver_id,
+    return tuple(_m131_excess_finding(row, resolver_id=resolver_id) for row in excess)
+
+
+def _m131_excess_finding(row: ActivityAssetDisposalExcess, *, resolver_id: str) -> CalculationSourceDiagnostic:
+    if row.error is not None:
+        return _disposal_finding(
+            row.revision,
+            f"its excess could not be worked out ({row.error}), and Modelo 131, whose instructions do not address "
+            "it, carries none",
             resolver_id=resolver_id,
-            source_ref=f"activity-asset:{row.revision.asset_id}",
-            message=(
-                f"{row.amount} EUR of excess from the baja of element {row.revision.asset_id!r} is not routed to "
-                "Modelo 131, whose instructions do not address it"
-            ),
         )
-        for row in excess
-        if row.error is None
+    return _disposal_finding(
+        row.revision,
+        f"{row.amount} EUR of excess is not routed to Modelo 131, whose instructions do not address it",
+        resolver_id=resolver_id,
     )
 
 

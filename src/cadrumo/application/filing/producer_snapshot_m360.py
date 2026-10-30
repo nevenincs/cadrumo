@@ -21,7 +21,7 @@ because DR360 campo 114 lets it belong to the representante.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, override
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
@@ -31,6 +31,7 @@ from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN, CountryCodeAlpha2
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
+from ...domain.calculations.registry.form_codes import RegistryCodedEnum
 from ...domain.deadlines.models import RefundAccount
 from ...domain.transactions.own_accounts import OwnAccountId
 
@@ -62,14 +63,22 @@ _GREECE_ISO_CODE = "GR"
 _SPAIN = "ES"
 
 
-class M360NivelCalidadDatos(StrEnum):
+_M360_FORM_CODES_FACT = "modelo-360-page-one-form-codes"
+
+
+class M360NivelCalidadDatos(RegistryCodedEnum):
     """DR360 página 1 campo 5, Nota 2."""
 
-    MEDIA = "1"
-    MAXIMA = "2"
+    MEDIA = "media"
+    MAXIMA = "maxima"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "nivel_calidad"
 
 
-class M360CausaPresentacion(StrEnum):
+class M360CausaPresentacion(RegistryCodedEnum):
     """DR360 página 1 campo 8, Nota 4.
 
     The design's third value, a blank for a communication of the prorrata definitiva on
@@ -77,8 +86,13 @@ class M360CausaPresentacion(StrEnum):
     be emitted, and a contract admitting it would only refuse later.
     """
 
-    INICIAL = "0"
-    MODIFICACION = "1"
+    INICIAL = "inicial"
+    MODIFICACION = "modificacion"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "causa"
 
 
 class M360AmbitoEstablecimiento(StrEnum):
@@ -89,29 +103,44 @@ class M360AmbitoEstablecimiento(StrEnum):
     CANARIAS_CEUTA_MELILLA = "canarias_ceuta_melilla"
 
 
-class M360HaciendaForal(StrEnum):
+class M360HaciendaForal(RegistryCodedEnum):
     """DR360 página 1 campo 42, Nota 7."""
 
-    ALAVA = "01"
-    GIPUZKOA = "20"
-    NAVARRA = "31"
-    BIZKAIA = "48"
+    ALAVA = "alava"
+    GIPUZKOA = "gipuzkoa"
+    NAVARRA = "navarra"
+    BIZKAIA = "bizkaia"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "hacienda_foral"
 
 
-class M360DelegacionCanariasCeutaMelilla(StrEnum):
+class M360DelegacionCanariasCeutaMelilla(RegistryCodedEnum):
     """DR360 página 1 campo 43, Nota 8."""
 
-    LAS_PALMAS = "35"
-    TENERIFE = "38"
-    CEUTA = "55"
-    MELILLA = "56"
+    LAS_PALMAS = "las_palmas"
+    TENERIFE = "tenerife"
+    CEUTA = "ceuta"
+    MELILLA = "melilla"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "delegacion"
 
 
-class M360TitularEnCalidadDe(StrEnum):
+class M360TitularEnCalidadDe(RegistryCodedEnum):
     """DR360 página 1 campo 114: whose account the refund is paid into."""
 
-    SOLICITANTE = "A"
-    REPRESENTANTE = "R"
+    SOLICITANTE = "solicitante"
+    REPRESENTANTE = "representante"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _M360_FORM_CODES_FACT, "titular"
 
 
 class Modelo360SolicitudFacts(BaseModel):

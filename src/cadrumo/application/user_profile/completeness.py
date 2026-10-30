@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     validating_governed_facts,
@@ -41,14 +42,18 @@ CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
 ATRIBUCION_SOCIOS_SECTION = "attribution_entity_socios"
 PARTICIPE_CLAVE_FIELD = "participe_clave"
 SOCIO_COUNTRY_FIELD = "country_of_residence"
-#: The one clave whose Modelo 184 record carries a country at positions 79-80.
-#:
-#: The other two claves -- residente, and no residente CON establecimiento
-#: permanente -- require BLANCOS there, so the country is not merely optional
-#: for them: the layout prohibits it. Both directions are enforced, because a
-#: rule that only asks for the value when it is due leaves the prohibited case
-#: to whatever the operator typed.
-PARTICIPE_CLAVE_BEARING_COUNTRY = "2"
+
+
+def participe_clave_bearing_country() -> str:
+    """Return the one clave whose Modelo 184 record carries a country.
+
+    The other two claves -- residente, and no residente CON establecimiento
+    permanente -- require BLANCOS there, so the country is not merely optional
+    for them: the layout prohibits it. Both directions are enforced, because a
+    rule that only asks for the value when it is due leaves the prohibited case
+    to whatever the operator typed.
+    """
+    return resolve_form_codes("modelo-184-member-form-codes").code("participe.country_bearing")
 
 
 @contextmanager
@@ -151,7 +156,7 @@ def atribucion_socio_missing_country_paths(values: Mapping[str, object]) -> tupl
     missing: list[str] = []
     for index in _socio_row_indices(values):
         clave = _token(values.get(f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{PARTICIPE_CLAVE_FIELD}"))
-        if clave != PARTICIPE_CLAVE_BEARING_COUNTRY:
+        if clave != participe_clave_bearing_country():
             continue
         path = f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{SOCIO_COUNTRY_FIELD}"
         if not _has_value(values, path):
@@ -174,7 +179,7 @@ def atribucion_socio_forbidden_country_paths(values: Mapping[str, object]) -> tu
     forbidden: list[str] = []
     for index in _socio_row_indices(values):
         clave = _token(values.get(f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{PARTICIPE_CLAVE_FIELD}"))
-        if not clave or clave == PARTICIPE_CLAVE_BEARING_COUNTRY:
+        if not clave or clave == participe_clave_bearing_country():
             continue
         path = f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{SOCIO_COUNTRY_FIELD}"
         if _has_value(values, path):
@@ -331,7 +336,6 @@ __all__ = [
     "FISCAL_RESIDENCY_PATH",
     "IRPF_INCOME_CATEGORIES_PATH",
     "IVA_REGIME_PATH",
-    "PARTICIPE_CLAVE_BEARING_COUNTRY",
     "REPRESENTANTE_FISCAL_NIF_PATH",
     "REPRESENTANTE_FISCAL_NOMBRE_PATH",
     "atribucion_socio_forbidden_country_paths",

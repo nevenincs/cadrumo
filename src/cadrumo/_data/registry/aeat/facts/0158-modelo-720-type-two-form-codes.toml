@@ -1,0 +1,32 @@
+[fact]
+fact_id = "modelo-720-type-two-form-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-720-type-two-form-codes:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-720"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-720"
+required_text = ["CLAVE DE CONDICIÓN DEL DECLARANTE", "Con poder de disposición", "SUBCLAVE DE BIEN O DERECHO", "Multipropiedad, aprovechamiento por turnos"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "condition.titular", value = "1" },
+  { key = "condition.representante", value = "2" },
+  { key = "condition.autorizado", value = "3" },
+  { key = "condition.beneficiario", value = "4" },
+  { key = "condition.usufructuario", value = "5" },
+  { key = "condition.tomador", value = "6" },
+  { key = "condition.poder_disposicion", value = "7" },
+  { key = "condition.otras_titularidad_real", value = "8" },
+  { key = "subclaves.C", value = "1,2,3,4,5" },
+  { key = "subclaves.V", value = "1,2,3" },
+  { key = "subclaves.I", value = "" },
+  { key = "subclaves.S", value = "1,2" },
+  { key = "subclaves.B", value = "1,2,3,4,5" },
+]

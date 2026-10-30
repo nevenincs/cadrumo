@@ -23,6 +23,7 @@ from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposalReason,
     PriorFreeDepreciationRegime,
 )
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 
 from ...actividad_asset.history import ActivityAssetHistory
@@ -271,3 +272,20 @@ def test_modelo_131_says_the_excess_is_not_routed() -> None:
 
     assert finding.reason == "activity_asset_disposal_finding"
     assert "3204.93" in finding.message
+
+
+def test_modelo_131_says_an_excess_it_could_not_work_out_as_modelos_100_and_130_do() -> None:
+    revision = _excess_history().revisions[-1]
+    unworked = ActivityAssetDisposalExcess(
+        revision=revision,
+        target_casilla_id="01",
+        error=ActividadAssetIncompleteError(translated_message="ledger.actividad_asset.errors.opening_history_missing"),
+    )
+
+    (finding,) = activity_asset_disposal_excess_m131_findings((unworked,), resolver_id="resolver")
+
+    assert finding.reason == "activity_asset_disposal_finding"
+    assert finding.source_ref == f"activity-asset:{revision.asset_id}"
+    assert "could not be worked out" in finding.message
+    assert "0.00" not in finding.message
+    assert finding.reason not in GATE_REFUSED_REASONS

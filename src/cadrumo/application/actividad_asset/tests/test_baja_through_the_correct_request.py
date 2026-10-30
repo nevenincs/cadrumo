@@ -6,16 +6,18 @@ Figures use 2,000.00 at 26% linear from 1 January 2025: 520.00 a full year.  A b
 
 from __future__ import annotations
 
+import json
 from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.actividad_asset.activity_asset_contracts import ActivityAssetCorrectRequest
 from cadrumo.application.actividad_asset.operation_dtos import (
+    ActivityAssetCorrectionRevisionSnapshot,
     ActivityAssetDisposalSnapshot,
-    ActivityAssetRevisionSnapshot,
 )
 from cadrumo.domain.renta.actividad_asset.claims import effective_claims
 from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
@@ -33,7 +35,7 @@ def _correction(baja: ActivityAssetRevision, disposal: ActivityAssetDisposal | N
 
     The stale ``out_of_service_date`` travels with it, as it does from a form that has no field for it.
     """
-    snapshot = ActivityAssetRevisionSnapshot.from_domain(baja).model_copy(
+    snapshot = ActivityAssetCorrectionRevisionSnapshot.from_domain(baja).model_copy(
         update={
             "revision_number": baja.revision_number + 1,
             "supersedes_revision_id": baja.revision_id,
@@ -85,6 +87,21 @@ def test_a_correct_request_that_clears_the_baja_restores_its_deductions() -> Non
 
     assert _by_year(repository) == {2025: Decimal("520.00"), 2026: Decimal("257.86"), 2027: Decimal("520.00")}
     assert operations.inspect(_ASSET)[-1].disposal is None
+
+
+def test_a_correct_request_that_leaves_the_baja_out_is_refused_while_null_removes_it() -> None:
+    _, _, baja = _disposed()
+    request = ActivityAssetCorrectRequest(
+        profile_id=uuid4(),
+        revision=ActivityAssetCorrectionRevisionSnapshot.from_domain(baja).model_copy(update={"disposal": None}),
+    )
+    stated = json.loads(request.model_dump_json())
+    assert stated["revision"]["disposal"] is None
+
+    assert ActivityAssetCorrectRequest.model_validate_json(json.dumps(stated)).revision.disposal is None
+    del stated["revision"]["disposal"]
+    with pytest.raises(ValidationError, match="disposal"):
+        ActivityAssetCorrectRequest.model_validate_json(json.dumps(stated))
 
 
 def test_a_second_baja_is_refused_and_leaves_the_history_unchanged() -> None:

@@ -1,0 +1,25 @@
+[fact]
+fact_id = "modelo-184-member-form-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-184-member-form-codes:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-184-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-184-2025"
+required_text = ["CLAVE TIPO DE PARTÍCIPE", "No residente sin establecimiento permanente", "NATURALEZA DEL INMUEBLE", "CLAVE DE DECLARADO", "Nudo propietario"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "clave.codes", value = "A,C,D,E,F,G,I,J,K" },
+  { key = "subclave.codes", value = "01,02,03,04,05,06" },
+  { key = "naturaleza_inmueble.codes", value = "1,2" },
+  { key = "situacion_inmueble.codes", value = "1,2,3,4,5" },
+  { key = "clave_declarado.codes", value = "N,T,U,O" },
+  { key = "participe.country_bearing", value = "2" },
+]

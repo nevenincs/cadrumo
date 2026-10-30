@@ -198,11 +198,7 @@ def test_executor_refuses_foreign_active_profile_before_phase_or_factory(monkeyp
     assert factory_calls == []
 
 
-def test_invoice_add_lease_wire_requires_python_enum_values() -> None:
-    with pytest.raises(ValidationError):
-        InvoiceAddBusinessPremisesLease(situacion_inmueble="1")
-
-
+@pytest.mark.usefixtures("operation")
 def test_registration_requires_profile_scoped_commit_and_secure_request_storage() -> None:
     def unused_factory(*, bucket_id: str) -> CatalogueCreationPorts:
         raise AssertionError(f"registration composed profile ports for {bucket_id}")
@@ -230,11 +226,14 @@ def test_registration_requires_profile_scoped_commit_and_secure_request_storage(
         "situacion_inmueble": SituacionInmueble.ABROAD.value,
         "referencia_catastral": "9872023VH5797S0001WX",
     }
+    invalid_decoded = registry.decode_request_payload(
+        INVOICE_ADD_OPERATION_DEFINITION_ID,
+        json.dumps(invalid_wire),
+    )
+    assert isinstance(invalid_decoded, InvoiceAddRequest)
+    assert invalid_decoded.business_premises_lease is not None
     with pytest.raises(ValidationError):
-        registry.decode_request_payload(
-            INVOICE_ADD_OPERATION_DEFINITION_ID,
-            json.dumps(invalid_wire),
-        )
+        invalid_decoded.business_premises_lease.to_domain()
     request = OperationRequest[InvoiceAddRequest](
         definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
@@ -598,11 +597,6 @@ def test_a_lease_on_a_received_invoice_is_an_invalid_invoice_refusal(monkeypatch
             "9872023VH5797S0001WX",
             id="domain-invalid-situation-reference-pair",
         ),
-        pytest.param(
-            "1",
-            "9872023VH5797S0001WX",
-            id="poisoned-raw-enum-string",
-        ),
     ),
 )
 def test_executor_rechecks_poisoned_lease_before_creating_ports(
@@ -645,9 +639,12 @@ def test_executor_rechecks_poisoned_lease_before_creating_ports(
     assert context.operands.value.result.validation_code == "invalid_invoice"
 
 
-def test_the_request_refuses_a_situacion_outside_the_record_design() -> None:
+@pytest.mark.usefixtures("operation")
+def test_the_worker_refuses_a_situacion_outside_the_record_design() -> None:
+    request = _request(
+        kind=InvoiceKind.ISSUED,
+        business_premises_lease={"situacion_inmueble": "5"},
+    )
+    assert request.business_premises_lease is not None
     with pytest.raises(ValidationError):
-        _request(
-            kind=InvoiceKind.ISSUED,
-            business_premises_lease={"situacion_inmueble": "5"},
-        )
+        request.business_premises_lease.to_domain()

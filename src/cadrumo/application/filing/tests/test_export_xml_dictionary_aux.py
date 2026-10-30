@@ -16,7 +16,7 @@ from .._export_xml_dictionary import (
 )
 from ..export_parity import assert_xml_declaration_aux_declared
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _xml_layout() -> ExportLayoutDefinition:

@@ -35,35 +35,40 @@ Source: European Payments Council, "EPC List of SEPA Scheme Countries"
 
 from __future__ import annotations
 
-from enum import StrEnum
-from typing import Final
+from typing import Final, override
 
 from ...core.iban import normalise_iban
+from ..calculations.registry.form_codes import RegistryCodedEnum
 from .establishment import SPAIN_COUNTRY_CODE
 
 
-class SepaMarca(StrEnum):
+class SepaMarca(RegistryCodedEnum):
     """Diseño DR303 ``Marca SEPA`` indicator for the cuenta-devolución block.
 
-    The member *value* is the single-character token the DID page expects at
-    position 194. ``ESPANA`` and ``UE_SEPA`` are the two SEPA-zone marcas
-    (IBAN-only DID sub-fields); ``RESTO_PAISES`` is the non-SEPA marca that
-    additionally carries the SWIFT-BIC and the foreign-bank block.
+    The registry declares the token each member writes at the DID page's marca
+    position. ``ESPANA`` and ``UE_SEPA`` are the two SEPA-zone marcas (IBAN-only
+    DID sub-fields); ``RESTO_PAISES`` is the non-SEPA marca that additionally
+    carries the SWIFT-BIC and the foreign-bank block.
     """
 
-    ESPANA = "1"
+    ESPANA = "espana"
     """Cuenta España — a Spanish IBAN (country ``ES``)."""
-    UE_SEPA = "2"
+    UE_SEPA = "ue_sepa"
     """UE SEPA — a SEPA-zone account that is not Spanish."""
-    RESTO_PAISES = "3"
+    RESTO_PAISES = "resto_paises"
     """Resto Países — an account outside the SEPA zone."""
 
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return "modelo-303-identification-form-codes", "sepa_marca"
 
-#: ISO 3166-1 alpha-2 country code of Spain, the ``Marca SEPA = 1`` country.
+
+#: ISO 3166-1 alpha-2 country code of Spain, the España marca country.
 
 #: The SEPA-zone country codes (excluding Spain, which is its own marca). A
-#: refund account whose country is in this set is ``Marca SEPA = 2`` (UE SEPA);
-#: a country outside it (and not ``ES``) is ``Marca SEPA = 3`` (Resto Países).
+#: refund account whose country is in this set is the UE SEPA marca (UE SEPA);
+#: a country outside it (and not ``ES``) is the Resto Países marca (Resto Países).
 #: Keyed by the ISO 3166-1 alpha-2 code that prefixes a SEPA IBAN. Grounded in
 #: the European Payments Council SEPA scheme participant list (EPC409-09) under
 #: Regulation (EU) No 260/2012 — see the module docstring.
@@ -136,10 +141,10 @@ def derive_sepa_marca(*, iban: str | None, bank_country_code: str = "") -> SepaM
 
     The country is taken from the IBAN's two-letter prefix (a SEPA IBAN
     account) or, absent an IBAN, from ``bank_country_code`` (a SWIFT account).
-    ``ES`` yields :attr:`SepaMarca.ESPANA` (``"1"``); any other SEPA-zone
-    country yields :attr:`SepaMarca.UE_SEPA` (``"2"``); a country outside the
+    ``ES`` yields :attr:`SepaMarca.ESPANA`; any other SEPA-zone
+    country yields :attr:`SepaMarca.UE_SEPA`; a country outside the
     SEPA zone — or no resolvable country — yields
-    :attr:`SepaMarca.RESTO_PAISES` (``"3"``), the marca that additionally
+    :attr:`SepaMarca.RESTO_PAISES`, the marca that additionally
     carries the SWIFT-BIC and foreign-bank block.
 
     The membership set is grounded in the European Payments Council SEPA

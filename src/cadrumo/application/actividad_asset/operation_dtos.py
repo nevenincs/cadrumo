@@ -456,6 +456,13 @@ class ActivityAssetRevisionSnapshot(BaseModel):
         return self
 
 
+class ActivityAssetCorrectionRevisionSnapshot(ActivityAssetRevisionSnapshot):
+    """The revision a correct request states, whose baja is always stated."""
+
+    disposal: ActivityAssetDisposalSnapshot | None = Field(...)
+    """The baja the correction records: another one replaces it and null removes it.  Leaving it out is refused."""
+
+
 class AmortizationClaimSnapshot(BaseModel):
     """Public recorded claim with every monetary fact represented explicitly."""
 

@@ -1,0 +1,57 @@
+[fact]
+fact_id = "modelo-100-profile-form-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-100-profile-form-codes:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-100-2025-xsd", "aeat-dr-100-2025-dictionary"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ["tipo_EstadoCivil", "1 = SOLTERO", "4 = SEPARADO / DIVORCIADO", "H = HOMBRE", "tipo_GradoDiscapacidad", "tipo_CCAA", "2 = DECLARANTE", "TIPOTRIBUTACION"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-dictionary"
+required_text = ["ECIVIL", "TIPOTRIBUTACION"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "sex.hombre", value = "H" },
+  { key = "sex.mujer", value = "M" },
+  { key = "marital_status.soltero", value = "1" },
+  { key = "marital_status.casado", value = "2" },
+  { key = "marital_status.viudo", value = "3" },
+  { key = "marital_status.separado_divorciado", value = "4" },
+  { key = "marital_status.pareja_hecho", value = "5" },
+  { key = "marital_status.export_members", value = "soltero,casado,viudo,separado_divorciado" },
+  { key = "disability_grade.ge_33_lt_65", value = "1" },
+  { key = "disability_grade.ge_65", value = "2" },
+  { key = "disability_grade.judicial_incapacity", value = "3" },
+  { key = "disability_grade.assistance_or_reduced_mobility", value = "4" },
+  { key = "declaration_type.individual", value = "1" },
+  { key = "declaration_type.joint", value = "2" },
+  { key = "ccaa.ANDALUCIA", value = "01" },
+  { key = "ccaa.ARAGON", value = "02" },
+  { key = "ccaa.ASTURIAS", value = "03" },
+  { key = "ccaa.BALEARES", value = "04" },
+  { key = "ccaa.CANARIAS", value = "05" },
+  { key = "ccaa.CANTABRIA", value = "06" },
+  { key = "ccaa.CASTILLA_LA_MANCHA", value = "07" },
+  { key = "ccaa.CASTILLA_Y_LEON", value = "08" },
+  { key = "ccaa.CATALUNA", value = "09" },
+  { key = "ccaa.EXTREMADURA", value = "10" },
+  { key = "ccaa.GALICIA", value = "11" },
+  { key = "ccaa.MADRID", value = "12" },
+  { key = "ccaa.MURCIA", value = "13" },
+  { key = "ccaa.LA_RIOJA", value = "16" },
+  { key = "ccaa.COMUNIDAD_VALENCIANA", value = "17" },
+  { key = "holder.declarante", value = "2" },
+  { key = "holder.conyuge", value = "3" },
+  { key = "holder.hijo1", value = "4" },
+  { key = "holder.hijo2", value = "5" },
+  { key = "holder.hijo3", value = "6" },
+  { key = "holder.hijo4", value = "7" },
+]

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 from ....core.i18n.render import tr
+from ....domain.invoices.business_premises import SituacionInmueble
 from ....domain.invoices.models import InvoiceLine
 from .models import LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
 
@@ -57,11 +60,20 @@ def _retention_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
     return None
 
 
+#: The label of each premises situation, shown instead of its form code.
+SITUACION_LOCALE_KEYS: Final[dict[SituacionInmueble, str]] = {
+    SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE: "tui.ledger.invoice.situacion.1",
+    SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE: "tui.ledger.invoice.situacion.2",
+    SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE: "tui.ledger.invoice.situacion.3",
+    SituacionInmueble.ABROAD: "tui.ledger.invoice.situacion.4",
+}
+
+
 def _lease_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
     if entry.arrendamiento_local_negocio:
         return tr(
             "tui.ledger.invoice.summary.lease",
-            situacion=entry.situacion_inmueble or "-",
+            situacion="-" if entry.situacion_inmueble is None else tr(SITUACION_LOCALE_KEYS[entry.situacion_inmueble]),
             referencia=entry.referencia_catastral or "-",
         )
     return None
