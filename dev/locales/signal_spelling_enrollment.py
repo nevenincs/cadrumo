@@ -728,6 +728,18 @@ def enroll_spelling_cell(
             locale_words[word].add((locale, key))
 
 
+def _spanish_legal_note_word(
+    dictionary_locale: str, key: str, word: str, dictionaries: Mapping[str, DictionaryLike]
+) -> bool:
+    """Recognize Spanish source wording on the bilingual legal-reference surface."""
+    return (
+        dictionary_locale == "en"
+        and key.startswith("parallel:docs/_generated/legal/")
+        and ".rst:line[" in key
+        and dictionaries["es"].lookup(word)
+    )
+
+
 def check_dictionary_spelling_words(
     dictionary_locale: str,
     words: dict[str, set[tuple[str, str]]],
@@ -750,16 +762,7 @@ def check_dictionary_spelling_words(
         ):
             continue
         for owner_locale, key in words[word]:
-            # Generated legal reference pages contain curated English notes
-            # alongside Spanish statutory wording. Honor the Spanish source
-            # dictionary for a token on that explicitly bilingual surface;
-            # words unknown to both dictionaries still reach the finding path.
-            if (
-                dictionary_locale == "en"
-                and key.startswith("parallel:docs/_generated/legal/")
-                and ".rst:line[" in key
-                and dictionaries["es"].lookup(word)
-            ):
+            if _spanish_legal_note_word(dictionary_locale, key, word, dictionaries):
                 continue
             record_unknown_spelling_word(
                 owner_locale, key, word, dictionary_locale, dictionaries, cell_text, unknown_words, unknown_by_cell
