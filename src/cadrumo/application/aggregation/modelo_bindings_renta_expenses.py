@@ -33,6 +33,7 @@ from ._modelo_bindings_support import (
     empty_source_resolution,
     revision_has_binding_source,
 )
+from .activity_asset_ledger_reconciliation import activity_asset_ledger_findings, capital_good_transaction_ids
 from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_actividad_assets import (
     LedgerRentaExpenseTreatment,
@@ -166,6 +167,11 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             labelled = amortization_labelled_expense_categories(
                 effective_date=date(aggregation.period.filing_year, 12, 31),
             )
+            capital_goods = capital_good_transaction_ids(
+                (observation.transaction_id for observation in aggregation.observations),
+                ledger=self._ports.transaction_reader,
+                tax_year=aggregation.period.filing_year,
+            )
             classification = classify_ledger_expenses_against_asset_register(
                 asset_history.revisions,
                 tuple(
@@ -177,6 +183,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                         amortization_labelled=(
                             observation.target_casilla_id in M100_AMORTIZATION_CASILLA_IDS
                             or observation.category.value in labelled
+                            or observation.transaction_id in capital_goods
                         ),
                     )
                     for observation in aggregation.observations
@@ -243,6 +250,13 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 resolver_id=self.resolver_id,
             )
             + asset_projection.diagnostics
+            + activity_asset_ledger_findings(
+                asset_history.revisions,
+                ledger=self._ports.transaction_reader,
+                tax_year=aggregation.period.filing_year,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
+            )
             + tuple(
                 CalculationSourceDiagnostic(
                     reason="unrouted_observation",

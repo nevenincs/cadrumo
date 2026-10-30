@@ -441,6 +441,8 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "activity_asset_foral_territory"
     | "activity_asset_residence_unresolved"
     | "activity_asset_claim_gap"
+    | "register_acquisition_exceeds_ledger"
+    | "register_acquisition_partly_accounted"
     | "activity_asset_accrual_unavailable"
     | "activity_asset_agrarian_excluded"
     | "activity_asset_activity_undeclared";

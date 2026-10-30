@@ -123,6 +123,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "inferred_retencion_excluded_from_credit": _C,
         "unresolved_retencion_substrate": _C,
         "advisory_retencion_credit_grade": _C,
+        "register_acquisition_exceeds_ledger": _C,
+        "register_acquisition_partly_accounted": _C,
         # For the filer's information.
         "deferred_binding_source": _I,
         "oss_no_live_source": _I,

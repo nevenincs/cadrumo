@@ -266,6 +266,11 @@ CalculationSourceDiagnosticReason = Literal[
     # part of the year. The deduction is not invented and the return is not
     # refused, because a gap reduces a deduction without invalidating the return.
     "activity_asset_claim_gap",
+    # What the register states for an element against what the ledger shows now:
+    # the entries it names paid less than its cost, or the element explains only part of them.
+    # Findings for the filer, who decides which side is wrong; neither withholds anything.
+    "register_acquisition_exceeds_ledger",
+    "register_acquisition_partly_accounted",
     # The schedule refused to work out what an element accrued, so the element
     # contributes nothing and the amount it may be owed is unknown, not zero.
     "activity_asset_accrual_unavailable",

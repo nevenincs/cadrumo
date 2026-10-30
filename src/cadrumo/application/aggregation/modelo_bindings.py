@@ -95,6 +95,7 @@ from ._retencion_rate_advisory import (
     inferred_actividad_retencion_rate_advisory_observations,
 )
 from ._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
+from .activity_asset_ledger_reconciliation import activity_asset_ledger_findings, capital_good_transaction_ids
 from .errors import AggregationValidationError
 from .impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
 from .irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
@@ -1112,6 +1113,11 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     _m130_asset_register_treatments(
                         aggregation.observations,
                         filing_year=aggregation_period.filing_year,
+                        capital_goods=capital_good_transaction_ids(
+                            (observation.transaction_id for observation in aggregation.observations),
+                            ledger=self._transaction_repository,
+                            tax_year=aggregation_period.filing_year,
+                        ),
                     ),
                 )
                 refused = refused_amortization_rows(
@@ -1194,6 +1200,13 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 resolver_id=self.resolver_id,
             )
             + asset_projection.diagnostics
+            + activity_asset_ledger_findings(
+                asset_history.revisions,
+                ledger=self._transaction_repository,
+                tax_year=aggregation_period.filing_year,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
+            )
             + tuple(
                 CalculationSourceDiagnostic(
                     reason="unrouted_observation",
@@ -1238,6 +1251,7 @@ def _m130_asset_register_treatments(
     observations: Sequence[RentaGastoObservation],
     *,
     filing_year: int,
+    capital_goods: frozenset[str],
 ) -> tuple[LedgerRentaExpenseTreatment, ...]:
     """Weigh the quarterly gasto rows against the activity-asset register.
 
@@ -1259,7 +1273,7 @@ def _m130_asset_register_treatments(
             category=observation.category_id,
             tax_year=observation.filing_date.year,
             deductible_amount=observation.deductible_amount,
-            amortization_labelled=observation.category_id in labelled,
+            amortization_labelled=observation.category_id in labelled or observation.transaction_id in capital_goods,
         )
         for observation in candidates
     )
