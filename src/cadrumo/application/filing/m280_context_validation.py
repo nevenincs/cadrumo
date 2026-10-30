@@ -11,6 +11,7 @@ from ...domain.calculations.registry.export_value_policy import (
     export_value_policy_wire_length,
     project_export_value,
 )
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportValidationError
 
@@ -18,7 +19,7 @@ _M280_SIGN_ID = "modelo-280-t2-rendimientos-negativos-imputables-sign"
 _M280_KEY_ID = "modelo-280-t2-extincion-plan"
 _M280_IMPUTABLE_CASILLA = "rendimientos-negativos-imputables"
 _M280_KEY_CASILLA = "extincion-plan"
-_M280_EXTINCION_KEY = "2"
+_M280_EXTINCION_FORM_CODES = "modelo-280-extinction-form-codes"
 _M280_NEGATIVE_SIGN = str(project_export_value(ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN, Decimal(-1)))
 _M280_ABSENT_SIGN = str(project_export_value(ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN, None))
 _M280_REVIEWED_SOURCES = {
@@ -107,10 +108,15 @@ def _require_m280_source_digest(sign: ExportFieldDefinition, source_digests: Map
         raise FilingExportValidationError(_M280_CHANGED)
 
 
+def _m280_negative_imputation_key() -> str:
+    """Return the extinction key under which negative returns are imputed."""
+    return resolve_form_codes(_M280_EXTINCION_FORM_CODES).code("extinction.other_circumstances")
+
+
 def _m280_wire_matches(key: str, sign_byte: str, magnitude: str) -> bool:
     if not magnitude.isascii() or not magnitude.isdigit():
         return False
-    if key == _M280_EXTINCION_KEY:
+    if key == _m280_negative_imputation_key():
         return sign_byte == _M280_NEGATIVE_SIGN
     return sign_byte == _M280_ABSENT_SIGN and magnitude == "0" * len(magnitude)
 
@@ -181,7 +187,7 @@ def m280_contextual_sign_byte(
     by_id = {item.id: item for item in record.fields}
     integer, fraction = _require_m280_component_declaration(field, *_m280_components(record, field))
     _require_m280_evidence_declaration(field, integer, fraction, by_id.get(_M280_KEY_ID), source_digests)
-    if key_wire != _M280_EXTINCION_KEY or raw_amount is None or raw_amount == "":
+    if key_wire != _m280_negative_imputation_key() or raw_amount is None or raw_amount == "":
         return rendered
     if str(project_export_value(ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN, raw_amount)) == _M280_ABSENT_SIGN:
         if rendered != _M280_ABSENT_SIGN:

@@ -21,6 +21,7 @@ from ...domain.calculations.registry.schema_exports import ExportFieldDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
+from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
 from .m190_context_validation import require_m190_signed_reintegro_context
 from .m280_context_validation import m280_contextual_sign_byte, require_m280_negative_imputation_context
 from .producer_snapshot import ChargeAccountSelection, FilingProducerSnapshot, RefundAccountSelection
@@ -40,6 +41,7 @@ def render_record(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
     source_digests: Mapping[str, str] | None = None,
+    clave_scope: PerceptorClaveScope | None = None,
 ) -> str:
     """Render one registry record, positioned when every field declares an offset.
 
@@ -58,6 +60,7 @@ def render_record(
             render_context=render_context,
             projection_values=projection_values,
             source_digests=source_digests,
+            clave_scope=clave_scope,
         )
     return _render_unpositioned_record(
         record,
@@ -113,6 +116,7 @@ def _render_positioned_record(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
     source_digests: Mapping[str, str] | None,
+    clave_scope: PerceptorClaveScope | None,
 ) -> str:
     length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
     buffer = [" "] * length
@@ -141,7 +145,7 @@ def _render_positioned_record(
             raise FilingExportError(f"export field {field.id!r} overlaps another field")
         buffer[start:end] = rendered
     wire = "".join(buffer)
-    require_m190_signed_reintegro_context(record, wire, source_digests=source_digests)
+    require_m190_signed_reintegro_context(record, wire, clave_scope=clave_scope, source_digests=source_digests)
     require_m280_negative_imputation_context(record, wire, source_digests=source_digests)
     return wire
 
