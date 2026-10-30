@@ -13,8 +13,8 @@ from .....application.inventory.registered_evidence_operation import InventoryEv
 from .....application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
-    InventoryClosingValueRecordRequest,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueRecordRequest,
     InventoryCreateRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,

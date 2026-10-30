@@ -400,8 +400,18 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         """Delegate one public action, retaining no screen-local tax arithmetic."""
         asset_id = self.query_one("#asset-id", Input).value
         revision_json = self.query_one("#asset-revision-json", Input).value
-        # Each action records the asset it names before it reaches the door, so an unknown outcome holds
-        # the writes for that asset.
+        # Each action names its asset before it reaches the door, so an unknown outcome holds its writes.
+        if button_id in ("asset-create", "asset-inspect", "asset-correct", "asset-forecast", "asset-claim"):
+            return self._dispatch_record(button_id, asset_id, revision_json)
+        if button_id in ("asset-filing-handoff", "asset-describe", "asset-dispose", "asset-disposal-calculate"):
+            return self._dispatch_disposal(button_id, asset_id, revision_json)
+        if button_id in ("asset-list", "asset-plan", "asset-timeline"):
+            return self._dispatch_register(button_id, asset_id, revision_json)
+        if button_id in ("asset-form-options", "asset-acquisition-candidates"):
+            return self._dispatch_options(button_id, asset_id, revision_json)
+        raise ValueError("unknown activity-asset action")
+
+    def _dispatch_record(self, button_id: str | None, asset_id: str, revision_json: str) -> _ActivityAssetScreenResult:
         if button_id == "asset-create":
             creation = ActivityAssetCreationRequestV1(
                 revision=self._stated_revision(revision_json),
@@ -455,6 +465,11 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             return _ActivityAssetScreenResult(
                 message=f"claim\t{result.claim.claim_id}\treused={str(result.reused_existing_claim).lower()}"
             )
+        raise ValueError("unknown activity-asset action")
+
+    def _dispatch_disposal(
+        self, button_id: str | None, asset_id: str, _revision_json: str
+    ) -> _ActivityAssetScreenResult:
         if button_id == "asset-filing-handoff":
             tax_year = int(self.query_one("#asset-filing-tax-year", Input).value)
             m130_period = Period.from_year_and_code(
@@ -464,6 +479,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             result = self._actions.filing_handoff(
                 ActivityAssetFilingRequestV1(tax_year=tax_year, m130_period=m130_period),
             )
+            if result.material_m130 is None or result.intangible_m130 is None:
+                raise InternalInvariantError("activity-asset handoff for a Modelo 130 period omitted its accruals")
             return _ActivityAssetScreenResult(
                 message=(
                     "filing_handoff"
@@ -479,8 +496,6 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             return _ActivityAssetScreenResult(message=f"described\t{asset_id}\tdescriptors={len(history.descriptors)}")
         if button_id == "asset-dispose":
             self._named_asset_id = asset_id
-            if result.material_m130 is None or result.intangible_m130 is None:
-                raise InternalInvariantError("activity-asset handoff for a Modelo 130 period omitted its accruals")
             history = self._actions.dispose(asset_id, self._stated_disposal())
             return _ActivityAssetScreenResult(
                 message=f"disposed\t{asset_id}\trevisions={len(history.revisions)}\tclaims={len(history.claims)}"
@@ -495,6 +510,11 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                     f"\tresult={calculation.result.decimal if calculation.result else ''}"
                 ),
             )
+        raise ValueError("unknown activity-asset action")
+
+    def _dispatch_register(
+        self, button_id: str | None, asset_id: str, _revision_json: str
+    ) -> _ActivityAssetScreenResult:
         if button_id == "asset-list":
             rows = self._actions.list_elements()
             return _ActivityAssetScreenResult(
@@ -504,26 +524,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 ),
             )
         if button_id == "asset-plan":
-            self._named_asset_id = asset_id
-            plan = self._actions.plan(asset_id)
-            limits = plan.limits
-            return _ActivityAssetScreenResult(
-                message="\n".join(
-                    (
-                        *(
-                            f"{limits.class_key or ''}\t{limits.maximum_period_ends_on or ''}"
-                            f"\t{limits.not_table_bound or ''}"
-                            for _ in ((),)
-                            if limits is not None
-                        ),
-                        *(
-                            f"{row.tax_year}\t{row.planned.decimal if row.planned else row.absence or ''}"
-                            f"\t{row.claimed.decimal}\t{row.claim_state.value}\t{_minimum_amortization_fields(row)}"
-                            for row in plan.rows or ()
-                        ),
-                    ),
-                ),
-            )
+            return self._plan_result(asset_id)
         if button_id == "asset-timeline":
             self._named_asset_id = asset_id
             return _ActivityAssetScreenResult(
@@ -532,6 +533,33 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                     for event in self._actions.timeline(asset_id)
                 ),
             )
+        raise ValueError("unknown activity-asset action")
+
+    def _plan_result(self, asset_id: str) -> _ActivityAssetScreenResult:
+        self._named_asset_id = asset_id
+        plan = self._actions.plan(asset_id)
+        limits = plan.limits
+        return _ActivityAssetScreenResult(
+            message="\n".join(
+                (
+                    *(
+                        f"{limits.class_key or ''}\t{limits.maximum_period_ends_on or ''}"
+                        f"\t{limits.not_table_bound or ''}"
+                        for _ in ((),)
+                        if limits is not None
+                    ),
+                    *(
+                        f"{row.tax_year}\t{row.planned.decimal if row.planned else row.absence or ''}"
+                        f"\t{row.claimed.decimal}\t{row.claim_state.value}\t{_minimum_amortization_fields(row)}"
+                        for row in plan.rows or ()
+                    ),
+                ),
+            ),
+        )
+
+    def _dispatch_options(
+        self, button_id: str | None, _asset_id: str, _revision_json: str
+    ) -> _ActivityAssetScreenResult:
         if button_id == "asset-form-options":
             options = self._actions.form_options(
                 AssetKind(self.query_one("#asset-options-kind", Input).value),

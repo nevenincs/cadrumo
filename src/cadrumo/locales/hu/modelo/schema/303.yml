@@ -40,8 +40,6 @@ modelo:
           dr303-11:
             label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
               ÁFA - adóösszeg
-          dr303-111:
-            label: Helyesbítő bevallás - helyesbítés összege
           dr303-112:
             help: Az államnak betudott, benzin, gázolaj és bioüzemanyag értékesítése
               utáni elszámolt előleg
@@ -223,9 +221,6 @@ modelo:
             label: Közös adózás éves korrekciós eredménye
           dr303-70:
             label: Ugyanazon év és időszak korábbi önbevallásaiból fizetendő összegek
-          dr303-71:
-            help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
-              véve.
           dr303-74:
             label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések adóalapja
           dr303-75:
@@ -351,6 +346,8 @@ modelo:
           iva-cuota-soportada-interiores-bienes-inversion:
             label: Belföldi tárgyi eszköz ügyletek előzetesen felszámított ÁFA-ja
               (a hivatalos 31. rovat része)
+          iva-importe-rectificacion:
+            label: Helyesbítő bevallás - helyesbítés összege
           iva-prorrata-porcentaje:
             label: Általános levonási hányad százaléka (levonásra jogosító volumen
               / teljes volumen × 100)
@@ -379,6 +376,9 @@ modelo:
           iva-regularizacion-inversiones:
             label: Beruházási javak korrekciója (LIVA 107-110. cikk)
           iva-resultado-autoliquidacion:
+            help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+              véve.
+          iva-resultado-final:
             help: A Modelo 303 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
               véve.
           iva-resultado-regimen-general:

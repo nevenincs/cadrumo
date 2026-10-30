@@ -85,10 +85,8 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
 )
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
-)
 from ...domain.calculations.registry.iva_wallet_carry_targets import MODELO_303_IVA_COMPENSATION_BINDING_ID
+from ...domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
@@ -502,7 +500,7 @@ def observation_from_iva_compensation_history(
             *observed(_M303_COMPENSACION_APLICADA_CASILLA, state.applied_amount),
             *observed(_M303_POSTERIOR_CASILLA, state.pending_for_later_amount),
             *observed(_M303_RESULTADO_CASILLA, state.period_result_amount),
-            *observed(_M303_RESULTADO_FINAL_CASILLA, state.final_result_amount),
+            *observed(m303_resultado_final_casilla(revision), state.final_result_amount),
             *observed(_M303_GENERADA_CASILLA, state.generated_amount),
             *observed(_M303_DISPONIBLE_CASILLA, state.available_end_amount),
         ),

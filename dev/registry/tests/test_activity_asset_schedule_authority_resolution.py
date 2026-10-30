@@ -29,9 +29,9 @@ from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
-    ACTIVITY_ASSET_PARAMETER_IDS,
     resolve_activity_asset_schedule_authority,
 )
+from cadrumo.domain.calculations.registry.actividad_asset_parameters import ACTIVITY_ASSET_PARAMETER_IDS
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
@@ -999,7 +999,7 @@ def test_a_vehicle_class_charges_only_on_a_declaration_that_proves_affectation()
     with _refused(
         ActividadAssetIncompleteError,
         "vehicle_affectation_required_for_class",
-        rendered="requires a vehicle affectation declaration",
+        rendered="vehicle affectation declaration",
     ):
         _charge(_asset(car, basis="20000"))
     # External transport is 16%: 20,000 x 16% = 3,200.00 for a car used only for the activity.
@@ -1039,7 +1039,7 @@ def test_a_vehicle_not_proven_affected_refuses_with_its_provision() -> None:
     with _refused(
         ActividadAssetIncompleteError,
         "vehicle_affectation_required_for_class",
-        rendered="requires a vehicle affectation declaration",
+        rendered="vehicle affectation declaration",
     ):
         _charge(_asset(_linear("transporte", _SIMPLIFIED), basis="20000"))
 

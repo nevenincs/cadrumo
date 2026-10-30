@@ -142,9 +142,8 @@ def _renta_gastos_pago_fraccionado_reachability_probe(
     rewritten instead of quietly outliving its truth.
 
     The reachability guarantee this family actually has is elsewhere and is
-    real: ``target_casilla_id`` is validated against
-    :data:`_RENTA_130_GASTO_CASILLAS` by the caller below, and the revision's
-    own casilla set is cross-checked at snapshot build.
+    real: :func:`ledger_renta_gastos_pago_fraccionado_target_failures` holds
+    ``target_casilla_id`` to the box the edition binds to this binding at build.
     """
     matcher = casilla_target_matcher(selector)
     probe = _ReachabilityProbeObservation(

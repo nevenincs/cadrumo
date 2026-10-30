@@ -822,8 +822,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         ),
         "desktop.ledger.counterparty.source.": ("document_evidence", "profile_authority", "operator_assertion"),
         "desktop.ledger.health.count.": ("active", "archived", "stashed", "split", "pending", "reviewed", "skipped"),
-        "desktop.ledger.inventory.kind.": ("opening", "purchase", "cogs", "count"),
-        "desktop.ledger.inventory.method.": ("fifo", "pmp", "coste_medio"),
         "desktop.ledger.prorrata.action.": (
             "seed",
             "declare_sector",
@@ -897,7 +895,7 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
-    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]"""
+    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|application\.inventory\.advisories|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]"""
 )
 _SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(
     r"`((?:desktop|workspace|ledger\.actividad_asset)\.[A-Za-z0-9_.]*)\$\{"

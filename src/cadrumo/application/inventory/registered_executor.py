@@ -178,9 +178,10 @@ class InventoryOperationExecutor:
         profile: str,
     ) -> str | OperationRefusalEvidence:
         if self._definition_id == INVENTORY_INSPECT_OPERATION_DEFINITION_ID:
-            if not isinstance(payload, InventoryInspectRequest):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            return await self._execute_inspect(request=payload, context=context, profile_id=profile_id, profile=profile)
+            inspect_request = _require_request(payload, InventoryInspectRequest)
+            return await self._execute_inspect(
+                request=inspect_request, context=context, profile_id=profile_id, profile=profile
+            )
         if self._definition_id in _LEDGER_CHANGE_OPERATION_IDS:
             return await self._execute_ledger_change(
                 request=payload,
@@ -189,49 +190,43 @@ class InventoryOperationExecutor:
                 profile=profile,
             )
         if self._definition_id == INVENTORY_LIST_OPERATION_DEFINITION_ID:
-            if not isinstance(payload, InventoryListRequest):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            _require_request(payload, InventoryListRequest)
             return await self._execute_list(context=context, profile_id=profile_id, profile=profile)
         if self._definition_id == INVENTORY_CREATE_OPERATION_DEFINITION_ID:
-            if not isinstance(payload, InventoryCreateRequest):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            create_request = _require_request(payload, InventoryCreateRequest)
             return await self._execute_create(
-                request=payload,
+                request=create_request,
                 context=context,
                 profile_id=profile_id,
                 profile=profile,
             )
         if self._definition_id == INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID:
-            if not isinstance(payload, InventoryMovementAddRequest):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            movement_request = _require_request(payload, InventoryMovementAddRequest)
             return await self._execute_movement_add(
-                request=payload,
+                request=movement_request,
                 context=context,
                 profile_id=profile_id,
                 profile=profile,
             )
         if self._definition_id == INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID:
-            if not isinstance(payload, InventoryValuationPreviewRequest):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            preview_request = _require_request(payload, InventoryValuationPreviewRequest)
             return await self._execute_valuation_preview(
-                request=payload,
+                request=preview_request,
                 context=context,
                 profile_id=profile_id,
                 profile=profile,
             )
         if self._definition_id == INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID:
-            if not isinstance(payload, InventoryClosingValueRecordRequest):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            closing_value_request = _require_request(payload, InventoryClosingValueRecordRequest)
             return await self._execute_closing_value_record(
-                request=payload,
+                request=closing_value_request,
                 context=context,
                 profile_id=profile_id,
                 profile=profile,
             )
-        if not isinstance(payload, InventoryClosingAuthorityRecordRequest):
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        closing_request = _require_request(payload, InventoryClosingAuthorityRecordRequest)
         return await self._execute_closing_authority_record(
-            request=payload,
+            request=closing_request,
             context=context,
             profile_id=profile_id,
             profile=profile,
@@ -537,6 +532,12 @@ class InventoryOperationExecutor:
         return await await_cancellation_complete(commit(), task_name=f"inventory-{operation_id}")
 
 
+def _require_request[Request: BaseModel](payload: BaseModel, expected: type[Request]) -> Request:
+    if not isinstance(payload, expected):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    return payload
+
+
 def _ledger_change_work(
     request: BaseModel,
     *,
@@ -568,15 +569,7 @@ def _ledger_change_work(
             actor=actor,
         )
     if isinstance(request, InventoryMovementCorrectRequest):
-        replacement = InventoryMovementCommand(
-            movement_id=request.movement_id,
-            movement_date=request.movement_date,
-            kind=request.kind,
-            quantity=Decimal(request.quantity.decimal),
-            unit_cost=Decimal(request.unit_cost.decimal) if request.unit_cost is not None else None,
-            taxable_base=Decimal(request.taxable_base.decimal) if request.taxable_base is not None else None,
-            acquisition_cost=request.acquisition_cost.to_domain() if request.acquisition_cost is not None else None,
-        )
+        replacement = _replacement_movement(request)
         return lambda: service.movement_correct(
             bucket_id=profile,
             actividad_id=request.actividad_id,
@@ -615,6 +608,18 @@ def _ledger_change_work(
             actor=actor,
         )
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+
+def _replacement_movement(request: InventoryMovementCorrectRequest) -> InventoryMovementCommand:
+    return InventoryMovementCommand(
+        movement_id=request.movement_id,
+        movement_date=request.movement_date,
+        kind=request.kind,
+        quantity=Decimal(request.quantity.decimal),
+        unit_cost=Decimal(request.unit_cost.decimal) if request.unit_cost is not None else None,
+        taxable_base=Decimal(request.taxable_base.decimal) if request.taxable_base is not None else None,
+        acquisition_cost=request.acquisition_cost.to_domain() if request.acquisition_cost is not None else None,
+    )
 
 
 def _refusal_for_error(

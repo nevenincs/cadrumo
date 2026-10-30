@@ -60,6 +60,7 @@ def render_layout_records(
             draft=draft,
             headers=headers,
             prior_domiciliation_election=prior_domiciliation_election,
+            revision=registry_snapshot.revision,
         ):
             continue
         rows = _render_rows_for_record(

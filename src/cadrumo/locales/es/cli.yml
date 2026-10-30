@@ -155,7 +155,7 @@ cli:
           de dar el documento por erróneo, de modo que esta factura queda registrada
           sin tratamiento de IVA y no se desglosará en una declaración hasta que se
           resuelva el país o el establecimiento de la contraparte.
-        confirm_counterparty_name_help: Nombre de la contraparte (sin heuristica de
+        confirm_counterparty_name_help: Nombre de la contraparte (sin heurística de
           extracción todavía; normalmente obligatorio).
         confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraído.
         confirm_currency_help: Código de moneda ISO-4217.
@@ -348,21 +348,20 @@ cli:
         acquisition_cost_stdin_help: Lee de la entrada estándar el objeto JSON de
           coste de adquisición completo
         actividad_id_help: Identificador de la actividad económica
-        refusal_activity_conflict: "Ya existe un registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Ejecuta `aeat app ledger inventory list` para ver los existentes."
-        refusal_activity_not_found: "No existe ningún registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Ejecuta `aeat app ledger inventory list` para ver los existentes."
-        refusal_duplicate_movement_id: "El registro de inventario ya contiene el movimiento %{movement_id}. Ejecuta `aeat app ledger inventory list` para ver los movimientos registrados."
         authority_file_help: Leer el documento JSON completo de autoridad de cierre
           desde un fichero.
         authority_invalid: El objeto de autoridad de cierre no es válido para este
           registro de existencias.
+        closing_authority_record_help: Registrar atómicamente la autoridad acreditada
+          del cierre de existencias
         evidence_add_help: "Guarda un documento de compra en este perfil y muestra la identidad con la que la compra lo nombra."
         evidence_source_help: "El documento de compra que quieres guardar: PDF, imagen o XML."
         options_help: "Muestra los valores que ofrece un formulario de inventario, cada uno con su nombre."
-        closing_value_file_help: "Archivo JSON con los datos del valor de cierre."
-        closing_value_file_invalid: "El archivo del valor de cierre no es válido para este inventario."
-        closing_value_record_help: "Registra un valor de cierre a partir de datos sencillos: el valor, el método y los documentos."
-        closing_authority_record_help: Registrar atómicamente la autoridad acreditada
-          del cierre de existencias
+        closing_value_file_help: Archivo JSON con los datos del valor de cierre.
+        closing_value_file_invalid: El archivo del valor de cierre no es válido para
+          este inventario.
+        closing_value_record_help: 'Registra un valor de cierre a partir de datos
+          sencillos: el valor, el método y los documentos.'
         correct_help: Corrige el valor inicial o el método de valoración, conservando
           los valores que sustituyen.
         corrected_opening_stock_help: Valor inicial corregido en euros.
@@ -390,6 +389,15 @@ cli:
         movement_reverse_help: Saca un movimiento del inventario; se queda en el historial.
         opening_stock_help: Valor inicial de existencias
         quantity_help: Cantidad del movimiento, positiva o negativa
+        refusal_activity_conflict: Ya existe un registro de inventario para la actividad
+          %{actividad_id} y el ejercicio %{year}. Ejecuta `aeat app ledger inventory
+          list` para ver los existentes.
+        refusal_activity_not_found: No existe ningún registro de inventario para la
+          actividad %{actividad_id} y el ejercicio %{year}. Ejecuta `aeat app ledger
+          inventory list` para ver los existentes.
+        refusal_duplicate_movement_id: El registro de inventario ya contiene el movimiento
+          %{movement_id}. Ejecuta `aeat app ledger inventory list` para ver los movimientos
+          registrados.
         restore_help: Devuelve un inventario retirado al registro activo.
         retire_help: Saca el inventario del registro activo conservando todos sus
           datos.
@@ -1395,7 +1403,7 @@ cli:
           el sobre de firma en --output. Solo local; nunca contacta con la AEAT.
         sign_output_help: Ruta donde escribir el sobre de firma en formato JSON.
         signature_path_help: Ruta del sobre de firma JSON generado por `sign`.
-        valid_for_days_help: Ventana de validez opcional en días; omitela para un
+        valid_for_days_help: Ventana de validez opcional en días; omítela para un
           paquete que nunca caduque.
         verify_help: Verifica el manifiesto de checksum de un paquete de revisión
           (solo integridad; no certifica quién lo construyó). Solo local; nunca contacta
@@ -2368,7 +2376,7 @@ cli:
         export_name_help: Perfil a respaldar; por defecto el activo.
         export_out_help: Ruta de destino del archivo. El nombre debe terminar en '.cadrumo-bucket.tar.gz'.
         help: Copia de seguridad de un perfil en un archivo sellado y cifrado AEAD,
-          o inspección de uno; restauralo con 'aeat config profile archive import'.
+          o inspección de uno; restáuralo con 'aeat config profile archive import'.
         import_file_help: Ruta del archivo sellado o del directorio de cápsula que
           se va a restaurar.
         import_help: Vuelve a publicar una cápsula de perfil desde un directorio o

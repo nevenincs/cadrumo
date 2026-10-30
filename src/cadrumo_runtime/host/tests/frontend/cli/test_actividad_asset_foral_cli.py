@@ -24,9 +24,9 @@ from .runtime_profile_backend import runtime_cli_profile
 from .test_actividad_asset_accelerated_da18_cli import (
     _BASIS,
     _LANGUAGES,
-    _electric_van,
-    _seed_direct_normal_profile,
-    _van_payment,
+    electric_van,
+    seed_direct_normal_profile,
+    van_payment,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -50,18 +50,18 @@ def _forecast(language: str) -> Result:
 
 def _refusals(tmp_path: Path, residence: str) -> dict[str, Result]:
     with runtime_cli_profile(tmp_path=tmp_path, label=f"register residence {residence}") as profile:
-        _seed_direct_normal_profile(profile.storage_root, profile.bucket_id)
-        payment = _van_payment(_ASSET_ID, _IN_SERVICE)
+        seed_direct_normal_profile(profile.storage_root, profile.bucket_id)
+        payment = van_payment(_ASSET_ID, _IN_SERVICE)
         created = invoke_cached_cli(
             [
                 *("--format", "json", "app", "ledger", "actividad-asset", "create"),
                 *("--name", "Furgoneta de reparto"),
-                _electric_van(_ASSET_ID, _IN_SERVICE, payment),
+                electric_van(_ASSET_ID, _IN_SERVICE, payment),
             ],
         )
         assert created.exit_code == 0, created.output
         # The ledger itself refuses to book a payment for such a residence, so it is recorded after the asset exists.
-        _seed_direct_normal_profile(profile.storage_root, profile.bucket_id, residence=residence)
+        seed_direct_normal_profile(profile.storage_root, profile.bucket_id, residence=residence)
         return {language: _forecast(language) for language in _LANGUAGES}
 
 

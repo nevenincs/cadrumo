@@ -740,15 +740,15 @@ def _resolve_modelo_exportprior_domiciliation(
     """Resolve the page-3 prior-domiciliation action, KEEP unless the filing must choose.
 
     KEEP is the neutral value: it leaves the marker blank and changes nothing
-    AEAT holds. Only a Modelo 303 rectificativa stating casilla 111 makes the
+    AEAT holds. Only a Modelo 303 rectificativa stating the rectified amount makes the
     choice consequential -- KEEP puts the refund account on the DID page under
     Nota 3, CANCEL_OR_MODIFY does not -- so that filing alone must state it.
     """
     if command.prior_domiciliation_election is None and m303_nota_three_requires_refund_account(
-        work_unit, revision, PriorDomiciliationElection.KEEP, amendment_evidence
+        work_unit, revision, PriorDomiciliationElection.KEEP, amendment_evidence, operation=operation
     ):
         raise ModeloExportPriorDomiciliationElectionRequiredError(
-            "a Modelo 303 rectificativa stating casilla 111 requires an explicit prior-domiciliation election",
+            "a Modelo 303 rectificativa stating the rectified amount requires an explicit prior-domiciliation election",
             context={"calculation_revision_id": command.calculation_revision_id, "modelo": str(work_unit.modelo)},
         )
     prior_domiciliation_election = resolveprior_domiciliation_election(

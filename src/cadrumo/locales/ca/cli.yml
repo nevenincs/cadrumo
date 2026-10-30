@@ -982,7 +982,7 @@ cli:
           com a presentat.
         work_unit_id_help: Identificador de la declaració (SHA-256 o prefix inequívoc).
       filing_record:
-        app_help: Inspeccionar els filing records interns registrats
+        app_help: Inspeccionar els registres interns de presentació
         bucket_id_help: Filtrar per perfil
         evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf, aeat_csv_register,
           aeat_live_capture)
@@ -993,7 +993,7 @@ cli:
           revisió del càlcul desat.
         export_missing: El càlcul històric seleccionat ja no es conserva; l'exportació
           no pot usar el càlcul actual.
-        filing_record_id_help: Identificador estable d'un filing record
+        filing_record_id_help: Identificador estable d'un registre de presentació
         import_casilla_help: Valor de casella importat amb sintaxi CASILLA_ID=DECIMAL
           (repetible; almenys un requerit)
         import_declared_kind_help: Tipus de declaració que l'AEAT registra per a aquesta
@@ -1004,9 +1004,9 @@ cli:
         import_help: Desa una declaració presentada fora de Cadrumo com a registre
           de presentació base, amb evidència oficial importada de l'AEAT
         import_set_required: --set és obligatori almenys una vegada per a una importació.
-        include_superseded_help: Incloure els filing records superats (exclosos per
+        include_superseded_help: Incloure els registres de presentació superats (exclosos per
           defecte)
-        list_help: Llistar els filing records registrats
+        list_help: Llistar els registres de presentació
         modelo_help: Filtrar per codi de model (p. ex. 303, 130, 100)
         observe_local_clear_help: Elimina la teva substitució perquè es torni a fer
           servir l'observació oficial de l'AEAT
@@ -1054,7 +1054,7 @@ cli:
             pendent.'
           receipt_totals_only: 'Model {modelo} {period} {filing_year}: la confirmació
             es basa en els imports del justificant, no en la igualtat casella a casella.'
-        view_help: Mostrar un filing record per id
+        view_help: Mostrar un registre de presentació per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         explain_help: Inclou legal_refs i source_refs que fonamenten cada fórmula
@@ -1576,18 +1576,18 @@ cli:
         create_stub_modelo_600_refused: 'El model %{modelo} (ITP-AJD, transmissions
           patrimonials i actes jurídics documentats) no està suportat per crear declaracions
           en aquest CLI. Fonament legal: Ley 28/1990 i competència autonòmica ITPyAJD;
-          presenta''l davant la Hacienda / CCAA competent.'
+          presenta''l davant la Hisenda / CCAA competent.'
         create_stub_modelo_620_refused: 'El model %{modelo} (ITP-AJD, transmissions
           de vehicles usats) no està suportat per crear declaracions en aquest CLI.
           Fonament legal: Ley 28/1990 i competència autonòmica ITPyAJD; presenta l''autoliquidació
-          davant la Hacienda / CCAA competent.'
+          davant la Hisenda / CCAA competent.'
         create_stub_modelo_650_refused: 'El model %{modelo} (ISD successions) no està
           suportat per crear declaracions en aquest CLI. Fonament legal: Ley 29/1987
           LISyD i Art. 67 RISD; termini ordinari de 6 mesos des de la defunció. Presenta''l
-          davant la Hacienda autonòmica competent.'
+          davant la Hisenda autonòmica competent.'
         create_stub_modelo_660_refused: 'El model %{modelo} (ISD cabal relicte, que
           acompanya el Model 650) no està suportat per crear declaracions en aquest
-          CLI. Fonament legal: Ley 29/1987 LISyD; presenta''l davant la Hacienda autonòmica
+          CLI. Fonament legal: Ley 29/1987 LISyD; presenta''l davant la Hisenda autonòmica
           competent.'
         dependencies_help: Mostra dependències d'historial de presentacions entre
           models i els bloquejos clean-state actuals per a una presentació objectiu
@@ -1714,7 +1714,7 @@ cli:
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la declaració
         name_required: Proporciona --name.
-        notes_help: Notes opcionals associades al filing record
+        notes_help: Notes opcionals associades al registre de presentació
         observations_help: Mostrar observacions de càlcul tipades per casella i l'origen
           de cada valor.
         observed_at_help: Quan vau confirmar l'atestació, com a instant ISO 8601 amb
@@ -2602,8 +2602,8 @@ cli:
         committed_view_unavailable: El canvi del perfil s'ha desat, però la vista
           actualitzada no està disponible. Torna a consultar el perfil abans de fer
           cap altre canvi.
-      no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
-        <NIF>` first.
+      no_active_profile: No hi ha cap perfil actiu. Executa `aeat config profile create
+        NAME --tax-id <NIF>` primer.
       notices:
         payer_fact_cleared: '{fact}: aquest perfil desava un «no» que l''assistent
           de configuració va escriure per defecte, de manera que no es distingia d''una
@@ -2698,15 +2698,15 @@ cli:
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       help: Diagnosticar i reparar configuració local, definicions dels models, perfil,
-        autenticació i logs
+        autenticació i registres
       integrity:
         objects_help: Comprova la integritat dels objectes segurs.
         objects_namespace_help: Limita les comprovacions d'integritat d'objectes segurs
           a un espai de noms.
       integrity_help: Comprovar la integritat dels objectes segurs i de les definicions
         dels models.
-      logs_help: Mostrar la ruta del fitxer de logs i les línies recents
-      logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
+      logs_help: Mostrar la ruta del fitxer de registre i les línies recents
+      logs_lines_help: Nombre de línies recents del fitxer de registre a mostrar
       profile_clear_active_help: Netejar un perfil actiu de fitxer-punter només quan
         apunta a estat de perfil il·legible.
       profile_clear_active_mismatch: --clear-active només pot esborrar el punter del
@@ -3512,9 +3512,11 @@ cli:
       id_help: Id del moviment a restaurar a actiu
       yes_help: Confirma la restauració del moviment a actiu
     review:
-      filter_help: Filtrar files per status, period (un testimoni AEAT simple, p.
-        ex. period=1T) amb year (p. ex. year=2026), issue, import, classification,
-        text, direction o account (l'id d'un compte bancari propi, p. ex. account=acc-01)
+      filter_help: Filtrar files per estat (`status`), període (`period`, un testimoni
+        AEAT simple, p. ex. `period=1T`) i any (`year=2026`), incidència (`issue`),
+        importació (`import`), classificació (`classification`), text, direcció
+        (`direction`) o compte (`account`, l'id d'un compte bancari propi, p. ex.
+        `account=acc-01`)
       header: SESSIÓ DE REVISIÓ DELS TEUS REGISTRES
       help: Revisió interactiva i validació d'apunts dels teus registres
       no_rows: No hi ha apunts dels teus registres pendents de revisió

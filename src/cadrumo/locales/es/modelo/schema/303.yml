@@ -33,8 +33,6 @@ modelo:
           dr303-11:
             label: IVA devengado adquisiciones intracomunitarias bienes y servicios
               - Cuota
-          dr303-111:
-            label: Rectificativa - Importe de la rectificación
           dr303-112:
             help: Pago a cuenta por entregas de gasolinas, gasóleos y biocarburantes
               atribuido al Estado
@@ -200,8 +198,6 @@ modelo:
           dr303-70:
             label: Resultado - Resultados a ingresar de anteriores autoliquidaciones
               del ejercicio y periodo
-          dr303-71:
-            help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
           dr303-74:
             label: Información adicional - Adquisiciones criterio caja - Base imponible
           dr303-75:
@@ -328,6 +324,8 @@ modelo:
           iva-cuota-soportada-interiores-bienes-inversion:
             label: Cuota IVA soportado en operaciones interiores con bienes de inversión
               (parte de la casilla oficial 31)
+          iva-importe-rectificacion:
+            label: Rectificativa - Importe de la rectificación
           iva-prorrata-porcentaje:
             label: Prorrata general - porcentaje (volumen con derecho / volumen total
               × 100)
@@ -358,6 +356,8 @@ modelo:
           iva-regularizacion-inversiones:
             label: Regularización por bienes de inversión (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:
+            help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
+          iva-resultado-final:
             help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
           iva-resultado-regimen-general:
             label: Resultado del régimen general (cuota devengada - cuota deducible)

@@ -2,6 +2,7 @@
 
 The comparison runs through the same source owners a draft's verification reads, so a
 filed :class:`CalculationRevision` and a draft cannot disagree about what the register says.
+It resolves against the pinned :class:`ModeloRevision` that defines the filed form.
 The pass reads the profile's :class:`TransactionCatalogue` through its ledger source owners.
 """
 
@@ -14,6 +15,7 @@ from typing import override
 
 from ...core.errors.hierarchy import CadrumoError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import ActivityAssetConsumption
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -27,10 +29,12 @@ from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.ledger_filing_snapshot import FiledRegisterReader
 from ..aggregation.ledger_membership import LedgerMembershipPorts, query_ledger_membership
 from ..aggregation.modelo_bindings import (
-    LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
 )
-from ..aggregation.modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
+from ..aggregation.modelo_bindings_renta_expenses import (
+    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+    LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
+)
 from ..invoices.catalogue_reads_ports import BucketBoundCatalogueReader, TransactionCatalogueReader
 from .profile_readiness_gate import load_modelo_work_profile
 from .work_profile import ModeloWorkProfile
@@ -174,11 +178,11 @@ def filed_register_reader(
             return recorded
         try:
             revision = operation.revision(work_unit.modelo, work_unit.revision_id)
-            if not {binding.source for binding in revision.bindings} & _REGISTER_SOURCES:
+            if not _has_register_source(revision):
                 return recorded
             if not scoped:
                 scoped.append(_read_once_per_pass(ports))
-            if not scoped[0].activity_asset_history_repository.load().revisions and recorded.is_empty:
+            if _empty_register_and_consumption(scoped[0], recorded):
                 return recorded
             if not profiles:
                 profiles.append(
@@ -203,6 +207,14 @@ def filed_register_reader(
         return membership.activity_asset_consumption if membership.available else None
 
     return read
+
+
+def _has_register_source(revision: ModeloRevision) -> bool:
+    return bool({binding.source for binding in revision.bindings} & _REGISTER_SOURCES)
+
+
+def _empty_register_and_consumption(ports: LedgerMembershipPorts, recorded: ActivityAssetConsumption) -> bool:
+    return not ports.activity_asset_history_repository.load().revisions and recorded.is_empty
 
 
 __all__ = ["filed_register_reader"]

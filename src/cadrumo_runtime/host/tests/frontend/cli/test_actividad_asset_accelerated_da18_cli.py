@@ -66,7 +66,7 @@ _ACCELERATED_MESSAGE_KEY = "errors.refused.refused_actividad_asset_accelerated_d
 _LANGUAGES = ("en", "es", "ca", "hu")
 
 
-def _seed_direct_normal_profile(root: Path, profile_id: str, *, residence: str = "madrid") -> None:
+def seed_direct_normal_profile(root: Path, profile_id: str, *, residence: str = "madrid") -> None:
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
@@ -106,7 +106,7 @@ def _seed_direct_normal_profile(root: Path, profile_id: str, *, residence: str =
     )
 
 
-def _van_payment(asset_id: str, in_service: date) -> str:
+def van_payment(asset_id: str, in_service: date) -> str:
     """Record the bank payment of the van, 30,000.00 base plus 6,300.00 IVA, and return its ledger id."""
     invoked = invoke_cached_cli(
         [
@@ -124,7 +124,7 @@ def _van_payment(asset_id: str, in_service: date) -> str:
     return str(transaction["transaction_id"])
 
 
-def _electric_van(asset_id: str, in_service: date, transaction_id: str) -> str:
+def electric_van(asset_id: str, in_service: date, transaction_id: str) -> str:
     """Return the create-command JSON of a new battery-electric van used only for the activity."""
     return ActivityAssetRevision(
         asset_id=asset_id,
@@ -174,14 +174,14 @@ def _forecast(asset_id: str, year: int, *, language: str = "es") -> Result:
 
 def test_an_electric_vehicle_under_the_accelerated_regime_refuses_in_every_language(tmp_path: Path) -> None:
     with runtime_cli_profile(tmp_path=tmp_path, label="accelerated da18") as profile:
-        _seed_direct_normal_profile(profile.storage_root, profile.bucket_id)
+        seed_direct_normal_profile(profile.storage_root, profile.bucket_id)
         for asset_id, in_service in (("van-2023", date(2023, 3, 1)), ("van-2024", date(2024, 3, 1))):
-            payment = _van_payment(asset_id, in_service)
+            payment = van_payment(asset_id, in_service)
             created = invoke_cached_cli(
                 [
                     *("--format", "json", "app", "ledger", "actividad-asset", "create"),
                     *("--name", asset_id),
-                    _electric_van(asset_id, in_service, payment),
+                    electric_van(asset_id, in_service, payment),
                 ],
             )
             assert created.exit_code == 0, created.output

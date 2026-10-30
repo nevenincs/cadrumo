@@ -540,11 +540,13 @@ def test_form_options_bridge_carries_the_kind_and_year(monkeypatch: pytest.Monke
             regime=DirectEstimationRegime.NORMAL,
             edition=ActivityAssetEdition(revision_id="bridge-edition", authored_filing_year=2025, projected=False),
             methods=(AmortizationMethod.LINEAR,),
+            declared_activities=(),
+            method_facts=(),
             acquisition_shapes=(AcquisitionShape.PRIMARY_PURCHASE,),
             table_groups=(),
+            disposal_reasons=(),
         ),
     )
-            disposal_reasons=(),
     requests = _bind(
         monkeypatch,
         completion=_read_completion(projection),

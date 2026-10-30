@@ -293,7 +293,7 @@ errors:
     error_portals_portal_registry: An error occurred in the AEAT portal registry.
     error_portals_unknown_portal: The AEAT portal provided does not exist.
     error_portals_validation: A portal's metadata failed validation.
-    error_profile_amortization_ledger: A profile amortization ledger operation is
+    error_profile_amortization_ledger: A profile amortisation ledger operation is
       not valid.
     error_profile_bienes_inversion_record: A capital-goods IVA regularisation record
       is structurally invalid.
@@ -987,13 +987,13 @@ errors:
       period, LIS DA 18 grants new electric vehicles and charging points accelerated
       depreciation at twice the maximum linear coefficient, not free depreciation.
       That regime is not computed, so no charge was calculated.
-    refused_actividad_asset_claim_conflict: The amortization claim conflicts with
+    refused_actividad_asset_claim_conflict: The amortisation claim conflicts with
       the asset's recorded claims.
     refused_actividad_asset_incomplete: The activity-asset schedule lacks a fact it
-      needs, such as its opening amortization history.
-    refused_actividad_asset_unsupported: The requested activity-asset amortization
+      needs, such as its opening amortisation history.
+    refused_actividad_asset_unsupported: The requested activity-asset amortisation
       has no enrolled authority for this case.
-    refused_actividad_asset_validation: An IRPF activity-asset fact or amortization
+    refused_actividad_asset_validation: An IRPF activity-asset fact or amortisation
       request failed validation.
     refused_apoderado_invalid_represented_nif: The represented party's tax identifier
       is not a valid NIF, NIE, or CIF.
@@ -1250,7 +1250,7 @@ errors:
     refused_pension_reduccion_computation: A pension reducción computation input violated
       a numeric pre-condition. Correct the supplied amounts.
     refused_profile_already_exists: A profile with those details already exists.
-    refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
+    refused_profile_basis_cap_exceeded: The cumulative amortisation would exceed the
       asset's cost basis.
     refused_profile_bienes_inversion_parameters: The active revision declares no capital-goods
       regularisation figures for this filing context.

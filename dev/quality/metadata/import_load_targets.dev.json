@@ -523,6 +523,7 @@
         "dev.locales.desktop_workspace_keys",
         "dev.locales.errors",
         "dev.locales.fstring_registry",
+        "dev.locales.inventory_fstring_registrations",
         "dev.locales.locale_audit",
         "dev.locales.locale_nodes",
         "dev.locales.locale_tree",

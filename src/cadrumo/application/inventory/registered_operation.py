@@ -45,12 +45,14 @@ from .registered_projections import (
 )
 from .registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
     INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueRecordRequest,
     InventoryCreateRequest,
     InventoryInspectRequest,
     InventoryListRequest,
@@ -59,6 +61,7 @@ from .registered_requests import (
 )
 from .registered_result_projection import (
     project_inventory_closing_authority_result,
+    project_inventory_closing_value_result,
     project_inventory_create_result,
     project_inventory_inspect_result,
     project_inventory_ledger_change_result,
@@ -308,9 +311,37 @@ def build_inventory_closing_authority_record_registration(
     )
 
 
+def build_inventory_closing_value_record_definition(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
+    """Build the guarded write of a closing value derived from plain facts."""
+    return _definition(
+        INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
+        InventoryClosingValueRecordRequest,
+        ports_factory,
+        execution_caller_reader,
+    )
+
+
+def build_inventory_closing_value_record_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind fingerprint-only closing results and typed refusals."""
+    return _registration(
+        definition,
+        request_type=InventoryClosingValueRecordRequest,
+        projection_type=InventoryClosingAuthorityOperationProjection,
+        projector=project_inventory_closing_value_result,
+    )
+
+
 __all__ = [
     "build_inventory_closing_authority_record_definition",
     "build_inventory_closing_authority_record_registration",
+    "build_inventory_closing_value_record_definition",
+    "build_inventory_closing_value_record_registration",
     "build_inventory_create_definition",
     "build_inventory_create_registration",
     "build_inventory_inspect_definition",

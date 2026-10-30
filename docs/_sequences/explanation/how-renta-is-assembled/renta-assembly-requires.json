@@ -33,10 +33,10 @@
             "action": null,
             "code": "modelo.requires.unbucketed_binding_source",
             "context": {
-              "binding_ids": "renta-certificado-trabajo-retenciones, renta-inventory-activity-acquisition-cost-0181, renta-inventory-activity-closing-decrease-0182, renta-inventory-activity-closing-increase-0177",
-              "casilla_ids": "0177, 0181, 0182, 0596",
+              "binding_ids": "renta-activity-asset-disposal-element-type-1626, renta-activity-asset-disposal-excess-direct-0179, renta-activity-asset-disposal-excess-objective-1478, renta-activity-asset-disposal-gain-element-1654, renta-activity-asset-disposal-gain-no-transmission-0304, renta-activity-asset-disposal-gain-property-1843, renta-activity-asset-disposal-loss-element-1639, renta-activity-asset-disposal-loss-no-transmission-0305, renta-activity-asset-disposal-loss-property-1832, renta-certificado-trabajo-retenciones, renta-inventory-activity-acquisition-cost-0181, renta-inventory-activity-closing-decrease-0182, renta-inventory-activity-closing-increase-0177",
+              "casilla_ids": "0177, 0179, 0181, 0182, 0304, 0305, 0596, 1478, 1626, 1639, 1654, 1832, 1843",
               "modelo": "100",
-              "source_kinds": "inventory, manual_input"
+              "source_kinds": "activity_asset_disposal, inventory, manual_input"
             },
             "message": "Some declared box sources do not belong to a modelo.requires data-inventory bucket. They are reported without a suggested repair because where their values come from needs review.",
             "severity": "warning"
@@ -50,7 +50,7 @@
           }
         ],
         "result": {
-          "authority_generation": "ad49e4630d2a56ee56ed2b825e25269260b62ccf25a7b8ece03d281019f4a397",
+          "authority_generation": "b7691ab7d8edea637cea88e4a71cbb823870d1923dc00eec7347ff7a9d6f63e7",
           "detail_row_fields": [],
           "filing_year": 2025,
           "ledger_derivable": [
@@ -226,7 +226,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"0175","label":"Self-consumption of goods and services","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0175","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0176","label":"Accrued VAT","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0176","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0178","label":"Other income","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0178","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"0179","label":"Excess depreciation on the transfer of assets with free depreciation","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0179","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0184","label":"Wages and salaries","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0184","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0185","label":"Employer's Social Security contributions","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0185","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0187","label":"Compensation payments","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0187","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
@@ -312,8 +311,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"0301","label":"Other capital gains arising from public aid.","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"0301","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0302","label":"Capital gains obtained by residents in 2025 from forestry exploitation of public woodlands","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"0302","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0303","label":"Public rental aid","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"0303","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"0304","label":"Other capital gains and/or losses imputable to 2025: Amount of gains","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"0304","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"0305","label":"Amount of losses","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"0305","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0308","label":"Taxpayer to whom it corresponds","legal_refs":["ley-35-2006:art-11","orden-hac-277-2026:art-3"],"number":"0308","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0309","label":"Total accumulated transfer value to which Transitional Provision 9 was applied in tax years 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, and 2023","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","ley-35-2006:dt-9","orden-hac-277-2026:art-3"],"number":"0309","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0310","label":"Taxpayer holder of the shares or units","legal_refs":["ley-35-2006:art-11","orden-hac-277-2026:art-3"],"number":"0310","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -1346,7 +1343,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"1475","label":"General reduction (only if the amount in box [1474] is > 0)","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"number":"1475","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1476","label":"For families with a diagnosed coeliac condition","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"1476","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1477","label":"Extraordinary expenses due to exceptional circumstances","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"number":"1477","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"1478","label":"Other business receipts","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"number":"1478","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1480","label":"Reductions for income generated over more than 2 years or obtained in a markedly irregular manner (article 32.1 and Transitional Provision 25 of the Tax Law)","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"number":"1480","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1481","label":"Reduced net income","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"number":"1481","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1483","label":"Reduction for carrying out certain economic activities (article 32.2.3 of the Tax Law)","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"number":"1483","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -1450,7 +1446,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"1623","label":"\"Plan 2030 de Apoyo al Deporte Base II\": Applied in this return","legal_refs":["ley-35-2006:art-68.2","orden-hac-277-2026:art-3"],"number":"1623","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1624","label":"Taxpayer holder of the asset transferred","legal_refs":["ley-35-2006:art-11","orden-hac-277-2026:art-3"],"number":"1624","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1625","label":"Timing allocation: mark with an \"X\" if you choose the instalment-sale or deferred-price criterion (complete Annex C.1)","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1625","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"1626","label":"Type of asset. Code","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1626","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1627","label":"\"Ironman Calella-Barcelona\": Applied in this return","legal_refs":["ley-35-2006:art-68.2","orden-hac-277-2026:art-3"],"number":"1627","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1628","label":"For expenses arising from the lease of dwellings","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"1628","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1629","label":"\"Barcelona Mobile World Capital\": Applied in this return","legal_refs":["ley-35-2006:art-68.2","orden-hac-277-2026:art-3"],"number":"1629","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -1462,7 +1457,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"1635","label":"Amount paid in 2021 and/or 2022 applied in the tax year","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"1635","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1636","label":"Transfer value eligible for reduction (Transitional Provision 9)","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1636","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1637","label":"Acquisition value","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1637","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"1639","label":"Capital loss imputable to 2025","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1639","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1641","label":"50 Percent exempt gain (only certain urban properties)","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1641","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1642","label":"Gain exempt through reinvestment in a life annuity","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1642","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1643","label":"For descendants in the event of a parent's death due to a workplace accident","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"1643","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -1473,7 +1467,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"1650","label":"Non-exempt reduced capital gain imputable to 2025","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1650","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1651","label":"Portion of the capital gain eligible for reduction (Additional Provision 7)","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1651","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1652","label":"Reduction (municipal taxi licence under objective estimation, Additional Provision 7)","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1652","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"1654","label":"Non-exempt reduced capital gain imputable to 2025","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1654","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1655","label":"Location. Code","legal_refs":["ley-35-2006:da-50","orden-hac-277-2026:art-3"],"number":"1655","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1656","label":"Cadastral reference","legal_refs":["ley-35-2006:da-50","orden-hac-277-2026:art-3"],"number":"1656","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1657","label":"Tax ID (NIF/NIE) of the person/entity that carried out the works (1)","legal_refs":["ley-35-2006:da-50","orden-hac-277-2026:art-3"],"number":"1657","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -1640,7 +1633,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"1827","label":"Transfer value used to set up a life annuity","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1827","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1828","label":"Transfer value of the primary residence eligible for reinvestment for the primary-residence reinvestment exemption","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1828","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1829","label":"Transfer value eligible for reduction (Transitional Provision 9)","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1829","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"1832","label":"Capital loss imputable to 2025","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1832","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1834","label":"Gain exempt through reinvestment in a life annuity","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1834","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1835","label":"Gain exempt through reinvestment in a primary residence","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1835","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1837","label":"Portion of the capital gain eligible for reduction (Transitional Provision 9)","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1837","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -1648,7 +1640,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"1839","label":"Applicable reduction (Transitional Provision 9 of the Tax Law)","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1839","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1841","label":"Non-exempt reduced capital gain imputable to 2025","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1841","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1842","label":"Non-exempt capital gain","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1842","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"1843","label":"Non-exempt capital gain imputable to 2025","legal_refs":["ley-35-2006:art-33","ley-35-2006:art-34","orden-hac-277-2026:art-3"],"number":"1843","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1847","label":"Total amount of the deduction for habitual and effective residence on the island of La Palma","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"1847","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1848","label":"For the care of descendants or adopted children up to 25 years of age","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"1848","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"1849","label":"For the emancipation of young people up to 35 years of age","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"1849","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
@@ -2135,6 +2126,24 @@
               ]
             },
             {
+              "binding_id": "renta-activity-asset-disposal-excess-direct-0179",
+              "binding_source": "activity_asset_disposal",
+              "casilla_id": "0179",
+              "label": "Excess depreciation on the transfer of assets with free depreciation",
+              "legal_refs": [
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30",
+                "ley-35-2006:art-31",
+                "ley-35-2006:art-32"
+              ],
+              "number": "0179",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-renta-2025-manual-parte1"
+              ]
+            },
+            {
               "binding_id": "renta-inventory-activity-acquisition-cost-0181",
               "binding_source": "inventory",
               "casilla_id": "0181",
@@ -2171,6 +2180,50 @@
               ]
             },
             {
+              "binding_id": "renta-activity-asset-disposal-gain-no-transmission-0304",
+              "binding_source": "activity_asset_disposal",
+              "casilla_id": "0304",
+              "label": "Other capital gains and/or losses imputable to 2025: Amount of gains",
+              "legal_refs": [
+                "ley-35-2006:art-33",
+                "ley-35-2006:art-34",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "0304",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure",
+                "aeat-renta-web-open"
+              ]
+            },
+            {
+              "binding_id": "renta-activity-asset-disposal-loss-no-transmission-0305",
+              "binding_source": "activity_asset_disposal",
+              "casilla_id": "0305",
+              "label": "Amount of losses",
+              "legal_refs": [
+                "ley-35-2006:art-33",
+                "ley-35-2006:art-34",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "0305",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure",
+                "aeat-renta-web-open"
+              ]
+            },
+            {
               "binding_id": "renta-certificado-trabajo-retenciones",
               "binding_source": "manual_input",
               "casilla_id": "0596",
@@ -2196,6 +2249,141 @@
                 "aeat-renta-2025-manual-parte1",
                 "aeat-modelo-190-instructions-2025",
                 "boe-modelo-190-2025-form"
+              ]
+            },
+            {
+              "binding_id": "renta-activity-asset-disposal-excess-objective-1478",
+              "binding_source": "activity_asset_disposal",
+              "casilla_id": "1478",
+              "label": "Other business receipts",
+              "legal_refs": [
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30",
+                "ley-35-2006:art-31",
+                "ley-35-2006:art-32",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "1478",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure",
+                "aeat-renta-web-open"
+              ]
+            },
+            {
+              "binding_id": "renta-activity-asset-disposal-element-type-1626",
+              "binding_source": "activity_asset_disposal",
+              "casilla_id": "1626",
+              "label": "Type of asset. Code",
+              "legal_refs": [
+                "ley-35-2006:art-33",
+                "ley-35-2006:art-34",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "1626",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure",
+                "aeat-renta-web-open"
+              ]
+            },
+            {
+              "binding_id": "renta-activity-asset-disposal-loss-element-1639",
+              "binding_source": "activity_asset_disposal",
+              "casilla_id": "1639",
+              "label": "Capital loss imputable to 2025",
+              "legal_refs": [
+                "ley-35-2006:art-33",
+                "ley-35-2006:art-34",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "1639",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure",
+                "aeat-renta-web-open"
+              ]
+            },
+            {
+              "binding_id": "renta-activity-asset-disposal-gain-element-1654",
+              "binding_source": "activity_asset_disposal",
+              "casilla_id": "1654",
+              "label": "Non-exempt reduced capital gain imputable to 2025",
+              "legal_refs": [
+                "ley-35-2006:art-33",
+                "ley-35-2006:art-34",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "1654",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure",
+                "aeat-renta-web-open"
+              ]
+            },
+            {
+              "binding_id": "renta-activity-asset-disposal-loss-property-1832",
+              "binding_source": "activity_asset_disposal",
+              "casilla_id": "1832",
+              "label": "Capital loss imputable to 2025",
+              "legal_refs": [
+                "ley-35-2006:art-33",
+                "ley-35-2006:art-34",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "1832",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure",
+                "aeat-renta-web-open"
+              ]
+            },
+            {
+              "binding_id": "renta-activity-asset-disposal-gain-property-1843",
+              "binding_source": "activity_asset_disposal",
+              "casilla_id": "1843",
+              "label": "Non-exempt capital gain imputable to 2025",
+              "legal_refs": [
+                "ley-35-2006:art-33",
+                "ley-35-2006:art-34",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "1843",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure",
+                "aeat-renta-web-open"
               ]
             }
           ],

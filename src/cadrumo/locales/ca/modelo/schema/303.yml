@@ -35,8 +35,6 @@ modelo:
           dr303-11:
             label: IVA meritat per adquisicions intracomunitàries de béns i serveis
               - quota
-          dr303-111:
-            label: Rectificativa - import de la rectificació
           dr303-112:
             help: Pagament a compte per lliuraments de gasolines, gasoils i biocarburants
               atribuït a l'Estat
@@ -212,8 +210,6 @@ modelo:
           dr303-70:
             label: Resultat - resultats a ingressar d'autoliquidacions anteriors de
               l'exercici i període
-          dr303-71:
-            help: Dada declarada al model 303, presa del disseny de registre oficial.
           dr303-74:
             label: Informació addicional - adquisicions de criteri de caixa - base
               imposable
@@ -337,6 +333,8 @@ modelo:
           iva-cuota-soportada-interiores-bienes-inversion:
             label: IVA suportat en operacions interiors amb béns d'inversió (part
               de la casella oficial 31)
+          iva-importe-rectificacion:
+            label: Rectificativa - import de la rectificació
           iva-prorrata-porcentaje:
             label: Percentatge de prorrata general (volum amb dret / volum total ×
               100)
@@ -367,6 +365,8 @@ modelo:
           iva-regularizacion-inversiones:
             label: Regularització de béns d'inversió (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:
+            help: Dada declarada al model 303, presa del disseny de registre oficial.
+          iva-resultado-final:
             help: Dada declarada al model 303, presa del disseny de registre oficial.
           iva-resultado-regimen-general:
             label: Resultat del règim general

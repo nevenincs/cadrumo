@@ -17,7 +17,7 @@ from functools import cache
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
+from cadrumo.domain.calculations.registry.actividad_asset_form_options import (
     ActivityAssetTableGroup,
     activity_asset_form_options,
     resolve_activity_asset_class_labels,

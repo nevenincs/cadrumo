@@ -94,6 +94,7 @@ type InventoryRequestV1 = (
     | InventoryMovementAddRequest
     | InventoryValuationPreviewRequest
     | InventoryClosingAuthorityRecordRequest
+    | InventoryClosingValueRecordRequest
     | InventoryInspectRequest
     | InventoryLedgerChangeRequest
     | InventoryEvidenceAddRequest
@@ -399,44 +400,52 @@ def inventory_outcome(
         done_line = tr(f"application.inventory.workbench.done.{result.outcome}")
         return RegisterOutcomeV1(lines=(done_line, *_ledger_detail_lines(result.ledger)))
     if isinstance(result, InventoryValuationOperationProjection):
-        preview = result.preview
-        if preview is None:
-            return RegisterOutcomeV1()
-        return RegisterOutcomeV1(
-            lines=(
-                tr(
-                    "tui.ledger.registers.inventory.result.valuation",
-                    actividad=preview.actividad_id,
-                    year=preview.year,
-                    method=preview.valuation_method.value,
-                    closing=preview.derived_closing_value.decimal,
-                    cogs=preview.cogs.decimal,
-                ),
-            )
-        )
+        return _valuation_outcome(result)
     if isinstance(result, InventoryClosingAuthorityOperationProjection):
-        record = result.record
-        if record is None:
-            return RegisterOutcomeV1()
-        return RegisterOutcomeV1(
-            lines=(
-                tr(
-                    "tui.ledger.registers.inventory.result.closing",
-                    actividad=record.actividad_id,
-                    year=record.year,
-                    changed=_yes_no(record.changed),
-                ),
-                tr(
-                    "tui.ledger.registers.inventory.result.fingerprint",
-                    fingerprint=record.authority_record_fingerprint,
-                ),
-            )
-        )
+        return _closing_outcome(result)
     ledger = result.ledger
     if ledger is None:
         return RegisterOutcomeV1()
     done = "create" if isinstance(result, InventoryCreateProjection) else "movement_add"
     return RegisterOutcomeV1(lines=(tr(_DONE_LOCALE_KEYS[done]), _ledger_line(ledger)))
+
+
+def _valuation_outcome(result: InventoryValuationOperationProjection) -> RegisterOutcomeV1:
+    preview = result.preview
+    if preview is None:
+        return RegisterOutcomeV1()
+    return RegisterOutcomeV1(
+        lines=(
+            tr(
+                "tui.ledger.registers.inventory.result.valuation",
+                actividad=preview.actividad_id,
+                year=preview.year,
+                method=preview.valuation_method.value,
+                closing=preview.derived_closing_value.decimal,
+                cogs=preview.cogs.decimal,
+            ),
+        )
+    )
+
+
+def _closing_outcome(result: InventoryClosingAuthorityOperationProjection) -> RegisterOutcomeV1:
+    record = result.record
+    if record is None:
+        return RegisterOutcomeV1()
+    return RegisterOutcomeV1(
+        lines=(
+            tr(
+                "tui.ledger.registers.inventory.result.closing",
+                actividad=record.actividad_id,
+                year=record.year,
+                changed=_yes_no(record.changed),
+            ),
+            tr(
+                "tui.ledger.registers.inventory.result.fingerprint",
+                fingerprint=record.authority_record_fingerprint,
+            ),
+        )
+    )
 
 
 class LedgerInventoryScreen(LedgerRegisterScreen):

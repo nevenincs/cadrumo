@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from collections import Counter
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
@@ -19,11 +18,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from cadrumo.domain.calculations.registry.lorca_reduction import resolve_lorca_reduction
-from cadrumo.domain.calculations.registry.m303_orden_constants import (
-    EXPECTED_ACTIVITY_COUNT,
-    EXPECTED_MODULE_DISTRIBUTION,
-    EXTRACTOR_VERSION,
-)
+from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority, RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from dev.docs.preprocess.orden_anual_html import (
@@ -159,16 +154,8 @@ def extract_m303_annual_orden_source(
 
 def validate_m303_annual_orden_table_shape(activities: tuple[M303AnnualOrdenRawActivity, ...]) -> None:
     """Reject an incomplete or ambiguous annual IVA quota table collection."""
-    if len(activities) != EXPECTED_ACTIVITY_COUNT:
-        raise RegistryValidationError(
-            f"annual Orden source must contain {EXPECTED_ACTIVITY_COUNT} annual IVA activity tables, "
-            f"got {len(activities)}",
-        )
-    module_counts = Counter(len(activity.modules) for activity in activities)
-    if module_counts != EXPECTED_MODULE_DISTRIBUTION:
-        raise RegistryValidationError(
-            f"annual Orden source has an unexpected IVA module distribution: {dict(sorted(module_counts.items()))!r}",
-        )
+    if not activities:
+        raise RegistryValidationError("annual Orden source contains no annual IVA activity table")
     identities = tuple(annual_orden_raw_activity_identity(activity) for activity in activities)
     if len(set(identities)) != len(identities):
         raise RegistryValidationError("annual Orden source contains ambiguous repeated official activity identities")

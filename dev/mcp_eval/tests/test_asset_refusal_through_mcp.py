@@ -32,9 +32,9 @@ from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import bind_public_cli_runner, invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.runtime_profile_backend import runtime_cli_profile
 from cadrumo_runtime.host.tests.frontend.cli.test_actividad_asset_accelerated_da18_cli import (
-    _electric_van,
-    _seed_direct_normal_profile,
-    _van_payment,
+    electric_van,
+    seed_direct_normal_profile,
+    van_payment,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -101,13 +101,13 @@ def test_a_forecast_refusal_reaches_the_agent_with_its_reason_key_and_facts(
         bind_cli_fixture_ports(cli_world_provider, invoke_cli),
         runtime_cli_profile(tmp_path=tmp_path, label="mcp asset refusal") as profile,
     ):
-        _seed_direct_normal_profile(profile.storage_root, profile.bucket_id)
-        payment = _van_payment(_ASSET_ID, _IN_SERVICE)
+        seed_direct_normal_profile(profile.storage_root, profile.bucket_id)
+        payment = van_payment(_ASSET_ID, _IN_SERVICE)
         created = invoke_cached_cli(
             [
                 *("--format", "json", "app", "ledger", "actividad-asset", "create"),
                 *("--name", _ASSET_ID),
-                _electric_van(_ASSET_ID, _IN_SERVICE, payment),
+                electric_van(_ASSET_ID, _IN_SERVICE, payment),
             ],
         )
         assert created.exit_code == 0, created.output

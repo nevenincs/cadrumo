@@ -46,9 +46,7 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
 )
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
-)
+from ...domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva_compensation.carry_forward import (
     IvaCompensationPeriodState,
@@ -252,6 +250,13 @@ def iva_compensation_state_from_observation_envelope(
     observation = validated.observation
     values = dict(observation.casilla_values)
     period = observation.filing_period or Period.from_year_and_code(observation.filing_year, observation.period)
+    resultado_final_casilla = m303_resultado_final_casilla(
+        operation.revision_for_context(
+            Modelo("303").value,
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
+    )
     return IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
         provenance=provenance,
@@ -265,7 +270,7 @@ def iva_compensation_state_from_observation_envelope(
         applied_amount=_resolve_casilla_value(values, _M303_COMPENSACION_APLICADA_CASILLA),
         pending_for_later_amount=_resolve_casilla_value(values, _M303_POSTERIOR_CASILLA),
         period_result_amount=_resolve_casilla_value(values, _M303_RESULTADO_CASILLA),
-        final_result_amount=_resolve_casilla_value(values, _M303_RESULTADO_FINAL_CASILLA),
+        final_result_amount=_resolve_casilla_value(values, resultado_final_casilla),
         generated_amount=values[_M303_GENERADA_CASILLA],
         available_end_amount=values[_M303_DISPONIBLE_CASILLA],
         source_observation_key=source_observation_key,

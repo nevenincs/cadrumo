@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections import Counter
 from decimal import Decimal
 from typing import Literal
 
@@ -14,11 +13,6 @@ from cadrumo.core.percentage import Percentage
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.m303_orden_constants import (
-    EXPECTED_ACTIVITY_COUNT,
-    EXPECTED_AGRICULTURAL_AXIS_COUNTS,
-    EXPECTED_MODULE_COUNT,
-    EXPECTED_MODULE_DISTRIBUTION,
-    EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
     validate_percentage_shape,
     validate_seasonal_index_shape,
 )
@@ -131,7 +125,7 @@ class M303AnnualOrdenSourceCensus(RegistryModel):
     source_ref: SourceRefId
     source_content_digest: ContentDigest
     extractor_version: str = Field(min_length=1)
-    activities: tuple[M303AnnualOrdenRawActivity, ...] = Field(min_length=EXPECTED_ACTIVITY_COUNT)
+    activities: tuple[M303AnnualOrdenRawActivity, ...] = Field(min_length=1)
     agricultural_indexes: tuple[M303AnnualOrdenRawAgriculturalIndex, ...] = Field(min_length=1)
     non_agricultural_ingresos_a_cuenta: tuple[M303AnnualOrdenRawIngresoACuenta, ...] = Field(min_length=1)
     agricultural_ingresos_a_cuenta: tuple[M303AnnualOrdenRawAgriculturalIngresoACuenta, ...] = Field(min_length=1)
@@ -148,38 +142,18 @@ class M303AnnualOrdenSourceCensus(RegistryModel):
 
 
 def _validate_source_activity_catalogue(census: M303AnnualOrdenSourceCensus) -> None:
-    if len(census.activities) != EXPECTED_ACTIVITY_COUNT:
-        raise RegistryValidationError(
-            f"annual Orden source must contain {EXPECTED_ACTIVITY_COUNT} annual IVA activity tables, "
-            f"got {len(census.activities)}",
-        )
-    module_counts = Counter(len(activity.modules) for activity in census.activities)
-    if module_counts != EXPECTED_MODULE_DISTRIBUTION:
-        raise RegistryValidationError(
-            f"annual Orden source has an unexpected IVA module distribution: {dict(sorted(module_counts.items()))!r}",
-        )
-    if sum(module_counts.values()) != EXPECTED_ACTIVITY_COUNT:
-        raise RegistryValidationError("annual Orden source activity table count is internally inconsistent")
-    total_modules = sum(module_count * occurrences for module_count, occurrences in module_counts.items())
-    if total_modules != EXPECTED_MODULE_COUNT:
-        raise RegistryValidationError(
-            f"annual Orden source must contain {EXPECTED_MODULE_COUNT} IVA module rows",
-        )
+    # The census counts come from the Orden itself; the checked manifest pins them
+    # for each ejercicio, so a changed extraction is refused as a stale manifest.
+    if any(not activity.modules for activity in census.activities):
+        raise RegistryValidationError("annual Orden source contains an IVA activity table without module rows")
 
 
 def _validate_source_agricultural_axes(census: M303AnnualOrdenSourceCensus) -> None:
-    expected_agricultural_count = EXPECTED_AGRICULTURAL_AXIS_COUNTS.get(census.ejercicio)
-    if expected_agricultural_count is None:
-        raise RegistryValidationError("annual Orden source has an unsupported agricultural axis exercise")
-    if len(census.agricultural_indexes) != expected_agricultural_count:
-        raise RegistryValidationError("annual Orden source has the wrong agricultural quota-index row count")
-    if len(census.agricultural_ingresos_a_cuenta) != expected_agricultural_count:
-        raise RegistryValidationError("annual Orden source has the wrong agricultural ingreso-a-cuenta row count")
+    if len(census.agricultural_indexes) != len(census.agricultural_ingresos_a_cuenta):
+        raise RegistryValidationError("annual Orden source agricultural axes disagree in row count")
 
 
 def _validate_source_common_axes(census: M303AnnualOrdenSourceCensus) -> None:
-    if len(census.non_agricultural_ingresos_a_cuenta) != EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT:
-        raise RegistryValidationError("annual Orden source has the wrong IAE ingreso-a-cuenta row count")
     validate_seasonal_index_shape(
         tuple((item.minimum_days, item.maximum_days) for item in census.seasonal_indexes),
         tuple(item.coefficient for item in census.seasonal_indexes),

@@ -45,8 +45,13 @@ DEPENDENCY_INPUTS = {
     # is pure Rust. The refreshed lock and manifest digests bind both changes; neither
     # adds a native dependency or distributed feature, so provider evidence remains valid.
     # This is source/feature evidence, not new artifact or minimum-host proof.
+    # The manager dependency added under cfg(target_os = "macos") is absent from
+    # Linux's production/build graph. Native Linux `cargo tree --locked --offline
+    # --target <triple> -e normal,build,features` is unchanged for both enrolled
+    # Linux architectures from the previously bound desktop manifest, including
+    # native provider features.
     "native/desktop/src-tauri/Cargo.lock": "17d460237dd1348bd33a812c3efe351b898f9f1bcce6f16a7d377dd53b10d9b2",
-    "native/desktop/src-tauri/Cargo.toml": "4d01f52a680bedd276929a8a249f630ff172b3e1f67dd7417469f086efda4a54",
+    "native/desktop/src-tauri/Cargo.toml": "f91fca51f7ab44ffcf678300124907ace4f52ddc2f1101b46fca338847edecb8",
     "native/application/Cargo.toml": "45b431600a5da6caa057865bdb39afc3aae4f9512d51d598f9d04e380cc03499",
     "native/platform/Cargo.toml": "45e633cefce86ce0a233670b94839e23bca14aba65b8d1c3b870718f50d01c37",
 }

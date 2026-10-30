@@ -14,9 +14,10 @@ _LANGUAGES = ("en", "es", "ca", "hu")
 _COMMAND = "aeat app ledger inventory list"
 
 
-def _catalogue(language: str, name: str) -> dict[str, object]:
+def _catalogue(language: str, name: str) -> object:
     with (_LOCALES / language / f"{name}.yml").open(encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
+        catalogue: object = yaml.safe_load(handle)
+    return catalogue
 
 
 def _at(node: object, *path: str) -> object:

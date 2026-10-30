@@ -23,7 +23,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry.actividad_asset_bindings import ACTIVITY_ASSET_PARAMETER_IDS
+from cadrumo.domain.calculations.registry.actividad_asset_parameters import ACTIVITY_ASSET_PARAMETER_IDS
 from cadrumo.domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_parameter_refs,

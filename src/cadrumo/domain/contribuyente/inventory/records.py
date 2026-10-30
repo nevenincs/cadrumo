@@ -811,17 +811,7 @@ class InventoryLedger(BaseModel):
         from ._anexo_d_records import resolve_inventory_authoritative_closing
         from .valuation import layers_value
 
-        movement_ids = tuple(movement.movement_id for movement in self.period_movements)
-        if len(set(movement_ids)) != len(movement_ids):
-            raise InventoryValidationError("inventory ledger movement_id values must be unique")
-        correction_ids = tuple(entry.correction_id for entry in self.history)
-        superseded_ids = tuple(
-            entry.superseded_movement.movement_id for entry in self.history if entry.superseded_movement is not None
-        )
-        if len(set(correction_ids)) != len(correction_ids) or len(set(superseded_ids)) != len(superseded_ids):
-            raise InventoryValidationError("inventory history identities must be unique")
-        if set(superseded_ids) & set(movement_ids):
-            raise InventoryValidationError("a superseded inventory movement cannot stay effective")
+        self._validate_movement_history()
         if self.opening_layers and _quantize(layers_value(self.opening_layers)) != _quantize(self.opening_stock):
             raise InventoryValidationError("opening_stock must equal the value of opening_layers")
         if self.closing_authority_record is not None:
@@ -835,6 +825,19 @@ class InventoryLedger(BaseModel):
                 prior_closing_link=record.prior_closing_link,
             )
         return self
+
+    def _validate_movement_history(self) -> None:
+        movement_ids = tuple(movement.movement_id for movement in self.period_movements)
+        if len(set(movement_ids)) != len(movement_ids):
+            raise InventoryValidationError("inventory ledger movement_id values must be unique")
+        correction_ids = tuple(entry.correction_id for entry in self.history)
+        superseded_ids = tuple(
+            entry.superseded_movement.movement_id for entry in self.history if entry.superseded_movement is not None
+        )
+        if len(set(correction_ids)) != len(correction_ids) or len(set(superseded_ids)) != len(superseded_ids):
+            raise InventoryValidationError("inventory history identities must be unique")
+        if set(superseded_ids) & set(movement_ids):
+            raise InventoryValidationError("a superseded inventory movement cannot stay effective")
 
 
 class InventoryLedgerDocument(BaseModel):

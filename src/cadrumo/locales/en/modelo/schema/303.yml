@@ -33,8 +33,6 @@ modelo:
           dr303-11:
             label: Accrued VAT on intra-Community acquisitions of goods and services
               - Tax amount
-          dr303-111:
-            label: Corrective return - correction amount
           dr303-112:
             help: Payment on account for supplies of petrol, diesel and biofuels attributed
               to the State
@@ -214,8 +212,6 @@ modelo:
           dr303-70:
             label: Result - Amounts payable from previous self-assessments of the
               tax year and period
-          dr303-71:
-            help: Data declared in modelo 303, taken from the official record design.
           dr303-74:
             label: Additional information - Acquisitions under the cash accounting
               scheme - Taxable base
@@ -334,6 +330,8 @@ modelo:
           iva-cuota-soportada-interiores-bienes-inversion:
             label: Input VAT on domestic capital-goods transactions (part of official
               box 31)
+          iva-importe-rectificacion:
+            label: Corrective return - correction amount
           iva-prorrata-porcentaje:
             label: General pro rata percentage (eligible turnover / total turnover
               × 100)
@@ -362,6 +360,8 @@ modelo:
           iva-regularizacion-inversiones:
             label: Capital goods adjustment (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:
+            help: Data declared in modelo 303, taken from the official record design.
+          iva-resultado-final:
             help: Data declared in modelo 303, taken from the official record design.
           iva-resultado-regimen-general:
             label: General regime result

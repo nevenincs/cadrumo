@@ -426,6 +426,85 @@ def _observation() -> CensalObservation:
     )
 
 
+class _ComposedRegistryCache:
+    """One default composition per worker; each case's close witness is set before it runs.
+
+    Composing every production group costs seconds and holds no profile state,
+    so only the cases that inject their own ports pay for a composition.
+    """
+
+    registry: OperationRegistry | None = None
+    cleanup: OperationRuntimeCloseWitness | None = None
+
+
+async def _acquire_censo_for_the_active_case() -> CensalOperationAcquisition:
+    cleanup = _ComposedRegistryCache.cleanup
+    if cleanup is None:
+        raise InternalInvariantError("the censal acquisition ran outside a conformance runtime")
+    return CensalOperationAcquisition(observation=_observation(), resource=cleanup)
+
+
+async def _acquire_verify_observation(surface, nif, expected, operation) -> VerifyLiveObservation:
+    del surface, expected, operation
+    return VerifyLiveObservation(nif=nif, verdict=IdentityCheckVerdict.VALID)
+
+
+def _verify_definition(surface: VerifySurface) -> OperationDefinition:
+    return build_verify_capture_definition(
+        surface,
+        persistence_factory=lambda bucket_id: VerifyObservationRepository(bucket_id=bucket_id),
+        acquire=_acquire_verify_observation,
+        browser_resources_factory=BrowserRuntimeResourceScope,
+        provider_preflight=lambda _profile_id, _operation: None,
+    )
+
+
+def _compose_conformance_registry(
+    *,
+    before_irreversible_section: Callable[[], Awaitable[None]] | None,
+    amendment_action_ports_factory: AmendmentActionPortsFactory | None,
+    execution_caller_reader: OperationExecutionCallerReader | None,
+) -> OperationRegistry:
+    return build_production_operation_registry(
+        auth_definitions=build_auth_operation_definitions(ports=build_auth_operation_ports()),
+        censal_definition=build_censal_operation_definition(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            browser_session_factory=default_browser_session_factory,
+            acquire=_acquire_censo_for_the_active_case,
+            before_irreversible_section=before_irreversible_section,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            censal_fetch_port=build_censal_fetch_port(),
+            provider_preflight=lambda _profile_id, _operation: None,
+        ),
+        verify_nif_iva_definition=_verify_definition(VerifySurface.NIF_IVA),
+        verify_tgvi_definition=_verify_definition(VerifySurface.TGVI),
+        amendment_action_ports_factory=amendment_action_ports_factory or build_amendment_action_ports,
+        execution_caller_reader=execution_caller_reader,
+        connectivity_probe=observe_synthetic_site,
+    )
+
+
+def _conformance_registry(
+    *,
+    before_irreversible_section: Callable[[], Awaitable[None]] | None,
+    amendment_action_ports_factory: AmendmentActionPortsFactory | None,
+    execution_caller_reader: OperationExecutionCallerReader | None,
+) -> OperationRegistry:
+    if before_irreversible_section or amendment_action_ports_factory or execution_caller_reader:
+        return _compose_conformance_registry(
+            before_irreversible_section=before_irreversible_section,
+            amendment_action_ports_factory=amendment_action_ports_factory,
+            execution_caller_reader=execution_caller_reader,
+        )
+    if _ComposedRegistryCache.registry is None:
+        _ComposedRegistryCache.registry = _compose_conformance_registry(
+            before_irreversible_section=None,
+            amendment_action_ports_factory=None,
+            execution_caller_reader=None,
+        )
+    return _ComposedRegistryCache.registry
+
+
 @contextmanager
 def conformance_operation_runtime(
     tmp_path: Path,
@@ -445,22 +524,7 @@ def conformance_operation_runtime(
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
 
-    async def acquire_censo() -> CensalOperationAcquisition:
-        return CensalOperationAcquisition(observation=_observation(), resource=cleanup)
-
-    async def acquire_verify(surface, nif, expected, operation) -> VerifyLiveObservation:
-        del surface, expected, operation
-        return VerifyLiveObservation(nif=nif, verdict=IdentityCheckVerdict.VALID)
-
-    def verify_definition(surface: VerifySurface) -> OperationDefinition:
-        return build_verify_capture_definition(
-            surface,
-            persistence_factory=lambda bucket_id: VerifyObservationRepository(bucket_id=bucket_id),
-            acquire=acquire_verify,
-            browser_resources_factory=BrowserRuntimeResourceScope,
-            provider_preflight=lambda _profile_id, _operation: None,
-        )
-
+    _ComposedRegistryCache.cleanup = cleanup
     with (
         override_settings(cadrumo_auth_provider=AuthProviderKind.CERTIFICATE, cadrumo_certificate_path=None),
         isolated_profile_storage_root(tmp_path=tmp_path) as root,
@@ -478,22 +542,10 @@ def conformance_operation_runtime(
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        registry = build_production_operation_registry(
-            auth_definitions=build_auth_operation_definitions(ports=build_auth_operation_ports()),
-            censal_definition=build_censal_operation_definition(
-                certificate_secret_backend_factory=build_certificate_secret_backend,
-                browser_session_factory=default_browser_session_factory,
-                acquire=acquire_censo,
-                before_irreversible_section=before_irreversible_section,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                censal_fetch_port=build_censal_fetch_port(),
-                provider_preflight=lambda _profile_id, _operation: None,
-            ),
-            verify_nif_iva_definition=verify_definition(VerifySurface.NIF_IVA),
-            verify_tgvi_definition=verify_definition(VerifySurface.TGVI),
-            amendment_action_ports_factory=amendment_action_ports_factory or build_amendment_action_ports,
+        registry = _conformance_registry(
+            before_irreversible_section=before_irreversible_section,
+            amendment_action_ports_factory=amendment_action_ports_factory,
             execution_caller_reader=execution_caller_reader,
-            connectivity_probe=observe_synthetic_site,
         )
         journal = OperationJournalRepository(storage_root=root / "operations")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:

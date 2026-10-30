@@ -123,6 +123,24 @@ def _generated_source_from_census(
     )
 
 
+def _require_projections_match_manifest(
+    projections: Sequence[M303AnnualOrdenProjection],
+    manifest: M303AnnualOrdenGeneratedManifest,
+) -> None:
+    """Refuse a compiled projection whose row counts differ from its pinned manifest row."""
+    by_source = {source.source_ref: source for source in manifest.sources}
+    for projection in projections:
+        source = by_source[projection.source_ref]
+        if (
+            len(projection.activities) != source.activity_table_count
+            or len(projection.non_agricultural_ingresos_a_cuenta) != source.non_agricultural_ingreso_a_cuenta_row_count
+        ):
+            raise RegistryLoadError(
+                f"annual Orden projection {projection.ejercicio}/{projection.registry_revision_id} "
+                "row counts disagree with its generated manifest",
+            )
+
+
 def render_generated_manifest(manifest: M303AnnualOrdenGeneratedManifest) -> str:
     """Render an ALREADY-generated manifest in canonical TOML order.
 
@@ -262,6 +280,7 @@ def load_m303_annual_orden_authority(
                 table_legal_refs=table_legal_refs,
             )
         )
+    _require_projections_match_manifest(projections, manifest)
     return M303AnnualOrdenCompilation(authority=M303AnnualOrdenAuthority(projections=tuple(projections)), legal=legal)
 
 
