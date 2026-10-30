@@ -53,7 +53,13 @@ _ACQUISITION = acquisition_transaction()
 _AUTHORITY = {"logical_generation": "a" * 64, "reader_incarnation": "b" * 64}
 
 
-def _revision(*, number: int = 1, supersedes: str | None = None, basis: str = "2000") -> ActivityAssetRevision:
+def _revision(
+    *,
+    number: int = 1,
+    supersedes: str | None = None,
+    basis: str = "2000",
+    class_key: str = "equipo-informacion-software",
+) -> ActivityAssetRevision:
     return ActivityAssetRevision(
         asset_id="laptop-1",
         revision_number=number,
@@ -77,7 +83,7 @@ def _revision(*, number: int = 1, supersedes: str | None = None, basis: str = "2
         amortization=ActivityAssetAmortizationElection(
             regime=DirectEstimationRegime.SIMPLIFIED,
             method=AmortizationMethod.LINEAR,
-            authority_class_key="equipo-informacion-software",
+            authority_class_key=class_key,
         ),
     )
 
