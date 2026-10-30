@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-30'
 body_schema: body-v2
-body_hash: 'sha256:a9d9ec59aa2fdc16e1aa8f70fc564fd764056bc5334ebb1ea5037fe70bf20d70'
+body_hash: 'sha256:e78889b402de71c706a264e8fef9d4757b22499c996c8771f49fb3b620631477'
 ---
 
 <!-- LINK RULES:
@@ -131,6 +131,7 @@ Bring Cadrumo to a working build, package and run on macOS arm64: configure and 
 - [ ] `S06` - Author the macOS application wrapper: .app bundle with Info.plist, icon and nested signed payload, packaged into the CPack DragNDrop DMG; `native/cmake/distribution/CMakeLists.txt, native/desktop/src-tauri, native/package-layout.json`.
 - [ ] `S07` - Verify the assembled bundle and DMG on macOS: CTest verify and verify-package, launch the desktop app, runtime and CLI from the extracted bundle; `native/cmake/ReleaseVerification.cmake, native/tests`.
 - [ ] `S08` - Add the POSIX runtime client for the desktop: a Unix-socket runtime transport beside the Windows pipe in the application and platform crates, then lift the macOS refusals in desktop app start, supervision, sign-in, agent launcher, terminal and process containment; `native/application/src/lib.rs, native/application/src/view_stream.rs, native/platform/src, native/desktop/src-tauri/src/app.rs, native/desktop/src-tauri/src/manager.rs, native/desktop/src-tauri/src/shell, native/desktop/src-tauri/src/agent`.
+- [ ] `S09` - Remove the native Development-versus-Installed image classification so native storage resolution follows the environment-driven root alone, matching the Python storage owner, and let a Debug manager start against it; `native/platform/src/storage.rs, native/manager/src/main.rs, native/platform/src/conformance_tests.rs`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:
