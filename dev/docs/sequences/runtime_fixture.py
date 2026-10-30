@@ -157,7 +157,7 @@ class _SequenceLoginObservation:
 @contextmanager
 def _worker_composition() -> Generator[None]:
     """Compose recorded dependencies after the canonical worker verifies its parent."""
-    root = Path(load_settings().cadrumo_local_storage_root)
+    root = Path(load_settings().cadrumo_storage_root)
     previous_backend = keyring.core._keyring_backend
     receipt_root = root / RECEIPT_FIXTURE_DIRECTORY
     keyring.set_keyring(
@@ -171,7 +171,6 @@ def _worker_composition() -> Generator[None]:
                 cadrumo_output_language="en",
                 cadrumo_live_tests_enabled="",
                 cadrumo_live_tests_google="",
-                cadrumo_log_dir=root / "logs" / "worker",
             ),
             frozen_clock(SANDBOX_INSTANT),
             bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),

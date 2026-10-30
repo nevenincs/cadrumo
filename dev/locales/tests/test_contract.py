@@ -261,9 +261,8 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     # the root landing was shortened, which made this test pass over a real
     # regression -- following content to where it went, without asking whether
     # it was entitled to go there.
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in root_text
-    assert "CADRUMO_SECRET_STORE_DIR" in root_text
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in config_text
+    assert "CADRUMO_STORAGE_ROOT" in root_text
+    assert "CADRUMO_STORAGE_ROOT" in config_text
     assert "CADRUMO_SECRET_PASSPHRASE" not in config_text
     for option in (
         "--profile-secrets-stdin",

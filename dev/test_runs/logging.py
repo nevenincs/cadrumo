@@ -16,7 +16,6 @@ from typing import IO, Any, Final
 
 import pytest
 
-from cadrumo.core.storage_environment import resolve_storage_path
 from cadrumo.tests.env_loader import bridge_env_file_into_environ
 from dev._paths import REPO_ROOT
 from dev.temporary_output import resolve_temporary_output
@@ -110,19 +109,6 @@ def pytest_configure_node(node: Any) -> None:
     channel.receive()
 
 
-def _product_log_directory(root: Path) -> Path:
-    """Preserve an explicit product log override and isolate the default per process."""
-    configured = os.environ.get("CADRUMO_LOG_DIR", "").strip()
-    if configured:
-        candidate = resolve_storage_path(configured)
-        run_default = (root / "artifacts" / "product-logs").resolve()
-        try:
-            candidate.relative_to(run_default)
-        except ValueError:
-            return candidate
-    return root / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
-
-
 class RunLog:
     """Live, flush-on-write record for one pytest controller invocation."""
 
@@ -157,9 +143,6 @@ class RunLog:
         self.exit_status: int | None = None
         self.stream: IO[str] = self.path.open("x", encoding="utf-8", newline="\n")
         _apply_run_environment(self.root, self.scratch)
-        product_logs = _product_log_directory(self.root)
-        product_logs.mkdir(parents=True, exist_ok=True)
-        os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
         os.environ["CADRUMO_TEST_RUN_ROOT"] = str(self.root)
         self.write(f"START {now.isoformat()} pid={os.getpid()}")
         self.write(f"COMMAND {' '.join(sys.argv)}")
@@ -227,9 +210,6 @@ def prepare_environment(repository: Path) -> None:
         global _INHERITED_RUN
         _INHERITED_RUN = True
         _apply_run_environment(root, Path(os.environ[_RUN_SCRATCH_ENV]))
-        product_logs = _product_log_directory(root)
-        product_logs.mkdir(parents=True, exist_ok=True)
-        os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
         return
     _ACTIVE = RunLog(repository)
 

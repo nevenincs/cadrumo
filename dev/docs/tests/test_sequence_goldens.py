@@ -534,7 +534,7 @@ def _hermetic_env(tmp_path: pytest.TempPathFactory) -> Iterator[None]:
     root = Path(str(tmp_path)) / "cadrumo-store"
     root.mkdir()
     with (
-        scoped_env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(root)),
+        scoped_env_var("CADRUMO_STORAGE_ROOT", str(root)),
         scoped_env_var("CADRUMO_OUTPUT_LANGUAGE", "en"),
     ):
         yield

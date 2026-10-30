@@ -1,17 +1,15 @@
 """Keep the documentation engine's process pins inside the test that caused them.
 
-The engine deliberately re-points product storage and diagnostic logging at its
-own scratch directories for the lifetime of the process it runs in
+The engine deliberately re-points product storage at its own scratch directory
+for the lifetime of the process it runs in
 (``dev.docs.build.ensure_isolated_storage_root``), so a build never reads the
-workstation's real store and never writes the shared ``cadrumo.log``. That is
-correct for a build process, whose lifetime IS the build.
+workstation's real store. That is correct for a build process, whose lifetime
+IS the build.
 
 A pytest worker outlives the test, so the same pin silently becomes the
 environment of every test that follows it on that worker. It was doing exactly
-that: ``CADRUMO_LOG_DIR`` stayed set, which made ``cadrumo_log_dir`` read as an
-explicitly overridden setting rather than one derived from the storage root, and
-``dev/ci/tests/test_core_storage_taxonomy.py`` then failed in whole-tree runs
-while passing in every scoped run anyone tried.
+that: the pinned storage root stayed set, and storage taxonomy tests then
+failed in whole-tree runs while passing in every scoped run anyone tried.
 """
 
 from __future__ import annotations

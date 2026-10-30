@@ -327,7 +327,7 @@ def test_a_spelling_planted_in_each_language_is_refused(tmp_path: Path, language
 @pytest.mark.parametrize("language", sorted(_PLANTED_DEFECTS))
 def test_the_same_sources_without_the_prefix_are_accepted(tmp_path: Path, language: str) -> None:
     relative, template = _PLANTED_DEFECTS[language]
-    _plant(tmp_path, relative, template.replace("<name>", "CADRUMO_LOCAL_STORAGE_ROOT"))
+    _plant(tmp_path, relative, template.replace("<name>", "CADRUMO_STORAGE_ROOT"))
 
     scan = _scan(tmp_path)
 
@@ -464,7 +464,7 @@ def test_a_file_that_cannot_be_read_is_reported_not_taken_for_clean(tmp_path: Pa
 def test_an_allowance_whose_file_is_gone_or_no_longer_spells_the_prefix_is_stale(tmp_path: Path) -> None:
     kept, cleaned, *gone = sorted(_ALLOWED_FILES)
     _plant(tmp_path, kept, f'NAME = "{_name("PORT")}"\n')
-    _plant(tmp_path, cleaned, 'NAME = "CADRUMO_LOCAL_STORAGE_ROOT"\n')
+    _plant(tmp_path, cleaned, 'NAME = "CADRUMO_STORAGE_ROOT"\n')
 
     scan = _scan(tmp_path)
 

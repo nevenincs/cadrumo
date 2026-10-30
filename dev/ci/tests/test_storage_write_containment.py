@@ -570,40 +570,6 @@ def _assigned_names_for_statement(statement: ast.stmt) -> tuple[str, ...]:
     return ()
 
 
-def _storage_pinner_is_rooted(tree: ast.Module, modules: dict[str, str], symbols: dict[str, str]) -> bool:
-    base_is_canonical = any(
-        isinstance(statement, (ast.Assign, ast.AnnAssign))
-        and "_BASE_STORAGE_ROOT" in _assigned_names_for_statement(statement)
-        and isinstance(statement.value, ast.Call)
-        and _call_path(statement.value, modules, symbols)[-1:] == ("configured_storage_root",)
-        for statement in tree.body
-    )
-    pinner = next(
-        (node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_pin_storage_override"),
-        None,
-    )
-    if not base_is_canonical or pinner is None:
-        return False
-    rooted_values = {
-        name
-        for statement in pinner.body
-        if isinstance(statement, (ast.Assign, ast.AnnAssign))
-        and isinstance(statement.value, ast.Call)
-        and _call_path(statement.value, modules, symbols)[-1:] == ("storage_directory",)
-        and any(
-            keyword.arg == "root" and isinstance(keyword.value, ast.Name) and keyword.value.id == "_BASE_STORAGE_ROOT"
-            for keyword in statement.value.keywords
-        )
-        for name in _assigned_names_for_statement(statement)
-    }
-    return any(
-        isinstance(statement, ast.Return)
-        and isinstance(statement.value, ast.Name)
-        and statement.value.id in rooted_values
-        for statement in pinner.body
-    )
-
-
 def _pytest_temp_bootstrap(root: Path) -> bool:
     """Prove conftest pins OS and stdlib temp before its first temp lookup."""
     try:
@@ -612,7 +578,6 @@ def _pytest_temp_bootstrap(root: Path) -> bool:
         return False
     modules, symbols = _imports(tree)
     constants = _string_constants(tree)
-    pinner_is_rooted = _storage_pinner_is_rooted(tree, modules, symbols)
     roots: set[str] = set()
     root_lines: list[int] = []
     configured_env: set[str] = set()
@@ -638,13 +603,7 @@ def _pytest_temp_bootstrap(root: Path) -> bool:
             continue
         if isinstance(value, ast.Call):
             call = _call_path(value, modules, symbols)
-            if call[-1:] in {("_pin_storage_override",), ("storage_directory",)} and value.args:
-                if _literal(value.args[0], constants) == "CADRUMO_TEMP_DIR" and (
-                    call[-1:] != ("_pin_storage_override",) or pinner_is_rooted
-                ):
-                    roots.update(name for target in targets for name in _assigned_names(target))
-                    root_lines.append(statement.lineno)
-            elif call[-1:] == ("prepare_temporary_directory",) or call == (
+            if call[-1:] == ("prepare_temporary_directory",) or call == (
                 "dev",
                 "temporary_output",
                 "prepare_temp_root",
@@ -740,8 +699,8 @@ def test_no_filesystem_write_uses_an_uncontrolled_external_root() -> None:
 
     assert examined > 100 and not unreadable, "the source scan was incomplete"
     assert findings == (), (
-        "route writes through CADRUMO_STORAGE_ROOT / a refined storage variable, "
-        "or initialize CADRUMO_TEMP_DIR before using process temp:\n  " + "\n  ".join(findings)
+        "route writes through the storage root (CADRUMO_STORAGE_ROOT), "
+        "or pin the temporary directory before using process temp:\n  " + "\n  ".join(findings)
     )
 
 
@@ -818,12 +777,10 @@ def test_an_explicit_hard_coded_temp_directory_is_reported(tmp_path: Path) -> No
     assert findings == ("fixture.py:2 (hardcoded-external)",)
 
 
-def test_documented_storage_roots_include_canonical_and_refined_temp_controls() -> None:
+def test_documented_storage_roots_include_the_canonical_root_and_scratch_base() -> None:
     """The gate follows the operator-facing names rather than suffix guesses."""
     assert {
         "CADRUMO_STORAGE_ROOT",
-        "CADRUMO_LOCAL_STORAGE_ROOT",
-        "CADRUMO_TEMP_DIR",
         "CADRUMO_SCRATCH_BASE",
     }.issubset(_documented_storage_overrides())
 
@@ -910,7 +867,7 @@ def test_storage_roots_and_explicit_temp_directory_are_accepted(tmp_path: Path) 
         "import os\nimport tempfile\nfrom pathlib import Path\n"
         "storage = Path(os.environ['CADRUMO_STORAGE_ROOT']) / 'profiles'\n"
         "storage.mkdir(parents=True, exist_ok=True)\n"
-        "with tempfile.TemporaryDirectory(dir=os.environ['CADRUMO_TEMP_DIR']):\n    pass\n",
+        "with tempfile.TemporaryDirectory(dir=os.environ['CADRUMO_SCRATCH_BASE']):\n    pass\n",
     )
 
     assert findings == ()
@@ -923,17 +880,12 @@ def test_an_unscoped_temp_constructor_is_allowed_only_after_bootstrap(tmp_path: 
     assert _fixture_scan(tmp_path, source, temp_controlled=True) == ()
 
 
-def test_pytest_temp_bootstrap_requires_rooted_and_early_os_and_stdlib_bindings(tmp_path: Path) -> None:
+def test_pytest_temp_bootstrap_requires_early_os_and_stdlib_bindings(tmp_path: Path) -> None:
     """A test-only allowance cannot be copied without the real root assignments."""
     base = (
         "import os\nimport tempfile\n"
-        "from cadrumo.core.storage_environment import configured_storage_root, storage_directory\n"
-        "_BASE_STORAGE_ROOT = configured_storage_root()\n"
-        "def _pin_storage_override(name, default):\n"
-        "    resolved = storage_directory(name, default, root=_BASE_STORAGE_ROOT)\n"
-        "    os.environ[name] = str(resolved)\n"
-        "    return resolved\n"
-        "_TEMP_BASE = _pin_storage_override('CADRUMO_TEMP_DIR', 'tmp')\n"
+        "from dev.temporary_output import prepare_temp_root\n"
+        "_TEMP_BASE = prepare_temp_root()\n"
     )
     bindings = (
         "os.environ.update({'TEMP': str(_TEMP_BASE), 'TMP': str(_TEMP_BASE), 'TMPDIR': str(_TEMP_BASE)})\n"
@@ -948,13 +900,6 @@ def test_pytest_temp_bootstrap_requires_rooted_and_early_os_and_stdlib_bindings(
 
     late_binding = base + "tempfile.gettempdir()\n" + bindings.replace("tempfile.gettempdir()\n", "")
     (tmp_path / "conftest.py").write_text(late_binding, encoding=UTF_8)
-    assert not _pytest_temp_bootstrap(tmp_path)
-
-    unrooted = base.replace(
-        "resolved = storage_directory(name, default, root=_BASE_STORAGE_ROOT)",
-        "resolved = Path.home() / default",
-    )
-    (tmp_path / "conftest.py").write_text(unrooted + bindings, encoding=UTF_8)
     assert not _pytest_temp_bootstrap(tmp_path)
 
 

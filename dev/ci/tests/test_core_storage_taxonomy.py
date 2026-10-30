@@ -11,7 +11,7 @@ two different depths stay distinguishable.
 from __future__ import annotations
 
 from enum import StrEnum
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 from pydantic import ValidationError
@@ -20,25 +20,29 @@ from cadrumo.core.bucket_pointer import pointer_path
 from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.storage_taxonomy import (
+    STORAGE_ROOT_SETTINGS_FIELD,
     FingerprintParticipation,
     StorageCategory,
+    StorageDefaultAnchor,
     StorageGrouping,
     StorageLifecycle,
     StorageLocation,
     StorageNodeKind,
-    StorageOverridePolicy,
     StorageScope,
 )
 from cadrumo.core.storage_taxonomy_locations import (
-    ROOT_DERIVED_STORAGE_FIELDS,
     STORAGE_TAXONOMY,
     bucket_scoped_storage_path,
     storage_location,
     storage_path,
     storage_tree_targets,
+    uses_external_transport,
 )
-from cadrumo.core.tests.storage_taxonomy_views import FINGERPRINT_EXCLUDED_STORAGE_FIELDS, STORAGE_FIELD_CATEGORIES
+from cadrumo.core.tests._settings_path_fields import path_typed_settings_fields
+from cadrumo.core.tests.storage_taxonomy_views import FINGERPRINT_EXCLUDED_STORAGE_CATEGORIES
 from cadrumo.tests.env_scope import derived_storage_settings
+
+_BUCKET_ID = "primary"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -51,7 +55,7 @@ def test_each_axis_is_a_closed_set() -> None:
     """Every axis names exactly the values it declares, and nothing else."""
     assert _axis_members(StorageNodeKind) == {"directory", "file"}
     assert _axis_members(StorageScope) == {"root", "bucket_relative", "keystore_root", "keystore_relative"}
-    assert _axis_members(StorageOverridePolicy) == {"operator_overridable", "fixed"}
+    assert _axis_members(StorageDefaultAnchor) == {"scope", "darwin_transient"}
     assert _axis_members(StorageLifecycle) == {"unbounded_by_design", "retention", "rotation", "ttl"}
     assert _axis_members(StorageGrouping) == {"state", "logs", "cache", "exports"}
     assert _axis_members(FingerprintParticipation) == {"participating", "excluded"}
@@ -97,87 +101,115 @@ def test_a_declaration_forbids_extra_fields_and_refuses_mutation() -> None:
         declared.subpath = "elsewhere"
 
 
-def test_bucket_and_keystore_layout_is_fixed_not_operator_overridable() -> None:
-    """An operator must not relocate a keystore out from under the bucket it unlocks."""
-    scoped = [location for location in STORAGE_TAXONOMY.values() if location.scope is not StorageScope.ROOT]
-    assert scoped, "the fixed layout must actually be declared, or this asserts nothing"
-    for location in scoped:
-        assert location.override_policy is StorageOverridePolicy.FIXED
-        assert location.settings_field is None, "a fixed member must expose no operator-facing field"
+def _resolved(location: StorageLocation, settings: Settings) -> Path | None:
+    """Resolve any member through its scope's accessor; ``None`` for the OS-derived namespace."""
+    if location.scope is StorageScope.ROOT:
+        if uses_external_transport(location):
+            return None
+        return storage_path(location.category, settings=settings)
+    return bucket_scoped_storage_path(location.category, _BUCKET_ID, settings=settings)
 
 
-def test_fixed_override_policy_forbids_a_settings_field() -> None:
-    """Declaration-time guard: FIXED and a settings_field cannot coexist.
+@pytest.mark.parametrize("retired", ["settings_field", "environment_variable", "override_policy"])
+def test_a_member_cannot_declare_an_override_control(retired: str) -> None:
+    """The storage root is the one control, so no member can carry a second one.
 
-    The test above only asserts that today's FIXED members happen to carry no
-    settings_field -- a fact about the current declarations, not a constraint
-    on a future one. A FIXED member and an operator-facing settings_field
-    contradict each other (the guarantee that a keystore cannot be relocated
-    out from under its bucket would be undone by the very field an operator
-    overrides through), so the combination must be refused at construction,
-    not merely absent so far.
+    A declaration naming a settings field, an environment variable or an
+    override policy must be unconstructable, not merely absent from today's
+    members. The positive control is the same declaration without the extra key.
     """
-    base_kwargs = {
-        "category": StorageCategory.TOKENS,
-        "subpath": "synthetic",
-        "node_kind": StorageNodeKind.DIRECTORY,
-        "scope": StorageScope.ROOT,
-        "lifecycle": StorageLifecycle.RETENTION,
-        "grouping": StorageGrouping.STATE,
-        "fingerprint_participation": FingerprintParticipation.PARTICIPATING,
-        "dormant_reason": "synthetic fixture built to exercise the guard, not a real declaration",
+    declared = storage_location(StorageCategory.TOKENS).model_dump()
+
+    assert StorageLocation.model_validate(declared) == storage_location(StorageCategory.TOKENS)
+    with pytest.raises(ValidationError):
+        StorageLocation.model_validate({**declared, retired: "cadrumo_live_state_dir"})
+    assert retired not in StorageLocation.model_fields
+
+
+def test_every_member_subpath_is_relative_to_its_scope_anchor() -> None:
+    """A subpath is a plain POSIX relative path: nothing in it can replace or escape its anchor."""
+    for category, location in STORAGE_TAXONOMY.items():
+        subpath = location.subpath
+        assert not PurePosixPath(subpath).is_absolute(), category
+        assert not PureWindowsPath(subpath).drive, category
+        assert "\\" not in subpath, f"{category.value} must spell its subpath with POSIX separators"
+        assert ".." not in PurePosixPath(subpath).parts, category
+        assert not location.relative_path().is_absolute(), category
+
+
+def test_every_member_lands_beneath_the_storage_root(tmp_path: Path) -> None:
+    """Whatever its scope, a member resolves under the one root and nowhere else."""
+    root = tmp_path / "state"
+    settings = Settings(cadrumo_storage_root=root)
+
+    resolved = {location.category: _resolved(location, settings) for location in STORAGE_TAXONOMY.values()}
+
+    assert len(resolved) == len(StorageCategory)
+    for category, path in resolved.items():
+        if path is None:
+            continue
+        assert path.is_absolute(), category
+        assert path.is_relative_to(root), f"{category.value} resolved to {path}, outside {root}"
+
+
+def test_keystore_members_never_resolve_beneath_the_bucket_container(tmp_path: Path) -> None:
+    """The keystore is sibling to ``buckets/`` whatever the root is: no setting can nest it."""
+    root = tmp_path / "state"
+    settings = Settings(cadrumo_storage_root=root)
+    container = storage_path(StorageCategory.BUCKETS, settings=settings)
+
+    keystore_members = [
+        location
+        for location in STORAGE_TAXONOMY.values()
+        if location.scope in {StorageScope.KEYSTORE_ROOT, StorageScope.KEYSTORE_RELATIVE}
+    ]
+    assert keystore_members, "the keystore layout must actually be declared, or this asserts nothing"
+    for location in keystore_members:
+        path = bucket_scoped_storage_path(location.category, _BUCKET_ID, settings=settings)
+        assert not path.is_relative_to(container), location.category
+
+
+def test_the_storage_root_is_a_flat_path_attribute_on_settings(tmp_path: Path) -> None:
+    """The root is a plain ``Path`` field, not a nested object or a property.
+
+    Gates that discover storage controls walk ``Settings.model_fields``; behind
+    a property the root would be invisible to them while still working.
+    """
+    root = tmp_path / "state"
+    assert STORAGE_ROOT_SETTINGS_FIELD == "cadrumo_storage_root"
+    assert Settings.model_fields[STORAGE_ROOT_SETTINGS_FIELD].annotation is Path
+    assert getattr(Settings(cadrumo_storage_root=root), STORAGE_ROOT_SETTINGS_FIELD) == root
+
+
+def test_no_other_path_setting_places_a_storage_member(tmp_path: Path) -> None:
+    """Pointing every other path-valued setting elsewhere moves no member off the root."""
+    root = tmp_path / "state"
+    others = {
+        name: tmp_path / "elsewhere" / name
+        for name in sorted(path_typed_settings_fields(Settings) - {STORAGE_ROOT_SETTINGS_FIELD})
     }
+    assert others, "the selector found no other path setting, so this asserts nothing"
 
-    # The mutation: a FIXED member also naming the settings field an operator
-    # would override it through must be unconstructable.
-    with pytest.raises(ValidationError, match="override_policy=FIXED"):
-        StorageLocation(
-            **base_kwargs,
-            override_policy=StorageOverridePolicy.FIXED,
-            settings_field="cadrumo_live_state_dir",
-        )
-
-    # Positive control: the identical settings_field is unproblematic on an
-    # OPERATOR_OVERRIDABLE member. The guard must fire on the FIXED
-    # contradiction specifically, not on any member that merely has a field.
-    overridable = StorageLocation(
-        **base_kwargs,
-        override_policy=StorageOverridePolicy.OPERATOR_OVERRIDABLE,
-        settings_field="cadrumo_live_state_dir",
-    )
-    assert overridable.settings_field == "cadrumo_live_state_dir"
-
-    # The restoration: removing the settings_field alone (not the policy)
-    # is again a legal FIXED declaration -- proves the guard is triggered by
-    # the combination, not by FIXED alone.
-    fixed_without_field = StorageLocation(
-        **base_kwargs,
-        override_policy=StorageOverridePolicy.FIXED,
-        settings_field=None,
-    )
-    assert fixed_without_field.override_policy is StorageOverridePolicy.FIXED
-    assert fixed_without_field.settings_field is None
+    with override_settings(cadrumo_storage_root=root, **others) as settings:
+        for name, value in others.items():
+            assert getattr(settings, name) == value, f"{name} was not applied, so it was not exercised"
+        for location in STORAGE_TAXONOMY.values():
+            path = _resolved(location, settings)
+            if path is not None:
+                assert path.is_relative_to(root), location.category
 
 
-def test_every_settings_field_a_member_names_exists_on_the_model() -> None:
-    """A member naming a field that no longer exists is a declaration that has rotted."""
-    assert STORAGE_FIELD_CATEGORIES, "the reverse index must not be empty, or this asserts nothing"
-    for field_name in STORAGE_FIELD_CATEGORIES:
-        assert field_name in Settings.model_fields, f"{field_name} is named by the taxonomy but absent from Settings"
+@pytest.mark.parametrize("retired", ["cadrumo_drafts_dir", "cadrumo_runs_dir", "cadrumo_usage_ratios_path"])
+def test_a_per_member_setting_does_not_exist_and_relocates_nothing(tmp_path: Path, retired: str) -> None:
+    """Naming a member's old setting is not a relocation: the member stays at its subpath."""
+    root = tmp_path / "state"
+    elsewhere = tmp_path / "operator-chosen"
+    assert retired not in Settings.model_fields
 
-
-def test_path_fields_stay_flat_attributes_on_settings(tmp_path: Path) -> None:
-    """The gates that discover storage fields walk ``Settings.model_fields``.
-
-    Moving these onto a nested object or behind a property would leave that
-    discovery finding nothing -- which passes silently while covering nothing.
-    Members therefore NAME their field rather than absorbing it.
-    """
-    settings = Settings(cadrumo_local_storage_root=tmp_path / "state")
-    for field_name, category in STORAGE_FIELD_CATEGORIES.items():
-        assert isinstance(getattr(settings, field_name, None), (Path, type(None))), (
-            f"{category.value} names {field_name}, which must stay a flat path attribute"
-        )
+    with override_settings(cadrumo_storage_root=root, **{retired: elsewhere}) as settings:
+        assert not hasattr(settings, retired)
+        for category in (StorageCategory.DRAFTS, StorageCategory.RUNS, StorageCategory.USAGE_RATIOS):
+            assert storage_path(category) == root / storage_location(category).relative_path()
 
 
 def test_fingerprint_participation_is_a_declared_axis_on_every_member() -> None:
@@ -188,46 +220,39 @@ def test_fingerprint_participation_is_a_declared_axis_on_every_member() -> None:
     with the behavioural halves that catch a digest degraded to the empty-tree
     constant. Two independent statements of one set is the duplicate authority
     this taxonomy exists to remove, so this keeps only what belongs here: the
-    axis is total over the members, and the derived index agrees with the
-    declarations it is built from.
+    axis is total over the members, and only root-scoped members are excluded
+    from the data-root digest.
     """
     for category, location in STORAGE_TAXONOMY.items():
         assert isinstance(location.fingerprint_participation, FingerprintParticipation), category
 
-    from cadrumo.core.storage_taxonomy import StorageScope as _Scope
-
-    recomputed = {
-        location.settings_field
-        for location in STORAGE_TAXONOMY.values()
-        if location.settings_field is not None
-        and location.fingerprint_participation is FingerprintParticipation.EXCLUDED
+    excluded = {
+        category
+        for category, location in STORAGE_TAXONOMY.items()
+        if location.fingerprint_participation is FingerprintParticipation.EXCLUDED
     }
-    assert recomputed == FINGERPRINT_EXCLUDED_STORAGE_FIELDS
-    assert recomputed, "the derived exclusion index is empty, so this asserts nothing"
-    assert all(STORAGE_TAXONOMY[STORAGE_FIELD_CATEGORIES[field]].scope is _Scope.ROOT for field in recomputed), (
+    assert FINGERPRINT_EXCLUDED_STORAGE_CATEGORIES, "the derived exclusion view is empty, so this asserts nothing"
+    assert FINGERPRINT_EXCLUDED_STORAGE_CATEGORIES.issubset(excluded)
+    assert all(STORAGE_TAXONOMY[category].scope is StorageScope.ROOT for category in excluded), (
         "only a root-scoped member can be excluded from the data-root digest"
     )
 
 
-def test_storage_path_reads_the_member_field_so_an_override_wins(tmp_path: Path) -> None:
-    """An explicit per-field override outranks root derivation, here as everywhere."""
-    elsewhere = tmp_path / "operator-chosen-drafts"
-    with override_settings(cadrumo_local_storage_root=tmp_path / "state", cadrumo_drafts_dir=elsewhere):
-        assert storage_path(StorageCategory.DRAFTS) == elsewhere
-
-
-def test_storage_path_falls_back_to_the_root_for_a_fieldless_member(tmp_path: Path) -> None:
-    """Fixed-layout members carry no operator field and resolve from the root."""
+def test_storage_path_resolves_every_root_member_from_the_root(tmp_path: Path) -> None:
+    """Root members carry no operator field and resolve at their subpath beneath the root."""
     root = tmp_path / "state"
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         assert storage_path(StorageCategory.BUCKETS) == root / "buckets"
         assert storage_path(StorageCategory.ACTIVE_PROFILE_POINTER) == root / "active-profile"
+        for location in STORAGE_TAXONOMY.values():
+            if location.scope is StorageScope.ROOT and not uses_external_transport(location):
+                assert storage_path(location.category) == root / location.relative_path(), location.category
 
 
 def test_storage_path_refuses_a_scoped_member_rather_than_resolving_it(tmp_path: Path) -> None:
     """A bucket-scoped member needs a bucket; silently dropping it would misplace state."""
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path / "state"),
+        override_settings(cadrumo_storage_root=tmp_path / "state"),
         pytest.raises(CoreValidationError) as refusal,
     ):
         storage_path(StorageCategory.BUCKET_KEYSTORE)
@@ -248,7 +273,7 @@ def test_the_scoped_accessor_resolves_bucket_and_keystore_members(tmp_path: Path
     for that check.
     """
     root = tmp_path / "state"
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         bucket_tree = root / "buckets" / "primary"
         assert bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE, "primary") == bucket_tree / "db"
         assert bucket_scoped_storage_path(StorageCategory.BUCKET_MANIFEST, "primary") == bucket_tree / "manifest.toml"
@@ -278,7 +303,7 @@ def test_the_keystore_anchor_passes_the_production_separation_check(tmp_path: Pa
     from cadrumo.adapters.persistence.storage.bucket.keystore_paths import validate_keystore_separation
 
     root = tmp_path / "state"
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         resolved = bucket_scoped_storage_path(StorageCategory.BUCKET_KEYSTORE, "primary")
 
     # Must not raise: a resolution nested under buckets/ or the per-bucket db
@@ -309,7 +334,7 @@ def test_the_production_separation_check_still_refuses_a_nested_keystore(tmp_pat
 
 def test_the_scoped_accessor_refuses_a_root_member_and_a_blank_bucket(tmp_path: Path) -> None:
     """Passing a root category a bucket id is a mistake worth naming, not absorbing."""
-    with override_settings(cadrumo_local_storage_root=tmp_path / "state"):
+    with override_settings(cadrumo_storage_root=tmp_path / "state"):
         with pytest.raises(CoreValidationError) as refusal:
             bucket_scoped_storage_path(StorageCategory.TOKENS, "primary")
         assert "storage_path" in str(refusal.value)
@@ -321,64 +346,58 @@ def test_the_scoped_accessor_refuses_a_root_member_and_a_blank_bucket(tmp_path: 
 def test_tree_targets_give_a_file_member_its_parent_and_never_its_leaf(tmp_path: Path) -> None:
     """The one file-valued member must contribute the directory, not the document."""
     root = tmp_path / "state"
-    with override_settings(cadrumo_local_storage_root=root) as settings:
+    with override_settings(cadrumo_storage_root=root) as settings:
         targets = storage_tree_targets(settings)
-        ratios = Path(settings.cadrumo_usage_ratios_path)
+        ratios = storage_path(StorageCategory.USAGE_RATIOS, settings=settings)
 
     assert ratios.parent in targets, "the file's directory must be materialised"
     assert ratios not in targets, "materialising the leaf would put a directory where a document belongs"
 
 
-def test_tree_targets_skip_fixed_layout_and_absent_opt_in_members(tmp_path: Path) -> None:
-    """Per-bucket layout is provisioned per bucket; an unset opt-in was never asked for."""
+def test_tree_targets_skip_fixed_layout_members_and_stay_beneath_the_root(tmp_path: Path) -> None:
+    """Per-bucket layout is provisioned per bucket; nothing leaves the root."""
     root = tmp_path / "state"
-    with override_settings(cadrumo_local_storage_root=root) as settings:
+    with override_settings(cadrumo_storage_root=root) as settings:
         targets = storage_tree_targets(settings)
+        unmaterialised = [
+            storage_path(location.category, settings=settings)
+            for location in STORAGE_TAXONOMY.values()
+            if location.scope is StorageScope.ROOT
+            and not location.materialised
+            and location.node_kind is StorageNodeKind.DIRECTORY
+        ]
 
     assert root / "buckets" not in targets, "the bucket container is provisioned by the bucket lifecycle"
-    assert root / "cache" / "registry" not in targets, "an unset opt-in override must not be materialised"
     assert root / "tokens" in targets, "a positive control: ordinary members ARE materialised"
+    assert unmaterialised, "no unmaterialised directory member was found, so this asserts nothing"
+    assert not set(unmaterialised) & set(targets)
+    assert all(target.is_relative_to(root) for target in targets)
 
 
-def test_a_root_override_re_derives_every_non_overridden_category(tmp_path: Path) -> None:
-    """The rebuild loop must cover the whole declared field set, not a stale copy.
+def test_a_root_override_moves_every_member(tmp_path: Path) -> None:
+    """Rebuilding settings under a new root leaves no member pinned to the previous one.
 
-    Flattening settings through ``model_dump`` turns every previously-derived
-    absolute path into an explicit value, so without the pop the entire tree
-    stays pinned to the previous root. That leak fails no individual test --
-    each one still reads a path that exists -- which is why it is asserted
-    directly, over every derived member rather than a sampled few.
+    The baseline derives every path from ``first``; overriding the root to
+    ``second`` must move all of them, asserted over every declared member
+    rather than a sampled few, since a member left on the old root fails no
+    individual test -- each one still reads a path that exists.
     """
     first = tmp_path / "first-root"
     second = tmp_path / "second-root"
 
     with (
         derived_storage_settings(first),
-        override_settings(cadrumo_local_storage_root=second) as rebuilt,
+        override_settings(cadrumo_storage_root=second) as rebuilt,
     ):
-        stale = {
-            field_name: getattr(rebuilt, field_name)
-            for field_name in ROOT_DERIVED_STORAGE_FIELDS
-            if not str(getattr(rebuilt, field_name)).startswith(str(second))
+        resolved = {
+            location.category: _resolved(location, rebuilt)
+            for location in STORAGE_TAXONOMY.values()
+            if not (location.scope is StorageScope.ROOT and uses_external_transport(location))
         }
 
-    assert ROOT_DERIVED_STORAGE_FIELDS, "the derived field set must be non-empty, or this asserts nothing"
+    assert resolved, "the declared member set must be non-empty, or this asserts nothing"
+    stale = {category: path for category, path in resolved.items() if path is None or not path.is_relative_to(second)}
     assert not stale, f"these stayed pinned to the previous root: {stale}"
-
-
-def test_an_explicitly_overridden_category_is_not_re_derived(tmp_path: Path) -> None:
-    """Positive control for the test above: the rebuild must not clobber an override.
-
-    A loop that re-derived unconditionally would pass the assertion above while
-    silently discarding exactly the operator intent the override expresses.
-    """
-    elsewhere = tmp_path / "operator-chosen-runs"
-
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path / "first", cadrumo_runs_dir=elsewhere),
-        override_settings(cadrumo_local_storage_root=tmp_path / "second") as rebuilt,
-    ):
-        assert rebuilt.cadrumo_runs_dir == elsewhere
 
 
 def test_the_settings_cache_key_watches_the_file_the_pointer_reader_writes(tmp_path: Path) -> None:

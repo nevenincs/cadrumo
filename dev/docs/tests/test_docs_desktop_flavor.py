@@ -120,6 +120,7 @@ _OUTBOUND_FIELDS = {
     "shortcut": {"id"},
     "open-external": {"url"},
     "context-menu": {"x", "y", "selection", "link", "pointer"},
+    "search-progress": {"id"},
     "search-results": {"id", "results"},
 }
 
@@ -148,7 +149,7 @@ def _build_fixture_site(work: Path, **env_overrides: str) -> tuple[Path, Command
             "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
             "CADRUMO_DOCS_SKIP_CLI_TREE": "1",
             "CADRUMO_DOCS_SKIP_CLI_REFERENCE": "1",
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(work / "state"),
+            "CADRUMO_STORAGE_ROOT": str(work / "state"),
             **env_overrides,
         }
     )

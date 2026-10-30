@@ -64,13 +64,14 @@ class _RequestOptions:
 @pytest.fixture
 def log_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
     """Configure the real logging stack against a temp log directory."""
-    log_dir = tmp_path / "containment-logs"
+    storage_root = tmp_path / "containment-storage"
+    log_dir = storage_root / "logs"
     original_configured = _logging_mod._configured
     monkeypatch.setattr(_logging_mod, "_FIRST_PARTY_LOGGER_ROOTS", set(_logging_mod._FIRST_PARTY_LOGGER_ROOTS))
     try:
         _logging_mod._configured = False
         with override_settings(
-            cadrumo_log_dir=log_dir,
+            cadrumo_storage_root=storage_root,
             cadrumo_log_root_level="DEBUG",
             cadrumo_log_file_level="DEBUG",
         ):

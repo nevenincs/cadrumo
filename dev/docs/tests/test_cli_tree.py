@@ -50,13 +50,13 @@ def test_projection_environment_preserves_the_published_authority_dependency(
     """The isolated docs process keeps authority while discarding product state."""
     authority_root = tmp_path / "authority"
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(authority_root))
-    monkeypatch.setenv("CADRUMO_TOKEN_DIR", str(tmp_path / "ambient-tokens"))
+    monkeypatch.setenv("CADRUMO_LOG_LEVEL", "DEBUG")
 
     environment = _reference_subprocess_environment(tmp_path / "state")
 
     assert environment["CADRUMO_AUTHORITY_ROOT"] == str(authority_root)
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(tmp_path / "state")
-    assert "CADRUMO_TOKEN_DIR" not in environment
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "state")
+    assert "CADRUMO_LOG_LEVEL" not in environment
 
 
 def _collect_all_path_keys_in_subprocess() -> set[str]:

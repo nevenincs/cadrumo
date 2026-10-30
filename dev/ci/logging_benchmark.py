@@ -101,8 +101,7 @@ def main() -> None:
 
     with tempfile.TemporaryDirectory(prefix="cadrumo-logging-benchmark-", dir=prepare_temp_root()) as directory:
         with override_settings(
-            cadrumo_local_storage_root=Path(directory),
-            cadrumo_log_dir=Path(directory) / "logs",
+            cadrumo_storage_root=Path(directory),
             cadrumo_log_stderr_level="CRITICAL",
             cadrumo_log_file_max_bytes=10 * 1024 * 1024,
         ):

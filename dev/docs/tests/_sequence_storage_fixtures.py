@@ -13,7 +13,7 @@ def _isolated_sequence_storage(tmp_path: Path) -> Iterator[None]:
     root = tmp_path / "cadrumo-store"
     root.mkdir()
     with (
-        scoped_env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(root)),
+        scoped_env_var("CADRUMO_STORAGE_ROOT", str(root)),
         scoped_env_var("CADRUMO_OUTPUT_LANGUAGE", "en"),
     ):
         yield

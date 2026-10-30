@@ -513,9 +513,8 @@ def _drop_handlers_bound_to_a_dead_stream() -> None:
     whenever a peer process held that file open. Widening this eviction to drop
     any handler not on the live ``sys.stderr`` therefore could not help — it
     detached the file handler, then the reconfigure immediately rebound it to
-    the same contended path. That fault is fixed at its source, by giving the
-    docs engine a per-process private log directory
-    (:func:`~dev.docs.build.ensure_private_diagnostic_log`).
+    the same contended path. That fault is fixed at its source, by giving each
+    sequence its own storage root and so its own log file.
 
     Detaching here stays narrow on purpose, as a genuine dead-stream guard only:
     handlers whose own stream reports itself CLOSED are removed, so a handler on
@@ -904,9 +903,8 @@ def _execute_page_in_root(
 
 
 def _retained_logs_root() -> Path:
-    """Return where a failed sandbox's logs are kept, read before the sandbox rebinds the log directory."""
-    configured = load_settings().cadrumo_log_dir
-    return (Path(configured) if configured is not None else Path(prepare_temp_root())) / "failed-sandboxes"
+    """Keep disposable failure diagnostics in the owning worktree's temporary root."""
+    return Path(prepare_temp_root()) / "failed-sandboxes"
 
 
 @contextmanager

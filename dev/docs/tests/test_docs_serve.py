@@ -101,7 +101,7 @@ def test_the_live_preview_renders_goldens_without_executing_them(scope: str) -> 
         assert env["CADRUMO_DOCS_LANGUAGE"] == "en"
         assert env["CADRUMO_DOCS_BUILD_ROOT"] == str(docs_build_root(_REPO_ROOT))
     finally:
-        shutil.rmtree(env["CADRUMO_LOCAL_STORAGE_ROOT"], ignore_errors=True)
+        shutil.rmtree(env["CADRUMO_STORAGE_ROOT"], ignore_errors=True)
 
 
 def test_serve_command_ignores_every_build_written_surface() -> None:

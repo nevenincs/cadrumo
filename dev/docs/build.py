@@ -304,73 +304,21 @@ def ensure_isolated_storage_root() -> None:
     ``aeat`` state. Callers that deliberately pin a storage root keep it.
     """
     scratch = prepare_temp_root() / "cadrumo-docs-build-storage"
-    os.environ.setdefault(STORAGE_ROOT.variable, str(scratch))
+    if not os.environ.get(STORAGE_ROOT.variable, "").strip():
+        os.environ[STORAGE_ROOT.variable] = str(scratch)
     root = resolved_storage_root_pin()
     root.mkdir(parents=True, exist_ok=True)
-    ensure_private_diagnostic_log()
 
 
 def resolved_storage_root_pin() -> Path:
     """Replace this process's root pin with the absolute root it names, and return it.
 
-    A caller may pin a relative root (the sample ``env/.env`` does). Every path this
-    module derives from the pin must start from the resolved root: a member path
-    derived from the relative spelling is itself relative, and the settings layer
-    anchors a relative member beneath the resolved root a second time.
+    The product honours only an absolute root and refuses any other spelling, so
+    every path this module derives from the pin starts from the resolved root.
     """
     root = storage_root_override(os.environ[STORAGE_ROOT.variable])
     os.environ[STORAGE_ROOT.variable] = str(root)
     return root
-
-
-def private_log_directory() -> Path:
-    """This process's private diagnostic log directory, beneath the resolved root pin."""
-    return resolved_storage_root_pin() / "logs" / f"pid-{os.getpid()}"
-
-
-def ensure_private_diagnostic_log() -> None:
-    """Re-point diagnostic file logging at a per-PROCESS scratch directory.
-
-    The storage-root pin above lands too late to move the diagnostic log on its
-    own: importing the application already resolved the rotating file handler
-    against the workstation's real log directory, and
-    :func:`~cadrumo.core.logging.configure_logging` is latched, so nothing
-    rebinds it. The docs engine therefore writes into the operator's shared
-    ``cadrumo.log`` — and that is not merely untidy, it is the source of a
-    non-deterministic diagnostic block in captured CLI output.
-
-    ``RotatingFileHandler`` rolls the log over by RENAMING it. On Windows a
-    rename fails with ``PermissionError`` (WinError 32) while any other process
-    holds the file open, and every concurrent ``aeat`` command, pytest worker,
-    and docs build on the box holds exactly that one shared file. The stdlib
-    reports the failed emit by printing its own ``--- Logging error ---`` block
-    — traceback, walked call stack, and ``repr`` of the record arguments — to
-    whatever ``sys.stderr`` is at that instant. Inside a sequence frame that is
-    Click's per-invocation capture buffer, so the block is recorded as CLI
-    output. It carries the runner's own stack frame (``check_sequences`` versus
-    ``refresh_sequences``) and object memory addresses, so no golden written by
-    one verb can ever match the other's run.
-
-    A directory keyed by PID removes the contention rather than masking its
-    symptom: nothing outside this process writes the file, so the rollover
-    rename always succeeds and there is no block to normalise.
-    """
-    from cadrumo.core.config import reset_settings_cache
-    from cadrumo.core.logging import configure_logging
-
-    from .logging_rebind import allow_logging_reconfiguration
-
-    private_log_dir = private_log_directory()
-    if os.environ.get("CADRUMO_LOG_DIR") == str(private_log_dir):
-        return
-    private_log_dir.mkdir(parents=True, exist_ok=True)
-    os.environ["CADRUMO_LOG_DIR"] = str(private_log_dir)
-    # The settings snapshot the latched configuration was derived from is
-    # cached; without dropping it the reconfigure below re-reads the OLD log
-    # directory and rebinds to the very file this function exists to leave.
-    reset_settings_cache()
-    allow_logging_reconfiguration()
-    configure_logging()
 
 
 def _targets_for_docs_root(

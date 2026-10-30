@@ -98,7 +98,7 @@ def _build_user_scope_html(tmp_path: Path) -> Path:
         "CADRUMO_DOCS_OFFLINE": "1",
         "CADRUMO_DOCS_SCOPE": "user",
         "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+        "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
         # The sweep reads the rendered tree's anchors and links; the
         # cli-sequence golden check contributes nothing to that surface and is
         # enforced once per lane by the dedicated goldens gate (see

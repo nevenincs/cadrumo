@@ -356,12 +356,12 @@ def _sandbox_template() -> Path:
 #: privacy boundary (``sensitive-financial-data``) and a determinism one.
 _SCRUBBED_ENV_PREFIXES: tuple[str, ...] = ("CADRUMO_", "AEAT_")
 
-#: Deliberate pins that survive the scrub. ``CADRUMO_LOCAL_STORAGE_ROOT`` is
+#: Deliberate pins that survive the scrub. ``CADRUMO_STORAGE_ROOT`` is
 #: the process-level isolation seam itself (``ensure_isolated_storage_root``);
 #: removing it would UNPIN the guard that keeps import-time settings resolution
 #: off the operator's real product state. The English output pin rides
 #: ``override_settings``, not the environment, so it needs no entry here.
-_ENV_SCRUB_ALLOWLIST: frozenset[str] = frozenset({"CADRUMO_LOCAL_STORAGE_ROOT"})
+_ENV_SCRUB_ALLOWLIST: frozenset[str] = frozenset({"CADRUMO_STORAGE_ROOT"})
 
 
 @contextmanager
@@ -409,12 +409,9 @@ def _isolated_external_tool_env(sandbox_root: Path) -> Generator[None]:
     empty_browsers = sandbox_root / "workdir" / ".playwright-browsers"
     empty_bin.mkdir(parents=True, exist_ok=True)
     empty_browsers.mkdir(parents=True, exist_ok=True)
-    # The product resolves its managed browser root from its own setting rather
-    # than Playwright's variable, so both are pinned to the same empty directory.
     pins = {
         "PATH": str(empty_bin),
         "PLAYWRIGHT_BROWSERS_PATH": str(empty_browsers),
-        "CADRUMO_PLAYWRIGHT_BROWSERS_DIR": str(empty_browsers),
     }
     previous = {key: os.environ.get(key) for key in pins}
     os.environ.update(pins)
@@ -432,13 +429,10 @@ def _isolated_external_tool_env(sandbox_root: Path) -> Generator[None]:
 def _isolated_diagnostic_log() -> Generator[None]:
     """Bind diagnostic file logging to THIS sequence's own storage root.
 
-    Mirrors :func:`dev.docs.build.ensure_private_diagnostic_log`'s reasoning one
-    level down: that function re-points the shared handler once per PROCESS so
-    concurrent processes cannot contend for one file. It never runs again per
-    sequence, so every sequence sharing a process (a full docs build, or a
-    multi-sequence ``--page`` check) still funnels DEBUG records into whichever
-    file the FIRST sequence in that process happened to bind — the module
-    docstring's "sequences never share state" claim was false for the log
+    Every sequence sharing a process (a full docs build, or a multi-sequence
+    ``--page`` check) would otherwise funnel DEBUG records into whichever file
+    the FIRST sequence in that process happened to bind — the module
+    docstring's "sequences never share state" claim would be false for the log
     channel alone. A ``config repair logs`` frame then tails a file carrying
     other sequences' temp paths and timestamps, which no golden can pin.
 
@@ -446,34 +440,19 @@ def _isolated_diagnostic_log() -> Generator[None]:
     so the derived path below is rooted under THIS sequence's own storage root,
     not the process default.
 
-    An explicit ``override_settings(cadrumo_log_dir=...)`` here, not reliance on
-    ``cadrumo_local_storage_root``'s automatic re-derivation
-    (:data:`~cadrumo.core.storage_taxonomy_locations.ROOT_DERIVED_STORAGE_FIELDS`):
-    :func:`dev.docs.build.ensure_private_diagnostic_log` already set
-    ``CADRUMO_LOG_DIR`` explicitly at PROCESS start, so the process-wide
-    :class:`~cadrumo.core.config.Settings` carries ``cadrumo_log_dir`` in its
-    own ``model_fields_set`` — and ``override_settings`` preserves a field
-    already marked explicit through every later override precisely because
-    that is the correct behaviour for a genuine operator override. It cannot
-    distinguish that case from this one, so the field must be re-set
-    explicitly here rather than left to re-derive. Rebinding through the
-    ``CADRUMO_LOG_DIR`` environment variable has no effect inside the sandbox:
-    :func:`~cadrumo.core.config.load_settings` returns the frozen override
-    object regardless of environment changes.
+    Logging derives its directory from the canonical storage taxonomy and the
+    isolated settings root. Reconfigure its process-wide sink for each sandbox.
     """
-    from cadrumo.core.logging import configure_logging
+    from cadrumo.core.logging import configure_logging, flush_logging
 
     from ..logging_rebind import allow_logging_reconfiguration
 
-    log_dir = Path(load_settings().cadrumo_local_storage_root) / "logs"
-    settings_context = override_settings(cadrumo_log_dir=str(log_dir))
-    settings_context.__enter__()
     allow_logging_reconfiguration()
     configure_logging()
     try:
         yield
     finally:
-        settings_context.__exit__(None, None, None)
+        flush_logging()
         # Release the latch and leave it unconfigured rather than eagerly
         # rebinding: this sequence's temporary directory is about to be torn
         # down, and the next sequence's own entry reconfigures fresh against
@@ -624,18 +603,18 @@ def sequence_sandbox(
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
         _provisioned_sandbox_profile(published=True),
-        sequence_receipt_store(Path(load_settings().cadrumo_local_storage_root), enabled=persistent_sign_in),
+        sequence_receipt_store(Path(load_settings().cadrumo_storage_root), enabled=persistent_sign_in),
     ):
         if enrolled_sequence_ids is None and sequence_id == "profile-setup-delete":
             _publish_replacement_sandbox_profile()
         with sequence_runtime(
-            Path(load_settings().cadrumo_local_storage_root),
+            Path(load_settings().cadrumo_storage_root),
             signed_in_profile=UUID(SANDBOX_PROFILE_ID) if persistent_sign_in else None,
         ):
             effective_settings = load_settings()
             try:
                 yield SequenceSandbox(
-                    storage_root=Path(effective_settings.cadrumo_local_storage_root),
+                    storage_root=Path(effective_settings.cadrumo_storage_root),
                     workdir=workdir.resolve(),
                     profile_id=SANDBOX_PROFILE_ID,
                     frozen_instant=SANDBOX_INSTANT,

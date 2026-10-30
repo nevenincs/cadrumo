@@ -209,7 +209,6 @@ from dev.docs.apidocs.rendering import TypeHintsFormatter
 
 repo = Path({str(REPO_ROOT)!r})
 os.environ["CADRUMO_DOCS_PROJECT_ROOT"] = str(repo)
-os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = {str(tmp_path / "storage")!r}
 os.environ["CADRUMO_STORAGE_ROOT"] = {str(tmp_path / "storage")!r}
 sys.path.insert(0, str(repo))
 sys.path.insert(0, str(repo / "src"))

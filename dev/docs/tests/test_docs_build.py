@@ -181,12 +181,11 @@ def test_docs_build_root_refinement_is_relative_and_pinned_before_isolation(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     storage_root = tmp_path / "storage"
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage_root))
     monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "compiled/docs")
 
     resolved = pin_docs_build_root(_REPO_ROOT)
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "isolated-product-state"))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "isolated-product-state"))
 
     assert resolved == storage_root / "compiled" / "docs"
     assert docs_build_root(_REPO_ROOT) == resolved
@@ -195,7 +194,6 @@ def test_docs_build_root_refinement_is_relative_and_pinned_before_isolation(
 
 def test_docs_build_root_defaults_to_the_checkout_build_tree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo_root = tmp_path / "checkout"
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "separate-storage"))
     monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "")
 
@@ -746,7 +744,7 @@ def _run_fixture_preview(repo_root: Path, storage: Path) -> str:
         "build_docs(repo, plan, strict=False, single_page=True, scope='user')"
     )
     env = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_DOCS_")}
-    env["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage)
+    env["CADRUMO_STORAGE_ROOT"] = str(storage)
     result = subprocess.run(
         [sys.executable, "-c", script, str(repo_root)],
         cwd=_REPO_ROOT,
@@ -770,7 +768,7 @@ def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path, mo
     (docs_root / "guide" / "one.rst").write_text("One\n===\n", encoding="utf-8")
     (docs_root / "guide" / "two.rst").write_text("Two\n===\n", encoding="utf-8")
     storage = tmp_path / "storage"
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(storage))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage))
     monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "")
 
     first = _run_fixture_preview(repo_root, storage)
@@ -829,7 +827,7 @@ def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
         **os.environ,
         "CADRUMO_DOCS_SCOPE": scope,
         "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / f"cadrumo-scope-store-{scope}"),
+        "CADRUMO_STORAGE_ROOT": str(tmp_path / f"cadrumo-scope-store-{scope}"),
     }
     result = subprocess.run(
         [sys.executable, "-c", script],
@@ -907,7 +905,7 @@ def _conf_read_set(tmp_path: Path, argv: list[str], *, scope: str = "full") -> d
         **os.environ,
         "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
         "CADRUMO_DOCS_SCOPE": scope,
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-read-set-store"),
+        "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-read-set-store"),
     }
     result = subprocess.run(
         [sys.executable, "-c", script],
@@ -1028,7 +1026,7 @@ def _render_focused_index(tmp_path: Path, flavor: str) -> Path:
         "CADRUMO_DOCS_ONLY": "index.md",
         "CADRUMO_DOCS_MASTER_DOC": "index",
         "CADRUMO_DOCS_SINGLE_PAGE": "1",
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+        "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
         # This gate reads the RENDERED index page's identity marks only; the
         # cli-sequence golden check and the cli-tree projection are enforced by
         # their dedicated gates and are not part of this page's assertions.

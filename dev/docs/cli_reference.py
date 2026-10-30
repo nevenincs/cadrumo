@@ -172,7 +172,7 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
     authority_root = os.environ.get(AUTHORITY_ROOT_ENV, "").strip()
     environment = ambient_product_settings_removed()
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
+    environment["CADRUMO_STORAGE_ROOT"] = str(storage_root)
     if authority_root:
         environment[AUTHORITY_ROOT_ENV] = authority_root
     return environment

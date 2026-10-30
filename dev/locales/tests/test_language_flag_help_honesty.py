@@ -51,12 +51,7 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
     env.update(
         {
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-            "CADRUMO_TOKEN_DIR": str(tmp_path / "probe-tokens"),
-            "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
-            "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
-            "CADRUMO_INVOICES_DIR": str(tmp_path / "invoices"),
-            "CADRUMO_DRAFTS_DIR": str(tmp_path / "probe-drafts"),
+            "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
         },
     )
     if language is not None:

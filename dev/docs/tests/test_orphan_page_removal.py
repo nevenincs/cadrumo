@@ -117,29 +117,29 @@ def test_missing_html_root_is_a_noop(tmp_path: Path) -> None:
 
 def test_isolated_storage_root_set_and_created() -> None:
     """When unset, the storage root points at a created build-scoped scratch dir."""
-    prior = os.environ.pop("CADRUMO_LOCAL_STORAGE_ROOT", None)
+    prior = os.environ.pop("CADRUMO_STORAGE_ROOT", None)
     try:
         ensure_isolated_storage_root()
-        configured = Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"])
+        configured = Path(os.environ["CADRUMO_STORAGE_ROOT"])
         assert configured.name == "cadrumo-docs-build-storage"
         assert configured.is_dir()
     finally:
         if prior is None:
-            os.environ.pop("CADRUMO_LOCAL_STORAGE_ROOT", None)
+            os.environ.pop("CADRUMO_STORAGE_ROOT", None)
         else:
-            os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = prior
+            os.environ["CADRUMO_STORAGE_ROOT"] = prior
 
 
 def test_isolated_storage_root_respects_caller_pin(tmp_path: Path) -> None:
     """A deliberately pinned storage root is kept verbatim."""
-    prior = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
-    os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(tmp_path / "pinned")
+    prior = os.environ.get("CADRUMO_STORAGE_ROOT")
+    os.environ["CADRUMO_STORAGE_ROOT"] = str(tmp_path / "pinned")
     try:
         ensure_isolated_storage_root()
-        assert os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] == str(tmp_path / "pinned")
+        assert os.environ["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "pinned")
         assert (tmp_path / "pinned").is_dir()
     finally:
         if prior is None:
-            os.environ.pop("CADRUMO_LOCAL_STORAGE_ROOT", None)
+            os.environ.pop("CADRUMO_STORAGE_ROOT", None)
         else:
-            os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = prior
+            os.environ["CADRUMO_STORAGE_ROOT"] = prior

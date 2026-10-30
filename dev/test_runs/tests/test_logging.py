@@ -68,16 +68,8 @@ class _FinishedRunLog(RunLog):
 def _top_level_environment() -> dict[str, str]:
     """Return an environment in which a child pytest mints its own run rather than joining this one."""
     environment = os.environ.copy()
-    run_root = environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
     environment.pop("CADRUMO_TEST_RUN_SCRATCH", None)
-    configured_logs = environment.get("CADRUMO_LOG_DIR", "").strip()
-    if (run_root is not None and run_root) and configured_logs:
-        # The parent logger exports its generated per-process product-log path.
-        # Drop that derived value with the run-root binding so an independent
-        # child can mint a fresh run; explicit overrides remain untouched.
-        generated_logs = Path(run_root) / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
-        if Path(configured_logs).resolve() == generated_logs.resolve():
-            environment.pop("CADRUMO_LOG_DIR", None)
     return environment
 
 
@@ -612,9 +604,7 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     environment["CADRUMO_PYTEST_PATH_PROBE"] = str(report)
     environment["XDG_CACHE_HOME"] = str(ambient_cache)
     configured_storage = tmp_path / "configured-storage"
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = ""
     environment["CADRUMO_STORAGE_ROOT"] = str(configured_storage)
-    environment["CADRUMO_LOG_DIR"] = "diagnostic-logs"
     result = subprocess.run(
         [
             sys.executable,
@@ -640,11 +630,10 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     assert Path(paths["cache"]).resolve() == run_root / "cache" / "pytest"
     # The child inherits machine-managed tool paths unchanged.
     assert paths["tool_cache_home"] == str(ambient_cache)
-    assert paths["log_dir"] == str(configured_storage / "diagnostic-logs")
     assert Path(paths["basetemp"]).resolve() == scratch / "pytest"
     assert Path(paths["stdlib_temp"]).resolve() == scratch
     storage_root = Path(paths["storage_root"]).resolve()
-    assert storage_root.parent == Path(paths["storage_temp_root"]).resolve()
+    assert storage_root.parent == Path(paths["stdlib_temp"]).resolve()
     assert Path(json.loads((run_root / "run.json").read_text(encoding="utf-8"))["scratch"]).resolve() == scratch
 
 

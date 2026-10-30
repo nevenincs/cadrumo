@@ -120,7 +120,7 @@ def gate_build_env(tmp_path: Path, **extra: str) -> dict[str, str]:
         **os.environ,
         "CADRUMO_DOCS_OFFLINE": "1",
         "CADRUMO_DOCS_PROJECT_ROOT": str(REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+        "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
         "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
         "CADRUMO_DOCS_SKIP_CLI_TREE": "1",
     }

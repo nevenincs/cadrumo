@@ -301,7 +301,7 @@ def test_delete_preserves_the_authenticated_replacement_selection(
 
     def observe_first_logout(args: tuple[str, ...], *, program: CommandProgram) -> Result:
         if program is CommandProgram.AEAT and args[-2:] == ("config", "logout"):
-            root = Path(load_settings().cadrumo_local_storage_root)
+            root = Path(load_settings().cadrumo_storage_root)
             assert read_pointer_selection(root).bucket_id == SANDBOX_PROFILE_ID
             assert profile_session_path(storage_root=root, profile_id=UUID(SANDBOX_PROFILE_ID)).is_file()
             observations.append(True)
@@ -342,7 +342,13 @@ def test_sandbox_template_respects_temporary_root_lifetime(
     authority_root = load_settings().cadrumo_authority_root
     first_root = tmp_path / "first-lifetime"
     second_root = tmp_path / "second-lifetime" if lifetime_change == "root_changed" else first_root
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(first_root))
+    temporary_root = [first_root]
+
+    def prepare_temp_root() -> Path:
+        temporary_root[0].mkdir(parents=True, exist_ok=True)
+        return temporary_root[0]
+
+    monkeypatch.setattr(sequence_sandbox_module, "prepare_temp_root", prepare_temp_root)
     with override_settings(cadrumo_authority_root=authority_root):
         first = sequence_sandbox_module._sandbox_template()
         assert first.is_relative_to(first_root.resolve())
@@ -350,7 +356,7 @@ def test_sandbox_template_respects_temporary_root_lifetime(
     if lifetime_change == "template_removed":
         assert first.resolve(strict=True).is_relative_to(tmp_path.resolve(strict=True))
         shutil.rmtree(first)
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(second_root))
+    temporary_root[0] = second_root
     with override_settings(cadrumo_authority_root=authority_root):
         second = sequence_sandbox_module._sandbox_template()
         assert second != first
@@ -948,7 +954,7 @@ class TestAmbientEnvNeutralisation:
             with sequence_sandbox(sequence_id="env-scrub-probe", sandbox_root=tmp_path / "scope"):
                 observed["clave"] = os.environ.get("CADRUMO_CLAVE_MOVIL_DNI_NIE")
                 observed["aeat"] = os.environ.get(_FAKE_SESSION_ENV_NAME)
-                observed["pin"] = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
+                observed["pin"] = os.environ.get("CADRUMO_STORAGE_ROOT")
 
             # Inside the scope: operator vars gone, the isolation pin intact.
             assert observed["clave"] is None

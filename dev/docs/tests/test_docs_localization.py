@@ -200,7 +200,7 @@ def _conf_language_config() -> dict[str, object]:
         env = {
             **os.environ,
             "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-            "CADRUMO_LOCAL_STORAGE_ROOT": storage_root,
+            "CADRUMO_STORAGE_ROOT": storage_root,
         }
         result = subprocess.run(
             [sys.executable, "-c", script],

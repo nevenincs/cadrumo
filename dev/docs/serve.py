@@ -564,7 +564,7 @@ def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_DOCS_LANGUAGE": "en",
             "CADRUMO_DOCS_SCOPE": scope,
-            "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-docs-serve-", dir=prepare_temp_root()),
+            "CADRUMO_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-docs-serve-", dir=prepare_temp_root()),
         }
     )
     return environment

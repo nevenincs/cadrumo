@@ -107,10 +107,9 @@ def test_default_logging_routes_warnings_to_file_not_stderr(tmp_path: Path, caps
     """
 
     marker = "warning-route-marker-7f6a3c"
-    log_dir = tmp_path / "logs"
     try:
         _logging_mod._configured = False
-        with override_settings(cadrumo_log_dir=log_dir):
+        with override_settings(cadrumo_storage_root=tmp_path):
             configure_logging()
             logger = get_logger("aeat-test_logging.default_route")
 
@@ -140,7 +139,7 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
     """An uncreatable log directory must NOT crash startup with a raw traceback.
 
     Real-behavior reproduction of a Windows PowerShell failure mode: the log
-    directory derived from an inaccessible ``CADRUMO_LOCAL_STORAGE_ROOT`` cannot be
+    directory derived from an inaccessible ``CADRUMO_STORAGE_ROOT`` cannot be
     created, and ``configure_logging`` runs at import time — before any CLI
     error boundary. The contract: no exception escapes, logging degrades to
     stderr-only (no ``FileHandler`` for the dead path), and an instructive,
@@ -149,12 +148,12 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
 
     blocker = tmp_path / "storage-root-file"
     blocker.write_text("x", encoding="utf-8")
-    dead_log_dir = blocker / "probe-logs"
+    dead_log_dir = blocker / "logs"
 
     failed_before = diagnostic_delivery_status()["records"].failed
     try:
         _logging_mod._configured = False
-        with override_settings(cadrumo_log_dir=dead_log_dir):
+        with override_settings(cadrumo_storage_root=blocker):
             configure_logging()
 
         # Configuration runs on the dispatch thread, which counts a failure instead of raising it.
@@ -176,7 +175,7 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
         assert flush_logging(timeout=HANG_GUARD_SECONDS)
         captured = capsys.readouterr()
         assert "stderr-only" in captured.err
-        assert "CADRUMO_LOCAL_STORAGE_ROOT" in captured.err
+        assert "CADRUMO_STORAGE_ROOT" in captured.err
         assert not dead_log_dir.exists()
     finally:
         # Rebuild the normal configuration so sibling tests see a healthy logger.

@@ -9,6 +9,7 @@ session, which is what a test that forgot to close one does.
 from __future__ import annotations
 
 import os
+import tempfile
 from contextlib import ExitStack
 from pathlib import Path
 
@@ -27,7 +28,7 @@ _LEAKED_LEASES = ExitStack()
 def test_reads_the_shared_authority_from_the_controlled_temporary_root() -> None:
     """Open the frozen snapshot through the shared owner, as runtime reads it."""
     authority_root = Path(os.environ["CADRUMO_AUTHORITY_ROOT"]).resolve()
-    temporary_root = Path(os.environ["CADRUMO_TEMP_DIR"]).resolve()
+    temporary_root = Path(tempfile.gettempdir()).resolve()
     assert authority_root.is_relative_to(temporary_root), f"{authority_root} is not under {temporary_root}"
 
     if os.environ.get(LEAK_LEASE_ENV) == "1":
