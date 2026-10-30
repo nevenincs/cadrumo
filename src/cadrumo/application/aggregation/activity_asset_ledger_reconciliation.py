@@ -21,8 +21,11 @@ from ...core.i18n.render import lookup_translation
 from ...core.i18n.translatable import Translatable as tr
 from ...core.text_fold import fold_diacritics
 from ...domain.calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
-from ...domain.categories.spending_category import SpendingCategory
-from ...domain.categories.spending_category_catalogue import amortizable_spending_categories
+from ...domain.categories.spending_category import SpendingCategory, SpendingCategoryFamily
+from ...domain.categories.spending_category_catalogue import (
+    amortizable_spending_categories,
+    resolve_spending_category_catalogue,
+)
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
@@ -324,7 +327,11 @@ def possibly_durable_expense_findings(
     )
     if not candidates:
         return ()
-    keywords = _amortizable_keywords(amortizable)
+    # Goods only: a dwelling's own words ("casa", "vivienda") also describe rent and IBI rows.
+    office = resolve_spending_category_catalogue(effective_date=date(tax_year, 12, 31)).categories_for_family(
+        SpendingCategoryFamily.OFFICE
+    )
+    keywords = _amortizable_keywords(category for category in amortizable if category in office)
     degraded: tuple[CalculationSourceDiagnostic, ...] = ()
     catalogue = InvoiceCatalogue()
     try:
