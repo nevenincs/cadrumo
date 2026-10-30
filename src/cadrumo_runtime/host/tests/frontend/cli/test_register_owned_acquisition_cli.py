@@ -284,7 +284,7 @@ def _register_machine(transaction_id: str) -> None:
         },
         separators=(",", ":"),
     )
-    created = _result(["app", "ledger", "actividad-asset", "create", revision])
+    created = _result(["app", "ledger", "actividad-asset", "create", "--name", _ASSET_ID, revision])
     revisions = created.get("revisions")
     assert isinstance(revisions, list)
     assert revisions[0]["asset_id"] == _ASSET_ID
@@ -312,8 +312,6 @@ def _claim_2025_charge() -> Decimal:
             "actividad-asset",
             "claim",
             json.dumps(forecast, separators=(",", ":")),
-            "--creating-operation",
-            "cli.register-owned-acquisition.claim",
         ],
     )
     claim = claimed.get("claim")
@@ -370,22 +368,22 @@ def test_register_owned_acquisition_deducts_the_charge_and_keeps_its_input_iva(t
     assert Decimal(iva_q2["28"]) == _BASE
     assert Decimal(iva_q2["iva.soportado.interiores"]) == _IVA
 
-    # The 1.000,00 purchase is the amortizable base, so no quarter deducts it;
-    # the second quarter's cumulative gasto is nothing at all.
-    assert Decimal(renta_q2["02"]) == Decimal("0")
+    # The 1.000,00 purchase is the amortizable base, so no quarter deducts it.
+    # Modelo 130 accrues from the schedule: 5 April through 30 June is 26 + 31 + 30
+    # days, and 1,000.00 x 12% x 87/365 = 28.60.
+    assert Decimal(renta_q2["02"]) == Decimal("28.60")
     assert Decimal(renta_q4["02"]) == charge
     assert Decimal(annual["0208"]) == charge
     assert Decimal(_BASE) not in {Decimal(value) for value in annual.values()}
 
 
-def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Path) -> None:
-    """The collision the register exists to prevent is still a refusal, not a sum.
+def test_a_separate_depreciation_row_is_withheld_with_a_blocking_note(tmp_path: Path) -> None:
+    """The collision the register exists to prevent is never a sum.
 
     The same store gains a second ledger row tagged with an amortization
-    category. The register already charges 2025 and owns the amortization
-    destinations exclusively, so declaring that row's amount as well would
-    deduct the year's depreciation twice. Both the quarterly and the annual
-    calculation refuse and name what to reclassify or reverse.
+    category, which no element owns. Declaring its amount as well would deduct
+    depreciation the register does not know about, so the row reaches no casilla
+    and the calculation carries a blocking note naming it and the remedy.
     """
     with runtime_cli_profile(tmp_path=tmp_path, label="asset collision") as profile:
         _seed_ready_profile(profile.storage_root, profile.bucket_id)
@@ -408,15 +406,15 @@ def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Pat
             paid_amount=competing_paid,
         )
 
-        refused_quarter = invoke_cached_cli(
+        created = invoke_cached_cli(
             [
                 *("--format", "json", "app", "modelo", "work", "create"),
                 *("--modelo", "130", "--year", "2025", "--period", "4T"),
             ],
         )
-        assert refused_quarter.exit_code == 0, refused_quarter.output
-        work_unit_id = json.loads(refused_quarter.output)["result"]["work_unit_id"]
-        refused_quarter = invoke_cached_cli(
+        assert created.exit_code == 0, created.output
+        work_unit_id = json.loads(created.output)["result"]["work_unit_id"]
+        calculated = invoke_cached_cli(
             [
                 *("--format", "json", "app", "modelo", "work", "calculate"),
                 *("--modelo", "130", "--year", "2025", "--period", "4T"),
@@ -424,16 +422,20 @@ def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Pat
                 *_NO_PRIOR_PAGOS_FRACCIONADOS,
             ],
         )
-
-        assert refused_quarter.exit_code != 0, refused_quarter.output
+        assert calculated.exit_code == 0, calculated.output
         status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
         assert status.exit_code == 0, status.output
         persisted = json.loads(status.output)["result"]
 
-    error = json.loads(refused_quarter.output)["error"]
-    assert error["code"] == "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT", refused_quarter.output
-    assert error["context"]["terminal_condition"] == "refused"
-    assert error["context"]["effect"] == "unknown"
-    assert error["context"]["operation_id"]
-    assert persisted["current_calculation_revision_id"] is None
+    envelope = json.loads(calculated.output)
+    # Only the register's 89.10 is deducted: the competing 250.00 is not added.
+    assert Decimal(envelope["result"]["casilla_values"]["02"]) == _CHARGE_2025
+    note = next(
+        notice["context"]
+        for notice in envelope["notices"]
+        if (notice.get("context") or {}).get("reason") == "ledger_amortization_row_unregistered"
+    )
+    assert note["level"] == "blocks"
+    assert note["remedy"]
+    assert persisted["current_calculation_revision_id"] == envelope["result"]["calculation_revision_id"]
     assert persisted["filed_calculation_revision_id"] is None
