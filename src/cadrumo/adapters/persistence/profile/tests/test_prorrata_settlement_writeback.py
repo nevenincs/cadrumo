@@ -38,8 +38,8 @@ from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_APLICADA_CASILLA,
     M303_COMPENSATION_PENDING_PRIOR_CASILLA,
-    M303_COMPENSATION_RESULTADO_FINAL_CASILLA,
 )
+from .....domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.calculation_repository import upsert_calculation_revision
 from .....domain.modelos.calculation_revision import (
@@ -116,17 +116,16 @@ def _seed_verified_m303_revision(
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
+    period = Period.from_year_and_code(2026, period_code)
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period=period.registry_token)
     # Filed as an ingreso, so the positive result the disposition declares is observed with it.
     values.setdefault(_RESULTADO, Decimal("100.00"))
     # The settlement snapshot every local M303 filing persists reads the final
     # result and the compensation operands; with no prior credit both are zero.
-    values.setdefault(M303_COMPENSATION_RESULTADO_FINAL_CASILLA, values[_RESULTADO])
+    values.setdefault(m303_resultado_final_casilla(snapshot.revision), values[_RESULTADO])
     values.setdefault(M303_COMPENSATION_PENDING_PRIOR_CASILLA, Decimal("0"))
     values.setdefault(M303_COMPENSATION_APLICADA_CASILLA, Decimal("0"))
-    period = Period.from_year_and_code(2026, period_code)
-    revision_id = (
-        published_authority_operation().snapshot("303", filing_year=2026, period=period.registry_token).revision.id
-    )
+    revision_id = snapshot.revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",

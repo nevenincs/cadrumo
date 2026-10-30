@@ -38,8 +38,8 @@ from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bind
     M303_COMPENSATION_APLICADA_CASILLA,
     M303_COMPENSATION_PENDING_PRIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
-    M303_COMPENSATION_RESULTADO_FINAL_CASILLA,
 )
+from cadrumo.domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -122,7 +122,7 @@ def _seed_borrador(
     # result and the compensation operands; with no prior credit both are zero.
     casilla_values = {
         _M303_RESULT_CASILLA: Decimal("1000.00"),
-        M303_COMPENSATION_RESULTADO_FINAL_CASILLA: Decimal("1000.00"),
+        m303_resultado_final_casilla(snapshot.revision): Decimal("1000.00"),
         M303_COMPENSATION_PENDING_PRIOR_CASILLA: Decimal("0"),
         M303_COMPENSATION_APLICADA_CASILLA: Decimal("0"),
     }

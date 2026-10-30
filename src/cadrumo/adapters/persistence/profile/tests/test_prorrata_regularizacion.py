@@ -48,9 +48,9 @@ from .....domain.calculations.registry.governed_fact_scope import validating_gov
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_APLICADA_CASILLA,
     M303_COMPENSATION_PENDING_PRIOR_CASILLA,
-    M303_COMPENSATION_RESULTADO_FINAL_CASILLA,
 )
 from .....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from .....domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
 from .....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
     ProrrataRegularizacionProvider,
@@ -174,7 +174,7 @@ def _seed_verified_m303_settlement(
         _RESULTADO_ID: Decimal("0"),
         # The settlement snapshot every local M303 filing persists reads the
         # final result and the compensation operands; none is carried here.
-        M303_COMPENSATION_RESULTADO_FINAL_CASILLA: Decimal("0"),
+        m303_resultado_final_casilla(registry_snapshot.revision): Decimal("0"),
         M303_COMPENSATION_PENDING_PRIOR_CASILLA: Decimal("0"),
         M303_COMPENSATION_APLICADA_CASILLA: Decimal("0"),
     }
