@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-09-27'
+modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:e643c12a23fde546c793e3b5b08db7d38d518473a2a93f6718dae46c209f7894'
+body_hash: 'sha256:27c06aa6240f5d5a2fd4ace03776ca5e07ba2d2ef9810a521bf26defad434249'
 related:
   - "[[2026-09-21-assets-core-ownership-contracts-reference]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
@@ -188,3 +188,16 @@ Authorized by the operator's registry conformance rectification brief of 2026-09
 
 - Initial filing-grade support extends from tax year 2025 to every year of the registry support envelope, floor 2022, for the same regimes and asset kinds. The Modelo 100 and Modelo 130 projections of the same effective claims target casillas 0208, 0227 and 02 in every supported year, where their meaning is unchanged.
 - Asset forecasts select the Modelo 100 edition canonically in every frontend; a year beyond the newest authored edition is served by projection and keeps that edition's capability limits.
+
+## Amendment 2026-10-30
+
+Authorized by the operator on 2026-10-30, who directed reconciliation of the amortization decisions with no divergent routes, on the evidence in `2026-10-30-assets-core-amortization-law-and-form-placement-research` and `2026-10-30-assets-core-implementation-state-against-law-reference`. The accepted body and earlier amendment are preserved; where they differ, this section governs.
+
+- Period amounts: claims are recorded by period and project whole. A Modelo 130 period counts each effective claim whose covered interval ends within that period's year-to-date span, and it never prorates a claim. This replaces the Implementation wording that an M130 projection multiplies the full-year charge by service days; the day-count rule now applies when the claim is computed.
+- Absence: for a Modelo 100 or Modelo 130 calculation, an element in service with lawful base remaining and no contiguous effective claims through the calculated period's end carries a blocking note. It is never read as zero. Calculate, preview, verify and export still create no charges.
+- Rounding: for every method charged by time, an emitted amount is the difference of the rounded cumulative charge of the tax year at the interval's two ends, so contiguous claims sum exactly to the annual figure.
+- Collision: the same-asset and same-year scope of the collision rule is replaced by the unconditional route in the 2026-10-30 amendment of `2026-08-23-amortization-casilla-mapping-adr`.
+- Consumption: a claim does not carry the calculation or filing revision that consumes it, because claim identity hashes its content and cannot change afterwards. The calculation revision records the effective claim IDs it consumed, and the existing drift gate treats a change to that set as staleness. The two unused fields leave the claim; there is no released compatibility floor.
+- Corrections: a superseding revision is refused while effective claims exceed its amortizable basis. The operator supersedes the affected claims in the same correction flow.
+- One projection: the Modelo 100 and Modelo 130 selection of effective claims has one defining function, used by both calculation and filing handoff.
+- Boundaries: the cost-basis rule is read with `2026-09-21-assets-core-cost-basis-stages-adr`. IVA amounts and shares come from their own owners and never scale the IRPF base directly. Residents of foral territories are refused with a typed reason, because Modelo 100 is not their return. Disposal gain or loss remains outside this decision and needs its own.

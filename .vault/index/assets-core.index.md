@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-10-03'
+modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:71f5a908160ce0d1e09d3bea76d6b51c4c148d376cddb70c28ab94ef5e9808ff'
+body_hash: 'sha256:0941637553af59f6a532997d4ae7435418e62ee6d1016559120cd23bc2553901'
 related:
   - '[[2026-09-21-assets-core-audit]]'
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
@@ -21,6 +21,8 @@ related:
   - '[[2026-09-24-assets-core-amortization-domain-grounding-research]]'
   - '[[2026-09-24-assets-core-average-workforce-write-path-adr]]'
   - '[[2026-09-24-assets-core-profile-indexed-object-write-path-reference]]'
+  - '[[2026-10-30-assets-core-amortization-law-and-form-placement-research]]'
+  - '[[2026-10-30-assets-core-implementation-state-against-law-reference]]'
 ---
 
 # `assets-core` feature index
@@ -45,6 +47,7 @@ Auto-generated index of all documents tagged with `#assets-core`.
 
 - `2026-09-21-assets-core-ownership-contracts-reference` - `assets-core` reference: `IRPF asset ownership and integration contracts`
 - `2026-09-24-assets-core-profile-indexed-object-write-path-reference` - `assets-core` reference: `How indexed profile objects are written and read today`
+- `2026-10-30-assets-core-implementation-state-against-law-reference` - `assets-core` reference: `Implementation state of the activity-asset register against the law`
 
 ### research
 
@@ -53,3 +56,4 @@ Auto-generated index of all documents tagged with `#assets-core`.
 - `2026-09-23-assets-core-proration-and-incentive-scope-research` - `assets-core` research: `Mid-year proration unit, LIS 103.5 reading and DA 17a/18a windows for IRPF 2025`
 - `2026-09-23-assets-core-vehicle-affectation-research` - `assets-core` research: `IRPF vehicle affectation and LIS DA 18a vehicle free depreciation`
 - `2026-09-24-assets-core-amortization-domain-grounding-research` - `assets-core` research: `Amortization domain grounding`
+- `2026-10-30-assets-core-amortization-law-and-form-placement-research` - `assets-core` research: `IRPF amortization law, form placement and the capitalize-or-expense test`

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#amortization-casilla-mapping'
 date: '2026-08-23'
-modified: '2026-09-08'
+modified: '2026-10-30'
 body_schema: 'body-v1'
-body_hash: 'sha256:14b9eb599b02b09a36d838cf2d0808e26e0acf5ed184ea845e8852d47828b954'
+body_hash: 'sha256:7745a3adb09bb49ae4028a66193e9ec0bccbb12c6d998abf97c508ebeaa6baae'
 related:
   - "[[2026-08-23-amortization-casilla-grounding-research]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
@@ -102,3 +102,13 @@ Atomic delivery prevents persistence shape, public vocabulary, and synthetic rou
 - Future implementation cannot claim progress by landing isolated records, repositories, namespaces, or self-tests without the owning application and filing path.
 - Removal of the partial slice reduces duplicate vocabulary and prevents unvalidated recorded amounts from becoming de facto filing inputs.
 - Finca amortization and bienes-inversión retain their existing independent ownership and behavior.
+
+## Amendment 2026-10-30
+
+Authorized by the operator on 2026-10-30, who directed reconciliation of the amortization decisions with no divergent routes, on the evidence in `2026-10-30-assets-core-amortization-law-and-form-placement-research` and `2026-10-30-assets-core-implementation-state-against-law-reference`. The accepted body above is preserved; where it differs, this section governs.
+
+- Scope follows `2026-09-21-assets-core-lifecycle-contract-adr` as amended: every year of the registry support envelope, floor 2022, not 2025 alone.
+- The activity-asset register is the only route to casillas `0208` and `0227`. This holds in every year, whether or not the register holds a claim for that year. Ledger categories whose destination is `0208` or `0227`, including the low-value and home-depreciation categories, route no deductible amount.
+- A ledger row in such a category is acquisition evidence. If the register owns it, it is withheld as today. If the register does not own it, the calculation carries a blocking note naming the row and the remedy, which is to register the element. It is never deducted, and it is never omitted with only an advisory.
+- Casilla `0227` receives its binding in every supported Modelo 100 revision. A destination the source owns without a binding is a defect of this decision, not an unsupported case.
+- Purchases within the LIS art. 12.3.e limit are recorded through the register under the low-value free method, which is the only place the new-element condition and the single annual limit are tested.

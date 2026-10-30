@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:1bb552a5b7bdaf1c445958503f507e3d869a7f5040dc1fd2030aef13e88b8e03'
+body_hash: 'sha256:b980d80bb4f667ad3fad7a0073dd627abeafdf6c3e6dd04873ca7068518bad65'
 related:
   - "[[2026-09-23-assets-core-vehicle-affectation-research]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
@@ -94,3 +94,9 @@ continuity contract rather than a new store.
   register; this decision does not link the two.
 - Authorized by the operator's coordinator on 2026-09-23 as the ordered third
   follow-up of the method-set work, after the proration and workforce items.
+
+## Amendment 2026-10-30
+
+Authorized by the operator on 2026-10-30, on the evidence in `2026-09-23-assets-core-proration-and-incentive-scope-research`. The accepted body is preserved; where it differs, this section governs.
+
+The RDL 7/2026 question named under Constraints is settled. Its art. 37 reaches only periods not concluded at 22 March 2026, so the DA 18 window for IRPF 2025 stays 2024 and 2025 on RDL 4/2024. A 2026 window requires a 2026 edition citing RDL 7/2026, as the 2026-10-30 amendment of `2026-09-23-assets-core-amortization-method-set-adr` states.

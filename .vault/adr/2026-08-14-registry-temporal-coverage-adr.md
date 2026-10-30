@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-10-06'
+modified: '2026-10-30'
 body_schema: 'body-v1'
-body_hash: 'sha256:aba7163bbfbb86671f52df79c18412946254ab883d87fe654a8cc34d5cc7b176'
+body_hash: 'sha256:3f28fad86a7b4ad11dcb233b1e0af04abdf40b7602933fd8b659462c46e7dd7d'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-corpus-structure-hardening-reference]]"
@@ -202,3 +202,7 @@ weakening the filing-grade meaning of `RegistrySnapshot`.
   epochs before new-year filing support can be claimed. The broader coverage
   manifest and revision-governance rollout remains follow-on work grounded by
   `2026-08-14-registry-temporal-coverage-research`.
+
+## Clarification: activity-asset projection (2026-10-30)
+
+Authorized by the operator on 2026-10-30. An activity-asset forecast and the Modelo 130 of a year above the newest authored Modelo 100 edition may use the projected edition, as the 2026-10-30 amendment of `2026-09-23-assets-core-amortization-method-set-adr` states. This does not widen a filing-grade Modelo 100 snapshot, which keeps this decision's gates. Current year bounds are read from `src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml`, not from the years this record names.

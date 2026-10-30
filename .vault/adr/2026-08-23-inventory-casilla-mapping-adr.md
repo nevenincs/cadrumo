@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#inventory-casilla-mapping'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-30'
 body_schema: 'body-v1'
-body_hash: 'sha256:e5ba705162b6ecbb6a079802f280cbb9be750ff64660737e9a9f847e1116ffa6'
+body_hash: 'sha256:6ce9d785e876cdeaa853eb430a0769ab8656c6792953af62eb6c88300dadbd12'
 related:
   - "[[2026-08-23-inventory-casilla-grounding-research]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
@@ -124,3 +124,7 @@ The complete three-output runtime-row projection is the only option that preserv
 - Complete source state prevents caller overrides; absent or defective state remains visibly unresolved and preserves manual fallback.
 - The stale inventory meaning attached to `0155` disappears with no compatibility path.
 - Supporting earlier revisions, production-cost composition, or new valuation authorities requires further grounding and decision work.
+
+## Amendment 2026-10-30
+
+Authorized by the operator on 2026-10-30. The accepted body is preserved. `2026-08-22-source-casilla-integration-adr` retired the connectivity census from product code on 2026-09-07, so "connected" here means delivered through the registry binding and resolver path with the proofs this record requires. It names no status field and no census. This record's valuation and year scope are unchanged.
