@@ -1985,6 +1985,8 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
   let credentialsBefore = null;
   let started = false;
   const seen = new Map();
+  const priorSetupFrames = [];
+  const priorSetupConsole = [];
 
   /** Every process of this run: the host's and the runtime's trees, and anything naming the root. */
   const runProcesses = async () => {
@@ -2277,7 +2279,120 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       chrome.en;
     await results.screenshot(session.page, "setup-01-signed-in");
 
-    driver = new SetupDriver({ session, input, signIn, layout, proxy });
+    const restartAfterCrash = async (cut) => {
+      const oldHost = host;
+      const oldPid = hostPid;
+      const oldSession = session;
+      await runProcesses();
+      const beforeCrash = await input.processes(TRACKED_PROCESSES);
+      const tracked = [
+        ...beforeCrash.filter((process) => process.pid === oldPid),
+        ...descendants(beforeCrash, oldPid),
+      ];
+      const frames = await oldSession.frames();
+      priorSetupFrames.push(...frames);
+      priorSetupConsole.push(...oldSession.console);
+      evidence("setup-before-crash-frames.json", frames);
+      evidence(
+        "setup-before-crash-ipc.json",
+        await oldSession.shell(() => window.__s10.ipc),
+      );
+      oldSession.stopObservation();
+      assert(oldHost.child.kill(), "the owned GUI must be interrupted");
+      const stopped = await exited(oldHost.exit, 15000);
+      assert(stopped, "the interrupted GUI must exit");
+      await runProcesses();
+      const afterCrash = await input.processes(TRACKED_PROCESSES);
+      const crashTree = [...tracked];
+      for (const process of tracked)
+        crashTree.push(...descendants(afterCrash, process.pid));
+      const waiting = probe(
+        python,
+        runtimeEnv,
+        ["wait-exits"],
+        [
+          ...new Set(
+            survivors(crashTree, afterCrash).map((process) => process.pid),
+          ),
+        ],
+      );
+      const left = survivors(
+        crashTree,
+        await input.processes(TRACKED_PROCESSES),
+      );
+      evidence("setup-crash-processes.json", {
+        cut,
+        oldPid,
+        stopped,
+        waiting,
+        left,
+      });
+      assert.equal(
+        waiting.length,
+        0,
+        "the crashed GUI's process handles must signal exit",
+      );
+      assert.equal(left.length, 0, "the crashed GUI must leave no owned child");
+      await oldSession.browser.close().catch(() => undefined);
+
+      const resumedPort = await freePort();
+      const resumedEnvironment = hostEnvironment(config, {
+        [REMOTE]: `--remote-debugging-port=${resumedPort}`,
+        CADRUMO_PROXY_URL: proxy.url,
+      }).env;
+      host = launch(testHost.executable, ["--gui"], {
+        env: resumedEnvironment,
+        cwd: layout.root,
+        out: resolve(config.results, "host-resumed-stdout.txt"),
+        err: resolve(config.results, "host-resumed-stderr.txt"),
+      });
+      hostPid = host.child.pid;
+      const early = host.exit.then((done) => {
+        throw new Error(`the relaunched host exited with ${done.code}`);
+      });
+      early.catch(() => undefined);
+      const endpoint = await Promise.race([
+        devtoolsEndpoint(resumedPort, 90000),
+        early,
+      ]);
+      session = await connect({
+        endpoint,
+        shellOrigins: [`${scheme}://tauri.localhost`],
+        documentObserver: observeProvisioning,
+        docsOrigin: docsOriginOf(window),
+        ipcPrefix: `${scheme}://ipc.localhost/`,
+        blockExternal: !config.allowBrowser,
+      });
+      await session.waitDocs(120000);
+      const presence = await session.call("sign_in_status");
+      assert.equal(presence.ok, true);
+      if (presence.value.state === "absent") {
+        await session.page.locator('.sign-in[data-state="open"]').waitFor({
+          state: "visible",
+          timeout: 30000,
+        });
+        const answer = await signIn.submit(
+          session,
+          signIn.secret,
+          "crash-recovery",
+        );
+        assert.equal(answer.kind, "signed-in");
+        await session.page.locator(".sign-in").waitFor({ state: "hidden" });
+      }
+      const ready = await session.call("sign_in_status");
+      assert.equal(ready.ok, true);
+      assert.equal(ready.value.state, "present");
+      evidence("setup-relaunched-host.json", { oldPid, newPid: hostPid });
+      return { session, oldPid, newPid: hostPid };
+    };
+    driver = new SetupDriver({
+      session,
+      input,
+      signIn,
+      layout,
+      proxy,
+      restartAfterCrash,
+    });
     if (summary.budgetExceeded)
       driver.abort(
         `the throwaway root reached ${summary.budgetExceeded} bytes`,
@@ -2410,8 +2525,8 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       "zero CSP violations during provisioning",
       async () =>
         cspVerdict(
-          await session.frames(),
-          session.console.map((entry) => entry.text),
+          [...priorSetupFrames, ...(await session.frames())],
+          [...priorSetupConsole, ...session.console].map((entry) => entry.text),
         ),
     );
     await results.screenshot(session.page, "setup-02-finished");

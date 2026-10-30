@@ -33,6 +33,8 @@ import {
   setupHostVerdict,
   setupItemsFrom,
   setupFailureVerdict,
+  SetupDriver,
+  waitSetupSignal,
   concurrentSetupVerdict,
   treeBytes,
 } from "./setup.mjs";
@@ -1308,6 +1310,184 @@ test("Resume passes only when the window offered it and showed no second plan", 
       FAIL,
       JSON.stringify(defect),
     );
+});
+
+test("setup row signals await genuine interrupted recovery without a new-host run and remove listeners", async () => {
+  const previous = globalThis.window;
+  const listeners = new Set();
+  const shell = {
+    __s10: {
+      setupLatest: {
+        snapshot: {
+          rows: [
+            {
+              item: "browser",
+              state: "absent",
+              failure: null,
+              recovery: "set_up",
+            },
+          ],
+        },
+      },
+    },
+    addEventListener: (_name, listener) => listeners.add(listener),
+    removeEventListener: (_name, listener) => listeners.delete(listener),
+  };
+  globalThis.window = shell;
+  const emit = (value) => {
+    for (const listener of [...listeners]) listener({ detail: value });
+  };
+  const session = { shell: (read, args) => read(args) };
+  try {
+    let settled = false;
+    const pending = waitSetupSignal(session, [
+      {
+        item: "browser",
+        state: "failed",
+        failure: "interrupted",
+        recovery: "resume",
+      },
+    ]).then((value) => {
+      settled = true;
+      return value;
+    });
+    assert.equal(listeners.size, 1);
+    emit({
+      snapshot: {
+        rows: [
+          {
+            item: "browser",
+            state: "failed",
+            failure: "cancelled",
+            recovery: "try_again",
+          },
+        ],
+      },
+    });
+    await Promise.resolve();
+    assert.equal(settled, false);
+    const actual = {
+      snapshot: {
+        rows: [
+          {
+            item: "browser",
+            state: "failed",
+            failure: "interrupted",
+            recovery: "resume",
+          },
+        ],
+      },
+    };
+    emit(actual);
+    assert.equal(await pending, actual);
+    assert.equal(listeners.size, 0);
+    const running = waitSetupSignal(session, [
+      { item: "browser", stage: "running", operationId: "new-run" },
+    ]);
+    emit(actual);
+    assert.equal(
+      listeners.size,
+      1,
+      "a matching row does not bypass existing run predicates",
+    );
+    const run = {
+      snapshot: {
+        runs: [{ item: "browser", stage: "running", operation_id: "new-run" }],
+      },
+    };
+    emit(run);
+    assert.equal(await running, run);
+    assert.equal(listeners.size, 0);
+  } finally {
+    globalThis.window = previous;
+  }
+});
+
+test("a genuinely new window resumes only after its own fresh approval", () => {
+  const interrupted = {
+    wireBytes: 30_000_000,
+    offered: "resume",
+    windowChanged: true,
+    oldPid: 10,
+    newPid: 20,
+  };
+  const resumed = {
+    resumeRequested: true,
+    reviewsShown: 1,
+    answersSent: 1,
+    rebuilt: [],
+    finalState: "ready",
+    wireBytes: 300_000_000,
+  };
+  assert.equal(browserResumeVerdict({ interrupted, resumed }).verdict, PASS);
+  for (const defect of [
+    { interrupted: { ...interrupted, oldPid: undefined } },
+    { interrupted: { ...interrupted, newPid: 10 } },
+    { interrupted: { ...interrupted, offered: "try_again" } },
+    { resumed: { ...resumed, resumeRequested: false } },
+    { resumed: { ...resumed, reviewsShown: 0 } },
+    { resumed: { ...resumed, answersSent: 0 } },
+    { resumed: { ...resumed, reviewsShown: 2 } },
+    { resumed: { ...resumed, rebuilt: ["completed-build"] } },
+  ])
+    assert.equal(
+      browserResumeVerdict({ interrupted, resumed, ...defect }).verdict,
+      FAIL,
+    );
+});
+
+test("crash recovery replaces the driver session and always releases its owned transfer gate", async () => {
+  for (const failRestart of [false, true]) {
+    let released = 0;
+    let observed = 0;
+    const replacement = {
+      shell: async () => {
+        observed += 1;
+      },
+    };
+    const driver = new SetupDriver({
+      session: {},
+      layout: { browsers: join(run, "absent-browser-fixture") },
+      restartAfterCrash: async (cut) => {
+        assert.equal(cut.operationId, "owned-browser-run");
+        assert.equal(
+          released,
+          0,
+          "the transfer stays held until the old owner is killed",
+        );
+        if (failRestart) throw new Error("owned restart failed");
+        return { session: replacement, oldPid: 10, newPid: 20 };
+      },
+    });
+    driver.review = { plan_digest: "approved-plan" };
+    driver.read = async () => ({
+      snapshot: {
+        runs: [
+          {
+            item: "browser",
+            stage: "running",
+            operation_id: "owned-browser-run",
+          },
+        ],
+      },
+    });
+    driver.crashGate = {
+      held: Promise.resolve({ bytes: 30_000_000, at: later }),
+      release() {
+        released += 1;
+      },
+    };
+    if (failRestart)
+      await assert.rejects(driver.interrupt(), /owned restart failed/);
+    else {
+      assert.equal((await driver.interrupt()).verdict, PASS);
+      assert.equal(driver.session, replacement);
+      assert.equal(observed, 1);
+      assert.deepEqual(driver.crashWindows, { oldPid: 10, newPid: 20 });
+    }
+    assert.equal(released, 1);
+    assert.equal(driver.crashGate, null);
+  }
 });
 
 test("a second setup passes only when it moved nothing, showed nothing and changed nothing", () => {

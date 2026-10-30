@@ -14,6 +14,7 @@ import ctypes
 import json
 import os
 import sys
+import time
 from pathlib import Path
 from typing import TypedDict
 
@@ -112,6 +113,37 @@ def delete(wanted: object) -> list[CredentialEntry]:
     return [entry for entry in credentials() if (entry["target"], entry["type"]) in pairs]
 
 
+def wait_exits(wanted: object) -> list[int]:
+    """Wait on the named owned processes' exit handles, returning survivors after 15 s."""
+    if sys.platform != "win32":
+        raise SystemExit("the process exit probe requires Windows")
+    if not isinstance(wanted, list) or any(type(pid) is not int or pid <= 0 for pid in wanted):
+        raise SystemExit("wait-exits expects a list of positive process identifiers")
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.OpenProcess.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32]
+    kernel.OpenProcess.restype = ctypes.c_void_p
+    kernel.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+    kernel.WaitForSingleObject.restype = ctypes.c_uint32
+    kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+    handles: list[tuple[int, int]] = []
+    try:
+        for pid in dict.fromkeys(wanted):
+            handle = kernel.OpenProcess(0x00100000, False, pid)  # SYNCHRONIZE only; never terminate.
+            if handle:
+                handles.append((pid, handle))
+            elif ctypes.get_last_error() != 87:  # ERROR_INVALID_PARAMETER: already gone.
+                raise ctypes.WinError(ctypes.get_last_error())
+        deadline = time.monotonic() + 15
+        for _, handle in handles:
+            remaining = max(0, int((deadline - time.monotonic()) * 1000))
+            if kernel.WaitForSingleObject(handle, remaining) == 0xFFFFFFFF:
+                raise ctypes.WinError(ctypes.get_last_error())
+        return [pid for pid, handle in handles if kernel.WaitForSingleObject(handle, 0) != 0]
+    finally:
+        for _, handle in handles:
+            kernel.CloseHandle(handle)
+
+
 def main() -> None:
     """Answer one command."""
     command = sys.argv[1]
@@ -121,6 +153,8 @@ def main() -> None:
         answer = credentials()
     elif command == "delete":
         answer = delete(json.loads(sys.stdin.read()))
+    elif command == "wait-exits":
+        answer = wait_exits(json.loads(sys.stdin.read()))
     else:
         raise SystemExit(f"unknown command {command!r}")
     sys.stdout.write(json.dumps(answer) + "\n")

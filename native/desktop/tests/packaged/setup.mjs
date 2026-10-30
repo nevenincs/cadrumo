@@ -320,7 +320,18 @@ export function browserResumeVerdict({ interrupted, resumed }) {
   if (resumed.resumeRequested !== true) {
     return fail("the click the window offered did not ask to resume");
   }
-  if (resumed.reviewsShown !== 0 || resumed.answersSent !== 0) {
+  const renewed = interrupted.windowChanged === true;
+  if (
+    renewed &&
+    (!Number.isSafeInteger(interrupted.oldPid) ||
+      !Number.isSafeInteger(interrupted.newPid) ||
+      interrupted.oldPid === interrupted.newPid)
+  )
+    return fail(
+      "the crash recovery did not establish a different owned window",
+    );
+  const reviews = renewed ? 1 : 0;
+  if (resumed.reviewsShown !== reviews || resumed.answersSent !== reviews) {
     return fail("Resume of an unchanged plan showed the plan again", {
       reviewsShown: resumed.reviewsShown,
       answersSent: resumed.answersSent,
@@ -338,7 +349,7 @@ export function browserResumeVerdict({ interrupted, resumed }) {
     return fail(`after Resume the item ended ${resumed.finalState}`);
   }
   return pass(
-    `resumed without a second review; ${resumed.wireBytes} bytes moved after Resume`,
+    `${renewed ? "resumed in a new window after its fresh review" : "resumed without a second review"}; ${resumed.wireBytes} bytes moved after Resume`,
   );
 }
 
@@ -823,15 +834,44 @@ export function waitSetupSignal(session, wanted, timeout = 120000) {
         const matches = (value) => {
           const snapshot = value?.snapshot;
           if (!snapshot) return false;
-          return wanted.every(({ item, stage, outcome, operationId }) => {
-            const run = snapshot.runs.find((entry) => entry.item === item);
-            return (
-              run &&
-              (!stage || run.stage === stage) &&
-              (!outcome || run.outcome === outcome) &&
-              (!operationId || run.operation_id === operationId)
-            );
-          });
+          return wanted.every(
+            ({
+              item,
+              stage,
+              outcome,
+              operationId,
+              state,
+              failure,
+              recovery,
+            }) => {
+              const wantsRow =
+                state !== undefined ||
+                failure !== undefined ||
+                recovery !== undefined;
+              const wantsRun =
+                !wantsRow ||
+                stage !== undefined ||
+                outcome !== undefined ||
+                operationId !== undefined;
+              const row = snapshot.rows?.find((entry) => entry.item === item);
+              if (
+                wantsRow &&
+                (!row ||
+                  (state !== undefined && row.state !== state) ||
+                  (failure !== undefined && row.failure !== failure) ||
+                  (recovery !== undefined && row.recovery !== recovery))
+              )
+                return false;
+              const run = snapshot.runs?.find((entry) => entry.item === item);
+              return (
+                !wantsRun ||
+                (run &&
+                  (!stage || run.stage === stage) &&
+                  (!outcome || run.outcome === outcome) &&
+                  (!operationId || run.operation_id === operationId))
+              );
+            },
+          );
         };
         let timer;
         const finish = (value, error) => {
@@ -1089,7 +1129,7 @@ export async function runConcurrentSetup(
           inspect();
         }),
     );
-    driver.interrupted = {
+    driver.cancelledTransfer = {
       wireBytes: evidence.browserWire.bytes,
       offered: evidence.cancelled.snapshot.rows.find(
         (row) => row.item === "browser",
@@ -1097,7 +1137,7 @@ export async function runConcurrentSetup(
       outcome: "cancelled",
     };
     driver.firstTransferAt = evidence.browserWire.at;
-    driver.concurrentInterrupted = true;
+    driver.concurrencyChecked = true;
     await driver.click(
       `${ROW("local_ai")} button`,
       "cancel local AI independently",
@@ -1298,13 +1338,22 @@ export async function runSetupFailureAcceptance({ driver, expectedSentence }) {
  * and the rendered document.
  */
 export class SetupDriver {
-  constructor({ session, input, signIn, layout, proxy, item = "browser" }) {
+  constructor({
+    session,
+    input,
+    signIn,
+    layout,
+    proxy,
+    item = "browser",
+    restartAfterCrash,
+  }) {
     this.session = session;
     this.input = input;
     this.signIn = signIn;
     this.layout = layout;
     this.proxy = proxy;
     this.item = item;
+    this.restartAfterCrash = restartAfterCrash;
     this.abortReason = null;
     this.approvals = [];
     this.timeline = [];
@@ -1491,6 +1540,17 @@ export class SetupDriver {
   /** The person approves the plan the row shows. */
   async approve() {
     const before = await this.lastSequence();
+    this.phaseApprovalStart = this.approvals.length;
+    if (this.restartAfterCrash) {
+      this.crashGate = this.proxy.hold(
+        [
+          ...new Set(
+            this.review.entries.flatMap((entry) => entry.source_hosts),
+          ),
+        ],
+        INTERRUPT_AFTER_BYTES,
+      );
+    }
     this.approveLabel = await this.click(
       APPROVE_BUTTON(this.item),
       "the row's approve button",
@@ -1519,8 +1579,66 @@ export class SetupDriver {
     });
   }
 
-  /** Cancel this native run once real transfer bytes cross the threshold. */
+  /** Interrupt this native run once real transfer bytes cross the threshold. */
   async interrupt() {
+    if (this.restartAfterCrash) {
+      if (!this.crashGate)
+        return fail("the browser transfer was not gated before approval");
+      let timer;
+      try {
+        const transfer = await Promise.race([
+          this.crashGate.held,
+          new Promise((_, reject) => {
+            timer = setTimeout(
+              () => reject(new Error("transfer threshold deadline")),
+              20 * 60 * 1000,
+            );
+          }),
+        ]);
+        const setup = await this.read();
+        const run = runOf(setup.snapshot, this.item);
+        if (run?.stage !== "running")
+          return fail(
+            "the browser was no longer running at the crash boundary",
+            { run },
+          );
+        this.completeAtCut = completedBuilds(this.layout.browsers);
+        this.firstTransferAt = transfer.at;
+        this.cut = {
+          at: new Date().toISOString(),
+          wireBytes: transfer.bytes,
+          movedBytes: transfer.bytes,
+          operationId: run.operation_id,
+          completeBuilds: Object.keys(this.completeAtCut),
+          priorPlanDigest: this.review.plan_digest,
+        };
+        const restarted = await this.restartAfterCrash(this.cut);
+        if (
+          !restarted?.session ||
+          !Number.isSafeInteger(restarted.oldPid) ||
+          !Number.isSafeInteger(restarted.newPid) ||
+          restarted.oldPid === restarted.newPid
+        )
+          return fail(
+            "the crash callback did not return a different owned window",
+          );
+        this.session = restarted.session;
+        this.crashWindows = {
+          oldPid: restarted.oldPid,
+          newPid: restarted.newPid,
+        };
+        await this.session.shell(watchReviews);
+        this.note("crash-relaunch", { ...this.cut, ...this.crashWindows });
+        return pass(
+          "the owned GUI was killed during a held transfer and relaunched",
+          { ...this.cut, ...this.crashWindows },
+        );
+      } finally {
+        clearTimeout(timer);
+        this.crashGate.release();
+        this.crashGate = null;
+      }
+    }
     const cut = await this.session.shell(
       ({ item, threshold }) =>
         new Promise((resolve, reject) => {
@@ -1588,6 +1706,34 @@ export class SetupDriver {
 
   /** What the window shows once the interruption settled, signing in again if it ended the session. */
   async afterInterruption() {
+    if (this.crashWindows) {
+      const setup = await waitSetupSignal(
+        this.session,
+        [
+          {
+            item: this.item,
+            state: "failed",
+            failure: "interrupted",
+            recovery: "resume",
+          },
+        ],
+        120000,
+      );
+      await this.openComponents();
+      this.interrupted = {
+        wireBytes: this.cut.movedBytes,
+        offered: this.row(setup).recovery,
+        outcome: "interrupted",
+        row: compactRows([this.row(setup)])[0],
+        windowChanged: true,
+        ...this.crashWindows,
+      };
+      this.note("after-interruption", this.interrupted);
+      return pass(
+        "the relaunched app reports failed/interrupted and offers Resume",
+        this.interrupted,
+      );
+    }
     const signedInAgain = false;
     const setup = await waitSetupSignal(this.session, [
       {
@@ -1665,6 +1811,14 @@ export class SetupDriver {
               ),
             { timeout: 30000, what: "the answer to the second plan" },
           );
+          if (
+            !answer.ok ||
+            answer.args?.decision !== "apply" ||
+            answer.args?.planDigest !== run.review.plan_digest
+          )
+            throw new Error(
+              "the new window did not approve the exact plan it showed",
+            );
           answersSent += 1;
           this.approvals.push({
             itemIds: run.review.entries.map((entry) => entry.item),
@@ -1830,35 +1984,33 @@ export class SetupDriver {
  * own and stop nothing.
  */
 export async function runSetupAcceptance({ driver, check, results }) {
-  const initial = driver.concurrentInterrupted
-    ? []
-    : [
-        [
-          "setup-review",
-          "Settings' provisioning button and the browser row's button show its plan",
-          () => driver.showPlan(),
-        ],
-        [
-          "setup-approval",
-          "the person approves exactly the plan shown",
-          () => driver.approve(),
-        ],
-        [
-          "setup-interrupt",
-          "the download is interrupted mid-transfer",
-          () => driver.interrupt(),
-        ],
-        [
-          "setup-interrupted",
-          "the window shows the interruption and how to resume",
-          () => driver.afterInterruption(),
-        ],
-      ];
+  const initial = [
+    [
+      "setup-review",
+      "Settings' provisioning button and the browser row's button show its plan",
+      () => driver.showPlan(),
+    ],
+    [
+      "setup-approval",
+      "the person approves exactly the plan shown",
+      () => driver.approve(),
+    ],
+    [
+      "setup-interrupt",
+      "the download is interrupted mid-transfer",
+      () => driver.interrupt(),
+    ],
+    [
+      "setup-interrupted",
+      "the window shows the interruption and how to resume",
+      () => driver.afterInterruption(),
+    ],
+  ];
   const steps = [
     ...initial,
     [
       "setup-recovery",
-      "the cancelled setup retries through a fresh review and finishes",
+      "the interrupted browser resumes under this window's approval and finishes",
       () => driver.resume(),
     ],
     [
@@ -1866,10 +2018,12 @@ export async function runSetupAcceptance({ driver, check, results }) {
       "one approval covered the browser before any byte moved",
       () =>
         planApprovalVerdict({
-          approvals:
-            driver.interrupted?.outcome === "cancelled"
-              ? driver.approvals.slice(0, 1)
-              : driver.approvals,
+          approvals: driver.approvals.slice(
+            driver.phaseApprovalStart ?? 0,
+            driver.crashWindows
+              ? (driver.phaseApprovalStart ?? 0) + 1
+              : undefined,
+          ),
           requiredItemIds: [driver.item],
           firstTransferAt: driver.firstTransferAt,
         }),
@@ -1904,7 +2058,10 @@ export async function runSetupAcceptance({ driver, check, results }) {
     });
     outcomes[id] = entry.verdict;
     // An interruption that left children running still happened.
-    const happened = id === "setup-interrupt" && driver.cut;
+    const happened =
+      id === "setup-interrupt" &&
+      driver.cut &&
+      (!driver.restartAfterCrash || driver.crashWindows);
     if (entry.verdict !== PASS && !independent.has(id) && !happened)
       blocked ??= id;
   }
