@@ -168,8 +168,13 @@ def did_page_suppressed(
     This function is shared by the renderer and parity derivations so they
     cannot disagree about which official record reaches disk.
 
-    Core types:
-    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    Args:
+        record: Official export record whose DID-page inclusion is being checked.
+        draft: :class:`~cadrumo.domain.filing.schema.ModeloDraft` being exported.
+        headers: Filing producer values used to determine the current disposition.
+        prior_domiciliation_election: Whether the earlier bank instruction is retained.
+        revision: :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
+            declaring the semantic role of the rectified-amount box.
     """
     if record.record_type != _DID_PAGE_RECORD_TYPE:
         return False

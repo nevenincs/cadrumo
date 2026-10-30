@@ -109,7 +109,11 @@ def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definiti
 
 
 def ledger_renta_gastos_estimacion_directa_target_failures(revision: ModeloRevision) -> list[str]:
-    """Refuse a gastos binding aimed at a box the edition does not bind to it."""
+    """Refuse a gastos binding aimed at a box the edition does not bind to it.
+
+    Args:
+        revision: :class:`ModeloRevision` whose expense binding targets are checked.
+    """
     return ledger_target_casilla_failures(
         revision,
         source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,

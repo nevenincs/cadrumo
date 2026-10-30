@@ -176,7 +176,11 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition
 
 
 def ledger_renta_gastos_pago_fraccionado_target_failures(revision: ModeloRevision) -> list[str]:
-    """Refuse a gasto binding aimed at a box the edition does not bind to it."""
+    """Refuse a gasto binding aimed at a box the edition does not bind to it.
+
+    Args:
+        revision: :class:`ModeloRevision` whose instalment expense targets are checked.
+    """
     return ledger_target_casilla_failures(
         revision,
         source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,

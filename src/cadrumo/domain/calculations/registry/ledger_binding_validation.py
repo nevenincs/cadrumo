@@ -98,6 +98,12 @@ def ledger_target_casilla_failures(
     edition's own declarations, so no box list is restated here. ``reciprocal``
     further requires the target to name this exact binding; a family whose second
     quantity shares its observation key with the first leaves it unset.
+
+    Args:
+        revision: :class:`ModeloRevision` owning the bindings and target casillas.
+        source_kind: Ledger aggregation family whose binding targets are checked.
+        target_casilla_id: Read the target casilla from one family binding.
+        reciprocal: Require the target casilla to name the same binding explicitly.
     """
     family = frozenset(binding.id for binding in revision.bindings if binding.source == source_kind)
     casillas = {casilla.id: casilla for casilla in revision.casillas}
