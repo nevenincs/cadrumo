@@ -36,6 +36,7 @@ import re
 import shutil
 import subprocess
 import tarfile
+import time
 import zipfile
 from collections.abc import Callable
 from pathlib import Path
@@ -54,6 +55,7 @@ from dev.source_tree import repository_files, snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_SHARED_BUILD_WAIT_SECONDS = 3600.0
 _WHEEL_PREFIX = "cadrumo"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
 _WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
@@ -161,6 +163,53 @@ _REQUIRED_MEMBERS = (
 )
 
 
+def _built_once_per_run(
+    tmp_path_factory: pytest.TempPathFactory,
+    name: str,
+    build: Callable[[Path], None],
+) -> Path:
+    """Return the directory ``build`` filled, built by exactly one worker of the run.
+
+    ``uv build`` of the full snapshot takes minutes, and a module-scoped fixture
+    is rebuilt by every xdist worker that receives one of this module's cases.
+    The artifacts are read-only afterwards, so the workers share one build.
+    """
+    base = tmp_path_factory.getbasetemp()
+    root = base.parent if os.environ.get("PYTEST_XDIST_WORKER") else base
+    shared = root / "shared-distributions" / name
+    done = shared / ".complete"
+    lock = root / "shared-distributions" / f"{name}.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + _SHARED_BUILD_WAIT_SECONDS
+    while time.monotonic() < deadline:
+        if done.is_file():
+            return shared
+        try:
+            descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            time.sleep(1.0)
+            continue
+        os.close(descriptor)
+        try:
+            if not done.is_file():
+                shared.mkdir(parents=True, exist_ok=True)
+                build(shared)
+                done.write_text("complete", encoding="utf-8")
+        finally:
+            lock.unlink(missing_ok=True)
+    raise AssertionError(f"no worker finished building {name} within {_SHARED_BUILD_WAIT_SECONDS:.0f} s")
+
+
+def _uv_build(arguments: list[str], out_dir: Path, source: Path) -> None:
+    subprocess.run(
+        ["uv", "build", *arguments, "--out-dir", str(out_dir)],
+        cwd=source,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+
 @pytest.fixture(scope="module")
 def candidate_source(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Snapshot the repository and stage the one release-selected authority candidate."""
@@ -230,7 +279,7 @@ def candidate_source(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @pytest.fixture(scope="module")
-def wheel_archive(candidate_source: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+def wheel_archive(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Build the candidate source snapshot and return its sole wheel."""
 
     if shutil.which("uv") is None:
@@ -238,14 +287,11 @@ def wheel_archive(candidate_source: Path, tmp_path_factory: pytest.TempPathFacto
             "uv binary not found on PATH; the packaging content-boundary gate "
             "cannot run without the project's build driver",
         )
-    out_dir = tmp_path_factory.mktemp("wheel-out")
-    subprocess.run(
-        ["uv", "build", "--wheel", "--out-dir", str(out_dir)],
-        cwd=candidate_source,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+
+    def build(out_dir: Path) -> None:
+        _uv_build(["--wheel"], out_dir, request.getfixturevalue("candidate_source"))
+
+    out_dir = _built_once_per_run(tmp_path_factory, "wheel", build)
     wheels = scan_directory(out_dir, pattern="cadrumo-*.whl")
     if len(wheels) != 1:
         raise AssertionError(f"expected exactly one cadrumo-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
@@ -261,7 +307,7 @@ def wheel_members(wheel_archive: Path) -> frozenset[str]:
 
 
 @pytest.fixture(scope="module")
-def sdist_archive(candidate_source: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+def sdist_archive(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Build the candidate source snapshot and return its sole source distribution."""
 
     if shutil.which("uv") is None:
@@ -269,14 +315,11 @@ def sdist_archive(candidate_source: Path, tmp_path_factory: pytest.TempPathFacto
             "uv binary not found on PATH; the packaging content-boundary gate "
             "cannot run without the project's build driver",
         )
-    out_dir = tmp_path_factory.mktemp("sdist-out")
-    subprocess.run(
-        ["uv", "build", "--sdist", "--out-dir", str(out_dir)],
-        cwd=candidate_source,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+
+    def build(out_dir: Path) -> None:
+        _uv_build(["--sdist"], out_dir, request.getfixturevalue("candidate_source"))
+
+    out_dir = _built_once_per_run(tmp_path_factory, "sdist", build)
     archives = scan_directory(out_dir, pattern="cadrumo-*.tar.gz")
     if len(archives) != 1:
         raise AssertionError(f"expected exactly one cadrumo-*.tar.gz in {out_dir}; got {[p.name for p in archives]!r}")
@@ -293,18 +336,14 @@ def sdist_members(sdist_archive: Path) -> frozenset[str]:
 
 @pytest.fixture(scope="module")
 def rebuilt_wheel_archive(
-    sdist_archive: Path, candidate_source: Path, tmp_path_factory: pytest.TempPathFactory
+    request: pytest.FixtureRequest, sdist_archive: Path, tmp_path_factory: pytest.TempPathFactory
 ) -> Path:
     """Build a wheel from the isolated sdist and return its archive path."""
 
-    out_dir = tmp_path_factory.mktemp("sdist-wheel-out")
-    subprocess.run(
-        ["uv", "build", "--wheel", "--out-dir", str(out_dir), str(sdist_archive)],
-        cwd=candidate_source,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    def build(out_dir: Path) -> None:
+        _uv_build(["--wheel", str(sdist_archive)], out_dir, request.getfixturevalue("candidate_source"))
+
+    out_dir = _built_once_per_run(tmp_path_factory, "sdist-wheel", build)
     wheels = scan_directory(out_dir, pattern="cadrumo-*.whl")
     if len(wheels) != 1:
         raise AssertionError(
