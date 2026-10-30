@@ -23,6 +23,7 @@ from .build_timing import BuildTimings
 from .hashing import digest
 from .layout import ApplicationImage
 from .package_inventory import DELEGATED_INVENTORIES, USER_DOCS, package_inventory
+from .portable_provenance import shipped_provenance, without_source
 
 
 def write_package_manifest(
@@ -86,8 +87,8 @@ def write_package_manifest(
         "smoke_modules": smoke_modules,
         "python": (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip(),
         "lock_sha256": digest(REPO_ROOT / "uv.lock"),
-        "inputs": dict(provenance or {}),
-        "agent": {"bundled": not interpreter, **agent_metadata}
+        "inputs": shipped_provenance(provenance, REPO_ROOT),
+        "agent": {"bundled": not interpreter, **without_source(agent_metadata)}
         | ({} if interpreter else {"dependencies": agent_closure(distributions, agent_requirements)}),
         "components": components,
         "tools": tools,

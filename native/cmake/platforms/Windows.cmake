@@ -81,7 +81,7 @@ endif()
 # Cargo targets in one target directory rebuilds ring and every crate above it. cc only tests whether
 # the variable is set.
 set(CADRUMO_RUST_ENV_VSTEL_MSBuildProjectFullPath "${PROJECT_BINARY_DIR}/ALL_BUILD.vcxproj")
-set(CADRUMO_RUST_ENV_RUSTFLAGS "-C target-feature=+crt-static")
+set(CADRUMO_RUST_ENV_RUSTFLAGS "-C target-feature=+crt-static ${CADRUMO_RUST_RELEASE_REMAP}")
 set(CADRUMO_RUST_ENV_CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER "${CMAKE_LINKER}")
 set(CADRUMO_RUST_ENV_LIB "${msvc_root}/lib/x64;${sdk_root}/Lib/${windows_sdk_version}/um/x64;${sdk_root}/Lib/${windows_sdk_version}/ucrt/x64")
 set(CADRUMO_RUST_ENV_INCLUDE "${msvc_root}/include;${sdk_root}/Include/${windows_sdk_version}/ucrt;${sdk_root}/Include/${windows_sdk_version}/shared;${sdk_root}/Include/${windows_sdk_version}/um;${sdk_root}/Include/${windows_sdk_version}/winrt")

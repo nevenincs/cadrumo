@@ -115,6 +115,12 @@ test("generated identity, server settings and artifact paths have no product fal
     assert.equal(config.version, product.version);
     assert.equal(config.app.windows[0].title, product.name);
     assert.equal(config.app.windows[0].create, false);
+    // The configuration is compiled into the host, so its icons are named relative to it.
+    assert.deepEqual(
+      config.bundle.icon.map((icon) => resolve(root, "host/desktop/src-tauri", icon)),
+      [resolve(root, "icons", "icon.ico"), resolve(root, "icons", "icon.png")],
+    );
+    assert.ok(config.bundle.icon.every((icon) => !isAbsolute(icon)));
     const ports = developmentServer();
     writeFileSync(
       resolve(root, "generated/desktop-server.json"),

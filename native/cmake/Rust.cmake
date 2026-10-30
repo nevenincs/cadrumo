@@ -1,3 +1,12 @@
+# A Release image must not record where it was built: rustc replaces this checkout's location with a
+# neutral prefix in every path it embeds, such as a panic location or a configuration file. Platform adapters
+# append this to the RUSTFLAGS they set. RUSTFLAGS splits on whitespace and has no quoting, so a checkout path
+# with whitespace is refused here rather than half remapped.
+if(PROJECT_SOURCE_DIR MATCHES "[ \t]")
+  message(FATAL_ERROR "A Release Rust image remaps the checkout path through RUSTFLAGS; "
+    "move the checkout to a path without whitespace: ${PROJECT_SOURCE_DIR}")
+endif()
+set(CADRUMO_RUST_RELEASE_REMAP "$<$<NOT:$<CONFIG:Debug>>:--remap-path-prefix=${PROJECT_SOURCE_DIR}=cadrumo>")
 # CMake owns target/configuration/output selection; Cargo owns Rust dependency freshness.
 # Platform adapters supply compiler/linker environment facts, never a second target list.
 function(cadrumo_cargo_command output)

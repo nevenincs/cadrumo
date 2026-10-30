@@ -14,6 +14,7 @@ from ..runtime_wheelhouse_contract import target_platform
 from .build_toolchain import builder_inputs
 from .hashing import digest
 from .linux_cxx_abi import admit_linux_cxx_proof, verify_linux_cxx_abi
+from .portable_provenance import checkout_relative
 from .target import toolchain_for_target
 
 _FIELDS = {"target", "floor", "admitted_image", "proof", "proof_sha256", "provider", "provider_sha256"}
@@ -61,7 +62,10 @@ def _require_floor_match(selection: Mapping[str, object], target: str, pin: Mapp
 
 
 def _verified_builder_records(
-    labels: Mapping[str, tuple[object, object]], configured: Mapping[str, object], shipped: Mapping[str, object]
+    labels: Mapping[str, tuple[object, object]],
+    configured: Mapping[str, object],
+    shipped: Mapping[str, object],
+    root: Path,
 ) -> dict[str, dict[str, object]]:
     records: dict[str, dict[str, object]] = {}
     for name, (path, sha256) in labels.items():
@@ -72,7 +76,7 @@ def _verified_builder_records(
             or cast(dict[str, object], record).get("sha256") != sha256
         ):
             raise ValueError(f"Linux C++ ABI input lacks its configured builder identity: {name}")
-        if cast(Mapping[str, object], shipped.get("builder_files", {})).get(name) != record:
+        if cast(Mapping[str, object], shipped.get("builder_files", {})).get(name) != checkout_relative(record, root):
             raise ValueError(f"Packaged Linux C++ ABI builder input differs: {name}")
         records[name] = cast(dict[str, object], record)
     return records
@@ -96,7 +100,7 @@ def verify_linux_cpp_abi_inputs(
     pin = _floor(target, root)
     _require_floor_match(selection, target, pin)
     shipped = manifest.get("inputs", {}).get("build_toolchain", {})
-    if shipped.get("linux_cpp_abi") != selection:
+    if shipped.get("linux_cpp_abi") != checkout_relative(selection, root):
         raise ValueError("Packaged Linux C++ ABI evidence differs from the configured builder")
     labels: dict[str, tuple[str, str]] = {
         "linux_cpp_abi/proof": (selection["proof"], selection["proof_sha256"]),
@@ -106,7 +110,7 @@ def verify_linux_cpp_abi_inputs(
             configured.get("native_tool_sha256", {}).get("readelf"),
         ),
     }
-    records = _verified_builder_records(labels, configured, shipped)
+    records = _verified_builder_records(labels, configured, shipped, root)
     builder_inputs({"builder_files": records})
     proof = Path(selection["proof"])
     declaration, provider = admit_linux_cxx_proof(
