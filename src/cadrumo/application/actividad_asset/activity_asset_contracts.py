@@ -15,6 +15,7 @@ from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.renta.actividad_asset.claims import covered_until_after, last_day_covered
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetClaimConflictError,
@@ -268,16 +269,49 @@ class ActivityAssetCorrectRequest(BaseModel):
 
 
 class ActivityAssetForecastRequest(BaseModel):
-    """Request a non-consuming charge forecast from pinned authority."""
+    """Request a non-consuming charge forecast from pinned authority.
+
+    The interval ends at ``covered_until``, the exclusive boundary the operations compute with,
+    or at ``covered_through``, the inclusive last day covered. Decoding converts the stated one
+    into the other once and keeps both, so either spelling yields the same request. Stating both
+    is accepted only when they name the same day.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     asset_id: ActivityAssetId
     covered_from: date
-    covered_until: date
+    covered_until: date | None = None
+    covered_through: date | None = None
     requested_free_amount: PublicDecimal | None = None
     supersedes_claim_id: Hex64Str | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _state_both_ends_of_the_interval(self) -> Self:
+        until, through = self.covered_until, self.covered_through
+        if until is None:
+            if through is None:
+                raise ValueError("a forecast interval states covered_until or covered_through")
+            if through == date.max:
+                raise ValueError("covered_through has no boundary after it")
+            object.__setattr__(self, "covered_until", covered_until_after(through))
+            return self
+        if until == date.min:
+            raise ValueError("covered_until has no day before it")
+        if through is None:
+            object.__setattr__(self, "covered_through", last_day_covered(until))
+            return self
+        if through != last_day_covered(until):
+            raise ValueError("covered_through is the day before covered_until")
+        return self
+
+    def exclusive_end(self) -> date:
+        """Return the exclusive boundary of the interval, which decoding always settles."""
+        if self.covered_until is None:
+            raise ValueError("a decoded forecast interval has its boundary")
+        return self.covered_until
 
 
 class ActivityAssetClaimRequest(BaseModel):

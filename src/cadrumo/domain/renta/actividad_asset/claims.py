@@ -34,6 +34,11 @@ def last_day_covered(covered_until: date) -> date:
     return covered_until - timedelta(days=1)
 
 
+def covered_until_after(covered_through: date) -> date:
+    """Return the exclusive boundary after a stated last covered day; the inverse of ``last_day_covered``."""
+    return covered_through + timedelta(days=1)
+
+
 class AmortizationClaim(CachedIdentityModel):
     """An immutable recorded charge, distinct from a recomputable forecast."""
 
@@ -569,6 +574,7 @@ __all__ = [
     "last_day_covered",
     "project_m100",
     "record_claim",
+    "covered_until_after",
     "select_effective_claims",
     "uncovered_claim_intervals",
 ]

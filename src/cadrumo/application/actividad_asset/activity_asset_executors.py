@@ -604,7 +604,7 @@ class ActivityAssetForecastExecutor:
                     operations.forecast,
                     asset_id=payload.asset_id,
                     covered_from=payload.covered_from,
-                    covered_until=payload.covered_until,
+                    covered_until=payload.exclusive_end(),
                     requested_free_amount=(
                         Decimal(payload.requested_free_amount.decimal)
                         if payload.requested_free_amount is not None
