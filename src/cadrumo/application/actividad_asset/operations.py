@@ -39,6 +39,7 @@ from ...domain.renta.actividad_asset.claims import (
 )
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalCalculation
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, DirectEstimationRegime
+from ...domain.renta.actividad_asset.election_facts import method_is_statable
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
     ActividadAssetError,
@@ -86,6 +87,7 @@ from .register_reads import (
     element_list,
     element_plan,
     element_timeline,
+    method_facts_view,
 )
 from .schedule_walk import M130ElementOutcome, m130_register_accruals
 from .service import ActivityAssetHistoryService
@@ -812,6 +814,7 @@ class ActivityAssetOperations:
             regime=regime,
             class_labels=self._authority.class_labels(regime, tax_year),
         )
+        offered = tuple(method for method in options.methods if method_is_statable(method))
         return ActivityAssetFormOptionsView(
             tax_year=tax_year,
             asset_kind=asset_kind,
@@ -819,7 +822,8 @@ class ActivityAssetOperations:
             edition=edition,
             acquisition_shapes=REGISTERABLE_ACQUISITION_SHAPES,
             declared_activities=tuple(TipoActividad),
-            methods=options.methods,
+            methods=offered,
+            method_facts=tuple(method_facts_view(method) for method in offered),
             table_groups=tuple(
                 ActivityAssetTableGroup(
                     class_key=group.class_key,

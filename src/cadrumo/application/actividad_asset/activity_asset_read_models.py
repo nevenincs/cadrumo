@@ -354,6 +354,31 @@ class ActivityAssetTableGroup(_ReadModel):
     maximum_period_years: PublicDecimal
 
 
+class ActivityAssetMethodFact(_ReadModel):
+    """One fact an election of a method states, typed by the election model itself.
+
+    ``path`` runs from the election down to the fact.  ``kind`` says how it is stated.  A
+    ``choice`` names the catalogue family of its words and lists its tokens; a ``class`` is
+    chosen among the form options' table groups.  ``required`` means the election is refused
+    without the fact, and ``required_with_group`` that it is refused when the fact's optional
+    group is stated without it.
+    """
+
+    path: tuple[str, ...]
+    kind: FactKind
+    required: bool
+    required_with_group: bool
+    token_family: str | None = None
+    tokens: tuple[str, ...] = ()
+
+
+class ActivityAssetMethodFacts(_ReadModel):
+    """The facts one offered method takes beyond its method and modality."""
+
+    method: AmortizationMethod
+    facts: tuple[ActivityAssetMethodFact, ...]
+
+
 class ActivityAssetFormOptionsView(_ReadModel):
     """What the registry admits for one asset kind and tax year."""
 
@@ -364,6 +389,9 @@ class ActivityAssetFormOptionsView(_ReadModel):
     acquisition_shapes: tuple[AcquisitionShape, ...]
     declared_activities: tuple[TipoActividad, ...]
     methods: tuple[AmortizationMethod, ...]
+    """Only the methods the registry admits and a form can state in full."""
+    method_facts: tuple[ActivityAssetMethodFacts, ...]
+    """The facts of each offered method, in the order of ``methods``."""
     table_groups: tuple[ActivityAssetTableGroup, ...]
 
 
@@ -426,6 +454,8 @@ __all__ = [
     "ActivityAssetListRow",
     "ActivityAssetM130Contribution",
     "ActivityAssetM130ProjectionSnapshot",
+    "ActivityAssetMethodFact",
+    "ActivityAssetMethodFacts",
     "ActivityAssetNonDeductibleIvaState",
     "ActivityAssetNotTableBoundReason",
     "ActivityAssetPlanAdvisory",

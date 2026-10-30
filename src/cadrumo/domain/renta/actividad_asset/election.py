@@ -11,11 +11,13 @@ authority.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from functools import cached_property
-from typing import Annotated, Self
+from types import MappingProxyType
+from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -331,6 +333,55 @@ class RenewableSelfConsumptionEvidence(BaseModel):
         return self
 
 
+ELECTION_FACT_ADMISSION: Final[Mapping[str, frozenset[AmortizationMethod]]] = MappingProxyType(
+    {
+        "linear_coefficient": frozenset({AmortizationMethod.LINEAR, AmortizationMethod.CONSTANT_PERCENTAGE}),
+        "shift_hours_per_day": frozenset({AmortizationMethod.LINEAR}),
+        "used_original_price": frozenset({AmortizationMethod.LINEAR}),
+        "small_enterprise": frozenset(
+            {
+                AmortizationMethod.LINEAR,
+                AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE,
+                AmortizationMethod.GOODWILL,
+                AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
+            },
+        ),
+        "sum_of_digits_period_years": frozenset({AmortizationMethod.SUM_OF_DIGITS}),
+        "digit_order": frozenset({AmortizationMethod.SUM_OF_DIGITS}),
+        "approved_plan": frozenset({AmortizationMethod.APPROVED_PLAN}),
+        "useful_life": frozenset({AmortizationMethod.INTANGIBLE_USEFUL_LIFE}),
+        "low_value": frozenset({AmortizationMethod.LOW_VALUE_FREE}),
+        "research_development_evidence_reference": frozenset(
+            {AmortizationMethod.RESEARCH_DEVELOPMENT_FREE, AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING},
+        ),
+        "charging_infrastructure": frozenset({AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE}),
+        "renewable_self_consumption": frozenset({AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE}),
+    }
+)
+"""The methods that consume each optional fact of an election; no other method may carry it."""
+
+ELECTION_REQUIRED_FACTS: Final[Mapping[AmortizationMethod, tuple[str, ...]]] = MappingProxyType(
+    {
+        AmortizationMethod.LINEAR: ("authority_class_key",),
+        AmortizationMethod.CONSTANT_PERCENTAGE: ("authority_class_key",),
+        AmortizationMethod.SUM_OF_DIGITS: ("authority_class_key", "sum_of_digits_period_years", "digit_order"),
+        AmortizationMethod.APPROVED_PLAN: ("approved_plan",),
+        AmortizationMethod.INTANGIBLE_USEFUL_LIFE: ("useful_life",),
+        AmortizationMethod.LOW_VALUE_FREE: ("low_value",),
+        AmortizationMethod.RESEARCH_DEVELOPMENT_FREE: ("research_development_evidence_reference",),
+        AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING: (
+            "authority_class_key",
+            "research_development_evidence_reference",
+        ),
+        AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE: ("charging_infrastructure",),
+        AmortizationMethod.ELECTRIC_VEHICLE_FREE: ("authority_class_key",),
+        AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE: ("authority_class_key", "small_enterprise"),
+        AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE: ("authority_class_key", "renewable_self_consumption"),
+    }
+)
+"""The facts an election of each method must state; a method not listed needs none."""
+
+
 class ActivityAssetAmortizationElection(CachedIdentityModel):
     """Regime, table class, method and the facts the chosen method requires.
 
@@ -372,87 +423,16 @@ class ActivityAssetAmortizationElection(CachedIdentityModel):
 
     @model_validator(mode="after")
     def _validate_method_shape(self) -> Self:
-        method = self.method
-        self._admit(
-            "linear_coefficient",
-            self.linear_coefficient,
-            {AmortizationMethod.LINEAR, AmortizationMethod.CONSTANT_PERCENTAGE},
-        )
-        self._admit("shift_hours_per_day", self.shift_hours_per_day, {AmortizationMethod.LINEAR})
-        self._admit("used_original_price", self.used_original_price, {AmortizationMethod.LINEAR})
-        self._admit(
-            "small_enterprise",
-            self.small_enterprise,
-            {
-                AmortizationMethod.LINEAR,
-                AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE,
-                AmortizationMethod.GOODWILL,
-                AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
-            },
-        )
-        self._admit(
-            "sum_of_digits_period_years",
-            self.sum_of_digits_period_years,
-            {AmortizationMethod.SUM_OF_DIGITS},
-        )
-        self._admit("digit_order", self.digit_order, {AmortizationMethod.SUM_OF_DIGITS})
-        self._admit("approved_plan", self.approved_plan, {AmortizationMethod.APPROVED_PLAN})
-        self._admit("useful_life", self.useful_life, {AmortizationMethod.INTANGIBLE_USEFUL_LIFE})
-        self._admit("low_value", self.low_value, {AmortizationMethod.LOW_VALUE_FREE})
-        self._admit(
-            "research_development_evidence_reference",
-            self.research_development_evidence_reference,
-            {AmortizationMethod.RESEARCH_DEVELOPMENT_FREE, AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING},
-        )
-        self._admit(
-            "charging_infrastructure",
-            self.charging_infrastructure,
-            {AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE},
-        )
-        self._admit(
-            "renewable_self_consumption",
-            self.renewable_self_consumption,
-            {AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE},
-        )
-        required: dict[AmortizationMethod, tuple[tuple[str, object], ...]] = {
-            AmortizationMethod.LINEAR: (("authority_class_key", self.authority_class_key),),
-            AmortizationMethod.CONSTANT_PERCENTAGE: (("authority_class_key", self.authority_class_key),),
-            AmortizationMethod.SUM_OF_DIGITS: (
-                ("authority_class_key", self.authority_class_key),
-                ("sum_of_digits_period_years", self.sum_of_digits_period_years),
-                ("digit_order", self.digit_order),
-            ),
-            AmortizationMethod.APPROVED_PLAN: (("approved_plan", self.approved_plan),),
-            AmortizationMethod.INTANGIBLE_USEFUL_LIFE: (("useful_life", self.useful_life),),
-            AmortizationMethod.LOW_VALUE_FREE: (("low_value", self.low_value),),
-            AmortizationMethod.RESEARCH_DEVELOPMENT_FREE: (
-                ("research_development_evidence_reference", self.research_development_evidence_reference),
-            ),
-            AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING: (
-                ("authority_class_key", self.authority_class_key),
-                ("research_development_evidence_reference", self.research_development_evidence_reference),
-            ),
-            AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE: (
-                ("charging_infrastructure", self.charging_infrastructure),
-            ),
-            AmortizationMethod.ELECTRIC_VEHICLE_FREE: (("authority_class_key", self.authority_class_key),),
-            AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE: (
-                ("authority_class_key", self.authority_class_key),
-                ("small_enterprise", self.small_enterprise),
-            ),
-            AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE: (
-                ("authority_class_key", self.authority_class_key),
-                ("renewable_self_consumption", self.renewable_self_consumption),
-            ),
-        }
-        for field_name, value in required.get(method, ()):
-            if value is None:
-                raise ValueError(f"{method.value} election requires {field_name}")
+        for field_name, methods in ELECTION_FACT_ADMISSION.items():
+            self._admit(field_name, getattr(self, field_name), methods)
+        for field_name in ELECTION_REQUIRED_FACTS.get(self.method, ()):
+            if getattr(self, field_name) is None:
+                raise ValueError(f"{self.method.value} election requires {field_name}")
         if self.shift_hours_per_day is not None and self.small_enterprise is not None:
             raise ValueError("multi-shift and reduced-size acceleration cannot be combined in one election")
         return self
 
-    def _admit(self, field_name: str, value: object, methods: set[AmortizationMethod]) -> None:
+    def _admit(self, field_name: str, value: object, methods: frozenset[AmortizationMethod]) -> None:
         if value is not None and self.method not in methods:
             raise ValueError(f"{field_name} is not a fact of the {self.method.value} method")
 
@@ -464,6 +444,8 @@ class ActivityAssetAmortizationElection(CachedIdentityModel):
 
 
 __all__ = [
+    "ELECTION_FACT_ADMISSION",
+    "ELECTION_REQUIRED_FACTS",
     "FREE_AMOUNT_METHODS",
     "WORKFORCE_CONDITIONED_METHODS",
     "AcquiredCondition",

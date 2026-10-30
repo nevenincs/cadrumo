@@ -24,6 +24,7 @@ from ...domain.renta.actividad_asset.claims import (
     last_day_covered,
 )
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, AmortizationMethod, DirectEstimationRegime
+from ...domain.renta.actividad_asset.election_facts import method_facts
 from ...domain.renta.actividad_asset.errors import ActividadAssetError
 from ...domain.renta.actividad_asset.fact_leaves import FactKind, indexed_to_step_path
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
@@ -48,6 +49,8 @@ from .activity_asset_read_models import (
     ActivityAssetElectionLimits,
     ActivityAssetFindingCounts,
     ActivityAssetListRow,
+    ActivityAssetMethodFact,
+    ActivityAssetMethodFacts,
     ActivityAssetNonDeductibleIvaState,
     ActivityAssetNotTableBoundReason,
     ActivityAssetPlanClaim,
@@ -61,7 +64,7 @@ from .activity_asset_read_models import (
     timeline_token_key,
 )
 from .disposal_calculation import DisposalBoundsReader, year_minimum
-from .fact_wording import ActivityAssetFlag, share_label
+from .fact_wording import ActivityAssetFlag, share_label, token_family
 from .history import ActivityAssetHistory
 from .legal_citations import ResolvedLegalCitations
 from .ports import ActivityAssetForecastOperation
@@ -139,6 +142,24 @@ def _claimable(
         if max(gap.covered_from, start) < min(gap.covered_until, end) and not _gap_lies_on_a_claim(gap, row)
     )
     return intervals, None
+
+
+def method_facts_view(method: AmortizationMethod) -> ActivityAssetMethodFacts:
+    """Serve the facts an election of a method states, as the election model types them."""
+    return ActivityAssetMethodFacts(
+        method=method,
+        facts=tuple(
+            ActivityAssetMethodFact(
+                path=fact.path,
+                kind=fact.kind,
+                required=fact.required,
+                required_with_group=fact.required_with_group,
+                token_family=None if fact.tokens is None else token_family(fact.tokens),
+                tokens=() if fact.tokens is None else tuple(member.value for member in fact.tokens),
+            )
+            for fact in method_facts(method)
+        ),
+    )
 
 
 def _claimable_interval(covered_from: date, covered_until: date) -> ActivityAssetClaimableInterval:
@@ -675,5 +696,6 @@ __all__ = [
     "element_list",
     "element_plan",
     "element_timeline",
+    "method_facts_view",
     "register_years",
 ]
