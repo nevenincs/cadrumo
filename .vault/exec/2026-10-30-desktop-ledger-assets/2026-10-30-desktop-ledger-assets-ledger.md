@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:451ae5e11694542c42a1bbecdf80eb39fc1e213130361a7d87b94c801db1f571'
+body_hash: 'sha256:9fded8a858d4e4592bfd53ac78927e87afef5ebb2f89cac070069d13278bbe05'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -202,6 +202,18 @@ related:
 - `S06` `M` `dev/locales/desktop_ledger_document_keys.py`
 - `S06` `verify:` `npx eslint and npx prettier --check on the changed frontend files` -> `pass`
 - `S06` `by:` `implementer-standard`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/YearStepper.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/planRead.ts`
+- `S05` `A` `native/desktop/frontend/src/components/ledger/assets/assetRevision.ts`
+- `S05` `D` `native/desktop/frontend/src/components/ledger/assets/assetsContract.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/ledgerClassesFixture.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S05` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S05` `A` `native/desktop/frontend/tests/support/assetRequests.ts`
+- `S05` `A` `dev/registry/tests/test_desktop_asset_requests_decode.py`
+- `S05` `verify:` `tsc --noEmit` -> `pass`
+- `S05` `verify:` `playwright ledger-assets-contract` -> `pass`
+- `S05` `verify:` `pytest desktop_asset requests decode` -> `pass`
 
 ## Notes
 
@@ -216,3 +228,4 @@ related:
 - `S05` Conformed to the served years, keys, class labels and the baja operations; S05 not closed. Uncommitted: shared files hold another session's edits.
 - `S06` Scenario specs ledger-setup and ledger-sweep not run: they need the served scenario bundle, and assets/StockPane.tsx did not exist yet (tsc fails only on that import).
 - `S06` tsc reports only another Step's tests/ledger-assets-contract.spec.ts unused port; desktop-frontend-chrome build refuses on `desktop.ledger.stock.field.*` keys not yet declared (another Step); locale pytest fails only on `desktop.ledger.assets.year_estimated*` undeclared (another Step)
+- `S05` batch 3 and register fixes conformed; uncommitted by instruction; host and manifests untouched

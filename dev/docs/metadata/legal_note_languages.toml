@@ -1279,3 +1279,87 @@ text = "LIS disposicion adicional decimoseptima"
 [[legal."ley-27-2014:da-17"]]
 language = "es"
 text = "libertad de amortizacion en instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion maxima 500.000 euros."
+
+[[legal."ley-35-2006:art-11"]]
+language = "es"
+text = "LIRPF art 11: individualización de rentas — la renta se entiende obtenida por los contribuyentes en función del origen o fuente (rendimientos del trabajo por quien genera el derecho, del capital por los titulares de los elementos, de actividades por quien las realiza, ganancias por los titulares). Base legal de las casillas 'Contribuyente que obtiene los rendimientos / a quien corresponde la imputación / titular' del Modelo 100 (toma de datos ampliada)."
+
+[[legal."ley-35-2006:art-38"]]
+language = "es"
+text = "LIRPF art 38: ganancias excluidas de gravamen en supuestos de reinversión — exención de la ganancia por transmisión de la vivienda habitual reinvertida en otra vivienda habitual, y de acciones/participaciones de entidades de nueva o reciente creación. Base legal de las casillas de exención por reinversión en Modelo 100."
+
+[[legal."ley-35-2006:art-39"]]
+language = "es"
+text = "LIRPF art 39: ganancias patrimoniales no justificadas — bienes o derechos cuya tenencia/declaración/adquisición no se corresponde con la renta o patrimonio declarados, integradas en la base liquidable general del periodo."
+
+[[legal."ley-35-2006:art-51"]]
+language = "es"
+text = "LIRPF art 51: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social (planes de pensiones, mutualidades de previsión social, planes de previsión asegurados, planes de previsión social empresarial, seguros de dependencia, y sistemas a favor de personas con discapacidad). Base legal de las casillas de reducción/exceso por previsión social en Modelo 100; el límite conjunto lo fija el art. 52."
+
+[[legal."ley-35-2006:art-53"]]
+language = "es"
+text = "LIRPF art 53: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social constituidos a favor de personas con discapacidad. Base legal de las casillas de reducción/exceso por previsión social de personas con discapacidad en Modelo 100 (distinto del patrimonio protegido del art. 54)."
+
+[[legal."ley-35-2006:art-54"]]
+language = "es"
+text = "LIRPF art 54: reducciones de la base imponible general por aportaciones a patrimonios protegidos de las personas con discapacidad (límite 10.000 € por aportante, 24.250 € conjunto). Base legal de las casillas de reducción/exceso por patrimonio protegido en Modelo 100."
+
+[[legal."ley-35-2006:art-55"]]
+language = "es"
+text = "LIRPF art 55: reducciones de la base imponible por pensiones compensatorias satisfechas al cónyuge y anualidades por alimentos (salvo las fijadas a favor de los hijos) por decisión judicial. Base legal de las casillas de reducción por pensiones compensatorias y anualidades por alimentos en Modelo 100."
+
+[[legal."ley-35-2006:art-60"]]
+language = "es"
+text = "LIRPF art 60: minimo por discapacidad. Del contribuyente: 3.000 euros (discapacidad grado >=33%<65%), 9.000 euros (grado >=65%); +3.000 euros en concepto de gastos de asistencia (ayuda de terceras personas, movilidad reducida, o grado >=65%). De ascendientes o descendientes con discapacidad: 3.000 euros por cada uno (>=33%), 9.000 euros (>=65%); +3.000 euros gastos de asistencia."
+
+[[legal."ley-35-2006:art-61"]]
+language = "es"
+text = "LIRPF art 61: normas comunes para la aplicacion del minimo del contribuyente y por descendientes, ascendientes y discapacidad. Norma 1a: cuando dos o mas contribuyentes tengan derecho al minimo por descendientes, ascendientes o discapacidad respecto de los mismos ascendientes o descendientes, su importe se prorrateara entre ellos por partes iguales"
+
+[[legal."ley-35-2006:art-7"]]
+language = "es"
+text = "Base legal de las casillas informativas de rentas exentas (importes que no se integran en la base imponible) del Modelo 100"
+
+[[legal."ley-35-2006:art-92"]]
+language = "es"
+text = "LIRPF art 92: imputación de rentas por la cesión de derechos de imagen. Base legal de las casillas del régimen especial de imputación por cesión de derechos de imagen en Modelo 100."
+
+[[legal."ley-35-2006:art-97"]]
+language = "es"
+text = "LIRPF art 97: autoliquidación. Incluye en su apartado 6 la compensación entre cónyuges cuando, en tributación individual, el resultado de una declaración es a ingresar y el de la otra a devolver. Base legal de las casillas de resultado de la autoliquidación, compensación entre cónyuges (datos de la cuenta SEPA) y autoliquidación rectificativa en Modelo 100."
+
+[[legal."ley-35-2006:da-11"]]
+language = "es"
+text = "LIRPF disposición adicional 11ª: mutualidad de previsión social de deportistas profesionales y de alto nivel — aportaciones reducibles de la base imponible general con su propio límite (la menor de 24.250 € o la suma de rendimientos netos de trabajo y actividades económicas). Base legal de las casillas de reducción/exceso por mutualidad de deportistas en Modelo 100."
+
+[[legal."ley-35-2006:da-45"]]
+language = "es"
+text = "LIRPF disposición adicional 45ª: tratamiento fiscal de la devolución de cláusulas suelo. Cuando las cantidades devueltas formaron parte de la base de deducciones previas, se pierde el derecho a esas deducciones y deben sumarse las cantidades indebidamente deducidas a la cuota líquida estatal y autonómica, sin intereses de demora. Base legal específica de las casillas Modelo 100 que marcan la regularización motivada por DA 45ª.2.a) o DA 45ª.3."
+
+[[legal."ley-35-2006:da-48"]]
+language = "es"
+text = "LIRPF disposición adicional 48ª: deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Económico Europeo, que equipara el tratamiento al de la tributación conjunta cuando uno de los miembros no es residente en España. Base legal de las casillas de la deducción por unidad familiar de residentes en la UE/EEE en Modelo 100."
+
+[[legal."ley-35-2006:da-50"]]
+language = "es"
+text = "LIRPF disposición adicional 50ª: deducción por obras de mejora de la eficiencia energética de viviendas (20%/40%/60% según el tipo de obra y la reducción de demanda/consumo acreditada por certificado energético). Base legal de las casillas de deducción y exceso por mejoras energéticas de vivienda en Modelo 100."
+
+[[legal."ley-35-2006:da-58"]]
+language = "es"
+text = "LIRPF disposición adicional 58ª: deducción por la adquisición de vehículos eléctricos enchufables y de pila de combustible y por la instalación de puntos de recarga (15% sobre el valor de adquisición, con límites). Base legal de las casillas de deducción por vehículos eléctricos y puntos de recarga en Modelo 100."
+
+[[legal."ley-35-2006:da-60"]]
+language = "es"
+text = "LIRPF disposición adicional 60ª: reducción del 30% sobre rendimientos de actividades artísticas obtenidos de manera excepcional, con base máxima anual de 150.000 euros, para rendimientos del trabajo artísticos y rendimientos netos de actividades económicas artísticas que excedan del 130% de la media de los tres periodos impositivos anteriores. Base legal de las casillas Modelo 100 2025 de reducción por rendimientos artísticos excepcionales."
+
+[[legal."ley-35-2006:dt-15"]]
+language = "es"
+text = "LIRPF disposición transitoria 15ª: régimen transitorio de la deducción por alquiler de la vivienda habitual — aplicable a contribuyentes con contrato de arrendamiento anterior al 01-01-2015 que venían deduciéndose (10,05% con base máxima según base imponible). Base legal de las casillas informativas y de cálculo de la deducción por alquiler en Modelo 100."
+
+[[legal."ley-35-2006:dt-18"]]
+language = "es"
+text = "LIRPF disposición transitoria 18ª: régimen transitorio de la deducción por inversión en vivienda habitual — aplicable a contribuyentes que adquirieron su vivienda habitual (o satisficieron cantidades para su construcción) antes del 01-01-2013 y venían deduciéndose. Base legal de las casillas de deducción por vivienda habitual en Modelo 100."
+
+[[legal."ley-35-2006:dt-9"]]
+language = "es"
+text = "LIRPF disposición transitoria 9ª: régimen transitorio (coeficientes de abatimiento) de las ganancias patrimoniales derivadas de elementos patrimoniales adquiridos antes del 31-12-1994, con el límite acumulado de 400.000 € de valor de transmisión. Base legal de la reducción DT-9ª en las casillas de ganancia patrimonial por transmisión de inmuebles en Modelo 100."

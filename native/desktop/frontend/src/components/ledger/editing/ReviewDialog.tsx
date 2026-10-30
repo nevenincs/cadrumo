@@ -1721,16 +1721,6 @@ export function ReviewDialog({
             )
           }
         />
-        <details className="ledger-technical text-sm">
-          <summary className="cursor-pointer text-muted-foreground">
-            {t("desktop.ledger.apply.technical")}
-          </summary>
-          <ul className="mt-2 grid gap-1 font-mono text-xs">
-            {plan.steps.map((step, at) => (
-              <li key={at}>{technicalLine(step)}</li>
-            ))}
-          </ul>
-        </details>
       </div>
     );
     footer = (
@@ -1827,7 +1817,6 @@ export function ReviewDialog({
       content,
     );
     const unsaved = items.filter((item) => !SAVED.has(item.outcome.kind));
-    const refusals = items.filter((item) => item.outcome.kind === "refused");
     const kinds = Object.keys(counts).length;
     body = (
       <div className="grid gap-3">
@@ -1888,25 +1877,6 @@ export function ReviewDialog({
           </Alert>
         )}
         <Outcomes items={unsaved} />
-        {refusals.length > 0 && (
-          <details className="ledger-technical text-sm">
-            <summary className="cursor-pointer text-muted-foreground">
-              {t("desktop.ledger.apply.technical")}
-            </summary>
-            <ul className="mt-2 grid gap-1 font-mono text-xs">
-              {refusals.map((item) => (
-                <li key={item.key}>
-                  {facts(t, [
-                    item.title,
-                    item.outcome.kind === "refused"
-                      ? (item.outcome.reason ?? "refused")
-                      : "",
-                  ])}
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
       </div>
     );
     footer = (
@@ -1964,26 +1934,6 @@ export function ReviewDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-/** One operation of the plan, as Technical details lists it. */
-function technicalLine(step: PlanStep): string {
-  switch (step.kind) {
-    case "bulk":
-      return `ledger.classify.bulk · ${step.part}/${step.parts} · ${step.rows.length}`;
-    case "classify":
-      return `ledger.classify.single · ${step.transactionId.slice(0, 12)} · ${step.request.patch_fields.join(",")}`;
-    case "update":
-      return `ledger.update · ${step.transactionId.slice(0, 12)} · ${step.request.patch_fields.join(",")}`;
-    case "add":
-      return `ledger.add · ${step.request.idempotency_key ?? ""}`;
-    case "action":
-      return `${step.definition} · ${actionRows(step.action)
-        .map((id) => id.slice(0, 12))
-        .join(",")}`;
-    case "answer":
-      return `ledger.classify.review · ${step.action.operationId.slice(0, 12)} · ${step.action.reviewDigest.slice(0, 12)}`;
-  }
 }
 
 function ConflictList({

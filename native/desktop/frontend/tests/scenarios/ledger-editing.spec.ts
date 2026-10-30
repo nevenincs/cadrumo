@@ -276,10 +276,12 @@ test("Delete clears an optional cell, and a required one says it cannot be clear
   await expect(amount).toHaveAttribute("aria-invalid", "true");
   // The clear goes through a single classification, never the bulk.
   await openReview(target);
-  await review(target).locator(".ledger-technical summary").click();
-  const technical = review(target).locator(".ledger-technical");
-  await expect(technical).toContainText("ledger.classify.single");
-  await expect(technical).not.toContainText("ledger.classify.bulk");
+  await save(target);
+  const submitted = await target.evaluate(
+    () => window.__scenarioHostCalls ?? [],
+  );
+  expect(submitted).toContain("ledger ledger.classify.single");
+  expect(submitted).not.toContain("ledger ledger.classify.bulk");
 });
 
 /** The scenario ledger's controls for what no person does here. */
@@ -819,13 +821,8 @@ test("a part refused whole saves nothing of it and keeps it staged", async ({
   await expect(review(target).locator("[data-tally=applied]")).toContainText(
     "1",
   );
-  // The code is under Technical details only, and a re-read is offered.
-  await expect(review(target).locator(".ledger-outcomes")).not.toContainText(
-    "precondition_failed",
-  );
-  await expect(review(target).locator(".ledger-technical")).toContainText(
-    "precondition_failed",
-  );
+  // The refusal's code is shown nowhere, and a re-read is offered.
+  await expect(review(target)).not.toContainText("precondition_failed");
   await expect(
     review(target).locator(".ledger-apply-refused-reread"),
   ).toBeVisible();

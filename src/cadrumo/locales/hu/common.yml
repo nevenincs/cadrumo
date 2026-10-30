@@ -2924,9 +2924,31 @@ desktop:
           döntés.'
         closing_authority_invalid: 'Elutasítva: a zárási döntés nem illik ehhez a
           nyilvántartáshoz.'
+        closing_authority_recorded: 'Elutasítva: {year} évre már el van mentve egy
+          zárási érték, ezért a készlete nem változhat.'
+        correction_changes_nothing: 'Elutasítva: ez nem változtatja meg a nyitókészletet
+          és a módszert.'
+        correction_id_conflict: 'Elutasítva: ezt a javítást már egy másik változtatásra
+          használtad. Zárd be ezt az űrlapot, és nyisd meg újra.'
+        count_would_raise_stock: 'Elutasítva: egy leltár nem emelheti a készletedet
+          a könyvelt egységek fölé.'
         duplicate_movement_id: 'Elutasítva: ez a mozgás már szerepel a nyilvántartásban.'
         invalid_valuation_method: 'Elutasítva: nem értékelési módszer.'
+        inventory_already_retired: 'Elutasítva: ez a készletnyilvántartás már meg
+          van szüntetve.'
+        inventory_not_retired: 'Elutasítva: ez a készletnyilvántartás nincs megszüntetve.'
+        inventory_retired: 'Elutasítva: ez a készletnyilvántartás meg van szüntetve.
+          Állítsd vissza, mielőtt módosítod a készletét.'
         inventory_validation: 'Elutasítva: a nyilvántartás ezt nem fogadja el.'
+        later_closing_authority_recorded: 'Elutasítva: a {later_year} évre elmentett
+          zárási érték erre az évre épül, ezért a készlete nem változhat.'
+        movement_already_superseded: 'Elutasítva: ezt a mozgást már kijavították vagy
+          visszavonták.'
+        movement_not_found: 'Elutasítva: ez a mozgás nincs ebben a készletnyilvántartásban.'
+        movement_outside_year: 'Elutasítva: a mozgás dátuma kívül esik a(z) {year}
+          évi nyilvántartáson.'
+        stock_would_go_negative: 'Elutasítva: több egység menne ki, mint amennyi készleten
+          van.'
       unit_cost: Egységköltség
       valuation: '{name} · zárókészlet {closing} · eladott áruk költsége {cogs} ·
         {method}'
@@ -3638,7 +3660,13 @@ desktop:
       action:
         add_book: Készletnyilvántartás felvétele
         add_movement: Mozgás felvétele
+        correct: A nyitókészlet vagy a módszer javítása
+        describe: A részletek szerkesztése
+        movement_correct: Ennek a mozgásnak a javítása
+        movement_reverse: Ennek a mozgásnak a visszavonása
         preview: Az értékelés előnézete
+        restore: A készletnyilvántartás visszaállítása
+        retire: A készletnyilvántartás megszüntetése
       books: Készletnyilvántartások, {year}
       column:
         cost: Költség
@@ -3652,7 +3680,12 @@ desktop:
         professional_fee: Szakmai díj
       count:
         books: 'Készletnyilvántartások: {count}'
+        corrections: 'Javítások: {count}'
         retired: 'Megszüntetve: {count}'
+      detail_failed: A mozgások és az előzmények nem tölthetők be.
+      detail_loading: A mozgások és az előzmények betöltése…
+      detail_refused: Ennél a nyilvántartásnál a mozgások és az előzmények nem jeleníthetők
+        meg.
       empty: '{year} évre még nincs készletnyilvántartásod. Vegyél fel egyet, hogy
         elkezdd számolni, mid van.'
       extra:
@@ -3663,14 +3696,30 @@ desktop:
         price: Összeg IVA nélkül
         remove: A további költség törlése
         share: Az IVA-jának az a része, amelyet levonhatsz (%)
+      fact:
+        description: 'Leírás: {value}'
+        label: 'Név: {value}'
+        method: 'Módszer: {value}'
+        movement: '{date} · {kind} · {quantity}'
+        no_description: Nincs leírás
+        opening: Nyitókészlet {value}
+        removed: Kikerült a számításból
       field:
         cost_hint: Add meg az egységköltséget vagy az összeset, amelyik megvan.
+        description: Leírás (nem kötelező)
         extra_total: További költségek IVA nélkül, összesen
         iva: Az ár IVA-ja
+        keep: A mostani marad
+        keep_hint: Hagyd üresen, ha a mostani marad.
+        label: Név
+        label_hint: Így hívják ezt a készletnyilvántartást a listáidban.
+        method_new: Új értékelési módszer
         name: Tevékenység
         name_hint: Az üzleti tevékenység, amelyhez ez a készlet tartozik, ahogy te
           nevezed.
+        opening_new: A nyitókészlet új értéke
         price: Ár IVA nélkül
+        reason: Ok
         recoverable: Levonható IVA, összesen
         share: Az IVA-nak az a része, amelyet levonhatsz (%)
         total: A beszerzés teljes költsége
@@ -3678,14 +3727,28 @@ desktop:
         unrecoverable: Le nem vonható IVA (a költséghez adódik)
       form:
         book: Új készletnyilvántartás, {year}
+        correct: '{name} javítása · {year}'
+        describe: '{name} részletei · {year}'
         movement: 'Mozgás felvétele ide: {name} · {year}'
+        movement_correct: '{name} egy mozgásának javítása · {year}'
+        restore: '{name} visszaállítása · {year}'
+        retire: '{name} megszüntetése · {year}'
+        reverse: '{name} egy mozgásának visszavonása · {year}'
+      history:
+        after: Utána
+        before: Előtte
+        reason: Ok
+        what: Mi történt
+        when: Mikor
+      history_none: Ebben a készletnyilvántartásban még semmi sem változott.
+      history_of: '{name} előzményei'
       load_failed: A készleted nem tölthető be.
       load_refused: A készleted most nem jeleníthető meg.
       loading: A készleted betöltése…
+      movement_correct_note: A javított mozgás a régi helyére lép. A régi az előzményekben
+        marad.
       movements_none: Ebben a nyilvántartásban még nincs mozgás. Vedd fel az elsőt.
       movements_of: '{name} mozgásai'
-      movements_unlisted: 'Mozgások ebben a nyilvántartásban: {count}. A korábbiak
-        még nem listázhatók; az újak itt jelennek meg, ahogy felveszed őket.'
       proof:
         change_file: Másik fájl kiválasztása
         check_hint: Bármilyen fájl, amely mutatja az ellenőrzést, például egy jegyzet
@@ -3715,10 +3778,24 @@ desktop:
         totals_hint: Írd be az összegeket, amelyekre a fenti számok kijönnek. Egyezniük
           kell a számokkal.
       refused: A készletnyilvántartás ezt nem fogadta el. Semmi sem lett mentve.
+      restore_note: A készletnyilvántartás visszakerül az aktív listádra mindazzal,
+        amit tartalmaz.
+      retire_note: Semmi sem törlődik. A készletnyilvántartás megszüntetettként jelölve
+        a listádban marad, és bármikor visszaállíthatod.
       retired: Megszüntetve
+      retired_because: Megszüntetve · {reason}
+      retired_hint: Ez a készletnyilvántartás meg van szüntetve. Állítsd vissza, hogy
+        módosíthasd a készletét.
+      reverse_note: A mozgás nem számít többé. Az előzményekben marad.
       submit:
         book: Nyilvántartás felvétele
+        correct: Javítás mentése
+        describe: Részletek mentése
         movement: Mozgás felvétele
+        movement_correct: Javítás mentése
+        restore: Nyilvántartás visszaállítása
+        retire: Nyilvántartás megszüntetése
+        reverse: Mozgás visszavonása
       summary: Készletösszegzés
       title: Készlet
       unavailable: A készleted most nem érhető el.
@@ -4697,6 +4774,12 @@ ledger:
       customs_document: Vámokmány
       invoice: Számla
       reception: Átvétel
+    electric_propulsion:
+      bev: Akkumulátoros elektromos jármű (BEV)
+      fchv: Üzemanyagcellás hibrid jármű (FCHV)
+      fcv: Üzemanyagcellás jármű (FCV)
+      phev: Konnektoros hibrid jármű (PHEV)
+      reev: Hatótávnövelős elektromos jármű (REEV)
     errors:
       accelerated_da18_depreciation: A(z) %{tax_year}. adóévre a LIS DA 18 az új elektromos
         járművekre és töltőpontokra a maximális lineáris együttható kétszeresével
@@ -5022,6 +5105,9 @@ ledger:
       claim: Értékcsökkenés rögzítve
       descriptor: Leírás hozzáadva
       revision: Adóadatok rögzítve
+    flag:
+      'false': Nem
+      'true': Igen
     method:
       approved_plan: Jóváhagyott értékcsökkenési terv
       charging_infrastructure_free: Szabad értékcsökkenés, töltőinfrastruktúra
@@ -5055,6 +5141,10 @@ ledger:
     original_price_determination:
       expert_valuation: Szakértői értékelés
       known: Ismert ár
+    ownership_mode:
+      fractional_direct: Közvetlen tulajdoni hányad
+      sole: Egyedüli tulajdon
+      spousal_community: Házastársi közös vagyon
     plan_absence:
       basis_exhausted: Az alap teljesen leírva
       conflict: Ütközik a rögzítettekkel
@@ -5072,6 +5162,10 @@ ledger:
         A kapcsolt társaságtól történő vásárlást az LIRPF 41. cikke szerint piaci
         értéken kell értékelni. Ez a figyelmeztetés nem vizsgál semmilyen eladói adatot,
         és egyetlen számot sem változtat meg.
+    plan_approval_kind:
+      amended_with_consent: Az elfogadott módosításokkal jóváhagyva
+      express: Kifejezett jóváhagyás
+      silence: Hallgatással jóváhagyva
     prior_free_depreciation_regime:
       trlis_da_11: TRLIS 11. kiegészítő rendelkezés
       trlis_dt_37: TRLIS 37. átmeneti rendelkezés
@@ -5082,10 +5176,41 @@ ledger:
       fully_amortized: Teljesen leírva
       in_service: Üzemben
       out_of_service: Kivezetve
+    renewable_documentation_kind:
+      energy_efficiency_certificate: Energiahatékonysági tanúsítvány
+      low_voltage_certificate: Kisfeszültségű villamos berendezés tanúsítványa
+      operating_authorisation: Üzemeltetési engedély
+      renewable_gas_registration: Megújuló gáz létesítményének nyilvántartásba vétele
+      surplus_registration: Többletenergia-nyilvántartásba vétel (RAIPREE)
+      thermal_process_registration: Hőtechnológiai folyamat nyilvántartásba vétele
+        vagy jelentése
+    renewable_installation_purpose:
+      electricity_self_consumption: Villamos energia önfogyasztásra
+      thermal_own_use: Hőenergia saját használatra
     stale_reason:
       authority_changed: A táblázatok e rögzítés után változtak
       revision_changed: Az elemet e rögzítés után javították
       schedule_unavailable: Az ütemezés most nem számítható ki
+    vehicle_category:
+      aircraft: Légi jármű
+      all_terrain: Terepjáró
+      leisure_boat: Szabadidős hajó
+      mixed_vehicle: Vegyes használatú jármű
+      moped: Segédmotoros kerékpár
+      motorcycle: Motorkerékpár
+      other_vehicle: Egyéb jármű
+      passenger_car: Személygépkocsi
+      trailer: Pótkocsi
+    vehicle_listed_use:
+      commercial_representative_travel: Kereskedelmi képviselők utazásai
+      habitual_onerous_hire: Rendszeres, ellenérték fejében történő bérbeadás
+      mixed_vehicle_goods_transport: Áruszállítás (vegyes használatú jármű)
+      paid_driving_or_pilot_instruction: Díjazás ellenében végzett vezetési vagy pilótaoktatás
+      paid_passenger_transport: Díjazás ellenében végzett személyszállítás
+    vehicle_private_use:
+      accessory_non_working_time: Járulékos magáncélú használat munkaidőn kívül
+      none: Nincs magáncélú használat
+      shared: Megosztott, magáncélú használattal
   evidence:
     reader:
       operation_failed: A bizonylatolvasó művelete sikertelen volt

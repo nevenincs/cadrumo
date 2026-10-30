@@ -1451,18 +1451,6 @@ function BankPreview({
           {progressText}
         </p>
       )}
-      <details className="text-xs text-muted-foreground">
-        <summary className="cursor-pointer">
-          {t("desktop.ledger.import.technical")}
-        </summary>
-        <ul className="mt-1 grid gap-0.5 font-mono">
-          {read.map((preview) => (
-            <li key={preview.file.token} className="[overflow-wrap:anywhere]">
-              {facts(t, [preview.file.name, `sha256 ${preview.digest ?? "-"}`])}
-            </li>
-          ))}
-        </ul>
-      </details>
     </>
   );
 }
@@ -1766,14 +1754,6 @@ function ResultStep({
             })}
           </p>
         )}
-        <details className="text-xs text-muted-foreground">
-          <summary className="cursor-pointer">
-            {t("desktop.ledger.import.technical")}
-          </summary>
-          <p className="mt-1 font-mono [overflow-wrap:anywhere]">
-            {facts(t, [outcome.file.name, `sha256 ${result.source_sha256}`])}
-          </p>
-        </details>
       </>
     );
   }

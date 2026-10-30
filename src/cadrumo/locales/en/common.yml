@@ -2895,9 +2895,29 @@ desktop:
           saved.'
         closing_authority_invalid: 'Refused: the closing decision doesn''t fit this
           book.'
+        closing_authority_recorded: 'Refused: a closing value is already saved for
+          {year}, so its stock can''t change.'
+        correction_changes_nothing: 'Refused: that doesn''t change the opening stock
+          or the method.'
+        correction_id_conflict: 'Refused: that correction was already used for a different
+          change. Close this form and open it again.'
+        count_would_raise_stock: 'Refused: a count can''t raise your stock above the
+          units you have on the books.'
         duplicate_movement_id: 'Refused: that movement is already in the book.'
         invalid_valuation_method: 'Refused: not a valuation method.'
+        inventory_already_retired: 'Refused: this stock book is already retired.'
+        inventory_not_retired: 'Refused: this stock book isn''t retired.'
+        inventory_retired: 'Refused: this stock book is retired. Restore it before
+          changing its stock.'
         inventory_validation: 'Refused: the book doesn''t accept that.'
+        later_closing_authority_recorded: 'Refused: the closing value saved for {later_year}
+          rests on this year, so its stock can''t change.'
+        movement_already_superseded: 'Refused: that movement was already corrected
+          or reversed.'
+        movement_not_found: 'Refused: that movement isn''t in this stock book.'
+        movement_outside_year: 'Refused: the date of the movement falls outside {year}.'
+        stock_would_go_negative: 'Refused: more units would go out than remain in
+          stock.'
       unit_cost: Unit cost
       valuation: '{name} · closing stock {closing} · cost of sales {cogs} · {method}'
     invoice:
@@ -3607,7 +3627,13 @@ desktop:
       action:
         add_book: Add a stock book
         add_movement: Add a movement
+        correct: Correct the opening stock or the method
+        describe: Edit the details
+        movement_correct: Correct this movement
+        movement_reverse: Reverse this movement
         preview: Preview the valuation
+        restore: Restore the stock book
+        retire: Retire the stock book
       books: Stock books for {year}
       column:
         cost: Cost
@@ -3621,7 +3647,12 @@ desktop:
         professional_fee: Professional fee
       count:
         books: 'Stock books: {count}'
+        corrections: 'Corrections: {count}'
         retired: 'Retired: {count}'
+      detail_failed: The movements and the history couldn't be loaded.
+      detail_loading: Loading the movements and the history…
+      detail_refused: The movements and the history can't be shown for this stock
+        book.
       empty: No stock book for {year} yet. Add one to start counting what you hold.
       extra:
         add: Add an extra cost
@@ -3631,13 +3662,29 @@ desktop:
         price: Amount without IVA
         remove: Remove this extra cost
         share: Share of its IVA you can deduct (%)
+      fact:
+        description: 'Description: {value}'
+        label: 'Name: {value}'
+        method: 'Method: {value}'
+        movement: '{date} · {kind} · {quantity}'
+        no_description: No description
+        opening: Opening stock {value}
+        removed: Taken out of the count
       field:
         cost_hint: Fill in the cost per unit or the total, whichever you have.
+        description: Description (optional)
         extra_total: Extra costs without IVA, all together
         iva: IVA on the price
+        keep: Keep the current one
+        keep_hint: Leave it empty to keep the current one.
+        label: Name
+        label_hint: How this stock book is called in your lists.
+        method_new: New valuation method
         name: Activity
         name_hint: The business activity this stock belongs to, as you call it.
+        opening_new: New opening stock value
         price: Price without IVA
+        reason: Reason
         recoverable: IVA you can deduct, all together
         share: Share of that IVA you can deduct (%)
         total: Total cost of the purchase
@@ -3645,14 +3692,28 @@ desktop:
         unrecoverable: IVA you can't deduct (added to the cost)
       form:
         book: New stock book for {year}
+        correct: Correct {name} · {year}
+        describe: Details of {name} · {year}
         movement: Add a movement to {name} · {year}
+        movement_correct: Correct a movement of {name} · {year}
+        restore: Restore {name} · {year}
+        retire: Retire {name} · {year}
+        reverse: Reverse a movement of {name} · {year}
+      history:
+        after: After
+        before: Before
+        reason: Reason
+        what: What happened
+        when: When
+      history_none: Nothing has been changed in this stock book.
+      history_of: History of {name}
       load_failed: Your stock couldn't be loaded.
       load_refused: Your stock can't be shown right now.
       loading: Loading your stock…
+      movement_correct_note: The corrected movement takes the place of the old one.
+        The old one stays in the history.
       movements_none: No movements in this book yet. Add the first one.
       movements_of: Movements of {name}
-      movements_unlisted: 'Movements in this book: {count}. The earlier ones can''t
-        be listed yet; new ones appear here as you add them.'
       proof:
         change_file: Choose another file
         check_hint: Any file that shows the check, such as a note or a worksheet.
@@ -3681,10 +3742,23 @@ desktop:
         totals_hint: Write the totals the figures above come to. They have to agree
           with those figures.
       refused: The stock book didn't accept that. Nothing was saved.
+      restore_note: The stock book goes back to your active list with everything it
+        holds.
+      retire_note: Nothing is deleted. The stock book stays in your list, marked as
+        retired, and you can restore it whenever you want.
       retired: Retired
+      retired_because: Retired · {reason}
+      retired_hint: This stock book is retired. Restore it to change its stock.
+      reverse_note: The movement stops counting. It stays in the history.
       submit:
         book: Add the book
+        correct: Save the correction
+        describe: Save the details
         movement: Add the movement
+        movement_correct: Save the correction
+        restore: Restore the stock book
+        retire: Retire the stock book
+        reverse: Reverse the movement
       summary: Stock summary
       title: Stock
       unavailable: Your stock isn't available right now.
@@ -9323,4 +9397,54 @@ workspace:
         expand: Show boxes
         go: Open box
         open: Open source
-      lead: B
+      lead: Boxes are filled from these when you calculate. Correct a value where
+        it is kept, then calculate again.
+      no_source: This box is not filled from another area.
+      no_surface: “{source}” has no area of its own to open.
+      none: This declaration has no boxes to show.
+      none_found: '{source}: none found'
+      not_here: That area cannot be opened from here; open it from the main menu.
+      not_yet: '{source}: not read yet'
+      title: Where the values come from
+    stage_refused:
+      not_editable: This box cannot be changed that way.
+      nothing_to_clear: There is no value of yours to clear in this box.
+      nothing_to_confirm: This box holds no assumed value to confirm.
+      nothing_to_restore: This box already shows its source's value.
+    staged:
+      clear: (will be cleared)
+      restore: (back to source)
+    step:
+      calculate: Calculate
+      file: Record filing
+      fill: Fill in
+      review: Check
+    summary:
+      blocked: Could not be worked out
+      calculated: Worked out from other boxes
+      entered: Entered by you
+      imported: Brought in from your data
+      needs_you: Need you
+      not_calculated: 'Not calculated yet: the boxes fill in when it is.'
+      title: This declaration
+    surface:
+      correct:
+        declarations: Open that declaration and correct it there
+        ledger: Open your records and correct it there
+        profile: Open your profile and correct it there
+        withholding: Open withholdings and correct it there
+      open:
+        declarations: Open that declaration
+        ledger: Open your records
+        profile: Open your profile
+        withholding: Open withholdings
+    todo:
+      failed: 'Boxes that could not be worked out: {count}'
+      failed_lead: They wait on something the calculation lacked. Choose one to see
+        what.
+      none: Nothing needs you on this form.
+      title: To do
+    value:
+      not_applicable: n/a
+      not_known_yet: Not known yet
+    was: was {value}

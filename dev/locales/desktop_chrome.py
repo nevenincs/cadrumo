@@ -39,7 +39,13 @@ from cadrumo_client.contracts.navigation import load_navigation_register
 
 from ._paths import LOCALES_DIR, RUNTIME_SRC_DIR, SRC_DIR
 from ._status import CatalogueLeafState, classify_catalogue_leaf
-from .desktop_assets_keys import ASSET_FAMILIES, ASSET_KEYS, ASSET_PERCENT_PLACEHOLDER_PREFIXES
+from .desktop_assets_keys import (
+    ASSET_FAMILIES,
+    ASSET_KEYS,
+    ASSET_PERCENT_PLACEHOLDER_PREFIXES,
+    INVENTORY_FAMILIES,
+    INVENTORY_KEYS,
+)
 from .desktop_interface_keys import DESKTOP_INTERFACE_KEYS
 from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
@@ -815,19 +821,8 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         ),
         "desktop.ledger.counterparty.source.": ("document_evidence", "profile_authority", "operator_assertion"),
         "desktop.ledger.health.count.": ("active", "archived", "stashed", "split", "pending", "reviewed", "skipped"),
-        "desktop.ledger.inventory.form.": ("create", "movement", "closing"),
         "desktop.ledger.inventory.kind.": ("opening", "purchase", "cogs", "count"),
         "desktop.ledger.inventory.method.": ("fifo", "pmp", "coste_medio"),
-        "desktop.ledger.inventory.refusal.": (
-            "activity_conflict",
-            "activity_not_found",
-            "invalid_valuation_method",
-            "duplicate_movement_id",
-            "inventory_validation",
-            "closing_authority_conflict",
-            "closing_authority_invalid",
-        ),
-        "desktop.ledger.inventory.task.": ("create", "movement", "closing"),
         "desktop.ledger.prorrata.action.": (
             "seed",
             "declare_sector",
@@ -878,6 +873,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.ledger.rules.refusal.": ("empty_pattern", "invalid_pattern", "category", "invalid_command"),
         **WORKSPACE_FAMILIES,
         **ASSET_FAMILIES,
+        **INVENTORY_FAMILIES,
     }
 )
 
@@ -888,6 +884,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | DESKTOP_INTERFACE_KEYS
     | WORKSPACE_KEYS
     | ASSET_KEYS
+    | INVENTORY_KEYS
 )
 
 #: Declared keys no shell source names yet, because their view is still being
@@ -899,7 +896,7 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
-    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]"""
+    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]"""
 )
 _SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(
     r"`((?:desktop|workspace|ledger\.actividad_asset)\.[A-Za-z0-9_.]*)\$\{"

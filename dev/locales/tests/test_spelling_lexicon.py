@@ -881,6 +881,47 @@ def test_audit_attested_hungarian_aeat_and_runtime_terms_are_exact_and_language_
         assert all(not is_project_spelling(locale, form) for form in forms if form not in shared_forms)
 
 
+def test_repeated_hungarian_operator_and_tax_forms_are_exact_and_language_scoped() -> None:
+    forms = (
+        "alparancs",
+        "többműszakos",
+        "őrzésben",
+        "őrzési",
+        "profilőrzési",
+        "imputációs",
+        "casillához",
+        "casillához.",
+        "casillákat",
+        "casillák",
+        "casillát",
+        "bájtjai",
+        "kompozálódnak",
+    )
+    dictionaries = load_dictionaries(REPO_ROOT)
+    for form in forms:
+        assert not dictionaries["hu"].lookup(form)
+        assert is_project_spelling("hu", form)
+
+    for near_miss in (
+        "alparancss",
+        "többműszakoss",
+        "őrzésbenn",
+        "őrzésii",
+        "profilőrzésii",
+        "imputációss",
+        "casilláhóz",
+        "casillákatx",
+        "casillákk",
+        "casillátt",
+        "bájtjaik",
+        "kompozálódnakx",
+    ):
+        assert not is_project_spelling("hu", near_miss)
+
+    for locale in ("en", "es", "ca"):
+        assert all(not is_project_spelling(locale, form) for form in forms)
+
+
 def test_audit_attested_hungarian_name_inflections_are_exact_and_language_scoped() -> None:
     forms = (
         "Cadrumóban",

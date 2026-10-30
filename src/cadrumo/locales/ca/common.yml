@@ -2937,9 +2937,32 @@ desktop:
           de tancament.'
         closing_authority_invalid: 'Rebutjat: la decisió de tancament no correspon
           a aquest llibre.'
+        closing_authority_recorded: 'Rebutjat: ja hi ha desat un valor de tancament
+          de {year}, així que les seves existències no poden canviar.'
+        correction_changes_nothing: 'Rebutjat: això no canvia les existències inicials
+          ni el mètode.'
+        correction_id_conflict: 'Rebutjat: aquesta correcció ja es va fer servir per
+          a un altre canvi. Tanca aquest formulari i obre''l de nou.'
+        count_would_raise_stock: 'Rebutjat: un recompte no pot pujar les teves existències
+          per sobre de les unitats que tens als llibres.'
         duplicate_movement_id: 'Rebutjat: aquest moviment ja és al llibre.'
         invalid_valuation_method: 'Rebutjat: no és un mètode de valoració.'
+        inventory_already_retired: 'Rebutjat: aquest llibre d''existències ja està
+          donat de baixa.'
+        inventory_not_retired: 'Rebutjat: aquest llibre d''existències no està donat
+          de baixa.'
+        inventory_retired: 'Rebutjat: aquest llibre d''existències està donat de baixa.
+          Restaura''l abans de canviar-ne les existències.'
         inventory_validation: 'Rebutjat: el llibre no ho accepta.'
+        later_closing_authority_recorded: 'Rebutjat: el valor de tancament desat de
+          {later_year} es recolza en aquest any, així que les seves existències no
+          poden canviar.'
+        movement_already_superseded: 'Rebutjat: aquest moviment ja va ser corregit
+          o anul·lat.'
+        movement_not_found: 'Rebutjat: aquest moviment no és en aquest llibre d''existències.'
+        movement_outside_year: 'Rebutjat: la data del moviment queda fora de {year}.'
+        stock_would_go_negative: 'Rebutjat: sortirien més unitats de les que queden
+          en existències.'
       unit_cost: Cost unitari
       valuation: '{name} · existències finals {closing} · cost de vendes {cogs} ·
         {method}'
@@ -3660,7 +3683,13 @@ desktop:
       action:
         add_book: Afegir un llibre d'existències
         add_movement: Afegir un moviment
+        correct: Corregir les existències inicials o el mètode
+        describe: Editar els detalls
+        movement_correct: Corregir aquest moviment
+        movement_reverse: Anul·lar aquest moviment
         preview: Veure una previsualització de la valoració
+        restore: Restaurar el llibre d'existències
+        retire: Donar de baixa el llibre d'existències
       books: Llibres d'existències de {year}
       column:
         cost: Cost
@@ -3674,7 +3703,11 @@ desktop:
         professional_fee: Honoraris professionals
       count:
         books: 'Llibres d''existències: {count}'
+        corrections: 'Correccions: {count}'
         retired: 'Donats de baixa: {count}'
+      detail_failed: No s'han pogut carregar els moviments i l'historial.
+      detail_loading: Carregant els moviments i l'historial…
+      detail_refused: No es poden mostrar els moviments i l'historial d'aquest llibre.
       empty: Encara no hi ha llibre d'existències de {year}. Afegeix-ne un per començar
         a comptar el que tens.
       extra:
@@ -3685,14 +3718,30 @@ desktop:
         price: Import sense IVA
         remove: Treure aquest cost addicional
         share: Part del seu IVA que pots deduir (%)
+      fact:
+        description: 'Descripció: {value}'
+        label: 'Nom: {value}'
+        method: 'Mètode: {value}'
+        movement: '{date} · {kind} · {quantity}'
+        no_description: Sense descripció
+        opening: Existències inicials {value}
+        removed: Fora del recompte
       field:
         cost_hint: Omple el cost per unitat o el total, el que tinguis.
+        description: Descripció (opcional)
         extra_total: Costos addicionals sense IVA, en total
         iva: IVA del preu
+        keep: Mantenir l'actual
+        keep_hint: Deixa-ho buit per mantenir l'actual.
+        label: Nom
+        label_hint: Com es diu aquest llibre d'existències a les teves llistes.
+        method_new: Nou mètode de valoració
         name: Activitat
         name_hint: L'activitat del negoci a la qual pertanyen aquestes existències,
           com tu l'anomenis.
+        opening_new: Nou valor de les existències inicials
         price: Preu sense IVA
+        reason: Motiu
         recoverable: IVA que pots deduir, en total
         share: Part d'aquest IVA que pots deduir (%)
         total: Cost total de la compra
@@ -3700,14 +3749,28 @@ desktop:
         unrecoverable: IVA que no pots deduir (se suma al cost)
       form:
         book: Nou llibre d'existències de {year}
+        correct: Corregir {name} · {year}
+        describe: Detalls de {name} · {year}
         movement: Afegir un moviment a {name} · {year}
+        movement_correct: Corregir un moviment de {name} · {year}
+        restore: Restaurar {name} · {year}
+        retire: Donar de baixa {name} · {year}
+        reverse: Anul·lar un moviment de {name} · {year}
+      history:
+        after: Després
+        before: Abans
+        reason: Motiu
+        what: Què ha passat
+        when: Quan
+      history_none: No s'ha canviat res en aquest llibre d'existències.
+      history_of: Historial de {name}
       load_failed: No s'han pogut carregar les teves existències.
       load_refused: Les teves existències no es poden mostrar ara mateix.
       loading: Carregant les teves existències…
+      movement_correct_note: El moviment corregit ocupa el lloc de l'anterior. L'anterior
+        queda a l'historial.
       movements_none: Aquest llibre encara no té moviments. Afegeix-ne el primer.
       movements_of: Moviments de {name}
-      movements_unlisted: 'Moviments d''aquest llibre: {count}. Els anteriors encara
-        no es poden llistar; els nous apareixen aquí a mesura que els afegeixes.'
       proof:
         change_file: Triar un altre fitxer
         check_hint: Qualsevol fitxer que mostri la revisió, com una nota o un full
@@ -3737,10 +3800,24 @@ desktop:
         totals_hint: Escriu els totals als quals arriben les xifres de dalt. Han de
           coincidir amb aquestes xifres.
       refused: El llibre d'existències no ho ha acceptat. No s'ha desat res.
+      restore_note: El llibre d'existències torna a la teva llista activa amb tot
+        el que conté.
+      retire_note: No s'esborra res. El llibre d'existències continua a la teva llista,
+        marcat com a donat de baixa, i el pots restaurar quan vulguis.
       retired: Donat de baixa
+      retired_because: Donat de baixa · {reason}
+      retired_hint: Aquest llibre d'existències està donat de baixa. Restaura'l per
+        canviar-ne les existències.
+      reverse_note: El moviment deixa de comptar. Queda a l'historial.
       submit:
         book: Afegir el llibre
+        correct: Desar la correcció
+        describe: Desar els detalls
         movement: Afegir el moviment
+        movement_correct: Desar la correcció
+        restore: Restaurar el llibre
+        retire: Donar de baixa el llibre
+        reverse: Anul·lar el moviment
       summary: Resum d'existències
       title: Existències
       unavailable: Les teves existències no estan disponibles ara mateix.
@@ -9496,4 +9573,54 @@ workspace:
         expand: Mostra les caselles
         go: Obre la casella
         open: Obre l'origen
-      lead: En calcu
+      lead: En calcular, les caselles s'emplenen amb aquestes dades. Corregeix un
+        valor on es desa i torna a calcular.
+      no_source: Aquesta casella no s'omple des d'un altre apartat.
+      no_surface: «{source}» no té un apartat propi per obrir.
+      none: Aquesta declaració no té caselles per mostrar.
+      none_found: '{source}: no s''ha trobat res'
+      not_here: Des d'aquí no es pot obrir aquest apartat; obre'l des del menú principal.
+      not_yet: '{source}: encara sense consultar'
+      title: D'on surten els valors
+    stage_refused:
+      not_editable: Aquesta casella no es pot canviar així.
+      nothing_to_clear: No hi ha cap valor teu per buidar en aquesta casella.
+      nothing_to_confirm: Aquesta casella no té cap valor suposat per confirmar.
+      nothing_to_restore: Aquesta casella ja mostra el valor del seu origen.
+    staged:
+      clear: (es buidarà)
+      restore: (torna a l'origen)
+    step:
+      calculate: Calcular
+      file: Registrar presentació
+      fill: Emplenar
+      review: Comprovar
+    summary:
+      blocked: No s'han pogut calcular
+      calculated: Calculades a partir d'altres caselles
+      entered: Introduïdes per tu
+      imported: Portades de les teves dades
+      needs_you: Et necessiten
+      not_calculated: 'Encara sense calcular: les caselles s''emplenen quan es calcula.'
+      title: Aquesta declaració
+    surface:
+      correct:
+        declarations: Obre aquella declaració i corregeix-ho allà
+        ledger: Obre els teus registres i corregeix-ho allà
+        profile: Obre el teu perfil i corregeix-ho allà
+        withholding: Obre les retencions i corregeix-ho allà
+      open:
+        declarations: Obrir aquella declaració
+        ledger: Obrir els teus registres
+        profile: Obrir el teu perfil
+        withholding: Obrir les retencions
+    todo:
+      failed: 'Caselles que no s''han pogut calcular: {count}'
+      failed_lead: Esperen alguna cosa que li faltava al càlcul. Tria'n una per veure
+        què.
+      none: Res d'aquest model no et necessita.
+      title: Pendent
+    value:
+      not_applicable: no s'aplica
+      not_known_yet: Encara no se sap
+    was: 'abans: {value}'

@@ -2940,9 +2940,33 @@ desktop:
         closing_authority_conflict: 'Rechazado: ya hay guardada otra decisión de cierre.'
         closing_authority_invalid: 'Rechazado: la decisión de cierre no corresponde
           a este libro.'
+        closing_authority_recorded: 'Rechazado: ya hay guardado un valor de cierre
+          de {year}, así que sus existencias no pueden cambiar.'
+        correction_changes_nothing: 'Rechazado: eso no cambia las existencias iniciales
+          ni el método.'
+        correction_id_conflict: 'Rechazado: esa corrección ya se usó para otro cambio.
+          Cierra este formulario y ábrelo de nuevo.'
+        count_would_raise_stock: 'Rechazado: un recuento no puede subir tus existencias
+          por encima de las unidades que tienes en los libros.'
         duplicate_movement_id: 'Rechazado: ese movimiento ya está en el libro.'
         invalid_valuation_method: 'Rechazado: no es un método de valoración.'
+        inventory_already_retired: 'Rechazado: este libro de existencias ya está dado
+          de baja.'
+        inventory_not_retired: 'Rechazado: este libro de existencias no está dado
+          de baja.'
+        inventory_retired: 'Rechazado: este libro de existencias está dado de baja.
+          Restáuralo antes de cambiar sus existencias.'
         inventory_validation: 'Rechazado: el libro no lo acepta.'
+        later_closing_authority_recorded: 'Rechazado: el valor de cierre guardado
+          de {later_year} se apoya en este año, así que sus existencias no pueden
+          cambiar.'
+        movement_already_superseded: 'Rechazado: ese movimiento ya fue corregido o
+          anulado.'
+        movement_not_found: 'Rechazado: ese movimiento no está en este libro de existencias.'
+        movement_outside_year: 'Rechazado: la fecha del movimiento queda fuera de
+          {year}.'
+        stock_would_go_negative: 'Rechazado: saldrían más unidades de las que quedan
+          en existencias.'
       unit_cost: Coste unitario
       valuation: '{name} · existencias finales {closing} · coste de ventas {cogs}
         · {method}'
@@ -3664,7 +3688,13 @@ desktop:
       action:
         add_book: Añadir un libro de existencias
         add_movement: Añadir un movimiento
+        correct: Corregir las existencias iniciales o el método
+        describe: Editar los detalles
+        movement_correct: Corregir este movimiento
+        movement_reverse: Anular este movimiento
         preview: Ver una vista previa de la valoración
+        restore: Restaurar el libro de existencias
+        retire: Dar de baja el libro de existencias
       books: Libros de existencias de {year}
       column:
         cost: Coste
@@ -3678,7 +3708,12 @@ desktop:
         professional_fee: Honorarios profesionales
       count:
         books: 'Libros de existencias: {count}'
+        corrections: 'Correcciones: {count}'
         retired: 'Dados de baja: {count}'
+      detail_failed: No se pudieron cargar los movimientos y el historial.
+      detail_loading: Cargando los movimientos y el historial…
+      detail_refused: No se pueden mostrar los movimientos y el historial de este
+        libro.
       empty: Aún no hay libro de existencias de {year}. Añade uno para empezar a contar
         lo que tienes.
       extra:
@@ -3689,14 +3724,30 @@ desktop:
         price: Importe sin IVA
         remove: Quitar este coste adicional
         share: Parte de su IVA que puedes deducir (%)
+      fact:
+        description: 'Descripción: {value}'
+        label: 'Nombre: {value}'
+        method: 'Método: {value}'
+        movement: '{date} · {kind} · {quantity}'
+        no_description: Sin descripción
+        opening: Existencias iniciales {value}
+        removed: Fuera del recuento
       field:
         cost_hint: Rellena el coste por unidad o el total, el que tengas.
+        description: Descripción (opcional)
         extra_total: Costes adicionales sin IVA, en total
         iva: IVA del precio
+        keep: Mantener el actual
+        keep_hint: Déjalo vacío para mantener el actual.
+        label: Nombre
+        label_hint: Cómo se llama este libro de existencias en tus listas.
+        method_new: Nuevo método de valoración
         name: Actividad
         name_hint: La actividad del negocio a la que pertenecen estas existencias,
           como tú la llames.
+        opening_new: Nuevo valor de las existencias iniciales
         price: Precio sin IVA
+        reason: Motivo
         recoverable: IVA que puedes deducir, en total
         share: Parte de ese IVA que puedes deducir (%)
         total: Coste total de la compra
@@ -3704,14 +3755,28 @@ desktop:
         unrecoverable: IVA que no puedes deducir (se suma al coste)
       form:
         book: Nuevo libro de existencias de {year}
+        correct: Corregir {name} · {year}
+        describe: Detalles de {name} · {year}
         movement: Añadir un movimiento a {name} · {year}
+        movement_correct: Corregir un movimiento de {name} · {year}
+        restore: Restaurar {name} · {year}
+        retire: Dar de baja {name} · {year}
+        reverse: Anular un movimiento de {name} · {year}
+      history:
+        after: Después
+        before: Antes
+        reason: Motivo
+        what: Qué pasó
+        when: Cuándo
+      history_none: No se ha cambiado nada en este libro de existencias.
+      history_of: Historial de {name}
       load_failed: No se pudieron cargar tus existencias.
       load_refused: Tus existencias no se pueden mostrar ahora mismo.
       loading: Cargando tus existencias…
+      movement_correct_note: El movimiento corregido ocupa el lugar del anterior.
+        El anterior queda en el historial.
       movements_none: Este libro aún no tiene movimientos. Añade el primero.
       movements_of: Movimientos de {name}
-      movements_unlisted: 'Movimientos de este libro: {count}. Los anteriores aún
-        no se pueden listar; los nuevos aparecen aquí a medida que los añades.'
       proof:
         change_file: Elegir otro archivo
         check_hint: Cualquier archivo que muestre la revisión, como una nota o una
@@ -3741,10 +3806,24 @@ desktop:
         totals_hint: Escribe los totales a los que llegan las cifras de arriba. Tienen
           que coincidir con esas cifras.
       refused: El libro de existencias no lo aceptó. No se guardó nada.
+      restore_note: El libro de existencias vuelve a tu lista activa con todo lo que
+        contiene.
+      retire_note: No se borra nada. El libro de existencias sigue en tu lista, marcado
+        como dado de baja, y puedes restaurarlo cuando quieras.
       retired: Dado de baja
+      retired_because: Dado de baja · {reason}
+      retired_hint: Este libro de existencias está dado de baja. Restáuralo para cambiar
+        sus existencias.
+      reverse_note: El movimiento deja de contar. Queda en el historial.
       submit:
         book: Añadir el libro
+        correct: Guardar la corrección
+        describe: Guardar los detalles
         movement: Añadir el movimiento
+        movement_correct: Guardar la corrección
+        restore: Restaurar el libro
+        retire: Dar de baja el libro
+        reverse: Anular el movimiento
       summary: Resumen de existencias
       title: Existencias
       unavailable: Tus existencias no están disponibles ahora mismo.
@@ -4720,6 +4799,12 @@ ledger:
       customs_document: Documento aduanero
       invoice: Factura
       reception: Recepción
+    electric_propulsion:
+      bev: Vehículo eléctrico de batería (BEV)
+      fchv: Vehículo híbrido de pila de combustible (FCHV)
+      fcv: Vehículo de pila de combustible (FCV)
+      phev: Vehículo híbrido enchufable (PHEV)
+      reev: Vehículo eléctrico de autonomía extendida (REEV)
     errors:
       accelerated_da18_depreciation: Para el ejercicio %{tax_year}, la LIS DA 18 concede
         a los vehículos eléctricos nuevos y a los puntos de recarga amortización acelerada
@@ -5050,6 +5135,9 @@ ledger:
       claim: Dotación registrada
       descriptor: Descripción añadida
       revision: Datos fiscales registrados
+    flag:
+      'false': 'No'
+      'true': Sí
     method:
       approved_plan: Plan especial de amortización
       charging_infrastructure_free: Libertad de amortización, infraestructura de recarga
@@ -5083,6 +5171,10 @@ ledger:
     original_price_determination:
       expert_valuation: Valoración pericial
       known: Precio conocido
+    ownership_mode:
+      fractional_direct: Titularidad por cuotas (directa)
+      sole: Titularidad única
+      spousal_community: Sociedad de gananciales
     plan_absence:
       basis_exhausted: Base totalmente amortizada
       conflict: Entra en conflicto con lo registrado
@@ -5100,6 +5192,10 @@ ledger:
         a una sociedad vinculada debe valorarse a valor de mercado según el art. 41
         LIRPF. Este aviso no examina ningún dato del vendedor y no cambia ninguna
         cifra.
+    plan_approval_kind:
+      amended_with_consent: Aprobado con las modificaciones aceptadas
+      express: Aprobación expresa
+      silence: Aprobación por silencio
     prior_free_depreciation_regime:
       trlis_da_11: TRLIS, disposición adicional 11.ª
       trlis_dt_37: TRLIS, disposición transitoria 37.ª
@@ -5110,10 +5206,40 @@ ledger:
       fully_amortized: Totalmente amortizado
       in_service: En funcionamiento
       out_of_service: Dado de baja
+    renewable_documentation_kind:
+      energy_efficiency_certificate: Certificado de eficiencia energética
+      low_voltage_certificate: Certificado de instalaciones eléctricas de baja tensión
+      operating_authorisation: Autorización de explotación
+      renewable_gas_registration: Inscripción de instalación de gas renovable
+      surplus_registration: Inscripción de excedentes (RAIPREE)
+      thermal_process_registration: Inscripción o informe de proceso térmico
+    renewable_installation_purpose:
+      electricity_self_consumption: Electricidad para autoconsumo
+      thermal_own_use: Energía térmica para uso propio
     stale_reason:
       authority_changed: Las tablas cambiaron después de esta dotación
       revision_changed: El elemento se corrigió después de esta dotación
       schedule_unavailable: Ahora no se puede calcular el cuadro
+    vehicle_category:
+      aircraft: Aeronave
+      all_terrain: Todoterreno
+      leisure_boat: Embarcación de recreo
+      mixed_vehicle: Vehículo mixto adaptable
+      moped: Ciclomotor
+      motorcycle: Motocicleta
+      other_vehicle: Otro vehículo
+      passenger_car: Turismo
+      trailer: Remolque
+    vehicle_listed_use:
+      commercial_representative_travel: Desplazamientos de representantes de comercio
+      habitual_onerous_hire: Alquiler habitual oneroso
+      mixed_vehicle_goods_transport: Transporte de mercancías (vehículo mixto)
+      paid_driving_or_pilot_instruction: Enseñanza de conducción o pilotaje con contraprestación
+      paid_passenger_transport: Transporte de viajeros mediante contraprestación
+    vehicle_private_use:
+      accessory_non_working_time: Uso privado accesorio fuera del horario laboral
+      none: Sin uso privado
+      shared: Uso compartido con uso privado
   evidence:
     reader:
       operation_failed: Falló la operación del lector de justificantes

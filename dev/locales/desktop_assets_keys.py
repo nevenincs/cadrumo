@@ -128,3 +128,55 @@ ASSET_KEYS: Final[frozenset[str]] = (
     frozenset(f"{prefix}{member}" for prefix, members in ASSET_FAMILIES.items() for member in members)
     | ASSET_SHARED_KEYS
 )
+
+
+#: The namespace the backend words the inventory enums under, which the Stock
+#: panel reads rather than words again.
+INVENTORY_LABEL_NAMESPACE: Final[str] = "application.inventory.labels."
+
+#: The desktop's own sentences for the reasons an inventory change is refused.
+#: The backend's sentences for them carry command-line instructions and
+#: identifiers, so the panel words each typed reason itself.
+INVENTORY_REFUSAL_FAMILY: Final[str] = "desktop.ledger.inventory.refusal."
+
+
+def _inventory_enum_families() -> dict[str, type[Enum]]:
+    """Return each inventory token family with the enum the operations serve it from."""
+    from cadrumo.domain.contribuyente.inventory.records import (
+        InventoryCorrectionReason,
+        InventoryHistoryKind,
+        InventoryRetirementReason,
+    )
+
+    return {
+        f"{INVENTORY_LABEL_NAMESPACE}correction_reason.": InventoryCorrectionReason,
+        f"{INVENTORY_LABEL_NAMESPACE}history_kind.": InventoryHistoryKind,
+        f"{INVENTORY_LABEL_NAMESPACE}retirement_reason.": InventoryRetirementReason,
+    }
+
+
+def _inventory_refusal_members() -> tuple[str, ...]:
+    """Return every typed reason an inventory operation refuses for."""
+    from typing import get_args
+
+    from cadrumo.application.inventory.registered_requests import InventoryRefusalReason
+
+    return tuple(sorted(str(reason) for reason in get_args(InventoryRefusalReason)))
+
+
+def _inventory_families() -> Mapping[str, tuple[str, ...]]:
+    families = {prefix: _values(enum) for prefix, enum in _inventory_enum_families().items()}
+    families[INVENTORY_REFUSAL_FAMILY] = _inventory_refusal_members()
+    return MappingProxyType(families)
+
+
+#: Every inventory family the panel words by its token, as ``prefix -> members``.
+INVENTORY_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = _inventory_families()
+
+#: The enum behind each inventory token family, for the test that compares them.
+INVENTORY_ENUM_FAMILIES: Final[Mapping[str, type[Enum]]] = MappingProxyType(_inventory_enum_families())
+
+#: Every inventory key the panel words, each family member spelled out.
+INVENTORY_KEYS: Final[frozenset[str]] = frozenset(
+    f"{prefix}{member}" for prefix, members in INVENTORY_FAMILIES.items() for member in members
+)

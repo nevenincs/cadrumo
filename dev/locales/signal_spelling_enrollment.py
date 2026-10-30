@@ -572,6 +572,23 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "sidecarokat",
             "payload",
             "payloadját.",
+            # Repeated Hungarian operator and calculation terms absent from
+            # the pinned dictionary. Preserve only forms present in the
+            # current audit; in particular, casilla remains the AEAT's
+            # authority-named box term with attested Hungarian case endings.
+            "alparancs",
+            "többműszakos",
+            "őrzésben",
+            "őrzési",
+            "profilőrzési",
+            "imputációs",
+            "casillához",
+            "casillához.",
+            "casillákat",
+            "casillák",
+            "casillát",
+            "bájtjai",
+            "kompozálódnak",
             # Exact Hungarian forms found in operator prose and the tax
             # catalogue. A manifest is called a manifeszt in Hungarian IT
             # usage; admit only the inflections actually present in source.
