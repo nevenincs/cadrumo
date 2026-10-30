@@ -281,6 +281,7 @@ def _runtime_registrations(descendant_relations: tuple[str, ...]) -> tuple[FStri
     from cadrumo.core.errors.error_codes import ErrorCategory
     from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+    from dev.locales.activity_asset_fstring_registrations import activity_asset_dynamic_registrations
     from dev.locales.inventory_fstring_registrations import inventory_dynamic_registrations
 
     return (
@@ -407,6 +408,7 @@ def _runtime_registrations(descendant_relations: tuple[str, ...]) -> tuple[FStri
         ),
         *_diagnostics_command_spec_registrations(),
         *inventory_dynamic_registrations(),
+        *activity_asset_dynamic_registrations(),
         *_custody_stdin_registrations(),
         *_modelo_work_help_registrations(),
         *_modelo_workbench_registrations(),
