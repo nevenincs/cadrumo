@@ -211,10 +211,6 @@ const SHAPE_WORD: Record<string, string> = {
   [OUTSIDE]: "desktop.ledger.assets.field.shape_outside",
 };
 
-/** The reasons for a baja the register always refuses, which the form does
- * not offer. The backend serves no list of the reasons it accepts. */
-const REFUSED_REASONS: ReadonlySet<string> = new Set(["donation"]);
-
 // ---- Typed text into values ---------------------------------------------------
 
 /** Each field starting from what the record states now. */
@@ -529,11 +525,10 @@ export const throughOf = (found: {
 }) => found.covered_through ?? found.covered_until;
 
 /** The span a claim form starts from: the claim being replaced or else a
- * span the plan says is still claimable. Its end is the boundary the
- * backend served and is not typed. */
+ * span the plan says is still claimable. Its last day is the one the
+ * backend served; the person may type another. */
 export type ClaimSpan = {
   from: string;
-  until: string;
   through: string;
 };
 
@@ -545,20 +540,18 @@ export function claimSpans(
     return [
       {
         from: replaced.covered_from,
-        until: replaced.covered_until,
         through: replaced.covered_through,
       },
     ];
   return (row?.claimable_intervals ?? []).map((interval) => ({
     from: interval.covered_from,
-    until: interval.covered_until,
     through: interval.covered_through,
   }));
 }
 
-/** The fields of a claim: where the span starts, which begins at the span
- * chosen, and the amount where the plan says the year's figure is the
- * person's to elect. */
+/** The fields of a claim: the first and last day of the span, which begin at
+ * the span chosen, and the amount where the plan says the year's figure is
+ * the person's to elect. */
 export function claimFields(
   row: PlanRow | null,
   replaced: PlanClaim | null,
@@ -568,6 +561,10 @@ export function claimFields(
     {
       ...date("covered_from", "desktop.ledger.assets.from", true),
       current: span?.from ?? null,
+    },
+    {
+      ...date("covered_through", "desktop.ledger.assets.until", true),
+      current: span?.through ?? null,
     },
     ...(row?.absence === "free_election"
       ? [
@@ -631,6 +628,12 @@ function vehicleFields(context: FieldContext, draft: FormDraft): FormField[] {
     context.row?.asset_kind ||
     String(context.revision?.asset_kind ?? "");
   if (kind !== "material") return [];
+  // Only a class the registry says can hold a vehicle is asked about one.
+  const chosen = draft[factKey(["authority_class_key"])] ?? "";
+  const group = context.options?.table_groups.find(
+    (found) => found.class_key === chosen,
+  );
+  if (group?.can_hold_vehicle !== true) return [];
   const question = flag(
     VEHICLE_DECLARED,
     "desktop.ledger.assets.field.vehicle_declared",
@@ -855,11 +858,13 @@ function revisionFields(
   ];
 }
 
+/** The reasons the backend serves, each worded by the key it served. */
 const bajaReasons = (context: FieldContext): FieldChoice[] =>
-  context
-    .tokens("disposal_reason")
-    .filter((token) => !REFUSED_REASONS.has(token))
-    .map((token): FieldChoice => ({ token, family: "disposal_reason" }));
+  (context.options?.disposal_reasons ?? []).map((option): FieldChoice => ({
+    token: option.reason,
+    family: null,
+    word: option.label_key,
+  }));
 
 /** The fields of a baja, new or changed. */
 function bajaFields(context: FieldContext): FormField[] {

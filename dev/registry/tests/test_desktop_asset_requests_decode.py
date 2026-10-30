@@ -27,7 +27,11 @@ import pytest
 from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
+    ActivityAssetFilingHandoffRequest,
+    ActivityAssetForecastRequest,
 )
+from cadrumo.application.actividad_asset.activity_asset_read_models import activity_asset_label_key
+from cadrumo.application.actividad_asset.fact_wording import token_family
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory
 from cadrumo.application.actividad_asset.operation_dtos import (
     ActivityAssetDisposalSnapshot,
@@ -35,7 +39,11 @@ from cadrumo.application.actividad_asset.operation_dtos import (
 )
 from cadrumo.application.actividad_asset.register_reads import method_facts_view
 from cadrumo.core.tipos_actividad import TipoActividad
-from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
+from cadrumo.domain.renta.actividad_asset.disposal import (
+    ADMITTED_DISPOSAL_REASONS,
+    ActivityAssetDisposal,
+    ActivityAssetDisposalReason,
+)
 from cadrumo.domain.renta.actividad_asset.election import AmortizationMethod
 from cadrumo.domain.renta.actividad_asset.election_facts import method_is_statable
 from cadrumo.domain.renta.actividad_asset.lifecycle import REGISTERABLE_ACQUISITION_SHAPES, AcquisitionShape
@@ -46,6 +54,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FRONTEND = REPO_ROOT / "native" / "desktop" / "frontend"
 _ENTRY = _FRONTEND / "tests" / "support" / "assetRequests.ts"
+_REGISTRY_PARAMETERS = (
+    REPO_ROOT
+    / "src"
+    / "cadrumo"
+    / "_data"
+    / "registry"
+    / "aeat"
+    / "modelos"
+    / "100"
+    / "revisions"
+    / "2022"
+    / "parameters"
+    / "0001-declarations.toml"
+)
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
 
 _BUNDLE_SCRIPT = """
@@ -133,7 +155,11 @@ _STATED_FACTS = {
     "decimal": "16",
 }
 
+#: A table class the registry classes as able to hold a vehicle, which the form asks a declaration of.
+_VEHICLE_CLASS = {"amortization.authority_class_key": "transporte-externo"}
+
 _VEHICLE = {
+    **_VEHICLE_CLASS,
     "vehicle_declared": "yes",
     "vehicle_category": "passenger_car",
     "vehicle_private_use": "none",
@@ -249,6 +275,13 @@ def _served() -> dict[str, Any]:
         "method_facts": [json.loads(method_facts_view(method).model_dump_json()) for method in methods],
         "acquisition_shapes": [shape.value for shape in REGISTERABLE_ACQUISITION_SHAPES],
         "declared_activities": [activity.value for activity in TipoActividad],
+        "disposal_reasons": [
+            {
+                "reason": reason.value,
+                "label_key": activity_asset_label_key(token_family(ActivityAssetDisposalReason), reason),
+            }
+            for reason in ADMITTED_DISPOSAL_REASONS
+        ],
     }
 
 
@@ -515,3 +548,115 @@ def test_the_fixture_the_forms_are_drawn_against_serves_what_the_backend_serves(
     assert {item["method"]: item["facts"] for item in fixture["facts"]} == backend
     assert fixture["shapes"] == [shape.value for shape in REGISTERABLE_ACQUISITION_SHAPES]
     assert fixture["activities"] == [activity.value for activity in TipoActividad]
+
+
+def _forecast(made: dict[str, Any]) -> ActivityAssetForecastRequest:
+    assert made["request"] is not None, "the form made no forecast request from a complete span"
+    return ActivityAssetForecastRequest.model_validate_json(json.dumps({"profile_id": str(uuid4()), **made["request"]}))
+
+
+def test_a_forecast_the_form_makes_states_the_last_day_covered_and_decodes_to_the_boundary_after_it(
+    created: tuple[Path, dict[str, dict[str, Any]]],
+) -> None:
+    made = _run(
+        created[0],
+        [
+            {
+                "id": "half",
+                "kind": "forecast",
+                "draft": {"covered_from": "2025-01-01", "covered_through": "2025-06-30"},
+                "supersedes": None,
+            },
+            {
+                "id": "incomplete",
+                "kind": "forecast",
+                "draft": {"covered_from": "2025-01-01"},
+                "supersedes": None,
+            },
+        ],
+    )
+
+    sent = made["half"]["request"]
+    assert "covered_until" not in sent
+    assert sent["covered_through"] == "2025-06-30"
+    decoded = _forecast(made["half"])
+    assert decoded.covered_through == date(2025, 6, 30)
+    assert decoded.exclusive_end() == date(2025, 7, 1)
+    assert made["incomplete"]["request"] is None
+
+
+def test_a_handoff_for_a_year_alone_sends_no_modelo_130_period_and_a_chosen_quarter_sends_it(
+    created: tuple[Path, dict[str, dict[str, Any]]],
+) -> None:
+    made = _run(
+        created[0],
+        [
+            {"id": "year", "kind": "handoff", "year": 2025, "period": ""},
+            {"id": "quarter", "kind": "handoff", "year": 2025, "period": "2T"},
+        ],
+    )
+
+    assert made["year"]["request"] == {"tax_year": 2025}
+    alone = ActivityAssetFilingHandoffRequest.model_validate_json(
+        json.dumps({"profile_id": str(uuid4()), **made["year"]["request"]}),
+    )
+    chosen = ActivityAssetFilingHandoffRequest.model_validate_json(
+        json.dumps({"profile_id": str(uuid4()), **made["quarter"]["request"]}),
+    )
+    assert alone.m130_period is None
+    assert chosen.m130_period == "2T"
+
+
+def test_the_reasons_a_baja_form_offers_are_the_ones_the_backend_serves_each_worded_by_its_key(
+    created: tuple[Path, dict[str, dict[str, Any]]],
+) -> None:
+    served = _served()["disposal_reasons"]
+    made = _run(
+        created[0],
+        [
+            {"id": "material", "kind": "baja_fields", "asset_kind": "material"},
+            {"id": "intangible", "kind": "baja_fields", "asset_kind": "intangible"},
+        ],
+    )
+
+    assert served
+    assert [item["reason"] for item in served] == [reason.value for reason in ADMITTED_DISPOSAL_REASONS]
+    assert ActivityAssetDisposalReason.DONATION.value not in {item["reason"] for item in served}
+    for name in ("material", "intangible"):
+        assert made[name]["reasons"] == served
+
+
+def _registry_vehicle_classes() -> dict[str, bool]:
+    """The registry's own classification of the classes a material element can be a restricted vehicle in."""
+    import tomllib
+
+    document = tomllib.loads(_REGISTRY_PARAMETERS.read_text(encoding="utf-8"))
+    parameters = {parameter["id"]: parameter for parameter in document["revisions"]["2022"]["parameters"]}
+    prefix = "renta-actividad-inmovilizado-amortizacion-"
+    flags = {
+        entry["key"]: entry["value"] == "1"
+        for entry in parameters[f"{prefix}clase-vehiculo-restringido"]["keyed_brackets"]
+    }
+    admits = {
+        entry["key"]: entry["value"] == "1" for entry in parameters[f"{prefix}clase-admite-material"]["keyed_brackets"]
+    }
+    tabled = {entry["key"] for entry in parameters[f"{prefix}normal-coeficiente-lineal-maximo"]["keyed_brackets"]}
+    return {key: flag for key, flag in flags.items() if admits.get(key, False) and key in tabled}
+
+
+def test_the_vehicle_declaration_is_asked_only_for_a_class_that_can_hold_a_vehicle(
+    created: tuple[Path, dict[str, dict[str, Any]]],
+) -> None:
+    expected = _registry_vehicle_classes()
+    made = _run(
+        created[0],
+        [
+            {"id": "material", "kind": "vehicle_fields", "asset_kind": "material"},
+            {"id": "intangible", "kind": "vehicle_fields", "asset_kind": "intangible"},
+        ],
+    )
+
+    assert any(expected.values()), "no class can hold a vehicle, so nothing was compared"
+    assert not all(expected.values())
+    assert made["material"]["drawn"] == expected
+    assert not any(made["intangible"]["drawn"].values())

@@ -1,7 +1,7 @@
 """The desktop Stock panel words every token the inventory operations serve.
 
-The options operation serves every closed choice a form offers, each with the key of its word; the
-history of a book words its kinds of change the same way. The canonical catalogues hold one word for
+The options operation serves every closed choice a form offers, each with the key of its word, and the
+kinds of change a book's history holds among them. The canonical catalogues hold one word for
 each, and the desktop reads them through its generated strings; a refusal arrives as a catalogue
 key under ``application.inventory.service.errors`` with the facts that fill it in, and an advisory
 as a key under ``application.inventory.advisories`` filled in with its year. Each test below fails
@@ -129,6 +129,6 @@ def test_the_options_the_backend_serves_are_exactly_the_families_declared() -> N
 
     served = {family: enum for family, enum in INVENTORY_OPTION_FAMILIES}
 
-    assert set(served) == set(_SERVED) - {"history_kind"}
+    assert set(served) == set(_SERVED)
     for family, enum in served.items():
         assert _SERVED[family] is enum

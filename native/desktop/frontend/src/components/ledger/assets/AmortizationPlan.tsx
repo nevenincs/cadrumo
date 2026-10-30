@@ -23,7 +23,6 @@ import type {
   LegalCitation,
   PlanClaim,
   PlanRow,
-  TimelineClaimUse,
 } from "../../../shell/ledgerSetup";
 import { Hint, NotKnown } from "./AssetList";
 import {
@@ -37,7 +36,7 @@ import {
   tokenWord,
 } from "./assetsWords";
 import { figureText, isStatedZero, PLAN_KEYS, stateTone } from "./planWords";
-import { claimUses, readPlan, readTimeline, useAssetRead } from "./planRead";
+import { readPlan, useAssetRead } from "./planRead";
 
 // One element's amortization plan, a row for each tax year it has. The plan
 // is current: it answers what the schedule allows now and what is recorded as
@@ -130,12 +129,10 @@ function absentText(t: Translate, planned: PlanRow): string | null {
 function Claims({
   locale,
   planned,
-  uses,
   onCorrectClaim,
 }: {
   locale: string;
   planned: PlanRow;
-  uses: ReadonlyMap<string, TimelineClaimUse>;
   onCorrectClaim?: (claimId: string, year: number) => void;
 }) {
   const t = useStrings();
@@ -197,11 +194,7 @@ function Claims({
           <tbody>
             {view.rows.map((claim) => {
               const next = replacement(claim);
-              const use = uses.get(claim.claim_id);
-              const stale =
-                claim.effective &&
-                use !== undefined &&
-                !use.matches_current_schedule;
+              const stale = claim.effective && !claim.matches_current_schedule;
               return (
                 <tr
                   key={claim.claim_id}
@@ -245,9 +238,13 @@ function Claims({
                         <Hint
                           words={facts(t, [
                             t(ASSET_KEYS.plan.no_match),
-                            use.stale_reason === null
+                            claim.stale_reason === null
                               ? null
-                              : tokenWord(t, "stale_reason", use.stale_reason),
+                              : tokenWord(
+                                  t,
+                                  "stale_reason",
+                                  claim.stale_reason,
+                                ),
                           ])}
                         >
                           <Icon
@@ -527,13 +524,11 @@ function PlanTable({
   locale,
   rows,
   year,
-  uses,
   onCorrectClaim,
 }: {
   locale: string;
   rows: readonly PlanRow[];
   year: number | null;
-  uses: ReadonlyMap<string, TimelineClaimUse>;
   onCorrectClaim?: (claimId: string, year: number) => void;
 }) {
   const t = useStrings();
@@ -753,7 +748,6 @@ function PlanTable({
                         <Claims
                           locale={locale}
                           planned={planned}
-                          uses={uses}
                           onCorrectClaim={onCorrectClaim}
                         />
                       </div>
@@ -797,8 +791,6 @@ export function AmortizationPlan({
 }) {
   const t = useStrings();
   const { read } = useAssetRead(readPlan, port, reader, assetId);
-  const { read: history } = useAssetRead(readTimeline, port, reader, assetId);
-  const uses = useMemo(() => claimUses(history), [history]);
   if (read === null) return <Reading label={t(PLAN_KEYS.reading)} />;
   if (read.kind !== "done") return <CallLine call={read} />;
   const { outcome, refusal, rows, limits, advisories } = read.result;
@@ -856,7 +848,6 @@ export function AmortizationPlan({
         locale={locale}
         rows={rows}
         year={year}
-        uses={uses}
         onCorrectClaim={onCorrectClaim}
       />
     </>

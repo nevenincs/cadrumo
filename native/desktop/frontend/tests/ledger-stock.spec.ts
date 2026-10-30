@@ -35,22 +35,27 @@ import {
   EXTRA_FIELDS,
   MOVEMENT_FIELDS,
   movementCounted,
+  NO_VOCABULARY,
   movementRequest as buildMovement,
   movementTouched,
   offersOf,
   PRICE_FIELDS,
+  plays,
   priceKinds,
+  proofFromKept,
   PROOF_SLOTS,
   slotKinds,
   vocabularyOf,
   wordOf,
   type ClosingDraft,
+  type Offers,
   type MovementDraft,
   type ProofDraft,
   type StockField,
 } from "../src/components/ledger/assets/stockModel";
 import type {
   InventoryBook,
+  InventoryEvidenceAddResult,
   InventoryBookRow,
   InventoryHistoryEntry,
   InventoryMovement,
@@ -114,11 +119,31 @@ const SERVED: Record<string, string[]> = {
     "operation_did_not_occur",
   ],
   decision_evidence_role: ["authority_reconciliation"],
+  history_kind: [
+    "described",
+    "opening_corrected",
+    "movement_corrected",
+    "movement_reversed",
+    "retired",
+    "restored",
+  ],
   movement_kind: ["opening", "purchase", "cogs", "count"],
   physical_evidence_role: ["physical_count", "acquisition_price_valuation"],
   retirement_reason: ["created_in_error", "activity_ceased", "no_stock_held"],
   valuation_method: ["fifo", "pmp", "coste_medio"],
 };
+/** The part the options read gives a member, as it gives it. */
+const SERVED_ROLES: Record<string, string> = {
+  attributable_cost_review: "cost_check",
+  iva_recoverability_review: "iva_check",
+  physical_observation: "count_authority",
+  purchase: "purchase",
+};
+const ROLED_FAMILIES = [
+  "acquisition_evidence_kind",
+  "closing_authority",
+  "movement_kind",
+];
 const OPTIONS: InventoryOptionsResult = {
   profile_id: "synthetic",
   families: Object.entries(SERVED).map(([family, values]) => ({
@@ -126,6 +151,9 @@ const OPTIONS: InventoryOptionsResult = {
     options: values.map((value) => ({
       value,
       label_key: `application.inventory.labels.${family}.${value}`,
+      role: ROLED_FAMILIES.includes(family)
+        ? (SERVED_ROLES[value] ?? null)
+        : null,
     })),
   })),
 };
@@ -169,14 +197,13 @@ const closingRequest = (
 /** A file the backend has kept, as the form holds it: what it named it by,
  * and the mark it answered. */
 const kept = (character: string, kind = ""): ProofDraft => ({
-  reference: `attachment:${MARK(character)}`,
+  reference: `document-${MARK(character)}`,
   kind,
   digest: MARK(character),
 });
 
 /** A purchase of 100 units for 1000.00 with 210.00 of IVA, all deductible. */
 function purchase(): MovementDraft {
-  const start = blankMovement();
   return {
     values: {
       date: "2026-03-04",
@@ -189,8 +216,8 @@ function purchase(): MovementDraft {
     extras: [],
     proofs: {
       price: kept("a", "purchase_invoice"),
-      cost_check: { ...kept("b"), kind: start.proofs.cost_check.kind },
-      iva_check: { ...kept("c"), kind: start.proofs.iva_check.kind },
+      cost_check: kept("b"),
+      iva_check: kept("c"),
     },
   };
 }
@@ -289,28 +316,28 @@ test("a purchase states what it cost and what it rests on, and no unit cost, tot
     attributable_cost_components: [],
     evidence: [
       {
-        reference: { reference: `attachment:${MARK("a")}` },
+        reference: { reference: `document-${MARK("a")}` },
         evidence_kind: "purchase_invoice",
         content_digest: MARK("a"),
       },
       {
-        reference: { reference: `attachment:${MARK("b")}` },
+        reference: { reference: `document-${MARK("b")}` },
         evidence_kind: "attributable_cost_review",
         content_digest: MARK("b"),
       },
       {
-        reference: { reference: `attachment:${MARK("c")}` },
+        reference: { reference: `document-${MARK("c")}` },
         evidence_kind: "iva_recoverability_review",
         content_digest: MARK("c"),
       },
     ],
     completeness: {
-      consideration_evidence: { reference: `attachment:${MARK("a")}` },
+      consideration_evidence: { reference: `document-${MARK("a")}` },
       attributable_cost_review_evidence: {
-        reference: `attachment:${MARK("b")}`,
+        reference: `document-${MARK("b")}`,
       },
       iva_recoverability_review_evidence: {
-        reference: `attachment:${MARK("c")}`,
+        reference: `document-${MARK("c")}`,
       },
     },
   });
@@ -349,7 +376,7 @@ test("each extra cost brings its own component and its own file, and no sum", ()
       taxable_base: { decimal: "100" },
       iva_amount: { decimal: "21" },
       deductible_iva_ratio: { decimal: "1" },
-      evidence_references: [{ reference: `attachment:${MARK("d")}` }],
+      evidence_references: [{ reference: `document-${MARK("d")}` }],
     },
   ]);
   expect(cost?.evidence.map((proof) => proof.evidence_kind)).toEqual([
@@ -368,7 +395,7 @@ test("a purchase without a file, a kind or a clean number makes no request and s
     ...whole,
     proofs: {
       ...whole.proofs,
-      iva_check: blankProof("iva_recoverability_review"),
+      iva_check: blankProof(),
     },
   });
   expect(noFile.request).toBeNull();
@@ -611,19 +638,6 @@ test("every choice the backend serves is worded in every language", () => {
       );
       expect(new Set(words).size, `${language} ${family}`).toBe(words.length);
     }
-  // The history kinds are worded the same way, though no list serves them.
-  for (const language of LANGUAGES)
-    for (const kind of [
-      "described",
-      "opening_corrected",
-      "movement_corrected",
-      "movement_reversed",
-      "retired",
-      "restored",
-    ])
-      expect(
-        catalogue[language]?.[`${LABEL_FAMILY.history_kind}${kind}`],
-      ).toBeTruthy();
 });
 
 test("a stored token is worded, and one without a word is unknown, never the token", () => {
@@ -650,16 +664,10 @@ test("the panel holds no list of the choices the backend serves", () => {
       ),
     )
     .join("\n");
-  // Three values are named because the form treats them apart: the two
-  // checks a purchase states, and the authority a count settles.
-  const named = new Set([
-    "purchase",
-    "attributable_cost_review",
-    "iva_recoverability_review",
-    "physical_observation",
-    // Also the name of a field of the closing request.
-    "physical_count",
-  ]);
+  // The parts a form treats specially are read from the roles the options
+  // read gives, so no value is named. ``physical_count`` is also the name of
+  // a field of the closing request.
+  const named = new Set(["physical_count"]);
   for (const [family, tokens] of Object.entries(SERVED))
     for (const token of tokens)
       if (
@@ -673,7 +681,7 @@ test("the panel holds no list of the choices the backend serves", () => {
 });
 
 test("the choices the options read serves are the vocabulary the builders judge by", () => {
-  expect(VOCABULARY.valuation_method).toEqual(SERVED.valuation_method);
+  expect(VOCABULARY.values.valuation_method).toEqual(SERVED.valuation_method);
   expect(priceKinds(VOCABULARY)).toEqual([
     "purchase_invoice",
     "transport_document",
@@ -693,7 +701,8 @@ test("the choices the options read serves are the vocabulary the builders judge 
     bookRequest(2026, { name: "A", method: "fifo", opening: "0" }).request,
   ).not.toBeNull();
   expect(
-    buildBook(2026, { name: "A", method: "fifo", opening: "0" }, {}).request,
+    buildBook(2026, { name: "A", method: "fifo", opening: "0" }, NO_VOCABULARY)
+      .request,
   ).toBeNull();
 });
 
@@ -1060,7 +1069,7 @@ test("a closing value states its facts, its documents and the reference minted f
       reason: "Checked against the year's movements",
       decision_evidence: [
         {
-          reference: { reference: `attachment:${MARK("e")}` },
+          reference: { reference: `document-${MARK("e")}` },
           role: "authority_reconciliation",
           content_digest: MARK("e"),
         },
@@ -1096,12 +1105,12 @@ test("a closing value from a count brings the count and a document for each part
     valuation_basis: "fifo_acquisition_price",
     evidence: [
       {
-        reference: { reference: `attachment:${MARK("f")}` },
+        reference: { reference: `document-${MARK("f")}` },
         role: "physical_count",
         content_digest: MARK("f"),
       },
       {
-        reference: { reference: `attachment:${MARK("1")}` },
+        reference: { reference: `document-${MARK("1")}` },
         role: "acquisition_price_valuation",
         content_digest: MARK("1"),
       },
@@ -1140,7 +1149,7 @@ test("a closing value that is not yet complete makes no request and says what is
   });
   expect(withPrior.request?.facts.prior_evidence).toEqual([
     {
-      reference: { reference: `attachment:${MARK("2")}` },
+      reference: { reference: `document-${MARK("2")}` },
       content_digest: MARK("2"),
     },
   ]);
@@ -1221,7 +1230,7 @@ test("correcting a purchase starts from what the book kept of it, so only what w
     },
   };
 
-  const draft = draftOfMovement(bought);
+  const draft = draftOfMovement(bought, VOCABULARY);
   expect(draft.values).toMatchObject({
     kind: "purchase",
     price: "1000",
@@ -1242,4 +1251,201 @@ test("correcting a purchase starts from what the book kept of it, so only what w
     sent.request?.acquisition_cost?.attributable_cost_components[0]
       ?.evidence_references,
   ).toEqual([{ reference: `attachment:${transport}` }]);
+});
+
+// ---- Roles, refused files and the names of kept files --------------------------------
+
+test("the parts a form treats specially are read from the roles the options serve", () => {
+  expect(VOCABULARY.roles).toEqual({
+    cost_check: "attributable_cost_review",
+    iva_check: "iva_recoverability_review",
+    count_authority: "physical_observation",
+    purchase: "purchase",
+  });
+  expect(plays(VOCABULARY, "purchase", "purchase")).toBe(true);
+  expect(plays(VOCABULARY, "purchase", "cogs")).toBe(false);
+
+  // The same choices under other values: the forms follow the roles.
+  const renamed: Offers = offersOf({
+    profile_id: "synthetic",
+    families: [
+      {
+        family: "movement_kind",
+        options: [
+          { value: "alta", label_key: "k.alta", role: null },
+          { value: "compra", label_key: "k.compra", role: "purchase" },
+        ],
+      },
+      {
+        family: "acquisition_evidence_kind",
+        options: [
+          { value: "factura", label_key: "k.factura", role: null },
+          { value: "nota_costes", label_key: "k.nc", role: "cost_check" },
+          { value: "nota_iva", label_key: "k.ni", role: "iva_check" },
+        ],
+      },
+    ],
+  });
+  const vocabulary = vocabularyOf(renamed);
+  expect(slotKinds("cost_check", vocabulary)).toEqual(["nota_costes"]);
+  expect(slotKinds("iva_check", vocabulary)).toEqual(["nota_iva"]);
+  expect(priceKinds(vocabulary)).toEqual(["factura"]);
+  const draft: MovementDraft = {
+    ...purchase(),
+    values: { ...purchase().values, kind: "compra" },
+    proofs: {
+      price: kept("a", "factura"),
+      cost_check: kept("b"),
+      iva_check: kept("c"),
+    },
+  };
+  const made = buildMovement(BOOK, "m", draft, vocabulary);
+  expect(made.problems).toEqual({});
+  expect(
+    made.request?.acquisition_cost?.evidence.map(
+      (proof) => proof.evidence_kind,
+    ),
+  ).toEqual(["factura", "nota_costes", "nota_iva"]);
+  // A value no role names is not a purchase, whatever it is called.
+  const plain = buildMovement(
+    BOOK,
+    "m",
+    { ...draft, values: { ...draft.values, kind: "purchase" } },
+    vocabulary,
+  );
+  expect(plain.request).toBeNull();
+});
+
+test("a count is the closing authority the options give that role", () => {
+  const draft: ClosingDraft = {
+    ...closing(),
+    values: {
+      authority: "physical_observation",
+      reason: "Counted",
+      observed_on: "2026-12-31",
+      closing_value: "10",
+      basis: "fifo_acquisition_price",
+    },
+    count: {
+      physical_count: kept("f", "physical_count"),
+      acquisition_price_valuation: kept("1", "acquisition_price_valuation"),
+    },
+  };
+  expect(
+    closingRequest(DECISION, draft).request?.facts.physical_count,
+  ).not.toBeNull();
+  // Without the role served, nothing marks a count and none is stated.
+  const unmarked = buildClosing(BOOK, DECISION, draft, {
+    ...VOCABULARY,
+    roles: {},
+  });
+  expect(unmarked.request?.facts.physical_count).toBeNull();
+});
+
+test("a file the book did not keep makes no proof, and one it kept makes one under the name the person saw", () => {
+  const stored: InventoryEvidenceAddResult = {
+    outcome: "stored",
+    profile_id: "synthetic",
+    reference: `document-${MARK("a")}`,
+    content_digest: MARK("a"),
+    refusal: null,
+  };
+  expect(proofFromKept(stored, "factura.pdf")).toEqual({
+    reference: `document-${MARK("a")}`,
+    kind: "",
+    digest: MARK("a"),
+    fileName: "factura.pdf",
+  });
+  const refused: InventoryEvidenceAddResult = {
+    outcome: "refused",
+    profile_id: "synthetic",
+    reference: null,
+    content_digest: null,
+    refusal: {
+      code: "REFUSED_INVENTORY_SERVICE_INPUT",
+      reason: "evidence_file_not_admitted",
+      actividad_id: null,
+      year: null,
+      movement_id: null,
+      valuation_method: null,
+      reason_key:
+        "application.inventory.service.errors.evidence_file_not_admitted",
+      reason_facts: [],
+    },
+  };
+  expect(proofFromKept(refused, "nota.docx")).toBeNull();
+  // A result that claims to be kept but names nothing is not one.
+  expect(proofFromKept({ ...stored, reference: null }, "x.pdf")).toBeNull();
+  // The sentence for a refused file reaches the shell in every language.
+  for (const language of LANGUAGES)
+    expect(
+      catalogue[language]?.[
+        "application.inventory.service.errors.evidence_file_not_admitted"
+      ],
+    ).toBeTruthy();
+});
+
+test("a purchase's files come back named where the book knows the name, and as an opaque reference either way", () => {
+  const named = MARK("a");
+  const unnamed = MARK("b");
+  const bought: InventoryMovement = {
+    ...movement("p2", "10"),
+    kind: "purchase",
+    movement_date: "2026-03-04",
+    acquisition_cost: {
+      consideration_excluding_iva: { decimal: "100" },
+      directly_attributable_cost_total: { decimal: "0.00" },
+      nonrecoverable_iva_included: { decimal: "0.00" },
+      recoverable_iva_excluded: { decimal: "21.00" },
+      total_acquisition_cost: { decimal: "100.00" },
+      component_count: 0,
+      evidence_count: 3,
+      complete: true,
+    },
+    acquisition_detail: {
+      consideration_iva_amount: { decimal: "21" },
+      consideration_deductible_iva_ratio: { decimal: "1" },
+      components: [],
+      documents: [
+        {
+          // A purchase kept before the form of a reference changed.
+          reference: `attachment:${named}`,
+          evidence_kind: "purchase_invoice",
+          content_digest: named,
+          file_name: "factura-papeleria.pdf",
+        },
+        {
+          reference: `document-${unnamed}`,
+          evidence_kind: "attributable_cost_review",
+          content_digest: unnamed,
+          file_name: null,
+        },
+        {
+          reference: `document-${MARK("c")}`,
+          evidence_kind: "iva_recoverability_review",
+          content_digest: MARK("c"),
+        },
+      ],
+      consideration_evidence: `attachment:${named}`,
+      attributable_cost_review_evidence: `document-${unnamed}`,
+      iva_recoverability_review_evidence: `document-${MARK("c")}`,
+    },
+  };
+  const draft = draftOfMovement(bought, VOCABULARY);
+
+  expect(draft.proofs.price.fileName).toBe("factura-papeleria.pdf");
+  expect(draft.proofs.cost_check.fileName).toBeUndefined();
+  expect(draft.proofs.iva_check.fileName).toBeUndefined();
+  // Whatever its form, the reference is sent back as it was served.
+  const sent = movementRequest(BOOK, "movement-new", draft);
+  expect(sent.problems).toEqual({});
+  expect(
+    sent.request?.acquisition_cost?.completeness.consideration_evidence,
+  ).toEqual({ reference: `attachment:${named}` });
+  expect(
+    sent.request?.acquisition_cost?.completeness
+      .attributable_cost_review_evidence,
+  ).toEqual({ reference: `document-${unnamed}` });
+  // A name is shown and never sent.
+  expect(JSON.stringify(sent.request)).not.toContain("factura-papeleria");
 });

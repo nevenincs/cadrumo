@@ -16,8 +16,11 @@ import {
   evidenceRequest,
   movementCorrectionRequest,
   movementRequest,
+  offersOf,
+  proofFromKept,
   restoreRequest,
   retireRequest,
+  vocabularyOf,
   reverseRequest,
   type BookDraft,
   type ClosingDraft,
@@ -29,7 +32,11 @@ import {
   type Vocabulary,
 } from "../../src/components/ledger/assets/stockModel";
 import type { FileToken } from "../../src/shell/ledger";
-import type { InventoryMovement } from "../../src/shell/ledgerSetup";
+import type {
+  InventoryEvidenceAddResult,
+  InventoryMovement,
+  InventoryOptionsResult,
+} from "../../src/shell/ledgerSetup";
 
 /** A file the backend kept: what it named it by, and the mark it answered. */
 type Proof = { kind?: string; reference: string; digest: string };
@@ -74,6 +81,19 @@ type Scenario =
   | { id: string; kind: "retire"; book: Book; reason: string }
   | { id: string; kind: "restore"; book: Book }
   | { id: string; kind: "evidence"; token: string }
+  | { id: string; kind: "roles" }
+  | {
+      id: string;
+      kind: "kept_names";
+      movement: InventoryMovement;
+    }
+  | {
+      id: string;
+      kind: "evidence_result";
+      /** What the backend answered to keeping a file. */
+      result: InventoryEvidenceAddResult;
+      fileName: string;
+    }
   | {
       id: string;
       kind: "movement_correct_kept";
@@ -170,13 +190,39 @@ function made(scenario: Scenario, vocabulary: Vocabulary) {
         problems: {},
         missing: new Set<string>(),
       };
+    case "roles":
+      return {
+        request: vocabulary.roles,
+        problems: {},
+        missing: new Set<string>(),
+      };
+    case "kept_names": {
+      // The names a correction shows for the files the book kept, by slot.
+      const proofs = draftOfMovement(scenario.movement, vocabulary).proofs;
+      return {
+        request: Object.fromEntries(
+          Object.entries(proofs).map(([slot, proof]) => [
+            slot,
+            proof.fileName ?? null,
+          ]),
+        ),
+        problems: {},
+        missing: new Set<string>(),
+      };
+    }
+    case "evidence_result":
+      return {
+        request: proofFromKept(scenario.result, scenario.fileName),
+        problems: {},
+        missing: new Set<string>(),
+      };
     case "movement_correct_kept":
       return movementCorrectionRequest(
         scenario.book,
         { correction: mint(), movement: mint() },
         scenario.target,
         scenario.reason,
-        draftOfMovement(scenario.movement),
+        draftOfMovement(scenario.movement, vocabulary),
         vocabulary,
       );
     case "closing":
@@ -210,12 +256,14 @@ process.stdin.setEncoding("utf8");
 process.stdin.on("data", (chunk: string) => chunks.push(chunk));
 process.stdin.on("end", () => {
   const given = JSON.parse(chunks.join("")) as {
-    vocabulary: Vocabulary;
+    /** What the options read serves: every choice, with its role. */
+    options: InventoryOptionsResult;
     scenarios: Scenario[];
   };
+  const vocabulary = vocabularyOf(offersOf(given.options));
   process.stdout.write(
     JSON.stringify(
-      given.scenarios.map((scenario) => build(scenario, given.vocabulary)),
+      given.scenarios.map((scenario) => build(scenario, vocabulary)),
     ),
   );
 });

@@ -8,6 +8,7 @@ import {
   descriptorLanded,
   elementLanded,
   forecastRequest,
+  handoffRequest,
   INCOMPLETE,
   missingLabels,
   openingYear,
@@ -40,6 +41,7 @@ import {
 import {
   ASSET_FAMILY,
   ASSET_REASON_FAMILY,
+  changeFieldWord,
   keyedText,
   reasonText,
   refusalText,
@@ -61,6 +63,7 @@ import type { Translate } from "../src/shell/strings";
 import { ledgerClassOf } from "../src/dev/ledgerClassesFixture";
 import {
   ADMITTED_METHODS,
+  DISPOSAL_REASONS,
   SEED_ELEMENTS,
   TABLE_GROUPS,
 } from "../src/dev/assetsSeed";
@@ -114,6 +117,7 @@ const change = (
   afterKey: string | null = null,
 ) => ({
   field,
+  field_key: `ledger.actividad_asset.field.${field}`,
   before: null,
   after,
   before_key: null,
@@ -1082,12 +1086,7 @@ test("a correction names the revision it stands on, and the claims it records ag
     claims.find((found) => found.claim_id === claim.claim_id),
   ).toMatchObject({ effective: false });
   expect(claims.filter((found) => found.effective)).toHaveLength(1);
-  expect(
-    staleClaims(
-      await planOf(port, "servidor"),
-      await eventsOf(port, "servidor"),
-    ),
-  ).toEqual([]);
+  expect(staleClaims(await planOf(port, "servidor"))).toEqual([]);
   expect(correctionLanded(await registerOf(port), "servidor", 3)).toBe("saved");
   // The new revision chains to the one it supersedes.
   const chain = await settled<LedgerResult<typeof INSPECT>>(
@@ -1129,12 +1128,11 @@ test("the filing handoff reads the seeded claims, and names the element it canno
   expect(projection.material_m100.target_casilla_id).toBe("0208");
   expect(projection.intangible_m100.target_casilla_id).toBe("0227");
   // Every element of the year is behind casilla 02, and the one it cannot work out is named.
-  expect(projection.material_m130.target_casilla_id).toBe("02");
-  expect(projection.material_m130.unavailable_asset_ids).toEqual([
-    "estanteria",
-  ]);
+  const material130 = projection.material_m130!;
+  expect(material130.target_casilla_id).toBe("02");
+  expect(material130.unavailable_asset_ids).toEqual(["estanteria"]);
   expect(
-    projection.material_m130.contributions.some(
+    material130.contributions.some(
       (item) => item.asset_id === "furgoneta" && item.claim_id !== null,
     ),
   ).toBe(true);
@@ -1142,8 +1140,8 @@ test("the filing handoff reads the seeded claims, and names the element it canno
     port.submit(HANDOFF, { tax_year: 2025, m130_period: "1T" }),
   );
   expect(
-    cents(quarter.filing_handoff!.material_m130.amount.decimal),
-  ).toBeLessThanOrEqual(cents(projection.material_m130.amount.decimal));
+    cents(quarter.filing_handoff!.material_m130!.amount.decimal),
+  ).toBeLessThanOrEqual(cents(material130.amount.decimal));
 });
 
 test("each plan year states its minimum amortization, and says when it is incomplete", async () => {
@@ -1284,6 +1282,7 @@ test("a baja ends the plan at the year of its last day, lists the element out of
       ["disposal.transmission_costs", "150.00"],
     ].map(([field, after]) => ({
       field,
+      field_key: `ledger.actividad_asset.field.${field}`,
       before: null,
       after,
       before_key: null,
@@ -1524,7 +1523,7 @@ test("an element made through create is forecast and claimed like a seeded one",
   const forecast = (await port.submit(FORECAST, {
     asset_id: "made-1",
     covered_from: "2026-06-15",
-    covered_until: "2027-01-01",
+    covered_through: "2026-12-31",
     requested_free_amount: null,
     supersedes_claim_id: null,
   })) as { result?: { forecast: never } };
@@ -1577,7 +1576,7 @@ test("a claim past the registry's last year is refused with the years it can tak
   const forecast = (await port.submit(FORECAST, {
     asset_id: "furgoneta",
     covered_from: "2027-01-01",
-    covered_until: "2028-01-01",
+    covered_through: "2027-12-31",
     requested_free_amount: null,
     supersedes_claim_id: null,
   })) as { result?: { forecast: never } };
@@ -1603,7 +1602,7 @@ test("a claim past the registry's last year is refused with the years it can tak
   const first = (await port.submit(FORECAST, {
     asset_id: "impresora",
     covered_from: span.covered_from,
-    covered_until: span.covered_until,
+    covered_through: span.covered_through,
     requested_free_amount: { decimal: "100.00" },
     supersedes_claim_id: null,
   })) as { result?: { forecast: never } };
@@ -1615,7 +1614,7 @@ test("a claim past the registry's last year is refused with the years it can tak
   const second = (await port.submit(FORECAST, {
     asset_id: "impresora",
     covered_from: span.covered_from,
-    covered_until: span.covered_until,
+    covered_through: span.covered_through,
     requested_free_amount: { decimal: "120.00" },
     supersedes_claim_id: claimId,
   })) as { result?: { forecast: never } };
@@ -1908,6 +1907,7 @@ test("each act's fields and requests come from the backend's choices", () => {
       methods.includes(found.method),
     ),
     table_groups: TABLE_GROUPS.material!.slice(0, 2),
+    disposal_reasons: [...DISPOSAL_REASONS],
   };
   const fields = fieldsFor(
     {
@@ -1948,14 +1948,16 @@ test("each act's fields and requests come from the backend's choices", () => {
   const claim = claimFields(plan, null);
   expect(claim.map((found) => [found.key, found.current])).toEqual([
     ["covered_from", "2026-07-01"],
+    ["covered_through", "2026-12-31"],
   ]);
-  // The span ends where the backend says, and is shown by its last day.
+  // The span starts from the backend's own, and is shown by its last day.
   expect(claimSpans(plan, null)).toEqual([
-    { from: "2026-07-01", until: "2027-01-01", through: "2026-12-31" },
+    { from: "2026-07-01", through: "2026-12-31" },
   ]);
   const free = SEED_ELEMENTS.find((seed) => seed.id === "impresora")!.rows[0]!;
   expect(claimFields(free, null).map((found) => found.key)).toEqual([
     "covered_from",
+    "covered_through",
     "free_amount",
   ]);
   expect(
@@ -1963,20 +1965,21 @@ test("each act's fields and requests come from the backend's choices", () => {
       "a",
       {
         covered_from: "2026-01-01",
+        covered_through: "2026-06-30",
         free_amount: { decimal: "5.00" },
       },
       "c",
-      "2026-06-30",
     ),
   ).toEqual({
     asset_id: "a",
     covered_from: "2026-01-01",
-    covered_until: "2026-06-30",
+    covered_through: "2026-06-30",
     requested_free_amount: { decimal: "5.00" },
     supersedes_claim_id: "c",
   });
+  expect(forecastRequest("a", { covered_from: "2026-01-01" }, null)).toBeNull();
   expect(
-    forecastRequest("a", { covered_from: "2026-01-01" }, null, null),
+    forecastRequest("a", { covered_through: "2026-06-30" }, null),
   ).toBeNull();
   expect(
     describeRequest("a", { name: "Sierra", serial_number: "S1" }).descriptor,
@@ -2437,6 +2440,7 @@ test("a whole property states its parts, a vehicle its declaration, and a linear
   });
 
   const vehicle = {
+    "amortization.authority_class_key": "transporte-externo",
     vehicle_declared: "yes",
     vehicle_category: "passenger_car",
     vehicle_private_use: "none",
@@ -2502,6 +2506,7 @@ test("a method with a fact that has no form is not offered, and its repeated row
       authored_filing_year: 2025,
       projected: true,
     },
+    disposal_reasons: [],
     methods: ["plain", "rows", "unworded"],
     acquisition_shapes: [...SERVED_SHAPES],
     declared_activities: [...SERVED_ACTIVITIES],
@@ -2563,20 +2568,237 @@ test("a dotación in the way of a span is found among the effective ones, and ea
   // The last day a dotación covers is the day before its exclusive boundary.
   expect(first.covered_through < first.covered_until).toBe(true);
   expect(
-    claimsInTheWay(recorded, first.covered_from, first.covered_until),
+    claimsInTheWay(recorded, first.covered_from, first.covered_through),
   ).toEqual([first]);
-  // A span that starts where it ends is not in the way.
+  // A span that starts on the claim's exclusive boundary day is not in the way.
   expect(claimsInTheWay(recorded, first.covered_until, "2099-01-01")).toEqual(
     [],
   );
+  // A span that ends on the claim's last day still meets it.
+  expect(
+    claimsInTheWay(recorded, "2000-01-01", first.covered_through),
+  ).toContain(first);
   // A replaced dotación is not in the way.
   expect(
     claimsInTheWay(
       recorded.map((found) => ({ ...found, effective: false })),
       first.covered_from,
-      first.covered_until,
+      first.covered_through,
     ),
   ).toEqual([]);
   for (const interval of furgoneta.claimable_intervals)
     expect(interval.covered_through < interval.covered_until).toBe(true);
+});
+
+// ---- What the backend states and the screens no longer work out -------------
+
+test("a forecast states the last day covered, which the backend turns into its boundary; stating neither or two different days is refused", async () => {
+  const port = portOf();
+  const ask = (extra: object) =>
+    port.submit(FORECAST, {
+      asset_id: "furgoneta",
+      covered_from: "2026-07-01",
+      requested_free_amount: null,
+      supersedes_claim_id: null,
+      ...extra,
+    } as never) as unknown as Promise<{
+      result?: { forecast: { amount: { decimal: string } } };
+    }>;
+  const request = forecastRequest(
+    "furgoneta",
+    { covered_from: "2026-07-01", covered_through: "2026-12-31" },
+    null,
+  )!;
+  expect(request).not.toHaveProperty("covered_until");
+  const through = (await ask({ covered_through: request.covered_through }))
+    .result!.forecast;
+  const until = (await ask({ covered_until: "2027-01-01" })).result!.forecast;
+  expect(through).toMatchObject({
+    covered_from: "2026-07-01",
+    covered_until: "2027-01-01",
+    covered_through: "2026-12-31",
+  });
+  expect(through.amount).toEqual(until.amount);
+  // A shorter span is another forecast, and its last day is the one asked.
+  const shorter = (await ask({ covered_through: "2026-09-30" })).result!
+    .forecast;
+  expect(shorter).toMatchObject({
+    covered_until: "2026-10-01",
+    covered_through: "2026-09-30",
+  });
+  expect(cents(shorter.amount.decimal)).toBeLessThan(
+    cents(through.amount.decimal),
+  );
+  await expect(ask({})).rejects.toMatchObject({ reason: "invalid" });
+  await expect(
+    ask({ covered_until: "2027-01-01", covered_through: "2026-12-30" }),
+  ).rejects.toMatchObject({ reason: "invalid" });
+});
+
+test("a handoff for a year alone states the Modelo 100 boxes and no Modelo 130 side; a chosen quarter adds it", async () => {
+  const port = portOf();
+  const alone = handoffRequest(2025, "");
+  expect(alone).toEqual({ tax_year: 2025 });
+  const year = await settled<LedgerResult<typeof HANDOFF>>(
+    port.submit(HANDOFF, alone),
+  );
+  expect(year).toMatchObject({ outcome: "succeeded", m130_period: null });
+  expect(year.filing_handoff).toMatchObject({
+    material_m130: null,
+    intangible_m130: null,
+  });
+  expect(year.filing_handoff!.material_m100.target_casilla_id).toBe("0208");
+  expect(year.filing_handoff!.intangible_m100.target_casilla_id).toBe("0227");
+  const quarter = handoffRequest(2025, "2T");
+  expect(quarter).toEqual({ tax_year: 2025, m130_period: "2T" });
+  const chosen = await settled<LedgerResult<typeof HANDOFF>>(
+    port.submit(HANDOFF, quarter),
+  );
+  expect(chosen.m130_period).toBe("2T");
+  expect(chosen.filing_handoff!.material_m130).not.toBeNull();
+  // The Modelo 100 boxes are the same with or without the quarter.
+  expect(chosen.filing_handoff!.material_m100).toEqual(
+    year.filing_handoff!.material_m100,
+  );
+});
+
+test("the vehicle declaration is asked only for a table class the options say can hold a vehicle", async () => {
+  const port = portOf();
+  const options = (await optionsOf(port, "material")) as FormOptions;
+  const classKey = factKey(["authority_class_key"]);
+  const asks = (chosen: string, assetKind = "material") =>
+    fieldsFor(
+      {
+        kind: "element",
+        row: null,
+        descriptor: null,
+        revision: null,
+        tokens: () => [],
+        options,
+      },
+      { asset_kind: assetKind, method: "linear", [classKey]: chosen },
+    ).some((found) => found.key === "vehicle_declared");
+  const holds = options.table_groups.filter((group) => group.can_hold_vehicle);
+  const cannot = options.table_groups.filter(
+    (group) => !group.can_hold_vehicle,
+  );
+  expect(holds.length).toBeGreaterThan(0);
+  expect(cannot.length).toBeGreaterThan(0);
+  for (const group of holds)
+    expect(asks(group.class_key), group.class_key).toBe(true);
+  for (const group of cannot)
+    expect(asks(group.class_key), group.class_key).toBe(false);
+  // No class chosen, or one the options do not list, asks nothing.
+  expect(asks("")).toBe(false);
+  expect(asks("not-a-class")).toBe(false);
+  // The kind alone no longer opens it.
+  expect(asks(holds[0]!.class_key, "intangible")).toBe(false);
+});
+
+test("a baja form offers exactly the reasons the options serve, each worded by the key served with it", async () => {
+  const port = portOf();
+  const reasonsOf = (options: FormOptions | null) =>
+    fieldsFor(
+      {
+        kind: "baja",
+        row: null,
+        descriptor: null,
+        revision: null,
+        tokens: () => [],
+        options,
+      },
+      {},
+    ).find((found) => found.key === "reason")!.choices;
+  for (const kind of ["material", "intangible"]) {
+    const options = (await optionsOf(port, kind)) as FormOptions;
+    const reasons = reasonsOf(options);
+    expect(options.disposal_reasons.length).toBeGreaterThan(0);
+    expect(reasons.map((choice) => [choice.token, choice.word])).toEqual(
+      options.disposal_reasons.map((item) => [item.reason, item.label_key]),
+    );
+    expect(reasons.map((choice) => choice.token)).not.toContain("donation");
+  }
+  // Until the options are read, no reason is offered.
+  expect(reasonsOf(null)).toEqual([]);
+});
+
+test("each plan claim states the verdict the timeline states of the same claim", async () => {
+  const port = portOf();
+  for (const row of await listOf(port)) {
+    const verdicts = new Map(
+      (await eventsOf(port, row.asset_id))
+        .filter((event) => event.claim !== null)
+        .map((event) => [event.record_id, event.claim!] as const),
+    );
+    for (const year of await planOf(port, row.asset_id))
+      for (const claim of year.claims) {
+        const found = verdicts.get(claim.claim_id);
+        expect(claim.matches_current_schedule, claim.claim_id).toBe(
+          found?.matches_current_schedule ?? true,
+        );
+        expect(claim.stale_reason, claim.claim_id).toBe(
+          found?.stale_reason ?? null,
+        );
+        // A verdict names its reason exactly when the claim no longer matches.
+        expect(claim.stale_reason === null).toBe(
+          claim.matches_current_schedule,
+        );
+      }
+  }
+  const stale = staleClaims(await planOf(port, "servidor"));
+  expect(stale.length).toBeGreaterThan(0);
+  for (const { claim } of stale) {
+    expect(claim.effective).toBe(true);
+    expect(claim.stale_reason).toBe("revision_changed");
+  }
+});
+
+test("a changed fact on the timeline is worded by the key the backend served for it, and an unkeyed one reads as the generic word", async () => {
+  const port = portOf();
+  const t = words({
+    "ledger.actividad_asset.field.serial_number": "Serial number",
+    "desktop.ledger.assets.field.other": "Other detail",
+  });
+  const changes = (await eventsOf(port, "furgoneta")).flatMap(
+    (event) => event.changes,
+  );
+  expect(changes.length).toBeGreaterThan(0);
+  for (const found of changes)
+    expect(found.field_key, found.field).toBe(
+      `ledger.actividad_asset.field.${found.field}`,
+    );
+  expect(changeFieldWord(t, "ledger.actividad_asset.field.serial_number")).toBe(
+    "Serial number",
+  );
+  // No key, or a key the catalogue lacks, is never drawn raw.
+  expect(changeFieldWord(t, null)).toBe("Other detail");
+  expect(changeFieldWord(t, "ledger.actividad_asset.field.invented")).toBe(
+    "Other detail",
+  );
+  expect(changeFieldWord(t, "tui.ledger.activity_asset.plan")).toBe(
+    "Other detail",
+  );
+  // The reference of a purchase outside the ledger is shown; the system's own identities are not.
+  const keyed = portOf();
+  const made = await newRequest(
+    keyed,
+    {
+      ...NEW_ELEMENT,
+      acquisition: "",
+      acquisition_shape: "acquired_outside_ledger",
+      declared_acquisition_date: "2026-01-10",
+      declared_activity: SERVED_ACTIVITIES[0]!,
+      acquisition_reference: "Factura 2026-118",
+    },
+    "made-keys",
+  );
+  await keyed.submit(CREATE, made! as never);
+  const fields = (await eventsOf(keyed, "made-keys")).flatMap((event) =>
+    event.changes.map((found) => found.field),
+  );
+  expect(fields).toContain("acquisition.invoice_evidence_id");
+  expect(fields).not.toContain("acquisition.observed_transaction_id");
+  expect(fields).not.toContain("acquisition.evidence_fingerprint");
+  expect(fields).not.toContain("asset_id");
+  expect(fields).not.toContain("revision_number");
 });

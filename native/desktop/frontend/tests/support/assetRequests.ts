@@ -13,6 +13,10 @@ import {
   type FormDraft,
 } from "../../src/components/ledger/assets/assetFields";
 import {
+  forecastRequest,
+  handoffRequest,
+} from "../../src/components/ledger/assets/assetWrites";
+import {
   bajaRequest,
   correctRequest,
   createRequest,
@@ -36,6 +40,7 @@ type Served = {
   method_facts: FormOptions["method_facts"];
   acquisition_shapes: string[];
   declared_activities: string[];
+  disposal_reasons: FormOptions["disposal_reasons"];
 };
 
 type Scenario =
@@ -53,7 +58,16 @@ type Scenario =
       base: RevisionBase;
       disposal: DisposalFacts | null;
     }
-  | { id: string; kind: "fixture" };
+  | { id: string; kind: "fixture" }
+  | {
+      id: string;
+      kind: "forecast";
+      draft: FormDraft;
+      supersedes: string | null;
+    }
+  | { id: string; kind: "handoff"; year: number; period: string }
+  | { id: string; kind: "baja_fields"; asset_kind: string }
+  | { id: string; kind: "vehicle_fields"; asset_kind: string };
 
 type Input = { served: Served; scenarios: Scenario[] };
 
@@ -100,6 +114,68 @@ const contextFor = (
 });
 
 function run(scenario: Scenario, served: Served) {
+  if (scenario.kind === "forecast")
+    return {
+      id: scenario.id,
+      request: forecastRequest(
+        "furgoneta",
+        scenario.draft,
+        scenario.supersedes,
+      ),
+    };
+  if (scenario.kind === "handoff")
+    return {
+      id: scenario.id,
+      request: handoffRequest(scenario.year, scenario.period),
+    };
+  if (scenario.kind === "baja_fields") {
+    const options = optionsFor(scenario.asset_kind, served);
+    const reason = fieldsFor(
+      {
+        kind: "baja",
+        row: null,
+        descriptor: null,
+        revision: null,
+        tokens: () => [],
+        options,
+      },
+      {},
+    ).find((found) => found.key === "reason");
+    return {
+      id: scenario.id,
+      reasons: (reason?.choices ?? []).map((choice) => ({
+        reason: choice.token,
+        label_key: choice.word ?? null,
+      })),
+    };
+  }
+  if (scenario.kind === "vehicle_fields") {
+    const options = optionsFor(scenario.asset_kind, served);
+    const classKey = "amortization.authority_class_key";
+    return {
+      id: scenario.id,
+      drawn: Object.fromEntries(
+        options.table_groups.map((group) => [
+          group.class_key,
+          fieldsFor(
+            {
+              kind: "element",
+              row: null,
+              descriptor: null,
+              revision: null,
+              tokens: () => [],
+              options,
+            },
+            {
+              asset_kind: scenario.asset_kind,
+              method: "linear",
+              [classKey]: group.class_key,
+            },
+          ).some((found) => found.key === "vehicle_declared"),
+        ]),
+      ),
+    };
+  }
   if (scenario.kind === "fixture")
     return {
       id: scenario.id,

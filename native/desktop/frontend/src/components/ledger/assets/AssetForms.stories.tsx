@@ -140,6 +140,22 @@ const chosen = async (root: Root, key: string, nth: number) => {
   await userEvent.selectOptions(select, option.value);
 };
 
+/** Chooses the choice the options served for `key` under `value`. */
+const chosenValue = async (root: Root, key: string, value: string) => {
+  const select = await drawn<HTMLSelectElement>(
+    root,
+    `[data-field="${key}"] select`,
+  );
+  await waitFor(
+    () => {
+      if (!select.querySelector(`option[value="${value}"]`))
+        throw new Error(`${key} does not offer ${value} yet`);
+    },
+    { timeout: 5000 },
+  );
+  await userEvent.selectOptions(select, value);
+};
+
 const pressed = async (root: Root, selector: string) => {
   const button = await drawn<HTMLElement>(
     root,
@@ -211,11 +227,28 @@ export const AddElementWholeProperty: Story = adding({
   ),
 });
 export const AddElementVehicle: Story = adding({
-  name: "Add element, a vehicle: its declaration",
+  name: "Add element, a class that can hold a vehicle: its declaration",
   play: steps(
     (root) => chosen(root, "asset_kind", 1),
     (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosen(root, "method", 0),
+    (root) =>
+      chosenValue(
+        root,
+        "amortization.authority_class_key",
+        "transporte-externo",
+      ),
     (root) => chosen(root, "vehicle_declared", 0),
+  ),
+});
+export const AddElementClassWithoutVehicle: Story = adding({
+  name: "Add element, a class that cannot hold a vehicle: no declaration",
+  play: steps(
+    (root) => chosen(root, "asset_kind", 1),
+    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosen(root, "method", 0),
+    (root) =>
+      chosenValue(root, "amortization.authority_class_key", "maquinaria"),
   ),
 });
 export const AddElementDone: Story = adding({
@@ -487,6 +520,10 @@ export const Claim: Story = claiming("furgoneta", 2026, {
 export const ClaimForecast: Story = claiming("furgoneta", 2026, {
   name: "Record dotación, forecast shown first",
   play: steps(forecast),
+});
+export const ClaimForecastEarlierEnd: Story = claiming("furgoneta", 2026, {
+  name: "Record dotación, a last day typed before the span's end",
+  play: steps((root) => typed(root, "covered_through", "2026-09-30"), forecast),
 });
 export const ClaimDone: Story = claiming("furgoneta", 2026, {
   name: "Record dotación, done",

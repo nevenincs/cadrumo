@@ -29,12 +29,39 @@ type Answer = "fixture" | "one" | "empty" | "refused" | "loading";
 /** How the choices the forms offer are answered. */
 type Choices = "fixture" | "refused";
 
+/** What the backend answers when a chosen file cannot be kept. */
+const FILE_REFUSED = {
+  kind: "refused",
+  operation_id: "story",
+  revision: 1,
+  reason: "REFUSED_INVENTORY_SERVICE_INPUT",
+  detail: {
+    outcome: "refused",
+    profile_id: "synthetic",
+    reference: null,
+    content_digest: null,
+    refusal: {
+      code: "REFUSED_INVENTORY_SERVICE_INPUT",
+      reason: "evidence_file_not_admitted",
+      actividad_id: null,
+      year: null,
+      movement_id: null,
+      valuation_method: null,
+      reason_key:
+        "application.inventory.service.errors.evidence_file_not_admitted",
+      reason_facts: [],
+    },
+  },
+};
+
 type Args = {
   shape?: LedgerShape;
   answer?: Answer;
   signedOut?: boolean;
   /** The choices the forms offer, answered or refused. */
   choices?: Choices;
+  /** Every file chosen is one the book cannot keep. */
+  fileRefused?: boolean;
   /** Also sends a change to a retired book and shows how it was refused. */
   sendRetiredChange?: boolean;
   /** Also sends one change twice and shows how each was answered. */
@@ -48,11 +75,15 @@ function withListAnswer(
   port: LedgerPort,
   answer: Answer,
   choices: Choices,
+  fileRefused: boolean,
 ): LedgerPort {
-  if (answer === "fixture" && choices === "fixture") return port;
+  if (answer === "fixture" && choices === "fixture" && !fileRefused)
+    return port;
   return {
     ...port,
     submit: ((definition: string, payload: never) => {
+      if (definition === "ledger.inventory.evidence.add" && fileRefused)
+        return Promise.resolve(FILE_REFUSED);
       if (definition === "ledger.inventory.options" && choices === "refused")
         return Promise.resolve({
           kind: "refused",
@@ -178,6 +209,7 @@ function Stage({
   shape,
   answer = "fixture",
   choices = "fixture",
+  fileRefused = false,
   signedOut,
   sendRetiredChange,
   replayProbe,
@@ -185,8 +217,8 @@ function Stage({
 }: Args) {
   const base = useLedgerPort(shape);
   const port = useMemo(
-    () => withListAnswer(base, answer, choices),
-    [base, answer, choices],
+    () => withListAnswer(base, answer, choices, fileRefused),
+    [base, answer, choices, fileRefused],
   );
   const { stage, onStage } = useStoryStage();
   const reader = signedOut ? null : STORY_READER;
@@ -596,4 +628,20 @@ export const ChoicesRefused: Story = {
       context,
       wordsOf(context)("desktop.ledger.stock.action.add_movement"),
     ),
+};
+
+export const FileCannotBeKept: Story = {
+  name: "A file the book cannot keep",
+  args: { fileRefused: true },
+  play: async (context) => {
+    const t = wordsOf(context);
+    await press(context, t("desktop.ledger.stock.action.add_movement"));
+    await pick(context, t("desktop.ledger.inventory.kind_label"), "purchase");
+    await userEvent.click(
+      await control(
+        context,
+        `${t("desktop.ledger.stock.proof.price")}: ${t("desktop.ledger.stock.proof.choose_file")}`,
+      ),
+    );
+  },
 };

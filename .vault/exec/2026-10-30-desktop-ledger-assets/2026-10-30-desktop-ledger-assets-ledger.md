@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-ledger-assets'
 date: '2026-10-30'
-modified: '2026-10-30'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:e3bab155bb9c3931c78ba803e13153f9aafb20050ad84d68c0216ad1534139a9'
+body_hash: 'sha256:69ce869f7d14ef82acbec7465c04c6f53422843dcbacaf893f6c879fca9fdcb7'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -298,6 +298,13 @@ related:
 - `S06` `verify:` `playwright stock contract spec` -> `pass`
 - `S06` `verify:` `playwright ledger-setup scenarios` -> `pass`
 - `S06` `by:` `implementer`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/assetFields.ts`
+- `S05` `M` `native/desktop/frontend/tests/support/assetRequests.ts`
+- `S05` `M` `dev/registry/tests/test_desktop_asset_requests_decode.py`
+- `S05` `verify:` `playwright-contract` -> `pass`
+- `S05` `verify:` `pytest-decode-seed` -> `pass`
+- `S05` `verify:` `pytest-vocabulary-chrome` -> `pass`
+- `S05` `verify:` `chrome-build` -> `pass`
 
 ## Notes
 

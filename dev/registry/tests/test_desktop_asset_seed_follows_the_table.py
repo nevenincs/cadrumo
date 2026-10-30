@@ -155,3 +155,29 @@ def test_the_seeded_table_classes_carry_the_registrys_official_names() -> None:
 
     assert seeded
     assert all(official[key] == label for key, label in seeded.items())
+
+
+_VEHICLE_FLAG = re.compile(r'class_key:\s*"(?P<key>[^"]+)",.*?can_hold_vehicle:\s*(?P<flag>true|false)', re.DOTALL)
+
+
+@pytest.mark.parametrize(
+    ("kind", "admits"), [("material", "clase-admite-material"), ("intangible", "clase-admite-intangible")]
+)
+def test_the_seeded_vehicle_flag_of_each_class_is_the_registrys_classification(kind: str, admits: str) -> None:
+    parameters = _parameters()
+    restricted = parameters[f"{_PREFIX}clase-vehiculo-restringido"]
+    expected = {
+        key: kind == "material" and restricted[key] == "1"
+        for key in parameters[f"{_PREFIX}normal-coeficiente-lineal-maximo"]
+        if parameters[f"{_PREFIX}{admits}"].get(key) == "1"
+    }
+    section = _section(_SEED.read_text(encoding="utf-8"), "TABLE_GROUPS")
+    block = section[section.index(f"{kind}:") :]
+    nxt = re.search(r"\n  \w+: \[", block[len(kind) + 2 :])
+    block = block if nxt is None else block[: nxt.start() + len(kind) + 2]
+    found = [_VEHICLE_FLAG.search(group) for group in re.split(r"\n    \{\n", block)[1:]]
+    seeded = {match["key"]: match["flag"] == "true" for match in found if match is not None}
+
+    assert expected, "the registry lists no class for the kind, so nothing was compared"
+    assert len(found) == len(expected), "a seeded class carries no vehicle flag"
+    assert seeded == expected

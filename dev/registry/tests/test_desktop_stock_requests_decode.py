@@ -24,9 +24,15 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.application.inventory.registered_evidence_operation import InventoryEvidenceAddRequest
+from cadrumo.application.inventory.registered_evidence_operation import (
+    InventoryEvidenceAddProjection,
+    InventoryEvidenceAddRequest,
+)
 from cadrumo.application.inventory.registered_options_operation import inventory_options
-from cadrumo.application.inventory.registered_projections import InventoryMovementProjection
+from cadrumo.application.inventory.registered_projections import (
+    InventoryMovementProjection,
+    InventoryRefusalProjection,
+)
 from cadrumo.application.inventory.registered_requests import (
     InventoryClosingValueRecordRequest,
     InventoryCorrectRequest,
@@ -39,6 +45,7 @@ from cadrumo.application.inventory.registered_requests import (
     InventoryRetireRequest,
 )
 from cadrumo.application.inventory.service import InventoryMovementCommand
+from cadrumo.domain.contribuyente.inventory.corrections import inventory_refusal_key
 from cadrumo.domain.contribuyente.inventory.records import MovementKind, MovementRecord, ValuationMethod
 from dev._paths import REPO_ROOT
 
@@ -71,7 +78,7 @@ def _mark(character: str) -> str:
 
 def _kept(character: str, kind: str | None = None) -> dict[str, str]:
     """A file the backend kept: the reference it named it by and the mark it answered."""
-    kept = {"reference": f"attachment:{_mark(character)}", "digest": _mark(character)}
+    kept = {"reference": f"document-{_mark(character)}", "digest": _mark(character)}
     return kept if kind is None else {**kept, "kind": kind}
 
 
@@ -364,16 +371,15 @@ def _bundle(tmp_path: Path) -> Path:
     return out
 
 
-def _vocabulary() -> dict[str, list[str]]:
-    """The choices the options operation serves, which the builders judge a request by."""
-    served = inventory_options(uuid4())
-    return {family.family: [option.value for option in family.options] for family in served.families}
+def _options() -> dict[str, Any]:
+    """What the options operation serves, with the role of each member: what the builders judge a request by."""
+    return inventory_options(uuid4()).model_dump(mode="json")
 
 
 def _run(bundle: Path, scenarios: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     done = subprocess.run(  # noqa: S603 - fixed node program on a bundle built above
         [_node(), str(bundle)],
-        input=json.dumps({"vocabulary": _vocabulary(), "scenarios": scenarios}),
+        input=json.dumps({"options": _options(), "scenarios": scenarios}),
         check=True,
         capture_output=True,
         text=True,
@@ -486,8 +492,7 @@ def test_the_facts_the_form_states_reach_the_purchase_where_the_backend_reads_th
     references = [item.reference.reference for item in two.evidence]
     assert len(references) == len(set(references)) == 5
     assert all(
-        reference == f"attachment:{item.content_digest}"
-        for reference, item in zip(references, two.evidence, strict=True)
+        reference == f"document-{item.content_digest}" for reference, item in zip(references, two.evidence, strict=True)
     )
     assert {item.evidence_kind.value for item in two.evidence} == {
         "purchase_invoice",
@@ -746,7 +751,7 @@ def test_a_closing_value_from_a_count_carries_the_count_and_both_its_files(made:
 def test_a_prior_closing_file_is_stated_as_the_backend_kept_it(made: dict[str, dict[str, Any]]) -> None:
     prior = _closing(made["closing_with_prior_file"]).facts.prior_evidence
 
-    assert [item.reference.reference for item in prior] == [f"attachment:{_mark('2')}"]
+    assert [item.reference.reference for item in prior] == [f"document-{_mark('2')}"]
     assert [item.content_digest for item in prior] == [_mark("2")]
     assert _closing(made["closing_derived"]).facts.prior_evidence == ()
 
@@ -784,3 +789,90 @@ def test_the_request_that_has_the_backend_keep_a_file_decodes_once_the_host_name
         json.dumps({"profile_id": str(uuid4()), "source_directory": str(tmp_path), **sent})
     )
     assert request.source_path == "file-0123456789abcdef"
+
+
+# ---- What the backend answers when a file is chosen, and what it serves of a kept one -----
+
+
+def _stored(character: str) -> dict[str, Any]:
+    digest = _mark(character)
+    return InventoryEvidenceAddProjection(
+        outcome="stored", profile_id=uuid4(), reference=f"document-{digest}", content_digest=digest
+    ).model_dump(mode="json")
+
+
+def _refused() -> dict[str, Any]:
+    return InventoryEvidenceAddProjection(
+        outcome="refused",
+        profile_id=uuid4(),
+        refusal=InventoryRefusalProjection(
+            code="REFUSED_INVENTORY_SERVICE_INPUT",
+            reason="evidence_file_not_admitted",
+            reason_key=inventory_refusal_key("evidence_file_not_admitted"),
+        ),
+    ).model_dump(mode="json")
+
+
+def test_a_kept_file_becomes_a_proof_and_a_refused_one_does_not(tmp_path: Path) -> None:
+    done = _run(
+        _bundle(tmp_path),
+        [
+            {"id": "stored", "kind": "evidence_result", "result": _stored("a"), "fileName": "factura.pdf"},
+            {"id": "refused", "kind": "evidence_result", "result": _refused(), "fileName": "nota.docx"},
+            {"id": "roles", "kind": "roles"},
+        ],
+    )
+
+    assert done["stored"]["request"] == {
+        "reference": f"document-{_mark('a')}",
+        "kind": "",
+        "digest": _mark("a"),
+        "fileName": "factura.pdf",
+    }
+    assert done["refused"]["request"] is None
+    # The refusal names its sentence by the key the backend serves, which the catalogue words.
+    refusal = _refused()["refusal"]
+    assert refusal["reason_key"] == "application.inventory.service.errors.evidence_file_not_admitted"
+    assert refusal["reason_facts"] == []
+
+
+def test_the_roles_the_options_serve_are_the_ones_the_forms_read(tmp_path: Path) -> None:
+    roles = _run(_bundle(tmp_path), [{"id": "roles", "kind": "roles"}])["roles"]["request"]
+
+    assert roles == {
+        "cost_check": "attributable_cost_review",
+        "iva_check": "iva_recoverability_review",
+        "count_authority": "physical_observation",
+        "purchase": "purchase",
+    }
+    served = {
+        (family["family"], option["value"]): option["role"]
+        for family in _options()["families"]
+        for option in family["options"]
+    }
+    assert {value for (family, value), role in served.items() if role is not None} == set(roles.values())
+    assert served[("movement_kind", "purchase")] == "purchase"
+
+
+def test_a_purchase_as_inspect_serves_it_shows_the_names_of_the_files_it_knows(tmp_path: Path) -> None:
+    bundle = _bundle(tmp_path)
+    first = _run(bundle, [scenario for scenario in _SCENARIOS if scenario["id"] == "purchase"])
+    request = _movement(first["purchase"])
+    assert request.acquisition_cost is not None
+    acquisition = request.acquisition_cost.to_domain()
+    record = MovementRecord.from_purchase_acquisition(
+        movement_id=request.movement_id,
+        movement_date=request.movement_date,
+        quantity=Decimal(request.quantity.decimal),
+        acquisition_cost=acquisition,
+    )
+    invoice = next(item for item in acquisition.evidence if item.evidence_kind.value == "purchase_invoice")
+    served = InventoryMovementProjection.from_movement(
+        record, with_acquisition_detail=True, document_file_names={str(invoice.content_digest): "factura.pdf"}
+    ).model_dump(mode="json")
+
+    names = _run(bundle, [{"id": "names", "kind": "kept_names", "movement": served}])["names"]["request"]
+
+    # Only the invoice is named; the checks have no name and read as kept.
+    assert names == {"price": "factura.pdf", "cost_check": None, "iva_check": None}
+    assert all(document["file_name"] in (None, "factura.pdf") for document in served["acquisition_detail"]["documents"])

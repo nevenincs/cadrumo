@@ -158,6 +158,7 @@ export const ASSET_FAMILY = {
   document_kind: "ledger.actividad_asset.document_kind.",
   electric_propulsion: "ledger.actividad_asset.electric_propulsion.",
   event_kind: "ledger.actividad_asset.event_kind.",
+  field: "ledger.actividad_asset.field.",
   flag: "ledger.actividad_asset.flag.",
   method: "ledger.actividad_asset.method.",
   non_deductible_iva_state: "ledger.actividad_asset.non_deductible_iva_state.",
@@ -277,74 +278,37 @@ const STATE_ICON: Record<string, IconName> = {
 export const stateIcon = (token: string): IconName =>
   Object.hasOwn(STATE_ICON, token) ? STATE_ICON[token]! : "info";
 
-/** The word of a field of a record, by the path the backend names it with. A
- * path this table does not know reads as the generic word, never raw. */
+/** The word of the fields the tab names itself, by the path the backend names
+ * them with. A path this table does not know reads as the generic word,
+ * never raw. The fields of a change on the timeline are not worded here: the
+ * backend serves the catalogue key of each. */
 const FIELD: Record<string, string> = {
   name: "desktop.ledger.assets.field.name",
   serial_number: "desktop.ledger.assets.field.serial",
-  description: "desktop.ledger.assets.field.description",
-  document_kind: "desktop.ledger.assets.field.document_kind",
-  document_number: "desktop.ledger.assets.field.document_number",
-  supplier_name: "desktop.ledger.assets.field.supplier_name",
-  supplier_tax_id: "desktop.ledger.assets.field.supplier_tax_id",
   asset_kind: "desktop.ledger.assets.field.kind",
-  acquisition_shape: "desktop.ledger.assets.field.acquisition_shape",
-  acquired_condition: "desktop.ledger.assets.field.acquired_condition",
-  "basis.stage": "desktop.ledger.assets.field.basis_stage",
-  "basis.business_use_share": "desktop.ledger.assets.field.business_use_share",
-  "basis.prior_allocation_provenance":
-    "desktop.ledger.assets.field.allocation_provenance",
-  "opening_history.status": "desktop.ledger.assets.field.opening_status",
   "opening_history.accumulated_amount":
     "desktop.ledger.assets.field.opening_amount",
-  "opening_history.covered_through_tax_year":
-    "desktop.ledger.assets.field.opening_through",
-  "opening_history.amortization_method":
-    "desktop.ledger.assets.field.opening_method",
-  "amortization.used_original_price.determination":
-    "desktop.ledger.assets.field.used_determination",
-  "amortization.used_original_price.original_price":
-    "desktop.ledger.assets.field.used_price",
-  "amortization.used_original_price.evidence_reference":
-    "desktop.ledger.assets.field.used_evidence",
-  "amortization.sum_of_digits_period_years":
-    "desktop.ledger.assets.field.digit_period",
-  "amortization.digit_order": "desktop.ledger.assets.field.digit_order",
-  "amortization.low_value.election_reference":
-    "desktop.ledger.assets.field.low_value_election",
-  "amortization.low_value.new_material_evidence_reference":
-    "desktop.ledger.assets.field.low_value_evidence",
-  "amortization.research_development_evidence_reference":
-    "desktop.ledger.assets.field.research_evidence",
   in_service_date: "desktop.ledger.assets.field.in_service_date",
-  out_of_service_date: "desktop.ledger.assets.field.out_of_service_date",
   "disposal.disposal_date": "desktop.ledger.assets.field.disposal_date",
-  "disposal.reason": "desktop.ledger.assets.field.disposal_reason",
-  "disposal.proceeds": "desktop.ledger.assets.field.proceeds",
   "disposal.transmission_costs":
     "desktop.ledger.assets.field.transmission_costs",
-  residual_value: "desktop.ledger.assets.field.residual_value",
   "basis.basis_amount": "desktop.ledger.assets.field.basis",
-  "basis.non_deductible_iva": "desktop.ledger.assets.field.non_deductible_iva",
   "amortization.method": "desktop.ledger.assets.field.method",
   "amortization.authority_class_key": "desktop.ledger.assets.field.class",
-  "amortization.linear_coefficient": "desktop.ledger.assets.field.coefficient",
-  "disposal.market_value": "desktop.ledger.assets.field.market_value",
-  "disposal.prior_free_depreciation_regime":
-    "desktop.ledger.assets.field.prior_regime",
-  "disposal.later_affectation_on":
-    "desktop.ledger.assets.field.later_affectation",
-  amount: "desktop.ledger.assets.field.amount",
 };
 /** A field path without the index of a repeated row. */
 export const unindexed = (path: string) => path.replace(/\[\d+\]/g, "[]");
 
-/** Whether the table words this field. */
-export const isWordedField = (path: string) =>
-  Object.hasOwn(FIELD, unindexed(path));
-
 export const fieldWord = (t: Translate, path: string) =>
-  isWordedField(path) ? t(FIELD[unindexed(path)]!) : t(ASSET_KEYS.field_other);
+  Object.hasOwn(FIELD, unindexed(path))
+    ? t(FIELD[unindexed(path)]!)
+    : t(ASSET_KEYS.field_other);
+
+/** The word of a changed fact on the timeline: the catalogue word of the key
+ * the backend served for it. Without a key, or where the catalogue has no
+ * word for it, the generic word. */
+export const changeFieldWord = (t: Translate, key: string | null) =>
+  wordOfKey(t, key) ?? t(ASSET_KEYS.field_other);
 
 /** What to do when the amortization already deducted is not known: where to
  * enter it, by the word of that field. */

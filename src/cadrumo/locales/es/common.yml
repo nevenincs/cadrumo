@@ -3785,6 +3785,7 @@ desktop:
         removed: Fuera del recuento
       facts:
         amount: Importe
+        document: '{kind}: {name}'
         documents: Archivos en que se apoya
         documents_unknown: Los archivos de esta compra no están disponibles.
         extra_total: Costes adicionales
@@ -3849,8 +3850,6 @@ desktop:
         choose_file: Elegir un archivo
         cost_check: Archivo que demuestra que revisaste los costes adicionales
         extra: Archivo que demuestra este coste
-        file_unread: No se pudo usar ese archivo. Elige un archivo PDF, una imagen
-          o un XML e inténtalo de nuevo.
         iva_check: Archivo que demuestra que revisaste cuánto IVA puedes deducir
         keeping: Guardando el archivo…
         kept: Guardado con tus libros

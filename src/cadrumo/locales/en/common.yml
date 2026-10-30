@@ -3727,6 +3727,7 @@ desktop:
         removed: Taken out of the count
       facts:
         amount: Amount
+        document: '{kind}: {name}'
         documents: Files it rests on
         documents_unknown: The files of this purchase aren't available.
         extra_total: Extra costs
@@ -3789,8 +3790,6 @@ desktop:
         choose_file: Choose a file
         cost_check: File that shows you checked for extra costs
         extra: File that shows this cost
-        file_unread: That file couldn't be used. Choose a PDF, image or XML file and
-          try again.
         iva_check: File that shows you checked how much IVA you can deduct
         keeping: Keeping the file…
         kept: Kept with your books

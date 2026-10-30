@@ -7,13 +7,7 @@
 import type { Translate } from "../../../shell/strings";
 import { amountText, dateText, percentText } from "../movements/movementWords";
 import type { Amount, TimelineChange } from "../../../shell/ledgerSetup";
-import {
-  ASSET_KEYS,
-  isWordedField,
-  tokenWord,
-  unindexed,
-  wordOfKey,
-} from "./assetsWords";
+import { ASSET_KEYS, tokenWord, unindexed, wordOfKey } from "./assetsWords";
 
 /** The labels only the plan and the timeline name directly. */
 export const PLAN_KEYS = {
@@ -145,6 +139,6 @@ export function changeValueText(
       break;
   }
   if (DATE.test(value)) return dateText(locale, value, true);
-  if (TEXT_FIELDS.has(path) && isWordedField(path)) return value;
+  if (TEXT_FIELDS.has(path) && change.field_key !== null) return value;
   return looksInternal(value) ? t(ASSET_KEYS.timeline.value_changed) : value;
 }

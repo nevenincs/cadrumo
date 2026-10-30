@@ -444,9 +444,7 @@ test("a closing value's files and a purchase's files are chosen in the file dial
   // A file the book refuses is said so, and the file stays unchosen.
   await target.evaluate(() => window.__scenarioLedger?.nextWrites(["refused"]));
   await form.getByRole("button", { name: `${counted}: ${choose}` }).click();
-  await expect(form).toContainText(
-    label("desktop.ledger.stock.proof.file_unread"),
-  );
+  await expect(form).toContainText(label("desktop.ledger.stock.refused"));
   await expect(
     form.getByRole("button", { name: `${counted}: ${choose}` }),
   ).toBeVisible();
@@ -457,9 +455,7 @@ test("a closing value's files and a purchase's files are chosen in the file dial
     form.getByRole("button", { name: `${counted}: ${change}` }),
   ).toBeVisible();
   await expect(form).toContainText("ticket-gasolinera-ruta7.jpg");
-  await expect(form).not.toContainText(
-    label("desktop.ledger.stock.proof.file_unread"),
-  );
+  await expect(form).not.toContainText(label("desktop.ledger.stock.refused"));
   await form
     .getByRole("button", { name: `${reconciliation}: ${choose}` })
     .click();

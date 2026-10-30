@@ -14,6 +14,7 @@ import {
   useSetupRead,
 } from "../setup/SetupParts";
 import { callRefusal, Hint } from "./AssetList";
+import { handoffRequest } from "./assetWrites";
 import { ASSET_KEYS, refusalText } from "./assetsWords";
 
 /** The words of the declaration boxes the handoff can name. A box outside
@@ -27,10 +28,11 @@ const TARGET_KEYS: Readonly<Record<string, string>> = {
 
 /**
  * Which declaration boxes the claims of a year reach, read only. The year
- * is the pane's; the Modelo 130 quarter is chosen here, and nothing is read
- * until it is. Each row shows the box and the amount the backend states for
- * it. Nothing is added up or worked out here, and an amount the backend does
- * not state is not drawn as zero.
+ * is the pane's, and it alone reads the Modelo 100 boxes; the Modelo 130
+ * quarter is chosen here, and only a chosen quarter is sent and adds the
+ * Modelo 130 rows. Each row shows the box and the amount the backend states
+ * for it. Nothing is added up or worked out here, and an amount the backend
+ * does not state is not drawn as zero.
  */
 export function FilingHandoffPanel({
   port,
@@ -47,15 +49,15 @@ export function FilingHandoffPanel({
   const [open, setOpen] = useState(false);
   const [period, setPeriod] = useState("");
   const asked =
-    open && reader !== null && year !== null && period !== ""
-      ? { tax_year: year, m130_period: period }
+    open && reader !== null && year !== null
+      ? handoffRequest(year, period)
       : null;
   const { read } = useSetupRead(
     port,
     reader,
     "ledger.actividad-asset.filing-handoff",
     asked,
-    asked ? `${asked.tax_year}:${asked.m130_period}` : "none",
+    asked ? `${asked.tax_year}:${asked.m130_period ?? ""}` : "none",
   );
 
   const note = (key: string) => (
@@ -64,7 +66,7 @@ export function FilingHandoffPanel({
   const body = () => {
     if (reader === null)
       return note("desktop.ledger.assets.filing.unavailable");
-    if (asked === null) return note("desktop.ledger.assets.filing.choose");
+    if (asked === null) return note("desktop.ledger.assets.filing.choose_year");
     if (read === null) return <Reading label={t("desktop.ledger.loading")} />;
     if (read.kind !== "done")
       return <CallLine call={read} refusal={callRefusal(t, read)} />;
@@ -82,10 +84,15 @@ export function FilingHandoffPanel({
       );
     if (handoff === null)
       return note("desktop.ledger.assets.filing.unavailable");
+    // A box the backend does not state, because no quarter was asked, is not
+    // drawn: it is not unknown, and it is not zero.
+    const stated = Object.entries(handoff).flatMap(([target, found]) =>
+      found === null ? [] : [[target, found] as const],
+    );
     return (
       <SetupTable
         label={t("desktop.ledger.assets.handoff")}
-        rows={Object.entries(handoff)}
+        rows={stated}
         rowKey={([target]) => target}
         columns={[
           {
@@ -145,8 +152,10 @@ export function FilingHandoffPanel({
         label={t("desktop.ledger.assets.quarter")}
         value={period}
         onValue={setPeriod}
-        placeholder={t("desktop.ledger.form.choose")}
-        options={QUARTER_CODES.map((code) => ({ value: code, label: code }))}
+        options={[
+          { value: "", label: t("desktop.ledger.assets.quarter_none") },
+          ...QUARTER_CODES.map((code) => ({ value: code, label: code })),
+        ]}
         className="max-w-48"
       />
       {body()}

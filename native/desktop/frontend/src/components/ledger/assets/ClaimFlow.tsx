@@ -7,6 +7,7 @@ import type {
   ActivityAssetForecast,
   ActivityAssetForecastResult,
   PlanClaim,
+  PlanRow,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
@@ -56,8 +57,9 @@ const NO_CLAIMS: readonly PlanClaim[] = [];
  * out the span and records nothing, then the dotación itself. The year
  * starts on the plan's latest year that can still take one, and the person
  * can choose another of the plan's years. The span starts from what the plan
- * says is still open, or from the dotación being replaced, and ends where
- * the backend says it ends. A dotación that meets another is refused with the
+ * says is still open, or from the dotación being replaced; its first and last
+ * day can be changed, and the last day is sent as typed. The forecast the
+ * backend serves is the one claimed, unchanged. A dotación that meets another is refused with the
  * backend's reason and offers to correct the one in the way; one sent again
  * for the same forecast is answered as already recorded. The landing is read
  * from the plan.
@@ -121,12 +123,7 @@ export function ClaimFlow({
   useFocusOnOpen(formRef, row !== null);
 
   const answered = answer(fields, form.draft, null);
-  const request = forecastRequest(
-    assetId,
-    answered.values,
-    replaces,
-    span?.until ?? null,
-  );
+  const request = forecastRequest(assetId, answered.values, replaces);
   const ready = Object.keys(answered.problems).length === 0 && request !== null;
   const forecastView = viewOf(forecastCall, neverReused);
   const wroteView = viewOf(write.last, claimReused);
@@ -153,6 +150,23 @@ export function ClaimFlow({
     form.set({ [field.key]: value });
     changed();
   };
+  // A different span, claim or year starts the dates over from that span as
+  // the plan serves it, whatever was typed for the one before.
+  const startOver = (
+    nextRow: PlanRow | null,
+    nextReplaces: string | null,
+    index: number,
+  ) => {
+    const nextReplaced =
+      (nextRow?.claims ?? NO_CLAIMS).find(
+        (claim) => claim.effective && claim.claim_id === nextReplaces,
+      ) ?? null;
+    const first = claimSpans(nextRow, nextReplaced)[index] ?? null;
+    form.set({
+      covered_from: first?.from ?? "",
+      covered_through: first?.through ?? "",
+    });
+  };
 
   // The recorded dotación in the way, when the refusal is that one meets another.
   const meets = [forecastView, wroteView].some(
@@ -166,7 +180,7 @@ export function ClaimFlow({
       ? claimsInTheWay(
           effective,
           forecast?.covered_from ?? request.covered_from,
-          forecast?.covered_until ?? request.covered_until,
+          forecast?.covered_through ?? request.covered_through,
         )
       : NO_CLAIMS;
 
@@ -218,6 +232,7 @@ export function ClaimFlow({
     setChosenYear(next);
     setReplaces(null);
     setSpanIndex(0);
+    startOver(rows?.find((found) => found.tax_year === next) ?? null, null, 0);
     changed();
   };
 
@@ -297,6 +312,7 @@ export function ClaimFlow({
               onValue={(value) => {
                 setReplaces(value === "" ? null : value);
                 setSpanIndex(0);
+                startOver(row, value === "" ? null : value, 0);
                 changed();
               }}
               options={[
@@ -319,6 +335,7 @@ export function ClaimFlow({
               value={String(spanIndex)}
               onValue={(value) => {
                 setSpanIndex(Number(value));
+                startOver(row, replaces, Number(value));
                 changed();
               }}
               options={spans.map((found, index) => ({
@@ -341,13 +358,6 @@ export function ClaimFlow({
             purchaseKnown={NO_FIELDS}
             locale={locale}
           />
-          {span && (
-            <p className="ledger-asset-claim-until text-sm text-muted-foreground">
-              {t("desktop.ledger.assets.claim_until", {
-                until: dateText(locale, span.through, true),
-              })}
-            </p>
-          )}
           <div className="flex flex-wrap gap-2">
             {closeButton}
             <Button
@@ -370,16 +380,7 @@ export function ClaimFlow({
                     amount: amountText(locale, forecast.amount.decimal),
                     days: forecast.service_days,
                     from: dateText(locale, forecast.covered_from, true),
-                    until: dateText(
-                      locale,
-                      throughOf(
-                        forecast as {
-                          covered_until: string;
-                          covered_through?: string;
-                        },
-                      ),
-                      true,
-                    ),
+                    until: dateText(locale, throughOf(forecast), true),
                   })}
                 </span>
                 <span className="text-sm">
@@ -422,6 +423,7 @@ export function ClaimFlow({
                 onClick={() => {
                   setReplaces(inTheWay[0]!.claim_id);
                   setSpanIndex(0);
+                  startOver(row, inTheWay[0]!.claim_id, 0);
                   changed();
                 }}
               >

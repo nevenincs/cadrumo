@@ -29,6 +29,10 @@ ASSET_NAMESPACE: Final[str] = "ledger.actividad_asset."
 #: The family whose members the backend serves as ``reason_key`` values.
 ASSET_REASON_FAMILY: Final[str] = f"{ASSET_NAMESPACE}errors."
 
+#: The family whose members word the facts the timeline shows a change of; the backend serves the
+#: key of each change as ``field_key``.
+ASSET_FIELD_FAMILY: Final[str] = f"{ASSET_NAMESPACE}field."
+
 
 def _enum_families() -> dict[str, type[Enum]]:
     """Return each token family with the enum the operations serve it from."""
@@ -97,9 +101,22 @@ def _reason_members() -> tuple[str, ...]:
     return tuple(sorted(key.removeprefix(ASSET_REASON_FAMILY) for key in leaves if key.startswith(ASSET_REASON_FAMILY)))
 
 
+def _field_members() -> tuple[str, ...]:
+    """Return the facts the timeline words, as members of the field family."""
+    from cadrumo.application.actividad_asset.activity_asset_read_models import (
+        TIMELINE_FIELD_PATHS,
+        timeline_field_word_key,
+    )
+
+    return tuple(
+        sorted(timeline_field_word_key(path).removeprefix(ASSET_FIELD_FAMILY) for path in TIMELINE_FIELD_PATHS)
+    )
+
+
 def _asset_families() -> Mapping[str, tuple[str, ...]]:
     families = {prefix: _values(enum) for prefix, enum in _enum_families().items()}
     families[ASSET_REASON_FAMILY] = _reason_members()
+    families[ASSET_FIELD_FAMILY] = _field_members()
     return MappingProxyType(families)
 
 
@@ -149,19 +166,10 @@ INVENTORY_PERCENT_PLACEHOLDER_PREFIXES: Final[tuple[str, ...]] = (INVENTORY_REAS
 
 
 def _inventory_enum_families() -> dict[str, type[Enum]]:
-    """Return each inventory token family with the enum the operations serve it from.
-
-    The options operation serves ten of them; the history kinds are shown on a book's changes and are
-    worded the same way.
-    """
+    """Return each inventory token family with the enum the options operation serves it from."""
     from cadrumo.application.inventory.registered_options_operation import INVENTORY_OPTION_FAMILIES
-    from cadrumo.domain.contribuyente.inventory.records import InventoryHistoryKind
 
-    served: dict[str, type[Enum]] = {
-        f"{INVENTORY_LABEL_NAMESPACE}{family}.": enum for family, enum in INVENTORY_OPTION_FAMILIES
-    }
-    served[f"{INVENTORY_LABEL_NAMESPACE}history_kind."] = InventoryHistoryKind
-    return served
+    return {f"{INVENTORY_LABEL_NAMESPACE}{family}.": enum for family, enum in INVENTORY_OPTION_FAMILIES}
 
 
 def _inventory_reason_members() -> tuple[str, ...]:

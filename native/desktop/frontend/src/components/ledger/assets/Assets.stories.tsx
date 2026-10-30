@@ -87,13 +87,13 @@ function withPartialHandoff(port: LedgerPort): LedgerPort {
         const result = structuredClone(answer.result) as {
           filing_handoff: Record<
             string,
-            { unavailable_asset_ids?: string[] }
+            { unavailable_asset_ids?: string[] } | null
           > | null;
         };
         for (const [target, found] of Object.entries(
           result.filing_handoff ?? {},
         ))
-          if (target.endsWith("_m130"))
+          if (found !== null && target.endsWith("_m130"))
             found.unavailable_asset_ids = ["first", "second"];
         return { ...answer, result };
       });
@@ -184,6 +184,12 @@ export const FormAsked: Story = {
   name: "A form asked for",
   play: (context) =>
     press(context, "button", wordsOf(context)(ASSET_KEYS.action.add)),
+};
+
+export const FilingHandoffYearAlone: Story = {
+  name: "Filing handoff for the year alone: the Modelo 100 boxes",
+  play: (context) =>
+    press(context, "button", wordsOf(context)("desktop.ledger.assets.handoff")),
 };
 
 export const FilingHandoff: Story = {
