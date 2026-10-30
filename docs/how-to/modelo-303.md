@@ -299,7 +299,7 @@ quarterly, while monthly VAT-liquidation profiles such as REDEME or large-compan
 taxpayers are monthly. Voluntary SII enrolment by itself does not switch Modelo
 303 from quarterly to monthly.
 
-The source-backed behavior is:
+The source-backed behaviour is:
 
 - A target is always profile + modelo + year + period, with the version of the
   official form chosen from that target unless you pass an exact version.
