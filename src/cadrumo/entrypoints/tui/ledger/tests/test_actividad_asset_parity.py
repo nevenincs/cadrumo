@@ -15,6 +15,7 @@ from .....application.calculations.actividad_asset_schedule import vehicle_affec
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
+from .....core.i18n.render import tr
 from .....core.operations import OperationEffect
 from .....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from .....domain.renta.actividad_asset.errors import (
@@ -437,11 +438,13 @@ async def test_activity_asset_plan_labels_the_minimum_amortization_and_flags_an_
             plan = await _wait_for_screen_result(
                 pilot=pilot, screen=screen, expected_prefix="equipo-informacion-software"
             )
+        label = tr("tui.ledger.activity_asset.plan_minimum")
+        incomplete = tr("tui.ledger.activity_asset.plan_minimum_incomplete")
 
     lines = plan.splitlines()
     # The served figure is shown as served, and only the year that omitted a year's minimum says so.
-    assert "2025	520.00	0.00	not_due	Minimum amortization	130.00" in lines
-    assert "2036	period_elapsed	0.00	not_due	Minimum amortization	130.00	incomplete" in lines
+    assert f"2025	520.00	0.00	not_due	{label}	130.00" in lines
+    assert f"2036	period_elapsed	0.00	not_due	{label}	130.00	{incomplete}" in lines
 
 
 @pytest.mark.asyncio
