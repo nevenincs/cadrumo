@@ -21,6 +21,7 @@ from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_bindings import (
     ActivityAssetDisposalBounds,
     activity_asset_form_options,
+    takes_used_double_coefficient,
 )
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -55,15 +56,19 @@ from ...domain.renta.actividad_asset.schedule import (
 from ..operations.public_scalar import project_scalar
 from .acquisition_ledger import require_acquisition_in_ledger
 from .activity_asset_read_models import (
+    PLAN_ADVISORY_FAMILY,
     ActivityAssetAcquisitionCandidate,
     ActivityAssetEdition,
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
     ActivityAssetNotTableBoundReason,
+    ActivityAssetPlanAdvisory,
+    ActivityAssetPlanAdvisoryKind,
     ActivityAssetPlanRow,
     ActivityAssetTableGroup,
     ActivityAssetTimelineEvent,
+    activity_asset_label_key,
 )
 from .disposal_calculation import calculate_element_disposal
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
@@ -757,6 +762,23 @@ class ActivityAssetOperations:
             class_key=revision.amortization.authority_class_key,
             not_table_bound=ActivityAssetNotTableBoundReason.AUTHORITY_UNAVAILABLE,
             unavailable_reason_key=reason_key,
+    def plan_advisories(self, asset_id: str) -> tuple[ActivityAssetPlanAdvisory, ...]:
+        """Say what the plan warns about the element's election, under this year's edition.
+
+        A warning looks only at the election and changes no figure.  Without an edition
+        there is no charge for it to speak about.
+        """
+        revision = self.inspect(asset_id)[-1]
+        tax_year = max(self._authority.today().year, revision.in_service_date.year)
+        try:
+            _, modelo = self._authority.edition(tax_year)
+        except RegistryError:
+            return ()
+        if not takes_used_double_coefficient(modelo, tax_year=tax_year, asset_revision=revision):
+            return ()
+        kind = ActivityAssetPlanAdvisoryKind.USED_ELEMENT_GROUP_LIMIT
+        return (ActivityAssetPlanAdvisory(kind=kind, label_key=activity_asset_label_key(PLAN_ADVISORY_FAMILY, kind)),)
+
         )
 
     def timeline(self, asset_id: str) -> tuple[ActivityAssetTimelineEvent, ...]:

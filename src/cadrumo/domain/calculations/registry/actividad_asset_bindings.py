@@ -691,6 +691,45 @@ def _require_not_building_or_furniture(parameters: _Parameters, bounds: _TableBo
         )
 
 
+def takes_used_double_coefficient(
+    modelo_revision: ModeloRevision,
+    *,
+    tax_year: int,
+    asset_revision: ActivityAssetRevision,
+) -> bool:
+    """Say whether an element's linear charge rests on RIS art. 4.3.a's multiplied maximum.
+
+    A coefficient elected inside the ordinary corridor takes nothing from the multiplier,
+    and an originating-price election is letter b or c.  An element the schedule refuses,
+    such as a multi-shift used one or a building with no stated age, takes none either.
+
+    Args:
+        modelo_revision: The :class:`ModeloRevision` supplying the coefficient authority.
+        tax_year: The year whose amortization charge is being assessed.
+        asset_revision: The element's effective acquisition and amortization election.
+    """
+    election = asset_revision.amortization
+    if (
+        election.method is not AmortizationMethod.LINEAR
+        or election.used_original_price is not None
+        or election.shift_hours_per_day is not None
+        or asset_revision.acquired_condition is not AcquiredCondition.USED
+    ):
+        return False
+    parameters = _Parameters(
+        by_id={parameter.id: parameter for parameter in modelo_revision.parameters},
+        revision_id=modelo_revision.id,
+        tax_year=tax_year,
+    )
+    try:
+        bounds = _table_bounds(parameters, asset_revision)
+        multiplier = parameters.keyed(_USED_MULTIPLIER_ID, f"{election.regime.value}:{asset_revision.asset_kind.value}")
+        used = multiplier is not None and _is_used_for_amortization(parameters, asset_revision, bounds.class_key)
+    except ActividadAssetError:
+        return False
+    return used and (election.linear_coefficient is None or election.linear_coefficient > bounds.maximum)
+
+
 def _resolve_constant_percentage(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> _Resolution:
     """Apply LIS art. 12.1.b and RIS art. 5 to the elected coefficient."""
     bounds = _table_bounds(parameters, asset_revision)
@@ -1221,4 +1260,5 @@ __all__ = [
     "activity_asset_parameter_of_reference",
     "resolve_activity_asset_class_labels",
     "resolve_activity_asset_schedule_authority",
+    "takes_used_double_coefficient",
 ]

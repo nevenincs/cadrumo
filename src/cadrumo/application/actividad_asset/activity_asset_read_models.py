@@ -34,6 +34,7 @@ ACTIVITY_ASSET_LABEL_NAMESPACE: Final = "ledger.actividad_asset."
 
 DISPOSAL_FINDING_FAMILY: Final = "disposal_finding"
 _REASON_FACT_KEY_LIMIT: Final = 64
+PLAN_ADVISORY_FAMILY: Final = "plan_advisory"
 _REASON_FACT_VALUE_LIMIT: Final = 2048
 NON_DEDUCTIBLE_IVA_STATE_FAMILY: Final = "non_deductible_iva_state"
 
@@ -99,6 +100,12 @@ class ActivityAssetClaimState(StrEnum):
 
 
 class ActivityAssetClaimStaleReason(StrEnum):
+class ActivityAssetPlanAdvisoryKind(StrEnum):
+    """What the plan tells the operator about an election, changing no figure and refusing nothing."""
+
+    USED_ELEMENT_GROUP_LIMIT = "used_element_group_limit"
+
+
     """Why a claim no longer matches the element's current schedule."""
 
     REVISION_CHANGED = "revision_changed"
@@ -214,6 +221,13 @@ class ActivityAssetPlanRow(_ReadModel):
 
 
 class ActivityAssetLegalCitation(_ReadModel):
+class ActivityAssetPlanAdvisory(_ReadModel):
+    """One non-blocking advisory on an element's plan, worded by its catalogue key."""
+
+    kind: ActivityAssetPlanAdvisoryKind
+    label_key: str
+
+
     """One legal provision, cited from its own identifier, with its official link."""
 
     text: str
@@ -377,6 +391,7 @@ __all__ = [
     "NON_DEDUCTIBLE_IVA_STATE_FAMILY",
     "TIMELINE_TOKEN_FAMILIES",
     "ActivityAssetAcquisitionCandidate",
+    "PLAN_ADVISORY_FAMILY",
     "ActivityAssetClaimStaleReason",
     "ActivityAssetClaimState",
     "ActivityAssetClaimableInterval",
@@ -394,6 +409,8 @@ __all__ = [
     "ActivityAssetNotTableBoundReason",
     "ActivityAssetPlanClaim",
     "ActivityAssetPlanRow",
+    "ActivityAssetPlanAdvisory",
+    "ActivityAssetPlanAdvisoryKind",
     "ActivityAssetReasonFact",
     "ActivityAssetRegisterState",
     "ActivityAssetTableGroup",

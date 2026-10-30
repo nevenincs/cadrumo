@@ -959,6 +959,7 @@ class ActivityAssetPlanExecutor(_ActivityAssetReadExecutor[ActivityAssetPlanRequ
 
 
 class ActivityAssetTimelineExecutor(_ActivityAssetReadExecutor[ActivityAssetTimelineRequest]):
+            "advisories": operations.plan_advisories(payload.asset_id),
     """List one element's ordered history."""
 
     definition_id = ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID

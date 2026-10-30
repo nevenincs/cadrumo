@@ -16,11 +16,13 @@ from pydantic import BaseModel
 from cadrumo.application.actividad_asset.activity_asset_read_models import (
     DISPOSAL_FINDING_FAMILY,
     NON_DEDUCTIBLE_IVA_STATE_FAMILY,
+    PLAN_ADVISORY_FAMILY,
     TIMELINE_TOKEN_FAMILIES,
     ActivityAssetClaimStaleReason,
     ActivityAssetClaimState,
     ActivityAssetListRow,
     ActivityAssetNonDeductibleIvaState,
+    ActivityAssetPlanAdvisoryKind,
     ActivityAssetRegisterState,
     activity_asset_label_key,
 )
@@ -604,6 +606,7 @@ def _served_word_families() -> dict[str, type[StrEnum]]:
     return {
         DISPOSAL_FINDING_FAMILY: ActivityAssetDisposalFindingKind,
         NON_DEDUCTIBLE_IVA_STATE_FAMILY: ActivityAssetNonDeductibleIvaState,
+        PLAN_ADVISORY_FAMILY: ActivityAssetPlanAdvisoryKind,
         **dict(TIMELINE_TOKEN_FAMILIES.values()),
     }
 

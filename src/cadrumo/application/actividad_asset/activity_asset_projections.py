@@ -22,6 +22,7 @@ from .activity_asset_read_models import (
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
+    ActivityAssetPlanAdvisory,
     ActivityAssetPlanRow,
     ActivityAssetTimelineEvent,
 )
@@ -201,6 +202,7 @@ class ActivityAssetPlanProjection(_ActivityAssetOperationProjection):
     asset_id: ActivityAssetId | None = None
     rows: tuple[ActivityAssetPlanRow, ...] | None = None
     limits: ActivityAssetElectionLimits | None = None
+    advisories: tuple[ActivityAssetPlanAdvisory, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

@@ -530,7 +530,7 @@ _READS: dict[
         ActivityAssetPlanResult,
         ActivityAssetPlanProjection,
         ActivityAssetPlanExecutor,
-        ("asset_id", "rows", "limits"),
+        ("asset_id", "rows", "limits", "advisories"),
         True,
     ),
     ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID: (
