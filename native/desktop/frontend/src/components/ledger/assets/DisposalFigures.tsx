@@ -2,12 +2,13 @@ import { useState, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { facts } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import { dateText } from "../movements/movementWords";
 import { CallLine, Reading } from "../setup/SetupParts";
 import { setupCall, type SetupCall } from "../setup/setupModel";
-import { callRefusal } from "./AssetList";
+import { callRefusal, NotKnown } from "./AssetList";
 import { disposalOf } from "./assetWrites";
 import type {
   ActivityAssetDisposalCalculateResult,
@@ -21,7 +22,7 @@ import {
   refusalText,
   tokenWord,
 } from "./assetsWords";
-import { DASH, figureText } from "./planWords";
+import { figureText } from "./planWords";
 
 type Calculation = ActivityAssetDisposalCalculateResult;
 
@@ -45,22 +46,37 @@ function Figures({
 }) {
   const t = useStrings();
   const text = ASSET_KEYS.baja;
-  const rows: [string, ReturnType<typeof figureText>][] = [
-    [text.acquisition_value, figureText(locale, calculation.acquisition_value)],
-    [text.deducted, figureText(locale, calculation.deducted)],
-    [text.minimum, figureText(locale, calculation.minimum)],
-    [text.reduction, figureText(locale, calculation.reduction)],
-    [text.excess, figureText(locale, calculation.excess)],
-    [text.net_value, figureText(locale, calculation.net_value)],
-    [
-      text.transmission_value,
-      figureText(locale, calculation.transmission_value),
-    ],
-    [
-      fieldWord(t, "disposal.transmission_costs"),
-      figureText(locale, calculation.transmission_costs),
-    ],
-    [text.result, figureText(locale, calculation.result)],
+  // Each row carries its words already; the minimum is the one figure always
+  // drawn, and said to be not worked out where it is null.
+  const rows: { label: string; said: string | null; always?: boolean }[] = [
+    {
+      label: t(text.acquisition_value),
+      said: figureText(locale, calculation.acquisition_value),
+    },
+    { label: t(text.deducted), said: figureText(locale, calculation.deducted) },
+    {
+      label: t(text.minimum),
+      said: figureText(locale, calculation.minimum),
+      always: true,
+    },
+    {
+      label: t(text.reduction),
+      said: figureText(locale, calculation.reduction),
+    },
+    { label: t(text.excess), said: figureText(locale, calculation.excess) },
+    {
+      label: t(text.net_value),
+      said: figureText(locale, calculation.net_value),
+    },
+    {
+      label: t(text.transmission_value),
+      said: figureText(locale, calculation.transmission_value),
+    },
+    {
+      label: fieldWord(t, "disposal.transmission_costs"),
+      said: figureText(locale, calculation.transmission_costs),
+    },
+    { label: t(text.result), said: figureText(locale, calculation.result) },
   ];
   return (
     <section
@@ -69,17 +85,22 @@ function Figures({
     >
       <h4 className="font-medium">{t(text.figures)}</h4>
       <p className="text-muted-foreground">
-        {tokenWord(t, "disposal_reason", calculation.reason)} ·{" "}
-        {dateText(locale, calculation.disposal_date, true)}
+        {facts(t, [
+          tokenWord(t, "disposal_reason", calculation.reason),
+          dateText(locale, calculation.disposal_date, true),
+        ])}
       </p>
       <dl className="grid grid-cols-[1fr_max-content] gap-x-4 gap-y-0.5">
         {rows
-          // A figure the reason does not compute is left out; the minimum is
-          // always drawn, and is said to be not worked out where it is null.
-          .filter(([label, said]) => said !== null || label === text.minimum)
-          .map(([label, said]) => (
-            <Fact key={label} label={t(label)}>
-              {said ?? t("desktop.ledger.assets.column.unavailable")}
+          // A figure the reason does not compute is left out.
+          .filter(({ said, always }) => said !== null || always)
+          .map(({ label, said }) => (
+            <Fact key={label} label={label}>
+              {said === null ? (
+                t("desktop.ledger.assets.column.unavailable")
+              ) : (
+                <span className="whitespace-nowrap">{said}</span>
+              )}
             </Fact>
           ))}
       </dl>
@@ -102,7 +123,9 @@ function Figures({
                 <span className="tabular-nums">{finding.tax_year}</span>
               )}
               <span className="tabular-nums">
-                {figureText(locale, finding.effect_on_cost) ?? DASH}
+                {figureText(locale, finding.effect_on_cost) ?? (
+                  <NotKnown why={t(ASSET_KEYS.baja.effect_missing)} />
+                )}
               </span>
             </li>
           ))}

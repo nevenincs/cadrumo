@@ -1,6 +1,9 @@
 // The requests the Assets tab's forms make, for a test that checks them against
 // the backend's own request contracts. The file is bundled and run by Node on
 // the scenarios given on standard input; it opens no page and holds no state.
+// The options the forms are drawn from, the facts each method takes among
+// them, come in with the scenarios from the backend, so a fact the backend
+// serves and a form cannot state fails the test and not the window.
 
 import {
   answer,
@@ -10,15 +13,30 @@ import {
   type FormDraft,
 } from "../../src/components/ledger/assets/assetFields";
 import {
+  bajaRequest,
   correctRequest,
   createRequest,
   type RevisionBase,
 } from "../../src/components/ledger/assets/assetRevision";
+import {
+  SERVED_ACTIVITIES,
+  SERVED_METHOD_FACTS,
+  SERVED_SHAPES,
+} from "../../src/dev/assetsFixture";
 import { TABLE_GROUPS } from "../../src/dev/assetsSeed";
 import type {
   AcquisitionCandidate,
+  DisposalFacts,
   FormOptions,
 } from "../../src/shell/ledgerSetup";
+
+/** What the backend serves with the options of a form. */
+type Served = {
+  methods: string[];
+  method_facts: FormOptions["method_facts"];
+  acquisition_shapes: string[];
+  declared_activities: string[];
+};
 
 type Scenario =
   | { id: string; kind: "create"; draft: FormDraft }
@@ -28,7 +46,16 @@ type Scenario =
       base: RevisionBase;
       changes: FormDraft;
       supersede: string[];
-    };
+    }
+  | {
+      id: string;
+      kind: "baja";
+      base: RevisionBase;
+      disposal: DisposalFacts | null;
+    }
+  | { id: string; kind: "fixture" };
+
+type Input = { served: Served; scenarios: Scenario[] };
 
 const hex = (seed: string) => seed.repeat(64).slice(0, 64);
 
@@ -50,18 +77,18 @@ const CANDIDATE: AcquisitionCandidate = {
   evidence_fingerprint: hex("c"),
 };
 
-const optionsFor = (kind: string): FormOptions => ({
+const optionsFor = (kind: string, served: Served): FormOptions => ({
   tax_year: 2026,
   asset_kind: kind,
   regime: "normal",
   edition: { revision_id: "2025", authored_filing_year: 2025, projected: true },
-  methods: [],
+  ...served,
   table_groups: [...(TABLE_GROUPS[kind] ?? [])],
 });
 
 const contextFor = (
   kind: "element" | "correction",
-  assetKind: string,
+  options: FormOptions,
   base: RevisionBase | null,
 ): FieldContext => ({
   kind,
@@ -69,28 +96,41 @@ const contextFor = (
   descriptor: null,
   revision: base?.revision ?? null,
   tokens: () => [],
-  options: optionsFor(assetKind),
+  options,
 });
 
-function run(scenario: Scenario) {
+function run(scenario: Scenario, served: Served) {
+  if (scenario.kind === "fixture")
+    return {
+      id: scenario.id,
+      facts: SERVED_METHOD_FACTS,
+      shapes: SERVED_SHAPES,
+      activities: SERVED_ACTIVITIES,
+    };
+  if (scenario.kind === "baja")
+    return {
+      id: scenario.id,
+      problems: {},
+      request: bajaRequest(scenario.base, scenario.disposal),
+    };
   if (scenario.kind === "create") {
-    const context = contextFor(
-      "element",
-      scenario.draft.asset_kind ?? "material",
-      null,
+    const options = optionsFor(scenario.draft.asset_kind ?? "material", served);
+    const fields = fieldsFor(
+      contextFor("element", options, null),
+      scenario.draft,
     );
-    const fields = fieldsFor(context, scenario.draft);
     const stated = answer(fields, scenario.draft, null);
     const request = createRequest(stated.values, {
       assetId: hex("d"),
       regime: "normal",
       candidate: CANDIDATE,
       base: null,
+      options,
     });
     return { id: scenario.id, problems: stated.problems, request };
   }
-  const assetKind = String(scenario.base.revision.asset_kind);
-  const context = contextFor("correction", assetKind, scenario.base);
+  const options = optionsFor(String(scenario.base.revision.asset_kind), served);
+  const context = contextFor("correction", options, scenario.base);
   const initial = initialOf(context, fieldsFor(context, {}));
   const draft = { ...initial, ...scenario.changes };
   const fields = fieldsFor(context, draft);
@@ -102,16 +142,24 @@ function run(scenario: Scenario) {
       regime: null,
       candidate: null,
       base: scenario.base,
+      options,
     },
     scenario.supersede,
   );
-  return { id: scenario.id, problems: stated.problems, request };
+  return {
+    id: scenario.id,
+    problems: stated.problems,
+    cleared: stated.cleared,
+    request,
+  };
 }
 
 let input = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", (chunk) => (input += chunk));
 process.stdin.on("end", () => {
-  const scenarios = JSON.parse(input) as Scenario[];
-  process.stdout.write(JSON.stringify(scenarios.map(run)));
+  const { served, scenarios } = JSON.parse(input) as Input;
+  process.stdout.write(
+    JSON.stringify(scenarios.map((scenario) => run(scenario, served))),
+  );
 });

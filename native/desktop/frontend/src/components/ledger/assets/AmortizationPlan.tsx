@@ -6,12 +6,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
+import { IconButton } from "@/components/ui/icon-button";
 import { useTableView } from "@/components/ui/table-view";
 import { facts } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
+import { WriteHold } from "../WritePause";
 import { dateText, percentText } from "../movements/movementWords";
 import { CallLine, Reading } from "../setup/SetupParts";
 import type {
@@ -19,68 +23,68 @@ import type {
   LegalCitation,
   PlanClaim,
   PlanRow,
+  TimelineClaimUse,
 } from "../../../shell/ledgerSetup";
+import { Hint, NotKnown } from "./AssetList";
 import {
   ASSET_KEYS,
   reasonText,
   refusalText,
   fieldWord,
   keyedText,
+  openingRemedy,
   stateIcon,
   tokenWord,
 } from "./assetsWords";
-import {
-  DASH,
-  figureText,
-  isStatedZero,
-  PLAN_KEYS,
-  stateTone,
-} from "./planWords";
-import { readPlan, useAssetRead } from "./planRead";
+import { figureText, isStatedZero, PLAN_KEYS, stateTone } from "./planWords";
+import { claimUses, readPlan, readTimeline, useAssetRead } from "./planRead";
 
 // One element's amortization plan, a row for each tax year it has. The plan
 // is current: it answers what the schedule allows now and what is recorded as
 // effective, every figure as the backend states it. Nothing here adds,
-// subtracts or derives a date; a figure the backend does not state is a dash
-// with its reason, never zero.
+// subtracts or derives a date; a figure the backend does not state is a mark
+// that says it is not known and why, never zero. The election's method is drawn
+// once, on the divider where it starts, and the table scrolls inside its own
+// frame with the year pinned, so a narrow panel loses no figure.
 
-/** A figure the backend states, or a dash with the reason it does not. */
+/** A figure the backend states, or a mark that says it is not known and why. */
 function Figure({
   locale,
   amount,
+  why,
   absent,
-  said,
 }: {
   locale: string;
   amount: PlanRow["planned"];
-  /** Why the figure is not stated, shown under the dash. */
+  /** Why the figure is not known, in the mark's tooltip. */
+  why: string;
+  /** The reason the backend gives, shown under the mark. */
   absent?: string | null;
-  /** What a screen reader hears for a dash with no reason shown. */
-  said?: string;
 }) {
   const text = figureText(locale, amount);
-  if (text !== null) return <span>{text}</span>;
+  if (text !== null)
+    return <span className="whitespace-nowrap tabular-nums">{text}</span>;
   return (
-    <span className="flex flex-col items-end">
-      <span aria-hidden="true">{DASH}</span>
-      {absent ? (
-        <span className="text-xs text-muted-foreground">{absent}</span>
-      ) : (
-        said && <span className="sr-only">{said}</span>
+    <span className="flex flex-col items-end gap-0.5">
+      <NotKnown why={absent ?? why} />
+      {absent && (
+        <span className="w-40 text-end text-xs text-muted-foreground">
+          {absent}
+        </span>
       )}
     </span>
   );
 }
 
-/** The span a claim covers, from and until the dates the backend states. */
+/** The span a claim covers, from and through the dates the backend states. */
 function Interval({
   locale,
   from,
-  until,
+  through,
 }: {
   locale: string;
   from: string;
-  until: string;
+  through: string;
 }) {
   const t = useStrings();
   return (
@@ -89,13 +93,21 @@ function Interval({
       {dateText(locale, from, true)}
       <Icon name="arrow" size="xs" className="text-muted-foreground" />
       <span className="sr-only">{t(PLAN_KEYS.until)} </span>
-      {dateText(locale, until, true)}
+      {dateText(locale, through, true)}
     </span>
   );
 }
 
-/** Why a year has no planned figure: the typed absence, and the reason the
- * backend gives for it where it gives one. */
+/** The reasons whose remedy is to enter the amortization already deducted
+ * before the element came into the register. */
+const OPENING_REASONS: ReadonlySet<string> = new Set([
+  "ledger.actividad_asset.errors.opening_history_missing",
+  "ledger.actividad_asset.errors.opening_history_amount_missing",
+]);
+
+/** Why a year has no planned figure: the typed absence, the reason the
+ * backend gives for it where it gives one, and where to fix it when the fix
+ * is entering the earlier amortization. */
 function absentText(t: Translate, planned: PlanRow): string | null {
   if (planned.absence === null) return null;
   const word = tokenWord(t, "plan_absence", planned.absence);
@@ -104,18 +116,59 @@ function absentText(t: Translate, planned: PlanRow): string | null {
     planned.absence_reason_key,
     planned.absence_reason_facts,
   );
-  return facts(t, [word, why]);
+  const key = planned.absence_reason_key;
+  return facts(t, [
+    word,
+    why,
+    key !== null && OPENING_REASONS.has(key) ? openingRemedy(t) : null,
+  ]);
 }
 
 /** Every claim a year holds, the replaced ones with the claim that replaced
- * them. Each distinction is a glyph and a word as well as a tone. */
-function Claims({ locale, planned }: { locale: string; planned: PlanRow }) {
+ * them. Each distinction is a glyph and a word as well as a tone; a claim in
+ * effect that no longer matches the figures is marked, and can be corrected. */
+function Claims({
+  locale,
+  planned,
+  uses,
+  onCorrectClaim,
+}: {
+  locale: string;
+  planned: PlanRow;
+  uses: ReadonlyMap<string, TimelineClaimUse>;
+  onCorrectClaim?: (claimId: string, year: number) => void;
+}) {
   const t = useStrings();
   const column = ASSET_KEYS.plan.column;
   const replacement = (claim: PlanClaim) =>
     claim.superseded_by === null
       ? undefined
       : planned.claims.find((other) => other.claim_id === claim.superseded_by);
+  const columns = useMemo(
+    () => [
+      { id: "period", label: t(column.period), name: t(column.period) },
+      {
+        id: "claimed",
+        label: t(column.claimed),
+        name: t(column.claimed),
+        align: "end" as const,
+      },
+      { id: "status", label: t(column.status), name: t(column.status) },
+      {
+        id: "actions",
+        label: t(ASSET_KEYS.action.correct),
+        name: t(ASSET_KEYS.action.correct),
+        hidden: true,
+        resizable: false,
+      },
+    ],
+    [t, column],
+  );
+  const view = useTableView({
+    columns,
+    rows: planned.claims,
+    resizeLabel: (name) => t("desktop.table.resize_column", { column: name }),
+  });
   return (
     <div className="flex flex-col gap-2 py-1 ps-6 text-xs">
       <p className="text-muted-foreground">
@@ -134,159 +187,198 @@ function Claims({ locale, planned }: { locale: string; planned: PlanRow }) {
       {planned.claims.length === 0 ? (
         <p className="text-muted-foreground">{t(PLAN_KEYS.no_claims)}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <caption className="sr-only">
-              {t(ASSET_KEYS.plan.claims, { year: planned.tax_year })}
-            </caption>
-            <thead>
-              <tr className="text-left text-muted-foreground">
-                {[
-                  PLAN_KEYS.from,
-                  PLAN_KEYS.until,
-                  column.claimed,
-                  column.status,
-                  column.replaced_by,
-                ].map((key) => (
-                  <th
-                    key={key}
-                    scope="col"
-                    className="px-2 py-0.5 font-normal whitespace-nowrap"
-                  >
-                    {t(key)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {planned.claims.map((claim) => {
-                const next = replacement(claim);
-                return (
-                  <tr
-                    key={claim.claim_id}
-                    className={cn(
-                      "border-t border-border align-top",
-                      !claim.effective && "text-muted-foreground",
-                    )}
-                  >
-                    <td className="px-2 py-1 whitespace-nowrap tabular-nums">
-                      {dateText(locale, claim.covered_from, true)}
-                    </td>
-                    <td className="px-2 py-1 whitespace-nowrap tabular-nums">
-                      {dateText(locale, claim.covered_until, true)}
-                    </td>
-                    <td className="px-2 py-1 text-right tabular-nums">
+        <table {...view.tableProps} className="w-full">
+          <caption className="sr-only">
+            {t(ASSET_KEYS.plan.claims, { year: planned.tax_year })}
+          </caption>
+          <thead>
+            <tr className="text-left text-muted-foreground">{view.headers}</tr>
+          </thead>
+          <tbody>
+            {view.rows.map((claim) => {
+              const next = replacement(claim);
+              const use = uses.get(claim.claim_id);
+              const stale =
+                claim.effective &&
+                use !== undefined &&
+                !use.matches_current_schedule;
+              return (
+                <tr
+                  key={claim.claim_id}
+                  className={cn(
+                    "border-t border-border align-top",
+                    !claim.effective && "text-muted-foreground",
+                  )}
+                >
+                  <td className="px-2 py-1">
+                    <Interval
+                      locale={locale}
+                      from={claim.covered_from}
+                      through={claim.covered_through}
+                    />
+                  </td>
+                  <td className="px-2 py-1 text-right tabular-nums">
+                    <span className="whitespace-nowrap">
                       {figureText(locale, claim.amount)}
-                      {isStatedZero(claim.amount) && (
-                        <span className="block text-muted-foreground">
-                          {t(ASSET_KEYS.plan.recorded_zero)}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-2 py-1">
-                      <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                        <Icon
-                          name={claim.effective ? "check" : "refused"}
-                          size="xs"
-                          className={
-                            claim.effective
-                              ? "text-success"
-                              : "text-muted-foreground"
-                          }
-                        />
-                        {claim.effective
-                          ? t(ASSET_KEYS.plan.in_effect)
-                          : t(ASSET_KEYS.plan.replaced)}
+                    </span>
+                    {isStatedZero(claim.amount) && (
+                      <span className="block text-muted-foreground">
+                        {t(ASSET_KEYS.plan.recorded_zero)}
                       </span>
-                    </td>
-                    <td className="px-2 py-1">
-                      {next ? (
-                        <span className="inline-flex flex-wrap items-center gap-x-1">
-                          <Icon name="arrow" size="xs" />
-                          <Interval
-                            locale={locale}
-                            from={next.covered_from}
-                            until={next.covered_until}
+                    )}
+                  </td>
+                  <td className="px-2 py-1">
+                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                      <Icon
+                        name={claim.effective ? "check" : "refused"}
+                        size="xs"
+                        className={
+                          claim.effective
+                            ? "text-success"
+                            : "text-muted-foreground"
+                        }
+                      />
+                      {claim.effective
+                        ? t(ASSET_KEYS.plan.in_effect)
+                        : t(ASSET_KEYS.plan.replaced)}
+                      {stale && (
+                        <Hint
+                          words={facts(t, [
+                            t(ASSET_KEYS.plan.no_match),
+                            use.stale_reason === null
+                              ? null
+                              : tokenWord(t, "stale_reason", use.stale_reason),
+                          ])}
+                        >
+                          <Icon
+                            name="alert"
+                            size="xs"
+                            className="text-warning"
                           />
-                          <span className="tabular-nums">
-                            {figureText(locale, next.amount)}
-                          </span>
-                        </span>
-                      ) : (
-                        <span aria-hidden="true">{DASH}</span>
+                        </Hint>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </span>
+                    {next && (
+                      <span className="mt-0.5 flex flex-wrap items-center gap-x-1">
+                        <span>{t(column.replaced_by)}</span>
+                        <Interval
+                          locale={locale}
+                          from={next.covered_from}
+                          through={next.covered_through}
+                        />
+                        <span className="whitespace-nowrap tabular-nums">
+                          {figureText(locale, next.amount)}
+                        </span>
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-2 py-1 text-right">
+                    {claim.effective && onCorrectClaim && (
+                      <WriteHold>
+                        <IconButton
+                          label={t(ASSET_KEYS.plan.claim_correct, {
+                            from: dateText(locale, claim.covered_from, true),
+                            until: dateText(
+                              locale,
+                              claim.covered_through,
+                              true,
+                            ),
+                          })}
+                          onClick={() =>
+                            onCorrectClaim(claim.claim_id, planned.tax_year)
+                          }
+                        >
+                          <Icon name="edit" />
+                        </IconButton>
+                      </WriteHold>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       )}
     </div>
   );
 }
 
-/** What a year's claim state says beyond its glyph and word: the spans still
- * open to claim and the rates it stands on. */
+/** What a year's claim state says beyond its glyph: the glyph carries the
+ * state's word in its name and tooltip, and the spans still open to claim are
+ * written out beside it. A year not yet due says only from when. */
 function Status({ locale, planned }: { locale: string; planned: PlanRow }) {
   const t = useStrings();
   const state = planned.claim_state;
   const open = state === "missing" || state === "partial";
-  const refusal = reasonText(t, planned.claimable_refusal_key);
+  // The planned figure's own cell already says a reason it shares.
+  const refusal =
+    planned.claimable_refusal_key !== null &&
+    planned.claimable_refusal_key === planned.absence_reason_key
+      ? null
+      : reasonText(t, planned.claimable_refusal_key);
+  const first = planned.claimable_intervals[0];
+  const notYet = state === "not_due" && first !== undefined;
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="inline-flex items-center gap-1 whitespace-nowrap">
-        <Icon name={stateIcon(state)} size="xs" className={stateTone(state)} />
-        {tokenWord(t, "claim_state", state)}
-      </span>
-      {planned.claimable_intervals.map((interval) => (
-        <span
-          key={`${interval.covered_from}/${interval.covered_until}`}
-          className="text-xs text-muted-foreground"
-        >
-          {t(
-            state === "partial"
-              ? ASSET_KEYS.plan.gap
-              : ASSET_KEYS.plan.claimable,
-            {
-              from: dateText(locale, interval.covered_from, true),
-              until: dateText(locale, interval.covered_until, true),
-            },
-          )}
-        </span>
-      ))}
-      {planned.claimable_intervals.length === 0 &&
-        (refusal !== null ? (
-          <span className="text-xs text-muted-foreground">{refusal}</span>
-        ) : (
-          open && (
-            <span className="text-xs text-muted-foreground">
-              {t(ASSET_KEYS.plan.claimable_none)}
-            </span>
-          )
-        ))}
-      {planned.edition?.projected && (
+    <div className="flex min-w-28 flex-col gap-0.5">
+      {notYet ? (
         <span className="inline-flex items-start gap-1 text-xs text-muted-foreground">
-          <Icon name="arrow" size="xs" className="mt-0.5" />
-          <span>
-            {t(ASSET_KEYS.plan.projected)}.{" "}
-            {t(ASSET_KEYS.plan.projected_note, { year: planned.tax_year })}
-          </span>
+          <Icon name="clock" size="xs" className="mt-0.5" />
+          {t(ASSET_KEYS.plan.from_date, {
+            date: dateText(locale, first.covered_from, true),
+          })}
         </span>
+      ) : (
+        <>
+          <span>
+            <Hint words={tokenWord(t, "claim_state", state)}>
+              <Icon
+                name={stateIcon(state)}
+                size="xs"
+                className={stateTone(state)}
+              />
+            </Hint>
+          </span>
+          {planned.claimable_intervals.map((interval) => (
+            <span
+              key={`${interval.covered_from}/${interval.covered_until}`}
+              className="text-xs text-muted-foreground"
+            >
+              {t(
+                state === "partial"
+                  ? ASSET_KEYS.plan.gap
+                  : ASSET_KEYS.plan.claimable,
+                {
+                  from: dateText(locale, interval.covered_from, true),
+                  until: dateText(locale, interval.covered_through, true),
+                },
+              )}
+            </span>
+          ))}
+          {planned.claimable_intervals.length === 0 &&
+            (refusal !== null ? (
+              <span className="text-xs text-muted-foreground">{refusal}</span>
+            ) : (
+              open && (
+                <span className="text-xs text-muted-foreground">
+                  {t(ASSET_KEYS.plan.claimable_none)}
+                </span>
+              )
+            ))}
+        </>
       )}
     </div>
   );
 }
 
 function Days({ planned }: { planned: PlanRow }) {
+  const t = useStrings();
   if (planned.service_days === null)
-    return <span aria-hidden="true">{DASH}</span>;
-  return planned.calendar_days === null ? (
-    <span>{planned.service_days}</span>
-  ) : (
-    <span>
-      {planned.service_days} / {planned.calendar_days}
+    return <NotKnown why={t(ASSET_KEYS.plan.days_missing)} />;
+  return (
+    <span className="whitespace-nowrap tabular-nums">
+      {planned.calendar_days === null
+        ? planned.service_days
+        : `${planned.service_days} / ${planned.calendar_days}`}
     </span>
   );
 }
@@ -305,7 +397,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 /** The provisions behind the limits, behind a disclosure with their count,
  * each as its own text. Where the window can open an address, the text is a
  * link to the official publication. A list the backend could not resolve whole
- * says so. */
+ * says so, with or without a list to show. */
 function Citations({
   citations,
   complete,
@@ -316,6 +408,8 @@ function Citations({
   onOpenLink?: (url: string) => void;
 }) {
   const t = useStrings();
+  const list = useId();
+  const [open, setOpen] = useState(false);
   const text = ASSET_KEYS.plan.limits;
   const partial = !complete && (
     <p className="ledger-assets-citations-partial flex items-start gap-1 text-xs text-muted-foreground">
@@ -326,34 +420,37 @@ function Citations({
   if (citations.length === 0) return partial || null;
   return (
     <div className="ledger-assets-citations flex flex-col gap-1">
-      <details>
-        <summary className="cursor-pointer text-muted-foreground">
-          {t(text.citations, { count: citations.length })}
-        </summary>
-        <ul className="mt-1 flex flex-col gap-0.5 ps-4">
-          {citations.map((citation) => (
-            <li key={citation.permalink} className="[overflow-wrap:anywhere]">
-              {onOpenLink ? (
-                <a
-                  href={citation.permalink}
-                  title={citation.permalink}
-                  className="text-primary underline underline-offset-2 hover:text-primary/80"
-                  // The window never leaves the app: the address opens in the browser.
-                  onClick={(event) => {
-                    event.preventDefault();
-                    onOpenLink(citation.permalink);
-                  }}
-                  onAuxClick={(event) => event.preventDefault()}
-                >
-                  {citation.text}
-                </a>
-              ) : (
-                citation.text
-              )}
-            </li>
-          ))}
-        </ul>
-      </details>
+      <Button
+        variant="ghost"
+        size="xs"
+        className="-ms-2 w-fit"
+        aria-expanded={open}
+        aria-controls={list}
+        onClick={() => setOpen(!open)}
+      >
+        <Icon name={open ? "chevronUp" : "chevronDown"} size="xs" />
+        {t(text.citations, { count: citations.length })}
+      </Button>
+      <ul id={list} hidden={!open} className="flex flex-col gap-0.5 ps-4">
+        {citations.map((citation) => (
+          <li key={citation.permalink} className="[overflow-wrap:anywhere]">
+            {onOpenLink ? (
+              <Button
+                variant="link"
+                size="xs"
+                className="h-auto min-w-0 p-0 text-start whitespace-normal text-primary"
+                // The window never leaves the app: the address opens in the browser.
+                onClick={() => onOpenLink(citation.permalink)}
+              >
+                {citation.text}
+                <Icon name="external" size="xs" />
+              </Button>
+            ) : (
+              citation.text
+            )}
+          </li>
+        ))}
+      </ul>
       {partial}
     </div>
   );
@@ -430,25 +527,25 @@ function PlanTable({
   locale,
   rows,
   year,
+  uses,
+  onCorrectClaim,
 }: {
   locale: string;
   rows: readonly PlanRow[];
   year: number | null;
+  uses: ReadonlyMap<string, TimelineClaimUse>;
+  onCorrectClaim?: (claimId: string, year: number) => void;
 }) {
   const t = useStrings();
   const base = useId();
   const [open, setOpen] = useState<ReadonlySet<number>>(new Set());
   const column = ASSET_KEYS.plan.column;
   // No column has a way to rank its rows: a plan keeps its years in order.
+  // The method is not a column: it is said once where it starts.
   const columns = useMemo(
     () => [
       { id: "year", label: t(column.year), name: t(column.year) },
       { id: "status", label: t(column.status), name: t(column.status) },
-      {
-        id: "method",
-        label: t(ASSET_KEYS.list.column.method),
-        name: t(ASSET_KEYS.list.column.method),
-      },
       {
         id: "rate",
         label: t(column.rate),
@@ -503,9 +600,12 @@ function PlanTable({
       role="group"
       tabIndex={0}
       aria-label={t(ASSET_KEYS.detail.plan)}
-      className="ledger-assets-plan min-h-0 flex-1 overflow-auto"
+      className="ledger-assets-plan @container min-h-0 flex-1 overflow-auto"
     >
-      <table {...view.tableProps} className="w-full text-sm">
+      <table
+        {...view.tableProps}
+        className="w-full text-sm [&_thead_th:first-child]:sticky [&_thead_th:first-child]:start-0 [&_thead_th:first-child]:z-(--layer-pinned) [&_thead_th:first-child]:bg-card"
+      >
         <caption className="sr-only">{t(ASSET_KEYS.detail.plan)}</caption>
         <thead className="sticky top-0 z-(--layer-pinned) bg-card">
           <tr className="text-left text-muted-foreground">{view.headers}</tr>
@@ -517,66 +617,95 @@ function PlanTable({
               before !== undefined && before.method !== planned.method;
             const shown = open.has(planned.tax_year);
             const detail = `${base}-${planned.tax_year}`;
+            const current = year === planned.tax_year;
+            const kept = planned.claims.some((claim) => claim.effective);
             return (
               <Fragment key={planned.tax_year}>
-                {changed && (
+                {(before === undefined || changed) && (
                   <tr className="border-t border-border bg-accent">
                     <td colSpan={span} className="px-2 py-1 text-xs">
-                      <span className="inline-flex flex-wrap items-center gap-x-1.5">
-                        <Icon name="swap" size="xs" />
-                        <span className="font-medium">
-                          {t(ASSET_KEYS.plan.election_changed)}
+                      <span className="sticky start-2 inline-flex flex-wrap items-center gap-x-1.5">
+                        {changed && (
+                          <>
+                            <Icon name="swap" size="xs" />
+                            <span className="font-medium">
+                              {t(ASSET_KEYS.plan.election_changed)}
+                            </span>
+                          </>
+                        )}
+                        <span className={changed ? undefined : "font-medium"}>
+                          {tokenWord(t, "method", planned.method)}
                         </span>
-                        {tokenWord(t, "method", planned.method)}
                       </span>
                     </td>
                   </tr>
                 )}
                 <tr
-                  ref={year === planned.tax_year ? bring : undefined}
-                  aria-current={year === planned.tax_year ? "true" : undefined}
+                  ref={current ? bring : undefined}
+                  aria-current={current ? "true" : undefined}
                   className={cn(
                     "border-t border-border align-top",
-                    year === planned.tax_year && "bg-selected",
+                    current && "bg-selected",
                   )}
                 >
-                  <td className="px-2 py-1.5">
-                    <button
-                      type="button"
-                      aria-expanded={shown}
-                      aria-controls={detail}
-                      className="inline-flex cursor-pointer items-center gap-1 rounded-xs tabular-nums hover:text-foreground focus-visible:outline-(length:--focus-ring) focus-visible:outline-ring focus-visible:outline-solid"
-                      onClick={() => toggle(planned.tax_year)}
-                    >
-                      <Icon
-                        name={shown ? "chevronUp" : "chevronDown"}
+                  <td
+                    className={cn(
+                      "sticky start-0 px-2 py-1.5",
+                      current ? "bg-selected" : "bg-card",
+                    )}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <Button
+                        variant="ghost"
                         size="xs"
-                      />
-                      <span className="sr-only">
-                        {t(ASSET_KEYS.plan.claims, {
-                          year: planned.tax_year,
-                        })}{" "}
-                      </span>
-                      {planned.tax_year}
-                    </button>
+                        className="-mx-1 gap-1 text-foreground tabular-nums"
+                        aria-expanded={shown}
+                        aria-controls={detail}
+                        onClick={() => toggle(planned.tax_year)}
+                      >
+                        <Icon
+                          name={shown ? "chevronUp" : "chevronDown"}
+                          size="xs"
+                        />
+                        <span className="sr-only">
+                          {t(ASSET_KEYS.plan.claims, {
+                            year: planned.tax_year,
+                          })}{" "}
+                        </span>
+                        {planned.tax_year}
+                      </Button>
+                      {planned.edition?.projected && (
+                        <Hint
+                          words={t(ASSET_KEYS.plan.projected_note, {
+                            year: planned.tax_year,
+                          })}
+                        >
+                          <Icon
+                            name="unknown"
+                            size="xs"
+                            className="text-muted-foreground"
+                          />
+                        </Hint>
+                      )}
+                    </span>
                   </td>
                   <td className="px-2 py-1.5">
                     <Status locale={locale} planned={planned} />
                   </td>
-                  <td className="px-2 py-1.5">
-                    {tokenWord(t, "method", planned.method)}
-                  </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     {planned.coefficient === null ? (
-                      <span aria-hidden="true">{DASH}</span>
+                      <NotKnown why={t(ASSET_KEYS.plan.rate_missing)} />
                     ) : (
-                      percentText(locale, planned.coefficient.decimal)
+                      <span className="whitespace-nowrap">
+                        {percentText(locale, planned.coefficient.decimal)}
+                      </span>
                     )}
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     <Figure
                       locale={locale}
                       amount={planned.planned}
+                      why={t(ASSET_KEYS.plan.planned_missing)}
                       absent={absentText(t, planned)}
                     />
                   </td>
@@ -584,24 +713,20 @@ function PlanTable({
                     {/* No claim in effect is no figure to draw: the state says why. */}
                     <Figure
                       locale={locale}
-                      amount={
-                        planned.claims.some((claim) => claim.effective)
-                          ? planned.claimed
-                          : null
-                      }
-                      said={tokenWord(t, "claim_state", planned.claim_state)}
+                      amount={kept ? planned.claimed : null}
+                      why={t(ASSET_KEYS.plan.claimed_missing)}
                     />
-                    {planned.claims.some((claim) => claim.effective) &&
-                      isStatedZero(planned.claimed) && (
-                        <span className="block text-xs text-muted-foreground">
-                          {t(ASSET_KEYS.plan.recorded_zero)}
-                        </span>
-                      )}
+                    {kept && isStatedZero(planned.claimed) && (
+                      <span className="block text-xs text-muted-foreground">
+                        {t(ASSET_KEYS.plan.recorded_zero)}
+                      </span>
+                    )}
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     <Figure
                       locale={locale}
                       amount={planned.minimum_through}
+                      why={t(ASSET_KEYS.plan.minimum_missing)}
                       absent={
                         planned.minimum_complete
                           ? null
@@ -620,8 +745,19 @@ function PlanTable({
                   </td>
                 </tr>
                 <tr id={detail} hidden={!shown}>
-                  <td colSpan={span} className="px-2 pb-2">
-                    {shown && <Claims locale={locale} planned={planned} />}
+                  <td colSpan={span} className="p-0 pb-2">
+                    {/* The claims keep the width of the frame, so they stay in
+                        view while the figures beside them scroll. */}
+                    {shown && (
+                      <div className="sticky start-0 w-[100cqw] px-2">
+                        <Claims
+                          locale={locale}
+                          planned={planned}
+                          uses={uses}
+                          onCorrectClaim={onCorrectClaim}
+                        />
+                      </div>
+                    )}
                   </td>
                 </tr>
               </Fragment>
@@ -636,7 +772,8 @@ function PlanTable({
 /**
  * One element's plan, read from the ledger, with the limits the registry puts
  * on its election above it. `year` is the year the pane stands on, which the
- * plan scrolls to and marks.
+ * plan scrolls to and marks. The element's history is read beside it, only to
+ * mark a claim in effect that no longer matches the figures.
  */
 export function AmortizationPlan({
   port,
@@ -645,6 +782,7 @@ export function AmortizationPlan({
   year = null,
   reader,
   onOpenLink,
+  onCorrectClaim,
 }: {
   port: LedgerPort;
   assetId: string;
@@ -654,17 +792,28 @@ export function AmortizationPlan({
   reader?: string | null;
   /** Opens an official address in the system browser. */
   onOpenLink?: (url: string) => void;
+  /** Asks to correct one claim of a year; offered on each claim in effect. */
+  onCorrectClaim?: (claimId: string, year: number) => void;
 }) {
   const t = useStrings();
   const { read } = useAssetRead(readPlan, port, reader, assetId);
+  const { read: history } = useAssetRead(readTimeline, port, reader, assetId);
+  const uses = useMemo(() => claimUses(history), [history]);
   if (read === null) return <Reading label={t(PLAN_KEYS.reading)} />;
   if (read.kind !== "done") return <CallLine call={read} />;
   const { outcome, refusal, rows, limits, advisories } = read.result;
   if (outcome === "refused" || rows === null)
     return (
-      <p role="alert" className="p-3 text-sm text-destructive">
-        {refusalText(t, refusal)}
-      </p>
+      <div className="p-3">
+        <Alert
+          tone="danger"
+          role="alert"
+          icon={<Icon name="refused" />}
+          className="ledger-assets-plan-refused"
+        >
+          {refusalText(t, refusal)}
+        </Alert>
+      </div>
     );
   if (rows.length === 0)
     return (
@@ -672,27 +821,44 @@ export function AmortizationPlan({
         {t(PLAN_KEYS.plan_empty)}
       </p>
     );
+  const estimated = rows.some((row) => row.edition?.projected);
   return (
     <>
-      {advisories.map((advisory) => (
-        <p
-          key={advisory.kind}
-          className="ledger-assets-advisory flex items-start gap-1 border-b px-3 py-2 text-sm text-muted-foreground"
-        >
-          <Icon name="info" size="xs" className="mt-0.5" />
-          <span>
-            {keyedText(
-              t,
-              advisory.label_key,
-              tokenWord(t, "plan_advisory", advisory.kind),
-            )}
-          </span>
-        </p>
-      ))}
+      {(advisories.length > 0 || estimated) && (
+        <div className="flex flex-col gap-2 border-b p-3">
+          {advisories.map((advisory) => (
+            <Alert
+              key={advisory.kind}
+              icon={<Icon name="info" />}
+              className="ledger-assets-advisory"
+            >
+              {keyedText(
+                t,
+                advisory.label_key,
+                tokenWord(t, "plan_advisory", advisory.kind),
+              )}
+            </Alert>
+          ))}
+          {estimated && (
+            <Alert
+              icon={<Icon name="unknown" />}
+              className="ledger-assets-estimated"
+            >
+              {t(ASSET_KEYS.plan.projected_summary)}
+            </Alert>
+          )}
+        </div>
+      )}
       {limits && (
         <Limits locale={locale} limits={limits} onOpenLink={onOpenLink} />
       )}
-      <PlanTable locale={locale} rows={rows} year={year} />
+      <PlanTable
+        locale={locale}
+        rows={rows}
+        year={year}
+        uses={uses}
+        onCorrectClaim={onCorrectClaim}
+      />
     </>
   );
 }

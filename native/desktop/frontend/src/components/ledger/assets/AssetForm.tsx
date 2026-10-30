@@ -4,11 +4,12 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { facts, labelled } from "../../../shell/compose";
+import { facts, labelled, listed } from "../../../shell/compose";
 import type {
   LedgerDefinitionId,
   LedgerPort,
@@ -21,8 +22,8 @@ import type {
   ActivityAssetCorrectRequest,
   ActivityAssetCreateRequest,
   AssetListRow,
-  FormOptions,
   TableGroup,
+  FormOptions,
 } from "../../../shell/ledgerSetup";
 import { tokensOf, useStrings, type Translate } from "../../../shell/strings";
 import { useWritePause, WriteHold, type LandingCheck } from "../WritePause";
@@ -42,12 +43,14 @@ import { grammarText } from "../setup/setupWords";
 import {
   answer,
   fieldsFor,
+  formKeyOf,
   initialOf,
   type FormDraft,
   type FormField,
   type FormValues,
 } from "./assetFields";
 import {
+  bajaRequest,
   correctRequest,
   createRequest,
   type RevisionBase,
@@ -88,11 +91,14 @@ export type ActProps = {
   onClose?: () => void;
   /** The form wrote: the page reads the register again. */
   onWritten?: () => void;
+  /** An element was added: the page shows it. */
+  onAdded?: (assetId: string) => void;
 };
 
 const NO_CANDIDATES: readonly AcquisitionCandidate[] = [];
 const NO_CLAIMS: readonly string[] = [];
 const NO_NOTES: Readonly<Record<string, string | null>> = {};
+const NO_KEYS: ReadonlySet<string> = new Set();
 
 /** The tokens of a family, from the generated words that the backend's enum
  * produced. */
@@ -159,7 +165,8 @@ export function useAssetRow(
 
 /** The text of a form, started from what the record states. It starts again
  * only when what the record states changes, never when the same fields are
- * drawn again, so what was typed is kept through a re-read. */
+ * drawn again, and what was typed is kept through a re-read and through a
+ * change of what the record states. */
 export function useFieldsDraft(initial: FormDraft) {
   const [held, setHeld] = useState<{
     signature: string;
@@ -168,9 +175,20 @@ export function useFieldsDraft(initial: FormDraft) {
   const [draft, setDraft] = useState<FormDraft>({});
   const signature = JSON.stringify(initial);
   if (held === null || signature !== held.signature) {
+    const before = held?.initial ?? {};
     setHeld({ signature, initial });
-    setDraft(initial);
+    setDraft((current) => ({
+      ...initial,
+      ...Object.fromEntries(
+        Object.entries(current).filter(
+          ([key, typed]) => typed !== (before[key] ?? ""),
+        ),
+      ),
+    }));
   }
+  const set = useCallback((changes: FormDraft) => {
+    setDraft((current) => ({ ...current, ...changes }));
+  }, []);
   return {
     draft,
     initial: held?.initial ?? initial,
@@ -178,10 +196,26 @@ export function useFieldsDraft(initial: FormDraft) {
     dirty: Object.keys(draft).some(
       (key) => draft[key] !== ((held?.initial ?? initial)[key] ?? ""),
     ),
-    set(changes: FormDraft) {
-      setDraft((current) => ({ ...current, ...changes }));
-    },
+    set,
   };
+}
+
+/** Brings a form into view and puts the cursor in its first field, when it
+ * opens and when `ready` becomes true. */
+export function useFocusOnOpen(
+  form: RefObject<HTMLElement | null>,
+  ready: boolean,
+) {
+  useEffect(() => {
+    const element = form.current;
+    if (!ready || element === null) return;
+    element.scrollIntoView?.({ block: "nearest" });
+    element
+      .querySelector<HTMLElement>(
+        "input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
+      )
+      ?.focus({ preventScroll: true });
+  }, [form, ready]);
 }
 
 /** What the registry allows a table class, as one line: the corridor of its
@@ -207,11 +241,32 @@ const corridorText = (t: Translate, locale: string, group: TableGroup) => {
   ]);
 };
 
+/** The hint that says how a control's value is written. */
+const WRITING_HINT: Partial<Record<FormField["control"], string>> = {
+  date: "desktop.ledger.form.date_hint",
+  amount: "desktop.ledger.form.amount_hint",
+  share: "desktop.ledger.form.percent_hint",
+};
+
+/** A choice's word: the generated word of its family, the catalogue key it
+ * names, the text served with it, else the generic word. */
+function choiceWord(
+  t: Translate,
+  option: FormField["choices"][number],
+): string {
+  if (option.family !== null) return tokenWord(t, option.family, option.token);
+  if (option.word !== undefined) {
+    const said = t(option.word);
+    return said === option.word ? t(ASSET_KEYS.unrecognised) : said;
+  }
+  return option.label ?? t(ASSET_KEYS.unrecognised);
+}
+
 /**
  * The fields of an act, each drawn by its control. The form decides nothing
  * about them: their choices, bounds and starting values are the backend's. A
- * field the backend named as still to fill in is marked until something is
- * typed.
+ * required field still to fill in is marked until something is typed; a
+ * field the record cannot do without says so when it is emptied.
  */
 export function FieldsGrid({
   fields,
@@ -220,6 +275,7 @@ export function FieldsGrid({
   onField,
   problems,
   missing,
+  cleared = NO_KEYS,
   candidates,
   purchaseKnown,
   notes = NO_NOTES,
@@ -230,7 +286,10 @@ export function FieldsGrid({
   draft: FormDraft;
   onField(field: FormField, value: string): void;
   problems: Record<string, GrammarRefusal>;
+  /** The fields to mark as still to fill in. */
   missing: ReadonlySet<string>;
+  /** The fields emptied that the record cannot do without. */
+  cleared?: ReadonlySet<string>;
   candidates: readonly AcquisitionCandidate[];
   /** Fields the picked purchase does not know. */
   purchaseKnown: ReadonlySet<string>;
@@ -246,10 +305,13 @@ export function FieldsGrid({
         const raw = draft[field.key] ?? "";
         const problem = problems[field.key];
         const fillIn = missing.has(field.key) && unstated(field);
+        const emptied = cleared.has(field.key);
+        const writing = WRITING_HINT[field.control];
         const hint =
           [
             field.hint_key ? t(field.hint_key) : null,
-            field.key === "authority_class_key"
+            writing ? t(writing) : null,
+            field.key === "amortization.authority_class_key"
               ? (() => {
                   const group = options?.table_groups.find(
                     (found) => found.class_key === raw,
@@ -262,12 +324,21 @@ export function FieldsGrid({
               ? t("desktop.ledger.assets.field.not_known")
               : null,
             field.control === "candidate" && candidates.length === 0
-              ? t("desktop.ledger.assets.field.acquisition_none")
+              ? t("desktop.ledger.assets.field.acquisition_none", {
+                  movements: t("desktop.ledger.section.movements"),
+                  documents: t("desktop.ledger.section.documents"),
+                })
               : null,
-            fillIn ? t(ASSET_KEYS.write.fill_in) : null,
           ]
             .filter(Boolean)
             .join(" ") || undefined;
+        const error = problem
+          ? grammarText(t, problem)
+          : emptied
+            ? t("desktop.ledger.assets.write.cannot_clear")
+            : fillIn
+              ? t(ASSET_KEYS.write.fill_in)
+              : null;
         const label = t(field.label_key);
         const choose = (value: string) => onField(field, value);
         return (
@@ -276,6 +347,7 @@ export function FieldsGrid({
             field.control === "date" ||
             field.control === "amount" ||
             field.control === "share" ||
+            field.control === "quantity" ||
             field.control === "whole" ? (
               <TextField
                 label={label}
@@ -284,15 +356,11 @@ export function FieldsGrid({
                 onValue={choose}
                 required={field.required}
                 hint={hint}
-                error={
-                  problem
-                    ? grammarText(t, problem)
-                    : fillIn
-                      ? t(ASSET_KEYS.write.fill_in)
-                      : null
-                }
+                error={error}
                 inputMode={
-                  field.control === "amount" || field.control === "share"
+                  field.control === "amount" ||
+                  field.control === "share" ||
+                  field.control === "quantity"
                     ? "decimal"
                     : field.control === "whole"
                       ? "numeric"
@@ -307,6 +375,8 @@ export function FieldsGrid({
                 onValue={choose}
                 placeholder={t("desktop.ledger.form.choose")}
                 hint={hint}
+                required={field.required}
+                error={error}
                 options={
                   field.control === "candidate"
                     ? candidates.map((candidate) => ({
@@ -330,10 +400,7 @@ export function FieldsGrid({
                         ]
                       : field.choices.map((option) => ({
                           value: option.token,
-                          label:
-                            option.family !== null
-                              ? tokenWord(t, option.family, option.token)
-                              : (option.label ?? t(ASSET_KEYS.unrecognised)),
+                          label: choiceWord(t, option),
                         }))
                 }
               />
@@ -443,7 +510,8 @@ export function WriteLine({
 
 // ---- The acts --------------------------------------------------------------------
 
-export type ActKind = "element" | "descriptor" | "correction" | "baja";
+export type ActKind =
+  "element" | "descriptor" | "correction" | "baja" | "baja_change";
 
 type Context = {
   port: LedgerPort;
@@ -453,6 +521,10 @@ type Context = {
   /** The request the form's values make, where the act builds one. */
   create: ActivityAssetCreateRequest | null;
   correct: ActivityAssetCorrectRequest | null;
+  /** The revision a change of the baja supersedes. */
+  base: RevisionBase | null;
+  /** Whether the baja is to be taken out. */
+  removing: boolean;
   /** How many descriptions the element's history holds once this one lands. */
   descriptions: number;
 };
@@ -460,10 +532,12 @@ type Context = {
 type Act = {
   title: string;
   submit: string;
-  /** The backend's kind of record the write adds, which words it. */
-  event: string;
+  /** What a write that landed says. */
+  done: string;
   /** Only what changed is stated, the rest left as the record has it. */
   delta: boolean;
+  /** Asks again before sending: what a baja does is not easily undone. */
+  confirms: boolean;
   send(context: Context): Promise<SetupCall<unknown>>;
   landing(context: Context): LandingCheck;
 };
@@ -482,8 +556,9 @@ const ACTS: Record<ActKind, Act> = {
   element: {
     title: ASSET_KEYS.action.add,
     submit: "desktop.ledger.assets.submit.create",
-    event: "revision",
+    done: "desktop.ledger.assets.write.element_added",
     delta: false,
+    confirms: false,
     send: (c) =>
       c.create === null
         ? never()
@@ -493,8 +568,9 @@ const ACTS: Record<ActKind, Act> = {
   descriptor: {
     title: ASSET_KEYS.action.describe,
     submit: "desktop.ledger.form.save",
-    event: "descriptor",
+    done: "desktop.ledger.assets.write.described",
     delta: false,
+    confirms: false,
     send: (c) =>
       setupCall(
         c.port,
@@ -507,8 +583,9 @@ const ACTS: Record<ActKind, Act> = {
   correction: {
     title: ASSET_KEYS.action.correct,
     submit: "desktop.ledger.assets.submit.correct",
-    event: "revision",
+    done: "desktop.ledger.assets.write.corrected",
     delta: true,
+    confirms: false,
     send: (c) =>
       c.correct === null
         ? never()
@@ -518,8 +595,9 @@ const ACTS: Record<ActKind, Act> = {
   baja: {
     title: ASSET_KEYS.action.dispose,
     submit: ASSET_KEYS.action.dispose,
-    event: "baja",
+    done: "desktop.ledger.assets.write.baja_recorded",
     delta: false,
+    confirms: true,
     send: (c) =>
       setupCall(
         c.port,
@@ -529,18 +607,37 @@ const ACTS: Record<ActKind, Act> = {
       ),
     landing: (c) => correctionLanding(c.port, c.assetId, nextRevision(c.asset)),
   },
+  baja_change: {
+    title: "desktop.ledger.assets.action.change_baja",
+    submit: "desktop.ledger.assets.baja.change_submit",
+    done: "desktop.ledger.assets.write.baja_changed",
+    delta: false,
+    confirms: true,
+    send: async (c) => {
+      const disposal = c.removing ? null : disposalOf(c.values);
+      const request = bajaRequest(c.base, disposal);
+      return request === null || (!c.removing && disposal === null)
+        ? never()
+        : setupCall(c.port, "ledger.actividad-asset.correct", request, true);
+    },
+    landing: (c) => correctionLanding(c.port, c.assetId, nextRevision(c.asset)),
+  },
 };
 
 /** The year of an ISO date, or null while the text is not one. */
 const yearOfDate = (text: string): number | null =>
   /^\d{4}-\d{2}-\d{2}$/.test(text) ? Number(text.slice(0, 4)) : null;
 
+/** What a form asks the person to confirm before it sends, if it does. */
+type Confirming = "save" | "remove" | null;
+
 /**
  * The form of an act on the register, drawn from what the backend serves for
  * it. Adding an element mints its opaque id once, when the form opens, and
- * never shows it. A write that was not seen to settle holds the page's writes
- * and is never sent again; a refusal keeps what was typed. `children` sit
- * between the fields and the buttons.
+ * never shows it. The send is always available: with something missing it
+ * marks what to fill in and sends nothing. A write that was not seen to
+ * settle holds the page's writes and is never sent again; a refusal keeps
+ * what was typed. `children` sit between the fields and the buttons.
  */
 export function AssetForm({
   port,
@@ -552,6 +649,7 @@ export function AssetForm({
   supersede = NO_CLAIMS,
   onClose,
   onWritten,
+  onAdded,
   children,
 }: ActProps & {
   kind: ActKind;
@@ -581,11 +679,12 @@ export function AssetForm({
   const events =
     history.read?.kind === "done" ? (history.read.result.events ?? []) : null;
   // A correction supersedes the revision the register holds now.
+  const changesRevision = kind === "correction" || kind === "baja_change";
   const inspected = useLedgerRead(
     port,
     reader,
     "ledger.actividad-asset.inspect",
-    kind === "correction" && id !== "" ? { asset_id: id } : null,
+    changesRevision && id !== "" ? { asset_id: id } : null,
     id,
   );
   const base: RevisionBase | null =
@@ -599,11 +698,11 @@ export function AssetForm({
   const optionsKind =
     kind === "element" ? typed.asset_kind : (asset.row?.asset_kind ?? "");
   const optionsYear =
-    (kind === "element"
+    kind === "element"
       ? yearOfDate(typed.in_service_date)
-      : yearOfDate(
+      : (yearOfDate(
           typed.in_service_date || asset.row?.in_service_date || "",
-        )) ?? taxYear;
+        ) ?? taxYear);
   const wantsOptions =
     (kind === "element" || kind === "correction") &&
     optionsKind !== "" &&
@@ -615,7 +714,7 @@ export function AssetForm({
     wantsOptions ? { asset_kind: optionsKind, tax_year: optionsYear } : null,
     `${kind}:${optionsKind}:${optionsYear}`,
   );
-  const loaded =
+  const loaded: FormOptions | null =
     options.read?.kind === "done" ? options.read.result.options : null;
 
   const context = {
@@ -629,6 +728,8 @@ export function AssetForm({
   // The form starts from the record; the fields it draws follow what is typed.
   const form = useFieldsDraft(initialOf(context, fieldsFor(context, {})));
   const fields = fieldsFor(context, form.draft);
+  const formRef = useRef<HTMLFormElement>(null);
+  useFocusOnOpen(formRef, true);
   const purchases = useLedgerRead(
     port,
     reader,
@@ -643,25 +744,22 @@ export function AssetForm({
   const write = useSetupWrite(facts(t, [t(act.title), asset.row?.name]));
   useSetupDraft(form.dirty);
 
+  // A new element starts on the first way of acquiring one the backend offers.
+  const { set: setDraft } = form;
+  const shape = form.draft.acquisition_shape ?? "";
+  const firstShape = loaded?.acquisition_shapes?.[0] ?? "";
+  useEffect(() => {
+    if (kind === "element" && shape === "" && firstShape !== "")
+      setDraft({ acquisition_shape: firstShape });
+  }, [kind, shape, firstShape, setDraft]);
+
   const picked = candidates.find(
     (candidate) => candidate.transaction_id === form.draft.acquisition,
   );
   const answered = answer(fields, form.draft, act.delta ? form.initial : null);
   const view = viewOf(write.last, neverReused);
-  const missing = new Set(view.kind === "refused" ? view.missing : []);
-  const needsRow = kind === "correction" || kind === "baja";
-  const stating = {
-    assetId: id,
-    regime: loaded?.regime ?? null,
-    candidate: picked ?? null,
-    base,
-  };
-  const create =
-    kind === "element" ? createRequest(answered.values, stating) : null;
-  const correct =
-    kind === "correction"
-      ? correctRequest(answered.values, stating, supersede)
-      : null;
+  const [tried, setTried] = useState(false);
+  const [confirming, setConfirming] = useState<Confirming>(null);
   // A fact every request of the act states, and the form still lacks.
   const lacking = act.delta
     ? []
@@ -669,14 +767,36 @@ export function AssetForm({
         (field) =>
           field.required && (answered.values[field.key] ?? null) === null,
       );
+  const toFill = [...lacking.map((field) => field.key), ...answered.cleared];
+  const missing = new Set([
+    ...(view.kind === "refused" ? view.missing.map(formKeyOf) : []),
+    ...(tried ? toFill : []),
+  ]);
+  const needsRow = changesRevision || kind === "baja";
+  const stating = {
+    assetId: id,
+    regime: loaded?.regime ?? null,
+    candidate: picked ?? null,
+    base,
+    options: loaded,
+  };
+  const create =
+    kind === "element" ? createRequest(answered.values, stating) : null;
+  const correct =
+    kind === "correction"
+      ? correctRequest(answered.values, stating, supersede)
+      : null;
+  const changed =
+    Object.keys(answered.values).length > 0 || answered.cleared.length > 0;
   const ready =
     Object.keys(answered.problems).length === 0 &&
-    lacking.length === 0 &&
+    toFill.length === 0 &&
     (!needsRow || asset.row !== null) &&
     (kind !== "element" || create !== null) &&
-    (kind !== "correction" ||
-      (correct !== null && Object.keys(answered.values).length > 0)) &&
-    (kind !== "baja" || disposalOf(answered.values) !== null);
+    (kind !== "correction" || (correct !== null && changed)) &&
+    (kind !== "baja" || disposalOf(answered.values) !== null) &&
+    (kind !== "baja_change" ||
+      (base !== null && disposalOf(answered.values) !== null));
 
   const onField = (field: FormField, value: string) => {
     if (field.key === "asset_kind" || field.key === "in_service_date")
@@ -699,8 +819,8 @@ export function AssetForm({
     });
   };
 
-  const send = async () => {
-    if (!ready || write.busy) return;
+  const send = async (removing = false) => {
+    if (write.busy) return;
     const sending: Context = {
       port,
       assetId: id,
@@ -708,32 +828,66 @@ export function AssetForm({
       values: answered.values,
       create,
       correct,
+      base,
+      removing,
       descriptions:
         (events ?? []).filter((event) => event.kind === "descriptor").length +
         1,
     };
     const done = await write.run(() => act.send(sending), act.landing(sending));
+    setConfirming(null);
     if (viewOf(done, neverReused).kind === "saved") {
+      setTried(false);
       // What the record states has changed: read it again.
       history.reload();
       inspected.reload();
       options.reload();
       asset.reload();
       onWritten?.();
+      if (kind === "element") onAdded?.(id);
     }
   };
 
+  const submit = () => {
+    if (write.busy) return;
+    if (!ready) {
+      setTried(true);
+      return;
+    }
+    if (act.confirms) setConfirming("save");
+    else void send();
+  };
+
+  const waiting =
+    kind === "element" && loaded === null
+      ? t("desktop.ledger.assets.write.options_wait")
+      : null;
+  const name = asset.row?.name ?? t(ASSET_KEYS.list.no_name);
+  const bajaDate = disposalOf(answered.values)?.disposal_date ?? "";
+  const stillToFill = listed(
+    t,
+    toFill.map((key) => {
+      const found = fields.find((field) => field.key === key);
+      return found ? t(found.label_key) : key;
+    }),
+  );
+
   return (
     <Panel
-      title={t(act.title)}
+      title={
+        kind === "element"
+          ? t(act.title)
+          : facts(t, [t(act.title), asset.row?.name])
+      }
       className={`ledger-asset-form ledger-asset-form-${kind}`}
     >
       <form
+        ref={formRef}
         noValidate
         className="flex flex-col gap-3"
         onSubmit={(event) => {
           event.preventDefault();
-          void send();
+          submit();
         }}
       >
         <FieldsGrid
@@ -743,6 +897,7 @@ export function AssetForm({
           onField={onField}
           problems={answered.problems}
           missing={missing}
+          cleared={new Set(answered.cleared)}
           candidates={candidates}
           purchaseKnown={
             new Set(
@@ -754,6 +909,8 @@ export function AssetForm({
             )
           }
           notes={{
+            method: waiting,
+            acquisition_shape: waiting,
             non_deductible_iva:
               picked === undefined
                 ? null
@@ -762,7 +919,9 @@ export function AssetForm({
               picked !== undefined &&
               (picked.invoice_evidence_id === null ||
                 picked.evidence_fingerprint === null)
-                ? t("desktop.ledger.assets.field.acquisition_no_evidence")
+                ? t("desktop.ledger.assets.field.acquisition_no_evidence", {
+                    documents: t("desktop.ledger.section.documents"),
+                  })
                 : null,
           }}
           locale={locale}
@@ -777,36 +936,128 @@ export function AssetForm({
         {typeof children === "function"
           ? children({ values: answered.values, ready })
           : children}
-        <div className="flex flex-wrap gap-2">
-          {onClose && (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              aria-disabled={write.busy || undefined}
-              onClick={() => {
-                if (!write.busy) onClose();
-              }}
+        {confirming !== null ? (
+          <Alert
+            tone="warning"
+            role="alertdialog"
+            icon={<Icon name="alert" />}
+            className="ledger-asset-confirm"
+          >
+            <span>
+              {confirming === "remove"
+                ? t("desktop.ledger.assets.baja.remove_confirm", { name })
+                : t(
+                    kind === "baja_change"
+                      ? "desktop.ledger.assets.baja.change_confirm"
+                      : "desktop.ledger.assets.baja.confirm",
+                    {
+                      name,
+                      date: dateText(locale, bajaDate, true),
+                    },
+                  )}
+            </span>
+            <span className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="ledger-asset-confirm-back"
+                aria-disabled={write.busy || undefined}
+                onClick={() => {
+                  if (!write.busy) setConfirming(null);
+                }}
+              >
+                {t("desktop.ledger.assets.baja.confirm_back")}
+              </Button>
+              <WriteHold>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="ledger-asset-confirm-yes"
+                  aria-disabled={write.busy || undefined}
+                  onClick={() => void send(confirming === "remove")}
+                >
+                  {write.busy
+                    ? t("desktop.ledger.form.saving")
+                    : t(
+                        confirming === "remove"
+                          ? "desktop.ledger.assets.baja.remove_yes"
+                          : "desktop.ledger.assets.baja.confirm_yes",
+                      )}
+                </Button>
+              </WriteHold>
+            </span>
+          </Alert>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {onClose && (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                aria-disabled={write.busy || undefined}
+                onClick={() => {
+                  if (!write.busy) onClose();
+                }}
+              >
+                {t("desktop.ledger.form.cancel")}
+              </Button>
+            )}
+            {kind === "baja_change" && (
+              <WriteHold>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="ledger-asset-remove"
+                  aria-disabled={write.busy || base === null || undefined}
+                  onClick={() => {
+                    if (!write.busy && base !== null) setConfirming("remove");
+                  }}
+                >
+                  {t("desktop.ledger.assets.baja.remove")}
+                </Button>
+              </WriteHold>
+            )}
+            <WriteHold>
+              <Button
+                type="submit"
+                size="sm"
+                className="ledger-asset-submit"
+                aria-disabled={write.busy || undefined}
+              >
+                {write.busy ? t("desktop.ledger.form.saving") : t(act.submit)}
+              </Button>
+            </WriteHold>
+          </div>
+        )}
+        {tried &&
+          !ready &&
+          confirming === null &&
+          (toFill.length > 0 ||
+            Object.keys(answered.problems).length > 0 ||
+            (kind === "correction" && !changed)) && (
+            <p
+              role="alert"
+              className="ledger-asset-missing flex items-start gap-1.5 text-sm text-destructive"
             >
-              {t("desktop.ledger.form.cancel")}
-            </Button>
+              <Icon name="alert" size="xs" className="mt-0.5" />
+              <span>
+                {toFill.length > 0
+                  ? t("desktop.ledger.assets.write.missing", {
+                      fields: stillToFill,
+                    })
+                  : Object.keys(answered.problems).length > 0
+                    ? t("desktop.ledger.assets.write.fix_marked")
+                    : t("desktop.ledger.assets.write.nothing_changed")}
+              </span>
+            </p>
           )}
-          <WriteHold>
-            <Button
-              type="submit"
-              size="sm"
-              className="ledger-asset-submit"
-              aria-disabled={!ready || write.busy || undefined}
-            >
-              {write.busy ? t("desktop.ledger.form.saving") : t(act.submit)}
-            </Button>
-          </WriteHold>
-        </div>
         <WriteLine
           call={write.last}
           fields={fields}
           saved={{
-            done: tokenWord(t, "event_kind", act.event),
+            done: t(act.done),
             reused: t(ASSET_KEYS.write.reused),
             reusedOf: neverReused,
           }}

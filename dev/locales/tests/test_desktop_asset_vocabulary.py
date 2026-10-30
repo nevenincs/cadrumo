@@ -23,6 +23,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
 )
 from cadrumo.application.actividad_asset.fact_wording import ActivityAssetFlag
 from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence
+from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposalFindingKind,
     ActivityAssetDisposalReason,
@@ -82,6 +83,7 @@ _SERVED = {
     "asset_kind": AssetKind,
     "basis_stage": AssetBasisStage,
     "claim_state": ActivityAssetClaimState,
+    "declared_activity": TipoActividad,
     "digit_order": DigitOrder,
     "disposal_finding": ActivityAssetDisposalFindingKind,
     "disposal_reason": ActivityAssetDisposalReason,

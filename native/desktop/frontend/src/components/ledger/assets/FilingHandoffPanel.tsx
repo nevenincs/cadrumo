@@ -13,8 +13,17 @@ import {
   SetupTable,
   useSetupRead,
 } from "../setup/SetupParts";
-import { callRefusal } from "./AssetList";
-import { refusalText } from "./assetsWords";
+import { callRefusal, Hint } from "./AssetList";
+import { ASSET_KEYS, refusalText } from "./assetsWords";
+
+/** The words of the declaration boxes the handoff can name. A box outside
+ * this list reads as the generic word, never as the key the backend uses. */
+const TARGET_KEYS: Readonly<Record<string, string>> = {
+  material_m100: "desktop.ledger.assets.target.material_m100",
+  intangible_m100: "desktop.ledger.assets.target.intangible_m100",
+  material_m130: "desktop.ledger.assets.target.material_m130",
+  intangible_m130: "desktop.ledger.assets.target.intangible_m130",
+};
 
 /**
  * Which declaration boxes the claims of a year reach, read only. The year
@@ -82,7 +91,10 @@ export function FilingHandoffPanel({
           {
             key: "target",
             label: t("desktop.ledger.assets.column.target"),
-            cell: ([target]) => t(`desktop.ledger.assets.target.${target}`),
+            cell: ([target]) =>
+              Object.hasOwn(TARGET_KEYS, target)
+                ? t(TARGET_KEYS[target]!)
+                : t(ASSET_KEYS.unrecognised),
           },
           {
             key: "casilla",
@@ -93,18 +105,28 @@ export function FilingHandoffPanel({
             key: "amount",
             label: t("desktop.ledger.assets.column.amount"),
             numeric: true,
-            cell: ([, found]) => amountText(locale, found.amount.decimal),
-          },
-          {
-            key: "unavailable",
-            label: t("desktop.ledger.assets.column.unavailable"),
-            cell: ([, found]) =>
-              "unavailable_asset_ids" in found &&
-              found.unavailable_asset_ids.length > 0
-                ? t("desktop.ledger.assets.handoff_unavailable", {
-                    count: found.unavailable_asset_ids.length,
-                  })
-                : "—",
+            // An amount that leaves elements out is marked partial on the
+            // amount itself.
+            cell: ([, found]) => {
+              const left =
+                "unavailable_asset_ids" in found
+                  ? found.unavailable_asset_ids.length
+                  : 0;
+              return (
+                <span className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
+                  {left > 0 && (
+                    <Hint
+                      words={t(ASSET_KEYS.handoff.partial, { count: left })}
+                      className="bg-secondary px-2 py-0.5 text-xs font-medium"
+                    >
+                      <Icon name="alert" size="xs" className="text-warning" />
+                      <span aria-hidden="true">{left}</span>
+                    </Hint>
+                  )}
+                  {amountText(locale, found.amount.decimal)}
+                </span>
+              );
+            },
           },
         ]}
         className="ledger-assets-handoff"

@@ -9,7 +9,8 @@ import { figureText } from "./planWords";
 
 /**
  * Corrects an element's tax facts or its method: a superseding revision, never
- * an edit of the last. The effective claims that no longer match the schedule
+ * an edit of the last. The revision carries the element's baja, if it has one,
+ * unchanged. The effective claims that no longer match the schedule
  * are offered to be recorded again under the corrected figures, in the same
  * write, so a failed correction leaves them as they were. The plan says which
  * claims are in effect and the timeline which of them no longer match.
@@ -66,7 +67,7 @@ export function CorrectForm(props: ActProps & { assetId: string }) {
                 year,
                 amount: figureText(locale, claim.amount) ?? "",
                 from: dateText(locale, claim.covered_from, true),
-                until: dateText(locale, claim.covered_until, true),
+                until: dateText(locale, claim.covered_through, true),
               })}
             </Label>
           ))}

@@ -26,7 +26,6 @@ import type {
   PublicPeriod,
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
-import { failureText } from "./declarationsWords";
 
 /** Where the dialog starts: a modelo, and a period within it. */
 export type NewDeclarationStart = {
@@ -37,8 +36,8 @@ export type NewDeclarationStart = {
 type Attempt =
   | { kind: "idle" }
   | { kind: "creating" }
-  | { kind: "refused"; code: string }
-  | { kind: "failed"; code: string }
+  | { kind: "refused" }
+  | { kind: "failed" }
   /** The write may have happened: nothing is sent again until the list is
    * read again. */
   | { kind: "unknown" }
@@ -169,9 +168,8 @@ function Chooser({
         if (result.kind === "success") {
           onOpen(result.unit.work_unit_id);
           onClose();
-        } else setAttempt({ kind: "refused", code: result.reason });
-      } else if (outcome.kind === "refused")
-        setAttempt({ kind: "refused", code: outcome.reason ?? "refused" });
+        } else setAttempt({ kind: "refused" });
+      } else if (outcome.kind === "refused") setAttempt({ kind: "refused" });
       // Paused or still running: its settlement was not seen.
       else setAttempt({ kind: "unknown" });
     } catch (error: unknown) {
@@ -184,10 +182,7 @@ function Chooser({
         setAttempt({ kind: "saved_unread" });
       } else
         // A refusal settled without writing; any other failure never sent.
-        setAttempt({
-          kind: failure.code === "refused" ? "refused" : "failed",
-          code: failureText(failure),
-        });
+        setAttempt({ kind: failure.code === "refused" ? "refused" : "failed" });
     }
   };
 

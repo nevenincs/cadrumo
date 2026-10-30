@@ -1322,7 +1322,6 @@ desktop:
         settled: Saved or already so
         unchanged: Unchanged
         unknown: Outcome unknown
-      technical: Technical details
       theirs: Take theirs
       tick_links: Tick each permanent link to save.
       title: Review and save · {count}
@@ -1334,9 +1333,10 @@ desktop:
     assets:
       action:
         add: Add element
-        claim: Record depreciation
+        change_baja: Change or remove the baja
+        claim: Record dotación
         correct: Correct
-        describe: Edit record
+        describe: Edit details
         dispose: Record disposal
       area:
         fixed: Fixed assets
@@ -1344,19 +1344,43 @@ desktop:
       areas: Asset areas
       baja:
         acquisition_value: Acquisition value
+        change_confirm: Change the baja of {name} to {date}? The dotaciones it moves
+          are worked out again.
+        change_submit: Save the change
+        confirm: Record the baja of {name} on {date}? Dotaciones after that day are
+          cancelled.
+        confirm_back: Go back
+        confirm_yes: Record the baja
         deducted: Depreciation deducted
+        effect_missing: No effect on the cost is worked out for this point.
         excess: Excess
         figures: Figures of the baja (nothing is saved)
-        findings: Findings
+        findings: Points to check
         net_value: Net value
         preview: Calculate the figures
         reduction: Reduction of the acquisition value
+        remove: Remove the baja
+        remove_confirm: Remove the baja of {name}? The element goes back into service
+          and the dotaciones the baja cancelled come back. A dotación it shortened
+          stays short until you record the rest.
+        remove_yes: Remove the baja
         result: Gain or loss
         route_changed: A later affectation to the activity changes how this baja is
           taxed.
         transmission_value: Transmission value
-      claim_reused: 'Already claimed: nothing was recorded twice.'
-      claimed: Claim recorded.
+        warning: A baja can be changed or removed later. Dotaciones after its date
+          are cancelled and the one it crosses is shortened. Changing or removing
+          the baja brings the cancelled ones back, but a shortened one stays short
+          until you record the rest.
+        warning_change: Changing or removing this baja brings back the dotaciones
+          it cancelled. A dotación it shortened stays short until you record the rest.
+      claim_no_plan: This element has no plan for {year}
+      claim_period: Period to record
+      claim_period_option: '{from} to {until}'
+      claim_reused: 'Dotación already recorded: nothing was recorded twice.'
+      claim_title: Record the dotación of {name} for {year}
+      claim_until: Runs until {until}.
+      claimed: Dotación recorded.
       column:
         amount: Amount
         casilla: Casilla
@@ -1364,47 +1388,59 @@ desktop:
         unavailable: Not worked out
       correct:
         claim_item: '{year} · {amount} · {from} – {until}'
-        supersede: 'Record these claims again under the corrected figures, in the
-          same step:'
-      correct_claim_title: Correct depreciation
+        supersede: 'Record these dotaciones again under the corrected figures, in
+          the same step:'
+      correct_claim_title: Correct the dotación of {name} for {year}
+      correct_that_claim: Correct that dotación
       count:
-        conflict: 'Overlapping claims: {count}'
-        incomplete: 'Years that cannot be worked out: {count}'
-        missing: 'Years not claimed: {count}'
-        stale: 'Claims that no longer match the schedule: {count}'
+        conflict: 'Overlapping dotaciones, all years: {count}'
+        incomplete: 'Years that cannot be worked out, all years: {count}'
+        missing: 'Years without a dotación, all years: {count}'
+        stale: 'Dotaciones that no longer match the schedule, all years: {count}'
       detail:
+        baja_reason: Reason for the baja
         close: Close
         panel: Element details
         plan: Plan
-        record: Record
+        record: Details
         tabs: Element views
         timeline: Timeline
       field:
         acquired_condition: Condition when acquired
         acquisition: Purchase
-        acquisition_no_evidence: This purchase has no invoice as evidence, so it cannot
-          be stated as the acquisition.
-        acquisition_none: No purchases to pick from yet.
+        acquisition_no_evidence: This purchase has no invoice yet. Attach its invoice
+          in {documents}, then come back.
+        acquisition_none: No purchases to pick from yet. Add the purchase in {movements},
+          or attach its invoice in {documents}, then come back.
         acquisition_option: '{description} · {date} · {amount}'
+        acquisition_reference: Invoice or document reference
         acquisition_shape: Kind of acquisition
-        allocation_provenance: Source of the earlier allocation
+        allocation_provenance: Where the earlier split comes from
         amount: Amount
         basis: Depreciable basis
-        basis_stage: Origin of the basis
+        basis_stage: How you came to own it
+        building_construction_date: Date the building was built
         business_use_share: Business use share
-        class: Table class
+        charging_certificate: Installation certificate
+        charging_documentation: Technical documentation
+        class: Group in the official table
         coefficient: Coefficient
+        construction_cost: Cost of the building
+        declared_acquisition_date: Purchase date
+        declared_activity: Activity
         description: Description
         digit_order: Order of the digits
         digit_period: Sum-of-digits period (years)
+        disposal_amount_hint: Enter 0 if there were none.
         disposal_date: Last day of service
         disposal_reason: Reason
         document_kind: Document kind
         document_number: Document number
         in_service_date: In service from
         kind: Kind
+        land_cost: Cost of the land
         later_affectation: Later affectation to the activity on
-        low_value_election: Reference of the election
+        low_value_election: Reference of your choice
         low_value_evidence: Evidence of the election
         market_value: Market value (if stated)
         method: Method
@@ -1413,65 +1449,101 @@ desktop:
         non_deductible_iva_hint: Write 0 if none of the IVA is non-deductible. Empty
           is not the same as 0.
         not_known: 'Not known for this purchase: state it yourself.'
-        opening_amount: Amortization already deducted
+        office_area: Area used for the activity (m²)
+        opening_amount: Amortisation already deducted
         opening_method: Method used before
-        opening_status: Amortization before entry
+        opening_status: Amortisation before entry
         opening_through: Covered through tax year
+        other: Other detail
         out_of_service_date: Out of service from
-        prior_regime: Attested prior free depreciation
+        ownership_mode: How you own it
+        ownership_share: Your share of the property
+        prior_regime: Earlier libertad de amortización
         proceeds: Proceeds
+        renewable_available_on: Date made available
+        renewable_building_code: Required by the building code
+        renewable_documentation: Documentation reference
+        renewable_documentation_kind: Kind of documentation
+        renewable_purpose: Purpose of the installation
+        renewable_replaces_fossil: Replaces a fossil-fuel installation
         research_evidence: Research and development evidence
         residual_value: Residual value
         serial: Serial number
+        shape_ledger: Bought in this ledger
+        shape_outside: Bought outside this ledger
+        shift_hours: Hours in use per day
+        small_available_on: Date made available
+        small_evidence: Evidence of small-company status
+        small_turnover: Net turnover of the previous period
         supplier_name: Supplier
         supplier_tax_id: Supplier tax ID
+        total_area: Total area (m²)
         transmission_costs: Transmission costs
         used_determination: How the originating price is set
         used_evidence: Evidence of the originating price
         used_price: Originating price
+        useful_life_ends_on: Useful life ends on
+        useful_life_evidence: Evidence of the useful life
+        vehicle_category: Kind of vehicle
+        vehicle_declared: Is it a vehicle?
+        vehicle_evidence: Evidence of how the vehicle is used
+        vehicle_in_books: Recorded in the books of the activity
+        vehicle_listed_use: Listed business use (if any)
+        vehicle_private_use: Private use
+        vehicle_propulsion: Electric drive (if any)
       filing:
-        choose: Choose a year and a Modelo 130 quarter to see where the claims go.
+        choose: Choose a year and a Modelo 130 quarter to see where the dotaciones
+          go.
         unavailable: The filing handoff isn't available.
       forecast: Depreciation {amount} · {days} days · {from} – {until}
-      forecast_note: A forecast records nothing until you claim it.
+      forecast_note: The forecast saves nothing until you record the dotación.
       free: Free depreciation requested
       free_hint: Only for a free-depreciation method
       from: From
-      handoff: Where the claims go
-      handoff_unavailable: '{count} elements not worked out and left out'
+      handoff: Dotaciones in your tax returns
+      handoff_partial: 'Partial: {count} elements can''t be worked out and are left
+        out of this amount.'
+      handoff_year: Year for the filing figures
       list:
         column:
-          accumulated: Amortized so far
+          accumulated: Amortised so far
           basis: Basis
           in_service: In service from
           kind: Kind
           method: Method
           name: Name
-          pending: Still to amortize
+          pending: Still to amortise
           serial: Serial number
           state: State
-        empty: No elements yet.
+        empty: No elements yet. Add your first with +
         label: Elements
         no_name: No name recorded
-        summary: Years needing attention
+        serial_missing: No serial number is recorded.
+        summary: Needing attention, all years
         unavailable: The register isn't available right now.
+      not_known: Not known
+      opening_unknown: Fill in “{field}” to work this out.
       plan:
-        claimable: Can still be claimed {from} – {until}
-        claimable_none: Nothing left to claim
-        claims: Claims for {year}
+        claim_correct: Correct the dotación from {from} to {until}
+        claimable: Dotación can still be recorded {from} – {until}
+        claimable_none: Nothing left to record
+        claimed_missing: Nothing is recorded for this year.
+        claims: Dotaciones for {year}
         column:
-          claimed: Claimed
+          claimed: Recorded
           days: Days
+          period: Period
           planned: Planned
           rate: Rate
           replaced_by: Replaced by
-          revision: Version
           status: Status
           year: Year
-        edition: Table edition {edition}
-        election_changed: Method election changes here
+        days_missing: No days in service are counted for this year.
+        edition: Tables from {edition}
+        election_changed: Amortisation method changes here
         empty: No years in this plan yet.
-        gap: 'Not claimed: {from} – {until}'
+        from_date: From {date}
+        gap: 'Not recorded: {from} – {until}'
         in_effect: In effect
         limits:
           citations: Legal basis ({count})
@@ -1481,23 +1553,27 @@ desktop:
           maximum_period: Maximum period
           minimum_coefficient: Minimum coefficient
           period_years: '{years} years'
-          title: Limits for this election
+          title: Limits for this method
         matches: Matches the current schedule
-        no_claims: No claim is recorded for this year.
+        minimum_missing: The minimum for this year can't be worked out.
+        no_claims: No dotación is recorded for this year.
         no_match: No longer matches the schedule
-        projected: Projected
-        projected_note: Projected tables are used for the forecast and Modelo 130.
-          Modelo 100 is not available for {year}.
+        planned_missing: No figure is worked out for this year.
+        projected_note: 'Estimated: official tables for {year} aren''t available.
+          Usable for Modelo 130, not Modelo 100.'
+        projected_summary: Years marked as estimated use tables carried forward from
+          the last official year. Usable for Modelo 130, not Modelo 100.
+        rate_missing: No rate applies because no figure is worked out for this year.
         recorded_zero: Recorded as zero
         replaced: Replaced
       quarter: Modelo 130 quarter
       refused: The register did not accept that.
-      replace_claim: Replace a claim (optional)
-      replace_none: Record a new claim
+      replace_claim: Replace a dotación (optional)
+      replace_none: Record a new dotación
       submit:
         correct: Save the correction
         create: Create the asset
-        forecast: Forecast
+        forecast: Work out the dotación
       target:
         intangible_m100: Modelo 100 · intangible
         intangible_m130: Modelo 130 · intangible
@@ -1509,20 +1585,33 @@ desktop:
         change_to: to
         column:
           changes: Changes
-          effect: Effect
+          effect: Effective date
           event: Event
           recorded: Recorded
-          sequence: No.
+        effect_missing: This record has no effective date.
         empty: Nothing has been added yet.
+        no_changes: No details changed.
         not_in_calculation: Not part of the calculation
         time_not_recorded: Time not recorded
-        used_by: 'Calculations using it: {count}'
+        used_by: Used in {count} calculations
+        used_by_one: Used in 1 calculation
+        value_changed: Changed
       unrecognised: Not recognised
       until: Until
       write:
+        baja_changed: Baja updated.
+        baja_recorded: Baja recorded.
+        cannot_clear: This can't be left empty.
+        corrected: Correction saved.
+        described: Details saved.
+        element_added: Element added.
         fill_in: Fill this in
+        fix_marked: Fix the fields marked above.
         incomplete: 'Not saved. Still to fill in: {fields}'
         kept: Nothing was saved. What you entered is still here.
+        missing: 'Still to fill in: {fields}'
+        nothing_changed: Nothing has changed yet.
+        options_wait: Choose the kind and in-service date first.
         reused: Already recorded; nothing was added.
       year: Year
       year_estimated: '{year} (estimated)'
@@ -2468,7 +2557,6 @@ desktop:
       duplicates_chip: 'Possible duplicates: {count}'
       duplicates_more: And {count} more.
       duplicates_note: Imported and flagged; compare them after importing.
-      field: Field
       file_counts: Rows {rows} · new {fresh} · already in the ledger {skipped}
       file_imported: Imported {fresh} · already in the ledger {skipped}
       file_not_sent: Not sent.
@@ -2537,7 +2625,6 @@ desktop:
         result: Result
         what: What
       steps: Steps
-      technical: Technical details
       title: Import
       unknown: Outcome unknown
       unknown_note: '{names} may have been imported. Nothing is sent again: read the
@@ -2581,8 +2668,6 @@ desktop:
       classification: Classification
       clear: Clear the value
       close: Hide the inspector
-      copied_id: Movement reference copied
-      copy_id: Copy reference
       derive:
         choose: Choose an IVA category
         stage: Work out figures
@@ -2611,7 +2696,6 @@ desktop:
         purchase_invoice: Purchase invoice · added {date}
       drop: Drop it
       earlier: Earlier decisions
-      earlier_ids: Earlier references
       effective_date: Effective date
       empty: empty
       eur_same: 'Same: a euro movement'
@@ -2640,7 +2724,6 @@ desktop:
         stashed: Set aside
         updated: Updated
       file_row: '{file}, row {row}'
-      fingerprint: Import reference
       fix:
         derive: Derive figures
         go: Fix
@@ -2741,7 +2824,6 @@ desktop:
         unavailable: The AI model isn't available right now
       more: More
       more_tax: More tax fields
-      movement_id: Movement reference
       moves_to: Moves to {period}
       new_identity: New reference
       no_counterparty: No counterparty
@@ -2849,7 +2931,6 @@ desktop:
         unclassified: Classify later
         under: The parts are {amount} short of the movement.
       stage: Add to changes
-      technical: Technical details
       unread: Could not be read
       unsaved: 'Changes: {count} · not saved'
       unsaved_classification: → {classification} · not saved
@@ -2888,36 +2969,6 @@ desktop:
       opening: Opening stock value
       preview_note: 'A preview: nothing is recorded.'
       quantity: Units
-      refusal:
-        activity_conflict: 'Refused: that activity already has a book for the year.'
-        activity_not_found: 'Refused: no book for that activity and year.'
-        closing_authority_conflict: 'Refused: a different closing decision is already
-          saved.'
-        closing_authority_invalid: 'Refused: the closing decision doesn''t fit this
-          book.'
-        closing_authority_recorded: 'Refused: a closing value is already saved for
-          {year}, so its stock can''t change.'
-        correction_changes_nothing: 'Refused: that doesn''t change the opening stock
-          or the method.'
-        correction_id_conflict: 'Refused: that correction was already used for a different
-          change. Close this form and open it again.'
-        count_would_raise_stock: 'Refused: a count can''t raise your stock above the
-          units you have on the books.'
-        duplicate_movement_id: "The register refused the movement: it is already recorded."
-        invalid_valuation_method: 'Refused: not a valuation method.'
-        inventory_already_retired: 'Refused: this stock book is already retired.'
-        inventory_not_retired: 'Refused: this stock book isn''t retired.'
-        inventory_retired: 'Refused: this stock book is retired. Restore it before
-          changing its stock.'
-        inventory_validation: 'Refused: the book doesn''t accept that.'
-        later_closing_authority_recorded: 'Refused: the closing value saved for {later_year}
-          rests on this year, so its stock can''t change.'
-        movement_already_superseded: 'Refused: that movement was already corrected
-          or reversed.'
-        movement_not_found: 'Refused: that movement isn''t in this stock book.'
-        movement_outside_year: 'Refused: the date of the movement falls outside {year}.'
-        stock_would_go_negative: 'Refused: more units would go out than remain in
-          stock.'
       unit_cost: Unit cost
       valuation: '{name} · closing stock {closing} · cost of sales {cogs} · {method}'
     invoice:
@@ -4674,6 +4725,20 @@ ledger:
       primary_purchase: Purchase
       produced: Own production
       split_payment: Purchase paid in parts
+    asset_kind:
+      intangible: Intangible asset
+      material: Tangible asset
+    basis_stage:
+      business_allocated: Allocated to the activity
+      taxpayer_owned: Owned by the taxpayer, before business use
+      whole_property: Whole property
+    claim_state:
+      claimed: Claimed
+      edition_unavailable: No official tables
+      missing: Not claimed
+      not_due: Nothing to claim
+      partial: Partly claimed
+      superseded: Claimed, corrected
     declared_activity:
       A01: Rental of real estate
       A02: Independent livestock farming
@@ -4685,30 +4750,16 @@ ledger:
       B03: Forestry
       B04: Mussel farming
       B05: Fishing
-    asset_kind:
-      intangible: Intangible asset
-      material: Tangible asset
-    basis_stage:
-      business_allocated: Allocated to the activity
-      taxpayer_owned: Owned by the taxpayer, before business use
-      whole_property: Whole property
-    claim_state:
-      claimed: Claimed
-      edition_unavailable: No edition for this year
-      missing: Not claimed
-      not_due: Nothing to claim
-      partial: Partly claimed
-      superseded: Claimed, corrected
     digit_order:
       ascending: Ascending
       descending: Descending
     disposal_finding:
       claim_gap: Year with depreciation not recorded
       exemption_not_computed: Gain exemption not computed
-      minimum_exceeded_deduction: Deduction above the minimum amortization
-      minimum_unresolved: 'Minimum amortization not available for this year: no edition
+      minimum_exceeded_deduction: Deduction above the minimum amortisation
+      minimum_unresolved: 'Minimum amortisation not available for this year: no edition
         covers it, so the reduction of cost may be understated'
-      no_minimum_authority: No minimum amortization published for this year
+      no_minimum_authority: No minimum amortisation published for this year
     disposal_reason:
       destruction: Destruction
       donation: Donation
@@ -4753,14 +4804,14 @@ ledger:
         components.
       amortization_box_not_bound: This edition of the return binds no box for the
         amortisation of this kind of asset, so a filing handoff cannot be prepared.
-      amortization_period_elapsed: The element's maximum amortization period ended
-        on {ended_on}, so it counts as fully amortized.
-      approved_plan_exceeds_basis: The approved plan distributes more than the amortizable
+      amortization_period_elapsed: The element's maximum amortisation period ended
+        on {ended_on}, so it counts as fully amortised.
+      approved_plan_exceeds_basis: The approved plan distributes more than the amortisable
         basis.
       approved_plan_not_yet_effective: An approved plan takes effect only in tax periods
         ending after its submission (RIS art. 7.8).
       approved_plan_required: An approved-plan election requires its plan.
-      approved_plan_without_distribution: The approved plan distributes no amortization
+      approved_plan_without_distribution: The approved plan distributes no amortisation
         to this tax year.
       asset_already_exists: The activity asset already exists.
       asset_made_available_after_in_service: An asset cannot enter service before
@@ -4784,12 +4835,12 @@ ledger:
       claim_year_not_after_opening_year: 'A claim for %{claim_tax_year} cannot be
         recorded: the opening amount already covers the years through %{opening_tax_year}.'
       claims_exceed_amortizable_basis: The opening amount and the effective claims
-        exceed the lawful amortizable basis.
+        exceed the lawful amortisable basis.
       claims_overlap: Claims of one element cannot cover overlapping intervals.
       constant_percentage_weighting_not_enrolled: 'Cadrumo doesn''t support this yet:
-        the constant-percentage weighting for this amortization period.'
+        the constant-percentage weighting for this amortisation period.'
       correction_below_effective_claims: The correction leaves effective claims above
-        the new amortizable basis; replace them in the same correction.
+        the new amortisable basis; replace them in the same correction.
       correction_must_supersede_current: This changed since you opened it. Refresh
         and try again.
       covered_interval_empty: The covered interval must end after it starts.
@@ -4829,7 +4880,7 @@ ledger:
         own year cannot be taken for that year once a later year is claimed.
       elected_coefficient_out_of_range: The elected coefficient %{elected} is outside
         the admissible range [%{minimum}, %{maximum}].
-      election_changes_only_at_year_boundary: An element's amortization election can
+      election_changes_only_at_year_boundary: An element's amortisation election can
         change only at a tax-year boundary.
       electric_vehicle_declaration_required: Electric-vehicle free depreciation requires
         a vehicle declaration.
@@ -4867,7 +4918,7 @@ ledger:
       free_claims_exceed_annual_cap: Effective free-depreciation claims exceed the
         annual cap.
       from_start_method_after_other_election: Constant percentage and sum of digits
-        run from the start of amortization; an element already charged under another
+        run from the start of amortisation; an element already charged under another
         election cannot adopt them.
       history_changed_after_forecast: The element's history changed after this figure
         was worked out; work it out again.
@@ -4875,7 +4926,7 @@ ledger:
         that claim instead of recording a new one.
       investment_cap_exceeded: The investment entering service in {entry_year} under
         the free depreciation you chose would reach {investment}, above the cap of
-        {investment_cap}; an element is not split between free and ordinary amortization.
+        {investment_cap}; an element is not split between free and ordinary amortisation.
       job_creation_new_only: Job-creating free depreciation applies only to new elements
         (LIS art. 102.1).
       job_creation_reduced_size_evidence_required: Job-creating free depreciation
@@ -4902,13 +4953,13 @@ ledger:
         use this method (%{provision}).
       method_not_enrolled_for_kind: 'Cadrumo doesn''t support this yet: this method
         for this kind of asset in this estimation modality.'
-      method_without_resolver: 'Cadrumo doesn''t support this yet: this amortization
+      method_without_resolver: 'Cadrumo doesn''t support this yet: this amortisation
         method.'
       method_without_schedule_arithmetic: 'Cadrumo doesn''t support this yet: this
-        amortization method.'
+        amortisation method.'
       modality_not_declared: The taxpayer profile declares no IRPF estimation regime.
       modality_not_direct_estimation: 'Cadrumo doesn''t support this yet: activity-asset
-        amortization outside direct estimation.'
+        amortisation outside direct estimation.'
       multi_shift_not_enrolled: 'Cadrumo doesn''t support this yet: the multi-shift
         coefficient of RIS art. 4.2 in this estimation modality.'
       multi_shift_requires_extra_shift: A multi-shift coefficient requires more than
@@ -4919,7 +4970,7 @@ ledger:
         attest the same method before constant percentage or sum of digits can continue
         it.
       opening_history_amount_missing: The known opening history lacks its amount.
-      opening_history_missing: The element's opening amortization history is missing.
+      opening_history_missing: The element's opening amortisation history is missing.
       opening_year_before_in_service: The opening amount cannot cover the years through
         %{opening_tax_year}, which is before the element's in-service year %{in_service_tax_year}.
       out_of_service_date_not_the_boundary: The out-of-service date must be the day
@@ -4929,12 +4980,12 @@ ledger:
       ownership_treatment_unknown: The whole-property basis has an unknown ownership
         treatment.
       parameter_absent: The Modelo 100 tables for this tax year lack a figure this
-        amortization needs, so it can't be worked out yet.
+        amortisation needs, so it can't be worked out yet.
       parameter_not_declared: Cadrumo doesn't support this yet.
       parameter_not_resolvable_for_date: The Modelo 100 tables have no figure in force
-        on %{on_date} that this amortization needs, so it can't be worked out.
+        on %{on_date} that this amortisation needs, so it can't be worked out.
       parameter_not_resolvable_for_year: The Modelo 100 tables have no figure for
-        tax year %{tax_year} that this amortization needs, so it can't be worked out.
+        tax year %{tax_year} that this amortisation needs, so it can't be worked out.
       profile_modality_mismatch: The estimation modality of this asset (normal or
         simplified) must match the one declared in your profile (RIRPF art. 28.3).
       reduced_size_acceleration_new_only: Reduced-size acceleration applies only to
@@ -4973,7 +5024,7 @@ ledger:
       schedule_authority_kind_mismatch: This changed since you opened it. Refresh
         and try again.
       simplified_intangible_table_method: 'This method is not admitted for intangible
-        assets in the simplified modality: RIRPF art. 30.1a prescribes linear amortization
+        assets in the simplified modality: RIRPF art. 30.1a prescribes linear amortisation
         on the simplified table (Orden of 27 March 1998), which lists information
         systems and programs at 26% over 10 years, and DGT V0190-19 and V0741-19 apply
         that table to intangible assets; RIS arts. 5.1 and 6.1 weight the LIS art.
@@ -4989,10 +5040,10 @@ ledger:
       superseding_claim_changes_interval: A claim that replaces another must keep
         the same element and covered period.
       table_class_group_not_a_flag: The tax tables give this table class a group classification
-        that can't be read, so the amortization can't be worked out.
+        that can't be read, so the amortisation can't be worked out.
       table_class_not_enrolled: 'Cadrumo doesn''t support this yet: this table class
         in this estimation modality.'
-      table_class_required: This method requires a class from the official amortization
+      table_class_required: This method requires a class from the official amortisation
         table.
       table_class_without_group_classification: 'Cadrumo doesn''t support this yet:
         this table class has no group classification in the tax tables.'
@@ -5014,9 +5065,9 @@ ledger:
         asset enters service.
       useful_life_not_positive: A useful life must be a positive finite number of
         years.
-      vehicle_affectation_required_for_class: Asset {asset_id} is in a table class that
-        can include a vehicle RIRPF art. 22.4 restricts, so it needs a vehicle affectation
-        declaration.
+      vehicle_affectation_required_for_class: Asset {asset_id} is in a table class
+        that can include a vehicle RIRPF art. 22.4 restricts, so it needs a vehicle
+        affectation declaration.
       vehicle_missing_from_books: A vehicle missing from the activity's books is not
         an affected asset (RIRPF art. 22.2.2º).
       vehicle_private_use_category_restricted: A vehicle with any private use is affected
@@ -5045,7 +5096,7 @@ ledger:
       'false': 'No'
       'true': 'Yes'
     method:
-      approved_plan: Approved amortization plan
+      approved_plan: Approved amortisation plan
       charging_infrastructure_free: Free depreciation, charging infrastructure
       constant_percentage: Constant percentage
       electric_vehicle_free: Free depreciation, electric vehicle
@@ -5065,15 +5116,15 @@ ledger:
       known: Non-deductible IVA known
       unknown: Non-deductible IVA unknown
     not_table_bound:
-      approved_plan: Follows an approved amortization plan
+      approved_plan: Follows an approved amortisation plan
       authority_unavailable: Limits not available for this year
       free_election: You choose the amount each year
       research_development_period: Follows the R&D building period
       twentieth_limit: Capped at one twentieth a year
       useful_life_evidence: Follows the useful life you evidence
     opening_history_status:
-      known: Accumulated amortization known
-      missing: Accumulated amortization missing
+      known: Accumulated amortisation known
+      missing: Accumulated amortisation missing
     original_price_determination:
       expert_valuation: Expert valuation
       known: Known price
@@ -5082,10 +5133,11 @@ ledger:
       sole: Sole ownership
       spousal_community: Community property of spouses
     plan_absence:
-      basis_exhausted: Basis fully amortized
+      basis_exhausted: Basis fully amortised
       conflict: Conflicts with the record
       covered_by_opening: Covered by the opening amount
-      edition_unavailable: No Modelo 100 edition for this year
+      edition_unavailable: Cadrumo has no official tables for this year, so it can't
+        work out this figure.
       free_election: 'Free depreciation: no planned figure'
       incomplete: 'Missing facts: cannot be worked out'
       period_elapsed: Maximum period elapsed
@@ -5108,7 +5160,7 @@ ledger:
       normal: Direct estimation, normal
       simplified: Direct estimation, simplified
     register_state:
-      fully_amortized: Fully amortized
+      fully_amortized: Fully amortised
       in_service: In service
       out_of_service: Out of service
     renewable_documentation_kind:
@@ -6212,12 +6264,12 @@ tui:
       in_service_date: In-service date (YYYY-MM-DD), replaces the revision's date
       inspect: Inspect
       list: List elements
-      method: 'Amortization method: linear, constant_percentage, sum_of_digits, approved_plan
+      method: 'Amortisation method: linear, constant_percentage, sum_of_digits, approved_plan
         or intangible_useful_life'
       name: Element name
       non_deductible_iva: Non-deductible IVA, replaces the revision's amount
-      plan: Amortization plan
-      plan_minimum: Minimum amortization
+      plan: Amortisation plan
+      plan_minimum: Minimum amortisation
       plan_minimum_incomplete: incomplete
       price: Price without IVA, replaces the revision's price
       revision: Asset revision (JSON)
@@ -7669,9 +7721,9 @@ tui:
       invalid_number: '%{field}: %{value} is not a whole number.'
       inventory:
         action:
-          evidence_add: "Store a purchase document"
-          closing_value: "Record a closing value from a facts file"
           closing_authority: Record a closing authority
+          evidence_add: "Store a purchase document"
+          closing_value: Record a closing value from a facts file
           create: Create an inventory
           movement_add: Add a movement
           valuation_preview: Preview the valuation
@@ -7691,10 +7743,10 @@ tui:
           acquisition_cost: Purchase cost file (purchases only)
           action: Request
           actividad_id: Activity
+          authority_record: Closing authority file
           evidence_file: "Document file"
           evidence_folder: "Folder the document path starts from"
-          closing_value_facts: "Closing value facts file"
-          authority_record: Closing authority file
+          closing_value_facts: Closing value facts file
           kind: Movement kind
           movement_date: Movement date
           movement_id: Movement identifier
@@ -7727,8 +7779,8 @@ tui:
             a different one is already recorded for that year.'
           closing_authority_invalid: 'The register refused the closing authority:
             it does not match the inventory it names.'
-          duplicate_movement_id: 'The register refused the movement: that movement
-            identifier is already used.'
+          duplicate_movement_id: 'The register refused the movement: it is already
+            recorded.'
           invalid_valuation_method: 'The register refused the request: the valuation
             method is not one it accepts.'
           inventory_validation: 'The register refused the request: it does not pass

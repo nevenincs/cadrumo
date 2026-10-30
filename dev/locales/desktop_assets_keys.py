@@ -134,10 +134,14 @@ ASSET_KEYS: Final[frozenset[str]] = (
 #: panel reads rather than words again.
 INVENTORY_LABEL_NAMESPACE: Final[str] = "application.inventory.labels."
 
-#: The desktop's own sentences for the reasons an inventory change is refused.
-#: The backend's sentences for them carry command-line instructions and
-#: identifiers, so the panel words each typed reason itself.
-INVENTORY_REFUSAL_FAMILY: Final[str] = "desktop.ledger.inventory.refusal."
+#: The family whose members the backend serves as ``reason_key`` values when
+#: it refuses an inventory change: one sentence for each reason, with the facts
+#: that fill it in.
+INVENTORY_REASON_FAMILY: Final[str] = "application.inventory.service.errors."
+
+#: The families whose catalogue text the backend renders with ``%{name}``
+#: placeholders, which the shell substitutes as ``{name}``.
+INVENTORY_PERCENT_PLACEHOLDER_PREFIXES: Final[tuple[str, ...]] = (INVENTORY_REASON_FAMILY,)
 
 
 def _inventory_enum_families() -> dict[str, type[Enum]]:
@@ -155,18 +159,20 @@ def _inventory_enum_families() -> dict[str, type[Enum]]:
     }
 
 
-def _inventory_refusal_members() -> tuple[str, ...]:
-    """Return every typed reason an inventory operation refuses for."""
-    from typing import get_args
-
-    from cadrumo.application.inventory.registered_requests import InventoryRefusalReason
-
-    return tuple(sorted(str(reason) for reason in get_args(InventoryRefusalReason)))
+def _inventory_reason_members() -> tuple[str, ...]:
+    """Return the reason keys the catalogue renders for the inventory operations, as members of the reason family."""
+    source = locale_catalogue_source(LOCALES_DIR, "en")
+    if source is None:
+        raise ValueError(f"No source catalogue under {LOCALES_DIR}, so no backend reason could be listed")
+    leaves = _flatten_raw_locale_leaves(LocaleManager(SRC_DIR, LOCALES_DIR).load_locale(source))
+    return tuple(
+        sorted(key.removeprefix(INVENTORY_REASON_FAMILY) for key in leaves if key.startswith(INVENTORY_REASON_FAMILY))
+    )
 
 
 def _inventory_families() -> Mapping[str, tuple[str, ...]]:
     families = {prefix: _values(enum) for prefix, enum in _inventory_enum_families().items()}
-    families[INVENTORY_REFUSAL_FAMILY] = _inventory_refusal_members()
+    families[INVENTORY_REASON_FAMILY] = _inventory_reason_members()
     return MappingProxyType(families)
 
 

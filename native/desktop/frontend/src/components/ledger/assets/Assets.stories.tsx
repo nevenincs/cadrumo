@@ -21,6 +21,8 @@ type Args = {
   answer?: Answer;
   signedOut?: boolean;
   parts?: boolean;
+  /** The handoff leaves elements out of its Modelo 130 amounts. */
+  partial?: boolean;
   locale: string;
 };
 
@@ -68,9 +70,50 @@ function withListAnswer(port: LedgerPort, answer: Answer): LedgerPort {
   };
 }
 
-function Stage({ shape, answer = "register", signedOut, parts, locale }: Args) {
+/** The scenario's port, with the filing handoff made partial: two elements
+ * are left out of each Modelo 130 amount, as when their year cannot be
+ * worked out. */
+function withPartialHandoff(port: LedgerPort): LedgerPort {
+  return {
+    ...port,
+    submit: ((definition: string, payload: never) => {
+      const sent = port.submit(definition as never, payload) as Promise<{
+        kind: string;
+        result?: unknown;
+      }>;
+      if (definition !== "ledger.actividad-asset.filing-handoff") return sent;
+      return sent.then((answer) => {
+        if (answer.kind !== "settled") return answer;
+        const result = structuredClone(answer.result) as {
+          filing_handoff: Record<
+            string,
+            { unavailable_asset_ids?: string[] }
+          > | null;
+        };
+        for (const [target, found] of Object.entries(
+          result.filing_handoff ?? {},
+        ))
+          if (target.endsWith("_m130"))
+            found.unavailable_asset_ids = ["first", "second"];
+        return { ...answer, result };
+      });
+    }) as LedgerPort["submit"],
+  };
+}
+
+function Stage({
+  shape,
+  answer = "register",
+  signedOut,
+  parts,
+  partial,
+  locale,
+}: Args) {
   const base = useLedgerPort(shape);
-  const port = useMemo(() => withListAnswer(base, answer), [base, answer]);
+  const port = useMemo(
+    () => withListAnswer(partial ? withPartialHandoff(base) : base, answer),
+    [base, answer, partial],
+  );
   return (
     <div className="flex h-full min-h-0 flex-col">
       <AssetsSection
@@ -157,6 +200,12 @@ export const FilingHandoff: Story = {
     });
     await userEvent.selectOptions(quarter, "4T");
   },
+};
+
+export const FilingHandoffPartialAmount: Story = {
+  name: "Filing handoff, an amount that leaves elements out",
+  args: { partial: true },
+  play: FilingHandoff.play,
 };
 
 export const WithoutStock: Story = {

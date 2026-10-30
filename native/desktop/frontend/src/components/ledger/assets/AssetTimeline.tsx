@@ -6,14 +6,9 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { dateText, stampText } from "../movements/movementWords";
 import { CallLine, Reading } from "../setup/SetupParts";
 import type { TimelineChange, TimelineEvent } from "../../../shell/ledgerSetup";
-import {
-  ASSET_KEYS,
-  fieldWord,
-  keyedText,
-  refusalText,
-  tokenWord,
-} from "./assetsWords";
-import { changeValueText, DASH, PLAN_KEYS } from "./planWords";
+import { ASSET_KEYS, fieldWord, refusalText, tokenWord } from "./assetsWords";
+import { NotKnown } from "./AssetList";
+import { changeValueText, PLAN_KEYS } from "./planWords";
 import { readTimeline, useAssetRead } from "./planRead";
 
 // One element's history: what was appended, in what order, from where. It is
@@ -33,39 +28,39 @@ function Change({
 }) {
   const t = useStrings();
   const { field, before, after } = change;
-  // A token the backend worded by catalogue key is drawn by that key; any
-  // other value is drawn as it is stated.
-  const value = (text: string, key?: string | null) =>
-    keyedText(t, key, changeValueText(t, locale, field, text));
+  // The backend's label, else the word of its key, else what the field is.
+  const value = (side: "before" | "after") =>
+    changeValueText(t, locale, change, side);
+  const name = fieldWord(t, field);
+  // A value that is added or cleared is one sentence of the catalogue's; one
+  // that changes reads before, arrow, after.
+  if (before === null && after !== null)
+    return (
+      <li className="flex items-start gap-1">
+        <Icon name="plus" size="xs" className="mt-0.5 text-muted-foreground" />
+        {t(ASSET_KEYS.timeline.change_added, {
+          field: name,
+          after: value("after"),
+        })}
+      </li>
+    );
+  if (before !== null && after === null)
+    return (
+      <li className="flex items-start gap-1">
+        <Icon name="erase" size="xs" className="mt-0.5 text-muted-foreground" />
+        {t(ASSET_KEYS.timeline.change_cleared, {
+          field: name,
+          before: value("before"),
+        })}
+      </li>
+    );
   return (
     <li className="flex flex-wrap items-center gap-x-1.5">
-      <span className="text-muted-foreground">{fieldWord(t, field)}</span>
-      {before === null && after !== null && (
-        <>
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <Icon name="plus" size="xs" />
-            {t(ASSET_KEYS.timeline.change_added)}
-          </span>
-          <span>{value(after, change.after_key)}</span>
-        </>
-      )}
-      {before !== null && after === null && (
-        <>
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <Icon name="erase" size="xs" />
-            {t(ASSET_KEYS.timeline.change_cleared)}
-          </span>
-          <span>{value(before, change.before_key)}</span>
-        </>
-      )}
-      {before !== null && after !== null && (
-        <>
-          <span>{value(before, change.before_key)}</span>
-          <Icon name="arrow" size="xs" className="text-muted-foreground" />
-          <span className="sr-only">{t(PLAN_KEYS.change_to)}</span>
-          <span>{value(after, change.after_key)}</span>
-        </>
-      )}
+      <span className="text-muted-foreground">{name}</span>
+      <span>{value("before")}</span>
+      <Icon name="arrow" size="xs" className="text-muted-foreground" />
+      <span className="sr-only">{t(PLAN_KEYS.change_to)}</span>
+      <span>{value("after")}</span>
     </li>
   );
 }
@@ -116,7 +111,12 @@ function ClaimUse({ event }: { event: TimelineEvent }) {
       )}
       {use.used_by.length > 0 && (
         <span className="[overflow-wrap:anywhere]">
-          {t(ASSET_KEYS.timeline.used_by, { count: use.used_by.length })}
+          {t(
+            use.used_by.length === 1
+              ? ASSET_KEYS.timeline.used_by_one
+              : ASSET_KEYS.timeline.used_by,
+            { count: use.used_by.length },
+          )}
         </span>
       )}
     </span>
@@ -135,13 +135,9 @@ function TimelineTable({
   // No column has a way to rank its rows: history keeps its sequence.
   const columns = useMemo(
     () =>
-      [
-        column.sequence,
-        column.recorded,
-        column.event,
-        column.effect,
-        column.changes,
-      ].map((key) => ({ id: key, label: t(key), name: t(key) })),
+      [column.recorded, column.event, column.effect, column.changes].map(
+        (key) => ({ id: key, label: t(key), name: t(key) }),
+      ),
     [t, column],
   );
   const view = useTableView({
@@ -167,7 +163,6 @@ function TimelineTable({
               key={event.sequence}
               className="border-t border-border align-top"
             >
-              <td className="px-2 py-1.5 tabular-nums">{event.sequence}</td>
               <td className="px-2 py-1.5">
                 <Recorded t={t} locale={locale} event={event} />
               </td>
@@ -185,14 +180,18 @@ function TimelineTable({
               </td>
               <td className="px-2 py-1.5 tabular-nums">
                 {event.effect_date === null ? (
-                  <span aria-hidden="true">{DASH}</span>
+                  <NotKnown why={t(ASSET_KEYS.timeline.effect_missing)} />
                 ) : (
-                  dateText(locale, event.effect_date, true)
+                  <span className="whitespace-nowrap">
+                    {dateText(locale, event.effect_date, true)}
+                  </span>
                 )}
               </td>
               <td className="px-2 py-1.5">
                 {event.changes.length === 0 ? (
-                  <span aria-hidden="true">{DASH}</span>
+                  <span className="text-muted-foreground">
+                    {t(ASSET_KEYS.timeline.no_changes)}
+                  </span>
                 ) : (
                   <ul className="flex flex-col gap-0.5">
                     {event.changes.map((change) => (

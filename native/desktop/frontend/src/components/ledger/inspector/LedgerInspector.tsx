@@ -133,7 +133,6 @@ export function LedgerInspector({
         onAction={setAction}
         onSplit={setSplitting}
         onSelectCohort={(cohort) => onSelection(new Set(cohort))}
-        copy={copy}
         say={setToast}
       />
     );

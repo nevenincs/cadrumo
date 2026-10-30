@@ -7,7 +7,7 @@ desktop:
     disclosures: Disclosures
     executable: Executable
     expires: Expires
-    failed: 'Access decision unavailable: {code}'
+    failed: The access decision couldn't be completed. Try again.
     network: Network access
     'no': 'No'
     none: None

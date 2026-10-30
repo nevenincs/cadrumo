@@ -1511,7 +1511,7 @@ function PlainPreview({
 
 type RefusedRow = InvoiceImportResult["refused"][number];
 
-/** The rows an import refused, each with the field and the reason; the
+/** The rows an import refused, each with its reason; the
  * columns can be sorted and dragged to a width. */
 function RefusedRows({
   t,
@@ -1523,11 +1523,9 @@ function RefusedRows({
   refused: readonly RefusedRow[];
 }) {
   const row = t("desktop.ledger.import.row");
-  const field = t("desktop.ledger.import.field");
   const reason = t("desktop.ledger.import.reason");
   const columns: ViewColumn<RefusedRow>[] = [
     { id: "row", label: row, name: row, sortValue: (item) => item.row_number },
-    { id: "field", label: field, name: field, sortValue: (item) => item.field },
     {
       id: "reason",
       label: reason,
@@ -1558,7 +1556,6 @@ function RefusedRows({
             className="border-t border-border align-top"
           >
             <td className="py-1 pr-3 tabular-nums">{count(item.row_number)}</td>
-            <td className="py-1 pr-3 font-mono text-xs">{item.field}</td>
             <td className="py-1 [overflow-wrap:anywhere]">{item.reason}</td>
           </tr>
         ))}

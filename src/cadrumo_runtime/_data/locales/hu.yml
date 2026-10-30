@@ -7,7 +7,7 @@ desktop:
     disclosures: Adatközlések
     executable: Futtatható fájl
     expires: Lejárat
-    failed: 'A hozzáférési döntés nem érhető el: {code}'
+    failed: A hozzáférési döntést nem sikerült befejezni. Próbáld újra.
     network: Hálózati hozzáférés
     'no': Nem
     none: Nincs

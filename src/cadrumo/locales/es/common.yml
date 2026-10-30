@@ -1365,7 +1365,6 @@ desktop:
         settled: Guardados o ya así
         unchanged: Sin cambios
         unknown: Resultado desconocido
-      technical: Detalles técnicos
       theirs: Tomar el guardado
       tick_links: Marca cada vínculo permanente para guardar.
       title: Revisar y guardar · {count}
@@ -1377,9 +1376,10 @@ desktop:
     assets:
       action:
         add: Añadir elemento
+        change_baja: Cambiar o quitar la baja
         claim: Registrar dotación
         correct: Corregir
-        describe: Editar ficha
+        describe: Editar datos
         dispose: Dar de baja
       area:
         fixed: Inmovilizado
@@ -1387,19 +1387,43 @@ desktop:
       areas: Áreas de activos
       baja:
         acquisition_value: Valor de adquisición
+        change_confirm: ¿Cambiar la baja de {name} al {date}? Las dotaciones que mueve
+          se calculan de nuevo.
+        change_submit: Guardar el cambio
+        confirm: ¿Registrar la baja de {name} el {date}? Las dotaciones posteriores
+          a ese día se anulan.
+        confirm_back: Volver
+        confirm_yes: Registrar la baja
         deducted: Amortización deducida
+        effect_missing: No se calcula el efecto de este punto sobre el coste.
         excess: Exceso
         figures: Cifras de la baja (no se guarda nada)
-        findings: Observaciones
+        findings: Puntos por revisar
         net_value: Valor neto
         preview: Calcular las cifras
         reduction: Reducción del valor de adquisición
+        remove: Quitar la baja
+        remove_confirm: ¿Quitar la baja de {name}? El elemento vuelve a estar en servicio
+          y vuelven las dotaciones que la baja anuló. La que acortó sigue corta hasta
+          que registres el resto.
+        remove_yes: Quitar la baja
         result: Ganancia o pérdida
         route_changed: Una afectación posterior a la actividad cambia cómo tributa
           esta baja.
         transmission_value: Valor de transmisión
-      claim_reused: 'Ya reclamada: no se ha registrado dos veces.'
-      claimed: Reclamación registrada.
+        warning: Una baja se puede cambiar o quitar después. Las dotaciones posteriores
+          a su fecha se anulan y la que la cruza se acorta. Al cambiar o quitar la
+          baja vuelven las anuladas, pero la acortada sigue corta hasta que registres
+          el resto.
+        warning_change: Al cambiar o quitar esta baja vuelven las dotaciones que anuló.
+          La dotación que acortó sigue corta hasta que registres el resto.
+      claim_no_plan: Este elemento no tiene cuadro para {year}
+      claim_period: Periodo que registrar
+      claim_period_option: Del {from} al {until}
+      claim_reused: Esta dotación ya estaba registrada.
+      claim_title: Registrar la dotación de {name} para {year}
+      claim_until: Llega hasta el {until}.
+      claimed: Dotación registrada.
       column:
         amount: Importe
         casilla: Casilla
@@ -1409,45 +1433,57 @@ desktop:
         claim_item: '{year} · {amount} · {from} – {until}'
         supersede: 'Registra de nuevo estas dotaciones con las cifras corregidas,
           en el mismo paso:'
-      correct_claim_title: Corregir la dotación
+      correct_claim_title: Corregir la dotación de {name} para {year}
+      correct_that_claim: Corregir esa dotación
       count:
-        conflict: 'Dotaciones solapadas: {count}'
-        incomplete: 'Años que no se pueden calcular: {count}'
-        missing: 'Años sin registrar: {count}'
-        stale: 'Dotaciones que ya no coinciden con el cuadro: {count}'
+        conflict: 'Dotaciones solapadas, todos los años: {count}'
+        incomplete: 'Años que no se pueden calcular, todos los años: {count}'
+        missing: 'Años sin dotación, todos los años: {count}'
+        stale: 'Dotaciones que ya no coinciden con el cuadro, todos los años: {count}'
       detail:
+        baja_reason: Motivo de la baja
         close: Cerrar
         panel: Detalles del elemento
         plan: Cuadro
-        record: Ficha
+        record: Detalles
         tabs: Vistas del elemento
         timeline: Cronología
       field:
         acquired_condition: Estado al adquirirlo
         acquisition: Compra
-        acquisition_no_evidence: Esta compra no tiene factura como justificante, así
-          que no puede indicarse como la adquisición.
-        acquisition_none: Aún no hay compras entre las que elegir.
+        acquisition_no_evidence: Esta compra aún no tiene factura. Adjunta su factura
+          en {documents} y vuelve.
+        acquisition_none: Aún no hay compras entre las que elegir. Añade la compra
+          en {movements}, o adjunta su factura en {documents}, y vuelve.
         acquisition_option: '{description} · {date} · {amount}'
+        acquisition_reference: Referencia de la factura o del documento
         acquisition_shape: Tipo de adquisición
-        allocation_provenance: Origen de la afectación anterior
+        allocation_provenance: De dónde sale el reparto anterior
         amount: Importe
         basis: Base amortizable
-        basis_stage: Origen de la base
+        basis_stage: Cómo llegó a ser tuyo
+        building_construction_date: Fecha de construcción del edificio
         business_use_share: Porcentaje de uso empresarial
-        class: Clase de la tabla
+        charging_certificate: Certificado de la instalación
+        charging_documentation: Documentación técnica
+        class: Grupo de la tabla oficial
         coefficient: Coeficiente
+        construction_cost: Coste de la construcción
+        declared_acquisition_date: Fecha de compra
+        declared_activity: Actividad
         description: Descripción
         digit_order: Orden de los dígitos
         digit_period: Periodo de la suma de dígitos (años)
+        disposal_amount_hint: Escribe 0 si no hubo.
         disposal_date: Último día de servicio
         disposal_reason: Motivo
         document_kind: Tipo de documento
         document_number: Número de documento
         in_service_date: En servicio desde
         kind: Tipo
+        land_cost: Coste del suelo
         later_affectation: Afectación posterior a la actividad el
-        low_value_election: Referencia de la elección
+        low_value_election: Referencia de tu elección
         low_value_evidence: Justificante de la elección
         market_value: Valor de mercado (si se indica)
         method: Método
@@ -1456,33 +1492,61 @@ desktop:
         non_deductible_iva_hint: Escribe 0 si nada del IVA es no deducible. Vacío
           no es lo mismo que 0.
         not_known: 'No se conoce para esta compra: indícalo tú.'
+        office_area: Superficie usada para la actividad (m²)
         opening_amount: Amortización ya deducida
         opening_method: Método aplicado antes
         opening_status: Amortización anterior a la entrada
         opening_through: Cubierta hasta el ejercicio
+        other: Otro dato
         out_of_service_date: Baja a partir del
-        prior_regime: Libertad de amortización anterior acreditada
+        ownership_mode: Cómo es la titularidad
+        ownership_share: Tu cuota del inmueble
+        prior_regime: Libertad de amortización anterior
         proceeds: Importe obtenido
+        renewable_available_on: Fecha de puesta a disposición
+        renewable_building_code: Exigida por el código técnico de la edificación
+        renewable_documentation: Referencia de la documentación
+        renewable_documentation_kind: Tipo de documentación
+        renewable_purpose: Finalidad de la instalación
+        renewable_replaces_fossil: Sustituye una instalación de combustible fósil
         research_evidence: Justificante de investigación y desarrollo
         residual_value: Valor residual
         serial: Número de serie
+        shape_ledger: Comprado en este libro
+        shape_outside: Comprado fuera de este libro
+        shift_hours: Horas de uso al día
+        small_available_on: Fecha de puesta a disposición
+        small_evidence: Justificante de empresa de reducida dimensión
+        small_turnover: Importe neto de la cifra de negocios del periodo anterior
         supplier_name: Proveedor
         supplier_tax_id: NIF del proveedor
+        total_area: Superficie total (m²)
         transmission_costs: Gastos de transmisión
         used_determination: Cómo se fija el precio originario
         used_evidence: Justificante del precio originario
         used_price: Precio originario
+        useful_life_ends_on: Fin de la vida útil
+        useful_life_evidence: Justificante de la vida útil
+        vehicle_category: Tipo de vehículo
+        vehicle_declared: ¿Es un vehículo?
+        vehicle_evidence: Justificante del uso del vehículo
+        vehicle_in_books: Anotado en los libros de la actividad
+        vehicle_listed_use: Uso profesional de la lista (si lo hay)
+        vehicle_private_use: Uso privado
+        vehicle_propulsion: Propulsión eléctrica (si la tiene)
       filing:
         choose: Elige un año y un trimestre del Modelo 130 para ver adónde van las
           dotaciones.
         unavailable: El traspaso a la declaración no está disponible.
       forecast: Amortización {amount} · {days} días · {from} – {until}
-      forecast_note: Una previsión no registra nada hasta que la reclamas.
+      forecast_note: La previsión no guarda nada hasta que registres la dotación.
       free: Amortización libre solicitada
       free_hint: Solo para un método de amortización libre
       from: Desde
-      handoff: Adónde van las reclamaciones
-      handoff_unavailable: '{count} elementos sin calcular, no incluidos'
+      handoff: Dotaciones en tus declaraciones
+      handoff_partial: 'Parcial: {count} elementos no se pueden calcular y quedan
+        fuera de este importe.'
+      handoff_year: Año de las cifras para la declaración
       list:
         column:
           accumulated: Amortizado hasta ahora
@@ -1494,27 +1558,34 @@ desktop:
           pending: Pendiente de amortizar
           serial: Número de serie
           state: Estado
-        empty: Todavía no hay elementos.
+        empty: Aún no hay elementos. Añade el primero con +
         label: Elementos
         no_name: Sin nombre registrado
-        summary: Años que necesitan atención
+        serial_missing: No hay número de serie registrado.
+        summary: Pendiente de atención, todos los años
         unavailable: El registro no está disponible ahora.
+      not_known: Se desconoce
+      opening_unknown: Rellena «{field}» para poder calcularlo.
       plan:
-        claimable: Se puede registrar del {from} al {until}
+        claim_correct: Corregir la dotación del {from} al {until}
+        claimable: Se puede registrar la dotación del {from} al {until}
         claimable_none: Nada pendiente de registrar
+        claimed_missing: No hay nada registrado para este año.
         claims: Dotaciones de {year}
         column:
           claimed: Registrada
           days: Días
+          period: Período
           planned: Prevista
           rate: Porcentaje
           replaced_by: Sustituida por
-          revision: Versión
           status: Estado
           year: Año
-        edition: Edición de la tabla {edition}
-        election_changed: Aquí cambia el método elegido
+        days_missing: Este año no cuenta días en servicio.
+        edition: Tablas de {edition}
+        election_changed: Aquí cambia el método de amortización
         empty: Este plan todavía no tiene ejercicios.
+        from_date: Desde el {date}
         gap: 'Sin registrar: del {from} al {until}'
         in_effect: Vigente
         limits:
@@ -1526,13 +1597,17 @@ desktop:
           maximum_period: Período máximo
           minimum_coefficient: Coeficiente mínimo
           period_years: '{years} años'
-          title: Límites de esta elección
+          title: Límites de este método
         matches: Coincide con el cuadro actual
+        minimum_missing: El mínimo de este año no se puede calcular.
         no_claims: No hay dotación registrada para este ejercicio.
         no_match: Ya no coincide con el cuadro
-        projected: Proyectada
-        projected_note: Las tablas proyectadas se usan para la previsión y el modelo
-          130. El modelo 100 no está disponible para {year}.
+        planned_missing: Este año no tiene cifra calculada.
+        projected_note: 'Estimada: no hay tablas oficiales para {year}. Sirve para
+          el modelo 130, no para el modelo 100.'
+        projected_summary: Los años marcados como estimados usan tablas del último
+          año oficial. Sirven para el modelo 130, no para el modelo 100.
+        rate_missing: No hay porcentaje porque este año no tiene cifra calculada.
         recorded_zero: Registrada como cero
         replaced: Sustituida
       quarter: Trimestre del modelo 130
@@ -1542,7 +1617,7 @@ desktop:
       submit:
         correct: Guardar la corrección
         create: Crear el elemento
-        forecast: Calcular previsión
+        forecast: Calcular la dotación
       target:
         intangible_m100: Modelo 100 · intangible
         intangible_m130: Modelo 130 · intangible
@@ -1554,20 +1629,33 @@ desktop:
         change_to: a
         column:
           changes: Cambios
-          effect: Efecto
+          effect: Fecha de efectos
           event: Evento
           recorded: Registrado
-          sequence: N.º
+        effect_missing: Este registro no tiene fecha de efectos.
         empty: Todavía no se ha añadido nada.
+        no_changes: No cambió ningún dato.
         not_in_calculation: No forma parte del cálculo
         time_not_recorded: Hora no registrada
-        used_by: 'Cálculos que la usan: {count}'
+        used_by: Se usa en {count} cálculos
+        used_by_one: Se usa en 1 cálculo
+        value_changed: Cambiado
       unrecognised: No reconocido
       until: Hasta
       write:
+        baja_changed: Baja actualizada.
+        baja_recorded: Baja registrada.
+        cannot_clear: Esto no puede quedar vacío.
+        corrected: Corrección guardada.
+        described: Datos guardados.
+        element_added: Elemento añadido.
         fill_in: Rellénalo
+        fix_marked: Corrige los campos marcados.
         incomplete: 'No se ha guardado. Falta rellenar: {fields}'
         kept: No se ha guardado nada. Lo que escribiste sigue aquí.
+        missing: 'Falta rellenar: {fields}'
+        nothing_changed: Todavía no has cambiado nada.
+        options_wait: Elige primero el tipo y la fecha de puesta en servicio.
         reused: Ya estaba registrada; no se ha añadido nada.
       year: Año
       year_estimated: '{year} (estimado)'
@@ -2512,7 +2600,6 @@ desktop:
       duplicates_chip: 'Posibles duplicados: {count}'
       duplicates_more: Y {count} más.
       duplicates_note: Se importan y se marcan; compáralos después de importar.
-      field: Campo
       file_counts: Filas {rows} · nuevas {fresh} · ya en el libro {skipped}
       file_imported: Importados {fresh} · ya en el libro {skipped}
       file_not_sent: No enviado.
@@ -2582,7 +2669,6 @@ desktop:
         result: Resultado
         what: Qué
       steps: Pasos
-      technical: Detalles técnicos
       title: Importar
       unknown: Resultado desconocido
       unknown_note: '{names} puede haberse importado. No se vuelve a enviar nada:
@@ -2626,8 +2712,6 @@ desktop:
       classification: Clasificación
       clear: Vaciar el valor
       close: Ocultar el inspector
-      copied_id: Referencia del movimiento copiada
-      copy_id: Copiar la referencia
       derive:
         choose: Elige una categoría de IVA
         stage: Calcular importes
@@ -2656,7 +2740,6 @@ desktop:
         purchase_invoice: Factura de compra · añadida {date}
       drop: Descartar
       earlier: Decisiones anteriores
-      earlier_ids: Referencias anteriores
       effective_date: Fecha efectiva
       empty: vacío
       eur_same: 'Igual: movimiento en euros'
@@ -2685,7 +2768,6 @@ desktop:
         stashed: Apartado
         updated: Actualizado
       file_row: '{file}, fila {row}'
-      fingerprint: Referencia de importación
       fix:
         derive: Calcular importes
         go: Corregir
@@ -2787,7 +2869,6 @@ desktop:
         unavailable: El modelo de IA no está disponible ahora mismo
       more: Más
       more_tax: Más campos fiscales
-      movement_id: Referencia del movimiento
       moves_to: Pasa a {period}
       new_identity: Referencia nueva
       no_counterparty: Sin contraparte
@@ -2895,7 +2976,6 @@ desktop:
         unclassified: Clasificar después
         under: A las partes les faltan {amount} para el movimiento.
       stage: Añadir a los cambios
-      technical: Detalles técnicos
       unread: No se pudo leer
       unsaved: 'Cambios: {count} · sin guardar'
       unsaved_classification: → {classification} · sin guardar
@@ -2934,39 +3014,6 @@ desktop:
       opening: Valor de las existencias iniciales
       preview_note: 'Una vista previa: no se registra nada.'
       quantity: Unidades
-      refusal:
-        activity_conflict: 'Rechazado: esa actividad ya tiene libro ese año.'
-        activity_not_found: 'Rechazado: no hay libro para esa actividad y año.'
-        closing_authority_conflict: 'Rechazado: ya hay guardada otra decisión de cierre.'
-        closing_authority_invalid: 'Rechazado: la decisión de cierre no corresponde
-          a este libro.'
-        closing_authority_recorded: 'Rechazado: ya hay guardado un valor de cierre
-          de {year}, así que sus existencias no pueden cambiar.'
-        correction_changes_nothing: 'Rechazado: eso no cambia las existencias iniciales
-          ni el método.'
-        correction_id_conflict: 'Rechazado: esa corrección ya se usó para otro cambio.
-          Cierra este formulario y ábrelo de nuevo.'
-        count_would_raise_stock: 'Rechazado: un recuento no puede subir tus existencias
-          por encima de las unidades que tienes en los libros.'
-        duplicate_movement_id: "El registro ha rechazado el movimiento: ya está registrado."
-        invalid_valuation_method: 'Rechazado: no es un método de valoración.'
-        inventory_already_retired: 'Rechazado: este libro de existencias ya está dado
-          de baja.'
-        inventory_not_retired: 'Rechazado: este libro de existencias no está dado
-          de baja.'
-        inventory_retired: 'Rechazado: este libro de existencias está dado de baja.
-          Restáuralo antes de cambiar sus existencias.'
-        inventory_validation: 'Rechazado: el libro no lo acepta.'
-        later_closing_authority_recorded: 'Rechazado: el valor de cierre guardado
-          de {later_year} se apoya en este año, así que sus existencias no pueden
-          cambiar.'
-        movement_already_superseded: 'Rechazado: ese movimiento ya fue corregido o
-          anulado.'
-        movement_not_found: 'Rechazado: ese movimiento no está en este libro de existencias.'
-        movement_outside_year: 'Rechazado: la fecha del movimiento queda fuera de
-          {year}.'
-        stock_would_go_negative: 'Rechazado: saldrían más unidades de las que quedan
-          en existencias.'
       unit_cost: Coste unitario
       valuation: '{name} · existencias finales {closing} · coste de ventas {cogs}
         · {method}'
@@ -4762,6 +4809,20 @@ ledger:
       primary_purchase: Compra
       produced: Producción propia
       split_payment: Compra pagada en varios pagos
+    asset_kind:
+      intangible: Inmovilizado intangible
+      material: Inmovilizado material
+    basis_stage:
+      business_allocated: Imputado a la actividad
+      taxpayer_owned: Propiedad del contribuyente, antes del uso en la actividad
+      whole_property: Inmueble completo
+    claim_state:
+      claimed: Registrada
+      edition_unavailable: Sin tablas oficiales
+      missing: Sin registrar
+      not_due: Nada que registrar
+      partial: Registrada en parte
+      superseded: Registrada, corregida
     declared_activity:
       A01: Arrendadores de bienes inmuebles
       A02: Ganadería independiente
@@ -4773,20 +4834,6 @@ ledger:
       B03: Forestal
       B04: Producción de mejillón
       B05: Pesquera
-    asset_kind:
-      intangible: Inmovilizado intangible
-      material: Inmovilizado material
-    basis_stage:
-      business_allocated: Imputado a la actividad
-      taxpayer_owned: Propiedad del contribuyente, antes del uso en la actividad
-      whole_property: Inmueble completo
-    claim_state:
-      claimed: Registrada
-      edition_unavailable: Sin edición para este año
-      missing: Sin registrar
-      not_due: Nada que registrar
-      partial: Registrada en parte
-      superseded: Registrada, corregida
     digit_order:
       ascending: Creciente
       descending: Decreciente
@@ -5126,9 +5173,9 @@ ledger:
         de la entrada en funcionamiento del elemento.
       useful_life_not_positive: La vida útil debe ser un número positivo y finito
         de años.
-      vehicle_affectation_required_for_class: El elemento {asset_id} está en una clase de tabla
-        que puede incluir un vehículo restringido por el RIRPF art. 22.4, por lo que
-        necesita una declaración de afectación del vehículo.
+      vehicle_affectation_required_for_class: El elemento {asset_id} está en una clase
+        de tabla que puede incluir un vehículo restringido por el RIRPF art. 22.4,
+        por lo que necesita una declaración de afectación del vehículo.
       vehicle_missing_from_books: Un vehículo que falta en los libros de la actividad
         no es un elemento afecto (RIRPF art. 22.2.2º).
       vehicle_private_use_category_restricted: Un vehículo con cualquier uso privado
@@ -5197,7 +5244,8 @@ ledger:
       basis_exhausted: Base totalmente amortizada
       conflict: Entra en conflicto con lo registrado
       covered_by_opening: Cubierto por el importe de apertura
-      edition_unavailable: Sin edición del modelo 100 para este ejercicio
+      edition_unavailable: Cadrumo no tiene tablas oficiales para este año, así que
+        no puede calcular esta cifra.
       free_election: 'Libertad de amortización: sin cifra prevista'
       incomplete: 'Faltan datos: no se puede calcular'
       period_elapsed: Período máximo transcurrido
@@ -7843,9 +7891,9 @@ tui:
       invalid_number: '%{field}: %{value} no es un número entero.'
       inventory:
         action:
-          evidence_add: "Guardar un documento de compra"
-          closing_value: "Registrar un valor de cierre desde un archivo de datos"
           closing_authority: Registrar una autoridad de cierre
+          evidence_add: "Guardar un documento de compra"
+          closing_value: Registrar un valor de cierre desde un archivo de datos
           create: Crear un inventario
           movement_add: Añadir un movimiento
           valuation_preview: Previsualizar la valoración
@@ -7865,10 +7913,10 @@ tui:
           acquisition_cost: Archivo del coste de compra (solo compras)
           action: Petición
           actividad_id: Actividad
+          authority_record: Archivo de la autoridad de cierre
           evidence_file: "Archivo del documento"
           evidence_folder: "Carpeta desde la que parte la ruta del documento"
-          closing_value_facts: "Archivo de datos del valor de cierre"
-          authority_record: Archivo de la autoridad de cierre
+          closing_value_facts: Archivo de datos del valor de cierre
           kind: Tipo de movimiento
           movement_date: Fecha del movimiento
           movement_id: Identificador del movimiento
@@ -7901,8 +7949,8 @@ tui:
             ya hay otra registrada para ese año.'
           closing_authority_invalid: 'El registro ha rechazado la autoridad de cierre:
             no coincide con el inventario que indica.'
-          duplicate_movement_id: 'El registro ha rechazado el movimiento: ese identificador
-            de movimiento ya existe.'
+          duplicate_movement_id: 'El registro ha rechazado el movimiento: ya está
+            registrado.'
           invalid_valuation_method: 'El registro ha rechazado la petición: no admite
             ese método de valoración.'
           inventory_validation: 'El registro ha rechazado la petición: no supera la

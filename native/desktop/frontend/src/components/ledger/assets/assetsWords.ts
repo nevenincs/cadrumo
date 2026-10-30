@@ -21,6 +21,7 @@ export const ASSET_KEYS = {
     plan: "desktop.ledger.assets.detail.plan",
     timeline: "desktop.ledger.assets.detail.timeline",
     record: "desktop.ledger.assets.detail.record",
+    baja_reason: "desktop.ledger.assets.detail.baja_reason",
   },
   action: {
     add: "desktop.ledger.assets.action.add",
@@ -33,6 +34,7 @@ export const ASSET_KEYS = {
     label: "desktop.ledger.assets.list.label",
     empty: "desktop.ledger.assets.list.empty",
     no_name: "desktop.ledger.assets.list.no_name",
+    serial_missing: "desktop.ledger.assets.list.serial_missing",
     column: {
       name: "desktop.ledger.assets.list.column.name",
       serial: "desktop.ledger.assets.list.column.serial",
@@ -55,7 +57,7 @@ export const ASSET_KEYS = {
       days: "desktop.ledger.assets.plan.column.days",
       minimum: "tui.ledger.activity_asset.plan_minimum",
       replaced_by: "desktop.ledger.assets.plan.column.replaced_by",
-      revision: "desktop.ledger.assets.plan.column.revision",
+      period: "desktop.ledger.assets.plan.column.period",
     },
     minimum_incomplete: "tui.ledger.activity_asset.plan_minimum_incomplete",
     claims: "desktop.ledger.assets.plan.claims",
@@ -65,8 +67,15 @@ export const ASSET_KEYS = {
     matches: "desktop.ledger.assets.plan.matches",
     no_match: "desktop.ledger.assets.plan.no_match",
     election_changed: "desktop.ledger.assets.plan.election_changed",
-    projected: "desktop.ledger.assets.plan.projected",
     projected_note: "desktop.ledger.assets.plan.projected_note",
+    projected_summary: "desktop.ledger.assets.plan.projected_summary",
+    from_date: "desktop.ledger.assets.plan.from_date",
+    rate_missing: "desktop.ledger.assets.plan.rate_missing",
+    planned_missing: "desktop.ledger.assets.plan.planned_missing",
+    days_missing: "desktop.ledger.assets.plan.days_missing",
+    claimed_missing: "desktop.ledger.assets.plan.claimed_missing",
+    minimum_missing: "desktop.ledger.assets.plan.minimum_missing",
+    claim_correct: "desktop.ledger.assets.plan.claim_correct",
     edition: "desktop.ledger.assets.plan.edition",
     claimable: "desktop.ledger.assets.plan.claimable",
     claimable_none: "desktop.ledger.assets.plan.claimable_none",
@@ -86,7 +95,6 @@ export const ASSET_KEYS = {
   },
   timeline: {
     column: {
-      sequence: "desktop.ledger.assets.timeline.column.sequence",
       recorded: "desktop.ledger.assets.timeline.column.recorded",
       event: "desktop.ledger.assets.timeline.column.event",
       effect: "desktop.ledger.assets.timeline.column.effect",
@@ -95,6 +103,10 @@ export const ASSET_KEYS = {
     time_not_recorded: "desktop.ledger.assets.timeline.time_not_recorded",
     not_in_calculation: "desktop.ledger.assets.timeline.not_in_calculation",
     used_by: "desktop.ledger.assets.timeline.used_by",
+    used_by_one: "desktop.ledger.assets.timeline.used_by_one",
+    effect_missing: "desktop.ledger.assets.timeline.effect_missing",
+    no_changes: "desktop.ledger.assets.timeline.no_changes",
+    value_changed: "desktop.ledger.assets.timeline.value_changed",
     change_added: "desktop.ledger.assets.timeline.change_added",
     change_cleared: "desktop.ledger.assets.timeline.change_cleared",
   },
@@ -117,8 +129,15 @@ export const ASSET_KEYS = {
     result: "desktop.ledger.assets.baja.result",
     route_changed: "desktop.ledger.assets.baja.route_changed",
     findings: "desktop.ledger.assets.baja.findings",
+    effect_missing: "desktop.ledger.assets.baja.effect_missing",
   },
   unrecognised: "desktop.ledger.assets.unrecognised",
+  not_known: "desktop.ledger.assets.not_known",
+  opening_unknown: "desktop.ledger.assets.opening_unknown",
+  field_other: "desktop.ledger.assets.field.other",
+  handoff: {
+    partial: "desktop.ledger.assets.handoff_partial",
+  },
   year: "desktop.ledger.assets.year",
   year_estimated: "desktop.ledger.assets.year_estimated",
   year_estimated_note: "desktop.ledger.assets.year_estimated_note",
@@ -132,24 +151,36 @@ export const ASSET_FAMILY = {
   asset_kind: "ledger.actividad_asset.asset_kind.",
   basis_stage: "ledger.actividad_asset.basis_stage.",
   claim_state: "ledger.actividad_asset.claim_state.",
+  declared_activity: "ledger.actividad_asset.declared_activity.",
   digit_order: "ledger.actividad_asset.digit_order.",
   disposal_finding: "ledger.actividad_asset.disposal_finding.",
   disposal_reason: "ledger.actividad_asset.disposal_reason.",
   document_kind: "ledger.actividad_asset.document_kind.",
+  electric_propulsion: "ledger.actividad_asset.electric_propulsion.",
   event_kind: "ledger.actividad_asset.event_kind.",
+  flag: "ledger.actividad_asset.flag.",
   method: "ledger.actividad_asset.method.",
   non_deductible_iva_state: "ledger.actividad_asset.non_deductible_iva_state.",
   not_table_bound: "ledger.actividad_asset.not_table_bound.",
   opening_history_status: "ledger.actividad_asset.opening_history_status.",
   original_price_determination:
     "ledger.actividad_asset.original_price_determination.",
+  ownership_mode: "ledger.actividad_asset.ownership_mode.",
   plan_absence: "ledger.actividad_asset.plan_absence.",
   plan_advisory: "ledger.actividad_asset.plan_advisory.",
+  plan_approval_kind: "ledger.actividad_asset.plan_approval_kind.",
   prior_free_depreciation_regime:
     "ledger.actividad_asset.prior_free_depreciation_regime.",
+  renewable_documentation_kind:
+    "ledger.actividad_asset.renewable_documentation_kind.",
+  renewable_installation_purpose:
+    "ledger.actividad_asset.renewable_installation_purpose.",
   regime: "ledger.actividad_asset.regime.",
   register_state: "ledger.actividad_asset.register_state.",
   stale_reason: "ledger.actividad_asset.stale_reason.",
+  vehicle_category: "ledger.actividad_asset.vehicle_category.",
+  vehicle_listed_use: "ledger.actividad_asset.vehicle_listed_use.",
+  vehicle_private_use: "ledger.actividad_asset.vehicle_private_use.",
 } as const;
 
 /** The family every reason key the backend serves belongs to. */
@@ -236,6 +267,7 @@ export function refusalText(
 /** The glyph a year's claim state is drawn with; the word sits in its tooltip
  * and accessible name, and colour never carries it alone. */
 const STATE_ICON: Record<string, IconName> = {
+  edition_unavailable: "noRate",
   claimed: "check",
   superseded: "check",
   missing: "alert",
@@ -245,8 +277,8 @@ const STATE_ICON: Record<string, IconName> = {
 export const stateIcon = (token: string): IconName =>
   Object.hasOwn(STATE_ICON, token) ? STATE_ICON[token]! : "info";
 
-/** The word and glyph of a field of a record, by the path the backend names
- * it with. A path this table does not know shows as the backend states it. */
+/** The word of a field of a record, by the path the backend names it with. A
+ * path this table does not know reads as the generic word, never raw. */
 const FIELD: Record<string, string> = {
   name: "desktop.ledger.assets.field.name",
   serial_number: "desktop.ledger.assets.field.serial",
@@ -304,8 +336,38 @@ const FIELD: Record<string, string> = {
     "desktop.ledger.assets.field.later_affectation",
   amount: "desktop.ledger.assets.field.amount",
 };
+/** A field path without the index of a repeated row. */
+export const unindexed = (path: string) => path.replace(/\[\d+\]/g, "[]");
+
+/** Whether the table words this field. */
+export const isWordedField = (path: string) =>
+  Object.hasOwn(FIELD, unindexed(path));
+
 export const fieldWord = (t: Translate, path: string) =>
-  Object.hasOwn(FIELD, path) ? t(FIELD[path]!) : path;
+  isWordedField(path) ? t(FIELD[unindexed(path)]!) : t(ASSET_KEYS.field_other);
+
+/** What to do when the amortization already deducted is not known: where to
+ * enter it, by the word of that field. */
+export const openingRemedy = (t: Translate) =>
+  t(ASSET_KEYS.opening_unknown, {
+    field: fieldWord(t, "opening_history.accumulated_amount"),
+  });
+
+/** The word the catalogue has for a key the backend served with a value, or
+ * null where the key is outside the register's families or has no word. */
+export function wordOfKey(
+  t: Translate,
+  key: string | null | undefined,
+): string | null {
+  if (
+    key === null ||
+    key === undefined ||
+    !Object.values(ASSET_FAMILY).some((family) => key.startsWith(family))
+  )
+    return null;
+  const said = t(key);
+  return said === key ? null : said;
+}
 
 const COUNT = {
   missing: "desktop.ledger.assets.count.missing",

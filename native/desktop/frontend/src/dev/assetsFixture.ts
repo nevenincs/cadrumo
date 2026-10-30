@@ -33,6 +33,496 @@ import {
 
 type Handler = (request: JsonObject) => JsonObject;
 
+/** One fact an election of a method states, as the options serve it. */
+type ServedFact = {
+  path: string[];
+  kind: string;
+  required: boolean;
+  required_with_group: boolean;
+  token_family: string | null;
+  tokens: string[];
+};
+
+/** The facts the options serve for each method, as the election model types
+ * them. */
+export const SERVED_METHOD_FACTS: { method: string; facts: ServedFact[] }[] = [
+  {
+    method: "linear",
+    facts: [
+      {
+        path: ["authority_class_key"],
+        kind: "class",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["linear_coefficient"],
+        kind: "share",
+        required: false,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["shift_hours_per_day"],
+        kind: "decimal",
+        required: false,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "evidence_reference"],
+        kind: "text",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "made_available_on"],
+        kind: "date",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "prior_period_net_turnover"],
+        kind: "amount",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["used_original_price", "determination"],
+        kind: "choice",
+        required: false,
+        required_with_group: true,
+        token_family: "original_price_determination",
+        tokens: ["known", "expert_valuation"],
+      },
+      {
+        path: ["used_original_price", "original_price"],
+        kind: "amount",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["used_original_price", "evidence_reference"],
+        kind: "text",
+        required: false,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "constant_percentage",
+    facts: [
+      {
+        path: ["authority_class_key"],
+        kind: "class",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["linear_coefficient"],
+        kind: "share",
+        required: false,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "sum_of_digits",
+    facts: [
+      {
+        path: ["authority_class_key"],
+        kind: "class",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["sum_of_digits_period_years"],
+        kind: "whole",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["digit_order"],
+        kind: "choice",
+        required: true,
+        required_with_group: false,
+        token_family: "digit_order",
+        tokens: ["descending", "ascending"],
+      },
+    ],
+  },
+  {
+    method: "approved_plan",
+    facts: [
+      {
+        path: ["approved_plan", "approval_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["approved_plan", "approval_kind"],
+        kind: "choice",
+        required: true,
+        required_with_group: false,
+        token_family: "plan_approval_kind",
+        tokens: ["express", "amended_with_consent", "silence"],
+      },
+      {
+        path: ["approved_plan", "submitted_on"],
+        kind: "date",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["approved_plan", "resolved_on"],
+        kind: "date",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["approved_plan", "annual_amounts"],
+        kind: "rows",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "intangible_useful_life",
+    facts: [
+      {
+        path: ["useful_life", "ends_on"],
+        kind: "date",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["useful_life", "evidence_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "intangible_indefinite_life",
+    facts: [
+      {
+        path: ["small_enterprise", "evidence_reference"],
+        kind: "text",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "made_available_on"],
+        kind: "date",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "prior_period_net_turnover"],
+        kind: "amount",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "goodwill",
+    facts: [
+      {
+        path: ["small_enterprise", "evidence_reference"],
+        kind: "text",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "made_available_on"],
+        kind: "date",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "prior_period_net_turnover"],
+        kind: "amount",
+        required: false,
+        required_with_group: true,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "low_value_free",
+    facts: [
+      {
+        path: ["low_value", "election_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["low_value", "new_material_evidence_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "research_development_free",
+    facts: [
+      {
+        path: ["research_development_evidence_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "research_development_building",
+    facts: [
+      {
+        path: ["authority_class_key"],
+        kind: "class",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["research_development_evidence_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "charging_infrastructure_free",
+    facts: [
+      {
+        path: ["charging_infrastructure", "technical_documentation_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["charging_infrastructure", "installation_certificate_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "electric_vehicle_free",
+    facts: [
+      {
+        path: ["authority_class_key"],
+        kind: "class",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "justified_amount",
+    facts: [],
+  },
+  {
+    method: "small_enterprise_employment_free",
+    facts: [
+      {
+        path: ["authority_class_key"],
+        kind: "class",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "evidence_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "made_available_on"],
+        kind: "date",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["small_enterprise", "prior_period_net_turnover"],
+        kind: "amount",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "renewable_self_consumption_free",
+    facts: [
+      {
+        path: ["authority_class_key"],
+        kind: "class",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["renewable_self_consumption", "purpose"],
+        kind: "choice",
+        required: true,
+        required_with_group: false,
+        token_family: "renewable_installation_purpose",
+        tokens: ["electricity_self_consumption", "thermal_own_use"],
+      },
+      {
+        path: ["renewable_self_consumption", "documentation_kind"],
+        kind: "choice",
+        required: true,
+        required_with_group: false,
+        token_family: "renewable_documentation_kind",
+        tokens: [
+          "operating_authorisation",
+          "surplus_registration",
+          "low_voltage_certificate",
+          "renewable_gas_registration",
+          "thermal_process_registration",
+          "energy_efficiency_certificate",
+        ],
+      },
+      {
+        path: ["renewable_self_consumption", "documentation_reference"],
+        kind: "text",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["renewable_self_consumption", "made_available_on"],
+        kind: "date",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["renewable_self_consumption", "replaces_fossil_installation"],
+        kind: "flag",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+      {
+        path: ["renewable_self_consumption", "required_by_building_code"],
+        kind: "flag",
+        required: true,
+        required_with_group: false,
+        token_family: null,
+        tokens: [],
+      },
+    ],
+  },
+  {
+    method: "entity_regime_free",
+    facts: [],
+  },
+];
+
+/** The shapes an element can be registered under, and the activities an
+ * element bought outside the ledger can belong to. */
+export const SERVED_SHAPES = ["primary_purchase", "acquired_outside_ledger"];
+export const SERVED_ACTIVITIES = [
+  "A01",
+  "A02",
+  "A03",
+  "A04",
+  "A05",
+  "B01",
+  "B02",
+  "B03",
+  "B04",
+  "B05",
+];
+
+/** Whether a form can state every fact the method requires as a single value. */
+const statable = (method: string) =>
+  (SERVED_METHOD_FACTS.find((found) => found.method === method)?.facts ?? [])
+    .filter((fact) => fact.required)
+    .every((fact) => fact.kind !== "rows");
+
 type Tools = {
   now: () => string;
   hex64: (text: string) => string;
@@ -71,6 +561,15 @@ const leap = (year: number) =>
 const daysBetween = (from: string, until: string) =>
   Math.round((Date.parse(until) - Date.parse(from)) / 86_400_000);
 const later = (a: string, b: string) => (a > b ? a : b);
+const dayBefore = (iso: string) =>
+  new Date(Date.parse(iso) - 86_400_000).toISOString().slice(0, 10);
+const dayAfter = (iso: string) =>
+  new Date(Date.parse(iso) + 86_400_000).toISOString().slice(0, 10);
+/** A span with the last day it covers beside its exclusive boundary. */
+const withThrough = <T extends { covered_until: string }>(span: T) => ({
+  ...span,
+  covered_through: dayBefore(span.covered_until),
+});
 const earlier = (a: string, b: string) => (a < b ? a : b);
 
 /** The charge of a span on the tax year's cumulative curve: each end is
@@ -181,6 +680,10 @@ export function assetOperations(tools: Tools) {
   const elements = new Map<string, Element>(
     SEED_ELEMENTS.map((seed) => {
       const copy = structuredClone(seed);
+      for (const row of copy.rows) {
+        row.claims = row.claims.map(withThrough);
+        row.claimable_intervals = row.claimable_intervals.map(withThrough);
+      }
       return [
         seed.id,
         {
@@ -262,6 +765,12 @@ export function assetOperations(tools: Tools) {
           projected: year > 2025,
         };
 
+  const SHARE_FIELDS = [
+    "basis.business_use_share",
+    "basis.ownership_share",
+    "amortization.linear_coefficient",
+  ];
+
   const history = (element: Element): JsonObject =>
     json({
       revisions: element.revisions.map((found) => found.revision),
@@ -278,6 +787,18 @@ export function assetOperations(tools: Tools) {
     changes: { field: string; before: string | null; after: string | null }[],
     extra: Partial<TimelineEvent> = {},
   ) => {
+    const labelOf = (field: string, value: string | null): string | null => {
+      if (value === null) return null;
+      if (SHARE_FIELDS.includes(field))
+        return `${Number((Number(value) * 100).toFixed(6))}%`;
+      if (field === "amortization.authority_class_key")
+        return (
+          Object.values(TABLE_GROUPS)
+            .flat()
+            .find((group) => group.class_key === value)?.class_label ?? null
+        );
+      return null;
+    };
     const keyOf = (field: string, value: string | null) =>
       value !== null && Object.hasOwn(TOKEN_FIELDS, field)
         ? `${FAMILY}${TOKEN_FIELDS[field]}.${value}`
@@ -294,6 +815,8 @@ export function assetOperations(tools: Tools) {
         ...change,
         before_key: keyOf(change.field, change.before),
         after_key: keyOf(change.field, change.after),
+        before_label: labelOf(change.field, change.before),
+        after_label: labelOf(change.field, change.after),
       })),
       affects_calculation: kind !== "descriptor",
       claim: null,
@@ -321,7 +844,9 @@ export function assetOperations(tools: Tools) {
     }
     if (cursor < until)
       gaps.push({ covered_from: cursor, covered_until: until });
-    return gaps.filter((gap) => gap.covered_from < gap.covered_until);
+    return gaps
+      .filter((gap) => gap.covered_from < gap.covered_until)
+      .map(withThrough);
   };
 
   const serviceWindow = (element: Element, row: PlanRow) => {
@@ -454,7 +979,12 @@ export function assetOperations(tools: Tools) {
           asset_kind: kind,
           regime: REGIME,
           edition,
-          methods: ADMITTED_METHODS[kind],
+          acquisition_shapes: SERVED_SHAPES,
+          declared_activities: SERVED_ACTIVITIES,
+          methods: ADMITTED_METHODS[kind]!.filter(statable),
+          method_facts: ADMITTED_METHODS[kind]!.filter(statable).map((method) =>
+            SERVED_METHOD_FACTS.find((found) => found.method === method)!,
+          ),
           table_groups: TABLE_GROUPS[kind],
         },
       });
@@ -534,17 +1064,57 @@ export function assetOperations(tools: Tools) {
     const opening = obj(revision.opening_history);
     const election = obj(revision.amortization);
     if (!acquisition || !basis || !opening || !election) return invalid();
-    for (const key of [
-      "observed_transaction_id",
-      "invoice_evidence_id",
-      "evidence_fingerprint",
-    ])
-      if (typeof acquisition[key] !== "string") return invalid();
     const kind = textOf(revision.asset_kind);
     if (kind === null || !Object.hasOwn(TABLE_GROUPS, kind)) return invalid();
-    if (revision.acquisition_shape !== "primary_purchase") return invalid();
+    const acquiredAs = textOf(revision.acquisition_shape);
+    if (acquiredAs === null || !SERVED_SHAPES.includes(acquiredAs))
+      return invalid();
     const inService = textOf(revision.in_service_date);
     if (inService === null || !DATE.test(inService)) return invalid();
+    if (typeof acquisition.invoice_evidence_id !== "string") return invalid();
+    if (acquiredAs === "acquired_outside_ledger") {
+      if (
+        acquisition.observed_transaction_id !== null ||
+        acquisition.evidence_fingerprint !== null
+      )
+        return invalid();
+      if (acquisition.invoice_evidence_id.trim() === "")
+        return refuse(
+          VALIDATION,
+          "acquisition_evidence_reference_required",
+          {},
+          shape,
+        );
+      const bought = textOf(revision.declared_acquisition_date);
+      if (bought === null)
+        return refuse(
+          VALIDATION,
+          "declared_acquisition_date_required",
+          {},
+          shape,
+        );
+      if (bought > inService)
+        return refuse(
+          VALIDATION,
+          "declared_acquisition_after_service",
+          {
+            declared_acquisition_date: bought,
+            in_service_date: inService,
+          },
+          shape,
+        );
+      const activity = textOf(revision.declared_activity);
+      if (activity === null || !SERVED_ACTIVITIES.includes(activity))
+        return refuse(VALIDATION, "declared_activity_required", {}, shape);
+    } else {
+      for (const name of ["observed_transaction_id", "evidence_fingerprint"])
+        if (typeof acquisition[name] !== "string") return invalid();
+      if (
+        revision.declared_acquisition_date != null ||
+        revision.declared_activity != null
+      )
+        return invalid();
+    }
     if (!["new", "used"].includes(String(revision.acquired_condition)))
       return invalid();
     if (
@@ -567,10 +1137,38 @@ export function assetOperations(tools: Tools) {
       return refuse(INCOMPLETE, null, {}, shape, [
         "basis.prior_allocation_provenance",
       ]);
-    if (basis.stage === "whole_property")
-      return refuse(INCOMPLETE, "allocation_components_missing", {}, shape, [
-        "basis.construction_cost",
-      ]);
+    if (basis.stage === "whole_property") {
+      if (basis.is_property !== true) return invalid();
+      const parts = [
+        "construction_cost",
+        "land_cost",
+        "office_area",
+        "total_area",
+        "ownership_share",
+      ].filter((name) => decimalOf(basis[name]) === null);
+      if (parts.length > 0 || textOf(basis.ownership_mode) === null)
+        return refuse(INCOMPLETE, "allocation_components_missing", {}, shape, [
+          ...parts.map((name) => `basis.${name}`),
+          ...(textOf(basis.ownership_mode) === null
+            ? ["basis.ownership_mode"]
+            : []),
+        ]);
+      if (
+        toCents(decimalOf(basis.construction_cost)!) +
+          toCents(decimalOf(basis.land_cost)!) !==
+          toCents(decimalOf(basis.basis_amount)!) ||
+        Number(decimalOf(basis.office_area)) >
+          Number(decimalOf(basis.total_area))
+      )
+        return invalid();
+      if (basis.ownership_mode === "spousal_community")
+        return refuse(
+          UNSUPPORTED,
+          "spousal_community_ownership_unsupported",
+          {},
+          shape,
+        );
+    } else if (basis.is_property === true) return invalid();
     // The opening history.
     const accumulated = decimalOf(opening.accumulated_amount);
     const through = opening.covered_through_tax_year;
@@ -656,8 +1254,7 @@ export function assetOperations(tools: Tools) {
         );
       if (
         !["known", "expert_valuation"].includes(String(used.determination)) ||
-        decimalOf(used.original_price) === null ||
-        textOf(used.evidence_reference) === null
+        decimalOf(used.original_price) === null
       )
         return invalid();
     }
@@ -689,6 +1286,50 @@ export function assetOperations(tools: Tools) {
       return refuse(INCOMPLETE, null, {}, shape, [
         "amortization.research_development_evidence_reference",
       ]);
+    // Every fact the method requires, and a group stated whole.
+    const served = SERVED_METHOD_FACTS.find((found) => found.method === method);
+    const stated = (path: string[]) =>
+      path.reduce<unknown>((at, step) => obj(at)?.[step] ?? null, election) !==
+      null;
+    const absent = (served?.facts ?? [])
+      .filter((fact) => fact.kind !== "rows")
+      .filter((fact) => {
+        if (stated(fact.path)) return false;
+        if (fact.required) return true;
+        return (
+          fact.required_with_group &&
+          (served?.facts ?? []).some(
+            (other) => other.path[0] === fact.path[0] && stated(other.path),
+          )
+        );
+      });
+    if (absent.length > 0)
+      return refuse(
+        INCOMPLETE,
+        null,
+        {},
+        shape,
+        absent.map((fact) => `amortization.${fact.path.join(".")}`),
+      );
+    const hours = decimalOf(election.shift_hours_per_day);
+    if (
+      hours !== null &&
+      (method !== "linear" || Number(hours) <= 0 || Number(hours) > 24)
+    )
+      return invalid();
+    // A vehicle is an element of a material kind whose declaration admits it.
+    const vehicle = obj(revision.vehicle_affectation);
+    if (vehicle !== null) {
+      if (kind !== "material") return invalid();
+      for (const name of ["category", "private_use", "evidence_reference"])
+        if (textOf(vehicle[name]) === null) return invalid();
+      if (typeof vehicle.recorded_in_activity_books !== "boolean")
+        return invalid();
+      if (vehicle.recorded_in_activity_books === false)
+        return refuse(UNSUPPORTED, "vehicle_missing_from_books", {}, shape);
+      if (vehicle.private_use === "shared")
+        return refuse(UNSUPPORTED, "vehicle_shared_use", {}, shape);
+    }
   };
 
   const describe: Handler = (request) => {
@@ -869,7 +1510,9 @@ export function assetOperations(tools: Tools) {
         decimalOf(election.linear_coefficient) ??
           group!.maximum_coefficient.decimal,
       );
-      row.claimable_intervals = [{ covered_from: start, covered_until: end }];
+      row.claimable_intervals = [
+        withThrough({ covered_from: start, covered_until: end }),
+      ];
     }
     return rows;
   };
@@ -891,22 +1534,24 @@ export function assetOperations(tools: Tools) {
     const existing = find(id);
     if (existing) return json({ ...ok, history: history(existing) });
     const acquisition = obj(revision.acquisition)!;
-    const purchase = PURCHASES.find(
-      (found) => found.transaction_id === acquisition.observed_transaction_id,
-    );
-    if (!purchase)
-      return refuse(
-        VALIDATION,
-        "acquisition_transaction_missing",
-        { transaction_id: String(acquisition.observed_transaction_id) },
-        shape,
+    if (acquisition.observed_transaction_id !== null) {
+      const purchase = PURCHASES.find(
+        (found) => found.transaction_id === acquisition.observed_transaction_id,
       );
-    if (
-      purchase.invoice_evidence_id !== acquisition.invoice_evidence_id ||
-      purchase.evidence_fingerprint !== acquisition.evidence_fingerprint
-    )
-      return invalid();
-    taken.add(purchase.transaction_id);
+      if (!purchase)
+        return refuse(
+          VALIDATION,
+          "acquisition_transaction_missing",
+          { transaction_id: String(acquisition.observed_transaction_id) },
+          shape,
+        );
+      if (
+        purchase.invoice_evidence_id !== acquisition.invoice_evidence_id ||
+        purchase.evidence_fingerprint !== acquisition.evidence_fingerprint
+      )
+        return invalid();
+      taken.add(purchase.transaction_id);
+    }
 
     const basis = obj(revision.basis)!;
     const election = obj(revision.amortization)!;
@@ -946,6 +1591,7 @@ export function assetOperations(tools: Tools) {
           ? null
           : dec(fromCents(Math.max(toCents(amount) - toCents(accumulated), 0))),
       findings: { missing: 0, incomplete: 0, conflict: 0, stale: 0 },
+      disposal: null,
       years: rows
         .map((row) => row.tax_year)
         .filter(
@@ -1028,6 +1674,15 @@ export function assetOperations(tools: Tools) {
     )
       return refuse(VALIDATION, "correction_must_supersede_current", {}, shape);
     judgeRevision(revision, shape);
+    // The baja a correction states replaces the one recorded, or removes it.
+    const stated = obj(revision.disposal);
+    const recorded = obj(current.revision.disposal);
+    const bajaMoves = JSON.stringify(stated) !== JSON.stringify(recorded);
+    const bajaFacts =
+      stated !== null && bajaMoves
+        ? statedDisposal({ disposal: stated })
+        : null;
+    if (bajaFacts !== null) judge(element, bajaFacts, shape);
     const changes = changesBetween(current.revision, revision);
     if (changes.length === 0) return invalid();
     const replaced = superseding.map((entry) => {
@@ -1104,6 +1759,13 @@ export function assetOperations(tools: Tools) {
         );
         restate(element, row);
       }
+    if (bajaFacts !== null) putOutOfService(element, bajaFacts);
+    else if (bajaMoves && stated === null) {
+      element.baja = null;
+      element.outOfService = null;
+      element.list.disposal = null;
+      element.list.state = "in_service";
+    }
     element.list.revision_number = number;
     element.list.in_service_date = textOf(revision.in_service_date)!;
     element.list.method = textOf(obj(revision.amortization)!.method)!;
@@ -1317,6 +1979,23 @@ export function assetOperations(tools: Tools) {
     return facts;
   };
 
+  /** The element stands out of service after the baja's last day. The plan
+   * ends the year of that day; the fixture does not work the figures of the
+   * years it drops out again if the baja later moves back. */
+  const putOutOfService = (element: Element, facts: DisposalFacts) => {
+    element.baja = facts;
+    element.outOfService = dayAfter(facts.disposal_date);
+    element.list.disposal = {
+      disposal_date: facts.disposal_date,
+      reason: facts.reason,
+      reason_key: `${FAMILY}disposal_reason.${facts.reason}`,
+    };
+    element.rows = element.rows.filter(
+      (row) => row.tax_year <= Number(facts.disposal_date.slice(0, 4)),
+    );
+    if (facts.disposal_date < TODAY) element.list.state = "out_of_service";
+  };
+
   const dispose: Handler = (request) => {
     exact(request, ["asset_id", "disposal"]);
     const element = find(required(request.asset_id));
@@ -1386,28 +2065,14 @@ export function assetOperations(tools: Tools) {
         prior_free_depreciation_regime: facts.prior_free_depreciation_regime,
         later_affectation_on: facts.later_affectation_on,
       }),
-      out_of_service_date: new Date(
-        Date.parse(facts.disposal_date) + 86_400_000,
-      )
-        .toISOString()
-        .slice(0, 10),
+      out_of_service_date: dayAfter(facts.disposal_date),
     };
     element.revisions.push({
       revision: afterBaja,
       revision_id: hex64(`revision:${JSON.stringify(afterBaja)}`),
     });
     element.list.revision_number += 1;
-    element.baja = facts;
-    element.outOfService = new Date(
-      Date.parse(facts.disposal_date) + 86_400_000,
-    )
-      .toISOString()
-      .slice(0, 10);
-    // The plan ends the year of the last day of service.
-    element.rows = element.rows.filter(
-      (row) => row.tax_year <= Number(facts.disposal_date.slice(0, 4)),
-    );
-    if (facts.disposal_date < TODAY) element.list.state = "out_of_service";
+    putOutOfService(element, facts);
     recount(element);
     return json({ ...ok, history: history(element) });
   };
@@ -1616,6 +2281,7 @@ export function assetOperations(tools: Tools) {
         tax_year: year,
         covered_from: from,
         covered_until: until,
+        covered_through: dayBefore(until),
         service_days: daysBetween(spanStart, spanEnd),
         calendar_days: leap(year) ? 366 : 365,
         amount: dec(amount),
@@ -1716,6 +2382,7 @@ export function assetOperations(tools: Tools) {
       amount: dec(given.amount.decimal),
       covered_from: given.covered_from,
       covered_until: given.covered_until,
+      covered_through: dayBefore(given.covered_until),
       effective: true,
       superseded_by: null,
       revision_id: latest(element).revision_id,

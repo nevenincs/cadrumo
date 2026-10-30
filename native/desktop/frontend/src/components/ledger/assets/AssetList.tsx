@@ -1,11 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { facts } from "../../../shell/compose";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { ATTENTION_TONE } from "../../modelo/workspace/Marks";
 import type { ModeloFormAttention } from "../../../shell/modeloContract";
@@ -22,10 +24,11 @@ import {
   COUNT_ICON,
   COUNT_KINDS,
   countWord,
+  openingRemedy,
   refusalText,
   tokenWord,
 } from "./assetsWords";
-import { DASH, figureText } from "./planWords";
+import { figureText } from "./planWords";
 
 /** Words the refusal a settled-but-refused call carries, for a `CallLine`. */
 export function callRefusal(
@@ -50,6 +53,48 @@ const COUNT_LEVEL: Record<keyof AssetCounts, ModeloFormAttention> = {
   stale: "check",
 };
 
+/** A small mark that says one thing: its words are the accessible name and the
+ * tooltip, and it takes keyboard focus so the tooltip needs no mouse. */
+export function Hint({
+  words,
+  className,
+  children,
+}: {
+  words: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          role="img"
+          tabIndex={0}
+          aria-label={words}
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full focus-visible:outline-(length:--focus-ring) focus-visible:outline-ring focus-visible:outline-solid",
+            className,
+          )}
+        >
+          {children}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{words}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** A figure the register does not know, drawn as a dashed circle. It is
+ * named "Not known" and the tooltip says why. */
+export function NotKnown({ why }: { why: string }) {
+  const t = useStrings();
+  return (
+    <Hint words={facts(t, [t(ASSET_KEYS.not_known), why])}>
+      <Icon name="unknown" size="xs" className="text-muted-foreground" />
+    </Hint>
+  );
+}
+
 /** One kind of count as a glyph and its number, the words in the tooltip and
  * the accessible name. */
 export function CountPill({
@@ -62,23 +107,17 @@ export function CountPill({
   const t = useStrings();
   const words = countWord(t, kind, count);
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          role="img"
-          aria-label={words}
-          className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium tabular-nums text-secondary-foreground"
-        >
-          <Icon
-            name={COUNT_ICON[kind]}
-            size="xs"
-            className={ATTENTION_TONE[COUNT_LEVEL[kind]]}
-          />
-          <span aria-hidden="true">{count}</span>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>{words}</TooltipContent>
-    </Tooltip>
+    <Hint
+      words={words}
+      className="bg-secondary px-2 py-0.5 text-xs font-medium tabular-nums text-secondary-foreground"
+    >
+      <Icon
+        name={COUNT_ICON[kind]}
+        size="xs"
+        className={ATTENTION_TONE[COUNT_LEVEL[kind]]}
+      />
+      <span aria-hidden="true">{count}</span>
+    </Hint>
   );
 }
 
@@ -133,7 +172,10 @@ export function AssetList({
         key: "serial",
         label: t(ASSET_KEYS.list.column.serial),
         sort: (row) => row.serial_number,
-        cell: (row) => row.serial_number ?? DASH,
+        cell: (row) =>
+          row.serial_number ?? (
+            <NotKnown why={t(ASSET_KEYS.list.serial_missing)} />
+          ),
       },
       {
         key: "kind",
@@ -151,7 +193,11 @@ export function AssetList({
         key: "in_service",
         label: t(ASSET_KEYS.list.column.in_service),
         sort: (row) => row.in_service_date,
-        cell: (row) => dateText(locale, row.in_service_date, true),
+        cell: (row) => (
+          <span className="whitespace-nowrap">
+            {dateText(locale, row.in_service_date, true)}
+          </span>
+        ),
       },
       {
         key: "state",
@@ -164,14 +210,25 @@ export function AssetList({
         label: t(ASSET_KEYS.list.column.basis),
         numeric: true,
         sort: (row) => rankDecimal(row.basis.decimal),
-        cell: (row) => figureText(locale, row.basis),
+        cell: (row) => (
+          <span className="whitespace-nowrap">
+            {figureText(locale, row.basis)}
+          </span>
+        ),
       },
       {
         key: "pending",
         label: t(ASSET_KEYS.list.column.pending),
         numeric: true,
         sort: (row) => rankDecimal(row.pending?.decimal),
-        cell: (row) => figureText(locale, row.pending) ?? DASH,
+        cell: (row) => {
+          const pending = figureText(locale, row.pending);
+          return pending === null ? (
+            <NotKnown why={openingRemedy(t)} />
+          ) : (
+            <span className="whitespace-nowrap">{pending}</span>
+          );
+        },
       },
       {
         key: "findings",

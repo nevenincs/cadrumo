@@ -10,19 +10,57 @@ import { AssetTimeline } from "./AssetTimeline";
 // scenario's register. Each story names the element whose plan or history
 // shows one state: a partly claimed year, years on projected rates, years
 // before the first edition, a maximum period that has elapsed, a free method,
-// an unknown opening history, a baja and a claim that no longer matches.
+// an unknown opening history, a baja and a claim that no longer matches. A
+// story can also change what the plan says, to show a state the register has
+// no element in: the remedy for a missing opening amount, and a legal basis
+// that is long and partial at once.
 
 type Answer = "register" | "empty" | "refused" | "loading" | "unavailable";
+
+type Tweak = "none" | "opening_remedy" | "long_partial_citations";
 
 type Args = {
   assetId: string;
   year: number | null;
+  /** What the plan is made to say beyond the register's own. */
+  tweak: Tweak;
   /** What the read answers; the register's own unless said. */
   answer: Answer;
   /** Drawn at the width of the detail panel rather than the pane. */
   narrow: boolean;
   locale: string;
 };
+
+type PlanShape = {
+  rows?: { absence: string | null; absence_reason_key: string | null }[] | null;
+  limits?: { legal_citations_complete: boolean } | null;
+};
+
+/** The scenario's port, with the plan changed as the story asks. */
+function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
+  if (tweak === "none") return port;
+  return {
+    ...port,
+    submit: ((definition: string, payload: never) => {
+      const sent = port.submit(definition as never, payload) as Promise<{
+        kind: string;
+        result?: unknown;
+      }>;
+      if (definition !== "ledger.actividad-asset.plan") return sent;
+      return sent.then((answer) => {
+        if (answer.kind !== "settled") return answer;
+        const plan = structuredClone(answer.result) as PlanShape;
+        if (tweak === "opening_remedy") {
+          for (const row of plan.rows ?? [])
+            if (row.absence === "incomplete")
+              row.absence_reason_key =
+                "ledger.actividad_asset.errors.opening_history_missing";
+        } else if (plan.limits) plan.limits.legal_citations_complete = false;
+        return { ...answer, result: plan };
+      });
+    }) as LedgerPort["submit"],
+  };
+}
 
 /** The scenario's port, with the plan and timeline reads answered as the
  * story asks. */
@@ -82,12 +120,16 @@ function Stage({
   view,
   assetId,
   year,
+  tweak,
   answer,
   narrow,
   locale,
 }: Args & { view: "plan" | "timeline" }) {
   const base = useLedgerPort();
-  const port = useMemo(() => withAnswer(base, answer), [base, answer]);
+  const port = useMemo(
+    () => withAnswer(withTweak(base, tweak), answer),
+    [base, tweak, answer],
+  );
   return (
     <div
       className={
@@ -104,6 +146,7 @@ function Stage({
           locale={locale}
           year={year}
           onOpenLink={() => undefined}
+          onCorrectClaim={() => undefined}
         />
       ) : (
         <AssetTimeline
@@ -122,6 +165,7 @@ const meta: Meta<Args> = {
   args: {
     assetId: "furgoneta",
     year: null,
+    tweak: "none",
     answer: "register",
     narrow: false,
     locale: "en",
@@ -182,14 +226,29 @@ export const PlanLongListOfLegalBasis: Story = plan({
   name: "Plan, eleven provisions behind the election, collapsed with their count",
   args: { assetId: "furgoneta", year: 2026 },
   play: async ({ canvasElement }: PlayContext) => {
-    const summary = await waitFor(() => {
+    const disclosure = await waitFor(() => {
       const found = canvasElement.querySelector(
-        ".ledger-assets-citations summary",
+        ".ledger-assets-citations button",
       );
       if (!found) throw new Error("the legal basis is not drawn yet");
       return found;
     });
-    await userEvent.click(summary);
+    await userEvent.click(disclosure);
+  },
+});
+
+export const PlanLongAndPartialLegalBasis: Story = plan({
+  name: "Plan, eleven provisions and a list that is also partial",
+  args: { assetId: "furgoneta", year: 2026, tweak: "long_partial_citations" },
+  play: async ({ canvasElement }: PlayContext) => {
+    const disclosure = await waitFor(() => {
+      const found = canvasElement.querySelector(
+        ".ledger-assets-citations button",
+      );
+      if (!found) throw new Error("the legal basis is not drawn yet");
+      return found;
+    });
+    await userEvent.click(disclosure);
   },
 });
 
@@ -201,6 +260,16 @@ export const PlanPartialListOfLegalBasis: Story = plan({
 export const PlanBeforeTheFirstEdition: Story = plan({
   name: "Plan, years before the first edition: no figure",
   args: { assetId: "compresor" },
+});
+
+export const PlanYearWithoutOfficialTables: Story = plan({
+  name: "Plan, a year with no official tables, said in words",
+  args: { assetId: "compresor", narrow: true },
+});
+
+export const PlanMissingOpeningAmount: Story = plan({
+  name: "Plan, an opening amount never entered says where to enter it",
+  args: { assetId: "estanteria", narrow: true, tweak: "opening_remedy" },
 });
 
 export const PlanCoveredByOpening: Story = plan({
@@ -215,7 +284,7 @@ export const PlanProjectedRates: Story = plan({
 
 export const PlanMaximumPeriodElapsed: Story = plan({
   name: "Plan, the maximum period has elapsed",
-  args: { assetId: "cristaleria" },
+  args: { assetId: "cristaleria", narrow: true },
   play: open(2024),
 });
 
@@ -241,8 +310,8 @@ export const PlanOutOfService: Story = plan({
 });
 
 export const PlanStaleClaim: Story = plan({
-  name: "Plan, a claim recorded under an earlier revision",
-  args: { assetId: "servidor" },
+  name: "Plan, a claim that no longer matches the figures is marked and can be corrected",
+  args: { assetId: "servidor", narrow: true },
   play: open(2025),
 });
 

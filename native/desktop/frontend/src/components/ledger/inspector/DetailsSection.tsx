@@ -1,6 +1,5 @@
 import { Icon } from "@/components/ui/icon";
-import { IconButton } from "@/components/ui/icon-button";
-import { facts, listed } from "@/shell/compose";
+import { facts } from "@/shell/compose";
 import type { LedgerTrackResult } from "../../../shell/ledger";
 import { effectiveFacts } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
@@ -14,20 +13,16 @@ import type { InspectorRead } from "./useInspectorReads";
 
 /**
  * The inspector's Details section: every fact of the movement, the ones the
- * grid does not show among them, where it came from, and its identities.
+ * grid does not show among them, and where it came from.
  * A change to a date that moves the movement to another quarter says which
  * declarations it affects.
  */
 export function DetailsSection({
   scope,
   track,
-  copy,
-  say,
 }: {
   scope: FieldScope;
   track: InspectorRead<LedgerTrackResult> | null;
-  copy: (text: string) => Promise<void>;
-  say: (text: string) => void;
 }) {
   const t = useStrings();
   const { row, changes, locale } = scope;
@@ -180,54 +175,6 @@ export function DetailsSection({
         </dt>
         <dd>{stampText(locale, tx.modified_at)}</dd>
       </dl>
-
-      <details className="ledger-technical">
-        <summary className="cursor-pointer text-sm text-muted-foreground">
-          {t("desktop.ledger.inspector.technical")}
-        </summary>
-        <dl className="mt-1 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 font-mono text-xs">
-          <dt className="font-sans text-muted-foreground">
-            {t("desktop.ledger.inspector.movement_id")}
-          </dt>
-          <dd className="flex items-center gap-1 break-all">
-            {tx.transaction_id}
-            <IconButton
-              label={t("desktop.ledger.inspector.copy_id")}
-              onClick={() =>
-                void copy(tx.transaction_id).then(() =>
-                  say(t("desktop.ledger.inspector.copied_id")),
-                )
-              }
-            >
-              <Icon name="copy" size="xs" />
-            </IconButton>
-          </dd>
-          {provenance?.import_fingerprint && (
-            <>
-              <dt className="font-sans text-muted-foreground">
-                {t("desktop.ledger.inspector.fingerprint")}
-              </dt>
-              <dd className="break-all">{provenance.import_fingerprint}</dd>
-            </>
-          )}
-          {(tracked?.tracking.edit_lineage.length ?? 0) > 0 && (
-            <>
-              <dt className="font-sans text-muted-foreground">
-                {t("desktop.ledger.inspector.earlier_ids")}
-              </dt>
-              <dd className="break-all">
-                {listed(
-                  t,
-                  tracked!.tracking.edit_lineage.map(
-                    (entry) => entry.previous_transaction_id,
-                  ),
-                  "plain",
-                )}
-              </dd>
-            </>
-          )}
-        </dl>
-      </details>
     </div>
   );
 }

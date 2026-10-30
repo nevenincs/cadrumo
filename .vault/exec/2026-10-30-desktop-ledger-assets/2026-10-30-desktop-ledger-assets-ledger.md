@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:9fded8a858d4e4592bfd53ac78927e87afef5ebb2f89cac070069d13278bbe05'
+body_hash: 'sha256:27f7549a566f7f1fba30f516d2c0398bd816265ea9d3e65f74850434b2dca3b8'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -214,6 +214,75 @@ related:
 - `S05` `verify:` `tsc --noEmit` -> `pass`
 - `S05` `verify:` `playwright ledger-assets-contract` -> `pass`
 - `S05` `verify:` `pytest desktop_asset requests decode` -> `pass`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/editing/ReviewDialog.tsx`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/inspector/DetailsSection.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/inspector/MovementInspector.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/inspector/LedgerInspector.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/modelo/workspace/CheckView.tsx`
+- `S06` `M` `dev/locales/desktop_workspace_keys.py`
+- `S06` `verify:` `npx tsc --noEmit` -> `pass`
+- `S06` `verify:` `cmake --build build/windows-x64 --target desktop-frontend-chrome` -> `pass`
+- `S06` `by:` `implementer`
+- `S06` `A` `native/desktop/frontend/src/components/ledger/assets/StockPane.tsx`
+- `S06` `A` `native/desktop/frontend/src/components/ledger/assets/stockModel.ts`
+- `S06` `A` `native/desktop/frontend/src/components/ledger/assets/Stock.stories.tsx`
+- `S06` `A` `native/desktop/frontend/tests/ledger-stock.spec.ts`
+- `S06` `A` `native/desktop/frontend/tests/support/stockRequests.ts`
+- `S06` `A` `dev/locales/tests/test_desktop_stock_options.py`
+- `S06` `A` `dev/locales/tests/test_desktop_stock_vocabulary.py`
+- `S06` `A` `dev/registry/tests/test_desktop_stock_requests_decode.py`
+- `S06` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S06` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S06` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S06` `M` `native/desktop/frontend/src/dev/ledgerClassesFixture.ts`
+- `S06` `M` `dev/locales/desktop_assets_keys.py`
+- `S06` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S06` `M` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.json`
+- `S06` `D` `native/desktop/frontend/src/components/ledger/setup/InventoryPane.tsx`
+- `S06` `verify:` `playwright ledger-stock.spec` -> `pass`
+- `S06` `verify:` `relay_contracts.py --check` -> `pass`
+- `S06` `verify:` `pytest stock decode, options, parity` -> `pass`
+- `S06` `by:` `implementation-engineer`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/AssetForm.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/ClaimFlow.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/CorrectForm.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/BajaForm.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/assetFields.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/assetRevision.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/assetWrites.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/assetsWords.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/FixedAssetsPane.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/AssetForms.stories.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/setup/SetupParts.tsx`
+- `S07` `M` `native/desktop/frontend/src/dev/assetsFixture.ts`
+- `S07` `M` `native/desktop/frontend/tests/ledger-assets-contract.spec.ts`
+- `S07` `M` `native/desktop/frontend/tests/support/assetRequests.ts`
+- `S07` `M` `dev/registry/tests/test_desktop_asset_requests_decode.py`
+- `S07` `M` `dev/locales/desktop_ledger_workflow_keys.py`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `by:` `implementation-engineer`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/AmortizationPlan.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/AssetList.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/AssetDetail.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/AssetTimeline.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/FilingHandoffPanel.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/DisposalFigures.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/planWords.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/planRead.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/Amortization.stories.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/Assets.stories.tsx`
+- `S07` `M` `native/desktop/frontend/src/dev/assetsSeed.ts`
+- `S07` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S07` `verify:` `npx tsc --noEmit` -> `pass`
+- `S07` `verify:` `npx eslint and prettier --check on the paths` -> `pass`
+- `S07` `verify:` `pytest dev/registry/tests/test_desktop_asset_seed_follows_the_table.py` -> `pass`
+- `S07` `verify:` `cmake --build build/windows-x64 --target desktop-frontend-chrome` -> `pass`
+- `S07` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py test_desktop_asset_vocabulary.py` -> `pass`
+- `S07` `by:` `implementer`
 
 ## Notes
 
@@ -229,3 +298,7 @@ related:
 - `S06` Scenario specs ledger-setup and ledger-sweep not run: they need the served scenario bundle, and assets/StockPane.tsx did not exist yet (tsc fails only on that import).
 - `S06` tsc reports only another Step's tests/ledger-assets-contract.spec.ts unused port; desktop-frontend-chrome build refuses on `desktop.ledger.stock.field.*` keys not yet declared (another Step); locale pytest fails only on `desktop.ledger.assets.year_estimated*` undeclared (another Step)
 - `S05` batch 3 and register fixes conformed; uncommitted by instruction; host and manifests untouched
+- `S06` `test_desktop_chrome` shell-drift test fails only on other agents' `ledger.actividad_asset` keys; Playwright specs not run
+- `S06` open: reason-sentence test fails for 4 reasons; shell-key drift test fails on another agent's keys; chrome build blocked by a `ledger.actividad_asset.` family in assetsFixture.ts; Rust tests not run
+- `S07` assetRequests.ts edited outside the write list: the decode test bundles it and it must carry the backend's served options
+- `S07` dev/locales `test_parity` fails on keys of the stock agent only `(tui.ledger.registers.inventory.*)`

@@ -83,6 +83,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2023-04-01",
             covered_until: "2024-01-01",
+            covered_through: "2023-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -127,6 +128,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2024-01-01",
             covered_until: "2025-01-01",
+            covered_through: "2024-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -171,6 +173,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2025-01-01",
             covered_until: "2026-01-01",
+            covered_through: "2025-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -202,6 +205,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2026-07-01",
             covered_until: "2027-01-01",
+            covered_through: "2026-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -220,6 +224,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2026-01-01",
             covered_until: "2026-07-01",
+            covered_through: "2026-06-30",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -251,6 +256,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2027-01-01",
             covered_until: "2028-01-01",
+            covered_through: "2027-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -287,6 +293,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2028-01-01",
             covered_until: "2029-01-01",
+            covered_through: "2028-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -323,6 +330,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2029-01-01",
             covered_until: "2030-01-01",
+            covered_through: "2029-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -359,6 +367,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2030-01-01",
             covered_until: "2031-01-01",
+            covered_through: "2030-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -395,6 +404,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2031-01-01",
             covered_until: "2032-01-01",
+            covered_through: "2031-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -545,6 +555,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2023, 2024, 2025, 2026],
       projected_years: [2027, 2028, 2029, 2030, 2031, 2032],
+      disposal: null,
     },
     events: [
       {
@@ -562,7 +573,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -570,6 +583,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2023-04-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -577,6 +592,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "24000.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -584,6 +601,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -591,13 +610,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "linear",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.linear",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.authority_class_key",
@@ -605,6 +628,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "transporte-externo",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "Elementos de transporte externo",
           },
           {
             field: "amortization.linear_coefficient",
@@ -612,6 +637,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.12",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "12%",
           },
           {
             field: "acquired_condition",
@@ -619,6 +646,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -627,6 +656,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -634,6 +665,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -641,6 +674,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -661,6 +696,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Furgoneta de reparto",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "serial_number",
@@ -668,6 +705,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "FR-2023-0114",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,
@@ -688,6 +727,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2169.86",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -712,6 +753,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2880.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -736,6 +779,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2880.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -760,6 +805,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "1428.16",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -1048,6 +1095,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2022-01-01",
             covered_until: "2023-01-01",
+            covered_through: "2022-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -1092,6 +1140,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2023-01-01",
             covered_until: "2024-01-01",
+            covered_through: "2023-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -1288,6 +1337,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2022, 2023, 2024, 2025, 2026],
       projected_years: [],
+      disposal: null,
     },
     events: [
       {
@@ -1305,7 +1355,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -1313,6 +1365,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2019-03-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -1320,6 +1374,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "3200.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -1327,6 +1383,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -1334,13 +1392,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "linear",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.linear",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.authority_class_key",
@@ -1348,6 +1410,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "equipo-proceso-informacion",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "Equipos para procesos de información",
           },
           {
             field: "amortization.linear_coefficient",
@@ -1355,6 +1419,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.25",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "25%",
           },
           {
             field: "acquired_condition",
@@ -1362,6 +1428,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -1370,6 +1438,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -1377,6 +1447,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -1384,6 +1456,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -1404,6 +1478,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Plotter HP DesignJet",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "serial_number",
@@ -1411,6 +1487,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "HP-DJ-77310",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,
@@ -1431,6 +1509,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "800.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -1455,6 +1535,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "400.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -1788,6 +1870,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2022-01-01",
             covered_until: "2023-01-01",
+            covered_through: "2022-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -1832,6 +1915,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2023-01-01",
             covered_until: "2024-01-01",
+            covered_through: "2023-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -1876,6 +1960,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2024-01-01",
             covered_until: "2025-01-01",
+            covered_through: "2024-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -1920,6 +2005,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2025-01-01",
             covered_until: "2026-01-01",
+            covered_through: "2025-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -1964,6 +2050,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2026-01-01",
             covered_until: "2027-01-01",
+            covered_through: "2026-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -1995,6 +2082,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2027-01-01",
             covered_until: "2028-01-01",
+            covered_through: "2027-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -2031,6 +2119,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2028-01-01",
             covered_until: "2029-01-01",
+            covered_through: "2028-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -2067,6 +2156,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2029-01-01",
             covered_until: "2030-01-01",
+            covered_through: "2029-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -2103,6 +2193,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2030-01-01",
             covered_until: "2031-01-01",
+            covered_through: "2030-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -2251,6 +2342,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2022, 2023, 2024, 2025, 2026],
       projected_years: [2027, 2028, 2029, 2030, 2031],
+      disposal: null,
     },
     events: [
       {
@@ -2268,7 +2360,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -2276,6 +2370,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2019-06-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -2283,6 +2379,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "3000.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -2290,6 +2388,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -2297,13 +2397,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "linear",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.linear",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.authority_class_key",
@@ -2311,6 +2415,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "maquinaria",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "Maquinaria",
           },
           {
             field: "amortization.linear_coefficient",
@@ -2318,6 +2424,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.12",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "12%",
           },
           {
             field: "acquired_condition",
@@ -2325,6 +2433,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -2333,6 +2443,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -2340,6 +2452,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -2347,6 +2461,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -2367,6 +2483,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Compresor de taller",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "serial_number",
@@ -2374,6 +2492,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "CT-1187",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,
@@ -2394,6 +2514,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "360.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -2418,6 +2540,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "360.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -2442,6 +2566,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "360.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -2466,6 +2592,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "360.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -2490,6 +2618,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "360.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -2769,6 +2899,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2022-01-01",
             covered_until: "2023-01-01",
+            covered_through: "2022-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -2813,6 +2944,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2023-01-01",
             covered_until: "2024-01-01",
+            covered_through: "2023-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -2844,6 +2976,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2024-01-01",
             covered_until: "2025-01-01",
+            covered_through: "2024-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -2880,6 +3013,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2025-01-01",
             covered_until: "2026-01-01",
+            covered_through: "2025-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -3030,6 +3164,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2022, 2023, 2024, 2025, 2026],
       projected_years: [],
+      disposal: null,
     },
     events: [
       {
@@ -3047,7 +3182,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -3055,6 +3192,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2022-01-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -3062,6 +3201,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "800.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -3069,6 +3210,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -3076,13 +3219,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "linear",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.linear",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.authority_class_key",
@@ -3090,6 +3237,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "cristaleria",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "Cristalería",
           },
           {
             field: "amortization.linear_coefficient",
@@ -3097,6 +3246,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.25",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "25%",
           },
           {
             field: "acquired_condition",
@@ -3104,6 +3255,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -3112,6 +3265,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -3119,6 +3274,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -3126,6 +3283,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -3146,6 +3305,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Cristalería de la sala de catas",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,
@@ -3166,6 +3327,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "200.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -3190,6 +3353,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "200.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -3464,6 +3629,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2022-01-01",
             covered_until: "2023-01-01",
+            covered_through: "2022-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -3508,6 +3674,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2023-01-01",
             covered_until: "2024-01-01",
+            covered_through: "2023-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -3552,6 +3719,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2024-01-01",
             covered_until: "2025-01-01",
+            covered_through: "2024-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -3596,6 +3764,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2025-01-01",
             covered_until: "2025-07-01",
+            covered_through: "2025-06-30",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -3705,6 +3874,11 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2022, 2023, 2024, 2025],
       projected_years: [],
+      disposal: {
+        disposal_date: "2025-06-30",
+        reason: "sale",
+        reason_key: "ledger.actividad_asset.disposal_reason.sale",
+      },
     },
     events: [
       {
@@ -3722,7 +3896,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -3730,6 +3906,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2021-01-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -3737,6 +3915,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "6000.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -3744,6 +3924,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -3751,13 +3933,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "linear",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.linear",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.authority_class_key",
@@ -3765,6 +3951,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "maquinaria",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "Maquinaria",
           },
           {
             field: "amortization.linear_coefficient",
@@ -3772,6 +3960,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.12",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "12%",
           },
           {
             field: "out_of_service_date",
@@ -3779,6 +3969,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2025-07-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquired_condition",
@@ -3786,6 +3978,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -3794,6 +3988,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -3801,6 +3997,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -3808,6 +4006,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -3828,6 +4028,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Cámara de revelado",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "serial_number",
@@ -3835,6 +4037,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "CR-3312",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,
@@ -3855,6 +4059,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "720.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -3879,6 +4085,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "720.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -3903,6 +4111,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "720.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -3927,6 +4137,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "357.04",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -4159,6 +4371,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2024-02-01",
             covered_until: "2025-01-01",
+            covered_through: "2024-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -4203,6 +4416,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2025-01-01",
             covered_until: "2026-01-01",
+            covered_through: "2025-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -4234,6 +4448,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2026-01-01",
             covered_until: "2027-01-01",
+            covered_through: "2026-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -4270,6 +4485,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2027-01-01",
             covered_until: "2028-01-01",
+            covered_through: "2027-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -4306,6 +4522,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2028-01-01",
             covered_until: "2029-01-01",
+            covered_through: "2028-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -4342,6 +4559,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2029-01-01",
             covered_until: "2030-01-01",
+            covered_through: "2029-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -4481,6 +4699,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2024, 2025, 2026],
       projected_years: [2027, 2028, 2029, 2030],
+      disposal: null,
     },
     events: [
       {
@@ -4498,7 +4717,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "intangible",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.intangible",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -4506,6 +4727,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2024-02-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -4513,6 +4736,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "1800.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -4520,6 +4745,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -4527,13 +4754,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "linear",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.linear",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.authority_class_key",
@@ -4541,6 +4772,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "intangible-software",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "Sistemas y programas informáticos",
           },
           {
             field: "amortization.linear_coefficient",
@@ -4548,6 +4781,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.20",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "20%",
           },
           {
             field: "acquired_condition",
@@ -4555,6 +4790,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -4563,6 +4800,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -4570,6 +4809,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -4577,6 +4818,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -4597,6 +4840,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Licencia de facturación",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,
@@ -4617,6 +4862,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "329.51",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -4641,6 +4888,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "360.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -4845,6 +5094,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2024-06-01",
             covered_until: "2025-01-01",
+            covered_through: "2024-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -4889,6 +5139,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2025-01-01",
             covered_until: "2026-01-01",
+            covered_through: "2025-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -4933,6 +5184,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2026-01-01",
             covered_until: "2027-01-01",
+            covered_through: "2026-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -4964,6 +5216,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2027-01-01",
             covered_until: "2028-01-01",
+            covered_through: "2027-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -5000,6 +5253,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2028-01-01",
             covered_until: "2029-01-01",
+            covered_through: "2028-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -5141,6 +5395,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2024, 2025, 2026],
       projected_years: [2027, 2028, 2029],
+      disposal: null,
     },
     events: [
       {
@@ -5158,7 +5413,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -5166,6 +5423,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2024-06-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -5173,6 +5432,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "1000.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -5180,6 +5441,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -5187,13 +5450,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "linear",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.linear",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.authority_class_key",
@@ -5201,6 +5468,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "util-herramienta",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "Útiles y herramientas",
           },
           {
             field: "amortization.linear_coefficient",
@@ -5208,6 +5477,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.25",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "25%",
           },
           {
             field: "acquired_condition",
@@ -5215,6 +5486,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -5223,6 +5496,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -5230,6 +5505,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -5237,6 +5514,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -5257,6 +5536,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "146.17",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -5281,6 +5562,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "250.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -5305,6 +5588,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "250.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -5496,6 +5781,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2025-01-01",
             covered_until: "2026-01-01",
+            covered_through: "2025-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -5527,6 +5813,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2026-01-01",
             covered_until: "2027-01-01",
+            covered_through: "2026-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -5563,6 +5850,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2027-01-01",
             covered_until: "2028-01-01",
+            covered_through: "2027-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -5599,6 +5887,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2028-01-01",
             covered_until: "2029-01-01",
+            covered_through: "2028-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -5746,6 +6035,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2025, 2026],
       projected_years: [2027, 2028, 2029],
+      disposal: null,
     },
     events: [
       {
@@ -5763,7 +6053,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -5771,6 +6063,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2025-01-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -5778,6 +6072,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "4000.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -5785,6 +6081,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -5792,13 +6090,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "linear",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.linear",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.authority_class_key",
@@ -5806,6 +6108,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "equipo-proceso-informacion",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "Equipos para procesos de información",
           },
           {
             field: "amortization.linear_coefficient",
@@ -5813,6 +6117,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.25",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "25%",
           },
           {
             field: "acquired_condition",
@@ -5820,6 +6126,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -5828,6 +6136,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -5835,6 +6145,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -5842,6 +6154,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -5862,6 +6176,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Servidor de archivos",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "serial_number",
@@ -5869,6 +6185,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "SRV-0042",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,
@@ -5889,6 +6207,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "1000.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -5914,6 +6234,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "3800.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -6288,6 +6610,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2023, 2024, 2025, 2026],
       projected_years: [],
+      disposal: null,
     },
     events: [
       {
@@ -6305,7 +6628,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -6313,6 +6638,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2023-01-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -6320,6 +6647,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "9000.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -6327,6 +6656,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -6334,13 +6665,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "linear",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.linear",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.authority_class_key",
@@ -6348,6 +6683,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "instalacion-resto",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "Resto instalaciones",
           },
           {
             field: "amortization.linear_coefficient",
@@ -6355,6 +6692,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.10",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: "10%",
           },
           {
             field: "acquired_condition",
@@ -6362,6 +6701,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -6370,6 +6711,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -6377,6 +6720,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -6384,6 +6729,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "missing",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.missing",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -6404,6 +6751,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Estanterías de almacén",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,
@@ -6516,6 +6865,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             },
             covered_from: "2026-03-10",
             covered_until: "2027-01-01",
+            covered_through: "2026-12-31",
             effective: true,
             superseded_by: null,
             revision_id:
@@ -6611,6 +6961,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2026],
       projected_years: [],
+      disposal: null,
     },
     events: [
       {
@@ -6628,7 +6979,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -6636,6 +6989,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2026-03-10",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -6643,6 +6998,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "280.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -6650,6 +7007,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -6657,13 +7016,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "low_value_free",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.low_value_free",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquired_condition",
@@ -6671,6 +7034,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -6679,6 +7044,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -6686,6 +7053,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -6693,6 +7062,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -6713,6 +7084,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Taladro percutor",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "serial_number",
@@ -6720,6 +7093,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "TP-5521",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,
@@ -6740,6 +7115,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "280.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -6891,6 +7268,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           {
             covered_from: "2026-09-01",
             covered_until: "2027-01-01",
+            covered_through: "2026-12-31",
           },
         ],
         claimable_refusal_key: null,
@@ -6991,6 +7369,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       years: [2026],
       projected_years: [],
+      disposal: null,
     },
     events: [
       {
@@ -7008,7 +7387,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before: null,
             after: "material",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.asset_kind.material",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "in_service_date",
@@ -7016,6 +7397,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "2026-09-01",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.basis_amount",
@@ -7023,6 +7406,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "250.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.non_deductible_iva",
@@ -7030,6 +7415,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "residual_value",
@@ -7037,13 +7424,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "0.00",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "amortization.method",
             before: null,
             after: "low_value_free",
             before_key: null,
-            after_key: null,
+            after_key: "ledger.actividad_asset.method.low_value_free",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquired_condition",
@@ -7051,6 +7442,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "new",
             before_key: null,
             after_key: "ledger.actividad_asset.acquired_condition.new",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "acquisition_shape",
@@ -7059,6 +7452,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             before_key: null,
             after_key:
               "ledger.actividad_asset.acquisition_shape.primary_purchase",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "basis.stage",
@@ -7066,6 +7461,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "business_allocated",
             before_key: null,
             after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+            before_label: null,
+            after_label: null,
           },
           {
             field: "opening_history.status",
@@ -7073,6 +7470,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "known",
             before_key: null,
             after_key: "ledger.actividad_asset.opening_history_status.known",
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: true,
@@ -7093,6 +7492,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "Impresora 3D",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
           {
             field: "serial_number",
@@ -7100,6 +7501,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             after: "I3D-0907",
             before_key: null,
             after_key: null,
+            before_label: null,
+            after_label: null,
           },
         ],
         affects_calculation: false,

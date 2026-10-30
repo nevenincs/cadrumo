@@ -317,7 +317,6 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.history.read_from_aeat",
         "workspace.modelo.history.rename",
         "workspace.modelo.history.title",
-        "workspace.modelo.issues.technical",
         "workspace.modelo.issues.title",
         "workspace.modelo.issues.verdict.none",
         "workspace.modelo.key.close",

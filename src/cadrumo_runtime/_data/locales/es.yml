@@ -7,7 +7,7 @@ desktop:
     disclosures: Divulgaciones
     executable: Ejecutable
     expires: Caduca
-    failed: 'Decisión de acceso no disponible: {code}'
+    failed: No se ha podido completar la decisión de acceso. Inténtalo de nuevo.
     network: Acceso a la red
     'no': 'No'
     none: Ninguno

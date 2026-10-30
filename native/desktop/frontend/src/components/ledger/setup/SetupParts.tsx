@@ -390,6 +390,8 @@ export function ChoiceField({
   placeholder,
   hint,
   className,
+  required,
+  error,
 }: {
   label: string;
   value: string;
@@ -398,15 +400,26 @@ export function ChoiceField({
   placeholder?: string;
   hint?: string;
   className?: string;
+  /** The choice must be made before the form can be sent. */
+  required?: boolean;
+  /** Why the choice was not accepted, or what is still to choose. */
+  error?: string | null;
 }) {
   const id = useId();
+  const describedBy =
+    [hint ? `${id}-hint` : null, error ? `${id}-error` : null]
+      .filter(Boolean)
+      .join(" ") || undefined;
   return (
-    <Field className={className}>
+    <Field data-invalid={error ? true : undefined} className={className}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <NativeSelect
         id={id}
         value={value}
-        aria-describedby={hint ? `${id}-hint` : undefined}
+        required={required}
+        aria-required={required || undefined}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
         onChange={(event) => onValue(event.target.value)}
       >
         {placeholder !== undefined && (
@@ -421,6 +434,7 @@ export function ChoiceField({
         ))}
       </NativeSelect>
       {hint && <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>}
+      <FieldError id={`${id}-error`}>{error}</FieldError>
     </Field>
   );
 }

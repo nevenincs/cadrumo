@@ -1340,7 +1340,6 @@ desktop:
         settled: Mentve vagy már így
         unchanged: Változatlan
         unknown: Ismeretlen eredmény
-      technical: Technikai részletek
       theirs: A mentettet veszem
       tick_links: Mentéshez jelöld be az összes végleges kapcsolatot.
       title: Áttekintés és mentés · {count}
@@ -1352,29 +1351,56 @@ desktop:
     assets:
       action:
         add: Elem hozzáadása
-        claim: Értékcsökkenés rögzítése
+        change_baja: A kivezetés módosítása vagy törlése
+        claim: Értékcsökkenési leírás rögzítése
         correct: Javítás
-        describe: Adatlap szerkesztése
+        describe: Adatok szerkesztése
         dispose: Kivezetés rögzítése
       area:
-        fixed: Tárgyi eszközök
+        fixed: Befektetett eszközök
         stock: Készlet
       areas: Eszközterületek
       baja:
         acquisition_value: Beszerzési érték
+        change_confirm: 'Módosítod {name} kivezetését erre a napra: {date}? Az érintett
+          értékcsökkenési leírások újra kiszámításra kerülnek.'
+        change_submit: A módosítás mentése
+        confirm: 'Rögzíted {name} kivezetését erre a napra: {date}? Az azt követő
+          értékcsökkenési leírások érvénytelenné válnak.'
+        confirm_back: Vissza
+        confirm_yes: Kivezetés rögzítése
         deducted: Elszámolt értékcsökkenés
+        effect_missing: Ennek a pontnak a költségre gyakorolt hatása nincs kiszámítva.
         excess: Többlet
         figures: A kivezetés számai (semmi sem mentődik)
-        findings: Megállapítások
+        findings: Ellenőrizendő pontok
         net_value: Nettó érték
         preview: Számok kiszámítása
         reduction: A beszerzési érték csökkentése
+        remove: Kivezetés törlése
+        remove_confirm: Törlöd {name} kivezetését? Az elem újra használatban lesz,
+          és visszatérnek a kivezetés által érvénytelenített értékcsökkenési leírások.
+          A megrövidített rövid marad, amíg a többit be nem rögzíted.
+        remove_yes: Kivezetés törlése
         result: Nyereség vagy veszteség
         route_changed: A tevékenységhez történt későbbi hozzárendelés megváltoztatja
           a kivezetés adózását.
         transmission_value: Átruházási érték
-      claim_reused: 'Már elszámolva: semmi sem került kétszer rögzítésre.'
-      claimed: Elszámolás rögzítve.
+        warning: A kivezetés később módosítható vagy törölhető. A dátuma utáni értékcsökkenési
+          leírások érvénytelenné válnak, az azt átfedő pedig rövidebb lesz. A kivezetés
+          módosításakor vagy törlésekor az érvénytelenek visszatérnek, de a megrövidített
+          rövid marad, amíg a többit be nem rögzíted.
+        warning_change: A kivezetés módosításakor vagy törlésekor visszatérnek az
+          általa érvénytelenített értékcsökkenési leírások. A megrövidített rövid
+          marad, amíg a többit be nem rögzíted.
+      claim_no_plan: 'Ennek az elemnek nincs terve erre az évre: {year}'
+      claim_period: Rögzítendő időszak
+      claim_period_option: '{from} – {until}'
+      claim_reused: 'Ez az értékcsökkenési leírás már rögzítve volt: semmi sem került
+        kétszer rögzítésre.'
+      claim_title: '{name} értékcsökkenési leírásának rögzítése: {year}'
+      claim_until: 'Eddig tart: {until}.'
+      claimed: Az értékcsökkenési leírás rögzítve.
       column:
         amount: Összeg
         casilla: Mező
@@ -1382,47 +1408,60 @@ desktop:
         unavailable: Nincs kiszámítva
       correct:
         claim_item: '{year}. · {amount} · {from} – {until}'
-        supersede: 'Rögzítsd újra ezeket az elszámolásokat a javított adatokkal, ugyanebben
-          a lépésben:'
-      correct_claim_title: Elszámolás javítása
+        supersede: 'Rögzítsd újra ezeket az értékcsökkenési leírásokat a javított
+          adatokkal, ugyanebben a lépésben:'
+      correct_claim_title: '{name} értékcsökkenési leírásának javítása: {year}'
+      correct_that_claim: Az az értékcsökkenési leírás javítása
       count:
-        conflict: 'Átfedő elszámolások: {count}'
-        incomplete: 'Nem kiszámítható évek: {count}'
-        missing: 'Elszámolatlan évek: {count}'
-        stale: 'Az ütemezéssel már nem egyező elszámolások: {count}'
+        conflict: 'Átfedő értékcsökkenési leírások, minden évben: {count}'
+        incomplete: 'Nem kiszámítható évek, minden évben: {count}'
+        missing: 'Értékcsökkenési leírás nélküli évek, minden évben: {count}'
+        stale: 'Az ütemezéssel már nem egyező értékcsökkenési leírások, minden évben:
+          {count}'
       detail:
+        baja_reason: A kivezetés oka
         close: Bezárás
         panel: Az elem adatai
         plan: Terv
-        record: Adatlap
+        record: Részletek
         tabs: Az elem nézetei
         timeline: Idővonal
       field:
         acquired_condition: Állapot a beszerzéskor
         acquisition: Beszerzés
-        acquisition_no_evidence: Ehhez a vásárláshoz nincs számla igazolásként, ezért
-          nem adható meg beszerzésként.
-        acquisition_none: Még nincs kiválasztható beszerzés.
+        acquisition_no_evidence: 'Ehhez a vásárláshoz még nincs számla. Csatold a
+          számláját itt: {documents}, aztán gyere vissza.'
+        acquisition_none: 'Még nincs választható vásárlás. Vedd fel a vásárlást itt:
+          {movements}, vagy csatold a számláját itt: {documents}, aztán gyere vissza.'
         acquisition_option: '{description} · {date} · {amount}'
+        acquisition_reference: A számla vagy dokumentum hivatkozása
         acquisition_shape: A beszerzés módja
-        allocation_provenance: A korábbi hozzárendelés forrása
+        allocation_provenance: Honnan származik a korábbi megosztás
         amount: Összeg
         basis: Értékcsökkenési alap
-        basis_stage: Az alap eredete
+        basis_stage: Hogyan lett a tiéd
+        building_construction_date: Az épület építésének napja
         business_use_share: Üzleti használat aránya
-        class: Táblázati osztály
+        charging_certificate: A telepítés igazolása
+        charging_documentation: Műszaki dokumentáció
+        class: Csoport a hivatalos táblázatban
         coefficient: Együttható
+        construction_cost: Az épület költsége
+        declared_acquisition_date: A vásárlás napja
+        declared_activity: Tevékenység
         description: Leírás
         digit_order: A számjegyek sorrendje
         digit_period: A számjegyek összegének időszaka (év)
+        disposal_amount_hint: Írj 0-t, ha nem volt.
         disposal_date: Utolsó üzemnap
         disposal_reason: Ok
         document_kind: Okmány fajtája
         document_number: Okmány száma
         in_service_date: Üzembe helyezés napja
         kind: Típus
+        land_cost: A telek költsége
         later_affectation: Későbbi hozzárendelés a tevékenységhez ekkor
-        low_value_election: A választás hivatkozása
+        low_value_election: A választásod hivatkozása
         low_value_evidence: A választás igazolása
         market_value: Piaci érték (ha van)
         method: Módszer
@@ -1431,33 +1470,62 @@ desktop:
         non_deductible_iva_hint: Írj 0-t, ha az IVA-ból semmi nem zárható ki a levonásból.
           Az üres mező nem ugyanaz, mint a 0.
         not_known: 'Ennél a beszerzésnél nem ismert: add meg te.'
+        office_area: A tevékenységre használt terület (m²)
         opening_amount: Már elszámolt értékcsökkenés
         opening_method: Korábban alkalmazott módszer
         opening_status: Értékcsökkenés a használatbavétel előtt
         opening_through: Fedezett adóév vége
+        other: Egyéb adat
         out_of_service_date: Kivezetés dátuma
-        prior_regime: Igazolt korábbi szabad értékcsökkenés
+        ownership_mode: A tulajdon módja
+        ownership_share: A te tulajdoni hányadod
+        prior_regime: Korábbi amortizációs szabadság
         proceeds: Bevétel
+        renewable_available_on: A rendelkezésre bocsátás napja
+        renewable_building_code: Az építési szabályzat előírja
+        renewable_documentation: A dokumentáció hivatkozása
+        renewable_documentation_kind: A dokumentáció fajtája
+        renewable_purpose: A berendezés célja
+        renewable_replaces_fossil: Fosszilis tüzelésű berendezést vált ki
         research_evidence: Kutatás-fejlesztési igazolás
         residual_value: Maradványérték
         serial: Gyártási szám
+        shape_ledger: Ebben a könyvben vásárolt
+        shape_outside: Ezen a könyvön kívül vásárolt
+        shift_hours: Napi használati órák
+        small_available_on: A rendelkezésre bocsátás napja
+        small_evidence: A kisvállalkozói státusz igazolása
+        small_turnover: Az előző időszak nettó árbevétele
         supplier_name: Szállító
         supplier_tax_id: Szállító adószáma
+        total_area: Teljes terület (m²)
         transmission_costs: Értékesítési költségek
         used_determination: Az eredeti ár megállapítása
         used_evidence: Az eredeti ár igazolása
         used_price: Eredeti ár
+        useful_life_ends_on: A hasznos élettartam vége
+        useful_life_evidence: A hasznos élettartam igazolása
+        vehicle_category: A jármű fajtája
+        vehicle_declared: Jármű?
+        vehicle_evidence: A jármű használatának igazolása
+        vehicle_in_books: Szerepel a tevékenység könyveiben
+        vehicle_listed_use: Listázott üzleti használat (ha van)
+        vehicle_private_use: Magáncélú használat
+        vehicle_propulsion: Elektromos hajtás (ha van)
       filing:
-        choose: Válassz évet és a 130-as modell negyedévét, hogy lásd, hová kerülnek
-          az értékcsökkenési leírások.
+        choose: Válassz egy évet és egy 130-as modell szerinti negyedévet, hogy lásd,
+          hová kerülnek az értékcsökkenési leírások.
         unavailable: A bevallási átadás nem érhető el.
       forecast: Értékcsökkenés {amount} · {days} nap · {from} – {until}
-      forecast_note: Az előrejelzés semmit sem rögzít, amíg el nem számolod.
+      forecast_note: Az előrejelzés addig nem ment semmit, amíg nem rögzíted az értékcsökkenési
+        leírást.
       free: Kért szabad értékcsökkenés
       free_hint: Csak szabad értékcsökkenési módszernél
       from: Ettől
-      handoff: Hová kerülnek az elszámolások
-      handoff_unavailable: '{count} elem nincs kiszámítva, nem szerepel'
+      handoff: Értékcsökkenési leírások a bevallásaidban
+      handoff_partial: 'Részleges: {count} elem nem számítható ki, ezért kimarad ebből
+        az összegből.'
+      handoff_year: A bevalláshoz tartozó számok éve
       list:
         column:
           accumulated: Eddig leírva
@@ -1469,28 +1537,35 @@ desktop:
           pending: Még leírandó
           serial: Gyártási szám
           state: Állapot
-        empty: Még nincs elem.
+        empty: Még nincs elem. Az elsőt a + gombbal veheted fel.
         label: Elemek
         no_name: Nincs rögzített név
-        summary: Figyelmet igénylő évek
+        serial_missing: Nincs rögzített gyártási szám.
+        summary: Figyelmet igényel, minden évben
         unavailable: A nyilvántartás most nem érhető el.
+      not_known: Nem ismert
+      opening_unknown: 'Töltsd ki a következő mezőt a kiszámításhoz: „{field}”.'
       plan:
-        claimable: 'Elszámolható: {from} – {until}'
-        claimable_none: Nincs több elszámolható
-        claims: '{year}. évi elszámolások'
+        claim_correct: A(z) {from} – {until} közötti elszámolás javítása
+        claimable: 'Értékcsökkenési leírás még rögzíthető: {from} – {until}'
+        claimable_none: Nincs több rögzíthető
+        claimed_missing: Erre az évre nincs rögzítve semmi.
+        claims: '{year}. évi értékcsökkenési leírások'
         column:
-          claimed: Elszámolt
+          claimed: Rögzített
           days: Napok
+          period: Időszak
           planned: Tervezett
           rate: Mérték
           replaced_by: Helyettesítette
-          revision: Változat
           status: Állapot
           year: Év
-        edition: 'Táblázat kiadása: {edition}'
-        election_changed: Itt változik a választott módszer
+        days_missing: Erre az évre nincs figyelembe vett üzemnap.
+        edition: '{edition}. évi táblázatok'
+        election_changed: Itt változik az értékcsökkenés módszere
         empty: Ebben a tervben még nincs adóév.
-        gap: 'Nincs elszámolva: {from} – {until}'
+        from_date: 'Ettől: {date}'
+        gap: 'Nincs rögzítve: {from} – {until}'
         in_effect: Hatályos
         limits:
           citations: Jogalap ({count})
@@ -1501,24 +1576,27 @@ desktop:
           maximum_period: Legnagyobb időszak
           minimum_coefficient: Legkisebb együttható
           period_years: '{years} év'
-          title: Ennek a választásnak a korlátai
+          title: Ennek a módszernek a korlátai
         matches: Egyezik a jelenlegi ütemezéssel
+        minimum_missing: Az erre az évre vonatkozó minimum nem számítható ki.
         no_claims: Erre az évre nincs rögzített értékcsökkenési leírás.
         no_match: Már nem egyezik az ütemezéssel
-        projected: Előrevetített
-        projected_note: Az előrevetített táblázatokat az előrejelzéshez és a 130-as
-          nyomtatványhoz használjuk. A 100-as nyomtatvány {year}. évre nem érhető
-          el.
+        planned_missing: Erre az évre nincs kiszámított összeg.
+        projected_note: 'Becsült: {year}. évre nincsenek hivatalos táblázatok. A 130-as
+          nyomtatványhoz használható, a 100-ashoz nem.'
+        projected_summary: A becsültként jelölt évek az utolsó hivatalos év táblázatait
+          használják. A 130-as nyomtatványhoz használhatók, a 100-ashoz nem.
+        rate_missing: Nincs mérték, mert erre az évre nincs kiszámított összeg.
         recorded_zero: Nullaként rögzítve
         replaced: Helyettesítve
       quarter: 130-as negyedév
       refused: A nyilvántartás nem fogadta el.
-      replace_claim: Elszámolás lecserélése (nem kötelező)
-      replace_none: Új elszámolás rögzítése
+      replace_claim: Értékcsökkenési leírás lecserélése (nem kötelező)
+      replace_none: Új értékcsökkenési leírás rögzítése
       submit:
         correct: Javítás mentése
         create: Eszköz létrehozása
-        forecast: Előrejelzés
+        forecast: A leírás kiszámítása
       target:
         intangible_m100: 100-as · immateriális
         intangible_m130: 130-as · immateriális
@@ -1530,20 +1608,33 @@ desktop:
         change_to: erre
         column:
           changes: Változások
-          effect: Hatály
+          effect: Hatálybalépés napja
           event: Esemény
           recorded: Rögzítve
-          sequence: Sorszám
+        effect_missing: Ennek a bejegyzésnek nincs hatálybalépési napja.
         empty: Még nem került hozzá semmi.
+        no_changes: Nem változott adat.
         not_in_calculation: Nem része a számításnak
         time_not_recorded: Az időpont nincs rögzítve
-        used_by: 'Felhasználó számítások: {count}'
+        used_by: '{count} számításban szerepel'
+        used_by_one: 1 számításban szerepel
+        value_changed: Módosítva
       unrecognised: Ismeretlen
       until: Eddig
       write:
+        baja_changed: A kivezetés frissítve.
+        baja_recorded: A kivezetés rögzítve.
+        cannot_clear: Ez nem maradhat üresen.
+        corrected: A javítás mentve.
+        described: Az adatok mentve.
+        element_added: Elem hozzáadva.
         fill_in: Töltsd ki
+        fix_marked: Javítsd a megjelölt mezőket.
         incomplete: 'Nem lett mentve. Még ki kell töltened: {fields}'
         kept: Semmi sem lett mentve. Amit beírtál, még itt van.
+        missing: 'Még ki kell tölteni: {fields}'
+        nothing_changed: Még nem változtattál semmin.
+        options_wait: Először válaszd ki a típust és az üzembe helyezés napját.
         reused: Már rögzítve volt; nem került hozzá semmi.
       year: Év
       year_estimated: '{year} (becsült)'
@@ -2492,7 +2583,6 @@ desktop:
       duplicates_more: És még {count}.
       duplicates_note: Importálódnak és megjelölődnek; importálás után hasonlítsd
         össze őket.
-      field: Mező
       file_counts: Sorok {rows} · új {fresh} · már a naplóban {skipped}
       file_imported: Importálva {fresh} · már a naplóban {skipped}
       file_not_sent: Nincs elküldve.
@@ -2562,7 +2652,6 @@ desktop:
         result: Eredmény
         what: Mit
       steps: Lépések
-      technical: Technikai részletek
       title: Importálás
       unknown: Ismeretlen eredmény
       unknown_note: 'Lehet, hogy {names} már importálódott. Semmi sem megy el újra:
@@ -2606,8 +2695,6 @@ desktop:
       classification: Besorolás
       clear: Érték törlése
       close: Részletek elrejtése
-      copied_id: Tétel hivatkozási száma másolva
-      copy_id: Hivatkozási szám másolása
       derive:
         choose: Válassz ÁFA-kategóriát
         stage: Összegek kiszámítása
@@ -2636,7 +2723,6 @@ desktop:
         purchase_invoice: 'Beszerzési számla · hozzáadva: {date}'
       drop: Elvetés
       earlier: Korábbi döntések
-      earlier_ids: Korábbi hivatkozási számok
       effective_date: Hatályos dátum
       empty: üres
       eur_same: 'Ugyanaz: euróban'
@@ -2665,7 +2751,6 @@ desktop:
         stashed: Félretéve
         updated: Frissítve
       file_row: '{file}, {row}. sor'
-      fingerprint: Importálási hivatkozás
       fix:
         derive: Összegek kiszámítása
         go: Javítás
@@ -2767,7 +2852,6 @@ desktop:
         unavailable: Az MI-modell jelenleg nem érhető el
       more: Több
       more_tax: További adómezők
-      movement_id: Tétel hivatkozási száma
       moves_to: 'Átkerül ide: {period}'
       new_identity: Új hivatkozási szám
       no_counterparty: Nincs partner
@@ -2876,7 +2960,6 @@ desktop:
         unclassified: Besorolás később
         under: A részekből {amount} hiányzik a tételhez.
       stage: Hozzáadás a változtatásokhoz
-      technical: Technikai részletek
       unread: Nem olvasható
       unsaved: 'Változások: {count} · nincs mentve'
       unsaved_classification: → {classification} · nincs mentve
@@ -2915,40 +2998,6 @@ desktop:
       opening: Nyitókészlet értéke
       preview_note: 'Előnézet: semmi sem kerül rögzítésre.'
       quantity: Mennyiség
-      refusal:
-        activity_conflict: 'Elutasítva: ennek a tevékenységnek már van nyilvántartása
-          arra az évre.'
-        activity_not_found: 'Elutasítva: nincs nyilvántartás ehhez a tevékenységhez
-          és évhez.'
-        closing_authority_conflict: 'Elutasítva: már el van mentve egy másik zárási
-          döntés.'
-        closing_authority_invalid: 'Elutasítva: a zárási döntés nem illik ehhez a
-          nyilvántartáshoz.'
-        closing_authority_recorded: 'Elutasítva: {year} évre már el van mentve egy
-          zárási érték, ezért a készlete nem változhat.'
-        correction_changes_nothing: 'Elutasítva: ez nem változtatja meg a nyitókészletet
-          és a módszert.'
-        correction_id_conflict: 'Elutasítva: ezt a javítást már egy másik változtatásra
-          használtad. Zárd be ezt az űrlapot, és nyisd meg újra.'
-        count_would_raise_stock: 'Elutasítva: egy leltár nem emelheti a készletedet
-          a könyvelt egységek fölé.'
-        duplicate_movement_id: "A nyilvántartás elutasította a mozgást: már rögzítve van."
-        invalid_valuation_method: 'Elutasítva: nem értékelési módszer.'
-        inventory_already_retired: 'Elutasítva: ez a készletnyilvántartás már meg
-          van szüntetve.'
-        inventory_not_retired: 'Elutasítva: ez a készletnyilvántartás nincs megszüntetve.'
-        inventory_retired: 'Elutasítva: ez a készletnyilvántartás meg van szüntetve.
-          Állítsd vissza, mielőtt módosítod a készletét.'
-        inventory_validation: 'Elutasítva: a nyilvántartás ezt nem fogadja el.'
-        later_closing_authority_recorded: 'Elutasítva: a {later_year} évre elmentett
-          zárási érték erre az évre épül, ezért a készlete nem változhat.'
-        movement_already_superseded: 'Elutasítva: ezt a mozgást már kijavították vagy
-          visszavonták.'
-        movement_not_found: 'Elutasítva: ez a mozgás nincs ebben a készletnyilvántartásban.'
-        movement_outside_year: 'Elutasítva: a mozgás dátuma kívül esik a(z) {year}
-          évi nyilvántartáson.'
-        stock_would_go_negative: 'Elutasítva: több egység menne ki, mint amennyi készleten
-          van.'
       unit_cost: Egységköltség
       valuation: '{name} · zárókészlet {closing} · eladott áruk költsége {cogs} ·
         {method}'
@@ -4736,6 +4785,20 @@ ledger:
       primary_purchase: Vásárlás
       produced: Saját előállítás
       split_payment: Részletekben fizetett vásárlás
+    asset_kind:
+      intangible: Immateriális eszköz
+      material: Tárgyi eszköz
+    basis_stage:
+      business_allocated: A tevékenységhez rendelve
+      taxpayer_owned: Az adózó tulajdona, az üzleti használat előtt
+      whole_property: Teljes ingatlan
+    claim_state:
+      claimed: Elszámolva
+      edition_unavailable: Nincsenek hivatalos táblázatok
+      missing: Nincs elszámolva
+      not_due: Nincs mit elszámolni
+      partial: Részben elszámolva
+      superseded: Elszámolva, javítva
     declared_activity:
       A01: Ingatlan bérbeadása
       A02: Önálló állattenyésztés
@@ -4747,20 +4810,6 @@ ledger:
       B03: Erdőgazdálkodás
       B04: Kagylótermelés
       B05: Halászat
-    asset_kind:
-      intangible: Immateriális eszköz
-      material: Tárgyi eszköz
-    basis_stage:
-      business_allocated: A tevékenységhez rendelve
-      taxpayer_owned: Az adózó tulajdona, az üzleti használat előtt
-      whole_property: Teljes ingatlan
-    claim_state:
-      claimed: Elszámolva
-      edition_unavailable: Nincs kiadás erre az évre
-      missing: Nincs elszámolva
-      not_due: Nincs mit elszámolni
-      partial: Részben elszámolva
-      superseded: Elszámolva, javítva
     digit_order:
       ascending: Növekvő
       descending: Csökkenő
@@ -5098,9 +5147,9 @@ ledger:
         eszköz üzembe állítása után kell véget érnie.
       useful_life_not_positive: A hasznos élettartamnak pozitív, véges számú évnek
         kell lennie.
-      vehicle_affectation_required_for_class: A(z) {asset_id} eszköz olyan táblázati osztályba
-        tartozik, amely a RIRPF 22.4 cikk által korlátozott járművet is tartalmazhat,
-        ezért járműhasználati nyilatkozat szükséges.
+      vehicle_affectation_required_for_class: A(z) {asset_id} eszköz olyan táblázati
+        osztályba tartozik, amely a RIRPF 22.4 cikk által korlátozott járművet is
+        tartalmazhat, ezért járműhasználati nyilatkozat szükséges.
       vehicle_missing_from_books: A tevékenység könyveiből hiányzó jármű nem tartozik
         a tevékenységhez kötött eszközök közé (RIRPF 22.2.2º cikk).
       vehicle_private_use_category_restricted: A magánhasználattal is érintett jármű
@@ -5169,7 +5218,8 @@ ledger:
       basis_exhausted: Az alap teljesen leírva
       conflict: Ütközik a rögzítettekkel
       covered_by_opening: A nyitó összeg fedezi
-      edition_unavailable: Ehhez az évhez nincs Modelo 100 kiadás
+      edition_unavailable: A Cadrumo nem rendelkezik hivatalos táblázatokkal erre
+        az évre, ezért nem tudja kiszámítani ezt az összeget.
       free_election: 'Szabad értékcsökkenés: nincs tervezett összeg'
       incomplete: 'Hiányzó adatok: nem számítható ki'
       period_elapsed: A maximális időszak lejárt
@@ -7795,9 +7845,9 @@ tui:
       invalid_number: '%{field}: a(z) %{value} nem egész szám.'
       inventory:
         action:
-          evidence_add: "Beszerzési dokumentum mentése"
-          closing_value: "Záróérték rögzítése adatfájlból"
           closing_authority: Záró jóváhagyás rögzítése
+          evidence_add: "Beszerzési dokumentum mentése"
+          closing_value: Záróérték rögzítése adatfájlból
           create: Készlet létrehozása
           movement_add: Mozgás hozzáadása
           valuation_preview: Értékelés előnézete
@@ -7817,10 +7867,10 @@ tui:
           acquisition_cost: Beszerzési költség fájlja (csak vásárlásnál)
           action: Kérés
           actividad_id: Tevékenység
+          authority_record: Záró jóváhagyás fájlja
           evidence_file: "Dokumentumfájl"
           evidence_folder: "A dokumentum útvonalának kiinduló mappája"
-          closing_value_facts: "Záróérték adatfájlja"
-          authority_record: Záró jóváhagyás fájlja
+          closing_value_facts: Záróérték adatfájlja
           kind: Mozgás fajtája
           movement_date: Mozgás dátuma
           movement_id: Mozgás azonosítója
@@ -7853,8 +7903,8 @@ tui:
             arra az évre már másik van rögzítve.'
           closing_authority_invalid: 'A nyilvántartás elutasította a záró jóváhagyást:
             nem egyezik a megnevezett készlettel.'
-          duplicate_movement_id: 'A nyilvántartás elutasította a mozgást: ez a mozgásazonosító
-            már foglalt.'
+          duplicate_movement_id: 'A nyilvántartás elutasította a mozgást: már rögzítve
+            van.'
           invalid_valuation_method: 'A nyilvántartás elutasította a kérést: ezt az
             értékelési módszert nem fogadja el.'
           inventory_validation: 'A nyilvántartás elutasította a kérést: nem felel

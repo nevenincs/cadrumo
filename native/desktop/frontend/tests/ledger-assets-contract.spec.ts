@@ -14,15 +14,20 @@ import {
   purchaseValues,
   refusalOf,
   refusalWord,
+  claimsInTheWay,
   staleClaims,
   viewOf,
 } from "../src/components/ledger/assets/assetWrites";
 import {
   answer,
   claimFields,
+  claimSpans,
+  factKey,
+  factsOf,
   fieldsFor,
   initialOf,
   parseField,
+  unlabelledFacts,
   type FormField,
 } from "../src/components/ledger/assets/assetFields";
 import {
@@ -30,6 +35,7 @@ import {
   type AssetListRow,
   type PlanRow,
   type TimelineEvent,
+  type FormOptions,
 } from "../src/shell/ledgerSetup";
 import {
   ASSET_FAMILY,
@@ -40,6 +46,7 @@ import {
   tokenWord,
 } from "../src/components/ledger/assets/assetsWords";
 import {
+  bajaRequest,
   correctRequest,
   createRequest,
 } from "../src/components/ledger/assets/assetRevision";
@@ -70,7 +77,12 @@ stand.window = {
   setTimeout: globalThis.setTimeout,
 };
 const { ledgerFixture } = await import("../src/dev/ledgerFixture");
-const { assetFixtureYears } = await import("../src/dev/assetsFixture");
+const {
+  assetFixtureYears,
+  SERVED_ACTIVITIES,
+  SERVED_METHOD_FACTS,
+  SERVED_SHAPES,
+} = await import("../src/dev/assetsFixture");
 
 const LIST = "ledger.actividad-asset.list";
 const PLAN = "ledger.actividad-asset.plan";
@@ -94,6 +106,21 @@ const portOf = (shape: "fixture" | "unknown" = "fixture"): LedgerPort =>
     signedIn: () => true,
     shape,
   });
+
+/** A changed field of the timeline, as the backend states it. */
+const change = (
+  field: string,
+  after: string | null,
+  afterKey: string | null = null,
+) => ({
+  field,
+  before: null,
+  after,
+  before_key: null,
+  after_key: afterKey,
+  before_label: null,
+  after_label: null,
+});
 
 async function settled<T>(outcome: Promise<{ kind: string }>): Promise<T> {
   const found = (await outcome) as { kind: string; result?: T };
@@ -237,6 +264,7 @@ test("the list states the backend's fields, and the years on offer span the regi
         "asset_id",
         "asset_kind",
         "basis",
+        "disposal",
         "findings",
         "in_service_date",
         "method",
@@ -541,7 +569,14 @@ test("the options are the registry's methods and table classes for the kind and 
       }),
     )
   ).options!;
-  expect(options.methods).toEqual(ADMITTED_METHODS.material);
+  // Only the methods whose facts a form can state in full are offered, each
+  // with the facts it takes.
+  expect(options.methods).toEqual(
+    ADMITTED_METHODS.material!.filter((method) => method !== "approved_plan"),
+  );
+  expect(
+    (options as FormOptions).method_facts!.map((found) => found.method),
+  ).toEqual(options.methods);
   expect(options.table_groups).toEqual(TABLE_GROUPS.material);
   expect(options.edition).toEqual({
     revision_id: "2025",
@@ -751,6 +786,7 @@ async function newRequest(
     regime: options.regime,
     candidate: candidate ?? null,
     base: null,
+    options: options as FormOptions,
   });
 }
 
@@ -769,7 +805,7 @@ const NEW_ELEMENT = {
   opening_status: "known",
   opening_amount: "0.00",
   method: "linear",
-  authority_class_key: "maquinaria",
+  "amortization.authority_class_key": "maquinaria",
 };
 
 test("adding an element sends the revision and descriptor the backend decodes, which judges the revision's facts", async () => {
@@ -813,7 +849,9 @@ test("adding an element sends the revision and descriptor the backend decodes, w
     code: "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
     reason_key: "ledger.actividad_asset.errors.method_not_enrolled_for_kind",
   });
-  const noClass = await refused(send({ authority_class_key: "" }));
+  const noClass = await refused(
+    send({ "amortization.authority_class_key": "" }),
+  );
   expect(noClass.detail.refusal.reason_key).toBe(
     "ledger.actividad_asset.errors.table_class_required",
   );
@@ -832,7 +870,9 @@ test("adding an element sends the revision and descriptor the backend decodes, w
     reason_key: "ledger.actividad_asset.errors.opening_year_before_in_service",
     reason_facts: [{ key: "opening_tax_year", value: "2025" }],
   });
-  const outside = await refused(send({ linear_coefficient: "99" }));
+  const outside = await refused(
+    send({ "amortization.linear_coefficient": "99" }),
+  );
   expect(outside.detail.refusal.reason_key).toBe(
     "ledger.actividad_asset.errors.elected_coefficient_out_of_range",
   );
@@ -912,9 +952,10 @@ test("an originating price is stated only for a used element on the linear metho
   const port = portOf();
   const used = {
     acquired_condition: "used",
-    used_determination: "expert_valuation",
-    used_price: "1500.00",
-    used_evidence: "valuation report of the appraiser",
+    "amortization.used_original_price.determination": "expert_valuation",
+    "amortization.used_original_price.original_price": "1500.00",
+    "amortization.used_original_price.evidence_reference":
+      "valuation report of the appraiser",
   };
   const request = (await newRequest(
     port,
@@ -947,7 +988,12 @@ test("an originating price is stated only for a used element on the linear metho
     },
     { ...NEW_ELEMENT },
   );
-  expect(fields.some((found) => found.key === "used_price")).toBe(false);
+  expect(
+    fields.some(
+      (found) =>
+        found.key === factKey(["used_original_price", "original_price"]),
+    ),
+  ).toBe(false);
   const advised = await settled<LedgerResult<typeof PLAN>>(
     port.submit(PLAN, { asset_id: "made-4" }),
   );
@@ -1242,6 +1288,8 @@ test("a baja ends the plan at the year of its last day, lists the element out of
       after,
       before_key: null,
       after_key: null,
+      before_label: null,
+      after_label: null,
     })),
   ]);
   // The same baja stated again is the record already there, not a refusal.
@@ -1638,7 +1686,7 @@ test("typed text becomes the values of its control, and nothing typed is not zer
   expect(parseField(field("choice"), "")).toEqual({ kind: "empty" });
 });
 
-test("a correction states only what changed from the record, and never an emptied field", () => {
+test("a correction states only what changed from the record, and an emptied field is stated cleared or named", () => {
   const row = servidorRow() as AssetListRow;
   const context = {
     kind: "correction" as const,
@@ -1660,9 +1708,15 @@ test("a correction states only what changed from the record, and never an emptie
   expect(answer(fields, initial, initial).values).toEqual({});
   const changed = answer(fields, { ...initial, basis_amount: "3600" }, initial);
   expect(changed.values).toEqual({ basis_amount: { decimal: "3600" } });
-  expect(
-    answer(fields, { ...initial, basis_amount: "" }, initial).values,
-  ).toEqual({});
+  // A fact the record cannot do without is named, not stated and not dropped.
+  const emptied = answer(fields, { ...initial, basis_amount: "" }, initial);
+  expect(emptied.values).toEqual({});
+  expect(emptied.cleared).toEqual(["basis_amount"]);
+  // A fact it can do without is stated as cleared.
+  const held = { ...initial, residual_value: "10" };
+  expect(answer(fields, { ...held, residual_value: "" }, held).values).toEqual({
+    residual_value: null,
+  });
   // A full form states every field, null where nothing was typed.
   const adding = fieldsFor({
     kind: "element",
@@ -1677,12 +1731,168 @@ test("a correction states only what changed from the record, and never an emptie
   );
 });
 
+test("a cleared fact is taken out of the corrected revision, and the baja the revision records travels with it", async () => {
+  const port = portOf();
+  const options = (await optionsOf(port)) as FormOptions;
+  const inspect = async (id: string) =>
+    (
+      await settled<LedgerResult<typeof INSPECT>>(
+        port.submit(INSPECT, { asset_id: id }),
+      )
+    ).revisions!.at(-1)!;
+  const base = await inspect("servidor");
+  const context = {
+    kind: "correction" as const,
+    row: servidorRow(),
+    descriptor: null,
+    revision: base.revision,
+    tokens: () => [],
+    options,
+  };
+  const initial = initialOf(context, fieldsFor(context, {}));
+  // Set a residual value, then clear it.
+  const withResidual = { ...initial, residual_value: "10" };
+  const first = correctRequest(
+    answer(fieldsFor(context, withResidual), withResidual, initial).values,
+    { assetId: "servidor", regime: null, candidate: null, base, options },
+    [],
+  )!;
+  expect(first.revision).toMatchObject({ residual_value: { decimal: "10" } });
+  expect(
+    (await settled<{ outcome: string }>(port.submit(CORRECT, first as never)))
+      .outcome,
+  ).toBe("succeeded");
+  const second = await inspect("servidor");
+  const again = {
+    ...context,
+    revision: second.revision,
+  };
+  const start = initialOf(again, fieldsFor(again, {}));
+  expect(start.residual_value).toBe("10");
+  const cleared = correctRequest(
+    answer(
+      fieldsFor(again, { ...start, residual_value: "" }),
+      {
+        ...start,
+        residual_value: "",
+      },
+      start,
+    ).values,
+    {
+      assetId: "servidor",
+      regime: null,
+      candidate: null,
+      base: second,
+      options,
+    },
+    [],
+  )!;
+  expect(cleared.revision).not.toHaveProperty("residual_value");
+
+  // An element with a baja keeps it through a correction of anything else.
+  const dispose = await port.submit(DISPOSE, {
+    asset_id: "taladro",
+    disposal: {
+      disposal_date: "2026-09-30",
+      reason: "sale",
+      proceeds: { decimal: "100.00" },
+      transmission_costs: { decimal: "0.00" },
+      market_value: null,
+      prior_free_depreciation_regime: null,
+      later_affectation_on: null,
+    },
+  });
+  expect(dispose.kind).toBe("settled");
+  const disposed = await inspect("taladro");
+  const recorded = disposed.revision.disposal;
+  expect(recorded).toMatchObject({ disposal_date: "2026-09-30" });
+  const row = (await listOf(port)).find(
+    (found) => found.asset_id === "taladro",
+  )!;
+  expect(row.disposal).toMatchObject({
+    disposal_date: "2026-09-30",
+    reason: "sale",
+    reason_key: "ledger.actividad_asset.disposal_reason.sale",
+  });
+  const taladro = {
+    kind: "correction" as const,
+    row,
+    descriptor: null,
+    revision: disposed.revision,
+    tokens: () => [],
+    options: (await optionsOf(port)) as FormOptions,
+  };
+  const before = initialOf(taladro, fieldsFor(taladro, {}));
+  const edit = { ...before, residual_value: "5" };
+  const kept = correctRequest(
+    answer(fieldsFor(taladro, edit), edit, before).values,
+    {
+      assetId: "taladro",
+      regime: null,
+      candidate: null,
+      base: disposed,
+      options: taladro.options,
+    },
+    [],
+  )!;
+  expect(kept.revision.disposal).toEqual(recorded);
+  expect(
+    (await settled<{ outcome: string }>(port.submit(CORRECT, kept as never)))
+      .outcome,
+  ).toBe("succeeded");
+  expect(
+    (await listOf(port)).find((found) => found.asset_id === "taladro")!
+      .disposal,
+  ).toMatchObject({ disposal_date: "2026-09-30" });
+  const latest = await inspect("taladro");
+  expect(latest.revision.disposal).toEqual(recorded);
+
+  // A baja is changed by stating another, and removed by stating none.
+  const moved = bajaRequest(latest, {
+    disposal_date: "2026-06-30",
+    reason: "sale",
+    proceeds: { decimal: "100.00" },
+    transmission_costs: { decimal: "0.00" },
+    market_value: null,
+    prior_free_depreciation_regime: null,
+    later_affectation_on: null,
+  })!;
+  expect(moved.revision).toMatchObject({
+    revision_number: Number(latest.revision.revision_number) + 1,
+    supersedes_revision_id: latest.revision_id,
+    disposal: { disposal_date: "2026-06-30" },
+  });
+  expect(moved.superseding_claims).toEqual([]);
+  expect(
+    (await settled<{ outcome: string }>(port.submit(CORRECT, moved as never)))
+      .outcome,
+  ).toBe("succeeded");
+  expect(
+    (await listOf(port)).find((found) => found.asset_id === "taladro")!
+      .disposal,
+  ).toMatchObject({ disposal_date: "2026-06-30" });
+  const removal = bajaRequest(await inspect("taladro"), null)!;
+  expect(removal.revision.disposal).toBeNull();
+  expect(
+    (await settled<{ outcome: string }>(port.submit(CORRECT, removal as never)))
+      .outcome,
+  ).toBe("succeeded");
+  const freed = (await listOf(port)).find(
+    (found) => found.asset_id === "taladro",
+  )!;
+  expect(freed.disposal).toBeNull();
+  expect(freed.state).toBe("in_service");
+  // A second baja is refused until the first is changed or removed.
+  expect(bajaRequest(null, null)).toBeNull();
+});
+
 function servidorRow(): AssetListRow {
   return SEED_ELEMENTS.find((seed) => seed.id === "servidor")!.list;
 }
 
 test("each act's fields and requests come from the backend's choices", () => {
-  const options = {
+  const methods = ["linear", "low_value_free"];
+  const options: FormOptions = {
     tax_year: 2026,
     asset_kind: "material",
     regime: "normal",
@@ -1691,7 +1901,12 @@ test("each act's fields and requests come from the backend's choices", () => {
       authored_filing_year: 2025,
       projected: true,
     },
-    methods: ["linear", "low_value_free"],
+    acquisition_shapes: [...SERVED_SHAPES],
+    declared_activities: [...SERVED_ACTIVITIES],
+    methods,
+    method_facts: SERVED_METHOD_FACTS.filter((found) =>
+      methods.includes(found.method),
+    ),
     table_groups: TABLE_GROUPS.material!.slice(0, 2),
   };
   const fields = fieldsFor(
@@ -1708,6 +1923,7 @@ test("each act's fields and requests come from the backend's choices", () => {
   );
   const choices = (key: string) =>
     fields.find((found) => found.key === key)!.choices;
+  const classKey = factKey(["authority_class_key"]);
   expect(choices("asset_kind").map((choice) => choice.token)).toEqual([
     "material",
     "intangible",
@@ -1716,15 +1932,15 @@ test("each act's fields and requests come from the backend's choices", () => {
     "linear",
     "low_value_free",
   ]);
-  expect(choices("authority_class_key").map((choice) => choice.token)).toEqual(
+  expect(choices("acquisition_shape").map((choice) => choice.token)).toEqual(
+    SERVED_SHAPES,
+  );
+  expect(choices(classKey).map((choice) => choice.token)).toEqual(
     options.table_groups.map((group) => group.class_key),
   );
   // A table class is drawn by the official name the backend serves with it.
   expect(
-    choices("authority_class_key").map((choice) => [
-      choice.family,
-      choice.label,
-    ]),
+    choices(classKey).map((choice) => [choice.family, choice.label]),
   ).toEqual(options.table_groups.map((group) => [null, group.class_label]));
   const plan = SEED_ELEMENTS.find((seed) => seed.id === "furgoneta")!.rows.find(
     (row) => row.tax_year === 2026,
@@ -1732,12 +1948,14 @@ test("each act's fields and requests come from the backend's choices", () => {
   const claim = claimFields(plan, null);
   expect(claim.map((found) => [found.key, found.current])).toEqual([
     ["covered_from", "2026-07-01"],
-    ["covered_until", "2027-01-01"],
+  ]);
+  // The span ends where the backend says, and is shown by its last day.
+  expect(claimSpans(plan, null)).toEqual([
+    { from: "2026-07-01", until: "2027-01-01", through: "2026-12-31" },
   ]);
   const free = SEED_ELEMENTS.find((seed) => seed.id === "impresora")!.rows[0]!;
   expect(claimFields(free, null).map((found) => found.key)).toEqual([
     "covered_from",
-    "covered_until",
     "free_amount",
   ]);
   expect(
@@ -1745,10 +1963,10 @@ test("each act's fields and requests come from the backend's choices", () => {
       "a",
       {
         covered_from: "2026-01-01",
-        covered_until: "2026-06-30",
         free_amount: { decimal: "5.00" },
       },
       "c",
+      "2026-06-30",
     ),
   ).toEqual({
     asset_id: "a",
@@ -1757,7 +1975,9 @@ test("each act's fields and requests come from the backend's choices", () => {
     requested_free_amount: { decimal: "5.00" },
     supersedes_claim_id: "c",
   });
-  expect(forecastRequest("a", { covered_from: "2026-01-01" }, null)).toBeNull();
+  expect(
+    forecastRequest("a", { covered_from: "2026-01-01" }, null, null),
+  ).toBeNull();
   expect(
     describeRequest("a", { name: "Sierra", serial_number: "S1" }).descriptor,
   ).toEqual({
@@ -1771,48 +1991,58 @@ test("each act's fields and requests come from the backend's choices", () => {
   });
 });
 
-test("the add form does not offer a method whose facts it cannot state, and a correction keeps the element's own", () => {
-  const hidden = (kind: string, revision: never = null as never) => {
-    const context = {
-      kind: revision === null ? ("element" as const) : ("correction" as const),
-      row: null,
-      descriptor: null,
-      revision,
-      tokens: () => [],
-      options: {
-        tax_year: 2026,
-        asset_kind: kind,
-        regime: "normal",
-        edition: {
-          revision_id: "2025",
-          authored_filing_year: 2025,
-          projected: true,
+test("the add form offers the methods the options serve, each with the facts they serve, and a correction keeps the element's own", async () => {
+  const port = portOf();
+  for (const kind of ["material", "intangible"]) {
+    const options = (await optionsOf(port, kind)) as FormOptions;
+    // Every served fact has a word, and no method is offered without its facts.
+    expect(unlabelledFacts(options)).toEqual([]);
+    const offered = (draft: Record<string, string>) =>
+      fieldsFor(
+        {
+          kind: "element",
+          row: null,
+          descriptor: null,
+          revision: null,
+          tokens: () => [],
+          options,
         },
-        methods: [...ADMITTED_METHODS[kind]!],
-        table_groups: [...TABLE_GROUPS[kind]!],
-      },
-    };
-    const offered = fieldsFor(context, {})
-      .find((found) => found.key === "method")!
-      .choices.map((choice) => choice.token);
-    return ADMITTED_METHODS[kind]!.filter(
-      (method) => !offered.includes(method),
-    );
+        draft,
+      );
+    expect(
+      offered({})
+        .find((found) => found.key === "method")!
+        .choices.map((choice) => choice.token),
+    ).toEqual(options.methods);
+    for (const method of options.methods) {
+      // The fields drawn for a method are its served facts, nothing more.
+      const drawn = offered({
+        method,
+        acquired_condition: "used",
+      })
+        .map((found) => found.key)
+        .filter((key) => key.startsWith("amortization."));
+      expect(drawn).toEqual(
+        factsOf(options, method).map((fact) => factKey(fact.path)),
+      );
+    }
+  }
+  const options = (await optionsOf(port)) as FormOptions;
+  const keptContext = {
+    kind: "correction" as const,
+    row: null,
+    descriptor: null,
+    revision: {
+      amortization: { regime: "normal", method: "approved_plan" },
+    } as never,
+    tokens: () => [],
+    options,
   };
-  expect(hidden("material")).toEqual([
-    "approved_plan",
-    "small_enterprise_employment_free",
-  ]);
-  expect(hidden("intangible")).toEqual([
-    "approved_plan",
-    "intangible_useful_life",
-  ]);
-  const plan = {
-    amortization: { regime: "normal", method: "approved_plan" },
-  } as never;
-  expect(hidden("material", plan)).toEqual([
-    "small_enterprise_employment_free",
-  ]);
+  expect(
+    fieldsFor(keptContext, {})
+      .find((found) => found.key === "method")!
+      .choices.map((choice) => choice.token),
+  ).toContain("approved_plan");
 });
 
 test("a refusal is read by its reason key and facts, and what is still to fill in is named", () => {
@@ -1955,10 +2185,17 @@ test("a reason is said by its catalogue key with its facts, and anything else re
   expect(tokenWord(t, "method", "linear")).toBe("Linear");
   expect(tokenWord(t, "method", "invented")).toBe("Not recognised");
   expect(tokenWord(t, "method", null)).toBe("Not recognised");
-  expect(changeValueText(t, "en", "amortization.method", "invented")).toBe(
-    "Not recognised",
-  );
-  expect(changeValueText(t, "en", "serial_number", "SC-1")).toBe("SC-1");
+  expect(
+    changeValueText(
+      t,
+      "en",
+      change("amortization.method", "invented"),
+      "after",
+    ),
+  ).toBe("Not recognised");
+  expect(
+    changeValueText(t, "en", change("serial_number", "SC-1"), "after"),
+  ).toBe("SC-1");
 });
 
 test("the list serves the years, and the pane opens on one that has begun", async () => {
@@ -2052,17 +2289,22 @@ test("a value the backend worded by key is drawn by that key, and anything else 
   expect(
     keyedText(t, "ledger.actividad_asset.disposal_finding.claim_gap", ""),
   ).toBe("Year with depreciation not recorded");
-  expect(changeValueText(t, "en", "disposal.reason", "invented")).toBe(
-    "Not recognised",
-  );
+  expect(
+    changeValueText(t, "en", change("disposal.reason", "invented"), "after"),
+  ).toBe("Not recognised");
+  // A word the backend names and the catalogue lacks is never drawn raw.
   expect(
     changeValueText(
       t,
       "en",
-      "disposal.prior_free_depreciation_regime",
-      "invented",
+      change(
+        "disposal.prior_free_depreciation_regime",
+        "invented",
+        "ledger.actividad_asset.prior_free_depreciation_regime.invented",
+      ),
+      "after",
     ),
-  ).toBe("Not recognised");
+  ).toBe(t("desktop.ledger.assets.timeline.value_changed"));
 });
 
 test("a purchase states the ledger's own account of its non-deductible IVA", async () => {
@@ -2075,4 +2317,266 @@ test("a purchase states the ledger's own account of its non-deductible IVA", asy
     expect(purchase.non_deductible_iva_state_key).toBe(
       `ledger.actividad_asset.non_deductible_iva_state.${purchase.non_deductible_iva_state}`,
     );
+});
+
+// ---- Facts the forms could not state before ----------------------------------------
+
+test("an element bought outside the ledger names its document, its date and its activity, and no purchase", async () => {
+  const port = portOf();
+  const outside = {
+    ...NEW_ELEMENT,
+    acquisition: "",
+    acquisition_shape: "acquired_outside_ledger",
+    declared_acquisition_date: "2024-11-05",
+    declared_activity: "A05",
+    acquisition_reference: "Factura 2024-118",
+  };
+  const request = (await newRequest(port, outside, "made-6"))!;
+  expect(request).not.toBeNull();
+  expect(request.revision).toMatchObject({
+    acquisition_shape: "acquired_outside_ledger",
+    acquisition: {
+      observed_transaction_id: null,
+      observed_lineage_event_id: null,
+      invoice_evidence_id: "Factura 2024-118",
+      evidence_fingerprint: null,
+    },
+    further_acquisitions: [],
+    declared_acquisition_date: "2024-11-05",
+    declared_activity: "A05",
+  });
+  // The document it holds is stated; without it nothing is made.
+  expect(
+    await newRequest(port, { ...outside, acquisition_reference: "" }, "made-6"),
+  ).toBeNull();
+  expect((await port.submit(CREATE, request as never)).kind).toBe("settled");
+  expect(
+    (await listOf(port)).some((found) => found.asset_id === "made-6"),
+  ).toBe(true);
+  // The day it was bought cannot follow the day it entered service.
+  const late = await newRequest(
+    port,
+    { ...outside, declared_acquisition_date: "2026-07-01" },
+    "made-7",
+  );
+  const refusal = await refused(port.submit(CREATE, late as never));
+  expect(refusal.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.declared_acquisition_after_service",
+  );
+  const options = (await optionsOf(port)) as FormOptions;
+  const drawn = (shape: string) =>
+    fieldsFor(
+      {
+        kind: "element",
+        row: null,
+        descriptor: null,
+        revision: null,
+        tokens: () => [],
+        options,
+      },
+      { acquisition_shape: shape },
+    ).map((found) => found.key);
+  expect(drawn("primary_purchase")).toContain("acquisition");
+  expect(drawn("primary_purchase")).not.toContain("declared_activity");
+  expect(drawn("acquired_outside_ledger")).not.toContain("acquisition");
+  expect(drawn("acquired_outside_ledger")).toEqual(
+    expect.arrayContaining([
+      "declared_acquisition_date",
+      "declared_activity",
+      "acquisition_reference",
+    ]),
+  );
+});
+
+test("a whole property states its parts, a vehicle its declaration, and a linear election its hours", async () => {
+  // Each element names the one purchase the ledger offers, so each has a ledger.
+  const send = async (changes: Record<string, string>, id: string) => {
+    const port = portOf();
+    const request = await newRequest(port, { ...NEW_ELEMENT, ...changes }, id);
+    expect(request, JSON.stringify(changes)).not.toBeNull();
+    return {
+      request: request!,
+      outcome: port.submit(CREATE, request as never),
+    };
+  };
+  const property = {
+    basis_stage: "whole_property",
+    basis_amount: "1000.00",
+    construction_cost: "800.00",
+    land_cost: "200.00",
+    ownership_mode: "sole",
+    ownership_share: "100",
+    office_area: "30",
+    total_area: "100",
+  };
+  const made = await send(property, "made-8");
+  expect(made.request.revision.basis).toMatchObject({
+    stage: "whole_property",
+    is_property: true,
+    construction_cost: { decimal: "800" },
+    land_cost: { decimal: "200" },
+    ownership_mode: "sole",
+    ownership_share: { decimal: "1" },
+    office_area: { decimal: "30" },
+    total_area: { decimal: "100" },
+  });
+  expect((await made.outcome).kind).toBe("settled");
+  // A stage that is not a property states none of its parts.
+  const plain = await newRequest(
+    portOf(),
+    { ...NEW_ELEMENT, construction_cost: "800.00" },
+    "made-9",
+  );
+  expect(plain!.revision.basis).toMatchObject({ is_property: false });
+  expect(plain!.revision.basis).not.toHaveProperty("construction_cost");
+  const parts = await send({ ...property, office_area: "" }, "made-10");
+  const incomplete = await refused(parts.outcome);
+  expect(incomplete.detail.refusal).toMatchObject({
+    code: INCOMPLETE,
+    precondition_verdict: { missing_field_keys: ["basis.office_area"] },
+  });
+
+  const vehicle = {
+    vehicle_declared: "yes",
+    vehicle_category: "passenger_car",
+    vehicle_private_use: "none",
+    vehicle_in_books: "yes",
+    vehicle_evidence: "Libro registro de bienes de inversión",
+    vehicle_propulsion: "bev",
+  };
+  const driven = await send(vehicle, "made-11");
+  expect(driven.request.revision.vehicle_affectation).toEqual({
+    category: "passenger_car",
+    private_use: "none",
+    recorded_in_activity_books: true,
+    evidence_reference: "Libro registro de bienes de inversión",
+    electric_propulsion: "bev",
+  });
+  expect((await driven.outcome).kind).toBe("settled");
+  const unbooked = await send(
+    { ...vehicle, vehicle_in_books: "no" },
+    "made-12",
+  );
+  expect((await refused(unbooked.outcome)).detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.vehicle_missing_from_books",
+  );
+  // A vehicle is declared for a material element only.
+  const intangible = await optionsOf(portOf(), "intangible");
+  expect(
+    fieldsFor(
+      {
+        kind: "element",
+        row: null,
+        descriptor: null,
+        revision: null,
+        tokens: () => [],
+        options: intangible as FormOptions,
+      },
+      { asset_kind: "intangible", vehicle_declared: "yes" },
+    ).map((found) => found.key),
+  ).not.toContain("vehicle_declared");
+
+  const hours = await send(
+    { "amortization.shift_hours_per_day": "16" },
+    "made-13",
+  );
+  expect(hours.request.revision.amortization).toMatchObject({
+    method: "linear",
+    shift_hours_per_day: { decimal: "16" },
+  });
+  expect((await hours.outcome).kind).toBe("settled");
+  const tooMany = await send(
+    { "amortization.shift_hours_per_day": "25" },
+    "made-14",
+  );
+  await expect(tooMany.outcome).rejects.toMatchObject({ reason: "invalid" });
+});
+
+test("a method with a fact that has no form is not offered, and its repeated rows are never drawn", () => {
+  const options: FormOptions = {
+    tax_year: 2026,
+    asset_kind: "material",
+    regime: "normal",
+    edition: {
+      revision_id: "2025",
+      authored_filing_year: 2025,
+      projected: true,
+    },
+    methods: ["plain", "rows", "unworded"],
+    acquisition_shapes: [...SERVED_SHAPES],
+    declared_activities: [...SERVED_ACTIVITIES],
+    method_facts: [
+      { method: "plain", facts: [] },
+      {
+        method: "rows",
+        facts: [
+          {
+            path: ["approved_plan", "annual_amounts"],
+            kind: "rows",
+            required: true,
+            required_with_group: false,
+            token_family: null,
+            tokens: [],
+          },
+        ],
+      },
+      {
+        method: "unworded",
+        facts: [
+          {
+            path: ["invented_fact"],
+            kind: "text",
+            required: true,
+            required_with_group: false,
+            token_family: null,
+            tokens: [],
+          },
+        ],
+      },
+    ],
+    table_groups: [],
+  };
+  const fields = fieldsFor({
+    kind: "element",
+    row: null,
+    descriptor: null,
+    revision: null,
+    tokens: () => [],
+    options,
+  });
+  expect(
+    fields
+      .find((found) => found.key === "method")!
+      .choices.map((choice) => choice.token),
+  ).toEqual(["plain"]);
+  expect(unlabelledFacts(options)).toEqual(["invented_fact"]);
+});
+
+test("a dotación in the way of a span is found among the effective ones, and each is shown by its last day", async () => {
+  const port = portOf();
+  const furgoneta = (await planOf(port, "furgoneta")).find(
+    (row) => row.tax_year === 2026,
+  )!;
+  const recorded = furgoneta.claims.filter((found) => found.effective);
+  expect(recorded.length).toBeGreaterThan(0);
+  const first = recorded[0]!;
+  // The last day a dotación covers is the day before its exclusive boundary.
+  expect(first.covered_through < first.covered_until).toBe(true);
+  expect(
+    claimsInTheWay(recorded, first.covered_from, first.covered_until),
+  ).toEqual([first]);
+  // A span that starts where it ends is not in the way.
+  expect(claimsInTheWay(recorded, first.covered_until, "2099-01-01")).toEqual(
+    [],
+  );
+  // A replaced dotación is not in the way.
+  expect(
+    claimsInTheWay(
+      recorded.map((found) => ({ ...found, effective: false })),
+      first.covered_from,
+      first.covered_until,
+    ),
+  ).toEqual([]);
+  for (const interval of furgoneta.claimable_intervals)
+    expect(interval.covered_through < interval.covered_until).toBe(true);
 });

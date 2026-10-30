@@ -1,6 +1,5 @@
 import type { IconName } from "@/components/ui/icon";
 import { facts } from "../../../shell/compose";
-import type { LedgerFailure } from "../../../shell/ledger";
 import type { ModeloDeclarationListRowV1 } from "../../../shell/modeloContract";
 import type { Translate } from "../../../shell/strings";
 
@@ -42,7 +41,3 @@ export function rowMark(row: ModeloDeclarationListRowV1): Mark | null {
       return null;
   }
 }
-
-/** The code a failed call names, shown beside the sentence. */
-export const failureText = (failure: LedgerFailure) =>
-  failure.reason ?? failure.code;

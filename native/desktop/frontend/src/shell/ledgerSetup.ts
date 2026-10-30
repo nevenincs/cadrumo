@@ -896,6 +896,15 @@ export type AssetListRow = {
   /** The later service years, whose figures are an estimate until the
    * registry publishes their tables. */
   projected_years: number[];
+  /** The baja the element's current revision records; null while it has none. */
+  disposal: ListDisposal | null;
+};
+
+export type ListDisposal = {
+  disposal_date: string;
+  reason: string;
+  /** The catalogue key that words `reason`. */
+  reason_key: string;
 };
 
 /** `years` are the register's: every year of any element, in order. */
@@ -917,12 +926,20 @@ export type PlanClaim = {
   amount: PublicDecimal;
   covered_from: string;
   covered_until: string;
+  /** The last day the claim covers, which is what a reader sees as its end;
+   * `covered_until` is the exclusive boundary the schedule computes with. */
+  covered_through: string;
   effective: boolean;
   superseded_by: string | null;
   revision_id: string;
 };
 
-export type ClaimableInterval = { covered_from: string; covered_until: string };
+export type ClaimableInterval = {
+  covered_from: string;
+  covered_until: string;
+  /** The last day the interval covers, as `PlanClaim.covered_through`. */
+  covered_through: string;
+};
 
 export type PlanRow = {
   /** Minimum amortization from entry to this year's end, which reduces cost at
@@ -990,6 +1007,10 @@ export type TimelineChange = {
   before_key: string | null;
   after_key: string | null;
   after: string | null;
+  /** The text that words `before` and `after` where the field carries a share
+   * or a table class; null for any other field. */
+  before_label: string | null;
+  after_label: string | null;
 };
 
 export type TimelineClaimUse = {
@@ -1032,6 +1053,18 @@ export type TableGroup = {
 };
 
 /** What the registry admits for one asset kind and tax year. */
+/** One fact an election of a method states, as the options serve it. */
+export type MethodFact = {
+  /** From the election down to the fact. */
+  path: string[];
+  kind: string;
+  required: boolean;
+  /** Required once the fact's optional group is stated. */
+  required_with_group: boolean;
+  token_family: string | null;
+  tokens: string[];
+};
+
 export type FormOptions = {
   tax_year: number;
   asset_kind: string;
@@ -1039,6 +1072,9 @@ export type FormOptions = {
   edition: PlanEdition;
   methods: string[];
   table_groups: TableGroup[];
+  acquisition_shapes: string[];
+  declared_activities: string[];
+  method_facts: { method: string; facts: MethodFact[] }[];
 };
 
 /** A ledger payment an element could name as its acquisition. What the

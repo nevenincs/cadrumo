@@ -1360,7 +1360,6 @@ desktop:
         settled: Desats o ja així
         unchanged: Sense canvis
         unknown: Resultat desconegut
-      technical: Detalls tècnics
       theirs: Pren el desat
       tick_links: Marca cada vincle permanent per desar.
       title: Revisa i desa · {count}
@@ -1372,9 +1371,10 @@ desktop:
     assets:
       action:
         add: Afegeix un element
+        change_baja: Canvia o treu la baixa
         claim: Registra la dotació
         correct: Corregeix
-        describe: Edita la fitxa
+        describe: Edita les dades
         dispose: Dona de baixa
       area:
         fixed: Immobilitzat
@@ -1382,19 +1382,44 @@ desktop:
       areas: Àrees d'actius
       baja:
         acquisition_value: Valor d'adquisició
+        change_confirm: Canviar la baixa de {name} al {date}? Les dotacions que mou
+          es calculen de nou.
+        change_submit: Desa el canvi
+        confirm: Registrar la baixa de {name} el {date}? Les dotacions posteriors
+          a aquest dia s'anul·len.
+        confirm_back: Torna
+        confirm_yes: Registra la baixa
         deducted: Amortització deduïda
+        effect_missing: No es calcula l'efecte d'aquest punt sobre el cost.
         excess: Excés
         figures: Xifres de la baixa (no es desa res)
-        findings: Observacions
+        findings: Punts per revisar
         net_value: Valor net
         preview: Calcula les xifres
         reduction: Reducció del valor d'adquisició
+        remove: Treu la baixa
+        remove_confirm: Treure la baixa de {name}? L'element torna a estar en servei
+          i tornen les dotacions que la baixa va anul·lar. La que va escurçar continua
+          curta fins que registris la resta.
+        remove_yes: Treu la baixa
         result: Guany o pèrdua
         route_changed: Una afectació posterior a l'activitat canvia com tributa aquesta
           baixa.
         transmission_value: Valor de transmissió
-      claim_reused: 'Ja reclamada: no s''ha registrat dues vegades.'
-      claimed: Reclamació registrada.
+        warning: Una baixa es pot canviar o treure després. Les dotacions posteriors
+          a la seva data s'anul·len i la que la creua s'escurça. En canviar o treure
+          la baixa tornen les anul·lades, però l'escurçada continua curta fins que
+          registris la resta.
+        warning_change: En canviar o treure aquesta baixa tornen les dotacions que
+          va anul·lar. La dotació que va escurçar continua curta fins que registris
+          la resta.
+      claim_no_plan: Aquest element no té quadre per a {year}
+      claim_period: Període per registrar
+      claim_period_option: Del {from} al {until}
+      claim_reused: Aquesta dotació ja estava registrada.
+      claim_title: Registra la dotació de {name} per a {year}
+      claim_until: Arriba fins al {until}.
+      claimed: Dotació registrada.
       column:
         amount: Import
         casilla: Casella
@@ -1404,45 +1429,57 @@ desktop:
         claim_item: '{year} · {amount} · {from} – {until}'
         supersede: 'Registra de nou aquestes dotacions amb les xifres corregides,
           en el mateix pas:'
-      correct_claim_title: Corregeix la dotació
+      correct_claim_title: Corregeix la dotació de {name} per a {year}
+      correct_that_claim: Corregeix aquesta dotació
       count:
-        conflict: 'Dotacions superposades: {count}'
-        incomplete: 'Anys que no es poden calcular: {count}'
-        missing: 'Anys sense registrar: {count}'
-        stale: 'Dotacions que ja no coincideixen amb el quadre: {count}'
+        conflict: 'Dotacions superposades, tots els anys: {count}'
+        incomplete: 'Anys que no es poden calcular, tots els anys: {count}'
+        missing: 'Anys sense dotació, tots els anys: {count}'
+        stale: 'Dotacions que ja no coincideixen amb el quadre, tots els anys: {count}'
       detail:
+        baja_reason: Motiu de la baixa
         close: Tanca
         panel: Detalls de l'element
         plan: Quadre
-        record: Fitxa
+        record: Detalls
         tabs: Vistes de l'element
         timeline: Cronologia
       field:
         acquired_condition: Estat en adquirir-lo
         acquisition: Compra
-        acquisition_no_evidence: Aquesta compra no té factura com a justificant, així
-          que no es pot indicar com l'adquisició.
-        acquisition_none: Encara no hi ha compres per triar.
+        acquisition_no_evidence: Aquesta compra encara no té factura. Adjunta la factura
+          a {documents} i torna.
+        acquisition_none: Encara no hi ha compres per triar. Afegeix la compra a {movements},
+          o adjunta la factura a {documents}, i torna.
         acquisition_option: '{description} · {date} · {amount}'
+        acquisition_reference: Referència de la factura o del document
         acquisition_shape: Tipus d'adquisició
-        allocation_provenance: Origen de l'afectació anterior
+        allocation_provenance: D'on surt el repartiment anterior
         amount: Import
         basis: Base amortitzable
-        basis_stage: Origen de la base
+        basis_stage: Com va arribar a ser teu
+        building_construction_date: Data de construcció de l'edifici
         business_use_share: Percentatge d'ús empresarial
-        class: Classe de la taula
+        charging_certificate: Certificat de la instal·lació
+        charging_documentation: Documentació tècnica
+        class: Grup de la taula oficial
         coefficient: Coeficient
+        construction_cost: Cost de la construcció
+        declared_acquisition_date: Data de compra
+        declared_activity: Activitat
         description: Descripció
         digit_order: Ordre dels dígits
         digit_period: Període de la suma de dígits (anys)
+        disposal_amount_hint: Escriu 0 si no n'hi va haver.
         disposal_date: Últim dia de servei
         disposal_reason: Motiu
         document_kind: Tipus de document
         document_number: Número de document
         in_service_date: En servei des de
         kind: Tipus
+        land_cost: Cost del sòl
         later_affectation: Afectació posterior a l'activitat el
-        low_value_election: Referència de l'elecció
+        low_value_election: Referència de la teva elecció
         low_value_evidence: Justificant de l'elecció
         market_value: Valor de mercat (si s'indica)
         method: Mètode
@@ -1451,32 +1488,60 @@ desktop:
         non_deductible_iva_hint: Escriu 0 si cap part de l'IVA és no deduïble. Buit
           no és el mateix que 0.
         not_known: 'No es coneix per a aquesta compra: indica-ho tu.'
+        office_area: Superfície usada per a l'activitat (m²)
         opening_amount: Amortització ja deduïda
         opening_method: Mètode aplicat abans
         opening_status: Amortització anterior a l'entrada
         opening_through: Coberta fins a l'exercici
+        other: Una altra dada
         out_of_service_date: Baixa a partir del
-        prior_regime: Llibertat d'amortització anterior acreditada
+        ownership_mode: Com és la titularitat
+        ownership_share: La teva quota de l'immoble
+        prior_regime: Llibertat d'amortització anterior
         proceeds: Import obtingut
+        renewable_available_on: Data de posada a disposició
+        renewable_building_code: Exigida pel codi tècnic de l'edificació
+        renewable_documentation: Referència de la documentació
+        renewable_documentation_kind: Tipus de documentació
+        renewable_purpose: Finalitat de la instal·lació
+        renewable_replaces_fossil: Substitueix una instal·lació de combustible fòssil
         research_evidence: Justificant de recerca i desenvolupament
         residual_value: Valor residual
         serial: Número de sèrie
+        shape_ledger: Comprat en aquest llibre
+        shape_outside: Comprat fora d'aquest llibre
+        shift_hours: Hores d'ús al dia
+        small_available_on: Data de posada a disposició
+        small_evidence: Justificant d'empresa de reduïda dimensió
+        small_turnover: Import net de la xifra de negocis del període anterior
         supplier_name: Proveïdor
         supplier_tax_id: NIF del proveïdor
+        total_area: Superfície total (m²)
         transmission_costs: Despeses de transmissió
         used_determination: Com es fixa el preu originari
         used_evidence: Justificant del preu originari
         used_price: Preu originari
+        useful_life_ends_on: Final de la vida útil
+        useful_life_evidence: Justificant de la vida útil
+        vehicle_category: Tipus de vehicle
+        vehicle_declared: És un vehicle?
+        vehicle_evidence: Justificant de l'ús del vehicle
+        vehicle_in_books: Anotat als llibres de l'activitat
+        vehicle_listed_use: Ús professional de la llista (si n'hi ha)
+        vehicle_private_use: Ús privat
+        vehicle_propulsion: Propulsió elèctrica (si en té)
       filing:
         choose: Tria un any i un trimestre del Model 130 per veure on van les dotacions.
         unavailable: El traspàs a la declaració no està disponible.
       forecast: Amortització {amount} · {days} dies · {from} – {until}
-      forecast_note: Una previsió no registra res fins que la reclames.
+      forecast_note: La previsió no desa res fins que registris la dotació.
       free: Amortització lliure sol·licitada
       free_hint: Només per a un mètode d'amortització lliure
       from: Des de
-      handoff: On van les reclamacions
-      handoff_unavailable: '{count} elements sense calcular, no inclosos'
+      handoff: Dotacions a les teves declaracions
+      handoff_partial: 'Parcial: {count} elements no es poden calcular i queden fora
+        d''aquest import.'
+      handoff_year: Any de les xifres per a la declaració
       list:
         column:
           accumulated: Amortitzat fins ara
@@ -1488,27 +1553,34 @@ desktop:
           pending: Pendent d'amortitzar
           serial: Número de sèrie
           state: Estat
-        empty: Encara no hi ha elements.
+        empty: Encara no hi ha elements. Afegeix el primer amb +
         label: Elements
         no_name: Sense nom registrat
-        summary: Anys que necessiten atenció
+        serial_missing: No hi ha cap número de sèrie registrat.
+        summary: Pendent d'atenció, tots els anys
         unavailable: El registre no està disponible ara.
+      not_known: Es desconeix
+      opening_unknown: Omple «{field}» per poder-ho calcular.
       plan:
-        claimable: Es pot registrar del {from} al {until}
+        claim_correct: Corregeix la dotació del {from} al {until}
+        claimable: Es pot registrar la dotació del {from} al {until}
         claimable_none: No queda res per registrar
+        claimed_missing: No hi ha res registrat per a aquest any.
         claims: Dotacions de {year}
         column:
           claimed: Registrada
           days: Dies
+          period: Període
           planned: Prevista
           rate: Percentatge
           replaced_by: Substituïda per
-          revision: Versió
           status: Estat
           year: Any
-        edition: Edició de la taula {edition}
-        election_changed: Aquí canvia el mètode escollit
+        days_missing: Aquest any no compta dies en servei.
+        edition: Taules de {edition}
+        election_changed: Aquí canvia el mètode d'amortització
         empty: Aquest pla encara no té exercicis.
+        from_date: Des del {date}
         gap: 'Sense registrar: del {from} al {until}'
         in_effect: Vigent
         limits:
@@ -1520,13 +1592,17 @@ desktop:
           maximum_period: Període màxim
           minimum_coefficient: Coeficient mínim
           period_years: '{years} anys'
-          title: Límits d'aquesta elecció
+          title: Límits d'aquest mètode
         matches: Coincideix amb el quadre actual
+        minimum_missing: El mínim d'aquest any no es pot calcular.
         no_claims: No hi ha cap dotació registrada per a aquest exercici.
         no_match: Ja no coincideix amb el quadre
-        projected: Projectada
-        projected_note: Les taules projectades s'usen per a la previsió i el model
-          130. El model 100 no està disponible per a {year}.
+        planned_missing: Aquest any no té cap xifra calculada.
+        projected_note: 'Estimada: no hi ha taules oficials per a {year}. Serveix
+          per al model 130, no per al model 100.'
+        projected_summary: Els anys marcats com a estimats fan servir les taules de
+          l'últim any oficial. Serveixen per al model 130, no per al model 100.
+        rate_missing: No hi ha percentatge perquè aquest any no té cap xifra calculada.
         recorded_zero: Registrada com a zero
         replaced: Substituïda
       quarter: Trimestre del model 130
@@ -1536,7 +1612,7 @@ desktop:
       submit:
         correct: Desa la correcció
         create: Crea l'element
-        forecast: Calcula la previsió
+        forecast: Calcula la dotació
       target:
         intangible_m100: Model 100 · intangible
         intangible_m130: Model 130 · intangible
@@ -1548,20 +1624,33 @@ desktop:
         change_to: a
         column:
           changes: Canvis
-          effect: Efecte
+          effect: Data d'efecte
           event: Esdeveniment
           recorded: Registrat
-          sequence: Núm.
+        effect_missing: Aquest registre no té data d'efecte.
         empty: Encara no s'ha afegit res.
+        no_changes: No ha canviat cap dada.
         not_in_calculation: No forma part del càlcul
         time_not_recorded: Hora no registrada
-        used_by: 'Càlculs que la fan servir: {count}'
+        used_by: S'usa en {count} càlculs
+        used_by_one: S'usa en 1 càlcul
+        value_changed: Canviat
       unrecognised: No reconegut
       until: Fins a
       write:
+        baja_changed: Baixa actualitzada.
+        baja_recorded: Baixa registrada.
+        cannot_clear: Això no pot quedar buit.
+        corrected: Correcció desada.
+        described: Dades desades.
+        element_added: Element afegit.
         fill_in: Omple-ho
+        fix_marked: Corregeix els camps marcats.
         incomplete: 'No s''ha desat. Falta omplir: {fields}'
         kept: No s'ha desat res. El que has escrit continua aquí.
+        missing: 'Falta omplir: {fields}'
+        nothing_changed: Encara no has canviat res.
+        options_wait: Tria primer el tipus i la data de posada en servei.
         reused: Ja estava registrada; no s'ha afegit res.
       year: Any
       year_estimated: '{year} (estimat)'
@@ -2508,7 +2597,6 @@ desktop:
       duplicates_chip: 'Possibles duplicats: {count}'
       duplicates_more: I {count} més.
       duplicates_note: S'importen i es marquen; compara'ls després d'importar.
-      field: Camp
       file_counts: Files {rows} · noves {fresh} · ja al llibre {skipped}
       file_imported: Importats {fresh} · ja al llibre {skipped}
       file_not_sent: No enviat.
@@ -2578,7 +2666,6 @@ desktop:
         result: Resultat
         what: Què
       steps: Passos
-      technical: Detalls tècnics
       title: Importa
       unknown: Resultat desconegut
       unknown_note: '{names} pot haver-se importat. No es torna a enviar res: torna
@@ -2622,8 +2709,6 @@ desktop:
       classification: Classificació
       clear: Buida el valor
       close: Amaga l'inspector
-      copied_id: Referència del moviment copiada
-      copy_id: Copia la referència
       derive:
         choose: Tria una categoria d'IVA
         stage: Calcula imports
@@ -2652,7 +2737,6 @@ desktop:
         purchase_invoice: Factura de compra · afegida {date}
       drop: Descarta
       earlier: Decisions anteriors
-      earlier_ids: Referències anteriors
       effective_date: Data efectiva
       empty: buit
       eur_same: 'Igual: moviment en euros'
@@ -2681,7 +2765,6 @@ desktop:
         stashed: Apartat
         updated: Actualitzat
       file_row: '{file}, fila {row}'
-      fingerprint: Referència d'importació
       fix:
         derive: Calcula imports
         go: Corregeix
@@ -2782,7 +2865,6 @@ desktop:
         unavailable: El model d'IA no està disponible ara mateix
       more: Més
       more_tax: Més camps fiscals
-      movement_id: Referència del moviment
       moves_to: Passa a {period}
       new_identity: Referència nova
       no_counterparty: Sense contrapart
@@ -2891,7 +2973,6 @@ desktop:
         unclassified: Classifica després
         under: A les parts els falten {amount} per al moviment.
       stage: Afegeix als canvis
-      technical: Detalls tècnics
       unread: No s'ha pogut llegir
       unsaved: 'Canvis: {count} · sense desar'
       unsaved_classification: → {classification} · sense desar
@@ -2930,39 +3011,6 @@ desktop:
       opening: Valor de les existències inicials
       preview_note: 'Una previsualització: no es registra res.'
       quantity: Unitats
-      refusal:
-        activity_conflict: 'Rebutjat: aquesta activitat ja té llibre aquell any.'
-        activity_not_found: 'Rebutjat: no hi ha llibre per a aquesta activitat i any.'
-        closing_authority_conflict: 'Rebutjat: ja hi ha guardada una altra decisió
-          de tancament.'
-        closing_authority_invalid: 'Rebutjat: la decisió de tancament no correspon
-          a aquest llibre.'
-        closing_authority_recorded: 'Rebutjat: ja hi ha desat un valor de tancament
-          de {year}, així que les seves existències no poden canviar.'
-        correction_changes_nothing: 'Rebutjat: això no canvia les existències inicials
-          ni el mètode.'
-        correction_id_conflict: 'Rebutjat: aquesta correcció ja es va fer servir per
-          a un altre canvi. Tanca aquest formulari i obre''l de nou.'
-        count_would_raise_stock: 'Rebutjat: un recompte no pot pujar les teves existències
-          per sobre de les unitats que tens als llibres.'
-        duplicate_movement_id: "El registre ha rebutjat el moviment: ja està registrat."
-        invalid_valuation_method: 'Rebutjat: no és un mètode de valoració.'
-        inventory_already_retired: 'Rebutjat: aquest llibre d''existències ja està
-          donat de baixa.'
-        inventory_not_retired: 'Rebutjat: aquest llibre d''existències no està donat
-          de baixa.'
-        inventory_retired: 'Rebutjat: aquest llibre d''existències està donat de baixa.
-          Restaura''l abans de canviar-ne les existències.'
-        inventory_validation: 'Rebutjat: el llibre no ho accepta.'
-        later_closing_authority_recorded: 'Rebutjat: el valor de tancament desat de
-          {later_year} es recolza en aquest any, així que les seves existències no
-          poden canviar.'
-        movement_already_superseded: 'Rebutjat: aquest moviment ja va ser corregit
-          o anul·lat.'
-        movement_not_found: 'Rebutjat: aquest moviment no és en aquest llibre d''existències.'
-        movement_outside_year: 'Rebutjat: la data del moviment queda fora de {year}.'
-        stock_would_go_negative: 'Rebutjat: sortirien més unitats de les que queden
-          en existències.'
       unit_cost: Cost unitari
       valuation: '{name} · existències finals {closing} · cost de vendes {cogs} ·
         {method}'
@@ -4752,6 +4800,20 @@ ledger:
       primary_purchase: Compra
       produced: Producció pròpia
       split_payment: Compra pagada en diversos pagaments
+    asset_kind:
+      intangible: Immobilitzat intangible
+      material: Immobilitzat material
+    basis_stage:
+      business_allocated: Imputat a l'activitat
+      taxpayer_owned: Propietat del contribuent, abans de l'ús en l'activitat
+      whole_property: Immoble complet
+    claim_state:
+      claimed: Registrada
+      edition_unavailable: Sense taules oficials
+      missing: Sense registrar
+      not_due: Res a registrar
+      partial: Registrada en part
+      superseded: Registrada, corregida
     declared_activity:
       A01: Arrendament de béns immobles
       A02: Ramaderia independent
@@ -4763,20 +4825,6 @@ ledger:
       B03: Forestal
       B04: Producció de musclo
       B05: Pesquera
-    asset_kind:
-      intangible: Immobilitzat intangible
-      material: Immobilitzat material
-    basis_stage:
-      business_allocated: Imputat a l'activitat
-      taxpayer_owned: Propietat del contribuent, abans de l'ús en l'activitat
-      whole_property: Immoble complet
-    claim_state:
-      claimed: Registrada
-      edition_unavailable: Sense edició per a aquest any
-      missing: Sense registrar
-      not_due: Res a registrar
-      partial: Registrada en part
-      superseded: Registrada, corregida
     digit_order:
       ascending: Creixent
       descending: Decreixent
@@ -4886,8 +4934,8 @@ ledger:
         a l'entrada en funcionament de l'element.
       declared_acquisition_date_required: Un element adquirit fora del llibre necessita
         la seva data d'adquisició.
-      declared_activity_required: Un element adquirit fora del llibre necessita
-        l'activitat a la qual pertany.
+      declared_activity_required: Un element adquirit fora del llibre necessita l'activitat
+        a la qual pertany.
       disposal_already_recorded: Aquest element ja té una baixa amb data %{disposal_date}.
         Per canviar-la o treure-la, corregeix l'element i edita o esborra la seva
         baixa.
@@ -5115,9 +5163,9 @@ ledger:
       useful_life_must_end_after_service: Una vida útil definida ha d'acabar després
         de l'entrada en funcionament de l'element.
       useful_life_not_positive: La vida útil ha de ser un nombre positiu i finit d'anys.
-      vehicle_affectation_required_for_class: L’element {asset_id} és en una classe de taula
-        que pot incloure un vehicle restringit pel RIRPF art. 22.4, per la qual cosa
-        necessita una declaració d'afectació del vehicle.
+      vehicle_affectation_required_for_class: L’element {asset_id} és en una classe
+        de taula que pot incloure un vehicle restringit pel RIRPF art. 22.4, per la
+        qual cosa necessita una declaració d'afectació del vehicle.
       vehicle_missing_from_books: Un vehicle que falta als llibres de l'activitat
         no és un element afecte (RIRPF art. 22.2.2º).
       vehicle_private_use_category_restricted: Un vehicle amb qualsevol ús privat
@@ -5186,7 +5234,8 @@ ledger:
       basis_exhausted: Base totalment amortitzada
       conflict: Entra en conflicte amb el que hi ha registrat
       covered_by_opening: Cobert per l'import d'obertura
-      edition_unavailable: Sense edició del model 100 per a aquest exercici
+      edition_unavailable: Cadrumo no té taules oficials per a aquest any, així que
+        no pot calcular aquesta xifra.
       free_election: 'Llibertat d''amortització: sense xifra prevista'
       incomplete: 'Falten dades: no es pot calcular'
       period_elapsed: Període màxim transcorregut
@@ -7821,9 +7870,9 @@ tui:
       invalid_number: '%{field}: %{value} no és un nombre enter.'
       inventory:
         action:
-          evidence_add: "Desa un document de compra"
-          closing_value: "Registra un valor de tancament des d'un fitxer de dades"
           closing_authority: Registra una autoritat de tancament
+          evidence_add: "Desa un document de compra"
+          closing_value: Registra un valor de tancament des d'un fitxer de dades
           create: Crea un inventari
           movement_add: Afegeix un moviment
           valuation_preview: Previsualitza la valoració
@@ -7843,10 +7892,10 @@ tui:
           acquisition_cost: Fitxer del cost de compra (només compres)
           action: Petició
           actividad_id: Activitat
+          authority_record: Fitxer de l'autoritat de tancament
           evidence_file: "Fitxer del document"
           evidence_folder: "Carpeta des de la qual parteix el camí del document"
-          closing_value_facts: "Fitxer de dades del valor de tancament"
-          authority_record: Fitxer de l'autoritat de tancament
+          closing_value_facts: Fitxer de dades del valor de tancament
           kind: Tipus de moviment
           movement_date: Data del moviment
           movement_id: Identificador del moviment
@@ -7879,8 +7928,7 @@ tui:
             ja n''hi ha una altra registrada per a aquest any.'
           closing_authority_invalid: 'El registre ha rebutjat l''autoritat de tancament:
             no coincideix amb l''inventari que indica.'
-          duplicate_movement_id: 'El registre ha rebutjat el moviment: aquest identificador
-            de moviment ja existeix.'
+          duplicate_movement_id: 'El registre ha rebutjat el moviment: ja està registrat.'
           invalid_valuation_method: 'El registre ha rebutjat la petició: no admet
             aquest mètode de valoració.'
           inventory_validation: 'El registre ha rebutjat la petició: no supera la

@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { userEvent, waitFor } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
+import { SEED_ELEMENTS } from "@/dev/assetsSeed";
 import { ledgerClassOf } from "@/dev/ledgerClassesFixture";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
@@ -13,12 +14,15 @@ import { CorrectForm } from "./CorrectForm";
 import { DescribeForm } from "./DescribeForm";
 
 // The forms of the Assets tab over the scenario ledger: adding an element,
-// describing it, correcting it, recording its depreciation and giving it a
-// baja. The choices of a field are the ones the backend serves. Each write
-// state has its story: in flight, done, already recorded, refused with what
-// was typed kept, incomplete with what to fill in, a claim that overlaps
-// another, failed, and a write whose settlement was not seen or whose answer
-// was lost, which holds the page's writes behind its banner.
+// describing it, correcting it, recording its dotación and giving it a baja,
+// and changing or removing one. The choices of a field are the ones the
+// backend serves. Each write state has its story: in flight, done, already
+// recorded, refused with what was typed kept, sent with fields missing, which
+// marks them and lists them under the button, a dotación that overlaps
+// another and the way to correct it, an element with no plan for the year, a
+// baja waiting for its confirmation, failed, and a write whose settlement was
+// not seen or whose answer was lost, which holds the page's writes behind its
+// banner.
 
 const noop = () => undefined;
 
@@ -159,7 +163,7 @@ const fillElement = async (root: Root) => {
   await chosen(root, "asset_kind", 1);
   await typed(root, "in_service_date", "2026-06-15");
   await chosen(root, "method", 0);
-  await chosen(root, "authority_class_key", 0);
+  await chosen(root, "amortization.authority_class_key", 0);
   await chosen(root, "acquisition", 0);
   await typed(root, "basis_amount", "900.00");
 };
@@ -184,8 +188,35 @@ export const AddElementPurchaseWithoutIva: Story = adding({
   play: steps((root) => chosen(root, "acquisition", 1)),
 });
 export const AddElementIncomplete: Story = adding({
-  name: "Add element, incomplete",
+  name: "Add element, sent with fields missing: marked and listed",
   play: steps(submit),
+});
+export const AddElementOutsideLedger: Story = adding({
+  name: "Add element, bought outside the ledger: date, activity and document",
+  play: steps(
+    (root) => chosen(root, "asset_kind", 1),
+    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosen(root, "acquisition_shape", 1),
+    (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
+    (root) => chosen(root, "declared_activity", 0),
+    (root) => typed(root, "acquisition_reference", "Factura 2024-118"),
+  ),
+});
+export const AddElementWholeProperty: Story = adding({
+  name: "Add element, whole property: its parts",
+  play: steps(
+    (root) => chosen(root, "asset_kind", 0),
+    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosen(root, "basis_stage", 2),
+  ),
+});
+export const AddElementVehicle: Story = adding({
+  name: "Add element, a vehicle: its declaration",
+  play: steps(
+    (root) => chosen(root, "asset_kind", 1),
+    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosen(root, "vehicle_declared", 0),
+  ),
 });
 export const AddElementDone: Story = adding({
   name: "Add element, done",
@@ -306,13 +337,59 @@ export const CorrectNotSeen: Story = correcting("servidor", {
 const disposing = (assetId: string, extra: Partial<Story> = {}) =>
   form((props) => <BajaForm {...props} assetId={assetId} />, extra);
 
-const dispose = (date: string) =>
-  steps(
-    (root) => typed(root, "date", date),
-    (root) => chosen(root, "reason", 0),
-    (root) => typed(root, "proceeds", "9000.00"),
-    (root) => typed(root, "transmission_costs", "150.00"),
-    submit,
+const fillBaja = (date: string) => async (root: Root) => {
+  await typed(root, "date", date);
+  await chosen(root, "reason", 0);
+  await typed(root, "proceeds", "9000.00");
+  await typed(root, "transmission_costs", "150.00");
+  await submit(root);
+};
+const confirm = (root: Root) => pressed(root, ".ledger-asset-confirm-yes");
+/** A baja filled in, sent, and confirmed. */
+const dispose = (date: string) => steps(fillBaja(date), confirm);
+
+/** The baja an element is given before its form opens, to change or remove. */
+const recorded = {
+  disposal_date: "2009-03-31",
+  reason: "sale",
+  proceeds: { decimal: "9000.00" },
+  transmission_costs: { decimal: "150.00" },
+  market_value: null,
+  prior_free_depreciation_regime: null,
+  later_affectation_on: null,
+};
+
+/** Draws its child once the element has a baja, as an element does that was
+ * given one earlier. */
+function AfterBaja({
+  port,
+  assetId,
+  children,
+}: {
+  port: LedgerPort;
+  assetId: string;
+  children: ReactNode;
+}) {
+  const [given, setGiven] = useState(false);
+  useEffect(() => {
+    void port
+      .submit("ledger.actividad-asset.dispose", {
+        asset_id: assetId,
+        disposal: recorded,
+      })
+      .then(() => setGiven(true));
+  }, [port, assetId]);
+  return given ? children : null;
+}
+
+const changing = (assetId: string, extra: Partial<Story> = {}) =>
+  form(
+    (props) => (
+      <AfterBaja port={props.port} assetId={assetId}>
+        <BajaForm {...props} assetId={assetId} />
+      </AfterBaja>
+    ),
+    extra,
   );
 
 export const Baja: Story = disposing("plotter", { name: "Baja" });
@@ -321,8 +398,12 @@ export const BajaDone: Story = disposing("furgoneta", {
   play: dispose("2026-12-31"),
 });
 export const BajaIncomplete: Story = disposing("plotter", {
-  name: "Baja, incomplete",
+  name: "Baja, sent with fields missing: marked and listed",
   play: steps(submit),
+});
+export const BajaConfirmation: Story = disposing("furgoneta", {
+  name: "Baja, waiting for the person to confirm: nothing sent yet",
+  play: steps(fillBaja("2026-12-31")),
 });
 export const BajaBeforeService: Story = disposing("plotter", {
   name: "Baja, before the element entered service: refused",
@@ -338,6 +419,32 @@ export const BajaNotSeen: Story = disposing("plotter", {
   args: { shape: "unknown" },
   play: dispose("2009-03-31"),
 });
+export const BajaChange: Story = changing("plotter", {
+  name: "Baja recorded: change or remove it",
+});
+export const BajaChangeDone: Story = changing("plotter", {
+  name: "Baja recorded, changed: done",
+  play: steps((root) => typed(root, "date", "2009-06-30"), submit, confirm),
+});
+export const BajaRemoveConfirmation: Story = changing("plotter", {
+  name: "Baja recorded, removal waiting for the person to confirm",
+  play: steps((root) => pressed(root, ".ledger-asset-remove")),
+});
+export const BajaRemoved: Story = changing("plotter", {
+  name: "Baja recorded, removed: done",
+  play: steps((root) => pressed(root, ".ledger-asset-remove"), confirm),
+});
+export const CorrectKeepsBaja: Story = form(
+  (props) => (
+    <AfterBaja port={props.port} assetId="plotter">
+      <CorrectForm {...props} assetId="plotter" />
+    </AfterBaja>
+  ),
+  {
+    name: "Correct an element with a baja: the baja stays",
+    play: steps((root) => typed(root, "residual_value", "10"), submit),
+  },
+);
 
 // ---- Recording depreciation ---------------------------------------------------------
 
@@ -345,76 +452,111 @@ const claiming = (
   assetId: string,
   taxYear: number,
   extra: Partial<Story> = {},
+  more: { initialYear?: number; supersedes?: string } = {},
 ) =>
   form(
-    (props) => <ClaimFlow {...props} assetId={assetId} taxYear={taxYear} />,
+    (props) => (
+      <ClaimFlow
+        {...props}
+        assetId={assetId}
+        taxYear={taxYear}
+        initialYear={more.initialYear}
+        supersedes={more.supersedes}
+      />
+    ),
     extra,
   );
 
+/** The dotación the plan of an element holds for a year. */
+const claimOf = (assetId: string, year: number) =>
+  SEED_ELEMENTS.find((seed) => seed.id === assetId)!
+    .rows.find((row) => row.tax_year === year)!
+    .claims.find((found) => found.effective)!.claim_id;
+
 const forecast = (root: Root) => pressed(root, ".ledger-asset-forecast");
 const claim = (root: Root) => pressed(root, ".ledger-asset-claim");
-/** A span that overlaps the half year already claimed. */
+/** A span that overlaps the half year already recorded. */
 const overlap = async (root: Root) => {
   await typed(root, "covered_from", "2026-01-01");
   await forecast(root);
-  await claim(root);
 };
 
 export const Claim: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, a year not claimed",
+  name: "Record dotación, a year not claimed",
 });
 export const ClaimForecast: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, forecast shown first",
+  name: "Record dotación, forecast shown first",
   play: steps(forecast),
 });
 export const ClaimDone: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, done",
+  name: "Record dotación, done",
   play: steps(forecast, claim),
 });
 export const ClaimAlreadyRecorded: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, sent again: already recorded",
+  name: "Record dotación, sent again: already recorded",
   play: steps(forecast, claim, async (root) => {
     await drawn(root, ".ledger-asset-saved");
     await claim(root);
   }),
 });
 export const ClaimConflict: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, overlaps a claim: refused, names it",
+  name: "Record dotación, overlaps one recorded: refused, offers to correct it",
   play: steps(overlap),
 });
+export const ClaimConflictCorrectThat: Story = claiming("furgoneta", 2026, {
+  name: "Record dotación, overlaps one recorded: switched to correcting it",
+  play: steps(overlap, (root) => pressed(root, ".ledger-asset-correct-that")),
+});
+export const ClaimCorrecting: Story = claiming(
+  "furgoneta",
+  2026,
+  { name: "Correct a dotación, opened from the plan" },
+  { initialYear: 2026, supersedes: claimOf("furgoneta", 2026) },
+);
+export const ClaimCorrectingDone: Story = claiming(
+  "furgoneta",
+  2026,
+  {
+    name: "Correct a dotación, done",
+    play: steps(forecast, claim),
+  },
+  { initialYear: 2026, supersedes: claimOf("furgoneta", 2026) },
+);
+export const ClaimNoPlanForTheYear: Story = claiming(
+  "furgoneta",
+  2026,
+  { name: "Record dotación, the element has no plan for the year" },
+  { initialYear: 2040 },
+);
 export const ClaimFreeMethodWithoutAmount: Story = claiming("impresora", 2026, {
-  name: "Record depreciation, free method without an amount: incomplete",
+  name: "Record dotación, free method without an amount: incomplete",
   play: steps(forecast),
 });
 export const ClaimProjectedYear: Story = claiming("furgoneta", 2027, {
-  name: "Record depreciation, a year on projected tables: forecast offered",
+  name: "Record dotación, a year on projected tables: forecast offered",
   play: steps(forecast),
 });
 export const ClaimPeriodElapsed: Story = claiming("cristaleria", 2026, {
-  name: "Record depreciation, maximum period elapsed: refused with its date",
-  play: steps(
-    (root) => typed(root, "covered_from", "2026-01-01"),
-    (root) => typed(root, "covered_until", "2027-01-01"),
-    forecast,
-  ),
+  name: "Record dotación, maximum period elapsed: refused with its date",
+  play: steps((root) => typed(root, "covered_from", "2026-01-01"), forecast),
 });
 export const ClaimInFlight: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, in flight",
+  name: "Record dotación, in flight",
   args: { hold: "in_flight" },
   play: steps(forecast, claim),
 });
 export const ClaimFailed: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, failed: nothing saved",
+  name: "Record dotación, failed: nothing saved",
   args: { hold: "unavailable" },
   play: steps(forecast, claim),
 });
 export const ClaimNotSeen: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, settlement not seen: held",
+  name: "Record dotación, settlement not seen: held",
   args: { shape: "unknown" },
   play: steps(forecast, claim),
 });
 export const ClaimAnswerLost: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, saved but the answer was lost: held",
+  name: "Record dotación, saved but the answer was lost: held",
   play: async (context) => {
     window.__scenarioLedger?.nextWrites(["saved_unread"]);
     await steps(forecast, claim)(context);

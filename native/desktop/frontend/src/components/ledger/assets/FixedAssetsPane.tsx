@@ -23,8 +23,14 @@ import { ASSET_KEYS, COUNT_KINDS, refusalText } from "./assetsWords";
 import { FilingHandoffPanel } from "./FilingHandoffPanel";
 import { YearStepper } from "./YearStepper";
 
-/** An act asked for: a new element, or one on an element already listed. */
-type AssetFormRequest = { kind: FormKind; assetId: string | null };
+/** An act asked for: a new element, or one on an element already listed. A
+ * dotación asked for may correct one recorded, in a year of the plan. */
+type AssetFormRequest = {
+  kind: FormKind;
+  assetId: string | null;
+  supersedes?: string;
+  year?: number;
+};
 
 type ListResult = ActivityAssetListResult;
 
@@ -63,12 +69,14 @@ function useAssetList(port: LedgerPort, reader: string | null) {
 const noop = () => undefined;
 
 /**
- * Assets › Fixed assets: the register's elements for a year, the detail of
- * the chosen one beside them, and the filing handoff under them. The list is
- * the backend's answer as it stands; an unread register, an empty one, a
- * refusal and a failure are each said apart, and none reads as the others.
+ * Assets › Fixed assets: the register's elements, the detail of the chosen
+ * one beside them, and the filing handoff under them. The list is the
+ * backend's answer as it stands, for all years; an unread register, an empty
+ * one, a refusal and a failure are each said apart, and none reads as the
+ * others. The year chosen above the handoff is the year its amounts go to.
  * The years on offer are the ones the list serves; the pane stands on the
- * latest of them that has begun, else the earliest.
+ * latest of them that has begun, else the earliest. A form on an element
+ * opens at the top of its panel, and closes when another element is chosen.
  */
 export function FixedAssetsPane({
   port,
@@ -87,7 +95,25 @@ export function FixedAssetsPane({
   const [selected, setSelected] = useState<string | null>(null);
   const [chosenYear, setYear] = useState<number | null>(null);
   const [request, setRequest] = useState<AssetFormRequest | null>(null);
+  const [asked, setAsked] = useState(0);
+  const [added, setAdded] = useState(false);
   const [width, setWidth] = useState<number | null>(null);
+
+  const ask = (next: AssetFormRequest | null) => {
+    setRequest(next);
+    setAsked((count) => count + 1);
+    setAdded(false);
+  };
+  // Another element, or none, takes down a form on the one that was chosen.
+  const select = (assetId: string | null) => {
+    setSelected(assetId);
+    if (
+      request !== null &&
+      request.assetId !== null &&
+      request.assetId !== assetId
+    )
+      ask(null);
+  };
 
   const answer = call?.kind === "done" ? call.result : null;
   const loaded = answer?.outcome === "succeeded" ? answer : null;
@@ -109,19 +135,36 @@ export function FixedAssetsPane({
       reader,
       locale,
       taxYear: year,
-      onClose: () => setRequest(null),
+      onClose: () => ask(null),
       onWritten: reload,
     };
     const { kind, assetId } = request;
     if (assetId === null)
-      return <AssetForm {...act} kind="element" assetId={null} />;
+      return (
+        <AssetForm
+          {...act}
+          kind="element"
+          assetId={null}
+          onAdded={(id) => {
+            ask(null);
+            setAdded(true);
+            setSelected(id);
+          }}
+        />
+      );
     if (kind === "descriptor")
       return <DescribeForm {...act} assetId={assetId} />;
     if (kind === "correction")
       return <CorrectForm {...act} assetId={assetId} />;
     if (kind === "baja") return <BajaForm {...act} assetId={assetId} />;
     return year === null ? null : (
-      <ClaimFlow {...act} assetId={assetId} taxYear={year} />
+      <ClaimFlow
+        {...act}
+        assetId={assetId}
+        taxYear={year}
+        initialYear={request.year ?? null}
+        supersedes={request.supersedes ?? null}
+      />
     );
   };
 
@@ -159,12 +202,13 @@ export function FixedAssetsPane({
       <AssetList
         rows={rows}
         selected={row?.asset_id ?? null}
-        onSelect={setSelected}
+        onSelect={select}
         locale={locale}
       />
     );
   };
 
+  const onElement = request !== null && request.assetId !== null;
   return (
     <div className="ledger-assets-fixed flex min-h-0 flex-1">
       <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
@@ -172,23 +216,11 @@ export function FixedAssetsPane({
           <WriteHold>
             <IconButton
               label={t(ASSET_KEYS.action.add)}
-              onClick={() => setRequest({ kind: "element", assetId: null })}
+              onClick={() => ask({ kind: "element", assetId: null })}
             >
               <Icon name="plus" />
             </IconButton>
           </WriteHold>
-          <YearStepper
-            value={year}
-            years={offered}
-            estimated={estimated}
-            onChange={setYear}
-          />
-          {year !== null && estimated.includes(year) && (
-            <span className="ledger-assets-estimated inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <Icon name="info" size="xs" />
-              {t(ASSET_KEYS.year_estimated_note)}
-            </span>
-          )}
           <span className="flex-1" />
           <span
             role="group"
@@ -206,15 +238,46 @@ export function FixedAssetsPane({
             })}
           </span>
         </div>
-        {form()}
+        {added && (
+          <Alert
+            tone="success"
+            icon={<Icon name="check" />}
+            className="ledger-asset-added"
+          >
+            {t("desktop.ledger.assets.write.element_added")}
+          </Alert>
+        )}
+        {!onElement && <div key={asked}>{form()}</div>}
         {body()}
         {loaded && (
-          <FilingHandoffPanel
-            port={port}
-            reader={reader}
-            locale={locale}
-            year={year}
-          />
+          <section
+            aria-label={t("desktop.ledger.assets.handoff")}
+            className="ledger-assets-filing flex flex-col gap-2"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {t("desktop.ledger.assets.handoff_year")}
+              </span>
+              <YearStepper
+                value={year}
+                years={offered}
+                estimated={estimated}
+                onChange={setYear}
+              />
+              {year !== null && estimated.includes(year) && (
+                <span className="ledger-assets-estimated inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <Icon name="info" size="xs" />
+                  {t(ASSET_KEYS.year_estimated_note)}
+                </span>
+              )}
+            </div>
+            <FilingHandoffPanel
+              port={port}
+              reader={reader}
+              locale={locale}
+              year={year}
+            />
+          </section>
         )}
       </div>
       {row && (
@@ -226,17 +289,35 @@ export function FixedAssetsPane({
           defaultRem={32}
           label={t("desktop.ledger.assets.detail.panel")}
         >
-          <AssetDetail
-            port={port}
-            reader={reader}
-            locale={locale}
-            row={row}
-            year={year}
-            version={version}
-            onOpenLink={onOpenLink}
-            onAct={(kind) => setRequest({ kind, assetId: row.asset_id })}
-            onClose={() => setSelected(null)}
-          />
+          <div className="flex min-h-0 flex-1 flex-col">
+            {onElement && request.assetId === row.asset_id && (
+              <div
+                key={asked}
+                className="ledger-assets-form-slot max-h-[70%] shrink-0 overflow-y-auto border-b p-3 [&_form_.grid]:grid-cols-1"
+              >
+                {form()}
+              </div>
+            )}
+            <AssetDetail
+              port={port}
+              reader={reader}
+              locale={locale}
+              row={row}
+              year={year}
+              version={version}
+              onOpenLink={onOpenLink}
+              onAct={(kind) => ask({ kind, assetId: row.asset_id })}
+              onCorrectClaim={(claimId, claimYear) =>
+                ask({
+                  kind: "claim",
+                  assetId: row.asset_id,
+                  supersedes: claimId,
+                  year: claimYear,
+                })
+              }
+              onClose={() => select(null)}
+            />
+          </div>
         </RightPanel>
       )}
     </div>

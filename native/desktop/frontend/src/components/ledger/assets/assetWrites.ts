@@ -22,7 +22,12 @@ import type {
 import type { Translate } from "../../../shell/strings";
 import { setupCall, type SetupCall } from "../setup/setupModel";
 import type { Landing, LandingCheck } from "../WritePause";
-import type { FormField, FormValue, FormValues } from "./assetFields";
+import {
+  formKeyOf,
+  type FormField,
+  type FormValue,
+  type FormValues,
+} from "./assetFields";
 import { fieldWord, reasonText } from "./assetsWords";
 
 /** The year the pane opens on among the years the list serves: the latest that
@@ -97,14 +102,15 @@ export function disposalOf(values: FormValues): DisposalFacts | null {
   };
 }
 
-/** The forecast of a span; null while the span is not both dates. */
+/** The forecast of a span; null while the span does not start on a date. The
+ * span ends where the backend served it, never on a day worked out here. */
 export function forecastRequest(
   assetId: string,
   values: FormValues,
   supersedes: string | null,
+  until: string | null,
 ): ActivityAssetForecastRequest | null {
   const from = textOf(values.covered_from);
-  const until = textOf(values.covered_until);
   if (from === null || until === null) return null;
   return {
     asset_id: assetId,
@@ -114,6 +120,19 @@ export function forecastRequest(
     supersedes_claim_id: supersedes,
   };
 }
+
+/** The recorded claims a span would meet, which the backend refuses it for. */
+export const claimsInTheWay = (
+  claims: readonly PlanClaim[],
+  from: string,
+  until: string,
+): PlanClaim[] =>
+  claims.filter(
+    (claim) =>
+      claim.effective &&
+      claim.covered_from < until &&
+      from < claim.covered_until,
+  );
 
 // ---- What the register says of a write held in doubt ---------------------------
 
@@ -274,6 +293,9 @@ export function currentDescriptor(
 
 /** The refusal code this tab treats apart. */
 export const INCOMPLETE = "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE";
+/** The refusal of a dotación that meets one already recorded, and its reason. */
+export const CLAIM_CONFLICT = "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT";
+export const CLAIMS_OVERLAP = "ledger.actividad_asset.errors.claims_overlap";
 
 export type Refusal = {
   code: string | null;
@@ -363,7 +385,7 @@ export function missingLabels(
   return listed(
     t,
     keys.map((key) => {
-      const found = fields.find((field) => field.key === key);
+      const found = fields.find((field) => field.key === formKeyOf(key));
       return found ? t(found.label_key) : fieldWord(t, key);
     }),
   );

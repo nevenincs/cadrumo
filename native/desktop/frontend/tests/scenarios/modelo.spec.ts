@@ -317,7 +317,7 @@ test("a box with no value is drawn as missing, never as a zero", async ({
   await expect(row).not.toContainText(/\b0[.,]00\b/);
 });
 
-test("the check lists every finding under its level, with its technical codes on request", async ({
+test("the check lists every finding under its level, in plain words only", async ({
   page: target,
 }) => {
   const read = form("130-1T-checked");
@@ -330,12 +330,7 @@ test("the check lists every finding under its level, with its technical codes on
     });
     const item = level.getByRole("listitem").filter({ hasText: line.message });
     await expect(item).toContainText(line.action);
-    const codes = item.getByText(line.technical, { exact: true });
-    await expect(codes).toBeHidden();
-    await item
-      .getByText(label("workspace.modelo.issues.technical"), { exact: true })
-      .click();
-    await expect(codes).toBeVisible();
+    await expect(item).not.toContainText(line.technical);
   }
 });
 

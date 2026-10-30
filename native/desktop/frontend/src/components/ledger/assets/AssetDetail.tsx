@@ -8,15 +8,22 @@ import { WriteHold } from "../WritePause";
 import { dateText } from "../movements/movementWords";
 import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
-import { DASH, figureText } from "./planWords";
+import { NotKnown } from "./AssetList";
+import { figureText } from "./planWords";
 import type { AssetListRow } from "../../../shell/ledgerSetup";
 import type { FormKind } from "./assetFields";
-import { ASSET_KEYS, fieldWord, tokenWord } from "./assetsWords";
+import {
+  ASSET_KEYS,
+  fieldWord,
+  openingRemedy,
+  tokenWord,
+  wordOfKey,
+} from "./assetsWords";
 
 /** The acts on one element, each a form of its own kind. */
 const ACTS = [
-  { kind: "descriptor", word: "describe", icon: "edit" },
-  { kind: "correction", word: "correct", icon: "reset" },
+  { kind: "descriptor", word: "describe", icon: "page" },
+  { kind: "correction", word: "correct", icon: "edit" },
   { kind: "claim", word: "claim", icon: "tick" },
   { kind: "baja", word: "dispose", icon: "archive" },
 ] as const satisfies readonly {
@@ -51,6 +58,7 @@ export function AssetDetail({
   version,
   onOpenLink,
   onAct,
+  onCorrectClaim,
   onClose,
 }: {
   port: LedgerPort;
@@ -62,6 +70,9 @@ export function AssetDetail({
   version: number;
   onOpenLink?: (url: string) => void;
   onAct: (kind: FormKind) => void;
+  /** Asks to correct one claim of a year; the plan offers it on each claim in
+   * effect. */
+  onCorrectClaim?: (claimId: string, year: number) => void;
   onClose: () => void;
 }) {
   const t = useStrings();
@@ -87,7 +98,11 @@ export function AssetDetail({
           {ACTS.map((act) => (
             <WriteHold key={act.kind}>
               <IconButton
-                label={t(ASSET_KEYS.action[act.word])}
+                label={
+                  act.kind === "baja" && row.disposal !== null
+                    ? t("desktop.ledger.assets.action.change_baja")
+                    : t(ASSET_KEYS.action[act.word])
+                }
                 onClick={() => onAct(act.kind)}
               >
                 <Icon name={act.icon} />
@@ -126,6 +141,7 @@ export function AssetDetail({
             locale={locale}
             year={year}
             onOpenLink={onOpenLink}
+            onCorrectClaim={onCorrectClaim}
           />
         </TabsContent>
         <TabsContent value="timeline" className="overflow-y-auto">
@@ -143,7 +159,9 @@ export function AssetDetail({
               {row.name ?? t(ASSET_KEYS.list.no_name)}
             </Fact>
             <Fact label={fieldWord(t, "serial_number")}>
-              {row.serial_number ?? DASH}
+              {row.serial_number ?? (
+                <NotKnown why={t(ASSET_KEYS.list.serial_missing)} />
+              )}
             </Fact>
             <Fact label={fieldWord(t, "asset_kind")}>
               {tokenWord(t, "asset_kind", row.asset_kind)}
@@ -157,17 +175,29 @@ export function AssetDetail({
             <Fact label={t(ASSET_KEYS.list.column.state)}>
               {tokenWord(t, "register_state", row.state)}
             </Fact>
-            <Fact label={t(ASSET_KEYS.plan.column.revision)}>
-              <span className="tabular-nums">{row.revision_number}</span>
-            </Fact>
+            {row.disposal !== null && (
+              <>
+                <Fact label={fieldWord(t, "disposal.disposal_date")}>
+                  {dateText(locale, row.disposal.disposal_date, true)}
+                </Fact>
+                <Fact label={t(ASSET_KEYS.detail.baja_reason)}>
+                  {wordOfKey(t, row.disposal.reason_key) ??
+                    tokenWord(t, "disposal_reason", row.disposal.reason)}
+                </Fact>
+              </>
+            )}
             <Fact label={fieldWord(t, "basis.basis_amount")}>
               {figureText(locale, row.basis)}
             </Fact>
             <Fact label={t(ASSET_KEYS.list.column.accumulated)}>
-              {figureText(locale, row.accumulated) ?? DASH}
+              {figureText(locale, row.accumulated) ?? (
+                <NotKnown why={openingRemedy(t)} />
+              )}
             </Fact>
             <Fact label={t(ASSET_KEYS.list.column.pending)}>
-              {figureText(locale, row.pending) ?? DASH}
+              {figureText(locale, row.pending) ?? (
+                <NotKnown why={openingRemedy(t)} />
+              )}
             </Fact>
           </dl>
         </TabsContent>

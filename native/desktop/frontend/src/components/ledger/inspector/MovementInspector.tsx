@@ -123,7 +123,6 @@ export function MovementInspector({
   onAction,
   onSplit,
   onSelectCohort,
-  copy,
   say,
 }: {
   port: LedgerPort;
@@ -150,7 +149,6 @@ export function MovementInspector({
   onAction: (request: ActionRequest) => void;
   onSplit: (row: LedgerRow) => void;
   onSelectCohort: (ids: string[]) => void;
-  copy: (text: string) => Promise<void>;
   say: (text: string) => void;
 }) {
   const t = useStrings();
@@ -540,10 +538,7 @@ export function MovementInspector({
           />,
           invoiceRef,
         )}
-        {section(
-          "details",
-          <DetailsSection scope={scope} track={track} copy={copy} say={say} />,
-        )}
+        {section("details", <DetailsSection scope={scope} track={track} />)}
         {section(
           "history",
           <HistorySection

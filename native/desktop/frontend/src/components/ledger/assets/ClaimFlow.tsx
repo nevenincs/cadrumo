@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -6,6 +6,7 @@ import { facts } from "../../../shell/compose";
 import type {
   ActivityAssetForecast,
   ActivityAssetForecastResult,
+  PlanClaim,
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
@@ -18,19 +19,30 @@ import {
   useSetupWrite,
 } from "../setup/SetupParts";
 import { setupCall, type SetupCall } from "../setup/setupModel";
-import { answer, claimFields, draftOf, type FormField } from "./assetFields";
+import {
+  answer,
+  claimFields,
+  claimSpans,
+  draftOf,
+  throughOf,
+  type FormField,
+} from "./assetFields";
 import {
   FieldsGrid,
   OptionsRead,
   useAssetRow,
   useFieldsDraft,
+  useFocusOnOpen,
   useLedgerRead,
   WriteLine,
   type ActProps,
 } from "./AssetForm";
 import {
+  CLAIM_CONFLICT,
+  CLAIMS_OVERLAP,
   claimLanding,
   claimReused,
+  claimsInTheWay,
   forecastRequest,
   neverReused,
   viewOf,
@@ -38,14 +50,17 @@ import {
 import { ASSET_KEYS } from "./assetsWords";
 
 const NO_FIELDS = new Set<string>();
-
+const NO_CLAIMS: readonly PlanClaim[] = [];
 /**
- * Records a year's depreciation in two steps: the forecast first, which works
- * out the span and records nothing, then the claim. The span starts from what
- * the plan says is still claimable, or from the claim being replaced; a claim
- * that overlaps another is refused with the backend's reason, and a claim
- * sent again for the same forecast is answered as already recorded. The
- * claim's landing is read from the plan's claims.
+ * Records a year's dotación in two steps: the forecast first, which works
+ * out the span and records nothing, then the dotación itself. The year
+ * starts on the plan's latest year that can still take one, and the person
+ * can choose another of the plan's years. The span starts from what the plan
+ * says is still open, or from the dotación being replaced, and ends where
+ * the backend says it ends. A dotación that meets another is refused with the
+ * backend's reason and offers to correct the one in the way; one sent again
+ * for the same forecast is answered as already recorded. The landing is read
+ * from the plan.
  */
 export function ClaimFlow({
   port,
@@ -53,17 +68,23 @@ export function ClaimFlow({
   locale,
   assetId,
   taxYear,
+  initialYear = null,
   supersedes = null,
   onClose,
   onWritten,
 }: ActProps & {
   assetId: string;
+  /** The year the page stands on, for an element whose plan has no year yet. */
   taxYear: number;
-  /** The claim the new one replaces, in the same write. */
+  /** The year to open on, where the person came from a year of the plan. */
+  initialYear?: number | null;
+  /** The dotación the new one replaces, in the same write. */
   supersedes?: string | null;
 }) {
   const t = useStrings();
   const [replaces, setReplaces] = useState<string | null>(supersedes);
+  const [chosenYear, setChosenYear] = useState<number | null>(initialYear);
+  const [spanIndex, setSpanIndex] = useState(0);
   const asset = useAssetRow(port, reader, assetId);
   const plan = useLedgerRead(
     port,
@@ -73,28 +94,54 @@ export function ClaimFlow({
     assetId,
   );
   const rows = plan.read?.kind === "done" ? plan.read.result.rows : null;
-  const year = rows?.find((row) => row.tax_year === taxYear) ?? null;
-  const effective = (year?.claims ?? []).filter((claim) => claim.effective);
+  const years = (rows ?? []).map((found) => found.tax_year);
+  // The latest year that can still take a dotación, else the latest year.
+  const latestOpen = [...(rows ?? [])]
+    .reverse()
+    .find((found) => found.claimable_intervals.length > 0);
+  const year = chosenYear ?? latestOpen?.tax_year ?? years.at(-1) ?? taxYear;
+  const row = rows?.find((found) => found.tax_year === year) ?? null;
+  const effective = (row?.claims ?? NO_CLAIMS).filter(
+    (claim) => claim.effective,
+  );
   const replaced =
     effective.find((claim) => claim.claim_id === replaces) ?? null;
-  const fields = claimFields(year, replaced);
+  const spans = claimSpans(row, replaced);
+  const span = spans[spanIndex] ?? spans[0] ?? null;
+  const fields = claimFields(row, replaced, span);
   const form = useFieldsDraft(draftOf(fields));
   const [forecast, setForecast] = useState<ActivityAssetForecast | null>(null);
   const [forecastCall, setForecastCall] =
     useState<SetupCall<ActivityAssetForecastResult> | null>(null);
   const [reading, setReading] = useState(false);
-  const write = useSetupWrite(
-    facts(t, [t(ASSET_KEYS.action.claim), asset.row?.name]),
-  );
+  const name = asset.row?.name ?? t(ASSET_KEYS.list.no_name);
+  const write = useSetupWrite(facts(t, [t(ASSET_KEYS.action.claim), name]));
   useSetupDraft(form.dirty);
+  const formRef = useRef<HTMLFormElement>(null);
+  useFocusOnOpen(formRef, row !== null);
 
   const answered = answer(fields, form.draft, null);
-  const request = forecastRequest(assetId, answered.values, replaces);
+  const request = forecastRequest(
+    assetId,
+    answered.values,
+    replaces,
+    span?.until ?? null,
+  );
   const ready = Object.keys(answered.problems).length === 0 && request !== null;
   const forecastView = viewOf(forecastCall, neverReused);
-  const missing = new Set(
-    forecastView.kind === "refused" ? forecastView.missing : [],
-  );
+  const wroteView = viewOf(write.last, claimReused);
+  const [tried, setTried] = useState(false);
+  const missing = new Set([
+    ...(forecastView.kind === "refused" ? forecastView.missing : []),
+    ...(tried
+      ? fields
+          .filter(
+            (found) =>
+              found.required && (answered.values[found.key] ?? null) === null,
+          )
+          .map((found) => found.key)
+      : []),
+  ]);
 
   // A different span is a different forecast.
   const changed = () => {
@@ -107,8 +154,28 @@ export function ClaimFlow({
     changed();
   };
 
+  // The recorded dotación in the way, when the refusal is that one meets another.
+  const meets = [forecastView, wroteView].some(
+    (view) =>
+      view.kind === "refused" &&
+      view.code === CLAIM_CONFLICT &&
+      view.reasonKey === CLAIMS_OVERLAP,
+  );
+  const inTheWay =
+    meets && request !== null
+      ? claimsInTheWay(
+          effective,
+          forecast?.covered_from ?? request.covered_from,
+          forecast?.covered_until ?? request.covered_until,
+        )
+      : NO_CLAIMS;
+
   const preview = async () => {
-    if (!ready || request === null || reading || write.busy) return;
+    if (reading || write.busy) return;
+    if (!ready || request === null) {
+      setTried(true);
+      return;
+    }
     setReading(true);
     setForecast(null);
     write.clear();
@@ -147,19 +214,74 @@ export function ClaimFlow({
     }
   };
 
-  return (
-    <Panel
-      title={t(
-        replaces === null
-          ? ASSET_KEYS.action.claim
-          : "desktop.ledger.assets.correct_claim_title",
-      )}
-      className="ledger-asset-form ledger-asset-form-claim"
+  const chooseYear = (next: number) => {
+    setChosenYear(next);
+    setReplaces(null);
+    setSpanIndex(0);
+    changed();
+  };
+
+  const yearChoice = years.length > 1 && (
+    <ChoiceField
+      label={t(ASSET_KEYS.year)}
+      value={String(year)}
+      onValue={(value) => chooseYear(Number(value))}
+      options={years.map((found) => ({
+        value: String(found),
+        label: String(found),
+      }))}
+    />
+  );
+
+  const title = t(
+    replaces === null
+      ? "desktop.ledger.assets.claim_title"
+      : "desktop.ledger.assets.correct_claim_title",
+    { name, year },
+  );
+
+  const closeButton = onClose && (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      aria-disabled={write.busy || undefined}
+      onClick={() => {
+        if (!write.busy) onClose();
+      }}
     >
-      {year === null ? (
-        <OptionsRead call={plan.read} />
+      {t("desktop.ledger.form.cancel")}
+    </Button>
+  );
+
+  return (
+    <Panel title={title} className="ledger-asset-form ledger-asset-form-claim">
+      {row === null ? (
+        rows === null ? (
+          <OptionsRead call={plan.read} />
+        ) : (
+          <div className="ledger-asset-no-plan flex flex-col gap-3">
+            {yearChoice}
+            <p role="status" className="text-sm">
+              {t("desktop.ledger.assets.claim_no_plan", { year })}
+            </p>
+            {onClose && (
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={onClose}
+                >
+                  {t("desktop.ledger.form.close")}
+                </Button>
+              </div>
+            )}
+          </div>
+        )
       ) : (
         <form
+          ref={formRef}
           noValidate
           className="flex flex-col gap-3"
           onSubmit={(event) => {
@@ -167,22 +289,43 @@ export function ClaimFlow({
             void preview();
           }}
         >
+          {yearChoice}
           {effective.length > 0 && (
             <ChoiceField
               label={t("desktop.ledger.assets.replace_claim")}
               value={replaces ?? ""}
               onValue={(value) => {
                 setReplaces(value === "" ? null : value);
+                setSpanIndex(0);
                 changed();
               }}
-              placeholder={t("desktop.ledger.assets.replace_none")}
-              options={effective.map((claim) => ({
-                value: claim.claim_id,
-                label: t("desktop.ledger.assets.correct.claim_item", {
-                  year: taxYear,
-                  amount: amountText(locale, claim.amount.decimal),
-                  from: dateText(locale, claim.covered_from, true),
-                  until: dateText(locale, claim.covered_until, true),
+              options={[
+                { value: "", label: t("desktop.ledger.assets.replace_none") },
+                ...effective.map((found) => ({
+                  value: found.claim_id,
+                  label: t("desktop.ledger.assets.correct.claim_item", {
+                    year,
+                    amount: amountText(locale, found.amount.decimal),
+                    from: dateText(locale, found.covered_from, true),
+                    until: dateText(locale, throughOf(found), true),
+                  }),
+                })),
+              ]}
+            />
+          )}
+          {spans.length > 1 && (
+            <ChoiceField
+              label={t("desktop.ledger.assets.claim_period")}
+              value={String(spanIndex)}
+              onValue={(value) => {
+                setSpanIndex(Number(value));
+                changed();
+              }}
+              options={spans.map((found, index) => ({
+                value: String(index),
+                label: t("desktop.ledger.assets.claim_period_option", {
+                  from: dateText(locale, found.from, true),
+                  until: dateText(locale, found.through, true),
                 }),
               }))}
             />
@@ -198,26 +341,21 @@ export function ClaimFlow({
             purchaseKnown={NO_FIELDS}
             locale={locale}
           />
+          {span && (
+            <p className="ledger-asset-claim-until text-sm text-muted-foreground">
+              {t("desktop.ledger.assets.claim_until", {
+                until: dateText(locale, span.through, true),
+              })}
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
-            {onClose && (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                aria-disabled={write.busy || undefined}
-                onClick={() => {
-                  if (!write.busy) onClose();
-                }}
-              >
-                {t("desktop.ledger.form.cancel")}
-              </Button>
-            )}
+            {closeButton}
             <Button
               type="submit"
               size="sm"
               variant="outline"
               className="ledger-asset-forecast"
-              aria-disabled={!ready || reading || write.busy || undefined}
+              aria-disabled={reading || write.busy || undefined}
             >
               {t("desktop.ledger.assets.submit.forecast")}
             </Button>
@@ -232,7 +370,16 @@ export function ClaimFlow({
                     amount: amountText(locale, forecast.amount.decimal),
                     days: forecast.service_days,
                     from: dateText(locale, forecast.covered_from, true),
-                    until: dateText(locale, forecast.covered_until, true),
+                    until: dateText(
+                      locale,
+                      throughOf(
+                        forecast as {
+                          covered_until: string;
+                          covered_through?: string;
+                        },
+                      ),
+                      true,
+                    ),
                   })}
                 </span>
                 <span className="text-sm">
@@ -265,6 +412,23 @@ export function ClaimFlow({
               reusedOf: claimReused,
             }}
           />
+          {inTheWay.length === 1 && (
+            <div className="flex">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="ledger-asset-correct-that"
+                onClick={() => {
+                  setReplaces(inTheWay[0]!.claim_id);
+                  setSpanIndex(0);
+                  changed();
+                }}
+              >
+                {t("desktop.ledger.assets.correct_that_claim")}
+              </Button>
+            </div>
+          )}
         </form>
       )}
     </Panel>
