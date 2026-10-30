@@ -9,6 +9,8 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+# Per-machine CMake toolchain, SDK and agent-source selections.
+/CMakeUserPresets.json
 develop-eggs/
 dist/
 downloads/
