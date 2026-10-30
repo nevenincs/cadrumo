@@ -404,7 +404,7 @@ def free_base_remains(revision: ActivityAssetRevision, history: ActivityAssetHis
     )
     opening = revision.opening_history.accumulated_amount or Decimal("0")
     consumed = opening + summary.accumulated_before_tax_year + summary.accumulated_in_tax_year
-    return revision.amortizable_basis() > consumed
+    return revision.amortizable_ceiling() > consumed
 
 
 __all__ = [

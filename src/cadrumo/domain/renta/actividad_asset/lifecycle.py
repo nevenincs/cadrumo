@@ -16,6 +16,7 @@ from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.money.rounding import round_to_cents
 from .disposal import ActivityAssetDisposal
 from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
@@ -367,6 +368,10 @@ class ActivityAssetRevision(CachedIdentityModel):
     def amortizable_basis(self) -> Decimal:
         """Return the allocated basis less residual value (RIS art. 3.2)."""
         return self.basis.deductible_basis() - self.residual_value
+
+    def amortizable_ceiling(self) -> Decimal:
+        """Return the most that charges, each emitted in cents, can lawfully add up to."""
+        return round_to_cents(self.amortizable_basis())
 
     @cached_property
     def revision_id(self) -> str:

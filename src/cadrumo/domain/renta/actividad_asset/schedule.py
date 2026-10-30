@@ -373,8 +373,14 @@ def _charge_bases(
             translated_message="ledger.actividad_asset.errors.opening_history_amount_missing"
         )
     amortizable_basis = revision.amortizable_basis()
-    pending_at_year_start = amortizable_basis - opening_amount - history.accumulated_before_tax_year
-    remaining_base = pending_at_year_start - history.accumulated_in_tax_year - history.accumulated_after_tax_year
+    pending_at_year_start = max(amortizable_basis - opening_amount - history.accumulated_before_tax_year, Decimal("0"))
+    remaining_base = (
+        revision.amortizable_ceiling()
+        - opening_amount
+        - history.accumulated_before_tax_year
+        - history.accumulated_in_tax_year
+        - history.accumulated_after_tax_year
+    )
     if remaining_base < Decimal("0"):
         raise ActividadAssetValidationError(
             translated_message="ledger.actividad_asset.errors.claims_exceed_amortizable_basis"

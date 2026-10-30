@@ -10,7 +10,6 @@ from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.money.rounding import round_to_cents
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     asset_schedule_history,
@@ -341,7 +340,7 @@ class ActivityAssetHistory(BaseModel):
         for claim in recorded:
             require_claim_after_opening_year(revision, claim.tax_year)
         consumed = opening + sum((claim.amount for claim in recorded), Decimal("0"))
-        if consumed > round_to_cents(revision.amortizable_basis()):
+        if consumed > revision.amortizable_ceiling():
             raise ActividadAssetClaimConflictError(
                 translated_message="ledger.actividad_asset.errors.correction_below_effective_claims",
             )
@@ -418,7 +417,7 @@ class ActivityAssetHistory(BaseModel):
             + summary.accumulated_in_tax_year
             + summary.accumulated_after_tax_year
         )
-        if consumed > round_to_cents(revision.amortizable_basis()):
+        if consumed > revision.amortizable_ceiling():
             raise ActividadAssetClaimConflictError(
                 translated_message="ledger.actividad_asset.errors.claims_exceed_amortizable_basis",
             )

@@ -185,7 +185,7 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
     """
     rows: list[ActivityAssetPlanRow] = []
     boundary = date.max if revision.disposal is None else revision.disposal.boundary
-    basis = round_to_cents(revision.amortizable_basis())
+    basis = revision.amortizable_ceiling()
     minimum = Decimal("0")
     minimum_complete = True
     for row in _walk_to_settlement(revision, context):
@@ -339,7 +339,7 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
     claims = tuple(claim for claim in effective_claims(context.history.claims) if claim.asset_id == revision.asset_id)
     opening = revision.opening_history.accumulated_amount
     accumulated = None if opening is None else opening + sum((claim.amount for claim in claims), Decimal("0"))
-    basis = round_to_cents(revision.amortizable_basis())
+    basis = revision.amortizable_ceiling()
     settled = _left_service(revision, context.today) or any(
         row.absence in _NOT_ACCRUING and row.tax_year <= context.today.year for row in plan
     )
