@@ -18,7 +18,6 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
-from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.tipos_actividad import TipoActividad
 from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection, last_day_covered
@@ -49,20 +48,19 @@ from ...domain.renta.actividad_asset.election import (
 )
 from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import (
-    AcquisitionLineageReference,
     AcquisitionShape,
-    ActivityAssetBasis,
     ActivityAssetRevision,
-    AssetBasisStage,
     AssetKind,
-    FurtherAcquisitionRow,
-    OpeningAmortizationHistory,
-    OpeningHistoryStatus,
-    OwnershipMode,
 )
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptor, ActivityAssetHistoryEvent
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from ...domain.renta.actividad_asset.vehicle_affectation import VehicleAffectation
+from .acquisition_dtos import (
+    AcquisitionLineageSnapshot,
+    ActivityAssetBasisSnapshot,
+    FurtherAcquisitionSnapshot,
+    OpeningHistorySnapshot,
+)
 from .activity_asset_read_models import ActivityAssetM130Contribution, ActivityAssetM130ProjectionSnapshot
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .operations import ActivityAssetFilingHandoff, M130AccrualProjection, M130Contribution
@@ -113,131 +111,6 @@ def _domain_charge_fields(snapshot: BaseModel) -> dict[str, object]:
                 raise TypeError("charge decimal must be a public decimal")
             data[name] = _decimal(amount)
     return data
-
-
-class AcquisitionLineageSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    observed_transaction_id: TransactionId | None = None
-    observed_lineage_event_id: Hex64Str | None = None
-    invoice_evidence_id: str = Field(max_length=256)
-    evidence_fingerprint: Hex64Str | None = None
-
-    @classmethod
-    def from_domain(cls, value: AcquisitionLineageReference) -> Self:
-        return cls(**value.model_dump(mode="python"))
-
-    def to_domain(self) -> AcquisitionLineageReference:
-        return AcquisitionLineageReference(**self.model_dump(mode="python"))
-
-
-class FurtherAcquisitionSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    shape: AcquisitionShape
-    lineage: AcquisitionLineageSnapshot
-
-    @classmethod
-    def from_domain(cls, value: FurtherAcquisitionRow) -> Self:
-        return cls(shape=value.shape, lineage=AcquisitionLineageSnapshot.from_domain(value.lineage))
-
-    def to_domain(self) -> FurtherAcquisitionRow:
-        return FurtherAcquisitionRow(shape=self.shape, lineage=self.lineage.to_domain())
-
-
-class OpeningHistorySnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    status: OpeningHistoryStatus
-    accumulated_amount: PublicDecimal | None = None
-    amortization_method: AmortizationMethod | None = None
-    covered_through_tax_year: FilingYear | None = None
-
-    @classmethod
-    def from_domain(cls, value: OpeningAmortizationHistory) -> Self:
-        return cls(
-            status=value.status,
-            accumulated_amount=(
-                project_scalar(value.accumulated_amount) if value.accumulated_amount is not None else None
-            ),
-            amortization_method=value.amortization_method,
-            covered_through_tax_year=value.covered_through_tax_year,
-        )
-
-    def to_domain(self) -> OpeningAmortizationHistory:
-        return OpeningAmortizationHistory(
-            status=self.status,
-            accumulated_amount=_decimal(self.accumulated_amount),
-            amortization_method=self.amortization_method,
-            covered_through_tax_year=self.covered_through_tax_year,
-        )
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self
-
-
-class ActivityAssetBasisSnapshot(BaseModel):
-    """Public basis DTO with explicit decimal allocation facts."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    stage: AssetBasisStage
-    basis_amount: PublicDecimal
-    non_deductible_iva: PublicDecimal
-    is_property: bool = False
-    construction_cost: PublicDecimal | None = None
-    land_cost: PublicDecimal | None = None
-    ownership_mode: OwnershipMode | None = None
-    ownership_share: PublicDecimal | None = None
-    office_area: PublicDecimal | None = None
-    total_area: PublicDecimal | None = None
-    business_use_share: PublicDecimal | None = None
-    prior_allocation_provenance: str | None = Field(default=None, min_length=1, max_length=512)
-
-    @classmethod
-    def from_domain(cls, value: ActivityAssetBasis) -> Self:
-        """Copy a canonical basis into its public decimal representation."""
-        decimal_names = (
-            "basis_amount",
-            "non_deductible_iva",
-            "construction_cost",
-            "land_cost",
-            "ownership_share",
-            "office_area",
-            "total_area",
-            "business_use_share",
-        )
-        data = value.model_dump(mode="python")
-        for name in decimal_names:
-            amount = data[name]
-            data[name] = PublicDecimal(decimal=str(amount)) if amount is not None else None
-        return cls(**data)
-
-    def to_domain(self) -> ActivityAssetBasis:
-        """Restore and revalidate the canonical domain basis."""
-        return ActivityAssetBasis(
-            stage=self.stage,
-            basis_amount=Decimal(self.basis_amount.decimal),
-            non_deductible_iva=Decimal(self.non_deductible_iva.decimal),
-            is_property=self.is_property,
-            construction_cost=_decimal(self.construction_cost),
-            land_cost=_decimal(self.land_cost),
-            ownership_mode=self.ownership_mode,
-            ownership_share=_decimal(self.ownership_share),
-            office_area=_decimal(self.office_area),
-            total_area=_decimal(self.total_area),
-            business_use_share=_decimal(self.business_use_share),
-            prior_allocation_provenance=self.prior_allocation_provenance,
-        )
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _canonical(self) -> Self:
-        self.to_domain()
-        return self
 
 
 class PlanAnnualAmountSnapshot(BaseModel):
@@ -839,7 +712,6 @@ class ActivityAssetHistoryClaimResultSnapshot(BaseModel):
 
 __all__ = [
     "ActivityAssetAmortizationElectionSnapshot",
-    "ActivityAssetBasisSnapshot",
     "ActivityAssetDisposalSnapshot",
     "ActivityAssetFilingHandoffSnapshot",
     "ActivityAssetHistoryClaimResultSnapshot",

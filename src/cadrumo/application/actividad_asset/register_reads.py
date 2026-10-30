@@ -7,14 +7,9 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel
-
-from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money.rounding import round_to_cents
-from ...core.type_guards import is_object_list_or_tuple, is_object_mapping
-from ...domain.calculations.registry.actividad_asset_bindings import ActivityAssetFormOptions
+from ...domain.calculations.registry.actividad_asset_form_options import ActivityAssetFormOptions
 from ...domain.calculations.registry.errors import RegistryError
-from ...domain.calculations.registry.prorrata_vocabulary import resolve_input_classification_definition
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimCoverageGap,
@@ -27,22 +22,15 @@ from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, AmortizationMethod, DirectEstimationRegime
 from ...domain.renta.actividad_asset.election_facts import method_facts
 from ...domain.renta.actividad_asset.errors import ActividadAssetError
-from ...domain.renta.actividad_asset.fact_leaves import FactKind, indexed_to_step_path
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
-from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
 from ...domain.renta.actividad_asset.schedule import (
     AssetScheduleHistory,
     ScheduleAuthority,
     add_years,
     require_method_continuity,
 )
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.public_scalar import PublicDecimal, project_scalar
 from .activity_asset_read_models import (
-    NON_DEDUCTIBLE_IVA_STATE_FAMILY,
-    TIMELINE_LABELLED_FIELDS,
-    ActivityAssetAcquisitionCandidate,
     ActivityAssetClaimableInterval,
     ActivityAssetClaimStaleReason,
     ActivityAssetClaimState,
@@ -53,20 +41,15 @@ from .activity_asset_read_models import (
     ActivityAssetListRow,
     ActivityAssetMethodFact,
     ActivityAssetMethodFacts,
-    ActivityAssetNonDeductibleIvaState,
     ActivityAssetNotTableBoundReason,
     ActivityAssetPlanClaim,
     ActivityAssetPlanRow,
     ActivityAssetRegisterState,
-    ActivityAssetTimelineChange,
-    ActivityAssetTimelineClaimUse,
-    ActivityAssetTimelineEvent,
     activity_asset_label_key,
     project_reason_facts,
-    timeline_token_key,
 )
 from .disposal_calculation import DisposalBoundsReader, year_minimum
-from .fact_wording import ActivityAssetFlag, share_label, token_family
+from .fact_wording import token_family
 from .history import ActivityAssetHistory
 from .legal_citations import ResolvedLegalCitations
 from .ports import ActivityAssetForecastOperation
@@ -136,6 +119,10 @@ def _claimable(
         )
     except ActividadAssetError as error:
         return (), error.translated_message
+    return _claimable_gaps(row), None
+
+
+def _claimable_gaps(row: WalkedYear) -> tuple[ActivityAssetClaimableInterval, ...]:
     start = row.charge.covered_from if row.charge is not None else date.min
     end = row.charge.covered_until if row.charge is not None else date.max
     intervals = tuple(
@@ -143,7 +130,7 @@ def _claimable(
         for gap in row.gaps
         if max(gap.covered_from, start) < min(gap.covered_until, end) and not _gap_lies_on_a_claim(gap, row)
     )
-    return intervals, None
+    return intervals
 
 
 def method_facts_view(method: AmortizationMethod) -> ActivityAssetMethodFacts:
@@ -186,13 +173,7 @@ def _claim_state(
     today: date,
 ) -> ActivityAssetClaimState:
     if not row.claims:
-        if row.absence in _NOT_ACCRUING or row.absence is PlanFigureAbsence.COVERED_BY_OPENING:
-            return ActivityAssetClaimState.NOT_DUE
-        if row.tax_year > today.year:
-            return ActivityAssetClaimState.NOT_DUE
-        if row.absence is PlanFigureAbsence.EDITION_UNAVAILABLE:
-            return ActivityAssetClaimState.EDITION_UNAVAILABLE
-        return ActivityAssetClaimState.MISSING
+        return _unclaimed_state(row, today=today)
     if (
         intervals
         or any(_gap_lies_on_a_claim(gap, row) for gap in row.gaps)
@@ -204,6 +185,16 @@ def _claim_state(
     return ActivityAssetClaimState.CLAIMED
 
 
+def _unclaimed_state(row: WalkedYear, *, today: date) -> ActivityAssetClaimState:
+    if row.absence in _NOT_ACCRUING or row.absence is PlanFigureAbsence.COVERED_BY_OPENING:
+        return ActivityAssetClaimState.NOT_DUE
+    if row.tax_year > today.year:
+        return ActivityAssetClaimState.NOT_DUE
+    if row.absence is PlanFigureAbsence.EDITION_UNAVAILABLE:
+        return ActivityAssetClaimState.EDITION_UNAVAILABLE
+    return ActivityAssetClaimState.MISSING
+
+
 def _plan_claims(
     revision: ActivityAssetRevision, tax_year: int, context: RegisterReadContext
 ) -> tuple[ActivityAssetPlanClaim, ...]:
@@ -212,7 +203,7 @@ def _plan_claims(
         claim.supersedes_claim_id: claim.claim_id for claim in claims if claim.supersedes_claim_id is not None
     }
     return tuple(
-        _plan_claim(claim, superseded_by, _matches_current_schedule(claim, revision, context))
+        _plan_claim(claim, superseded_by, matches_current_schedule(claim, revision, context))
         for claim in claims
         if claim.asset_id == revision.asset_id and claim.tax_year == tax_year
     )
@@ -358,7 +349,7 @@ def _history_before_claim(claim: AmortizationClaim, history: ActivityAssetHistor
     )
 
 
-def _matches_current_schedule(
+def matches_current_schedule(
     claim: AmortizationClaim,
     current: ActivityAssetRevision,
     context: RegisterReadContext,
@@ -403,13 +394,13 @@ def register_years(rows: Iterable[ActivityAssetListRow]) -> tuple[int, ...]:
 
 def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> ActivityAssetListRow:
     plan = element_plan(revision, context)
-    claims = tuple(claim for claim in effective_claims(context.history.claims) if claim.asset_id == revision.asset_id)
+    claims = _effective_asset_claims(context.history.claims, revision.asset_id)
     opening = revision.opening_history.accumulated_amount
     accumulated = None if opening is None else opening + sum((claim.amount for claim in claims), Decimal("0"))
     basis = revision.amortizable_ceiling()
     pending = None if accumulated is None else max(basis - accumulated, Decimal("0"))
     descriptor = context.history.current_descriptor(revision.asset_id)
-    readable = tuple(row.tax_year for row in plan if context.admits_filing_year(row.tax_year))
+    readable = _readable_years(plan, context)
     return ActivityAssetListRow(
         asset_id=revision.asset_id,
         name=None if descriptor is None else descriptor.facts.name,
@@ -422,27 +413,45 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
         basis=_amount(basis),
         accumulated=_optional_amount(accumulated),
         pending=_optional_amount(pending),
-        findings=ActivityAssetFindingCounts(
-            missing=sum(
-                row.claim_state in {ActivityAssetClaimState.MISSING, ActivityAssetClaimState.PARTIAL} for row in plan
-            ),
-            incomplete=sum(row.absence is PlanFigureAbsence.INCOMPLETE for row in plan),
-            conflict=sum(row.absence in {PlanFigureAbsence.CONFLICT, PlanFigureAbsence.UNSUPPORTED} for row in plan),
-            stale=sum(_matches_current_schedule(claim, revision, context) is not None for claim in claims),
-        ),
+        findings=_finding_counts(plan, claims, revision, context),
         years=tuple(year for year in readable if year <= context.last_admitted_year),
         projected_years=tuple(year for year in readable if year > context.last_admitted_year),
-        disposal=(
-            None
-            if revision.disposal is None
-            else ActivityAssetListDisposal(
-                disposal_date=revision.disposal.disposal_date,
-                reason=revision.disposal.reason,
-                reason_key=activity_asset_label_key(
-                    token_family(ActivityAssetDisposalReason), revision.disposal.reason
-                ),
-            )
+        disposal=_list_disposal(revision),
+    )
+
+
+def _effective_asset_claims(claims: tuple[AmortizationClaim, ...], asset_id: str) -> tuple[AmortizationClaim, ...]:
+    return tuple(claim for claim in effective_claims(claims) if claim.asset_id == asset_id)
+
+
+def _readable_years(plan: tuple[ActivityAssetPlanRow, ...], context: RegisterReadContext) -> tuple[int, ...]:
+    return tuple(row.tax_year for row in plan if context.admits_filing_year(row.tax_year))
+
+
+def _list_disposal(revision: ActivityAssetRevision) -> ActivityAssetListDisposal | None:
+    disposal = revision.disposal
+    if disposal is None:
+        return None
+    return ActivityAssetListDisposal(
+        disposal_date=disposal.disposal_date,
+        reason=disposal.reason,
+        reason_key=activity_asset_label_key(token_family(ActivityAssetDisposalReason), disposal.reason),
+    )
+
+
+def _finding_counts(
+    plan: tuple[ActivityAssetPlanRow, ...],
+    claims: tuple[AmortizationClaim, ...],
+    revision: ActivityAssetRevision,
+    context: RegisterReadContext,
+) -> ActivityAssetFindingCounts:
+    return ActivityAssetFindingCounts(
+        missing=sum(
+            row.claim_state in {ActivityAssetClaimState.MISSING, ActivityAssetClaimState.PARTIAL} for row in plan
         ),
+        incomplete=sum(row.absence is PlanFigureAbsence.INCOMPLETE for row in plan),
+        conflict=sum(row.absence in {PlanFigureAbsence.CONFLICT, PlanFigureAbsence.UNSUPPORTED} for row in plan),
+        stale=sum(matches_current_schedule(claim, revision, context) is not None for claim in claims),
     )
 
 
@@ -473,251 +482,11 @@ def _left_service(revision: ActivityAssetRevision, today: date) -> bool:
     return revision.disposal is not None and revision.disposal.boundary <= today
 
 
-def _flatten(value: object, prefix: str = "") -> dict[str, str | None]:
-    """Flatten a dumped record into dotted fields; a repeated row is named by its position."""
-    if is_object_mapping(value):
-        flat: dict[str, str | None] = {}
-        for name, item in value.items():
-            flat.update(_flatten(item, f"{prefix}.{name}" if prefix else str(name)))
-        return flat
-    if is_object_list_or_tuple(value):
-        items = tuple(value)
-        if not items:
-            return {prefix: None}
-        flat = {}
-        for position, item in enumerate(items):
-            flat.update(_flatten(item, f"{prefix}[{position}]"))
-        return flat
-    if isinstance(value, bool):
-        return {prefix: ActivityAssetFlag(str(value).lower()).value}
-    return {prefix: None if value is None else str(value)}
-
-
-ClassNames = Callable[[BaseModel], Mapping[str, str]]
-"""Reads the official names of the table classes a record's modality and year publish."""
-
-
-def _changed_value_label(field: str, value: str | None, names: Mapping[str, str]) -> str | None:
-    """Word a changed value that is a share or a table class, or return ``None`` for any other."""
-    if value is None:
-        return None
-    kind = TIMELINE_LABELLED_FIELDS.get(indexed_to_step_path(field))
-    if kind is FactKind.SHARE:
-        return share_label(value)
-    if kind is FactKind.CLASS:
-        return names.get(value)
-    return None
-
-
-def _changes(
-    before: BaseModel | None,
-    after: BaseModel,
-    *,
-    excluding: frozenset[str] = frozenset(),
-    class_names: ClassNames,
-) -> tuple[ActivityAssetTimelineChange, ...]:
-    old = {} if before is None else _flatten(before.model_dump(mode="json", exclude=set(excluding)))
-    new = _flatten(after.model_dump(mode="json", exclude=set(excluding)))
-    old_names: Mapping[str, str] = dict[str, str]() if before is None else class_names(before)
-    new_names = class_names(after)
-    return tuple(
-        ActivityAssetTimelineChange(
-            field=name,
-            before=old.get(name),
-            after=new.get(name),
-            before_key=timeline_token_key(name, old.get(name)),
-            after_key=timeline_token_key(name, new.get(name)),
-            before_label=_changed_value_label(name, old.get(name), old_names),
-            after_label=_changed_value_label(name, new.get(name), new_names),
-        )
-        for name in sorted({*old, *new})
-        if old.get(name) != new.get(name)
-    )
-
-
-def _class_names_reader(context: RegisterReadContext) -> ClassNames:
-    """Read the table class names of a revision's modality, under the year the plan limits read."""
-    cache: dict[tuple[DirectEstimationRegime, int], Mapping[str, str]] = {}
-
-    def names(record: BaseModel) -> Mapping[str, str]:
-        if not isinstance(record, ActivityAssetRevision):
-            return dict[str, str]()
-        regime = record.amortization.regime
-        tax_year = max(context.today.year, record.in_service_date.year)
-        if (regime, tax_year) not in cache:
-            try:
-                cache[regime, tax_year] = context.class_labels(regime, tax_year)
-            except (ActividadAssetError, RegistryError):
-                cache[regime, tax_year] = {}
-        return cache[regime, tax_year]
-
-    return names
-
-
-_REVISION_LINK_FIELDS = frozenset({"asset_id", "revision_number", "supersedes_revision_id"})
-"""A revision's place in its chain, which the timeline's order already states."""
-
-
-def element_timeline(
-    asset_id: str,
-    context: RegisterReadContext,
-    *,
-    used_by: Mapping[str, tuple[str, ...]],
-) -> tuple[ActivityAssetTimelineEvent, ...]:
-    """List one element's records in history order, each with what it changed.
-
-    Returns:
-        One event per record.  A claim also says what consumed it and whether it
-        still matches the current schedule.
-    """
-    history = context.history
-    revisions = {item.revision_id: item for item in history.revisions}
-    claims = {item.claim_id: item for item in history.claims}
-    descriptors = {item.descriptor_id: item for item in history.descriptors}
-    current = current_revisions(history.revisions)[asset_id]
-    class_names = _class_names_reader(context)
-    timeline: list[ActivityAssetTimelineEvent] = []
-    for event in history.ordered_events():
-        if event.asset_id != asset_id:
-            continue
-        effect_date: date | None = None
-        changes: tuple[ActivityAssetTimelineChange, ...]
-        claim_use: ActivityAssetTimelineClaimUse | None = None
-        if event.kind in {ActivityAssetEventKind.REVISION, ActivityAssetEventKind.BAJA}:
-            revision = revisions[event.record_id]
-            previous = revisions.get(revision.supersedes_revision_id or "")
-            changes = _changes(previous, revision, excluding=_REVISION_LINK_FIELDS, class_names=class_names)
-            effect_date = (
-                revision.disposal.disposal_date
-                if event.kind is ActivityAssetEventKind.BAJA and revision.disposal is not None
-                else revision.in_service_date
-            )
-        elif event.kind is ActivityAssetEventKind.CLAIM:
-            claim = claims[event.record_id]
-            replaced = claims.get(claim.supersedes_claim_id or "")
-            changes = (
-                ActivityAssetTimelineChange(
-                    field="amount",
-                    before=None if replaced is None else str(replaced.amount),
-                    after=str(claim.amount),
-                ),
-            )
-            effect_date = claim.covered_from
-            stale = _matches_current_schedule(claim, current, context)
-            claim_use = ActivityAssetTimelineClaimUse(
-                used_by=used_by.get(claim.claim_id, ()),
-                matches_current_schedule=stale is None,
-                stale_reason=stale,
-            )
-        else:
-            descriptor = descriptors[event.record_id]
-            earlier = next(
-                (
-                    item
-                    for item in history.descriptors
-                    if item.asset_id == asset_id and item.descriptor_number == descriptor.descriptor_number - 1
-                ),
-                None,
-            )
-            changes = _changes(None if earlier is None else earlier.facts, descriptor.facts, class_names=class_names)
-        timeline.append(
-            ActivityAssetTimelineEvent(
-                sequence=event.sequence,
-                recorded_at=event.recorded_at,
-                kind=event.kind,
-                asset_id=asset_id,
-                record_id=event.record_id,
-                effect_date=effect_date,
-                origin=event.origin,
-                changes=changes,
-                affects_calculation=event.kind is not ActivityAssetEventKind.DESCRIPTOR,
-                claim=claim_use,
-            ),
-        )
-    return tuple(timeline)
-
-
-def acquisition_candidates(
-    catalogue: TransactionCatalogue,
-    history: ActivityAssetHistory,
-) -> tuple[ActivityAssetAcquisitionCandidate, ...]:
-    """List the business payments in a :class:`TransactionCatalogue` not yet named as acquisitions.
-
-    The candidates are returned newest first.
-
-    Returns:
-        One candidate per row.  What the ledger does not know is null, never zero.
-    """
-    owned = {
-        transaction_id
-        for revision in current_revisions(history.revisions).values()
-        for transaction_id in revision.acquisition_transaction_ids
-    }
-    rows = (
-        row
-        for row in catalogue.transactions.values()
-        if row.direction is TransactionDirection.OUTGOING
-        and row.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and row.business_classification in {BusinessClassification.BUSINESS, BusinessClassification.MIXED}
-        and row.transaction_id not in owned
-    )
-    return tuple(
-        _candidate(row)
-        for row in sorted(rows, key=lambda item: (item.raw.booked_date, item.transaction_id), reverse=True)
-    )
-
-
-def _non_deductible_iva(row: Transaction) -> Decimal | None:
-    """Read the row's non-deductible IVA from its classification; anything else stays unknown."""
-    if row.iva_amount is None or row.input_classification is None or row.raw.currency != DEFAULT_CURRENCY:
-        return None
-    definition = resolve_input_classification_definition(row.input_classification)
-    if definition.uses_general_percentage or definition.deductible_percentage is None:
-        return None
-    if definition.deductible_percentage == Decimal("100"):
-        return Decimal("0.00")
-    if definition.deductible_percentage == Decimal("0"):
-        return row.iva_amount
-    return None
-
-
-def _candidate(row: Transaction) -> ActivityAssetAcquisitionCandidate:
-    non_deductible = _non_deductible_iva(row)
-    state = (
-        ActivityAssetNonDeductibleIvaState.UNKNOWN
-        if non_deductible is None
-        else ActivityAssetNonDeductibleIvaState.KNOWN
-    )
-    evidence_id = row.purchase_invoice_evidence_id
-    paid = row.raw.amount if row.raw.currency == DEFAULT_CURRENCY else row.value_in_eur
-    return ActivityAssetAcquisitionCandidate(
-        transaction_id=row.transaction_id,
-        booked_date=row.raw.booked_date,
-        description=row.raw.description,
-        amount=_amount(row.raw.amount),
-        currency=row.raw.currency,
-        paid_in_euro=_optional_amount(paid),
-        taxable_base=_optional_amount(row.taxable_base),
-        iva_amount=_optional_amount(row.iva_amount),
-        non_deductible_iva_state=state,
-        non_deductible_iva_state_key=activity_asset_label_key(NON_DEDUCTIBLE_IVA_STATE_FAMILY, state),
-        non_deductible_iva=_optional_amount(non_deductible),
-        invoice_evidence_id=evidence_id,
-        evidence_fingerprint=evidence_id if _is_digest(evidence_id) else None,
-    )
-
-
-def _is_digest(value: str | None) -> bool:
-    return value is not None and len(value) == 64 and all(char in "0123456789abcdef" for char in value)
-
-
 __all__ = [
     "RegisterReadContext",
-    "acquisition_candidates",
     "election_limits",
     "element_list",
     "element_plan",
-    "element_timeline",
     "method_facts_view",
     "register_years",
 ]

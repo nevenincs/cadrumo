@@ -136,6 +136,21 @@ class _Parameters:
     def keyed(self, parameter_id: str, key: str) -> Decimal | None:
         return resolve_keyed_bracket(self.require(parameter_id), key=key, filing_year=self.tax_year)
 
+    def class_flag(self, parameter_id: str, class_key: str) -> bool:
+        """Read a table class's yes-or-no classification, refusing a class the registry leaves unclassified."""
+        flag = self.keyed(parameter_id, class_key)
+        if flag is None:
+            raise ActividadAssetUnsupportedError(
+                context={"class_key": class_key},
+                translated_message="ledger.actividad_asset.errors.table_class_without_group_classification",
+            )
+        if flag not in {Decimal("0"), Decimal("1")}:
+            raise ActividadAssetValidationError(
+                context={"class_key": class_key},
+                translated_message="ledger.actividad_asset.errors.table_class_group_not_a_flag",
+            )
+        return flag == Decimal("1")
+
     def scalar(self, parameter_id: str) -> tuple[Decimal, ThresholdComparison]:
         try:
             resolved = resolve_dated_value(

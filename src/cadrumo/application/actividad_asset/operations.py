@@ -21,9 +21,9 @@ from ...core.period import Period
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_bindings import (
     ActivityAssetDisposalBounds,
-    activity_asset_form_options,
     takes_used_double_coefficient,
 )
+from ...domain.calculations.registry.actividad_asset_form_options import activity_asset_form_options
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_references import LegalReference
@@ -61,12 +61,13 @@ from ...domain.renta.actividad_asset.schedule import (
     require_method_continuity,
 )
 from ..operations.public_scalar import project_scalar
+from .acquisition_candidates import acquisition_candidates
 from .acquisition_ledger import require_acquisition_in_ledger
 from .activity_asset_read_models import (
     PLAN_ADVISORY_FAMILY,
     ActivityAssetAcquisitionCandidate,
-    ActivityAssetEdition,
     ActivityAssetDisposalReasonOption,
+    ActivityAssetEdition,
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
@@ -79,8 +80,8 @@ from .activity_asset_read_models import (
     activity_asset_label_key,
 )
 from .disposal_calculation import calculate_element_disposal
-from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .fact_wording import token_family
+from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .legal_citations import resolve_legal_citations
 from .ports import (
     AcquisitionLedgerReader,
@@ -90,13 +91,12 @@ from .ports import (
 )
 from .register_reads import (
     RegisterReadContext,
-    acquisition_candidates,
     election_limits,
     element_list,
     element_plan,
-    element_timeline,
     method_facts_view,
 )
+from .register_timeline import element_timeline
 from .schedule_walk import M130ElementOutcome, m130_register_accruals
 from .service import ActivityAssetHistoryService
 
@@ -285,12 +285,7 @@ class ActivityAssetOperations:
                 translated_message="ledger.actividad_asset.errors.correction_must_supersede_current"
             )
         require_acquisition_in_ledger(revision, self._ledger)
-        baja_claims: tuple[AmortizationClaim, ...] = ()
-        if revision.disposal != current.disposal:
-            for disposal in (revision.disposal, current.disposal):
-                if disposal is not None:
-                    self._require_common_territory(_year_end(disposal.disposal_date.year))
-            baja_claims = self._baja_supersessions(revision, history, origin=origin)
+        baja_claims = self._changed_disposal_claims(revision, current, history, origin=origin)
         replaced = {claim.supersedes_claim_id for claim in baja_claims}
         claims = (
             *baja_claims,
@@ -311,6 +306,21 @@ class ActivityAssetOperations:
             return latest.apply_correction(revision, claims, recorded_at=recorded_at, origin=origin)
 
         return self._service.apply(mutation)
+
+    def _changed_disposal_claims(
+        self,
+        revision: ActivityAssetRevision,
+        current: ActivityAssetRevision,
+        history: ActivityAssetHistory,
+        *,
+        origin: str | None,
+    ) -> tuple[AmortizationClaim, ...]:
+        if revision.disposal == current.disposal:
+            return ()
+        for disposal in (revision.disposal, current.disposal):
+            if disposal is not None:
+                self._require_common_territory(_year_end(disposal.disposal_date.year))
+        return self._baja_supersessions(revision, history, origin=origin)
 
     def _superseding_claims(
         self,
@@ -384,22 +394,9 @@ class ActivityAssetOperations:
         boundary = None if disposal is None else disposal.boundary
         creating_operation = origin or revision.asset_id
         standing = tuple(claim for claim in effective_claims(history.claims) if claim.asset_id == revision.asset_id)
-        recorded = [
-            claim.set_to_zero_by_baja(revision.revision_id, creating_operation=creating_operation)
-            for claim in standing
-            if boundary is not None and claim.covered_from >= boundary and claim.amount > Decimal("0")
-        ]
+        recorded = _baja_zero_claims(standing, boundary, revision.revision_id, creating_operation)
         recompute = sorted(
-            (
-                claim
-                for claim in standing
-                if (boundary is not None and claim.covered_from < boundary < claim.covered_until)
-                or (
-                    claim.disposal_revision_id is not None
-                    and claim.amount == Decimal("0")
-                    and (boundary is None or claim.covered_until <= boundary)
-                )
-            ),
+            (claim for claim in standing if _baja_needs_recomputation(claim, boundary)),
             key=lambda claim: claim.covered_from,
         )
         if not recompute:
@@ -872,6 +869,10 @@ class ActivityAssetOperations:
                     maximum_coefficient=project_scalar(group.maximum_coefficient),
                     minimum_coefficient=project_scalar(group.minimum_coefficient),
                     maximum_period_years=project_scalar(group.maximum_period_years),
+                    can_hold_vehicle=group.can_hold_vehicle,
+                )
+                for group in options.table_groups
+            ),
             disposal_reasons=tuple(
                 ActivityAssetDisposalReasonOption(
                     reason=reason,
@@ -879,14 +880,33 @@ class ActivityAssetOperations:
                 )
                 for reason in ADMITTED_DISPOSAL_REASONS
             ),
-                )
-                for group in options.table_groups
-            ),
         )
 
     def acquisition_candidates(self) -> tuple[ActivityAssetAcquisitionCandidate, ...]:
         """List the business payments no element names as its acquisition yet."""
         return acquisition_candidates(self._ledger.load(), self._service.reopen())
+
+
+def _baja_zero_claims(
+    claims: tuple[AmortizationClaim, ...], boundary: date | None, revision_id: str, creating_operation: str
+) -> list[AmortizationClaim]:
+    if boundary is None:
+        return []
+    return [
+        claim.set_to_zero_by_baja(revision_id, creating_operation=creating_operation)
+        for claim in claims
+        if claim.covered_from >= boundary and claim.amount > Decimal("0")
+    ]
+
+
+def _baja_needs_recomputation(claim: AmortizationClaim, boundary: date | None) -> bool:
+    crossing = boundary is not None and claim.covered_from < boundary < claim.covered_until
+    restored = (
+        claim.disposal_revision_id is not None
+        and claim.amount == Decimal("0")
+        and (boundary is None or claim.covered_until <= boundary)
+    )
+    return crossing or restored
 
 
 def _require_profile_modality(elected: DirectEstimationRegime, declared: DirectEstimationRegime) -> None:

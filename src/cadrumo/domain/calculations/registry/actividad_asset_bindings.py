@@ -390,27 +390,12 @@ def _require_class_matches_kind(parameters: ActivityAssetParameters, class_key: 
     parameter_id = (
         ACTIVITY_ASSET_INTANGIBLE_CLASS_ID if asset_kind is AssetKind.INTANGIBLE else ACTIVITY_ASSET_MATERIAL_CLASS_ID
     )
-    if not _class_flag(parameters, parameter_id, class_key):
+    if not parameters.class_flag(parameter_id, class_key):
         raise ActividadAssetUnsupportedError(
             context={"class_key": class_key, "asset_kind": asset_kind.value},
             translated_message="ledger.actividad_asset.errors.table_class_wrong_kind",
         )
     return parameters.reference(parameter_id, class_key)
-
-
-def _class_flag(parameters: ActivityAssetParameters, parameter_id: str, class_key: str) -> bool:
-    flag = parameters.keyed(parameter_id, class_key)
-    if flag is None:
-        raise ActividadAssetUnsupportedError(
-            context={"class_key": class_key},
-            translated_message="ledger.actividad_asset.errors.table_class_without_group_classification",
-        )
-    if flag not in {Decimal("0"), Decimal("1")}:
-        raise ActividadAssetValidationError(
-            context={"class_key": class_key},
-            translated_message="ledger.actividad_asset.errors.table_class_group_not_a_flag",
-        )
-    return flag == Decimal("1")
 
 
 def _is_used_for_amortization(
@@ -423,7 +408,7 @@ def _is_used_for_amortization(
     """
     if asset_revision.acquired_condition is not AcquiredCondition.USED:
         return False
-    if not _class_flag(parameters, ACTIVITY_ASSET_BUILDING_CLASS_ID, class_key):
+    if not parameters.class_flag(ACTIVITY_ASSET_BUILDING_CLASS_ID, class_key):
         return True
     built = asset_revision.building_construction_date
     if built is None:
@@ -593,8 +578,7 @@ def _elected_coefficient(
 def _require_not_building_or_furniture(
     parameters: ActivityAssetParameters, bounds: _TableBounds, provision: str
 ) -> None:
-    if _class_flag(parameters, ACTIVITY_ASSET_BUILDING_CLASS_ID, bounds.class_key) or _class_flag(
-        parameters,
+    if parameters.class_flag(ACTIVITY_ASSET_BUILDING_CLASS_ID, bounds.class_key) or parameters.class_flag(
         ACTIVITY_ASSET_FURNITURE_CLASS_ID,
         bounds.class_key,
     ):
@@ -806,7 +790,7 @@ def _resolve_research_development_free(
             raise ActividadAssetIncompleteError(
                 translated_message="ledger.actividad_asset.errors.research_development_free_table_class_required"
             )
-        if _class_flag(parameters, ACTIVITY_ASSET_BUILDING_CLASS_ID, class_key):
+        if parameters.class_flag(ACTIVITY_ASSET_BUILDING_CLASS_ID, class_key):
             raise ActividadAssetUnsupportedError(
                 translated_message="ledger.actividad_asset.errors.research_development_free_excludes_buildings"
             )
@@ -824,7 +808,7 @@ def _resolve_research_development_building(
         raise ActividadAssetIncompleteError(
             translated_message="ledger.actividad_asset.errors.research_development_building_table_class_required"
         )
-    if not _class_flag(parameters, ACTIVITY_ASSET_BUILDING_CLASS_ID, class_key):
+    if not parameters.class_flag(ACTIVITY_ASSET_BUILDING_CLASS_ID, class_key):
         raise ActividadAssetValidationError(
             translated_message="ledger.actividad_asset.errors.research_development_building_requires_building_class"
         )
@@ -879,7 +863,7 @@ def _require_vehicle_affectation(
     references: tuple[str, ...] = ()
     restricted = False
     if class_key is not None and asset_revision.asset_kind is AssetKind.MATERIAL:
-        restricted = _class_flag(parameters, ACTIVITY_ASSET_RESTRICTED_VEHICLE_CLASS_ID, class_key)
+        restricted = parameters.class_flag(ACTIVITY_ASSET_RESTRICTED_VEHICLE_CLASS_ID, class_key)
         references = (parameters.reference(ACTIVITY_ASSET_RESTRICTED_VEHICLE_CLASS_ID, class_key),)
     if affectation is None:
         if restricted and class_key is not None:
@@ -1046,7 +1030,7 @@ def _validate_renewable_installation(
     evidence: RenewableSelfConsumptionEvidence,
     class_key: str,
 ) -> None:
-    if _class_flag(parameters, ACTIVITY_ASSET_BUILDING_CLASS_ID, class_key):
+    if parameters.class_flag(ACTIVITY_ASSET_BUILDING_CLASS_ID, class_key):
         raise ActividadAssetUnsupportedError(
             translated_message="ledger.actividad_asset.errors.renewable_excludes_buildings"
         )

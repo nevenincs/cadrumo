@@ -14,9 +14,9 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
     ActivityAssetDisposalBounds,
-    resolve_activity_asset_class_labels,
     resolve_activity_asset_schedule_authority,
 )
+from cadrumo.domain.calculations.registry.actividad_asset_form_options import resolve_activity_asset_class_labels
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     activity_asset_amortization_casillas,
