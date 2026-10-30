@@ -148,6 +148,8 @@ class ActivityAssetDisposalYearFacts(BaseModel):
 
     ``minimum`` and ``maximum_charge`` are that year's exact figures, or ``None``
     when no maximum period, fixed percentage or table class supplies one.
+    ``minimum_unresolved`` says the year has a minimum the registry cannot state,
+    because no edition covers it, as distinct from a year the law gives none.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -157,6 +159,7 @@ class ActivityAssetDisposalYearFacts(BaseModel):
     minimum: Decimal | None = Field(default=None, ge=Decimal("0"))
     maximum_charge: Decimal | None = Field(default=None, ge=Decimal("0"))
     claim_gap: bool = False
+    minimum_unresolved: bool = False
 
 
 class ActivityAssetDisposalFacts(BaseModel):
@@ -169,6 +172,8 @@ class ActivityAssetDisposalFacts(BaseModel):
     allocation_share: Decimal = Field(gt=Decimal("0"), le=Decimal("1"))
     amortizable_value: Decimal = Field(ge=Decimal("0"))
     opening_amount: Decimal = Field(ge=Decimal("0"))
+    opening_covered_through: DisposalTaxYear | None = None
+    """The last tax year the opening amount covers; a later year with no claim is a gap."""
     years: tuple[ActivityAssetDisposalYearFacts, ...]
     excess_applies: bool = False
 
@@ -186,6 +191,7 @@ class ActivityAssetDisposalFindingKind(StrEnum):
     CLAIM_GAP = "claim_gap"
     MINIMUM_EXCEEDED_DEDUCTION = "minimum_exceeded_deduction"
     NO_MINIMUM_AUTHORITY = "no_minimum_authority"
+    MINIMUM_UNRESOLVED = "minimum_unresolved"
     EXEMPTION_NOT_COMPUTED = "exemption_not_computed"
 
 
@@ -200,14 +206,14 @@ class ActivityAssetDisposalFinding(BaseModel):
 
 
 class ActivityAssetDisposalYear(BaseModel):
-    """One year's cumulative figures."""
+    """One year's cumulative figures; ``minimum_through`` is ``None`` once a year's minimum is unresolved."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     tax_year: DisposalTaxYear
     claims: Decimal
     deducted_through: Decimal
-    minimum_through: Decimal
+    minimum_through: Decimal | None
     reduction_through: Decimal
 
 
@@ -216,13 +222,16 @@ class ActivityAssetDisposalCalculation(BaseModel):
 
     ``result`` is ``None`` for a withdrawal, which computes no gain (LIRPF art.
     28.3); otherwise a positive result is a gain and a negative one a loss.
+    ``minimum`` is ``None`` when a contributing year's is unresolved.  The reduction
+    and the result then rest on the years that are known, and a finding names each
+    year left out, so the reduction may be understated.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     acquisition_value: Decimal
     deducted: Decimal
-    minimum: Decimal
+    minimum: Decimal | None
     reduction: Decimal
     excess: Decimal
     net_value: Decimal
@@ -309,9 +318,11 @@ def _ordinary_rows(
     reduction = min(opening, cap)
     deducted = opening
     minimum = Decimal("0")
+    unresolved = False
     for position, year in enumerate(facts.years):
         minimum += year.minimum or Decimal("0")
         minimum_through = round_to_cents(minimum)
+        unresolved = unresolved or year.minimum_unresolved
         deducted += year.claims
         in_opening_span = first_claim is None or year.tax_year < first_claim
         if in_opening_span:
@@ -326,11 +337,11 @@ def _ordinary_rows(
                 tax_year=year.tax_year,
                 claims=year.claims,
                 deducted_through=deducted,
-                minimum_through=minimum_through,
+                minimum_through=None if unresolved else minimum_through,
                 reduction_through=reduction,
             ),
         )
-        findings.extend(_year_findings(year, opening_covers=in_opening_span and opening > Decimal("0")))
+        findings.extend(_year_findings(year, opening_covered_through=facts.opening_covered_through))
         if span_ends and reduction > before_minimum:
             findings.append(
                 ActivityAssetDisposalFinding(
@@ -354,6 +365,7 @@ def _excess_rows(
     minimum = Decimal("0")
     maximum = Decimal("0")
     maximum_through = Decimal("0.00")
+    unresolved = False
     for year in facts.years:
         if year.maximum_charge is None:
             raise ActividadAssetUnsupportedError(
@@ -364,31 +376,39 @@ def _excess_rows(
         maximum_through = min(cap, round_to_cents(maximum))
         minimum += year.minimum or Decimal("0")
         minimum_through = round_to_cents(minimum)
+        unresolved = unresolved or year.minimum_unresolved
         deducted += year.claims
         rows.append(
             ActivityAssetDisposalYear(
                 tax_year=year.tax_year,
                 claims=year.claims,
                 deducted_through=deducted,
-                minimum_through=minimum_through,
+                minimum_through=None if unresolved else minimum_through,
                 reduction_through=min(cap, max(min(deducted, maximum_through), minimum_through)),
             ),
         )
-        findings.extend(_year_findings(year, opening_covers=False))
+        findings.extend(_year_findings(year, opening_covered_through=facts.opening_covered_through))
     return tuple(rows), tuple(findings), maximum_through
 
 
 def _year_findings(
     year: ActivityAssetDisposalYearFacts,
     *,
-    opening_covers: bool,
+    opening_covered_through: int | None,
 ) -> tuple[ActivityAssetDisposalFinding, ...]:
     found: list[ActivityAssetDisposalFinding] = []
+    opening_covers = opening_covered_through is not None and year.tax_year <= opening_covered_through
     if year.claim_gap and not opening_covers:
         found.append(
             ActivityAssetDisposalFinding(kind=ActivityAssetDisposalFindingKind.CLAIM_GAP, tax_year=year.tax_year)
         )
-    if year.minimum is None:
+    if year.minimum_unresolved:
+        found.append(
+            ActivityAssetDisposalFinding(
+                kind=ActivityAssetDisposalFindingKind.MINIMUM_UNRESOLVED, tax_year=year.tax_year
+            ),
+        )
+    elif year.minimum is None:
         found.append(
             ActivityAssetDisposalFinding(
                 kind=ActivityAssetDisposalFindingKind.NO_MINIMUM_AUTHORITY, tax_year=year.tax_year

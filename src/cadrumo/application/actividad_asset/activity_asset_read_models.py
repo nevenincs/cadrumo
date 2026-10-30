@@ -65,8 +65,8 @@ class ActivityAssetReasonFact(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    key: str
-    value: str
+    key: str = Field(min_length=1, max_length=64)
+    value: str = Field(max_length=2048)
 
 
 def project_reason_facts(facts: Mapping[str, str]) -> tuple[ActivityAssetReasonFact, ...]:
@@ -90,6 +90,7 @@ class ActivityAssetClaimState(StrEnum):
     SUPERSEDED = "superseded"
     PARTIAL = "partial"
     NOT_DUE = "not_due"
+    EDITION_UNAVAILABLE = "edition_unavailable"
 
 
 class ActivityAssetClaimStaleReason(StrEnum):
@@ -282,7 +283,7 @@ class ActivityAssetDisposalYearView(_ReadModel):
     tax_year: int
     claims: PublicDecimal
     deducted_through: PublicDecimal
-    minimum_through: PublicDecimal
+    minimum_through: PublicDecimal | None = None
     reduction_through: PublicDecimal
 
 
@@ -293,7 +294,7 @@ class ActivityAssetDisposalCalculationView(_ReadModel):
     reason: ActivityAssetDisposalReason
     acquisition_value: PublicDecimal
     deducted: PublicDecimal
-    minimum: PublicDecimal
+    minimum: PublicDecimal | None = None
     reduction: PublicDecimal
     excess: PublicDecimal
     net_value: PublicDecimal

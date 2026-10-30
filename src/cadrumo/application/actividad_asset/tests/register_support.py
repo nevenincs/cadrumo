@@ -7,12 +7,12 @@ from datetime import date, datetime
 from functools import cache
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetEdition
+from cadrumo.application.actividad_asset.disposal_calculation import pinned_disposal_bounds
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import ActivityAssetRegisterAuthority
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
     ActivityAssetDisposalBounds,
     resolve_activity_asset_class_labels,
-    resolve_activity_asset_disposal_bounds,
     resolve_activity_asset_schedule_authority,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -102,11 +102,7 @@ def _published_legal_reference(reference_id: str) -> LegalReference:
 
 def _published_disposal_bounds(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
     with bundled_indexed_authority().operation() as operation:
-        return resolve_activity_asset_disposal_bounds(
-            operation.revision_for_context("100", filing_year=tax_year, period="0A"),
-            tax_year=tax_year,
-            asset_revision=revision,
-        )
+        return pinned_disposal_bounds(operation)(revision, tax_year)
 
 
 def memory_register_authority(

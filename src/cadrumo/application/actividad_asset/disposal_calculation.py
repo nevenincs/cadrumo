@@ -41,14 +41,14 @@ DisposalBoundsReader = Callable[[ActivityAssetRevision, int], ActivityAssetDispo
 
 
 def pinned_disposal_bounds(operation: PinnedAuthorityOperation) -> DisposalBoundsReader:
-    """Read a baja's bounds under one authority pin; a year with no edition supplies none."""
+    """Read a baja's bounds under one authority pin; a year no edition covers says so."""
 
     def read(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
         try:
             modelo_revision = operation.revision_for_context("100", filing_year=tax_year, period="0A")
+            return resolve_activity_asset_disposal_bounds(modelo_revision, tax_year=tax_year, asset_revision=revision)
         except RegistryError:
-            return ActivityAssetDisposalBounds()
-        return resolve_activity_asset_disposal_bounds(modelo_revision, tax_year=tax_year, asset_revision=revision)
+            return ActivityAssetDisposalBounds(edition_available=False)
 
     return read
 
@@ -83,6 +83,7 @@ def calculate_element_disposal(
             allocation_share=revision.basis.allocation_share(),
             amortizable_value=revision.amortizable_basis(),
             opening_amount=opening,
+            opening_covered_through=revision.opening_history.covered_through_tax_year,
             years=tuple(
                 _year_facts(revision, disposal, history, tax_year=tax_year, bounds=bounds(revision, tax_year))
                 for tax_year in range(revision.in_service_date.year, disposal.disposal_date.year + 1)
@@ -121,6 +122,7 @@ def _year_facts(
         minimum=minimum,
         maximum_charge=maximum,
         claim_gap=bool(uncovered_claim_intervals(revision, history.claims, start=start, end=end)),
+        minimum_unresolved=not bounds.edition_available,
     )
 
 
@@ -140,6 +142,8 @@ def year_minimum(
     base = revision.amortizable_basis()
     if bounds.useful_life_ends_on is not None:
         life_days = (bounds.useful_life_ends_on - revision.in_service_date).days
+        if life_days <= 0:
+            return None
         lived = _overlap_days(revision.in_service_date, min(boundary, bounds.useful_life_ends_on), start, end)
         return base * lived / life_days
     if bounds.minimum_coefficient is None:
@@ -166,7 +170,7 @@ def project_disposal_calculation(
         reason=disposal.reason,
         acquisition_value=project_scalar(calculation.acquisition_value),
         deducted=project_scalar(calculation.deducted),
-        minimum=project_scalar(calculation.minimum),
+        minimum=optional(calculation.minimum),
         reduction=project_scalar(calculation.reduction),
         excess=project_scalar(calculation.excess),
         net_value=project_scalar(calculation.net_value),
@@ -179,7 +183,7 @@ def project_disposal_calculation(
                 tax_year=year.tax_year,
                 claims=project_scalar(year.claims),
                 deducted_through=project_scalar(year.deducted_through),
-                minimum_through=project_scalar(year.minimum_through),
+                minimum_through=optional(year.minimum_through),
                 reduction_through=project_scalar(year.reduction_through),
             )
             for year in calculation.years

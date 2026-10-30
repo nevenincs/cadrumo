@@ -4661,6 +4661,7 @@ ledger:
     errors:
       accelerated_da18_depreciation: Para el ejercicio %{tax_year}, la LIS DA 18 concede
         a los vehículos eléctricos nuevos y a los puntos de recarga amortización acelerada
+      edition_unavailable: Sin edición para este año
         al doble del coeficiente lineal máximo, no libertad de amortización. Ese régimen
         no se calcula, por lo que la elección %{method} no genera ningún cargo.
       acquisition_cost_exceeds_payment: El coste indicado %{cost} (precio %{price}
@@ -4672,6 +4673,9 @@ ledger:
         supera los %{iva_amount} de IVA de la transacción de adquisición.
       acquisition_price_exceeds_base: El precio indicado %{price} supera la base de
         %{taxable_base} de la transacción de adquisición.
+      minimum_unresolved: 'Amortización mínima no disponible para este año: ninguna
+        edición lo cubre, así que la reducción del coste puede quedar por debajo de
+        la real'
       acquisition_transaction_missing: La transacción de adquisición %{transaction_id}
         no está en el libro mayor.
       acquisition_transaction_not_payment: La transacción de adquisición %{transaction_id}
@@ -4730,6 +4734,11 @@ ledger:
         en servicio del elemento.
       disposal_claim_past_boundary: Esta dotación llega hasta %{covered_until}, más
         allá de la baja del elemento, que termina sus dotaciones el %{boundary}.
+      claim_superseded_replay: Esta dotación ya fue sustituida por una corrección
+        y no se puede registrar de nuevo.
+      claim_year_beyond_registry: 'El registro aún no tiene edición para %{tax_year}:
+        puedes registrar dotaciones hasta %{last_admitted_year}. La previsión de ese
+        año es una proyección.'
       disposal_donation_refused: La donación no se admite como baja de un elemento
         de la actividad.
       disposal_excess_without_table_class: El exceso de %{tax_year} necesita un grupo
@@ -4830,6 +4839,8 @@ ledger:
       modality_not_direct_estimation: La amortización del inmovilizado de la actividad
         solo está inscrita para la estimación directa, no para %{regime}.
       multi_shift_not_enrolled: El coeficiente de varios turnos del RIS art. 4.2 no
+      later_affectation_out_of_order: La fecha de afectación posterior no puede ser
+        posterior a la entrada en funcionamiento del elemento ni a su baja.
         está inscrito para la modalidad %{regime}.
       multi_shift_requires_extra_shift: El coeficiente de varios turnos requiere más
         de un turno normal al día.

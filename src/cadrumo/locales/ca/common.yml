@@ -4622,6 +4622,7 @@ ledger:
       financial_lease_unexercised: Arrendament financer, opció de compra sense exercir
       historical_without_evidence: Històric, sense justificant
       primary_purchase: Compra
+      edition_unavailable: Sense edició per a aquest any
       produced: Producció pròpia
       split_payment: Compra pagada en diversos pagaments
     asset_kind:
@@ -4633,6 +4634,9 @@ ledger:
       whole_property: Immoble complet
     claim_state:
       claimed: Registrada
+      minimum_unresolved: 'Amortització mínima no disponible per a aquest any: cap
+        edició no el cobreix, de manera que la reducció del cost pot quedar per sota
+        de la real'
       missing: Sense registrar
       not_due: Res a registrar
       partial: Registrada en part
@@ -4691,6 +4695,11 @@ ledger:
         empresarial.
       charging_infrastructure_new_only: La llibertat d'amortització d'infraestructures
         de recàrrega només s'aplica a elements nous.
+      claim_superseded_replay: Aquesta dotació ja ha estat substituïda per una correcció
+        i no es pot tornar a registrar.
+      claim_year_beyond_registry: 'El registre encara no té edició per a %{tax_year}:
+        pots registrar dotacions fins a %{last_admitted_year}. La previsió d''aquell
+        any és una projecció.'
       acquisition_row_named_twice: Aquest element anomena dues vegades el mateix apunt
         del llibre entre les seves files d'adquisició.
       charging_infrastructure_period_not_enrolled: La infraestructura de recàrrega
@@ -4789,6 +4798,8 @@ ledger:
       investment_cap_exceeded: La inversió que entra en servei el {entry_year} amb
         {method} arribaria a {investment}, per sobre del límit de {investment_cap};
         un element no es reparteix entre amortització lliure i ordinària.
+      later_affectation_out_of_order: La data d'afectació posterior no pot ser posterior
+        a l'entrada en funcionament de l'element ni a la seva baixa.
       job_creation_new_only: La llibertat d'amortització per creació d'ocupació només
         s'aplica a elements nous (LIS art. 102.1).
       job_creation_reduced_size_evidence_required: La llibertat d'amortització per

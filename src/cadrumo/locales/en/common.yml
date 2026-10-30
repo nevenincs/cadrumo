@@ -4577,6 +4577,7 @@ ledger:
       sale: Sale
       scrapping: Scrapping
       theft: Theft
+      edition_unavailable: No edition for this year
       withdrawal: Withdrawal from the activity
     document_kind:
       customs_document: Customs document
@@ -4588,6 +4589,8 @@ ledger:
         maximum linear coefficient rather than free depreciation. That regime is not
         computed, so the %{method} election has no charge.
       acquisition_cost_exceeds_payment: The stated cost %{cost} (price %{price} plus
+      minimum_unresolved: 'Minimum amortization not available for this year: no edition
+        covers it, so the reduction of cost may be understated'
         non-deductible IVA %{non_deductible_iva}) exceeds the %{paid} EUR the acquisition
         transaction paid.
       acquisition_currency_unconverted: The acquisition transaction is in %{currency}
@@ -4646,6 +4649,11 @@ ledger:
       creation_requires_first_revision: Asset creation requires revision number one.
       disposal_already_recorded: This element already has a baja dated %{disposal_date}.
         Change it with a correction.
+      claim_superseded_replay: This claim was already replaced by a correction and
+        cannot be recorded again.
+      claim_year_beyond_registry: 'The registry has no edition for %{tax_year} yet:
+        claims can be recorded through %{last_admitted_year}. The forecast for that
+        year is a projection.'
       disposal_amount_invalid: The baja's amounts must be non-negative euro figures
         with at most two decimals.
       disposal_before_service: The baja date cannot be before the element entered
@@ -4742,6 +4750,8 @@ ledger:
         assets in the %{regime} modality.
       method_without_resolver: The %{method} method has no enrolled authority resolver.
       method_without_schedule_arithmetic: The method {method} has no enrolled schedule
+      later_affectation_out_of_order: The later affectation date cannot be after the
+        element entered service or after its baja.
         arithmetic.
       modality_not_declared: The taxpayer profile declares no IRPF estimation regime.
       modality_not_direct_estimation: Activity-asset amortization is enrolled only

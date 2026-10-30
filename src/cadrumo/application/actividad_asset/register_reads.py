@@ -156,6 +156,8 @@ def _claim_state(
             return ActivityAssetClaimState.NOT_DUE
         if row.tax_year > today.year:
             return ActivityAssetClaimState.NOT_DUE
+        if row.absence is PlanFigureAbsence.EDITION_UNAVAILABLE:
+            return ActivityAssetClaimState.EDITION_UNAVAILABLE
         return ActivityAssetClaimState.MISSING
     if (
         intervals
@@ -202,7 +204,12 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
     minimum_complete = True
     for row in _walk_to_settlement(revision, context):
         intervals, refusal_key = _claimable(revision, row, context.history)
-        year = _minimum_or_none(revision, row.tax_year, boundary, context)
+        year = year_minimum(
+            revision,
+            tax_year=row.tax_year,
+            boundary=boundary,
+            bounds=context.minimum_bounds(revision, row.tax_year),
+        )
         minimum_complete = minimum_complete and year is not None
         minimum += year or Decimal("0")
         rows.append(
@@ -283,19 +290,6 @@ def election_limits(
         legal_citations=citations.citations,
         legal_citations_complete=citations.complete,
     )
-
-
-def _minimum_or_none(
-    revision: ActivityAssetRevision,
-    tax_year: int,
-    boundary: date,
-    context: RegisterReadContext,
-) -> Decimal | None:
-    try:
-        bounds = context.minimum_bounds(revision, tax_year)
-    except RegistryError:
-        return None
-    return year_minimum(revision, tax_year=tax_year, boundary=boundary, bounds=bounds)
 
 
 def _edition_or_none(context: RegisterReadContext, tax_year: int) -> ActivityAssetEdition | None:
@@ -541,7 +535,9 @@ def acquisition_candidates(
     catalogue: TransactionCatalogue,
     history: ActivityAssetHistory,
 ) -> tuple[ActivityAssetAcquisitionCandidate, ...]:
-    """List the business payments no element names as its acquisition yet, newest first.
+    """List the business payments in a :class:`TransactionCatalogue` not yet named as acquisitions.
+
+    The candidates are returned newest first.
 
     Returns:
         One candidate per row.  What the ledger does not know is null, never zero.

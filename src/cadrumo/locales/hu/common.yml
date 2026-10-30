@@ -4604,6 +4604,7 @@ ledger:
       produced: Saját előállítás
       split_payment: Részletekben fizetett vásárlás
     asset_kind:
+      edition_unavailable: Nincs kiadás erre az évre
       intangible: Immateriális eszköz
       material: Tárgyi eszköz
     basis_stage:
@@ -4615,6 +4616,9 @@ ledger:
       missing: Nincs elszámolva
       not_due: Nincs mit elszámolni
       partial: Részben elszámolva
+      minimum_unresolved: 'Erre az évre nem érhető el a minimális értékcsökkenés:
+        egyetlen kiadás sem fedi le, ezért a bekerülési érték csökkentése alacsonyabb
+        lehet a valósnál'
       superseded: Elszámolva, javítva
     disposal_finding:
       claim_gap: Elszámolatlan értékcsökkenési leírású év
@@ -4677,6 +4681,11 @@ ledger:
       charging_infrastructure_new_only: A töltőinfrastruktúra szabad értékcsökkenése
         csak új elemekre alkalmazható.
       charging_infrastructure_period_not_enrolled: A töltőinfrastruktúrának olyan
+      claim_superseded_replay: Ezt az elszámolást egy javítás már felváltotta, ezért
+        nem rögzíthető újra.
+      claim_year_beyond_registry: 'A nyilvántartásban még nincs %{tax_year}. évi kiadás:
+        elszámolást %{last_admitted_year}. évig rögzíthetsz. Az arra az évre szóló
+        előrejelzés csak becslés.'
         adóidőszakban kell üzembe állnia, amelyet a LIS DA 18a.2 nyilvántart.
       claim_not_under_current_revision: Új elszámolást az elem aktuális változatához
         kell rögzíteni.
@@ -4777,6 +4786,8 @@ ledger:
       job_creation_new_only: A munkahelyteremtéshez kapcsolódó szabad értékcsökkenés
         csak új elemekre alkalmazható (LIS 102.1 cikk).
       job_creation_reduced_size_evidence_required: A munkahelyteremtéshez kapcsolódó
+      later_affectation_out_of_order: A későbbi tevékenységbe vonás dátuma nem lehet
+        későbbi az eszköz üzembe helyezésénél vagy a kivezetésénél.
         szabad értékcsökkenéshez a kisméretű vállalkozás igazolása szükséges.
       justified_amount_unvalidated: A LIS 12.1.e cikk elfogadja a adózó által igazolt
         összeget, de egyetlen nyilvántartási jogforrás sem tudja ezt az igazolást

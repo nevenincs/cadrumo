@@ -303,6 +303,8 @@ class ActivityAssetDisposalBounds:
     minimum_coefficient: Decimal | None = None
     maximum_coefficient: Decimal | None = None
     useful_life_ends_on: date | None = None
+    edition_available: bool = True
+    """False when no edition covers the year, so its figures are unknown rather than absent in law."""
 
 
 def resolve_activity_asset_disposal_bounds(
@@ -311,7 +313,7 @@ def resolve_activity_asset_disposal_bounds(
     tax_year: int,
     asset_revision: ActivityAssetRevision,
 ) -> ActivityAssetDisposalBounds:
-    """Read one year's minimum and maximum coefficient for a baja, without judging the election.
+    """Read a :class:`ModeloRevision`'s minimum and maximum coefficient for a baja, without judging the election.
 
     A baja looks back over years the element's election may no longer resolve in,
     so what the edition cannot supply stays absent rather than refused.
@@ -1166,7 +1168,7 @@ def activity_asset_form_options(
     regime: DirectEstimationRegime,
     class_labels: Mapping[str, str],
 ) -> ActivityAssetFormOptions:
-    """Read the admitted methods and table groups from the same parameters the resolver charges by.
+    """Read a :class:`ModeloRevision`'s admitted methods and table groups from resolver parameters.
 
     Raises:
         RegistryValidationError: When an offered table class has no official name.
