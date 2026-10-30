@@ -5134,14 +5134,16 @@ ledger:
       vehicle_shared_use: Un vehículo compartido entre la actividad y las necesidades
         privadas no es un elemento afecto, y un vehículo no puede estar afecto parcialmente
         (RIRPF art. 22.2.1º y 22.3; LIRPF art. 29.2).
-      workforce_fell_below: La plantilla media de los 24 meses posteriores al inicio
-        del año de entrada en funcionamiento queda por debajo de la de los 12 meses
-        anteriores (LIS DA 17a.1).
+      workforce_fell_below: La plantilla media de los %{following_months} meses posteriores
+        al inicio del año de entrada en funcionamiento queda por debajo de la de los
+        %{prior_months} meses anteriores (LIS DA 17a.1).
       workforce_increase_not_kept: El incremento de plantilla no se mantiene durante
-        los 24 meses adicionales que exige la LIS art. 102.1.
-      workforce_increase_not_reached: La plantilla media de los 24 meses posteriores
-        al inicio del año de entrada en funcionamiento no supera la de los 12 meses
-        anteriores (LIS art. 102.1).
+        los %{maintained_months} meses adicionales que exige la LIS art. 102.1.
+      workforce_increase_not_reached: La plantilla media de los %{following_months}
+        meses posteriores al inicio del año de entrada en funcionamiento no supera
+        la de los %{prior_months} meses anteriores (LIS art. 102.1).
+      workforce_window_not_whole_years: Un periodo de plantilla de %{months} meses
+        no se puede medir con medias de años naturales.
       workforce_year_not_declared: La plantilla media de %{year} no está declarada.
     event_kind:
       baja: Baja registrada

@@ -1410,6 +1410,76 @@ valid_from = 2022-01-01
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["importe resultante de multiplicar la cifra de 120.000 euros por el incremento de la"]
 [[revisions."2022".parameters]]
+id = "renta-actividad-afectacion-posterior-enajenacion-plazo-anos"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-28"]
+
+[[revisions."2022".parameters.values]]
+value = "3"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Se entenderá que no ha existido afectación si el elemento patrimonial se enajena antes de transcurridos 3 años desde esta"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-plantilla-meses-anteriores"
+data_type = "integer"
+unit = "months"
+legal_refs = ["ley-27-2014:art-102"]
+
+[[revisions."2022".parameters.values]]
+value = "12"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["se incremente respecto de la plantilla media de los 12 meses anteriores"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-plantilla-meses-siguientes"
+data_type = "integer"
+unit = "months"
+legal_refs = ["ley-27-2014:art-102"]
+
+[[revisions."2022".parameters.values]]
+value = "24"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["24 meses siguientes a la fecha del inicio del período impositivo"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-plantilla-meses-mantenimiento"
+data_type = "integer"
+unit = "months"
+legal_refs = ["ley-27-2014:art-102"]
+
+[[revisions."2022".parameters.values]]
+value = "24"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["se mantenga durante un período adicional de otros 24 meses"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-incremento-decimales"
+data_type = "integer"
+unit = "decimal_places"
+legal_refs = ["ley-27-2014:art-102"]
+
+[[revisions."2022".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["plantilla media total de la actividad económica calculado con dos decimales"]
+[[revisions."2022".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-clase-vehiculo-restringido"
 data_type = "keyed_bracket_table"
 unit = "flag"

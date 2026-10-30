@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
 
@@ -38,7 +38,11 @@ from ...renta.actividad_asset.errors import (
 from ...renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...renta.actividad_asset.schedule import ScheduleAuthority, add_fractional_years, add_years
 from ...renta.actividad_asset.vehicle_affectation import require_vehicle_affected
-from ...renta.actividad_asset.workforce import job_creation_increase, renewable_workforce_maintained
+from ...renta.actividad_asset.workforce import (
+    WorkforceWindows,
+    job_creation_increase,
+    renewable_workforce_maintained,
+)
 from ...user_profile.plantilla_media import PlantillaMediaYear
 from .errors import RegistryValidationError
 from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, StringMappingPolicy
@@ -87,6 +91,13 @@ _RENEWABLE_INVESTMENT_CAP_ID = f"{_PREFIX}-renovables-inversion-maxima"
 _RENEWABLE_FIRST_YEAR_ID = f"{_PREFIX}-renovables-primer-ejercicio"
 _RENEWABLE_LAST_YEAR_ID = f"{_PREFIX}-renovables-ultimo-ejercicio"
 _RENEWABLE_AVAILABILITY_ID = f"{_PREFIX}-renovables-puesta-a-disposicion-admitida"
+_EMPLOYMENT_PRIOR_MONTHS_ID = f"{_PREFIX}-erd-empleo-plantilla-meses-anteriores"
+_EMPLOYMENT_FOLLOWING_MONTHS_ID = f"{_PREFIX}-erd-empleo-plantilla-meses-siguientes"
+_EMPLOYMENT_MAINTAINED_MONTHS_ID = f"{_PREFIX}-erd-empleo-plantilla-meses-mantenimiento"
+_EMPLOYMENT_INCREASE_DECIMALS_ID = f"{_PREFIX}-erd-empleo-incremento-decimales"
+_RENEWABLE_PRIOR_MONTHS_ID = f"{_PREFIX}-renovables-plantilla-meses-anteriores"
+_RENEWABLE_FOLLOWING_MONTHS_ID = f"{_PREFIX}-renovables-plantilla-meses-siguientes"
+_LATER_AFFECTATION_PERIOD_ID = "renta-actividad-afectacion-posterior-enajenacion-plazo-anos"
 _INDEFINITE_LIFE_RATE_ID = "renta-actividad-inmovilizado-intangible-vida-util-no-estimable-limite-anual"
 _GOODWILL_RATE_ID = "renta-actividad-fondo-comercio-amortizacion-limite-anual"
 _LOW_VALUE_THRESHOLD_ID = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-umbral-unitario"
@@ -122,6 +133,13 @@ ACTIVITY_ASSET_PARAMETER_IDS: frozenset[str] = frozenset(
         _RENEWABLE_FIRST_YEAR_ID,
         _RENEWABLE_LAST_YEAR_ID,
         _RENEWABLE_AVAILABILITY_ID,
+        _EMPLOYMENT_PRIOR_MONTHS_ID,
+        _EMPLOYMENT_FOLLOWING_MONTHS_ID,
+        _EMPLOYMENT_MAINTAINED_MONTHS_ID,
+        _EMPLOYMENT_INCREASE_DECIMALS_ID,
+        _RENEWABLE_PRIOR_MONTHS_ID,
+        _RENEWABLE_FOLLOWING_MONTHS_ID,
+        _LATER_AFFECTATION_PERIOD_ID,
         _INDEFINITE_LIFE_RATE_ID,
         _GOODWILL_RATE_ID,
         _LOW_VALUE_THRESHOLD_ID,
@@ -305,6 +323,8 @@ class ActivityAssetDisposalBounds:
     useful_life_ends_on: date | None = None
     edition_available: bool = True
     """False when no edition covers the year, so its figures are unknown rather than absent in law."""
+    later_affectation_period_years: int | None = None
+    """The LIRPF art. 28.3 period the edition states, or ``None`` when it states none."""
 
 
 def resolve_activity_asset_disposal_bounds(
@@ -323,6 +343,20 @@ def resolve_activity_asset_disposal_bounds(
         revision_id=modelo_revision.id,
         tax_year=tax_year,
     )
+    return replace(
+        _coefficient_bounds(parameters, asset_revision),
+        later_affectation_period_years=_later_affectation_period_years(parameters),
+    )
+
+
+def _later_affectation_period_years(parameters: _Parameters) -> int | None:
+    try:
+        return int(parameters.value(_LATER_AFFECTATION_PERIOD_ID))
+    except ActividadAssetError:
+        return None
+
+
+def _coefficient_bounds(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> ActivityAssetDisposalBounds:
     election = asset_revision.amortization
     try:
         if election.method in {AmortizationMethod.GOODWILL, AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE}:
@@ -1018,13 +1052,26 @@ def _resolve_employment_free(
             translated_message="ledger.actividad_asset.errors.job_creation_reduced_size_evidence_required"
         )
     turnover_reference = _require_reduced_size(parameters, asset_revision, evidence)
-    increase = job_creation_increase(workforce, entry_year=asset_revision.in_service_date.year)
+    increase = job_creation_increase(
+        workforce,
+        entry_year=asset_revision.in_service_date.year,
+        windows=WorkforceWindows(
+            prior_months=int(parameters.value(_EMPLOYMENT_PRIOR_MONTHS_ID)),
+            following_months=int(parameters.value(_EMPLOYMENT_FOLLOWING_MONTHS_ID)),
+            maintained_months=int(parameters.value(_EMPLOYMENT_MAINTAINED_MONTHS_ID)),
+        ),
+        increase_decimal_places=int(parameters.value(_EMPLOYMENT_INCREASE_DECIMALS_ID)),
+    )
     per_unit = parameters.value(_EMPLOYMENT_INVESTMENT_PER_UNIT_ID)
     return _Resolution(
         method_facts={"free_depreciation_investment_cap": round_to_cents(per_unit * increase.increase)},
         references=(
             turnover_reference,
             parameters.reference(_EMPLOYMENT_INVESTMENT_PER_UNIT_ID),
+            parameters.reference(_EMPLOYMENT_PRIOR_MONTHS_ID),
+            parameters.reference(_EMPLOYMENT_FOLLOWING_MONTHS_ID),
+            parameters.reference(_EMPLOYMENT_MAINTAINED_MONTHS_ID),
+            parameters.reference(_EMPLOYMENT_INCREASE_DECIMALS_ID),
             *_workforce_references(increase.years),
         ),
     )
@@ -1053,7 +1100,14 @@ def _resolve_renewable_free(
         raise ActividadAssetUnsupportedError(
             translated_message="ledger.actividad_asset.errors.renewable_only_in_entry_period"
         )
-    maintenance = renewable_workforce_maintained(workforce, entry_year=entry_year)
+    maintenance = renewable_workforce_maintained(
+        workforce,
+        entry_year=entry_year,
+        windows=WorkforceWindows(
+            prior_months=int(parameters.value(_RENEWABLE_PRIOR_MONTHS_ID)),
+            following_months=int(parameters.value(_RENEWABLE_FOLLOWING_MONTHS_ID)),
+        ),
+    )
     return _Resolution(
         method_facts={"free_depreciation_investment_cap": parameters.value(_RENEWABLE_INVESTMENT_CAP_ID)},
         references=(
@@ -1062,6 +1116,8 @@ def _resolve_renewable_free(
             parameters.reference(_RENEWABLE_FIRST_YEAR_ID),
             parameters.reference(_RENEWABLE_LAST_YEAR_ID),
             parameters.reference(_RENEWABLE_INVESTMENT_CAP_ID),
+            parameters.reference(_RENEWABLE_PRIOR_MONTHS_ID),
+            parameters.reference(_RENEWABLE_FOLLOWING_MONTHS_ID),
             f"renewable-documentation:{evidence.documentation_kind.value}:{evidence.documentation_reference}",
             *_workforce_references(maintenance.years),
         ),

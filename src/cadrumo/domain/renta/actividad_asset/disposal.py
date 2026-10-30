@@ -11,6 +11,7 @@ not it was claimed, so a missing claim is a finding and never a refusal.
 
 from __future__ import annotations
 
+import calendar
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
@@ -102,8 +103,8 @@ class ActivityAssetDisposal(BaseModel):
     Amounts are stated for the whole element, except under a business-allocated
     basis, and take the same shares as its cost in the calculation.
     ``later_affectation_on`` attests the day a privately held element was later
-    affected to the activity, because a sale within three years of it changes the
-    route (LIRPF art. 28.3).
+    affected to the activity, because a sale within the period LIRPF art. 28.3
+    sets after it changes the route.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -176,6 +177,8 @@ class ActivityAssetDisposalFacts(BaseModel):
     """The last tax year the opening amount covers; a later year with no claim is a gap."""
     years: tuple[ActivityAssetDisposalYearFacts, ...]
     excess_applies: bool = False
+    later_affectation_period_years: int | None = Field(default=None, gt=0)
+    """The years after a later affectation in which a sale changes the route; ``None`` when no edition states them."""
 
     @model_validator(mode="after")
     def _require_ordered_years(self) -> Self:
@@ -289,21 +292,25 @@ def calculate_disposal(facts: ActivityAssetDisposalFacts) -> ActivityAssetDispos
         transmission_value=transmission_value,
         transmission_costs=costs,
         result=result,
-        route_changed_by_later_affectation=_within_three_years_of_later_affectation(disposal),
+        route_changed_by_later_affectation=_within_later_affectation_period(
+            disposal,
+            period_years=facts.later_affectation_period_years,
+        ),
         years=rows,
         findings=findings,
     )
 
 
-def _within_three_years_of_later_affectation(disposal: ActivityAssetDisposal) -> bool:
+def _within_later_affectation_period(disposal: ActivityAssetDisposal, *, period_years: int | None) -> bool:
+    """Say whether the sale may leave the ordinary route: with no stated period, the route stays open."""
     affected = disposal.later_affectation_on
     if affected is None or disposal.reason not in TRANSMISSION_REASONS:
         return False
-    try:
-        third_anniversary = affected.replace(year=affected.year + 3)
-    except ValueError:
-        third_anniversary = date(affected.year + 3, 2, 28)
-    return disposal.disposal_date < third_anniversary
+    if period_years is None:
+        return True
+    target_year = affected.year + period_years
+    last_day = calendar.monthrange(target_year, affected.month)[1]
+    return disposal.disposal_date < date(target_year, affected.month, min(affected.day, last_day))
 
 
 def _ordinary_rows(

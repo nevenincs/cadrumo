@@ -36,6 +36,34 @@ valid_from = 2023-01-01
 source_ref = "aeat-renta-2023-manual-parte1"
 required_text = ["beneficiarse del régimen de libertad de amortización será de 500.000 euros."]
 [[revisions."2023".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-plantilla-meses-anteriores"
+data_type = "integer"
+unit = "months"
+legal_refs = ["ley-27-2014:da-17", "real-decreto-ley-18-2022:art-22"]
+
+[[revisions."2023".parameters.values]]
+value = "12"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["se mantenga respecto de la plantilla media de los 12 meses anteriores"]
+[[revisions."2023".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-plantilla-meses-siguientes"
+data_type = "integer"
+unit = "months"
+legal_refs = ["ley-27-2014:da-17", "real-decreto-ley-18-2022:art-22"]
+
+[[revisions."2023".parameters.values]]
+value = "24"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["24 meses siguientes a la fecha del inicio del período impositivo"]
+[[revisions."2023".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"
 data_type = "integer"
 unit = "year"

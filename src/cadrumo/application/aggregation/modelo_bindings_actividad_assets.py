@@ -754,7 +754,7 @@ _PROPERTY_ROW_ROUTES: Final[frozenset[ActivityAssetDisposalRoute]] = frozenset(
 
 def _later_affectation_message(calculation: ActivityAssetDisposalCalculation) -> str:
     return (
-        f"the sale falls within three years of a later affectation, which changes its route (LIRPF art. 28.3), so its "
+        f"the sale falls within the period after a later affectation that changes its route (LIRPF art. 28.3), so its "
         f"result of {calculation.result} EUR enters no box and is left to you"
     )
 

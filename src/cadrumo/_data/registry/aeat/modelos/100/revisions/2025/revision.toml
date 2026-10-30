@@ -10578,6 +10578,41 @@ sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-
 sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
+selector = {revision = "2024", id = "renta-actividad-afectacion-posterior-enajenacion-plazo-anos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Se entenderá que no ha existido afectación si el elemento patrimonial se enajena antes de transcurridos 3 años desde esta"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-plantilla-meses-anteriores"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["se incremente respecto de la plantilla media de los 12 meses anteriores"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-plantilla-meses-siguientes"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["24 meses siguientes a la fecha del inicio del período impositivo"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-plantilla-meses-mantenimiento"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["se mantenga durante un período adicional de otros 24 meses"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-incremento-decimales"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["plantilla media total de la actividad económica calculado con dos decimales"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-renovables-plantilla-meses-anteriores"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["se mantenga respecto de la plantilla media de los 12 meses anteriores"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-renovables-plantilla-meses-siguientes"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["24 meses siguientes a la fecha del inicio del período impositivo"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2025".family_overrides]]
+family = "parameters"
 selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-inversion-por-unidad-plantilla"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["importe resultante de multiplicar la cifra de 120.000 euros por el incremento de la"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}

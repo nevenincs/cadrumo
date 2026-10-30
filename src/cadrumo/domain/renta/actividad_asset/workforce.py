@@ -1,20 +1,21 @@
 """Average-workforce conditions of two free-depreciation incentives.
 
 LIS art. 102.1 admits free depreciation when the average total workforce of
-the 24 months after the start of the tax period in which the assets enter
-service exceeds that of the 12 months before it, and the increase is kept for
-a further 24 months; the eligible investment is EUR 120,000 per unit of
-increase, "calculado con dos decimales".  LIS DA 17a.1 conditions its free
-depreciation on keeping the 24-month average at the prior 12-month level.
-Workforce counts people employed as labour law defines them, weighted by
-contracted hours against a full working day.
+a period after the start of the tax period in which the assets enter service
+exceeds that of a period before it, and the increase is kept for a further
+period; the eligible investment is an amount per unit of the increase.  LIS
+DA 17a.1 conditions its free depreciation on keeping the later average at the
+earlier level.  Workforce counts people employed as labour law defines them,
+weighted by contracted hours against a full working day.
 
-An IRPF tax period is the calendar year, so both windows are calendar years
-around the entry year Y: Y-1 before, Y and Y+1 after, and Y+2 and Y+3 for the
-art. 102 maintenance period.  The years come from the taxpayer profile's
-validated ``irpf.plantilla_media`` instances.  A year not yet closed may be
-declared as a commitment; it carries a regularisation duty (LIS art. 102.4,
-DA 17a.7) that the evaluation reports rather than hides.
+The lengths of those periods and the increase's decimal places are registry
+parameters, which the law states in months.  An IRPF tax period is the calendar
+year, so each one becomes consecutive calendar years around the entry year; a
+length that is not a whole number of years cannot be counted from calendar-year
+averages and refuses.  The years come from the taxpayer profile's validated
+``irpf.plantilla_media`` instances.  A year not yet closed may be declared as a
+commitment; it carries a regularisation duty (LIS art. 102.4, DA 17a.7) that
+the evaluation reports rather than hides.
 """
 
 from __future__ import annotations
@@ -22,13 +23,23 @@ from __future__ import annotations
 import calendar
 from decimal import ROUND_DOWN, Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 from .errors import ActividadAssetIncompleteError, ActividadAssetUnsupportedError
 
-_TWO_PLACES = Decimal("0.01")
+_MONTHS_PER_YEAR = 12
+
+
+class WorkforceWindows(BaseModel):
+    """How long, in months, each average a workforce condition compares runs."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    prior_months: int = Field(gt=0)
+    following_months: int = Field(gt=0)
+    maintained_months: int = Field(default=0, ge=0)
 
 
 class WorkforceIncrease(BaseModel):
@@ -68,29 +79,70 @@ def _window_average(years: tuple[PlantillaMediaYear, ...]) -> Decimal:
     return weighted / sum(days, Decimal("0"))
 
 
+def _whole_years(months: int) -> int:
+    """Return a window's length in calendar years, or refuse one calendar years cannot measure."""
+    years, remainder = divmod(months, _MONTHS_PER_YEAR)
+    if remainder:
+        raise ActividadAssetUnsupportedError(
+            context={"months": months},
+            translated_message="ledger.actividad_asset.errors.workforce_window_not_whole_years",
+        )
+    return years
+
+
+def _prior_years(
+    years: tuple[PlantillaMediaYear, ...], *, entry_year: int, months: int
+) -> tuple[PlantillaMediaYear, ...]:
+    length = _whole_years(months)
+    return tuple(_require(years, entry_year - offset) for offset in range(length, 0, -1))
+
+
+def _years_from(
+    years: tuple[PlantillaMediaYear, ...], *, first_year: int, months: int
+) -> tuple[PlantillaMediaYear, ...]:
+    return tuple(_require(years, first_year + offset) for offset in range(_whole_years(months)))
+
+
 def _committed(years: tuple[PlantillaMediaYear, ...]) -> tuple[int, ...]:
     return tuple(item.year for item in years if item.state is PlantillaMediaState.COMMITTED)
 
 
-def job_creation_increase(years: tuple[PlantillaMediaYear, ...], *, entry_year: int) -> WorkforceIncrease:
+def job_creation_increase(
+    years: tuple[PlantillaMediaYear, ...],
+    *,
+    entry_year: int,
+    windows: WorkforceWindows,
+    increase_decimal_places: int,
+) -> WorkforceIncrease:
     """Apply LIS art. 102.1 for assets entering service in ``entry_year``.
 
-    The increase is truncated to two decimals, the reading of "calculado con
-    dos decimales" that can never overstate the eligible investment.
+    The law states how many decimals the increase carries, not how it reaches
+    them; it is truncated, the reading that can never overstate the eligible
+    investment.
     """
-    before = _require(years, entry_year - 1)
-    following = (_require(years, entry_year), _require(years, entry_year + 1))
-    maintained = (_require(years, entry_year + 2), _require(years, entry_year + 3))
-    increase = (_window_average(following) - before.average_workforce).quantize(_TWO_PLACES, rounding=ROUND_DOWN)
+    before = _prior_years(years, entry_year=entry_year, months=windows.prior_months)
+    following = _years_from(years, first_year=entry_year, months=windows.following_months)
+    maintained = _years_from(
+        years,
+        first_year=entry_year + _whole_years(windows.following_months),
+        months=windows.maintained_months,
+    )
+    baseline = _window_average(before)
+    increase = (_window_average(following) - baseline).quantize(
+        Decimal(1).scaleb(-increase_decimal_places),
+        rounding=ROUND_DOWN,
+    )
     if increase <= Decimal("0"):
         raise ActividadAssetUnsupportedError(
-            translated_message="ledger.actividad_asset.errors.workforce_increase_not_reached"
+            context={"following_months": windows.following_months, "prior_months": windows.prior_months},
+            translated_message="ledger.actividad_asset.errors.workforce_increase_not_reached",
         )
-    if _window_average(maintained) - before.average_workforce < increase:
+    if _window_average(maintained) - baseline < increase:
         raise ActividadAssetUnsupportedError(
-            translated_message="ledger.actividad_asset.errors.workforce_increase_not_kept"
+            context={"maintained_months": windows.maintained_months},
+            translated_message="ledger.actividad_asset.errors.workforce_increase_not_kept",
         )
-    used = (before, *following, *maintained)
+    used = (*before, *following, *maintained)
     return WorkforceIncrease(increase=increase, years=used, committed_years=_committed(used))
 
 
@@ -98,19 +150,24 @@ def renewable_workforce_maintained(
     years: tuple[PlantillaMediaYear, ...],
     *,
     entry_year: int,
+    windows: WorkforceWindows,
 ) -> WorkforceMaintenance:
-    """Apply LIS DA 17a.1: the 24-month average must not fall below the prior 12 months."""
-    before = _require(years, entry_year - 1)
-    following = (_require(years, entry_year), _require(years, entry_year + 1))
-    if _window_average(following) < before.average_workforce:
-        raise ActividadAssetUnsupportedError(translated_message="ledger.actividad_asset.errors.workforce_fell_below")
-    used = (before, *following)
+    """Apply LIS DA 17a.1: the later average must not fall below the earlier one."""
+    before = _prior_years(years, entry_year=entry_year, months=windows.prior_months)
+    following = _years_from(years, first_year=entry_year, months=windows.following_months)
+    if _window_average(following) < _window_average(before):
+        raise ActividadAssetUnsupportedError(
+            context={"following_months": windows.following_months, "prior_months": windows.prior_months},
+            translated_message="ledger.actividad_asset.errors.workforce_fell_below",
+        )
+    used = (*before, *following)
     return WorkforceMaintenance(years=used, committed_years=_committed(used))
 
 
 __all__ = [
     "WorkforceIncrease",
     "WorkforceMaintenance",
+    "WorkforceWindows",
     "job_creation_increase",
     "renewable_workforce_maintained",
 ]

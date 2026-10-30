@@ -318,11 +318,18 @@ def test_a_gain_reports_that_no_exemption_was_computed() -> None:
     assert ActivityAssetDisposalFindingKind.EXEMPTION_NOT_COMPUTED in [f.kind for f in calculation.findings]
 
 
-def test_a_sale_within_three_years_of_a_later_affectation_changes_the_route() -> None:
+def test_a_sale_within_the_stated_period_of_a_later_affectation_changes_the_route() -> None:
     within = _disposal(proceeds="1.00", later_affectation_on=date(2022, 7, 1))
     after = _disposal(proceeds="1.00", later_affectation_on=date(2022, 6, 30))
-    assert calculate_disposal(_facts(within, (_year(2025),))).route_changed_by_later_affectation
-    assert not calculate_disposal(_facts(after, (_year(2025),))).route_changed_by_later_affectation
+    stated = {"later_affectation_period_years": 3}
+    assert calculate_disposal(
+        _facts(within, (_year(2025),)).model_copy(update=stated)
+    ).route_changed_by_later_affectation
+    assert not calculate_disposal(
+        _facts(after, (_year(2025),)).model_copy(update=stated)
+    ).route_changed_by_later_affectation
+    # An edition stating no period leaves the route open rather than assuming the ordinary one.
+    assert calculate_disposal(_facts(after, (_year(2025),))).route_changed_by_later_affectation
 
 
 def test_manual_example_as_an_arithmetic_oracle() -> None:

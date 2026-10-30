@@ -89,6 +89,7 @@ def calculate_element_disposal(
                 for tax_year in range(revision.in_service_date.year, disposal.disposal_date.year + 1)
             ),
             excess_applies=disposal_excess_applies(revision, disposal),
+            later_affectation_period_years=bounds(revision, disposal.disposal_date.year).later_affectation_period_years,
         ),
     )
 

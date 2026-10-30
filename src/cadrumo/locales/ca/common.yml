@@ -5123,14 +5123,16 @@ ledger:
       vehicle_shared_use: Un vehicle compartit entre l'activitat i les necessitats
         privades no és un element afecte, i un vehicle no pot estar afecte parcialment
         (RIRPF art. 22.2.1º i 22.3; LIRPF art. 29.2).
-      workforce_fell_below: La plantilla mitjana dels 24 mesos posteriors a l'inici
-        de l'any d'entrada en funcionament queda per sota de la dels 12 mesos anteriors
-        (LIS DA 17a.1).
+      workforce_fell_below: La plantilla mitjana dels %{following_months} mesos posteriors
+        a l'inici de l'any d'entrada en funcionament queda per sota de la dels %{prior_months}
+        mesos anteriors (LIS DA 17a.1).
       workforce_increase_not_kept: L'increment de plantilla no es manté durant els
-        24 mesos addicionals que exigeix la LIS art. 102.1.
-      workforce_increase_not_reached: La plantilla mitjana dels 24 mesos posteriors
-        a l'inici de l'any d'entrada en funcionament no supera la dels 12 mesos anteriors
-        (LIS art. 102.1).
+        %{maintained_months} mesos addicionals que exigeix la LIS art. 102.1.
+      workforce_increase_not_reached: La plantilla mitjana dels %{following_months}
+        mesos posteriors a l'inici de l'any d'entrada en funcionament no supera la
+        dels %{prior_months} mesos anteriors (LIS art. 102.1).
+      workforce_window_not_whole_years: Un període de plantilla de %{months} mesos
+        no es pot mesurar amb mitjanes d'anys naturals.
       workforce_year_not_declared: La plantilla mitjana de %{year} no està declarada.
     event_kind:
       baja: Baixa registrada

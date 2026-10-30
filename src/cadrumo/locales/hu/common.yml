@@ -5106,13 +5106,16 @@ ledger:
       vehicle_shared_use: A tevékenység és magáncélok között megosztott jármű nem
         tartozik a tevékenységhez kötött eszközök közé, és egy jármű nem köthető részlegesen
         a tevékenységhez (RIRPF 22.2.1º és 22.3 cikk; LIRPF 29.2 cikk).
-      workforce_fell_below: Az üzembe állítás évének kezdetét követő 24 hónap átlagos
-        létszáma elmarad az azt megelőző 12 hónapétól (LIS DA 17a.1).
+      workforce_fell_below: Az üzembe állítás évének kezdetét követő %{following_months}
+        hónap átlagos létszáma elmarad az azt megelőző %{prior_months} hónapétól (LIS
+        DA 17a.1).
       workforce_increase_not_kept: A létszámnövekedést nem tartják fenn a LIS 102.1
-        cikk által előírt további 24 hónapig.
-      workforce_increase_not_reached: Az üzembe állítás évének kezdetét követő 24
-        hónap átlagos létszáma nem haladja meg az azt megelőző 12 hónapét (LIS 102.1
-        cikk).
+        cikk által előírt további %{maintained_months} hónapig.
+      workforce_increase_not_reached: Az üzembe állítás évének kezdetét követő %{following_months}
+        hónap átlagos létszáma nem haladja meg az azt megelőző %{prior_months} hónapét
+        (LIS 102.1 cikk).
+      workforce_window_not_whole_years: A(z) %{months} hónapos létszámidőszak nem
+        mérhető naptári évek átlagaival.
       workforce_year_not_declared: A(z) %{year}. évi átlagos létszám nincs megadva.
     event_kind:
       baja: Kivezetés rögzítve

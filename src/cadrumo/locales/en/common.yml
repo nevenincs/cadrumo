@@ -5023,13 +5023,16 @@ ledger:
       vehicle_shared_use: A vehicle shared between the activity and private needs
         is not an affected asset, and a vehicle cannot be partially affected (RIRPF
         art. 22.2.1º and 22.3; LIRPF art. 29.2).
-      workforce_fell_below: The average workforce of the 24 months after the entry
-        year's start falls below that of the 12 months before (LIS DA 17a.1).
+      workforce_fell_below: The average workforce of the %{following_months} months
+        after the entry year's start falls below that of the %{prior_months} months
+        before (LIS DA 17a.1).
       workforce_increase_not_kept: The workforce increase is not kept for the further
-        24 months LIS art. 102.1 requires.
-      workforce_increase_not_reached: The average workforce of the 24 months after
-        the entry year's start does not exceed that of the 12 months before (LIS art.
-        102.1).
+        %{maintained_months} months LIS art. 102.1 requires.
+      workforce_increase_not_reached: The average workforce of the %{following_months}
+        months after the entry year's start does not exceed that of the %{prior_months}
+        months before (LIS art. 102.1).
+      workforce_window_not_whole_years: A workforce period of %{months} months can't
+        be measured from calendar-year averages.
       workforce_year_not_declared: The average workforce of %{year} is not declared.
     event_kind:
       baja: Disposal recorded
