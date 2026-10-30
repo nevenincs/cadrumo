@@ -8,7 +8,7 @@ Protocol (MCP) executable is `cadrumo-mcp`.
 
 | Command family | Live authority | Structured map |
 | --- | --- | --- |
-| Root behaviour and global options | `aeat --help` | [CLI overview](../cli/index.rst) |
+| Root behavior and global options | `aeat --help` | [CLI overview](../cli/index.rst) |
 | Profile, authentication, diagnostics, Google, and local configuration | `aeat config --help` and leaf help | [Configuration commands](../cli/config.rst) |
 | Ledger, modelo, review, live-read, export, record, and reconciliation | `aeat app --help` and leaf help | [Application commands](../cli/app.rst) |
 | JSON envelopes and output schemas | Leaf help with the selected format | [Command schemas](../cli/schemas.rst) |
@@ -24,7 +24,7 @@ separate and [the how-to guides](../how-to/index.md) for task sequences.
 
 | Prefix or field family | Owner | Scope |
 | --- | --- | --- |
-| `CADRUMO_*` / `cadrumo_*` | Cadrumo product | Local state, output, providers, profiles, credentials storage, and product behaviour |
+| `CADRUMO_*` / `cadrumo_*` | Cadrumo product | Local state, output, providers, profiles, credentials storage, and product behavior |
 | `AEAT_*` / `aeat_*` | AEAT integration | Sede endpoints and paths, bundled manual and normative corpus roots, and the language of authority terminology |
 
 Examples of product controls include `CADRUMO_STORAGE_ROOT` and

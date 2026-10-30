@@ -47,7 +47,7 @@ untouched and requires you to choose a separate, explicit disposition.
 
 ## Safety and filing scope
 
-| Surface | Cadrumo behaviour |
+| Surface | Cadrumo behavior |
 | --- | --- |
 | Calculation and check | Local; evaluates your saved records against the bundled tax rules and supporting documents |
 | Export | Writes an AEAT-compatible local file after the check and the required supporting-document conditions pass; refuses to overwrite an existing file without `--replace`; portal acceptance is not guaranteed, and files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept |

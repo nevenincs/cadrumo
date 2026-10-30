@@ -251,7 +251,7 @@ Use these limits when deciding how much to review yourself:
 - What AEAT holds does not count unless you explicitly read or reconcile it in
   the workflow you are running.
 
-For a conservative annual close, calculate and review every 303 period, reconcile official AEAT receipts where available, inspect the values taken from 303, and check the annual draft before export. If the command line does not offer the check you need, report that gap instead of documenting it as enforced behaviour.
+For a conservative annual close, calculate and review every 303 period, reconcile official AEAT receipts where available, inspect the values taken from 303, and check the annual draft before export. If the command line does not offer the check you need, report that gap instead of documenting it as enforced behavior.
 
 ## Next steps
 

@@ -124,6 +124,8 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "xlsm",
             "xlsx",
             "loopback",
+            # Authored documentation uses the valid US English spelling too.
+            "behavior",
             # These exact lowercase names occur in translated operator
             # commands and English CLI diagnostics: ``aeat`` is the literal
             # command root, ``auth``/``config`` are command namespaces, and

@@ -1177,3 +1177,9 @@ def test_real_dictionaries_check_names_abbreviations_and_sentence_ends(monkeypat
     assert set(spelling[("hu", "guide")]) == {"pl", "hibásszó."}
     assert spelling[("en", "name")] == ("misspeling",)
     assert set(spelling[("en", "typo")]) == {"Móvill", "vee", "Móvil"}
+
+
+def test_us_english_behavior_is_recognized_without_accepting_a_typo() -> None:
+    assert is_project_spelling("en", "behavior")
+    assert not is_project_spelling("en", "behavor")
+    assert not is_project_spelling("es", "behavior")

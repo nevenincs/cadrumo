@@ -70,8 +70,8 @@ Check this section when you need to know whether a release affects:
 
 - filing workflow order;
 - taxpayer profile setup;
-- ledger import or classification behaviour;
-- modelo calculation, verification, or export behaviour;
+- ledger import or classification behavior;
+- modelo calculation, verification, or export behavior;
 - storage, receipts, or reconciliation steps.
 
 ## Download guidance
