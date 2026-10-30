@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
 
@@ -62,8 +63,8 @@ from ..screen import ModeloWorkbenchScreen
 pytestmark = [pytest.mark.hex_entrypoint]
 
 
-@pytest.fixture
-def m349_work(tmp_path: Path) -> Iterator[SeededOperatorWork]:
+@contextmanager
+def _seeded_m349(tmp_path: Path) -> Iterator[SeededOperatorWork]:
     with seeded_operator_work(tmp_path, modelo="349") as work:
         invoices = tuple(
             intra_community_invoice(
@@ -89,6 +90,50 @@ def m349_work(tmp_path: Path) -> Iterator[SeededOperatorWork]:
         yield work
 
 
+@pytest.fixture
+def m349_work(tmp_path: Path) -> Iterator[SeededOperatorWork]:
+    """A declaration the test may rewrite."""
+    with _seeded_m349(tmp_path) as work:
+        yield work
+
+
+@pytest.fixture(scope="module")
+def shared_m349_work(tmp_path_factory: pytest.TempPathFactory) -> Iterator[SeededOperatorWork]:
+    """One seeded declaration for the checks that only read it; seeding encrypted storage dominates their cost."""
+    with _seeded_m349(tmp_path_factory.mktemp("m349-read")) as work:
+        yield work
+
+
+@pytest.fixture(scope="module")
+def known_empty_m349(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Iterator[tuple[SeededOperatorWork, BucketAggregationCalculationResult]]:
+    """A declaration recalculated over an empty invoice catalogue and verified, read by the layout cases."""
+    with _seeded_m349(tmp_path_factory.mktemp("m349-empty")) as work:
+        unit = work.work_unit
+        work.ports.invoice_repository.save(build_invoice_catalogue(()))
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            unit.work_unit_id, ports=work.ports, clock=SEEDED_AT
+        )
+        assert isinstance(result, BucketAggregationCalculationResult)
+        assert not result.revision.detail_rows and "detail_rows" in result.revision.model_fields_set
+        report = verify_modelo_revision_with_preconditions(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="operator:test",
+            workflow_profile=TaxpayerProfile(
+                tax_id="12345678Z", iva_regime=IVARegime("GENERAL"), does_intracomunitario=True
+            ),
+            settings=ready_clave_settings("12345678Z"),
+            operator_scope_ports=build_inward_operator_scope_ports_for_active_route(),
+            operation=work.operation,
+            clock=SEEDED_AT,
+        ).report
+        assert any(finding.casilla_id == "op.codigo-pais" for finding in report.findings)
+        yield work, result
+
+
 def _installed(work: SeededOperatorWork) -> InstalledModeloWorkbench:
     # Read-only acceptance never submits an operation; the production source and
     # door still perform their normal admission and load paths.
@@ -98,9 +143,10 @@ def _installed(work: SeededOperatorWork) -> InstalledModeloWorkbench:
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
 @pytest.mark.unit
 def test_real_encrypted_calculation_rows_reach_the_installed_form(
-    m349_work: SeededOperatorWork,
+    shared_m349_work: SeededOperatorWork,
     language: OutputLanguage,
 ) -> None:
+    m349_work = shared_m349_work
     unit, calculated = m349_work.work_unit, m349_work.require_head()
     stored = (
         CalculationRevisionCatalogueRepository(bucket_id=unit.bucket_id).load().get(calculated.calculation_revision_id)
@@ -174,11 +220,12 @@ def test_explicit_empty_and_omitted_legacy_detail_channels_survive_real_encrypte
 @pytest.mark.parametrize("size", ((80, 24), (120, 40)))
 @pytest.mark.parametrize("appearance", ("dark", "light"))
 async def test_installed_saved_records_are_read_only_visible_content_in_each_terminal_layout(
-    m349_work: SeededOperatorWork,
+    shared_m349_work: SeededOperatorWork,
     language: OutputLanguage,
     size: tuple[int, int],
     appearance: str,
 ) -> None:
+    m349_work = shared_m349_work
     unit, calculated = m349_work.work_unit, m349_work.require_head()
     with override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(_installed(m349_work))
@@ -264,33 +311,15 @@ async def test_installed_saved_records_are_read_only_visible_content_in_each_ter
 @pytest.mark.parametrize("size", ((80, 24), (120, 40)))
 @pytest.mark.parametrize("appearance", ("dark", "light"))
 async def test_installed_known_empty_records_keep_source_guidance_and_column_finding_navigation(
-    m349_work: SeededOperatorWork,
+    known_empty_m349: tuple[SeededOperatorWork, BucketAggregationCalculationResult],
     language: OutputLanguage,
     size: tuple[int, int],
     appearance: str,
 ) -> None:
+    m349_work, result = known_empty_m349
     unit = m349_work.work_unit
-    m349_work.ports.invoice_repository.save(build_invoice_catalogue(()))
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        unit.work_unit_id, ports=m349_work.ports, clock=SEEDED_AT
-    )
-    assert not result.revision.detail_rows and "detail_rows" in result.revision.model_fields_set
-    report = verify_modelo_revision_with_preconditions(
-        result.revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator:test",
-        workflow_profile=TaxpayerProfile(
-            tax_id="12345678Z", iva_regime=IVARegime("GENERAL"), does_intracomunitario=True
-        ),
-        settings=ready_clave_settings("12345678Z"),
-        operator_scope_ports=build_inward_operator_scope_ports_for_active_route(),
-        operation=m349_work.operation,
-        clock=SEEDED_AT,
-    ).report
     column = "op.codigo-pais"
     key = ("casilla", column)
-    assert any(finding.casilla_id == column for finding in report.findings)
     with override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(_installed(m349_work))
         app = ScreenHostApp(screen)
