@@ -12,7 +12,11 @@ import type {
   LedgerPort,
   PublicDecimal,
 } from "../../../shell/ledger";
-import type { ActivityAssetRefusal } from "../../../shell/ledgerSetup";
+import type {
+  ActivityAssetForecast,
+  ActivityAssetForecastRequest,
+  ActivityAssetRefusal,
+} from "../../../shell/ledgerSetup";
 
 /** An amount the backend states or does not. Null is unknown and never
  * zero; a recorded zero is `{ decimal: "0.00" }`. */
@@ -122,8 +126,10 @@ export type TimelineEvent = {
 export type FormKind =
   "element" | "descriptor" | "correction" | "claim" | "baja";
 
+/** `candidate` is a choice among the purchases the backend offers, picked
+ * and never typed. */
 export type FormControl =
-  "text" | "date" | "amount" | "whole" | "choice" | "flag";
+  "text" | "date" | "amount" | "whole" | "choice" | "flag" | "candidate";
 
 export type FormField = {
   key: string;
@@ -133,12 +139,20 @@ export type FormField = {
   choices: { token: string; label_key: string }[];
   /** The least and most a date or an amount may be, as text. */
   bounds: { min: string | null; max: string | null } | null;
+  /** What the record states now, as text, where the form starts from it;
+   * null or absent where it states nothing. */
+  current?: string | null;
+  /** The word that says how to write the value. */
+  hint_key?: string | null;
 };
 
 export type FormOptions = {
   kind: FormKind;
   tax_year: number | null;
   fields: FormField[];
+  /** The number the next descriptor, revision or claim of this act takes,
+   * where the act is numbered. */
+  next_sequence?: number | null;
 };
 
 export type DescriptorField = { key: string; value: string | null };
@@ -151,9 +165,25 @@ export type Descriptor = {
   fields: DescriptorField[];
 };
 
+/** A purchase an element can come from. `values` states what the purchase
+ * gives each field of the add form, by field key; null is not known, never
+ * zero. */
+export type AcquisitionCandidate = {
+  candidate_id: string;
+  description: string;
+  date: string;
+  amount: Amount;
+  values: Record<string, string | null>;
+};
+
+/** What a form states, by field key: text, a decimal, a whole number, a
+ * choice's token, a flag, or null where nothing was stated. */
+export type FormValue = string | number | boolean | PublicDecimal | null;
+export type FormValues = Record<string, FormValue>;
+
 // ---- Operations ----------------------------------------------------------
 
-type ResultBase = {
+export type ResultBase = {
   outcome: "succeeded" | "refused";
   refusal: (ActivityAssetRefusal & { reason_key?: string | null }) | null;
 };
@@ -164,6 +194,7 @@ export const PROVISIONAL_OPERATIONS = {
   "ledger.actividad-asset.plan": { effect: "read" },
   "ledger.actividad-asset.timeline": { effect: "read" },
   "ledger.actividad-asset.form-options": { effect: "read" },
+  "ledger.actividad-asset.acquisition-candidates": { effect: "read" },
   "ledger.actividad-asset.describe": { effect: "write" },
   "ledger.actividad-asset.dispose": { effect: "write" },
 } as const satisfies Record<string, { effect: "read" | "write" }>;
@@ -184,7 +215,9 @@ export type ProvisionalRequests = {
     kind: FormKind;
     asset_id?: string;
     tax_year?: number;
+    supersedes_claim_id?: string;
   };
+  "ledger.actividad-asset.acquisition-candidates": Record<string, never>;
   "ledger.actividad-asset.describe": {
     asset_id: string;
     name: string | null;
@@ -193,8 +226,8 @@ export type ProvisionalRequests = {
   };
   "ledger.actividad-asset.dispose": {
     asset_id: string;
-    date: string;
-    reason_key: string;
+    date: string | null;
+    reason_key: string | null;
   };
 };
 
@@ -210,6 +243,9 @@ export type ProvisionalResults = {
   };
   "ledger.actividad-asset.form-options": ResultBase & {
     options: FormOptions | null;
+  };
+  "ledger.actividad-asset.acquisition-candidates": ResultBase & {
+    candidates: AcquisitionCandidate[];
   };
   "ledger.actividad-asset.describe": ResultBase & {
     descriptor: Descriptor | null;
@@ -235,4 +271,78 @@ export function submitProvisional<D extends ProvisionalOperationId>(
     id as unknown as LedgerDefinitionId,
     payload as never,
   ) as unknown as Promise<LedgerOutcome<ProvisionalResults[D]>>;
+}
+
+// ---- The admitted operations in their drafted shapes ----------------------
+
+/** The admitted operations whose request and answer the backend is changing:
+ * they keep their ids, and these are the shapes the Assets tab sends and
+ * reads until the admitted types conform. A forecast keeps its admitted
+ * shape. */
+export type DraftedOperationId =
+  | "ledger.actividad-asset.forecast"
+  | "ledger.actividad-asset.claim"
+  | "ledger.actividad-asset.create"
+  | "ledger.actividad-asset.correct";
+
+/** The claim a new claim overlaps, as the backend states it. */
+export type ClaimConflict = {
+  claim_id: string;
+  from: string;
+  until: string;
+  amount: Amount;
+};
+
+export type DraftedRequests = {
+  "ledger.actividad-asset.forecast": ActivityAssetForecastRequest;
+  "ledger.actividad-asset.claim": {
+    forecast: ActivityAssetForecast;
+    /** The claim this one replaces, in the same write. */
+    supersedes_claim_id: string | null;
+  };
+  /** The element's id is minted by the window and never shown. */
+  "ledger.actividad-asset.create": { asset_id: string; values: FormValues };
+  "ledger.actividad-asset.correct": {
+    asset_id: string;
+    /** The revision the person was looking at. */
+    revision_number: number;
+    /** Only the facts that change. */
+    values: FormValues;
+    /** Effective claims recorded again under the corrected figures, in the
+     * same write. */
+    supersede_claim_ids: string[];
+  };
+};
+
+export type DraftedResults = {
+  "ledger.actividad-asset.forecast": ResultBase & {
+    forecast: ActivityAssetForecast | null;
+  };
+  "ledger.actividad-asset.claim": ResultBase & {
+    claim_id: string | null;
+    reused_existing_claim: boolean;
+    superseded_claim_id: string | null;
+    conflicting_claim: ClaimConflict | null;
+  };
+  "ledger.actividad-asset.create": ResultBase & {
+    asset_id: string | null;
+    reused_existing_element: boolean;
+  };
+  "ledger.actividad-asset.correct": ResultBase & {
+    revision_number: number | null;
+    superseded_claim_ids: string[];
+  };
+};
+
+/** Submits an admitted operation with its drafted request, as the scenario
+ * ledger answers it. The port's type names the admitted shapes alone, so the
+ * payload crosses it here and nowhere else. */
+export function submitDrafted<D extends DraftedOperationId>(
+  port: LedgerPort,
+  id: D,
+  payload: DraftedRequests[D],
+): Promise<LedgerOutcome<DraftedResults[D]>> {
+  return port.submit(id, payload as never) as unknown as Promise<
+    LedgerOutcome<DraftedResults[D]>
+  >;
 }

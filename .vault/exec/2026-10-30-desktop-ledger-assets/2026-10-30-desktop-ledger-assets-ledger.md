@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed73cc7caddd8d55a8d64249c46032711771436c42a42cc171a7e936c374092b'
+body_hash: 'sha256:06829a8d5a46364845ed6723ee66a466ba99082b6e072dfbfd61d11f5a972e40'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -80,6 +80,22 @@ related:
 - `S03` `verify:` `npx eslint owned paths` -> `pass`
 - `S03` `verify:` `npx prettier --check owned paths` -> `pass`
 - `S03` `by:` `implementer`
+- `S04` `A` `native/desktop/frontend/src/components/ledger/assets/AssetForm.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ledger/assets/DescribeForm.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ledger/assets/CorrectForm.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ledger/assets/ClaimFlow.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ledger/assets/BajaForm.tsx`
+- `S04` `A` `native/desktop/frontend/src/components/ledger/assets/assetWrites.ts`
+- `S04` `A` `native/desktop/frontend/src/components/ledger/assets/AssetForms.stories.tsx`
+- `S04` `M` `native/desktop/frontend/src/components/ledger/assets/assetsContract.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/assetsFixture.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S04` `M` `native/desktop/frontend/tests/ledger-assets-contract.spec.ts`
+- `S04` `verify:` `tsc --noEmit` -> `pass`
+- `S04` `verify:` `eslint on S04 paths` -> `pass`
+- `S04` `verify:` `prettier --check on S04 paths` -> `pass`
+- `S04` `verify:` `playwright (no-server config) ledger-assets-contract, ledger-setup-model, ledger-fixture-host, ledger-classes, ledger-grammar, ledger-stage, ledger-apply, ledger-plan, ledger-window, ledger-inspector-model, ledger-invoices-model, ledger-documents-model` -> `pass`
+- `S04` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -87,3 +103,6 @@ related:
 - `S01` The four common.yml catalogues carry other sessions' uncommitted keys beside the 107 desktop.ledger.assets keys of this Step; they are not in this Step's commit
 - `S02` tsc reports errors only in src/dev/assetsFixture.ts, written by another Step in progress; none in these files
 - `S03` assetsFixture.ts holds another session's uncommitted hunks; only the S03 hunks were staged
+- `S04` S04 The new string keys the forms use are not yet in the locale catalogues or dev/locales; the locale gates fail on them until the strings owner adds them
+- `S04` S04 assetsFixture.ts also carries uncommitted pending-figure edits made for the plan views
+- `S04` S04 ledgerSetupFixture.ts gains one argument so the admitted create, correct, claim and forecast keep answering their admitted shapes

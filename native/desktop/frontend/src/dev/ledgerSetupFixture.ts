@@ -1494,6 +1494,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       },
     },
     () => assets,
+    { reads: assetReads, writes: assetWrites },
   );
   const reads: Partial<
     Record<LedgerDefinitionId | ProvisionalOperationId, Handler>
