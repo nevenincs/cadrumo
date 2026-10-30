@@ -8,19 +8,31 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from enum import StrEnum
 
 import pytest
+from pydantic import BaseModel
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import (
+    DISPOSAL_FINDING_FAMILY,
+    NON_DEDUCTIBLE_IVA_STATE_FAMILY,
+    TIMELINE_TOKEN_FAMILIES,
     ActivityAssetClaimStaleReason,
     ActivityAssetClaimState,
+    ActivityAssetListRow,
     ActivityAssetNonDeductibleIvaState,
     ActivityAssetRegisterState,
+    activity_asset_label_key,
 )
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations, SupersedingClaimRequest
+from cadrumo.application.actividad_asset.register_reads import register_years
 from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
+from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -502,3 +514,139 @@ def test_an_elapsed_period_counts_as_amortized_in_the_plan_and_m130() -> None:
     assert row.state is ActivityAssetRegisterState.FULLY_AMORTIZED
     assert row.pending is not None
     assert Decimal(row.pending.decimal) == Decimal("0")
+
+
+def _slow_rate_forecast(
+    revision: ActivityAssetRevision,
+    *,
+    covered_from: date,
+    covered_until: date,
+    history: AssetScheduleHistory,
+    requested_free_amount: Decimal | None = None,
+) -> ScheduledAmortizationCharge:
+    return schedule_charge(
+        revision,
+        ScheduleAuthority(
+            tax_year=covered_from.year,
+            asset_kind=revision.asset_kind,
+            method=revision.amortization.method,
+            election_fingerprint=revision.amortization.fingerprint,
+            annual_rate=Decimal("0.02"),
+            authority_generation="register-test-v1",
+            source_reference="register test table",
+            maximum_period_ends_on=date(2095, 1, 1),
+        ),
+        covered_from=covered_from,
+        covered_until=covered_until,
+        history=history,
+        requested_free_amount=requested_free_amount,
+    )
+
+
+def _supported_floor() -> int:
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().floor
+
+
+def test_the_years_of_an_element_are_its_service_window_inside_the_registry_support() -> None:
+    operations, _ = _operations()
+    operations.create(_revision(), _NAME)
+
+    row = operations.list_elements()[0]
+
+    assert row.years == tuple(plan_row.tax_year for plan_row in operations.plan("laptop-1"))
+    assert row.years == (2025, 2026, 2027, 2028, 2029)
+    assert register_years([row]) == row.years
+
+
+def test_a_decades_old_element_is_offered_only_the_years_the_registry_supports() -> None:
+    operations = ActivityAssetOperations(
+        repository=MemoryRepository(),
+        ledger=MemoryLedger(_ACQUISITION),
+        forecast_operation=_slow_rate_forecast,
+        taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
+        register_authority=memory_register_authority(today=date(2025, 12, 31)),
+    )
+    operations.create(_revision(in_service=date(2001, 1, 1)), _NAME)
+
+    row = operations.list_elements()[0]
+
+    # 2,000.00 at 2% charges 40.00 a year, so 50 projected years from 2025 run to 2074 and 2075 is exhausted.
+    floor = _supported_floor()
+    assert min(plan_row.tax_year for plan_row in operations.plan("laptop-1")) == 2001 < floor
+    assert row.years == tuple(range(floor, 2025 + 50 + 1))
+    assert register_years([row]) == row.years
+
+
+def test_the_register_years_merge_every_element_once_in_ascending_order() -> None:
+    operations, _ = _operations()
+    operations.create(_revision(), _NAME)
+    row = operations.list_elements()[0]
+    other: ActivityAssetListRow = row.model_copy(update={"years": (2028, 2029, 2030, 2031)})
+
+    assert register_years([other, row]) == (2025, 2026, 2027, 2028, 2029, 2030, 2031)
+    assert register_years([]) == ()
+
+
+def _served_word_families() -> dict[str, type[StrEnum]]:
+    return {
+        DISPOSAL_FINDING_FAMILY: ActivityAssetDisposalFindingKind,
+        NON_DEDUCTIBLE_IVA_STATE_FAMILY: ActivityAssetNonDeductibleIvaState,
+        **dict(TIMELINE_TOKEN_FAMILIES.values()),
+    }
+
+
+@pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
+def test_every_served_token_has_a_catalogue_word_in_every_locale(locale: str) -> None:
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        words = {
+            activity_asset_label_key(family, member): tr(activity_asset_label_key(family, member), locale=locale)
+            for family, enum in _served_word_families().items()
+            for member in enum
+        }
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)
+
+    assert len(words) == sum(len(enum) for enum in _served_word_families().values())
+    assert all(word.strip() for word in words.values())
+
+
+def test_a_timeline_token_family_names_a_real_enum_field_of_the_revision() -> None:
+    for path, (_, enum) in TIMELINE_TOKEN_FAMILIES.items():
+        model: type[BaseModel] = ActivityAssetRevision
+        *parents, leaf = path.split(".")
+        for name in parents:
+            annotation = model.model_fields[name].annotation
+            assert isinstance(annotation, type)
+            assert issubclass(annotation, BaseModel)
+            model = annotation
+        assert model.model_fields[leaf].annotation is enum
+
+
+def test_the_timeline_words_each_token_it_changes_and_leaves_other_values_bare() -> None:
+    operations, _ = _operations()
+    first = _revision()
+    operations.create(first, _NAME)
+    operations.correct(_revision(number=2, supersedes=first.revision_id, basis="1000"))
+
+    created, corrected = [
+        event for event in operations.timeline("laptop-1") if event.kind is ActivityAssetEventKind.REVISION
+    ]
+
+    keys = {change.field: (change.before_key, change.after_key) for change in created.changes}
+    assert keys["acquired_condition"] == (None, "ledger.actividad_asset.acquired_condition.new")
+    assert keys["acquisition_shape"] == (None, "ledger.actividad_asset.acquisition_shape.primary_purchase")
+    assert keys["basis.stage"] == (None, "ledger.actividad_asset.basis_stage.business_allocated")
+    assert keys["opening_history.status"] == (None, "ledger.actividad_asset.opening_history_status.known")
+    assert keys["in_service_date"] == (None, None)
+    assert {change.field for change in corrected.changes} == {"basis.basis_amount"}
+    assert all(change.before_key is None and change.after_key is None for change in corrected.changes)
+
+
+def test_a_candidate_serves_the_key_of_its_non_deductible_iva_state() -> None:
+    operations, _ = _operations()
+
+    candidate = operations.acquisition_candidates()[0]
+
+    assert candidate.non_deductible_iva_state_key == "ledger.actividad_asset.non_deductible_iva_state.unknown"

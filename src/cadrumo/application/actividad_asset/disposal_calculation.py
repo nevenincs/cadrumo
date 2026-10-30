@@ -25,9 +25,11 @@ from ...domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ..operations.public_scalar import project_scalar
 from .activity_asset_read_models import (
+    DISPOSAL_FINDING_FAMILY,
     ActivityAssetDisposalCalculationView,
     ActivityAssetDisposalFindingView,
     ActivityAssetDisposalYearView,
+    activity_asset_label_key,
 )
 from .history import ActivityAssetHistory
 
@@ -157,6 +159,7 @@ def project_disposal_calculation(
         findings=tuple(
             ActivityAssetDisposalFindingView(
                 kind=finding.kind,
+                label_key=activity_asset_label_key(DISPOSAL_FINDING_FAMILY, finding.kind),
                 tax_year=finding.tax_year,
                 effect_on_cost=optional(finding.effect_on_cost),
             )

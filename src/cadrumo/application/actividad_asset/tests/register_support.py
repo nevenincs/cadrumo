@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
@@ -70,6 +71,12 @@ def _published_modelo_100() -> ModeloRevision:
         return operation.revision_for_context("100", filing_year=2025, period="0A")
 
 
+@cache
+def _published_support() -> SupportedFilingYearsCatalogue:
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years()
+
+
 def _published_authority(revision: ActivityAssetRevision, tax_year: int) -> ScheduleAuthority:
     with bundled_indexed_authority().operation() as operation:
         return resolve_activity_asset_schedule_authority(
@@ -118,6 +125,7 @@ def memory_register_authority(
             ),
             _published_modelo_100(),
         ),
+        admits_filing_year=_published_support().admits_filing_year,
         agrarian_activities=lambda _on: frozenset(),
         residence_territory=lambda: territory,
         claim_consumers=claim_consumers,
