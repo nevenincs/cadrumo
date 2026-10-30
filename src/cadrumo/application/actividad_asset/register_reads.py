@@ -205,24 +205,33 @@ def _claim_state(
 
 
 def _plan_claims(
-    asset_id: str, tax_year: int, claims: tuple[AmortizationClaim, ...]
+    revision: ActivityAssetRevision, tax_year: int, context: RegisterReadContext
 ) -> tuple[ActivityAssetPlanClaim, ...]:
+    claims = context.history.claims
     superseded_by = {
         claim.supersedes_claim_id: claim.claim_id for claim in claims if claim.supersedes_claim_id is not None
     }
     return tuple(
-        ActivityAssetPlanClaim(
-            claim_id=claim.claim_id,
-            amount=_amount(claim.amount),
-            covered_from=claim.covered_from,
-            covered_until=claim.covered_until,
-            covered_through=last_day_covered(claim.covered_until),
-            effective=claim.claim_id not in superseded_by,
-            superseded_by=superseded_by.get(claim.claim_id),
-            revision_id=claim.asset_revision_id,
-        )
+        _plan_claim(claim, superseded_by, _matches_current_schedule(claim, revision, context))
         for claim in claims
-        if claim.asset_id == asset_id and claim.tax_year == tax_year
+        if claim.asset_id == revision.asset_id and claim.tax_year == tax_year
+    )
+
+
+def _plan_claim(
+    claim: AmortizationClaim, superseded_by: Mapping[str, str], stale: ActivityAssetClaimStaleReason | None
+) -> ActivityAssetPlanClaim:
+    return ActivityAssetPlanClaim(
+        claim_id=claim.claim_id,
+        amount=_amount(claim.amount),
+        covered_from=claim.covered_from,
+        covered_until=claim.covered_until,
+        covered_through=last_day_covered(claim.covered_until),
+        effective=claim.claim_id not in superseded_by,
+        superseded_by=superseded_by.get(claim.claim_id),
+        revision_id=claim.asset_revision_id,
+        matches_current_schedule=stale is None,
+        stale_reason=stale,
     )
 
 
@@ -263,7 +272,7 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
                 edition=_edition_or_none(context, row.tax_year),
                 service_days=None if row.charge is None else row.charge.service_days,
                 calendar_days=None if row.charge is None else row.charge.calendar_days,
-                claims=_plan_claims(revision.asset_id, row.tax_year, context.history.claims),
+                claims=_plan_claims(revision, row.tax_year, context),
                 minimum_through=_amount(min(basis, round_to_cents(minimum))),
                 minimum_complete=minimum_complete,
             ),

@@ -200,6 +200,16 @@ class ActivityAssetPlanClaim(ActivityAssetCoveredInterval):
     effective: bool
     superseded_by: Hex64Str | None = None
     revision_id: Hex64Str
+    matches_current_schedule: bool
+    """Whether the current revision and authority would stamp this claim's schedule fingerprint again."""
+    stale_reason: ActivityAssetClaimStaleReason | None = None
+    """Why it no longer does; null exactly when ``matches_current_schedule``."""
+
+    @model_validator(mode="after")
+    def _stale_exactly_when_it_no_longer_matches(self) -> Self:
+        if self.matches_current_schedule != (self.stale_reason is None):
+            raise ValueError("a claim names why it is stale exactly when it no longer matches its schedule")
+        return self
 
 
 class ActivityAssetClaimableInterval(ActivityAssetCoveredInterval):

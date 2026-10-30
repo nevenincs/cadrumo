@@ -53,10 +53,11 @@ _ACQUISITION = acquisition_transaction()
 _AUTHORITY = {"logical_generation": "a" * 64, "reader_incarnation": "b" * 64}
 
 
-def _revision() -> ActivityAssetRevision:
+def _revision(*, number: int = 1, supersedes: str | None = None, basis: str = "2000") -> ActivityAssetRevision:
     return ActivityAssetRevision(
         asset_id="laptop-1",
-        revision_number=1,
+        revision_number=number,
+        supersedes_revision_id=supersedes,
         acquisition=AcquisitionLineageReference(
             observed_transaction_id=_ACQUISITION.transaction_id,
             invoice_evidence_id="invoice-1",
@@ -66,7 +67,7 @@ def _revision() -> ActivityAssetRevision:
         asset_kind=AssetKind.MATERIAL,
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
-            basis_amount=Decimal("2000"),
+            basis_amount=Decimal(basis),
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="ledger allocation allocation-1",
         ),
