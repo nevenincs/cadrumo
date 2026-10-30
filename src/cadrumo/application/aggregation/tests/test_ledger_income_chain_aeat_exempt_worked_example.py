@@ -46,6 +46,11 @@ bound casilla, are both bypassed. Here the same published example is driven
 through those two links for real, and the manual's own printed 138.400 and
 58.100 are what the chain has to land on.
 
+**What it does not cover.** Casilla 0208 appears here only as the manual's own printed
+gasto figure, typed in by hand. This module is not an amortization oracle: no element, claim or
+schedule is involved. The register-driven chain from an element's claim to 0208 and the
+rendimiento neto is pinned in ``test_ledger_asset_amortization_chain_worked_example``.
+
 **Fixture provenance.** The rows below carry the operations the example
 DESCRIBES — two income lines, their amounts, the exempt treatment it states —
 and never its RESULT. Nothing in the fixture is derived from 138.400 or from
