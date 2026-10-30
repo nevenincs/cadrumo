@@ -33,15 +33,14 @@ from .ledger_binding_selector_support import (
     LEDGER_INCOME_FACTS,
     LedgerIncomeFact,
     LedgerIncomeFactValue,
-    casilla_id_set,
     mapping_lacks_fact,
 )
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
     ledger_binding_selector,
+    ledger_target_casilla_failures,
     require_ledger_aggregation_op,
     require_ledger_fact,
-    require_ledger_target_casilla,
 )
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 
@@ -138,23 +137,9 @@ class LedgerRentaIncomeProvider(BaseModel):
         return value
 
 
-# Per-modelo income casillas this aggregation may feed. M130 (pago fraccionado)
-# feeds the cumulative-quarter ingresos casillas; M100 (annual IRPF) feeds the
-# estimación-directa "Ingresos de explotación" leaf (0171). Validated at registry
-# load so a binding targeting any other casilla surfaces before any calculation.
+# The declaration series this aggregation feeds. The boxes it may target come from
+# each edition's own bindings: see ``ledger_renta_income_target_failures``.
 _RENTA_INCOME_MODELOS: frozenset[Modelo] = frozenset((Modelo("100"), Modelo("130"), Modelo("131")))
-_RENTA_130_INCOME_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_130_INCOME_CASILLAS", "01", "03")
-_RENTA_100_INCOME_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_100_INCOME_CASILLAS", "0171")
-# One casilla, and the narrowness is the point. Modelo 131 casilla 01 is the sum
-# of modulos-computed rendimientos -- derived from signos and indices correctores,
-# not from receipts -- so no ledger sum may target it. Only casilla 05, the
-# agrarian volumen de ingresos del trimestre, is a real ledger aggregation.
-_RENTA_131_INCOME_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_131_INCOME_CASILLAS", "05")
-_RENTA_INCOME_CASILLAS_BY_MODELO: dict[Modelo, frozenset[CasillaId]] = {
-    Modelo("130"): _RENTA_130_INCOME_CASILLAS,
-    Modelo("100"): _RENTA_100_INCOME_CASILLAS,
-    Modelo("131"): _RENTA_131_INCOME_CASILLAS,
-}
 
 
 def validate_ledger_renta_income_aggregation_binding_definition(binding: BindingDefinition) -> None:
@@ -164,14 +149,23 @@ def validate_ledger_renta_income_aggregation_binding_definition(binding: Binding
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         LedgerRentaIncomeProvider,
     )
-    require_ledger_target_casilla(
-        binding,
-        selector.target_casilla_id,
-        _RENTA_INCOME_CASILLAS_BY_MODELO.get(selector.modelo, frozenset()),
-        scope=f"supported {selector.modelo.value} income casillas",
-    )
     require_ledger_aggregation_op(binding)
     require_ledger_fact(binding, selector.fact, LEDGER_INCOME_FACTS)
+
+
+def ledger_renta_income_target_failures(revision: ModeloRevision) -> list[str]:
+    """Refuse an income binding aimed at a box the edition does not give this family.
+
+    The retención binding of a revision shares its observation key with the income
+    binding, so the target must belong to the family without naming the binding.
+    A modulos-computed box has no ledger owner and is refused by the same rule.
+    """
+    return ledger_target_casilla_failures(
+        revision,
+        source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        target_casilla_id=lambda binding: provider_member(binding, LedgerRentaIncomeProvider).target_casilla_id,
+        reciprocal=False,
+    )
 
 
 class RentaIncomeObservationProtocol(Protocol):

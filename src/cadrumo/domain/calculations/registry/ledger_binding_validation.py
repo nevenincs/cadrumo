@@ -22,15 +22,18 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
+from .binding_targets import bound_casilla_binding_ids
 from .errors import RegistryValidationError
+from .schema_input_kind import InputKind
 
 if TYPE_CHECKING:
-    from .schema import BindingDefinition
+    from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "LEDGER_AGGREGATION_OPS",
     "ledger_binding_build_diagnostics",
     "ledger_binding_selector",
+    "ledger_target_casilla_failures",
     "require_ledger_aggregation_op",
     "require_ledger_fact",
     "require_ledger_target_casilla",
@@ -79,6 +82,45 @@ def require_ledger_target_casilla(
             f"binding {binding.id!r} target_casilla_id {target_casilla_id!r} "
             f"is outside the {scope} {sorted(supported)!r}",
         )
+
+
+def ledger_target_casilla_failures(
+    revision: ModeloRevision,
+    *,
+    source_kind: BindingSourceKind,
+    target_casilla_id: Callable[[BindingDefinition], CasillaId],
+    reciprocal: bool,
+) -> list[str]:
+    """Return the failures for family bindings aimed at a box the edition gives another owner.
+
+    A ledger total may only land on a bound casilla that the same family feeds. A
+    manual or computed box, or a box another family binds, is refused from the
+    edition's own declarations, so no box list is restated here. ``reciprocal``
+    further requires the target to name this exact binding; a family whose second
+    quantity shares its observation key with the first leaves it unset.
+    """
+    family = frozenset(binding.id for binding in revision.bindings if binding.source == source_kind)
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    failures: list[str] = []
+    for binding in revision.bindings:
+        if binding.source != source_kind:
+            continue
+        target = target_casilla_id(binding)
+        casilla = casillas.get(target)
+        if casilla is None:
+            failures.append(f"binding {binding.id!r} targets casilla {target!r}, which the edition does not declare")
+            continue
+        owners = bound_casilla_binding_ids(casilla)
+        if casilla.input_kind is not InputKind.BOUND or not owners or not family.issuperset(owners):
+            failures.append(
+                f"binding {binding.id!r} targets casilla {target!r}, which is {casilla.input_kind.value} "
+                f"and bound by {sorted(owners)!r} rather than by the {source_kind.value} family",
+            )
+        elif reciprocal and binding.id not in owners:
+            failures.append(
+                f"binding {binding.id!r} targets casilla {target!r}, which is bound by {sorted(owners)!r}",
+            )
+    return failures
 
 
 def require_ledger_fact(binding: BindingDefinition, fact: str, supported: Collection[str]) -> None:

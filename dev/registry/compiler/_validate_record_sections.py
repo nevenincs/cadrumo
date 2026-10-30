@@ -24,6 +24,13 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
+    ledger_renta_gastos_estimacion_directa_target_failures,
+)
+from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
+    ledger_renta_gastos_pago_fraccionado_target_failures,
+)
+from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import ledger_renta_income_target_failures
 from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
     validate_m303_regimen_simplificado_annual_summary_revision,
 )
@@ -224,6 +231,12 @@ def validate_binding_section(
     failures.extend(
         f"{prefix}: {failure}" for failure in validate_m303_regimen_simplificado_annual_summary_revision(revision)
     )
+    for target_failures in (
+        ledger_renta_income_target_failures,
+        ledger_renta_gastos_estimacion_directa_target_failures,
+        ledger_renta_gastos_pago_fraccionado_target_failures,
+    ):
+        failures.extend(f"{prefix}: {failure}" for failure in target_failures(revision))
     for binding in revision.bindings:
         owner = f"binding {binding.id}"
         failures.extend(missing_refs(prefix, owner, binding.legal_refs, legal_refs, "legal"))

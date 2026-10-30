@@ -25,6 +25,7 @@ from .ids import BindingId
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
     ledger_binding_selector,
+    ledger_target_casilla_failures,
     require_ledger_aggregation_op,
     require_ledger_fact,
 )
@@ -105,6 +106,18 @@ def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definiti
     )
     require_ledger_aggregation_op(binding)
     require_ledger_fact(binding, selector.fact, _DEDUCTIBLE_AMOUNT_FACTS)
+
+
+def ledger_renta_gastos_estimacion_directa_target_failures(revision: ModeloRevision) -> list[str]:
+    """Refuse a gastos binding aimed at a box the edition does not bind to it."""
+    return ledger_target_casilla_failures(
+        revision,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        target_casilla_id=lambda binding: (
+            provider_member(binding, LedgerRentaGastosEstimacionDirectaProvider).target_casilla_id
+        ),
+        reciprocal=True,
+    )
 
 
 def _renta_gastos_estimacion_directa_build_matcher(

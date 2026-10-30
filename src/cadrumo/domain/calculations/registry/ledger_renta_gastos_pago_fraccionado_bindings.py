@@ -19,21 +19,20 @@ from ._ledger_binding_resolution import (
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
+from .binding_selector_utils import provider_member
 from .errors import RegistryError, RegistryValidationError
 from .ids import BindingId
-from .ledger_binding_selector_support import casilla_id_set
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
     ledger_binding_selector,
+    ledger_target_casilla_failures,
     require_ledger_aggregation_op,
     require_ledger_fact,
-    require_ledger_target_casilla,
 )
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
 
-_RENTA_130_GASTO_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_130_GASTO_CASILLAS", "02")
 _DEDUCTIBLE_AMOUNT_FACTS: frozenset[str] = frozenset({"deductible_amount_sum"})
 
 
@@ -169,18 +168,24 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
         LedgerRentaGastosPagoFraccionadoProvider,
     )
-    require_ledger_target_casilla(
-        binding,
-        selector.target_casilla_id,
-        _RENTA_130_GASTO_CASILLAS,
-        scope="supported Modelo 130 gasto casillas",
-    )
     require_ledger_aggregation_op(binding)
     require_ledger_fact(binding, selector.fact, _DEDUCTIBLE_AMOUNT_FACTS)
     try:
         _renta_gastos_pago_fraccionado_reachability_probe(selector)
     except RegistryValidationError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} {exc}") from exc
+
+
+def ledger_renta_gastos_pago_fraccionado_target_failures(revision: ModeloRevision) -> list[str]:
+    """Refuse a gasto binding aimed at a box the edition does not bind to it."""
+    return ledger_target_casilla_failures(
+        revision,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+        target_casilla_id=lambda binding: (
+            provider_member(binding, LedgerRentaGastosPagoFraccionadoProvider).target_casilla_id
+        ),
+        reciprocal=True,
+    )
 
 
 def resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
