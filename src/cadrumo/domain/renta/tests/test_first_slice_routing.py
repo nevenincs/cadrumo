@@ -21,6 +21,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     renta_first_slice_binding_target_casillas,
 )
@@ -33,6 +34,7 @@ from ...categories.spending_category_catalogue import (
 from .._first_slice_routing import (
     resolve_first_slice_expense_routing,
 )
+from ..actividad_asset.claims import M100_AMORTIZATION_CASILLA_IDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +43,7 @@ _FILING_YEAR = 2025
 
 
 def _routable_categories(
-    authority: PinnedAuthorityOperation,
+    authority: GovernedFactSource,
     coordinate: date,
 ) -> tuple[SpendingCategory, ...]:
     """Return the categories the first slice routes: the activity-asset register carries the amortizable ones."""
@@ -178,7 +180,7 @@ def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
         check_first_slice_routing("100", representative_targets, representative_targets, filing_year=_FILING_YEAR) == []
     )
     # A revision with no first-slice bindings has an empty required set --
-    # reports nothing even with an empty casilla set (the 2020-2022 shape).
+    # reports nothing even with an empty casilla set.
     assert check_first_slice_routing("100", frozenset(), frozenset(), filing_year=_FILING_YEAR) == []
     # A non-100 modelo is outside the first slice -- no check.
     assert check_first_slice_routing("303", frozenset(), representative_targets, filing_year=_FILING_YEAR) == []
@@ -189,14 +191,10 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
 ) -> None:
     """The per-revision binding-target helper reflects real registry data.
 
-    Every edition inside the support envelope binds exactly the routing
-    casillas its own design declares: "Aportaciones a mutualidades
-    alternativas" shares the combined ``0186`` Seguridad Social casilla until
-    the design adds the dedicated ``0195`` box, so the edition before that box
-    exists binds one casilla fewer. Editions below the floor are stored history
-    and declare no ledger bindings. This is the property that makes the
-    universal ``first_slice_target_casillas`` codomain unsuitable as a
-    per-revision referential-integrity requirement.
+    Supported editions bind the declared category-routing casillas and the
+    asset-register-only casillas. Editions below the floor are stored history
+    and declare no ledger bindings. The set is revision-scoped because the
+    official design adds and removes casillas between years.
     """
 
     modelo_100 = full_published_modelo(operation, "100")
@@ -211,7 +209,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
             continue
         in_envelope += 1
         declared = frozenset(casilla.id for casilla in revision.casillas)
-        assert targets == routing & declared, revision.id
+        assert targets == (routing | M100_AMORTIZATION_CASILLA_IDS) & declared, revision.id
 
     assert in_envelope, "no Modelo 100 edition lies inside the support envelope"
 
@@ -220,12 +218,10 @@ def test_modelo_100_snapshots_build_cleanly_across_every_revision(operation: Pin
     """Every supported Modelo 100 revision's snapshot passes referential integrity.
 
     This is the real end-to-end proof for the fix: building a snapshot for a
-    revision that declares no first-slice ledger bindings (2022) must not
-    raise, even though casilla ``0195`` -- part of the universal routing
-    table's codomain -- does not exist on it. Building 2023-2025 must also
-    succeed. A regression back to checking the universal codomain against
-    every revision's own casilla set reproduces the exact defect this test
-    guards against.
+    revision must not raise when casilla ``0195`` -- part of the universal
+    routing table's codomain -- does not exist on it. Checking the universal
+    codomain against every revision's own casilla set reproduces the defect
+    this test guards against.
 
     The years come from the published support envelope; an authored revision
     below its floor is stored history and must be refused, not built.
