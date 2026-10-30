@@ -159,7 +159,7 @@ TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
 # must stay whole so their prepositions do not become global exceptions.
 # Owners: _data/terminology/concepts and the bienes de inversión register.
 TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w'’-])(?:bienes de inversión|recargo de equivalencia|"
+    r"(?<![\w'’-])['‘’]?(?:bien(?:es)? de inversión|recargo de equivalencia|"
     r"regla de prorrata|prorrata especial|datos censales|"
     r"declaración (?:tributaria|censal|de la renta)|"
     r"justificante de presentación|retenciones (?:del trabajo|de alquiler)|"
@@ -177,7 +177,15 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     # register labels.
     r"rendimiento neto del trabajo|rendimientos del trabajo|"
     r"rendimientos del capital mobiliario(?: del ahorro)?|"
-    r"estimación directa|reales decretos|órdenes ministeriales|"
+    r"estimación directa|estimación objetiva(?: \(módulos\))?|"
+    # These complete Spanish labels are retained in the English profile,
+    # activity-asset and Modelo 210 catalogues. Spanish still checks each word;
+    # their prepositions and nouns are not English spelling exceptions.
+    r"tipo de renta|libertad de amortización|colegio concertado|"
+    r"importe neto de la cifra de negocios|suministro inmediato de información|"
+    r"acuse de recibo|número de rentas|"
+    r"(?:(?<=Objective assessment \()|(?<=Objective estimation \())módulos(?=\))|"
+    r"reales decretos|órdenes ministeriales|"
     r"(?<=Spanish )leyes|(?<=per )contribuyente|"
     r"certificado de retenciones e ingresos a cuenta|retenciones e ingresos a cuenta|"
     r"certificado de situación censal|situación censal|"
@@ -209,7 +217,7 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"(?:(?<=IRPF )|(?<=withholding \())retención(?=\b)|"
     r"retención(?= (?:fraction|withheld|rate|e ingresos)\b)|"
     r"casillas?|modelos?|borrador(?:es)?|censos?|"
-    r"expedientes?|justificantes?|prorratas?|prorrateo|renta)(?![\w'’])",
+    r"expedientes?|justificantes?|prorratas?|prorrateo|renta)['’]?(?![\w'’])",
     re.IGNORECASE,
 )
 

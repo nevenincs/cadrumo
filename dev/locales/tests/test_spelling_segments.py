@@ -367,3 +367,69 @@ def test_spanish_tax_words_inside_complete_commands_do_not_split_the_path(locale
 def test_misspelled_commands_keep_the_verb_visible_to_spelling(locale: str) -> None:
     words = words_by_language("aeat app modelo work verfy misspeling", locale)
     assert {"verfy", "misspeling"} <= words[locale]
+
+
+@pytest.mark.parametrize(
+    "term",
+    [
+        "estimación objetiva",
+        "estimación objetiva (módulos)",
+        "tipo de renta",
+        "libertad de amortización",
+        "colegio concertado",
+        "importe neto de la cifra de negocios",
+        "Suministro Inmediato de Información",
+        "acuse de recibo",
+        "Número de rentas",
+        "bien de inversión",
+    ],
+)
+def test_complete_spanish_profile_and_filing_terms_keep_neighboring_prose_checked(term: str) -> None:
+    words = words_by_language(f"Read {term} misspeling")
+    assert words["en"] == {"Read", "misspeling"}
+    assert words["es"]
+
+
+@pytest.mark.parametrize("label", ["Objective assessment", "Objective estimation"])
+def test_modulos_is_spanish_only_in_its_attested_assessment_label(label: str) -> None:
+    assert words_by_language(f"{label} (módulos) misspeling") == {
+        "en": {*label.split(), "misspeling"},
+        "es": {"módulos"},
+    }
+    assert "módulos" in words_by_language("Generic módulos misspeling")["en"]
+
+
+@pytest.mark.parametrize(
+    ("term", "typo"),
+    [
+        ("estimacion objetiva", "estimacion"),
+        ("estimación objetivaa", "objetivaa"),
+        ("tipo de rentaa", "rentaa"),
+        ("libertad de amortizacion", "amortizacion"),
+        ("colegio concertadoo", "concertadoo"),
+        ("importe neto de la cifra de negocioos", "negocioos"),
+        ("Suministro Inmediato de Informacion", "Informacion"),
+        ("acuse de reciboo", "reciboo"),
+        ("Numero de rentas", "Numero"),
+        ("bien de inversion", "inversion"),
+    ],
+)
+def test_spanish_profile_and_filing_term_typos_remain_visible(term: str, typo: str) -> None:
+    assert typo in words_by_language(f"Read {term} misspeling")["en"]
+
+
+@pytest.mark.parametrize("quote", ["'", "’", "‘"])
+def test_quoted_official_spanish_heading_keeps_surrounding_prose_checked(quote: str) -> None:
+    closing = "’" if quote == "‘" else quote
+    assert words_by_language(f"Read {quote}Número de rentas{closing} misspeling") == {
+        "en": {"Read", "misspeling"},
+        "es": {"Número", "de", "rentas"},
+    }
+
+
+def test_quoted_spanish_term_does_not_admit_a_partial_word_or_english_possessive() -> None:
+    for text in ("'colegio concertadoo'", "'colegio concertado's", "prefix'colegio concertado'"):
+        words = words_by_language(f"Read {text} misspeling")
+        assert set(words) == {"en"}
+        assert any("colegio" in word for word in words["en"])
+        assert any("concertado" in word for word in words["en"])
