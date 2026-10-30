@@ -481,9 +481,22 @@ def _annual_rate(context: _ChargeContext) -> Decimal:
 
 def _linear_amount(context: _ChargeContext) -> Decimal:
     """Apply the lifecycle rule: basis x rate x service days / tax-year days."""
-    days = Decimal((context.interval_end - context.interval_start).days)
+    return _tax_year_cumulative_difference(context, context.amortizable_basis * _annual_rate(context))
+
+
+def _tax_year_cumulative_difference(context: _ChargeContext, annual_charge: Decimal) -> Decimal:
+    """Spread an annual charge by days, rounding the tax year's cumulative curve.
+
+    Rounding each endpoint rather than each interval makes contiguous claims
+    sum exactly to the annual figure, whichever periods the operator records.
+    """
+    window_start = max(context.revision.in_service_date, context.year_start)
     year_days = Decimal(calendar_days_in_tax_year(context.authority.tax_year))
-    return round_to_cents(context.amortizable_basis * _annual_rate(context) * days / year_days)
+
+    def cumulative(point: date) -> Decimal:
+        return annual_charge * Decimal((point - window_start).days) / year_days
+
+    return round_to_cents(cumulative(context.interval_end)) - round_to_cents(cumulative(context.interval_start))
 
 
 def _constant_percentage_amount(context: _ChargeContext) -> Decimal:
@@ -508,9 +521,7 @@ def _constant_percentage_amount(context: _ChargeContext) -> Decimal:
         # Rounding the cumulative curve, not each interval, lets contiguous
         # final-year claims reach exactly the pending value.
         return round_to_cents(cumulative(context.interval_end)) - round_to_cents(cumulative(context.interval_start))
-    days = Decimal((context.interval_end - context.interval_start).days)
-    year_days = Decimal(calendar_days_in_tax_year(context.authority.tax_year))
-    return round_to_cents(context.pending_at_year_start * _annual_rate(context) * days / year_days)
+    return _tax_year_cumulative_difference(context, context.pending_at_year_start * _annual_rate(context))
 
 
 def _approved_plan_amount(context: _ChargeContext) -> Decimal:

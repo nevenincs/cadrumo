@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from itertools import pairwise
 
 import pytest
 from pydantic import ValidationError
@@ -249,6 +250,34 @@ def test_rate_applies_to_the_basis_less_residual_value_and_is_capped_at_the_rema
     assert capped.amount == Decimal("100.00")
     assert calendar_days_in_tax_year(2024) == 366
     assert calendar_days_in_tax_year(2025) == 365
+
+
+def test_contiguous_period_charges_sum_exactly_to_the_annual_figure() -> None:
+    revision = _revision(basis=_ordinary_basis(business_use_share=Decimal("1")))
+    authority = _authority(revision, annual_rate=Decimal("0.12"))
+    quarter_ends = (date(2025, 1, 1), date(2025, 4, 1), date(2025, 7, 1), date(2025, 10, 1), date(2026, 1, 1))
+
+    charges = [
+        schedule_charge(revision, authority, covered_from=start, covered_until=end, history=_NO_HISTORY).amount
+        for start, end in pairwise(quarter_ends)
+    ]
+
+    # 1,000 x 12% accrues 29.589, 59.507, 89.753 and 120 at the quarter ends;
+    # rounding each quarter alone would give 30.25 in Q3 and a total of 120.01.
+    assert charges == [Decimal("29.59"), Decimal("29.92"), Decimal("30.24"), Decimal("30.25")]
+
+
+def test_a_mid_year_start_splits_its_charge_without_a_rounding_gap() -> None:
+    revision = _revision(basis=_ordinary_basis(business_use_share=Decimal("1")), in_service_date=date(2025, 7, 1))
+    authority = _authority(revision, annual_rate=Decimal("0.12"))
+
+    def charged(start: date, end: date) -> Decimal:
+        return schedule_charge(revision, authority, covered_from=start, covered_until=end, history=_NO_HISTORY).amount
+
+    # 184 of 365 days gives 60.49; the first 92 days accrue 30.247.
+    assert charged(date(2025, 1, 1), date(2026, 1, 1)) == Decimal("60.49")
+    assert charged(date(2025, 7, 1), date(2025, 10, 1)) == Decimal("30.25")
+    assert charged(date(2025, 10, 1), date(2026, 1, 1)) == Decimal("30.24")
 
 
 def test_an_authority_resolved_for_another_election_is_refused() -> None:
