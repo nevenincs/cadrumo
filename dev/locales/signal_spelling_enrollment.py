@@ -645,13 +645,41 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
 }
 
 
+# Reviewed tú imperatives observed in Spanish operator prose. Each entry is the
+# stem as written before one enclitic (including its required accent), not a
+# license to strip suffixes from arbitrary dictionary words. RAE describes the
+# attachment and accentuation of these pronouns in its orthography:
+# https://www.rae.es/diccionario-estudiante/docs/ortografia.pdf
+_SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
+    {"elimína", "actualíza", "archíva", "exclúye", "restáura", "vacía", "clasifíca", "revísa", "adjúnta"}
+)
+_SPANISH_DIRECT_OBJECT_CLITICS = ("lo", "la", "los", "las")
+
+
+def _spanish_reviewed_imperative(word: str) -> bool:
+    """Recognize one pronoun on a reviewed imperative, preserving its accent."""
+    # Sentence-initial capitalization is grammatical; do not casefold the
+    # entire token, which would admit arbitrary internal capitalization.
+    word = word[:1].lower() + word[1:]
+    if word == "autentícate":
+        return True
+    return any(
+        word.endswith(clitic) and word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_IMPERATIVES
+        for clitic in _SPANISH_DIRECT_OBJECT_CLITICS
+    )
+
+
 def is_project_spelling(locale: str, word: str) -> bool:
-    """Accept only explicitly attested forms, without changing Hunspell data."""
+    """Accept reviewed dictionary gaps without changing Hunspell data."""
     if locale == "en" and word.endswith("'s"):
         # A grammatical possessive does not change an exact enrolled name.
         # Other apostrophe forms and misspelled stems still need a dictionary.
         word = word[:-2]
-    return word in _SHARED_SPELLINGS or word in _LOCALE_SPELLINGS.get(locale, frozenset())
+    return (
+        word in _SHARED_SPELLINGS
+        or word in _LOCALE_SPELLINGS.get(locale, frozenset())
+        or (locale == "es" and _spanish_reviewed_imperative(word))
+    )
 
 
 def spelling_surface(key: str) -> str:

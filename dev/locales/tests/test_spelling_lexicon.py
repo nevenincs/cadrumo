@@ -416,6 +416,59 @@ def test_frequent_attested_spanish_clitic_imperatives_are_exact_and_language_sco
         assert all(not is_project_spelling(locale, form) for form in forms)
 
 
+def test_reviewed_spanish_imperatives_keep_stress_and_check_the_whole_stem() -> None:
+    forms = (
+        "elimínalo",
+        "Actualízalo",
+        "archívalo",
+        "exclúyelo",
+        "restáuralo",
+        "vacíalos",
+        "clasifícala",
+        "revísalos",
+        "adjúntalo",
+        "autentícate",
+        # Different object gender and number on the same reviewed imperative.
+        "elimínalas",
+        "exclúyela",
+        "vacíalo",
+    )
+    for form in forms:
+        assert is_project_spelling("es", form)
+        assert all(not is_project_spelling(locale, form) for locale in ("ca", "en", "hu"))
+
+    for typo in (
+        "eliminalo",
+        "elimínallo",
+        "elíminalo",
+        "elimína",
+        "elimínate",
+        "actualizálo",
+        "archívallo",
+        "exclúielo",
+        "restáuralaX",
+        "vacÍalos",
+        "clasifícalaaa",
+        "adjúntalolo",
+        "autentícatez",
+        "autentícalo",
+        "inventálo",
+    ):
+        assert not is_project_spelling("es", typo)
+
+
+def test_spanish_imperative_spelling_flows_through_the_locale_audit(monkeypatch: pytest.MonkeyPatch) -> None:
+    class Dictionary:
+        def lookup(self, word: str) -> bool:
+            return False
+
+    monkeypatch.setattr("dev.locales.signal_spelling.load_dictionaries", lambda repository: {"es": Dictionary()})
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        {"guide"}, {"es": {"guide": "elimínalo eliminalo elimínallo"}}, Path(".")
+    )
+    assert set(spelling[("es", "guide")]) == {"eliminalo", "elimínallo"}
+
+
 def test_attested_spanish_tax_and_runtime_terms_are_exact_and_language_scoped() -> None:
     forms = (
         "operandos",
