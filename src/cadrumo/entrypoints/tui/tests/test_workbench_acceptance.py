@@ -65,6 +65,18 @@ def workbench(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathF
         yield installed
 
 
+@pytest.fixture(scope="module")
+def interaction_workbench(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWorkbench]:
+    """One real quarterly declaration for the interaction checks.
+
+    Seeding encrypted storage dominates a case, and these cases only stage edits
+    on a mounted screen; the typed-value check itself asserts the stored form is
+    unchanged afterwards.
+    """
+    with real_workbench(tmp_path_factory.mktemp("acceptance-interaction")) as installed:
+        yield installed
+
+
 async def _panel_opened(pilot: Pilot[None]) -> bool:
     """Wait for the box panel Enter opens, docked or in the dialog, once the box's full help has been read."""
     try:
@@ -156,9 +168,10 @@ async def test_no_transport_token_reaches_what_the_filer_reads(
 @pytest.mark.parametrize("size", _SIZES, ids=lambda size: f"{size[0]}x{size[1]}")
 @pytest.mark.parametrize("theme", _THEMES)
 async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(
-    tmp_path: Path, language: OutputLanguage, size: tuple[int, int], theme: str
+    interaction_workbench: InstalledModeloWorkbench, language: OutputLanguage, size: tuple[int, int], theme: str
 ) -> None:
-    with real_workbench(tmp_path) as installed, override_settings(cadrumo_output_language=language.value):
+    installed = interaction_workbench
+    with override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(installed, actions=installed)
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
@@ -197,7 +210,7 @@ async def test_every_dialog_returns_the_focus_to_the_box_it_was_opened_from(
 @pytest.mark.parametrize("size", _SIZES, ids=lambda size: f"{size[0]}x{size[1]}")
 @pytest.mark.parametrize("theme", _THEMES)
 async def test_a_typed_value_is_kept_nowhere_once_abandoned(
-    tmp_path: Path,
+    interaction_workbench: InstalledModeloWorkbench,
     caplog: pytest.LogCaptureFixture,
     language: OutputLanguage,
     size: tuple[int, int],
@@ -205,7 +218,8 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(
 ) -> None:
     caplog.set_level(logging.DEBUG)
     typed = "987654.32" if language is OutputLanguage.EN else "987654,32"
-    with real_workbench(tmp_path) as installed, override_settings(cadrumo_output_language=language.value):
+    installed = interaction_workbench
+    with override_settings(cadrumo_output_language=language.value):
         screen = ModeloWorkbenchScreen(installed, actions=installed)
         app = ScreenHostApp(screen)
         async with app.run_test(size=size) as pilot:
