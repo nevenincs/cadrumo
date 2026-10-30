@@ -441,11 +441,8 @@ def test_native_inventory_closing_authority_replay_and_divergence(tmp_path: Path
             "--quantity",
             "1",
         )
-        assert after_authority.exit_code == 0, after_authority.output
-        post_authority_payload = unwrap_cli_result(after_authority)
-        assert (
-            post_authority_payload["closing_authority_fingerprints"]["record"]
-            == first_authority["authority_record_fingerprint"]
-        )
+        # A recorded closing value ends the year's stock facts; a later movement would contradict it.
+        assert after_authority.exit_code != 0, after_authority.output
+        assert "closing_authority_recorded" in after_authority.output
         for canary in ("prior-secret-ref", "decision-secret-ref", "secret-operator", "e" * 64, "f" * 64):
             assert canary not in after_authority.output
