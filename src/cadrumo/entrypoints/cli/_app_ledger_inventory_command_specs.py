@@ -194,7 +194,7 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(),
-        policy=_POLICY_1,
+        policy=_POLICY_5,
         handler=LazyBinding.available(DeferredTarget(".ledger_inventory_commands", "inventory_options", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
