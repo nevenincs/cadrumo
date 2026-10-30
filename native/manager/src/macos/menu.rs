@@ -1,11 +1,12 @@
-//! Menu policy for the inactive Darwin host. Native installation effects must
-//! be supplied by their real owner before executable composition is possible.
+//! Menu policy for the Darwin host; native effects come from the admitted package.
 
 use crate::{preferences::Preferences, strings::Strings};
 use std::io;
 
 #[cfg(target_os = "macos")]
 pub mod appkit;
+#[cfg(target_os = "macos")]
+pub mod effects;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Action {
@@ -24,8 +25,7 @@ pub struct Availability {
     pub cutover_unsettled: bool,
 }
 
-/// Required native ports. Construction does not call them. No production
-/// implementation is provided until native installation/cutover composition exists.
+/// Required native ports. Construction does not call them.
 pub trait Effects {
     fn availability(&self) -> io::Result<Availability>;
     fn open_application(&mut self) -> io::Result<()>;

@@ -25,8 +25,11 @@ mod posix_tests;
 pub mod process_exit;
 #[cfg(unix)]
 pub mod process_scope;
+pub mod runtime_connect;
 #[cfg(windows)]
 pub mod runtime_pipe;
+#[cfg(unix)]
+pub mod runtime_socket;
 pub mod storage;
 #[cfg(target_os = "macos")]
 pub mod transport;

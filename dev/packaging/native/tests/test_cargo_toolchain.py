@@ -49,9 +49,9 @@ def test_test_program_target_dir_is_not_a_cargo_override(tmp_path: Path) -> None
             "--locked",
             "--manifest-path",
             "Cargo.toml",
-            "check",
             "--config",
             "deny.toml",
+            "check",
             "--hide-inclusion-graph",
             "advisories",
             "bans",
@@ -75,10 +75,12 @@ def test_quality_commands_use_owned_cargo_paths(
     def command(_argv: list[str], **kwargs: Any) -> Any:
         assert kwargs["environment"]["CARGO_BUILD_TARGET_DIR"] == str(native)
         assert kwargs["environment"]["CARGO_BUILD_BUILD_DIR"] == str(native)
+        assert kwargs["environment"]["PATH"].split(os.pathsep)[0] == str(toolchain)
         return SimpleNamespace(returncode=0)
 
     monkeypatch.setattr(cargo_command, "run_command", command)
-    assert run_configured_command(tmp_path, {}, ["cargo", *arguments]).returncode == 0
+    toolchain = tmp_path / "toolchain/bin"
+    assert run_configured_command(tmp_path, {}, [str(toolchain / "cargo"), *arguments]).returncode == 0
 
 
 def _toolchain(wrapper: Path) -> dict[str, Any]:

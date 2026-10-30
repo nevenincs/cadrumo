@@ -14,7 +14,7 @@ from ..desktop_holder_identity import descends_from_this_runtime
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_inbound_adapter,
-    pytest.mark.skipif(sys.platform not in ("win32", "linux"), reason="reads native process ancestry"),
+    pytest.mark.skipif(sys.platform not in ("win32", "linux", "darwin"), reason="reads native process ancestry"),
 ]
 
 

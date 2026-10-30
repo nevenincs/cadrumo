@@ -1739,10 +1739,7 @@ fn recover_activity_after_release(
     if !matches!(error, Error::Io(error) if error.kind() == std::io::ErrorKind::PermissionDenied) {
         return None;
     }
-    if !activity
-        .ended(item)
-        .is_some_and(|ended| ended.run == run.id)
-    {
+    if activity.ended(item).is_none_or(|ended| ended.run != run.id) {
         return None;
     }
     let released = Arc::new(AtomicBool::new(false));

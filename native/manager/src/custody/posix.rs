@@ -18,6 +18,8 @@ const DIRECTORY_FLAGS: libc::c_int =
     libc::O_RDONLY | libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_CLOEXEC;
 const RECORD_MODE: libc::c_uint = 0o600;
 const DIRECTORY_MODE: libc::mode_t = 0o700;
+/// Further attempts at a lock create that a concurrent creator made report its leaf missing.
+const CREATE_RACE_RETRIES: u32 = 8;
 
 /// The parent directory, opened by a walk that followed no link.
 #[derive(Debug)]
@@ -95,12 +97,26 @@ pub(super) fn acquire_lock(
     name: &OsStr,
     deadline: Instant,
 ) -> io::Result<Option<File>> {
-    let file = regular(File::from(open_at(
-        anchor.0.as_raw_fd(),
-        &c_name(name)?,
-        libc::O_RDWR | libc::O_CREAT | libc::O_NOFOLLOW | libc::O_CLOEXEC,
-        RECORD_MODE,
-    )?))?;
+    let name = c_name(name)?;
+    let mut attempts = 0;
+    let descriptor = loop {
+        match open_at(
+            anchor.0.as_raw_fd(),
+            &name,
+            libc::O_RDWR | libc::O_CREAT | libc::O_NOFOLLOW | libc::O_CLOEXEC,
+            RECORD_MODE,
+        ) {
+            // A create racing another creator of the same leaf can transiently report it
+            // missing on some kernels, although the held anchor keeps its directory alive.
+            Err(error)
+                if error.kind() == io::ErrorKind::NotFound && attempts < CREATE_RACE_RETRIES =>
+            {
+                attempts += 1;
+            }
+            result => break result?,
+        }
+    };
+    let file = regular(File::from(descriptor))?;
     loop {
         match file.try_lock() {
             Ok(()) => return Ok(Some(file)),

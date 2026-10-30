@@ -12,12 +12,13 @@ from __future__ import annotations
 import os
 import sys
 from dataclasses import dataclass
+from typing import cast
 from uuid import uuid4
 
 import pytest
 
 from cadrumo_client.contracts.access_vocabulary import AccessScope
-from cadrumo_client.contracts.contracts import Peer
+from cadrumo_client.contracts.contracts import ByteChannel, Peer
 from cadrumo_client.contracts.service_access import InstalledParentImage, InstalledServiceDescriptor
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_runtime.adapters import service_verification
@@ -81,7 +82,7 @@ def _peer() -> tuple[ConnectionContext, _Channel]:
 
 def _window_peer(context: ConnectionContext, channel: _Channel, descriptor: InstalledServiceDescriptor) -> bool:
     verifier = _Verifier(native_process_identity(os.getpid(), _owner()).image, [])
-    return desktop_window_peer(verifier, context, channel.peer, descriptor)
+    return desktop_window_peer(verifier, context, cast(ByteChannel, channel), descriptor)
 
 
 @pytest.fixture

@@ -1,5 +1,5 @@
-//! Inactive native host lifecycle policy. Installed composition remains gated on
-//! native version ownership, cutover coordination and graphical acceptance.
+//! Native host lifecycle policy: a session end or an explicit Quit, and whether the
+//! supervisor has settled enough for the process to finish.
 
 #[cfg(target_os = "macos")]
 pub mod appkit;
