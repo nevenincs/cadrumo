@@ -46,7 +46,11 @@ from ....application.actividad_asset.operation_dtos import (
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
 )
-from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
+from ....application.actividad_asset.operations import (
+    ActivityAssetFilingHandoff,
+    M130AccrualProjection,
+    M130Contribution,
+)
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection, asset_schedule_history
@@ -66,6 +70,7 @@ from ....domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ....domain.renta.actividad_asset.schedule import ScheduleAuthority, ScheduledAmortizationCharge, schedule_charge
 from .. import operation_ledger_actividad_asset as bridge
 
@@ -179,10 +184,12 @@ def test_create_bridge_sends_exact_profile_revision_and_correlates_history(
         request_type=ActivityAssetCreateRequest,
     )
 
-    assert bridge.create_activity_asset(_context(), revision=revision) is projection
+    descriptor = ActivityAssetDescriptorFacts(name="Office laptop", serial_number="SN-1")
+    assert bridge.create_activity_asset(_context(), revision=revision, descriptor=descriptor) is projection
     request = cast(ActivityAssetCreateRequest, requests[0])
     assert request.profile_id == _PROFILE
     assert request.revision.to_domain() == revision
+    assert request.descriptor == descriptor
 
 
 def test_inspect_bridge_correlates_full_revision_identity_and_read_only_effect(
@@ -302,7 +309,7 @@ def test_claim_bridge_correlates_exact_claim_identity_and_update_effect(monkeypa
     claim = AmortizationClaim.from_schedule(
         schedule,
         asset_kind=revision.asset_kind,
-        creating_operation="bridge.claim",
+        creating_operation=ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     )
     domain_result = ActivityAssetHistoryClaimResult(
         history=ActivityAssetHistory(revisions=(revision,), claims=(claim,)),
@@ -332,7 +339,6 @@ def test_claim_bridge_correlates_exact_claim_identity_and_update_effect(monkeypa
         bridge.claim_activity_asset(
             _context(),
             forecast=schedule,
-            creating_operation="bridge.claim",
             supersedes_claim_id=None,
         )
         is projection
@@ -340,7 +346,6 @@ def test_claim_bridge_correlates_exact_claim_identity_and_update_effect(monkeypa
     request = cast(ActivityAssetClaimRequest, requests[0])
     assert request.profile_id == _PROFILE
     assert request.forecast.to_domain() == schedule
-    assert request.creating_operation == "bridge.claim"
     claim_result = projection.claim_result
     if claim_result is None:
         raise AssertionError("claim projection omitted its claim result")
@@ -349,19 +354,23 @@ def test_claim_bridge_correlates_exact_claim_identity_and_update_effect(monkeypa
 
 def test_filing_handoff_bridge_correlates_requested_frame_without_effect(monkeypatch: pytest.MonkeyPatch) -> None:
     projection_row = ClaimProjection(
-        target_casilla_id="06",
+        target_casilla_id="0208",
         tax_year=2025,
         claim_ids=("c" * 64,),
         amount=Decimal("78.00"),
     )
     empty_row = projection_row.model_copy(
-        update={"target_casilla_id": "07", "claim_ids": (), "amount": Decimal("0.00")}
+        update={"target_casilla_id": "0227", "claim_ids": (), "amount": Decimal("0.00")}
     )
     handoff = ActivityAssetFilingHandoff(
         material_m100=projection_row,
         intangible_m100=empty_row,
-        material_m130=projection_row,
-        intangible_m130=empty_row,
+        material_m130=M130AccrualProjection(
+            tax_year=2025,
+            amount=Decimal("78.00"),
+            contributions=(M130Contribution(asset_id="asset-1", amount=Decimal("78.00"), claim_id="c" * 64),),
+        ),
+        intangible_m130=M130AccrualProjection(tax_year=2025, amount=Decimal("0.00")),
     )
     projection = ActivityAssetFilingHandoffProjection(
         profile_id=_PROFILE,

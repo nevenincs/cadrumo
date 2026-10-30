@@ -11,42 +11,52 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from ...application.actividad_asset.activity_asset_contracts import (
+    ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID,
     ActivityAssetAuthorityProvenance,
     ActivityAssetClaimRequest,
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
+    ActivityAssetDescribeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
     ActivityAssetInspectRequest,
 )
 from ...application.actividad_asset.activity_asset_projections import (
+    ActivityAssetAcquisitionCandidatesProjection,
     ActivityAssetClaimProjection,
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
+    ActivityAssetDescribeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
+    ActivityAssetFormOptionsProjection,
     ActivityAssetInspectProjection,
+    ActivityAssetListProjection,
+    ActivityAssetPlanProjection,
+    ActivityAssetTimelineProjection,
 )
 from ...application.actividad_asset.history import ActivityAssetHistory
-from ...application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ...application.actividad_asset.ports import ActivityAssetHistoryRepository as ActivityAssetHistoryPort
 from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
-from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_directa_normal_token
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     asset_schedule_history,
     project_m100,
-    project_m130,
 )
 from ...domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -212,6 +222,12 @@ def assert_activity_asset_conformance_result(
             ActivityAssetForecastProjection,
             ActivityAssetClaimProjection,
             ActivityAssetFilingHandoffProjection,
+            ActivityAssetDescribeProjection,
+            ActivityAssetListProjection,
+            ActivityAssetPlanProjection,
+            ActivityAssetTimelineProjection,
+            ActivityAssetFormOptionsProjection,
+            ActivityAssetAcquisitionCandidatesProjection,
         ),
     )
     assert isinstance(projection.authority, ActivityAssetAuthorityProvenance)
@@ -223,9 +239,12 @@ def assert_activity_asset_conformance_result(
         assert isinstance(payload, ActivityAssetCreateRequest)
         assert isinstance(projection, ActivityAssetCreateProjection)
         revision = payload.revision.to_domain()
-        expected = ActivityAssetHistory(revisions=(revision,))
         assert before == ActivityAssetHistory()
-        assert after == expected
+        assert after.revisions == (revision,)
+        assert after.claims == ()
+        descriptor = after.current_descriptor(revision.asset_id)
+        assert descriptor is not None
+        assert descriptor.facts == payload.descriptor
         assert projection.history is not None
         assert projection.history.to_domain() == after
         return
@@ -246,8 +265,8 @@ def assert_activity_asset_conformance_result(
     if definition_id == ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID:
         assert isinstance(payload, ActivityAssetCorrectRequest)
         assert isinstance(projection, ActivityAssetCorrectProjection)
-        expected = before.append_revision(payload.revision.to_domain())
-        assert after == expected
+        assert after.revisions == (*before.revisions, payload.revision.to_domain())
+        assert after.claims == before.claims
         assert projection.history is not None
         assert projection.history.to_domain() == after
         return
@@ -298,7 +317,7 @@ def assert_activity_asset_conformance_result(
         expected_claim = AmortizationClaim.from_schedule(
             payload.forecast.to_domain(),
             asset_kind=revision.asset_kind,
-            creating_operation=payload.creating_operation,
+            creating_operation=ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
             supersedes_claim_id=payload.supersedes_claim_id,
         )
         assert len(after.claims) == len(before.claims) + 1
@@ -315,17 +334,65 @@ def assert_activity_asset_conformance_result(
     if definition_id == ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID:
         assert isinstance(payload, ActivityAssetFilingHandoffRequest)
         assert isinstance(projection, ActivityAssetFilingHandoffProjection)
-        period = Period.from_year_and_code(payload.tax_year, payload.m130_period)
-        expected = ActivityAssetFilingHandoff(
-            material_m100=project_m100(after.claims, asset_kind=AssetKind.MATERIAL, tax_year=payload.tax_year),
-            intangible_m100=project_m100(after.claims, asset_kind=AssetKind.INTANGIBLE, tax_year=payload.tax_year),
-            material_m130=project_m130(after.claims, period=period, asset_kind=AssetKind.MATERIAL),
-            intangible_m130=project_m130(after.claims, period=period, asset_kind=AssetKind.INTANGIBLE),
-        )
         assert after == before
         assert (projection.tax_year, projection.m130_period) == (payload.tax_year, payload.m130_period)
         assert projection.filing_handoff is not None
-        assert projection.filing_handoff.to_domain() == expected
+        handoff = projection.filing_handoff.to_domain()
+        assert handoff.material_m100 == project_m100(
+            after.claims,
+            asset_kind=AssetKind.MATERIAL,
+            tax_year=payload.tax_year,
+        )
+        # EUR 300.00 at the published 26% for the full year 2025.
+        assert handoff.material_m130.amount == Decimal("78.00")
+        assert [item.amount for item in handoff.material_m130.contributions] == [Decimal("78.00")]
+        assert handoff.intangible_m130.contributions == ()
+        return
+
+    assert after == before or definition_id == ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID
+
+    if definition_id == ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID:
+        assert isinstance(payload, ActivityAssetDescribeRequest)
+        assert isinstance(projection, ActivityAssetDescribeProjection)
+        assert after.same_tax_facts(before)
+        descriptor = after.current_descriptor(payload.asset_id)
+        assert descriptor is not None
+        assert descriptor.facts == payload.descriptor
+        assert projection.history is not None
+        assert projection.history.to_domain() == after
+        return
+
+    if definition_id == ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID:
+        assert isinstance(projection, ActivityAssetListProjection)
+        assert projection.rows is not None
+        assert [row.basis.decimal for row in projection.rows] == ["300.00"]
+        return
+
+    if definition_id == ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID:
+        assert isinstance(projection, ActivityAssetPlanProjection)
+        assert projection.rows is not None
+        assert projection.rows[0].tax_year == 2025
+        assert projection.rows[0].planned is not None
+        assert projection.rows[0].planned.decimal == "78.00"
+        return
+
+    if definition_id == ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID:
+        assert isinstance(projection, ActivityAssetTimelineProjection)
+        assert projection.events is not None
+        assert [event.kind.value for event in projection.events] == ["revision", "claim"]
+        assert projection.events[1].claim is not None
+        assert projection.events[1].claim.matches_current_schedule is True
+        return
+
+    if definition_id == ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID:
+        assert isinstance(projection, ActivityAssetFormOptionsProjection)
+        assert projection.options is not None
+        assert "equipo-proceso-informacion" in {group.class_key for group in projection.options.table_groups}
+        return
+
+    if definition_id == ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID:
+        assert isinstance(projection, ActivityAssetAcquisitionCandidatesProjection)
+        assert projection.candidates == ()
         return
 
     raise AssertionError(f"unknown activity-asset conformance operation: {definition_id}")

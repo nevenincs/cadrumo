@@ -72,6 +72,10 @@ class MemoryLedger:
         """Hold the rows by their content-derived identifiers."""
         self._transactions = {item.transaction_id: item for item in transactions}
 
+    def load(self) -> TransactionCatalogue:
+        """Return every held row."""
+        return self.load_by_ids(self._transactions)
+
     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
         """Return the held rows addressed by ``transaction_ids``."""
         with bundled_indexed_authority().operation():

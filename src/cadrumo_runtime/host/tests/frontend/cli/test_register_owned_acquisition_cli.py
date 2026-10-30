@@ -36,7 +36,6 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
@@ -45,7 +44,6 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
-from cadrumo.tests.storage_scope import storage_overrides
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
@@ -90,19 +88,6 @@ _M100_ANNUAL_ANSWERS = (
 
 #: No earlier Modelo 130 was filed, so the carried prior-payment figure is zero.
 _NO_PRIOR_PAGOS_FRACCIONADOS = ("--binding", "modelo-130-pagos-fraccionados-anteriores=0.00")
-
-
-def _prepare_cli_directories(tmp_path: Path) -> None:
-    for directory in storage_overrides(
-        tmp_path,
-        StorageCategory.SECRETS,
-        StorageCategory.TOKENS,
-        StorageCategory.RUNS,
-        StorageCategory.DRAFTS,
-        StorageCategory.FINANCIAL_TRANSACTIONS,
-        StorageCategory.INVOICES,
-    ).values():
-        directory.mkdir(parents=True, exist_ok=True)
 
 
 def _seed_ready_profile(root: Path, profile_id: str) -> None:
@@ -366,7 +351,6 @@ def _calculated_casillas(*, modelo: str, period: str, options: tuple[str, ...] =
 
 def test_register_owned_acquisition_deducts_the_charge_and_keeps_its_input_iva(tmp_path: Path) -> None:
     """The supported route: ledger purchase plus register claim, with no collision."""
-    _prepare_cli_directories(tmp_path)
     with runtime_cli_profile(tmp_path=tmp_path, label="asset acquisition") as profile:
         _seed_ready_profile(profile.storage_root, profile.bucket_id)
         _seed_zero_iva_compensation()
@@ -403,7 +387,6 @@ def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Pat
     deduct the year's depreciation twice. Both the quarterly and the annual
     calculation refuse and name what to reclassify or reverse.
     """
-    _prepare_cli_directories(tmp_path)
     with runtime_cli_profile(tmp_path=tmp_path, label="asset collision") as profile:
         _seed_ready_profile(profile.storage_root, profile.bucket_id)
         transaction_id = _add_machine_purchase(_add_supplier_invoice_evidence(tmp_path))

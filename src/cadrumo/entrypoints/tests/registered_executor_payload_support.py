@@ -54,6 +54,8 @@ from ...application.inventory.tests.registered_operation_conformance_support imp
     prepare_inventory_operation_conformance_case,
 )
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
+from ...domain.renta.actividad_asset.lifecycle import AssetKind
+from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...application.invoices.catalogue_read_operation import INVOICE_LIST_OPERATION_DEFINITION_ID
 from ...application.invoices.catalogue_remove_operation import INVOICE_REMOVE_OPERATION_DEFINITION_ID
 from ...application.invoices.catalogue_update_operation import (
@@ -1437,6 +1439,7 @@ def _payload(
                         acquisition_transaction_id=seed_acquisition_transaction(profile_id, operation=operation),
                     )
                 ),
+                "descriptor": ActivityAssetDescriptorFacts(name="Conformance element", serial_number="SN-1"),
             }
         case (
             "ledger.actividad-asset.inspect"
@@ -1444,18 +1447,33 @@ def _payload(
             | "ledger.actividad-asset.forecast"
             | "ledger.actividad-asset.claim"
             | "ledger.actividad-asset.filing-handoff"
+            | "ledger.actividad-asset.describe"
+            | "ledger.actividad-asset.list"
+            | "ledger.actividad-asset.plan"
+            | "ledger.actividad-asset.timeline"
+            | "ledger.actividad-asset.form-options"
+            | "ledger.actividad-asset.acquisition-candidates"
         ):
             action = definition.definition_id.rsplit(".", 1)[1]
             asset_seed = seed_activity_asset(
                 profile_id,
                 operation=operation,
                 asset_id=f"conformance-{action}",
-                include_claim=action == "filing-handoff",
+                include_claim=action in {"filing-handoff", "timeline"},
             )
             subject_ref = profile_operation_subject(str(profile_id))
             values = {"profile_id": profile_id}
-            if action == "inspect":
+            if action in {"inspect", "plan", "timeline"}:
                 values["asset_id"] = asset_seed.revision.asset_id
+            elif action == "describe":
+                values.update(
+                    asset_id=asset_seed.revision.asset_id,
+                    descriptor=ActivityAssetDescriptorFacts(name="Conformance element", serial_number="SN-1"),
+                )
+            elif action == "form-options":
+                values.update(asset_kind=AssetKind.MATERIAL, tax_year=2025)
+            elif action in {"list", "acquisition-candidates"}:
+                pass
             elif action == "correct":
                 values["revision"] = ActivityAssetRevisionSnapshot.from_domain(
                     activity_asset_revision(
@@ -1472,7 +1490,6 @@ def _payload(
             elif action == "claim":
                 values.update(
                     forecast=ScheduledAmortizationChargeSnapshot.from_domain(asset_seed.forecast),
-                    creating_operation="activity-asset-conformance.claim",
                 )
             else:
                 values.update(tax_year=2025, m130_period="4T")

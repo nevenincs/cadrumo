@@ -12,7 +12,7 @@ from decimal import Decimal
 from threading import Event
 
 from .....application.actividad_asset.history import ActivityAssetHistoryClaimResult
-from .....application.actividad_asset.operations import ActivityAssetFilingHandoff
+from .....application.actividad_asset.operations import ActivityAssetFilingHandoff, M130AccrualProjection
 from .....domain.renta.actividad_asset.claims import ClaimProjection
 from .....domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -81,7 +81,7 @@ def activity_asset_forecast(
     covered_from: date,
     covered_until: date,
     history: AssetScheduleHistory,
-    requested_free_amount: Decimal | None,
+    requested_free_amount: Decimal | None = None,
 ) -> ScheduledAmortizationCharge:
     """Schedule one charge for *revision* under a fixture-only authority."""
     return schedule_charge(
@@ -169,10 +169,6 @@ class ActivityAssetActionStub:
             intangible_m100=ClaimProjection(
                 target_casilla_id="0114", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
             ),
-            material_m130=ClaimProjection(
-                target_casilla_id="0120", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
-            ),
-            intangible_m130=ClaimProjection(
-                target_casilla_id="0121", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
-            ),
+            material_m130=M130AccrualProjection(tax_year=request.tax_year, amount=Decimal("0.00")),
+            intangible_m130=M130AccrualProjection(tax_year=request.tax_year, amount=Decimal("0.00")),
         )
