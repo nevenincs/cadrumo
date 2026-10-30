@@ -78,10 +78,10 @@ from ...modelo.calculation_notes import GATE_REFUSED_REASONS
 from ..source_mesh import CalculationSourceResolution
 from .test_modelo_source_mesh_ledger import (
     _m130_binding_id,
-    _machine_acquisition_transaction,
-    _reasons,
     _renta_expense_binding_id,
     _revision,
+    machine_acquisition_transaction,
+    reasons,
     resolve_m100,
     resolve_m130,
 )
@@ -119,7 +119,7 @@ def _purchase(name: str, price: str, *, activity: str | None = None) -> Transact
     """The bank row of a purchase in a register-owned amortization category: price plus 21 % IVA."""
     base = Decimal(price)
     iva = (base * Decimal("0.21")).quantize(Decimal("0.01"))
-    row = _machine_acquisition_transaction(
+    row = machine_acquisition_transaction(
         str(amortizable_spending_categories()[0]),
         provider_id=name,
         amount=base + iva,
@@ -740,7 +740,7 @@ def test_a_claim_gap_is_a_non_blocking_finding_and_no_deduction_is_invented(
     assert first_quarter.amount == Decimal("295.89")
     assert (box_0208, box_0227) == (Decimal("295.89"), _ZERO)
     assert len(gaps) == 2
-    assert not set(_reasons(annual)) & GATE_REFUSED_REASONS
+    assert not set(reasons(annual)) & GATE_REFUSED_REASONS
     by_asset = {item.source_ref: item.message for item in gaps}
     # 1.200,00 less the 295,89 claimed; the whole 50,00 of the unclaimed goodwill.
     assert "904.11 EUR accrued" in by_asset["activity-asset:machine"]
@@ -808,7 +808,7 @@ def test_no_ledger_category_reaches_0208_or_0227_without_the_register(operation:
     assert categories
 
     for index, category in enumerate(categories):
-        row = _machine_acquisition_transaction(str(category), provider_id=f"unregistered-{index}")
+        row = machine_acquisition_transaction(str(category), provider_id=f"unregistered-{index}")
         register = _register(operation, row)
 
         box_0208, box_0227, annual = _m100(register)
@@ -816,5 +816,5 @@ def test_no_ledger_category_reaches_0208_or_0227_without_the_register(operation:
 
         assert (box_0208, box_0227, box_02) == (_ZERO, _ZERO, _ZERO), category
         for resolution in (annual, quarterly):
-            assert "ledger_amortization_row_unregistered" in _reasons(resolution), category
+            assert "ledger_amortization_row_unregistered" in reasons(resolution), category
             assert row.transaction_id not in resolution.source_transaction_ids, category

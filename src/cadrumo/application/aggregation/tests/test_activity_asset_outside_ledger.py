@@ -20,13 +20,13 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     ActivityAssetRevision,
 )
 
+from ...actividad_asset.acquisition_candidates import acquisition_candidates
 from ...actividad_asset.acquisition_ledger import require_acquisition_in_ledger
 from ...actividad_asset.history import ActivityAssetHistory
 from ...actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
-from ...actividad_asset.register_reads import acquisition_candidates
 from ...actividad_asset.tests.ledger_support import MemoryLedger, acquisition_transaction
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
-from .test_modelo_source_mesh_ledger import _reasons, _register_claim, register_asset, resolve_m100, resolve_m130
+from .test_modelo_source_mesh_ledger import _register_claim, reasons, register_asset, resolve_m100, resolve_m130
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -63,8 +63,8 @@ def test_a_claim_reaches_modelo_100_and_the_instalment_with_no_row() -> None:
     annual = resolve_m100(history)
 
     assert Decimal("1200.00") in annual.binding_values.values()
-    assert set(_reasons(annual)) & GATE_REFUSED_REASONS == set()
-    assert set(_reasons(resolve_m130(history, "4T"))) & GATE_REFUSED_REASONS == set()
+    assert set(reasons(annual)) & GATE_REFUSED_REASONS == set()
+    assert set(reasons(resolve_m130(history, "4T"))) & GATE_REFUSED_REASONS == set()
 
 
 def test_a_baja_routes_its_gain_with_no_row() -> None:
@@ -83,7 +83,7 @@ def test_a_baja_routes_its_gain_with_no_row() -> None:
         value for binding, value in resolution.binding_values.items() if str(binding).endswith("gain-element-1654")
     ]
     assert gains == [Decimal("297.53")]
-    assert set(_reasons(resolution)) & GATE_REFUSED_REASONS == set()
+    assert set(reasons(resolution)) & GATE_REFUSED_REASONS == set()
 
 
 @pytest.mark.parametrize("reference", ["", "   "])
@@ -122,9 +122,9 @@ def test_an_agrarian_element_stays_out_of_the_instalment_and_in_the_annual_retur
     excluded = resolve_m130(agrarian_history, "4T")
     counted = resolve_m130(other_history, "4T")
 
-    assert "activity_asset_agrarian_excluded" in _reasons(excluded)
+    assert "activity_asset_agrarian_excluded" in reasons(excluded)
     assert sum(excluded.binding_values.values(), Decimal("0")) == Decimal("0")
-    assert "activity_asset_agrarian_excluded" not in _reasons(counted)
+    assert "activity_asset_agrarian_excluded" not in reasons(counted)
     # 12,000 x 10% for the year, the same element counted once its activity is not agrarian.
     assert sum(counted.binding_values.values(), Decimal("0")) == Decimal("1200.00")
     assert Decimal("1200.00") in resolve_m100(agrarian_history).binding_values.values()

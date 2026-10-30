@@ -9,9 +9,11 @@ from functools import cache
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
+    activity_asset_amortization_casillas,
+)
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.categories.registry import resolve_category_profiles
-from ....domain.renta.actividad_asset.claims import M100_AMORTIZATION_CASILLA_IDS
 from ....domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -29,7 +31,7 @@ from ....domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from ....domain.renta.ledger_expenses import renta_first_slice_expense_routing
-from ..modelo_bindings_actividad_assets import (
+from ..activity_asset_expense_reconciliation import (
     LedgerRentaExpenseTreatment,
     amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
@@ -364,10 +366,14 @@ def test_no_labelled_category_reaches_an_amortization_casilla(year: int) -> None
         labelled = amortization_labelled_expense_categories(effective_date=effective_date)
         routing = renta_first_slice_expense_routing(effective_date=effective_date)
         profiles = resolve_category_profiles(year, operation=operation)
+        boxes = activity_asset_amortization_casillas(
+            operation.revision_for_context("100", filing_year=year, period="0A")
+        )
 
     assert labelled
     assert not {category.value for category in routing} & labelled
-    assert not {casilla for casilla in routing.values() if casilla in M100_AMORTIZATION_CASILLA_IDS}
+    assert boxes
+    assert not set(routing.values()) & set(boxes.values())
     assert {
         category.value for category, profile in profiles.items() if profile.proportionality.kind.is_non_deductible
     } >= labelled

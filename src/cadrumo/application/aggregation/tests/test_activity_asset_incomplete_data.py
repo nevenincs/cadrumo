@@ -11,6 +11,9 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
     ActivityAssetDisposalReason,
@@ -22,6 +25,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ...actividad_asset.history import ActivityAssetHistory
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
@@ -29,12 +33,12 @@ from ...modelo.work_profile import ModeloWorkProfile
 from .. import modelo_bindings_actividad_assets
 from ..source_mesh import CalculationSourceResolution
 from .test_modelo_source_mesh_ledger import (
-    _BUCKET_ID,
-    _create_profile_record_for_test,
-    _m130_box,
-    _profile_creation_context_for_test,
-    _reasons,
+    _PRIOR_YEAR_ROW_NOTE,
+    BUCKET_ID,
+    _prior_year_purchase,
     _register_claim,
+    m130_box,
+    reasons,
     register_asset,
     resolve_m100,
     resolve_m130,
@@ -46,7 +50,7 @@ _TRANSACTION = "c" * 64
 
 
 def _blocks(resolution: CalculationSourceResolution) -> set[str]:
-    return set(_reasons(resolution)) & GATE_REFUSED_REASONS
+    return set(reasons(resolution)) & GATE_REFUSED_REASONS
 
 
 def _opening_unknown(asset: ActivityAssetRevision) -> ActivityAssetRevision:
@@ -74,7 +78,7 @@ def _profile(operation, *facts: UserProfileFact) -> ModeloWorkProfile:
     return ModeloWorkProfile(
         record=_create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=BUCKET_ID,
             facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *facts),
             context=_profile_creation_context_for_test(),
         ),
@@ -87,7 +91,7 @@ def test_a_withdrawal_with_an_unknown_opening_stops_nothing(period: str) -> None
     history = _disposed_with_unknown_opening(ActivityAssetDisposalReason.WITHDRAWAL)
 
     assert _blocks(resolve_m100(history)) == set()
-    assert "activity_asset_disposal_finding" not in _reasons(resolve_m100(history))
+    assert "activity_asset_disposal_finding" not in reasons(resolve_m100(history))
     assert _blocks(resolve_m130(history, period)) == set()
 
 
@@ -149,7 +153,7 @@ def test_a_registry_failure_behind_a_baja_is_an_unresolved_finding(monkeypatch: 
     resolution = resolve_m100(ActivityAssetHistory(revisions=(asset, asset.with_disposal(baja))))
 
     assert _blocks(resolution) == set()
-    assert "activity_asset_disposal_finding" in _reasons(resolution)
+    assert "activity_asset_disposal_finding" in reasons(resolution)
 
 
 def _moved_to_navarra_in_2026(operation) -> ModeloWorkProfile:
@@ -171,12 +175,13 @@ def test_a_move_to_foral_territory_in_2026_leaves_the_2025_returns_alone(operati
 
     assert Decimal("1200.00") in annual.binding_values.values()
     assert _blocks(annual) == set()
-    assert _m130_box(fourth_quarter) == Decimal("1200.00")
+    assert m130_box(fourth_quarter) == Decimal("1200.00")
     assert _blocks(fourth_quarter) == set()
 
 
 def test_the_foral_refusal_holds_for_the_period_truly_in_foral_territory(operation) -> None:
-    history = ActivityAssetHistory(revisions=(register_asset("furniture", transaction_id=_TRANSACTION),))
+    row = _prior_year_purchase()
+    history = ActivityAssetHistory(revisions=(register_asset("furniture", transaction_id=row.transaction_id),))
 
     profile = _profile(
         operation,
@@ -184,10 +189,11 @@ def test_the_foral_refusal_holds_for_the_period_truly_in_foral_territory(operati
         UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(2025, 7, 1)),
     )
 
-    assert _reasons(resolve_m100(history, profile=profile)) == ["activity_asset_foral_territory"]
-    assert _reasons(resolve_m130(history, "3T", profile=profile)) == ["activity_asset_foral_territory"]
+    expected = [_PRIOR_YEAR_ROW_NOTE, "activity_asset_foral_territory"]
+    assert reasons(resolve_m100(history, rows=(row,), profile=profile)) == expected
+    assert reasons(resolve_m130(history, "3T", rows=(row,), profile=profile)) == expected
     # 12,000 x 10% x 90 / 365 = 295.89, in the quarter still in common territory.
-    assert _m130_box(resolve_m130(history, "1T", profile=profile)) == Decimal("295.89")
+    assert m130_box(resolve_m130(history, "1T", rows=(row,), profile=profile)) == Decimal("295.89")
 
 
 def test_a_residence_recorded_only_for_later_periods_is_a_finding_and_the_register_still_counts(operation) -> None:
@@ -199,5 +205,5 @@ def test_a_residence_recorded_only_for_later_periods_is_a_finding_and_the_regist
     resolution = resolve_m130(ActivityAssetHistory(revisions=(asset,)), "4T", profile=profile)
 
     assert _blocks(resolution) == set()
-    assert "activity_asset_residence_period_unknown" in _reasons(resolution)
-    assert _m130_box(resolution) == Decimal("1200.00")
+    assert "activity_asset_residence_period_unknown" in reasons(resolution)
+    assert m130_box(resolution) == Decimal("1200.00")

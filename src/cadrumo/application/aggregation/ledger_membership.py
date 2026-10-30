@@ -39,11 +39,13 @@ from .inventory import InventoryLedgerRepositoryProtocol, InventorySourceResolve
 from .modelo_bindings import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
-    LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
 )
 from .modelo_bindings_iva import LedgerIvaAggregationSourceResolver
-from .modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
+from .modelo_bindings_renta_expenses import (
+    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+    LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
+)
 from .oss_ioss import OssIossLedgerSourceResolver
 from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, ModeloSourceResolver
 
@@ -206,6 +208,7 @@ def _collect_ledger_membership(
         ),
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
             transaction_repository=ports.transaction_repository,
+            invoice_reader=ports.invoice_catalogue_read_ports.invoice_reader,
             prorrata_register_repository=ports.prorrata_register_repository,
             usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
             activity_asset_history_repository=ports.activity_asset_history_repository,

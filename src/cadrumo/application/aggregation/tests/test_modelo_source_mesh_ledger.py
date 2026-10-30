@@ -71,7 +71,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ...actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReader, InvoiceCatalogueReadPorts
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS, UNWORKED_BOX_REASONS, note_attention
 from ...modelo.work_form_findings import ModeloFormAttention
 from ...modelo.work_profile import ModeloWorkProfile
@@ -84,10 +84,10 @@ from ..iva_ledger import (
     IvaLedgerAggregationIssueReason,
 )
 from ..ledger_membership import LedgerMembershipPorts, LedgerSourceMembership, _collect_ledger_membership
-from ..modelo_bindings import LedgerRentaGastosPagoFraccionadoAggregationSourceResolver
 from ..modelo_bindings_iva import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
 from ..modelo_bindings_renta_expenses import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+    LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
 )
 from ..oss_ioss import OssIossLedgerCandidate, OssIossLedgerSourceResolver, aggregate_oss_ioss_bindings
 from ..source_mesh import (
@@ -101,7 +101,7 @@ from .usage_ratio_support import no_stored_usage_ratios
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-_BUCKET_ID = "28282828-2828-4828-8828-282828282828"
+BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
 
 class _EmptyInvoiceCatalogueReader:
@@ -143,7 +143,7 @@ class _EmptyActivityAssetHistoryRepository:
         raise AssertionError("empty resolver repository is read-only")
 
 
-class _StaticActivityAssetHistoryRepository(_EmptyActivityAssetHistoryRepository):
+class StaticActivityAssetHistoryRepository(_EmptyActivityAssetHistoryRepository):
     def __init__(self, history: ActivityAssetHistory) -> None:
         self._history = history
 
@@ -259,7 +259,7 @@ class _InMemoryProrrataRegisterRepository:
         self._register = register
 
 
-def _catalogue_read_ports(
+def catalogue_read_ports(
     *,
     invoice_repository: _InMemoryInvoiceCatalogueRepository,
     transaction_repository: InMemoryTransactionCatalogueRepository,
@@ -270,12 +270,12 @@ def _catalogue_read_ports(
     )
 
 
-def _empty_invoice_repository() -> _InMemoryInvoiceCatalogueRepository:
+def empty_invoice_repository() -> _InMemoryInvoiceCatalogueRepository:
     return _InMemoryInvoiceCatalogueRepository()
 
 
-def _empty_prorrata_repository() -> _InMemoryProrrataRegisterRepository:
-    return _InMemoryProrrataRegisterRepository(bucket_id=_BUCKET_ID)
+def empty_prorrata_repository() -> _InMemoryProrrataRegisterRepository:
+    return _InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID)
 
 
 def _ledger_iva_resolver(
@@ -286,13 +286,13 @@ def _ledger_iva_resolver(
 ) -> _LedgerIvaAggregationSourceResolver:
     return _LedgerIvaAggregationSourceResolver(
         transaction_repository=transaction_repository,
-        invoice_catalogue_read_ports=_catalogue_read_ports(
+        invoice_catalogue_read_ports=catalogue_read_ports(
             invoice_repository=invoice_repository,
             transaction_repository=transaction_repository,
         ),
         prorrata_register_repository=prorrata_register_repository,
         investment_asset_register=BienesInversionIvaRegister(),
-        investment_asset_profile_id=_BUCKET_ID,
+        investment_asset_profile_id=BUCKET_ID,
     )
 
 
@@ -337,7 +337,7 @@ def _renta_transaction(
     )
 
 
-def _invoice(tx_id: str, *, bucket_id: str = _BUCKET_ID) -> Invoice:
+def _invoice(tx_id: str, *, bucket_id: str = BUCKET_ID) -> Invoice:
     line = InvoiceLine(
         description="Asesoria fiscal",
         quantity=Decimal("1"),
@@ -373,7 +373,7 @@ def _domestic_iva_invoice(
     issued_at: date,
     taxable_base: Decimal,
     iva_amount: Decimal,
-    bucket_id: str = _BUCKET_ID,
+    bucket_id: str = BUCKET_ID,
     linked_transaction_ids: tuple[str, ...] = (),
     operation_date: date | None = None,
     counterparty_country: str = "ES",
@@ -433,7 +433,7 @@ def _exempt_intracommunity_invoice(
     )
     return Invoice.model_validate(
         {
-            "bucket_id": _BUCKET_ID,
+            "bucket_id": BUCKET_ID,
             "kind": kind,
             "invoice_number": invoice_number,
             "issued_at": issued_at,
@@ -453,7 +453,7 @@ def _exempt_intracommunity_invoice(
 def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
     revision = _revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
     )
     incoming = iva_transaction(
         "sale-general",
@@ -473,11 +473,11 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
-        invoice_repository=_empty_invoice_repository(),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_repository=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -499,8 +499,8 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
 
 def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() -> None:
     revision = _revision("303", "2022")
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
-    prorrata_repo = _InMemoryProrrataRegisterRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
+    prorrata_repo = _InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID)
     outgoing = iva_transaction(
         "purchase-prorrata-general",
         direction=TransactionDirection.OUTGOING,
@@ -527,11 +527,11 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
-        invoice_repository=_empty_invoice_repository(),
+        invoice_repository=empty_invoice_repository(),
         prorrata_register_repository=prorrata_repo,
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -556,7 +556,7 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
 
 def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_transaction_ledger() -> None:
     revision = _m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
     invoice = _domestic_iva_invoice(
         "LAURA-1T-SALE",
@@ -571,10 +571,10 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
         _ledger_iva_resolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
-            prorrata_register_repository=_empty_prorrata_repository(),
+            prorrata_register_repository=empty_prorrata_repository(),
         ).resolve(
             CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 modelo="303",
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
@@ -596,7 +596,7 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
 def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority() -> None:
     """A received invoice reaches no SOPORTADO row until classified authority exists."""
     revision = _m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
     invoice = _domestic_iva_invoice(
         "PURCHASE-WITHOUT-DEDUCTION-AUTHORITY",
@@ -611,10 +611,10 @@ def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority(
         _ledger_iva_resolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
-            prorrata_register_repository=_empty_prorrata_repository(),
+            prorrata_register_repository=empty_prorrata_repository(),
         ).resolve(
             CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 modelo="303",
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
@@ -641,7 +641,7 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
     the Q1 half alone.
     """
     revision = _m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
     invoice = _domestic_iva_invoice(
         "LAURA-Q1-OPERATION-INVOICED-IN-Q2",
@@ -657,10 +657,10 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
         return _ledger_iva_resolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
-            prorrata_register_repository=_empty_prorrata_repository(),
+            prorrata_register_repository=empty_prorrata_repository(),
         ).resolve(
             CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 modelo="303",
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, code),
@@ -685,7 +685,7 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
 
 def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transaction_ledger_matches() -> None:
     revision = _m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
     transaction = iva_transaction(
         "laura-1t-sale",
@@ -709,10 +709,10 @@ def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transac
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
-        prorrata_register_repository=_empty_prorrata_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "1T"),
@@ -738,7 +738,7 @@ def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_
     the proxy case is asserted noisy.
     """
     revision = _m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
     transaction = iva_transaction(
         "laura-1t-sale",
@@ -763,10 +763,10 @@ def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
-        prorrata_register_repository=_empty_prorrata_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "1T"),
@@ -797,7 +797,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     """
     revision = _revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
     )
     # A consumed domestic sale (matches the repercutido-general binding) ...
     domestic_sale = iva_transaction(
@@ -831,11 +831,11 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
-        invoice_repository=_empty_invoice_repository(),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_repository=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -876,7 +876,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation() 
     """
     revision = _revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
     )
     domestic_sale = iva_transaction(
         "sale-general",
@@ -898,11 +898,11 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation() 
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
-        invoice_repository=_empty_invoice_repository(),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_repository=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -928,7 +928,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     """
     revision = _revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
     )
     domestic_sale = iva_transaction(
         "sale-general",
@@ -941,11 +941,11 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
-        invoice_repository=_empty_invoice_repository(),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_repository=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -960,7 +960,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
 def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagnostic() -> None:
     revision = _revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
     )
     personal_q2 = iva_transaction(
         "personal-q2",
@@ -978,11 +978,11 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
-        invoice_repository=_empty_invoice_repository(),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_repository=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -1005,7 +1005,7 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
 def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> None:
     revision = _revision("303", "2022")
     tx_repo = InMemoryTransactionCatalogueRepository(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
     )
     missing_rate = iva_transaction(
         "business-missing-rate",
@@ -1022,11 +1022,11 @@ def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> N
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
-        invoice_repository=_empty_invoice_repository(),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_repository=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -1042,7 +1042,7 @@ def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> N
 def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenance() -> None:
     revision = _revision("100", "2025")
     tx_repo = InMemoryTransactionCatalogueRepository(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
     )
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
     initial = _renta_transaction("renta-linked", purchase_invoice_evidence_id=None)
@@ -1052,13 +1052,13 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        ports=_catalogue_read_ports(invoice_repository=invoice_repo, transaction_repository=tx_repo),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        ports=catalogue_read_ports(invoice_repository=invoice_repo, transaction_repository=tx_repo),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
         activity_asset_history_repository=_EmptyActivityAssetHistoryRepository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
@@ -1078,7 +1078,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
 def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_it() -> None:
     """A depreciation row the register does not own carries a blocking note and reaches no box."""
     revision = _revision("100", "2025")
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     acquisition = _renta_transaction(
         "asset-acquisition",
         purchase_invoice_evidence_id=None,
@@ -1136,16 +1136,16 @@ def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_
     history = ActivityAssetHistory(revisions=(asset,), claims=(claim,))
 
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        ports=_catalogue_read_ports(
+        ports=catalogue_read_ports(
             invoice_repository=_InMemoryInvoiceCatalogueRepository(),
             transaction_repository=tx_repo,
         ),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
-        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
@@ -1206,12 +1206,12 @@ def test_renta_source_mesh_projects_recorded_asset_claim_without_full_cost() -> 
 
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         ports=_empty_catalogue_read_ports(),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
-        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
@@ -1279,7 +1279,7 @@ def machine_claim(asset: ActivityAssetRevision) -> AmortizationClaim:
     )
 
 
-def _machine_acquisition_transaction(
+def machine_acquisition_transaction(
     category: str,
     *,
     provider_id: str = "machine-acquisition",
@@ -1330,25 +1330,25 @@ def test_renta_source_mesh_declares_only_the_claim_for_a_register_owned_acquisit
     withholding is reported rather than silent.
     """
     revision = _revision("100", "2025")
-    acquisition = _machine_acquisition_transaction("hardware_amortizable")
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    acquisition = machine_acquisition_transaction("hardware_amortizable")
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
     asset = machine_asset(acquisition.transaction_id)
     claim = machine_claim(asset)
 
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        ports=_catalogue_read_ports(
+        ports=catalogue_read_ports(
             invoice_repository=_InMemoryInvoiceCatalogueRepository(),
             transaction_repository=tx_repo,
         ),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
-        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(
             ActivityAssetHistory(revisions=(asset,), claims=(claim,)),
         ),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
@@ -1372,16 +1372,17 @@ def test_renta_source_mesh_declares_only_the_claim_for_a_register_owned_acquisit
 @pytest.mark.parametrize("period", ["1T", "2T"])
 def test_renta_gasto_keeps_only_in_window_held_back_identity_as_durable_evidence(period: str) -> None:
     transaction = _renta_transaction("missing-base-gasto", purchase_invoice_evidence_id=None)
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
         transaction_repository=tx_repo,
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_reader=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=no_stored_usage_ratios,
         activity_asset_history_repository=_EmptyActivityAssetHistoryRepository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="130",
             filing_year=2025,
             period=Period.from_year_and_code(2025, period),
@@ -1400,22 +1401,23 @@ def test_renta_gasto_keeps_only_in_window_held_back_identity_as_durable_evidence
 def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_acquisition() -> None:
     """Modelo 130 casilla 02 carries the same 120,00 charge and not the 1.000,00 purchase."""
     revision = _revision("130", "2019-y-siguientes")
-    acquisition = _machine_acquisition_transaction("hardware_amortizable")
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    acquisition = machine_acquisition_transaction("hardware_amortizable")
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
     asset = machine_asset(acquisition.transaction_id)
     claim = machine_claim(asset)
 
     resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
         transaction_repository=tx_repo,
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_reader=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=no_stored_usage_ratios,
-        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(
             ActivityAssetHistory(revisions=(asset,), claims=(claim,)),
         ),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="130",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),
@@ -1441,29 +1443,30 @@ def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_ac
 def test_renta_gasto_source_mesh_blocks_a_separate_depreciation_row() -> None:
     """A depreciation row outside the register's own acquisition blocks and adds nothing to casilla 02."""
     revision = _revision("130", "2019-y-siguientes")
-    acquisition = _machine_acquisition_transaction("hardware_amortizable")
-    separate_depreciation = _machine_acquisition_transaction(
+    acquisition = machine_acquisition_transaction("hardware_amortizable")
+    separate_depreciation = machine_acquisition_transaction(
         "mobiliario_amortizable",
         provider_id="separate-depreciation-row",
         amount=Decimal("302.50"),
         taxable_base=Decimal("250.00"),
         iva_amount=Decimal("52.50"),
     )
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions((acquisition, separate_depreciation)))
     asset = machine_asset(acquisition.transaction_id)
     claim = machine_claim(asset)
 
     resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
         transaction_repository=tx_repo,
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_reader=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=no_stored_usage_ratios,
-        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(
             ActivityAssetHistory(revisions=(asset,), claims=(claim,)),
         ),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="130",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),
@@ -1564,17 +1567,19 @@ def resolve_m130(
     *,
     rows: tuple[Transaction, ...] = (),
     profile: ModeloWorkProfile | None = None,
+    invoices: InvoiceCatalogueReader | None = None,
 ) -> CalculationSourceResolution:
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions(rows))
     return LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
         transaction_repository=tx_repo,
-        prorrata_register_repository=_empty_prorrata_repository(),
+        invoice_reader=invoices or empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=no_stored_usage_ratios,
-        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="130",
             filing_year=2025,
             period=Period.from_year_and_code(2025, period),
@@ -1590,20 +1595,21 @@ def resolve_m100(
     rows: tuple[Transaction, ...] = (),
     profile: ModeloWorkProfile | None = None,
     year: int = 2025,
+    invoices: InvoiceCatalogueReader | None = None,
 ) -> CalculationSourceResolution:
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions(rows))
     return LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        ports=_catalogue_read_ports(
-            invoice_repository=_InMemoryInvoiceCatalogueRepository(),
-            transaction_repository=tx_repo,
+        ports=InvoiceCatalogueReadPorts(
+            invoice_reader=invoices or _InMemoryInvoiceCatalogueRepository(),
+            transaction_reader=tx_repo,
         ),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
-        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="100",
             filing_year=year,
             period=Period.from_year_and_code(year, "0A"),
@@ -1613,12 +1619,29 @@ def resolve_m100(
     )
 
 
-def _m130_box(resolution: CalculationSourceResolution) -> Decimal:
+def m130_box(resolution: CalculationSourceResolution) -> Decimal:
     return resolution.binding_values[_m130_binding_id(_revision("130", "2019-y-siguientes"))]
 
 
-def _reasons(resolution: CalculationSourceResolution) -> list[str]:
+def reasons(resolution: CalculationSourceResolution) -> list[str]:
     return [item.reason for item in resolution.diagnostics]
+
+
+_PRIOR_YEAR_ROW_NOTE = "source_issue"
+
+
+def _prior_year_purchase() -> Transaction:
+    """The purchase behind a default ``register_asset`` element, booked before the year under calculation.
+
+    Its only trace on a return is the ``_PRIOR_YEAR_ROW_NOTE`` saying the row falls outside the period.
+    """
+    return machine_acquisition_transaction(
+        "hardware_amortizable",
+        amount=Decimal("14520.00"),
+        taxable_base=Decimal("12000.00"),
+        iva_amount=Decimal("2520.00"),
+        year=2024,
+    )
 
 
 def _acquisition_row(provider_id: str, *, activity: str | None) -> Transaction:
@@ -1638,14 +1661,15 @@ def _acquisition_row(provider_id: str, *, activity: str | None) -> Transaction:
 )
 def test_m130_accrues_from_the_schedule_with_no_claim_and_creates_none(period: str, expected: Decimal) -> None:
     """The static repository refuses any write, so reaching a figure proves none was recorded."""
-    asset = register_asset("furniture", transaction_id="c" * 64)
+    row = _prior_year_purchase()
+    asset = register_asset("furniture", transaction_id=row.transaction_id)
 
-    resolution = resolve_m130(ActivityAssetHistory(revisions=(asset,)), period)
+    resolution = resolve_m130(ActivityAssetHistory(revisions=(asset,)), period, rows=(row,))
 
-    assert _m130_box(resolution) == expected
+    assert m130_box(resolution) == expected
     assert [item.contributor_source_kind for item in resolution.provenance] == ["activity_asset_schedule"]
     assert all(item.source_ref.startswith("activity-asset-schedule:") for item in resolution.provenance)
-    assert _reasons(resolution) == []
+    assert reasons(resolution) == [_PRIOR_YEAR_ROW_NOTE]
 
 
 def test_m130_accrual_ignores_a_later_years_claim_and_a_claim_inside_the_year() -> None:
@@ -1661,7 +1685,7 @@ def test_m130_accrual_ignores_a_later_years_claim_and_a_claim_inside_the_year() 
 
     resolution = resolve_m130(ActivityAssetHistory(revisions=(asset,), claims=(in_year, later)), "1T")
 
-    assert _m130_box(resolution) == Decimal("295.89")
+    assert m130_box(resolution) == Decimal("295.89")
 
 
 def test_m130_excludes_an_agrarian_element_but_keeps_the_same_taxpayers_other_activity() -> None:
@@ -1673,23 +1697,24 @@ def test_m130_excludes_an_agrarian_element_but_keeps_the_same_taxpayers_other_ac
 
     resolution = resolve_m130(ActivityAssetHistory(revisions=(farm, office)), "1T", rows=(farm_row, office_row))
 
-    assert _m130_box(resolution) == Decimal("295.89")
+    assert m130_box(resolution) == Decimal("295.89")
     excluded = [item for item in resolution.diagnostics if item.reason == "activity_asset_agrarian_excluded"]
     assert [item.source_ref for item in excluded] == ["activity-asset:farm-machine"]
 
 
 def test_m130_counts_an_element_with_no_declared_activity_and_says_so_only_beside_an_agrarian_one() -> None:
-    silent = register_asset("unmarked", transaction_id="c" * 64)
+    silent_row = _prior_year_purchase()
+    silent = register_asset("unmarked", transaction_id=silent_row.transaction_id)
     farm_row = _acquisition_row("farm-machine", activity="B05")
     farm = register_asset("farm-machine", transaction_id=farm_row.transaction_id)
 
-    alone = resolve_m130(ActivityAssetHistory(revisions=(silent,)), "1T")
-    beside = resolve_m130(ActivityAssetHistory(revisions=(silent, farm)), "1T", rows=(farm_row,))
+    alone = resolve_m130(ActivityAssetHistory(revisions=(silent,)), "1T", rows=(silent_row,))
+    beside = resolve_m130(ActivityAssetHistory(revisions=(silent, farm)), "1T", rows=(silent_row, farm_row))
 
-    assert _m130_box(alone) == Decimal("295.89")
-    assert _reasons(alone) == []
-    assert _m130_box(beside) == Decimal("295.89")
-    assert "activity_asset_activity_undeclared" in _reasons(beside)
+    assert m130_box(alone) == Decimal("295.89")
+    assert reasons(alone) == [_PRIOR_YEAR_ROW_NOTE]
+    assert m130_box(beside) == Decimal("295.89")
+    assert "activity_asset_activity_undeclared" in reasons(beside)
 
 
 def test_m130_free_method_contributes_only_its_claims_ending_within_the_span() -> None:
@@ -1710,23 +1735,24 @@ def test_m130_free_method_contributes_only_its_claims_ending_within_the_span() -
     )
     claimed = resolve_m130(ActivityAssetHistory(revisions=(asset,), claims=(within, beyond)), "1T")
 
-    assert _m130_box(unclaimed) == Decimal("0")
+    assert m130_box(unclaimed) == Decimal("0")
     gap = [item for item in unclaimed.diagnostics if item.reason == "activity_asset_claim_gap"]
     assert [item.source_ref for item in gap] == ["activity-asset:research-lab"]
-    assert _m130_box(claimed) == Decimal("700.00")
+    assert m130_box(claimed) == Decimal("700.00")
     assert {item.source_ref for item in claimed.provenance} == {f"activity-asset-claim:{within.claim_id}"}
-    assert "activity_asset_claim_gap" not in _reasons(claimed)
+    assert "activity_asset_claim_gap" not in reasons(claimed)
 
 
 def test_m130_reports_an_element_whose_schedule_cannot_be_worked_out() -> None:
-    asset = register_asset("furniture", transaction_id="c" * 64).model_copy(
+    row = _prior_year_purchase()
+    asset = register_asset("furniture", transaction_id=row.transaction_id).model_copy(
         update={"opening_history": OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING)},
     )
 
-    resolution = resolve_m130(ActivityAssetHistory(revisions=(asset,)), "1T")
+    resolution = resolve_m130(ActivityAssetHistory(revisions=(asset,)), "1T", rows=(row,))
 
-    assert _m130_box(resolution) == Decimal("0")
-    assert _reasons(resolution) == ["activity_asset_accrual_unavailable"]
+    assert m130_box(resolution) == Decimal("0")
+    assert reasons(resolution) == [_PRIOR_YEAR_ROW_NOTE, "activity_asset_accrual_unavailable"]
 
 
 def test_m100_with_no_claims_invents_nothing_and_reports_the_gap_without_refusing() -> None:
@@ -1776,8 +1802,8 @@ def test_a_gap_in_a_past_year_neither_blocks_nor_is_reported_in_a_later_year() -
 
     resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,), claims=(current_year,)))
 
-    assert "activity_asset_claim_gap" not in _reasons(resolution)
-    assert not set(_reasons(resolution)) & GATE_REFUSED_REASONS
+    assert "activity_asset_claim_gap" not in reasons(resolution)
+    assert not set(reasons(resolution)) & GATE_REFUSED_REASONS
 
 
 def test_with_complete_claims_m130_fourth_quarter_equals_0208_plus_0227() -> None:
@@ -1807,7 +1833,7 @@ def test_with_complete_claims_m130_fourth_quarter_equals_0208_plus_0227() -> Non
     revision = _revision("100", "2025")
     material_box = annual.binding_values[_renta_expense_binding_id(revision, "0208")]
     assert material_box == Decimal("1200.00")
-    assert _m130_box(quarterly) == Decimal("1250.00")
+    assert m130_box(quarterly) == Decimal("1250.00")
     intangible_binding = next(
         (
             binding.id
@@ -1823,8 +1849,8 @@ def test_with_complete_claims_m130_fourth_quarter_equals_0208_plus_0227() -> Non
         assert len(unrouted) == 1
         assert "50.00" in unrouted[0].message
     else:
-        assert _m130_box(quarterly) == material_box + annual.binding_values[intangible_binding]
-    assert "activity_asset_claim_gap" not in _reasons(annual)
+        assert m130_box(quarterly) == material_box + annual.binding_values[intangible_binding]
+    assert "activity_asset_claim_gap" not in reasons(annual)
 
 
 @pytest.mark.parametrize(
@@ -1841,7 +1867,7 @@ def test_an_unowned_amortization_row_blocks_both_returns_with_no_register_at_all
     taxable_base: Decimal,
     iva_amount: Decimal,
 ) -> None:
-    row = _machine_acquisition_transaction(
+    row = machine_acquisition_transaction(
         "hardware_amortizable",
         provider_id="unregistered-machine",
         amount=amount,
@@ -1859,27 +1885,28 @@ def test_an_unowned_amortization_row_blocks_both_returns_with_no_register_at_all
         assert note_attention(notes[0].reason, box=None) is ModeloFormAttention.MISSING
         assert resolution.source_transaction_ids == ()
     assert annual.binding_values.get(_renta_expense_binding_id(_revision("100", "2025"), "0208"), Decimal("0")) == 0
-    assert _m130_box(quarterly) == Decimal("0")
+    assert m130_box(quarterly) == Decimal("0")
 
 
 def test_a_register_owned_row_is_withheld_not_blocked_even_with_no_claim() -> None:
-    row = _machine_acquisition_transaction("hardware_amortizable")
+    row = machine_acquisition_transaction("hardware_amortizable")
     asset = register_asset("machine", transaction_id=row.transaction_id, basis=Decimal("1000.00"))
 
     resolution = resolve_m130(ActivityAssetHistory(revisions=(asset,)), "2T", rows=(row,))
 
-    assert "ledger_amortization_row_unregistered" not in _reasons(resolution)
-    assert "register_owned_capital_acquisition" in _reasons(resolution)
+    assert "ledger_amortization_row_unregistered" not in reasons(resolution)
+    assert "register_owned_capital_acquisition" in reasons(resolution)
 
 
 @pytest.mark.parametrize("resolve", [resolve_m100, lambda history, **kwargs: resolve_m130(history, "1T", **kwargs)])
 def test_a_foral_period_leaves_registered_assets_out_with_a_finding_and_refuses_nothing(resolve, operation) -> None:
-    asset = register_asset("furniture", transaction_id="c" * 64)
+    row = _prior_year_purchase()
+    asset = register_asset("furniture", transaction_id=row.transaction_id)
     claim = _register_claim(asset, amount=Decimal("1200.00"))
     profile = ModeloWorkProfile(
         record=_create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
                 UserProfileFact(path="tax_residence.ccaa", value="navarra"),
@@ -1889,25 +1916,26 @@ def test_a_foral_period_leaves_registered_assets_out_with_a_finding_and_refuses_
         profile_decode_context=operation.profile_decode_context(),
     )
 
-    resolution = resolve(ActivityAssetHistory(revisions=(asset,), claims=(claim,)), profile=profile)
+    resolution = resolve(ActivityAssetHistory(revisions=(asset,), claims=(claim,)), rows=(row,), profile=profile)
     no_register = resolve(ActivityAssetHistory(), profile=profile)
 
-    assert _reasons(resolution) == ["activity_asset_foral_territory"]
+    assert reasons(resolution) == [_PRIOR_YEAR_ROW_NOTE, "activity_asset_foral_territory"]
     assert "activity_asset_foral_territory" not in GATE_REFUSED_REASONS
-    assert "foral rules" in resolution.diagnostics[0].remedy
+    assert "foral rules" in resolution.diagnostics[1].remedy
     assert sum(resolution.binding_values.values(), Decimal("0")) == Decimal("0")
     assert resolution.provenance == ()
-    assert _reasons(no_register) == []
+    assert reasons(no_register) == []
 
 
 @pytest.mark.parametrize("resolve", [resolve_m100, lambda history, **kwargs: resolve_m130(history, "1T", **kwargs)])
 def test_an_unreadable_residence_leaves_registered_assets_out_with_a_finding(resolve, operation) -> None:
-    asset = register_asset("furniture", transaction_id="c" * 64)
+    row = _prior_year_purchase()
+    asset = register_asset("furniture", transaction_id=row.transaction_id)
     claim = _register_claim(asset, amount=Decimal("1200.00"))
     profile = ModeloWorkProfile(
         record=_create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
                 UserProfileFact(path="tax_residence.ccaa", value="not-a-region"),
@@ -1917,14 +1945,14 @@ def test_an_unreadable_residence_leaves_registered_assets_out_with_a_finding(res
         profile_decode_context=operation.profile_decode_context(),
     )
 
-    resolution = resolve(ActivityAssetHistory(revisions=(asset,), claims=(claim,)), profile=profile)
+    resolution = resolve(ActivityAssetHistory(revisions=(asset,), claims=(claim,)), rows=(row,), profile=profile)
     no_register = resolve(ActivityAssetHistory(), profile=profile)
 
-    assert _reasons(resolution) == ["activity_asset_residence_unresolved"]
+    assert reasons(resolution) == [_PRIOR_YEAR_ROW_NOTE, "activity_asset_residence_unresolved"]
     assert "activity_asset_residence_unresolved" not in GATE_REFUSED_REASONS
     assert sum(resolution.binding_values.values(), Decimal("0")) == Decimal("0")
     assert resolution.provenance == ()
-    assert _reasons(no_register) == []
+    assert reasons(no_register) == []
 
 
 class _UnreadableActivityAssetHistoryRepository(_EmptyActivityAssetHistoryRepository):
@@ -1936,12 +1964,12 @@ class _UnreadableActivityAssetHistoryRepository(_EmptyActivityAssetHistoryReposi
 def test_an_unreadable_history_surfaces_as_a_typed_diagnostic_on_both_resolvers() -> None:
     annual = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         ports=_empty_catalogue_read_ports(),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
         activity_asset_history_repository=_UnreadableActivityAssetHistoryRepository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="100",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
@@ -1949,13 +1977,14 @@ def test_an_unreadable_history_surfaces_as_a_typed_diagnostic_on_both_resolvers(
         ),
     )
     quarterly = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
-        transaction_repository=InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID),
-        prorrata_register_repository=_empty_prorrata_repository(),
+        transaction_repository=InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID),
+        invoice_reader=empty_invoice_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
         usage_ratio_profile_loader=no_stored_usage_ratios,
         activity_asset_history_repository=_UnreadableActivityAssetHistoryRepository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="130",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "1T"),
@@ -1963,8 +1992,8 @@ def test_an_unreadable_history_surfaces_as_a_typed_diagnostic_on_both_resolvers(
         ),
     )
 
-    assert set(_reasons(annual)) == {"storage_degraded"}
-    assert set(_reasons(quarterly)) == {"storage_degraded"}
+    assert set(reasons(annual)) == {"storage_degraded"}
+    assert set(reasons(quarterly)) == {"storage_degraded"}
     assert annual.binding_values == {}
     assert quarterly.binding_values == {}
 
@@ -1991,7 +2020,7 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
         candidates=candidates,
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="369",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),
@@ -2034,7 +2063,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
         candidates=candidates,
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="369",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),
@@ -2070,7 +2099,7 @@ def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota() -> Non
     the invoice past the guard.
     """
     revision = _m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
     invoice = _domestic_iva_invoice(
         "DE-1T-SALE",
@@ -2087,10 +2116,10 @@ def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota() -> Non
         _ledger_iva_resolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
-            prorrata_register_repository=_empty_prorrata_repository(),
+            prorrata_register_repository=empty_prorrata_repository(),
         ).resolve(
             CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 modelo="303",
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
@@ -2117,7 +2146,7 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> 
     what is actually compared.
     """
     revision = _m303_revision()
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
     exempt = _exempt_intracommunity_invoice(
         "DE-1T-EXEMPT",
@@ -2130,10 +2159,10 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
-        prorrata_register_repository=_empty_prorrata_repository(),
+        prorrata_register_repository=empty_prorrata_repository(),
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="303",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "1T"),
@@ -2175,15 +2204,15 @@ def test_an_intangible_claim_reaches_0227_and_a_material_claim_reaches_0208_in_e
 
     assert resolution.binding_values[_renta_expense_binding_id(revision, "0208")] == Decimal("1200.00")
     assert resolution.binding_values[_renta_expense_binding_id(revision, "0227")] == Decimal("700.00")
-    assert "unrouted_observation" not in _reasons(resolution)
-    assert "activity_asset_claim_gap" not in _reasons(resolution)
+    assert "unrouted_observation" not in reasons(resolution)
+    assert "activity_asset_claim_gap" not in reasons(resolution)
 
 
 @pytest.mark.parametrize("category", _AMORTIZABLE_CATEGORIES)
 @pytest.mark.parametrize("year", _filing_years())
 def test_no_ledger_category_reaches_0208_or_0227_and_the_unowned_row_is_reported(year: int, category: str) -> None:
     revision = _m100_revision(year)
-    row = _machine_acquisition_transaction(category, provider_id=f"unregistered-{category}", year=year)
+    row = machine_acquisition_transaction(category, provider_id=f"unregistered-{category}", year=year)
 
     resolution = resolve_m100(ActivityAssetHistory(), rows=(row,), year=year)
 
@@ -2192,7 +2221,7 @@ def test_no_ledger_category_reaches_0208_or_0227_and_the_unowned_row_is_reported
     assert resolution.source_transaction_ids == ()
     notes = [item for item in resolution.diagnostics if item.reason == "ledger_amortization_row_unregistered"]
     assert [note.source_ref for note in notes] == [f"transaction:{row.transaction_id}"]
-    assert "unrouted_observation" not in _reasons(resolution)
+    assert "unrouted_observation" not in reasons(resolution)
 
 
 @pytest.mark.parametrize("category", _AMORTIZABLE_CATEGORIES)
@@ -2202,7 +2231,7 @@ def test_a_register_owned_row_without_a_claim_yields_a_non_blocking_gap_and_no_d
     category: str,
 ) -> None:
     revision = _m100_revision(year)
-    row = _machine_acquisition_transaction(category, provider_id=f"owned-{category}", year=year)
+    row = machine_acquisition_transaction(category, provider_id=f"owned-{category}", year=year)
     asset = register_asset(
         "furniture",
         transaction_id=row.transaction_id,
@@ -2214,18 +2243,18 @@ def test_a_register_owned_row_without_a_claim_yields_a_non_blocking_gap_and_no_d
 
     for casilla in ("0208", "0227"):
         assert resolution.binding_values.get(_renta_expense_binding_id(revision, casilla), Decimal("0")) == 0
-    assert "ledger_amortization_row_unregistered" not in _reasons(resolution)
+    assert "ledger_amortization_row_unregistered" not in reasons(resolution)
     gaps = [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
     assert len(gaps) == 1
     assert gaps[0].reason not in GATE_REFUSED_REASONS
 
 
-class _EmptyInventoryRepository:
+class EmptyInventoryRepository:
     def load(self) -> InventoryLedgerDocument:
         return InventoryLedgerDocument()
 
 
-class _EmptyInvestmentRegisterRepository:
+class EmptyInvestmentRegisterRepository:
     def load(self) -> BienesInversionIvaRegister:
         return BienesInversionIvaRegister()
 
@@ -2245,15 +2274,15 @@ def activity_asset_ledger_membership(
     """Assemble the real register membership for cross-seam drift proofs."""
     ports = LedgerMembershipPorts(
         transaction_repository=tx_repo,
-        invoice_catalogue_read_ports=_catalogue_read_ports(
-            invoice_repository=_empty_invoice_repository(),
+        invoice_catalogue_read_ports=catalogue_read_ports(
+            invoice_repository=empty_invoice_repository(),
             transaction_repository=tx_repo,
         ),
-        prorrata_register_repository=_empty_prorrata_repository(),
-        bienes_inversion_repository=_EmptyInvestmentRegisterRepository(),
-        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+        prorrata_register_repository=empty_prorrata_repository(),
+        bienes_inversion_repository=EmptyInvestmentRegisterRepository(),
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
         usage_ratio_profile_loader=no_stored_usage_ratios,
-        inventory_repository=_EmptyInventoryRepository(),
+        inventory_repository=EmptyInventoryRepository(),
     )
     resolver = (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
@@ -2262,7 +2291,7 @@ def activity_asset_ledger_membership(
     )
     membership: LedgerSourceMembership = _collect_ledger_membership(
         context=CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             work_unit_id=work_unit.work_unit_id,
             modelo=modelo,
             filing_year=2025,

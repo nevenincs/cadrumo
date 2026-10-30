@@ -26,8 +26,8 @@ from cadrumo.domain.renta.actividad_asset.disposal import (
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 
 from ...actividad_asset.history import ActivityAssetHistory
-from ...modelo._calculation_source_staging import add_expected_missing_binding_diagnostics
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
+from ...modelo.tests.source_diagnostics_support import apply_expected_missing_binding_diagnostics
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..modelo_bindings_actividad_assets import (
     ActivityAssetDisposalExcess,
@@ -36,13 +36,13 @@ from ..modelo_bindings_actividad_assets import (
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .renta_income_aggregation_support import _catalogue_read_ports
 from .test_modelo_source_mesh_ledger import (
-    _BUCKET_ID,
+    BUCKET_ID,
     InMemoryTransactionCatalogueRepository,
+    StaticActivityAssetHistoryRepository,
     _acquisition_row,
-    _reasons,
     _register_claim,
     _revision,
-    _StaticActivityAssetHistoryRepository,
+    reasons,
     register_asset,
     resolve_m100,
     resolve_m130,
@@ -95,15 +95,15 @@ def _income(
     *,
     rows: tuple[Transaction, ...] = (),
 ) -> CalculationSourceResolution:
-    repository = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    repository = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     repository.save(TransactionCatalogue.from_transactions(rows))
     return LedgerRentaIncomeAggregationSourceResolver(
         ports=_catalogue_read_ports(invoices=InvoiceCatalogue(), transactions=TransactionCatalogue()),
-        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
         transaction_repository=repository,
     ).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="130",
             filing_year=2025,
             period=Period.from_year_and_code(2025, period),
@@ -121,7 +121,7 @@ def _findings(resolution: CalculationSourceResolution) -> list[str]:
 
 
 def _blocks(resolution: CalculationSourceResolution) -> set[str]:
-    return set(_reasons(resolution)) & GATE_REFUSED_REASONS
+    return set(reasons(resolution)) & GATE_REFUSED_REASONS
 
 
 def _boxes(resolution: CalculationSourceResolution) -> dict[str, Decimal]:
@@ -148,9 +148,9 @@ def test_a_sale_gain_enters_its_box_and_states_clave_5_on_the_row() -> None:
 def test_the_stated_clave_is_not_reported_as_a_missing_box() -> None:
     resolution = resolve_m100(_disposed())
 
-    checked = add_expected_missing_binding_diagnostics(_revision("100", "2025"), resolution)
+    checked = apply_expected_missing_binding_diagnostics(_revision("100", "2025"), resolution)
 
-    assert "unresolved_binding" not in _reasons(checked)
+    assert "unresolved_binding" not in reasons(checked)
     assert not {str(binding) for binding in checked.unresolved_binding_ids} & {
         "renta-activity-asset-disposal-element-type-1626"
     }
@@ -160,7 +160,7 @@ def test_a_year_with_no_element_row_states_no_clave_and_owes_none() -> None:
     resolution = resolve_m100(ActivityAssetHistory())
 
     assert not resolution.enum_binding_values
-    assert "unresolved_binding" not in _reasons(resolution)
+    assert "unresolved_binding" not in reasons(resolution)
     assert "renta-activity-asset-disposal-element-type-1626" in {
         str(binding) for binding in resolution.inapplicable_binding_ids
     }
@@ -194,9 +194,14 @@ def test_each_supported_edition_binds_every_route() -> None:
         ActivityAssetDisposalRoute.TRANSMISSION_LOSS_PROPERTY: "1832",
         ActivityAssetDisposalRoute.NO_TRANSMISSION_GAIN: "0304",
         ActivityAssetDisposalRoute.NO_TRANSMISSION_LOSS: "0305",
+        ActivityAssetDisposalRoute.TRANSMISSION_ELEMENT_TYPE: "1626",
     }
     for year in ("2022", "2023", "2024", "2025"):
-        assert dict(activity_asset_disposal_route_casillas(_revision("100", year))) == expected
+        revision = _revision("100", year)
+        assert dict(activity_asset_disposal_route_casillas(revision)) == expected
+        casilla = next(item for item in revision.casillas if item.id == "1626")
+        assert casilla.input_kind == "bound"
+        assert casilla.binding == "renta-activity-asset-disposal-element-type-1626"
 
 
 def test_the_calculation_consumes_the_baja_revision() -> None:
@@ -260,7 +265,7 @@ def test_modelo_131_says_the_excess_is_not_routed() -> None:
     revision = _excess_history().revisions[-1]
 
     (finding,) = activity_asset_disposal_excess_m131_findings(
-        (ActivityAssetDisposalExcess(revision=revision, amount=Decimal("3204.93")),),
+        (ActivityAssetDisposalExcess(revision=revision, target_casilla_id="01", amount=Decimal("3204.93")),),
         resolver_id="resolver",
     )
 

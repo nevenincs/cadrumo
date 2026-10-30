@@ -283,12 +283,12 @@ def _resolve_mesh_families(
     from ..aggregation.modelo_bindings import (
         LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIrnrIncomeAggregationSourceResolver,
-        LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,
     )
     from ..aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
     from ..aggregation.modelo_bindings_renta_expenses import (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+        LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     )
     from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
     from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
@@ -329,6 +329,7 @@ def _resolve_mesh_families(
             resolve_declared(
                 LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
                     transaction_repository=memoized_transaction_repository,
+                    invoice_reader=renta_catalogue_read_ports.invoice_reader,
                     prorrata_register_repository=prorrata_register_repository,
                     usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
                     activity_asset_history_repository=ports.activity_asset_history_repository,
