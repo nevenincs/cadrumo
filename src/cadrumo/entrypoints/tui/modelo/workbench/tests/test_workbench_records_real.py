@@ -8,7 +8,7 @@ then exercise the installed reader and the actual terminal widget in every local
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
@@ -64,7 +64,7 @@ pytestmark = [pytest.mark.hex_entrypoint]
 
 
 @contextmanager
-def _seeded_m349(tmp_path: Path) -> Iterator[SeededOperatorWork]:
+def _seeded_m349(tmp_path: Path) -> Generator[SeededOperatorWork]:
     with seeded_operator_work(tmp_path, modelo="349") as work:
         invoices = tuple(
             intra_community_invoice(
@@ -91,14 +91,14 @@ def _seeded_m349(tmp_path: Path) -> Iterator[SeededOperatorWork]:
 
 
 @pytest.fixture
-def m349_work(tmp_path: Path) -> Iterator[SeededOperatorWork]:
+def m349_work(tmp_path: Path) -> Generator[SeededOperatorWork]:
     """A declaration the test may rewrite."""
     with _seeded_m349(tmp_path) as work:
         yield work
 
 
 @pytest.fixture(scope="module")
-def shared_m349_work(tmp_path_factory: pytest.TempPathFactory) -> Iterator[SeededOperatorWork]:
+def shared_m349_work(tmp_path_factory: pytest.TempPathFactory) -> Generator[SeededOperatorWork]:
     """One seeded declaration for the checks that only read it; seeding encrypted storage dominates their cost."""
     with _seeded_m349(tmp_path_factory.mktemp("m349-read")) as work:
         yield work
