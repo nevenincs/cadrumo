@@ -236,9 +236,12 @@ def _path_origin(
         if isinstance(attribute, ast.Attribute) and attribute.attr == "name"
         for part in ast.walk(attribute.value)
     }
+    selectors = {
+        part for expression in ast.walk(node) if isinstance(expression, ast.IfExp) for part in ast.walk(expression.test)
+    }
     path_literals = _path_literal_contexts(node, modules, symbols)
     for item in ast.walk(node):
-        if item in path_components:
+        if item in path_components or item in selectors:
             continue
         if isinstance(item, ast.Name) and item.id in names:
             found.update(names[item.id])
@@ -841,6 +844,37 @@ def test_a_source_paths_basename_does_not_taint_a_controlled_copy_destination(tm
     findings = _fixture_scan(tmp_path, source)
 
     assert findings == ()
+
+
+def test_an_environment_selector_does_not_taint_controlled_path_branches(tmp_path: Path) -> None:
+    """A worker flag chooses a path but contributes none of its components."""
+    source = (
+        "import os\nfrom pathlib import Path\n"
+        "base = Path('controlled')\n"
+        "root = base.parent if bool(os.environ.get('PYTEST_XDIST_WORKER')) else base\n"
+        "root.mkdir()\n"
+    )
+    assert _fixture_scan(tmp_path, source) == ()
+
+
+def test_an_environment_path_branch_is_reported_despite_a_selector(tmp_path: Path) -> None:
+    """Either branch can supply the actual destination of a conditional write."""
+    source = (
+        "import os\nfrom pathlib import Path\n"
+        "root = Path(os.environ['HOME']) if os.environ.get('FLAG') else Path('controlled')\n"
+        "root.mkdir()\n"
+    )
+    assert _fixture_scan(tmp_path, source) == ("fixture.py:4 (home)",)
+
+
+def test_a_conditional_selector_still_reports_its_own_write(tmp_path: Path) -> None:
+    """Ignoring selector provenance must preserve its independent side effects."""
+    source = (
+        "import os\nfrom pathlib import Path\n"
+        "root = Path('one') if Path(os.environ['HOME']).mkdir() else Path('two')\n"
+        "root.mkdir()\n"
+    )
+    assert _fixture_scan(tmp_path, source) == ("fixture.py:3 (home)",)
 
 
 @pytest.mark.parametrize("device", ("/dev/null", "/dev/tty", "NUL", "CONOUT$"))
