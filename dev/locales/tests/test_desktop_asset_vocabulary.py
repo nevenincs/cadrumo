@@ -21,6 +21,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetPlanAdvisoryKind,
     ActivityAssetRegisterState,
 )
+from cadrumo.application.actividad_asset.fact_wording import ActivityAssetFlag
 from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposalFindingKind,
@@ -33,14 +34,24 @@ from cadrumo.domain.renta.actividad_asset.election import (
     DigitOrder,
     DirectEstimationRegime,
     OriginalPriceDetermination,
+    PlanApprovalKind,
+    RenewableDocumentationKind,
+    RenewableInstallationPurpose,
 )
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionShape,
     AssetBasisStage,
     AssetKind,
     OpeningHistoryStatus,
+    OwnershipMode,
 )
 from cadrumo.domain.renta.actividad_asset.register_records import AcquisitionDocumentKind, ActivityAssetEventKind
+from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
+    ElectricPropulsion,
+    VehicleCategory,
+    VehicleListedUse,
+    VehiclePrivateUse,
+)
 from dev._paths import REPO_ROOT
 
 from .._ast_scanner import scan_source_text
@@ -75,18 +86,27 @@ _SERVED = {
     "disposal_finding": ActivityAssetDisposalFindingKind,
     "disposal_reason": ActivityAssetDisposalReason,
     "document_kind": AcquisitionDocumentKind,
+    "electric_propulsion": ElectricPropulsion,
     "event_kind": ActivityAssetEventKind,
+    "flag": ActivityAssetFlag,
     "method": AmortizationMethod,
     "non_deductible_iva_state": ActivityAssetNonDeductibleIvaState,
     "not_table_bound": ActivityAssetNotTableBoundReason,
     "plan_advisory": ActivityAssetPlanAdvisoryKind,
     "opening_history_status": OpeningHistoryStatus,
     "original_price_determination": OriginalPriceDetermination,
+    "ownership_mode": OwnershipMode,
+    "plan_approval_kind": PlanApprovalKind,
     "plan_absence": PlanFigureAbsence,
     "prior_free_depreciation_regime": PriorFreeDepreciationRegime,
     "regime": DirectEstimationRegime,
     "register_state": ActivityAssetRegisterState,
+    "renewable_documentation_kind": RenewableDocumentationKind,
+    "renewable_installation_purpose": RenewableInstallationPurpose,
     "stale_reason": ActivityAssetClaimStaleReason,
+    "vehicle_category": VehicleCategory,
+    "vehicle_listed_use": VehicleListedUse,
+    "vehicle_private_use": VehiclePrivateUse,
 }
 _FRONTEND_SOURCE = REPO_ROOT / "native" / "desktop" / "frontend" / "src"
 _BACKEND_SOURCES = (
