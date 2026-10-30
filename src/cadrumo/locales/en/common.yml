@@ -5012,7 +5012,7 @@ ledger:
         asset enters service.
       useful_life_not_positive: A useful life must be a positive finite number of
         years.
-      vehicle_affectation_required_for_class: This asset is in a table class that
+      vehicle_affectation_required_for_class: Asset {asset_id} is in a table class that
         can include a vehicle RIRPF art. 22.4 restricts, so it needs a vehicle affectation
         declaration.
       vehicle_missing_from_books: A vehicle missing from the activity's books is not

@@ -5095,7 +5095,7 @@ ledger:
         eszköz üzembe állítása után kell véget érnie.
       useful_life_not_positive: A hasznos élettartamnak pozitív, véges számú évnek
         kell lennie.
-      vehicle_affectation_required_for_class: Ez az eszköz olyan táblázati osztályba
+      vehicle_affectation_required_for_class: A(z) {asset_id} eszköz olyan táblázati osztályba
         tartozik, amely a RIRPF 22.4 cikk által korlátozott járművet is tartalmazhat,
         ezért járműhasználati nyilatkozat szükséges.
       vehicle_missing_from_books: A tevékenység könyveiből hiányzó jármű nem tartozik

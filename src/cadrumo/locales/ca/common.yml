@@ -5112,7 +5112,7 @@ ledger:
       useful_life_must_end_after_service: Una vida útil definida ha d'acabar després
         de l'entrada en funcionament de l'element.
       useful_life_not_positive: La vida útil ha de ser un nombre positiu i finit d'anys.
-      vehicle_affectation_required_for_class: Aquest element és en una classe de taula
+      vehicle_affectation_required_for_class: L’element {asset_id} és en una classe de taula
         que pot incloure un vehicle restringit pel RIRPF art. 22.4, per la qual cosa
         necessita una declaració d'afectació del vehicle.
       vehicle_missing_from_books: Un vehicle que falta als llibres de l'activitat
