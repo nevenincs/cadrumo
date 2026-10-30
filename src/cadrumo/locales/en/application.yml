@@ -501,25 +501,18 @@ application:
         no_stock_held: No stock held
     service:
       errors:
-        actividad_conflict: An inventory record book already exists for activity %{actividad_id}
-          and year %{year}. Run `aeat app ledger inventory list` to see the existing
-          ones.
-        actividad_not_found: No inventory record book exists for activity %{actividad_id}
-          and year %{year}. Run `aeat app ledger inventory list` to see the existing
-          ones.
+        actividad_conflict: "An inventory record book already exists for activity %{actividad_id} and year %{year}. Open it instead of creating another."
+        actividad_not_found: "No inventory record book exists for activity %{actividad_id} and year %{year}. Create it first, or check the activity and year."
         closing_authority_conflict: A different closing-authority record already exists
           for this activity and year.
         closing_authority_recorded: The %{year} inventory of %{actividad_id} has a
           recorded closing authority, so its stock facts can no longer change.
         correction_changes_nothing: This correction names no opening value or valuation
           method that differs from the current one.
-        correction_id_conflict: Correction %{correction_id} was already used for a
-          different change.
+        correction_id_conflict: "This correction was already recorded with different details."
         count_would_raise_stock: 'A physical count cannot raise stock: %{sku} would
           end above the units on record.'
-        duplicate_movement_id: The inventory record book already contains movement
-          %{movement_id}. Run `aeat app ledger inventory list` to see the recorded
-          movements.
+        duplicate_movement_id: "This movement is already in the inventory record book. Check the recorded movements before adding it again."
         invalid_valuation_method: 'The inventory valuation method is not supported:
           %{valuation_method}.'
         inventory_already_retired: The %{year} inventory of %{actividad_id} is already
@@ -529,12 +522,9 @@ application:
           it before changing its stock facts.
         later_closing_authority_recorded: The %{later_year} closing authority of %{actividad_id}
           rests on this closing, so the %{year} stock facts can no longer change.
-        movement_already_superseded: Movement %{movement_id} was already corrected
-          or reversed.
-        movement_not_found: The %{year} inventory of %{actividad_id} has no movement
-          %{movement_id}.
-        movement_outside_year: Movement %{movement_id} is dated outside the %{year}
-          inventory.
+        movement_already_superseded: "This movement was already corrected or reversed."
+        movement_not_found: "The %{year} inventory of %{actividad_id} does not have this movement."
+        movement_outside_year: "This movement is dated outside the %{year} inventory."
         stock_would_go_negative: 'This would take stock below zero: %{sku} would need
           more units than remain.'
     workbench:
@@ -979,6 +969,9 @@ application:
           do not add up.
         what_to_do: Open your records for this period, fix the ones that are marked,
           then calculate again.
+      ledger_expense_may_be_durable:
+        what: "A ledger entry deducted as a current expense may be an asset that lasts more than a year. Is it?"
+        what_to_do: "If it is, register the asset, because it deducts through depreciation, then calculate again. If it is a consumable, leave the entry as it is."
       ledger_amortization_row_unregistered:
         what: A ledger entry records the purchase of a long-term asset that is not
           in your asset register, so it deducts nothing.
@@ -1052,6 +1045,9 @@ application:
       register_acquisition_partly_accounted:
         what: "An asset in your register accounts for only part of its ledger entry, so the rest deducts nothing."
         what_to_do: "Register what else that entry paid for, or correct the asset's price, then calculate again."
+      register_acquisition_row_missing:
+        what: "An asset in your register names a ledger entry that is no longer in your ledger."
+        what_to_do: "Enter that ledger entry again, or correct the asset in your register, then calculate again."
       register_owned_capital_acquisition:
         what: A purchase of equipment is left out of your expenses, because it is
           deducted through its yearly depreciation.

@@ -545,12 +545,8 @@ application:
         no_stock_held: Sin existencias
     service:
       errors:
-        actividad_conflict: Ya existe un registro de inventario para la actividad
-          %{actividad_id} y el ejercicio %{year}. Ejecuta `aeat app ledger inventory
-          list` para ver los existentes.
-        actividad_not_found: No existe ningún registro de inventario para la actividad
-          %{actividad_id} y el ejercicio %{year}. Ejecuta `aeat app ledger inventory
-          list` para ver los existentes.
+        actividad_conflict: "Ya existe un registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Ábrelo en lugar de crear otro."
+        actividad_not_found: "No existe ningún registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Créalo primero o revisa la actividad y el ejercicio."
         closing_authority_conflict: Ya existe un registro distinto de autoridad de
           cierre para esta actividad y año.
         closing_authority_recorded: El inventario %{year} de %{actividad_id} tiene
@@ -558,13 +554,10 @@ application:
           no pueden cambiar.
         correction_changes_nothing: Esta corrección no indica ningún valor inicial
           ni método de valoración distinto del actual.
-        correction_id_conflict: La corrección %{correction_id} ya se usó para otro
-          cambio.
+        correction_id_conflict: "Esta corrección ya se registró con otros datos."
         count_would_raise_stock: 'Un recuento físico no puede aumentar las existencias:
           %{sku} quedaría por encima de las unidades registradas.'
-        duplicate_movement_id: El registro de inventario ya contiene el movimiento
-          %{movement_id}. Ejecuta `aeat app ledger inventory list` para ver los movimientos
-          registrados.
+        duplicate_movement_id: "Este movimiento ya está en el registro de inventario. Revisa los movimientos registrados antes de añadirlo de nuevo."
         invalid_valuation_method: 'El método de valoración de inventario no está admitido:
           %{valuation_method}.'
         inventory_already_retired: El inventario %{year} de %{actividad_id} ya está
@@ -575,12 +568,9 @@ application:
         later_closing_authority_recorded: La autoridad de cierre %{later_year} de
           %{actividad_id} parte de este cierre, así que los datos de existencias de
           %{year} ya no pueden cambiar.
-        movement_already_superseded: El movimiento %{movement_id} ya se corrigió o
-          se anuló.
-        movement_not_found: El inventario %{year} de %{actividad_id} no tiene el movimiento
-          %{movement_id}.
-        movement_outside_year: El movimiento %{movement_id} tiene una fecha fuera
-          del inventario %{year}.
+        movement_already_superseded: "Este movimiento ya se corrigió o se anuló."
+        movement_not_found: "El inventario %{year} de %{actividad_id} no tiene este movimiento."
+        movement_outside_year: "Este movimiento tiene una fecha fuera del inventario %{year}."
         stock_would_go_negative: 'Esto dejaría las existencias por debajo de cero:
           %{sku} necesitaría más unidades de las que quedan.'
     workbench:
@@ -1049,6 +1039,9 @@ application:
           o no cuadran.
         what_to_do: Abre tus registros de este periodo, corrige los que estén marcados
           y vuelve a calcular.
+      ledger_expense_may_be_durable:
+        what: "Un movimiento deducido como gasto corriente puede ser un bien que dura más de un año. ¿Lo es?"
+        what_to_do: "Si lo es, da de alta el bien, porque se deduce por amortización, y vuelve a calcular. Si es un consumible, deja el movimiento como está."
       ledger_amortization_row_unregistered:
         what: Un movimiento registra una compra amortizable que no está en tu registro
           de bienes, así que no deduce nada.
@@ -1128,6 +1121,9 @@ application:
       register_acquisition_partly_accounted:
         what: "Un bien de tu registro explica solo una parte de su movimiento, así que el resto no deduce nada."
         what_to_do: "Da de alta lo demás que pagó ese movimiento, o corrige el precio del bien, y vuelve a calcular."
+      register_acquisition_row_missing:
+        what: "Un bien de tu registro indica un movimiento que ya no está en tus movimientos."
+        what_to_do: "Vuelve a introducir ese movimiento, o corrige el bien en tu registro, y vuelve a calcular."
       register_owned_capital_acquisition:
         what: Una compra de equipamiento se deja fuera de tus gastos, porque se deduce
           mediante su amortización anual.

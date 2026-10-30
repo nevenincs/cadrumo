@@ -544,12 +544,8 @@ application:
         no_stock_held: Sense existències
     service:
       errors:
-        actividad_conflict: Ja existeix un registre d'inventari per a l'activitat
-          %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory
-          list` per veure els existents.
-        actividad_not_found: No existeix cap registre d'inventari per a l'activitat
-          %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory
-          list` per veure els existents.
+        actividad_conflict: "Ja existeix un registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Obre'l en lloc de crear-ne un altre."
+        actividad_not_found: "No existeix cap registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Crea'l primer o revisa l'activitat i l'exercici."
         closing_authority_conflict: Ja existeix un registre diferent d'autoritat de
           tancament per a aquesta activitat i any.
         closing_authority_recorded: L'inventari %{year} de %{actividad_id} té una
@@ -557,12 +553,10 @@ application:
           ja no poden canviar.
         correction_changes_nothing: Aquesta correcció no indica cap valor inicial
           ni mètode de valoració diferent de l'actual.
-        correction_id_conflict: La correcció %{correction_id} ja es va fer servir
-          per a un altre canvi.
+        correction_id_conflict: "Aquesta correcció ja es va registrar amb altres dades."
         count_would_raise_stock: 'Un recompte físic no pot augmentar les existències:
           %{sku} quedaria per sobre de les unitats registrades.'
-        duplicate_movement_id: El registre d'inventari ja conté el moviment %{movement_id}.
-          Executa `aeat app ledger inventory list` per veure els moviments registrats.
+        duplicate_movement_id: "Aquest moviment ja és al registre d'inventari. Revisa els moviments registrats abans d'afegir-lo de nou."
         invalid_valuation_method: 'El mètode de valoració d''inventari no està admès:
           %{valuation_method}.'
         inventory_already_retired: L'inventari %{year} de %{actividad_id} ja està
@@ -573,12 +567,9 @@ application:
         later_closing_authority_recorded: L'autoritat de tancament %{later_year} de
           %{actividad_id} parteix d'aquest tancament, així que les dades d'existències
           de %{year} ja no poden canviar.
-        movement_already_superseded: El moviment %{movement_id} ja es va corregir
-          o anul·lar.
-        movement_not_found: L'inventari %{year} de %{actividad_id} no té el moviment
-          %{movement_id}.
-        movement_outside_year: El moviment %{movement_id} té una data fora de l'inventari
-          %{year}.
+        movement_already_superseded: "Aquest moviment ja es va corregir o anul·lar."
+        movement_not_found: "L'inventari %{year} de %{actividad_id} no té aquest moviment."
+        movement_outside_year: "Aquest moviment té una data fora de l'inventari %{year}."
         stock_would_go_negative: 'Això deixaria les existències per sota de zero:
           %{sku} necessitaria més unitats de les que queden.'
     workbench:
@@ -1046,6 +1037,9 @@ application:
           o no quadren.
         what_to_do: Obre els teus registres d'aquest període, corregeix els que estiguin
           marcats i torna a calcular.
+      ledger_expense_may_be_durable:
+        what: "Un moviment deduït com a despesa corrent pot ser un bé que dura més d'un any. Ho és?"
+        what_to_do: "Si ho és, dona d'alta el bé, perquè es dedueix per amortització, i torna a calcular. Si és un consumible, deixa el moviment com està."
       ledger_amortization_row_unregistered:
         what: Un moviment registra una compra amortitzable que no és al teu registre
           de béns, de manera que no dedueix res.
@@ -1124,6 +1118,9 @@ application:
       register_acquisition_partly_accounted:
         what: "Un bé del teu registre explica només una part del seu moviment, així que la resta no dedueix res."
         what_to_do: "Dona d'alta la resta del que va pagar aquell moviment, o corregeix el preu del bé, i torna a calcular."
+      register_acquisition_row_missing:
+        what: "Un bé del teu registre indica un moviment que ja no és als teus moviments."
+        what_to_do: "Torna a introduir aquell moviment, o corregeix el bé al teu registre, i torna a calcular."
       register_owned_capital_acquisition:
         what: Una compra d'equipament es deixa fora de les teves despeses, perquè
           es dedueix mitjançant la seva amortització anual.

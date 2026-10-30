@@ -526,25 +526,18 @@ application:
         no_stock_held: Nincs készlet
     service:
       errors:
-        actividad_conflict: Már létezik készletnyilvántartás a(z) %{actividad_id}
-          tevékenységhez és a(z) %{year} évhez. Futtasd a(z) `aeat app ledger inventory
-          list` parancsot a meglévők megtekintéséhez.
-        actividad_not_found: Nincs készletnyilvántartás a(z) %{actividad_id} tevékenységhez
-          és a(z) %{year} évhez. Futtasd a(z) `aeat app ledger inventory list` parancsot
-          a meglévők megtekintéséhez.
+        actividad_conflict: "Már létezik készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Nyisd meg, ahelyett hogy újat hoznál létre."
+        actividad_not_found: "Nincs készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Először hozd létre, vagy ellenőrizd a tevékenységet és az évet."
         closing_authority_conflict: Ehhez a tevékenységhez és évhez már más zárókészlet-hatósági
           rekord tartozik.
         closing_authority_recorded: A(z) %{actividad_id} %{year}. évi készletéhez
           zárási jogalap van rögzítve, ezért a készletadatai már nem módosíthatók.
         correction_changes_nothing: Ez a javítás nem ad meg a jelenlegitől eltérő
           nyitó értéket vagy értékelési módszert.
-        correction_id_conflict: A(z) %{correction_id} javítást már egy másik módosításhoz
-          használták.
+        correction_id_conflict: "Ezt a javítást már más adatokkal rögzítették."
         count_would_raise_stock: 'A leltár nem növelheti a készletet: a(z) %{sku}
           tétel a nyilvántartott egységek fölé kerülne.'
-        duplicate_movement_id: A készletnyilvántartás már tartalmazza a(z) %{movement_id}
-          mozgást. Futtasd a(z) `aeat app ledger inventory list` parancsot a rögzített
-          mozgások megtekintéséhez.
+        duplicate_movement_id: "Ez a mozgás már szerepel a készletnyilvántartásban. Mielőtt újra felvennéd, ellenőrizd a rögzített mozgásokat."
         invalid_valuation_method: 'A készlet értékelési mód nem támogatott: %{valuation_method}.'
         inventory_already_retired: A(z) %{actividad_id} %{year}. évi készlete már
           ki van vonva.
@@ -554,12 +547,9 @@ application:
         later_closing_authority_recorded: A(z) %{actividad_id} %{later_year}. évi
           zárási jogalapja erre a zárásra épül, ezért a(z) %{year}. évi készletadatok
           már nem módosíthatók.
-        movement_already_superseded: A(z) %{movement_id} mozgást már javították vagy
-          sztornózták.
-        movement_not_found: A(z) %{actividad_id} %{year}. évi készletében nincs %{movement_id}
-          mozgás.
-        movement_outside_year: A(z) %{movement_id} mozgás dátuma kívül esik a(z) %{year}.
-          évi készleten.
+        movement_already_superseded: "Ezt a mozgást már javították vagy sztornózták."
+        movement_not_found: "A(z) %{actividad_id} %{year}. évi készletében nincs ilyen mozgás."
+        movement_outside_year: "Ennek a mozgásnak a dátuma kívül esik a(z) %{year}. évi készleten."
         stock_would_go_negative: 'Ettől a készlet nulla alá csökkenne: a(z) %{sku}
           tételből több egység kellene, mint amennyi maradt.'
     workbench:
@@ -1004,6 +994,9 @@ application:
           hiányzik az igazolás, vagy nem egyeznek.
         what_to_do: Nyisd meg az erre az időszakra vonatkozó nyilvántartásaidat, javítsd
           a megjelölt tételeket, majd számolj újra.
+      ledger_expense_may_be_durable:
+        what: "Egy folyó költségként levont tétel egy évnél tovább használt eszköz lehet. Az?"
+        what_to_do: "Ha igen, vedd fel az eszközt, mert értékcsökkenésen keresztül vonható le, majd számolj újra. Ha fogyóeszköz, hagyd a tételt változatlanul."
       ledger_amortization_row_unregistered:
         what: Egy tétel olyan amortizálható vásárlást rögzít, amely nincs az eszköznyilvántartásodban,
           ezért nem vonható le.
@@ -1081,6 +1074,9 @@ application:
       register_acquisition_partly_accounted:
         what: "A nyilvántartásodban szereplő eszköz a könyvelési tételének csak egy részét magyarázza, így a többi nem vonható le."
         what_to_do: "Vedd fel, mi mást fizetett az a tétel, vagy javítsd az eszköz árát, majd számolj újra."
+      register_acquisition_row_missing:
+        what: "A nyilvántartásodban szereplő eszköz olyan könyvelési tételre hivatkozik, amely már nincs a tételeid között."
+        what_to_do: "Vedd fel újra azt a tételt, vagy javítsd az eszközt a nyilvántartásban, majd számolj újra."
       register_owned_capital_acquisition:
         what: Egy eszközvásárlás kimarad a költségei közül, mert az éves értékcsökkenési
           leírásán keresztül vonható le.
