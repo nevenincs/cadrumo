@@ -90,6 +90,16 @@ def modelo_ids() -> tuple[str, ...]:
         return tuple(sorted(str(code) for code in registry_modelo_codes(operation=operation)))
 
 
+@pytest.fixture(scope="module")
+def own_screen_findings(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> tuple[tuple[str, tuple[object, ...]], ...]:
+    """Every screen's own findings, computed once; the gates only read them."""
+    from ..analysis.screens import screen_findings
+
+    return screen_findings(authority, modelo_ids)
+
+
 def _python_target_resolves(target: str) -> bool:
     """Return whether a registry-owned ``cadrumo`` target resolves."""
     return target in _FILED_OBSERVATION_CONSUMERS
@@ -520,7 +530,7 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
 
 
 def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A reader who sees ``kind=x`` in a screen's output can find x explained in that screen.
 
@@ -538,13 +548,13 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
     would see. Kinds that occur only under a constructed defect are not covered
     here; they are covered by the detector test that constructs them.
     """
-    from ..analysis.screens import screen_findings, screen_module
+    from ..analysis.screens import screen_module
 
     observed: set[tuple[str, str]] = set()
     undocumented: list[str] = []
     # Both tables, through the shared traversal. This gate iterated the
     # authority table alone and so never read a corpus screen's kinds.
-    for name, findings in screen_findings(authority, modelo_ids):
+    for name, findings in own_screen_findings:
         module = screen_module(name)
         doc = module.__doc__ or ""
         for finding in findings:
@@ -560,7 +570,9 @@ def test_every_kind_a_screen_emits_is_named_in_its_own_docstring(
 
 
 def test_a_runner_projection_never_reports_a_kind_its_screen_does_not_emit(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    authority: ValidatedRegistryAuthority,
+    modelo_ids: tuple[str, ...],
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A table entry may narrow its screen's findings; it may not invent them.
 
@@ -580,12 +592,12 @@ def test_a_runner_projection_never_reports_a_kind_its_screen_does_not_emit(
     and is fixed at the reader: those gates call each screen's own entry point
     rather than the table.
     """
-    from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_findings
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
 
     def kinds_of(rows: tuple[object, ...]) -> set[str]:
         return {kind for row in rows if isinstance(kind := getattr(row, "kind", None), str)}
 
-    direct = {name: kinds_of(findings) for name, findings in screen_findings(authority, modelo_ids)}
+    direct = {name: kinds_of(findings) for name, findings in own_screen_findings}
     assert any(direct.values()), "no screen emitted a kind, so this gate checked nothing"
 
     invented: dict[str, list[str]] = {}
@@ -600,7 +612,7 @@ def test_a_runner_projection_never_reports_a_kind_its_screen_does_not_emit(
 
 
 def test_a_derived_screen_reports_nothing_its_source_does_not(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A screen declaring a source may re-describe its findings, not exceed them.
 
@@ -617,7 +629,7 @@ def test_a_derived_screen_reports_nothing_its_source_does_not(
     built on the other, which is why the declaration is an author's and not
     inferred from this containment holding.
     """
-    from ..analysis.screens import SCREENS, screen_findings
+    from ..analysis.screens import SCREENS
 
     sources = {
         entry.name: entry.derives_from for entry in SCREENS if (entry.derives_from is not None and entry.derives_from)
@@ -626,7 +638,7 @@ def test_a_derived_screen_reports_nothing_its_source_does_not(
 
     populations = {
         name: {(getattr(f, "modelo", None), str(getattr(f, "revision", ""))) for f in findings}
-        for name, findings in screen_findings(authority, modelo_ids)
+        for name, findings in own_screen_findings
     }
     for derived, source in sources.items():
         assert source in populations, f"{derived} derives from {source!r}, which is not an enrolled screen"
@@ -874,7 +886,7 @@ _NUMBER_WORDS: dict[str, int] = {
 
 
 def test_a_screen_that_counts_its_conditions_states_the_right_number(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A docstring claiming "N conditions are reported" must agree with what the screen emits.
 
@@ -893,9 +905,9 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     wrong: list[str] = []
     unstated_conditions: list[str] = []
     checked = 0
-    from ..analysis.screens import screen_findings, screen_module, screen_module_names
+    from ..analysis.screens import screen_module, screen_module_names
 
-    findings_by_name = dict(screen_findings(authority, modelo_ids))
+    findings_by_name = dict(own_screen_findings)
     for screen_name in sorted(screen_module_names()):
         module = screen_module(screen_name)
         doc = module.__doc__ or ""
@@ -1492,7 +1504,7 @@ def test_the_citation_gate_exempts_two_located_regions_and_no_more() -> None:
 
 
 def test_every_declared_condition_has_a_live_member_or_a_written_proof(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    own_screen_findings: tuple[tuple[str, tuple[object, ...]], ...],
 ) -> None:
     """A condition with neither stops reporting and nothing says so.
 
@@ -1513,10 +1525,9 @@ def test_every_declared_condition_has_a_live_member_or_a_written_proof(
     import pathlib
 
     from ..analysis.screens import CORPUS_SCREENS, SCREENS, screen_module
-    from ..analysis.screens import screen_findings as _screen_findings
 
     live: dict[str, set[str]] = {}
-    for name, findings in _screen_findings(authority, modelo_ids):
+    for name, findings in own_screen_findings:
         kinds = {kind for finding in findings if isinstance(kind := getattr(finding, "kind", None), str)}
         live[name] = kinds
 

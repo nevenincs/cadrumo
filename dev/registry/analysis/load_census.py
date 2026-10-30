@@ -564,7 +564,13 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
     for path in _iter_source_files():
         module = _module_name_for(path)
         try:
-            tree = _parse(path)
+            text = path.read_text(encoding="utf-8")
+            # A file that never spells the callee has no call site to lose, so a
+            # syntax error in it cannot hide one; skipping its parse is the
+            # bulk of this scan's cost.
+            if "import_module" not in text:
+                continue
+            tree = ast.parse(text)
         except (OSError, SyntaxError, UnicodeDecodeError) as error:
             if module is not None:
                 unread.append(f"{path}: {type(error).__name__}: {error}")
@@ -583,11 +589,14 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
 def _dynamic_imports_in_file(path: Path, module: str, tree: ast.Module) -> tuple[DynamicImportSite, ...]:
     """Resolve the dynamic-import call sites in one parsed source module."""
     package = module.rsplit(".", 1)[0] if path.name != "__init__.py" else module
+    calls = [node for node in ast.walk(tree) if _is_import_module_call(node)]
+    if not calls:
+        # Loop resolution only annotates import_module call lines, so a module
+        # with none needs neither the constants scan nor the loop walk.
+        return ()
     loop_targets = _loop_resolved_targets(tree, _string_tuple_constants(tree), module=module)
     sites: list[DynamicImportSite] = []
-    for node in ast.walk(tree):
-        if not _is_import_module_call(node):
-            continue
+    for node in calls:
         members = loop_targets.get(node.lineno)
         if members is None:
             sites.append(DynamicImportSite(module, node.lineno, _literal_dynamic_target(node, package)))
