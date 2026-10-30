@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import ctypes
 import errno
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -278,3 +279,29 @@ def test_constructor_close_failure_preserves_existing_canonical_cleanup_owners(
     asyncio.run(retained.retry_cleanup())
     assert earlier.calls == 2
     assert port.close_calls == [17]
+
+
+def _arguments_record(count: int, path: bytes, *arguments: bytes) -> bytes:
+    return count.to_bytes(4, sys.byteorder) + path + b"\0\0\0\0" + b"".join(item + b"\0" for item in arguments)
+
+
+def test_kernel_argument_record_yields_the_arguments_after_the_program_name() -> None:
+    record = _arguments_record(3, b"/Applications/Cadrumo", b"cadrumo", b"--role", b"runtime") + b"PATH=/bin\0"
+    assert native.decode_macos_process_arguments(record) == ("--role", "runtime")
+    assert native.decode_macos_process_arguments(_arguments_record(1, b"/bin/x", b"x")) == ()
+
+
+@pytest.mark.parametrize(
+    "record",
+    [
+        b"",
+        b"\1\0",
+        _arguments_record(0, b"/bin/x", b"x"),
+        _arguments_record(3, b"/bin/x", b"x", b"--role"),
+        (2).to_bytes(4, sys.byteorder) + b"\0",
+    ],
+)
+def test_a_short_or_malformed_kernel_argument_record_refuses(record: bytes) -> None:
+    with pytest.raises(RefusalError) as caught:
+        native.decode_macos_process_arguments(record)
+    assert caught.value.reason is RefusalCode.PEER_UNTRUSTED

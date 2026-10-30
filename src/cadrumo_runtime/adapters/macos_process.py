@@ -143,6 +143,95 @@ def read_macos_process(pid: int, *, expected_owner: str) -> MacosProcessObservat
         raise RefusalError(RefusalCode.UNAVAILABLE) from None
 
 
+# Darwin sys/sysctl.h: CTL_KERN=1, KERN_ARGMAX=8, KERN_PROCARGS2=49.
+_CTL_KERN = 1
+_KERN_ARGMAX = 8
+_KERN_PROCARGS2 = 49
+_MAXIMUM_ARGUMENT_BYTES = 4 * 1024 * 1024
+
+
+def decode_macos_process_arguments(payload: bytes) -> tuple[str, ...]:
+    """Decode a complete KERN_PROCARGS2 record into the arguments after the program name.
+
+    The record is the argument count, the executed path, alignment padding and
+    then exactly that many argument strings; anything shorter or malformed refuses.
+
+    Args:
+        payload: Exact native KERN_PROCARGS2 bytes for one process.
+    """
+    if len(payload) < 4:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    count = struct.unpack("=i", payload[:4])[0]
+    path_end = payload.find(b"\0", 4)
+    if not 0 < count <= len(payload) or path_end <= 4:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    cursor = path_end
+    while cursor < len(payload) and payload[cursor] == 0:
+        cursor += 1
+    arguments: list[bytes] = []
+    for _ in range(count):
+        end = payload.find(b"\0", cursor)
+        if end < 0:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        arguments.append(payload[cursor:end])
+        cursor = end + 1
+    return tuple(os.fsdecode(argument) for argument in arguments[1:])
+
+
+def _read_kernel_arguments(pid: int) -> bytes:
+    native = ctypes.CDLL("/usr/lib/libSystem.B.dylib", use_errno=True)
+    control = native.sysctl
+    control.argtypes = (
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.c_uint,
+        ctypes.c_void_p,
+        ctypes.POINTER(ctypes.c_size_t),
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+    )
+    control.restype = ctypes.c_int
+    limit = ctypes.c_int()
+    size = ctypes.c_size_t(ctypes.sizeof(limit))
+    query = (ctypes.c_int * 2)(_CTL_KERN, _KERN_ARGMAX)
+    if control(query, 2, ctypes.byref(limit), ctypes.byref(size), None, 0) != 0:
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    if not 0 < limit.value <= _MAXIMUM_ARGUMENT_BYTES:
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    buffer = ctypes.create_string_buffer(limit.value)
+    size = ctypes.c_size_t(limit.value)
+    query = (ctypes.c_int * 3)(_CTL_KERN, _KERN_PROCARGS2, pid)
+    ctypes.set_errno(0)
+    if control(query, 3, buffer, ctypes.byref(size), None, 0) != 0:
+        # The kernel answers EINVAL for an exiting process or another account's.
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    if not 0 < size.value <= limit.value:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    return buffer.raw[: size.value]
+
+
+def read_macos_process_arguments(pid: int, *, expected_owner: str) -> tuple[str, ...]:
+    """Read the arguments one exact incarnation was started with, after its program name.
+
+    The process record and the kernel incarnation are read on both sides of the
+    argument read, so a reused PID or a new program cannot supply the answer.
+
+    Args:
+        pid: Kernel-derived process ID.
+        expected_owner: Native UID supplied by the owning transport.
+    """
+    before = read_macos_process(pid, expected_owner=expected_owner)
+    incarnation = read_macos_incarnation(pid)
+    if incarnation is None:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    try:
+        payload = _read_kernel_arguments(pid)
+    except (AttributeError, OSError):
+        raise RefusalError(RefusalCode.UNAVAILABLE) from None
+    if read_macos_incarnation(pid) != incarnation or read_macos_process(pid, expected_owner=expected_owner) != before:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    return decode_macos_process_arguments(payload)
+
+
 @dataclass(frozen=True, slots=True)
 class MacosProcessIncarnation:
     """One exact process lifetime: a PID is reusable, its kernel version is not.

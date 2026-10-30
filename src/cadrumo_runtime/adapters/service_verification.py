@@ -23,7 +23,7 @@ from cadrumo_client.transport.windows_channel import WindowsChannel
 
 from .boot_record import runtime_package_directory
 from .macos_login import macos_peer_audit_token
-from .macos_process import read_macos_process
+from .macos_process import read_macos_process, read_macos_process_arguments
 from .native_peer import require_live_native_peer
 from .service_descriptors import package_member_path
 
@@ -181,9 +181,28 @@ def native_process_arguments(pid: int, owner: str) -> tuple[str, ...]:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED)
         parts = (directory / "cmdline").read_bytes().split(b"\0")
         return tuple(os.fsdecode(part) for part in parts[1:-1])
+    if sys.platform == "darwin":
+        return read_macos_process_arguments(pid, expected_owner=owner)
     if sys.platform != "win32":
         raise RefusalError(RefusalCode.UNAVAILABLE)
     return _windows_process_arguments(pid, owner)
+
+
+def channel_peer_image(channel: ByteChannel) -> str | None:
+    """Name the program of the channel's connected peer incarnation, or None when unknown.
+
+    A transport that names the program at accept supplies it. Otherwise a
+    retained socket's kernel audit token names the exact incarnation's program,
+    and that token must belong to the same process the channel reported.
+    """
+    image_path = channel.peer.image_path
+    if image_path is None and isinstance(channel, PosixChannel) and sys.platform == "darwin":
+        with channel.pinned_peer_socket() as sock:
+            token = macos_peer_audit_token(sock, expected_owner=channel.peer.os_owner_id)
+        if token.process_id != channel.peer.process_id:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        image_path = token.image_path
+    return image_path
 
 
 def _require_channel(channel: ByteChannel, identity: NativeProcessIdentity) -> None:
@@ -191,10 +210,7 @@ def _require_channel(channel: ByteChannel, identity: NativeProcessIdentity) -> N
         require_live_native_peer(channel)
     else:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-    image_path = channel.peer.image_path
-    if image_path is None and isinstance(channel, PosixChannel) and sys.platform == "darwin":
-        with channel.pinned_peer_socket() as sock:
-            image_path = macos_peer_audit_token(sock, expected_owner=channel.peer.os_owner_id).image_path
+    image_path = channel_peer_image(channel)
     if (
         channel.peer.process_id != identity.pid
         or image_path is None

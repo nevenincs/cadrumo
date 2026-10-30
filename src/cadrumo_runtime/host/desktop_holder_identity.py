@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, cast
 
-from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileLogin
 from cadrumo_client.contracts.service_access import InstalledServiceDescriptor, NativeServiceVerifier
 from cadrumo_client.contracts.transport import ConnectionContext
@@ -40,7 +40,7 @@ def _desktop_image_listed(verifier: DesktopImageMatcher, image: str, descriptor:
 def desktop_window_peer(
     verifier: DesktopImageMatcher,
     context: ConnectionContext,
-    channel_peer: Peer,
+    channel: ByteChannel,
     descriptor: InstalledServiceDescriptor,
 ) -> bool:
     """Whether the peer is the installed desktop image itself, connected from its window.
@@ -53,14 +53,14 @@ def desktop_window_peer(
     """
     from pathlib import Path
 
-    from ..adapters.service_verification import native_process_arguments, native_process_identity
+    from ..adapters.service_verification import channel_peer_image, native_process_arguments, native_process_identity
 
     pid, owner = context.peer.process_id, context.peer.os_owner_id
-    if pid is None or context.peer != channel_peer or not descriptor.allowed_parent_images:
+    if pid is None or context.peer != channel.peer or not descriptor.allowed_parent_images:
         return False
     try:
         identity = native_process_identity(pid, owner)
-        image = channel_peer.image_path
+        image = channel_peer_image(channel)
         if image is None or Path(image).resolve() != Path(identity.image).resolve():
             return False
         if not _desktop_image_listed(verifier, identity.image, descriptor):
@@ -141,7 +141,7 @@ def verify_desktop_holder(
             native_process_identity(context.peer.process_id, context.peer.os_owner_id)
             return
         raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_descriptor_absent")
-    if desktop_window_peer(verifier, context, channel.peer, descriptor):
+    if desktop_window_peer(verifier, context, channel, descriptor):
         return
     if verifier.verify_service(context, channel, descriptor) is None:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_unverified")
