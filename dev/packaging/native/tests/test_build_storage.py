@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.storage_environment import tool_storage_environment
 from dev._paths import REPO_ROOT
+from dev.tool_storage import tool_storage_environment
 
 from ...command_execution import run_command
 from ..assembly_identity import installed_distributions

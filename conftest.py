@@ -65,11 +65,11 @@ if str(_SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(_SOURCE_ROOT))
 
 from dev.temporary_output import prepare_temp_root  # noqa: E402
+from dev.tool_storage import storage_directory  # noqa: E402
 
 from cadrumo.core.storage_environment import (  # noqa: E402
     configured_storage_root,
     resolve_storage_path,
-    storage_directory,
 )
 
 # The tests package initializer is intentionally inert and env_loader is pure

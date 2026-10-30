@@ -7,12 +7,13 @@ import json
 import sys
 from pathlib import Path
 
-from cadrumo.core.storage_environment import configured_storage_root, storage_directory
+from cadrumo.core.storage_environment import configured_storage_root
 from dev.registry.binding_signal.common import required_mapping, stable_dump
 from dev.registry.binding_signal.consumer_audit import audit_consumers
 from dev.registry.binding_signal.report import blocking_findings, build_report, summary
 from dev.registry.binding_signal.revision_audit import audit_revisions
 from dev.registry.binding_signal.sources import collect_inputs
+from dev.tool_storage import storage_directory
 
 
 def audit(root: Path) -> dict[str, object]:

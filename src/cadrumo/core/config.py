@@ -788,9 +788,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         """Return the one location setting this command line reads: its storage root.
 
         Every other location resolves at a fixed subpath beneath the root.
-        Development tool locations are not settings of this command line;
-        development tools bind them through
-        :func:`~cadrumo.core.storage_environment.tool_storage_environment`.
+        Development tool locations are not settings of this command line.
         """
         return frozenset({STORAGE_ROOT.variable})
 

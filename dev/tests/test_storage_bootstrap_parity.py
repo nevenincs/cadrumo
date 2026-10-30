@@ -10,11 +10,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS, tool_storage_environment
 from dev._paths import REPO_ROOT
 from dev.docs.build_paths import DOCS_BUILD_ROOT_ENV, docs_build_root
 from dev.packaging.command_execution import run_command
 from dev.product_environment import clean_product_env
+from dev.tool_storage import TOOL_STORAGE_LOCATIONS, tool_storage_environment
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

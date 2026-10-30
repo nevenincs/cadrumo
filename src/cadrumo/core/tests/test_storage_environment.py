@@ -16,14 +16,11 @@ from ..storage_environment import (
     STORAGE_ROOT,
     TEMPORARY_FILES_SUBPATH,
     TEMPORARY_VARIABLES,
-    TOOL_STORAGE_LOCATIONS,
     ChildEnvironmentProfile,
     child_environment,
     configured_storage_root,
     host_installed_default_root,
     relayed_setting_names,
-    storage_directory,
-    tool_storage_environment,
     withheld_child_settings,
 )
 from ..storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD, StorageCategory
@@ -76,7 +73,6 @@ def test_the_variable_relocates_every_member_beneath_it(tmp_path: Path) -> None:
         ):
             assert storage_path(category, settings=settings) == root / storage_location(category).relative_path()
         assert storage_location(StorageCategory.TEMPORARY_FILES).relative_path() == Path(TEMPORARY_FILES_SUBPATH)
-        assert storage_directory("CADRUMO_DEV_CACHE_ROOT", "development/cache") == root / "development" / "cache"
 
 
 def test_a_removed_member_variable_changes_nothing(tmp_path: Path) -> None:
@@ -122,45 +118,11 @@ def test_the_only_location_setting_is_the_root() -> None:
     assert "CADRUMO_AUTH_PROVIDER" not in controls
 
 
-def test_location_settings_are_separate_from_development_tools() -> None:
+def test_the_relayed_settings_are_the_root_the_authority_and_the_proxy() -> None:
     product = Settings.storage_env_var_names()
-    development = frozenset(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values())
     assert product == {STORAGE_ROOT.variable}
-    assert "CADRUMO_TOOL_CACHE_DIR" in development
-    assert not product & development
-    assert not {"XDG_CACHE_HOME", "UV_CACHE_DIR"} & (product | development)
-    assert not any(name.startswith("CADRUMO_UV_") for name in development)
-    assert not {"UV_CACHE_DIR", "UV_PYTHON_INSTALL_DIR", "UV_TOOL_DIR", "UV_TOOL_BIN_DIR"} & set(TOOL_STORAGE_LOCATIONS)
     proxy = {"CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"}
     assert relayed_setting_names() == product | {"CADRUMO_AUTHORITY_ROOT"} | proxy
-
-
-def test_uv_global_paths_remain_owned_by_the_machine_and_uv(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    machine_paths = {
-        "UV_CACHE_DIR": str(tmp_path / "machine-cache"),
-        "UV_PYTHON_INSTALL_DIR": str(tmp_path / "machine-python"),
-        "UV_TOOL_DIR": str(tmp_path / "machine-tools"),
-        "UV_TOOL_BIN_DIR": str(tmp_path / "machine-tool-bin"),
-    }
-    retired_controls = {
-        "CADRUMO_UV_CACHE_DIR": str(tmp_path / "retired-cache"),
-        "CADRUMO_UV_PYTHON_DIR": str(tmp_path / "retired-python"),
-        "CADRUMO_UV_TOOL_DIR": str(tmp_path / "retired-tools"),
-        "CADRUMO_UV_TOOL_BIN_DIR": str(tmp_path / "retired-tool-bin"),
-    }
-    for name, value in {**machine_paths, **retired_controls}.items():
-        monkeypatch.setenv(name, value)
-
-    managed = tool_storage_environment()
-    child = {**os.environ, **managed}
-    for name in retired_controls:
-        monkeypatch.delenv(name)
-    without_retired_controls = tool_storage_environment()
-
-    assert not set(machine_paths) & managed.keys()
-    assert {name: child[name] for name in machine_paths} == machine_paths
-    assert managed == without_retired_controls
-    assert not set(retired_controls) & {variable for variable, _default in TOOL_STORAGE_LOCATIONS.values()}
 
 
 def _received(tmp_path: Path) -> dict[str, str]:

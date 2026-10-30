@@ -449,11 +449,6 @@ def refuse_unanchored_storage_member(candidate: PurePath) -> None:
         _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "A relative storage member cannot replace its root anchor.")
 
 
-def storage_directory(environment_variable: str, default: str, *, root: Path | None = None) -> Path:
-    """Resolve one category override; blank values use the category default."""
-    return resolve_storage_path(os.environ.get(environment_variable, "").strip() or default, root=root)
-
-
 def prepare_temporary_directory() -> Path:
     """Create the controlled scratch base for callers of tempfile APIs."""
     root = configured_storage_root()
@@ -562,28 +557,3 @@ def child_environment(
 
     environment.update(profile_root_environment(resolved_root, profile_id))
     return environment
-
-
-TOOL_STORAGE_LOCATIONS: Mapping[str, tuple[str, str]] = {
-    "PIP_CACHE_DIR": ("CADRUMO_PIP_CACHE_DIR", "development/cache/pip"),
-    "npm_config_cache": ("CADRUMO_NPM_CACHE_DIR", "development/cache/npm"),
-    "CARGO_HOME": ("CADRUMO_CARGO_HOME", "development/cache/cargo"),
-    "CARGO_TARGET_DIR": ("CADRUMO_CARGO_TARGET_DIR", "development/build/cargo"),
-    "PYTHONPYCACHEPREFIX": ("CADRUMO_PYTHON_CACHE_DIR", "development/cache/pycache"),
-    "XDG_CACHE_HOME": ("CADRUMO_TOOL_CACHE_DIR", "development/cache/tools"),
-    "XDG_CONFIG_HOME": ("CADRUMO_TOOL_CONFIG_DIR", "development/config/tools"),
-    "XDG_DATA_HOME": ("CADRUMO_TOOL_DATA_DIR", "development/data/tools"),
-    "XDG_STATE_HOME": ("CADRUMO_TOOL_STATE_DIR", "development/state/tools"),
-    "RUFF_CACHE_DIR": ("CADRUMO_RUFF_CACHE_DIR", "development/cache/ruff"),
-    "HOMEBREW_CACHE": ("CADRUMO_HOMEBREW_CACHE_DIR", "development/cache/homebrew"),
-    "HOMEBREW_LOGS": ("CADRUMO_HOMEBREW_LOGS_DIR", "development/logs/homebrew"),
-    "HOMEBREW_TEMP": ("CADRUMO_HOMEBREW_TEMP_DIR", "tmp/homebrew"),
-}
-
-
-def tool_storage_environment() -> dict[str, str]:
-    """Bind external tool caches and bytecode to shared, overrideable storage."""
-    return {
-        native: str(storage_directory(variable, default))
-        for native, (variable, default) in TOOL_STORAGE_LOCATIONS.items()
-    }

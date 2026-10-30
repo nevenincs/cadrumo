@@ -19,6 +19,8 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import (
     wrap_profile_custody_password_material,
 )
 from cadrumo.core.config import Settings, configured_authority_root
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority_store import require_authority_store_available
 
 
@@ -30,10 +32,10 @@ def require(condition: bool, message: str) -> None:
 
 root = Path(sys.argv[1]).resolve(strict=True)
 manifest = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
-temporary_root = Settings().cadrumo_temp_dir
+temporary_root = storage_path(StorageCategory.TEMPORARY_FILES)
 temporary_root.mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix="cadrumo-package-kdf-", dir=temporary_root) as neutral:
-    settings = Settings(cadrumo_local_storage_root=Path(neutral) / "state")
+    settings = Settings(cadrumo_storage_root=Path(neutral) / "state")
     wrapped = wrap_profile_custody_password_material(
         secret=secrets.token_urlsafe(32),
         dek=secrets.token_bytes(32),

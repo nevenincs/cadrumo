@@ -52,7 +52,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from cadrumo.core.storage_environment import configured_storage_root, storage_directory
+from cadrumo.core.storage_environment import configured_storage_root
+from dev.tool_storage import storage_directory
 
 VERSION = "1.7.12"
 

@@ -29,7 +29,7 @@ if not (__package__ is not None and __package__):
 REPO_ROOT = importlib.import_module("dev._paths").REPO_ROOT
 _STORAGE_ENVIRONMENT = importlib.import_module("cadrumo.core.storage_environment")
 resolve_storage_path = _STORAGE_ENVIRONMENT.resolve_storage_path
-tool_storage_environment = _STORAGE_ENVIRONMENT.tool_storage_environment
+tool_storage_environment = importlib.import_module("dev.tool_storage").tool_storage_environment
 require_homebrew_installation_prefix = importlib.import_module(
     "dev.packaging.homebrew_storage",
 ).require_homebrew_installation_prefix

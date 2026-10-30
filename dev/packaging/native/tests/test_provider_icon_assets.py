@@ -78,10 +78,7 @@ def test_wheel_metadata_and_icon_module_drive_stable_frontend_projection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     wheel = _wheel(tmp_path / "agent.whl")
-    controlled = tmp_path / "controlled-temporary"
-    controlled.mkdir()
     ambient = tmp_path / "ambient-not-created"
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(controlled))
     monkeypatch.setattr(tempfile, "tempdir", str(ambient))
 
     document = provider_icon_document(wheel)
@@ -104,7 +101,6 @@ def test_wheel_metadata_and_icon_module_drive_stable_frontend_projection(
     first = output.read_bytes()
     generate(wheel, output)
     assert output.read_bytes() == first
-    assert not list(controlled.iterdir())
     assert not ambient.exists()
 
 

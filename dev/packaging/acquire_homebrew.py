@@ -23,9 +23,10 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo.core.storage_environment import resolve_storage_path, storage_directory, tool_storage_environment
+from cadrumo.core.storage_environment import resolve_storage_path
 from dev._paths import UTF_8
 from dev.packaging.homebrew_storage import require_homebrew_installation_prefix
+from dev.tool_storage import storage_directory, tool_storage_environment
 
 from .acquire_common import (
     AcquisitionError,

@@ -325,8 +325,8 @@ def run_security_scan(
 
 def _semgrep_environment() -> dict[str, str]:
     """Bind scanner state explicitly; Semgrep ignores XDG roots that do not exist."""
-    from cadrumo.core.storage_environment import tool_storage_environment
     from dev.temporary_output import prepare_temp_root
+    from dev.tool_storage import tool_storage_environment
 
     environment = dict(os.environ)
     environment.update(tool_storage_environment())

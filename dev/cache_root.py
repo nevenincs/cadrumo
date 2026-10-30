@@ -31,7 +31,9 @@ from __future__ import annotations
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Final
 
-from cadrumo.core.storage_environment import configured_storage_root, storage_directory
+from cadrumo.core.storage_environment import configured_storage_root
+
+from .tool_storage import storage_directory
 
 DEV_CACHE_ROOT_ENV: Final[str] = "CADRUMO_DEV_CACHE_ROOT"
 """Environment variable relocating every development cache at once."""

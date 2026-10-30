@@ -15,7 +15,6 @@ from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
 from cadrumo.core.storage_environment import (
     STORAGE_PATH_RULES,
     STORAGE_ROOT,
-    TOOL_STORAGE_LOCATIONS,
     StoragePlatform,
     StorageRootRefusal,
 )
@@ -30,6 +29,7 @@ from dev.packaging.native.layout import load_layout
 from dev.packaging.native.release_image_scan import RETIRED_STORAGE_VARIABLES
 from dev.packaging.native.storage_vectors import storage_path_vectors, storage_root_vectors
 from dev.packaging.native.verification_paths import verification_destination
+from dev.tool_storage import TOOL_STORAGE_LOCATIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
