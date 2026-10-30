@@ -189,3 +189,58 @@ For P03, resolve authority rows through the registry-backed provider rather
 than accepting a caller-invented rate, preserve the single M130 casilla-02
 owner, and displace the proven unsafe transaction-ledger 0208 route only within
 the scoped acquisition/depreciation collision.
+
+## Integrated review, 2026-10-30
+
+Verdict: revision required. Step S14 of the 2026-10-30 plan, over S01 to S13 and S11, S15, S16 as extended. All findings are new with the asset work except the manifest entry. Executed means run against the real domain; every other entry rests on source reading.
+
+### money | high | Removing or redating a baja leaves its zero claim effective and loses the year's deduction
+Executed. `_baja_supersessions` in `application/actividad_asset/operations.py`, `uncovered_claim_intervals` in `domain/renta/actividad_asset/claims.py`.
+
+### money | high | Sub-cent basis puts a fully amortized element in permanent conflict
+Executed: basis 1234.57 at 35 percent and 50 percent allocation gives 432.0995 against charges of 432.10. `schedule.py` compares unrounded; `history.py` compares at cents.
+
+### never-blocks | high | Incomplete opening history blocks Modelo 100 and 130, even for a withdrawal
+`disposal_calculation.py`, `application/aggregation/modelo_bindings_actividad_assets.py`.
+
+### staleness | high | Modelo 130 fingerprint omits accumulated history, so a stale filed figure can pass unseen
+`schedule.py` fingerprint against `_constant_percentage_amount`.
+
+### boxes | high | A baja with a non-zero result blocks Modelo 100 with no route to clear it
+0179, 0306, 0307, 0385, 0387, 1844, 1846 and 1478 had no bindings; clave 1626 and agrarian excess unestablished.
+
+### never-blocks | high | Second instalments and ancillary rows in amortizable categories block with reclassification as the only remedy
+`_validate_primary_purchase` in the ledger lifecycle, `ledger_amortization_row_unregistered`.
+
+### staleness | medium | A new generation or later baja falsely flags consumers, and a disposal-only revision marks claims stale
+`ScheduleAuthority.fingerprint`, `_matches_current_schedule` in `register_reads.py`.
+
+### staleness | medium | Filed staleness cost grows with sealed revisions and elements on every status read
+`stale_filed_revisions` in `ledger_filing_snapshot.py`. Not measured by the review.
+
+### data-bounds | medium | Years run to 2075, future claims are accepted, and forecast and walk filter claims differently
+`register_reads.py`, `operations.py`.
+
+### money | medium | Pre-floor years understate the minimum, the opening span hides claim gaps, and pending display departs from the formula
+`disposal_calculation.py`, `domain/renta/actividad_asset/disposal.py`, `register_reads.py`.
+
+### territory | medium | Residence is read from the current profile, so a later move to foral territory blocks earlier periods
+`_territory_refusal` in `modelo_bindings_actividad_assets.py`.
+
+### manifest | medium | A stale contract manifest kills the worker and surfaces as custody_recovering
+Pre-existing. `contract_manifest.py`, `worker_operation_requests.py`. The manifest check is in no packaging or merge recipe.
+
+### mcp | medium | No asset refusal is run through the MCP server
+`test_refusal_reaches_frontends.py` covers MCP at schema level only.
+
+### replay | medium | An identical retry of dispose or create is refused where record_claim replays
+`operations.py`.
+
+### tests | medium | Test support diverges from production and some tests prove little
+`register_support.py` disposal bounds, `test_opening_coverage.py`, and `test_ledger_income_chain_aeat_exempt_worked_example.py`, which types 0208 by hand and is no amortization oracle.
+
+### decision | low | later_affectation_on is justified by LIRPF art. 28.3 but unnamed in the disposal ADR
+Named by amendment on 2026-10-30.
+
+### law | low | The RIS art. 4.3 group paragraph is unresolved for an individual buyer
+Letter a could over-deduct if it applies; no fact records the seller relationship. Under research.
