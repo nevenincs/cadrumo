@@ -53,6 +53,8 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "unresolved_binding",
         "unhandled_binding_source",
         "source_domain_not_ready",
+        "ledger_amortization_row_unregistered",
+        "activity_asset_foral_territory",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on: a figure left out or unworked."""
@@ -89,6 +91,9 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "unclassified_declarant_role_fact": _M,
         "unconverted_foreign_currency": _M,
         "aggregation_activity_undeclared": _M,
+        "activity_asset_claim_gap": _M,
+        "activity_asset_accrual_unavailable": _M,
+        "activity_asset_activity_undeclared": _M,
         # Worth checking. A value Cadrumo inferred or kept is among them: no box
         # lists it as assumed, so nothing in the editor can confirm it, and the
         # filer checks it against their records instead.
@@ -119,6 +124,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "deferred_binding_source": _I,
         "oss_no_live_source": _I,
         "register_owned_capital_acquisition": _I,
+        "activity_asset_agrarian_excluded": _I,
         "dt12_regime_window_closed": _I,
         "dt12_regime_window_unverified": _I,
         "dt12_parcial_rescate_guidance": _I,
@@ -129,7 +135,14 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
 PRINTED_BOX_REASONS: Final[frozenset[str]] = frozenset({"unresolved_binding"})
 """Blocking reasons that withhold filing only on a printed box: a working figure they name is worth checking."""
 
-UNWORKED_BOX_REASONS: Final[frozenset[str]] = frozenset({"unresolved_binding", "unresolved_derived_binding"})
+UNWORKED_BOX_REASONS: Final[frozenset[str]] = frozenset(
+    {
+        "unresolved_binding",
+        "unresolved_derived_binding",
+        "activity_asset_claim_gap",
+        "activity_asset_accrual_unavailable",
+    }
+)
 """Reasons that name a box that could not be worked out: it never reads as a zero."""
 
 RECORDS_REASONS: Final[frozenset[str]] = frozenset(
@@ -155,6 +168,7 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
         "ungrounded_income_substrate",
         "unusable_sales_invoice_evidence",
         "aggregation_activity_undeclared",
+        "ledger_amortization_row_unregistered",
     }
 )
 """Reasons whose cause is an entry in the filer's records, where the note sits and is put right."""

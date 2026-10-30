@@ -246,6 +246,57 @@ def resolve_residence_ccaa(
             authority operation used when the record is loaded.
         operation: Pinned authority operation supplying the profile decode context.
     """
+    raw = _recorded_tax_region(
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+    )
+    if raw is None:
+        return None
+    try:
+        return parse_tax_region(raw)
+    except (ForalRegimeError, TaxResidenceProfileError):
+        return None
+
+
+def resident_in_foral_territory(
+    *,
+    bucket_id: str,
+    profile_record: UserProfileRecord | None = None,
+    profile_decode_context: ProfileDecodeContext | None = None,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether the bucket's recorded tax residence is a foral territory.
+
+    Reads the same fact as :func:`resolve_residence_ccaa` and asks the same
+    parser. An absent or unparseable residence is not foral: nothing established it.
+    """
+    raw = _recorded_tax_region(
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+    )
+    if raw is None:
+        return False
+    try:
+        parse_tax_region(raw)
+    except ForalRegimeError:
+        return True
+    except TaxResidenceProfileError:
+        return False
+    return False
+
+
+def _recorded_tax_region(
+    *,
+    bucket_id: str,
+    profile_record: UserProfileRecord | None,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
+    """Return the raw ``tax_residence.ccaa`` fact, or ``None`` with no profile or fact."""
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
     record = profile_record
@@ -257,14 +308,7 @@ def resolve_residence_ccaa(
             ).load(bucket_id)
         except ProfileNotFoundError:
             return None
-
-    raw = fact_value(record, "tax_residence.ccaa")
-    if raw is None:
-        return None
-    try:
-        return parse_tax_region(raw)
-    except (ForalRegimeError, TaxResidenceProfileError):
-        return None
+    return fact_value(record, "tax_residence.ccaa")
 
 
 def resolve_iva_deduction_ratio(

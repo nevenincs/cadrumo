@@ -8,6 +8,7 @@ own owning concern moves.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
@@ -32,11 +33,15 @@ from ._modelo_bindings_support import (
 from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_actividad_assets import (
     LedgerRentaExpenseTreatment,
-    activity_asset_expense_observations,
+    activity_asset_provenance,
+    amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
     dwelling_ownership_share,
+    m100_activity_asset_projection,
+    refused_amortization_rows,
     register_acquisition_transaction_ids,
     register_owned_acquisition_diagnostics,
+    unregistered_amortization_row_diagnostics,
 )
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .renta_ledger_models import RentaLedgerExpenseAggregation
@@ -139,35 +144,59 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         if not revision_has_binding_source(context.revision, "ledger_renta_gastos_estimacion_directa_aggregation"):
             return empty_source_resolution(self.resolver_id, self.owned_sources)
 
-        asset_history = self._activity_asset_history_repository.load()
+        try:
+            asset_history = self._activity_asset_history_repository.load()
+        except STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
         aggregation = self._aggregate(context, asset_history=asset_history)
         if isinstance(aggregation, CalculationSourceResolution):
             return aggregation
-        register_owned = classify_ledger_expenses_against_asset_register(
-            asset_history.revisions,
-            asset_history.claims,
-            tuple(
-                LedgerRentaExpenseTreatment(
-                    transaction_id=observation.transaction_id,
-                    category=str(observation.category),
-                    tax_year=observation.tax_year,
-                    deductible_amount=observation.deductible_amount,
-                    amortization_labelled=observation.target_casilla_id in M100_AMORTIZATION_CASILLA_IDS,
-                )
-                for observation in aggregation.observations
-            ),
-        )
-        withheld_transaction_ids = {acquisition.transaction_id for acquisition in register_owned}
+        with source_context_operation(context) as operation:
+            labelled = amortization_labelled_expense_categories(
+                effective_date=date(aggregation.period.filing_year, 12, 31),
+            )
+            classification = classify_ledger_expenses_against_asset_register(
+                asset_history.revisions,
+                tuple(
+                    LedgerRentaExpenseTreatment(
+                        transaction_id=observation.transaction_id,
+                        category=str(observation.category),
+                        tax_year=observation.tax_year,
+                        deductible_amount=observation.deductible_amount,
+                        amortization_labelled=(
+                            observation.target_casilla_id in M100_AMORTIZATION_CASILLA_IDS
+                            or observation.category.value in labelled
+                        ),
+                    )
+                    for observation in aggregation.observations
+                ),
+            )
+            refused = refused_amortization_rows(
+                aggregation.issues,
+                assets=asset_history.revisions,
+                tax_year=aggregation.period.filing_year,
+                effective_date=date(aggregation.period.filing_year, 12, 31),
+            )
+            asset_projection = m100_activity_asset_projection(
+                asset_history,
+                context=context,
+                period=aggregation.period,
+                operation=operation,
+                resolver_id=self.resolver_id,
+            )
+        register_owned = classification.withheld
+        excluded_transaction_ids = classification.excluded_transaction_ids
         ledger_observations = tuple(
             observation
             for observation in aggregation.observations
-            if observation.transaction_id not in withheld_transaction_ids
+            if observation.transaction_id not in excluded_transaction_ids
         )
-        asset_observations = activity_asset_expense_observations(
-            asset_history.claims,
-            modelo="100",
-            period=aggregation.period,
-        )
+        asset_observations = asset_projection.observations
         all_observations = (*ledger_observations, *asset_observations)
         unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(context.revision, all_observations)
         return CalculationSourceResolution(
@@ -188,6 +217,11 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                 resolver_id=self.resolver_id,
             )
+            + unregistered_amortization_row_diagnostics(
+                (*classification.unregistered, *refused),
+                resolver_id=self.resolver_id,
+            )
+            + asset_projection.diagnostics
             + tuple(
                 CalculationSourceDiagnostic(
                     reason="unrouted_observation",
@@ -209,18 +243,10 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 ledger_observations,
                 _renta_observation_provenance,
             )
-            + tuple(
-                CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
-                    contributor_source_kind="activity_asset_claim",
-                    contributor_binding_source=None,
-                    lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=f"activity-asset-claim:{observation.claim_id}",
-                    parent_source_ref=None,
-                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                )
-                for observation in asset_observations
+            + activity_asset_provenance(
+                asset_observations,
+                resolver_id=self.resolver_id,
+                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
             ),
         )
 

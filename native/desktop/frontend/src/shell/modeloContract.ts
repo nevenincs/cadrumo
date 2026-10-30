@@ -436,7 +436,13 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "aggregation_activity_undeclared"
     | "operator_override_diverges_from_computed"
     | "register_owned_capital_acquisition"
-    | "m193_settled_row_amounts_unresolved_authority";
+    | "m193_settled_row_amounts_unresolved_authority"
+    | "ledger_amortization_row_unregistered"
+    | "activity_asset_foral_territory"
+    | "activity_asset_claim_gap"
+    | "activity_asset_accrual_unavailable"
+    | "activity_asset_agrarian_excluded"
+    | "activity_asset_activity_undeclared";
   source_kind: string;
   binding_source: BindingSourceKind | null;
   message: string;
@@ -486,8 +492,11 @@ export type CalculationSourceDiagnosticSnapshot = {
  * zero. `unhandled_binding_source` is a declared source with no executable
  * route. `source_domain_not_ready` is a source store that could not be read
  * yet. `invoice_reverse_charge_cuota_not_derivable` is a reverse-charge
- * invoice whose IVA owed could not be derived. These four block filing until a
- * recalculation clears them. `terminal_origin_mismatch` is a value that
+ * invoice whose IVA owed could not be derived.
+ * `ledger_amortization_row_unregistered` is a ledger row in an amortization
+ * category no registered element owns. `activity_asset_foral_territory` is a
+ * foral resident whose registered assets cannot reach these forms. These six
+ * block filing until a recalculation clears them. `terminal_origin_mismatch` is a value that
  * reached the declaration by an undeclared route; it persists so a reopened
  * declaration still shows it, but withholds nothing, because the route it
  * reports may lack a terminal origin by design. `binding_source` is `None`
@@ -504,7 +513,9 @@ export type CalculationSourceIssue = {
     | "terminal_origin_mismatch"
     | "unhandled_binding_source"
     | "source_domain_not_ready"
-    | "invoice_reverse_charge_cuota_not_derivable";
+    | "invoice_reverse_charge_cuota_not_derivable"
+    | "ledger_amortization_row_unregistered"
+    | "activity_asset_foral_territory";
   binding_source: BindingSourceKind | null;
   message: string;
   resolver_id: string | null;

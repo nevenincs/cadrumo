@@ -8,19 +8,16 @@ from functools import cache
 
 import pytest
 
-from ....core.casilla_id import validated_casilla_id
-from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
-from ....domain.renta.actividad_asset.claims import AmortizationClaim
+from ....domain.renta.actividad_asset.claims import M100_AMORTIZATION_CASILLA_IDS
 from ....domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
     AmortizationMethod,
     DirectEstimationRegime,
 )
-from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from ....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -31,13 +28,17 @@ from ....domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from ....domain.renta.ledger_expenses import renta_first_slice_expense_routing
 from ..modelo_bindings_actividad_assets import (
+    _AMORTIZATION_CATEGORY_TOKENS,
     LedgerRentaExpenseTreatment,
-    activity_asset_expense_observations,
     amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
+    refused_amortization_rows,
     register_owned_acquisition_diagnostics,
+    unregistered_amortization_row_diagnostics,
 )
+from ..renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -47,29 +48,6 @@ def _supported_years() -> tuple[int, ...]:
     support = published_supported_filing_years()
     assert support is not None, "the published authority declares no support envelope"
     return support.years
-
-
-def _claim(
-    year: int,
-    *,
-    kind: AssetKind = AssetKind.MATERIAL,
-    amount: Decimal = Decimal("500.00"),
-    covered_until: date | None = None,
-) -> AmortizationClaim:
-    """A claim covering the first quarter of ``year`` unless told otherwise."""
-    return AmortizationClaim(
-        asset_id="computer",
-        asset_revision_id="a" * 64,
-        asset_kind=kind,
-        tax_year=year,
-        covered_from=date(year, 1, 1),
-        covered_until=covered_until or date(year, 4, 1),
-        amount=amount,
-        schedule_fingerprint="b" * 64,
-        authority_generation="published-test-generation",
-        source_reference=f"modelo-100:{year}:parameter:test",
-        creating_operation="record-amortization",
-    )
 
 
 def _asset(year: int) -> ActivityAssetRevision:
@@ -86,6 +64,7 @@ def _asset(year: int) -> ActivityAssetRevision:
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=Decimal("2000.00"),
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="canonical-ledger-allocation",
         ),
         in_service_date=date(year, 1, 1),
@@ -100,51 +79,6 @@ def _asset(year: int) -> ActivityAssetRevision:
             authority_class_key="equipo-proceso-informacion",
         ),
     )
-
-
-@pytest.mark.parametrize("year", _supported_years())
-def test_m130_projects_each_claim_to_the_sole_expense_casilla(year: int) -> None:
-    """A claim reaches Modelo 130 as its own observation, never a replaced total."""
-    period = Period.from_year_and_code(year, "1T")
-    claim = _claim(year)
-
-    observations = activity_asset_expense_observations((claim,), modelo="130", period=period)
-
-    assert [observation.claim_id for observation in observations] == [claim.claim_id]
-    assert observations[0].target_casilla_id == validated_casilla_id("02", surface="test M130 target")
-    assert observations[0].deductible_amount == Decimal("500.00")
-
-
-@pytest.mark.parametrize("year", _supported_years())
-def test_m130_excludes_a_claim_covered_beyond_the_period_timeout(year: int) -> None:
-    """The year-to-date cutoff is the period end, so a later claim is not declared yet."""
-    period = Period.from_year_and_code(year, "1T")
-
-    within = activity_asset_expense_observations((_claim(year),), modelo="130", period=period)
-    beyond = activity_asset_expense_observations(
-        (_claim(year, covered_until=date(year, 7, 1)),),
-        modelo="130",
-        period=period,
-    )
-
-    assert len(within) == 1
-    assert beyond == ()
-
-
-@pytest.mark.parametrize("year", _supported_years())
-def test_m100_keeps_material_and_intangible_destinations_distinct(year: int) -> None:
-    """Material and intangible amortization reach distinct Modelo 100 casillas."""
-    period = Period.from_year_and_code(year, "0A")
-    material = _claim(year)
-    intangible = _claim(year, kind=AssetKind.INTANGIBLE, amount=Decimal("125.00"))
-
-    observations = activity_asset_expense_observations((material, intangible), modelo="100", period=period)
-
-    by_claim = {observation.claim_id: observation for observation in observations}
-    assert by_claim[material.claim_id].target_casilla_id == validated_casilla_id("0208", surface="test")
-    assert by_claim[material.claim_id].deductible_amount == Decimal("500.00")
-    assert by_claim[intangible.claim_id].target_casilla_id == validated_casilla_id("0227", surface="test")
-    assert by_claim[intangible.claim_id].deductible_amount == Decimal("125.00")
 
 
 def _treatment(
@@ -166,54 +100,98 @@ def _treatment(
 
 @pytest.mark.parametrize("year", _supported_years())
 def test_acquisition_evidence_alone_is_valid(year: int) -> None:
-    assert classify_ledger_expenses_against_asset_register((_asset(year),), (_claim(year),), ()) == ()
+    classification = classify_ledger_expenses_against_asset_register((_asset(year),), ())
+
+    assert classification.withheld == ()
+    assert classification.unregistered == ()
 
 
 @pytest.mark.parametrize("year", _supported_years())
-def test_a_separate_depreciation_row_for_a_charged_year_still_refuses(year: int) -> None:
-    """A second depreciation treatment the schedule does not account for refuses.
-
-    The register charges ``year`` for this asset and owns the activity
-    amortization destinations exclusively. A ledger row that routes its own
-    depreciation amount there would deduct the year's depreciation twice, so the
-    calculation names the asset, the transaction, the category, and the year.
-    """
-    asset = _asset(year)
-    claim = _claim(year)
-
-    with pytest.raises(ActividadAssetClaimConflictError, match="retain acquisition evidence"):
-        classify_ledger_expenses_against_asset_register(
-            (asset,),
-            (claim,),
-            (
-                _treatment(
-                    transaction_id="a" * 64,
-                    category="hardware_amortizable",
-                    amortization_labelled=True,
-                    tax_year=year,
-                ),
-            ),
-        )
-
-
-@pytest.mark.parametrize("year", _supported_years())
-def test_a_separate_depreciation_row_for_an_uncharged_year_is_left_alone(year: int) -> None:
-    """Without a charge for that year there is no second treatment to collide with."""
-    assert (
-        classify_ledger_expenses_against_asset_register(
-            (_asset(year),),
-            (_claim(year),),
-            (
-                _treatment(
-                    transaction_id="a" * 64,
-                    category="hardware_amortizable",
-                    amortization_labelled=True,
-                    tax_year=year - 1,
-                ),
-            ),
-        )
-        == ()
+def test_an_unowned_amortization_row_is_reported_with_or_without_a_claim(year: int) -> None:
+    """The register is the only route in every year, so a claim changes nothing about the row."""
+    row = _treatment(
+        transaction_id="a" * 64,
+        category="hardware_amortizable",
+        amortization_labelled=True,
+        tax_year=year,
     )
+
+    unclaimed = classify_ledger_expenses_against_asset_register((_asset(year),), (row,))
+    no_assets = classify_ledger_expenses_against_asset_register((), (row,))
+
+    assert [item.transaction_id for item in unclaimed.unregistered] == ["a" * 64]
+    assert [item.transaction_id for item in no_assets.unregistered] == ["a" * 64]
+    assert unclaimed.excluded_transaction_ids == {"a" * 64}
+
+
+def test_the_unowned_row_note_names_the_row_and_the_remedy() -> None:
+    row = classify_ledger_expenses_against_asset_register(
+        (),
+        (
+            _treatment(
+                transaction_id="a" * 64, category="hardware_amortizable", amortization_labelled=True, tax_year=2025
+            ),
+        ),
+    ).unregistered
+
+    diagnostics = unregistered_amortization_row_diagnostics(row, resolver_id="resolver")
+
+    assert [diagnostic.reason for diagnostic in diagnostics] == ["ledger_amortization_row_unregistered"]
+    assert diagnostics[0].source_ref == f"transaction:{'a' * 64}"
+    assert "hardware_amortizable" in diagnostics[0].message
+    assert diagnostics[0].remedy is not None
+    assert "register the element" in diagnostics[0].remedy
+
+
+def _refused(
+    reason: RentaLedgerAggregationIssueReason, *, transaction_id: str, category: str
+) -> RentaLedgerAggregationIssue:
+    return RentaLedgerAggregationIssue(
+        transaction_id=transaction_id,
+        category_id=category,
+        reason=reason,
+        detail="refused",
+    )
+
+
+def test_a_row_refused_once_its_route_is_gone_still_counts_as_unowned() -> None:
+    """After the category leaves the routing the row never becomes an observation, and must still block."""
+    asset = _asset(2025)
+    with bundled_indexed_authority().operation():
+        rows = refused_amortization_rows(
+            (
+                _refused(
+                    RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
+                    transaction_id="a" * 64,
+                    category="hardware_amortizable",
+                ),
+                _refused(
+                    RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
+                    transaction_id=asset.acquisition.observed_transaction_id,
+                    category="hardware_amortizable",
+                ),
+                _refused(
+                    RentaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
+                    transaction_id="b" * 64,
+                    category="hardware_amortizable",
+                ),
+                _refused(
+                    RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+                    transaction_id="d" * 64,
+                    category="mobiliario_amortizable",
+                ),
+                _refused(
+                    RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
+                    transaction_id="e" * 64,
+                    category="asesoria_fiscal",
+                ),
+            ),
+            assets=(asset,),
+            tax_year=2025,
+            effective_date=date(2025, 12, 31),
+        )
+
+    assert [row.transaction_id for row in rows] == ["a" * 64]
 
 
 @pytest.mark.parametrize("year", _supported_years())
@@ -227,11 +205,9 @@ def test_acquisition_purchase_is_withheld_instead_of_deducted_as_a_current_expen
     the register already accounts for this asset's depreciation.
     """
     asset = _asset(year)
-    claim = _claim(year)
 
-    withheld = classify_ledger_expenses_against_asset_register(
+    classified = classify_ledger_expenses_against_asset_register(
         (asset,),
-        (claim,),
         (
             _treatment(
                 transaction_id=asset.acquisition.observed_transaction_id,
@@ -242,6 +218,9 @@ def test_acquisition_purchase_is_withheld_instead_of_deducted_as_a_current_expen
             ),
         ),
     )
+    withheld = classified.withheld
+
+    assert classified.unregistered == ()
 
     assert len(withheld) == 1
     assert withheld[0].asset_id == asset.asset_id
@@ -262,7 +241,6 @@ def test_acquisition_purchase_is_withheld_before_any_charge_is_claimed(year: int
 
     withheld = classify_ledger_expenses_against_asset_register(
         (asset,),
-        (),
         (
             _treatment(
                 transaction_id=asset.acquisition.observed_transaction_id,
@@ -271,31 +249,26 @@ def test_acquisition_purchase_is_withheld_before_any_charge_is_claimed(year: int
                 tax_year=year,
             ),
         ),
-    )
+    ).withheld
 
     assert tuple(item.purchase_amount for item in withheld) == (Decimal("1000.00"),)
 
 
 @pytest.mark.parametrize("year", _supported_years())
 def test_unrelated_expense_rows_are_outside_the_register_scope(year: int) -> None:
-    asset = _asset(year)
-    claim = _claim(year)
-
-    assert (
-        classify_ledger_expenses_against_asset_register(
-            (asset,),
-            (claim,),
-            (
-                _treatment(
-                    transaction_id="e" * 64,
-                    category="asesoria_fiscal",
-                    amortization_labelled=False,
-                    tax_year=year,
-                ),
+    classified = classify_ledger_expenses_against_asset_register(
+        (_asset(year),),
+        (
+            _treatment(
+                transaction_id="e" * 64,
+                category="asesoria_fiscal",
+                amortization_labelled=False,
+                tax_year=year,
             ),
-        )
-        == ()
+        ),
     )
+
+    assert classified.excluded_transaction_ids == frozenset()
 
 
 @pytest.mark.parametrize("year", _supported_years())
@@ -317,7 +290,6 @@ def test_only_the_current_asset_revision_declares_the_owned_acquisition(year: in
 
     withheld = classify_ledger_expenses_against_asset_register(
         (original, current),
-        (),
         (
             _treatment(
                 transaction_id=superseded_transaction_id,
@@ -332,7 +304,7 @@ def test_only_the_current_asset_revision_declares_the_owned_acquisition(year: in
                 tax_year=year,
             ),
         ),
-    )
+    ).withheld
 
     assert tuple(item.transaction_id for item in withheld) == (current_transaction_id,)
 
@@ -342,7 +314,6 @@ def test_withheld_acquisition_advisory_names_the_asset_and_the_amount(year: int)
     asset = _asset(year)
     withheld = classify_ledger_expenses_against_asset_register(
         (asset,),
-        (),
         (
             _treatment(
                 transaction_id=asset.acquisition.observed_transaction_id,
@@ -352,7 +323,7 @@ def test_withheld_acquisition_advisory_names_the_asset_and_the_amount(year: int)
                 amount=Decimal("2000.00"),
             ),
         ),
-    )
+    ).withheld
 
     diagnostics = register_owned_acquisition_diagnostics(
         withheld,
@@ -383,3 +354,15 @@ def test_amortization_labelled_categories_come_from_the_governed_routing(year: i
     assert "mobiliario_amortizable" in labelled
     assert "asesoria_fiscal" not in labelled
     assert "material_oficina" not in labelled
+
+
+@pytest.mark.parametrize("year", _ROUTING_EDITIONS)
+def test_every_routed_amortization_category_stays_labelled_without_its_route(year: int) -> None:
+    """The labelled set outlives the routing, so a route the set does not hold must fail here."""
+    with bundled_indexed_authority().operation():
+        routing = renta_first_slice_expense_routing(effective_date=date(year, 6, 30))
+        labelled = amortization_labelled_expense_categories(effective_date=date(year, 6, 30))
+
+    routed = {category.value for category, casilla in routing.items() if casilla in M100_AMORTIZATION_CASILLA_IDS}
+    assert routed <= labelled
+    assert labelled == _AMORTIZATION_CATEGORY_TOKENS

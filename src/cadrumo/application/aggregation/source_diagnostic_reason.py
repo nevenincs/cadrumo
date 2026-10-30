@@ -243,4 +243,29 @@ CalculationSourceDiagnosticReason = Literal[
     # so nothing is missing from the return; what is missing is the authority
     # for them, which must not read as settled.
     "m193_settled_row_amounts_unresolved_authority",
+    # A ledger row in an amortization category that no registered element claims
+    # as its acquisition. The register is the only route to the activity
+    # amortization boxes, so the row deducts nothing, and leaving it at that would
+    # silently drop a real element from the return. Blocking until the element is
+    # registered or the row is reclassified.
+    "ledger_amortization_row_unregistered",
+    # A resident of a foral territory holding registered activity assets. Modelo
+    # 100 and Modelo 130 of the AEAT do not apply there, so no figure from the
+    # register may reach them. Blocking, and distinct from a source that could not
+    # be read: there is nothing to retry.
+    "activity_asset_foral_territory",
+    # An element in service with lawful base remaining and no effective claim for
+    # part of the year. The deduction is not invented and the return is not
+    # refused, because a gap reduces a deduction without invalidating the return.
+    "activity_asset_claim_gap",
+    # The schedule refused to work out what an element accrued, so the element
+    # contributes nothing and the amount it may be owed is unknown, not zero.
+    "activity_asset_accrual_unavailable",
+    # An element of an agrarian activity left out of the Modelo 130 expense box
+    # because that activity's instalment is a share of income (RIRPF art. 110.1.c).
+    "activity_asset_agrarian_excluded",
+    # An element whose acquisition row declares no activity, held by a taxpayer
+    # another of whose elements is agrarian. It counts in the Modelo 130 expense
+    # box, since silence does not mean agrarian, but only the filer can settle it.
+    "activity_asset_activity_undeclared",
 ]

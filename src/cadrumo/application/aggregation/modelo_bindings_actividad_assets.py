@@ -1,29 +1,81 @@
-"""Read-only Modelo 100/130 projections for effective activity-asset claims."""
+"""Read-only Modelo 100/130 projections of the activity-asset register.
+
+Modelo 100 carries effective claims only. Modelo 130 carries what each element
+accrued from 1 January to the quarter's end, worked out from its schedule without
+recording anything (RIRPF art. 110.1.a); an element on a free method has no
+computable accrual, so it contributes its effective claims. Neither creates a
+charge. The register is the only route to the activity amortization boxes: a
+ledger row in an amortization category is acquisition evidence, withheld when the
+register owns it and a blocking note when it does not.
+"""
 
 from __future__ import annotations
 
-from datetime import date
+from collections.abc import Iterable
+from dataclasses import dataclass
+from datetime import date, timedelta
 from decimal import Decimal
+from typing import Final, Protocol
 
 from pydantic import BaseModel, Field
 
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...core.tipos_actividad import TipoActividad
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.renta.actividad_asset.claims import (
     M100_AMORTIZATION_CASILLA_IDS,
     AmortizationClaim,
-    effective_claims,
+    asset_schedule_history,
     m100_casilla_id,
     select_effective_claims,
+    uncovered_claim_intervals,
 )
-from ...domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
-from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetBasisStage
+from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS
+from ...domain.renta.actividad_asset.errors import ActividadAssetError
+from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetBasisStage, OpeningHistoryStatus
+from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
+from ...domain.renta.errors import RentaValidationError
 from ...domain.renta.ledger_expenses import renta_first_slice_expense_routing
-from .source_mesh import CalculationSourceDiagnostic
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
+from ..actividad_asset.history import ActivityAssetHistory
+from ..calculations.actividad_asset_schedule import forecast_activity_asset_charge
+from ..user_profile.plantilla_media_rows import plantilla_media_years_of
+from . import _shared_issue_reasons
+from .renta_ledger import resident_in_foral_territory
+from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceProvenance
 from .source_resolution_operations import source_diagnostics_for
+
+_AGRARIAN_INSTALMENT_SELECTOR: Final[str] = (
+    "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras"
+)
+"""The activities whose instalment is a share of income under RIRPF art. 110.1.c."""
+
+_AMORTIZATION_CATEGORY_TOKENS: Final[frozenset[str]] = frozenset(
+    {"amortizacion_vivienda_afecto", "hardware_amortizable", "mobiliario_amortizable"},
+)
+"""Ledger categories that declare an amortization, whether or not the registry still routes them.
+
+The routing is what declares them today, and it stops doing so when these
+categories leave it, so it cannot be the only source: the rows must keep blocking
+after the route is gone. A test holds this set to the routing while both exist.
+"""
+
+_NOT_A_DECLARED_EXPENSE_ISSUE_REASONS: Final[frozenset[str]] = frozenset(
+    {
+        _shared_issue_reasons.OUTSIDE_PERIOD,
+        _shared_issue_reasons.UNSUPPORTED_DIRECTION,
+        _shared_issue_reasons.PERSONAL_TRANSACTION,
+        _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE,
+    },
+)
+"""Refusals saying a row is not this period's business expense, so it declares no amortization here."""
 
 
 class LedgerRentaExpenseTreatment(BaseModel):
@@ -65,157 +117,680 @@ class RegisterOwnedAcquisition(BaseModel):
     purchase_amount: Decimal
 
 
-class ActivityAssetExpenseObservation(BaseModel):
-    """One effective claim projected through an existing Renta expense owner."""
+class ActivityAssetClaimSource(BaseModel):
+    """An observation resting on one recorded effective claim."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     claim_id: Hex64Str
+
+    @property
+    def contributor_source_kind(self) -> str:
+        """Name this kind of contributor in provenance."""
+        return "activity_asset_claim"
+
+    @property
+    def source_ref(self) -> str:
+        """Identify the claim in provenance."""
+        return f"activity-asset-claim:{self.claim_id}"
+
+
+class ActivityAssetScheduleSource(BaseModel):
+    """An observation resting on an element's schedule, with no claim behind it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schedule_fingerprint: Hex64Str
+
+    @property
+    def contributor_source_kind(self) -> str:
+        """Name this kind of contributor in provenance."""
+        return "activity_asset_schedule"
+
+    @property
+    def source_ref(self) -> str:
+        """Identify the schedule in provenance."""
+        return f"activity-asset-schedule:{self.schedule_fingerprint}"
+
+
+class ActivityAssetExpenseObservation(BaseModel):
+    """One amount of the register projected through an existing Renta expense owner."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source: ActivityAssetClaimSource | ActivityAssetScheduleSource
     modelo: str
     period: str = Field(min_length=2, max_length=2)
     target_casilla_id: CasillaId
     deductible_amount: Decimal = Field(ge=Decimal("0"))
 
 
-def activity_asset_expense_observations(
+@dataclass(frozen=True, slots=True)
+class ActivityAssetProjection:
+    """What the register contributes to one calculation, and what it has to say about it."""
+
+    observations: tuple[ActivityAssetExpenseObservation, ...] = ()
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+
+
+class _Forecast:
+    """The one schedule route, bound to one calculation's authority and profile."""
+
+    def __init__(self, context: CalculationSourceContext, operation: PinnedAuthorityOperation) -> None:
+        self._context = context
+        self._operation = operation
+
+    def __call__(
+        self,
+        revision: ActivityAssetRevision,
+        *,
+        covered_from: date,
+        covered_until: date,
+        history: AssetScheduleHistory,
+    ) -> ScheduledAmortizationCharge:
+        """Forecast one element's non-free charge without recording anything."""
+        profile = self._context.profile
+        return forecast_activity_asset_charge(
+            revision,
+            modelo_100_revision=self._operation.revision_for_context(
+                "100",
+                filing_year=covered_from.year,
+                period="0A",
+            ),
+            authority_generation=self._operation.pin().logical_generation,
+            covered_from=covered_from,
+            covered_until=covered_until,
+            history=history,
+            taxpayer_workforce=lambda: () if profile is None else plantilla_media_years_of(profile.record),
+            legal_reference=self._operation.legal_reference,
+        )
+
+
+def m100_activity_asset_projection(
+    history: ActivityAssetHistory,
+    *,
+    context: CalculationSourceContext,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+    resolver_id: str,
+) -> ActivityAssetProjection:
+    """Project effective claims into casillas 0208 and 0227, reporting this year's uncovered intervals.
+
+    A gap is reported and never filled: the deduction is not invented, the return
+    is not refused, and only the filing year is examined, so a gap of an earlier
+    year cannot weigh on a later one.
+
+    Returns:
+        The claims' observations and a non-blocking finding per uncovered interval.
+    """
+    current = _current_revisions(history.revisions)
+    if not current:
+        return ActivityAssetProjection()
+    if _foral(context, operation):
+        return _foral_projection(resolver_id)
+    observations = _m100_claim_observations(history.claims, period=period)
+    reached = {observation.target_casilla_id for observation in observations}
+    forecast = _Forecast(context, operation)
+    diagnostics = tuple(
+        diagnostic
+        for asset_id in sorted(current)
+        for diagnostic in _m100_gap_diagnostics(
+            current[asset_id],
+            history,
+            tax_year=period.filing_year,
+            reached=reached,
+            forecast=forecast,
+            resolver_id=resolver_id,
+        )
+    )
+    return ActivityAssetProjection(observations=observations, diagnostics=diagnostics)
+
+
+def m130_activity_asset_projection(
+    history: ActivityAssetHistory,
+    *,
+    context: CalculationSourceContext,
+    period: Period,
+    target_casilla_id: CasillaId,
+    transactions: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    resolver_id: str,
+) -> ActivityAssetProjection:
+    """Project each element's amortization accrued from 1 January to the quarter's end.
+
+    An element belongs to the activity its acquisition row declares. An agrarian
+    activity pays a share of income whatever its expenses, so its elements stay
+    out; the filter is by activity, and another element of the same taxpayer still
+    counts. An element whose row declares no activity counts, because silence does
+    not mean agrarian.
+
+    Returns:
+        The accrued observations and the findings about elements that contributed nothing.
+    """
+    current = _current_revisions(history.revisions)
+    if not current:
+        return ActivityAssetProjection()
+    if _foral(context, operation):
+        return _foral_projection(resolver_id)
+    agrarian = frozenset(
+        TipoActividad(code)
+        for code in tipo_actividad_code_set(
+            _AGRARIAN_INSTALMENT_SELECTOR,
+            effective_date=period.end_date,
+            authority=operation,
+        )
+    )
+    rows = transactions.load_by_ids(
+        revision.acquisition.observed_transaction_id for revision in current.values()
+    ).transactions
+    activities = {
+        asset_id: (row.tipo_actividad if (row := rows.get(revision.acquisition.observed_transaction_id)) else None)
+        for asset_id, revision in current.items()
+    }
+    any_agrarian = any(activity in agrarian for activity in activities.values())
+    forecast = _Forecast(context, operation)
+    observations: list[ActivityAssetExpenseObservation] = []
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for asset_id in sorted(current):
+        revision = current[asset_id]
+        if activities[asset_id] in agrarian:
+            diagnostics.append(_agrarian_excluded_diagnostic(revision, period=period, resolver_id=resolver_id))
+            continue
+        if activities[asset_id] is None and any_agrarian:
+            diagnostics.append(_activity_undeclared_diagnostic(revision, resolver_id=resolver_id))
+        contribution = _m130_element_contribution(
+            revision,
+            history,
+            period=period,
+            target_casilla_id=target_casilla_id,
+            forecast=forecast,
+            resolver_id=resolver_id,
+        )
+        observations.extend(contribution.observations)
+        diagnostics.extend(contribution.diagnostics)
+    return ActivityAssetProjection(observations=tuple(observations), diagnostics=tuple(diagnostics))
+
+
+def activity_asset_provenance(
+    observations: Iterable[ActivityAssetExpenseObservation],
+    *,
+    resolver_id: str,
+    resolved_binding_source: BindingSourceKind,
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Name the claim or schedule behind each observation.
+
+    Returns:
+        One primary provenance row per observation.
+    """
+    return tuple(
+        CalculationSourceProvenance(
+            resolver_id=resolver_id,
+            resolved_binding_source=resolved_binding_source,
+            contributor_source_kind=observation.source.contributor_source_kind,
+            contributor_binding_source=None,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=observation.source.source_ref,
+            parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+        )
+        for observation in observations
+    )
+
+
+def _foral(context: CalculationSourceContext, operation: PinnedAuthorityOperation) -> bool:
+    profile = context.profile
+    return resident_in_foral_territory(
+        bucket_id=context.bucket_id,
+        profile_record=None if profile is None else profile.record,
+        profile_decode_context=None if profile is None else profile.profile_decode_context,
+        operation=operation,
+    )
+
+
+def _foral_projection(resolver_id: str) -> ActivityAssetProjection:
+    return ActivityAssetProjection(
+        diagnostics=(
+            CalculationSourceDiagnostic(
+                reason="activity_asset_foral_territory",
+                source_kind=resolver_id,
+                resolver_id=resolver_id,
+                message=(
+                    "the taxpayer resides in a foral territory, where Modelos 100 and 130 of the AEAT do not apply; "
+                    "the activity-asset register contributes nothing to this calculation"
+                ),
+                remedy="declare these assets with the foral Hacienda of your territory",
+            ),
+        ),
+    )
+
+
+def _m100_claim_observations(
     claims: tuple[AmortizationClaim, ...],
     *,
-    modelo: str,
     period: Period,
 ) -> tuple[ActivityAssetExpenseObservation, ...]:
-    """Project effective claims into the existing M100 or M130 expense family."""
-    through = period.end_date if modelo == "130" else None
-    effective = select_effective_claims(claims, tax_year=period.filing_year, through=through)
-    if modelo == "130":
-        return tuple(
-            ActivityAssetExpenseObservation(
-                claim_id=claim.claim_id,
-                modelo=modelo,
-                period=period.registry_token,
-                target_casilla_id=validated_casilla_id("02", surface="activity asset M130 observation"),
-                deductible_amount=claim.amount,
-            )
-            for claim in effective
+    return tuple(
+        ActivityAssetExpenseObservation(
+            source=ActivityAssetClaimSource(claim_id=claim.claim_id),
+            modelo="100",
+            period=period.registry_token,
+            target_casilla_id=validated_casilla_id(
+                m100_casilla_id(claim.asset_kind),
+                surface="activity asset M100 observation",
+            ),
+            deductible_amount=claim.amount,
         )
-    if modelo == "100":
-        return tuple(
-            ActivityAssetExpenseObservation(
-                claim_id=claim.claim_id,
-                modelo=modelo,
-                period=period.registry_token,
-                target_casilla_id=validated_casilla_id(
-                    m100_casilla_id(claim.asset_kind),
-                    surface="activity asset M100 observation",
+        for claim in select_effective_claims(claims, tax_year=period.filing_year)
+    )
+
+
+def _year_history(
+    history: ActivityAssetHistory,
+    revision: ActivityAssetRevision,
+    *,
+    tax_year: int,
+) -> AssetScheduleHistory:
+    """Summarise history up to ``tax_year``: a later year's claim does not change this year's figure."""
+    return asset_schedule_history(
+        tuple(claim for claim in history.claims if claim.tax_year <= tax_year),
+        history.revisions,
+        asset_id=revision.asset_id,
+        tax_year=tax_year,
+    )
+
+
+def _m100_gap_diagnostics(
+    revision: ActivityAssetRevision,
+    history: ActivityAssetHistory,
+    *,
+    tax_year: int,
+    reached: set[CasillaId],
+    forecast: _Forecast,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    casilla = validated_casilla_id(m100_casilla_id(revision.asset_kind), surface="activity asset M100 finding")
+    named_box = None if casilla in reached else casilla
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for gap in uncovered_claim_intervals(
+        revision,
+        history.claims,
+        start=date(tax_year, 1, 1),
+        end=date(tax_year + 1, 1, 1),
+    ):
+        if revision.amortization.method in FREE_AMOUNT_METHODS:
+            if not _free_base_remains(revision, history, tax_year=tax_year):
+                continue
+            accrued = "no computable accrual, because the amount of a free method is the taxpayer's election"
+        else:
+            try:
+                charge = forecast(
+                    revision,
+                    covered_from=gap.covered_from,
+                    covered_until=gap.covered_until,
+                    history=_year_history(history, revision, tax_year=tax_year),
+                )
+            except ActividadAssetError as exc:
+                diagnostics.append(
+                    _accrual_unavailable_diagnostic(revision, exc, casilla_id=named_box, resolver_id=resolver_id),
+                )
+                continue
+            if charge.amount <= Decimal("0"):
+                continue
+            accrued = f"{charge.amount} EUR accrued"
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="activity_asset_claim_gap",
+                source_kind=resolver_id,
+                resolver_id=resolver_id,
+                source_ref=f"activity-asset:{revision.asset_id}",
+                casilla_id=named_box,
+                message=(
+                    f"element {revision.asset_id!r} has no effective claim for "
+                    f"{gap.covered_from.isoformat()} to {gap.covered_until.isoformat()} ({accrued}); "
+                    f"box {casilla} declares only recorded claims"
                 ),
-                deductible_amount=claim.amount,
-            )
-            for claim in effective
+                remedy="record the amortization charge for that interval to deduct it",
+            ),
         )
-    raise ValueError("activity-asset expense observations support only Modelos 100 and 130")
+    return tuple(diagnostics)
+
+
+def _free_base_remains(revision: ActivityAssetRevision, history: ActivityAssetHistory, *, tax_year: int) -> bool:
+    """Whether a free-method element still has amortizable basis after opening history and claims."""
+    if revision.opening_history.status is OpeningHistoryStatus.MISSING:
+        return True
+    summary = _year_history(history, revision, tax_year=tax_year)
+    opening = revision.opening_history.accumulated_amount or Decimal("0")
+    consumed = opening + summary.accumulated_before_tax_year + summary.accumulated_in_tax_year
+    return revision.amortizable_basis() > consumed
+
+
+def _m130_element_contribution(
+    revision: ActivityAssetRevision,
+    history: ActivityAssetHistory,
+    *,
+    period: Period,
+    target_casilla_id: CasillaId,
+    forecast: _Forecast,
+    resolver_id: str,
+) -> ActivityAssetProjection:
+    tax_year = period.filing_year
+    year_start = date(tax_year, 1, 1)
+    until = period.end_date + timedelta(days=1)
+    if revision.in_service_date >= until or (
+        revision.out_of_service_date is not None and revision.out_of_service_date <= year_start
+    ):
+        return ActivityAssetProjection()
+    try:
+        if revision.amortization.method in FREE_AMOUNT_METHODS:
+            return _m130_free_contribution(
+                revision,
+                history,
+                period=period,
+                target_casilla_id=target_casilla_id,
+                resolver_id=resolver_id,
+            )
+        # The accrual is the schedule's own figure for the span, so claims recorded
+        # inside the year do not reduce it the way they reduce a further charge.
+        summary = _year_history(history, revision, tax_year=tax_year).model_copy(
+            update={"accumulated_in_tax_year": Decimal("0")},
+        )
+        charge = forecast(revision, covered_from=year_start, covered_until=until, history=summary)
+    except ActividadAssetError as exc:
+        return ActivityAssetProjection(
+            diagnostics=(_accrual_unavailable_diagnostic(revision, exc, casilla_id=None, resolver_id=resolver_id),),
+        )
+    if charge.amount <= Decimal("0"):
+        return ActivityAssetProjection()
+    return ActivityAssetProjection(
+        observations=(
+            ActivityAssetExpenseObservation(
+                source=ActivityAssetScheduleSource(schedule_fingerprint=charge.schedule_fingerprint),
+                modelo="130",
+                period=period.registry_token,
+                target_casilla_id=target_casilla_id,
+                deductible_amount=charge.amount,
+            ),
+        ),
+    )
+
+
+def _m130_free_contribution(
+    revision: ActivityAssetRevision,
+    history: ActivityAssetHistory,
+    *,
+    period: Period,
+    target_casilla_id: CasillaId,
+    resolver_id: str,
+) -> ActivityAssetProjection:
+    claims = tuple(
+        claim
+        for claim in select_effective_claims(history.claims, tax_year=period.filing_year, through=period.end_date)
+        if claim.asset_id == revision.asset_id
+    )
+    if claims:
+        return ActivityAssetProjection(
+            observations=tuple(
+                ActivityAssetExpenseObservation(
+                    source=ActivityAssetClaimSource(claim_id=claim.claim_id),
+                    modelo="130",
+                    period=period.registry_token,
+                    target_casilla_id=target_casilla_id,
+                    deductible_amount=claim.amount,
+                )
+                for claim in claims
+            ),
+        )
+    if not _free_base_remains(revision, history, tax_year=period.filing_year):
+        return ActivityAssetProjection()
+    start = max(date(period.filing_year, 1, 1), revision.in_service_date)
+    return ActivityAssetProjection(
+        diagnostics=(
+            CalculationSourceDiagnostic(
+                reason="activity_asset_claim_gap",
+                source_kind=resolver_id,
+                resolver_id=resolver_id,
+                source_ref=f"activity-asset:{revision.asset_id}",
+                message=(
+                    f"element {revision.asset_id!r} has no effective claim for {start.isoformat()} to "
+                    f"{period.end_date.isoformat()} and no computable accrual, because the amount of a free method "
+                    f"is the taxpayer's election; it contributes nothing to box {target_casilla_id}"
+                ),
+                remedy="record the elected amortization charge to deduct it",
+            ),
+        ),
+    )
+
+
+def _accrual_unavailable_diagnostic(
+    revision: ActivityAssetRevision,
+    error: ActividadAssetError,
+    *,
+    casilla_id: CasillaId | None,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="activity_asset_accrual_unavailable",
+        source_kind=resolver_id,
+        resolver_id=resolver_id,
+        source_ref=f"activity-asset:{revision.asset_id}",
+        casilla_id=casilla_id,
+        message=f"the schedule of element {revision.asset_id!r} could not be worked out: {error}",
+        remedy="complete or correct the element in the register, then calculate again",
+    )
+
+
+def _agrarian_excluded_diagnostic(
+    revision: ActivityAssetRevision,
+    *,
+    period: Period,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="activity_asset_agrarian_excluded",
+        source_kind=resolver_id,
+        resolver_id=resolver_id,
+        source_ref=f"activity-asset:{revision.asset_id}",
+        message=(
+            f"element {revision.asset_id!r} belongs to an agrarian activity, whose {period.registry_token} instalment "
+            "is a share of income (RIRPF art. 110.1.c); its amortization is deducted in Modelo 100 only"
+        ),
+    )
+
+
+def _activity_undeclared_diagnostic(
+    revision: ActivityAssetRevision,
+    *,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="activity_asset_activity_undeclared",
+        source_kind=resolver_id,
+        resolver_id=resolver_id,
+        source_ref=f"transaction:{revision.acquisition.observed_transaction_id}",
+        message=(
+            f"the acquisition of element {revision.asset_id!r} declares no activity, and another element of this "
+            "taxpayer is agrarian; it is counted as non-agrarian"
+        ),
+        remedy="set the type of activity on the acquisition entry, then calculate again",
+    )
 
 
 def amortization_labelled_expense_categories(*, effective_date: date) -> frozenset[str]:
-    """Return the ledger categories whose Renta destination is an amortization dotación.
+    """Return the ledger categories that declare an amortization rather than an ordinary expense.
 
-    Derived from the governed first-slice expense routing selected at
-    ``effective_date``, so the set follows the registry declaration instead of a
-    restated category list. A category outside the returned set labels an
-    ordinary expense, never a depreciation treatment.
+    The governed first-slice routing selected at ``effective_date`` contributes
+    whatever it still sends to an activity amortization casilla, beside the
+    categories that keep their meaning after leaving that routing.
 
     Returns:
-        The category tokens routed to an activity amortization casilla.
+        The category tokens whose rows belong to the activity-asset register.
     """
-    return frozenset(
-        category.value
-        for category, casilla in renta_first_slice_expense_routing(effective_date=effective_date).items()
-        if casilla in M100_AMORTIZATION_CASILLA_IDS
-    )
+    try:
+        routing = renta_first_slice_expense_routing(effective_date=effective_date)
+    except RentaValidationError:
+        return _AMORTIZATION_CATEGORY_TOKENS
+    return _AMORTIZATION_CATEGORY_TOKENS | {
+        category.value for category, casilla in routing.items() if casilla in M100_AMORTIZATION_CASILLA_IDS
+    }
+
+
+class UnregisteredAmortizationRow(BaseModel):
+    """A ledger row declaring an amortization that no registered element accounts for."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    transaction_id: TransactionId
+    category: str | None = Field(default=None, min_length=1, max_length=128)
+    tax_year: int
+
+
+@dataclass(frozen=True, slots=True)
+class LedgerExpenseRegisterClassification:
+    """Which ledger rows the register withholds, and which it refuses to leave unexplained."""
+
+    withheld: tuple[RegisterOwnedAcquisition, ...]
+    unregistered: tuple[UnregisteredAmortizationRow, ...]
+
+    @property
+    def excluded_transaction_ids(self) -> frozenset[str]:
+        """Return the rows that must not reach an expense total."""
+        return frozenset(
+            {row.transaction_id for row in self.withheld} | {row.transaction_id for row in self.unregistered},
+        )
 
 
 def classify_ledger_expenses_against_asset_register(
     assets: tuple[ActivityAssetRevision, ...],
-    claims: tuple[AmortizationClaim, ...],
     treatments: tuple[LedgerRentaExpenseTreatment, ...],
-) -> tuple[RegisterOwnedAcquisition, ...]:
-    """Withhold register-owned acquisitions and refuse competing depreciation treatments.
+) -> LedgerExpenseRegisterClassification:
+    """Withhold register-owned acquisitions and report unowned amortization rows.
 
     The activity-asset source owns the activity amortization destinations
-    exclusively, so no ledger row may route a deductible amount to one. Which of
-    the two authorised dispositions applies depends on whether the register
-    already accounts for the row:
+    exclusively, in every year and whether or not it holds a claim for that year,
+    so no ledger row may route a deductible amount to one:
 
     - A row on a transaction a registered asset declares as its acquisition IS
       the acquisition. Under LIRPF art. 28.1 the rendimiento neto follows the
       Impuesto sobre Sociedades rules, where LIS art. 12.1 makes the deductible
       item the amortización del inmovilizado and RIS art. 3.2 makes the
       acquisition price the amortizable base, amortised across the element's
-      useful life (RIS art. 3.3). The purchase is therefore not an expense of
-      the period: the row is withheld from the expense total and reported, and
-      the ledger's own depreciation route yields to the register whatever
-      category the row carries. The transaction and its IVA facts are untouched,
-      so the acquisition stays as evidence exactly as the register requires.
-    - Any other row whose own destination is an activity amortization casilla,
-      in a tax year the register already charges, declares a second depreciation
-      treatment the schedule does not account for. Summing it would deduct the
-      same year's depreciation twice, so the calculation refuses and names what
-      to reclassify or reverse.
-
-    Withholding is reported rather than silent: the returned rows carry the
-    asset, transaction, category, year, and purchase amount the caller turns
-    into an operator-visible diagnostic.
+      useful life (RIS art. 3.3). The row is withheld and reported, whatever
+      category it carries; the transaction and its IVA facts are untouched.
+    - Any other row whose own destination is an activity amortization casilla is
+      an element the register does not know. It is never deducted, and the
+      caller turns it into a blocking note whose remedy is to register the element.
 
     Returns:
-        One :class:`RegisterOwnedAcquisition` per withheld row, in asset order.
-
-    Raises:
-        ActividadAssetClaimConflictError: When a row outside the register's own
-            acquisitions routes a depreciation amount for a charged tax year.
+        The withheld rows in asset order and the unregistered rows in ledger order.
     """
     owners = _current_acquisition_owners(assets)
-    owner_by_transaction = {transaction_id: asset_id for asset_id, transaction_id in owners}
-    withheld = tuple(
-        RegisterOwnedAcquisition(
-            asset_id=asset_id,
-            transaction_id=treatment.transaction_id,
-            category=treatment.category,
-            tax_year=treatment.tax_year,
-            purchase_amount=treatment.deductible_amount,
-        )
-        for asset_id, transaction_id in owners
-        for treatment in treatments
-        if treatment.transaction_id == transaction_id
-    )
-    _refuse_competing_depreciation_treatments(
-        claims,
-        tuple(
-            treatment
+    owned = {transaction_id for _asset_id, transaction_id in owners}
+    return LedgerExpenseRegisterClassification(
+        withheld=tuple(
+            RegisterOwnedAcquisition(
+                asset_id=asset_id,
+                transaction_id=treatment.transaction_id,
+                category=treatment.category,
+                tax_year=treatment.tax_year,
+                purchase_amount=treatment.deductible_amount,
+            )
+            for asset_id, transaction_id in owners
             for treatment in treatments
-            if treatment.amortization_labelled and treatment.transaction_id not in owner_by_transaction
+            if treatment.transaction_id == transaction_id
+        ),
+        unregistered=tuple(
+            UnregisteredAmortizationRow(
+                transaction_id=treatment.transaction_id,
+                category=treatment.category,
+                tax_year=treatment.tax_year,
+            )
+            for treatment in treatments
+            if treatment.amortization_labelled and treatment.transaction_id not in owned
         ),
     )
-    return withheld
 
 
-def _refuse_competing_depreciation_treatments(
-    claims: tuple[AmortizationClaim, ...],
-    amortization_labelled: tuple[LedgerRentaExpenseTreatment, ...],
-) -> None:
-    """Refuse a ledger depreciation amount for a tax year the register charges."""
-    if not amortization_labelled:
-        return
-    charged_assets: dict[int, list[str]] = {}
-    for claim in effective_claims(claims):
-        charged_assets.setdefault(claim.tax_year, []).append(claim.asset_id)
-    for treatment in amortization_labelled:
-        competing_assets = sorted(set(charged_assets.get(treatment.tax_year, ())))
-        if not competing_assets:
-            continue
-        raise ActividadAssetClaimConflictError(
-            "competing transaction-ledger depreciation treatment "
-            f"asset={competing_assets[0]!r} transaction={treatment.transaction_id!r} "
-            f"category={treatment.category!r} tax_year={treatment.tax_year}; retain acquisition evidence and "
-            "reclassify or reverse only the competing depreciation treatment",
+class RefusedExpenseRow(Protocol):
+    """What an aggregation issue says about the ledger row it refused."""
+
+    @property
+    def transaction_id(self) -> str:
+        """The refused ledger row."""
+        ...
+
+    @property
+    def category_id(self) -> str | None:
+        """The category the row declares."""
+        ...
+
+    @property
+    def reason(self) -> str:
+        """The machine-readable refusal."""
+        ...
+
+
+def refused_amortization_rows(
+    issues: Iterable[RefusedExpenseRow],
+    *,
+    assets: tuple[ActivityAssetRevision, ...],
+    tax_year: int,
+    effective_date: date,
+) -> tuple[UnregisteredAmortizationRow, ...]:
+    """Find amortization rows the expense rules refused, which never became observations.
+
+    A purchase above the low-value limit, or any row once its category leaves the
+    routing, is refused before it can be classified. Such a row still declares an
+    element the register does not know, so an advisory alone would omit it.
+
+    Returns:
+        One row per refused, unowned, amortization-labelled expense of this period.
+    """
+    declared = tuple(
+        issue
+        for issue in issues
+        if issue.category_id is not None and str(issue.reason) not in _NOT_A_DECLARED_EXPENSE_ISSUE_REASONS
+    )
+    if not declared:
+        return ()
+    labelled = amortization_labelled_expense_categories(effective_date=effective_date)
+    owned = register_acquisition_transaction_ids(assets)
+    return tuple(
+        UnregisteredAmortizationRow(
+            transaction_id=issue.transaction_id,
+            category=issue.category_id,
+            tax_year=tax_year,
         )
+        for issue in declared
+        if issue.category_id in labelled and issue.transaction_id not in owned
+    )
+
+
+def unregistered_amortization_row_diagnostics(
+    rows: Iterable[UnregisteredAmortizationRow],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Project each unowned amortization row into its blocking note.
+
+    Returns:
+        One note per row, naming the row and the remedy.
+    """
+    return source_diagnostics_for(
+        tuple({row.transaction_id: row for row in rows}.values()),
+        reason="ledger_amortization_row_unregistered",
+        source_kind=resolver_id,
+        resolver_id=resolver_id,
+        source_ref=lambda row: f"transaction:{row.transaction_id}",
+        message=lambda row: (
+            f"ledger transaction {row.transaction_id!r} (category={row.category!r}, tax_year={row.tax_year}) declares "
+            "an amortizable element the activity-asset register does not hold; it deducts nothing"
+        ),
+        remedy=lambda _row: (
+            "register the element in the activity-asset register, naming this transaction as its acquisition, "
+            "or reclassify the row if it is not an amortizable element"
+        ),
+    )
 
 
 def register_owned_acquisition_diagnostics(
@@ -304,13 +879,23 @@ def dwelling_ownership_share(assets: tuple[ActivityAssetRevision, ...]) -> Decim
 
 
 __all__ = [
+    "ActivityAssetClaimSource",
     "ActivityAssetExpenseObservation",
+    "ActivityAssetProjection",
+    "ActivityAssetScheduleSource",
+    "LedgerExpenseRegisterClassification",
     "LedgerRentaExpenseTreatment",
+    "RefusedExpenseRow",
     "RegisterOwnedAcquisition",
-    "activity_asset_expense_observations",
+    "UnregisteredAmortizationRow",
+    "activity_asset_provenance",
     "amortization_labelled_expense_categories",
     "classify_ledger_expenses_against_asset_register",
     "dwelling_ownership_share",
+    "m100_activity_asset_projection",
+    "m130_activity_asset_projection",
+    "refused_amortization_rows",
     "register_acquisition_transaction_ids",
     "register_owned_acquisition_diagnostics",
+    "unregistered_amortization_row_diagnostics",
 ]

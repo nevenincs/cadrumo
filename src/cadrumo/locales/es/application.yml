@@ -844,6 +844,27 @@ application:
           modelo %{modelo}; las definiciones del modelo deben declarar la capacidad
           de borrador.
     calc_diagnostic:
+      activity_asset_accrual_unavailable:
+        what: No se ha podido calcular la amortización de un bien, así que no se incluye.
+        what_to_do: Completa o corrige el bien en el registro y vuelve a calcular.
+      activity_asset_activity_undeclared:
+        what: La compra de un bien no indica tipo de actividad, así que se cuenta
+          como no agraria.
+        what_to_do: Indica el tipo de actividad en ese movimiento y vuelve a calcular.
+      activity_asset_agrarian_excluded:
+        what: Un bien de una actividad agraria queda fuera de este pago fraccionado,
+          que se calcula sobre los ingresos de esa actividad.
+        what_to_do: No tienes que hacer nada. Su amortización se deduce en tu declaración
+          anual.
+      activity_asset_claim_gap:
+        what: Un bien no tiene amortización registrada para parte del año, así que
+          esa parte no se deduce.
+        what_to_do: Registra la dotación de ese periodo si quieres deducirla y vuelve
+          a calcular.
+      activity_asset_foral_territory:
+        what: Resides en un territorio foral, donde este modelo no se aplica, así
+          que tus bienes registrados no se incluyen.
+        what_to_do: Declara estos bienes ante la Hacienda foral de tu territorio.
       administrador_retencion_rate_mismatch:
         what: El tipo de retención de un registro de administrador no coincide con
           el que corresponde.
@@ -941,6 +962,11 @@ application:
           o no cuadran.
         what_to_do: Abre tus registros de este periodo, corrige los que estén marcados
           y vuelve a calcular.
+      ledger_amortization_row_unregistered:
+        what: Un movimiento registra una compra amortizable que no está en tu registro
+          de bienes, así que no deduce nada.
+        what_to_do: Da de alta el elemento indicando ese movimiento como su adquisición,
+          o cambia la clasificación del movimiento, y vuelve a calcular.
       m193_settled_row_amounts_unresolved_authority:
         what: Algunos importes de un registro de un pago hecho en un año posterior
           no tienen una fuente oficial que los confirme.

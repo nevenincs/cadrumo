@@ -803,6 +803,28 @@ application:
           nyomtatványhoz; a nyomtatványdefinícióknak deklarálniuk kell a borrador
           képességet.
     calc_diagnostic:
+      activity_asset_accrual_unavailable:
+        what: Egy eszköz amortizációját nem sikerült kiszámítani, ezért nem szerepel.
+        what_to_do: Egészítsd ki vagy javítsd az eszközt a nyilvántartásban, majd
+          számolj újra.
+      activity_asset_activity_undeclared:
+        what: Egy eszköz vásárlásánál nincs megadva a tevékenység típusa, ezért nem
+          mezőgazdaságiként számít.
+        what_to_do: Add meg a tevékenység típusát ennél a tételnél, majd számolj újra.
+      activity_asset_agrarian_excluded:
+        what: Egy mezőgazdasági tevékenység eszköze kimarad ebből az előlegből, amely
+          a tevékenység bevételén alapul.
+        what_to_do: Nincs teendőd. Az amortizációját az éves bevallásodban vonhatod
+          le.
+      activity_asset_claim_gap:
+        what: Egy eszközhöz az év egy részére nincs rögzített amortizáció, ezért ez
+          a rész nem kerül levonásra.
+        what_to_do: Ha le szeretnéd vonni, rögzítsd az adott időszak amortizációját,
+          majd számolj újra.
+      activity_asset_foral_territory:
+        what: Olyan önálló adóhatóságú területen élsz, ahol ez a nyomtatvány nem alkalmazható,
+          ezért a nyilvántartott eszközeid nem szerepelnek benne.
+        what_to_do: Ezeket az eszközöket a területed adóhatóságánál jelentsd be.
       administrador_retencion_rate_mismatch:
         what: Egy ügyvezetői tétel levonási kulcsa eltér az alkalmazandó kulcstól.
         what_to_do: Hasonlítsd össze a kulcsot a hivatalos útmutatóval, és szükség
@@ -896,6 +918,11 @@ application:
           hiányzik az igazolás, vagy nem egyeznek.
         what_to_do: Nyisd meg az erre az időszakra vonatkozó nyilvántartásaidat, javítsd
           a megjelölt tételeket, majd számolj újra.
+      ledger_amortization_row_unregistered:
+        what: Egy tétel olyan amortizálható vásárlást rögzít, amely nincs az eszköznyilvántartásodban,
+          ezért nem vonható le.
+        what_to_do: Vedd fel az eszközt, és jelöld meg ezt a tételt a beszerzéseként,
+          vagy sorold át a tételt, majd számolj újra.
       m193_settled_row_amounts_unresolved_authority:
         what: Egy későbbi évben teljesített kifizetés tételének egyes összegeit nem
           erősíti meg hivatalos forrás.

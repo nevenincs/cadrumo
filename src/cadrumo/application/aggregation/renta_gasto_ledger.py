@@ -164,6 +164,8 @@ class RentaGastoLedgerAggregationIssue(BaseModel):
     transaction_id: TransactionId
     reason: RentaGastoLedgerAggregationIssueReason
     detail: IssueDetail
+    category_id: str | None = Field(default=None, min_length=1, max_length=128)
+    """The row's ledger category, so a refused row can still be recognised by what it declares."""
 
 
 class RentaGastoObservation(BaseModel):
@@ -412,7 +414,7 @@ def aggregate_renta_gasto_ledger(
         if outcome is None:
             continue
         if isinstance(outcome, RentaGastoLedgerAggregationIssue):
-            issues.append(outcome)
+            issues.append(outcome.model_copy(update={"category_id": transaction.category_id}))
         else:
             observations.append(outcome)
 

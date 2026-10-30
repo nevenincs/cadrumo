@@ -773,6 +773,28 @@ application:
         unsupported_modelo: Reading borrador values is not supported for modelo %{modelo};
           the modelo definitions must declare the borrador capability.
     calc_diagnostic:
+      activity_asset_accrual_unavailable:
+        what: The depreciation of an asset could not be worked out, so it is not included.
+        what_to_do: Complete or correct the asset in the register, then calculate
+          again.
+      activity_asset_activity_undeclared:
+        what: The purchase of an asset has no type of activity, so it is counted as
+          non-agricultural.
+        what_to_do: Set the type of activity on that entry, then calculate again.
+      activity_asset_agrarian_excluded:
+        what: An asset of an agricultural activity is left out of this instalment,
+          which is based on that activity's income.
+        what_to_do: You do not have to do anything. Its depreciation is deducted in
+          your annual return.
+      activity_asset_claim_gap:
+        what: An asset has no recorded depreciation for part of the year, so that
+          part is not deducted.
+        what_to_do: Record the depreciation charge for that period if you want to
+          deduct it, then calculate again.
+      activity_asset_foral_territory:
+        what: You live in the Basque Country or Navarre, where this form does not
+          apply, so your registered assets are not included.
+        what_to_do: Declare these assets with the tax authority of your territory.
       administrador_retencion_rate_mismatch:
         what: The withholding rate on a record for a company director differs from
           the rate that applies.
@@ -872,6 +894,11 @@ application:
           do not add up.
         what_to_do: Open your records for this period, fix the ones that are marked,
           then calculate again.
+      ledger_amortization_row_unregistered:
+        what: A ledger entry records the purchase of a long-term asset that is not
+          in your asset register, so it deducts nothing.
+        what_to_do: Register the element, naming that entry as its acquisition, or
+          reclassify the entry, then calculate again.
       m193_settled_row_amounts_unresolved_authority:
         what: Some amounts in a record of a payment made in a later year have no official
           source that confirms them.
@@ -1636,9 +1663,8 @@ application:
         withholding made that year: %{contradicting_invoice_count} received invoice(s)
         with withholding you must pay in as the payer, and %{contradicting_ledger_row_count}
         outgoing payment(s) in an IRPF withholding category. The withholding detail
-        for modelo %{source_modelo} is empty, so
-        nothing declares them. Enter them in this modelo''s per-payee detail before
-        you check it.'
+        for modelo %{source_modelo} is empty, so nothing declares them. Enter them
+        in this modelo''s per-payee detail before you check it.'
       withholding_detail_absent_attested: 'Modelo %{modelo} %{filing_year} declares
         no payments (percepciones) to anyone, and your profile records that you paid
         no income subject to withholding (retención) in the periods you confirmed.

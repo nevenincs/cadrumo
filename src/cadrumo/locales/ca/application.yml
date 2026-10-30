@@ -841,6 +841,27 @@ application:
           al model %{modelo}; les definicions del model han de declarar la capacitat
           d'esborrany.
     calc_diagnostic:
+      activity_asset_accrual_unavailable:
+        what: No s'ha pogut calcular l'amortització d'un bé, de manera que no s'inclou.
+        what_to_do: Completa o corregeix el bé al registre i torna a calcular.
+      activity_asset_activity_undeclared:
+        what: La compra d'un bé no indica el tipus d'activitat, de manera que es compta
+          com a no agrària.
+        what_to_do: Indica el tipus d'activitat en aquest moviment i torna a calcular.
+      activity_asset_agrarian_excluded:
+        what: Un bé d'una activitat agrària queda fora d'aquest pagament fraccionat,
+          que es calcula sobre els ingressos d'aquesta activitat.
+        what_to_do: No has de fer res. La seva amortització es dedueix a la teva declaració
+          anual.
+      activity_asset_claim_gap:
+        what: Un bé no té amortització registrada per a part de l'any, de manera que
+          aquesta part no es dedueix.
+        what_to_do: Registra la dotació d'aquest període si la vols deduir i torna
+          a calcular.
+      activity_asset_foral_territory:
+        what: Resideixes en un territori foral, on aquest model no s'aplica, de manera
+          que els teus béns registrats no s'hi inclouen.
+        what_to_do: Declara aquests béns davant la hisenda foral del teu territori.
       administrador_retencion_rate_mismatch:
         what: El tipus de retenció d'un registre d'administrador no coincideix amb
           el que correspon.
@@ -939,6 +960,11 @@ application:
           o no quadren.
         what_to_do: Obre els teus registres d'aquest període, corregeix els que estiguin
           marcats i torna a calcular.
+      ledger_amortization_row_unregistered:
+        what: Un moviment registra una compra amortitzable que no és al teu registre
+          de béns, de manera que no dedueix res.
+        what_to_do: Dona d'alta l'element indicant aquest moviment com a adquisició,
+          o reclassifica el moviment, i torna a calcular.
       m193_settled_row_amounts_unresolved_authority:
         what: Alguns imports d'un registre d'un pagament fet en un any posterior no
           tenen una font oficial que els confirmi.

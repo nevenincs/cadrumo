@@ -11,7 +11,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from ....core.errors.hierarchy import CadrumoError
+from ....application.persistence_errors import PersistenceDegradationError
 from ....core.logging import get_logger
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
 from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
@@ -28,7 +28,7 @@ _log = get_logger(__name__)
 ACTIVIDAD_ASSET_HISTORY_FILENAME = "actividad-asset-history.secure-object"
 
 
-class ActividadAssetHistoryPersistenceError(CadrumoError):
+class ActividadAssetHistoryPersistenceError(PersistenceDegradationError):
     """Raised when encrypted activity-asset history cannot be reopened safely."""
 
 
@@ -67,9 +67,7 @@ class ActividadAssetHistoryRepository:
                     "error_type": type(exc).__name__,
                 },
             )
-        raise ActividadAssetHistoryPersistenceError(
-            f"unable to load activity asset history: {self._storage.object_key}",
-        ) from None
+        raise ActividadAssetHistoryPersistenceError("activity_asset_history_load") from None
 
     def append_revision(self, revision: ActivityAssetRevision) -> ActivityAssetHistory:
         """Atomically append one immutable revision under the secure-object CAS guard."""
