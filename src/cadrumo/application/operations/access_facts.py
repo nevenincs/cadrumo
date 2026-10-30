@@ -73,6 +73,7 @@ _LOCAL_READS: Final = (
     "ledger.history.typed",
     "ledger.inventory.inspect",
     "ledger.inventory.list",
+    "ledger.inventory.options",
     "ledger.invoice.list",
     "ledger.invoice.view",
     "ledger.list",

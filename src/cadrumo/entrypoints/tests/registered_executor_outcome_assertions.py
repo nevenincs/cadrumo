@@ -640,7 +640,8 @@ def _assert_registered_executor_conformance_outcome(
             assert bienes_result.refusal is None
             assert bienes_result.count == 1
             assert bienes_result.record == expected_projection
-    if inventory_repository is not None:
+    # Family preparations verify their own typed projections and persisted material above.
+    if inventory_repository is not None and family_preparation is None:
         projection_type = {
             "ledger.inventory.list": InventoryListProjection,
             "ledger.inventory.create": InventoryCreateProjection,
