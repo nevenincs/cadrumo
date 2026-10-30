@@ -175,7 +175,7 @@ def _built_once_per_run(
     The artifacts are read-only afterwards, so the workers share one build.
     """
     base = tmp_path_factory.getbasetemp()
-    root = base.parent if os.environ.get("PYTEST_XDIST_WORKER") else base
+    root = base.parent if bool(os.environ.get("PYTEST_XDIST_WORKER")) else base
     shared = root / "shared-distributions" / name
     done = shared / ".complete"
     lock = root / "shared-distributions" / f"{name}.lock"
