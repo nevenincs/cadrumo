@@ -169,6 +169,45 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"autoliquidación conjunta|referencia catastral|situación catastral|"
     r"diseño de registros|consulta de declaraciones presentadas|fichero BOE|"
     r"cotejo por CSV|CSV cotejo|"
+    # English UI and guidance deliberately retain these complete Spanish
+    # statutory phrases. Keep the route phrase-specific: their component words
+    # (especially de, del, por, and common nouns) remain English dictionary
+    # input everywhere else. Sources: the live modelo findings, Censo and
+    # Renta terminology concepts, and the Modelo 036/037 and activity-asset
+    # register labels.
+    r"rendimiento neto del trabajo|rendimientos del trabajo|"
+    r"rendimientos del capital mobiliario(?: del ahorro)?|"
+    r"estimación directa|reales decretos|órdenes ministeriales|"
+    r"(?<=Spanish )leyes|(?<=per )contribuyente|"
+    r"certificado de retenciones e ingresos a cuenta|retenciones e ingresos a cuenta|"
+    r"certificado de situación censal|situación censal|"
+    r"censal(?= (?:certificate|facts|read))|"
+    r"código seguro de verificación|"
+    r"mínimo por descendientes|anualidades por alimentos|guarda y custodia|"
+    r"régimen de atribución de rentas|comunidad de bienes|sociedad civil|"
+    r"carácter social|entrega intracomunitaria|"
+    r"signos[, ]+índices[, ]+módulos|previsión social|"
+    r"código técnico de la edificación|hacienda foral|"
+    r"concierto económico|convenio económico|"
+    # These technical labels recur in the activity-asset UI. The match spans
+    # only the Spanish term; lookarounds require a precise register cue without
+    # sending surrounding English words to the Spanish dictionary.
+    r"(?:(?<=record )|(?<=change )|(?<=remove )|(?<=correct )|(?<=the )|(?<=a )|"
+    r"(?<=this )|(?<=its )|(?<=element's ))baja(?=\b)|"
+    r"baja(?= (?:date|figures|of|updated|recorded|is|was)\b)|"
+    r"(?:(?<=record )|(?<=replace )|(?<=correct )|(?<=forecast )|"
+    r"(?<=without a )|(?<=without the )|(?<=years without a )|"
+    r"(?<=the )|(?<=a )|(?<=this )|(?<=that ))dotación(?=\b)|"
+    r"dotación(?= (?:of|from|for|already|can|is|was|recorded)\b)|"
+    # `sede` is preserved only as the named AEAT filing service.
+    r"(?<=AEAT )sede(?=\b)|(?<=service \()sede(?=\))|"
+    # `compensación` is the Spanish Modelo 303 carry-forward term.
+    r"(?:(?<=previous Modelo 303 )|(?<=prior Modelo 303 )|"
+    r"(?<=previous )|(?<=prior )|(?<=carry-forward )|(?<=zero )|"
+    r"(?<=zero local )|(?<=Modelo 303 ))compensación(?=\b)|"
+    # Keep only the Spanish tax term inside these mixed-language collocations.
+    r"(?:(?<=IRPF )|(?<=withholding \())retención(?=\b)|"
+    r"retención(?= (?:fraction|withheld|rate|e ingresos)\b)|"
     r"casillas?|modelos?|borrador(?:es)?|censos?|"
     r"expedientes?|justificantes?|prorratas?|prorrateo|renta)(?![\w'’])",
     re.IGNORECASE,

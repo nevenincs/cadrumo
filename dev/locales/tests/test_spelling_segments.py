@@ -222,6 +222,91 @@ def test_exact_aeat_terms_in_english_ui_copy_are_checked_as_spanish(term: str) -
 
 
 @pytest.mark.parametrize(
+    ("phrase", "spanish"),
+    [
+        ("rendimiento neto del trabajo", {"rendimiento", "neto", "del", "trabajo"}),
+        ("rendimientos del capital mobiliario del ahorro", {"rendimientos", "del", "capital", "mobiliario", "ahorro"}),
+        (
+            "certificado de retenciones e ingresos a cuenta",
+            {"certificado", "de", "retenciones", "e", "ingresos", "a", "cuenta"},
+        ),
+        ("mínimo por descendientes", {"mínimo", "por", "descendientes"}),
+        ("anualidades por alimentos", {"anualidades", "por", "alimentos"}),
+        ("régimen de atribución de rentas", {"régimen", "de", "atribución", "rentas"}),
+        ("entrega intracomunitaria", {"entrega", "intracomunitaria"}),
+        ("signos, índices, módulos", {"signos", "índices", "módulos"}),
+        ("estimación directa", {"estimación", "directa"}),
+        ("reales decretos", {"reales", "decretos"}),
+        ("órdenes ministeriales", {"órdenes", "ministeriales"}),
+        ("Concierto Económico", {"Concierto", "Económico"}),
+    ],
+)
+def test_preserved_spanish_tax_phrases_route_only_the_phrase(phrase: str, spanish: set[str]) -> None:
+    assert words_by_language(f"Read {phrase} below misspeling") == {
+        "en": {"Read", "below", "misspeling"},
+        "es": spanish,
+    }
+
+
+@pytest.mark.parametrize(
+    ("text", "spanish"),
+    [
+        ("previous Modelo 303 compensación", {"Modelo", "compensación"}),
+        ("withholding (retención)", {"retención"}),
+        ("The AEAT sede", {"sede"}),
+        ("Record baja", {"baja"}),
+        ("from a baja in the register", {"baja"}),
+        ("from censal certificate", {"censal"}),
+        ("the dotación", {"dotación"}),
+        ("per contribuyente", {"contribuyente"}),
+        ("baja date", {"baja"}),
+        ("dotación recorded", {"dotación"}),
+    ],
+)
+def test_tax_terms_in_mixed_language_context_route_only_the_spanish_word(text: str, spanish: set[str]) -> None:
+    segments = words_by_language(f"Read {text} misspeling")
+    assert segments["es"] == spanish
+    assert "misspeling" in segments["en"]
+    if text == "from censal certificate":
+        assert {"from", "certificate"} <= segments["en"]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "rendimientos del capital mobilario",
+        "mínimo por descendientees",
+        "previous Modelo 303 compensacion",
+        "withholding (retencion)",
+        "The AEAT sedee",
+        "Record bajaa",
+        "the dotacion",
+        "dotaciónx recorded",
+        "estimacion directa",
+        "per contribuyentee",
+        "from a bajaa in the register",
+    ],
+)
+def test_misspelled_or_unaccented_tax_terms_stay_in_english(text: str) -> None:
+    segments = words_by_language(f"Read {text} misspeling")
+    assert "misspeling" in segments["en"]
+    assert not any(word.casefold() in segments.get("es", set()) for word in text.split())
+    unaccented = {
+        "compensacion",
+        "retencion",
+        "sedee",
+        "bajaa",
+        "dotacion",
+        "dotaciónx",
+        "mobilario",
+        "descendientees",
+        "estimacion",
+        "contribuyentee",
+    }
+    assert unaccented.intersection(segments["en"])
+
+
+@pytest.mark.parametrize(
     "term",
     [
         "domiciliación bancariaa",
