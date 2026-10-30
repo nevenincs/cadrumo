@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#google-app-identity'
 date: '2026-10-19'
-modified: '2026-10-19'
+modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:df8d0cae6babb39cb568dd8dd9f15a20fed8b3f5f3391422aa4b9d724e54f1ba'
+body_hash: 'sha256:cb1f5e373bf494929c890015f32af42bc3cf77b362d53a214ae88548666272f1'
 related:
   - "[[2026-10-04-google-app-identity-adr]]"
   - "[[2026-10-04-canonical-environment-adr]]"
@@ -31,7 +31,7 @@ On 2026-10-19 the operator ruled that Google sign-in belongs to the current prof
 - The session store keyed rows by the record's profile but opened whichever profile was selected at write time. A consent outlasting a profile switch could write A's token into B's database (`src/cadrumo/adapters/outbound/google/session_store.py`, before this record).
 - The token and metadata namespaces kept the default `CIPHERTEXT_WITH_METADATA` mirror policy, so a full profile archive push copied their ciphertext to Drive (`src/cadrumo/adapters/outbound/storage/mirror_push.py:316`). Both were already `PROCESS_LOCAL`, so neither portable export nor restorative backup carries them.
 - Access tokens are memory-only (`src/cadrumo/adapters/outbound/google/records.py:70`); the OAuth flow writes no file, temporary file, keyring entry or log line with token text; the TUI and CLI hold no Google store of their own; the agent and its tools reach Google only through registered operations.
-- `CADRUMO_TOKEN_DIR` is a live, declared location (`native/application-environment.toml`, `src/cadrumo/core/config.py:242`), defaulting to `<storage root>/tokens`. Its only writer is the AEAT acquisition-lock path (`src/cadrumo/application/auth/acquisition_lock.py:138`), whose files hold no Google material.
+- The token directory is a location beneath the storage root, `<storage root>/tokens`, with no override variable. Its only writer is the AEAT acquisition-lock path (`src/cadrumo/application/auth/acquisition_lock.py:138`), whose files hold no Google material.
 - `CADRUMO_ACTIVE_PROFILE` stays severed from every environment source (`src/cadrumo/core/config.py:82`, rule 13): selection belongs to the pointer and the in-process override.
 - `2026-10-13-provider-settings-adr` constraint 8 said the agent receives no profile identity. A folder path under `buckets/` names the profile's identifier.
 - The client is publisher installation data in the package's own `cadrumo/_data/google/oauth_client.json` (`src/cadrumo/core/config_google.py:17`), embedded at build time and pinned as a package fact, never under the storage root.
@@ -42,7 +42,7 @@ On 2026-10-19 the operator ruled that Google sign-in belongs to the current prof
 - **Restore an environment selector (`CADRUMO_ACTIVE_PROFILE`) so processes follow the selection.** Rejected: it reverses rule 13 and the reason it was severed, a shell variable outranking the pointer.
 - **A pointer-derived variable that every process reads at start.** Rejected for children: a long-lived parent would hand a stale folder down after a switch, and the CLI and TUI must ask the runtime, not read the pointer (`2026-10-18-runtime-authority-boundary-adr`).
 - **Encrypt the token under a second per-profile key in a root-level store.** Rejected: the bucket database already gives per-profile placement and keys; a second store adds a reach across profiles the ruling forbids.
-- **Remove `CADRUMO_TOKEN_DIR`.** Rejected: it is a declared, operator-relocatable location with a live reader.
+- **Remove the token directory.** Rejected: it is a declared location with a live reader.
 
 ## Constraints
 
@@ -51,7 +51,7 @@ On 2026-10-19 the operator ruled that Google sign-in belongs to the current prof
 3. `CADRUMO_PROFILE_ROOT` names `<storage root>/buckets/<profile id>` of the one profile a process is started for. Its launcher derives it from that exact profile; a received value is never relayed; nothing in Cadrumo reads it back to select a profile. `CADRUMO_ACTIVE_PROFILE` stays severed.
 4. Launchers that know their profile set it: the runtime for each profile worker (its bound profile) and the agent service for the agent gateway (the lease's profile), which forwards it with the storage root to the tool servers and programs the agent starts. The package contract declares it as an optional slot of the `python`, `aeat`, `cadrumo-mcp`, `agent-gateway` and `agent-worker` profiles. A profile switch starts new workers and a new agent session, so the folder follows the switch without a long-lived value.
 5. The Google OAuth client stays a single installation-wide package fact readable by every profile and session. No profile folder holds a copy, and no per-profile client exists.
-6. `CADRUMO_TOKEN_DIR` stays as declared. It never receives Google token material.
+6. The token directory stays as declared. It never receives Google token material.
 
 Affected prior rulings, amended in place on 2026-10-19 with a note of what they said before: `2026-10-04-google-app-identity-adr` (the open mirror-policy question is settled), `2026-10-04-canonical-environment-adr` (the reserved-names bullet gains the derived variable), and `2026-10-13-provider-settings-adr` constraint 8 (the agent now receives its profile's folder path, and still no password, receipt, session policy or settings store).
 

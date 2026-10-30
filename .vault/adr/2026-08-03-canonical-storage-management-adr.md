@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-10-13'
+modified: '2026-10-30'
 body_schema: 'body-v1'
-body_hash: 'sha256:fb88a463ad0da535b96892b616e53316a7053d805d5dbf0180c8e92991e9b84d'
+body_hash: 'sha256:7d66f5761b6af9f9c66292408e031ed8252ef88f059082c3526883c922ba6ffa'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -231,7 +231,7 @@ A site is enrolled when the location it uses is produced by that accessor. A
 site is **not** enrolled when it does any of the following — the mechanical test
 a burndown agent applies to get a yes or no without judgement:
 
-- reads `cadrumo_local_storage_root` and joins anything onto it;
+- reads `cadrumo_storage_root` and joins anything onto it;
 - names a child of the root, at any depth, by string literal or module-local
   constant;
 - calls `Path.home()`, `expanduser`, or a platform-directory lookup to *derive*
@@ -692,7 +692,7 @@ a real platform root on a machine still carrying retired-product state. Verified
 the module imports only stdlib (`atexit`, `os`, `shutil`, `time`, `pathlib`,
 `tempfile`), sets only the root variable, and names **no taxonomy leaf** — its
 single apparent leaf match is the ordinary English word "runs" in prose. It
-touches only `cadrumo_local_storage_root`, which the lifecycle gate classifies
+touches only `cadrumo_storage_root`, which the lifecycle gate classifies
 as exempt input precisely because it is the container rather than a categorised
 child. Its concern — do not resolve settings during collection — is orthogonal
 to what lives under the root. It survives verbatim, and nothing migrates onto it.
@@ -1254,3 +1254,7 @@ written there.
 R7/R25 materialisation and reclaim must consume the external member's declared policy. The OS query may materialise its cache base before validation; application operations create only a missing product directory with mode 0700. Insecure existing directories refuse without repair. Ordinary materialisation, reclaim and uninstall never delete the shared transport directory or its namespace-lock inodes. Socket cleanup remains incarnation-checked; transient transport does not become a recursively reclaimable cache merely because its native base is called a cache. The four public storage areas and protected-descendant preflight are unchanged. Development roots remain root-relative and explicit synthetic/operator socket namespaces keep their isolation; custom installed data roots retain root-derived endpoint identities; no taxpayer payload, credential, durable record or existing tree is moved or migrated.
 
 Accepted 2026-10-08 under the user's advance authorization to fix defects and code/build all installer/manager work except signing. The successor records the evidence, exact scope and refusal contract; acceptance does not establish implemented consumer parity or native lifecycle acceptance.
+
+## 2026-10-30 single storage control
+
+Accepted 2026-10-30 on the owner's rulings of that date: "CADRUMO_STORAGE_ROOT is the only env variable that controls storage. [...] No divergent overrides. Single control. The root folder's absolute path controls the app directory; everything else is a relative path under the main root." No taxonomy member carries an override variable or a settings field, so the `OPERATOR_OVERRIDABLE` policy, its guard step and the per-member variables named in this record (for example `CADRUMO_LIVE_STATE_DIR` in R28) are retired: each names a location beneath the root. The bucket and keystore layout stays fixed, and relocation stays refuse-and-instruct.

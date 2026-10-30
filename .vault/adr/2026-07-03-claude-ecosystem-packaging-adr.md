@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-10-21'
-body_hash: 'sha256:097a8fa1ffbdb1f3eb536a2f512a8fda96f512f5e833542cf5f336195b1348eb'
+modified: '2026-10-30'
+body_hash: 'sha256:f89a26949d407c8758733033c489ea9c64c7491b61f0df6b0021450c8e185a84'
 related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -58,7 +58,7 @@ stores taxpayer data, and how the corpus integrity chain survives a physical spl
   `"see repository"` field is a cosmetic alignment.
 - **Dependency hygiene.** `vaultspec-rag[mcp]` rides the base dependency set
   today; it is developer tooling and must be demoted before first release.
-- **Installed-run user-data defect (blocking).** `Settings.cadrumo_local_storage_root`
+- **Installed-run user-data defect (blocking).** `Settings.cadrumo_storage_root`
   defaults to `PROJECT_ROOT / "var" / "storage"` where `PROJECT_ROOT` walks up
   from the installed module, inside the virtualenv, and under `uvx` inside
   uv's ephemeral cache, where the taxpayer's encrypted store could be wiped by
@@ -127,7 +127,7 @@ stores taxpayer data, and how the corpus integrity chain survives a physical spl
 High-level layering (the plan owns steps and sequencing):
 
 - **Product-run foundations.** Move the installed-run storage default off
-  `PROJECT_ROOT`: `Settings.cadrumo_local_storage_root` (and the derived
+  `PROJECT_ROOT`: `Settings.cadrumo_storage_root` (and the derived
   tokens/logs roots) defaults to a platform user-data directory when running
   from an installed distribution, keeping the checkout default for the dev
   loop. Demote `vaultspec-rag[mcp]` out of the base dependency set. Align the

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-agent-host'
 date: '2026-10-12'
-modified: '2026-10-17'
+modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b28b25028d2c673a6e26363ab1c715d6551f1962a253d5f71474313b13ff726'
+body_hash: 'sha256:0e9ca44fe28953fbcfac618be3660e9bfb1738fd6973b370f0afa8aebeefb44a'
 related:
   - "[[2026-10-12-desktop-agent-host-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -114,7 +114,7 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 > Binding if accepted:
 >
 > - The shell holds no runtime connection, session, receipt, password, provider credential or agent data key. It never signs in for the agent.
-> - Agent state lives only under `<storage-root>/agent/<profile-id>/`, derived by Cadrumo from the resolved storage root (honouring `CADRUMO_LOCAL_STORAGE_ROOT`) and the launcher's bound profile. The agent receives that one path and no other; it never receives the storage root or another profile's id.
+> - Agent state lives only under `<storage-root>/agent/<profile-id>/`, derived by Cadrumo from the resolved storage root (honouring `CADRUMO_STORAGE_ROOT`) and the launcher's bound profile. The agent receives that one path and no other; it never receives the storage root or another profile's id.
 > - Every byte cadrumo-agent persists under that root that can hold private content is encrypted with the profile's agent data key. Nothing private is written to plaintext logs, temp files, token files, workspaces or provider homes. Files that hold no private content (ready record, store-format marker) may stay plaintext.
 > - The agent data key and the provider credential travel only Cadrumo custody → runtime door → launcher memory → agent standard input frame → worker standard input pipe, and are never placed in environment variables, files, command lines, transcripts or the webview. Cadrumo passwords and receipts never cross into the launcher's child or the provider.
 > - No real document is written in plaintext to the agent root. Documents live in Cadrumo custody; the model reads only registered projections served by Cadrumo.
@@ -182,7 +182,7 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 >
 > 1. Package: the manifest's agent statement matches the installed distribution; removing it or changing its version yields `agent_service_absent` or `agent_service_incompatible` in the column, and nothing is downloaded.
 > 2. Lifecycle: the launcher and agent start only while signed in, and stop on sign-out, lock, idle and absolute expiry, runtime restart, profile switch and window close, leaving no process. The shell never holds a runtime connection, key or credential (process and memory inspection of the host's IPC traffic and arguments).
-> 3. Location: with and without `CADRUMO_LOCAL_STORAGE_ROOT`, agent state appears only under that root's `agent/<profile-id>/`; a second profile's root is never touched; profile deletion and all-profile reset remove it, with receipts.
+> 3. Location: with and without `CADRUMO_STORAGE_ROOT`, agent state appears only under that root's `agent/<profile-id>/`; a second profile's root is never touched; profile deletion and all-profile reset remove it, with receipts.
 > 4. At rest: after a real conversation with a document, a byte scan of the storage root, the OS temp directory and user cache directories for known message, tool-result and document strings finds none outside encrypted stores; the stores do not open without the key.
 > 5. Secrets: the agent data key, provider credential, gateway bearer and Cadrumo password appear in no environment block, command line, file, log or transcript.
 > 6. Approvals: every tool call waits on the person's decision, a rejected call does not run, and the model cannot answer its own request.

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-12'
-modified: '2026-10-14'
+modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:4eac6f4fe42cd997ef7d307640e5bd970a9416d51c78f33f9b5e91a4a52aabf4'
+body_hash: 'sha256:06137586e6f797e1e3901a8998b4a875731b0363e6f99295e1409415c8bd1b89'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]"
@@ -18,7 +18,7 @@ related:
 
 ## Problem Statement
 
-A process outside Cadrumo that selects its own storage root with `CADRUMO_LOCAL_STORAGE_ROOT` cannot get a runtime for that root. The packaged CLI on that root creates a profile, but `config login` is refused with `REFUSED_LOCAL_RUNTIME` because no runtime serves the root. The installed manager supervises only the installed default root and refuses an override (`native/manager/src/supervision/environment.rs:63`, `2026-10-04-runtime-manager-architecture-adr`). The packaged `cadrumo-runtime` can serve any absolute root, but only when the launcher passes `--storage-identity` and `--expected-version` (`src/cadrumo_runtime/host/arguments.py`). Those values come from Cadrumo internals: an owner/physical-root digest (`src/cadrumo_client/transport/windows.py:53`) and the installed distribution version. The cadrumo-agent testbed stopped at exactly this point. It recorded that it must not emulate the runtime protocol, clear the override or import Cadrumo internals to get around it. The runtime also has no public readiness signal and no portable stop for an unsupervised launch.
+A process outside Cadrumo that selects its own storage root with `CADRUMO_STORAGE_ROOT` cannot get a runtime for that root. The packaged CLI on that root creates a profile, but `config login` is refused with `REFUSED_LOCAL_RUNTIME` because no runtime serves the root. The installed manager supervises only the installed default root and refuses an override (`native/manager/src/supervision/environment.rs:63`, `2026-10-04-runtime-manager-architecture-adr`). The packaged `cadrumo-runtime` can serve any absolute root, but only when the launcher passes `--storage-identity` and `--expected-version` (`src/cadrumo_runtime/host/arguments.py`). Those values come from Cadrumo internals: an owner/physical-root digest (`src/cadrumo_client/transport/windows.py:53`) and the installed distribution version. The cadrumo-agent testbed stopped at exactly this point. It recorded that it must not emulate the runtime protocol, clear the override or import Cadrumo internals to get around it. The runtime also has no public readiness signal and no portable stop for an unsupervised launch.
 
 The operator, 2026-10-12: "Please make the real Cadrumo runtime support the existing CADRUMO_LOCAL_STORAGE_ROOT environment override, alongside CADRUMO_SECRET_STORE_DIR. [...] Provide a supported launch path for an explicitly configured root, with runtime discovery, authentication, data access and MCP all using that root. Preserve isolation from the default installation and allow the caller to manage startup, readiness and shutdown. Do not bypass runtime checks or introduce mocks. [...] Document the launch command for external consumers such as cadrumo-agent."
 
@@ -28,7 +28,7 @@ The operator, 2026-10-12: "Please make the real Cadrumo runtime support the exis
 - Every client resolves its endpoint from `effective_storage_root()` (`src/cadrumo_client/transport/installed_client.py:70`). A runtime that resolves its root the same way serves exactly the endpoint those clients derive.
 - The runtime's identity and version arguments guard a supervisor's pinned expectations. A caller that resolved nothing has no pin to compare against. Native peer identity, profile credentials, grants, session binding, custody and worker containment do not depend on those arguments.
 - On Windows a caller cannot reliably deliver Ctrl+C to a child it does not share a console with. Closing a pipe works the same way on every platform, and the pipe also closes when the caller dies.
-- `CADRUMO_SECRET_STORE_DIR` and the other storage settings already reach workers through `worker_path_environment_names()` (`src/cadrumo_runtime/adapters/worker_environment.py`).
+- The storage root reaches workers through the pinned child environment.
 
 ## Considered options
 
@@ -40,7 +40,7 @@ The operator, 2026-10-12: "Please make the real Cadrumo runtime support the exis
 
 ## Constraints
 
-1. `cadrumo-runtime --configured-root` serves only an explicitly configured root: one named by `CADRUMO_LOCAL_STORAGE_ROOT`, or by `CADRUMO_STORAGE_ROOT` in a checkout. It resolves that root with the same settings resolution every client uses.
+1. `cadrumo-runtime --configured-root` serves only an explicitly configured root: one named by `CADRUMO_STORAGE_ROOT`. It resolves that root with the same settings resolution every client uses.
 2. It refuses with `runtime_root_mismatch` (exit 68) when no explicit root is configured, or when the root is, contains or lies inside the installed default root. A refused root is not created.
 3. It derives the storage identity and uses its own installed version. `--expected-version` stays available as an optional pin, and a mismatch refuses with exit 69. `--storage-identity` and `--supervised` are refused with this form.
 4. Once clients can connect, it writes exactly one JSON line to standard output: `kind` `runtime_ready`, `pid`, `product_version` and `storage_identity`. Nothing else is written to standard output.

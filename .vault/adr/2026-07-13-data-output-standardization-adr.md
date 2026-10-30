@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-10-29'
-body_hash: 'sha256:150c57ec7280ade907dfd19849844cd5b403812660c1a144d514d38a139549ad'
+modified: '2026-10-30'
+body_hash: 'sha256:e074ea2d7dcdd5850b204a00a9094d0074e180ce2b450c89934f85d9fef094ee'
 related:
   - "[[2026-07-13-data-output-standardization-research]]"
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
@@ -32,10 +32,11 @@ temp dir, and the repo root with unmanaged, inconsistently-named artifacts.
 ## Considerations
 
 - The installed-run state-root seam already exists and is accepted: the
-  claude-ecosystem-packaging decision moved `cadrumo_local_storage_root` (and
+  claude-ecosystem-packaging decision moved `cadrumo_storage_root` (and
   tokens/logs/secrets/blobs/audit/db) to a platform user-data dir on
-  installed runs, keeping `PROJECT_ROOT/var/storage` for the dev loop. This
-  ADR extends that derivation; it does not replace it.
+  installed runs; a repository run supplies its root through
+  `CADRUMO_STORAGE_ROOT`. This ADR extends that derivation; it does not
+  replace it.
 - The product-identity doctrine (cadrumo-product-authority-names) classifies
   by ownership/referent: app-owned artifact names are `cadrumo`/`CADRUMO`;
   `aeat` names only the tax authority, its evidence, and its protocol.
@@ -70,9 +71,9 @@ temp dir, and the repo root with unmanaged, inconsistently-named artifacts.
 
 - Pre-release, zero-legacy regime: no migration of existing on-disk artifacts;
   old locations/names are abandoned or refused, never read.
-- The dev checkout loop must keep working with repo-relative defaults
-  (`PROJECT_ROOT/var/storage` root) so gitignore and developer muscle memory
-  survive.
+- The dev checkout loop keeps working through the task runner, which exports
+  `CADRUMO_STORAGE_ROOT` as an absolute path into the ignored `var/storage`
+  tree; the product holds no repository-relative default.
 - Two-root env-var reality during the transition: renames of `AEAT_*`-prefixed
   app-owned SETTINGS fields ride the per-field adjudication table (R6) and
   must sweep docs, locales, error suggestions, and the agent harness per the
@@ -85,14 +86,14 @@ temp dir, and the repo root with unmanaged, inconsistently-named artifacts.
 
 ## Implementation
 
-**R1 — One root, five categories.** `cadrumo_local_storage_root` remains the
-single operator-facing root (platform user-data installed, `var/storage`
-checkout). A category taxonomy lives under it: `state` (existing secrets,
+**R1 — One root, five categories.** `cadrumo_storage_root` is the
+single operator-facing root (the absolute `CADRUMO_STORAGE_ROOT`, else the
+per-user data directory). A category taxonomy lives under it: `state` (existing secrets,
 blobs, audit, tokens, buckets), `cache/<name>`, `logs`, `exports`, and
 runtime `staging` (OS temp, always context-managed). Every settings dir field
 whose default is currently `PROJECT_ROOT/var/...` moves into the state-root
-derivation table (`_STATE_ROOT_DERIVED_DIRS` generalised): explicit env
-overrides keep working, but default output directories derive from the
+derivation table (`_STATE_ROOT_DERIVED_DIRS` generalised): no member has an
+env override, and output directories derive from the
 root except the default transient transport anchor for installed Darwin mode,
 accepted in the 2026-10-08 exception below. `PROJECT_ROOT`-anchored output defaults are eliminated. The dormant
 `cadrumo_submission_browser_trace_dir` / `cadrumo_status_browser_trace_dir`
