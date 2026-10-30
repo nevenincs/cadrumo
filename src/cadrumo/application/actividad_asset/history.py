@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Self
 
 from pydantic import BaseModel, model_validator
@@ -9,7 +10,12 @@ from pydantic import BaseModel, model_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
-from ...domain.renta.actividad_asset.claims import AmortizationClaim, asset_schedule_history, record_claim
+from ...domain.renta.actividad_asset.claims import (
+    AmortizationClaim,
+    asset_schedule_history,
+    effective_claims,
+    record_claim,
+)
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
     ActividadAssetIncompleteError,
@@ -97,7 +103,22 @@ class ActivityAssetHistory(BaseModel):
             or revision.supersedes_revision_id != latest.revision_id
         ):
             raise ActividadAssetClaimConflictError("asset correction must supersede the current revision")
+        if latest is not None:
+            self._require_claims_within_basis(revision)
         return ActivityAssetHistory(revisions=(*self.revisions, revision), claims=self.claims)
+
+    def _require_claims_within_basis(self, revision: ActivityAssetRevision) -> None:
+        recorded = tuple(claim for claim in effective_claims(self.claims) if claim.asset_id == revision.asset_id)
+        if not recorded:
+            return
+        opening = revision.opening_history.accumulated_amount
+        if opening is None:
+            raise ActividadAssetIncompleteError("opening amortization history is missing")
+        consumed = opening + sum((claim.amount for claim in recorded), Decimal("0"))
+        if consumed > round_to_cents(revision.amortizable_basis()):
+            raise ActividadAssetClaimConflictError(
+                "effective claims exceed the superseding revision's lawful amortizable basis",
+            )
 
     def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
         """Record a claim through the domain replay/conflict contract.

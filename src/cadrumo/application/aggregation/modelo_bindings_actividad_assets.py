@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
@@ -17,6 +17,7 @@ from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     effective_claims,
     m100_casilla_id,
+    select_effective_claims,
 )
 from ...domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetBasisStage
@@ -83,10 +84,9 @@ def activity_asset_expense_observations(
     period: Period,
 ) -> tuple[ActivityAssetExpenseObservation, ...]:
     """Project effective claims into the existing M100 or M130 expense family."""
-    effective = tuple(claim for claim in effective_claims(claims) if claim.tax_year == period.filing_year)
+    through = period.end_date if modelo == "130" else None
+    effective = select_effective_claims(claims, tax_year=period.filing_year, through=through)
     if modelo == "130":
-        cutoff = period.end_date + timedelta(days=1)
-        effective = tuple(claim for claim in effective if claim.covered_until <= cutoff)
         return tuple(
             ActivityAssetExpenseObservation(
                 claim_id=claim.claim_id,

@@ -12,7 +12,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
-from ....core.identity.hex_ids import CalculationRevisionId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
 from ....core.period import Period
@@ -68,8 +67,6 @@ class AmortizationClaim(BaseModel):
     source_reference: str = Field(min_length=1, max_length=2048)
     creating_operation: str = Field(min_length=1, max_length=256)
     supersedes_claim_id: Hex64Str | None = None
-    calculation_revision_id: CalculationRevisionId | None = None
-    filing_revision_id: Hex64Str | None = None
     method: AmortizationMethod = AmortizationMethod.LINEAR
     free_depreciation_election_reference: ElectionReference | None = None
     free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
@@ -242,6 +239,71 @@ def effective_claims(claims: tuple[AmortizationClaim, ...]) -> tuple[Amortizatio
     """Return auditable-history claims that still consume lawful basis, in order."""
     superseded = {claim.supersedes_claim_id for claim in claims if claim.supersedes_claim_id is not None}
     return tuple(claim for claim in claims if claim.claim_id not in superseded)
+
+
+def select_effective_claims(
+    claims: tuple[AmortizationClaim, ...],
+    *,
+    tax_year: int,
+    through: date | None = None,
+) -> tuple[AmortizationClaim, ...]:
+    """Return the effective claims of one tax year, optionally cut at an inclusive date.
+
+    ``through`` is the last day a claim may cover: a claim is kept when its
+    half-open interval ends no later than the day after ``through``.  This is
+    the single selection every calculation and filing handoff projects from.
+    """
+    selected = tuple(claim for claim in effective_claims(claims) if claim.tax_year == tax_year)
+    if through is None:
+        return selected
+    cutoff = through + timedelta(days=1)
+    return tuple(claim for claim in selected if claim.covered_until <= cutoff)
+
+
+class ClaimCoverageGap(BaseModel):
+    """A half-open interval of an element's service window with no effective claim."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    covered_from: date
+    covered_until: date
+
+
+def uncovered_claim_intervals(
+    revision: ActivityAssetRevision,
+    claims: tuple[AmortizationClaim, ...],
+    *,
+    start: date,
+    end: date,
+) -> tuple[ClaimCoverageGap, ...]:
+    """Return the ordered, merged half-open intervals of ``[start, end)`` left uncovered.
+
+    Only the element's service window counts: from its in-service date to its
+    out-of-service date when set, clipped to the span.  Superseded claims and
+    claims of other assets are ignored.  No amount is computed; callers call
+    once per tax year.
+    """
+    if end <= start:
+        raise ActividadAssetValidationError("claim coverage span must be half-open and non-empty")
+    window_start = max(start, revision.in_service_date)
+    window_end = end if revision.out_of_service_date is None else min(end, revision.out_of_service_date)
+    covering = sorted(
+        (claim for claim in effective_claims(claims) if claim.asset_id == revision.asset_id),
+        key=lambda claim: claim.covered_from,
+    )
+    gaps: list[ClaimCoverageGap] = []
+    cursor = window_start
+    for claim in covering:
+        if cursor >= window_end:
+            break
+        if claim.covered_until <= cursor:
+            continue
+        if claim.covered_from > cursor:
+            gaps.append(ClaimCoverageGap(covered_from=cursor, covered_until=min(claim.covered_from, window_end)))
+        cursor = max(cursor, claim.covered_until)
+    if cursor < window_end:
+        gaps.append(ClaimCoverageGap(covered_from=cursor, covered_until=window_end))
+    return tuple(gaps)
 
 
 def effective_free_depreciation_claims(
@@ -423,7 +485,7 @@ def _same_incentive_investment_of_other_assets(
 def project_m100(claims: tuple[AmortizationClaim, ...], *, asset_kind: AssetKind, tax_year: int) -> ClaimProjection:
     """Project one effective claim set to its exclusive Modelo 100 destination."""
     selected = tuple(
-        claim for claim in effective_claims(claims) if claim.tax_year == tax_year and claim.asset_kind is asset_kind
+        claim for claim in select_effective_claims(claims, tax_year=tax_year) if claim.asset_kind is asset_kind
     )
     return _project(selected, tax_year=tax_year, target_casilla_id=m100_casilla_id(asset_kind))
 
@@ -432,13 +494,10 @@ def project_m130(claims: tuple[AmortizationClaim, ...], *, period: Period, asset
     """Project the same effective claims cumulatively through a dated M130 period."""
     if not period.has_date_span():
         raise ActividadAssetValidationError("M130 asset projection requires a dated filing period")
-    cutoff = period.end_date
     selected = tuple(
         claim
-        for claim in effective_claims(claims)
-        if claim.tax_year == period.filing_year
-        and claim.asset_kind is asset_kind
-        and claim.covered_until <= cutoff + timedelta(days=1)
+        for claim in select_effective_claims(claims, tax_year=period.filing_year, through=period.end_date)
+        if claim.asset_kind is asset_kind
     )
     return _project(selected, tax_year=period.filing_year, target_casilla_id="02")
 
@@ -461,6 +520,7 @@ __all__ = [
     "M100_AMORTIZATION_CASILLA_IDS",
     "MATERIAL_M100_CASILLA_ID",
     "AmortizationClaim",
+    "ClaimCoverageGap",
     "ClaimProjection",
     "ClaimRecordResult",
     "asset_schedule_history",
@@ -470,4 +530,6 @@ __all__ = [
     "project_m100",
     "project_m130",
     "record_claim",
+    "select_effective_claims",
+    "uncovered_claim_intervals",
 ]
