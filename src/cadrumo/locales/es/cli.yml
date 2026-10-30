@@ -348,6 +348,9 @@ cli:
         acquisition_cost_stdin_help: Lee de la entrada estándar el objeto JSON de
           coste de adquisición completo
         actividad_id_help: Identificador de la actividad económica
+        refusal_activity_conflict: "Ya existe un registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Ejecuta `aeat app ledger inventory list` para ver los existentes."
+        refusal_activity_not_found: "No existe ningún registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Ejecuta `aeat app ledger inventory list` para ver los existentes."
+        refusal_duplicate_movement_id: "El registro de inventario ya contiene el movimiento %{movement_id}. Ejecuta `aeat app ledger inventory list` para ver los movimientos registrados."
         authority_file_help: Leer el documento JSON completo de autoridad de cierre
           desde un fichero.
         authority_invalid: El objeto de autoridad de cierre no es válido para este

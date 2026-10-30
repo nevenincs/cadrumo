@@ -2945,7 +2945,7 @@ desktop:
           a un altre canvi. Tanca aquest formulari i obre''l de nou.'
         count_would_raise_stock: 'Rebutjat: un recompte no pot pujar les teves existències
           per sobre de les unitats que tens als llibres.'
-        duplicate_movement_id: 'Rebutjat: aquest moviment ja és al llibre.'
+        duplicate_movement_id: "El registre ha rebutjat el moviment: ja està registrat."
         invalid_valuation_method: 'Rebutjat: no és un mètode de valoració.'
         inventory_already_retired: 'Rebutjat: aquest llibre d''existències ja està
           donat de baixa.'

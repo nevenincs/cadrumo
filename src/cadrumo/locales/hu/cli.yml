@@ -345,6 +345,9 @@ cli:
         acquisition_cost_stdin_help: A teljes beszerzési költség JSON-objektum beolvasása
           a szabványos bemenetről
         actividad_id_help: Gazdasági tevékenység azonosítója.
+        refusal_activity_conflict: "Már létezik készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Futtasd a(z) `aeat app ledger inventory list` parancsot a meglévők megtekintéséhez."
+        refusal_activity_not_found: "Nincs készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Futtasd a(z) `aeat app ledger inventory list` parancsot a meglévők megtekintéséhez."
+        refusal_duplicate_movement_id: "A készletnyilvántartás már tartalmazza a(z) %{movement_id} mozgást. Futtasd a(z) `aeat app ledger inventory list` parancsot a rögzített mozgások megtekintéséhez."
         authority_file_help: A teljes zárókészlet-hatósági JSON-dokumentum beolvasása
           fájlból.
         authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletnyilvántartáshoz.

@@ -76,10 +76,10 @@ ProjectionT = TypeVar("ProjectionT", bound=BaseModel)
 type _JsonValue = bool | int | float | str | list[_JsonValue] | dict[str, _JsonValue] | None
 
 _REFUSAL_LOCALE_KEYS = {
-    "activity_conflict": "application.inventory.service.errors.actividad_conflict",
-    "activity_not_found": "application.inventory.service.errors.actividad_not_found",
+    "activity_conflict": "cli.app.ledger.inventory.refusal_activity_conflict",
+    "activity_not_found": "cli.app.ledger.inventory.refusal_activity_not_found",
     "invalid_valuation_method": "application.inventory.service.errors.invalid_valuation_method",
-    "duplicate_movement_id": "application.inventory.service.errors.duplicate_movement_id",
+    "duplicate_movement_id": "cli.app.ledger.inventory.refusal_duplicate_movement_id",
     "inventory_validation": "errors.refused.refused_profile_inventory_validation",
     "closing_authority_conflict": "application.inventory.service.errors.closing_authority_conflict",
     "closing_authority_invalid": "errors.refused.refused_profile_inventory_validation",

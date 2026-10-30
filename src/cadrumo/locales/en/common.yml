@@ -2903,7 +2903,7 @@ desktop:
           change. Close this form and open it again.'
         count_would_raise_stock: 'Refused: a count can''t raise your stock above the
           units you have on the books.'
-        duplicate_movement_id: 'Refused: that movement is already in the book.'
+        duplicate_movement_id: "The register refused the movement: it is already recorded."
         invalid_valuation_method: 'Refused: not a valuation method.'
         inventory_already_retired: 'Refused: this stock book is already retired.'
         inventory_not_retired: 'Refused: this stock book isn''t retired.'

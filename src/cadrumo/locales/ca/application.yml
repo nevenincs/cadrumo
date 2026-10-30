@@ -546,11 +546,8 @@ application:
       errors:
         actividad_conflict: "Ja existeix un registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Obre'l en lloc de crear-ne un altre."
         actividad_not_found: "No existeix cap registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Crea'l primer o revisa l'activitat i l'exercici."
-        closing_authority_conflict: Ja existeix un registre diferent d'autoritat de
-          tancament per a aquesta activitat i any.
-        closing_authority_recorded: L'inventari %{year} de %{actividad_id} té una
-          autoritat de tancament registrada, així que les seves dades d'existències
-          ja no poden canviar.
+        closing_authority_conflict: "Ja hi ha un altre valor de tancament registrat per a aquesta activitat i aquest any."
+        closing_authority_recorded: "L'inventari %{year} de %{actividad_id} ja té registrat el seu valor de tancament, així que les seves dades d'existències ja no poden canviar."
         correction_changes_nothing: Aquesta correcció no indica cap valor inicial
           ni mètode de valoració diferent de l'actual.
         correction_id_conflict: "Aquesta correcció ja es va registrar amb altres dades."
@@ -564,9 +561,7 @@ application:
         inventory_not_retired: L'inventari %{year} de %{actividad_id} no està retirat.
         inventory_retired: L'inventari %{year} de %{actividad_id} està retirat. Restaura'l
           abans de canviar les seves dades d'existències.
-        later_closing_authority_recorded: L'autoritat de tancament %{later_year} de
-          %{actividad_id} parteix d'aquest tancament, així que les dades d'existències
-          de %{year} ja no poden canviar.
+        later_closing_authority_recorded: "El valor de tancament %{later_year} de %{actividad_id} parteix d'aquest tancament, així que les dades d'existències de %{year} ja no poden canviar."
         movement_already_superseded: "Aquest moviment ja es va corregir o anul·lar."
         movement_not_found: "L'inventari %{year} de %{actividad_id} no té aquest moviment."
         movement_outside_year: "Aquest moviment té una data fora de l'inventari %{year}."

@@ -2948,7 +2948,7 @@ desktop:
           Cierra este formulario y ábrelo de nuevo.'
         count_would_raise_stock: 'Rechazado: un recuento no puede subir tus existencias
           por encima de las unidades que tienes en los libros.'
-        duplicate_movement_id: 'Rechazado: ese movimiento ya está en el libro.'
+        duplicate_movement_id: "El registro ha rechazado el movimiento: ya está registrado."
         invalid_valuation_method: 'Rechazado: no es un método de valoración.'
         inventory_already_retired: 'Rechazado: este libro de existencias ya está dado
           de baja.'

@@ -346,6 +346,9 @@ cli:
         acquisition_cost_stdin_help: Llegeix de l'entrada estàndard l'objecte JSON
           de cost d'adquisició complet
         actividad_id_help: Identificador de l'activitat econòmica
+        refusal_activity_conflict: "Ja existeix un registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory list` per veure els existents."
+        refusal_activity_not_found: "No existeix cap registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory list` per veure els existents."
+        refusal_duplicate_movement_id: "El registre d'inventari ja conté el moviment %{movement_id}. Executa `aeat app ledger inventory list` per veure els moviments registrats."
         authority_file_help: Llegeix el document JSON complet d'autoritat de tancament
           des d'un fitxer.
         authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest

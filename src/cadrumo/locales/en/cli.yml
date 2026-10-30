@@ -325,6 +325,9 @@ cli:
         acquisition_cost_stdin_help: Read the complete acquisition-cost JSON object
           from stdin
         actividad_id_help: Economic activity identifier
+        refusal_activity_conflict: "An inventory record book already exists for activity %{actividad_id} and year %{year}. Run `aeat app ledger inventory list` to see the existing ones."
+        refusal_activity_not_found: "No inventory record book exists for activity %{actividad_id} and year %{year}. Run `aeat app ledger inventory list` to see the existing ones."
+        refusal_duplicate_movement_id: "The inventory record book already contains movement %{movement_id}. Run `aeat app ledger inventory list` to see the recorded movements."
         authority_file_help: Read the complete closing-authority JSON document from
           a file.
         authority_invalid: The closing-authority object is invalid for this inventory
