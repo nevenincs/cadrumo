@@ -113,7 +113,7 @@ def test_spanish_cli_and_operator_terms_are_exact_and_language_scoped() -> None:
         # Catalan independently uses flags/config in CLI instructions and
         # Hungarian independently uses config in its runtime catalogue.
         assert not is_project_spelling("ca", term) or term in {"flags", "config"}
-        assert not is_project_spelling("en", term)
+        assert not is_project_spelling("en", term) or term == "config"
         assert not is_project_spelling("hu", term) or term == "config"
 
     for near_miss in ("resolutorr", "Introo", "flagss", "configg"):
@@ -617,8 +617,8 @@ def test_catalan_runtime_tokens_are_exact_and_language_scoped() -> None:
         assert not is_project_spelling("ca", near_miss)
 
     independently_attested = {
-        "en": {"backend"},
-        "es": {"config", "flags", "hash", "backend"},
+        "en": {"aeat", "config", "backend"},
+        "es": {"aeat", "config", "flags", "hash", "backend"},
         "hu": {"aeat", "config", "hash", "payload"},
     }
     for locale, shared_forms in independently_attested.items():
@@ -761,10 +761,34 @@ def test_audit_hungarian_terms_and_cli_tokens_are_exact_and_language_scoped() ->
     ):
         assert not is_project_spelling("hu", near_miss)
 
-    independently_attested = {"es": {"config"}, "ca": {"aeat", "config"}}
+    independently_attested = {
+        "en": {"aeat", "config"},
+        "es": {"aeat", "config"},
+        "ca": {"aeat", "config"},
+    }
     for locale in ("en", "es", "ca"):
         allowed = independently_attested.get(locale, set())
         assert all(not is_project_spelling(locale, form) for form in forms if form not in allowed)
+
+
+def test_audit_cli_roots_and_auth_config_labels_are_exact_and_language_scoped() -> None:
+    # The October audit found lowercase command roots and namespaces across
+    # runtime catalogues, plus English diagnostic labels preserving title case.
+    expected = {
+        "en": {"aeat", "auth", "Auth", "config", "Config"},
+        "es": {"aeat", "auth", "config"},
+        "ca": {"aeat", "auth", "config"},
+        "hu": {"aeat", "auth", "config"},
+    }
+    for locale, forms in expected.items():
+        for form in forms:
+            assert is_project_spelling(locale, form)
+
+    for locale in ("en", "es", "ca", "hu"):
+        assert not is_project_spelling(locale, "autth")
+        assert not is_project_spelling(locale, "confg")
+        assert not is_project_spelling(locale, "aeatt")
+        assert all(not is_project_spelling(locale, form) for form in {"Auth", "Config"} - expected.get(locale, set()))
 
 
 def test_audit_attested_hungarian_aeat_and_runtime_terms_are_exact_and_language_scoped() -> None:
@@ -913,13 +937,22 @@ def test_repeated_hungarian_operator_and_tax_forms_are_exact_and_language_scoped
         "casillákatx",
         "casillákk",
         "casillátt",
-        "bájtjaik",
+        "bájtjaikk",
         "kompozálódnakx",
     ):
         assert not is_project_spelling("hu", near_miss)
 
     for locale in ("en", "es", "ca"):
         assert all(not is_project_spelling(locale, form) for form in forms)
+
+
+def test_hungarian_local_storage_adverb_is_exact_and_language_scoped() -> None:
+    dictionaries = load_dictionaries(REPO_ROOT)
+    assert not dictionaries["hu"].lookup("atomikusan")
+    assert is_project_spelling("hu", "atomikusan")
+    assert not is_project_spelling("hu", "atomikusann")
+    for locale in ("en", "es", "ca"):
+        assert not is_project_spelling(locale, "atomikusan")
 
 
 def test_audit_attested_hungarian_name_inflections_are_exact_and_language_scoped() -> None:

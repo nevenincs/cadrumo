@@ -124,6 +124,15 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "xlsm",
             "xlsx",
             "loopback",
+            # These exact lowercase names occur in translated operator
+            # commands and English CLI diagnostics: ``aeat`` is the literal
+            # command root, ``auth``/``config`` are command namespaces, and
+            # Auth/Config are displayed diagnostic section labels.
+            "aeat",
+            "auth",
+            "Auth",
+            "config",
+            "Config",
             # AEAT legal vocabulary is deliberately preserved in English
             # operator messages where the Spanish term names a filing
             # procedure, status, or tax concept. These exact forms occur in
@@ -262,6 +271,11 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "Intro",
             "flags",
             "config",
+            # Lowercase ``aeat`` is the literal command root retained in
+            # Spanish operator help and command examples.
+            "aeat",
+            # ``auth`` is retained as a command namespace in CLI guidance.
+            "auth",
             # Current Modelo 390 help and workbench guidance use the exact
             # AEAT tax-domain term exoneración.
             "exoneración",
@@ -379,6 +393,8 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "payload",
             "backend",
             "runtime",
+            # The AEAT CLI namespace is written ``auth`` in command examples.
+            "auth",
             # These exact Catalan forms are valid but absent from the pinned
             # dictionary: sublímit in a reduction warning, preomplert in
             # filing-record guidance, and reanomenament in work guidance.
@@ -572,6 +588,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "sidecarokat",
             "payload",
             "payloadját.",
+            # ``atomikusan`` is an ordinary Hungarian adverb in local object
+            # storage error prose; the pinned dictionary omits this valid form.
+            "atomikusan",
             # Repeated Hungarian operator and calculation terms absent from
             # the pinned dictionary. Preserve only forms present in the
             # current audit; in particular, casilla remains the AEAT's
@@ -613,6 +632,8 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "ingreso",
             "domiciliación",
             "config",
+            # ``auth`` is a literal runtime command namespace in help text.
+            "auth",
             "relation",
             "notifications",
             "LongPathsEnabled",
