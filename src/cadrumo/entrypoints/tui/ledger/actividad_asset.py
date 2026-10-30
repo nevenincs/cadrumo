@@ -479,6 +479,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             return _ActivityAssetScreenResult(message=f"described\t{asset_id}\tdescriptors={len(history.descriptors)}")
         if button_id == "asset-dispose":
             self._named_asset_id = asset_id
+            if result.material_m130 is None or result.intangible_m130 is None:
+                raise InternalInvariantError("activity-asset handoff for a Modelo 130 period omitted its accruals")
             history = self._actions.dispose(asset_id, self._stated_disposal())
             return _ActivityAssetScreenResult(
                 message=f"disposed\t{asset_id}\trevisions={len(history.revisions)}\tclaims={len(history.claims)}"

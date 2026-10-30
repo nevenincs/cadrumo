@@ -135,8 +135,16 @@ class ActivityAssetFilingHandoff(BaseModel):
 
     material_m100: ClaimProjection
     intangible_m100: ClaimProjection
-    material_m130: M130AccrualProjection
-    intangible_m130: M130AccrualProjection
+    material_m130: M130AccrualProjection | None = None
+    intangible_m130: M130AccrualProjection | None = None
+    """Both set for a Modelo 130 period, and both absent when the handoff states Modelo 100 alone."""
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _m130_together(self) -> Self:
+        if (self.material_m130 is None) != (self.intangible_m130 is None):
+            raise ValueError("a filing handoff states the Modelo 130 accrual of both asset kinds or of neither")
+        return self
 
 
 class SupersedingClaimRequest(BaseModel):
@@ -660,13 +668,33 @@ class ActivityAssetOperations:
             )
         return self._service.record_claim(claim, expected_history=current_history, recorded_at=recorded_at)
 
-    def filing_handoff(self, *, tax_year: int, m130_period: Period) -> ActivityAssetFilingHandoff:
-        """Project M100 from effective claims and M130 from the accrual route, recording nothing."""
+    def filing_handoff(self, *, tax_year: int, m130_period: Period | None = None) -> ActivityAssetFilingHandoff:
+        """Project M100 from effective claims and, for a stated period, M130 from the accrual route.
+
+        Without ``m130_period`` only the Modelo 100 boxes are projected; no Modelo 130 figure is
+        worked out. Nothing is recorded.
+        """
         history = self._service.reopen()
-        period_end = m130_period.end_date
         if history.revisions:
             self._require_common_territory(_year_end(tax_year))
-            self._require_common_territory(period_end)
+            if m130_period is not None:
+                self._require_common_territory(m130_period.end_date)
+        m100_boxes = self._authority.m100_amortization_casillas(tax_year)
+
+        def m100(asset_kind: AssetKind) -> ClaimProjection:
+            box = m100_boxes.get(asset_kind)
+            if box is None:
+                raise ActividadAssetUnsupportedError(
+                    context={"asset_kind": asset_kind.value, "tax_year": tax_year},
+                    translated_message="ledger.actividad_asset.errors.amortization_box_not_bound",
+                )
+            return project_m100(history.claims, asset_kind=asset_kind, tax_year=tax_year, target_casilla_id=box)
+
+        material_m100 = m100(AssetKind.MATERIAL)
+        intangible_m100 = m100(AssetKind.INTANGIBLE)
+        if m130_period is None:
+            return ActivityAssetFilingHandoff(material_m100=material_m100, intangible_m100=intangible_m100)
+        period_end = m130_period.end_date
         current = {revision.asset_id: revision for revision in history.revisions}
         rows = self._ledger.load_by_ids(
             {owned for revision in current.values() for owned in revision.acquisition_transaction_ids},
@@ -680,16 +708,6 @@ class ActivityAssetOperations:
         )
 
         m130_box = self._authority.m130_amortization_casilla(m130_period)
-        m100_boxes = self._authority.m100_amortization_casillas(tax_year)
-
-        def m100(asset_kind: AssetKind) -> ClaimProjection:
-            box = m100_boxes.get(asset_kind)
-            if box is None:
-                raise ActividadAssetUnsupportedError(
-                    context={"asset_kind": asset_kind.value, "tax_year": tax_year},
-                    translated_message="ledger.actividad_asset.errors.amortization_box_not_bound",
-                )
-            return project_m100(history.claims, asset_kind=asset_kind, tax_year=tax_year, target_casilla_id=box)
 
         def m130(asset_kind: AssetKind) -> M130AccrualProjection:
             selected = tuple(accrual for accrual in accruals if accrual.revision.asset_kind is asset_kind)
@@ -716,8 +734,8 @@ class ActivityAssetOperations:
             )
 
         return ActivityAssetFilingHandoff(
-            material_m100=m100(AssetKind.MATERIAL),
-            intangible_m100=m100(AssetKind.INTANGIBLE),
+            material_m100=material_m100,
+            intangible_m100=intangible_m100,
             material_m130=m130(AssetKind.MATERIAL),
             intangible_m130=m130(AssetKind.INTANGIBLE),
         )

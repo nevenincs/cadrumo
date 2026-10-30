@@ -192,6 +192,8 @@ def actividad_asset_filing_handoff(ctx: typer.Context, tax_year: int, m130_perio
     if result.filing_handoff is None:
         raise InternalInvariantError("successful activity-asset handoff omitted its filing projections")
     handoff = result.filing_handoff.to_domain()
+    if handoff.material_m130 is None or handoff.intangible_m130 is None:
+        raise InternalInvariantError("activity-asset handoff for a Modelo 130 period omitted its accruals")
     emit_envelope(
         ctx,
         command="ledger.actividad_asset.filing_handoff",

@@ -350,6 +350,8 @@ def assert_activity_asset_conformance_result(
             target_casilla_id="0208",
         )
         # EUR 300.00 at the published 25% for the full year 2025.
+        assert handoff.material_m130 is not None
+        assert handoff.intangible_m130 is not None
         assert handoff.material_m130.amount == Decimal("75.00")
         assert [item.amount for item in handoff.material_m130.contributions] == [Decimal("75.00")]
         assert handoff.intangible_m130.contributions == ()

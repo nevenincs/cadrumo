@@ -779,17 +779,25 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
 
     material_m100: ClaimProjectionSnapshot
     intangible_m100: ClaimProjectionSnapshot
-    material_m130: ActivityAssetM130ProjectionSnapshot
-    intangible_m130: ActivityAssetM130ProjectionSnapshot
+    material_m130: ActivityAssetM130ProjectionSnapshot | None = None
+    intangible_m130: ActivityAssetM130ProjectionSnapshot | None = None
+    """Both set for a Modelo 130 period, and both null when the handoff states Modelo 100 alone."""
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _m130_together(self) -> Self:
+        if (self.material_m130 is None) != (self.intangible_m130 is None):
+            raise ValueError("a filing handoff states the Modelo 130 accrual of both asset kinds or of neither")
+        return self
 
     @classmethod
     def from_domain(cls, value: ActivityAssetFilingHandoff) -> Self:
-        """Project the canonical M100 and M130 filing destinations."""
+        """Project the canonical M100 and, when stated, M130 filing destinations."""
         return cls(
             material_m100=ClaimProjectionSnapshot.from_domain(value.material_m100),
             intangible_m100=ClaimProjectionSnapshot.from_domain(value.intangible_m100),
-            material_m130=_m130_snapshot(value.material_m130),
-            intangible_m130=_m130_snapshot(value.intangible_m130),
+            material_m130=None if value.material_m130 is None else _m130_snapshot(value.material_m130),
+            intangible_m130=None if value.intangible_m130 is None else _m130_snapshot(value.intangible_m130),
         )
 
     def to_domain(self) -> ActivityAssetFilingHandoff:
@@ -797,8 +805,8 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
         return ActivityAssetFilingHandoff(
             material_m100=self.material_m100.to_domain(),
             intangible_m100=self.intangible_m100.to_domain(),
-            material_m130=_m130_domain(self.material_m130),
-            intangible_m130=_m130_domain(self.intangible_m130),
+            material_m130=None if self.material_m130 is None else _m130_domain(self.material_m130),
+            intangible_m130=None if self.intangible_m130 is None else _m130_domain(self.intangible_m130),
         )
 
 

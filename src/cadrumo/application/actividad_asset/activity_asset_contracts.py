@@ -341,10 +341,12 @@ class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     tax_year: ActivityAssetTaxYear
-    m130_period: Annotated[str, Field(min_length=1, max_length=16)]
+    m130_period: Annotated[str, Field(min_length=1, max_length=16)] | None = None
+    """The Modelo 130 period to project, or null to project the Modelo 100 boxes alone."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_canonical_period(self) -> Self:
-        Period.from_year_and_code(self.tax_year, self.m130_period)
+        if self.m130_period is not None:
+            Period.from_year_and_code(self.tax_year, self.m130_period)
         return self

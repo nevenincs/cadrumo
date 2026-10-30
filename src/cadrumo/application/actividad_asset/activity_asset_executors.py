@@ -735,7 +735,11 @@ class ActivityAssetFilingHandoffExecutor:
                 bucket_id=bucket_id,
                 operation=context.authority_operation,
             )
-            period = Period.from_year_and_code(payload.tax_year, payload.m130_period)
+            period = (
+                None
+                if payload.m130_period is None
+                else Period.from_year_and_code(payload.tax_year, payload.m130_period)
+            )
             try:
                 handoff = await asyncio.to_thread(
                     operations.filing_handoff,

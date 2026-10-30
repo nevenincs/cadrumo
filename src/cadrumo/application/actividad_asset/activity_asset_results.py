@@ -132,15 +132,18 @@ def require_filing_frame(
     m130_period: str | None,
     filing_handoff: ActivityAssetFilingHandoff | ActivityAssetFilingHandoffSnapshot | None,
 ) -> None:
-    """Require a handoff to sit inside the requested M100 tax year and M130 period."""
-    if outcome == "succeeded" and (tax_year is None or m130_period is None):
+    """Require a handoff to sit inside the requested M100 tax year, and to state M130 exactly for a requested period."""
+    if outcome == "succeeded" and tax_year is None:
         raise ValueError("successful activity-asset handoff must identify its filing frame")
     if filing_handoff is not None:
-        if tax_year is None or m130_period is None:
+        if tax_year is None:
             raise ValueError("activity-asset filing handoff requires its requested filing frame")
         if (filing_handoff.material_m100.tax_year, filing_handoff.intangible_m100.tax_year) != (tax_year, tax_year):
             raise ValueError("activity-asset filing handoff differs from its requested tax year")
-        Period.from_year_and_code(tax_year, m130_period)
+        if (m130_period is None) != (filing_handoff.material_m130 is None):
+            raise ValueError("activity-asset filing handoff states Modelo 130 exactly for a requested period")
+        if m130_period is not None:
+            Period.from_year_and_code(tax_year, m130_period)
 
 
 class ActivityAssetInspectResult(ActivityAssetOperationResult):
