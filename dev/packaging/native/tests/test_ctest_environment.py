@@ -15,11 +15,14 @@ from ...command_execution import run_command
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 MODULE = REPO_ROOT / "native/cmake/CTestEnvironment.cmake"
+# Variables a test run may still export that the module must neither read nor add.
+RETIRED_VARIABLES = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_TEMP_DIR")
 
 
 def _clean_environment() -> dict[str, str]:
     environment = dict(os.environ)
-    environment.pop("CADRUMO_STORAGE_ROOT", None)
+    for name in ("CADRUMO_STORAGE_ROOT", *RETIRED_VARIABLES):
+        environment.pop(name, None)
     return environment
 
 

@@ -616,7 +616,7 @@ spelled in the probe.
 
 `bundle.release-image-scan` runs on a Release package only. It refuses a package whose
 product-owned files spell a storage variable the declaration retired, the development
-`var/storage` default, the checkout marker or the path of the checkout the build ran in; the
+`var/storage` default or the path of the checkout the build ran in; the
 Python standard library, dependencies and the Node runtime are not scanned. A Release build
 therefore compiles Rust with the checkout path remapped to a neutral prefix, writes the desktop
 configuration's icon paths relative to it, records only checkout-relative locations and no agent

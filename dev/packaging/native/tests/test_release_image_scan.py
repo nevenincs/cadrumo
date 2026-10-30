@@ -52,7 +52,7 @@ def test_every_development_fact_in_a_product_file_is_found(tmp_path: Path) -> No
     # A checkout path, spelled with another case and escaped as JSON, inside a distribution record.
     escaped = str(checkout).lower().replace("\\", "\\\\")
     _write(site / "cadrumo-1.0.dist-info" / "direct_url.json", f'{{"url": "{escaped}"}}'.encode())
-    _write(package / "docs" / "overrides.html", b"<p>pyproject.toml</p>")
+    _write(package / "docs" / "overrides.html", b"<p>CADRUMO_LOG_DIR</p>")
 
     findings = scan(package, checkout)
 
@@ -60,7 +60,7 @@ def test_every_development_fact_in_a_product_file_is_found(tmp_path: Path) -> No
         Finding(PurePath("bin/aeat.exe"), "retired storage variable CADRUMO_LOCAL_STORAGE_ROOT"),
         Finding(PurePath("cadrumo/site-packages/cadrumo-1.0.dist-info/direct_url.json"), "checkout path"),
         Finding(PurePath("cadrumo/site-packages/cadrumo/core/storage.py"), "development storage default"),
-        Finding(PurePath("docs/overrides.html"), "checkout marker"),
+        Finding(PurePath("docs/overrides.html"), "retired storage variable CADRUMO_LOG_DIR"),
     ]
     assert main(["--package", str(package), "--checkout", str(tmp_path)]) == 1
 

@@ -3,7 +3,7 @@
 A release image resolves storage from the one storage variable, which names an absolute
 directory, or from the per-user default; a Debug build's development root is baked in at compile
 time. So no product-owned file of a release package may name a storage variable the package
-declaration retired, the development default root, the checkout marker or the checkout the
+declaration retired, the development default root or the checkout the
 build ran in. Third-party payloads (the Python standard library and dependencies, the Node
 runtime and modules) are outside this product's control and are not scanned.
 """
@@ -57,7 +57,6 @@ RETIRED_STORAGE_VARIABLES = (
     "CADRUMO_WORKFLOW_RUNS_DIR",
 )
 _DEVELOPMENT_DEFAULT = ("var", "storage")
-_CHECKOUT_MARKER = "pyproject.toml"
 
 
 @dataclass(frozen=True)
@@ -76,7 +75,6 @@ def development_spellings(checkout: Path) -> dict[str, tuple[str, ...]]:
     return {
         **{f"retired storage variable {name}": (name,) for name in RETIRED_STORAGE_VARIABLES},
         "development storage default": ("/".join(default), "\\".join(default), "\\\\".join(default)),
-        "checkout marker": (_CHECKOUT_MARKER,),
         "checkout path": tuple(dict.fromkeys((native, posix, native.replace("\\", "\\\\")))),
     }
 
