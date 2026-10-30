@@ -124,12 +124,17 @@ def test_real_locale_error_preserves_adjacent_and_command_typos(monkeypatch: pyt
     value = tr("application.auth.operator.errors.requires_custody_session", locale="en")
     assert "aeat config login" in value
     leaves: dict[str, object] = {"valid": value + " misspeling", "invalid": "Run aeat config logni then misspeling."}
+    filtered, excluded = filtered_translation_text(str(leaves["invalid"]))
+    assert filtered == leaves["invalid"]
+    assert excluded == 0
     monkeypatch.setattr(
         "dev.locales.signal_spelling.load_dictionaries", lambda repository: {"en": Dictionary(), "es": Dictionary()}
     )
     spelling, _inventory, _findings = spellcheck_catalogues(set(leaves), {"en": leaves}, Path("."))
     assert spelling[("en", "valid")] == ("misspeling",)
-    assert set(spelling[("en", "invalid")]) == {"aeat", "config", "logni", "misspeling"}
+    # The exact spellings aeat/config are enrolled technical vocabulary even
+    # outside a valid command; its misspelled verb must still reach the audit.
+    assert set(spelling[("en", "invalid")]) == {"logni", "misspeling"}
 
 
 def test_lazy_graph_loading_has_no_docs_cycle_and_reuses_only_process_local_cache() -> None:
