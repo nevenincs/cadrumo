@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 13:29+0100\n"
+"POT-Creation-Date: 2026-10-31 00:35+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -58,8 +58,8 @@ msgstr ""
 " (Modelo 100)](../how-to/modelo-100.md)."
 
 #: ../../explanation/how-renta-is-assembled.md:18
-msgid "One declaration, five source routes"
-msgstr "Una declaració, cinc vies d'origen"
+msgid "One declaration, six source routes"
+msgstr "Una declaració, sis vies d'origen"
 
 #: ../../explanation/how-renta-is-assembled.md:20
 msgid ""
@@ -67,14 +67,14 @@ msgid ""
 "defines over two thousand boxes (casillas) and two hundred formulas. "
 "Every value on it arrives through a declared data source. The listing "
 "calls each of these contracts a `binding`. The current Renta flow uses "
-"five broad routes. They are not the complete list of source kinds for "
+"six broad routes. They are not the complete list of source kinds for "
 "every modelo. List them for your filing year:"
 msgstr ""
 "El Modelo 100 és el model més gran que prepara l'eina: la versió del 2025"
 " defineix més de dues mil caselles i dues-centes fórmules. Cada valor hi "
 "arriba a través d'un origen de dades declarat. El llistat anomena "
 "cadascun d'aquests contractes `binding`. El flux actual de la Renta "
-"utilitza cinc vies generals. No són la llista completa de tipus d'origen "
+"utilitza sis vies generals. No són la llista completa de tipus d'origen "
 "de tots els models. Llista-les per al teu exercici:"
 
 #: ../../explanation/how-renta-is-assembled.md:31
@@ -105,11 +105,10 @@ msgstr ""
 "activitat: els apunts d'ingressos classificats i de despeses deduïbles de"
 " l'any, sumats per casella i llistats com les files `renta-ledger-*`. Són"
 " els mateixos registres que llegeixen les teves presentacions "
-"trimestrals; la Renda llegeix tot l'any de cop. La llista de 2025 "
-"també inclou la casella 0227 per a l'amortització d'actius "
-"intangibles; aquests imports provenen del registre d'actius de "
-"l'activitat, perquè cap categoria de despesa del llibre major no "
-"s'assigna a aquesta casella."
+"trimestrals; la Renda llegeix tot l'any de cop. La llista de 2025 també "
+"inclou la casella 0227 per a l'amortització d'actius intangibles; aquests"
+" imports provenen del registre d'actius de l'activitat, perquè cap "
+"categoria de despesa del llibre major no s'assigna a aquesta casella."
 
 #: ../../explanation/how-renta-is-assembled.md:33
 msgid ""
@@ -151,7 +150,19 @@ msgstr ""
 "registre d'inventari xifrat de l'exercici, llistades sota l'origen "
 "`inventory`."
 
-#: ../../explanation/how-renta-is-assembled.md:39
+#: ../../explanation/how-renta-is-assembled.md:38
+msgid ""
+"**Activity asset disposals.** Gains, losses, and excess amortisation from"
+" disposals recorded in your activity asset register, plus the asset type "
+"for a transferred activity asset. The listing labels these rows "
+"`activity_asset_disposal`."
+msgstr ""
+"**Baixes d'actius de l'activitat.** Guanys, pèrdues i excés "
+"d'amortització de les baixes registrades al teu registre d'actius de "
+"l'activitat, més el tipus d'actiu d'un actiu de l'activitat transmès. El "
+"llistat etiqueta aquestes files com a `activity_asset_disposal`."
+
+#: ../../explanation/how-renta-is-assembled.md:43
 msgid ""
 "Everything else - employment income details, capital income, deductions "
 "your records cannot know about - is a box you fill in yourself when it "
@@ -162,7 +173,7 @@ msgstr ""
 "casella que emplenes tu quan t'aplica. L'inventari complet per al teu "
 "any:"
 
-#: ../../explanation/how-renta-is-assembled.md:45
+#: ../../explanation/how-renta-is-assembled.md:49
 msgid ""
 "For the 2025 version, the stock boxes 0177 (stock variation, increase), "
 "0181 (purchase of inventory), and 0182 (stock variation, decrease) are "
@@ -179,11 +190,11 @@ msgstr ""
 "`--binding`. Si l'exercici no té registre d'inventari, el càlcul avisa i "
 "les tres caselles es queden a 0."
 
-#: ../../explanation/how-renta-is-assembled.md:52
+#: ../../explanation/how-renta-is-assembled.md:56
 msgid "How the quarterly filings fold in"
 msgstr "Com s'hi integren les presentacions trimestrals"
 
-#: ../../explanation/how-renta-is-assembled.md:54
+#: ../../explanation/how-renta-is-assembled.md:58
 msgid ""
 "Across the year you paid income tax in pieces: instalments on Modelo 130 "
 "(or 131 under módulos), and withholdings that clients or payers reported "
@@ -199,7 +210,7 @@ msgstr ""
 " es troben. La declaració els contraposa als teus ingressos de tot l'any "
 "i liquida la diferència: el que encara es deu, o el que et retornen."
 
-#: ../../explanation/how-renta-is-assembled.md:61
+#: ../../explanation/how-renta-is-assembled.md:65
 msgid ""
 "The fold-in has a condition. Before the annual check passes, every "
 "earlier filing the declaration depends on must be recorded as filed. A "
@@ -215,7 +226,7 @@ msgstr ""
 "registrada com a presentada a Cadrumo passa amb un avís que no és "
 "oficial. Mira què espera la declaració i què la bloqueja actualment:"
 
-#: ../../explanation/how-renta-is-assembled.md:71
+#: ../../explanation/how-renta-is-assembled.md:75
 msgid ""
 "Each dependency row names the source modelo and period and whether the "
 "proof of its filing is in place. A dependency that does not apply to you "
@@ -230,7 +241,7 @@ msgstr ""
 "les dades del teu perfil i es mostra com a no aplicable, mai s'omet "
 "silenciosament."
 
-#: ../../explanation/how-renta-is-assembled.md:77
+#: ../../explanation/how-renta-is-assembled.md:81
 msgid ""
 "The tool never fabricates a missing prior period: a gap stays visible for"
 " you to resolve. [How filings build on earlier ones](building-on-earlier-"
@@ -241,11 +252,11 @@ msgstr ""
 "anteriors](building-on-earlier-filings.md) explica aquesta regla de "
 "disseny."
 
-#: ../../explanation/how-renta-is-assembled.md:81
+#: ../../explanation/how-renta-is-assembled.md:85
 msgid "What carries between years"
 msgstr "Què s'arrossega entre anys"
 
-#: ../../explanation/how-renta-is-assembled.md:83
+#: ../../explanation/how-renta-is-assembled.md:87
 msgid ""
 "A Renta with a negative base liquidable does not just end: the negative "
 "carries forward, and a later year's declaration offsets it. The carry "
@@ -264,11 +275,11 @@ msgstr ""
 "coincideix bloqueja l'arrossegament en comptes d'importar silenciosament "
 "xifres calculades sota una llei diferent."
 
-#: ../../explanation/how-renta-is-assembled.md:85
+#: ../../explanation/how-renta-is-assembled.md:89
 msgid "Tracing any figure to its source and its law"
 msgstr "Traçar qualsevol xifra fins al seu origen i la seva llei"
 
-#: ../../explanation/how-renta-is-assembled.md:87
+#: ../../explanation/how-renta-is-assembled.md:91
 msgid ""
 "After a calculation, every resolved value carries a typed record of where"
 " it came from: the rule or formula that produced it, its operands, and "
@@ -282,7 +293,7 @@ msgstr ""
 "per a un declarant assalariat. Les ordres de lectura inspeccionen aquest "
 "esborrany, i l'última ordre consulta la definició d'una casella:"
 
-#: ../../explanation/how-renta-is-assembled.md:97
+#: ../../explanation/how-renta-is-assembled.md:101
 msgid ""
 "The JSON output of any of these commands carries `legal_refs` and "
 "`source_refs` on every row. This is the property Cadrumo preserves end to"
@@ -297,11 +308,11 @@ msgstr ""
 "darrere, la regla que els va encaminar i l'article de llei que hi ha "
 "darrere de la regla)."
 
-#: ../../explanation/how-renta-is-assembled.md:103
+#: ../../explanation/how-renta-is-assembled.md:107
 msgid "Where this sits in the journey"
 msgstr "On se situa això dins del recorregut"
 
-#: ../../explanation/how-renta-is-assembled.md:105
+#: ../../explanation/how-renta-is-assembled.md:109
 msgid ""
 "This page is part of the [how-it-works overview](index.md) cluster and "
 "goes one level deeper than [How filings build on earlier ones](building-"
@@ -319,4 +330,3 @@ msgstr ""
 ")](../how-to/modelo-100.md); els pagaments fraccionats trimestrals que "
 "l'alimenten es tracten a [Prepara un pagament fraccionat de l'IRPF del "
 "Modelo 130](../how-to/modelo-130.md)."
-
