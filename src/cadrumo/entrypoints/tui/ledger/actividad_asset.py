@@ -188,7 +188,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
             return
         except (CadrumoError, ValueError) as exc:
-            self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+            shown = resolve_error_message(exc) if isinstance(exc, CadrumoError) else str(exc)
+            self.query_one("#asset-result", Static).update(f"refused\t{shown}")
             self._show_recovery(exc)
             return
         finally:

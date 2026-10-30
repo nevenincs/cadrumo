@@ -88,7 +88,8 @@ def forecast_activity_asset_charge(
         if recovery is None or exc.terminal_precondition_verdict is not None:
             raise
         raise ActividadAssetIncompleteError(
-            str(exc),
+            context=exc.context,
+            translated_message=exc.translated_message,
             precondition_verdict=vehicle_affectation_verdict(recovery),
             vehicle_affectation_recovery=recovery,
         ) from exc

@@ -228,7 +228,7 @@ class ActivityAssetBasis(BaseModel):
     def _validate_direct_ownership(self) -> None:
         if self.ownership_mode is OwnershipMode.SPOUSAL_COMMUNITY:
             raise ActividadAssetUnsupportedError(
-                "spousal community ownership is not enrolled for activity-asset allocation",
+                translated_message="ledger.actividad_asset.errors.spousal_community_ownership_unsupported"
             )
         if self.ownership_mode is OwnershipMode.SOLE:
             if self.ownership_share != Decimal("1"):
@@ -239,7 +239,9 @@ class ActivityAssetBasis(BaseModel):
             if self.ownership_share == Decimal("1"):
                 raise ValueError("fractional direct ownership_share must be below one")
             return
-        raise ActividadAssetValidationError("whole-property basis has an unknown ownership treatment")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.ownership_treatment_unknown"
+        )
 
     @staticmethod
     def _require_share(value: Decimal | None, message: str) -> None:
@@ -261,7 +263,9 @@ class ActivityAssetBasis(BaseModel):
             return self.acquisition_cost()
         if self.stage is AssetBasisStage.TAXPAYER_OWNED:
             if self.business_use_share is None:  # defensive: validator proves unreachable
-                raise ActividadAssetValidationError("ordinary asset lacks business_use_share")
+                raise ActividadAssetValidationError(
+                    translated_message="ledger.actividad_asset.errors.business_use_share_missing"
+                )
             return self.acquisition_cost() * self.business_use_share
         if (
             self.construction_cost is None
@@ -269,7 +273,9 @@ class ActivityAssetBasis(BaseModel):
             or self.office_area is None
             or self.total_area is None
         ):
-            raise ActividadAssetValidationError("whole-property basis lacks allocation components")
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.allocation_components_missing"
+            )
         building_cost = self.construction_cost + self.non_deductible_iva
         return building_cost * self.ownership_share * self.office_area / self.total_area
 
@@ -315,7 +321,6 @@ class ActivityAssetRevision(BaseModel):
     def _validate_revision_shape(self) -> Self:
         _validate_revision_lineage(self)
         _validate_primary_purchase(self)
-        _validate_low_value_unit_value(self)
         _validate_service_dates(self)
         _validate_residual_basis(self)
         _validate_building_construction_date(self)
@@ -349,21 +354,6 @@ def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
         )
     if revision.acquisition_shape is not AcquisitionShape.PRIMARY_PURCHASE:
         raise ValueError("initial activity-asset support requires one primary purchase transaction")
-
-
-def _validate_low_value_unit_value(revision: ActivityAssetRevision) -> None:
-    """Keep the EUR 300 unit value equal to the acquisition cost the basis states.
-
-    The unit value is the precio de adquisicion, price plus non-deductible IVA
-    and never deductible IVA, so it has one source: the basis.  The election restates it
-    only as evidence the schedule reads, and a restatement that differs cannot
-    be admitted.
-    """
-    low_value = revision.amortization.low_value
-    if low_value is not None and low_value.unit_acquisition_value != revision.basis.acquisition_cost():
-        raise ValueError(
-            "low-value unit_acquisition_value must equal the price plus non-deductible IVA of the basis",
-        )
 
 
 def _validate_service_dates(revision: ActivityAssetRevision) -> None:

@@ -110,21 +110,18 @@ def require_vehicle_affected(affectation: VehicleAffectation) -> None:
     """Refuse a vehicle the declaration does not prove to be an affected asset."""
     if not affectation.recorded_in_activity_books:
         raise ActividadAssetUnsupportedError(
-            "a vehicle missing from the activity's books is not an affected asset (RIRPF art. 22.2.2º)",
+            translated_message="ledger.actividad_asset.errors.vehicle_missing_from_books"
         )
     if affectation.private_use is VehiclePrivateUse.SHARED:
-        raise ActividadAssetUnsupportedError(
-            "a vehicle shared between the activity and private needs is not an affected asset, and a vehicle "
-            "cannot be partially affected (RIRPF art. 22.2.1º and 22.3; LIRPF art. 29.2)",
-        )
+        raise ActividadAssetUnsupportedError(translated_message="ledger.actividad_asset.errors.vehicle_shared_use")
     if (
         affectation.private_use is VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME
         and affectation.category in RESTRICTED_VEHICLE_CATEGORIES
         and affectation.listed_use is None
     ):
         raise ActividadAssetUnsupportedError(
-            f"a {affectation.category.value} with any private use is affected only under one of the uses RIRPF "
-            "art. 22.4 (a)-(e) lists; otherwise it must be used exclusively for the activity",
+            context={"category": affectation.category.value},
+            translated_message="ledger.actividad_asset.errors.vehicle_private_use_category_restricted",
         )
 
 

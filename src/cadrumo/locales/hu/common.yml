@@ -329,10 +329,10 @@ categories:
   registry:
     amortizacion_vivienda_afecto:
       label: Üzleti célra használt lakás amortizációja
-      notes: A lakás tevékenységhez használt alapterületének aránya és a tulajdoni
-        hányadod szerint levonható; a közüzemi díjakra vonatkozó 30% itt nem alkalmazandó
-        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, üzleti célra használt lakás
-        amortizációja).
+      notes: A lakás amortizációját a tevékenység eszköznyilvántartásán keresztül
+        vonod le, a lakás üzleti célra használt részére és a tulajdoni hányadodra
+        számítva (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3). Az ebbe a kategóriába
+        tartozó főkönyvi tétel önmagában semmit sem von le.
     arrendamiento_local:
       label: Üzlethelyiség bérleti díja
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
@@ -1337,6 +1337,20 @@ desktop:
       when_read: Beolvasáskor
       yours: Az előkészített változásod
     assets:
+      absent:
+        free_method: 'Szabad értékcsökkenés: nincs tervezett összeg'
+        not_computed: Nincs kiszámítva
+        opening_history_unknown: Hiányzik a nyitó előzmény
+        other: Nincs megadott összeg
+      action:
+        add: Elem hozzáadása
+        claim: Értékcsökkenés rögzítése
+        correct: Javítás
+        describe: Adatlap szerkesztése
+        dispose: Kivezetés rögzítése
+      area:
+        fixed: Tárgyi eszközök
+        stock: Készlet
       asset_id: Eszköz azonosítója
       claim: Elszámolás
       claim_reused: 'Már elszámolva: semmi sem került kétszer rögzítésre.'
@@ -1349,8 +1363,42 @@ desktop:
         number: Változat
         revision: Azonosító
         target: Bevallás
+      count:
+        conflict: 'Átfedő elszámolások: {count}'
+        incomplete: 'Nem kiszámítható évek: {count}'
+        missing: 'Elszámolatlan évek: {count}'
+        stale: 'Az ütemezéssel már nem egyező elszámolások: {count}'
       creating_hint: Mi alatt kerül rögzítésre, pl. melyik bevalláshoz
       creating_operation: Rögzítés megnevezése
+      detail:
+        plan: Terv
+        record: Adatlap
+        timeline: Idővonal
+      event:
+        baja_recorded: Kivezetés rögzítve
+        claim_recorded: Értékcsökkenés rögzítve
+        correction_added: Javítás hozzáadva
+        description_added: Leírás hozzáadva
+        element_added: Elem hozzáadva
+        other: Esemény rögzítve
+      field:
+        amount: Összeg
+        baja_date: Utolsó üzemnap
+        baja_reason: Ok
+        basis: Értékcsökkenési alap
+        in_service_date: Üzembe helyezés napja
+        kind: Típus
+        method: Módszer
+        name: Név
+        other: Egyéb adat
+        residual_value: Maradványérték
+        serial: Gyártási szám
+      finding:
+        claim_conflict: Két elszámolás átfedi egymást
+        claim_stale: Egy elszámolás már nem egyezik az ütemezéssel
+        opening_history_missing: 'Hiányzik a nyitó előzmény: semmi sem számítható
+          ki'
+        other: Valami a figyelmedet igényli
       forecast: Értékcsökkenés {amount} · {days} nap · {from} – {until}
       forecast_note: Az előrejelzés semmit sem rögzít, amíg el nem számolod.
       free: Kért szabad értékcsökkenés
@@ -1358,6 +1406,61 @@ desktop:
       from: Ettől
       handoff: Hová kerülnek az elszámolások
       inspect: Megtekintés
+      list:
+        column:
+          in_service: Üzembe helyezés
+          kind: Típus
+          method: Módszer
+          name: Név
+          serial: Gyártási szám
+        disposed: 'Kivezetve: {date}'
+        empty: Még nincs elem.
+        label: Elemek
+        no_name: Nincs rögzített név
+      option:
+        kind:
+          intangible: Immateriális eszköz
+          tangible: Tárgyi eszköz
+          vehicle: Jármű
+        method:
+          constant_percentage: Állandó százalék
+          free_300: Szabad értékcsökkenés, alacsony értékű elem
+          linear_table: Lineáris, hivatalos táblázat
+        reason:
+          sale: Értékesítés
+          scrapping: Selejtezés
+          theft: Lopás
+          withdrawal: Kivonás a tevékenységből
+      origin:
+        import: Importálva
+        other: Egyéb forrás
+        person: Általad rögzítve
+        system: A Cadrumo számította ki
+      plan:
+        claimable: 'Elszámolható: {from} – {until}'
+        claimable_none: Nincs több elszámolható
+        claims: '{year}. évi elszámolások'
+        column:
+          claimed: Elszámolt
+          days: Napok
+          matches: Egyezik az ütemezéssel
+          planned: Tervezett
+          replaced_by: Helyettesítette
+          revision: Változat
+          status: Állapot
+          used_by: Felhasználva ebben
+          year: Év
+        edition: 'Táblázat kiadása: {edition}'
+        election_changed: Itt változik a választott módszer
+        gap: 'Nincs elszámolva: {from} – {until}'
+        in_effect: Hatályos
+        matches: Egyezik a jelenlegi ütemezéssel
+        no_match: Már nem egyezik az ütemezéssel
+        projected: Előrevetített
+        projected_note: Az előrevetített táblázatok az előrejelzést és a 130-as nyomtatványt
+          szolgálják. A 100-as nyomtatvány {year}. évre nem érhető el.
+        recorded_zero: Nullaként rögzítve
+        replaced: Helyettesítve
       quarter: 130-as negyedév
       refusal:
         refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Elutasítva:
@@ -1374,6 +1477,13 @@ desktop:
       revision_hint: Töltsd ki az összes üres adatot; mentés után egy változat nem
         szerkeszthető.
       revisions: Változatok
+      state:
+        claimed: Elszámolva
+        forecast: Előrejelzés
+        incomplete: Nem számítható ki
+        missing: Nincs elszámolva
+        other: Ismeretlen állapot
+        partial: Részben elszámolva
       submit:
         correct: Javítás mentése
         create: Eszköz létrehozása
@@ -1390,8 +1500,31 @@ desktop:
         filing: Bevallásokhoz
         forecast: Előrejelzés
       tax_year: Adóév
+      timeline:
+        change: '{field}: {before} → {after}'
+        change_added: '{field}: {after}'
+        change_cleared: '{field}: {before} törölve'
+        column:
+          changes: Változások
+          effect: Hatály
+          event: Esemény
+          origin: Forrás
+          recorded: Rögzítve
+          replaces: Helyettesíti
+          sequence: Sorszám
+        not_in_calculation: Nem része a számításnak
+        time_not_recorded: Az időpont nincs rögzítve
       title: Tevékenységi eszközök
       until: Eddig
+      write:
+        conflict: 'Már van elszámolás erre az időszakra: {from} – {until}. Inkább
+          azt javítsd.'
+        dispose_note: A dátum az utolsó üzemnap. Az ezt átlépő elszámolások ugyanebben
+          a lépésben lecserélődnek, és a kivezetés visszavonása sem állítja vissza
+          őket.
+        incomplete: 'Nem lett mentve. Még ki kell töltened: {fields}'
+        reused: Már rögzítve volt; nem került hozzá semmi.
+      year: Év
     capital:
       art108: A 108. cikk alá tartozik
       column:
@@ -1487,8 +1620,10 @@ desktop:
       vehicle: Jármű
     category_keywords:
       amortizacion_vivienda_afecto: amortizacion vivienda casa
-      arrendamiento_local: alquiler local oficina arrendamiento renta
-      arrendamiento_vivienda_afecto: alquiler vivienda casa piso arrendamiento
+      arrendamiento_local: alquiler local oficina arrendamiento renta üzlethelyiség
+        iroda bérleti díj bérlemény
+      arrendamiento_vivienda_afecto: alquiler vivienda casa piso arrendamiento lakás
+        otthon albérlet bérleti díj
       asesoria_contable: asesoria gestoria contable contabilidad
       asesoria_fiscal: asesoria gestoria fiscal impuestos
       asesoria_juridica: abogado asesoria juridica legal notario
@@ -1496,7 +1631,8 @@ desktop:
       cuotas_autonomos_ss: autonomos seguridad social reta tgss cuota
       cuotas_colegiales: colegio colegiado cuota colegial
       formacion_profesional: curso formacion academia master taller
-      gastos_bancarios: comision banco mantenimiento cuenta transferencia
+      gastos_bancarios: comision banco mantenimiento cuenta transferencia banki díj
+        jutalék bankszámla számlavezetés átutalás
       gastos_financieros: intereses prestamo financiacion
       hardware_amortizable: ordenador portatil pc monitor hardware
       ibi_local_afecto: ibi impuesto bienes inmuebles ayuntamiento local
@@ -1510,7 +1646,8 @@ desktop:
       reparaciones_conservacion: reparacion mantenimiento arreglo
       seguros_responsabilidad_civil: seguro responsabilidad civil poliza
       seguros_salud_autonomo: seguro salud medico poliza
-      software_suscripcion: software suscripcion licencia aplicacion
+      software_suscripcion: software suscripcion licencia aplicacion szoftver előfizetés
+        licenc alkalmazás
       subcontratacion: subcontratacion colaborador freelance
       suministros_cliente_directos: suministros cliente
       suministros_home_office_agua: agua
@@ -4401,6 +4538,197 @@ google_review:
   technical: Technikai hivatkozások
   value: Érték
 ledger:
+  actividad_asset:
+    errors:
+      accelerated_da18_depreciation: A(z) %{tax_year}. adóévre a LIS DA 18 az új elektromos
+        járművekre és töltőpontokra a maximális lineáris együttható kétszeresével
+        számolt gyorsított értékcsökkenést biztosít, nem szabad értékcsökkenést. Ezt
+        a szabályozást a program nem számítja ki, ezért a(z) %{method} választás nem
+        eredményez terhelést.
+      acquisition_cost_exceeds_payment: 'A megadott költség (%{cost}: ár %{price}
+        plusz le nem vonható áfa %{non_deductible_iva}) meghaladja a beszerzési tranzakció
+        által kifizetett %{paid} EUR-t.'
+      acquisition_currency_unconverted: A beszerzési tranzakció %{currency} pénznemű,
+        és nincs EUR-átváltása.
+      acquisition_iva_exceeds_transaction_iva: A megadott le nem vonható áfa (%{non_deductible_iva})
+        meghaladja a beszerzési tranzakció %{iva_amount} összegű áfáját.
+      acquisition_price_exceeds_base: A megadott ár (%{price}) meghaladja a beszerzési
+        tranzakció %{taxable_base} összegű alapját.
+      acquisition_transaction_missing: A(z) %{transaction_id} beszerzési tranzakció
+        nincs a főkönyvben.
+      acquisition_transaction_not_payment: A(z) %{transaction_id} beszerzési tranzakció
+        nem kifizetés.
+      allocation_components_missing: Az egész ingatlanra vonatkozó alapból hiányoznak
+        a megosztási összetevők.
+      approved_plan_not_yet_effective: A jóváhagyott terv csak a benyújtása után záruló
+        adóidőszakokban hatályos (RIS 7.8 cikk).
+      approved_plan_required: A jóváhagyott terv szerinti választáshoz meg kell adni
+        a tervet.
+      approved_plan_without_distribution: A jóváhagyott terv erre az adóévre nem oszt
+        fel értékcsökkenést.
+      asset_already_exists: A tevékenységi eszköz már létezik.
+      asset_made_available_after_in_service: Egy eszköz nem állhat üzembe, mielőtt
+        rendelkezésre bocsátották volna.
+      asset_not_found: A tevékenységi eszköz nem létezik.
+      business_use_share_missing: Egy rendes eszközhöz hiányzik az üzleti felhasználási
+        arány.
+      charging_infrastructure_new_only: A töltőinfrastruktúra szabad értékcsökkenése
+        csak új elemekre alkalmazható.
+      charging_infrastructure_period_not_enrolled: A töltőinfrastruktúrának olyan
+        adóidőszakban kell üzembe állnia, amelyet a LIS DA 18a.2 nyilvántart.
+      constant_percentage_weighting_not_enrolled: Az állandó százalék %{band} súlyozása
+        nincs nyilvántartva.
+      correction_must_supersede_current: Az eszköz javításának az aktuális változatot
+        kell felváltania.
+      creation_requires_first_revision: Az eszköz létrehozásához az egyes számú változat
+        szükséges.
+      elected_coefficient_out_of_range: A választott %{elected} együttható kívül esik
+        a megengedett [%{minimum}, %{maximum}] tartományon.
+      electric_vehicle_declaration_required: Az elektromos járművek szabad értékcsökkenéséhez
+        járműnyilatkozat szükséges.
+      electric_vehicle_new_only: Az elektromos járművek szabad értékcsökkenése csak
+        új járművekre alkalmazható.
+      electric_vehicle_period_not_enrolled: A járműnek olyan adóidőszakban kell üzembe
+        állnia, amelyet a LIS DA 18a.1 nyilvántart.
+      electric_vehicle_propulsion_required: Az elektromos járművek szabad értékcsökkenéséhez
+        meg kell adni a jármű II. melléklet szerinti hajtástípusát.
+      entity_regime_not_individual: A LIS 12.3.a és 12.3.d cikk a sociedades laborales-re
+        és az explotaciones asociativas prioritarias-ra vonatkozik, amelyek jogi személyek,
+        nem természetes személy adózók.
+      financial_lease_unexercised: A pénzügyi lízingbe vett eszköz csak a vételi jog
+        gyakorlása után kerül a nyilvántartásba; a lízingdíjakra az LIS 106. cikke
+        vonatkozik.
+      forecast_no_longer_matches: Az előrejelzés már nem egyezik az aktuális előzmények
+        és jogforrás szerinti ütemtervvel; készíts új előrejelzést.
+      forecast_not_current_revision: Az előrejelzés nem az eszköz aktuális változatára
+        hivatkozik.
+      job_creation_new_only: A munkahelyteremtéshez kapcsolódó szabad értékcsökkenés
+        csak új elemekre alkalmazható (LIS 102.1 cikk).
+      job_creation_reduced_size_evidence_required: A munkahelyteremtéshez kapcsolódó
+        szabad értékcsökkenéshez a kisméretű vállalkozás igazolása szükséges.
+      justified_amount_unvalidated: A LIS 12.1.e cikk elfogadja a adózó által igazolt
+        összeget, de egyetlen nyilvántartási jogforrás sem tudja ezt az igazolást
+        érvényesíteni, ezért a hívó által megadott, nem érvényesített összeg nem válhat
+        benyújtásra alkalmas terheléssé.
+      low_value_election_required: Az alacsony értékű szabad értékcsökkenéshez kifejezett
+        választási igazolás szükséges.
+      low_value_new_only: Az alacsony értékű szabad értékcsökkenés csak új elemekre
+        alkalmazható.
+      method_admission_invalid: A(z) %{admission_key} módszer-engedélyezés sem engedélyezett,
+        sem kizárt.
+      method_excluded_by_law: A(z) %{method} módszert jogszabály kizárja %{asset_kind}
+        eszközökre a(z) %{regime} módozatban (%{legal}).
+      method_excludes_buildings_and_furniture: Épületek, mobiliario és enseres nem
+        alkalmazhatják ezt a módszert (%{provision}).
+      method_not_enrolled_for_kind: A(z) %{method} módszer nincs nyilvántartva %{asset_kind}
+        eszközökre a(z) %{regime} módozatban.
+      method_without_resolver: A(z) %{method} módszerhez nincs nyilvántartott hatósági
+        feloldó.
+      modality_not_declared: Az adózói profil nem jelöl meg IRPF-becslési rendszert.
+      modality_not_direct_estimation: 'A tevékenységi eszközök értékcsökkenése csak
+        a közvetlen becslésre van nyilvántartva, nem erre: %{regime}.'
+      multi_shift_not_enrolled: A RIS 4.2 cikk szerinti többműszakos együttható nincs
+        nyilvántartva a(z) %{regime} módozatra.
+      multi_shift_requires_extra_shift: A többműszakos együtthatóhoz naponta egynél
+        több normál műszak szükséges.
+      multi_shift_with_used_asset_unsupported: A RIS 4. cikk nem mondja meg, hogyan
+        kombinálódik a többműszakos és a használt eszközre vonatkozó együttható.
+      ownership_treatment_unknown: Az egész ingatlanra vonatkozó alap tulajdonosi
+        kezelése ismeretlen.
+      parameter_absent: A(z) %{parameter_id} tevékenységieszköz-hatósági paraméter
+        hiányzik a Modelo 100 %{revision_id} változatából.
+      parameter_not_declared: A(z) %{parameter_id} tevékenységieszköz-paraméter nem
+        szerepel a feloldó deklarált olvasási készletében.
+      parameter_not_resolvable_for_date: 'A(z) %{parameter_id} tevékenységieszköz-hatósági
+        paraméter nem oldható fel erre: %{axis} %{on_date}.'
+      parameter_not_resolvable_for_year: A(z) %{parameter_id} tevékenységieszköz-hatósági
+        paraméter nem oldható fel a(z) %{tax_year}. évre.
+      profile_modality_mismatch: Az eszköz a(z) %{elected} módozatot választja, de
+        az adózói profil %{declared} módozatot jelöl meg.
+      reduced_size_acceleration_new_only: A kisméretű vállalkozásokra vonatkozó gyorsítás
+        csak új elemekre alkalmazható (LIS 103.1 cikk).
+      reduced_size_evidence_required: A kisméretű vállalkozásokra vonatkozó gyorsításhoz
+        igazolás szükséges.
+      reduced_size_turnover_reached: Az előző időszak nettó árbevétele eléri a kisméretű
+        vállalkozás küszöbét (LIS 101.1 cikk).
+      renewable_entry_year_not_enrolled: A létesítménynek olyan évben kell üzembe
+        állnia, amelyet a LIS DA 17a.1 nyilvántart.
+      renewable_evidence_required: A megújuló energiás szabad értékcsökkenéshez táblázati
+        osztály és igazolás szükséges.
+      renewable_excludes_buildings: Az épületek nem alkalmazhatják a megújuló energiás
+        szabad értékcsökkenést (LIS DA 17a.1).
+      renewable_made_available_before_admitted_date: A létesítményt azelőtt bocsátották
+        rendelkezésre, hogy a LIS DA 17a.1 az adott időponttól elfogadná a létesítményeket.
+      renewable_mandatory_installation_unsupported: A Código Técnico de la Edificación
+        által kötelezővé tett létesítmény csak a kötelező teljesítményt meghaladó
+        költségrészre jogosult (LIS DA 17a.5), és ennek a résznek az elszámolása nem
+        támogatott.
+      renewable_only_in_entry_period: A megújuló energiás szabad értékcsökkenés csak
+        abban az adóidőszakban alkalmazható, amelyben a létesítmény üzembe áll (LIS
+        DA 17a.1); az akkor nem érvényesített összeg később már nem érvényesíthető
+        szabadon.
+      renewable_thermal_requires_fossil_replacement: Hőtermelő létesítmény csak akkor
+        jogosult, ha fosszilis energiát használó létesítményt vált ki (LIS DA 17a.1).
+      research_development_building_requires_building_class: A K+F épület módszerhez
+        épület táblázati osztály szükséges.
+      research_development_building_table_class_required: A K+F épület szerinti választáshoz
+        táblázati osztály szükséges.
+      research_development_free_excludes_buildings: A K+F szabad értékcsökkenés nem
+        terjed ki épületekre (LIS 12.3.b cikk).
+      research_development_free_table_class_required: Az anyagi K+F szabad értékcsökkenéshez
+        táblázati osztály szükséges.
+      revision_begins_after_tax_year: A Modelo 100 %{revision_id} változata a(z) %{tax_year}.
+        adóév után kezdődik.
+      simplified_intangible_table_method: 'A(z) %{method} módszer az egyszerűsített
+        módozatban nem engedélyezett immateriális eszközökre: a RIRPF 30.1a cikk lineáris
+        értékcsökkenést ír elő az egyszerűsített táblázat szerint (Orden, 1998. március
+        27.), amely az információs rendszereket és programokat 10 évre 26 %-on tartalmazza,
+        a DGT V0190-19 és V0741-19 állásfoglalás pedig ezt a táblázatot alkalmazza
+        az immateriális eszközökre; a RIS 5.1 és 6.1 cikk a LIS 12.1.a cikk táblázatát
+        súlyozza, amelyet ez a módozat nem használ.'
+      spousal_community_ownership_unsupported: A házassági közös tulajdon nincs nyilvántartva
+        a tevékenységi eszközök megosztására.
+      sum_of_digits_period_out_of_range: A számjegyösszeg-módszer %{period} éves időszaka
+        kívül esik a megengedett egész éves [%{shortest}, %{longest}] tartományon.
+      sum_of_digits_period_required: A számjegyösszeg-módszerhez meg kell adni az
+        időszakot.
+      superseded_claim_not_effective: A felváltott elszámolás nem érvényes elszámolása
+        ennek az eszköznek.
+      table_class_group_not_a_flag: A(z) %{class_key} táblázati osztály csoportbesorolása
+        nem igen-nem jelző.
+      table_class_not_enrolled: A(z) %{class_key} táblázati osztály nincs nyilvántartva
+        a(z) %{regime} módozatra.
+      table_class_required: A(z) %{method} módszerhez törvényi táblázati osztály szükséges.
+      table_class_without_group_classification: A(z) %{class_key} táblázati osztálynak
+        nincs nyilvántartott csoportbesorolása.
+      table_class_wrong_kind: A(z) %{class_key} táblázati osztály nem %{asset_kind}
+        eszközöket sorol be.
+      used_building_requires_construction_date: Használt épülethez meg kell adni az
+        építés dátumát.
+      useful_life_evidence_required: A meghatározott élettartam szerinti választáshoz
+        igazolni kell a hasznos élettartamot.
+      useful_life_must_end_after_service: A meghatározott hasznos élettartamnak az
+        eszköz üzembe állítása után kell véget érnie.
+      vehicle_affectation_required_for_class: A(z) %{asset_id} tevékenységi eszköz
+        a(z) %{class_key} táblázati osztályba tartozik, amely a RIRPF 22.4 cikk által
+        korlátozott járművet is tartalmazhat, ezért járműhasználati nyilatkozat szükséges.
+      vehicle_missing_from_books: A tevékenység könyveiből hiányzó jármű nem tartozik
+        a tevékenységhez kötött eszközök közé (RIRPF 22.2.2º cikk).
+      vehicle_private_use_category_restricted: A(z) %{category} kategóriájú jármű
+        magánhasználat esetén csak a RIRPF 22.4 cikk (a)-(e) pontjában felsorolt felhasználások
+        egyike alapján tartozik a tevékenységhez; egyébként kizárólag a tevékenységhez
+        használható.
+      vehicle_shared_use: A tevékenység és magáncélok között megosztott jármű nem
+        tartozik a tevékenységhez kötött eszközök közé, és egy jármű nem köthető részlegesen
+        a tevékenységhez (RIRPF 22.2.1º és 22.3 cikk; LIRPF 29.2 cikk).
+      workforce_fell_below: Az üzembe állítás évének kezdetét követő 24 hónap átlagos
+        létszáma elmarad az azt megelőző 12 hónapétól (LIS DA 17a.1).
+      workforce_increase_not_kept: A létszámnövekedést nem tartják fenn a LIS 102.1
+        cikk által előírt további 24 hónapig.
+      workforce_increase_not_reached: Az üzembe állítás évének kezdetét követő 24
+        hónap átlagos létszáma nem haladja meg az azt megelőző 12 hónapét (LIS 102.1
+        cikk).
+      workforce_year_not_declared: A(z) %{year}. évi átlagos létszám nincs megadva.
   evidence:
     reader:
       operation_failed: A bizonylatolvasó művelete sikertelen volt

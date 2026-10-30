@@ -54,7 +54,10 @@ def _require(years: tuple[PlantillaMediaYear, ...], year: int) -> PlantillaMedia
     """Return a declared year, or refuse: an undeclared year is never zero."""
     found = next((item for item in years if item.year == year), None)
     if found is None:
-        raise ActividadAssetIncompleteError(f"the average workforce of {year} is not declared")
+        raise ActividadAssetIncompleteError(
+            context={"year": year},
+            translated_message="ledger.actividad_asset.errors.workforce_year_not_declared",
+        )
     return found
 
 
@@ -81,12 +84,11 @@ def job_creation_increase(years: tuple[PlantillaMediaYear, ...], *, entry_year: 
     increase = (_window_average(following) - before.average_workforce).quantize(_TWO_PLACES, rounding=ROUND_DOWN)
     if increase <= Decimal("0"):
         raise ActividadAssetUnsupportedError(
-            "the average workforce of the 24 months after the entry year's start does not exceed that of the "
-            "12 months before (LIS art. 102.1)",
+            translated_message="ledger.actividad_asset.errors.workforce_increase_not_reached"
         )
     if _window_average(maintained) - before.average_workforce < increase:
         raise ActividadAssetUnsupportedError(
-            "the workforce increase is not kept for the further 24 months LIS art. 102.1 requires",
+            translated_message="ledger.actividad_asset.errors.workforce_increase_not_kept"
         )
     used = (before, *following, *maintained)
     return WorkforceIncrease(increase=increase, years=used, committed_years=_committed(used))
@@ -101,10 +103,7 @@ def renewable_workforce_maintained(
     before = _require(years, entry_year - 1)
     following = (_require(years, entry_year), _require(years, entry_year + 1))
     if _window_average(following) < before.average_workforce:
-        raise ActividadAssetUnsupportedError(
-            "the average workforce of the 24 months after the entry year's start falls below that of the "
-            "12 months before (LIS DA 17a.1)",
-        )
+        raise ActividadAssetUnsupportedError(translated_message="ledger.actividad_asset.errors.workforce_fell_below")
     used = (before, *following)
     return WorkforceMaintenance(years=used, committed_years=_committed(used))
 

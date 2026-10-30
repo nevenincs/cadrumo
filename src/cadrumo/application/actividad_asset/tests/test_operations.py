@@ -235,7 +235,7 @@ def test_correction_must_supersede_the_current_revision() -> None:
     first = _revision()
     operations.create(first)
 
-    with pytest.raises(ActividadAssetValidationError, match="current revision"):
+    with pytest.raises(ActividadAssetValidationError, match="correction_must_supersede_current"):
         operations.correct(_revision(number=2, supersedes="c" * 64))
 
     corrected = _revision(number=2, supersedes=first.revision_id)
@@ -334,7 +334,7 @@ def test_forecast_refuses_an_election_the_taxpayer_modality_does_not_declare() -
     revision = _revision()
     operations.create(revision)
 
-    with pytest.raises(ActividadAssetValidationError, match="profile declares normal"):
+    with pytest.raises(ActividadAssetValidationError, match="profile_modality_mismatch"):
         operations.forecast(asset_id=revision.asset_id, covered_from=date(2025, 1, 1), covered_until=date(2026, 1, 1))
 
 
@@ -382,7 +382,7 @@ def test_creation_refuses_an_acquisition_the_ledger_does_not_hold() -> None:
 
     with pytest.raises(ActividadAssetValidationError, match="acquisition_transaction_missing"):
         operations.create(_revision())
-    with pytest.raises(ActividadAssetValidationError, match="does not exist"):
+    with pytest.raises(ActividadAssetValidationError, match="asset_not_found"):
         operations.inspect("laptop-1")
 
 

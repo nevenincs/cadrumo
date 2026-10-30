@@ -352,10 +352,10 @@ categories:
   registry:
     amortizacion_vivienda_afecto:
       label: Amortización de la vivienda afecta
-      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        y a tu porcentaje de titularidad en ella; no se aplica el 30 % de los suministros
-        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, amortización de la vivienda
-        afecta).
+      notes: Deduces la amortización de la vivienda a través del registro de bienes
+        de la actividad, sobre la parte de la vivienda afecta y tu porcentaje de titularidad
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3). Un apunte del libro en
+        esta categoría no deduce nada por sí solo.
     arrendamiento_local:
       label: Alquiler del local
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
@@ -1366,6 +1366,20 @@ desktop:
       when_read: Cuando lo leíste
       yours: Tu cambio preparado
     assets:
+      absent:
+        free_method: 'Libertad de amortización: sin cifra prevista'
+        not_computed: Sin calcular
+        opening_history_unknown: Falta el historial de apertura
+        other: Sin cifra indicada
+      action:
+        add: Añadir elemento
+        claim: Registrar dotación
+        correct: Corregir
+        describe: Editar ficha
+        dispose: Dar de baja
+      area:
+        fixed: Inmovilizado
+        stock: Existencias
       asset_id: Identificador del elemento
       claim: Reclamarla
       claim_reused: 'Ya reclamada: no se ha registrado dos veces.'
@@ -1378,8 +1392,42 @@ desktop:
         number: Revisión
         revision: Id
         target: Declaración
+      count:
+        conflict: 'Dotaciones solapadas: {count}'
+        incomplete: 'Años que no se pueden calcular: {count}'
+        missing: 'Años sin registrar: {count}'
+        stale: 'Dotaciones que ya no coinciden con el cuadro: {count}'
       creating_hint: Con qué se registra, p. ej. la declaración a la que va
       creating_operation: Registrado como
+      detail:
+        plan: Cuadro
+        record: Ficha
+        timeline: Cronología
+      event:
+        baja_recorded: Baja registrada
+        claim_recorded: Dotación registrada
+        correction_added: Corrección añadida
+        description_added: Descripción añadida
+        element_added: Elemento añadido
+        other: Evento registrado
+      field:
+        amount: Importe
+        baja_date: Último día en servicio
+        baja_reason: Motivo
+        basis: Base amortizable
+        in_service_date: En servicio desde
+        kind: Tipo
+        method: Método
+        name: Nombre
+        other: Otro dato
+        residual_value: Valor residual
+        serial: Número de serie
+      finding:
+        claim_conflict: Dos dotaciones se solapan
+        claim_stale: Una dotación ya no coincide con el cuadro
+        opening_history_missing: 'Falta el historial de apertura: no se puede calcular
+          nada'
+        other: Algo requiere tu atención
       forecast: Amortización {amount} · {days} días · {from} – {until}
       forecast_note: Una previsión no registra nada hasta que la reclamas.
       free: Amortización libre solicitada
@@ -1387,6 +1435,61 @@ desktop:
       from: Desde
       handoff: Adónde van las reclamaciones
       inspect: Consultar
+      list:
+        column:
+          in_service: En servicio desde
+          kind: Tipo
+          method: Método
+          name: Nombre
+          serial: Número de serie
+        disposed: Baja el {date}
+        empty: Todavía no hay elementos.
+        label: Elementos
+        no_name: Sin nombre registrado
+      option:
+        kind:
+          intangible: Inmovilizado inmaterial
+          tangible: Inmovilizado material
+          vehicle: Vehículo
+        method:
+          constant_percentage: Porcentaje constante
+          free_300: Libertad de amortización, elemento de escaso valor
+          linear_table: Lineal, tabla oficial
+        reason:
+          sale: Venta
+          scrapping: Achatarramiento
+          theft: Robo
+          withdrawal: Desafectación de la actividad
+      origin:
+        import: Importado
+        other: Otro origen
+        person: Introducido por ti
+        system: Calculado por Cadrumo
+      plan:
+        claimable: Se puede registrar del {from} al {until}
+        claimable_none: Nada pendiente de registrar
+        claims: Dotaciones de {year}
+        column:
+          claimed: Registrada
+          days: Días
+          matches: Coincide con el cuadro
+          planned: Prevista
+          replaced_by: Sustituida por
+          revision: Revisión
+          status: Estado
+          used_by: Usada en
+          year: Año
+        edition: Edición de la tabla {edition}
+        election_changed: Aquí cambia el método elegido
+        gap: 'Sin registrar: del {from} al {until}'
+        in_effect: Vigente
+        matches: Coincide con el cuadro actual
+        no_match: Ya no coincide con el cuadro
+        projected: Proyectada
+        projected_note: Las tablas proyectadas sirven para la previsión y el modelo
+          130. El modelo 100 no está disponible para {year}.
+        recorded_zero: Registrada como cero
+        replaced: Sustituida
       quarter: Trimestre del modelo 130
       refusal:
         refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Rechazado:
@@ -1402,6 +1505,13 @@ desktop:
         create: Primera revisión (JSON)
       revision_hint: Rellena cada dato vacío; una revisión no se edita una vez guardada.
       revisions: Revisiones
+      state:
+        claimed: Registrada
+        forecast: Previsión
+        incomplete: No se puede calcular
+        missing: Sin registrar
+        other: Estado no reconocido
+        partial: Registrada en parte
       submit:
         correct: Guardar la corrección
         create: Crear el elemento
@@ -1418,8 +1528,30 @@ desktop:
         filing: Para las declaraciones
         forecast: Previsión
       tax_year: Ejercicio
+      timeline:
+        change: '{field}: {before} → {after}'
+        change_added: '{field}: {after}'
+        change_cleared: '{field}: se quita {before}'
+        column:
+          changes: Cambios
+          effect: Efecto
+          event: Evento
+          origin: Origen
+          recorded: Registrado
+          replaces: Sustituye a
+          sequence: N.º
+        not_in_calculation: No forma parte del cálculo
+        time_not_recorded: Hora no registrada
       title: Elementos afectos a la actividad
       until: Hasta
+      write:
+        conflict: Ya hay una dotación que cubre del {from} al {until}. Corrige esa
+          dotación.
+        dispose_note: La fecha es el último día en servicio. Las dotaciones que la
+          cruzan se sustituyen en el mismo paso, y deshacer la baja no las recupera.
+        incomplete: 'No se ha guardado. Falta rellenar: {fields}'
+        reused: Ya estaba registrada; no se ha añadido nada.
+      year: Año
     capital:
       art108: Acogido al art. 108
       column:
@@ -4430,6 +4562,199 @@ google_review:
   technical: Referencias técnicas
   value: Valor
 ledger:
+  actividad_asset:
+    errors:
+      accelerated_da18_depreciation: Para el ejercicio %{tax_year}, la LIS DA 18 concede
+        a los vehículos eléctricos nuevos y a los puntos de recarga amortización acelerada
+        al doble del coeficiente lineal máximo, no libertad de amortización. Ese régimen
+        no se calcula, por lo que la elección %{method} no genera ningún cargo.
+      acquisition_cost_exceeds_payment: El coste indicado %{cost} (precio %{price}
+        más IVA no deducible %{non_deductible_iva}) supera los %{paid} EUR que pagó
+        la transacción de adquisición.
+      acquisition_currency_unconverted: La transacción de adquisición está en %{currency}
+        y no tiene conversión a EUR.
+      acquisition_iva_exceeds_transaction_iva: El IVA no deducible indicado %{non_deductible_iva}
+        supera los %{iva_amount} de IVA de la transacción de adquisición.
+      acquisition_price_exceeds_base: El precio indicado %{price} supera la base de
+        %{taxable_base} de la transacción de adquisición.
+      acquisition_transaction_missing: La transacción de adquisición %{transaction_id}
+        no está en el libro mayor.
+      acquisition_transaction_not_payment: La transacción de adquisición %{transaction_id}
+        no es un pago.
+      allocation_components_missing: La base del inmueble completo carece de sus componentes
+        de imputación.
+      approved_plan_not_yet_effective: Un plan aprobado solo surte efecto en los periodos
+        impositivos que terminan después de su presentación (RIS art. 7.8).
+      approved_plan_required: La elección de plan aprobado requiere su plan.
+      approved_plan_without_distribution: El plan aprobado no distribuye ninguna amortización
+        a este ejercicio.
+      asset_already_exists: El elemento de la actividad ya existe.
+      asset_made_available_after_in_service: Un elemento no puede entrar en funcionamiento
+        antes de ponerse a disposición.
+      asset_not_found: El elemento de la actividad no existe.
+      business_use_share_missing: Un elemento ordinario carece de su porcentaje de
+        uso empresarial.
+      charging_infrastructure_new_only: La libertad de amortización de infraestructuras
+        de recarga solo se aplica a elementos nuevos.
+      charging_infrastructure_period_not_enrolled: La infraestructura de recarga debe
+        entrar en funcionamiento en un periodo impositivo que inscribe la LIS DA 18a.2.
+      constant_percentage_weighting_not_enrolled: La ponderación %{band} del porcentaje
+        constante no está inscrita.
+      correction_must_supersede_current: Una corrección del elemento debe sustituir
+        a la revisión vigente.
+      creation_requires_first_revision: La creación del elemento requiere la revisión
+        número uno.
+      elected_coefficient_out_of_range: El coeficiente elegido %{elected} queda fuera
+        del intervalo admisible [%{minimum}, %{maximum}].
+      electric_vehicle_declaration_required: La libertad de amortización de vehículos
+        eléctricos requiere una declaración del vehículo.
+      electric_vehicle_new_only: La libertad de amortización de vehículos eléctricos
+        solo se aplica a vehículos nuevos.
+      electric_vehicle_period_not_enrolled: El vehículo debe entrar en funcionamiento
+        en un periodo impositivo que inscribe la LIS DA 18a.1.
+      electric_vehicle_propulsion_required: La libertad de amortización de vehículos
+        eléctricos requiere el tipo de propulsión del vehículo según el anexo II.
+      entity_regime_not_individual: La LIS art. 12.3.a y 12.3.d se aplican a las sociedades
+        laborales y a las explotaciones asociativas prioritarias, que son entidades
+        y no contribuyentes personas físicas.
+      financial_lease_unexercised: Un elemento en arrendamiento financiero no tiene
+        asiento en el registro hasta que ejerces la opción de compra; sus cuotas siguen
+        el art. 106 de la LIS.
+      forecast_no_longer_matches: La previsión ya no coincide con el cuadro de amortización
+        según el historial y la autoridad vigentes; calcula la previsión de nuevo.
+      forecast_not_current_revision: La previsión no remite a la revisión vigente
+        del elemento.
+      job_creation_new_only: La libertad de amortización por creación de empleo solo
+        se aplica a elementos nuevos (LIS art. 102.1).
+      job_creation_reduced_size_evidence_required: La libertad de amortización por
+        creación de empleo requiere su justificación de empresa de reducida dimensión.
+      justified_amount_unvalidated: La LIS art. 12.1.e admite el importe que el contribuyente
+        justifique, pero ninguna autoridad del registro puede validar esa justificación,
+        y un importe sin validar aportado por quien llama no puede convertirse en
+        un cargo apto para la presentación.
+      low_value_election_required: La libertad de amortización de bajo valor requiere
+        una prueba expresa de la elección.
+      low_value_new_only: La libertad de amortización de bajo valor solo se aplica
+        a elementos nuevos.
+      method_admission_invalid: La admisión de método %{admission_key} no es ni admitida
+        ni excluida.
+      method_excluded_by_law: El método %{method} está excluido por ley para el inmovilizado
+        %{asset_kind} en la modalidad %{regime} (%{legal}).
+      method_excludes_buildings_and_furniture: Los edificios, el mobiliario y los
+        enseres no pueden usar este método (%{provision}).
+      method_not_enrolled_for_kind: El método %{method} no está inscrito para el inmovilizado
+        %{asset_kind} en la modalidad %{regime}.
+      method_without_resolver: El método %{method} no tiene un resolutor de autoridad
+        inscrito.
+      modality_not_declared: El perfil del contribuyente no declara ningún régimen
+        de estimación del IRPF.
+      modality_not_direct_estimation: La amortización del inmovilizado de la actividad
+        solo está inscrita para la estimación directa, no para %{regime}.
+      multi_shift_not_enrolled: El coeficiente de varios turnos del RIS art. 4.2 no
+        está inscrito para la modalidad %{regime}.
+      multi_shift_requires_extra_shift: El coeficiente de varios turnos requiere más
+        de un turno normal al día.
+      multi_shift_with_used_asset_unsupported: El RIS art. 4 no establece cómo se
+        combinan el coeficiente de varios turnos y el de elementos usados.
+      ownership_treatment_unknown: La base del inmueble completo tiene un tratamiento
+        de titularidad desconocido.
+      parameter_absent: El parámetro de autoridad %{parameter_id} del inmovilizado
+        de la actividad no está en la revisión %{revision_id} del Modelo 100.
+      parameter_not_declared: El parámetro %{parameter_id} del inmovilizado de la
+        actividad no figura en el conjunto de lectura declarado del resolutor.
+      parameter_not_resolvable_for_date: El parámetro de autoridad %{parameter_id}
+        del inmovilizado de la actividad no se puede resolver para %{axis} %{on_date}.
+      parameter_not_resolvable_for_year: El parámetro de autoridad %{parameter_id}
+        del inmovilizado de la actividad no se puede resolver para %{tax_year}.
+      profile_modality_mismatch: El elemento elige la modalidad %{elected}, pero el
+        perfil del contribuyente declara %{declared}.
+      reduced_size_acceleration_new_only: La aceleración de empresa de reducida dimensión
+        solo se aplica a elementos nuevos (LIS art. 103.1).
+      reduced_size_evidence_required: La aceleración de empresa de reducida dimensión
+        requiere su justificación.
+      reduced_size_turnover_reached: El importe neto de la cifra de negocios del periodo
+        anterior alcanza el umbral de empresa de reducida dimensión (LIS art. 101.1).
+      renewable_entry_year_not_enrolled: La instalación debe entrar en funcionamiento
+        en un año que inscribe la LIS DA 17a.1.
+      renewable_evidence_required: La libertad de amortización de renovables requiere
+        su clase de tabla y su justificación.
+      renewable_excludes_buildings: Los edificios no pueden usar la libertad de amortización
+        de renovables (LIS DA 17a.1).
+      renewable_made_available_before_admitted_date: La instalación se puso a disposición
+        antes de la fecha desde la que la LIS DA 17a.1 admite instalaciones.
+      renewable_mandatory_installation_unsupported: Una instalación que el Código
+        Técnico de la Edificación hace obligatoria solo cumple los requisitos por
+        la parte del coste que excede de la potencia obligatoria (LIS DA 17a.5), y
+        no se admite cargar esa parte.
+      renewable_only_in_entry_period: La libertad de amortización de renovables solo
+        se aplica en el periodo impositivo en que la instalación entra en funcionamiento
+        (LIS DA 17a.1); el importe no tomado entonces no puede tomarse libremente
+        después.
+      renewable_thermal_requires_fossil_replacement: Una instalación térmica solo
+        cumple los requisitos cuando sustituye a otra que utiliza energía fósil (LIS
+        DA 17a.1).
+      research_development_building_requires_building_class: El método de edificio
+        de I+D requiere una clase de tabla de edificio.
+      research_development_building_table_class_required: La elección de edificio
+        de I+D requiere su clase de tabla.
+      research_development_free_excludes_buildings: La libertad de amortización de
+        I+D excluye los edificios (LIS art. 12.3.b).
+      research_development_free_table_class_required: La libertad de amortización
+        de I+D material requiere una clase de tabla.
+      revision_begins_after_tax_year: La revisión %{revision_id} del Modelo 100 empieza
+        después del ejercicio %{tax_year}.
+      simplified_intangible_table_method: 'El método %{method} no se admite para el
+        inmovilizado intangible en la modalidad simplificada: el RIRPF art. 30.1a
+        prescribe la amortización lineal según la tabla simplificada (Orden de 27
+        de marzo de 1998), que fija los sistemas y programas informáticos en el 26
+        % a 10 años, y las consultas DGT V0190-19 y V0741-19 aplican esa tabla al
+        inmovilizado intangible; el RIS arts. 5.1 y 6.1 ponderan la tabla de la LIS
+        art. 12.1.a, que esta modalidad no utiliza.'
+      spousal_community_ownership_unsupported: La titularidad en sociedad de gananciales
+        no está inscrita para la imputación del inmovilizado de la actividad.
+      sum_of_digits_period_out_of_range: El periodo de números dígitos %{period} queda
+        fuera del intervalo admisible de años enteros [%{shortest}, %{longest}].
+      sum_of_digits_period_required: El método de los números dígitos requiere su
+        periodo.
+      superseded_claim_not_effective: La amortización sustituida no es una amortización
+        vigente de este elemento.
+      table_class_group_not_a_flag: La clasificación de grupo de la clase de tabla
+        %{class_key} no es un indicador de sí o no.
+      table_class_not_enrolled: La clase de tabla %{class_key} no está inscrita para
+        la modalidad %{regime}.
+      table_class_required: El método %{method} exige una clase de la tabla legal.
+      table_class_without_group_classification: La clase de tabla %{class_key} no
+        tiene una clasificación de grupo inscrita.
+      table_class_wrong_kind: La clase de tabla %{class_key} no clasifica inmovilizado
+        %{asset_kind}.
+      used_building_requires_construction_date: Un edificio usado requiere su fecha
+        de construcción.
+      useful_life_evidence_required: La elección de vida útil definida requiere su
+        justificación de vida útil.
+      useful_life_must_end_after_service: Una vida útil definida debe terminar después
+        de la entrada en funcionamiento del elemento.
+      vehicle_affectation_required_for_class: El activo %{asset_id} de la actividad
+        está en la clase de tabla %{class_key}, que puede contener un vehículo restringido
+        por el RIRPF art. 22.4, por lo que requiere una declaración de afectación
+        del vehículo.
+      vehicle_missing_from_books: Un vehículo que falta en los libros de la actividad
+        no es un elemento afecto (RIRPF art. 22.2.2º).
+      vehicle_private_use_category_restricted: Un vehículo de categoría %{category}
+        con cualquier uso privado solo está afecto en uno de los usos que enumera
+        el RIRPF art. 22.4 (a)-(e); en caso contrario debe usarse exclusivamente para
+        la actividad.
+      vehicle_shared_use: Un vehículo compartido entre la actividad y las necesidades
+        privadas no es un elemento afecto, y un vehículo no puede estar afecto parcialmente
+        (RIRPF art. 22.2.1º y 22.3; LIRPF art. 29.2).
+      workforce_fell_below: La plantilla media de los 24 meses posteriores al inicio
+        del año de entrada en funcionamiento queda por debajo de la de los 12 meses
+        anteriores (LIS DA 17a.1).
+      workforce_increase_not_kept: El incremento de plantilla no se mantiene durante
+        los 24 meses adicionales que exige la LIS art. 102.1.
+      workforce_increase_not_reached: La plantilla media de los 24 meses posteriores
+        al inicio del año de entrada en funcionamiento no supera la de los 12 meses
+        anteriores (LIS art. 102.1).
+      workforce_year_not_declared: La plantilla media de %{year} no está declarada.
   evidence:
     reader:
       operation_failed: Falló la operación del lector de justificantes

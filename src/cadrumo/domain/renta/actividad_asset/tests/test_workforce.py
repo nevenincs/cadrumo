@@ -79,12 +79,16 @@ def test_no_increase_an_unkept_increase_and_an_undeclared_year_refuse() -> None:
     )
     partial = _years((2024, "10.00", "observed"), (2025, "12.00", "observed"), (2026, "12.00", "observed"))
 
-    with pytest.raises(ActividadAssetUnsupportedError, match="does not exceed"):
+    with pytest.raises(ActividadAssetUnsupportedError) as flat_refusal:
         job_creation_increase(flat, entry_year=2025)
-    with pytest.raises(ActividadAssetUnsupportedError, match="further 24 months"):
+    assert flat_refusal.value.translated_message == "ledger.actividad_asset.errors.workforce_increase_not_reached"
+    with pytest.raises(ActividadAssetUnsupportedError) as unkept_refusal:
         job_creation_increase(unkept, entry_year=2025)
-    with pytest.raises(ActividadAssetIncompleteError, match="2027 is not declared"):
+    assert unkept_refusal.value.translated_message == "ledger.actividad_asset.errors.workforce_increase_not_kept"
+    with pytest.raises(ActividadAssetIncompleteError) as partial_refusal:
         job_creation_increase(partial, entry_year=2025)
+    assert partial_refusal.value.translated_message == "ledger.actividad_asset.errors.workforce_year_not_declared"
+    assert partial_refusal.value.context == {"year": 2027}
 
 
 def test_renewable_free_depreciation_needs_the_workforce_kept() -> None:
@@ -92,7 +96,10 @@ def test_renewable_free_depreciation_needs_the_workforce_kept() -> None:
     fallen = _years((2024, "8.00", "observed"), (2025, "8.00", "observed"), (2026, "7.50", "observed"))
 
     assert renewable_workforce_maintained(kept, entry_year=2025).committed_years == (2026,)
-    with pytest.raises(ActividadAssetUnsupportedError, match="DA 17a"):
+    with pytest.raises(ActividadAssetUnsupportedError) as fallen_refusal:
         renewable_workforce_maintained(fallen, entry_year=2025)
-    with pytest.raises(ActividadAssetIncompleteError, match="2024 is not declared"):
+    assert fallen_refusal.value.translated_message == "ledger.actividad_asset.errors.workforce_fell_below"
+    with pytest.raises(ActividadAssetIncompleteError) as undeclared_refusal:
         renewable_workforce_maintained(_years((2025, "8.00", "observed")), entry_year=2025)
+    assert undeclared_refusal.value.translated_message == "ledger.actividad_asset.errors.workforce_year_not_declared"
+    assert undeclared_refusal.value.context == {"year": 2024}

@@ -131,30 +131,17 @@ registry's orphan check knows they are consumed; reading an id outside it
 refuses, so the set cannot fall behind the code.
 """
 
-_REFUSED_METHODS: dict[AmortizationMethod, str] = {
-    AmortizationMethod.JUSTIFIED_AMOUNT: (
-        "LIS art. 12.1.e admits an amount the taxpayer justifies, but no registry authority can validate that "
-        "justification, and an unvalidated caller amount cannot become a filing-grade charge"
-    ),
-    AmortizationMethod.ENTITY_REGIME_FREE: (
-        "LIS art. 12.3.a and 12.3.d apply to sociedades laborales and explotaciones asociativas prioritarias, "
-        "which are entities rather than individual taxpayers"
-    ),
+_REFUSED_METHOD_LOCALE_KEYS: dict[AmortizationMethod, str] = {
+    AmortizationMethod.JUSTIFIED_AMOUNT: "ledger.actividad_asset.errors.justified_amount_unvalidated",
+    AmortizationMethod.ENTITY_REGIME_FREE: "ledger.actividad_asset.errors.entity_regime_not_individual",
 }
-_SIMPLIFIED_INTANGIBLE_TABLE_METHOD_REFUSAL = (
-    "is not admitted for intangible assets in the simplified modality because the official sources do not "
-    "settle which table it weights: RIRPF art. 30.1a restricts only material assets to the simplified linear "
-    "table; the simplified table (Orden of 27 March 1998) lists information systems and programs at 26% over "
-    "10 years; RIS arts. 5.1 and 6.1 derive the constant percentage and the digit period from the LIS art. "
-    "12.1.a table (33% over 6 years); and the AEAT 2025 manual's simplified-modality section and its "
-    "normal-modality method section give no simplified intangible example"
-)
-_UNDETERMINED_ADMISSIONS: dict[tuple[DirectEstimationRegime, AssetKind, AmortizationMethod], str] = {
+_SIMPLIFIED_INTANGIBLE_TABLE_METHOD_LOCALE_KEY = "ledger.actividad_asset.errors.simplified_intangible_table_method"
+_UNDETERMINED_ADMISSION_LOCALE_KEYS: dict[tuple[DirectEstimationRegime, AssetKind, AmortizationMethod], str] = {
     (DirectEstimationRegime.SIMPLIFIED, AssetKind.INTANGIBLE, AmortizationMethod.CONSTANT_PERCENTAGE): (
-        _SIMPLIFIED_INTANGIBLE_TABLE_METHOD_REFUSAL
+        _SIMPLIFIED_INTANGIBLE_TABLE_METHOD_LOCALE_KEY
     ),
     (DirectEstimationRegime.SIMPLIFIED, AssetKind.INTANGIBLE, AmortizationMethod.SUM_OF_DIGITS): (
-        _SIMPLIFIED_INTANGIBLE_TABLE_METHOD_REFUSAL
+        _SIMPLIFIED_INTANGIBLE_TABLE_METHOD_LOCALE_KEY
     ),
 }
 _ELECTRIC_MOBILITY_PROVISION_ID = "ley-27-2014:da-18"
@@ -173,13 +160,14 @@ class _Parameters:
     def require(self, parameter_id: str) -> ParameterDefinition:
         if parameter_id not in ACTIVITY_ASSET_PARAMETER_IDS:
             raise ActividadAssetValidationError(
-                f"activity-asset parameter {parameter_id!r} is not in the resolver's declared read set",
+                context={"parameter_id": parameter_id},
+                translated_message="ledger.actividad_asset.errors.parameter_not_declared",
             )
         parameter = self.by_id.get(parameter_id)
         if parameter is None:
             raise ActividadAssetUnsupportedError(
-                f"activity-asset authority parameter {parameter_id!r} is absent from Modelo 100 revision "
-                f"{self.revision_id}",
+                context={"parameter_id": parameter_id, "revision_id": self.revision_id},
+                translated_message="ledger.actividad_asset.errors.parameter_absent",
             )
         return parameter
 
@@ -196,7 +184,8 @@ class _Parameters:
             raise
         except Exception as exc:
             raise ActividadAssetUnsupportedError(
-                f"activity-asset authority parameter {parameter_id!r} is not resolvable for {self.tax_year}",
+                context={"parameter_id": parameter_id, "tax_year": self.tax_year},
+                translated_message="ledger.actividad_asset.errors.parameter_not_resolvable_for_year",
             ) from exc
         return resolved.value, resolved.comparison
 
@@ -211,7 +200,8 @@ class _Parameters:
             raise
         except Exception as exc:
             raise ActividadAssetUnsupportedError(
-                f"activity-asset authority parameter {parameter_id!r} is not resolvable for {axis.value} {on}",
+                context={"parameter_id": parameter_id, "axis": axis.value, "on_date": on.isoformat()},
+                translated_message="ledger.actividad_asset.errors.parameter_not_resolvable_for_date",
             ) from exc
         return resolved.value
 
@@ -250,12 +240,13 @@ def resolve_activity_asset_schedule_authority(
     """
     if modelo_revision.valid_from.year > tax_year:
         raise ActividadAssetUnsupportedError(
-            f"Modelo 100 revision {modelo_revision.id} begins after tax year {tax_year}",
+            context={"revision_id": modelo_revision.id, "tax_year": tax_year},
+            translated_message="ledger.actividad_asset.errors.revision_begins_after_tax_year",
         )
     election = asset_revision.amortization
-    refusal = _REFUSED_METHODS.get(election.method)
+    refusal = _REFUSED_METHOD_LOCALE_KEYS.get(election.method)
     if refusal is not None:
-        raise ActividadAssetUnsupportedError(refusal)
+        raise ActividadAssetUnsupportedError(translated_message=refusal)
     parameters = _Parameters(
         by_id={parameter.id: parameter for parameter in modelo_revision.parameters},
         revision_id=modelo_revision.id,
@@ -286,23 +277,40 @@ def _require_method_admitted(
     parameter_id = _METHOD_ADMISSION_IDS[election.regime]
     key = f"{asset_revision.asset_kind.value}:{election.method.value}"
     admitted = parameters.keyed(parameter_id, key)
-    undetermined = _UNDETERMINED_ADMISSIONS.get((election.regime, asset_revision.asset_kind, election.method))
+    undetermined = _UNDETERMINED_ADMISSION_LOCALE_KEYS.get(
+        (election.regime, asset_revision.asset_kind, election.method)
+    )
     if admitted is None and undetermined is not None:
-        raise ActividadAssetUnsupportedError(f"{election.method.value} {undetermined}")
+        raise ActividadAssetUnsupportedError(
+            context={"method": election.method.value},
+            translated_message=undetermined,
+        )
     if admitted is None:
         _refuse_accelerated_electric_mobility_period(parameters, asset_revision, legal_reference)
         raise ActividadAssetUnsupportedError(
-            f"{election.method.value} is not enrolled for {asset_revision.asset_kind.value} assets in the "
-            f"{election.regime.value} modality",
+            context={
+                "method": election.method.value,
+                "asset_kind": asset_revision.asset_kind.value,
+                "regime": election.regime.value,
+            },
+            translated_message="ledger.actividad_asset.errors.method_not_enrolled_for_kind",
         )
     if admitted == Decimal("0"):
         legal = ", ".join(parameters.require(parameter_id).legal_refs)
         raise ActividadAssetUnsupportedError(
-            f"{election.method.value} is excluded by law for {asset_revision.asset_kind.value} assets in the "
-            f"{election.regime.value} modality ({legal})",
+            context={
+                "method": election.method.value,
+                "asset_kind": asset_revision.asset_kind.value,
+                "regime": election.regime.value,
+                "legal": legal,
+            },
+            translated_message="ledger.actividad_asset.errors.method_excluded_by_law",
         )
     if admitted != Decimal("1"):
-        raise ActividadAssetValidationError(f"method admission {key!r} is neither admitted nor excluded")
+        raise ActividadAssetValidationError(
+            context={"admission_key": key},
+            translated_message="ledger.actividad_asset.errors.method_admission_invalid",
+        )
     return parameters.reference(parameter_id, key)
 
 
@@ -341,9 +349,7 @@ def _accelerated_da18_refusal(
     """Name the LIS DA 18 accelerated regime a claim falls under, which the product does not compute."""
     method = asset_revision.amortization.method.value
     return ActividadAssetAcceleratedDa18DepreciationError(
-        f"LIS DA 18 grants tax year {tax_year} accelerated depreciation of new electric vehicles and charging "
-        f"points at twice the maximum linear coefficient rather than free depreciation, and that regime is not "
-        f"computed, so the {method} election has no charge",
+        translated_message="ledger.actividad_asset.errors.accelerated_da18_depreciation",
         context={
             "asset_id": asset_revision.asset_id,
             "method": method,
@@ -361,7 +367,10 @@ def _resolve_method(
     method = asset_revision.amortization.method
     resolver = _METHOD_RESOLVERS.get(method)
     if resolver is None:
-        raise ActividadAssetUnsupportedError(f"{method.value} has no enrolled authority resolver")
+        raise ActividadAssetUnsupportedError(
+            context={"method": method.value},
+            translated_message="ledger.actividad_asset.errors.method_without_resolver",
+        )
     return resolver(parameters, asset_revision, workforce)
 
 
@@ -379,7 +388,10 @@ def _table_bounds(parameters: _Parameters, asset_revision: ActivityAssetRevision
     election = asset_revision.amortization
     class_key = election.authority_class_key
     if class_key is None:
-        raise ActividadAssetIncompleteError(f"{election.method.value} requires a statutory table class")
+        raise ActividadAssetIncompleteError(
+            context={"method": election.method.value},
+            translated_message="ledger.actividad_asset.errors.table_class_required",
+        )
     kind_reference = _require_class_matches_kind(parameters, class_key, asset_revision.asset_kind)
     coefficient_id = _COEFFICIENT_IDS[election.regime]
     period_id = _PERIOD_IDS[election.regime]
@@ -387,7 +399,8 @@ def _table_bounds(parameters: _Parameters, asset_revision: ActivityAssetRevision
     period_years = parameters.keyed(period_id, class_key)
     if maximum_percent is None or period_years is None:
         raise ActividadAssetUnsupportedError(
-            f"table class {class_key!r} is not enrolled for the {election.regime.value} modality",
+            context={"class_key": class_key, "regime": election.regime.value},
+            translated_message="ledger.actividad_asset.errors.table_class_not_enrolled",
         )
     return _TableBounds(
         class_key=class_key,
@@ -407,7 +420,8 @@ def _require_class_matches_kind(parameters: _Parameters, class_key: str, asset_k
     parameter_id = _INTANGIBLE_CLASS_ID if asset_kind is AssetKind.INTANGIBLE else _MATERIAL_CLASS_ID
     if not _class_flag(parameters, parameter_id, class_key):
         raise ActividadAssetUnsupportedError(
-            f"table class {class_key!r} does not classify {asset_kind.value} assets",
+            context={"class_key": class_key, "asset_kind": asset_kind.value},
+            translated_message="ledger.actividad_asset.errors.table_class_wrong_kind",
         )
     return parameters.reference(parameter_id, class_key)
 
@@ -415,9 +429,15 @@ def _require_class_matches_kind(parameters: _Parameters, class_key: str, asset_k
 def _class_flag(parameters: _Parameters, parameter_id: str, class_key: str) -> bool:
     flag = parameters.keyed(parameter_id, class_key)
     if flag is None:
-        raise ActividadAssetUnsupportedError(f"table class {class_key!r} has no enrolled group classification")
+        raise ActividadAssetUnsupportedError(
+            context={"class_key": class_key},
+            translated_message="ledger.actividad_asset.errors.table_class_without_group_classification",
+        )
     if flag not in {Decimal("0"), Decimal("1")}:
-        raise ActividadAssetValidationError(f"group classification of {class_key!r} is not a flag")
+        raise ActividadAssetValidationError(
+            context={"class_key": class_key},
+            translated_message="ledger.actividad_asset.errors.table_class_group_not_a_flag",
+        )
     return flag == Decimal("1")
 
 
@@ -433,7 +453,9 @@ def _is_used_for_amortization(parameters: _Parameters, asset_revision: ActivityA
         return True
     built = asset_revision.building_construction_date
     if built is None:
-        raise ActividadAssetIncompleteError("a used building requires its construction date")
+        raise ActividadAssetIncompleteError(
+            translated_message="ledger.actividad_asset.errors.used_building_requires_construction_date"
+        )
     minimum_age, comparison = parameters.scalar(_USED_BUILDING_AGE_ID)
     age = _whole_years_between(built, asset_revision.in_service_date)
     return _reaches(Decimal(age), minimum_age, comparison)
@@ -458,7 +480,7 @@ def _resolve_linear(parameters: _Parameters, asset_revision: ActivityAssetRevisi
     if used_multiplier is not None and _is_used_for_amortization(parameters, asset_revision, bounds.class_key):
         if election.shift_hours_per_day is not None:
             raise ActividadAssetUnsupportedError(
-                "RIS art. 4 does not state how the multi-shift and used-asset coefficients combine",
+                translated_message="ledger.actividad_asset.errors.multi_shift_with_used_asset_unsupported",
             )
         maximum *= used_multiplier
         references.append(parameters.reference(_USED_MULTIPLIER_ID, used_key))
@@ -468,14 +490,23 @@ def _resolve_linear(parameters: _Parameters, asset_revision: ActivityAssetRevisi
         shift_hours = parameters.keyed(_SHIFT_HOURS_ID, election.regime.value)
         if shift_hours is None:
             raise ActividadAssetUnsupportedError(
-                f"the RIS art. 4.2 multi-shift coefficient is not enrolled for the {election.regime.value} modality",
+                context={"regime": election.regime.value},
+                translated_message="ledger.actividad_asset.errors.multi_shift_not_enrolled",
             )
         if election.shift_hours_per_day <= shift_hours:
-            raise ActividadAssetValidationError("a multi-shift coefficient requires more than one normal shift a day")
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.multi_shift_requires_extra_shift"
+            )
         maximum = bounds.minimum + (bounds.maximum - bounds.minimum) * election.shift_hours_per_day / shift_hours
         references.append(parameters.reference(_SHIFT_HOURS_ID, election.regime.value))
     coefficient = _elected_coefficient(election, minimum=bounds.minimum, maximum=maximum)
-    return _Resolution(method_facts={"annual_rate": min(coefficient, Decimal("1"))}, references=tuple(references))
+    return _Resolution(
+        method_facts={
+            "annual_rate": min(coefficient, Decimal("1")),
+            "maximum_period_ends_on": add_fractional_years(asset_revision.in_service_date, bounds.period_years),
+        },
+        references=tuple(references),
+    )
 
 
 def _small_enterprise_multiplier(
@@ -486,9 +517,13 @@ def _small_enterprise_multiplier(
     """Validate LIS arts. 101 and 103.1 and return the acceleration multiplier."""
     evidence = asset_revision.amortization.small_enterprise
     if evidence is None:  # defensive: callers check presence first
-        raise ActividadAssetIncompleteError("reduced-size acceleration requires its evidence")
+        raise ActividadAssetIncompleteError(
+            translated_message="ledger.actividad_asset.errors.reduced_size_evidence_required"
+        )
     if asset_revision.acquired_condition is not AcquiredCondition.NEW:
-        raise ActividadAssetUnsupportedError("reduced-size acceleration applies only to new elements (LIS art. 103.1)")
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.reduced_size_acceleration_new_only"
+        )
     references.extend(
         (_require_reduced_size(parameters, asset_revision, evidence), parameters.reference(_ERD_MULTIPLIER_ID)),
     )
@@ -502,11 +537,13 @@ def _require_reduced_size(
 ) -> str:
     """Refuse unless the asset was made available in a LIS art. 101 period; return the threshold reference."""
     if evidence.made_available_on > asset_revision.in_service_date:
-        raise ActividadAssetValidationError("an asset cannot enter service before it is made available")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.asset_made_available_after_in_service"
+        )
     threshold, comparison = parameters.scalar(_ERD_TURNOVER_ID)
     if _reaches(evidence.prior_period_net_turnover, threshold, comparison):
         raise ActividadAssetUnsupportedError(
-            "prior-period net turnover reaches the reduced-size threshold (LIS art. 101.1)",
+            translated_message="ledger.actividad_asset.errors.reduced_size_turnover_reached"
         )
     return parameters.reference(_ERD_TURNOVER_ID)
 
@@ -523,7 +560,8 @@ def _elected_coefficient(
         return maximum
     if not minimum <= elected <= maximum:
         raise ActividadAssetValidationError(
-            f"elected coefficient {elected} is outside the admissible range [{minimum}, {maximum}]",
+            context={"elected": elected, "minimum": minimum, "maximum": maximum},
+            translated_message="ledger.actividad_asset.errors.elected_coefficient_out_of_range",
         )
     return elected
 
@@ -535,7 +573,8 @@ def _require_not_building_or_furniture(parameters: _Parameters, bounds: _TableBo
         bounds.class_key,
     ):
         raise ActividadAssetUnsupportedError(
-            f"buildings, mobiliario and enseres cannot use this method ({provision})",
+            context={"provision": provision},
+            translated_message="ledger.actividad_asset.errors.method_excludes_buildings_and_furniture",
         )
 
 
@@ -555,7 +594,10 @@ def _resolve_constant_percentage(parameters: _Parameters, asset_revision: Activi
         band = "periodo-corto"
     weight = parameters.keyed(_WEIGHTING_ID, band)
     if weight is None:
-        raise ActividadAssetUnsupportedError(f"constant-percentage weighting {band!r} is not enrolled")
+        raise ActividadAssetUnsupportedError(
+            context={"band": band},
+            translated_message="ledger.actividad_asset.errors.constant_percentage_weighting_not_enrolled",
+        )
     floor = parameters.value(_MINIMUM_PERCENTAGE_ID) / Decimal("100")
     percentage = min(max(coefficient * weight, floor), Decimal("1"))
     return _Resolution(
@@ -582,12 +624,15 @@ def _resolve_sum_of_digits(parameters: _Parameters, asset_revision: ActivityAsse
     _require_not_building_or_furniture(parameters, bounds, "RIS art. 6.2")
     period = election.sum_of_digits_period_years
     if period is None:  # defensive: election validation proves unreachable
-        raise ActividadAssetIncompleteError("sum of digits requires its period")
+        raise ActividadAssetIncompleteError(
+            translated_message="ledger.actividad_asset.errors.sum_of_digits_period_required"
+        )
     shortest = math.ceil(Decimal("1") / bounds.maximum)
     longest = bounds.period_years
     if not shortest <= period <= longest:
         raise ActividadAssetValidationError(
-            f"sum-of-digits period {period} is outside the admissible whole-year range [{shortest}, {longest}]",
+            context={"period": period, "shortest": shortest, "longest": longest},
+            translated_message="ledger.actividad_asset.errors.sum_of_digits_period_out_of_range",
         )
     return _Resolution(
         method_facts={"sum_of_digits_period_years": period, "digit_order": election.digit_order},
@@ -603,14 +648,16 @@ def _resolve_approved_plan(parameters: _Parameters, asset_revision: ActivityAsse
     """Apply RIS art. 7.8 and bind the plan's distribution for the tax year."""
     plan = asset_revision.amortization.approved_plan
     if plan is None:  # defensive: election validation proves unreachable
-        raise ActividadAssetIncompleteError("an approved-plan election requires its plan")
+        raise ActividadAssetIncompleteError(translated_message="ledger.actividad_asset.errors.approved_plan_required")
     if plan.submitted_on > date(parameters.tax_year, 12, 31):
         raise ActividadAssetUnsupportedError(
-            "an approved plan takes effect only in tax periods ending after its submission (RIS art. 7.8)",
+            translated_message="ledger.actividad_asset.errors.approved_plan_not_yet_effective"
         )
     annual_amount = plan.amount_for(parameters.tax_year)
     if annual_amount is None:
-        raise ActividadAssetUnsupportedError("the approved plan distributes no amortization to this tax year")
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.approved_plan_without_distribution"
+        )
     return _Resolution(
         method_facts={"plan_annual_amount": annual_amount, "plan_total": plan.total},
         references=(f"approved-plan:{plan.approval_reference}",),
@@ -621,9 +668,13 @@ def _resolve_useful_life(asset_revision: ActivityAssetRevision) -> _Resolution:
     """Apply LIS art. 12.2: a definite-life intangible amortizes over that life."""
     useful_life = asset_revision.amortization.useful_life
     if useful_life is None:  # defensive: election validation proves unreachable
-        raise ActividadAssetIncompleteError("a definite-life election requires its useful-life evidence")
+        raise ActividadAssetIncompleteError(
+            translated_message="ledger.actividad_asset.errors.useful_life_evidence_required"
+        )
     if useful_life.ends_on <= asset_revision.in_service_date:
-        raise ActividadAssetValidationError("a definite useful life must end after the asset enters service")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.useful_life_must_end_after_service"
+        )
     return _Resolution(
         method_facts={"useful_life_ends_on": useful_life.ends_on},
         references=(f"useful-life-evidence:{useful_life.evidence_reference}",),
@@ -652,10 +703,12 @@ def _resolve_twentieth_limit(parameters: _Parameters, asset_revision: ActivityAs
 def _resolve_low_value(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> _Resolution:
     """Resolve the LIS art. 12.3.e EUR 300 / EUR 25,000 branch for a new element."""
     if asset_revision.acquired_condition is not AcquiredCondition.NEW:
-        raise ActividadAssetUnsupportedError("low-value free depreciation applies only to new elements")
+        raise ActividadAssetUnsupportedError(translated_message="ledger.actividad_asset.errors.low_value_new_only")
     election = asset_revision.amortization.low_value
     if election is None:  # defensive: election validation proves unreachable
-        raise ActividadAssetIncompleteError("low-value free depreciation requires explicit election evidence")
+        raise ActividadAssetIncompleteError(
+            translated_message="ledger.actividad_asset.errors.low_value_election_required"
+        )
     return _Resolution(
         method_facts={
             "free_depreciation_unit_threshold": parameters.value(_LOW_VALUE_THRESHOLD_ID),
@@ -672,9 +725,13 @@ def _resolve_research_development_free(parameters: _Parameters, asset_revision: 
     references: tuple[str, ...] = ()
     if asset_revision.asset_kind is AssetKind.MATERIAL:
         if class_key is None:
-            raise ActividadAssetIncompleteError("material R&D free depreciation requires a table class")
+            raise ActividadAssetIncompleteError(
+                translated_message="ledger.actividad_asset.errors.research_development_free_table_class_required"
+            )
         if _class_flag(parameters, _BUILDING_CLASS_ID, class_key):
-            raise ActividadAssetUnsupportedError("R&D free depreciation excludes buildings (LIS art. 12.3.b)")
+            raise ActividadAssetUnsupportedError(
+                translated_message="ledger.actividad_asset.errors.research_development_free_excludes_buildings"
+            )
         references = (parameters.reference(_BUILDING_CLASS_ID, class_key),)
     return _Resolution(method_facts={}, references=references)
 
@@ -686,12 +743,19 @@ def _resolve_research_development_building(
     """Apply LIS art. 12.3.b: an R&D building amortizes linearly over its period."""
     class_key = asset_revision.amortization.authority_class_key
     if class_key is None:  # defensive: election validation proves unreachable
-        raise ActividadAssetIncompleteError("an R&D building election requires its table class")
+        raise ActividadAssetIncompleteError(
+            translated_message="ledger.actividad_asset.errors.research_development_building_table_class_required"
+        )
     if not _class_flag(parameters, _BUILDING_CLASS_ID, class_key):
-        raise ActividadAssetValidationError("the R&D building method requires a building table class")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.research_development_building_requires_building_class"
+        )
     period = parameters.value(_RND_BUILDING_PERIOD_ID)
     return _Resolution(
-        method_facts={"annual_rate": Decimal("1") / period},
+        method_facts={
+            "annual_rate": Decimal("1") / period,
+            "maximum_period_ends_on": add_fractional_years(asset_revision.in_service_date, period),
+        },
         references=(parameters.reference(_BUILDING_CLASS_ID, class_key), parameters.reference(_RND_BUILDING_PERIOD_ID)),
     )
 
@@ -699,12 +763,14 @@ def _resolve_research_development_building(
 def _resolve_charging_infrastructure(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> _Resolution:
     """Apply LIS DA 18a.2: new charging points entering service in the enrolled periods."""
     if asset_revision.acquired_condition is not AcquiredCondition.NEW:
-        raise ActividadAssetUnsupportedError("charging-infrastructure free depreciation applies only to new elements")
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.charging_infrastructure_new_only"
+        )
     first_year = parameters.value(_CHARGING_FIRST_YEAR_ID)
     last_year = parameters.value(_CHARGING_LAST_YEAR_ID)
     if not first_year <= Decimal(asset_revision.in_service_date.year) <= last_year:
         raise ActividadAssetUnsupportedError(
-            "charging infrastructure must enter service in a tax period LIS DA 18a.2 enrols",
+            translated_message="ledger.actividad_asset.errors.charging_infrastructure_period_not_enrolled"
         )
     return _Resolution(
         method_facts={},
@@ -730,8 +796,8 @@ def _require_vehicle_affectation(parameters: _Parameters, asset_revision: Activi
     if affectation is None:
         if restricted and class_key is not None:
             raise ActividadAssetIncompleteError(
-                f"activity asset {asset_revision.asset_id!r} is in table class {class_key!r}, which can hold a "
-                "vehicle RIRPF art. 22.4 restricts, so it requires a vehicle affectation declaration",
+                context={"asset_id": asset_revision.asset_id, "class_key": class_key},
+                translated_message="ledger.actividad_asset.errors.vehicle_affectation_required_for_class",
                 vehicle_affectation_recovery=VehicleAffectationRecovery(
                     asset_id=asset_revision.asset_id,
                     revision_id=asset_revision.revision_id,
@@ -739,7 +805,9 @@ def _require_vehicle_affectation(parameters: _Parameters, asset_revision: Activi
                 ),
             )
         if election.method is AmortizationMethod.ELECTRIC_VEHICLE_FREE:
-            raise ActividadAssetIncompleteError("electric-vehicle free depreciation requires a vehicle declaration")
+            raise ActividadAssetIncompleteError(
+                translated_message="ledger.actividad_asset.errors.electric_vehicle_declaration_required"
+            )
         return references
     require_vehicle_affected(affectation)
     return references
@@ -748,16 +816,20 @@ def _require_vehicle_affectation(parameters: _Parameters, asset_revision: Activi
 def _resolve_electric_vehicle(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> _Resolution:
     """Apply LIS DA 18a.1: new electric vehicles entering service in the enrolled periods."""
     if asset_revision.acquired_condition is not AcquiredCondition.NEW:
-        raise ActividadAssetUnsupportedError("electric-vehicle free depreciation applies only to new vehicles")
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.electric_vehicle_new_only"
+        )
     affectation = asset_revision.vehicle_affectation
     if affectation is None or affectation.electric_propulsion is None:
         raise ActividadAssetIncompleteError(
-            "electric-vehicle free depreciation requires the vehicle's annex II propulsion type",
+            translated_message="ledger.actividad_asset.errors.electric_vehicle_propulsion_required"
         )
     first_year = parameters.value(_ELECTRIC_VEHICLE_FIRST_YEAR_ID)
     last_year = parameters.value(_ELECTRIC_VEHICLE_LAST_YEAR_ID)
     if not first_year <= Decimal(asset_revision.in_service_date.year) <= last_year:
-        raise ActividadAssetUnsupportedError("the vehicle must enter service in a tax period LIS DA 18a.1 enrols")
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.electric_vehicle_period_not_enrolled"
+        )
     return _Resolution(
         method_facts={},
         references=(
@@ -787,12 +859,12 @@ def _resolve_employment_free(
     average-workforce increase, the increase calculated with two decimals.
     """
     if asset_revision.acquired_condition is not AcquiredCondition.NEW:
-        raise ActividadAssetUnsupportedError(
-            "job-creating free depreciation applies only to new elements (LIS art. 102.1)"
-        )
+        raise ActividadAssetUnsupportedError(translated_message="ledger.actividad_asset.errors.job_creation_new_only")
     evidence = asset_revision.amortization.small_enterprise
     if evidence is None:  # defensive: election validation proves unreachable
-        raise ActividadAssetIncompleteError("job-creating free depreciation requires its reduced-size evidence")
+        raise ActividadAssetIncompleteError(
+            translated_message="ledger.actividad_asset.errors.job_creation_reduced_size_evidence_required"
+        )
     turnover_reference = _require_reduced_size(parameters, asset_revision, evidence)
     increase = job_creation_increase(workforce, entry_year=asset_revision.in_service_date.year)
     per_unit = parameters.value(_EMPLOYMENT_INVESTMENT_PER_UNIT_ID)
@@ -822,11 +894,12 @@ def _resolve_renewable_free(
     first_year = parameters.value(_RENEWABLE_FIRST_YEAR_ID)
     last_year = parameters.value(_RENEWABLE_LAST_YEAR_ID)
     if not first_year <= Decimal(entry_year) <= last_year:
-        raise ActividadAssetUnsupportedError("the installation must enter service in a year LIS DA 17a.1 enrols")
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.renewable_entry_year_not_enrolled"
+        )
     if entry_year != parameters.tax_year:
         raise ActividadAssetUnsupportedError(
-            "renewable free depreciation applies only in the tax period the installation enters service "
-            "(LIS DA 17a.1); an amount not taken then cannot be taken freely later",
+            translated_message="ledger.actividad_asset.errors.renewable_only_in_entry_period"
         )
     maintenance = renewable_workforce_maintained(workforce, entry_year=entry_year)
     return _Resolution(
@@ -849,7 +922,9 @@ def _renewable_support(
     evidence = asset_revision.amortization.renewable_self_consumption
     class_key = asset_revision.amortization.authority_class_key
     if evidence is None or class_key is None:  # defensive: election validation proves unreachable
-        raise ActividadAssetIncompleteError("renewable free depreciation requires its table class and evidence")
+        raise ActividadAssetIncompleteError(
+            translated_message="ledger.actividad_asset.errors.renewable_evidence_required"
+        )
     return evidence, class_key
 
 
@@ -860,23 +935,26 @@ def _validate_renewable_installation(
     class_key: str,
 ) -> None:
     if _class_flag(parameters, _BUILDING_CLASS_ID, class_key):
-        raise ActividadAssetUnsupportedError("buildings cannot use renewable free depreciation (LIS DA 17a.1)")
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.renewable_excludes_buildings"
+        )
     if evidence.purpose is RenewableInstallationPurpose.THERMAL_OWN_USE and not evidence.replaces_fossil_installation:
         raise ActividadAssetUnsupportedError(
-            "a thermal installation qualifies only when it replaces one using fossil energy (LIS DA 17a.1)",
+            translated_message="ledger.actividad_asset.errors.renewable_thermal_requires_fossil_replacement"
         )
     if evidence.required_by_building_code:
         raise ActividadAssetUnsupportedError(
-            "an installation the Codigo Tecnico de la Edificacion makes mandatory qualifies only for the cost "
-            "share above the mandatory power (LIS DA 17a.5), and charging that share is not supported",
+            translated_message="ledger.actividad_asset.errors.renewable_mandatory_installation_unsupported"
         )
     if evidence.made_available_on > asset_revision.in_service_date:
-        raise ActividadAssetValidationError("an asset cannot enter service before it is made available")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.asset_made_available_after_in_service"
+        )
     if parameters.on_date(_RENEWABLE_AVAILABILITY_ID, DateAxis.TRANSACTION_DATE, evidence.made_available_on) != Decimal(
         "1",
     ):
         raise ActividadAssetUnsupportedError(
-            "the installation was made available before the date LIS DA 17a.1 admits installations from",
+            translated_message="ledger.actividad_asset.errors.renewable_made_available_before_admitted_date"
         )
 
 
@@ -914,4 +992,69 @@ _METHOD_RESOLVERS: dict[AmortizationMethod, _MethodResolver] = {
     ),
 }
 
-__all__ = ["ACTIVITY_ASSET_PARAMETER_IDS", "resolve_activity_asset_schedule_authority"]
+@dataclass(frozen=True, slots=True)
+class ActivityAssetTableGroup:
+    """One amortization table class with the corridor RIS art. 4.1 draws from it."""
+
+    class_key: str
+    maximum_coefficient: Decimal
+    minimum_coefficient: Decimal
+    maximum_period_years: Decimal
+
+
+@dataclass(frozen=True, slots=True)
+class ActivityAssetFormOptions:
+    """What one Modelo 100 edition admits for an asset kind, modality and tax year."""
+
+    methods: tuple[AmortizationMethod, ...]
+    table_groups: tuple[ActivityAssetTableGroup, ...]
+
+
+def activity_asset_form_options(
+    modelo_revision: ModeloRevision,
+    *,
+    tax_year: int,
+    asset_kind: AssetKind,
+    regime: DirectEstimationRegime,
+) -> ActivityAssetFormOptions:
+    """Read the admitted methods and table groups from the same parameters the resolver charges by."""
+    parameters = _Parameters(
+        by_id={parameter.id: parameter for parameter in modelo_revision.parameters},
+        revision_id=modelo_revision.id,
+        tax_year=tax_year,
+    )
+    methods = tuple(
+        method
+        for method in AmortizationMethod
+        if method not in _REFUSED_METHODS
+        and parameters.keyed(_METHOD_ADMISSION_IDS[regime], f"{asset_kind.value}:{method.value}") == Decimal("1")
+    )
+    kind_parameter = _INTANGIBLE_CLASS_ID if asset_kind is AssetKind.INTANGIBLE else _MATERIAL_CLASS_ID
+    groups: list[ActivityAssetTableGroup] = []
+    for class_key in sorted({entry.key for entry in parameters.require(_COEFFICIENT_IDS[regime]).keyed_brackets}):
+        maximum_percent = parameters.keyed(_COEFFICIENT_IDS[regime], class_key)
+        period_years = parameters.keyed(_PERIOD_IDS[regime], class_key)
+        if (
+            maximum_percent is None
+            or period_years is None
+            or parameters.keyed(kind_parameter, class_key) != Decimal("1")
+        ):
+            continue
+        groups.append(
+            ActivityAssetTableGroup(
+                class_key=class_key,
+                maximum_coefficient=maximum_percent / Decimal("100"),
+                minimum_coefficient=Decimal("1") / period_years,
+                maximum_period_years=period_years,
+            ),
+        )
+    return ActivityAssetFormOptions(methods=methods, table_groups=tuple(groups))
+
+
+__all__ = [
+    "ACTIVITY_ASSET_PARAMETER_IDS",
+    "ActivityAssetFormOptions",
+    "ActivityAssetTableGroup",
+    "activity_asset_form_options",
+    "resolve_activity_asset_schedule_authority",
+]

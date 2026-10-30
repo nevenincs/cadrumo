@@ -326,10 +326,10 @@ categories:
   registry:
     amortizacion_vivienda_afecto:
       label: Depreciation of home used for business
-      notes: Deductible in proportion to the home's floor area used for the business
-        and to your ownership share in it; the 30% supplies factor does not apply
-        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, depreciation of the home
-        used for business).
+      notes: You deduct the home's depreciation through the activity asset register,
+        on the part of the home used for the business and your ownership share in
+        it (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3). A ledger row in this
+        category deducts nothing by itself.
     arrendamiento_local:
       label: Business premises rent
       notes: Fully deductible expense (Ley 35/2006 art. 28.1).
@@ -1325,6 +1325,20 @@ desktop:
       when_read: When you read it
       yours: Your staged change
     assets:
+      absent:
+        free_method: 'Free depreciation: no planned figure'
+        not_computed: Not worked out
+        opening_history_unknown: Opening history missing
+        other: No figure stated
+      action:
+        add: Add element
+        claim: Record depreciation
+        correct: Correct
+        describe: Edit record
+        dispose: Record disposal
+      area:
+        fixed: Fixed assets
+        stock: Stock
       asset_id: Asset id
       claim: Claim it
       claim_reused: 'Already claimed: nothing was recorded twice.'
@@ -1337,9 +1351,42 @@ desktop:
         number: Revision
         revision: Id
         target: Declaration
+      count:
+        conflict: 'Overlapping claims: {count}'
+        incomplete: 'Years that cannot be worked out: {count}'
+        missing: 'Years not claimed: {count}'
+        stale: 'Claims that no longer match the schedule: {count}'
       creating_hint: What the claim is recorded under, e.g. the declaration it is
         for
       creating_operation: Recorded as
+      detail:
+        plan: Plan
+        record: Record
+        timeline: Timeline
+      event:
+        baja_recorded: Disposal recorded
+        claim_recorded: Depreciation recorded
+        correction_added: Correction added
+        description_added: Description added
+        element_added: Element added
+        other: Event recorded
+      field:
+        amount: Amount
+        baja_date: Last day of service
+        baja_reason: Reason
+        basis: Depreciable basis
+        in_service_date: In service from
+        kind: Kind
+        method: Method
+        name: Name
+        other: Other fact
+        residual_value: Residual value
+        serial: Serial number
+      finding:
+        claim_conflict: Two claims overlap
+        claim_stale: A claim no longer matches the schedule
+        opening_history_missing: 'Opening history missing: nothing can be worked out'
+        other: Something needs your attention
       forecast: Depreciation {amount} · {days} days · {from} – {until}
       forecast_note: A forecast records nothing until you claim it.
       free: Free depreciation requested
@@ -1347,6 +1394,61 @@ desktop:
       from: From
       handoff: Where the claims go
       inspect: Inspect
+      list:
+        column:
+          in_service: In service from
+          kind: Kind
+          method: Method
+          name: Name
+          serial: Serial number
+        disposed: Disposed on {date}
+        empty: No elements yet.
+        label: Elements
+        no_name: No name recorded
+      option:
+        kind:
+          intangible: Intangible asset
+          tangible: Tangible asset
+          vehicle: Vehicle
+        method:
+          constant_percentage: Constant percentage
+          free_300: Free depreciation, low-value element
+          linear_table: Linear, official table
+        reason:
+          sale: Sale
+          scrapping: Scrapping
+          theft: Theft
+          withdrawal: Withdrawal from the activity
+      origin:
+        import: Imported
+        other: Another source
+        person: Entered by you
+        system: Worked out by Cadrumo
+      plan:
+        claimable: Can still be claimed {from} – {until}
+        claimable_none: Nothing left to claim
+        claims: Claims for {year}
+        column:
+          claimed: Claimed
+          days: Days
+          matches: Matches schedule
+          planned: Planned
+          replaced_by: Replaced by
+          revision: Revision
+          status: Status
+          used_by: Used in
+          year: Year
+        edition: Table edition {edition}
+        election_changed: Method election changes here
+        gap: 'Not claimed: {from} – {until}'
+        in_effect: In effect
+        matches: Matches the current schedule
+        no_match: No longer matches the schedule
+        projected: Projected
+        projected_note: Projected tables serve the forecast and Modelo 130. Modelo
+          100 is not available for {year}.
+        recorded_zero: Recorded as zero
+        replaced: Replaced
       quarter: Modelo 130 quarter
       refusal:
         refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Refused:
@@ -1363,6 +1465,13 @@ desktop:
         create: First revision (JSON)
       revision_hint: Fill every empty fact; a revision is never edited once saved.
       revisions: Revisions
+      state:
+        claimed: Claimed
+        forecast: Forecast
+        incomplete: Cannot be worked out
+        missing: Not claimed
+        other: State not recognised
+        partial: Partly claimed
       submit:
         correct: Save the correction
         create: Create the asset
@@ -1379,8 +1488,29 @@ desktop:
         filing: For declarations
         forecast: Forecast
       tax_year: Tax year
+      timeline:
+        change: '{field}: {before} → {after}'
+        change_added: '{field}: {after}'
+        change_cleared: '{field}: {before} removed'
+        column:
+          changes: Changes
+          effect: Effect
+          event: Event
+          origin: Origin
+          recorded: Recorded
+          replaces: Replaces
+          sequence: No.
+        not_in_calculation: Not part of the calculation
+        time_not_recorded: Time not recorded
       title: Activity assets
       until: Until
+      write:
+        conflict: A claim already covers {from} – {until}. Correct that claim instead.
+        dispose_note: The date is the last day of service. Claims that cross it are
+          replaced in the same step, and undoing the baja does not bring them back.
+        incomplete: 'Not saved. Still to fill in: {fields}'
+        reused: Already recorded; nothing was added.
+      year: Year
     capital:
       art108: Eligible under art. 108
       column:
@@ -1476,8 +1606,10 @@ desktop:
       vehicle: Vehicle
     category_keywords:
       amortizacion_vivienda_afecto: amortizacion vivienda casa
-      arrendamiento_local: alquiler local oficina arrendamiento renta
-      arrendamiento_vivienda_afecto: alquiler vivienda casa piso arrendamiento
+      arrendamiento_local: alquiler local oficina arrendamiento renta rent premises
+        office lease
+      arrendamiento_vivienda_afecto: alquiler vivienda casa piso arrendamiento rent
+        home flat lease
       asesoria_contable: asesoria gestoria contable contabilidad
       asesoria_fiscal: asesoria gestoria fiscal impuestos
       asesoria_juridica: abogado asesoria juridica legal notario
@@ -4356,6 +4488,185 @@ google_review:
   technical: Technical references
   value: Value
 ledger:
+  actividad_asset:
+    errors:
+      accelerated_da18_depreciation: For tax year %{tax_year}, LIS DA 18 grants new
+        electric vehicles and charging points accelerated depreciation at twice the
+        maximum linear coefficient rather than free depreciation. That regime is not
+        computed, so the %{method} election has no charge.
+      acquisition_cost_exceeds_payment: The stated cost %{cost} (price %{price} plus
+        non-deductible IVA %{non_deductible_iva}) exceeds the %{paid} EUR the acquisition
+        transaction paid.
+      acquisition_currency_unconverted: The acquisition transaction is in %{currency}
+        and has no EUR conversion.
+      acquisition_iva_exceeds_transaction_iva: The stated non-deductible IVA %{non_deductible_iva}
+        exceeds the %{iva_amount} IVA of the acquisition transaction.
+      acquisition_price_exceeds_base: The stated price %{price} exceeds the %{taxable_base}
+        base of the acquisition transaction.
+      acquisition_transaction_missing: The acquisition transaction %{transaction_id}
+        is not in the ledger.
+      acquisition_transaction_not_payment: The acquisition transaction %{transaction_id}
+        is not a payment.
+      allocation_components_missing: The whole-property basis lacks its allocation
+        components.
+      approved_plan_not_yet_effective: An approved plan takes effect only in tax periods
+        ending after its submission (RIS art. 7.8).
+      approved_plan_required: An approved-plan election requires its plan.
+      approved_plan_without_distribution: The approved plan distributes no amortization
+        to this tax year.
+      asset_already_exists: The activity asset already exists.
+      asset_made_available_after_in_service: An asset cannot enter service before
+        it is made available.
+      asset_not_found: The activity asset does not exist.
+      business_use_share_missing: An ordinary asset lacks its business-use share.
+      charging_infrastructure_new_only: Charging-infrastructure free depreciation
+        applies only to new elements.
+      charging_infrastructure_period_not_enrolled: Charging infrastructure must enter
+        service in a tax period LIS DA 18a.2 enrols.
+      constant_percentage_weighting_not_enrolled: The constant-percentage weighting
+        %{band} is not enrolled.
+      correction_must_supersede_current: An asset correction must supersede the current
+        revision.
+      creation_requires_first_revision: Asset creation requires revision number one.
+      elected_coefficient_out_of_range: The elected coefficient %{elected} is outside
+        the admissible range [%{minimum}, %{maximum}].
+      electric_vehicle_declaration_required: Electric-vehicle free depreciation requires
+        a vehicle declaration.
+      electric_vehicle_new_only: Electric-vehicle free depreciation applies only to
+        new vehicles.
+      electric_vehicle_period_not_enrolled: The vehicle must enter service in a tax
+        period LIS DA 18a.1 enrols.
+      electric_vehicle_propulsion_required: Electric-vehicle free depreciation requires
+        the vehicle's annex II propulsion type.
+      entity_regime_not_individual: LIS art. 12.3.a and 12.3.d apply to sociedades
+        laborales and explotaciones asociativas prioritarias, which are entities rather
+        than individual taxpayers.
+      financial_lease_unexercised: An element under a financial lease has no register
+        entry until its purchase option is exercised; its instalments follow LIS art.
+        106.
+      forecast_no_longer_matches: The forecast no longer matches the schedule under
+        current history and authority; forecast again.
+      forecast_not_current_revision: The forecast does not reference the current asset
+        revision.
+      job_creation_new_only: Job-creating free depreciation applies only to new elements
+        (LIS art. 102.1).
+      job_creation_reduced_size_evidence_required: Job-creating free depreciation
+        requires its reduced-size evidence.
+      justified_amount_unvalidated: LIS art. 12.1.e admits an amount the taxpayer
+        justifies, but no registry authority can validate that justification, and
+        an unvalidated amount supplied by the caller cannot become a filing-grade
+        charge.
+      low_value_election_required: Low-value free depreciation requires explicit election
+        evidence.
+      low_value_new_only: Low-value free depreciation applies only to new elements.
+      method_admission_invalid: The method admission %{admission_key} is neither admitted
+        nor excluded.
+      method_excluded_by_law: The %{method} method is excluded by law for %{asset_kind}
+        assets in the %{regime} modality (%{legal}).
+      method_excludes_buildings_and_furniture: Buildings, mobiliario and enseres cannot
+        use this method (%{provision}).
+      method_not_enrolled_for_kind: The %{method} method is not enrolled for %{asset_kind}
+        assets in the %{regime} modality.
+      method_without_resolver: The %{method} method has no enrolled authority resolver.
+      modality_not_declared: The taxpayer profile declares no IRPF estimation regime.
+      modality_not_direct_estimation: Activity-asset amortization is enrolled only
+        for direct estimation, not %{regime}.
+      multi_shift_not_enrolled: The RIS art. 4.2 multi-shift coefficient is not enrolled
+        for the %{regime} modality.
+      multi_shift_requires_extra_shift: A multi-shift coefficient requires more than
+        one normal shift a day.
+      multi_shift_with_used_asset_unsupported: RIS art. 4 does not state how the multi-shift
+        and used-asset coefficients combine.
+      ownership_treatment_unknown: The whole-property basis has an unknown ownership
+        treatment.
+      parameter_absent: The activity-asset authority parameter %{parameter_id} is
+        absent from Modelo 100 revision %{revision_id}.
+      parameter_not_declared: The activity-asset parameter %{parameter_id} is not
+        in the resolver's declared read set.
+      parameter_not_resolvable_for_date: The activity-asset authority parameter %{parameter_id}
+        is not resolvable for %{axis} %{on_date}.
+      parameter_not_resolvable_for_year: The activity-asset authority parameter %{parameter_id}
+        is not resolvable for %{tax_year}.
+      profile_modality_mismatch: The asset elects the %{elected} modality but the
+        taxpayer profile declares %{declared}.
+      reduced_size_acceleration_new_only: Reduced-size acceleration applies only to
+        new elements (LIS art. 103.1).
+      reduced_size_evidence_required: Reduced-size acceleration requires its evidence.
+      reduced_size_turnover_reached: The prior-period net turnover reaches the reduced-size
+        threshold (LIS art. 101.1).
+      renewable_entry_year_not_enrolled: The installation must enter service in a
+        year LIS DA 17a.1 enrols.
+      renewable_evidence_required: Renewable free depreciation requires its table
+        class and evidence.
+      renewable_excludes_buildings: Buildings cannot use renewable free depreciation
+        (LIS DA 17a.1).
+      renewable_made_available_before_admitted_date: The installation was made available
+        before the date LIS DA 17a.1 admits installations from.
+      renewable_mandatory_installation_unsupported: An installation the Código Técnico
+        de la Edificación makes mandatory qualifies only for the cost share above
+        the mandatory power (LIS DA 17a.5), and charging that share is not supported.
+      renewable_only_in_entry_period: Renewable free depreciation applies only in
+        the tax period the installation enters service (LIS DA 17a.1); an amount not
+        taken then cannot be taken freely later.
+      renewable_thermal_requires_fossil_replacement: A thermal installation qualifies
+        only when it replaces one using fossil energy (LIS DA 17a.1).
+      research_development_building_requires_building_class: The R&D building method
+        requires a building table class.
+      research_development_building_table_class_required: An R&D building election
+        requires its table class.
+      research_development_free_excludes_buildings: R&D free depreciation excludes
+        buildings (LIS art. 12.3.b).
+      research_development_free_table_class_required: Material R&D free depreciation
+        requires a table class.
+      revision_begins_after_tax_year: Modelo 100 revision %{revision_id} begins after
+        tax year %{tax_year}.
+      simplified_intangible_table_method: 'The %{method} method is not admitted for
+        intangible assets in the simplified modality: RIRPF art. 30.1a prescribes
+        linear amortization on the simplified table (Orden of 27 March 1998), which
+        lists information systems and programs at 26% over 10 years, and DGT V0190-19
+        and V0741-19 apply that table to intangible assets; RIS arts. 5.1 and 6.1
+        weight the LIS art. 12.1.a table, which this modality does not use.'
+      spousal_community_ownership_unsupported: Spousal community ownership is not
+        enrolled for activity-asset allocation.
+      sum_of_digits_period_out_of_range: The sum-of-digits period %{period} is outside
+        the admissible whole-year range [%{shortest}, %{longest}].
+      sum_of_digits_period_required: The sum-of-digits method requires its period.
+      superseded_claim_not_effective: The superseded claim is not an effective claim
+        of this asset.
+      table_class_group_not_a_flag: The group classification of table class %{class_key}
+        is not a yes-or-no flag.
+      table_class_not_enrolled: Table class %{class_key} is not enrolled for the %{regime}
+        modality.
+      table_class_required: The %{method} method requires a statutory table class.
+      table_class_without_group_classification: Table class %{class_key} has no enrolled
+        group classification.
+      table_class_wrong_kind: Table class %{class_key} does not classify %{asset_kind}
+        assets.
+      used_building_requires_construction_date: A used building requires its construction
+        date.
+      useful_life_evidence_required: A definite-life election requires its useful-life
+        evidence.
+      useful_life_must_end_after_service: A definite useful life must end after the
+        asset enters service.
+      vehicle_affectation_required_for_class: Activity asset %{asset_id} is in table
+        class %{class_key}, which can hold a vehicle RIRPF art. 22.4 restricts, so
+        it requires a vehicle affectation declaration.
+      vehicle_missing_from_books: A vehicle missing from the activity's books is not
+        an affected asset (RIRPF art. 22.2.2º).
+      vehicle_private_use_category_restricted: A %{category} with any private use
+        is affected only under one of the uses RIRPF art. 22.4 (a)-(e) lists; otherwise
+        it must be used exclusively for the activity.
+      vehicle_shared_use: A vehicle shared between the activity and private needs
+        is not an affected asset, and a vehicle cannot be partially affected (RIRPF
+        art. 22.2.1º and 22.3; LIRPF art. 29.2).
+      workforce_fell_below: The average workforce of the 24 months after the entry
+        year's start falls below that of the 12 months before (LIS DA 17a.1).
+      workforce_increase_not_kept: The workforce increase is not kept for the further
+        24 months LIS art. 102.1 requires.
+      workforce_increase_not_reached: The average workforce of the 24 months after
+        the entry year's start does not exceed that of the 12 months before (LIS art.
+        102.1).
+      workforce_year_not_declared: The average workforce of %{year} is not declared.
   evidence:
     reader:
       operation_failed: Evidence reader operation failed

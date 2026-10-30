@@ -345,10 +345,10 @@ categories:
   registry:
     amortizacion_vivienda_afecto:
       label: Amortització de l'habitatge afecte a l'activitat
-      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        i al teu percentatge de titularitat; no s'hi aplica el 30 % dels subministraments
-        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, amortització de l'habitatge
-        afecte).
+      notes: Dedueixes l'amortització de l'habitatge a través del registre de béns
+        de l'activitat, sobre la part de l'habitatge afecta i el teu percentatge de
+        titularitat (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3). Un apunt del
+        llibre en aquesta categoria no dedueix res per si sol.
     arrendamiento_local:
       label: Lloguer del local de negoci
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
@@ -1361,6 +1361,20 @@ desktop:
       when_read: Quan el vas llegir
       yours: El teu canvi preparat
     assets:
+      absent:
+        free_method: 'Llibertat d''amortització: sense xifra prevista'
+        not_computed: Sense calcular
+        opening_history_unknown: Falta l'historial d'obertura
+        other: Sense xifra indicada
+      action:
+        add: Afegeix un element
+        claim: Registra la dotació
+        correct: Corregeix
+        describe: Edita la fitxa
+        dispose: Dona de baixa
+      area:
+        fixed: Immobilitzat
+        stock: Existències
       asset_id: Identificador de l'element
       claim: Reclama-la
       claim_reused: 'Ja reclamada: no s''ha registrat dues vegades.'
@@ -1373,8 +1387,42 @@ desktop:
         number: Revisió
         revision: Id
         target: Declaració
+      count:
+        conflict: 'Dotacions superposades: {count}'
+        incomplete: 'Anys que no es poden calcular: {count}'
+        missing: 'Anys sense registrar: {count}'
+        stale: 'Dotacions que ja no coincideixen amb el quadre: {count}'
       creating_hint: Amb què es registra, p. ex. la declaració a què va
       creating_operation: Registrat com a
+      detail:
+        plan: Quadre
+        record: Fitxa
+        timeline: Cronologia
+      event:
+        baja_recorded: Baixa registrada
+        claim_recorded: Dotació registrada
+        correction_added: Correcció afegida
+        description_added: Descripció afegida
+        element_added: Element afegit
+        other: Esdeveniment registrat
+      field:
+        amount: Import
+        baja_date: Darrer dia en servei
+        baja_reason: Motiu
+        basis: Base amortitzable
+        in_service_date: En servei des de
+        kind: Tipus
+        method: Mètode
+        name: Nom
+        other: Una altra dada
+        residual_value: Valor residual
+        serial: Número de sèrie
+      finding:
+        claim_conflict: Dues dotacions se superposen
+        claim_stale: Una dotació ja no coincideix amb el quadre
+        opening_history_missing: 'Falta l''historial d''obertura: no es pot calcular
+          res'
+        other: Alguna cosa requereix la teva atenció
       forecast: Amortització {amount} · {days} dies · {from} – {until}
       forecast_note: Una previsió no registra res fins que la reclames.
       free: Amortització lliure sol·licitada
@@ -1382,6 +1430,61 @@ desktop:
       from: Des de
       handoff: On van les reclamacions
       inspect: Consulta
+      list:
+        column:
+          in_service: En servei des de
+          kind: Tipus
+          method: Mètode
+          name: Nom
+          serial: Número de sèrie
+        disposed: Baixa el {date}
+        empty: Encara no hi ha elements.
+        label: Elements
+        no_name: Sense nom registrat
+      option:
+        kind:
+          intangible: Immobilitzat immaterial
+          tangible: Immobilitzat material
+          vehicle: Vehicle
+        method:
+          constant_percentage: Percentatge constant
+          free_300: Llibertat d'amortització, element de poc valor
+          linear_table: Lineal, taula oficial
+        reason:
+          sale: Venda
+          scrapping: Desballestament
+          theft: Robatori
+          withdrawal: Desafectació de l'activitat
+      origin:
+        import: Importat
+        other: Un altre origen
+        person: Introduït per tu
+        system: Calculat per Cadrumo
+      plan:
+        claimable: Es pot registrar del {from} al {until}
+        claimable_none: No queda res per registrar
+        claims: Dotacions de {year}
+        column:
+          claimed: Registrada
+          days: Dies
+          matches: Coincideix amb el quadre
+          planned: Prevista
+          replaced_by: Substituïda per
+          revision: Revisió
+          status: Estat
+          used_by: Usada a
+          year: Any
+        edition: Edició de la taula {edition}
+        election_changed: Aquí canvia el mètode escollit
+        gap: 'Sense registrar: del {from} al {until}'
+        in_effect: Vigent
+        matches: Coincideix amb el quadre actual
+        no_match: Ja no coincideix amb el quadre
+        projected: Projectada
+        projected_note: Les taules projectades serveixen per a la previsió i el model
+          130. El model 100 no està disponible per a {year}.
+        recorded_zero: Registrada com a zero
+        replaced: Substituïda
       quarter: Trimestre del model 130
       refusal:
         refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Rebutjat:
@@ -1398,6 +1501,13 @@ desktop:
         create: Primera revisió (JSON)
       revision_hint: Omple cada dada buida; una revisió no s'edita un cop desada.
       revisions: Revisions
+      state:
+        claimed: Registrada
+        forecast: Previsió
+        incomplete: No es pot calcular
+        missing: Sense registrar
+        other: Estat no reconegut
+        partial: Registrada en part
       submit:
         correct: Desa la correcció
         create: Crea l'element
@@ -1414,8 +1524,30 @@ desktop:
         filing: Per a les declaracions
         forecast: Previsió
       tax_year: Exercici
+      timeline:
+        change: '{field}: {before} → {after}'
+        change_added: '{field}: {after}'
+        change_cleared: '{field}: es treu {before}'
+        column:
+          changes: Canvis
+          effect: Efecte
+          event: Esdeveniment
+          origin: Origen
+          recorded: Registrat
+          replaces: Substitueix
+          sequence: Núm.
+        not_in_calculation: No forma part del càlcul
+        time_not_recorded: Hora no registrada
       title: Elements afectes a l'activitat
       until: Fins a
+      write:
+        conflict: Ja hi ha una dotació que cobreix del {from} al {until}. Corregeix
+          aquesta dotació.
+        dispose_note: La data és el darrer dia en servei. Les dotacions que la creuen
+          se substitueixen en el mateix pas, i desfer la baixa no les recupera.
+        incomplete: 'No s''ha desat. Falta omplir: {fields}'
+        reused: Ja estava registrada; no s'ha afegit res.
+      year: Any
     capital:
       art108: Acollit a l'art. 108
       column:
@@ -1511,8 +1643,10 @@ desktop:
       vehicle: Vehicle
     category_keywords:
       amortizacion_vivienda_afecto: amortizacion vivienda casa
-      arrendamiento_local: alquiler local oficina arrendamiento renta
-      arrendamiento_vivienda_afecto: alquiler vivienda casa piso arrendamiento
+      arrendamiento_local: alquiler local oficina arrendamiento renta lloguer local
+        negoci arrendament
+      arrendamiento_vivienda_afecto: alquiler vivienda casa piso arrendamiento lloguer
+        habitatge pis arrendament
       asesoria_contable: asesoria gestoria contable contabilidad
       asesoria_fiscal: asesoria gestoria fiscal impuestos
       asesoria_juridica: abogado asesoria juridica legal notario
@@ -1520,7 +1654,8 @@ desktop:
       cuotas_autonomos_ss: autonomos seguridad social reta tgss cuota
       cuotas_colegiales: colegio colegiado cuota colegial
       formacion_profesional: curso formacion academia master taller
-      gastos_bancarios: comision banco mantenimiento cuenta transferencia
+      gastos_bancarios: comision banco mantenimiento cuenta transferencia comissió
+        bancària banc compte manteniment transferència
       gastos_financieros: intereses prestamo financiacion
       hardware_amortizable: ordenador portatil pc monitor hardware
       ibi_local_afecto: ibi impuesto bienes inmuebles ayuntamiento local
@@ -1534,7 +1669,8 @@ desktop:
       reparaciones_conservacion: reparacion mantenimiento arreglo
       seguros_responsabilidad_civil: seguro responsabilidad civil poliza
       seguros_salud_autonomo: seguro salud medico poliza
-      software_suscripcion: software suscripcion licencia aplicacion
+      software_suscripcion: software suscripcion licencia aplicacion programari subscripció
+        llicència aplicació
       subcontratacion: subcontratacion colaborador freelance
       suministros_cliente_directos: suministros cliente
       suministros_home_office_agua: agua
@@ -1546,7 +1682,7 @@ desktop:
       telefonia_movil: telefono movil celular telefonia
       tributos_fiscalmente_deducibles: tasa tributo impuesto ayuntamiento
       vehiculo_combustible: gasolina gasoil diesel combustible carburante gasolinera
-        coche
+        coche benzina dièsel cotxe
       vehiculo_mantenimiento: taller revision itv neumaticos coche
       vehiculo_parking: parking aparcamiento estacionamiento
       vehiculo_peaje: peaje autopista
@@ -4424,6 +4560,197 @@ google_review:
   technical: Referències tècniques
   value: Valor
 ledger:
+  actividad_asset:
+    errors:
+      accelerated_da18_depreciation: Per a l'exercici %{tax_year}, la LIS DA 18 concedeix
+        als vehicles elèctrics nous i als punts de recàrrega amortització accelerada
+        al doble del coeficient lineal màxim, no llibertat d'amortització. Aquest
+        règim no es calcula, per la qual cosa l'elecció %{method} no genera cap càrrega.
+      acquisition_cost_exceeds_payment: El cost indicat %{cost} (preu %{price} més
+        IVA no deduïble %{non_deductible_iva}) supera els %{paid} EUR que va pagar
+        la transacció d'adquisició.
+      acquisition_currency_unconverted: La transacció d'adquisició és en %{currency}
+        i no té conversió a EUR.
+      acquisition_iva_exceeds_transaction_iva: L'IVA no deduïble indicat %{non_deductible_iva}
+        supera els %{iva_amount} d'IVA de la transacció d'adquisició.
+      acquisition_price_exceeds_base: El preu indicat %{price} supera la base de %{taxable_base}
+        de la transacció d'adquisició.
+      acquisition_transaction_missing: La transacció d'adquisició %{transaction_id}
+        no és al llibre major.
+      acquisition_transaction_not_payment: La transacció d'adquisició %{transaction_id}
+        no és un pagament.
+      allocation_components_missing: La base de l'immoble complet no té els seus components
+        d'imputació.
+      approved_plan_not_yet_effective: Un pla aprovat només té efecte en els períodes
+        impositius que acaben després de la seva presentació (RIS art. 7.8).
+      approved_plan_required: L'elecció de pla aprovat requereix el seu pla.
+      approved_plan_without_distribution: El pla aprovat no distribueix cap amortització
+        a aquest exercici.
+      asset_already_exists: L'element de l'activitat ja existeix.
+      asset_made_available_after_in_service: Un element no pot entrar en funcionament
+        abans de posar-se a disposició.
+      asset_not_found: L'element de l'activitat no existeix.
+      business_use_share_missing: Un element ordinari no té el seu percentatge d'ús
+        empresarial.
+      charging_infrastructure_new_only: La llibertat d'amortització d'infraestructures
+        de recàrrega només s'aplica a elements nous.
+      charging_infrastructure_period_not_enrolled: La infraestructura de recàrrega
+        ha d'entrar en funcionament en un període impositiu que inscriu la LIS DA
+        18a.2.
+      constant_percentage_weighting_not_enrolled: La ponderació %{band} del percentatge
+        constant no està inscrita.
+      correction_must_supersede_current: Una correcció de l'element ha de substituir
+        la revisió vigent.
+      creation_requires_first_revision: La creació de l'element requereix la revisió
+        número u.
+      elected_coefficient_out_of_range: El coeficient escollit %{elected} queda fora
+        de l'interval admissible [%{minimum}, %{maximum}].
+      electric_vehicle_declaration_required: La llibertat d'amortització de vehicles
+        elèctrics requereix una declaració del vehicle.
+      electric_vehicle_new_only: La llibertat d'amortització de vehicles elèctrics
+        només s'aplica a vehicles nous.
+      electric_vehicle_period_not_enrolled: El vehicle ha d'entrar en funcionament
+        en un període impositiu que inscriu la LIS DA 18a.1.
+      electric_vehicle_propulsion_required: La llibertat d'amortització de vehicles
+        elèctrics requereix el tipus de propulsió del vehicle segons l'annex II.
+      entity_regime_not_individual: La LIS art. 12.3.a i 12.3.d s'apliquen a les societats
+        laborals i a les explotacions associatives prioritàries, que són entitats
+        i no contribuents persones físiques.
+      financial_lease_unexercised: Un element en arrendament financer no té assentament
+        al registre fins que exerceixes l'opció de compra; les seves quotes segueixen
+        l'art. 106 de la LIS.
+      forecast_no_longer_matches: La previsió ja no coincideix amb el quadre d'amortització
+        segons l'historial i l'autoritat vigents; torna a calcular la previsió.
+      forecast_not_current_revision: La previsió no remet a la revisió vigent de l'element.
+      job_creation_new_only: La llibertat d'amortització per creació d'ocupació només
+        s'aplica a elements nous (LIS art. 102.1).
+      job_creation_reduced_size_evidence_required: La llibertat d'amortització per
+        creació d'ocupació requereix la seva justificació d'empresa de reduïda dimensió.
+      justified_amount_unvalidated: La LIS art. 12.1.e admet l'import que el contribuent
+        justifiqui, però cap autoritat del registre pot validar aquesta justificació,
+        i un import sense validar aportat per qui crida no pot esdevenir una càrrega
+        apta per a la presentació.
+      low_value_election_required: La llibertat d'amortització de baix valor requereix
+        una prova expressa de l'elecció.
+      low_value_new_only: La llibertat d'amortització de baix valor només s'aplica
+        a elements nous.
+      method_admission_invalid: L'admissió de mètode %{admission_key} no és ni admesa
+        ni exclosa.
+      method_excluded_by_law: El mètode %{method} està exclòs per llei per a l'immobilitzat
+        %{asset_kind} en la modalitat %{regime} (%{legal}).
+      method_excludes_buildings_and_furniture: Els edificis, el mobiliari i els estris
+        no poden usar aquest mètode (%{provision}).
+      method_not_enrolled_for_kind: El mètode %{method} no està inscrit per a l'immobilitzat
+        %{asset_kind} en la modalitat %{regime}.
+      method_without_resolver: El mètode %{method} no té cap resolutor d'autoritat
+        inscrit.
+      modality_not_declared: El perfil del contribuent no declara cap règim d'estimació
+        de l'IRPF.
+      modality_not_direct_estimation: L'amortització de l'immobilitzat de l'activitat
+        només està inscrita per a l'estimació directa, no per a %{regime}.
+      multi_shift_not_enrolled: El coeficient de diversos torns del RIS art. 4.2 no
+        està inscrit per a la modalitat %{regime}.
+      multi_shift_requires_extra_shift: El coeficient de diversos torns requereix
+        més d'un torn normal al dia.
+      multi_shift_with_used_asset_unsupported: El RIS art. 4 no estableix com es combinen
+        el coeficient de diversos torns i el d'elements usats.
+      ownership_treatment_unknown: La base de l'immoble complet té un tractament de
+        titularitat desconegut.
+      parameter_absent: El paràmetre d'autoritat %{parameter_id} de l'immobilitzat
+        de l'activitat no és a la revisió %{revision_id} del Model 100.
+      parameter_not_declared: El paràmetre %{parameter_id} de l'immobilitzat de l'activitat
+        no figura al conjunt de lectura declarat del resolutor.
+      parameter_not_resolvable_for_date: El paràmetre d'autoritat %{parameter_id}
+        de l'immobilitzat de l'activitat no es pot resoldre per a %{axis} %{on_date}.
+      parameter_not_resolvable_for_year: El paràmetre d'autoritat %{parameter_id}
+        de l'immobilitzat de l'activitat no es pot resoldre per a %{tax_year}.
+      profile_modality_mismatch: L'element tria la modalitat %{elected}, però el perfil
+        del contribuent declara %{declared}.
+      reduced_size_acceleration_new_only: L'acceleració d'empresa de reduïda dimensió
+        només s'aplica a elements nous (LIS art. 103.1).
+      reduced_size_evidence_required: L'acceleració d'empresa de reduïda dimensió
+        requereix la seva justificació.
+      reduced_size_turnover_reached: L'import net de la xifra de negocis del període
+        anterior assoleix el llindar d'empresa de reduïda dimensió (LIS art. 101.1).
+      renewable_entry_year_not_enrolled: La instal·lació ha d'entrar en funcionament
+        en un any que inscriu la LIS DA 17a.1.
+      renewable_evidence_required: La llibertat d'amortització de renovables requereix
+        la seva classe de taula i la seva justificació.
+      renewable_excludes_buildings: Els edificis no poden usar la llibertat d'amortització
+        de renovables (LIS DA 17a.1).
+      renewable_made_available_before_admitted_date: La instal·lació es va posar a
+        disposició abans de la data a partir de la qual la LIS DA 17a.1 admet instal·lacions.
+      renewable_mandatory_installation_unsupported: Una instal·lació que el Código
+        Técnico de la Edificación fa obligatòria només compleix els requisits per
+        la part del cost que excedeix de la potència obligatòria (LIS DA 17a.5), i
+        no s'admet carregar aquesta part.
+      renewable_only_in_entry_period: La llibertat d'amortització de renovables només
+        s'aplica en el període impositiu en què la instal·lació entra en funcionament
+        (LIS DA 17a.1); l'import no pres aleshores no es pot prendre lliurement després.
+      renewable_thermal_requires_fossil_replacement: Una instal·lació tèrmica només
+        compleix els requisits quan en substitueix una que utilitza energia fòssil
+        (LIS DA 17a.1).
+      research_development_building_requires_building_class: El mètode d'edifici de
+        R+D requereix una classe de taula d'edifici.
+      research_development_building_table_class_required: L'elecció d'edifici de R+D
+        requereix la seva classe de taula.
+      research_development_free_excludes_buildings: La llibertat d'amortització de
+        R+D exclou els edificis (LIS art. 12.3.b).
+      research_development_free_table_class_required: La llibertat d'amortització
+        de R+D material requereix una classe de taula.
+      revision_begins_after_tax_year: La revisió %{revision_id} del Model 100 comença
+        després de l'exercici %{tax_year}.
+      simplified_intangible_table_method: 'El mètode %{method} no s''admet per a l''immobilitzat
+        intangible en la modalitat simplificada: el RIRPF art. 30.1a prescriu l''amortització
+        lineal segons la taula simplificada (Orden de 27 de març de 1998), que fixa
+        els sistemes i programes informàtics al 26 % a 10 anys, i les consultes DGT
+        V0190-19 i V0741-19 apliquen aquesta taula a l''immobilitzat intangible; el
+        RIS arts. 5.1 i 6.1 ponderen la taula de la LIS art. 12.1.a, que aquesta modalitat
+        no utilitza.'
+      spousal_community_ownership_unsupported: La titularitat en societat de guanys
+        no està inscrita per a la imputació de l'immobilitzat de l'activitat.
+      sum_of_digits_period_out_of_range: El període de nombres dígits %{period} queda
+        fora de l'interval admissible d'anys sencers [%{shortest}, %{longest}].
+      sum_of_digits_period_required: El mètode dels nombres dígits requereix el seu
+        període.
+      superseded_claim_not_effective: L'amortització substituïda no és una amortització
+        vigent d'aquest element.
+      table_class_group_not_a_flag: La classificació de grup de la classe de taula
+        %{class_key} no és un indicador de sí o no.
+      table_class_not_enrolled: La classe de taula %{class_key} no està inscrita per
+        a la modalitat %{regime}.
+      table_class_required: El mètode %{method} exigeix una classe de la taula legal.
+      table_class_without_group_classification: La classe de taula %{class_key} no
+        té cap classificació de grup inscrita.
+      table_class_wrong_kind: La classe de taula %{class_key} no classifica immobilitzat
+        %{asset_kind}.
+      used_building_requires_construction_date: Un edifici usat requereix la seva
+        data de construcció.
+      useful_life_evidence_required: L'elecció de vida útil definida requereix la
+        seva justificació de vida útil.
+      useful_life_must_end_after_service: Una vida útil definida ha d'acabar després
+        de l'entrada en funcionament de l'element.
+      vehicle_affectation_required_for_class: L'actiu %{asset_id} de l'activitat és
+        a la classe de taula %{class_key}, que pot contenir un vehicle restringit
+        pel RIRPF art. 22.4, per la qual cosa requereix una declaració d'afectació
+        del vehicle.
+      vehicle_missing_from_books: Un vehicle que falta als llibres de l'activitat
+        no és un element afecte (RIRPF art. 22.2.2º).
+      vehicle_private_use_category_restricted: Un vehicle de categoria %{category}
+        amb qualsevol ús privat només està afecte en un dels usos que enumera el RIRPF
+        art. 22.4 (a)-(e); en cas contrari s'ha d'usar exclusivament per a l'activitat.
+      vehicle_shared_use: Un vehicle compartit entre l'activitat i les necessitats
+        privades no és un element afecte, i un vehicle no pot estar afecte parcialment
+        (RIRPF art. 22.2.1º i 22.3; LIRPF art. 29.2).
+      workforce_fell_below: La plantilla mitjana dels 24 mesos posteriors a l'inici
+        de l'any d'entrada en funcionament queda per sota de la dels 12 mesos anteriors
+        (LIS DA 17a.1).
+      workforce_increase_not_kept: L'increment de plantilla no es manté durant els
+        24 mesos addicionals que exigeix la LIS art. 102.1.
+      workforce_increase_not_reached: La plantilla mitjana dels 24 mesos posteriors
+        a l'inici de l'any d'entrada en funcionament no supera la dels 12 mesos anteriors
+        (LIS art. 102.1).
+      workforce_year_not_declared: La plantilla mitjana de %{year} no està declarada.
   evidence:
     reader:
       operation_failed: Ha fallat l'operació del lector de justificants
