@@ -112,3 +112,9 @@ Authorized by the operator on 2026-10-30, who directed reconciliation of the amo
 - A ledger row in such a category is acquisition evidence. If the register owns it, it is withheld as today. If the register does not own it, the calculation carries a blocking note naming the row and the remedy, which is to register the element. It is never deducted, and it is never omitted with only an advisory.
 - Casilla `0227` receives its binding in every supported Modelo 100 revision. A destination the source owns without a binding is a defect of this decision, not an unsupported case.
 - Purchases within the LIS art. 12.3.e limit are recorded through the register under the low-value free method, which is the only place the new-element condition and the single annual limit are tested.
+
+## Amendment 2026-10-30, later
+
+Authorized by the operator's ruling of 2026-10-30 that amortization is not a blocker. Where this differs from the earlier text, this section governs.
+
+A ledger row in an amortizable category that the register does not own is never deducted, and the calculation carries a non-blocking finding naming the row and the remedy, which is to register the element. It no longer carries a blocking note.

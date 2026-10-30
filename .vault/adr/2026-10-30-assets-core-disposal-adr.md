@@ -109,3 +109,12 @@ The append-only record wins because the lifecycle contract already requires immu
 - Until clave 1626's meanings are found, rows that need it carry a blocking note. This is the known limit of the decision.
 - The manual example at part 1 line 36479 charges 486 for half of 2025, above the 482.01 day-count maximum, so the product gives 169,726.01 against the manual's 169,730. It serves only as an arithmetic oracle and that difference is expected.
 - Reconsider if a source fixes the counterfactual coefficient, the disposal-day convention, scrapping or clave 1626, or if the DYCTEA original of TEAC 01524/2017 differs from the reproduction.
+
+## Amendment 2026-10-30, later
+
+Authorized by the operator's ruling of 2026-10-30 that amortization is not a blocker. The accepted body is preserved; where it differs, this section governs.
+
+- A baja never blocks a return. A gain, loss or excess whose row cannot be completed, including agrarian excess, a sale within three years of a later afectación and unknown opening history, is a non-blocking finding that keeps the calculation unresolved where no figure is known. The sentences calling these blocking notes, and the consequence on clave 1626, no longer apply.
+- Missing opening history still refuses the calculation of the disposal figure itself, not the baja and not either return.
+- Boxes are bound per revision through the `activity_asset_disposal` family: excess 0179 or 1478; gain and loss 1654 and 1639, 1843 and 1832, 0304 and 0305. Agrarian excess has no established line and stays a finding.
+- Clave 1626: AEAT's Renta help gives clave 5 as other elements afectos to an activity, read from irpf-2022 to irpf-2025. This triggers the Reconsider clause on 1626; where the clave depends on a fact not recorded, it stays a finding.
