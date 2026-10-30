@@ -27,7 +27,7 @@ from ..register import (
 )
 from .register_authoring import with_declaration
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _IBAN = "DE89370400440532013000"
 _OTHER_IBAN = "ES9121000418450200051332"

@@ -299,7 +299,7 @@ def foreign_asset_row_order(row: Modelo720ValuedRow) -> tuple[str, str, str, str
 
 def foreign_asset_record_order(record: Modelo720Record) -> tuple[str, str, str, str, str, str]:
     """Return the deterministic row order of a type 2 record: its lot, then the declarant condition."""
-    return (*foreign_asset_row_order(record.row), record.declaration.condition.value)
+    return (*foreign_asset_row_order(record.row), record.declaration.condition.code)
 
 
 def _build_foreign_asset_rows(
@@ -325,7 +325,7 @@ def _build_foreign_asset_rows(
                 "identifier_scheme": record.asset.identifier.scheme,
                 # Position 103 is zero for a class without subclaves (I).
                 "subclave": str(record.asset.subclave) if record.asset.subclave is not None else "0",
-                "declarant_condition": declaration.condition,
+                "declarant_condition": declaration.condition.code,
                 "titularidad_detail": declaration.titularidad_detail or "",
                 "participation_pct": declaration.participation_pct,
             },
