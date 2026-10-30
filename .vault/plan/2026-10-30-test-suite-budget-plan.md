@@ -193,12 +193,7 @@ templates. -->
 
 ## Parallelization
 
-<!-- State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelized when they share no hard
-interdependency. -->
+S02, S03, S04 and S05 run concurrently with disjoint write scopes: S02 `src/cadrumo/entrypoints/tests` plus `dev/operation_contract_manifest/tests`; S03 `dev/registry`; S04 `dev/tests`, `dev/docs/tests`, `dev/locales/tests` and `dev/packaging/tests`; S05 `dev/tui` and `src/cadrumo/entrypoints/tui`. Workers commit their own paths. The orchestrator serializes ledger rows and Step closure. S08 and S10 wait until these finish, because width and pruning measurements need a stable suite.
 
 ## Verification
 
