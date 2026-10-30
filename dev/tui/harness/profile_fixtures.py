@@ -249,6 +249,10 @@ class ProfileCaptureHost(ScreenHostApp[None]):
         if event is not None:
             event.prevent_default()
         await super().on_mount()
+        self.run_worker(self._prepare_frame(), name="profile-capture-state")
+
+    async def _prepare_frame(self) -> None:
+        """Leave the mount message free to process queued editor callbacks."""
         await self._reach_state()
         self.frame_ready.set()
 
@@ -269,8 +273,9 @@ class ProfileCaptureHost(ScreenHostApp[None]):
         if state in {ProfileFixtureState.REVIEW, ProfileFixtureState.READY}:
             await screen.action_continue_setup()
             if state is ProfileFixtureState.READY:
+                previous_revision = screen.overview.record_revision
                 await screen.action_continue_setup()
-                await self._wait_for_profile_write()
+                await self._wait_for_profile_write(previous_revision)
             return
         await screen.action_continue_setup()
         dialog = await self._mounted_editor()
@@ -296,8 +301,9 @@ class ProfileCaptureHost(ScreenHostApp[None]):
             screen._open_field_editor(field)
             dialog = await self._mounted_editor()
             if state is ProfileFixtureState.SAVED_EDIT:
+                previous_revision = screen.overview.record_revision
                 dialog._submit_typed("Synthetic edited name")
-                await self._wait_for_profile_write()
+                await self._wait_for_profile_write(previous_revision)
         return True
 
     async def _mounted_editor(self) -> FieldEditScreen:
@@ -308,11 +314,17 @@ class ProfileCaptureHost(ScreenHostApp[None]):
         await asyncio.wait_for(dialog._mounted_event.wait(), timeout=10)
         return dialog
 
-    async def _wait_for_profile_write(self) -> None:
+    async def _wait_for_profile_write(self, previous_revision: int) -> None:
         """Wait for UI settlement, including the persisted-result repaint."""
         screen = self.profile_screen
         for _ in range(1000):
-            if screen._pending_write is None and screen._pending_completion is None:
+            # Modal dismissal queues its save callback; no worker yet does not
+            # mean the requested write has already finished.
+            if (
+                screen.overview.record_revision > previous_revision
+                and screen._pending_write is None
+                and screen._pending_completion is None
+            ):
                 await asyncio.sleep(0)
                 return
             await asyncio.sleep(0.01)
