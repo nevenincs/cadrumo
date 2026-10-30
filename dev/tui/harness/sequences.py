@@ -25,7 +25,8 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Awaitable, Callable, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Generator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
@@ -554,22 +555,27 @@ class ShotRefusal:
     detail: str
 
 
-def capture_scenario(
-    scenario: SequenceScenario,
-    shots: Sequence[Shot],
-) -> tuple[ScenarioProvenance, tuple[ScenarioFrame, ...], tuple[ShotRefusal, ...]]:
-    """Run a scenario's sequence once and capture every requested shot over its outcome.
+@dataclass(frozen=True, slots=True)
+class ScenarioWorld:
+    """A sequence's executed sandbox, held open so several captures can read the one declaration."""
 
-    A shot whose page the declaration does not offer is returned as a refusal
-    instead of a frame; anything wrong with the scenario as a whole still raises.
-    """
+    provenance: ScenarioProvenance
+    sandbox: SequenceSandbox
+
+
+def _unknown_pages(scenario: SequenceScenario, shots: Sequence[Shot]) -> None:
     pages = scenario_pages(scenario)
     unknown = sorted({shot.page for shot in shots} - set(pages))
     if unknown:
         raise ScenarioError(f"unknown page(s) {', '.join(unknown)}; accepted: {', '.join(pages)}")
-    discovered, problems = discover_sequences(sequence_id=scenario.sequence_id)
+
+
+@contextmanager
+def scenario_world(sequence_id: str) -> Generator[ScenarioWorld]:
+    """Run a sequence once and keep its sandbox open for every capture taken over it."""
+    discovered, problems = discover_sequences(sequence_id=sequence_id)
     if problems or len(discovered) != 1:
-        raise ScenarioError(f"sequence {scenario.sequence_id!r} could not be read: {'; '.join(problems)}")
+        raise ScenarioError(f"sequence {sequence_id!r} could not be read: {'; '.join(problems)}")
     item = discovered[0]
     golden = read_golden(item.page, item.sequence_id)
     golden_digest = sha256(golden_path(item.page, item.sequence_id).read_bytes()).hexdigest()
@@ -588,11 +594,35 @@ def capture_scenario(
             matches_golden=not divergences,
             golden_problems=tuple(divergences[:_GOLDEN_PROBLEMS_KEPT]),
         )
-        # The installed session enters this composition before it builds the
-        # root; the CLI frames above compose their own per invocation.
-        with profile_adapter_composition():
-            frames, refusals = asyncio.run(_capture_all(scenario, sandbox, tuple(shots)))
-    return provenance, frames, refusals
+        yield ScenarioWorld(provenance=provenance, sandbox=sandbox)
+
+
+def capture_in_world(
+    world: ScenarioWorld,
+    scenario: SequenceScenario,
+    shots: Sequence[Shot],
+) -> tuple[tuple[ScenarioFrame, ...], tuple[ShotRefusal, ...]]:
+    """Capture shots over an open world; a shot whose page the declaration does not offer is a refusal."""
+    _unknown_pages(scenario, shots)
+    # The installed session enters this composition before it builds the
+    # root; the CLI frames of the sequence compose their own per invocation.
+    with profile_adapter_composition():
+        return asyncio.run(_capture_all(scenario, world.sandbox, tuple(shots)))
+
+
+def capture_scenario(
+    scenario: SequenceScenario,
+    shots: Sequence[Shot],
+) -> tuple[ScenarioProvenance, tuple[ScenarioFrame, ...], tuple[ShotRefusal, ...]]:
+    """Run a scenario's sequence once and capture every requested shot over its outcome.
+
+    A shot whose page the declaration does not offer is returned as a refusal
+    instead of a frame; anything wrong with the scenario as a whole still raises.
+    """
+    _unknown_pages(scenario, shots)
+    with scenario_world(scenario.sequence_id) as world:
+        frames, refusals = capture_in_world(world, scenario, shots)
+    return world.provenance, frames, refusals
 
 
 async def _capture_all(
@@ -746,12 +776,15 @@ __all__ = [
     "ScenarioError",
     "ScenarioFrame",
     "ScenarioProvenance",
+    "ScenarioWorld",
     "SequenceScenario",
     "Shot",
     "ShotRefusal",
+    "capture_in_world",
     "capture_scenario",
     "page_interfaces",
     "resolve_scenario",
     "scenario_pages",
     "scenario_surface",
+    "scenario_world",
 ]

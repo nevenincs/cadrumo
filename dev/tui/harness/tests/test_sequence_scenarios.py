@@ -9,6 +9,8 @@ operator's walk to each page.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterator
+from contextlib import ExitStack
 from pathlib import Path
 
 import pytest
@@ -33,10 +35,13 @@ from ..sequences import (
     REVIEW_PAGE,
     SEQUENCE_SCENARIOS,
     ScenarioError,
+    ScenarioWorld,
     SequenceScenario,
     Shot,
+    capture_in_world,
     capture_scenario,
     scenario_pages,
+    scenario_world,
 )
 
 _FIRST_QUARTER = SEQUENCE_SCENARIOS["modelo-303-first-quarter"]
@@ -49,6 +54,30 @@ _FIRST_QUARTER_PAGES = (*_BROWSING_PAGES, ISSUES_PAGE)
 _INSTALMENT_PAGES = (*_BROWSING_PAGES, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
 _EVERY_PAGE = (*_BROWSING_PAGES, EDITOR_PAGE, BULK_CONFIRM_PAGE, REVIEW_PAGE, RECALCULATE_PAGE, ISSUES_PAGE)
 _ANNUAL_RETURN_PAGES = (*_BROWSING_PAGES, REVIEW_PAGE, ISSUES_PAGE)
+
+
+@pytest.fixture(scope="module")
+def world_of() -> Iterator[Callable[[SequenceScenario], ScenarioWorld]]:
+    """The executed sequence is reused while consecutive tests read the same declaration.
+
+    Only one sandbox may be open at a time: a second one would connect to the
+    first one's live profile runtime and read its declarations.
+    """
+    with ExitStack() as outer:
+        current: list[tuple[str, ExitStack, ScenarioWorld]] = []
+        outer.callback(lambda: current and current.pop()[1].close())
+
+        def open_world(scenario: SequenceScenario) -> ScenarioWorld:
+            if current and current[0][0] == scenario.sequence_id:
+                return current[0][2]
+            if current:
+                current.pop()[1].close()
+            holder = ExitStack()
+            world = holder.enter_context(scenario_world(scenario.sequence_id))
+            current.append((scenario.sequence_id, holder, world))
+            return world
+
+        yield open_world
 
 
 def _qualname(screen: object) -> str:
@@ -168,7 +197,9 @@ def _surface_text(frame_text: str) -> str:
 
 @pytest.mark.integration
 @pytest.mark.hex_core
-def test_every_walk_refuses_unavailable_pages_without_changing_the_declaration(tmp_path: Path) -> None:
+def test_every_walk_refuses_unavailable_pages_without_changing_the_declaration(
+    tmp_path: Path, world_of: Callable[[SequenceScenario], ScenarioWorld]
+) -> None:
     """Every capture shares one sandbox, so a walk that saved anything would show on the workbench read after it.
 
     This sequence now records its operator inputs and has no editable assumed
@@ -183,7 +214,7 @@ def test_every_walk_refuses_unavailable_pages_without_changing_the_declaration(t
     claimed = SequenceScenario(
         _ANNUAL_RETURN.sequence_id, _ANNUAL_RETURN.modelo, "claimed to offer every editing page", assumes=True
     )
-    _, frames, refusals = capture_scenario(claimed, shots)
+    frames, refusals = capture_in_world(world_of(claimed), claimed, shots)
 
     assert [refusal.shot.page for refusal in refusals] == [EDITOR_PAGE, BULK_CONFIRM_PAGE, RECALCULATE_PAGE], refusals
 
@@ -205,23 +236,6 @@ def test_every_walk_refuses_unavailable_pages_without_changing_the_declaration(t
 
 @pytest.mark.integration
 @pytest.mark.hex_core
-def test_a_page_the_declaration_does_not_offer_is_refused_alone(tmp_path: Path) -> None:
-    """A filed declaration opens no change; asking for one refuses that shot and keeps the others."""
-    claimed_open = SequenceScenario(_FIRST_QUARTER.sequence_id, "303", "filed, claimed to accept changes", assumes=True)
-    shots = [
-        Shot(page, 80, 24, "dark", tmp_path / f"{page}.svg") for page in ("workbench", BULK_CONFIRM_PAGE, "sources")
-    ]
-
-    _, frames, refusals = capture_scenario(claimed_open, shots)
-
-    assert [frame.shot.page for frame in frames] == ["workbench", "sources"]
-    assert [refused.shot.page for refused in refusals] == [BULK_CONFIRM_PAGE]
-    assert "no assumed value" in refusals[0].detail
-    assert not (tmp_path / f"{BULK_CONFIRM_PAGE}.svg").exists()
-
-
-@pytest.mark.integration
-@pytest.mark.hex_core
 @pytest.mark.parametrize(
     ("scenario", "reason"),
     [
@@ -231,7 +245,10 @@ def test_a_page_the_declaration_does_not_offer_is_refused_alone(tmp_path: Path) 
     ids=["completed-return-is-not-confirm", "next-step-is-not-confirm"],
 )
 def test_f8_is_never_pressed_where_it_would_do_anything_but_open_a_panel(
-    scenario: SequenceScenario, reason: str, tmp_path: Path
+    scenario: SequenceScenario,
+    reason: str,
+    tmp_path: Path,
+    world_of: Callable[[SequenceScenario], ScenarioWorld],
 ) -> None:
     """F8 runs the next step, so the walk refuses before pressing it wherever that step is not a panel."""
     claimed = SequenceScenario(
@@ -242,7 +259,7 @@ def test_f8_is_never_pressed_where_it_would_do_anything_but_open_a_panel(
         for index, page in enumerate(("workbench", F8_CONFIRM_PAGE, "workbench"))
     ]
 
-    _, frames, refusals = capture_scenario(claimed, shots)
+    frames, refusals = capture_in_world(world_of(claimed), claimed, shots)
 
     assert [refused.shot.page for refused in refusals] == [F8_CONFIRM_PAGE]
     assert reason in refusals[0].detail, refusals
@@ -251,11 +268,34 @@ def test_f8_is_never_pressed_where_it_would_do_anything_but_open_a_panel(
 
 @pytest.mark.integration
 @pytest.mark.hex_core
-def test_a_scenario_whose_sequence_leaves_no_such_declaration_is_refused(tmp_path: Path) -> None:
+def test_a_page_the_declaration_does_not_offer_is_refused_alone(
+    tmp_path: Path, world_of: Callable[[SequenceScenario], ScenarioWorld]
+) -> None:
+    """A filed declaration opens no change; asking for one refuses that shot and keeps the others."""
+    claimed_open = SequenceScenario(_FIRST_QUARTER.sequence_id, "303", "filed, claimed to accept changes", assumes=True)
+    shots = [
+        Shot(page, 80, 24, "dark", tmp_path / f"{page}.svg") for page in ("workbench", BULK_CONFIRM_PAGE, "sources")
+    ]
+
+    frames, refusals = capture_in_world(world_of(claimed_open), claimed_open, shots)
+
+    assert [frame.shot.page for frame in frames] == ["workbench", "sources"]
+    assert [refused.shot.page for refused in refusals] == [BULK_CONFIRM_PAGE]
+    assert "no assumed value" in refusals[0].detail
+    assert not (tmp_path / f"{BULK_CONFIRM_PAGE}.svg").exists()
+
+
+@pytest.mark.integration
+@pytest.mark.hex_core
+def test_a_scenario_whose_sequence_leaves_no_such_declaration_is_refused(
+    tmp_path: Path, world_of: Callable[[SequenceScenario], ScenarioWorld]
+) -> None:
     mismatched = SequenceScenario(_FIRST_QUARTER.sequence_id, "130", "a modelo this sequence never works")
 
     with pytest.raises(ScenarioError, match=r"0 declaration\(s\) of modelo 130.*303 2026 1T"):
-        capture_scenario(mismatched, (Shot("workbench", 80, 24, "dark", tmp_path / "workbench.svg"),))
+        capture_in_world(
+            world_of(mismatched), mismatched, (Shot("workbench", 80, 24, "dark", tmp_path / "workbench.svg"),)
+        )
 
     assert not (tmp_path / "overview.svg").exists()
 
@@ -266,7 +306,9 @@ _GEOMETRIES = ((80, 24), (120, 36), (160, 48))
 
 @pytest.mark.integration
 @pytest.mark.hex_core
-def test_the_workbench_reads_cleanly_at_every_geometry_and_theme_through_the_production_root(tmp_path: Path) -> None:
+def test_the_workbench_reads_cleanly_at_every_geometry_and_theme_through_the_production_root(
+    tmp_path: Path, world_of: Callable[[SequenceScenario], ScenarioWorld]
+) -> None:
     """Through the installed root over a documented declaration, every size and theme lands, fits and leaks nothing."""
     shots = [
         Shot(page, width, height, theme, tmp_path / f"{page}-{width}x{height}-{theme}.svg")
@@ -275,7 +317,7 @@ def test_the_workbench_reads_cleanly_at_every_geometry_and_theme_through_the_pro
         for theme in ("light", "dark")
     ]
 
-    _, frames, _ = capture_scenario(_FIRST_QUARTER, shots)
+    frames, _ = capture_in_world(world_of(_FIRST_QUARTER), _FIRST_QUARTER, shots)
 
     expected = {"workbench": _qualname(ModeloWorkbenchScreen), "sources": _qualname(WorkbenchSourcesScreen)}
     assert len(frames) == len(shots)
