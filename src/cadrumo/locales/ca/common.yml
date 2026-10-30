@@ -1418,7 +1418,6 @@ desktop:
       claim_period_option: Del {from} al {until}
       claim_reused: Aquesta dotació ja estava registrada.
       claim_title: Registra la dotació de {name} per a {year}
-      claim_until: Arriba fins al {until}.
       claimed: Dotació registrada.
       column:
         amount: Import
@@ -1455,7 +1454,6 @@ desktop:
         acquisition_reference: Referència de la factura o del document
         acquisition_shape: Tipus d'adquisició
         allocation_provenance: D'on surt el repartiment anterior
-        amount: Import
         basis: Base amortitzable
         basis_stage: Com va arribar a ser teu
         building_construction_date: Data de construcció de l'edifici
@@ -1494,7 +1492,6 @@ desktop:
         opening_status: Amortització anterior a l'entrada
         opening_through: Coberta fins a l'exercici
         other: Una altra dada
-        out_of_service_date: Baixa a partir del
         ownership_mode: Com és la titularitat
         ownership_share: La teva quota de l'immoble
         prior_regime: Llibertat d'amortització anterior
@@ -1531,7 +1528,7 @@ desktop:
         vehicle_private_use: Ús privat
         vehicle_propulsion: Propulsió elèctrica (si en té)
       filing:
-        choose: Tria un any i un trimestre del Model 130 per veure on van les dotacions.
+        choose_year: Tria un any per veure on van les dotacions.
         unavailable: El traspàs a la declaració no està disponible.
       forecast: Amortització {amount} · {days} dies · {from} – {until}
       forecast_note: La previsió no desa res fins que registris la dotació.
@@ -1606,6 +1603,7 @@ desktop:
         recorded_zero: Registrada com a zero
         replaced: Substituïda
       quarter: Trimestre del model 130
+      quarter_none: Sense trimestre del model 130
       refused: El registre no ho ha admès.
       replace_claim: Substituir una dotació (opcional)
       replace_none: Registrar una dotació nova

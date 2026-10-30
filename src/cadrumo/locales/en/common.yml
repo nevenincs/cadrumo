@@ -1379,7 +1379,6 @@ desktop:
       claim_period_option: '{from} to {until}'
       claim_reused: 'Dotación already recorded: nothing was recorded twice.'
       claim_title: Record the dotación of {name} for {year}
-      claim_until: Runs until {until}.
       claimed: Dotación recorded.
       column:
         amount: Amount
@@ -1416,7 +1415,6 @@ desktop:
         acquisition_reference: Invoice or document reference
         acquisition_shape: Kind of acquisition
         allocation_provenance: Where the earlier split comes from
-        amount: Amount
         basis: Depreciable basis
         basis_stage: How you came to own it
         building_construction_date: Date the building was built
@@ -1455,7 +1453,6 @@ desktop:
         opening_status: Amortisation before entry
         opening_through: Covered through tax year
         other: Other detail
-        out_of_service_date: Out of service from
         ownership_mode: How you own it
         ownership_share: Your share of the property
         prior_regime: Earlier libertad de amortización
@@ -1492,8 +1489,7 @@ desktop:
         vehicle_private_use: Private use
         vehicle_propulsion: Electric drive (if any)
       filing:
-        choose: Choose a year and a Modelo 130 quarter to see where the dotaciones
-          go.
+        choose_year: Choose a year to see where the depreciation allowances go.
         unavailable: The filing handoff isn't available.
       forecast: Depreciation {amount} · {days} days · {from} – {until}
       forecast_note: The forecast saves nothing until you record the dotación.
@@ -1567,6 +1563,7 @@ desktop:
         recorded_zero: Recorded as zero
         replaced: Replaced
       quarter: Modelo 130 quarter
+      quarter_none: No Modelo 130 quarter
       refused: The register did not accept that.
       replace_claim: Replace a dotación (optional)
       replace_none: Record a new dotación

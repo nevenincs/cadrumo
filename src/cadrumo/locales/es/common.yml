@@ -1422,7 +1422,6 @@ desktop:
       claim_period_option: Del {from} al {until}
       claim_reused: Esta dotación ya estaba registrada.
       claim_title: Registrar la dotación de {name} para {year}
-      claim_until: Llega hasta el {until}.
       claimed: Dotación registrada.
       column:
         amount: Importe
@@ -1459,7 +1458,6 @@ desktop:
         acquisition_reference: Referencia de la factura o del documento
         acquisition_shape: Tipo de adquisición
         allocation_provenance: De dónde sale el reparto anterior
-        amount: Importe
         basis: Base amortizable
         basis_stage: Cómo llegó a ser tuyo
         building_construction_date: Fecha de construcción del edificio
@@ -1498,7 +1496,6 @@ desktop:
         opening_status: Amortización anterior a la entrada
         opening_through: Cubierta hasta el ejercicio
         other: Otro dato
-        out_of_service_date: Baja a partir del
         ownership_mode: Cómo es la titularidad
         ownership_share: Tu cuota del inmueble
         prior_regime: Libertad de amortización anterior
@@ -1535,8 +1532,7 @@ desktop:
         vehicle_private_use: Uso privado
         vehicle_propulsion: Propulsión eléctrica (si la tiene)
       filing:
-        choose: Elige un año y un trimestre del Modelo 130 para ver adónde van las
-          dotaciones.
+        choose_year: Elige un año para ver a dónde van las dotaciones.
         unavailable: El traspaso a la declaración no está disponible.
       forecast: Amortización {amount} · {days} días · {from} – {until}
       forecast_note: La previsión no guarda nada hasta que registres la dotación.
@@ -1611,6 +1607,7 @@ desktop:
         recorded_zero: Registrada como cero
         replaced: Sustituida
       quarter: Trimestre del modelo 130
+      quarter_none: Sin trimestre del modelo 130
       refused: El registro no lo admitió.
       replace_claim: Sustituir una dotación (opcional)
       replace_none: Registrar una dotación nueva
