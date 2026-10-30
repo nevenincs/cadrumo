@@ -128,7 +128,7 @@ def connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
     )
 
 
-def login(client: VerifiedConnection, profile: UUID, method: str, raw: bytes):
+def login(client: VerifiedConnection, profile: UUID, method: str, raw: bytes, *, seconds: float = 75):
     buffer = bytearray(raw)
     request = ProfileLogin.model_validate(
         {
@@ -140,7 +140,7 @@ def login(client: VerifiedConnection, profile: UUID, method: str, raw: bytes):
     )
     # Admission now completes the worker's one-time public registry graph
     # before releasing a usable session; the real frontend reserves 75s.
-    result = client.login(request, buffer, deadline=time.monotonic() + 75)
+    result = client.login(request, buffer, deadline=time.monotonic() + seconds)
     assert buffer == bytes(len(raw))
     return result
 

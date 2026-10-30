@@ -51,6 +51,6 @@ def test_desktop_frontend_claim_by_a_generic_peer_logs_its_check(
     assert record.levelno == logging.WARNING
     assert record.__dict__["error_code"] is not None
     assert str(record.__dict__["error_origin"]).startswith(
-        "cadrumo_runtime.host.profile_connection_services:_verify_desktop_holder:"
+        "cadrumo_runtime.host.desktop_holder_identity:verify_desktop_holder:"
     )
     assert "desktop_holder_descriptor_absent" not in str(refused.value)

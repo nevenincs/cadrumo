@@ -1,11 +1,10 @@
 """A person's sign-in that runs out of KDF time leaves the runtime ready for the retry.
 
 A real runtime admits a real profile worker. While the installation's one KDF
-permit is held by another process, the worker's password unwrap waits out its
-whole budget and is refused as unavailable. The case then releases the permit
-and signs in again on the same connection, reads that session's status, and
-lists the profiles. None of these may wait on anything the refused attempt
-left behind.
+permit is held by another process, the worker's password unwrap waits for it
+and the caller's budget runs out. The case then releases the permit and signs
+in again on a new connection, reads that session's status, and lists the
+profiles. None of these may wait on anything the timed-out attempt left behind.
 """
 
 from __future__ import annotations
@@ -24,6 +23,7 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import profile
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.user_profile.profile_summary import profile_listing
 from cadrumo.core.config import Settings
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus, SessionRequest
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
@@ -79,12 +79,15 @@ def test_a_refused_kdf_timeout_leaves_the_retry_status_and_listing_unblocked(tmp
                 clients.append(human)
                 holder.start()
                 assert held.wait(30)
-                refused = login(human, profile, "password", PROFILE_INPUT.encode())
-                assert not (isinstance(refused, ProfileStatus) and refused.status.session_id is not None), refused
+                with pytest.raises(RefusalError) as queued:
+                    login(human, profile, "password", PROFILE_INPUT.encode(), seconds=5)
+                assert queued.value.reason is RefusalCode.TIMEOUT
                 release.set()
                 holder.join(timeout=30)
                 assert not holder.is_alive()
 
+                human = connect(endpoint)
+                clients.append(human)
                 admitted = login(human, profile, "password", PROFILE_INPUT.encode())
                 assert isinstance(admitted, ProfileStatus), admitted
                 assert admitted.status.denial is None, admitted
