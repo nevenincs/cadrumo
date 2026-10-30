@@ -32,6 +32,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
+    ELEMENT_ROW_ROUTES,
     ActivityAssetDisposalRoute,
     activity_asset_disposal_route_casillas,
 )
@@ -698,19 +699,8 @@ class _BajaReader:
         return self._finding(revision, f"{amount} EUR ({route.value}) enters box {box}{self._row_entry(route)}")
 
     def _row_entry(self, route: ActivityAssetDisposalRoute) -> str:
-        if route in _ELEMENT_ROW_ROUTES:
-            clave = next(
-                (
-                    casilla.number
-                    for casilla in self._context.revision.casillas
-                    if casilla.semantic_role == _ELEMENT_TYPE_CLAVE_ROLE
-                ),
-                None,
-            )
-            return (
-                f"; on its row, enter clave {_AFFECTED_ELEMENT_CLAVE} in box {clave}, for an element affected to an "
-                "activity, with the dates and values"
-            )
+        if route in ELEMENT_ROW_ROUTES:
+            return "; on its row, enter the dates and values"
         if route in _PROPERTY_ROW_ROUTES:
             return "; on its row, mark the property as affected to an activity and enter the dates and values"
         return ""
@@ -740,13 +730,6 @@ class _BajaReader:
 
 
 _ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
-_ELEMENT_TYPE_CLAVE_ROLE: Final[str] = "irpf_ganancia_otros_tipo_elemento_clave"
-_AFFECTED_ELEMENT_CLAVE: Final[str] = "5"
-"""AEAT's Renta help for 2022 to 2025 gives clave 5 to other elements affected to economic activities."""
-
-_ELEMENT_ROW_ROUTES: Final[frozenset[ActivityAssetDisposalRoute]] = frozenset(
-    {ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT, ActivityAssetDisposalRoute.TRANSMISSION_LOSS_ELEMENT},
-)
 _PROPERTY_ROW_ROUTES: Final[frozenset[ActivityAssetDisposalRoute]] = frozenset(
     {ActivityAssetDisposalRoute.TRANSMISSION_GAIN_PROPERTY, ActivityAssetDisposalRoute.TRANSMISSION_LOSS_PROPERTY},
 )

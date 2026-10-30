@@ -498,11 +498,16 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         validate_ledger_renta_gastos_estimacion_directa_aggregation_binding,
         resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
     ),
-    _ledger_aggregation(
+    _filing_grade(
         BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
         ActivityAssetDisposalProvider,
         validate_activity_asset_disposal_binding,
+        channels=_MONEY_CHANNELS | frozenset({BindingValueChannel.TEXT}),
+        ops=LEDGER_AGGREGATION_OPS | frozenset({BindingAggregationOp.COPY}),
+        origins=frozenset({TerminalOriginClass.LEDGER_AGGREGATE}),
+        output="scalar",
         resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
+        stage="mesh",
     ),
     _ledger_aggregation(
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,

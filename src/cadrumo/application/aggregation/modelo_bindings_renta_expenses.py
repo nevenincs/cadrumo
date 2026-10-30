@@ -14,6 +14,7 @@ from typing import ClassVar
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
     resolve_activity_asset_disposal_binding_values,
+    resolve_activity_asset_disposal_element_type_values,
 )
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
@@ -221,6 +222,10 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         asset_observations = asset_projection.observations
         all_observations = (*ledger_observations, *asset_observations)
         unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(context.revision, all_observations)
+        element_types, element_types_inapplicable = resolve_activity_asset_disposal_element_type_values(
+            context.revision,
+            asset_projection.disposal_observations,
+        )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -234,6 +239,8 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     asset_projection.disposal_observations,
                 ),
             },
+            enum_binding_values=element_types,
+            inapplicable_binding_ids=element_types_inapplicable,
             source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
             diagnostics=source_issue_diagnostics(
                 issues,

@@ -26,6 +26,7 @@ from cadrumo.domain.renta.actividad_asset.disposal import (
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 
 from ...actividad_asset.history import ActivityAssetHistory
+from ...modelo._calculation_source_staging import add_expected_missing_binding_diagnostics
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..modelo_bindings_actividad_assets import (
@@ -132,13 +133,37 @@ def _boxes(resolution: CalculationSourceResolution) -> dict[str, Decimal]:
     }
 
 
-def test_a_sale_gain_enters_its_box_and_names_clave_5_on_the_row() -> None:
+def test_a_sale_gain_enters_its_box_and_states_clave_5_on_the_row() -> None:
     resolution = resolve_m100(_disposed())
 
     # No claim: reduction is the minimum 12,000 x 5% x 181 / 365 = 297.53, all of it gain.
     assert _boxes(resolution) == {"1654": Decimal("297.53")}
     assert _blocks(resolution) == set()
-    assert any("clave 5 in box 1626" in note for note in _findings(resolution))
+    assert {str(binding): value for binding, value in resolution.enum_binding_values.items()} == {
+        "renta-activity-asset-disposal-element-type-1626": "5",
+    }
+    assert not any("clave" in note for note in _findings(resolution))
+
+
+def test_the_stated_clave_is_not_reported_as_a_missing_box() -> None:
+    resolution = resolve_m100(_disposed())
+
+    checked = add_expected_missing_binding_diagnostics(_revision("100", "2025"), resolution)
+
+    assert "unresolved_binding" not in _reasons(checked)
+    assert not {str(binding) for binding in checked.unresolved_binding_ids} & {
+        "renta-activity-asset-disposal-element-type-1626"
+    }
+
+
+def test_a_year_with_no_element_row_states_no_clave_and_owes_none() -> None:
+    resolution = resolve_m100(ActivityAssetHistory())
+
+    assert not resolution.enum_binding_values
+    assert "unresolved_binding" not in _reasons(resolution)
+    assert "renta-activity-asset-disposal-element-type-1626" in {
+        str(binding) for binding in resolution.inapplicable_binding_ids
+    }
 
 
 def test_a_sale_loss_enters_the_loss_box_as_a_magnitude() -> None:

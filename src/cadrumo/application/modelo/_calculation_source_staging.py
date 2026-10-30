@@ -519,12 +519,17 @@ def add_expected_missing_binding_diagnostics(
         sorted(
             {
                 *source_resolution.unresolved_binding_ids,
-                *(binding_id for binding_id, _casilla_id, _source in missing),
+                *(
+                    binding_id
+                    for binding_id, _casilla_id, _source in missing
+                    if binding_id not in source_resolution.enum_binding_values
+                ),
             }
         )
     )
     not_missing = {
         *source_resolution.inapplicable_binding_ids,
+        *source_resolution.enum_binding_values,
         *(binding_id for binding_id, _row_index in source_resolution.row_binding_values),
     }
     diagnostics = _present_source_gap_diagnostics(missing, source_resolution, not_missing)
