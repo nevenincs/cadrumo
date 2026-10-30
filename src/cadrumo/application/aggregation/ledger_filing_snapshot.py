@@ -412,7 +412,13 @@ def evaluate_ledger_filing_staleness(
         snapshot: The filed ledger snapshot.
         catalogue: The live :class:`TransactionCatalogue`.
     """
-    index = _index(catalogue)
+    return _evaluate_over_index(snapshot, _index(catalogue))
+
+
+def _evaluate_over_index(
+    snapshot: LedgerFilingSnapshot,
+    index: Mapping[str, Transaction],
+) -> LedgerFilingStalenessVerdict:
     current = {
         row.transaction_id: row_fingerprint(
             index[row.transaction_id],
@@ -464,14 +470,13 @@ def stale_filed_revisions(
         register_reader: The current register view of one revision.
     """
     findings: list[tuple[CalculationRevision, LedgerFilingStalenessVerdict]] = []
+    index = _index(catalogue)
     for revision in revisions.values():
         if revision.state not in SEALED_REVISION_STATES:
             continue
         snapshot = revision.ledger_filing_snapshot
         verdict = (
-            LedgerFilingStalenessVerdict(is_stale=False)
-            if snapshot is None
-            else evaluate_ledger_filing_staleness(snapshot, catalogue)
+            LedgerFilingStalenessVerdict(is_stale=False) if snapshot is None else _evaluate_over_index(snapshot, index)
         )
         current = register_reader(revision)
         if current is None:
