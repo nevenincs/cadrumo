@@ -211,12 +211,6 @@ class LowValueElection(BaseModel):
 
     election_reference: ElectionReference
     new_material_evidence_reference: EvidenceReference
-    unit_acquisition_value: Decimal
-
-    @field_validator("unit_acquisition_value")
-    @classmethod
-    def _require_positive_cents(cls, value: Decimal) -> Decimal:
-        return require_euro_cents(value, allow_zero=False)
 
 
 class ChargingInfrastructureEvidence(BaseModel):

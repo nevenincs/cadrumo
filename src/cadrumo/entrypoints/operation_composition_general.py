@@ -197,12 +197,16 @@ def compose_actividad_asset_registered_operations(inputs: OperationCompositionIn
         build_activity_asset_correct_registration,
         build_activity_asset_create_definition,
         build_activity_asset_create_registration,
+        build_activity_asset_describe_definition,
+        build_activity_asset_describe_registration,
         build_activity_asset_filing_handoff_definition,
         build_activity_asset_filing_handoff_registration,
         build_activity_asset_forecast_definition,
         build_activity_asset_forecast_registration,
         build_activity_asset_inspect_definition,
         build_activity_asset_inspect_registration,
+        build_activity_asset_read_definitions,
+        build_activity_asset_read_registration,
     )
     from .actividad_asset_composition import build_activity_asset_operation_ports
 
@@ -214,8 +218,10 @@ def compose_actividad_asset_registered_operations(inputs: OperationCompositionIn
     forecast = build_activity_asset_forecast_definition(ports)
     claim = build_activity_asset_claim_definition(ports)
     handoff = build_activity_asset_filing_handoff_definition(ports)
+    describe = build_activity_asset_describe_definition(ports)
+    reads = build_activity_asset_read_definitions(ports)
     return built(
-        (create, inspect, correct, forecast, claim, handoff),
+        (create, inspect, correct, forecast, claim, handoff, describe, *reads),
         (
             build_activity_asset_create_registration(create),
             build_activity_asset_inspect_registration(inspect),
@@ -223,6 +229,8 @@ def compose_actividad_asset_registered_operations(inputs: OperationCompositionIn
             build_activity_asset_forecast_registration(forecast),
             build_activity_asset_claim_registration(claim),
             build_activity_asset_filing_handoff_registration(handoff),
+            build_activity_asset_describe_registration(describe),
+            *(build_activity_asset_read_registration(definition) for definition in reads),
         ),
     )
 

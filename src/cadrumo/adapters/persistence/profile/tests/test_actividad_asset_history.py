@@ -206,7 +206,7 @@ def test_cas_retry_refuses_a_correction_that_lost_the_revision_race(
 
         monkeypatch.setattr(repository._storage._objects, "save_many", save_after_interloper)
 
-        with pytest.raises(ActividadAssetClaimConflictError, match="current revision"):
+        with pytest.raises(ActividadAssetClaimConflictError, match="correction_must_supersede_current"):
             repository.append_revision(stale)
 
         reopened = repository.load()
@@ -242,7 +242,7 @@ def test_cas_retry_refuses_a_claim_forecasted_against_stale_history(
 
         monkeypatch.setattr(repository._storage._objects, "save_many", save_after_interloper)
 
-        with pytest.raises(ActividadAssetClaimConflictError, match="changed after the forecast"):
+        with pytest.raises(ActividadAssetClaimConflictError, match="history_changed_after_forecast"):
             repository.record_claim(stale_forecast_claim, expected_history=expected_history)
 
         assert interloper_written is True
@@ -279,7 +279,7 @@ def test_cas_rechecks_effective_free_depreciation_cap_after_an_independent_write
 
         monkeypatch.setattr(repository._storage, "mutate", mutate_after_interloper)
 
-        with pytest.raises(ActividadAssetClaimConflictError, match="annual cap"):
+        with pytest.raises(ActividadAssetClaimConflictError, match="free_claims_exceed_annual_cap"):
             repository.record_claim(first)
 
         reopened = repository.load()
@@ -320,7 +320,7 @@ def test_cas_rechecks_the_remaining_basis_after_an_independent_write(
         monkeypatch.setattr(repository._storage, "mutate", mutate_after_interloper)
 
         # 600 + 600 would reach 1,200 of a 1,000 amortizable basis.
-        with pytest.raises(ActividadAssetClaimConflictError, match="lawful amortizable basis"):
+        with pytest.raises(ActividadAssetClaimConflictError, match="claims_exceed_amortizable_basis"):
             repository.record_claim(second_quarter)
 
         reopened = repository.load()

@@ -30,19 +30,29 @@ cli:
         update_help: Cambia los datos indicados de una cuenta propia; un IBAN o bloque
           bancario nuevo solo llega por el canal secreto.
       actividad_asset:
+        acquisition_candidates_help: Lista los pagos del libro que un elemento podría
+          citar como adquisición.
         claim_help: Registra una previsión como amortización; repetirla de forma idéntica
           devuelve el registro existente.
         correct_help: Añade una revisión que sustituye a la revisión vigente del activo
           (JSON).
         create_help: Crea un activo a partir de su primera revisión inmutable (JSON).
-        filing_handoff_help: Muestra las amortizaciones registradas proyectadas en
-          el Modelo 100 y, de forma acumulada, en el Modelo 130.
+        describe_help: Registra el nombre, el número de serie y los datos de registro
+          de un elemento; ningún cálculo cambia.
+        filing_handoff_help: Muestra los cargos registrados proyectados al Modelo
+          100 y el devengo proyectado al Modelo 130.
         forecast_help: Calcula, sin registrarla, la amortización que admite la elección
           de la revisión para un intervalo.
+        form_options_help: Muestra los métodos y grupos de tabla que el registro admite
+          para un tipo de elemento y ejercicio.
         group_help: 'Registro de activos de actividades económicas del IRPF: revisiones
           inmutables, previsiones de amortización y amortizaciones registradas (LIS
           art. 12).'
         inspect_help: Muestra la cadena completa de revisiones de un activo.
+        list_help: Lista los elementos del registro con base, acumulado, pendiente
+          y avisos.
+        plan_help: Muestra el plan de amortización de un elemento, año por año.
+        timeline_help: Muestra el historial de un elemento en orden.
       bienes_inversion:
         acquisition_year_help: Año de adquisición del bien.
         art108_help: Si el bien tiene la consideración de bien de inversión según
@@ -1458,9 +1468,13 @@ cli:
           de auditoría)
         amend_wizard_reason_required: Se requiere un motivo para el registro de auditoría
           de la corrección.
-        amend_wizard_select_prompt: "Registrada como presentada: %{modelo} %{year}
-          %{period}, valores actuales:\n%{summary}\n¿Qué números de casilla cambiaron?
-          (separados por comas o espacios, en blanco para ninguno)"
+        amend_wizard_select_prompt: 'Registrada como presentada: %{modelo} %{year}
+          %{period}, valores actuales:
+
+          %{summary}
+
+          ¿Qué números de casilla cambiaron? (separados por comas o espacios, en blanco
+          para ninguno)'
         amend_wizard_unknown_casilla: La casilla %{token} no forma parte de la declaración
           %{modelo} %{year} %{period} registrada como presentada; elige una de las
           casillas listadas.
@@ -3638,9 +3652,9 @@ cli:
         heading: Configuración y diagnóstico del contribuyente.
         paragraph_durable_state: El estado duradero (perfil, autenticación, registros)
           persiste entre sesiones.
-        paragraph_storage_isolation: Para aislar el estado, defina CADRUMO_LOCAL_STORAGE_ROOT
-          y CADRUMO_SECRET_STORE_DIR. Pase secretos de perfil con --profile-secrets-stdin
-          o --profile-secrets-fd, y secretos del comando con --secrets-stdin o --secrets-fd.
+        paragraph_storage_isolation: Para aislar el estado, defina CADRUMO_STORAGE_ROOT.
+          Pase secretos de perfil con --profile-secrets-stdin o --profile-secrets-fd,
+          y secretos del comando con --secrets-stdin o --secrets-fd.
         profile_archive: Copia el perfil a un archivo sellado, o restaura uno.
         profile_delete: Elimina un perfil almacenado localmente.
         profile_history: Inspecciona el historial append-only de eventos del perfil.

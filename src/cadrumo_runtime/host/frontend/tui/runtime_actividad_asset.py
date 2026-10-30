@@ -11,29 +11,54 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from cadrumo.application.actividad_asset.activity_asset_contracts import (
+    ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID,
+    ActivityAssetAcquisitionCandidatesRequest,
     ActivityAssetAuthorityProvenance,
     ActivityAssetClaimRequest,
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
+    ActivityAssetDescribeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
+    ActivityAssetFormOptionsRequest,
     ActivityAssetInspectRequest,
+    ActivityAssetListRequest,
+    ActivityAssetPlanRequest,
+    ActivityAssetTimelineRequest,
 )
 from cadrumo.application.actividad_asset.activity_asset_projections import (
+    ActivityAssetAcquisitionCandidatesProjection,
     ActivityAssetClaimProjection,
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
+    ActivityAssetDescribeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
+    ActivityAssetFormOptionsProjection,
     ActivityAssetInspectProjection,
+    ActivityAssetListProjection,
+    ActivityAssetPlanProjection,
+    ActivityAssetTimelineProjection,
 )
-from cadrumo.application.actividad_asset.history import ActivityAssetHistoryClaimResult
+from cadrumo.application.actividad_asset.activity_asset_read_models import (
+    ActivityAssetAcquisitionCandidate,
+    ActivityAssetFormOptionsView,
+    ActivityAssetListRow,
+    ActivityAssetPlanRow,
+    ActivityAssetTimelineEvent,
+)
+from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operation_dtos import (
     ActivityAssetHistorySnapshot,
     ActivityAssetRevisionSnapshot,
@@ -44,6 +69,8 @@ from cadrumo.application.operations.frontend_projection import OperationPublicPr
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
+from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
+from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from cadrumo.domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from cadrumo.entrypoints.tui.ledger.actividad_asset import ActivityAssetTuiActionsV1
 from cadrumo.entrypoints.tui.ledger.models_actividad_asset import (
@@ -66,6 +93,12 @@ type _ActivityAssetProjection = (
     | ActivityAssetForecastProjection
     | ActivityAssetClaimProjection
     | ActivityAssetFilingHandoffProjection
+    | ActivityAssetDescribeProjection
+    | ActivityAssetListProjection
+    | ActivityAssetPlanProjection
+    | ActivityAssetTimelineProjection
+    | ActivityAssetFormOptionsProjection
+    | ActivityAssetAcquisitionCandidatesProjection
 )
 
 
@@ -210,6 +243,7 @@ class RuntimeActivityAssetTuiActionsV1:
             ActivityAssetCreateRequest(
                 profile_id=self._profile_id,
                 revision=ActivityAssetRevisionSnapshot.from_domain(request.revision),
+                descriptor=request.descriptor,
             ),
             definition_id=ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetCreateProjection,
@@ -243,6 +277,7 @@ class RuntimeActivityAssetTuiActionsV1:
             ActivityAssetCorrectRequest(
                 profile_id=self._profile_id,
                 revision=ActivityAssetRevisionSnapshot.from_domain(request.revision),
+                superseding_claims=request.superseding_claims,
             ),
             definition_id=ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetCorrectProjection,
@@ -307,7 +342,7 @@ class RuntimeActivityAssetTuiActionsV1:
             expected_claim = AmortizationClaim.from_schedule(
                 request.forecast,
                 asset_kind=revision.asset_kind,
-                creating_operation=request.creating_operation,
+                creating_operation=ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
                 supersedes_claim_id=request.supersedes_claim_id,
             )
             if projection.claim_id != expected_claim.claim_id or claim_result.claim != expected_claim:
@@ -318,7 +353,6 @@ class RuntimeActivityAssetTuiActionsV1:
             ActivityAssetClaimRequest(
                 profile_id=self._profile_id,
                 forecast=ScheduledAmortizationChargeSnapshot.from_domain(request.forecast),
-                creating_operation=request.creating_operation,
                 supersedes_claim_id=request.supersedes_claim_id,
             ),
             definition_id=ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
@@ -347,6 +381,105 @@ class RuntimeActivityAssetTuiActionsV1:
             ),
             definition_id=ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetFilingHandoffProjection,
+            success_effect=OperationEffect.NONE,
+            correlate=correlate,
+        )
+
+    def describe(self, asset_id: str, descriptor: ActivityAssetDescriptorFacts) -> ActivityAssetHistory:
+        """Append an element's descriptive facts and return the persisted history."""
+
+        def correlate(projection: ActivityAssetDescribeProjection) -> ActivityAssetHistory:
+            if projection.history is None:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return projection.history.to_domain()
+
+        return self._call(
+            ActivityAssetDescribeRequest(profile_id=self._profile_id, asset_id=asset_id, descriptor=descriptor),
+            definition_id=ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+            result_type=ActivityAssetDescribeProjection,
+            success_effect=OperationEffect.UPDATED,
+            correlate=correlate,
+        )
+
+    def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
+        """Summarise the register."""
+
+        def correlate(projection: ActivityAssetListProjection) -> tuple[ActivityAssetListRow, ...]:
+            if projection.rows is None:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return projection.rows
+
+        return self._call(
+            ActivityAssetListRequest(profile_id=self._profile_id),
+            definition_id=ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
+            result_type=ActivityAssetListProjection,
+            success_effect=OperationEffect.NONE,
+            correlate=correlate,
+        )
+
+    def plan(self, asset_id: str) -> tuple[ActivityAssetPlanRow, ...]:
+        """Read one element's amortization plan."""
+
+        def correlate(projection: ActivityAssetPlanProjection) -> tuple[ActivityAssetPlanRow, ...]:
+            if projection.rows is None or projection.asset_id != asset_id:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return projection.rows
+
+        return self._call(
+            ActivityAssetPlanRequest(profile_id=self._profile_id, asset_id=asset_id),
+            definition_id=ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
+            result_type=ActivityAssetPlanProjection,
+            success_effect=OperationEffect.NONE,
+            correlate=correlate,
+        )
+
+    def timeline(self, asset_id: str) -> tuple[ActivityAssetTimelineEvent, ...]:
+        """Read one element's ordered history."""
+
+        def correlate(projection: ActivityAssetTimelineProjection) -> tuple[ActivityAssetTimelineEvent, ...]:
+            if projection.events is None or projection.asset_id != asset_id:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return projection.events
+
+        return self._call(
+            ActivityAssetTimelineRequest(profile_id=self._profile_id, asset_id=asset_id),
+            definition_id=ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID,
+            result_type=ActivityAssetTimelineProjection,
+            success_effect=OperationEffect.NONE,
+            correlate=correlate,
+        )
+
+    def form_options(self, asset_kind: AssetKind, tax_year: int) -> ActivityAssetFormOptionsView:
+        """Read what the registry admits for an asset kind and tax year."""
+
+        def correlate(projection: ActivityAssetFormOptionsProjection) -> ActivityAssetFormOptionsView:
+            options = projection.options
+            if options is None or options.asset_kind is not asset_kind or options.tax_year != tax_year:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return options
+
+        return self._call(
+            ActivityAssetFormOptionsRequest(profile_id=self._profile_id, asset_kind=asset_kind, tax_year=tax_year),
+            definition_id=ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
+            result_type=ActivityAssetFormOptionsProjection,
+            success_effect=OperationEffect.NONE,
+            correlate=correlate,
+        )
+
+    def acquisition_candidates(self) -> tuple[ActivityAssetAcquisitionCandidate, ...]:
+        """List the ledger payments an element could name as its acquisition."""
+
+        def correlate(
+            projection: ActivityAssetAcquisitionCandidatesProjection,
+        ) -> tuple[ActivityAssetAcquisitionCandidate, ...]:
+            if projection.candidates is None:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return projection.candidates
+
+        return self._call(
+            ActivityAssetAcquisitionCandidatesRequest(profile_id=self._profile_id),
+            definition_id=ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID,
+            result_type=ActivityAssetAcquisitionCandidatesProjection,
             success_effect=OperationEffect.NONE,
             correlate=correlate,
         )

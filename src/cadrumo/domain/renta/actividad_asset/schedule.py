@@ -36,7 +36,12 @@ from .election import (
     require_euro_cents,
     require_free_depreciation_facts,
 )
-from .errors import ActividadAssetIncompleteError, ActividadAssetUnsupportedError, ActividadAssetValidationError
+from .errors import (
+    ActividadAssetIncompleteError,
+    ActividadAssetPeriodElapsedError,
+    ActividadAssetUnsupportedError,
+    ActividadAssetValidationError,
+)
 from .lifecycle import ActivityAssetRevision, AssetKind, OpeningHistoryStatus
 
 _RATE_METHODS: frozenset[AmortizationMethod] = frozenset(
@@ -65,12 +70,15 @@ class AssetScheduleHistory(BaseModel):
     ``same_incentive_investment_of_other_assets`` is the investment every
     other asset's current revision places under the same workforce-conditioned
     incentive and entry year, which shares one investment cap with this asset.
+    ``accumulated_after_tax_year`` is what later years have already claimed: it
+    leaves this year's charge unchanged except by capping it at the lawful basis.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     accumulated_before_tax_year: Decimal = Decimal("0")
     accumulated_in_tax_year: Decimal = Decimal("0")
+    accumulated_after_tax_year: Decimal = Decimal("0")
     taxpayer_low_value_claimed_in_tax_year: Decimal = Decimal("0")
     same_incentive_investment_of_other_assets: Decimal = Decimal("0")
     election_fingerprints_before_tax_year: tuple[str, ...] = ()
@@ -79,6 +87,7 @@ class AssetScheduleHistory(BaseModel):
     @field_validator(
         "accumulated_before_tax_year",
         "accumulated_in_tax_year",
+        "accumulated_after_tax_year",
         "taxpayer_low_value_claimed_in_tax_year",
         "same_incentive_investment_of_other_assets",
     )
@@ -102,6 +111,7 @@ class ScheduleAuthority(BaseModel):
     source_reference: str = Field(min_length=1, max_length=2048)
     annual_rate: Decimal | None = None
     useful_life_ends_on: date | None = None
+    maximum_period_ends_on: date | None = None
     sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=100)
     digit_order: DigitOrder | None = None
     plan_annual_amount: Decimal | None = None
@@ -179,6 +189,7 @@ class ScheduledAmortizationCharge(BaseModel):
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     method: AmortizationMethod = AmortizationMethod.LINEAR
+    annual_rate: Decimal | None = None
     free_depreciation_election_reference: ElectionReference | None = None
     free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: Decimal | None = None
@@ -283,11 +294,12 @@ def schedule_charge(
         authority_generation=authority.authority_generation,
         source_reference=authority.source_reference,
         method=authority.method,
+        annual_rate=authority.annual_rate,
         free_depreciation_election_reference=low_value.election_reference if low_value is not None else None,
         free_depreciation_new_material_evidence_reference=(
             low_value.new_material_evidence_reference if low_value is not None else None
         ),
-        free_depreciation_unit_acquisition_value=low_value.unit_acquisition_value if low_value is not None else None,
+        free_depreciation_unit_acquisition_value=(revision.basis.acquisition_cost() if low_value is not None else None),
         free_depreciation_annual_cap=authority.free_depreciation_annual_cap,
     )
 
@@ -315,20 +327,26 @@ def _validate_charge_scope(
     requested_free_amount: Decimal | None,
 ) -> None:
     if authority.asset_kind is not revision.asset_kind:
-        raise ActividadAssetValidationError("schedule authority asset kind does not match asset revision")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.schedule_authority_kind_mismatch"
+        )
     if authority.election_fingerprint != revision.amortization.fingerprint:
-        raise ActividadAssetValidationError("schedule authority was resolved for a different amortization election")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.schedule_authority_election_mismatch"
+        )
     if revision.opening_history.status is OpeningHistoryStatus.MISSING:
-        raise ActividadAssetIncompleteError("opening amortization history is missing")
+        raise ActividadAssetIncompleteError(translated_message="ledger.actividad_asset.errors.opening_history_missing")
     if covered_until <= covered_from:
-        raise ActividadAssetValidationError("covered interval must be half-open and non-empty")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.covered_interval_empty")
     require_method_continuity(authority.method, authority.election_fingerprint, history)
     require_opening_method(revision, authority.method)
     _require_free_amount_shape(authority.method, requested_free_amount)
     year_start = date(authority.tax_year, 1, 1)
     year_end = date(authority.tax_year + 1, 1, 1)
     if not year_start <= covered_from < covered_until <= year_end:
-        raise ActividadAssetValidationError("covered interval must stay inside the authority's tax year")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.covered_interval_outside_tax_year"
+        )
 
 
 def _charge_bases(
@@ -337,12 +355,16 @@ def _charge_bases(
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
     opening_amount = revision.opening_history.accumulated_amount
     if opening_amount is None:  # defensive: status validation proves unreachable
-        raise ActividadAssetIncompleteError("known opening amortization history lacks an amount")
+        raise ActividadAssetIncompleteError(
+            translated_message="ledger.actividad_asset.errors.opening_history_amount_missing"
+        )
     amortizable_basis = revision.amortizable_basis()
     pending_at_year_start = amortizable_basis - opening_amount - history.accumulated_before_tax_year
-    remaining_base = pending_at_year_start - history.accumulated_in_tax_year
+    remaining_base = pending_at_year_start - history.accumulated_in_tax_year - history.accumulated_after_tax_year
     if remaining_base < Decimal("0"):
-        raise ActividadAssetValidationError("opening and effective claims exceed the lawful amortizable basis")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.claims_exceed_amortizable_basis"
+        )
     return opening_amount, amortizable_basis, pending_at_year_start, remaining_base
 
 
@@ -356,11 +378,19 @@ def _charge_interval(
     year_end: date,
 ) -> tuple[date, date]:
     window_start = max(revision.in_service_date, year_start)
-    window_end = min(revision.out_of_service_date or year_end, year_end, _amortization_end(revision, authority))
+    amortization_end = _amortization_end(revision, authority)
+    window_end = min(revision.out_of_service_date or year_end, year_end, amortization_end)
     interval_start = max(covered_from, window_start)
     interval_end = min(covered_until, window_end)
     if interval_end <= interval_start:
-        raise ActividadAssetUnsupportedError("covered interval has no amortizable in-service days in the tax year")
+        if interval_start >= amortization_end:
+            raise ActividadAssetPeriodElapsedError(
+                context={"ended_on": amortization_end.isoformat()},
+                translated_message="ledger.actividad_asset.errors.amortization_period_elapsed",
+            )
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.covered_interval_without_service_days"
+        )
     return interval_start, interval_end
 
 
@@ -369,22 +399,36 @@ def require_method_continuity(
     election_fingerprint: str,
     history: AssetScheduleHistory,
 ) -> None:
-    """Refuse a change of method inside a tax year or into a from-start method.
+    """Refuse a change of method inside a tax year, into a from-start method, or behind a later claim.
 
     Forecasts and the claim write both apply this one rule, so a claim can
-    never be persisted under an election its forecast would have refused.
+    never be persisted under an election its forecast would have refused.  A
+    missing earlier year can be claimed behind a later one only where its charge
+    does not depend on what those later claims consumed: constant percentage and
+    sum of digits follow the pending value, and free depreciation not taken in
+    its own year cannot be taken for that year afterwards.
     """
     current = election_fingerprint
+    if history.accumulated_after_tax_year > Decimal("0"):
+        if method in _FROM_START_METHODS:
+            raise ActividadAssetUnsupportedError(
+                context={"method": method.value},
+                translated_message="ledger.actividad_asset.errors.earlier_year_depends_on_pending_value",
+            )
+        if method in FREE_AMOUNT_METHODS:
+            raise ActividadAssetUnsupportedError(
+                context={"method": method.value},
+                translated_message="ledger.actividad_asset.errors.earlier_year_free_depreciation_not_taken",
+            )
     if any(fingerprint != current for fingerprint in history.election_fingerprints_in_tax_year):
         raise ActividadAssetValidationError(
-            "an asset's amortization election can change only at a tax-year boundary",
+            translated_message="ledger.actividad_asset.errors.election_changes_only_at_year_boundary"
         )
     if method in _FROM_START_METHODS and any(
         fingerprint != current for fingerprint in history.election_fingerprints_before_tax_year
     ):
         raise ActividadAssetUnsupportedError(
-            "constant percentage and sum of digits run from the start of amortization (RIS arts. 5.1 and 6.1); "
-            "an asset already charged under another election cannot adopt them",
+            translated_message="ledger.actividad_asset.errors.from_start_method_after_other_election"
         )
 
 
@@ -400,8 +444,7 @@ def require_opening_method(revision: ActivityAssetRevision, method: Amortization
         return
     if opening.amortization_method is not method:
         raise ActividadAssetUnsupportedError(
-            "a non-zero opening amount must attest the same from-start method before constant percentage or "
-            "sum of digits can continue it (RIS arts. 5.1 and 6.1)",
+            translated_message="ledger.actividad_asset.errors.opening_amount_must_attest_from_start_method"
         )
 
 
@@ -420,22 +463,24 @@ def parse_requested_free_amount(raw: str | None) -> Decimal | None:
         return None
     parsed = try_parse_canonical_decimal(raw)
     if parsed is None:
-        raise ActividadAssetValidationError("free-depreciation amount must be a decimal euro amount")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.free_amount_not_decimal")
     return parsed
 
 
 def _require_free_amount_shape(method: AmortizationMethod, requested_free_amount: Decimal | None) -> None:
     if method in FREE_AMOUNT_METHODS:
         if requested_free_amount is None:
-            raise ActividadAssetIncompleteError("a free-depreciation method requires an elected amount")
+            raise ActividadAssetIncompleteError(translated_message="ledger.actividad_asset.errors.free_amount_required")
         if (
             not requested_free_amount.is_finite()
             or requested_free_amount <= Decimal("0")
             or requested_free_amount != round_to_cents(requested_free_amount)
         ):
-            raise ActividadAssetValidationError("elected free-depreciation amount must be positive euro cents")
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.free_amount_not_positive_cents"
+            )
     elif requested_free_amount is not None:
-        raise ActividadAssetValidationError("only a free-depreciation method accepts an elected amount")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.free_amount_not_accepted")
 
 
 def _amortization_end(revision: ActivityAssetRevision, authority: ScheduleAuthority) -> date:
@@ -443,10 +488,12 @@ def _amortization_end(revision: ActivityAssetRevision, authority: ScheduleAuthor
     if authority.method is AmortizationMethod.SUM_OF_DIGITS:
         period = authority.sum_of_digits_period_years
         if period is None:  # defensive: authority validation proves unreachable
-            raise ActividadAssetValidationError("sum-of-digits authority lacks its period")
+            raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
         return add_years(revision.in_service_date, period)
     if authority.useful_life_ends_on is not None:
         return authority.useful_life_ends_on
+    if authority.maximum_period_ends_on is not None:
+        return authority.maximum_period_ends_on
     return date.max
 
 
@@ -469,13 +516,16 @@ def _method_amount(
         return _approved_plan_amount(context)
     if method in _RATE_METHODS:
         return _linear_amount(context)
-    raise ActividadAssetUnsupportedError(f"{method.value} has no enrolled schedule arithmetic")
+    raise ActividadAssetUnsupportedError(
+        context={"method": method.value},
+        translated_message="ledger.actividad_asset.errors.method_without_schedule_arithmetic",
+    )
 
 
 def _annual_rate(context: _ChargeContext) -> Decimal:
     rate = context.authority.annual_rate
     if rate is None:  # defensive: authority validation proves unreachable
-        raise ActividadAssetValidationError(f"{context.authority.method.value} authority lacks an annual rate")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
     return rate
 
 
@@ -508,12 +558,12 @@ def _constant_percentage_amount(context: _ChargeContext) -> Decimal:
     """
     life_end = context.authority.useful_life_ends_on
     if life_end is None:  # defensive: authority validation proves unreachable
-        raise ActividadAssetValidationError("constant-percentage authority lacks its useful-life conclusion")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
     if life_end <= context.year_end:
         final_start = max(context.revision.in_service_date, context.year_start)
         final_days = Decimal((life_end - final_start).days)
         if final_days <= Decimal("0"):  # defensive: a non-empty interval proves a positive span
-            raise ActividadAssetValidationError("final constant-percentage window has no days")
+            raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
 
         def cumulative(point: date) -> Decimal:
             return context.pending_at_year_start * Decimal((point - final_start).days) / final_days
@@ -529,9 +579,11 @@ def _approved_plan_amount(context: _ChargeContext) -> Decimal:
     plan_total = context.authority.plan_total
     annual_amount = context.authority.plan_annual_amount
     if plan_total is None or annual_amount is None:  # defensive: authority validation proves unreachable
-        raise ActividadAssetValidationError("approved-plan authority lacks its distribution")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
     if plan_total > context.amortizable_basis:
-        raise ActividadAssetValidationError("approved plan distributes more than the amortizable basis")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.approved_plan_exceeds_basis"
+        )
     window_start = max(context.revision.in_service_date, context.year_start)
     whole_days = Decimal((context.year_end - window_start).days)
 
@@ -558,7 +610,7 @@ def _sum_of_digits_cumulative(context: _ChargeContext, point: date) -> Decimal:
     period = context.authority.sum_of_digits_period_years
     order = context.authority.digit_order
     if period is None or order is None:  # defensive: authority validation proves unreachable
-        raise ActividadAssetValidationError("sum-of-digits authority lacks its period or order")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
     digit_sum = Decimal(period * (period + 1) // 2)
     in_service = context.revision.in_service_date
     total = Decimal("0")
@@ -578,7 +630,7 @@ def _useful_life_cumulative(context: _ChargeContext, point: date) -> Decimal:
     """Accumulate a definite-life intangible straight-line by days."""
     life_end = context.authority.useful_life_ends_on
     if life_end is None:  # defensive: authority validation proves unreachable
-        raise ActividadAssetValidationError("definite-life authority lacks its useful-life end")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
     in_service = context.revision.in_service_date
     life_days = Decimal((life_end - in_service).days)
     elapsed = Decimal((min(point, life_end) - in_service).days)
@@ -592,9 +644,11 @@ def _free_amount(
     requested_free_amount: Decimal | None,
 ) -> Decimal:
     if requested_free_amount is None:  # defensive: shape validation proves unreachable
-        raise ActividadAssetIncompleteError("a free-depreciation method requires an elected amount")
+        raise ActividadAssetIncompleteError(translated_message="ledger.actividad_asset.errors.free_amount_required")
     if requested_free_amount > context.remaining_base:
-        raise ActividadAssetValidationError("elected free depreciation exceeds the asset's remaining lawful basis")
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.free_amount_exceeds_remaining_basis"
+        )
     if context.authority.method is AmortizationMethod.LOW_VALUE_FREE:
         _require_low_value_election(context, history=history, requested_free_amount=requested_free_amount)
     if context.authority.method in WORKFORCE_CONDITIONED_METHODS:
@@ -612,13 +666,17 @@ def _require_investment_within_cap(context: _ChargeContext, *, history: AssetSch
     """
     investment_cap = context.authority.free_depreciation_investment_cap
     if investment_cap is None:  # defensive: authority validation proves unreachable
-        raise ActividadAssetValidationError("workforce-conditioned authority lacks its investment cap")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
     investment = history.same_incentive_investment_of_other_assets + context.revision.basis.deductible_basis()
     if investment > investment_cap:
         raise ActividadAssetUnsupportedError(
-            f"the investment entering service in {context.revision.in_service_date.year} under "
-            f"{context.authority.method.value} would reach {investment}, above the investment cap of "
-            f"{investment_cap}; an asset is not split between free and ordinary amortization",
+            context={
+                "entry_year": context.revision.in_service_date.year,
+                "method": context.authority.method.value,
+                "investment": str(investment),
+                "investment_cap": str(investment_cap),
+            },
+            translated_message="ledger.actividad_asset.errors.investment_cap_exceeded",
         )
 
 
@@ -634,18 +692,23 @@ def _require_low_value_election(
     threshold = authority.free_depreciation_unit_threshold
     annual_cap = authority.free_depreciation_annual_cap
     if election is None or threshold is None or annual_cap is None:  # defensive: authority validation proves this
-        raise ActividadAssetValidationError("free-depreciation authority is incomplete")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
     if context.revision.in_service_date.year != authority.tax_year:
         raise ActividadAssetUnsupportedError(
-            "low-value free depreciation requires a new asset placed in service in tax year",
+            translated_message="ledger.actividad_asset.errors.low_value_requires_entry_year"
         )
-    if election.unit_acquisition_value > threshold:
-        raise ActividadAssetUnsupportedError("asset unit acquisition value exceeds the enrolled low-value threshold")
-    if election.unit_acquisition_value < context.revision.basis.deductible_basis():
-        raise ActividadAssetValidationError("free-depreciation unit value cannot be below the allocated asset basis")
+    unit_value = context.revision.basis.acquisition_cost()
+    if unit_value != round_to_cents(unit_value):
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.low_value_unit_value_not_cents"
+        )
+    if unit_value > threshold:
+        raise ActividadAssetUnsupportedError(
+            translated_message="ledger.actividad_asset.errors.low_value_threshold_exceeded"
+        )
     if history.taxpayer_low_value_claimed_in_tax_year + requested_free_amount > annual_cap:
         raise ActividadAssetUnsupportedError(
-            "free-depreciation election exceeds the annual cap; submit an explicit compliant election amount",
+            translated_message="ledger.actividad_asset.errors.free_amount_exceeds_annual_cap"
         )
 
 
@@ -663,7 +726,7 @@ def add_fractional_years(start: date, years: Decimal) -> date:
     the following life year's days, rounded half-up to a whole day.
     """
     if not years.is_finite() or years <= Decimal("0"):
-        raise ActividadAssetValidationError("a useful life must be a positive finite number of years")
+        raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.useful_life_not_positive")
     whole = int(years)
     anniversary = add_years(start, whole)
     following = add_years(start, whole + 1)

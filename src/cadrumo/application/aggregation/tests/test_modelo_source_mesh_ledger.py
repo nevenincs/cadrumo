@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
@@ -133,10 +133,18 @@ class _EmptyActivityAssetHistoryRepository:
         del revision
         raise AssertionError("empty resolver repository is read-only")
 
+    def apply(self, mutation: Callable[[ActivityAssetHistory], ActivityAssetHistory]) -> ActivityAssetHistory:
+        del mutation
+        raise AssertionError("empty resolver repository is read-only")
+
     def record_claim(
-        self, claim: AmortizationClaim, *, expected_history: ActivityAssetHistory | None = None
+        self,
+        claim: AmortizationClaim,
+        *,
+        expected_history: ActivityAssetHistory | None = None,
+        recorded_at: datetime | None = None,
     ) -> ActivityAssetHistoryClaimResult:
-        del claim, expected_history
+        del claim, expected_history, recorded_at
         raise AssertionError("empty resolver repository is read-only")
 
 

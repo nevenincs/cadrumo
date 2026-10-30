@@ -7,26 +7,30 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from ....application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
 from ....core.filing_year import FilingYear
 from ....core.hex import Hex64Str
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 
 
 class ActivityAssetCreationRequestV1(BaseModel):
-    """Request to persist an initial immutable asset revision."""
+    """Request to persist an initial immutable asset revision with its descriptive facts."""
 
     model_config = STRICT_FROZEN_CONFIG
     revision: ActivityAssetRevision
+    descriptor: ActivityAssetDescriptorFacts
 
 
 class ActivityAssetCorrectionRequestV1(BaseModel):
-    """Request to append one superseding asset revision."""
+    """Request to append one superseding asset revision and the claims it replaces."""
 
     model_config = STRICT_FROZEN_CONFIG
     revision: ActivityAssetRevision
+    superseding_claims: tuple[ActivityAssetSupersedingClaim, ...] = ()
 
 
 class ActivityAssetForecastRequestV1(BaseModel):
@@ -45,7 +49,6 @@ class ActivityAssetClaimRequestV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
     forecast: ScheduledAmortizationCharge
-    creating_operation: str = Field(min_length=1, max_length=256)
     supersedes_claim_id: Hex64Str | None = None
 
 

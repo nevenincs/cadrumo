@@ -37,47 +37,78 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .activity_asset_contracts import (
+    ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_REFUSAL_CODES,
+    ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID,
+    ActivityAssetAcquisitionCandidatesRequest,
     ActivityAssetClaimRequest,
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
+    ActivityAssetDescribeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
+    ActivityAssetFormOptionsRequest,
     ActivityAssetInspectRequest,
+    ActivityAssetListRequest,
     ActivityAssetOperationPortsFactory,
+    ActivityAssetPlanRequest,
     ActivityAssetRefusal,
+    ActivityAssetTimelineRequest,
 )
 from .activity_asset_executors import (
+    ActivityAssetAcquisitionCandidatesExecutor,
     ActivityAssetClaimExecutor,
     ActivityAssetCorrectExecutor,
     ActivityAssetCreateExecutor,
+    ActivityAssetDescribeExecutor,
     ActivityAssetFilingHandoffExecutor,
     ActivityAssetForecastExecutor,
+    ActivityAssetFormOptionsExecutor,
     ActivityAssetInspectExecutor,
+    ActivityAssetListExecutor,
+    ActivityAssetPlanExecutor,
+    ActivityAssetTimelineExecutor,
 )
 from .activity_asset_projections import (
+    ActivityAssetAcquisitionCandidatesProjection,
     ActivityAssetClaimProjection,
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
+    ActivityAssetDescribeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
+    ActivityAssetFormOptionsProjection,
     ActivityAssetInspectProjection,
+    ActivityAssetListProjection,
+    ActivityAssetPlanProjection,
+    ActivityAssetTimelineProjection,
 )
+from .activity_asset_read_models import project_reason_facts
 from .activity_asset_results import (
+    ActivityAssetAcquisitionCandidatesResult,
     ActivityAssetClaimResult,
     ActivityAssetCorrectResult,
     ActivityAssetCreateResult,
+    ActivityAssetDescribeResult,
     ActivityAssetFilingHandoffResult,
     ActivityAssetForecastResult,
+    ActivityAssetFormOptionsResult,
     ActivityAssetInspectResult,
+    ActivityAssetListResult,
     ActivityAssetOperationResult,
+    ActivityAssetPlanResult,
     ActivityAssetRefusalResult,
+    ActivityAssetTimelineResult,
 )
 from .operation_dtos import (
     ActivityAssetFilingHandoffSnapshot,
@@ -93,6 +124,12 @@ type _ActivityAssetRequest = (
     | ActivityAssetForecastRequest
     | ActivityAssetClaimRequest
     | ActivityAssetFilingHandoffRequest
+    | ActivityAssetDescribeRequest
+    | ActivityAssetListRequest
+    | ActivityAssetPlanRequest
+    | ActivityAssetTimelineRequest
+    | ActivityAssetFormOptionsRequest
+    | ActivityAssetAcquisitionCandidatesRequest
 )
 
 
@@ -131,6 +168,15 @@ def resolve_activity_asset_access(
         ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID: (ActivityAssetForecastRequest, False),
         ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID: (ActivityAssetClaimRequest, True),
         ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID: (ActivityAssetFilingHandoffRequest, False),
+        ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID: (ActivityAssetDescribeRequest, True),
+        ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID: (ActivityAssetListRequest, False),
+        ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID: (ActivityAssetPlanRequest, False),
+        ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID: (ActivityAssetTimelineRequest, False),
+        ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID: (ActivityAssetFormOptionsRequest, False),
+        ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID: (
+            ActivityAssetAcquisitionCandidatesRequest,
+            False,
+        ),
     }
     target = targets.get(request.definition_id)
     if target is None:
@@ -243,6 +289,8 @@ def _project_refusal(refusal: ActivityAssetRefusalResult | None) -> ActivityAsse
             else None
         ),
         accelerated_da18=refusal.accelerated_da18,
+        reason_key=refusal.reason_key,
+        reason_facts=project_reason_facts(refusal.reason_facts),
     )
 
 
@@ -390,6 +438,142 @@ def _project_filing_handoff(
             if private.filing_handoff is not None
             else None
         ),
+    )
+
+
+def _project_describe(result: BaseModel, receipt: OperationTerminalReceipt, /) -> ActivityAssetDescribeProjection:
+    private = _private_result(result, ActivityAssetDescribeResult)
+    _verify_private_receipt(
+        private,
+        receipt,
+        definition_id=ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+        success_effect=OperationEffect.UPDATED,
+    )
+    return ActivityAssetDescribeProjection(
+        profile_id=private.profile_id,
+        authority=private.authority,
+        outcome=private.outcome,
+        refusal=_project_refusal(private.refusal),
+        history=ActivityAssetHistorySnapshot.from_domain(private.history) if private.history is not None else None,
+    )
+
+
+def _read_projector[R: ActivityAssetOperationResult, P: BaseModel](
+    definition_id: str,
+    result_type: type[R],
+    projection_type: type[P],
+    fields: tuple[str, ...],
+) -> OperationResultProjector:
+    """Project a read: the private read model is already the public one."""
+
+    def project(result: BaseModel, receipt: OperationTerminalReceipt, /) -> P:
+        private = _private_result(result, result_type)
+        _verify_private_receipt(private, receipt, definition_id=definition_id, success_effect=OperationEffect.NONE)
+        return projection_type(
+            profile_id=private.profile_id,
+            authority=private.authority,
+            outcome=private.outcome,
+            refusal=_project_refusal(private.refusal),
+            **{name: getattr(private, name) for name in fields},
+        )
+
+    return project
+
+
+_READS: dict[str, tuple[type, type[ActivityAssetOperationResult], type[BaseModel], type, tuple[str, ...], bool]] = {
+    ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID: (
+        ActivityAssetListRequest,
+        ActivityAssetListResult,
+        ActivityAssetListProjection,
+        ActivityAssetListExecutor,
+        ("rows",),
+        False,
+    ),
+    ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID: (
+        ActivityAssetPlanRequest,
+        ActivityAssetPlanResult,
+        ActivityAssetPlanProjection,
+        ActivityAssetPlanExecutor,
+        ("asset_id", "rows"),
+        True,
+    ),
+    ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID: (
+        ActivityAssetTimelineRequest,
+        ActivityAssetTimelineResult,
+        ActivityAssetTimelineProjection,
+        ActivityAssetTimelineExecutor,
+        ("asset_id", "events"),
+        True,
+    ),
+    ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID: (
+        ActivityAssetFormOptionsRequest,
+        ActivityAssetFormOptionsResult,
+        ActivityAssetFormOptionsProjection,
+        ActivityAssetFormOptionsExecutor,
+        ("options",),
+        False,
+    ),
+    ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID: (
+        ActivityAssetAcquisitionCandidatesRequest,
+        ActivityAssetAcquisitionCandidatesResult,
+        ActivityAssetAcquisitionCandidatesProjection,
+        ActivityAssetAcquisitionCandidatesExecutor,
+        ("candidates",),
+        False,
+    ),
+}
+"""Each read's request, result, projection, executor, payload fields and whether its request is sensitive."""
+
+
+def build_activity_asset_read_definitions(
+    ports_factory: ActivityAssetOperationPortsFactory,
+) -> tuple[OperationDefinition, ...]:
+    """Build the read-only register, plan, timeline, form-option and candidate operations."""
+    return tuple(
+        _definition(
+            definition_id=definition_id,
+            request_type=request_type,
+            result_type=result_type,
+            executor_type=executor_type,
+            ports_factory=ports_factory,
+            sensitive_input=sensitive,
+            mutation=False,
+        )
+        for definition_id, (request_type, result_type, _, executor_type, _, sensitive) in _READS.items()
+    )
+
+
+def build_activity_asset_read_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    """Register one read's typed request and projection schemas."""
+    _, result_type, projection_type, _, fields, _ = _READS[definition.definition_id]
+    return _registration(
+        definition,
+        projection_type=projection_type,
+        result_projector=_read_projector(definition.definition_id, result_type, projection_type, fields),
+    )
+
+
+def build_activity_asset_describe_definition(ports_factory: ActivityAssetOperationPortsFactory) -> OperationDefinition:
+    """Build the guarded operation that appends one element's descriptive facts."""
+    return _definition(
+        definition_id=ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetDescribeRequest,
+        result_type=ActivityAssetDescribeResult,
+        executor_type=ActivityAssetDescribeExecutor,
+        ports_factory=ports_factory,
+        sensitive_input=True,
+        mutation=True,
+    )
+
+
+def build_activity_asset_describe_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Register the typed describe request and projection schemas."""
+    return _registration(
+        definition,
+        projection_type=ActivityAssetDescribeProjection,
+        result_projector=_project_describe,
     )
 
 
@@ -544,11 +728,15 @@ __all__ = [
     "build_activity_asset_correct_registration",
     "build_activity_asset_create_definition",
     "build_activity_asset_create_registration",
+    "build_activity_asset_describe_definition",
+    "build_activity_asset_describe_registration",
     "build_activity_asset_filing_handoff_definition",
     "build_activity_asset_filing_handoff_registration",
     "build_activity_asset_forecast_definition",
     "build_activity_asset_forecast_registration",
     "build_activity_asset_inspect_definition",
     "build_activity_asset_inspect_registration",
+    "build_activity_asset_read_definitions",
+    "build_activity_asset_read_registration",
     "resolve_activity_asset_access",
 ]

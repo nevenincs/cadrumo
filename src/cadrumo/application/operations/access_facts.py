@@ -46,9 +46,14 @@ _LOCAL_READS: Final = (
     "config.google.status",
     "diagnostics.read",
     "diagnostics.secure-objects.check",
+    "ledger.actividad-asset.acquisition-candidates",
     "ledger.actividad-asset.filing-handoff",
     "ledger.actividad-asset.forecast",
+    "ledger.actividad-asset.form-options",
     "ledger.actividad-asset.inspect",
+    "ledger.actividad-asset.list",
+    "ledger.actividad-asset.plan",
+    "ledger.actividad-asset.timeline",
     # The register listings of bienes de inversión, inventory and prorrata read
     # only, although their definitions permit an update.
     "ledger.bienes_inversion.list",
@@ -182,6 +187,7 @@ _LOCAL_WRITES: Final = (
     "ledger.actividad-asset.claim",
     "ledger.actividad-asset.correct",
     "ledger.actividad-asset.create",
+    "ledger.actividad-asset.describe",
     "ledger.allocate",
     "ledger.archive",
     "ledger.attach",

@@ -30,14 +30,7 @@ _PACKAGES = (
 )
 _SINGLE_FILES = (SRC_DIR / "domain" / "calculations" / "registry" / "actividad_asset_bindings.py",)
 
-# These modules convert next; the exemption leaves with them.
-_NOT_YET_CONVERTED = frozenset(
-    {
-        "schedule.py",
-        "claims.py",
-        "history.py",
-    },
-)
+_NOT_YET_CONVERTED = frozenset[str]()
 
 
 def _class_name(node: ast.expr) -> str | None:

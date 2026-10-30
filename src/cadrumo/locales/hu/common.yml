@@ -4560,6 +4560,10 @@ ledger:
         nem kifizetés.
       allocation_components_missing: Az egész ingatlanra vonatkozó alapból hiányoznak
         a megosztási összetevők.
+      amortization_period_elapsed: Az elem maximális értékcsökkenési időszaka {ended_on}
+        napon lejárt, ezért teljesen leírtnak számít.
+      approved_plan_exceeds_basis: A jóváhagyott terv többet oszt fel, mint a leírható
+        alap.
       approved_plan_not_yet_effective: A jóváhagyott terv csak a benyújtása után záruló
         adóidőszakokban hatályos (RIS 7.8 cikk).
       approved_plan_required: A jóváhagyott terv szerinti választáshoz meg kell adni
@@ -4570,20 +4574,42 @@ ledger:
       asset_made_available_after_in_service: Egy eszköz nem állhat üzembe, mielőtt
         rendelkezésre bocsátották volna.
       asset_not_found: A tevékenységi eszköz nem létezik.
+      authority_incomplete: A módszerhez közzétett hatósági adat hiányos.
       business_use_share_missing: Egy rendes eszközhöz hiányzik az üzleti felhasználási
         arány.
       charging_infrastructure_new_only: A töltőinfrastruktúra szabad értékcsökkenése
         csak új elemekre alkalmazható.
       charging_infrastructure_period_not_enrolled: A töltőinfrastruktúrának olyan
         adóidőszakban kell üzembe állnia, amelyet a LIS DA 18a.2 nyilvántart.
+      claim_not_under_current_revision: Új elszámolást az elem aktuális változatához
+        kell rögzíteni.
+      claim_revision_absent: Egy rögzített elszámolás olyan változatra hivatkozik,
+        amely nincs az előzményekben.
+      claims_exceed_amortizable_basis: A nyitó összeg és az érvényes elszámolások
+        meghaladják a törvényes leírható alapot.
+      claims_overlap: Egy elem elszámolásai nem fedhetnek át egymással átfedő időszakokat.
       constant_percentage_weighting_not_enrolled: Az állandó százalék %{band} súlyozása
         nincs nyilvántartva.
+      correction_below_effective_claims: A javítás után az érvényes elszámolások meghaladják
+        az új leírható alapot; ugyanabban a javításban cseréld le őket.
       correction_must_supersede_current: Az eszköz javításának az aktuális változatot
         kell felváltania.
+      covered_interval_empty: A fedezett időszaknak a kezdete után kell végződnie.
+      covered_interval_outside_tax_year: A fedezett időszaknak egy adóéven belül kell
+        maradnia.
+      covered_interval_without_service_days: A fedezett időszakban nincs használatban
+        töltött nap abban az adóévben.
       creation_requires_first_revision: Az eszköz létrehozásához az egyes számú változat
         szükséges.
+      earlier_year_depends_on_pending_value: Egy későbbi évre már van elszámolás,
+        és ez a módszer a fennmaradó értékből számol, ezért most nem számolhatsz el
+        korábbi évet.
+      earlier_year_free_depreciation_not_taken: A saját évében igénybe nem vett szabad
+        értékcsökkenés nem vehető igénybe arra az évre, ha későbbi évre már van elszámolás.
       elected_coefficient_out_of_range: A választott %{elected} együttható kívül esik
         a megengedett [%{minimum}, %{maximum}] tartományon.
+      election_changes_only_at_year_boundary: Egy elem értékcsökkenési választása
+        csak adóév fordulóján változhat.
       electric_vehicle_declaration_required: Az elektromos járművek szabad értékcsökkenéséhez
         járműnyilatkozat szükséges.
       electric_vehicle_new_only: Az elektromos járművek szabad értékcsökkenése csak
@@ -4598,10 +4624,38 @@ ledger:
       financial_lease_unexercised: A pénzügyi lízingbe vett eszköz csak a vételi jog
         gyakorlása után kerül a nyilvántartásba; a lízingdíjakra az LIS 106. cikke
         vonatkozik.
+      foral_territory: Foral területen élsz, ahol az AEAT 100-as és 130-as modellje
+        nem alkalmazandó.
       forecast_no_longer_matches: Az előrejelzés már nem egyezik az aktuális előzmények
         és jogforrás szerinti ütemtervvel; készíts új előrejelzést.
       forecast_not_current_revision: Az előrejelzés nem az eszköz aktuális változatára
         hivatkozik.
+      free_amount_exceeds_annual_cap: A választott szabad értékcsökkenés meghaladja
+        az éves korlátot.
+      free_amount_exceeds_remaining_basis: A választott szabad értékcsökkenés meghaladja
+        az elem fennmaradó alapját.
+      free_amount_not_accepted: Választott összeget csak szabad értékcsökkenési módszer
+        fogad el.
+      free_amount_not_decimal: A szabad értékcsökkenés összegének tizedes euróösszegnek
+        kell lennie.
+      free_amount_not_positive_cents: A választott összegnek pozitívnak és egész centnek
+        kell lennie.
+      free_amount_required: A szabad értékcsökkenési módszerhez választott összeg
+        szükséges.
+      free_claims_disagree_on_cap: Az érvényes szabad értékcsökkenési elszámolások
+        eltérő éves korlátot adnak meg.
+      free_claims_exceed_annual_cap: Az érvényes szabad értékcsökkenési elszámolások
+        meghaladják az éves korlátot.
+      from_start_method_after_other_election: Az állandó százalék és a számjegyösszeg
+        a leírás kezdetétől érvényes; más választással már leírt elem nem térhet át
+        rájuk.
+      history_changed_after_forecast: Az elem előzményei megváltoztak az összeg kiszámítása
+        után; számold ki újra.
+      interval_has_different_claim: Erre az időszakra már van másik elszámolás; cseréld
+        le.
+      investment_cap_exceeded: A {entry_year} évben {method} módszerrel használatba
+        vett beruházás elérné a(z) {investment} összeget, ami meghaladja a(z) {investment_cap}
+        korlátot; egy elem nem osztható meg szabad és rendes leírás között.
       job_creation_new_only: A munkahelyteremtéshez kapcsolódó szabad értékcsökkenés
         csak új elemekre alkalmazható (LIS 102.1 cikk).
       job_creation_reduced_size_evidence_required: A munkahelyteremtéshez kapcsolódó
@@ -4614,6 +4668,12 @@ ledger:
         választási igazolás szükséges.
       low_value_new_only: Az alacsony értékű szabad értékcsökkenés csak új elemekre
         alkalmazható.
+      low_value_requires_entry_year: A kis értékű szabad értékcsökkenéshez az adott
+        adóévben használatba vett új elem szükséges.
+      low_value_threshold_exceeded: Az elem egységnyi beszerzési értéke meghaladja
+        a kis értékű határt.
+      low_value_unit_value_not_cents: Az elem egységnyi beszerzési értékének egész
+        centnek kell lennie.
       method_admission_invalid: A(z) %{admission_key} módszer-engedélyezés sem engedélyezett,
         sem kizárt.
       method_excluded_by_law: A(z) %{method} módszert jogszabály kizárja %{asset_kind}
@@ -4624,6 +4684,8 @@ ledger:
         eszközökre a(z) %{regime} módozatban.
       method_without_resolver: A(z) %{method} módszerhez nincs nyilvántartott hatósági
         feloldó.
+      method_without_schedule_arithmetic: A(z) {method} módszerhez nincs nyilvántartott
+        ütemezési számítás.
       modality_not_declared: Az adózói profil nem jelöl meg IRPF-becslési rendszert.
       modality_not_direct_estimation: 'A tevékenységi eszközök értékcsökkenése csak
         a közvetlen becslésre van nyilvántartva, nem erre: %{regime}.'
@@ -4633,6 +4695,11 @@ ledger:
         több normál műszak szükséges.
       multi_shift_with_used_asset_unsupported: A RIS 4. cikk nem mondja meg, hogyan
         kombinálódik a többműszakos és a használt eszközre vonatkozó együttható.
+      opening_amount_must_attest_from_start_method: A nem nulla nyitó összegnek ugyanazt
+        a módszert kell igazolnia, hogy az állandó százalék vagy a számjegyösszeg
+        folytathassa.
+      opening_history_amount_missing: Az ismert nyitó előzményből hiányzik az összeg.
+      opening_history_missing: Hiányzik az elem nyitó értékcsökkenési előzménye.
       ownership_treatment_unknown: Az egész ingatlanra vonatkozó alap tulajdonosi
         kezelése ismeretlen.
       parameter_absent: A(z) %{parameter_id} tevékenységieszköz-hatósági paraméter
@@ -4679,6 +4746,10 @@ ledger:
         táblázati osztály szükséges.
       revision_begins_after_tax_year: A Modelo 100 %{revision_id} változata a(z) %{tax_year}.
         adóév után kezdődik.
+      schedule_authority_election_mismatch: A hatósági adatot más értékcsökkenési
+        választáshoz határozták meg.
+      schedule_authority_kind_mismatch: A hatósági adat eszköztípusa nem egyezik az
+        elemmel.
       simplified_intangible_table_method: 'A(z) %{method} módszer az egyszerűsített
         módozatban nem engedélyezett immateriális eszközökre: a RIRPF 30.1a cikk lineáris
         értékcsökkenést ír elő az egyszerűsített táblázat szerint (Orden, 1998. március
@@ -4692,8 +4763,11 @@ ledger:
         kívül esik a megengedett egész éves [%{shortest}, %{longest}] tartományon.
       sum_of_digits_period_required: A számjegyösszeg-módszerhez meg kell adni az
         időszakot.
+      superseded_claim_absent: A lecserélendő elszámolás nincs az előzményekben.
       superseded_claim_not_effective: A felváltott elszámolás nem érvényes elszámolása
         ennek az eszköznek.
+      superseding_claim_changes_interval: A helyettesítő elszámolásnak meg kell tartania
+        az elemet és a fedezett időszakot.
       table_class_group_not_a_flag: A(z) %{class_key} táblázati osztály csoportbesorolása
         nem igen-nem jelző.
       table_class_not_enrolled: A(z) %{class_key} táblázati osztály nincs nyilvántartva
@@ -4703,12 +4777,15 @@ ledger:
         nincs nyilvántartott csoportbesorolása.
       table_class_wrong_kind: A(z) %{class_key} táblázati osztály nem %{asset_kind}
         eszközöket sorol be.
+      tax_year_without_edition: A(z) {tax_year}. adóévre nincs 100-as modell kiadás.
       used_building_requires_construction_date: Használt épülethez meg kell adni az
         építés dátumát.
       useful_life_evidence_required: A meghatározott élettartam szerinti választáshoz
         igazolni kell a hasznos élettartamot.
       useful_life_must_end_after_service: A meghatározott hasznos élettartamnak az
         eszköz üzembe állítása után kell véget érnie.
+      useful_life_not_positive: A hasznos élettartamnak pozitív, véges számú évnek
+        kell lennie.
       vehicle_affectation_required_for_class: A(z) %{asset_id} tevékenységi eszköz
         a(z) %{class_key} táblázati osztályba tartozik, amely a RIRPF 22.4 cikk által
         korlátozott járművet is tartalmazhat, ezért járműhasználati nyilatkozat szükséges.
@@ -5766,16 +5843,25 @@ tui:
       valid: Érvényes.
   ledger:
     activity_asset:
+      acquisition_candidates: Lehetséges beszerzések
       asset_id: Eszközazonosító
       claim: Értékcsökkenés rögzítése
       correct: Javítás
       create: Létrehozás
+      describe: Leírás mentése
       filing: Adónyomtatványra átvitel előkészítése
       forecast: Előrejelzés kiszámítása
+      form_options: Űrlapbeállítások
       free_amount: Szabad értékcsökkenés összege (nem kötelező)
       inspect: Megtekintés
+      list: Elemek listája
+      name: Elem neve
+      plan: Értékcsökkenési terv
       revision: Eszközverzió (JSON)
+      serial: Sorozatszám
       supersedes: Felülírandó elszámolt értékcsökkenés (nem kötelező)
+      superseding_claims: A javítással lecserélt elszámolások (JSON)
+      timeline: Előzmények
       title: Értékcsökkenthető eszközök
     area:
       classification: Besorolás

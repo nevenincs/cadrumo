@@ -14,7 +14,11 @@ from cadrumo.application.actividad_asset.operation_dtos import (
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
 )
-from cadrumo.application.actividad_asset.operations import ActivityAssetFilingHandoff
+from cadrumo.application.actividad_asset.operations import (
+    ActivityAssetFilingHandoff,
+    M130AccrualProjection,
+    M130Contribution,
+)
 from cadrumo.domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimProjection,
@@ -114,16 +118,24 @@ def test_public_asset_snapshots_roundtrip_every_decimal_bearing_history_fact() -
 
 def test_filing_handoff_snapshots_preserve_decimal_claim_projections() -> None:
     projection = ClaimProjection(
-        target_casilla_id="06",
+        target_casilla_id="0208",
         tax_year=2025,
         claim_ids=("c" * 64,),
         amount=Decimal("78.00"),
     )
     handoff = ActivityAssetFilingHandoff(
         material_m100=projection,
-        intangible_m100=projection.model_copy(update={"target_casilla_id": "07", "amount": Decimal("0.00")}),
-        material_m130=projection,
-        intangible_m130=projection.model_copy(update={"target_casilla_id": "07", "amount": Decimal("0.00")}),
+        intangible_m100=projection.model_copy(update={"target_casilla_id": "0227", "amount": Decimal("0.00")}),
+        material_m130=M130AccrualProjection(
+            tax_year=2025,
+            amount=Decimal("78.00"),
+            contributions=(
+                M130Contribution(asset_id="asset-1", amount=Decimal("40.00"), claim_id="c" * 64),
+                M130Contribution(asset_id="asset-2", amount=Decimal("38.00"), schedule_fingerprint="d" * 64),
+            ),
+            unavailable_asset_ids=("asset-3",),
+        ),
+        intangible_m130=M130AccrualProjection(tax_year=2025, amount=Decimal("0.00")),
     )
 
     snapshot = ActivityAssetFilingHandoffSnapshot.from_domain(handoff)

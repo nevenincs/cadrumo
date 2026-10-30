@@ -18,8 +18,16 @@ from .activity_asset_contracts import (
     ActivityAssetAuthorityProvenance,
     ActivityAssetId,
     ActivityAssetRefusalCode,
+    ActivityAssetRefusalReasonKey,
     ActivityAssetTaxYear,
     require_da18_facts_match,
+)
+from .activity_asset_read_models import (
+    ActivityAssetAcquisitionCandidate,
+    ActivityAssetFormOptionsView,
+    ActivityAssetListRow,
+    ActivityAssetPlanRow,
+    ActivityAssetTimelineEvent,
 )
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .operation_dtos import ActivityAssetFilingHandoffSnapshot, ActivityAssetRevisionSnapshot
@@ -37,6 +45,8 @@ class ActivityAssetRefusalResult(BaseModel):
     code: ActivityAssetRefusalCode
     precondition_verdict: PreconditionVerdict | None = None
     accelerated_da18: ActivityAssetAcceleratedDa18Facts | None = None
+    reason_key: ActivityAssetRefusalReasonKey | None = None
+    reason_facts: dict[str, str] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -204,4 +214,79 @@ class ActivityAssetFilingHandoffResult(ActivityAssetOperationResult):
             m130_period=self.m130_period,
             filing_handoff=self.filing_handoff,
         )
+        return self
+
+
+class ActivityAssetDescribeResult(ActivityAssetOperationResult):
+    """Private terminal result for appending one element's descriptive facts."""
+
+    history: ActivityAssetHistory | None = None
+    wrote: bool = False
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.history is not None)
+        return self
+
+
+class ActivityAssetListResult(ActivityAssetOperationResult):
+    """Private terminal result summarising the register."""
+
+    rows: tuple[ActivityAssetListRow, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.rows is not None)
+        return self
+
+
+class ActivityAssetPlanResult(ActivityAssetOperationResult):
+    """Private terminal result with one element's plan."""
+
+    asset_id: ActivityAssetId | None = None
+    rows: tuple[ActivityAssetPlanRow, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.rows is not None)
+        return self
+
+
+class ActivityAssetTimelineResult(ActivityAssetOperationResult):
+    """Private terminal result with one element's ordered history."""
+
+    asset_id: ActivityAssetId | None = None
+    events: tuple[ActivityAssetTimelineEvent, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.events is not None)
+        return self
+
+
+class ActivityAssetFormOptionsResult(ActivityAssetOperationResult):
+    """Private terminal result with what the registry admits."""
+
+    options: ActivityAssetFormOptionsView | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.options is not None)
+        return self
+
+
+class ActivityAssetAcquisitionCandidatesResult(ActivityAssetOperationResult):
+    """Private terminal result listing candidate acquisitions."""
+
+    candidates: tuple[ActivityAssetAcquisitionCandidate, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.candidates is not None)
         return self

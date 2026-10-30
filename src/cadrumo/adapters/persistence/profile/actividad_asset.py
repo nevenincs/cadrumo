@@ -6,6 +6,8 @@ Core types:
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -73,28 +75,35 @@ class ActividadAssetHistoryRepository:
         """Atomically append one immutable revision under the secure-object CAS guard."""
         return self._storage.mutate(lambda current: current.append_revision(revision))
 
+    def apply(self, mutation: Callable[[ActivityAssetHistory], ActivityAssetHistory]) -> ActivityAssetHistory:
+        """Apply one pure change under the secure-object CAS guard, retried against fresh state."""
+        return self._storage.mutate(mutation)
+
     def record_claim(
         self,
         claim: AmortizationClaim,
         *,
         expected_history: ActivityAssetHistory | None = None,
+        recorded_at: datetime | None = None,
     ) -> ActivityAssetHistoryClaimResult:
         """Atomically record a claim against its optional forecast history."""
         current = self.load()
         replay = current.record_claim(claim)
         if replay.reused_existing_claim:
             return replay
-        if expected_history is not None and current != expected_history:
-            raise ActividadAssetClaimConflictError("activity asset history changed after the forecast; forecast again")
+        if expected_history is not None and not current.same_tax_facts(expected_history):
+            raise ActividadAssetClaimConflictError(translated_message="ledger.actividad_asset.errors.history_changed_after_forecast")
 
         mutation_result: list[ActivityAssetHistoryClaimResult] = []
 
         def _record(history: ActivityAssetHistory) -> ActivityAssetHistory:
-            result = history.record_claim(claim)
-            if expected_history is not None and history != expected_history and not result.reused_existing_claim:
-                raise ActividadAssetClaimConflictError(
-                    "activity asset history changed after the forecast; forecast again",
-                )
+            result = history.record_claim(claim, recorded_at=recorded_at)
+            if (
+                expected_history is not None
+                and not history.same_tax_facts(expected_history)
+                and not result.reused_existing_claim
+            ):
+                raise ActividadAssetClaimConflictError(translated_message="ledger.actividad_asset.errors.history_changed_after_forecast")
             mutation_result[:] = [result]
             return result.history
 

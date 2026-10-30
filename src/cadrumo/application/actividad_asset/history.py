@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Self
 
@@ -13,6 +14,7 @@ from ...core.money.rounding import round_to_cents
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     asset_schedule_history,
+    current_revisions,
     effective_claims,
     record_claim,
 )
@@ -22,16 +24,29 @@ from ...domain.renta.actividad_asset.errors import (
     ActividadAssetValidationError,
 )
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ...domain.renta.actividad_asset.register_records import (
+    ActivityAssetDescriptor,
+    ActivityAssetDescriptorFacts,
+    ActivityAssetEventKind,
+    ActivityAssetHistoryEvent,
+)
 from ...domain.renta.actividad_asset.schedule import require_method_continuity, require_opening_method
 
 
 class ActivityAssetHistory(BaseModel):
-    """One encrypted profile document containing immutable asset facts and claims."""
+    """One encrypted profile document containing immutable asset facts and claims.
+
+    ``descriptors`` and ``events`` state nothing about tax: they stay out of every
+    revision and claim identity, and :meth:`same_tax_facts` ignores them.  A record
+    with no event is one written before order was kept; it sorts first.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     revisions: tuple[ActivityAssetRevision, ...] = ()
     claims: tuple[AmortizationClaim, ...] = ()
+    descriptors: tuple[ActivityAssetDescriptor, ...] = ()
+    events: tuple[ActivityAssetHistoryEvent, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -40,6 +55,8 @@ class ActivityAssetHistory(BaseModel):
         self._validate_claim_identities()
         self._validate_claim_references(revisions_by_id)
         self._validate_claim_replay()
+        self._validate_descriptors()
+        self._validate_events()
         return self
 
     def _index_revisions_and_validate_chains(self) -> dict[str, ActivityAssetRevision]:
@@ -80,7 +97,133 @@ class ActivityAssetHistory(BaseModel):
             if revision.supersedes_revision_id != expected_superseded_id:
                 raise ValueError("asset revision supersession must point to the prior revision of the same asset")
 
-    def append_revision(self, revision: ActivityAssetRevision) -> ActivityAssetHistory:
+    def _validate_descriptors(self) -> None:
+        known_assets = {revision.asset_id for revision in self.revisions}
+        numbers: dict[str, int] = {}
+        for descriptor in self.descriptors:
+            if descriptor.asset_id not in known_assets:
+                raise ValueError("activity asset descriptor names an unknown asset")
+            numbers[descriptor.asset_id] = numbers.get(descriptor.asset_id, 0) + 1
+            if descriptor.descriptor_number != numbers[descriptor.asset_id]:
+                raise ValueError("activity asset descriptors must be append-only and consecutively numbered")
+
+    def _validate_events(self) -> None:
+        records = self._record_ids()
+        unlogged = len(records) - len(self.events)
+        if unlogged < 0:
+            raise ValueError("activity asset history has more events than records")
+        previous = unlogged
+        seen: set[tuple[ActivityAssetEventKind, str]] = set()
+        for event in self.events:
+            if event.sequence <= previous:
+                raise ValueError("activity asset events must follow the unlogged records in strictly increasing order")
+            previous = event.sequence
+            address = (event.kind, event.record_id)
+            if records.get(address) != event.asset_id:
+                raise ValueError("activity asset event references an unknown record")
+            if address in seen:
+                raise ValueError("activity asset history orders a record twice")
+            seen.add(address)
+
+    def _record_ids(self) -> dict[tuple[ActivityAssetEventKind, str], str]:
+        """Map every record's kind and identity to its asset, revisions before claims before descriptors."""
+        return {
+            **{(ActivityAssetEventKind.REVISION, item.revision_id): item.asset_id for item in self.revisions},
+            **{(ActivityAssetEventKind.CLAIM, item.claim_id): item.asset_id for item in self.claims},
+            **{(ActivityAssetEventKind.DESCRIPTOR, item.descriptor_id): item.asset_id for item in self.descriptors},
+        }
+
+    def ordered_events(self) -> tuple[ActivityAssetHistoryEvent, ...]:
+        """Return one event per record in history order; records written before order was kept come first."""
+        logged = {(event.kind, event.record_id) for event in self.events}
+        unlogged = tuple(address for address in self._record_ids().items() if address[0] not in logged)
+        return (
+            *(
+                ActivityAssetHistoryEvent(sequence=position, kind=kind, asset_id=asset_id, record_id=record_id)
+                for position, ((kind, record_id), asset_id) in enumerate(unlogged, start=1)
+            ),
+            *self.events,
+        )
+
+    def _next_event(
+        self,
+        kind: ActivityAssetEventKind,
+        asset_id: str,
+        record_id: str,
+        *,
+        recorded_at: datetime | None,
+        origin: str | None,
+    ) -> ActivityAssetHistoryEvent:
+        unlogged = len(self._record_ids()) - len(self.events)
+        last = self.events[-1].sequence if self.events else unlogged
+        return ActivityAssetHistoryEvent(
+            sequence=last + 1,
+            kind=kind,
+            asset_id=asset_id,
+            record_id=record_id,
+            recorded_at=recorded_at,
+            origin=origin,
+        )
+
+    def same_tax_facts(self, other: ActivityAssetHistory) -> bool:
+        """Say whether two documents hold the same revisions and claims, whatever their descriptors."""
+        return self.revisions == other.revisions and self.claims == other.claims
+
+    def current_descriptor(self, asset_id: str) -> ActivityAssetDescriptor | None:
+        """Return an element's latest descriptor, or ``None`` when none was ever written."""
+        return next((item for item in reversed(self.descriptors) if item.asset_id == asset_id), None)
+
+    def describe(
+        self,
+        asset_id: str,
+        facts: ActivityAssetDescriptorFacts,
+        *,
+        recorded_at: datetime | None = None,
+        origin: str | None = None,
+    ) -> ActivityAssetHistory:
+        """Append a descriptor; restating the current one is an exact replay and writes nothing."""
+        if not any(revision.asset_id == asset_id for revision in self.revisions):
+            raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.asset_not_found")
+        current = self.current_descriptor(asset_id)
+        if current is not None and current.facts == facts:
+            return self
+        descriptor = ActivityAssetDescriptor(
+            asset_id=asset_id,
+            descriptor_number=1 if current is None else current.descriptor_number + 1,
+            facts=facts,
+        )
+        event = self._next_event(
+            ActivityAssetEventKind.DESCRIPTOR,
+            asset_id,
+            descriptor.descriptor_id,
+            recorded_at=recorded_at,
+            origin=origin,
+        )
+        return self.model_copy_validated(descriptors=(*self.descriptors, descriptor), events=(*self.events, event))
+
+    def model_copy_validated(
+        self,
+        *,
+        revisions: tuple[ActivityAssetRevision, ...] | None = None,
+        claims: tuple[AmortizationClaim, ...] | None = None,
+        descriptors: tuple[ActivityAssetDescriptor, ...] | None = None,
+        events: tuple[ActivityAssetHistoryEvent, ...] | None = None,
+    ) -> ActivityAssetHistory:
+        """Build the next document through the full history validation."""
+        return ActivityAssetHistory(
+            revisions=self.revisions if revisions is None else revisions,
+            claims=self.claims if claims is None else claims,
+            descriptors=self.descriptors if descriptors is None else descriptors,
+            events=self.events if events is None else events,
+        )
+
+    def append_revision(
+        self,
+        revision: ActivityAssetRevision,
+        *,
+        recorded_at: datetime | None = None,
+        origin: str | None = None,
+    ) -> ActivityAssetHistory:
         """Append only a creation or the exact successor of the current revision.
 
         The encrypted repository invokes this against the value read inside its
@@ -88,24 +231,79 @@ class ActivityAssetHistory(BaseModel):
         closes the pre-read/write race for corrections made by concurrent
         callers.
         """
-        if any(existing.revision_id == revision.revision_id for existing in self.revisions):
+        return self.apply_correction(revision, (), recorded_at=recorded_at, origin=origin)
+
+    def apply_correction(
+        self,
+        revision: ActivityAssetRevision,
+        superseding_claims: tuple[AmortizationClaim, ...],
+        *,
+        recorded_at: datetime | None = None,
+        origin: str | None = None,
+    ) -> ActivityAssetHistory:
+        """Append a revision with the claims that replace what it invalidates, judged together.
+
+        The basis check runs on the final state, so a correction below an effective
+        claim is admitted exactly when the same write supersedes enough of them.
+        Each new claim is judged against the years up to its own: a later standing
+        claim was not recalculated by this correction, and the timeline reports it
+        as no longer matching.
+        """
+        known = {item.claim_id for item in self.claims}
+        if any(existing.revision_id == revision.revision_id for existing in self.revisions) and all(
+            claim.claim_id in known for claim in superseding_claims
+        ):
             return self
-        latest = max(
-            (item for item in self.revisions if item.asset_id == revision.asset_id),
-            key=lambda item: item.revision_number,
-            default=None,
+        self._require_successor(revision)
+        claims = self.claims
+        for claim in superseding_claims:
+            claims = record_claim(claims, claim).claims
+        logged = self._next_event(
+            ActivityAssetEventKind.REVISION,
+            revision.asset_id,
+            revision.revision_id,
+            recorded_at=recorded_at,
+            origin=origin,
         )
+        events = [logged]
+        for claim in superseding_claims:
+            events.append(
+                ActivityAssetHistoryEvent(
+                    sequence=events[-1].sequence + 1,
+                    kind=ActivityAssetEventKind.CLAIM,
+                    asset_id=claim.asset_id,
+                    record_id=claim.claim_id,
+                    recorded_at=recorded_at,
+                    origin=origin,
+                ),
+            )
+        candidate = self.model_copy_validated(
+            revisions=(*self.revisions, revision),
+            claims=claims,
+            events=(*self.events, *events),
+        )
+        candidate._require_claims_within_basis(revision)
+        for claim in superseding_claims:
+            candidate._require_claim_invariants(
+                claim,
+                tuple(item for item in claims if item.tax_year <= claim.tax_year),
+            )
+        return candidate
+
+    def _require_successor(self, revision: ActivityAssetRevision) -> None:
+        latest = current_revisions(self.revisions).get(revision.asset_id)
         if latest is None:
             if revision.revision_number != 1 or revision.supersedes_revision_id is not None:
-                raise ActividadAssetValidationError("asset creation requires revision number one")
+                raise ActividadAssetValidationError(
+                    translated_message="ledger.actividad_asset.errors.creation_requires_first_revision",
+                )
         elif (
             revision.revision_number != latest.revision_number + 1
             or revision.supersedes_revision_id != latest.revision_id
         ):
-            raise ActividadAssetClaimConflictError("asset correction must supersede the current revision")
-        if latest is not None:
-            self._require_claims_within_basis(revision)
-        return ActivityAssetHistory(revisions=(*self.revisions, revision), claims=self.claims)
+            raise ActividadAssetClaimConflictError(
+                translated_message="ledger.actividad_asset.errors.correction_must_supersede_current",
+            )
 
     def _require_claims_within_basis(self, revision: ActivityAssetRevision) -> None:
         recorded = tuple(claim for claim in effective_claims(self.claims) if claim.asset_id == revision.asset_id)
@@ -113,14 +311,21 @@ class ActivityAssetHistory(BaseModel):
             return
         opening = revision.opening_history.accumulated_amount
         if opening is None:
-            raise ActividadAssetIncompleteError("opening amortization history is missing")
+            raise ActividadAssetIncompleteError(
+                translated_message="ledger.actividad_asset.errors.opening_history_missing",
+            )
         consumed = opening + sum((claim.amount for claim in recorded), Decimal("0"))
         if consumed > round_to_cents(revision.amortizable_basis()):
             raise ActividadAssetClaimConflictError(
-                "effective claims exceed the superseding revision's lawful amortizable basis",
+                translated_message="ledger.actividad_asset.errors.correction_below_effective_claims",
             )
 
-    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
+    def record_claim(
+        self,
+        claim: AmortizationClaim,
+        *,
+        recorded_at: datetime | None = None,
+    ) -> ActivityAssetHistoryClaimResult:
         """Record a claim through the domain replay/conflict contract.
 
         A new claim must also keep the asset's method continuity and stay
@@ -129,12 +334,20 @@ class ActivityAssetHistory(BaseModel):
         history can never both consume the same basis.
         """
         result = record_claim(self.claims, claim)
-        if not result.reused_existing_claim:
-            self._require_claim_invariants(claim, result.claims)
+        if result.reused_existing_claim:
+            return ActivityAssetHistoryClaimResult(history=self, claim=result.claim, reused_existing_claim=True)
+        self._require_claim_invariants(claim, result.claims)
+        event = self._next_event(
+            ActivityAssetEventKind.CLAIM,
+            claim.asset_id,
+            claim.claim_id,
+            recorded_at=recorded_at,
+            origin=claim.creating_operation,
+        )
         return ActivityAssetHistoryClaimResult(
-            history=ActivityAssetHistory(revisions=self.revisions, claims=result.claims),
+            history=self.model_copy_validated(claims=result.claims, events=(*self.events, event)),
             claim=result.claim,
-            reused_existing_claim=result.reused_existing_claim,
+            reused_existing_claim=False,
         )
 
     def _require_claim_invariants(
@@ -144,13 +357,14 @@ class ActivityAssetHistory(BaseModel):
     ) -> None:
         revision = next((item for item in self.revisions if item.revision_id == claim.asset_revision_id), None)
         if revision is None:
-            raise ActividadAssetValidationError("activity asset claim references an unknown revision")
-        current = max(
-            (item for item in self.revisions if item.asset_id == claim.asset_id),
-            key=lambda item: item.revision_number,
-        )
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.claim_revision_absent"
+            )
+        current = current_revisions(self.revisions)[claim.asset_id]
         if current.revision_id != revision.revision_id:
-            raise ActividadAssetClaimConflictError("a new claim must be recorded under the asset's current revision")
+            raise ActividadAssetClaimConflictError(
+                translated_message="ledger.actividad_asset.errors.claim_not_under_current_revision",
+            )
         summary = asset_schedule_history(
             claims_after,
             self.revisions,
@@ -162,10 +376,19 @@ class ActivityAssetHistory(BaseModel):
         require_opening_method(revision, election.method)
         opening = revision.opening_history.accumulated_amount
         if opening is None:
-            raise ActividadAssetIncompleteError("opening amortization history is missing")
-        consumed = opening + summary.accumulated_before_tax_year + summary.accumulated_in_tax_year
+            raise ActividadAssetIncompleteError(
+                translated_message="ledger.actividad_asset.errors.opening_history_missing",
+            )
+        consumed = (
+            opening
+            + summary.accumulated_before_tax_year
+            + summary.accumulated_in_tax_year
+            + summary.accumulated_after_tax_year
+        )
         if consumed > round_to_cents(revision.amortizable_basis()):
-            raise ActividadAssetClaimConflictError("effective claims would exceed the asset's lawful amortizable basis")
+            raise ActividadAssetClaimConflictError(
+                translated_message="ledger.actividad_asset.errors.claims_exceed_amortizable_basis",
+            )
 
 
 class ActivityAssetHistoryClaimResult(BaseModel):

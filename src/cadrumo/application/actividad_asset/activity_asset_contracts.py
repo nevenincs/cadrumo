@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from typing import Annotated, Literal, Protocol, Self
@@ -23,10 +23,13 @@ from ...domain.renta.actividad_asset.errors import (
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
 )
+from ...domain.renta.actividad_asset.lifecycle import AssetKind
+from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ..operations.models import CredentialFreeOperationRequest
 from ..operations.public_scalar import PublicDecimal
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.profile_read_ports import ProfilePathValuesReadPort
+from .activity_asset_read_models import ActivityAssetReasonFact
 from .operation_dtos import (
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
@@ -44,6 +47,18 @@ ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID = "ledger.actividad-asset.foreca
 ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID = "ledger.actividad-asset.claim"
 
 ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID = "ledger.actividad-asset.filing-handoff"
+
+ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.describe"
+
+ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID = "ledger.actividad-asset.list"
+
+ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID = "ledger.actividad-asset.plan"
+
+ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.timeline"
+
+ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID = "ledger.actividad-asset.form-options"
+
+ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID = "ledger.actividad-asset.acquisition-candidates"
 
 ACTIVITY_ASSET_REFUSED_VALIDATION = "REFUSED_ACTIVIDAD_ASSET_VALIDATION"
 
@@ -67,8 +82,6 @@ ACTIVITY_ASSET_REFUSAL_CODES = frozenset(
 
 ActivityAssetId = Annotated[str, Field(min_length=1, max_length=128)]
 
-ActivityAssetOperationName = Annotated[str, Field(min_length=1, max_length=256)]
-
 ActivityAssetTaxYear = Annotated[int, Field(ge=1900, le=9999)]
 
 ActivityAssetRefusalCode = Literal[
@@ -87,6 +100,7 @@ class ActivityAssetOperationPorts:
     history_repository: ActivityAssetHistoryRepository
     ledger: AcquisitionLedgerReader
     profile_path_values: ProfilePathValuesReadPort
+    claim_consumers: Callable[[Iterable[str]], Mapping[str, tuple[str, ...]]]
 
 
 class ActivityAssetOperationPortsFactory(Protocol):
@@ -136,6 +150,10 @@ def require_da18_facts_match(code: str, facts: ActivityAssetAcceleratedDa18Facts
         raise ValueError("activity-asset DA 18 facts accompany exactly the DA 18 refusal")
 
 
+ActivityAssetRefusalReasonKey = Annotated[str, Field(pattern=r"^[a-z0-9_]+(?:\.[a-z0-9_]+)+$", max_length=256)]
+"""The catalogue key naming why, inside the broader refusal code."""
+
+
 class ActivityAssetRefusal(BaseModel):
     """Bounded public refusal detail without persisted exception prose."""
 
@@ -144,6 +162,8 @@ class ActivityAssetRefusal(BaseModel):
     code: ActivityAssetRefusalCode
     precondition_verdict: PreconditionVerdictSnapshot | None = None
     accelerated_da18: ActivityAssetAcceleratedDa18Facts | None = None
+    reason_key: ActivityAssetRefusalReasonKey | None = None
+    reason_facts: tuple[ActivityAssetReasonFact, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -155,20 +175,23 @@ class ActivityAssetRefusal(BaseModel):
         """Rebuild the domain refusal this detail was recorded from, carrying the settled receipt facts."""
         if self.accelerated_da18 is not None:
             return ActividadAssetAcceleratedDa18DepreciationError(
-                context={**self.accelerated_da18.model_dump(mode="python"), **context}
+                context={**self.accelerated_da18.model_dump(mode="python"), **context},
+                translated_message=self.reason_key,
             )
+        merged = {**{fact.key: fact.value for fact in self.reason_facts}, **context}
         if self.code == ACTIVITY_ASSET_REFUSED_INCOMPLETE:
             return ActividadAssetIncompleteError(
-                context=context,
+                context=merged,
+                translated_message=self.reason_key,
                 precondition_verdict=(
                     self.precondition_verdict.to_verdict() if self.precondition_verdict is not None else None
                 ),
             )
         if self.code == ACTIVITY_ASSET_REFUSED_UNSUPPORTED:
-            return ActividadAssetUnsupportedError(context=context)
+            return ActividadAssetUnsupportedError(context=merged, translated_message=self.reason_key)
         if self.code == ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT:
-            return ActividadAssetClaimConflictError(context=context)
-        return ActividadAssetValidationError(context=context)
+            return ActividadAssetClaimConflictError(context=merged, translated_message=self.reason_key)
+        return ActividadAssetValidationError(context=merged, translated_message=self.reason_key)
 
 
 class ActivityAssetCreateRequest(BaseModel):
@@ -178,6 +201,17 @@ class ActivityAssetCreateRequest(BaseModel):
 
     profile_id: UUID
     revision: ActivityAssetRevisionSnapshot
+    descriptor: ActivityAssetDescriptorFacts
+
+
+class ActivityAssetDescribeRequest(BaseModel):
+    """Append one element's descriptive facts, which change no calculation."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+    descriptor: ActivityAssetDescriptorFacts
 
 
 class ActivityAssetInspectRequest(BaseModel):
@@ -189,13 +223,23 @@ class ActivityAssetInspectRequest(BaseModel):
     asset_id: ActivityAssetId
 
 
+class ActivityAssetSupersedingClaim(BaseModel):
+    """A recorded claim the correction replaces; the backend works out the new figure."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    supersedes_claim_id: Hex64Str
+    requested_free_amount: PublicDecimal | None = None
+
+
 class ActivityAssetCorrectRequest(BaseModel):
-    """Append one correction to the current immutable asset revision."""
+    """Append one correction and the claims it replaces, as one atomic change."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     revision: ActivityAssetRevisionSnapshot
+    superseding_claims: tuple[ActivityAssetSupersedingClaim, ...] = ()
 
 
 class ActivityAssetForecastRequest(BaseModel):
@@ -218,12 +262,55 @@ class ActivityAssetClaimRequest(BaseModel):
 
     profile_id: UUID
     forecast: ScheduledAmortizationChargeSnapshot
-    creating_operation: ActivityAssetOperationName
     supersedes_claim_id: Hex64Str | None = None
 
 
+class ActivityAssetListRequest(CredentialFreeOperationRequest):
+    """Summarise the exact profile's register."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+
+
+class ActivityAssetPlanRequest(BaseModel):
+    """Work out one element's amortization plan."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+
+
+class ActivityAssetTimelineRequest(BaseModel):
+    """List one element's ordered history."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+
+
+class ActivityAssetFormOptionsRequest(CredentialFreeOperationRequest):
+    """Read what the registry admits for an asset kind and tax year."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_kind: AssetKind
+    tax_year: ActivityAssetTaxYear
+
+
+class ActivityAssetAcquisitionCandidatesRequest(CredentialFreeOperationRequest):
+    """List the ledger payments an element could name as its acquisition."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+
+
 class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
-    """Read the exact profile's existing M100 and M130 claim projections."""
+    """Read the exact profile's M100 claim projections and M130 accruals."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

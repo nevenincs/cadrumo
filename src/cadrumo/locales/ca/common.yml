@@ -4581,6 +4581,9 @@ ledger:
         no és un pagament.
       allocation_components_missing: La base de l'immoble complet no té els seus components
         d'imputació.
+      amortization_period_elapsed: El període màxim d'amortització de l'element va
+        acabar el {ended_on}, així que compta com a totalment amortitzat.
+      approved_plan_exceeds_basis: El pla aprovat reparteix més que la base amortitzable.
       approved_plan_not_yet_effective: Un pla aprovat només té efecte en els períodes
         impositius que acaben després de la seva presentació (RIS art. 7.8).
       approved_plan_required: L'elecció de pla aprovat requereix el seu pla.
@@ -4590,6 +4593,7 @@ ledger:
       asset_made_available_after_in_service: Un element no pot entrar en funcionament
         abans de posar-se a disposició.
       asset_not_found: L'element de l'activitat no existeix.
+      authority_incomplete: L'autoritat publicada per a aquest mètode és incompleta.
       business_use_share_missing: Un element ordinari no té el seu percentatge d'ús
         empresarial.
       charging_infrastructure_new_only: La llibertat d'amortització d'infraestructures
@@ -4597,14 +4601,35 @@ ledger:
       charging_infrastructure_period_not_enrolled: La infraestructura de recàrrega
         ha d'entrar en funcionament en un període impositiu que inscriu la LIS DA
         18a.2.
+      claim_not_under_current_revision: Un càrrec nou s'ha de registrar amb la revisió
+        vigent de l'element.
+      claim_revision_absent: Un càrrec registrat cita una revisió que no és a l'historial.
+      claims_exceed_amortizable_basis: L'import inicial i els càrrecs vigents superen
+        la base amortitzable legal.
+      claims_overlap: Els càrrecs d'un element no poden cobrir intervals que se solapin.
       constant_percentage_weighting_not_enrolled: La ponderació %{band} del percentatge
         constant no està inscrita.
+      correction_below_effective_claims: La correcció deixa càrrecs vigents per sobre
+        de la nova base amortitzable; substitueix-los en la mateixa correcció.
       correction_must_supersede_current: Una correcció de l'element ha de substituir
         la revisió vigent.
+      covered_interval_empty: L'interval cobert ha d'acabar després de començar.
+      covered_interval_outside_tax_year: L'interval cobert ha de quedar dins d'un
+        exercici.
+      covered_interval_without_service_days: L'interval cobert no té dies en servei
+        en aquest exercici.
       creation_requires_first_revision: La creació de l'element requereix la revisió
         número u.
+      earlier_year_depends_on_pending_value: Ja hi ha un exercici posterior amb càrrec
+        i aquest mètode calcula sobre el valor pendent, així que ara no pots reclamar
+        un exercici anterior.
+      earlier_year_free_depreciation_not_taken: La llibertat d'amortització no aplicada
+        en el seu exercici no es pot aplicar a aquest exercici si ja n'hi ha un de
+        posterior amb càrrec.
       elected_coefficient_out_of_range: El coeficient escollit %{elected} queda fora
         de l'interval admissible [%{minimum}, %{maximum}].
+      election_changes_only_at_year_boundary: L'elecció d'amortització d'un element
+        només pot canviar en començar un exercici.
       electric_vehicle_declaration_required: La llibertat d'amortització de vehicles
         elèctrics requereix una declaració del vehicle.
       electric_vehicle_new_only: La llibertat d'amortització de vehicles elèctrics
@@ -4619,9 +4644,36 @@ ledger:
       financial_lease_unexercised: Un element en arrendament financer no té assentament
         al registre fins que exerceixes l'opció de compra; les seves quotes segueixen
         l'art. 106 de la LIS.
+      foral_territory: Resideixes en territori foral, on no s'apliquen els Models
+        100 i 130 de l'AEAT.
       forecast_no_longer_matches: La previsió ja no coincideix amb el quadre d'amortització
         segons l'historial i l'autoritat vigents; torna a calcular la previsió.
       forecast_not_current_revision: La previsió no remet a la revisió vigent de l'element.
+      free_amount_exceeds_annual_cap: L'import triat de llibertat d'amortització supera
+        el límit anual.
+      free_amount_exceeds_remaining_basis: L'import triat de llibertat d'amortització
+        supera la base restant de l'element.
+      free_amount_not_accepted: Només un mètode de llibertat d'amortització admet
+        un import triat.
+      free_amount_not_decimal: L'import de llibertat d'amortització ha de ser un import
+        decimal en euros.
+      free_amount_not_positive_cents: L'import triat ha de ser positiu i en cèntims
+        sencers.
+      free_amount_required: Un mètode de llibertat d'amortització requereix un import
+        triat.
+      free_claims_disagree_on_cap: Els càrrecs vigents de llibertat d'amortització
+        discrepen sobre el límit anual.
+      free_claims_exceed_annual_cap: Els càrrecs vigents de llibertat d'amortització
+        superen el límit anual.
+      from_start_method_after_other_election: El percentatge constant i els nombres
+        dígits s'apliquen des de l'inici de l'amortització; un element ja amortitzat
+        amb una altra elecció no els pot adoptar.
+      history_changed_after_forecast: L'historial de l'element va canviar després
+        de calcular aquesta xifra; torna a calcular-la.
+      interval_has_different_claim: Aquest interval ja té un altre càrrec; substitueix-lo.
+      investment_cap_exceeded: La inversió que entra en servei el {entry_year} amb
+        {method} arribaria a {investment}, per sobre del límit de {investment_cap};
+        un element no es reparteix entre amortització lliure i ordinària.
       job_creation_new_only: La llibertat d'amortització per creació d'ocupació només
         s'aplica a elements nous (LIS art. 102.1).
       job_creation_reduced_size_evidence_required: La llibertat d'amortització per
@@ -4634,6 +4686,12 @@ ledger:
         una prova expressa de l'elecció.
       low_value_new_only: La llibertat d'amortització de baix valor només s'aplica
         a elements nous.
+      low_value_requires_entry_year: La llibertat d'amortització d'escàs valor requereix
+        un element nou posat en servei en aquest exercici.
+      low_value_threshold_exceeded: El valor unitari d'adquisició de l'element supera
+        el llindar d'escàs valor.
+      low_value_unit_value_not_cents: El valor unitari d'adquisició de l'element ha
+        d'estar en cèntims sencers.
       method_admission_invalid: L'admissió de mètode %{admission_key} no és ni admesa
         ni exclosa.
       method_excluded_by_law: El mètode %{method} està exclòs per llei per a l'immobilitzat
@@ -4644,6 +4702,8 @@ ledger:
         %{asset_kind} en la modalitat %{regime}.
       method_without_resolver: El mètode %{method} no té cap resolutor d'autoritat
         inscrit.
+      method_without_schedule_arithmetic: El mètode {method} no té un càlcul de calendari
+        registrat.
       modality_not_declared: El perfil del contribuent no declara cap règim d'estimació
         de l'IRPF.
       modality_not_direct_estimation: L'amortització de l'immobilitzat de l'activitat
@@ -4654,6 +4714,12 @@ ledger:
         més d'un torn normal al dia.
       multi_shift_with_used_asset_unsupported: El RIS art. 4 no estableix com es combinen
         el coeficient de diversos torns i el d'elements usats.
+      opening_amount_must_attest_from_start_method: Un import inicial diferent de
+        zero ha d'acreditar el mateix mètode perquè el percentatge constant o els
+        nombres dígits el continuïn.
+      opening_history_amount_missing: L'historial inicial conegut no indica el seu
+        import.
+      opening_history_missing: Falta l'historial inicial d'amortització de l'element.
       ownership_treatment_unknown: La base de l'immoble complet té un tractament de
         titularitat desconegut.
       parameter_absent: El paràmetre d'autoritat %{parameter_id} de l'immobilitzat
@@ -4700,6 +4766,10 @@ ledger:
         de R+D material requereix una classe de taula.
       revision_begins_after_tax_year: La revisió %{revision_id} del Model 100 comença
         després de l'exercici %{tax_year}.
+      schedule_authority_election_mismatch: L'autoritat es va resoldre per a una altra
+        elecció d'amortització.
+      schedule_authority_kind_mismatch: El tipus d'element de l'autoritat no coincideix
+        amb l'element.
       simplified_intangible_table_method: 'El mètode %{method} no s''admet per a l''immobilitzat
         intangible en la modalitat simplificada: el RIRPF art. 30.1a prescriu l''amortització
         lineal segons la taula simplificada (Orden de 27 de març de 1998), que fixa
@@ -4713,8 +4783,11 @@ ledger:
         fora de l'interval admissible d'anys sencers [%{shortest}, %{longest}].
       sum_of_digits_period_required: El mètode dels nombres dígits requereix el seu
         període.
+      superseded_claim_absent: El càrrec que se substitueix no és a l'historial.
       superseded_claim_not_effective: L'amortització substituïda no és una amortització
         vigent d'aquest element.
+      superseding_claim_changes_interval: Un càrrec substitutiu ha de conservar l'element
+        i l'interval cobert.
       table_class_group_not_a_flag: La classificació de grup de la classe de taula
         %{class_key} no és un indicador de sí o no.
       table_class_not_enrolled: La classe de taula %{class_key} no està inscrita per
@@ -4724,12 +4797,14 @@ ledger:
         té cap classificació de grup inscrita.
       table_class_wrong_kind: La classe de taula %{class_key} no classifica immobilitzat
         %{asset_kind}.
+      tax_year_without_edition: Cap edició del Model 100 cobreix l'exercici {tax_year}.
       used_building_requires_construction_date: Un edifici usat requereix la seva
         data de construcció.
       useful_life_evidence_required: L'elecció de vida útil definida requereix la
         seva justificació de vida útil.
       useful_life_must_end_after_service: Una vida útil definida ha d'acabar després
         de l'entrada en funcionament de l'element.
+      useful_life_not_positive: La vida útil ha de ser un nombre positiu i finit d'anys.
       vehicle_affectation_required_for_class: L'actiu %{asset_id} de l'activitat és
         a la classe de taula %{class_key}, que pot contenir un vehicle restringit
         pel RIRPF art. 22.4, per la qual cosa requereix una declaració d'afectació
@@ -5792,16 +5867,25 @@ tui:
       valid: Vàlid.
   ledger:
     activity_asset:
+      acquisition_candidates: Adquisicions candidates
       asset_id: Identificador de l’actiu
       claim: Registrar amortització
       correct: Corregir
       create: Crear
+      describe: Desar la descripció
       filing: Preparar trasllat a models
       forecast: Calcular previsió
+      form_options: Opcions del formulari
       free_amount: Import de llibertat d’amortització (opcional)
       inspect: Inspeccionar
+      list: Llista els elements
+      name: Nom de l'element
+      plan: Pla d'amortització
       revision: Revisió de l’actiu (JSON)
+      serial: Número de sèrie
       supersedes: Amortització registrada que se substitueix (opcional)
+      superseding_claims: Càrrecs que substitueix aquesta correcció (JSON)
+      timeline: Historial
       title: Actius amortitzables
     area:
       classification: Classificació

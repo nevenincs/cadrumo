@@ -18,6 +18,14 @@ class ActividadAssetUnsupportedError(ActividadAssetError):
     """Raised when a requested asset shape has no enrolled authority."""
 
 
+class ActividadAssetPeriodElapsedError(ActividadAssetUnsupportedError):
+    """Raised when an interval lies past the element's maximum amortization period.
+
+    The element counts as fully amortized from that day (V3655-16), so the
+    accrual and the plan read this as nothing left rather than as a failure.
+    """
+
+
 class ActividadAssetAcceleratedDa18DepreciationError(ActividadAssetUnsupportedError):
     """Raised when LIS DA 18 grants the tax period accelerated rather than free depreciation.
 
@@ -74,6 +82,7 @@ __all__ = [
     "ActividadAssetClaimConflictError",
     "ActividadAssetError",
     "ActividadAssetIncompleteError",
+    "ActividadAssetPeriodElapsedError",
     "ActividadAssetUnsupportedError",
     "ActividadAssetValidationError",
     "VehicleAffectationRecovery",

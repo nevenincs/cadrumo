@@ -29,20 +29,30 @@ cli:
         update_help: Módosítsd egy saját számla megadott adatait; új IBAN vagy bankadat
           csak a titkos csatornán érkezhet.
       actividad_asset:
+        acquisition_candidates_help: Felsorolja azokat a főkönyvi kifizetéseket, amelyeket
+          egy elem beszerzésként megnevezhet.
         claim_help: Előrejelzés rögzítése értékcsökkenési elszámolásként; az azonos
           ismétlés a meglévő bejegyzést adja vissza.
         correct_help: Az eszköz aktuális változatát felváltó új változat hozzáfűzése
           (JSON).
         create_help: Eszköz létrehozása az első, megváltoztathatatlan változatából
           (JSON).
-        filing_handoff_help: A rögzített elszámolások megjelenítése a Modelo 100-on
-          és halmozottan a Modelo 130-on.
+        describe_help: Rögzíti egy elem nevét, sorozatszámát és nyilvántartási adatait;
+          egyetlen számítás sem változik.
+        filing_handoff_help: Megmutatja a 100-as modellbe vetített rögzített elszámolásokat
+          és a 130-as modellbe vetített időbeli elhatárolást.
         forecast_help: A változat választása szerinti értékcsökkenés kiszámítása egy
           időszakra, rögzítés nélkül.
+        form_options_help: Megmutatja a nyilvántartás által egy eszköztípushoz és
+          adóévhez elfogadott módszereket és táblázatcsoportokat.
         group_help: 'IRPF gazdasági tevékenységi eszköznyilvántartás: megváltoztathatatlan
           változatok, értékcsökkenési előrejelzések és rögzített elszámolások (LIS
           12. cikk).'
         inspect_help: Egy eszköz teljes változatláncának megjelenítése.
+        list_help: Felsorolja a nyilvántartás elemeit alappal, halmozott és fennmaradó
+          összeggel és megállapításokkal.
+        plan_help: Megmutatja egy elem értékcsökkenési tervét évenként.
+        timeline_help: Megmutatja egy elem előzményeit időrendben.
       bienes_inversion:
         acquisition_year_help: A jószág beszerzésének éve.
         art108_help: A jószág a LIVA 108. cikk szerint beruházási jószágnak minősül-e.
@@ -84,7 +94,8 @@ cli:
         withdraw_help: Vonja vissza az ügyfélről rögzített megerősítést, kijelentve,
           hogy a korábbi válasz téves volt.
       evidence:
-        add_help: Beszerzési számlához tartozó bizonyíték regisztrálása PDF-ből vagy képből.
+        add_help: Beszerzési számlához tartozó bizonyíték regisztrálása PDF-ből vagy
+          képből.
         attachment_id_help: A tartalom alapján címzett melléklet azonosítója.
         attachment_queue_help: A számlaellenőrzésre váró Drive-mellékletek listázása.
         attachment_view_help: A tárolt melléklet metaadatainak és eredetének vizsgálata.
@@ -1434,9 +1445,13 @@ cli:
           naplóban)
         amend_wizard_reason_required: A helyesbítés ellenőrzési naplójához indoklás
           szükséges.
-        amend_wizard_select_prompt: "Benyújtottként rögzítve: %{modelo} %{year} %{period},
-          jelenlegi értékek:\n%{summary}\nMely rovatszámok változtak? (vesszővel vagy
-          szóközzel elválasztva, üresen, ha egyik sem)"
+        amend_wizard_select_prompt: 'Benyújtottként rögzítve: %{modelo} %{year} %{period},
+          jelenlegi értékek:
+
+          %{summary}
+
+          Mely rovatszámok változtak? (vesszővel vagy szóközzel elválasztva, üresen,
+          ha egyik sem)'
         amend_wizard_unknown_casilla: A(z) %{token} rovat nem része a benyújtottként
           rögzített %{modelo} %{year} %{period} bevallásnak; válassz a felsorolt rovatszámok
           közül.
@@ -2977,7 +2992,8 @@ cli:
       prorrata_sector_help: Annak a megkülönböztetett szektornak az azonosítója (LIVA
         9.1.c és 101. cikk), amelyhez ez a bemenet tartozik; egyeznie kell egy már
         deklarált szektorral.
-      purchase_invoice_evidence_help: A beszerzési számlához tartozó bizonyíték kanonikus azonosítója.
+      purchase_invoice_evidence_help: A beszerzési számlához tartozó bizonyíték kanonikus
+        azonosítója.
       recargo_amount_help: A recargo de equivalencia rendszerű kiskereskedőnek történő
         értékesítésre felszámított recargo-tétel (LIVA 161. cikk); a Modelo 303 recargo-tételébe
         IVA-kulcs szerint összesítve
@@ -3023,8 +3039,8 @@ cli:
         előtt történt, ezért a korábbi bizonylatcsomagot őrzi.
       help: Meglévő bizonylat csatolása egy tranzakcióhoz a nyilvántartásban.
       id_help: A tranzakció azonosítója, amelyhez a bizonylatot csatolod.
-      purchase_invoice_evidence_help: A tranzakciót alátámasztó, beszerzési számlához tartozó meglévő bizonyíték
-        azonosítója.
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó, beszerzési számlához
+        tartozó meglévő bizonyíték azonosítója.
     categories:
       family_column: Kategóriacsalád
       header: ELISMERT KIADÁSI KATEGÓRIÁK
@@ -3583,10 +3599,9 @@ cli:
         footer: 'Teljes áttekintésért futtasd: aeat --help.'
         heading: aeat config - profil, hitelesítés, diagnosztika
         paragraph_durable_state: A config-parancsok a helyi tartós állapotot kezelik.
-        paragraph_storage_isolation: Elkülönített állapothoz állítsd be a CADRUMO_LOCAL_STORAGE_ROOT
-          és CADRUMO_SECRET_STORE_DIR értékét. A profil titkát --profile-secrets-stdin
-          vagy --profile-secrets-fd, a parancs titkát --secrets-stdin vagy --secrets-fd
-          kapcsolóval add át.
+        paragraph_storage_isolation: Elkülönített állapothoz állítsd be a CADRUMO_STORAGE_ROOT
+          értékét. A profil titkát --profile-secrets-stdin vagy --profile-secrets-fd,
+          a parancs titkát --secrets-stdin vagy --secrets-fd kapcsolóval add át.
         profile_archive: A profil mentése lezárt archívumba, vagy egy archívum visszaállítása.
         profile_delete: Helyileg tárolt profil törlése.
         profile_history: Az append-only profil eseménytörténet megtekintése.
@@ -3807,9 +3822,9 @@ cli:
       profile_missing: Nincs beállítva aktív profil. Hozzon létre egyet az adatok
         importálása előtt.
       storage_ok: A helyi titkosított tár olvasható az aktuális főkulccsal.
-      storage_warning: 'Az aktuális főkulccsal nem olvasható %{count} titkosított rekord
+      storage_warning: Az aktuális főkulccsal nem olvasható %{count} titkosított rekord
         a helyi tárolóból. Ezek nem a bankszámlakivonat sorai; importálhatsz új tranzakciókat,
-        de a régebbi helyi adatok használata előtt ellenőrizd a diagnosztikát.'
+        de a régebbi helyi adatok használata előtt ellenőrizd a diagnosztikát.
       title: Munkaterület állapota
       transactions_empty: Még nem importáltak banki tranzakciókat.
       transactions_present: '%{count} banki tranzakció érhető el a nyilvántartásodban.'

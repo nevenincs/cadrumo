@@ -117,7 +117,7 @@ def test_history_append_revision_accepts_only_the_current_successor() -> None:
     corrected = history.append_revision(winning)
 
     assert corrected.append_revision(winning) is corrected
-    with pytest.raises(ActividadAssetClaimConflictError, match="current revision"):
+    with pytest.raises(ActividadAssetClaimConflictError, match="correction_must_supersede_current"):
         corrected.append_revision(stale)
 
 
@@ -155,9 +155,9 @@ def test_reopen_replays_claims_and_refuses_malformed_overlap_or_supersession() -
     )
     missing_superseded_claim = _claim(revision, supersedes_claim_id="d" * 64)
 
-    with pytest.raises(ValidationError, match="overlapping"):
+    with pytest.raises(ValidationError, match="claims_overlap"):
         ActivityAssetHistory(revisions=(revision,), claims=(first, overlapping))
-    with pytest.raises(ValidationError, match="absent"):
+    with pytest.raises(ValidationError, match="superseded_claim_absent"):
         ActivityAssetHistory(revisions=(revision,), claims=(missing_superseded_claim,))
 
 
@@ -188,7 +188,7 @@ def test_superseding_revision_with_basis_one_cent_below_effective_claims_is_refu
         basis_amount="399.99",
     )
 
-    with pytest.raises(ActividadAssetClaimConflictError, match="exceed"):
+    with pytest.raises(ActividadAssetClaimConflictError, match="correction_below_effective_claims"):
         history.append_revision(correction)
     assert len(history.revisions) == 1
 
@@ -211,7 +211,7 @@ def test_superseding_revision_counts_its_opening_amount_with_effective_claims() 
     )
 
     assert history.append_revision(equal).revisions[-1] == equal
-    with pytest.raises(ActividadAssetClaimConflictError, match="exceed"):
+    with pytest.raises(ActividadAssetClaimConflictError, match="correction_below_effective_claims"):
         history.append_revision(one_cent_short)
 
 

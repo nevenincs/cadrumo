@@ -29,19 +29,29 @@ cli:
         update_help: Canvia les dades indicades d'un compte propi; un IBAN o bloc
           bancari nou només arriba pel canal secret.
       actividad_asset:
+        acquisition_candidates_help: Llista els pagaments del llibre que un element
+          podria citar com a adquisició.
         claim_help: Registra una previsió com a amortització; repetir-la de manera
           idèntica retorna el registre existent.
         correct_help: Afegeix una revisió que substitueix la revisió vigent de l'actiu
           (JSON).
         create_help: Crea un actiu a partir de la seva primera revisió immutable (JSON).
-        filing_handoff_help: Mostra les amortitzacions registrades projectades al
-          Model 100 i, de manera acumulada, al Model 130.
+        describe_help: Registra el nom, el número de sèrie i les dades de registre
+          d'un element; cap càlcul canvia.
+        filing_handoff_help: Mostra els càrrecs registrats projectats al Model 100
+          i la meritació projectada al Model 130.
         forecast_help: Calcula, sense registrar-la, l'amortització que admet l'elecció
           de la revisió per a un interval.
+        form_options_help: Mostra els mètodes i grups de taula que el registre admet
+          per a un tipus d'element i exercici.
         group_help: 'Registre d''actius d''activitats econòmiques de l''IRPF: revisions
           immutables, previsions d''amortització i amortitzacions registrades (LIS
           art. 12).'
         inspect_help: Mostra la cadena completa de revisions d'un actiu.
+        list_help: Llista els elements del registre amb base, acumulat, pendent i
+          avisos.
+        plan_help: Mostra el pla d'amortització d'un element, any per any.
+        timeline_help: Mostra l'historial d'un element en ordre.
       bienes_inversion:
         acquisition_year_help: Any d'adquisició del bé.
         art108_help: Si el bé té la consideració de bé d'inversió segons LIVA art.
@@ -1446,9 +1456,13 @@ cli:
           d'auditoria)
         amend_wizard_reason_required: Cal un motiu per al registre d'auditoria de
           la correcció.
-        amend_wizard_select_prompt: "Registrada com a presentada: %{modelo} %{year}
-          %{period}, valors actuals:\n%{summary}\nQuins números de casella van canviar?
-          (separats per comes o espais, en blanc per a cap)"
+        amend_wizard_select_prompt: 'Registrada com a presentada: %{modelo} %{year}
+          %{period}, valors actuals:
+
+          %{summary}
+
+          Quins números de casella van canviar? (separats per comes o espais, en blanc
+          per a cap)'
         amend_wizard_unknown_casilla: La casella %{token} no forma part de la declaració
           %{modelo} %{year} %{period} registrada com a presentada; tria una de les
           caselles llistades.
@@ -3615,9 +3629,9 @@ cli:
         heading: Configuració i diagnòstic del contribuent.
         paragraph_durable_state: L'estat durador (perfil, autenticació, registres)
           persisteix entre sessions.
-        paragraph_storage_isolation: Per aïllar l'estat, defineix CADRUMO_LOCAL_STORAGE_ROOT
-          i CADRUMO_SECRET_STORE_DIR. Passa secrets de perfil amb --profile-secrets-stdin
-          o --profile-secrets-fd, i secrets de l'ordre amb --secrets-stdin o --secrets-fd.
+        paragraph_storage_isolation: Per aïllar l'estat, defineix CADRUMO_STORAGE_ROOT.
+          Passa secrets de perfil amb --profile-secrets-stdin o --profile-secrets-fd,
+          i secrets de l'ordre amb --secrets-stdin o --secrets-fd.
         profile_archive: Fes una còpia del perfil en un fitxer segellat, o restaura'n
           una.
         profile_delete: Elimina un perfil emmagatzemat localment.

@@ -76,6 +76,34 @@ def _leaf(
     )
 
 
+_DESCRIPTOR_OPTIONS = (
+    _option("name", "--name"),
+    _option("serial_number", "--serial-number", optional=True),
+    _option("description", "--description", optional=True),
+    _option("document_kind", "--document-kind", optional=True),
+    _option("document_number", "--document-number", optional=True),
+    _option("supplier_name", "--supplier-name", optional=True),
+    _option("supplier_tax_id", "--supplier-tax-id", optional=True),
+)
+
+
+def _read_leaf(
+    token: str,
+    parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
+) -> CommandSpec:
+    name = token.replace("-", "_")
+    return _leaf(
+        f"app_ledger_actividad_asset_{name}",
+        token,
+        f"actividad_asset_{name}",
+        parameters,
+        help_key=TranslationKey(f"cli.app.ledger.actividad_asset.{name}_help"),
+        schema_module="._actividad_asset_payloads",
+        schema_name="ActivityAssetReadPayload",
+        policy=_POLICY_6,
+    )
+
+
 LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         "app_ledger_actividad_asset",
@@ -94,7 +122,7 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_ledger_actividad_asset_create",
         "create",
         "actividad_asset_create",
-        (_argument("revision_json"),),
+        (_argument("revision_json"), *_DESCRIPTOR_OPTIONS),
         help_key=TranslationKey("cli.app.ledger.actividad_asset.create_help"),
         schema_module="._actividad_asset_payloads",
         schema_name="ActivityAssetHistoryPayload",
@@ -113,7 +141,7 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "app_ledger_actividad_asset_correct",
         "correct",
         "actividad_asset_correct",
-        (_argument("revision_json"),),
+        (_argument("revision_json"), _option("superseding_claims_json", "--superseding-claims-json", optional=True)),
         help_key=TranslationKey("cli.app.ledger.actividad_asset.correct_help"),
         schema_module="._actividad_asset_payloads",
         schema_name="ActivityAssetHistoryPayload",
@@ -141,7 +169,6 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "actividad_asset_record_claim",
         (
             _argument("forecast_json"),
-            _option("creating_operation", "--creating-operation"),
             _option("supersedes_claim_id", "--supersedes-claim-id", optional=True),
         ),
         help_key=TranslationKey("cli.app.ledger.actividad_asset.claim_help"),
@@ -159,6 +186,23 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         schema_name="ActivityAssetFilingHandoffPayload",
         policy=_POLICY_6,
     ),
+    _leaf(
+        "app_ledger_actividad_asset_describe",
+        "describe",
+        "actividad_asset_describe",
+        (_argument("asset_id"), *_DESCRIPTOR_OPTIONS),
+        help_key=TranslationKey("cli.app.ledger.actividad_asset.describe_help"),
+        schema_module="._actividad_asset_payloads",
+        schema_name="ActivityAssetHistoryPayload",
+        policy=_POLICY_4,
+    ),
+    _read_leaf("list"),
+    _read_leaf("plan", (_argument("asset_id"),)),
+    _read_leaf("timeline", (_argument("asset_id"),)),
+    _read_leaf(
+        "form-options", (_option("asset_kind", "--asset-kind"), _option("tax_year", "--tax-year", integer=True))
+    ),
+    _read_leaf("acquisition-candidates"),
 )
 
 __all__ = ["LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS"]

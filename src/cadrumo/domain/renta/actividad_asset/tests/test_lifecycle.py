@@ -293,7 +293,7 @@ def test_an_authority_resolved_for_another_election_is_refused() -> None:
     revision = _revision()
     other = _revision(amortization=_linear_election("otro-elemento"))
 
-    with pytest.raises(ActividadAssetValidationError, match="different amortization election"):
+    with pytest.raises(ActividadAssetValidationError, match="schedule_authority_election_mismatch"):
         schedule_charge(
             revision,
             _authority(other),
@@ -384,7 +384,7 @@ def test_later_afectacion_amortizes_from_in_service_date_on_the_full_acquisition
     assert first_year.amount == Decimal("50.41")
     assert next_year.amount == Decimal("100.00")
     assert revision.opening_history.accumulated_amount == Decimal("0")
-    with pytest.raises(ActividadAssetUnsupportedError, match="no amortizable in-service days"):
+    with pytest.raises(ActividadAssetUnsupportedError, match="covered_interval_without_service_days"):
         schedule_charge(
             revision,
             _authority(revision, tax_year=2024),

@@ -35,7 +35,11 @@ class ActivityAssetClaimPayload(OutputRootSchema[dict[str, JsonValue]]):
 
 
 class ActivityAssetFilingHandoffPayload(OutputRootSchema[dict[str, JsonValue]]):
-    """Non-consuming M130/M100 claim projections."""
+    """Non-consuming M100 claim projections and M130 accruals."""
+
+
+class ActivityAssetReadPayload(OutputRootSchema[dict[str, JsonValue]]):
+    """One read of the register: list, plan, timeline, form options or acquisition candidates."""
 
 
 __all__ = [
@@ -44,4 +48,5 @@ __all__ = [
     "ActivityAssetForecastPayload",
     "ActivityAssetHistoryPayload",
     "ActivityAssetInspectionPayload",
+    "ActivityAssetReadPayload",
 ]

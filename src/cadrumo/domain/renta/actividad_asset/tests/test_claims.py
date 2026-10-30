@@ -7,14 +7,12 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.period import Period
 from ....calculations.registry.tests.published_authority import published_supported_filing_years
 from ..claims import (
     AmortizationClaim,
     ClaimCoverageGap,
     effective_claims,
     project_m100,
-    project_m130,
     record_claim,
     select_effective_claims,
     uncovered_claim_intervals,
@@ -74,14 +72,14 @@ def test_exact_retry_reuses_claim_and_changed_same_interval_refuses() -> None:
 
     assert replayed.reused_existing_claim
     assert replayed.claim.claim_id == original.claim_id
-    with pytest.raises(ActividadAssetClaimConflictError, match="same asset"):
+    with pytest.raises(ActividadAssetClaimConflictError, match="interval_has_different_claim"):
         record_claim(recorded.claims, _claim(amount=Decimal("201.00")))
 
 
 def test_overlaps_refuse_but_supersession_allows_a_new_revision_of_same_asset() -> None:
     original = _claim()
     claims = record_claim((), original).claims
-    with pytest.raises(ActividadAssetClaimConflictError, match="overlapping"):
+    with pytest.raises(ActividadAssetClaimConflictError, match="claims_overlap"):
         record_claim(
             claims,
             _claim(covered_from=date(_YEAR, 3, 1), covered_until=date(_YEAR, 5, 1)),
@@ -100,7 +98,7 @@ def test_overlaps_refuse_but_supersession_allows_a_new_revision_of_same_asset() 
 
 
 @pytest.mark.parametrize("year", _supported_years())
-def test_m100_and_m130_reference_same_effective_claim_without_duplicate_basis_use(year: int) -> None:
+def test_m100_projects_each_kind_from_its_own_effective_claims(year: int) -> None:
     material = _claim(year)
     intangible = _claim(
         year,
@@ -114,17 +112,13 @@ def test_m100_and_m130_reference_same_effective_claim_without_duplicate_basis_us
 
     material_m100 = project_m100(claims, asset_kind=AssetKind.MATERIAL, tax_year=year)
     intangible_m100 = project_m100(claims, asset_kind=AssetKind.INTANGIBLE, tax_year=year)
-    material_m130 = project_m130(
-        claims,
-        period=Period.from_year_and_code(year, "1T"),
-        asset_kind=AssetKind.MATERIAL,
-    )
 
     assert material_m100.target_casilla_id == "0208"
     assert intangible_m100.target_casilla_id == "0227"
-    assert material_m130.target_casilla_id == "02"
-    assert material_m100.claim_ids == material_m130.claim_ids == (material.claim_id,)
-    assert material_m100.amount == material_m130.amount == Decimal("200.00")
+    assert material_m100.claim_ids == (material.claim_id,)
+    assert material_m100.amount == Decimal("200.00")
+    assert intangible_m100.claim_ids == (intangible.claim_id,)
+    assert intangible_m100.amount == Decimal("300.00")
 
 
 def _revision(*, in_service: date, out_of_service: date | None = None) -> ActivityAssetRevision:
@@ -243,7 +237,7 @@ def test_gap_finder_ignores_superseded_and_other_asset_claims() -> None:
 
 
 def test_gap_finder_refuses_an_empty_span() -> None:
-    with pytest.raises(ActividadAssetValidationError, match="non-empty"):
+    with pytest.raises(ActividadAssetValidationError, match="covered_interval_empty"):
         uncovered_claim_intervals(_revision(in_service=_START), (), start=_START, end=_START)
 
 

@@ -16,6 +16,13 @@ from .activity_asset_contracts import (
     ActivityAssetRefusal,
     ActivityAssetTaxYear,
 )
+from .activity_asset_read_models import (
+    ActivityAssetAcquisitionCandidate,
+    ActivityAssetFormOptionsView,
+    ActivityAssetListRow,
+    ActivityAssetPlanRow,
+    ActivityAssetTimelineEvent,
+)
 from .activity_asset_results import (
     ActivityAssetInspectionRevision,
     ActivityAssetM130Period,
@@ -133,4 +140,78 @@ class ActivityAssetFilingHandoffProjection(_ActivityAssetOperationProjection):
             m130_period=self.m130_period,
             filing_handoff=self.filing_handoff,
         )
+        return self
+
+
+class ActivityAssetDescribeProjection(_ActivityAssetOperationProjection):
+    """Public describe result with the complete persisted history."""
+
+    history: ActivityAssetHistorySnapshot | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.history is not None)
+        return self
+
+
+class ActivityAssetListProjection(_ActivityAssetOperationProjection):
+    """Public summary of the register."""
+
+    rows: tuple[ActivityAssetListRow, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.rows is not None)
+        return self
+
+
+class ActivityAssetPlanProjection(_ActivityAssetOperationProjection):
+    """Public amortization plan of one element."""
+
+    asset_id: ActivityAssetId | None = None
+    rows: tuple[ActivityAssetPlanRow, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.rows is not None)
+        return self
+
+
+class ActivityAssetTimelineProjection(_ActivityAssetOperationProjection):
+    """Public ordered history of one element."""
+
+    asset_id: ActivityAssetId | None = None
+    events: tuple[ActivityAssetTimelineEvent, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.events is not None)
+        return self
+
+
+class ActivityAssetFormOptionsProjection(_ActivityAssetOperationProjection):
+    """Public form options read from the registry."""
+
+    options: ActivityAssetFormOptionsView | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.options is not None)
+        return self
+
+
+class ActivityAssetAcquisitionCandidatesProjection(_ActivityAssetOperationProjection):
+    """Public list of ledger payments an element could name as its acquisition."""
+
+    candidates: tuple[ActivityAssetAcquisitionCandidate, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.candidates is not None)
         return self

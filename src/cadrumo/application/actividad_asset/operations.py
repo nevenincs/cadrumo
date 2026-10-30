@@ -398,7 +398,9 @@ class ActivityAssetOperations:
             forecast=self._forecast_operation,
             period_end=period_end,
             activities={
-                asset_id: (row.tipo_actividad if (row := rows.get(revision.acquisition.observed_transaction_id)) else None)
+                asset_id: (
+                    row.tipo_actividad if (row := rows.get(revision.acquisition.observed_transaction_id)) else None
+                )
                 for asset_id, revision in current.items()
             },
             agrarian=self._authority.agrarian_activities(period_end) if current else frozenset(),

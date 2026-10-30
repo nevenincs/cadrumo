@@ -48,18 +48,25 @@ from ...domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
     OwnershipMode,
 )
+from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptor, ActivityAssetHistoryEvent
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from ...domain.renta.actividad_asset.vehicle_affectation import VehicleAffectation
+from .activity_asset_read_models import ActivityAssetM130Contribution, ActivityAssetM130ProjectionSnapshot
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from .operations import ActivityAssetFilingHandoff
+from .operations import ActivityAssetFilingHandoff, M130AccrualProjection, M130Contribution
 
 
 def _decimal(value: PublicDecimal | None) -> Decimal | None:
     return None if value is None else Decimal(value.decimal)
 
 
-_CHARGE_DECIMAL_FIELDS: Final = ("amount", "free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap")
-"""Decimal facts a scheduled charge and a recorded claim both carry."""
+_CHARGE_DECIMAL_FIELDS: Final = (
+    "amount",
+    "annual_rate",
+    "free_depreciation_unit_acquisition_value",
+    "free_depreciation_annual_cap",
+)
+"""Decimal facts of a scheduled charge or a recorded claim; only a forecast states its rate."""
 
 
 def _public_charge_fields(value: BaseModel) -> dict[str, object]:
@@ -67,8 +74,9 @@ def _public_charge_fields(value: BaseModel) -> dict[str, object]:
     data: dict[str, object] = {}
     data.update(value.model_dump(mode="python"))
     for name in _CHARGE_DECIMAL_FIELDS:
-        amount = data[name]
-        data[name] = PublicDecimal(decimal=str(amount)) if amount is not None else None
+        if name in data:
+            amount = data[name]
+            data[name] = PublicDecimal(decimal=str(amount)) if amount is not None else None
     return data
 
 
@@ -76,10 +84,11 @@ def _domain_charge_fields(snapshot: BaseModel) -> dict[str, object]:
     """Copy a charge snapshot field by field, restoring its public decimals."""
     data: dict[str, object] = {name: getattr(snapshot, name) for name in type(snapshot).model_fields}
     for name in _CHARGE_DECIMAL_FIELDS:
-        amount = data[name]
-        if amount is not None and not isinstance(amount, PublicDecimal):
-            raise TypeError("charge decimal must be a public decimal")
-        data[name] = _decimal(amount)
+        if name in data:
+            amount = data[name]
+            if amount is not None and not isinstance(amount, PublicDecimal):
+                raise TypeError("charge decimal must be a public decimal")
+            data[name] = _decimal(amount)
     return data
 
 
@@ -262,21 +271,18 @@ class LowValueElectionSnapshot(BaseModel):
 
     election_reference: ElectionReference
     new_material_evidence_reference: EvidenceReference
-    unit_acquisition_value: PublicDecimal
 
     @classmethod
     def from_domain(cls, value: LowValueElection) -> Self:
         return cls(
             election_reference=value.election_reference,
             new_material_evidence_reference=value.new_material_evidence_reference,
-            unit_acquisition_value=project_scalar(value.unit_acquisition_value),
         )
 
     def to_domain(self) -> LowValueElection:
         return LowValueElection(
             election_reference=self.election_reference,
             new_material_evidence_reference=self.new_material_evidence_reference,
-            unit_acquisition_value=Decimal(self.unit_acquisition_value.decimal),
         )
 
 
@@ -473,13 +479,17 @@ class ActivityAssetHistorySnapshot(BaseModel):
 
     revisions: tuple[ActivityAssetRevisionSnapshot, ...] = ()
     claims: tuple[AmortizationClaimSnapshot, ...] = ()
+    descriptors: tuple[ActivityAssetDescriptor, ...] = ()
+    events: tuple[ActivityAssetHistoryEvent, ...] = ()
 
     @classmethod
     def from_domain(cls, value: ActivityAssetHistory) -> Self:
-        """Project every canonical revision and claim in append order."""
+        """Project every canonical revision, claim, descriptor and event in append order."""
         return cls(
             revisions=tuple(ActivityAssetRevisionSnapshot.from_domain(item) for item in value.revisions),
             claims=tuple(AmortizationClaimSnapshot.from_domain(item) for item in value.claims),
+            descriptors=value.descriptors,
+            events=value.events,
         )
 
     def to_domain(self) -> ActivityAssetHistory:
@@ -487,6 +497,8 @@ class ActivityAssetHistorySnapshot(BaseModel):
         return ActivityAssetHistory(
             revisions=tuple(item.to_domain() for item in self.revisions),
             claims=tuple(item.to_domain() for item in self.claims),
+            descriptors=self.descriptors,
+            events=self.events,
         )
 
     @model_validator(mode="after")
@@ -513,6 +525,7 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
     authority_generation: str = Field(min_length=1, max_length=256)
     source_reference: str = Field(min_length=1, max_length=2048)
     method: AmortizationMethod = AmortizationMethod.LINEAR
+    annual_rate: PublicDecimal | None = None
     free_depreciation_election_reference: ElectionReference | None = None
     free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: PublicDecimal | None = None
@@ -537,7 +550,7 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
 class ClaimProjectionSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    target_casilla_id: str = Field(pattern=r"^(?:\d{2}|0\d{3})$")
+    target_casilla_id: str = Field(pattern=r"^0\d{3}$")
     tax_year: FilingYear
     claim_ids: tuple[str, ...]
     amount: PublicDecimal
@@ -566,15 +579,49 @@ class ClaimProjectionSnapshot(BaseModel):
         return self
 
 
+def _m130_snapshot(value: M130AccrualProjection) -> ActivityAssetM130ProjectionSnapshot:
+    return ActivityAssetM130ProjectionSnapshot(
+        tax_year=value.tax_year,
+        amount=project_scalar(value.amount),
+        contributions=tuple(
+            ActivityAssetM130Contribution(
+                asset_id=item.asset_id,
+                amount=project_scalar(item.amount),
+                claim_id=item.claim_id,
+                schedule_fingerprint=item.schedule_fingerprint,
+            )
+            for item in value.contributions
+        ),
+        unavailable_asset_ids=value.unavailable_asset_ids,
+    )
+
+
+def _m130_domain(value: ActivityAssetM130ProjectionSnapshot) -> M130AccrualProjection:
+    return M130AccrualProjection(
+        tax_year=value.tax_year,
+        amount=Decimal(value.amount.decimal),
+        contributions=tuple(
+            M130Contribution(
+                asset_id=item.asset_id,
+                amount=Decimal(item.amount.decimal),
+                claim_id=item.claim_id,
+                schedule_fingerprint=item.schedule_fingerprint,
+            )
+            for item in value.contributions
+        ),
+        unavailable_asset_ids=value.unavailable_asset_ids,
+    )
+
+
 class ActivityAssetFilingHandoffSnapshot(BaseModel):
-    """Four non-consuming filing projections with explicit decimal amounts."""
+    """Non-consuming filing projections with explicit decimal amounts."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     material_m100: ClaimProjectionSnapshot
     intangible_m100: ClaimProjectionSnapshot
-    material_m130: ClaimProjectionSnapshot
-    intangible_m130: ClaimProjectionSnapshot
+    material_m130: ActivityAssetM130ProjectionSnapshot
+    intangible_m130: ActivityAssetM130ProjectionSnapshot
 
     @classmethod
     def from_domain(cls, value: ActivityAssetFilingHandoff) -> Self:
@@ -582,8 +629,8 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
         return cls(
             material_m100=ClaimProjectionSnapshot.from_domain(value.material_m100),
             intangible_m100=ClaimProjectionSnapshot.from_domain(value.intangible_m100),
-            material_m130=ClaimProjectionSnapshot.from_domain(value.material_m130),
-            intangible_m130=ClaimProjectionSnapshot.from_domain(value.intangible_m130),
+            material_m130=_m130_snapshot(value.material_m130),
+            intangible_m130=_m130_snapshot(value.intangible_m130),
         )
 
     def to_domain(self) -> ActivityAssetFilingHandoff:
@@ -591,8 +638,8 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
         return ActivityAssetFilingHandoff(
             material_m100=self.material_m100.to_domain(),
             intangible_m100=self.intangible_m100.to_domain(),
-            material_m130=self.material_m130.to_domain(),
-            intangible_m130=self.intangible_m130.to_domain(),
+            material_m130=_m130_domain(self.material_m130),
+            intangible_m130=_m130_domain(self.intangible_m130),
         )
 
 

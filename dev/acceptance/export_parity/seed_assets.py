@@ -92,7 +92,7 @@ class AssetSeedStage(SeedState):
             "amortization": {"regime": "normal", "method": asset.method, "authority_class_key": asset.class_key},
         }
         self._result(
-            ("app", "ledger", "actividad-asset", "create", json.dumps(revision, separators=(",", ":"))), stage=stage
+            ("app", "ledger", "actividad-asset", "create", json.dumps(revision, separators=(",", ":")), "--name", "Parity element"), stage=stage
         )
         if asset.is_iva_investment_good and not carried_in:
             self._result(
@@ -155,8 +155,6 @@ class AssetSeedStage(SeedState):
                 "actividad-asset",
                 "claim",
                 json.dumps(forecast, separators=(",", ":")),
-                "--creating-operation",
-                _ACTOR,
             ),
             stage=f"{stage}.claim",
         )

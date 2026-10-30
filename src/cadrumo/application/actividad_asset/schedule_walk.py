@@ -1,0 +1,390 @@
+"""Walk an element's schedule year by year: the one route to accrued amortization.
+
+The plan, the Modelo 130 calculation and the filing handoff all read this route.
+A year with no claim still consumes what the schedule charged for it, so an element
+reaches the end of its amortization on the same date whether or not anyone recorded
+those years (DGT V3655-16: the elapsed maximum period leaves nothing to amortize).
+Nothing here records a claim.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from datetime import date, timedelta
+from decimal import Decimal
+from enum import StrEnum
+
+from ...core.tipos_actividad import TipoActividad
+from ...domain.calculations.registry.errors import RegistryError
+from ...domain.renta.actividad_asset.claims import (
+    AmortizationClaim,
+    ClaimCoverageGap,
+    asset_schedule_history,
+    current_revisions,
+    select_effective_claims,
+    uncovered_claim_intervals,
+)
+from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS
+from ...domain.renta.actividad_asset.errors import (
+    ActividadAssetError,
+    ActividadAssetIncompleteError,
+    ActividadAssetPeriodElapsedError,
+    ActividadAssetUnsupportedError,
+)
+from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, OpeningHistoryStatus
+from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from .history import ActivityAssetHistory
+from .ports import ActivityAssetForecastOperation
+
+
+class PlanFigureAbsence(StrEnum):
+    """Why a year has no planned figure."""
+
+    FREE_ELECTION = "free_election"
+    EDITION_UNAVAILABLE = "edition_unavailable"
+    PERIOD_ELAPSED = "period_elapsed"
+    BASIS_EXHAUSTED = "basis_exhausted"
+    INCOMPLETE = "incomplete"
+    UNSUPPORTED = "unsupported"
+    CONFLICT = "conflict"
+
+
+@dataclass(frozen=True, slots=True)
+class WalkedYear:
+    """One tax year of an element's schedule."""
+
+    tax_year: int
+    claims: tuple[AmortizationClaim, ...]
+    gaps: tuple[ClaimCoverageGap, ...]
+    charge: ScheduledAmortizationCharge | None
+    absence: PlanFigureAbsence | None
+    reason_key: str | None
+    reason_facts: Mapping[str, str] = field(default_factory=dict)
+    consumed_before: Decimal = Decimal("0")
+    consumed_through: Decimal = Decimal("0")
+
+    @property
+    def claimed(self) -> Decimal:
+        """Return what this year's effective claims charge."""
+        return sum((claim.amount for claim in self.claims), Decimal("0"))
+
+
+def walk_element(
+    revision: ActivityAssetRevision,
+    history: ActivityAssetHistory,
+    *,
+    forecast: ActivityAssetForecastOperation,
+    through_year: int,
+    settled_after: int | None = None,
+) -> tuple[WalkedYear, ...]:
+    """Work out each service year from entry to ``through_year`` under the current revision.
+
+    A covered year consumes its claims.  A year with an uncovered interval
+    consumes the larger of its claims and its charge.  A year the schedule cannot
+    work out consumes its claims and carries the typed reason.  With
+    ``settled_after``, the walk ends at the first such reason from that year on,
+    which is where a plan stops having anything further to say.
+
+    Returns:
+        One row per year in order, stopping at the year of the element's baja.
+    """
+    last_service_day = (
+        None if revision.out_of_service_date is None else revision.out_of_service_date - timedelta(days=1)
+    )
+    last_year = through_year if last_service_day is None else min(through_year, last_service_day.year)
+    rows: list[WalkedYear] = []
+    consumed = Decimal("0")
+    for tax_year in range(revision.in_service_date.year, last_year + 1):
+        claims = tuple(
+            claim
+            for claim in select_effective_claims(history.claims, tax_year=tax_year)
+            if claim.asset_id == revision.asset_id
+        )
+        gaps = uncovered_claim_intervals(
+            revision,
+            history.claims,
+            start=date(tax_year, 1, 1),
+            end=date(tax_year + 1, 1, 1),
+        )
+        row = _walk_year(
+            revision,
+            history,
+            forecast=forecast,
+            tax_year=tax_year,
+            claims=claims,
+            gaps=gaps,
+            consumed_before=consumed,
+        )
+        rows.append(row)
+        consumed = row.consumed_through
+        if settled_after is not None and tax_year >= settled_after and row.absence is not None:
+            break
+    return tuple(rows)
+
+
+def _walk_year(
+    revision: ActivityAssetRevision,
+    history: ActivityAssetHistory,
+    *,
+    forecast: ActivityAssetForecastOperation,
+    tax_year: int,
+    claims: tuple[AmortizationClaim, ...],
+    gaps: tuple[ClaimCoverageGap, ...],
+    consumed_before: Decimal,
+) -> WalkedYear:
+    claimed = sum((claim.amount for claim in claims), Decimal("0"))
+    common = {"tax_year": tax_year, "claims": claims, "gaps": gaps, "consumed_before": consumed_before}
+    if revision.amortization.method in FREE_AMOUNT_METHODS:
+        return WalkedYear(
+            charge=None,
+            absence=PlanFigureAbsence.FREE_ELECTION,
+            reason_key=None,
+            consumed_through=consumed_before + claimed,
+            **common,
+        )
+    try:
+        charge = _span_charge(
+            revision,
+            history,
+            forecast=forecast,
+            tax_year=tax_year,
+            until=date(tax_year + 1, 1, 1),
+            consumed_before=consumed_before,
+        )
+    except (ActividadAssetError, RegistryError) as error:
+        return WalkedYear(
+            charge=None,
+            absence=_absence_of(error),
+            reason_key=_reason_key(error),
+            reason_facts=_reason_facts(error),
+            consumed_through=consumed_before + claimed,
+            **common,
+        )
+    consumed_in_year = max(claimed, charge.amount) if gaps else claimed
+    return WalkedYear(
+        charge=charge,
+        absence=PlanFigureAbsence.BASIS_EXHAUSTED if charge.amount <= Decimal("0") else None,
+        reason_key=None,
+        consumed_through=consumed_before + consumed_in_year,
+        **common,
+    )
+
+
+def _span_charge(
+    revision: ActivityAssetRevision,
+    history: ActivityAssetHistory,
+    *,
+    forecast: ActivityAssetForecastOperation,
+    tax_year: int,
+    until: date,
+    consumed_before: Decimal,
+) -> ScheduledAmortizationCharge:
+    """Charge from 1 January to ``until`` as the schedule's own figure.
+
+    Claims inside the year do not reduce it and later years do not touch it; what
+    earlier years consumed comes from the walk.
+    """
+    summary = asset_schedule_history(
+        tuple(claim for claim in history.claims if claim.tax_year <= tax_year),
+        history.revisions,
+        asset_id=revision.asset_id,
+        tax_year=tax_year,
+    ).model_copy(
+        update={
+            "accumulated_before_tax_year": consumed_before,
+            "accumulated_in_tax_year": Decimal("0"),
+            "election_fingerprints_in_tax_year": (),
+        },
+    )
+    return forecast(revision, covered_from=date(tax_year, 1, 1), covered_until=until, history=summary)
+
+
+def _absence_of(error: Exception) -> PlanFigureAbsence:
+    if isinstance(error, RegistryError):
+        return PlanFigureAbsence.EDITION_UNAVAILABLE
+    if isinstance(error, ActividadAssetPeriodElapsedError):
+        return PlanFigureAbsence.PERIOD_ELAPSED
+    if isinstance(error, ActividadAssetIncompleteError):
+        return PlanFigureAbsence.INCOMPLETE
+    if isinstance(error, ActividadAssetUnsupportedError):
+        return PlanFigureAbsence.UNSUPPORTED
+    return PlanFigureAbsence.CONFLICT
+
+
+def _reason_key(error: Exception) -> str | None:
+    return error.translated_message if isinstance(error, ActividadAssetError) else None
+
+
+def _reason_facts(error: Exception) -> dict[str, str]:
+    if not isinstance(error, ActividadAssetError):
+        return {}
+    return {name: str(value) for name, value in (error.context or {}).items()}
+
+
+class M130ElementOutcome(StrEnum):
+    """What one element says about one Modelo 130 period."""
+
+    ACCRUED = "accrued"
+    NOTHING = "nothing"
+    FREE_GAP = "free_gap"
+    UNAVAILABLE = "unavailable"
+    AGRARIAN_EXCLUDED = "agrarian_excluded"
+
+
+@dataclass(frozen=True, slots=True)
+class M130Contribution:
+    """One amount behind Modelo 130 casilla 02: a recorded claim or the element's schedule."""
+
+    asset_id: str
+    amount: Decimal
+    claim_id: str | None = None
+    schedule_fingerprint: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class M130ElementAccrual:
+    """One element's accrual from 1 January to the end of the period."""
+
+    revision: ActivityAssetRevision
+    outcome: M130ElementOutcome
+    contributions: tuple[M130Contribution, ...] = ()
+    error: ActividadAssetError | RegistryError | None = None
+    activity_undeclared: bool = False
+
+
+def m130_register_accruals(
+    history: ActivityAssetHistory,
+    *,
+    forecast: ActivityAssetForecastOperation,
+    period_end: date,
+    activities: Mapping[str, TipoActividad | None],
+    agrarian: frozenset[TipoActividad],
+) -> tuple[M130ElementAccrual, ...]:
+    """Work out what every element of the register accrued in the year through ``period_end``.
+
+    An element belongs to the activity its acquisition row declares.  An agrarian
+    activity pays a share of income whatever its expenses (RIRPF art. 110.1.c), so
+    its elements stay out and others still count.  An element declaring no activity
+    counts, because silence does not mean agrarian.
+
+    Returns:
+        One accrual per element, in asset order.
+    """
+    current = current_revisions(history.revisions)
+    any_agrarian = any(activity in agrarian for activity in activities.values())
+    accruals: list[M130ElementAccrual] = []
+    for asset_id in sorted(current):
+        revision = current[asset_id]
+        activity = activities.get(asset_id)
+        if activity in agrarian:
+            accruals.append(M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.AGRARIAN_EXCLUDED))
+            continue
+        accrual = _m130_element_accrual(revision, history, forecast=forecast, period_end=period_end)
+        accruals.append(
+            M130ElementAccrual(
+                revision=revision,
+                outcome=accrual.outcome,
+                contributions=accrual.contributions,
+                error=accrual.error,
+                activity_undeclared=activity is None and any_agrarian,
+            ),
+        )
+    return tuple(accruals)
+
+
+def _m130_element_accrual(
+    revision: ActivityAssetRevision,
+    history: ActivityAssetHistory,
+    *,
+    forecast: ActivityAssetForecastOperation,
+    period_end: date,
+) -> M130ElementAccrual:
+    tax_year = period_end.year
+    until = period_end + timedelta(days=1)
+    if revision.in_service_date >= until or (
+        revision.out_of_service_date is not None and revision.out_of_service_date <= date(tax_year, 1, 1)
+    ):
+        return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)
+    if revision.amortization.method in FREE_AMOUNT_METHODS:
+        return _m130_free_accrual(revision, history, period_end=period_end)
+    earlier = walk_element(revision, history, forecast=forecast, through_year=tax_year - 1)
+    try:
+        charge = _span_charge(
+            revision,
+            history,
+            forecast=forecast,
+            tax_year=tax_year,
+            until=until,
+            consumed_before=earlier[-1].consumed_through if earlier else Decimal("0"),
+        )
+    except ActividadAssetPeriodElapsedError:
+        return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)
+    except (ActividadAssetError, RegistryError) as error:
+        return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.UNAVAILABLE, error=error)
+    if charge.amount <= Decimal("0"):
+        return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)
+    return M130ElementAccrual(
+        revision=revision,
+        outcome=M130ElementOutcome.ACCRUED,
+        contributions=(
+            M130Contribution(
+                asset_id=revision.asset_id,
+                amount=charge.amount,
+                schedule_fingerprint=charge.schedule_fingerprint,
+            ),
+        ),
+    )
+
+
+def _m130_free_accrual(
+    revision: ActivityAssetRevision,
+    history: ActivityAssetHistory,
+    *,
+    period_end: date,
+) -> M130ElementAccrual:
+    """A free amount is the taxpayer's election, so only its recorded claims accrue."""
+    claims = tuple(
+        claim
+        for claim in select_effective_claims(history.claims, tax_year=period_end.year, through=period_end)
+        if claim.asset_id == revision.asset_id
+    )
+    if claims:
+        return M130ElementAccrual(
+            revision=revision,
+            outcome=M130ElementOutcome.ACCRUED,
+            contributions=tuple(
+                M130Contribution(asset_id=revision.asset_id, amount=claim.amount, claim_id=claim.claim_id)
+                for claim in claims
+            ),
+        )
+    if free_base_remains(revision, history, tax_year=period_end.year):
+        return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.FREE_GAP)
+    return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)
+
+
+def free_base_remains(revision: ActivityAssetRevision, history: ActivityAssetHistory, *, tax_year: int) -> bool:
+    """Say whether a free-method element still has basis after opening history and claims up to ``tax_year``."""
+    if revision.opening_history.status is OpeningHistoryStatus.MISSING:
+        return True
+    summary = asset_schedule_history(
+        tuple(claim for claim in history.claims if claim.tax_year <= tax_year),
+        history.revisions,
+        asset_id=revision.asset_id,
+        tax_year=tax_year,
+    )
+    opening = revision.opening_history.accumulated_amount or Decimal("0")
+    consumed = opening + summary.accumulated_before_tax_year + summary.accumulated_in_tax_year
+    return revision.amortizable_basis() > consumed
+
+
+__all__ = [
+    "M130Contribution",
+    "M130ElementAccrual",
+    "M130ElementOutcome",
+    "PlanFigureAbsence",
+    "WalkedYear",
+    "free_base_remains",
+    "m130_register_accruals",
+    "walk_element",
+]

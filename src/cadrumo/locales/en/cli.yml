@@ -28,18 +28,28 @@ cli:
         update_help: Change the named details of an own account; a new IBAN or bank
           block comes only through the secret channel.
       actividad_asset:
+        acquisition_candidates_help: List the ledger payments an element could name
+          as its acquisition.
         claim_help: Record a forecast as an amortization claim; an identical replay
           returns the existing claim.
         correct_help: Append a revision that supersedes the asset's current revision
           (JSON).
         create_help: Create an activity asset from its first immutable revision (JSON).
-        filing_handoff_help: Show the recorded claims projected to Modelo 100 and,
-          cumulatively, to Modelo 130.
+        describe_help: Record an element's name, serial number and register details;
+          no calculation changes.
+        filing_handoff_help: Show the recorded claims projected to Modelo 100 and
+          the accrual projected to Modelo 130.
         forecast_help: Preview, without recording it, the amortization the revision's
           election allows for a covered interval.
+        form_options_help: Show the methods and table groups the registry admits for
+          an asset kind and tax year.
         group_help: 'IRPF activity-asset register: immutable revisions, amortization
           forecasts and recorded claims (LIS art. 12).'
         inspect_help: Show one activity asset's complete revision chain.
+        list_help: List the register's elements with basis, accumulated, pending and
+          findings.
+        plan_help: Show one element's amortization plan, year by year.
+        timeline_help: Show one element's history in order.
       bienes_inversion:
         acquisition_year_help: Year the good was acquired.
         art108_help: Whether the good qualifies as a bien de inversión under LIVA
@@ -1351,7 +1361,13 @@ cli:
           trail)
         amend_wizard_reason_required: A reason is required for the correction audit
           trail.
-        amend_wizard_select_prompt: "Recorded as filed: %{modelo} %{year} %{period},\ncurrent values:\n%{summary}\nWhich box numbers changed? (comma/space separated, blank for none)"
+        amend_wizard_select_prompt: 'Recorded as filed: %{modelo} %{year} %{period},
+
+          current values:
+
+          %{summary}
+
+          Which box numbers changed? (comma/space separated, blank for none)'
         amend_wizard_unknown_casilla: Box %{token} is not part of the %{modelo} %{year}
           %{period} return recorded as filed; choose from the listed box numbers.
         amend_wizard_value_prompt: Corrected value for casilla %{number} (%{label}),
@@ -3374,10 +3390,9 @@ cli:
         footer: Run aeat --help for the full overview.
         heading: aeat config - profile, auth, diagnostics
         paragraph_durable_state: Config commands manage local durable state.
-        paragraph_storage_isolation: For isolated state, set CADRUMO_LOCAL_STORAGE_ROOT
-          and CADRUMO_SECRET_STORE_DIR. Pass profile secrets through --profile-secrets-stdin
-          or --profile-secrets-fd, and command secrets through --secrets-stdin or
-          --secrets-fd.
+        paragraph_storage_isolation: For isolated state, set CADRUMO_STORAGE_ROOT.
+          Pass profile secrets through --profile-secrets-stdin or --profile-secrets-fd,
+          and command secrets through --secrets-stdin or --secrets-fd.
         profile_archive: Back the profile up to a sealed archive, or restore one.
         profile_delete: Delete a locally stored profile.
         profile_history: Inspect the append-only profile event history.

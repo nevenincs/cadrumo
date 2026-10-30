@@ -6,10 +6,19 @@ import asyncio
 from dataclasses import dataclass, replace
 from typing import Protocol, override
 
+from pydantic import TypeAdapter
 from textual.app import ComposeResult
 from textual.widgets import Button, Input, Static
 
-from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
+from ....application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
+from ....application.actividad_asset.activity_asset_read_models import (
+    ActivityAssetAcquisitionCandidate,
+    ActivityAssetFormOptionsView,
+    ActivityAssetListRow,
+    ActivityAssetPlanRow,
+    ActivityAssetTimelineEvent,
+)
+from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ....application.operator_actions.models import PreconditionVerdict
 from ....core.errors.error_codes import resolve_error_message
@@ -18,7 +27,8 @@ from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date
 from ....core.period import Period
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
-from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
+from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
@@ -35,7 +45,9 @@ from .models_actividad_asset import (
 from .workspace_screen import LedgerWorkspaceScreen
 
 #: The actions that change records; an unknown outcome withholds them until the asset is read again.
-_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim")
+_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe")
+
+_SUPERSEDING_CLAIMS = TypeAdapter(tuple[ActivityAssetSupersedingClaim, ...])
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,6 +81,30 @@ class ActivityAssetTuiActionsV1(Protocol):
 
     def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
         """Record an explicit claim through the application boundary."""
+        ...
+
+    def describe(self, asset_id: str, descriptor: ActivityAssetDescriptorFacts) -> ActivityAssetHistory:
+        """Append an element's descriptive facts."""
+        ...
+
+    def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
+        """Summarise the register."""
+        ...
+
+    def plan(self, asset_id: str) -> tuple[ActivityAssetPlanRow, ...]:
+        """Read one element's amortization plan."""
+        ...
+
+    def timeline(self, asset_id: str) -> tuple[ActivityAssetTimelineEvent, ...]:
+        """Read one element's ordered history."""
+        ...
+
+    def form_options(self, asset_kind: AssetKind, tax_year: int) -> ActivityAssetFormOptionsView:
+        """Read what the registry admits for an asset kind and tax year."""
+        ...
+
+    def acquisition_candidates(self) -> tuple[ActivityAssetAcquisitionCandidate, ...]:
+        """List the ledger payments an element could name as its acquisition."""
         ...
 
     def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
@@ -117,14 +153,33 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             "tui.ledger.activity_asset.revision",
         )
         yield localized(
+            Input(placeholder=tr("tui.ledger.activity_asset.name"), id="asset-name"),
+            "tui.ledger.activity_asset.name",
+        )
+        yield localized(
+            Input(placeholder=tr("tui.ledger.activity_asset.serial"), id="asset-serial"),
+            "tui.ledger.activity_asset.serial",
+        )
+        yield localized(
             Button(tr("tui.ledger.activity_asset.create"), id="asset-create"), "tui.ledger.activity_asset.create"
+        )
+        yield localized(
+            Button(tr("tui.ledger.activity_asset.describe"), id="asset-describe"),
+            "tui.ledger.activity_asset.describe",
         )
         yield localized(
             Button(tr("tui.ledger.activity_asset.inspect"), id="asset-inspect"), "tui.ledger.activity_asset.inspect"
         )
         yield localized(
+            Input(placeholder=tr("tui.ledger.activity_asset.superseding_claims"), id="asset-superseding-claims"),
+            "tui.ledger.activity_asset.superseding_claims",
+        )
+        yield localized(
             Button(tr("tui.ledger.activity_asset.correct"), id="asset-correct"), "tui.ledger.activity_asset.correct"
         )
+        for action in ("list", "plan", "timeline", "acquisition_candidates"):
+            key = f"tui.ledger.activity_asset.{action}"
+            yield localized(Button(tr(key), id=f"asset-{action.replace('_', '-')}"), key)
         yield Static("", id="asset-current-revision-id", markup=False)
         yield localized(
             Input(placeholder=tr("tui.ledger.activity_asset.free_amount"), id="asset-free-amount"),
@@ -139,7 +194,6 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield localized(
             Button(tr("tui.ledger.activity_asset.forecast"), id="asset-forecast"), "tui.ledger.activity_asset.forecast"
         )
-        yield Input(value="actividad_asset.tui.claim", id="asset-creating-operation")
         yield localized(
             Button(tr("tui.ledger.activity_asset.claim"), id="asset-claim"), "tui.ledger.activity_asset.claim"
         )
@@ -148,6 +202,11 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield localized(
             Button(tr("tui.ledger.activity_asset.filing"), id="asset-filing-handoff"),
             "tui.ledger.activity_asset.filing",
+        )
+        yield Input(value="material", id="asset-options-kind")
+        yield localized(
+            Button(tr("tui.ledger.activity_asset.form_options"), id="asset-form-options"),
+            "tui.ledger.activity_asset.form_options",
         )
         yield Static("", id="asset-result", markup=False)
         yield Static("", id="asset-recovery", markup=False)
@@ -242,7 +301,10 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             "#asset-covered-from",
             "#asset-covered-until",
             "#asset-supersedes-claim-id",
-            "#asset-creating-operation",
+            "#asset-name",
+            "#asset-serial",
+            "#asset-superseding-claims",
+            "#asset-options-kind",
             "#asset-filing-tax-year",
             "#asset-filing-m130-period",
         ):
@@ -271,7 +333,10 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         # Each action records the asset it names before it reaches the door, so an unknown outcome holds
         # the writes for that asset.
         if button_id == "asset-create":
-            creation = ActivityAssetCreationRequestV1(revision=ActivityAssetRevision.model_validate_json(revision_json))
+            creation = ActivityAssetCreationRequestV1(
+                revision=ActivityAssetRevision.model_validate_json(revision_json),
+                descriptor=self._descriptor(),
+            )
             self._named_asset_id = creation.revision.asset_id
             return self._inspection_result(prefix="created", result=self._actions.create(creation))
         if button_id == "asset-inspect":
@@ -280,8 +345,10 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             inspected = self._inspection_result(prefix="asset", result=result)
             return replace(inspected, inspected_asset_id=result.asset_id)
         if button_id == "asset-correct":
+            superseding = self.query_one("#asset-superseding-claims", Input).value.strip()
             correction = ActivityAssetCorrectionRequestV1(
-                revision=ActivityAssetRevision.model_validate_json(revision_json)
+                revision=ActivityAssetRevision.model_validate_json(revision_json),
+                superseding_claims=_SUPERSEDING_CLAIMS.validate_json(superseding) if superseding else (),
             )
             self._named_asset_id = correction.revision.asset_id
             return self._inspection_result(prefix="corrected", result=self._actions.correct(correction))
@@ -312,7 +379,6 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             result = self._actions.record_claim(
                 ActivityAssetClaimRequestV1(
                     forecast=self._last_forecast,
-                    creating_operation=self.query_one("#asset-creating-operation", Input).value,
                     supersedes_claim_id=self._last_forecast_supersedes,
                 ),
             )
@@ -337,7 +403,60 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                     f"\tm130_intangible={result.intangible_m130.amount}"
                 )
             )
+        if button_id == "asset-describe":
+            self._named_asset_id = asset_id
+            history = self._actions.describe(asset_id, self._descriptor())
+            return _ActivityAssetScreenResult(message=f"described\t{asset_id}\tdescriptors={len(history.descriptors)}")
+        if button_id == "asset-list":
+            rows = self._actions.list_elements()
+            return _ActivityAssetScreenResult(
+                message="\n".join(
+                    f"{row.asset_id}\t{row.name or ''}\t{row.state.value}\t{row.pending.decimal if row.pending else ''}"
+                    for row in rows
+                ),
+            )
+        if button_id == "asset-plan":
+            self._named_asset_id = asset_id
+            return _ActivityAssetScreenResult(
+                message="\n".join(
+                    f"{row.tax_year}\t{row.planned.decimal if row.planned else ''}"
+                    f"\t{row.claimed.decimal}\t{row.claim_state.value}"
+                    for row in self._actions.plan(asset_id)
+                ),
+            )
+        if button_id == "asset-timeline":
+            self._named_asset_id = asset_id
+            return _ActivityAssetScreenResult(
+                message="\n".join(
+                    f"{event.sequence}\t{event.kind.value}\t{event.record_id}"
+                    for event in self._actions.timeline(asset_id)
+                ),
+            )
+        if button_id == "asset-form-options":
+            options = self._actions.form_options(
+                AssetKind(self.query_one("#asset-options-kind", Input).value),
+                int(self.query_one("#asset-filing-tax-year", Input).value),
+            )
+            return _ActivityAssetScreenResult(
+                message=(
+                    f"methods={','.join(method.value for method in options.methods)}"
+                    f"\ttable_groups={len(options.table_groups)}\tedition={options.edition.revision_id}"
+                ),
+            )
+        if button_id == "asset-acquisition-candidates":
+            return _ActivityAssetScreenResult(
+                message="\n".join(
+                    f"{item.transaction_id}\t{item.booked_date}\t{item.amount.decimal}"
+                    for item in self._actions.acquisition_candidates()
+                ),
+            )
         raise ValueError("unknown activity-asset action")
+
+    def _descriptor(self) -> ActivityAssetDescriptorFacts:
+        return ActivityAssetDescriptorFacts(
+            name=self.query_one("#asset-name", Input).value,
+            serial_number=self.query_one("#asset-serial", Input).value.strip() or None,
+        )
 
     @staticmethod
     def _inspection_result(*, prefix: str, result: ActivityAssetInspectionV1) -> _ActivityAssetScreenResult:

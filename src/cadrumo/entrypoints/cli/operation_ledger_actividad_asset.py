@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 from typing import Any, NoReturn
@@ -17,26 +18,45 @@ from cadrumo_client.commands.registered_operation_errors import invalid_completi
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...application.actividad_asset.activity_asset_contracts import (
+    ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID,
+    ActivityAssetAcquisitionCandidatesRequest,
     ActivityAssetClaimRequest,
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
+    ActivityAssetDescribeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
+    ActivityAssetFormOptionsRequest,
     ActivityAssetInspectRequest,
+    ActivityAssetListRequest,
+    ActivityAssetPlanRequest,
+    ActivityAssetSupersedingClaim,
+    ActivityAssetTimelineRequest,
 )
 from ...application.actividad_asset.activity_asset_projections import (
+    ActivityAssetAcquisitionCandidatesProjection,
     ActivityAssetClaimProjection,
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
+    ActivityAssetDescribeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
+    ActivityAssetFormOptionsProjection,
     ActivityAssetInspectProjection,
+    ActivityAssetListProjection,
+    ActivityAssetPlanProjection,
+    ActivityAssetTimelineProjection,
 )
 from ...application.actividad_asset.operation_dtos import (
     ActivityAssetRevisionSnapshot,
@@ -46,7 +66,8 @@ from ...application.operations.public_scalar import PublicDecimal
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.renta.actividad_asset.claims import AmortizationClaim
-from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
+from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from .common import active_bucket_id_or_refuse
 
@@ -57,6 +78,12 @@ type _ActivityAssetProjection = (
     | ActivityAssetForecastProjection
     | ActivityAssetClaimProjection
     | ActivityAssetFilingHandoffProjection
+    | ActivityAssetDescribeProjection
+    | ActivityAssetListProjection
+    | ActivityAssetPlanProjection
+    | ActivityAssetTimelineProjection
+    | ActivityAssetFormOptionsProjection
+    | ActivityAssetAcquisitionCandidatesProjection
 )
 
 
@@ -104,6 +131,12 @@ def _validate_terminal(
             ActivityAssetForecastProjection,
             ActivityAssetClaimProjection,
             ActivityAssetFilingHandoffProjection,
+            ActivityAssetDescribeProjection,
+            ActivityAssetListProjection,
+            ActivityAssetPlanProjection,
+            ActivityAssetTimelineProjection,
+            ActivityAssetFormOptionsProjection,
+            ActivityAssetAcquisitionCandidatesProjection,
         ),
     ):
         raise invalid_completion_error(completed)
@@ -149,12 +182,14 @@ def create_activity_asset(
     ctx: typer.Context,
     *,
     revision: ActivityAssetRevision,
+    descriptor: ActivityAssetDescriptorFacts,
 ) -> ActivityAssetCreateProjection:
     """Create one revision through the operation bound to this profile."""
     client = _client(ctx)
     request = ActivityAssetCreateRequest(
         profile_id=client.profile_id,
         revision=ActivityAssetRevisionSnapshot.from_domain(revision),
+        descriptor=descriptor,
     )
     completed = _submit(
         client,
@@ -190,12 +225,14 @@ def correct_activity_asset(
     ctx: typer.Context,
     *,
     revision: ActivityAssetRevision,
+    superseding_claims: tuple[ActivityAssetSupersedingClaim, ...] = (),
 ) -> ActivityAssetCorrectProjection:
     """Append one correction under the repository's guarded commit."""
     client = _client(ctx)
     request = ActivityAssetCorrectRequest(
         profile_id=client.profile_id,
         revision=ActivityAssetRevisionSnapshot.from_domain(revision),
+        superseding_claims=superseding_claims,
     )
     completed = _submit(
         client,
@@ -257,7 +294,6 @@ def claim_activity_asset(
     ctx: typer.Context,
     *,
     forecast: ScheduledAmortizationCharge,
-    creating_operation: str,
     supersedes_claim_id: str | None,
 ) -> ActivityAssetClaimProjection:
     """Record or replay one exact forecast as an immutable claim."""
@@ -265,7 +301,6 @@ def claim_activity_asset(
     request = ActivityAssetClaimRequest(
         profile_id=client.profile_id,
         forecast=ScheduledAmortizationChargeSnapshot.from_domain(forecast),
-        creating_operation=creating_operation,
         supersedes_claim_id=supersedes_claim_id,
     )
     completed = _submit(
@@ -292,7 +327,7 @@ def claim_activity_asset(
     expected_claim = AmortizationClaim.from_schedule(
         forecast,
         asset_kind=revision.asset_kind,
-        creating_operation=creating_operation,
+        creating_operation=ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
         supersedes_claim_id=supersedes_claim_id,
     )
     if claim_result.claim.to_domain() != expected_claim or result.claim_id != expected_claim.claim_id:
@@ -326,11 +361,108 @@ def filing_handoff_activity_asset(
     return result
 
 
+def describe_activity_asset(
+    ctx: typer.Context,
+    *,
+    asset_id: str,
+    descriptor: ActivityAssetDescriptorFacts,
+) -> ActivityAssetDescribeProjection:
+    """Append one element's descriptive facts."""
+    client = _client(ctx)
+    completed = _submit(
+        client,
+        ActivityAssetDescribeRequest(profile_id=client.profile_id, asset_id=asset_id, descriptor=descriptor),
+        definition_id=ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+        result_type=ActivityAssetDescribeProjection,
+    )
+    result = _finish(completed, success_effect=OperationEffect.UPDATED)
+    if result.history is None:
+        raise invalid_completion_error(completed)
+    return result
+
+
+def _read[ResultT: _ActivityAssetProjection](
+    ctx: typer.Context,
+    build: Callable[[UUID], BaseModel],
+    *,
+    definition_id: str,
+    result_type: type[ResultT],
+) -> ResultT:
+    client = _client(ctx)
+    completed = _submit(client, build(client.profile_id), definition_id=definition_id, result_type=result_type)
+    return _finish(completed, success_effect=OperationEffect.NONE)
+
+
+def list_activity_assets(ctx: typer.Context) -> ActivityAssetListProjection:
+    """Summarise the register."""
+    return _read(
+        ctx,
+        lambda profile_id: ActivityAssetListRequest(profile_id=profile_id),
+        definition_id=ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
+        result_type=ActivityAssetListProjection,
+    )
+
+
+def plan_activity_asset(ctx: typer.Context, *, asset_id: str) -> ActivityAssetPlanProjection:
+    """Read one element's amortization plan."""
+    return _read(
+        ctx,
+        lambda profile_id: ActivityAssetPlanRequest(profile_id=profile_id, asset_id=asset_id),
+        definition_id=ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
+        result_type=ActivityAssetPlanProjection,
+    )
+
+
+def timeline_activity_asset(ctx: typer.Context, *, asset_id: str) -> ActivityAssetTimelineProjection:
+    """Read one element's ordered history."""
+    return _read(
+        ctx,
+        lambda profile_id: ActivityAssetTimelineRequest(profile_id=profile_id, asset_id=asset_id),
+        definition_id=ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID,
+        result_type=ActivityAssetTimelineProjection,
+    )
+
+
+def form_options_activity_asset(
+    ctx: typer.Context,
+    *,
+    asset_kind: AssetKind,
+    tax_year: int,
+) -> ActivityAssetFormOptionsProjection:
+    """Read what the registry admits for an asset kind and tax year."""
+    return _read(
+        ctx,
+        lambda profile_id: ActivityAssetFormOptionsRequest(
+            profile_id=profile_id,
+            asset_kind=asset_kind,
+            tax_year=tax_year,
+        ),
+        definition_id=ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
+        result_type=ActivityAssetFormOptionsProjection,
+    )
+
+
+def acquisition_candidates_activity_asset(ctx: typer.Context) -> ActivityAssetAcquisitionCandidatesProjection:
+    """List the ledger payments an element could name as its acquisition."""
+    return _read(
+        ctx,
+        lambda profile_id: ActivityAssetAcquisitionCandidatesRequest(profile_id=profile_id),
+        definition_id=ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID,
+        result_type=ActivityAssetAcquisitionCandidatesProjection,
+    )
+
+
 __all__ = [
+    "acquisition_candidates_activity_asset",
     "claim_activity_asset",
     "correct_activity_asset",
     "create_activity_asset",
+    "describe_activity_asset",
     "filing_handoff_activity_asset",
     "forecast_activity_asset",
+    "form_options_activity_asset",
     "inspect_activity_asset",
+    "list_activity_assets",
+    "plan_activity_asset",
+    "timeline_activity_asset",
 ]
