@@ -351,7 +351,8 @@ def element_list(context: RegisterReadContext) -> tuple[ActivityAssetListRow, ..
 
     Returns:
         One row per element.  ``accumulated`` is the opening amount plus effective
-        claims; ``pending`` is the basis left, zero once the walk says nothing remains.
+        claims; ``pending`` is the basis less that, whatever the schedule's state, so
+        an unclaimed year still shows in it.
     """
     current = current_revisions(context.history.revisions)
     return tuple(_list_row(current[asset_id], context) for asset_id in sorted(current))
@@ -368,17 +369,14 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
     opening = revision.opening_history.accumulated_amount
     accumulated = None if opening is None else opening + sum((claim.amount for claim in claims), Decimal("0"))
     basis = revision.amortizable_ceiling()
-    settled = _left_service(revision, context.today) or any(
-        row.absence in _NOT_ACCRUING and row.tax_year <= context.today.year for row in plan
-    )
-    pending = None if accumulated is None else (Decimal("0.00") if settled else max(basis - accumulated, Decimal("0")))
+    pending = None if accumulated is None else max(basis - accumulated, Decimal("0"))
     descriptor = context.history.current_descriptor(revision.asset_id)
     return ActivityAssetListRow(
         asset_id=revision.asset_id,
         name=None if descriptor is None else descriptor.facts.name,
         serial_number=None if descriptor is None else descriptor.facts.serial_number,
         asset_kind=revision.asset_kind,
-        state=_register_state(revision, pending, today=context.today),
+        state=_register_state(revision, pending, plan, today=context.today),
         in_service_date=revision.in_service_date,
         method=revision.amortization.method,
         revision_number=revision.revision_number,
@@ -400,14 +398,24 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
 def _register_state(
     revision: ActivityAssetRevision,
     pending: Decimal | None,
+    plan: tuple[ActivityAssetPlanRow, ...],
     *,
     today: date,
 ) -> ActivityAssetRegisterState:
+    """Name the element's standing; a schedule that ended over unclaimed years has not amortized it."""
     if _left_service(revision, today):
         return ActivityAssetRegisterState.OUT_OF_SERVICE
     if pending is not None and pending <= Decimal("0"):
         return ActivityAssetRegisterState.FULLY_AMORTIZED
-    return ActivityAssetRegisterState.IN_SERVICE
+    schedule_ended = any(row.absence in _NOT_ACCRUING and row.tax_year <= today.year for row in plan)
+    unclaimed = any(
+        row.claim_state in {ActivityAssetClaimState.MISSING, ActivityAssetClaimState.PARTIAL} for row in plan
+    )
+    return (
+        ActivityAssetRegisterState.FULLY_AMORTIZED
+        if schedule_ended and not unclaimed
+        else ActivityAssetRegisterState.IN_SERVICE
+    )
 
 
 def _left_service(revision: ActivityAssetRevision, today: date) -> bool:

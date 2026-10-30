@@ -32,7 +32,11 @@ from cadrumo.core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
-from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind
+from cadrumo.domain.renta.actividad_asset.disposal import (
+    ActivityAssetDisposal,
+    ActivityAssetDisposalFindingKind,
+    ActivityAssetDisposalReason,
+)
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -510,10 +514,11 @@ def test_an_elapsed_period_counts_as_amortized_in_the_plan_and_m130() -> None:
     assert beyond.material_m130.amount == Decimal("0.00")
     assert beyond.material_m130.unavailable_asset_ids == ()
 
+    # 2025 and 2026 were never claimed, so nothing is amortized and the whole basis stays pending.
     row = operations.list_elements()[0]
-    assert row.state is ActivityAssetRegisterState.FULLY_AMORTIZED
+    assert row.state is ActivityAssetRegisterState.IN_SERVICE
     assert row.pending is not None
-    assert Decimal(row.pending.decimal) == Decimal("0")
+    assert Decimal(row.pending.decimal) == Decimal("2000.00")
 
 
 def _slow_rate_forecast(
@@ -650,3 +655,84 @@ def test_a_candidate_serves_the_key_of_its_non_deductible_iva_state() -> None:
     candidate = operations.acquisition_candidates()[0]
 
     assert candidate.non_deductible_iva_state_key == "ledger.actividad_asset.non_deductible_iva_state.unknown"
+
+
+def _elapsed_after_2026(
+    revision: ActivityAssetRevision,
+    *,
+    covered_from: date,
+    covered_until: date,
+    history: AssetScheduleHistory,
+    requested_free_amount: Decimal | None = None,
+) -> ScheduledAmortizationCharge:
+    if covered_from.year > 2026:
+        raise ActividadAssetPeriodElapsedError(
+            context={"ended_on": "2027-01-01"},
+            translated_message="ledger.actividad_asset.errors.amortization_period_elapsed",
+        )
+    return _forecast(
+        revision,
+        covered_from=covered_from,
+        covered_until=covered_until,
+        history=history,
+        requested_free_amount=requested_free_amount,
+    )
+
+
+def _elapsed_operations() -> ActivityAssetOperations:
+    operations = ActivityAssetOperations(
+        repository=MemoryRepository(),
+        ledger=MemoryLedger(_ACQUISITION),
+        forecast_operation=_elapsed_after_2026,
+        taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
+        register_authority=memory_register_authority(today=date(2028, 6, 30)),
+    )
+    operations.create(_revision(), _NAME)
+    return operations
+
+
+def test_a_period_that_ended_over_unclaimed_years_keeps_the_value_pending() -> None:
+    operations = _elapsed_operations()
+    operations.record_claim(_full_year(operations, 2025), creating_operation="test.2025")
+
+    row = operations.list_elements()[0]
+
+    # 2,000.00 basis less the 520.00 of 2025; 2026 was never claimed.
+    assert row.pending is not None
+    assert Decimal(row.pending.decimal) == Decimal("1480.00")
+    assert row.state is ActivityAssetRegisterState.IN_SERVICE
+    assert row.findings.missing == 1
+
+
+def test_a_period_that_ended_with_every_year_claimed_is_fully_amortized_and_shows_the_rest() -> None:
+    operations = _elapsed_operations()
+    for year in (2025, 2026):
+        operations.record_claim(_full_year(operations, year), creating_operation=f"test.{year}")
+
+    row = operations.list_elements()[0]
+
+    # 2,000.00 less two years at 520.00: the rest stays visible, though nothing more can be charged.
+    assert row.pending is not None
+    assert Decimal(row.pending.decimal) == Decimal("960.00")
+    assert row.state is ActivityAssetRegisterState.FULLY_AMORTIZED
+
+
+def test_a_baja_keeps_the_formula_value_pending() -> None:
+    operations, _ = _operations(today=date(2026, 12, 31))
+    operations.create(_revision(), _NAME)
+    operations.record_claim(_full_year(operations, 2025), creating_operation="test.2025")
+    operations.dispose(
+        "laptop-1",
+        ActivityAssetDisposal(
+            disposal_date=date(2025, 12, 31),
+            reason=ActivityAssetDisposalReason.SCRAPPING,
+            proceeds=Decimal("0.00"),
+            transmission_costs=Decimal("0.00"),
+        ),
+    )
+
+    row = operations.list_elements()[0]
+
+    assert row.state is ActivityAssetRegisterState.OUT_OF_SERVICE
+    assert row.pending is not None
+    assert Decimal(row.pending.decimal) == Decimal("1480.00")
