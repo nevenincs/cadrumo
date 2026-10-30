@@ -8,12 +8,6 @@ from typing import Protocol
 from .errors import RegistryValidationError
 from .ids import RevisionId, SourceRefId
 
-EXPECTED_ACTIVITY_COUNT = 49
-EXPECTED_MODULE_COUNT = 141
-EXPECTED_MODULE_DISTRIBUTION = {1: 2, 2: 25, 3: 12, 4: 4, 5: 1, 6: 3, 7: 2}
-EXPECTED_MODULE_DISTRIBUTION_VECTOR = (2, 25, 12, 4, 1, 3, 2)
-EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT = 47
-EXPECTED_AGRICULTURAL_AXIS_COUNTS = {2022: 16, 2023: 16, 2024: 16, 2025: 17, 2026: 17}
 #: Shape bounds for the temporada corrector bands, NOT their values. The
 #: coefficients and day bands are fixed by each annual Orden and are already
 #: grounded in the census by its own required_text; asserting them here would
@@ -41,26 +35,25 @@ class _GeneratedSourceShape(Protocol):
 
 
 def validate_generated_source_counts(source: _GeneratedSourceShape) -> None:
-    """Validate generated M303 source counts against structural expectations."""
-    expected_agricultural_count = EXPECTED_AGRICULTURAL_AXIS_COUNTS.get(source.ejercicio)
-    if source.activity_table_count != EXPECTED_ACTIVITY_COUNT:
-        raise RegistryValidationError("annual Orden manifest has the wrong activity table count")
-    if source.module_row_count != EXPECTED_MODULE_COUNT:
-        raise RegistryValidationError("annual Orden manifest has the wrong module row count")
-    if source.module_distribution != EXPECTED_MODULE_DISTRIBUTION_VECTOR:
-        raise RegistryValidationError("annual Orden manifest has the wrong module distribution")
-    if (
-        expected_agricultural_count is None
-        or source.agricultural_index_row_count != expected_agricultural_count
-        or source.agricultural_ingreso_a_cuenta_row_count != expected_agricultural_count
+    """Refuse manifest counts that contradict one another.
+
+    Each annual Orden states its own table sizes, so the manifest row holds them
+    and is compared to a fresh extraction of the pinned BOE source. This check
+    asserts only what must hold in any year: the distribution adds up to the
+    tables and rows it describes, and both agricultural axes list the same rows.
+    """
+    if source.activity_table_count != sum(source.module_distribution):
+        raise RegistryValidationError("annual Orden manifest activity count disagrees with its module distribution")
+    if source.module_row_count != sum(
+        size * occurrences for size, occurrences in enumerate(source.module_distribution, start=1)
     ):
-        raise RegistryValidationError("annual Orden manifest has the wrong agricultural axis row count")
+        raise RegistryValidationError("annual Orden manifest module count disagrees with its module distribution")
+    if source.agricultural_index_row_count != source.agricultural_ingreso_a_cuenta_row_count:
+        raise RegistryValidationError("annual Orden manifest agricultural axes disagree in row count")
 
 
 def validate_generated_source_axis_shape(source: _GeneratedSourceShape) -> None:
     """Validate that generated M303 source axes have the required shape."""
-    if source.non_agricultural_ingreso_a_cuenta_row_count != EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT:
-        raise RegistryValidationError("annual Orden manifest has the wrong IAE ingreso-a-cuenta row count")
     validate_seasonal_index_shape(
         source.seasonal_index_day_bands,
         source.seasonal_index_coefficients,
@@ -144,12 +137,6 @@ def validate_2022_annual_orden_coordinate(
 
 
 __all__ = [
-    "EXPECTED_ACTIVITY_COUNT",
-    "EXPECTED_AGRICULTURAL_AXIS_COUNTS",
-    "EXPECTED_MODULE_COUNT",
-    "EXPECTED_MODULE_DISTRIBUTION",
-    "EXPECTED_MODULE_DISTRIBUTION_VECTOR",
-    "EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT",
     "EXTRACTOR_VERSION",
     "FIRST_SEASONAL_INDEX_DAY",
     "MINIMUM_SEASONAL_INDEX_BANDS",

@@ -25,8 +25,6 @@ from ...iva.regimen_simplificado_rows import (
 from .errors import RegistryValidationError
 from .ids import LegalRefId, RevisionId, SourceRefId
 from .m303_orden_constants import (
-    EXPECTED_ACTIVITY_COUNT,
-    EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
     EXTRACTOR_VERSION,
     validate_percentage_shape,
     validate_seasonal_index_shape,
@@ -138,7 +136,7 @@ class M303AnnualOrdenProjection(RegistryModel):
     registry_revision_id: RevisionId
     source_ref: SourceRefId
     source_content_digest: ContentDigest
-    activities: tuple[ActividadOrdenAnual, ...] = Field(min_length=EXPECTED_ACTIVITY_COUNT)
+    activities: tuple[ActividadOrdenAnual, ...] = Field(min_length=1)
     agricultural_authority: AutoridadAgricolaOrdenAnualNoResuelta
     non_agricultural_ingresos_a_cuenta: tuple[PorcentajeIngresoCuentaIaeOrdenAnual, ...] = Field(min_length=1)
     seasonal_indexes: tuple[IndiceTemporadaOrdenAnual, ...] = Field(min_length=1)
@@ -155,10 +153,6 @@ class M303AnnualOrdenProjection(RegistryModel):
 
 
 def _validate_projection_activity_rows(projection: M303AnnualOrdenProjection) -> None:
-    _require_invariant(
-        len(projection.activities) == EXPECTED_ACTIVITY_COUNT,
-        "annual Orden projection is incomplete",
-    )
     _require_invariant(
         not any(activity.ejercicio != projection.ejercicio for activity in projection.activities),
         "annual Orden activities must match their projection ejercicio",
@@ -183,10 +177,6 @@ def _validate_projection_iae_identity(projection: M303AnnualOrdenProjection) -> 
 
 
 def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> None:
-    _require_invariant(
-        len(projection.non_agricultural_ingresos_a_cuenta) == EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
-        "annual Orden projection has the wrong IAE ingreso-a-cuenta row count",
-    )
     validate_seasonal_index_shape(
         tuple((item.minimum_days, item.maximum_days) for item in projection.seasonal_indexes),
         tuple(item.coefficient for item in projection.seasonal_indexes),
@@ -265,8 +255,8 @@ class M303AnnualOrdenSnapshot(RegistryModel):
     registry_revision_id: RevisionId
     source_ref: SourceRefId
     source_content_digest: ContentDigest
-    activities: tuple[ActividadOrdenAnual, ...] = Field(min_length=EXPECTED_ACTIVITY_COUNT)
-    activity_refs: tuple[ActividadOrdenAnualRef, ...] = Field(min_length=EXPECTED_ACTIVITY_COUNT)
+    activities: tuple[ActividadOrdenAnual, ...] = Field(min_length=1)
+    activity_refs: tuple[ActividadOrdenAnualRef, ...] = Field(min_length=1)
     agricultural_authority: AutoridadAgricolaOrdenAnualNoResuelta
     non_agricultural_ingresos_a_cuenta: tuple[PorcentajeIngresoCuentaIaeOrdenAnual, ...] = Field(min_length=1)
     seasonal_indexes: tuple[IndiceTemporadaOrdenAnual, ...] = Field(min_length=1)

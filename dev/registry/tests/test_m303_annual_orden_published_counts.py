@@ -14,6 +14,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.m303_orden_constants import validate_generated_source_counts
@@ -48,9 +49,11 @@ def test_each_published_orden_carries_its_printed_table_counts(ejercicio: int) -
         snapshot = operation.snapshot(
             "303", filing_year=ejercicio, period="4T", grade=RegistryAuthorityGrade.CALCULATION
         )
-    orden = snapshot.m303_annual_orden
-    assert orden is not None
-    sizes = Counter(len(activity.modules) for activity in orden.activities)
+    orden = snapshot.supplementary_ordenes[Modelo("303")].require_projection(
+        ejercicio=ejercicio,
+        registry_revision_id=snapshot.revision.id,
+    )
+    sizes = Counter(len(activity.modulos) for activity in orden.activities)
     assert len(orden.activities) == 49
     assert sum(sizes[size] * size for size in sizes) == 141
     assert tuple(sizes[size] for size in range(1, 8)) == (2, 25, 12, 4, 1, 3, 2)
