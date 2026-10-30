@@ -156,6 +156,7 @@ _PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_inventory_closing_value_record",
         "app_ledger_inventory_evidence_add",
         "app_ledger_inventory_inspect",
+        "app_ledger_inventory_options",
         "app_ledger_inventory_describe",
         "app_ledger_inventory_correct",
         "app_ledger_inventory_movement_correct",

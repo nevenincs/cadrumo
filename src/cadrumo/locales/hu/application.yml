@@ -510,6 +510,43 @@ application:
     advisories:
       retired_book_leaves_year_unresolved: "Ez a készlet ki van vezetve, de még vannak tételei, ezért a %{year}. évi D melléklet megoldatlan marad. Állítsd vissza, vagy töröld a tételeit."
     labels:
+      acquisition_evidence_kind:
+        purchase_invoice: "Beszerzési számla"
+        transport_document: "Szállítási dokumentum"
+        insurance_document: "Biztosítási dokumentum"
+        customs_declaration: "Vámáru-nyilatkozat"
+        contract: "Szerződés"
+        other_acquisition_evidence: "Egyéb beszerzési dokumentum"
+        attributable_cost_review: "Költségellenőrzés"
+        iva_recoverability_review: "ÁFA-ellenőrzés"
+      attributable_cost_kind:
+        freight: "Fuvardíj"
+        insurance: "Biztosítás"
+        customs_duty: "Vám"
+        handling: "Rakodás"
+        professional_fee: "Szakértői díj"
+        other_directly_attributable: "Egyéb közvetlen költség"
+      closing_authority:
+        movement_derived: "A mozgásokból számítva"
+        physical_observation: "Fizikai leltár"
+      closing_valuation_basis:
+        fifo_acquisition_price: "Beszerzési ár, először be, először ki"
+        pmp_acquisition_price: "Súlyozott átlagos beszerzési ár"
+        coste_medio_acquisition_price: "Átlagköltség beszerzési áron"
+      decision_evidence_role:
+        authority_reconciliation: "Záróérték-ellenőrzés"
+      movement_kind:
+        opening: "Nyitás"
+        purchase: "Beszerzés"
+        cogs: "Eladott áruk költsége"
+        count: "Leltár"
+      physical_evidence_role:
+        physical_count: "Fizikai leltár"
+        acquisition_price_valuation: "Értékelés beszerzési áron"
+      valuation_method:
+        fifo: "Először be, először ki"
+        pmp: "Súlyozott átlagár"
+        coste_medio: "Átlagköltség"
       correction_reason:
         duplicate_entry: Kettős rögzítés
         keying_error: Rögzítési hiba

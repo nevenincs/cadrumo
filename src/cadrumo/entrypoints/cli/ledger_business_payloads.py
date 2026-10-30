@@ -223,6 +223,26 @@ class InventoryLedgerPayload(OutputSchema):
     advisories: list[InventoryAdvisoryPayload] = []
 
 
+class InventoryOptionPayload(OutputSchema):
+    """One offered value and the key of its word."""
+
+    value: NonEmptyStr
+    label_key: NonEmptyStr
+
+
+class InventoryOptionFamilyPayload(OutputSchema):
+    """One closed vocabulary."""
+
+    family: NonEmptyStr
+    options: list[InventoryOptionPayload]
+
+
+class InventoryOptionsResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger inventory options``."""
+
+    families: list[InventoryOptionFamilyPayload]
+
+
 class InventoryEvidenceAddResult(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory evidence-add``."""
 

@@ -769,6 +769,7 @@
         "cadrumo.application.inventory.registered_evidence_operation",
         "cadrumo.application.inventory.registered_executor",
         "cadrumo.application.inventory.registered_operation",
+        "cadrumo.application.inventory.registered_options_operation",
         "cadrumo.application.inventory.registered_projections",
         "cadrumo.application.inventory.registered_requests",
         "cadrumo.application.inventory.registered_result_projection",

@@ -10,24 +10,24 @@ if TYPE_CHECKING:
 
 def inventory_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Register inventory keys from their domain and command-spec vocabularies."""
-    from cadrumo.application.inventory.registered_projections import InventoryLedgerChangeProjection
-    from cadrumo.domain.contribuyente.inventory.corrections import INVENTORY_CORRECTION_REFUSAL_REASONS
-    from cadrumo.domain.contribuyente.inventory.records import (
-        InventoryCorrectionReason,
-        InventoryHistoryKind,
-        InventoryRetirementReason,
+    from cadrumo.application.inventory.registered_options_operation import INVENTORY_OPTION_FAMILIES
+    from cadrumo.application.inventory.registered_projections import (
+        InventoryAdvisoryProjection,
+        InventoryLedgerChangeProjection,
     )
+    from cadrumo.domain.contribuyente.inventory.corrections import INVENTORY_CORRECTION_REFUSAL_REASONS
+    from cadrumo.domain.contribuyente.inventory.records import InventoryHistoryKind
 
     from .fstring_registry import FStringKeyRegistration
 
     label_keys = tuple(
         f"application.inventory.labels.{family}.{member.value}"
-        for family, enum in (
-            ("correction_reason", InventoryCorrectionReason),
-            ("history_kind", InventoryHistoryKind),
-            ("retirement_reason", InventoryRetirementReason),
-        )
+        for family, enum in (*INVENTORY_OPTION_FAMILIES, ("history_kind", InventoryHistoryKind))
         for member in enum
+    )
+    advisory_keys = tuple(
+        f"application.inventory.advisories.{code}"
+        for code in get_args(InventoryAdvisoryProjection.model_fields["code"].annotation)
     )
     refusal_keys = tuple(
         f"application.inventory.service.errors.{reason}" for reason in INVENTORY_CORRECTION_REFUSAL_REASONS
@@ -50,6 +50,11 @@ def inventory_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
         raise RuntimeError("The command-spec registry declared no CLI inventory translation keys")
 
     return (
+        FStringKeyRegistration(
+            description="application.inventory.advisories.* (closed inventory advisory codes)",
+            key_factory=lambda key: key,
+            values=advisory_keys,
+        ),
         FStringKeyRegistration(
             description="application.inventory.labels.* (closed inventory reason and history enums)",
             key_factory=lambda key: key,

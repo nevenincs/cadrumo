@@ -186,6 +186,23 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
+        "app_ledger_inventory_options",
+        "app_ledger_inventory",
+        "options",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.inventory.options_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(),
+        policy=_POLICY_1,
+        handler=LazyBinding.available(DeferredTarget(".ledger_inventory_commands", "inventory_options", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_business_payloads", "InventoryOptionsResult", __package__),
+            identity="ledger.inventory.options",
+        ),
+    ),
+    CommandSpec(
         "app_ledger_inventory_evidence_add",
         "app_ledger_inventory",
         "evidence-add",

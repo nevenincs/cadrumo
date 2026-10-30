@@ -528,6 +528,43 @@ application:
     advisories:
       retired_book_leaves_year_unresolved: "Aquest inventari està retirat però encara té apunts, de manera que l'Annex D de %{year} queda sense resoldre. Restaura'l o elimina'n els apunts."
     labels:
+      acquisition_evidence_kind:
+        purchase_invoice: "Factura de compra"
+        transport_document: "Document de transport"
+        insurance_document: "Document d'assegurança"
+        customs_declaration: "Declaració duanera"
+        contract: "Contracte"
+        other_acquisition_evidence: "Un altre document de compra"
+        attributable_cost_review: "Comprovació del cost"
+        iva_recoverability_review: "Comprovació de l'IVA"
+      attributable_cost_kind:
+        freight: "Nòlit"
+        insurance: "Assegurança"
+        customs_duty: "Aranzel"
+        handling: "Manipulació"
+        professional_fee: "Honoraris professionals"
+        other_directly_attributable: "Un altre cost directe"
+      closing_authority:
+        movement_derived: "Calculat a partir dels moviments"
+        physical_observation: "Recompte físic"
+      closing_valuation_basis:
+        fifo_acquisition_price: "Preu de compra, primera entrada primera sortida"
+        pmp_acquisition_price: "Preu mitjà ponderat de compra"
+        coste_medio_acquisition_price: "Cost mitjà a preu de compra"
+      decision_evidence_role:
+        authority_reconciliation: "Comprovació del valor de tancament"
+      movement_kind:
+        opening: "Obertura"
+        purchase: "Compra"
+        cogs: "Cost de les vendes"
+        count: "Recompte"
+      physical_evidence_role:
+        physical_count: "Recompte físic"
+        acquisition_price_valuation: "Valoració a preu de compra"
+      valuation_method:
+        fifo: "Primera entrada, primera sortida"
+        pmp: "Preu mitjà ponderat"
+        coste_medio: "Cost mitjà"
       correction_reason:
         duplicate_entry: Entrada duplicada
         keying_error: Error d'introducció

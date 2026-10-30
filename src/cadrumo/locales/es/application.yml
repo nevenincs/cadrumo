@@ -529,6 +529,43 @@ application:
     advisories:
       retired_book_leaves_year_unresolved: "Este inventario está retirado pero aún tiene apuntes, así que el Anexo D de %{year} queda sin resolver. Restáuralo o elimina sus apuntes."
     labels:
+      acquisition_evidence_kind:
+        purchase_invoice: "Factura de compra"
+        transport_document: "Documento de transporte"
+        insurance_document: "Documento de seguro"
+        customs_declaration: "Declaración aduanera"
+        contract: "Contrato"
+        other_acquisition_evidence: "Otro documento de compra"
+        attributable_cost_review: "Comprobación del coste"
+        iva_recoverability_review: "Comprobación del IVA"
+      attributable_cost_kind:
+        freight: "Flete"
+        insurance: "Seguro"
+        customs_duty: "Arancel"
+        handling: "Manipulación"
+        professional_fee: "Honorarios profesionales"
+        other_directly_attributable: "Otro coste directo"
+      closing_authority:
+        movement_derived: "Calculado a partir de los movimientos"
+        physical_observation: "Recuento físico"
+      closing_valuation_basis:
+        fifo_acquisition_price: "Precio de compra, primera entrada primera salida"
+        pmp_acquisition_price: "Precio medio ponderado de compra"
+        coste_medio_acquisition_price: "Coste medio a precio de compra"
+      decision_evidence_role:
+        authority_reconciliation: "Comprobación del valor de cierre"
+      movement_kind:
+        opening: "Apertura"
+        purchase: "Compra"
+        cogs: "Coste de las ventas"
+        count: "Recuento"
+      physical_evidence_role:
+        physical_count: "Recuento físico"
+        acquisition_price_valuation: "Valoración a precio de compra"
+      valuation_method:
+        fifo: "Primera entrada, primera salida"
+        pmp: "Precio medio ponderado"
+        coste_medio: "Coste medio"
       correction_reason:
         duplicate_entry: Entrada duplicada
         keying_error: Error de introducción

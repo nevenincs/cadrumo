@@ -353,6 +353,7 @@ cli:
         authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletnyilvántartáshoz.
         evidence_add_help: "Elmenti a beszerzési dokumentumot ebbe a profilba, és megmutatja azt az azonosítót, amellyel a beszerzés hivatkozik rá."
         evidence_source_help: "A mentendő beszerzési dokumentum: PDF, kép vagy XML."
+        options_help: "Megmutatja a készletűrlap által felkínált értékeket, mindegyiket a nevével."
         closing_value_file_help: "JSON-fájl a záróérték adataival."
         closing_value_file_invalid: "A záróérték fájlja nem érvényes ehhez a készlethez."
         closing_value_record_help: "Záróérték rögzítése egyszerű adatokból: az érték, a módszer és a dokumentumok."

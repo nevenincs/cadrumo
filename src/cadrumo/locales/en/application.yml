@@ -485,6 +485,43 @@ application:
     advisories:
       retired_book_leaves_year_unresolved: "This inventory was retired but still holds entries, so the %{year} Anexo D stays unresolved. Restore it, or remove its entries."
     labels:
+      acquisition_evidence_kind:
+        purchase_invoice: "Purchase invoice"
+        transport_document: "Transport document"
+        insurance_document: "Insurance document"
+        customs_declaration: "Customs declaration"
+        contract: "Contract"
+        other_acquisition_evidence: "Other purchase document"
+        attributable_cost_review: "Cost check"
+        iva_recoverability_review: "IVA check"
+      attributable_cost_kind:
+        freight: "Freight"
+        insurance: "Insurance"
+        customs_duty: "Customs duty"
+        handling: "Handling"
+        professional_fee: "Professional fee"
+        other_directly_attributable: "Other direct cost"
+      closing_authority:
+        movement_derived: "Worked out from the movements"
+        physical_observation: "Physical count"
+      closing_valuation_basis:
+        fifo_acquisition_price: "Purchase price, first in first out"
+        pmp_acquisition_price: "Weighted average purchase price"
+        coste_medio_acquisition_price: "Average cost at purchase price"
+      decision_evidence_role:
+        authority_reconciliation: "Closing value check"
+      movement_kind:
+        opening: "Opening"
+        purchase: "Purchase"
+        cogs: "Cost of goods sold"
+        count: "Count"
+      physical_evidence_role:
+        physical_count: "Physical count"
+        acquisition_price_valuation: "Valuation at purchase price"
+      valuation_method:
+        fifo: "First in, first out"
+        pmp: "Weighted average price"
+        coste_medio: "Average cost"
       correction_reason:
         duplicate_entry: Duplicate entry
         keying_error: Keying error

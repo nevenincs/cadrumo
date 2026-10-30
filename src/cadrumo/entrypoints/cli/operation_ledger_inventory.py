@@ -21,6 +21,11 @@ from ...application.inventory.registered_evidence_operation import (
     InventoryEvidenceAddProjection,
     InventoryEvidenceAddRequest,
 )
+from ...application.inventory.registered_options_operation import (
+    INVENTORY_OPTIONS_OPERATION_DEFINITION_ID,
+    InventoryOptionsProjection,
+    InventoryOptionsRequest,
+)
 from ...application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
@@ -76,6 +81,7 @@ from .ledger_business_payloads import (
     InventoryLedgerChangeResult,
     InventoryListResult,
     InventoryMovementAddResult,
+    InventoryOptionsResult,
     InventoryValuationPreviewPayload,
 )
 
@@ -416,6 +422,24 @@ def record_inventory_closing_authority(
     return _record_closing(ctx, request, definition_id=INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID)
 
 
+def read_inventory_options(ctx: typer.Context, *, request: InventoryOptionsRequest) -> InventoryOptionsResult:
+    """Read the inventory form vocabularies through the exact profile worker."""
+    completed = _run(
+        ctx,
+        request,
+        definition_id=INVENTORY_OPTIONS_OPERATION_DEFINITION_ID,
+        result_type=InventoryOptionsProjection,
+        allow_refusal_detail=False,
+    )
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code is not None
+    ):
+        raise invalid_completion_error(completed)
+    return InventoryOptionsResult.model_validate(completed.projection.model_dump(mode="json", exclude={"profile_id"}))
+
+
 def add_inventory_evidence(ctx: typer.Context, *, request: InventoryEvidenceAddRequest) -> InventoryEvidenceAddResult:
     """Store one purchase document through the exact profile worker."""
     completed = _run(
@@ -495,6 +519,7 @@ __all__ = [
     "inspect_inventory_ledger",
     "preview_inventory_valuation",
     "read_inventory_catalogue",
+    "read_inventory_options",
     "record_inventory_closing_authority",
     "record_inventory_closing_value",
 ]

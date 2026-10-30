@@ -9,6 +9,7 @@ import typer
 from pydantic import ValidationError
 
 from ...application.inventory.registered_evidence_operation import InventoryEvidenceAddRequest
+from ...application.inventory.registered_options_operation import InventoryOptionsRequest
 from ...application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
@@ -52,6 +53,7 @@ from .operation_ledger_inventory import (
     inspect_inventory_ledger,
     preview_inventory_valuation,
     read_inventory_catalogue,
+    read_inventory_options,
     record_inventory_closing_authority,
     record_inventory_closing_value,
 )
@@ -415,6 +417,21 @@ def inventory_closing_authority_record(
     )
 
 
+def inventory_options(ctx: typer.Context) -> None:
+    """Show the closed vocabularies an inventory form offers, each value with its word."""
+    result = read_inventory_options(ctx, request=InventoryOptionsRequest(profile_id=UUID(_inventory_bucket_id())))
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.options",
+        result=result,
+        lines=tuple(
+            f"{family.family}\t{option.value}\t{tr(option.label_key)}"
+            for family in result.families
+            for option in family.options
+        ),
+    )
+
+
 def inventory_evidence_add(ctx: typer.Context, source_path: str) -> None:
     """Store one purchase document in the profile's custody and print the identity a purchase names it by."""
     result = add_inventory_evidence(
@@ -479,6 +496,7 @@ __all__ = [
     "inventory_movement_add",
     "inventory_movement_correct",
     "inventory_movement_reverse",
+    "inventory_options",
     "inventory_restore",
     "inventory_retire",
     "inventory_valuation_preview",
