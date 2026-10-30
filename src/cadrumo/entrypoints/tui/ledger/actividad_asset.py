@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, replace
+from decimal import Decimal
 from typing import Protocol, override
 
 from pydantic import TypeAdapter
@@ -24,14 +25,16 @@ from ....application.actividad_asset.operation_dtos import ActivityAssetDisposal
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
 from ....application.operations.public_scalar import PublicDecimal
 from ....application.operator_actions.models import PreconditionVerdict
+from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date
 from ....core.period import Period
 from ....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason, PriorFreeDepreciationRegime
+from ....domain.renta.actividad_asset.election import ActivityAssetAmortizationElection, AmortizationMethod
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
-from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
+from ....domain.renta.actividad_asset.lifecycle import ActivityAssetBasis, ActivityAssetRevision, AssetKind
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
@@ -52,6 +55,14 @@ from .workspace_screen import LedgerWorkspaceScreen
 _WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe", "#asset-dispose")
 
 _SUPERSEDING_CLAIMS = TypeAdapter(tuple[ActivityAssetSupersedingClaim, ...])
+
+#: The facts a new element states with typed fields; a field left empty states nothing, never zero.
+_FACT_INPUT_LOCALE_KEYS = {
+    "asset-price": "tui.ledger.activity_asset.price",
+    "asset-non-deductible-iva": "tui.ledger.activity_asset.non_deductible_iva",
+    "asset-in-service-date": "tui.ledger.activity_asset.in_service_date",
+    "asset-method": "tui.ledger.activity_asset.method",
+}
 
 #: The baja's inputs with literal keys, shared by rendering, clearing and locale discovery.
 _DISPOSAL_INPUT_LOCALE_KEYS = {
@@ -196,6 +207,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             Input(placeholder=tr("tui.ledger.activity_asset.serial"), id="asset-serial"),
             "tui.ledger.activity_asset.serial",
         )
+        for input_id, key in _FACT_INPUT_LOCALE_KEYS.items():
+            yield localized(Input(placeholder=tr(key), id=input_id), key)
         yield localized(
             Button(tr("tui.ledger.activity_asset.create"), id="asset-create"), "tui.ledger.activity_asset.create"
         )
@@ -349,6 +362,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             "#asset-filing-tax-year",
             "#asset-filing-m130-period",
             *(f"#{input_id}" for input_id in _DISPOSAL_INPUT_LOCALE_KEYS),
+            *(f"#{input_id}" for input_id in _FACT_INPUT_LOCALE_KEYS),
         ):
             self.query_one(selector, Input).value = ""
         self.query_one("#asset-current-revision-id", Static).update("")
@@ -376,7 +390,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         # the writes for that asset.
         if button_id == "asset-create":
             creation = ActivityAssetCreationRequestV1(
-                revision=ActivityAssetRevision.model_validate_json(revision_json),
+                revision=self._stated_revision(revision_json),
                 descriptor=self._descriptor(),
             )
             self._named_asset_id = creation.revision.asset_id
@@ -389,7 +403,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         if button_id == "asset-correct":
             superseding = self.query_one("#asset-superseding-claims", Input).value.strip()
             correction = ActivityAssetCorrectionRequestV1(
-                revision=ActivityAssetRevision.model_validate_json(revision_json),
+                revision=self._stated_revision(revision_json),
                 superseding_claims=_SUPERSEDING_CLAIMS.validate_json(superseding) if superseding else (),
             )
             self._named_asset_id = correction.revision.asset_id
@@ -539,6 +553,41 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             prior_free_depreciation_regime=PriorFreeDepreciationRegime(prior_regime) if prior_regime else None,
             later_affectation_on=require_iso8601_date(later_affectation) if later_affectation else None,
         )
+
+    def _stated_revision(self, revision_json: str) -> ActivityAssetRevision:
+        """Read the revision, with each typed fact the operator stated in place of the one it carries."""
+        revision = ActivityAssetRevision.model_validate_json(revision_json)
+        price = self._fact_amount("asset-price")
+        non_deductible_iva = self._fact_amount("asset-non-deductible-iva")
+        in_service = self._disposal_text("asset-in-service-date")
+        method = self._disposal_text("asset-method")
+        updates: dict[str, object] = {}
+        if price is not None or non_deductible_iva is not None:
+            basis = dict(revision.basis)
+            if price is not None:
+                basis["basis_amount"] = price
+            if non_deductible_iva is not None:
+                basis["non_deductible_iva"] = non_deductible_iva
+            updates["basis"] = ActivityAssetBasis.model_validate(basis)
+        if in_service:
+            updates["in_service_date"] = require_iso8601_date(in_service)
+        if method:
+            election = dict(revision.amortization)
+            election["method"] = AmortizationMethod(method)
+            updates["amortization"] = ActivityAssetAmortizationElection.model_validate(election)
+        if not updates:
+            return revision
+        return ActivityAssetRevision.model_validate({**dict(revision), **updates})
+
+    def _fact_amount(self, input_id: str) -> Decimal | None:
+        """Read a stated amount; an empty field is no statement, and an ambiguous number is refused."""
+        text = self._disposal_text(input_id)
+        if not text:
+            return None
+        amount = coerce_finite_european_decimal(text)
+        if amount is None:
+            raise ValueError(f"{input_id} is not an unambiguous amount")
+        return amount
 
     def _descriptor(self) -> ActivityAssetDescriptorFacts:
         return ActivityAssetDescriptorFacts(

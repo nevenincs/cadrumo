@@ -6056,10 +6056,15 @@ tui:
         review: Levezetés áttekintése
         stage: A tétel IVA-értékeinek levezetése és rögzítése a(z) %{category} kategóriából.
         title: IVA levezetése
+      in_service_date: Üzembe helyezés napja (ÉÉÉÉ-HH-NN), felülírja a revízióét
       loading: Beolvasás…
       not_done: Semmi sem változott.
+      method: 'Értékcsökkenési leírás módja: linear, constant_percentage, sum_of_digits,
+        approved_plan vagy intangible_useful_life'
       page:
+      non_deductible_iva: Le nem vonható IVA, felülírja a revízió összegét
         empty: Nincs tétel.
+      price: IVA nélküli ár, felülírja a revízióét
         next: Következő oldal
         none: Abban az irányban nincs több oldal.
         previous: Előző oldal

@@ -6077,10 +6077,16 @@ tui:
         prompt: Tria la categoria d'IVA de l'apunt seleccionat. El tipus, la base
           i la quota que implica es deriven i es registren en un sol pas.
         refused: 'L''IVA no s''ha derivat: %{messages}'
+      in_service_date: Data de posada en funcionament (AAAA-MM-DD), substitueix la
+        de la revisió
         review: Revisa la derivació
         stage: Deriva i registra l'IVA d'aquest apunt a partir de la categoria %{category}.
+      method: 'Mètode d''amortització: linear, constant_percentage, sum_of_digits,
+        approved_plan o intangible_useful_life'
         title: Deriva l'IVA
+      non_deductible_iva: IVA no deduïble, substitueix l'import de la revisió
       loading: Llegint…
+      price: Preu sense IVA, substitueix el de la revisió
       not_done: No s'ha canviat res.
       page:
         empty: No hi ha registres.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from datetime import date
+from decimal import Decimal
 from threading import Event
 
 import pytest
@@ -453,3 +454,79 @@ async def test_activity_asset_screen_records_a_baja_and_reads_its_figures() -> N
         ("disposal_calculate", (revision.asset_id, stated)),
         ("dispose", (revision.asset_id, stated)),
     ]
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_creation_takes_the_typed_facts_over_the_revision_it_carries() -> None:
+    revision = activity_asset_revision("tui-typed-facts")
+    actions = ActivityAssetActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 70)) as pilot:
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        screen.query_one("#asset-price", Input).value = "1.500,00"
+        screen.query_one("#asset-non-deductible-iva", Input).value = "315.00"
+        screen.query_one("#asset-in-service-date", Input).value = "2025-03-01"
+        screen.query_one("#asset-method", Input).value = "linear"
+        screen.query_one("#asset-serial", Input).value = "SN-1"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="created\ttui-typed-facts")
+
+    created = actions.requests[0][1]
+    assert isinstance(created, ActivityAssetCreationRequestV1)
+    assert created.revision.basis.basis_amount == Decimal("1500.00")
+    assert created.revision.basis.non_deductible_iva == Decimal("315.00")
+    assert created.revision.in_service_date == date(2025, 3, 1)
+    assert created.revision.amortization.method.value == "linear"
+    assert created.descriptor == ActivityAssetDescriptorFacts(name="Office laptop", serial_number="SN-1")
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_creation_leaves_a_fact_left_empty_as_the_revision_states_it() -> None:
+    revision = activity_asset_revision("tui-untyped-facts")
+    actions = ActivityAssetActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 70)) as pilot:
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="created\ttui-untyped-facts")
+
+    created = actions.requests[0][1]
+    assert isinstance(created, ActivityAssetCreationRequestV1)
+    assert created.revision == revision
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_creation_refuses_an_ambiguous_price_without_calling_the_door() -> None:
+    revision = activity_asset_revision("tui-ambiguous-price")
+    actions = ActivityAssetActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 70)) as pilot:
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        screen.query_one("#asset-price", Input).value = "1.5.0"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
+
+    assert actions.requests == []
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_creation_shows_the_refusal_of_a_method_the_revision_cannot_carry() -> None:
+    revision = activity_asset_revision("tui-method-refused")
+    actions = ActivityAssetActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 70)) as pilot:
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        screen.query_one("#asset-method", Input).value = "sum_of_digits"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-create")
+        shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused	")
+
+    assert "sum_of_digits_period_years" in shown
+    assert actions.requests == []

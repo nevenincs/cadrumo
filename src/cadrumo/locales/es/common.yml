@@ -6086,10 +6086,16 @@ tui:
         prompt: Elige la categoría de IVA del apunte seleccionado. El tipo, la base
           y la cuota que implica se derivan y se registran en un solo paso.
         refused: 'El IVA no se ha derivado: %{messages}'
+      in_service_date: Fecha de puesta en funcionamiento (AAAA-MM-DD), sustituye a
+        la de la revisión
         review: Revisar la derivación
         stage: Derivar y registrar el IVA de este apunte a partir de la categoría
+      method: 'Método de amortización: linear, constant_percentage, sum_of_digits,
+        approved_plan o intangible_useful_life'
           %{category}.
+      non_deductible_iva: IVA no deducible, sustituye al importe de la revisión
         title: Derivar el IVA
+      price: Precio sin IVA, sustituye al de la revisión
       loading: Leyendo…
       not_done: No se ha cambiado nada.
       page:

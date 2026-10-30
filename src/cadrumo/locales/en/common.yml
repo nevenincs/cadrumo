@@ -5965,10 +5965,15 @@ tui:
         prompt: Choose the IVA category of the selected entry. The rate, base and
           amount it implies are derived and recorded in one step.
         refused: 'The IVA was not derived: %{messages}'
+      in_service_date: In-service date (YYYY-MM-DD), replaces the revision's date
         review: Review derivation
         stage: Derive and record the IVA of this entry from category %{category}.
+      method: 'Amortization method: linear, constant_percentage, sum_of_digits, approved_plan
+        or intangible_useful_life'
         title: Derive IVA
+      non_deductible_iva: Non-deductible IVA, replaces the revision's amount
       loading: Reading…
+      price: Price without IVA, replaces the revision's price
       not_done: Nothing was changed.
       page:
         empty: No records.
