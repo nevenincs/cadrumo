@@ -597,7 +597,13 @@ export class SignInFixture {
     const response = await session.call("sign_out");
     assert.equal(response.ok, true);
     assert.equal(response.value.remainingAccess.automationRevoked, false);
-    const after = await session.call("sign_in_status");
+    const after = await waitFor(
+      async () => {
+        const status = await session.call("sign_in_status");
+        return status.ok && status.value.state === "absent" ? status : null;
+      },
+      { timeout: 30000, what: "the signed-out status snapshot" },
+    );
     assert.equal(after.ok, true);
     assert.equal(after.value.state, "absent");
     assert.equal(after.value.active_profile, "Desktop Acceptance");

@@ -142,7 +142,7 @@ export class TerminalObserver {
     }
   }
 
-  async frame(state, record) {
+  async frame(state, record, deferDrain = false) {
     if (
       !Number.isSafeInteger(record.index) ||
       record.index < state.next ||
@@ -188,7 +188,11 @@ export class TerminalObserver {
       this.metrics.peakPendingRecords,
       this.totals("pendingCount"),
     );
-    while (state.pending.has(state.next) && !this.disposed) {
+    if (!deferDrain) await this.drainFrames(state);
+  }
+
+  async drainFrames(state) {
+    while (state.pending.has(state.next) && !this.disposed && state.term) {
       const next = state.pending.get(state.next);
       state.pending.delete(state.next);
       state.pendingCount = state.pending.size;
@@ -199,27 +203,78 @@ export class TerminalObserver {
       }
       state.next += 1;
       if (next.bytes[0] === 0) {
+        // Validate and retain every frame separately; only parser writes are
+        // joined. Control/end frames and gaps remain ordering barriers.
+        const chunks = [next.bytes.subarray(1)];
+        let length = next.bytes.length - 1;
+        while (chunks.length < OBSERVATION_LIMITS.records) {
+          const following = state.pending.get(state.next);
+          if (
+            !following ||
+            following.end ||
+            following.bytes[0] !== 0 ||
+            length + following.bytes.length - 1 > OBSERVATION_LIMITS.batchBytes
+          )
+            break;
+          state.pending.delete(state.next);
+          state.next += 1;
+          state.pendingBytes -= following.bytes.length;
+          state.pendingCount = state.pending.size;
+          chunks.push(following.bytes.subarray(1));
+          length += following.bytes.length - 1;
+        }
+        const combined = new Uint8Array(length);
+        let offset = 0;
+        for (const chunk of chunks) {
+          combined.set(chunk, offset);
+          offset += chunk.length;
+        }
         state.parsing = true;
         try {
-          await this.write(state, next.bytes.subarray(1));
+          await this.write(state, combined);
         } finally {
           state.parsing = false;
         }
         if (this.disposed || !state.term) return;
-        state.interpreted += next.bytes.length - 1;
-        this.metrics.dataFrames += 1;
-        this.metrics.bytes += next.bytes.length - 1;
+        state.interpreted += length;
+        this.metrics.dataFrames += chunks.length;
+        this.metrics.bytes += length;
       }
     }
   }
 
+  ack(state, record) {
+    if (
+      !Number.isSafeInteger(record.offset) ||
+      record.offset < 0 ||
+      !Number.isSafeInteger(record.session) ||
+      record.session < 0 ||
+      (state.pendingAck && state.pendingAck.session !== record.session)
+    )
+      this.lose(
+        record.kind,
+        record.generation,
+        "TerminalObservationAckInvalid",
+      );
+    else if (state.session === null)
+      state.pendingAck = {
+        session: record.session,
+        offset: Math.max(state.pendingAck?.offset ?? 0, record.offset),
+      };
+    else if (record.session === state.session)
+      state.acked = Math.max(state.acked, record.offset);
+  }
+
   async accept(batch) {
     if (!batch || this.disposed) return;
+    if (!Array.isArray(batch.records))
+      throw new ObservationError("TerminalObservationBatchInvalid");
     if (batch.document !== this.document) this.reset(batch.document);
     const epoch = this.epoch;
     for (const loss of batch.losses ?? [])
       this.lose(loss.kind, loss.generation, loss.code);
-    for (const record of batch.records) {
+    for (let index = 0; index < batch.records.length; index += 1) {
+      const record = batch.records[index];
       if (this.disposed || this.epoch !== epoch) break;
       if (!KINDS.includes(record.kind)) continue;
       let state = this.current.get(record.kind);
@@ -254,8 +309,52 @@ export class TerminalObserver {
       }
       if (!state || state.generation !== record.generation || !state.term)
         continue;
-      if (record.type === "frame") await this.frame(state, record);
-      else if (
+      if (record.type === "frame") {
+        // ACKs are metadata, so apply them in order without flushing parser
+        // bytes. Pending frames keep rows unreadable until their write settles.
+        let count = 0;
+        let frames = 0;
+        let bytes = 0;
+        if (
+          !record.end &&
+          record.bytes?.[0] === 0 &&
+          record.index === state.next
+        ) {
+          while (count < OBSERVATION_LIMITS.records) {
+            const candidate = batch.records[index + count];
+            if (
+              !candidate ||
+              candidate.kind !== record.kind ||
+              candidate.generation !== record.generation
+            )
+              break;
+            if (candidate.type === "ack") {
+              this.ack(state, candidate);
+              count += 1;
+              if (!state.term) break;
+              continue;
+            }
+            if (
+              candidate.type !== "frame" ||
+              candidate.end ||
+              candidate.index !== record.index + frames ||
+              candidate.bytes?.[0] !== 0 ||
+              (count > 0 &&
+                bytes + candidate.bytes.length > OBSERVATION_LIMITS.batchBytes)
+            )
+              break;
+            await this.frame(state, candidate, true);
+            count += 1;
+            frames += 1;
+            bytes += candidate.bytes.length;
+            if (!state.term) break;
+          }
+        }
+        if (count > 0) {
+          index += count - 1;
+          await this.drainFrames(state);
+        } else await this.frame(state, record);
+      } else if (
         record.type === "resize" &&
         this.size(state, record.cols, record.rows)
       )
@@ -285,27 +384,7 @@ export class TerminalObserver {
           state.acked = Math.max(state.acked, state.pendingAck?.offset ?? 0);
           state.pendingAck = null;
         }
-      } else if (record.type === "ack") {
-        if (
-          !Number.isSafeInteger(record.offset) ||
-          record.offset < 0 ||
-          !Number.isSafeInteger(record.session) ||
-          record.session < 0 ||
-          (state.pendingAck && state.pendingAck.session !== record.session)
-        )
-          this.lose(
-            record.kind,
-            record.generation,
-            "TerminalObservationAckInvalid",
-          );
-        else if (state.session === null)
-          state.pendingAck = {
-            session: record.session,
-            offset: Math.max(state.pendingAck?.offset ?? 0, record.offset),
-          };
-        else if (record.session === state.session)
-          state.acked = Math.max(state.acked, record.offset);
-      }
+      } else if (record.type === "ack") this.ack(state, record);
     }
   }
 

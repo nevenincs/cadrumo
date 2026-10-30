@@ -188,9 +188,21 @@ export function instrument(config) {
     const channel = channels[id];
     return channel && latest[channel.kind] === id ? channel : null;
   };
+  const wakeObservation = () => {
+    const notify =
+      config.observationWakeBinding && window[config.observationWakeBinding];
+    if (typeof notify === "function") {
+      try {
+        Promise.resolve(notify()).catch(() => undefined);
+      } catch {}
+    }
+  };
   const lose = (id, code) => {
     const channel = current(id);
-    if (channel) channel.observationLoss ??= code;
+    if (channel && !channel.observationLoss) {
+      channel.observationLoss = code;
+      wakeObservation();
+    }
   };
   const capture = (id, record, bytes = null) => {
     const channel = current(id);
@@ -203,6 +215,7 @@ export function instrument(config) {
       lose(id, "TerminalObservationCaptureLimit");
       return;
     }
+    const empty = observation.length === 0;
     observation.push({
       ...record,
       kind: channel.kind,
@@ -220,18 +233,32 @@ export function instrument(config) {
       captureStats.peakRecords,
       captureStats.records,
     );
+    if (empty) wakeObservation();
   };
-  state.drainVT = () => {
+  state.observationLimits = bounds;
+  state.drainVT = (budget = {}) => {
+    const byteLimit =
+      Number.isSafeInteger(budget.bytes) && budget.bytes >= 0
+        ? Math.min(budget.bytes, bounds.batchBytes)
+        : bounds.batchBytes;
+    const recordLimit =
+      Number.isSafeInteger(budget.records) && budget.records >= 0
+        ? Math.min(budget.records, bounds.batchRecords)
+        : bounds.batchRecords;
     const records = [];
     let size = 0;
-    while (observation.length && records.length < bounds.batchRecords) {
+    while (observation.length && records.length < recordLimit) {
       const next = observation[0];
       const bytes = next.bytes?.length ?? 0;
       // A single larger frame drains alone; the Node parser splits its writes.
-      if (records.length && size + bytes > bounds.batchBytes) break;
+      if (
+        size + bytes > byteLimit &&
+        (records.length || budget.oversized === false)
+      )
+        break;
       records.push(observation.shift());
       size += bytes;
-      if (size >= bounds.batchBytes) break;
+      if (size >= byteLimit) break;
     }
     captureStats.bytes -= size;
     captureStats.records = observation.length;
@@ -601,8 +628,38 @@ export function instrument(config) {
 }
 
 /** A bounded batch of wire observations, consumed by the Node-owned parser. */
-export function drainTerminalObservation() {
-  return window.__s10?.drainVT?.() ?? null;
+export function drainTerminalObservation(limits) {
+  const capture = window.__s10;
+  if (!capture?.drainVT) return null;
+  const bounds = capture.observationLimits ?? limits;
+  if (!bounds) return capture.drainVT();
+  let combined = null;
+  let bytes = 0;
+  // Raw batches retain their 64-record cap. One synchronous CDP round trip
+  // fills the existing byte budget, bounded by the global record allowance.
+  while (
+    (!combined || combined.more) &&
+    bytes < bounds.batchBytes &&
+    (!combined || combined.records.length < bounds.records)
+  ) {
+    const batch = capture.drainVT({
+      bytes: bounds.batchBytes - bytes,
+      records: bounds.records - (combined?.records.length ?? 0),
+      oversized: !combined?.records.length,
+    });
+    if (!batch) break;
+    if (!combined) combined = { ...batch, records: [] };
+    combined.records.push(...batch.records);
+    combined.more = batch.more;
+    combined.losses = batch.losses;
+    combined.captureStats = batch.captureStats;
+    bytes += batch.records.reduce(
+      (sum, record) => sum + (record.bytes?.length ?? 0),
+      0,
+    );
+    if (!batch.records.length) break;
+  }
+  return combined;
 }
 
 /** Renderer presence and pane visibility; this does not inspect GPU pixels. */
@@ -811,6 +868,24 @@ export async function docsProbe({ kind, nonce, ids, timeoutMs, ipcOrigin }) {
 /** The page's own search, through the Pagefind bundle beside the document. */
 export async function pagefindSearch({ query, bundle }) {
   const started = performance.now();
+  if (!bundle) {
+    const root =
+      document.documentElement.getAttribute("data-content_root") || "";
+    const declared =
+      document
+        .querySelector('meta[name="cadrumo-docs-site-prefix"]')
+        ?.getAttribute("content") || "";
+    const prefix =
+      declared && !declared.endsWith("/") ? `${declared}/` : declared;
+    const apex =
+      (root === "./" ? "" : root) +
+      prefix
+        .split("/")
+        .slice(0, -1)
+        .map(() => "../")
+        .join("");
+    bundle = new URL(`${apex}pagefind/pagefind.js`, document.baseURI).href;
+  }
   const pagefind = await import(new URL(bundle, location.href).href);
   if (typeof pagefind.init === "function") await pagefind.init();
   const search = await pagefind.search(query);

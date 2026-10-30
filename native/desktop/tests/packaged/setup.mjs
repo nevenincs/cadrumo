@@ -482,6 +482,8 @@ export const TRACKED_PROCESSES = Object.freeze([
   "headless_shell.exe",
   "msedgewebview2.exe",
   "ollama.exe",
+  "ollama_llama_server.exe",
+  "llama-server.exe",
   "conhost.exe",
 ]);
 
@@ -768,7 +770,7 @@ export class CountingProxy {
 // action, plan review and approval. Settings' provisioning section opens it.
 const DIALOG = ".setup-dialog";
 const ROW = (item) => `${DIALOG} .setup-components [data-setup-row="${item}"]`;
-const ROW_BUTTON = (item) => `${ROW(item)} button`;
+const ROW_BUTTON = (item) => `${ROW(item)} > button`;
 /** The row's plan review; its last button approves the plan. */
 const APPROVE_BUTTON = (item) => `${ROW(item)} [data-setup-review] button`;
 const OPEN_PANEL = "[data-settings-provisioning] button";
@@ -952,6 +954,12 @@ export async function runConcurrentSetup(
   const evidence = {};
   const gates = [];
   try {
+    await driver.openComponents();
+    const disclosure = session.page.locator(
+      `${DIALOG} [data-setup-element="local_ai"] > button`,
+    );
+    if ((await disclosure.getAttribute("aria-expanded")) !== "true")
+      await disclosure.click();
     await driver.click(ROW_BUTTON("browser"), "browser setup");
     await waitSetupSignal(session, [{ item: "browser", stage: "review" }]);
     await session.page

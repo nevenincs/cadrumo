@@ -49,6 +49,465 @@ import {
   removalVerdict,
 } from "./provisioning.mjs";
 import { sedeMissingVerdict } from "./probes.mjs";
+import { TerminalObserver, OBSERVATION_LIMITS } from "./terminal-observer.mjs";
+import { ObservationWake, Session } from "./session.mjs";
+import { drainTerminalObservation } from "./browser.mjs";
+
+function rawDrainFixture(records) {
+  const queue = [...records];
+  const batches = [];
+  const capture = {
+    drainVT(budget = {}) {
+      const limit = Math.min(
+        budget.bytes ?? OBSERVATION_LIMITS.batchBytes,
+        OBSERVATION_LIMITS.batchBytes,
+      );
+      const count = Math.min(
+        budget.records ?? OBSERVATION_LIMITS.batchRecords,
+        OBSERVATION_LIMITS.batchRecords,
+      );
+      const drained = [];
+      let bytes = 0;
+      while (queue.length && drained.length < count) {
+        const size = queue[0].bytes?.length ?? 0;
+        if (
+          bytes + size > limit &&
+          (drained.length || budget.oversized === false)
+        )
+          break;
+        drained.push(queue.shift());
+        bytes += size;
+        if (bytes >= limit) break;
+      }
+      batches.push({ records: drained.length, bytes, budget });
+      return {
+        document: "fixture",
+        records: drained,
+        more: queue.length > 0,
+        losses: [],
+        captureStats: { records: queue.length },
+      };
+    },
+  };
+  return { capture, batches };
+}
+
+test("one transport drain fills the existing byte budget with tiny frames and preserves raw batch bounds", async () => {
+  const f = parserFixture();
+  const payloads = Array.from({ length: 1024 }, (_, index) =>
+    Uint8Array.from({ length: 127 }, (_, offset) => (index + offset) % 256),
+  );
+  const records = payloads.flatMap((bytes, index) => [
+    f.record("frame", { index, bytes: [0, ...bytes] }),
+    f.record("ack", { session: 7, offset: (index + 1) * bytes.length }),
+  ]);
+  const raw = rawDrainFixture(records);
+  const previous = globalThis.window;
+  globalThis.window = { __s10: raw.capture };
+  try {
+    await assert.rejects(
+      f.observer.accept({ document: "fixture", records: { records: [] } }),
+      /TerminalObservationBatchInvalid/,
+    );
+    await f.accept(f.open);
+    let more = true;
+    let transports = 0;
+    while (more && transports < 4) {
+      const batch = drainTerminalObservation(OBSERVATION_LIMITS);
+      assert(batch.records.length <= OBSERVATION_LIMITS.records);
+      assert(
+        batch.records.reduce(
+          (sum, record) => sum + (record.bytes?.length ?? 0),
+          0,
+        ) <= OBSERVATION_LIMITS.batchBytes,
+      );
+      await f.accept(batch.records);
+      transports += 1;
+      more = batch.more;
+    }
+    assert.equal(more, false, "the bounded transport must make progress");
+    assert.equal(transports, 3); // Two full byte budgets and the trailing ACK.
+    assert(
+      raw.batches.every(
+        (batch) => batch.records <= OBSERVATION_LIMITS.batchRecords,
+      ),
+    );
+    assert(
+      Buffer.concat(f.writes).equals(Buffer.concat(payloads)),
+      "parser bytes differ from wire data",
+    );
+    assert.equal(f.writes.length, 2);
+    assert(
+      f.writes.every((bytes) => bytes.length <= OBSERVATION_LIMITS.batchBytes),
+    );
+    assert.equal(f.observer.stats().dataFrames, payloads.length);
+    assert.equal(f.observer.current.get("python").next, payloads.length);
+    assert.equal(f.observer.current.get("python").acked, 127 * payloads.length);
+    assert.match(f.observer.rows("python"), /parsed/);
+  } finally {
+    globalThis.window = previous;
+    f.observer.dispose();
+  }
+});
+
+test("combined transport preserves the single oversized frame exception and global metadata record cap", () => {
+  const previous = globalThis.window;
+  try {
+    const oversized = {
+      bytes: new Uint8Array(OBSERVATION_LIMITS.batchBytes + 1),
+    };
+    const raw = rawDrainFixture([{ bytes: new Uint8Array(1) }, oversized]);
+    globalThis.window = { __s10: raw.capture };
+    assert.equal(
+      drainTerminalObservation(OBSERVATION_LIMITS).records.length,
+      1,
+    );
+    const alone = drainTerminalObservation(OBSERVATION_LIMITS);
+    assert.deepEqual(alone.records, [oversized]);
+    assert.equal(alone.more, false);
+    const metadata = rawDrainFixture(
+      Array.from({ length: OBSERVATION_LIMITS.records + 1 }, () => ({
+        type: "ack",
+      })),
+    );
+    globalThis.window = { __s10: metadata.capture };
+    const bounded = drainTerminalObservation(OBSERVATION_LIMITS);
+    assert.equal(bounded.records.length, OBSERVATION_LIMITS.records);
+    assert.equal(bounded.more, true);
+    assert(
+      metadata.batches.every(
+        (batch) => batch.records <= OBSERVATION_LIMITS.batchRecords,
+      ),
+    );
+  } finally {
+    globalThis.window = previous;
+  }
+});
+
+test("observation activity cannot be lost between a drain and its wait, and shutdown releases waits", async () => {
+  const wake = new ObservationWake();
+  const beforeDrain = wake.version;
+  wake.notify();
+  await wake.wait(beforeDrain);
+  let finished = false;
+  const waiting = wake.wait(wake.version).then(() => {
+    finished = true;
+  });
+  await Promise.resolve();
+  assert.equal(finished, false);
+  wake.notify();
+  await waiting;
+  const closing = wake.wait(wake.version);
+  wake.close();
+  await closing;
+  await wake.wait(wake.version);
+});
+
+test(
+  "shell capture wakes the serial pump without polling and rejects child or foreign-frame signals",
+  { timeout: 2000 },
+  async () => {
+    const handlers = new Map();
+    const bindings = new Map();
+    let frameUrl = "https://shell.invalid/index.html";
+    const frame = { url: () => frameUrl };
+    let drains = 0;
+    let first;
+    let second;
+    let third;
+    const firstDrain = new Promise((resolve) => {
+      first = resolve;
+    });
+    const secondDrain = new Promise((resolve) => {
+      second = resolve;
+    });
+    const thirdDrain = new Promise((resolve) => {
+      third = resolve;
+    });
+    const page = {
+      on: (name, listener) => handlers.set(name, listener),
+      mainFrame: () => frame,
+      exposeBinding: async (name, listener) => bindings.set(name, listener),
+      evaluate: async () => {
+        drains += 1;
+        return {
+          document: "fixture",
+          records: [],
+          more: false,
+          captureStats: {},
+        };
+      },
+    };
+    const session = new Session({
+      browser: { on() {} },
+      page,
+      shellOrigins: ["https://shell.invalid"],
+      docsOrigin: "https://docs.invalid",
+    });
+    session.observer.dispose();
+    session.observer = {
+      accept: async () => {
+        if (drains === 1) {
+          session.observationWake.notify(); // Arrives while parsing, before wait registration.
+          first();
+        }
+        if (drains === 3) third();
+        if (drains === 2) second();
+      },
+      stats: () => ({ cells: 1 }),
+      dispose() {},
+      reset() {},
+    };
+    try {
+      assert.equal(await session.enableObservationWake(), true);
+      const notify = [...bindings.values()][0];
+      const version = session.observationWake.version;
+      notify({ page: {}, frame });
+      notify({ page, frame: { url: () => "https://shell.invalid/child" } });
+      frameUrl = "https://foreign.invalid/";
+      notify({ page, frame });
+      assert.equal(session.observationWake.version, version);
+      frameUrl = "https://shell.invalid/index.html";
+      session.startObservation();
+      await firstDrain;
+      // First notification forces drain two despite its empty previous batch;
+      // this one wakes drain three even if it precedes wait registration.
+      await secondDrain;
+      notify({ page, frame });
+      await thirdDrain;
+      handlers.get("close")();
+      await session.observationPump;
+      assert.equal(session.observationStopped, true);
+      assert.equal(session.observationFailure, null);
+      assert.equal(drains, 3);
+    } finally {
+      session.stopObservation();
+    }
+  },
+);
+
+function parserFixture(onWrite) {
+  const writes = [];
+  const events = [];
+  const observer = new TerminalObserver({
+    createTerminal: ({ rows }) => ({
+      rows,
+      buffer: {
+        active: {
+          baseY: 0,
+          getLine: () => ({ translateToString: () => "parsed" }),
+        },
+      },
+      write(bytes, done) {
+        writes.push(Uint8Array.from(bytes));
+        events.push("write");
+        onWrite?.(observer);
+        queueMicrotask(done);
+      },
+      resize() {
+        events.push("resize");
+      },
+      dispose() {
+        events.push("dispose");
+      },
+    }),
+  });
+  const record = (type, fields = {}) => ({
+    kind: "python",
+    generation: 1,
+    type,
+    ...fields,
+  });
+  const accept = (records) => observer.accept({ document: "fixture", records });
+  const open = [
+    record("open", { cols: 80, rows: 24 }),
+    record("bind", { ok: true, session: 7 }),
+  ];
+  return { observer, writes, events, record, accept, open };
+}
+
+test("many small terminal frames retain every byte and index while parser writes stay bounded", async () => {
+  const f = parserFixture();
+  const payloads = Array.from({ length: 1024 }, (_, index) =>
+    Uint8Array.from({ length: 127 }, (_, offset) => (index + offset) % 256),
+  );
+  try {
+    await f.accept(f.open);
+    for (
+      let start = 0;
+      start < payloads.length;
+      start += OBSERVATION_LIMITS.batchRecords
+    ) {
+      const frames = payloads
+        .slice(start, start + OBSERVATION_LIMITS.batchRecords)
+        .map((bytes, offset) =>
+          f.record("frame", { index: start + offset, bytes: [0, ...bytes] }),
+        );
+      await f.accept(frames);
+    }
+    const expected = Buffer.concat(payloads);
+    assert(
+      Buffer.concat(f.writes).equals(expected),
+      "parser bytes differ from wire data",
+    );
+    assert.equal(
+      f.writes.length,
+      payloads.length / OBSERVATION_LIMITS.batchRecords,
+    );
+    assert(
+      f.writes.every((bytes) => bytes.length <= OBSERVATION_LIMITS.batchBytes),
+    );
+    assert.equal(f.observer.stats().dataFrames, payloads.length);
+    assert.equal(f.observer.stats().bytes, expected.length);
+    assert.equal(f.observer.stats().lossCount, 0);
+    assert.equal(f.observer.current.get("python").next, payloads.length);
+    assert.equal(
+      f.observer.rows("python"),
+      null,
+      "unacknowledged bytes remain unreadable",
+    );
+    await f.accept([f.record("ack", { session: 7, offset: expected.length })]);
+    assert.match(f.observer.rows("python"), /parsed/);
+  } finally {
+    f.observer.dispose();
+  }
+});
+
+test("alternating small data frames and ACKs preserve all bytes and ACK order with bounded writes", async () => {
+  const f = parserFixture((observer) =>
+    assert.equal(
+      observer.rows("python"),
+      null,
+      "ACKed rows remain unreadable while the combined parser write is outstanding",
+    ),
+  );
+  const acknowledgements = [];
+  const applyAck = f.observer.ack.bind(f.observer);
+  f.observer.ack = (state, record) => {
+    acknowledgements.push(record.offset);
+    applyAck(state, record);
+  };
+  const payloads = Array.from({ length: 1024 }, (_, index) =>
+    Uint8Array.from({ length: 127 }, (_, offset) => (index + offset) % 256),
+  );
+  const records = payloads.flatMap((bytes, index) => [
+    f.record("frame", { index, bytes: [0, ...bytes] }),
+    f.record("ack", { session: 7, offset: (index + 1) * bytes.length }),
+  ]);
+  try {
+    await f.accept(f.open);
+    for (
+      let index = 0;
+      index < records.length;
+      index += OBSERVATION_LIMITS.batchRecords
+    )
+      await f.accept(
+        records.slice(index, index + OBSERVATION_LIMITS.batchRecords),
+      );
+    assert(
+      Buffer.concat(f.writes).equals(Buffer.concat(payloads)),
+      "parser bytes differ from wire data",
+    );
+    assert.deepEqual(
+      acknowledgements,
+      payloads.map((_, index) => (index + 1) * 127),
+    );
+    assert.equal(
+      f.writes.length,
+      records.length / OBSERVATION_LIMITS.batchRecords,
+    );
+    assert(
+      f.writes.every((bytes) => bytes.length <= OBSERVATION_LIMITS.batchBytes),
+    );
+    assert.equal(f.observer.stats().dataFrames, payloads.length);
+    assert.equal(f.observer.current.get("python").next, payloads.length);
+    assert.equal(f.observer.stats().lossCount, 0);
+    assert.match(f.observer.rows("python"), /parsed/);
+  } finally {
+    f.observer.dispose();
+  }
+});
+
+test("an invalid ACK inside a combined data run invalidates that generation", async () => {
+  const f = parserFixture();
+  try {
+    await f.accept([
+      ...f.open,
+      f.record("frame", { index: 0, bytes: [0, 65] }),
+      f.record("ack", { session: 7, offset: -1 }),
+      f.record("frame", { index: 1, bytes: [0, 66] }),
+    ]);
+    assert.throws(
+      () => f.observer.rows("python"),
+      /TerminalObservationAckInvalid/,
+    );
+    assert.equal(f.observer.stats().lossCount, 1);
+  } finally {
+    f.observer.dispose();
+  }
+});
+
+test("terminal coalescing flushes at resize, control and end while applying ACK metadata", async () => {
+  const f = parserFixture();
+  const frame = (index, bytes) => f.record("frame", { index, bytes });
+  try {
+    await f.accept([
+      ...f.open,
+      frame(0, [0, 65]),
+      frame(1, [0, 66]),
+      f.record("resize", { cols: 81, rows: 24 }),
+      frame(2, [0, 67]),
+      frame(3, [1, 123, 125]),
+      frame(4, [0, 68]),
+      f.record("ack", { session: 7, offset: 4 }),
+      frame(5, [0, 69]),
+      f.record("frame", { index: 6, end: true }),
+    ]);
+    assert.deepEqual(
+      f.writes.map((bytes) => Array.from(bytes)),
+      [[65, 66], [67], [68, 69]],
+    );
+    assert.deepEqual(f.events.slice(0, 3), ["write", "resize", "write"]);
+    assert.equal(f.observer.current.get("python").ended, true);
+    assert.equal(f.observer.current.get("python").acked, 4);
+    assert.equal(f.observer.stats().dataFrames, 5);
+  } finally {
+    f.observer.dispose();
+  }
+});
+
+test("terminal coalescing preserves gaps, duplicate refusal and malformed-frame refusal", async () => {
+  for (const scenario of ["gap", "duplicate", "malformed"]) {
+    const f = parserFixture();
+    const frame = (index, bytes) => f.record("frame", { index, bytes });
+    try {
+      await f.accept(f.open);
+      if (scenario === "gap") {
+        await f.accept([frame(1, [0, 66]), frame(2, [0, 67])]);
+        assert.equal(f.writes.length, 0);
+        assert.equal(f.observer.stats().pendingRecords, 2);
+        await f.accept([frame(0, [0, 65])]);
+        assert.deepEqual(Buffer.concat(f.writes), Buffer.from("ABC"));
+        assert.equal(f.observer.current.get("python").next, 3);
+      } else {
+        await f.accept([
+          frame(0, [0, 65]),
+          scenario === "duplicate" ? frame(0, [0, 66]) : frame(1, [0, 256]),
+        ]);
+        assert.throws(
+          () => f.observer.rows("python"),
+          new RegExp(
+            scenario === "duplicate"
+              ? "TerminalObservationFrameOrder"
+              : "TerminalObservationFrameInvalid",
+          ),
+        );
+      }
+    } finally {
+      f.observer.dispose();
+    }
+  }
+});
 
 const testing = resolve(tmpdir(), "cadrumo-testing");
 const run = resolve(testing, "cadrumo-setup-run");
@@ -68,9 +527,20 @@ test("check 1 rejects startup overlap, missing first snapshot and an unexercised
   };
   for (const judge of [startupPanelVerdict, firstNullSnapshotVerdict]) {
     assert.equal(judge(valid).verdict, PASS);
+    assert.equal(
+      judge({
+        ...valid,
+        reads: [
+          { revision: 0, state: "unavailable", snapshot: null },
+          ...valid.reads,
+        ],
+      }).verdict,
+      PASS,
+    );
     for (const defect of [
       { states: [] },
       { reads: [] },
+      { reads: [{ revision: 0, state: "unavailable", snapshot: null }] },
       { overflow: true },
       {
         states: [
@@ -131,6 +601,7 @@ test("check 2 rejects missing, duplicated or unordered engine rows and duplicate
     { elements: [{ ...browser, sentences: ["Absent", "Absent"] }, local] },
     { elements: [{ ...browser, buttons: [] }, local] },
     { elements: [browser, { ...local, nested: [] }] },
+    { elements: [browser, { ...local, sentences: ["Not installed"] }] },
     {
       elements: [
         browser,
@@ -377,6 +848,21 @@ test("check 10 rejects a missing Sede offer, wrong persisted refusal or absent l
     warning: true,
   };
   assert.equal(sedeMissingVerdict(valid).verdict, PASS);
+  assert.equal(
+    sedeMissingVerdict({
+      ...valid,
+      sentence: "El navegador no está instalado.",
+      expectedSentence: "El navegador no está instalado.",
+    }).verdict,
+    PASS,
+  );
+  assert.equal(
+    sedeMissingVerdict({
+      ...valid,
+      expectedSentence: "El navegador no está instalado.",
+    }).verdict,
+    FAIL,
+  );
   for (const defect of [
     { absent: false },
     { sentence: "Something failed" },
@@ -793,6 +1279,31 @@ test("another program's browser writing its own log in the real cache is reporte
 
   assert.equal(guardedChange(`changed ${shellLog}`, context), false);
   assert.equal(guardedChange(`added ${shellLog}`, context), false);
+});
+
+test("a managed browser log is charged without proof of external ownership", () => {
+  const managed = join(STORAGE, "components", "playwright");
+  const log = join(
+    managed,
+    "chromium_headless_shell-1248",
+    "chrome-headless-shell-win64",
+    "debug.log",
+  );
+  const context = storageContext();
+  assert.equal(guardedChange(`changed ${log}`, context), true);
+  assert.equal(guardedChange(`removed ${log}`, context), true);
+  assert.equal(guardedChange(`removed ${managed}`, context), true);
+  assert.equal(
+    guardedChange(`added ${join(managed, "chrome.exe")}`, context),
+    true,
+  );
+  assert.equal(
+    guardedChange(`changed ${log}`, {
+      ...context,
+      runCommandLines: [join(managed, "chrome.exe")],
+    }),
+    true,
+  );
 });
 
 test("an install, a removal or this run's own browser in the real cache is charged to the run", () => {

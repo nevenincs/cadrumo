@@ -16,7 +16,7 @@ import {
   statSync,
   statfsSync,
 } from "node:fs";
-import { dirname, isAbsolute, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { test } from "node:test";
 import "./packaged/setup.test.mjs";
 import { fileURLToPath } from "node:url";
@@ -34,7 +34,7 @@ import { installedHost, packagedHostPaths } from "./packaged/host.mjs";
 import { SignInFixture } from "./packaged/sign-in.mjs";
 import { docsUiChecks } from "./packaged/docs-ui.mjs";
 import {
-  installProvisioningObserver,
+  observeProvisioning,
   startupObservation,
   startupPanelVerdict,
   firstNullSnapshotVerdict,
@@ -125,13 +125,30 @@ function settings() {
   // The setup run's whole footprint is one throwaway root in the build's
   // testing directory, removed when the run ends.
   const setup = process.env[SETUP_VARIABLE] === "1";
+  const configuration = process.env.CADRUMO_BUILD_CONFIG;
+  assert(
+    ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"].includes(
+      configuration,
+    ),
+    "Select a supported CMake configuration for the packaged run.",
+  );
   const setupParent = setup
-    ? resolve(buildPath("testing"), "packaged-setup")
+    ? resolve(buildPath("testing"), configuration, "packaged-setup")
     : null;
   const run = setup
     ? resolve(setupParent, `run-${stamp}`)
     : resolve(buildPath("desktop_testing"), "packaged", "runs", stamp);
   const layout = setup ? scratchLayout(run) : null;
+  const resultsParent = resolve(buildPath("desktop_results"), "packaged");
+  const results =
+    process.env.CADRUMO_PACKAGED_RESULTS || resolve(resultsParent, stamp);
+  const resultsMember = relative(resultsParent, resolve(results));
+  assert(
+    resultsMember &&
+      !resultsMember.startsWith("..") &&
+      !isAbsolute(resultsMember),
+    "Packaged results must be inside the CMake packaged results directory.",
+  );
   return {
     stamp,
     packageRoot,
@@ -141,13 +158,7 @@ function settings() {
     storage: layout ? layout.storage : resolve(run, "storage"),
     setupParent,
     layout,
-    results:
-      process.env.CADRUMO_PACKAGED_RESULTS ||
-      resolve(
-        buildPath("desktop_results"),
-        setup ? "packaged-setup" : "packaged",
-        stamp,
-      ),
+    results,
     allowBrowser: process.env.CADRUMO_PACKAGED_ALLOW_BROWSER === "1",
   };
 }
@@ -276,8 +287,51 @@ async function exited(exit, ms) {
   return Promise.race([exit, sleep(ms).then(() => null)]);
 }
 
+async function captureProvisioningFailure(session, results, id) {
+  if (!session) return;
+  results.evidence(
+    `${id}-ui.json`,
+    await session.shell(() => ({
+      language: document.documentElement.lang,
+      surfaces: [
+        ...document.querySelectorAll(
+          '.setup-dialog, .pane-tui, [data-slot="local-models"], [data-slot="local-models-signed-out"], .profile-status',
+        ),
+      ].map((node) => ({
+        slot: node.getAttribute("data-slot"),
+        className: node.className,
+        text: node.textContent.trim().slice(0, 12000),
+      })),
+      setup: window.__s10.setupLatest,
+      documentation: window.__s14DocsFailure ?? null,
+      commands: window.__s10.ipc
+        .slice(-80)
+        .map(({ cmd, ok, code }) => ({ cmd, ok, code })),
+    })),
+  );
+  results.evidence(
+    `${id}-diagnostics.json`,
+    await session.call("diagnostics_snapshot", { after: 0 }),
+  );
+  if (/^(palette|localized|settings-docs)/.test(id))
+    results.evidence(
+      `${id}-docs.json`,
+      await session.docs(() => ({
+        href: location.href,
+        language: document.documentElement.lang,
+        messages: window.__s10.messages.slice(-30),
+        keys: window.__s10.keys.slice(-10),
+      })),
+    );
+  if (id.startsWith("provisioning-3"))
+    results.evidence(
+      `${id}-models.json`,
+      await session.call("agent_local_models"),
+    );
+}
+
 /** Records one check or experiment as a result line and as a subtest. */
-function recorder(t, results) {
+function recorder(t, results, onFailure) {
   return async (kind, id, title, run) => {
     const checkStartedAt = new Date().toISOString();
     const checkStarted = performance.now();
@@ -286,6 +340,13 @@ function recorder(t, results) {
       outcome = await run();
     } catch (error) {
       outcome = { verdict: FAIL, detail: `error: ${error?.message ?? error}` };
+    }
+    if (outcome.verdict === FAIL && onFailure) {
+      try {
+        await onFailure(id);
+      } catch (error) {
+        outcome.detail += `; capture: ${error.message}`;
+      }
     }
     const entry = results.record({
       kind,
@@ -327,7 +388,9 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
   let webviewPids = [];
   let signIn = null;
 
-  const record = recorder(t, results);
+  const record = recorder(t, results, (id) =>
+    captureProvisioningFailure(session, results, id),
+  );
   const check = (id, title, run) => record("check", id, title, run);
   const experiment = (id, title, run) => record("experiment", id, title, run);
   const evidence = (name, value) => results.evidence(name, value);
@@ -762,8 +825,9 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
 
     // Documentation: CSP, search and a localized root ---------------------------
     // The documentation is put away by default: it is shown before it is read.
-    if (!(await page.locator(".pane-docs").isVisible()))
+    if (!(await page.locator(".docs-frame").isVisible()))
       await page.locator('.rail [data-rail="docs"]').click();
+    await page.locator(".docs-frame").waitFor({ state: "visible" });
     const shown = session.docsFrame()?.url();
     const shownEntry = entries.find((language) => language.entry === shown);
     const localized = entries.find(
@@ -792,7 +856,6 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       pagefind = await frame
         .evaluate(pagefindSearch, {
           query: "modelo",
-          bundle: "pagefind/pagefind.js",
         })
         .catch((error) => ({
           results: 0,
@@ -1675,6 +1738,11 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     );
 
     // Close with a paused session ------------------------------------------------
+    const signedOutPrompt = page.locator('.sign-in[data-state="open"]');
+    if (await signedOutPrompt.isVisible()) {
+      await signedOutPrompt.locator(":scope > button[aria-label]").click();
+      await signedOutPrompt.waitFor({ state: "hidden" });
+    }
     await quiet("python", 1000);
     await session.shell(() => window.__s10.hold());
     await session.type("python", flood(40000, "S10-FLOOD3-END"));
@@ -1867,7 +1935,9 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
   const results = new Results(config.results);
   const startedAt = new Date().toISOString();
   const summary = { root: layout.root };
-  const record = recorder(t, results);
+  const record = recorder(t, results, (id) =>
+    captureProvisioningFailure(session, results, id),
+  );
   const check = (id, title, run) => record("check", id, title, run);
   const evidence = (name, value) => results.evidence(name, value);
   const input = new DesktopInput();
@@ -2061,6 +2131,7 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
         session = await connect({
           endpoint,
           shellOrigins: [`${scheme}://tauri.localhost`],
+          documentObserver: observeProvisioning,
           docsOrigin: docsOriginOf(window),
           ipcPrefix: `${scheme}://ipc.localhost/`,
           blockExternal: !config.allowBrowser,
@@ -2069,7 +2140,6 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       },
     );
     if (launched.verdict !== PASS) return;
-    await installProvisioningObserver(session);
     // The host installs its sign-in state while startup assembles the workspace,
     // so nothing is asked of it before the workspace has loaded, as in the main suite.
     const workspace = await check(
@@ -2101,7 +2171,7 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
     await session.page
       .locator('.sign-in[data-state="open"]')
       .waitFor({ state: "visible" });
-    await session.page.locator(".sign-in button[aria-label]").click();
+    await session.page.locator(".sign-in > button[aria-label]").click();
     await session.page
       .locator('.setup-dialog[data-state="open"]')
       .waitFor({ state: "visible", timeout: 20000 });
@@ -2119,6 +2189,11 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       "provisioning-1-elements",
       "each engine element has one status and its own action",
       async () => {
+        const localAi = session.page.locator(
+          '.setup-dialog [data-setup-element="local_ai"] > button',
+        );
+        if ((await localAi.getAttribute("aria-expanded")) !== "true")
+          await localAi.click();
         const read = await session.call("desktop_setup_read");
         return panelRowsVerdict(
           read.value?.snapshot,
@@ -2127,13 +2202,50 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       },
     );
     await session.page.locator(".setup-dialog button[aria-label]").click();
-    await session.page.locator('[data-rail="profile"]').click();
+    await session.page.locator(".profile-trigger").click();
+    const chrome = JSON.parse(
+      readFileSync(
+        resolve(buildPath("desktop_frontend_generated"), "chrome-strings.json"),
+        "utf8",
+      ),
+    );
+    let words = chrome.en ?? chrome;
     const authenticated = await check(
       "canonical-sign-in",
       "real password form signs in to the throwaway profile",
-      () => signIn.signIn(session, input, hostPid),
+      async () => {
+        evidence(
+          "setup-sign-in-menu.json",
+          await session.shell(() => ({
+            open:
+              document
+                .querySelector(".account-menu")
+                ?.getAttribute("data-state") ?? null,
+            items: [
+              ...document.querySelectorAll(
+                ".account-menu [data-slot=dropdown-menu-item]",
+              ),
+            ].map((node) => ({
+              text: node.textContent.trim(),
+              role: node.getAttribute("role"),
+              disabled: node.hasAttribute("data-disabled"),
+            })),
+          })),
+        );
+        await session.page
+          .locator(".account-menu")
+          .getByRole("menuitem", {
+            name: "Desktop Acceptance",
+            exact: true,
+          })
+          .click();
+        return signIn.signIn(session, input, hostPid);
+      },
     );
     if (authenticated.verdict !== PASS) return;
+    words =
+      chrome[await session.shell(() => document.documentElement.lang)] ??
+      chrome.en;
     await results.screenshot(session.page, "setup-01-signed-in");
 
     driver = new SetupDriver({ session, input, signIn, layout, proxy });
@@ -2154,15 +2266,13 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
     await check(
       "provisioning-10-sede",
       "Sede without a browser offers setup and logs its refusal locally",
-      () => runSedeMissingAcceptance({ session, driver }),
+      () =>
+        runSedeMissingAcceptance({
+          session,
+          driver,
+          expectedSentence: words["desktop.browser.ended.component_not_ready"],
+        }),
     );
-    const chrome = JSON.parse(
-      readFileSync(
-        resolve(buildPath("desktop_frontend_generated"), "chrome-strings.json"),
-        "utf8",
-      ),
-    );
-    const words = chrome["en"] ?? chrome;
     await check(
       "provisioning-9-failure",
       "a real setup failure has specific wording and exactly one local record",

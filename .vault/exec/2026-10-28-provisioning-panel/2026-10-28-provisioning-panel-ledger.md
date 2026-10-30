@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#provisioning-panel'
 date: '2026-10-28'
-modified: '2026-10-29'
+modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:adeffd0844332dd3afcda9d1cbb665af4ff7398e2f11015f07f51efa455927aa'
+body_hash: 'sha256:d429f5d8b1ac887c5c3e676e9cef67e2d31c53046fc1bc563873acb035030de3'
 related:
   - "[[2026-10-28-provisioning-panel-plan]]"
 ---
@@ -256,6 +256,18 @@ related:
 - `S05` `verify:` `node --test native/desktop/tests/packaged/setup.test.mjs` -> `pass`
 - `S05` `verify:` `packaged harness JavaScript syntax checks` -> `pass`
 - `S05` `verify:` `Prettier explicit changed files` -> `pass`
+- `S05` `M` `native/desktop/tests/packaged/docs-ui.mjs`
+- `S05` `M` `native/desktop/tests/packaged/session.mjs`
+- `S05` `M` `native/desktop/tests/packaged/sign-in.mjs`
+- `S05` `M` `native/desktop/tests/packaged/terminal-observer.mjs`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target bundle` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target app-native` -> `pass`
+- `S05` `verify:` `just build-native Release desktop-frontend-check` -> `pass`
+- `S05` `verify:` `just build-native Release desktop-frontend-test (scenarios/setup.spec.ts; 45 tests)` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target desktop-packaged-harness-test` -> `pass`
+- `S05` `verify:` `node --test native/desktop/tests/packaged/setup.test.mjs (35 tests; broken-input cases 1-10)` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target desktop-packaged-test` -> `fail`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target desktop-packaged-setup-test` -> `fail`
 
 ## Notes
 
@@ -277,3 +289,4 @@ related:
 - `S05` new SetupFailed code for component setup failures; hand-kept mirrors updated (no generator exists); `child_failed` absent from both mirrors (pre-existing)
 - `S05` 2026-10-29 18:04-21:13, HEAD 65d05917db..e21c31c181: Release bundle 13 attempts, all exit 1, refused by `docs_build` 'Documentation inputs changed during the build' (concurrent peer edits); desktop-frontend-chrome also exited 1 in 5 runs, cause not isolated. Debug bundle and Debug desktop-packaged-host not reached; built-app checks 1-10 not run; S05 left open. Coverage gap: registered lanes desktop-packaged-test/desktop-packaged-setup-test (signed in, browser only) do not assert checks 1,3,4,5,7,9,10; 2 and 6 partial; 8 via csp-zero.
 - `S05` Packaged provisioning assertions implemented with pure negative cases (25 unit tests passed). Release rebuild and both packaged lanes pending: peer CMake desktop-frontend-dev PID 38512 still owns build/windows-x64. Initial complete:null is not deterministically exercised by reloading the cached native host; real crash-interruption/resume remains unverified (cancellation/retry is distinct). S05 remains open. Pre-existing shared .tmp entries preserved; this task retained no scratch.
+- `S05` S05 remains open. Quiet Release bundle passed on 2026-10-29; new-day app-native rebuild passed on 2026-10-30. Last real setup run 2026-10-29T23-47-40-140Z: 31 PASS, 3 FAIL (Sede missing offer, local AI removal/reinstall and model removal); real null-first startup, per-part sizes, concurrent transfers/cancellation, rail spinner, Settings, native proxy-induced failure logged once, browser cancel/retry/full check and CSP passed. Model installation completed but the catalog installed marker had not refreshed; a bounded marker wait was added afterward and is not yet verified in a packaged run. Existing crash-interruption/resume remains unverified; cancellation/retry is recorded distinctly. Latest normal run 2026-10-30T07-27-13-102Z refused staging because peer changes left interpreter, desktop and test-host identities unsettled; no app launched. Earlier real normal run 2026-10-30T00-18-51-762Z exposed a 4.622-second docs reply beyond the product 4-second cutoff and harness capture overflow. Bounded capture aggregation, activity wakeups, ACK-aware parser coalescing and their regressions now pass 35 unit and 45 existing harness tests, but final real normal/setup runs are pending. Another session is actively editing/building the native contract and diagnostics, so the build tree was released. Sede native start bypasses the setup-engine browser row; repairing product behavior is outside this task allowlist. Shared .tmp contains peer-owned work; this task retained no temporary fixture directory.

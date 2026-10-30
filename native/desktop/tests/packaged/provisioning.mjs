@@ -5,6 +5,23 @@ import { FAIL, PASS } from "./verdicts.mjs";
 const localElement = '.setup-dialog [data-setup-element="local_ai"]';
 const attribute = (value) => JSON.stringify(value);
 
+// The native catalog command answers busy while the agent prepares its answer;
+// the next read retrieves that answer. Other refusals remain failures.
+async function readCatalog(session, driver) {
+  const answer = await driver.wait(
+    async () => {
+      const reply = await session.call("agent_provider_catalog");
+      return !reply.ok && reply.error?.code === "agent_service_busy"
+        ? null
+        : reply;
+    },
+    { timeout: 30000, what: "the agent's catalog read handshake" },
+  );
+  if (!answer.ok)
+    throw new Error(`the model catalog was refused: ${answer.error?.code}`);
+  return answer;
+}
+
 /** Selection is acceptance-only: every identity and byte figure comes from the agent. */
 export function smallestLocalModels(catalog, settings) {
   const keyless = new Set(
@@ -65,12 +82,18 @@ export async function openLocalAi(driver) {
   await driver.session.page
     .locator(`${localElement} [data-testid="local-ai"]`)
     .waitFor({ state: "visible", timeout: 30000 });
+  // The catalogue and the person's list load when the dropdown mounts.
+  // A missing row is meaningful only after that real read has rendered its form.
+  await driver.session.page
+    .locator(`${localElement} [data-slot="local-model-add"]`)
+    .first()
+    .waitFor({ state: "visible", timeout: 30000 });
 }
 
 /** Read real catalogue metadata, open the dropdown and list its smallest model. */
 export async function prepareSmallestModel({ session, driver }) {
   const [catalog, settings] = await Promise.all([
-    session.call("agent_provider_catalog"),
+    readCatalog(session, driver),
     session.call("provider_settings_status"),
   ]);
   if (!catalog.ok || !settings.ok)
@@ -97,7 +120,7 @@ export async function addCustomLocalModel({ session, driver, lane, model }) {
   await openLocalAi(driver);
   // LocalModels renders one form for each keyless lane, in catalogue order.
   const settings = await session.call("provider_settings_status");
-  const catalog = await session.call("agent_provider_catalog");
+  const catalog = await readCatalog(session, driver);
   if (!settings.ok || !catalog.ok)
     throw new Error("local lane metadata could not be read");
   const answer = catalog.value;
@@ -303,19 +326,8 @@ export function observeProvisioning() {
   window.addEventListener("packaged-setup-snapshot", (event) => {
     const value = event.detail;
     if (evidence.reads.length >= 2000) evidence.overflow = true;
-    else evidence.reads.push({ snapshot: value?.snapshot ?? value });
+    else evidence.reads.push(structuredClone(value));
   });
-}
-
-/** Reload with the observer in place, before the person dismisses sign-in. */
-export async function installProvisioningObserver(session) {
-  await session.page.addInitScript(observeProvisioning);
-  await session.page.reload({ waitUntil: "load", timeout: 60000 });
-  await session.page.waitForFunction(
-    () => !!window.__s10?.tokenSeen && !!window.__provisioningEvidence,
-    null,
-    { timeout: 60000 },
-  );
 }
 
 export async function startupObservation(session) {
@@ -339,7 +351,9 @@ export function startupPanelVerdict(observation) {
   );
   if (opened < 0)
     return verdict(false, "the provisioning panel did not open after sign-in");
-  const first = observation.reads?.[0];
+  const first = observation.reads?.find(
+    (value) => value?.snapshot && Object.hasOwn(value.snapshot, "complete"),
+  );
   if (
     !first ||
     first.failed ||
@@ -359,7 +373,9 @@ export function startupPanelVerdict(observation) {
 
 /** A separate result: a real run need not happen to return an initially unread snapshot. */
 export function firstNullSnapshotVerdict(observation) {
-  const first = observation?.reads?.[0];
+  const first = observation?.reads?.find(
+    (value) => value?.snapshot && Object.hasOwn(value.snapshot, "complete"),
+  );
   if (!first || first.failed || first.snapshot == null)
     return verdict(false, "the first real setup snapshot was not captured");
   if (first.snapshot.complete !== null)
@@ -482,6 +498,11 @@ export function panelRowsVerdict(snapshot, panel) {
     )
       return verdict(false, `${row.item} has no enabled expansion control`);
     if (element.expandable && element.expanded) {
+      if (element.sentences.length !== 0)
+        return verdict(
+          false,
+          `${row.item} repeats its status outside the expanded program row`,
+        );
       const [program] = element.nested ?? [];
       if (
         element.nested?.length !== 1 ||
@@ -574,9 +595,9 @@ export function partSizesVerdict(expected, rendered) {
 
 export async function planPartsObservation(session, item) {
   return session.shell((item) => {
-    const entry = [...document.querySelectorAll("[data-setup-plan]")].find(
-      (node) => node.getAttribute("data-setup-plan") === item,
-    );
+    const entry = [
+      ...document.querySelectorAll(".setup-dialog [data-setup-plan]"),
+    ].find((node) => node.getAttribute("data-setup-plan") === item);
     return entry
       ? [...entry.querySelectorAll("[data-setup-part]")].map((node) => ({
           part: node.getAttribute("data-setup-part"),
@@ -588,9 +609,10 @@ export async function planPartsObservation(session, item) {
 
 export async function assertPlanSizes(session, snapshot) {
   const evidence = [];
+  const locale = await session.shell(() => document.documentElement.lang);
   for (const run of snapshot.runs.filter((run) => run.stage === "review")) {
     await session.page
-      .locator(`[data-setup-plan="${run.item}"]`)
+      .locator(`.setup-dialog [data-setup-plan="${run.item}"]`)
       .waitFor({ state: "visible", timeout: 30000 });
     const expected = run.review.entries
       .flatMap((entry) => entry.parts)
@@ -608,7 +630,7 @@ export async function assertPlanSizes(session, snapshot) {
           sizeText:
             part.download_bytes === null
               ? null
-              : new Intl.NumberFormat("en", {
+              : new Intl.NumberFormat(locale, {
                   style: "unit",
                   unit: units[index],
                   unitDisplay: "short",
@@ -616,6 +638,7 @@ export async function assertPlanSizes(session, snapshot) {
                 }).format(value),
         };
       });
+    if (expected.length === 0) continue;
     const rendered = await planPartsObservation(session, run.item);
     const result = partSizesVerdict(expected, rendered);
     evidence.push({ item: run.item, ...result });
@@ -685,6 +708,13 @@ export async function installSmallestModel({ driver, lane, model }) {
       what: "the selected model's real setup completion",
     },
   );
+  if (["completed", "nothing_to_do"].includes(settled.outcome))
+    await session.page
+      .locator(
+        `${localElement} [data-model=${attribute(model)}][data-installed="true"]`,
+      )
+      .first()
+      .waitFor({ state: "visible", timeout: 30000 });
   return verdict(
     ["completed", "nothing_to_do"].includes(settled.outcome),
     "the selected catalog model's download settled successfully",

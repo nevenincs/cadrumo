@@ -14,11 +14,14 @@ export function sedeMissingVerdict({
   panel,
   records,
   warning,
+  expectedSentence,
 }) {
   const record = records?.[0];
   const valid =
     absent === true &&
-    /(?:not|isn't) installed/i.test(sentence ?? "") &&
+    (expectedSentence
+      ? sentence?.includes(expectedSentence)
+      : /(?:not|isn't) installed/i.test(sentence ?? "")) &&
     offer === true &&
     panel === true &&
     records?.length === 1 &&
@@ -37,7 +40,11 @@ export function sedeMissingVerdict({
 }
 
 /** The existing native log is watched before navigation, so no delay stands for a write. */
-export async function runSedeMissingAcceptance({ session, driver }) {
+export async function runSedeMissingAcceptance({
+  session,
+  driver,
+  expectedSentence,
+}) {
   const read = await driver.read();
   const absent =
     read.snapshot?.rows.find((row) => row.item === "browser")?.state ===
@@ -136,6 +143,7 @@ export async function runSedeMissingAcceptance({ session, driver }) {
       panel: true,
       records: local,
       warning,
+      expectedSentence,
     });
   } finally {
     watcher?.close();
