@@ -2377,11 +2377,11 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
           "crash-recovery",
         );
         assert.equal(answer.kind, "signed-in");
-        await session.page.locator(".sign-in").waitFor({ state: "hidden" });
       }
       const ready = await session.call("sign_in_status");
       assert.equal(ready.ok, true);
       assert.equal(ready.value.state, "present");
+      await session.page.locator(".sign-in").waitFor({ state: "hidden" });
       evidence("setup-relaunched-host.json", { oldPid, newPid: hostPid });
       return { session, oldPid, newPid: hostPid };
     };
