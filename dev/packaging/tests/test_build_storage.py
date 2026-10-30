@@ -47,8 +47,6 @@ def _expected_paths(work: Path) -> dict[str, str]:
     temporary = work / "temporary"
     return {
         "CADRUMO_STORAGE_ROOT": str(storage),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(storage),
-        "CADRUMO_LOG_DIR": str(storage / "logs"),
         "CADRUMO_DEV_CACHE_ROOT": str(cache),
         "CADRUMO_DEV_CACHE_DIR": str(cache),
         "CADRUMO_PYTHON_CACHE_DIR": str(work / "python-cache"),
@@ -58,7 +56,6 @@ def _expected_paths(work: Path) -> dict[str, str]:
         "CADRUMO_DOCS_BUILD_ROOT": str(work / "docs"),
         "CADRUMO_DEV_ARTIFACTS_DIR": str(work / "artifacts"),
         **{name: str(cache / name.lower()) for name in _DERIVED_CACHE_VARIABLES},
-        "CADRUMO_TEMP_DIR": str(temporary),
         "TEMP": str(temporary),
         "TMP": str(temporary),
         "TMPDIR": str(temporary),
@@ -89,7 +86,7 @@ def test_build_storage_pins_application_paths_and_restores_process_state(
     previous_no_bytecode = sys.dont_write_bytecode
 
     with build_storage(work) as selected:
-        isolated = Path(os.environ["CADRUMO_TEMP_DIR"]).parent
+        isolated = Path(os.environ["TEMP"]).parent
         expected = _expected_paths(isolated)
         assert selected == work
         assert {name: os.environ[name] for name in expected} == expected
@@ -115,17 +112,17 @@ def test_build_storage_restores_state_after_failure_and_refuses_unowned_paths(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     work = build_owned_work_root / "failure-work"
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
+    monkeypatch.delenv("CADRUMO_STORAGE_ROOT", raising=False)
     previous_tempdir = tempfile.tempdir
     previous_no_bytecode = sys.dont_write_bytecode
     isolated: Path | None = None
 
     with pytest.raises(RuntimeError, match="build failed"), build_storage(work):
-        isolated = Path(os.environ["CADRUMO_TEMP_DIR"]).parent
-        assert os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] == str(isolated / "storage")
+        isolated = Path(os.environ["TEMP"]).parent
+        assert os.environ["CADRUMO_STORAGE_ROOT"] == str(isolated / "storage")
         raise RuntimeError("build failed")
 
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" not in os.environ
+    assert "CADRUMO_STORAGE_ROOT" not in os.environ
     assert tempfile.tempdir == previous_tempdir
     assert sys.dont_write_bytecode is previous_no_bytecode
     assert isolated is not None
@@ -191,7 +188,7 @@ def test_build_storage_cli_binds_child_environment_and_propagates_exit(build_own
 
     assert result.returncode == 23
     payload = json.loads(marker.read_text(encoding="utf-8"))
-    isolated = Path(payload["environment"]["CADRUMO_TEMP_DIR"]).parent
+    isolated = Path(payload["environment"]["TEMP"]).parent
     expected = _expected_paths(isolated)
     assert payload["environment"] == expected
     assert isolated.is_relative_to(TEMP_ROOT)
@@ -204,20 +201,20 @@ def test_build_storage_cli_binds_child_environment_and_propagates_exit(build_own
 
 def test_concurrent_build_environments_keep_child_state_independent(build_owned_work_root: Path) -> None:
     """Overlapping real children receive separate state without changing their parent."""
-    names = ("CADRUMO_STORAGE_ROOT", "CADRUMO_TEMP_DIR", "PYTHONDONTWRITEBYTECODE")
+    names = ("CADRUMO_STORAGE_ROOT", "TEMP", "PYTHONDONTWRITEBYTECODE")
     ambient = {name: os.environ.get(name) for name in names}
     rendezvous = Barrier(2)
     script = (
         "import json, os, pathlib\n"
         "root = pathlib.Path(os.environ['CADRUMO_STORAGE_ROOT'])\n"
         "marker = root / 'manifest.json'\n"
-        "marker.write_text(json.dumps({'storage': str(root), 'temporary': os.environ['CADRUMO_TEMP_DIR']}))\n"
+        "marker.write_text(json.dumps({'storage': str(root), 'temporary': os.environ['TEMP']}))\n"
         "print(marker.read_text())\n"
     )
 
     def run_build(label: str) -> tuple[Path, dict[str, str]]:
         with build_environment(build_owned_work_root / label) as controls:
-            isolated = Path(controls["CADRUMO_TEMP_DIR"]).parent
+            isolated = Path(controls["TEMP"]).parent
             rendezvous.wait(timeout=30)
             result = run_command(
                 (sys.executable, "-B", "-c", script),

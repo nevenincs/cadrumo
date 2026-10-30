@@ -124,7 +124,7 @@ def parse(text: str) -> ApplicationEnvironment:
     authority = _fixed(pins["authority"], "pins.authority", names, role="fixed")
     if authority.source != "layout_path":
         raise _fail("pins.authority must name a layout path")
-    temporary_member = _temporary_member(pins["temporary_member"], names)
+    temporary_member = _temporary_member(pins["temporary_member"])
     path, entries, external_path_defaults, windows_system, posix_system = _parse_path(document["path"], names, base)
     root_table = _table(document["root"], "root")
     root = _root(root_table, names)

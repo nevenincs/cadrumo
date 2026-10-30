@@ -19,14 +19,7 @@ use std::{
 #[derive(Deserialize)]
 struct Contract {
     layout: Layout,
-    application_environment: ApplicationEnvironment,
     desktop_defaults: DesktopDefaults,
-}
-/// The package's declared environment: the storage root and the member locations an
-/// operator may relocate, whose overrides the desktop leaves to the command line's Settings.
-#[derive(Deserialize)]
-struct ApplicationEnvironment {
-    location_names: Vec<String>,
 }
 /// The package's own locations under the storage root, and the command line's log
 /// location, format and limits, which the desktop reads without asking Python.
@@ -35,7 +28,6 @@ struct DesktopDefaults {
     console_workspace: RelativePath,
     webview: RelativePath,
     logs: RelativePath,
-    log_variable: String,
     log_file: RelativePath,
     manager_log_file: RelativePath,
     log_format: String,
@@ -247,23 +239,17 @@ fn project(root: &Path, parent: &Parent) -> Result<(PathBuf, Projection, Layout,
         BinaryExpectation::host().map_err(|e| invalid().caused_by(e))?,
     )
     .map_err(|e| invalid().caused_by(e))?;
-    let projection = native_projection(
-        &executable,
-        parent,
-        &contract.desktop_defaults,
-        &contract.application_environment.location_names,
-    )?;
+    let projection = native_projection(&executable, parent, &contract.desktop_defaults)?;
     Ok((executable, projection, layout, bundled))
 }
 
 /// The environment the package's interpreter defines for the parent, and the locations
-/// beneath its pinned root: the package's own components at their declared places, and
-/// the command line's log directory where an admitted override relocates it.
+/// beneath its pinned root: the package's own components and the command line's log
+/// directory, each at its declared place.
 fn native_projection(
     executable: &Path,
     parent: &Parent,
     defaults: &DesktopDefaults,
-    location_names: &[String],
 ) -> Result<Projection> {
     use cadrumo_platform::{
         ROOT_VARIABLE, prepared_environment,
@@ -300,13 +286,8 @@ fn native_projection(
         validated_absolute_path(&relative.under(&storage))
             .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))
     };
-    let logs = member_path(
-        &storage,
-        &defaults.log_variable,
-        defaults.logs.as_str(),
-        &defined,
-    )
-    .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
+    let logs = member_path(&storage, defaults.logs.as_str())
+        .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
     let log_file = logs.join(
         Path::new(defaults.log_file.as_str())
             .file_name()
@@ -350,13 +331,13 @@ fn native_projection(
         console_workspace,
         log_level,
     };
-    if !admissible(&projection, location_names) {
+    if !admissible(&projection) {
         return Err(failure(ErrorCode::EnvironmentFailed));
     }
     Ok(projection)
 }
 
-fn admissible(projection: &Projection, location_names: &[String]) -> bool {
+fn admissible(projection: &Projection) -> bool {
     [
         &projection.webview,
         &projection.storage,
@@ -374,13 +355,13 @@ fn admissible(projection: &Projection, location_names: &[String]) -> bool {
             .output_language
             .bytes()
             .all(|byte| byte.is_ascii_lowercase())
-        && pins_storage(projection, location_names)
+        && pins_storage(projection)
 }
 
 /// Every child must carry the resolved root under the package's declared root name, or
 /// a child started elsewhere would resolve storage against its own directory.
-fn pins_storage(projection: &Projection, location_names: &[String]) -> bool {
-    location_names.contains(&projection.storage_variable)
+fn pins_storage(projection: &Projection) -> bool {
+    projection.storage_variable == cadrumo_platform::ROOT_VARIABLE
         && projection
             .environment
             .iter()
@@ -424,25 +405,14 @@ mod tests {
         let workspace = storage.join("workspace");
         let executable = contract.layout.paths.executable.under(&package);
         let mut parent = Parent::current().unwrap();
-        parent.environment.retain(|(key, _)| {
-            !contract
-                .application_environment
-                .location_names
-                .iter()
-                .any(|name| key.eq_ignore_ascii_case(name))
-        });
+        parent
+            .environment
+            .retain(|(key, _)| !key.eq_ignore_ascii_case(cadrumo_platform::ROOT_VARIABLE));
         parent.environment.push((
             cadrumo_platform::ROOT_VARIABLE.into(),
             storage.clone().into_os_string(),
         ));
-        let project = || {
-            native_projection(
-                &executable,
-                &parent,
-                &contract.desktop_defaults,
-                &contract.application_environment.location_names,
-            )
-        };
+        let project = || native_projection(&executable, &parent, &contract.desktop_defaults);
         let projection = project().unwrap();
         assert_eq!(projection.log_level, Level::Info);
         // A profile folder handed to the desktop reaches none of its children,
@@ -464,13 +434,7 @@ mod tests {
                 .any(|(key, _)| key.to_string_lossy().eq_ignore_ascii_case(profile_variable)),
             "the package image keeps the slot, so only the desktop's own filter withholds it"
         );
-        let withheld = native_projection(
-            &executable,
-            &handed,
-            &contract.desktop_defaults,
-            &contract.application_environment.location_names,
-        )
-        .unwrap();
+        let withheld = native_projection(&executable, &handed, &contract.desktop_defaults).unwrap();
         assert!(
             !withheld
                 .environment
@@ -491,13 +455,8 @@ mod tests {
             overridden
                 .environment
                 .push(("CADRUMO_LOG_LEVEL".into(), value.into()));
-            let observed = native_projection(
-                &executable,
-                &overridden,
-                &contract.desktop_defaults,
-                &contract.application_environment.location_names,
-            )
-            .unwrap();
+            let observed =
+                native_projection(&executable, &overridden, &contract.desktop_defaults).unwrap();
             assert_eq!(observed.log_level, expected);
         }
         let mut invalid = parent.clone_for_test();
@@ -505,14 +464,9 @@ mod tests {
             "CADRUMO_LOG_LEVEL".into(),
             "private-invalid-level-canary".into(),
         ));
-        let error = native_projection(
-            &executable,
-            &invalid,
-            &contract.desktop_defaults,
-            &contract.application_environment.location_names,
-        )
-        .err()
-        .unwrap();
+        let error = native_projection(&executable, &invalid, &contract.desktop_defaults)
+            .err()
+            .unwrap();
         assert_eq!(error.code, ErrorCode::EnvironmentFailed);
         assert!(!serde_json::to_string(&error).unwrap().contains("canary"));
         assert_eq!(
@@ -528,39 +482,16 @@ mod tests {
             contract.desktop_defaults.manager_log_file.under(&storage)
         );
 
-        // A relocated log directory moves the command line's log file and nothing else:
-        // the package's own components stay at their declared places under the root.
-        let explicit_logs = scratch.join("explicit-logs");
+        // No variable relocates a member: a retired log-directory override moves nothing.
         let mut relocated = parent.clone_for_test();
         relocated.environment.push((
-            contract.desktop_defaults.log_variable.clone().into(),
-            explicit_logs.clone().into_os_string(),
+            "CADRUMO_LOG_DIR".into(),
+            scratch.join("explicit-logs").into_os_string(),
         ));
-        let moved = native_projection(
-            &executable,
-            &relocated,
-            &contract.desktop_defaults,
-            &contract.application_environment.location_names,
-        )
-        .unwrap();
-        assert_eq!(moved.logs, explicit_logs);
-        assert_eq!(moved.log_file.parent(), Some(explicit_logs.as_path()));
-        assert_eq!(moved.webview, projection.webview);
-        assert_eq!(moved.console_workspace, projection.console_workspace);
-        assert_eq!(moved.manager_log_file, projection.manager_log_file);
-        let mut relative = parent.clone_for_test();
-        relative.environment.push((
-            contract.desktop_defaults.log_variable.clone().into(),
-            "relocated-logs".into(),
-        ));
-        let anchored = native_projection(
-            &executable,
-            &relative,
-            &contract.desktop_defaults,
-            &contract.application_environment.location_names,
-        )
-        .unwrap();
-        assert_eq!(anchored.logs, storage.join("relocated-logs"));
+        let unmoved =
+            native_projection(&executable, &relocated, &contract.desktop_defaults).unwrap();
+        assert_eq!(unmoved.logs, projection.logs);
+        assert_eq!(unmoved.log_file, projection.log_file);
         assert_eq!(projection.console_workspace, workspace);
         assert!(workspace.is_dir());
         std::fs::remove_dir(&workspace).unwrap();
@@ -580,7 +511,7 @@ mod tests {
         serde_json::from_value(serde_json::json!({
             "environment": environment,
             "storage": "C:/state/var/storage",
-            "storage_variable": "CADRUMO_LOCAL_STORAGE_ROOT",
+            "storage_variable": "CADRUMO_STORAGE_ROOT",
             "webview": "C:/state/var/storage/webview",
             "logs": "C:/state/var/storage/logs",
             "log_file": "C:/state/var/storage/logs/cadrumo.log",
@@ -595,34 +526,31 @@ mod tests {
     }
 
     #[test]
-    fn storage_pin_requires_the_resolved_root_under_a_settings_owned_name() {
-        let owned = ["CADRUMO_LOCAL_STORAGE_ROOT".to_owned()];
-        let pinned = serde_json::json!({"CADRUMO_LOCAL_STORAGE_ROOT": "C:/state/var/storage"});
-        assert!(pins_storage(&projection(pinned.clone()), &owned));
-        assert!(!pins_storage(
-            &projection(pinned),
-            &["CADRUMO_STORAGE_ROOT".to_owned()]
-        ));
+    fn storage_pin_requires_the_resolved_root_under_the_declared_name() {
+        let pinned = serde_json::json!({"CADRUMO_STORAGE_ROOT": "C:/state/storage"});
+        assert!(pins_storage(&projection(pinned.clone())));
+        let mut renamed = projection(pinned);
+        renamed.storage_variable = "CADRUMO_ROOT".to_owned();
+        assert!(!pins_storage(&renamed));
         for unpinned in [
             serde_json::json!({}),
-            serde_json::json!({"CADRUMO_LOCAL_STORAGE_ROOT": "var/storage"}),
-            serde_json::json!({"CADRUMO_LOCAL_STORAGE_ROOT": "C:/elsewhere"}),
+            serde_json::json!({"CADRUMO_STORAGE_ROOT": "relative/storage"}),
+            serde_json::json!({"CADRUMO_STORAGE_ROOT": "C:/elsewhere"}),
             serde_json::json!({
-                "CADRUMO_LOCAL_STORAGE_ROOT": "C:/state/var/storage",
-                "cadrumo_local_storage_root": "C:/elsewhere",
+                "CADRUMO_STORAGE_ROOT": "C:/state/storage",
+                "cadrumo_storage_root": "C:/elsewhere",
             }),
         ] {
-            assert!(!pins_storage(&projection(unpinned), &owned));
+            assert!(!pins_storage(&projection(unpinned)));
         }
     }
 
     #[test]
     fn a_projection_with_a_relative_webview_location_is_refused() {
-        let owned = ["CADRUMO_LOCAL_STORAGE_ROOT".to_owned()];
         // Absolute on the running platform, so only the webview field varies.
         let storage = std::env::temp_dir().join("state");
         let mut admitted = projection(serde_json::json!({
-            "CADRUMO_LOCAL_STORAGE_ROOT": storage.to_string_lossy(),
+            "CADRUMO_STORAGE_ROOT": storage.to_string_lossy(),
         }));
         admitted.logs = storage.join("logs");
         admitted.log_file = admitted.logs.join("cadrumo.log");
@@ -630,13 +558,13 @@ mod tests {
         admitted.console_workspace = storage.join("workspace");
         admitted.webview = storage.join("webview");
         admitted.storage = storage;
-        assert!(admissible(&admitted, &owned));
+        assert!(admissible(&admitted));
         let mut relative = admitted;
         relative.manager_log_file = PathBuf::from("manager.log");
-        assert!(!admissible(&relative, &owned));
+        assert!(!admissible(&relative));
         relative.manager_log_file = relative.logs.join("cadrumo-manager.log");
         relative.webview = PathBuf::from("webview");
-        assert!(!admissible(&relative, &owned));
+        assert!(!admissible(&relative));
     }
 
     // Launch does not carry these facts until their consumers land; this keeps
@@ -672,12 +600,6 @@ mod tests {
         assert!(languages.contains(&serde_json::Value::from(
             projection.output_language.as_str()
         )));
-        assert!(pins_storage(
-            &projection,
-            &serde_json::from_value::<Vec<String>>(
-                contract["application_environment"]["location_names"].clone()
-            )
-            .unwrap()
-        ));
+        assert!(pins_storage(&projection));
     }
 }

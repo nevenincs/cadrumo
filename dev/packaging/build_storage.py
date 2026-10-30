@@ -23,7 +23,7 @@ _DERIVED_CACHE_VARIABLES = (
     "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
     "CADRUMO_RUNTIME_WHEEL_CACHE_DIR",
 )
-_TEMPORARY_VARIABLES = ("CADRUMO_TEMP_DIR", "TEMP", "TMP", "TMPDIR")
+_TEMPORARY_VARIABLES = ("TEMP", "TMP", "TMPDIR")
 
 
 def _path_variables(work: Path) -> dict[str, Path]:
@@ -34,8 +34,6 @@ def _path_variables(work: Path) -> dict[str, Path]:
     temporary = work / "temporary"
     paths = {
         "CADRUMO_STORAGE_ROOT": storage,
-        "CADRUMO_LOCAL_STORAGE_ROOT": storage,
-        "CADRUMO_LOG_DIR": storage / "logs",
         "CADRUMO_DEV_CACHE_ROOT": cache,
         "CADRUMO_DEV_CACHE_DIR": cache,
         "CADRUMO_PYTHON_CACHE_DIR": work / "python-cache",

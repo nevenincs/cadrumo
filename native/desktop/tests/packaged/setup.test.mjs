@@ -1258,7 +1258,7 @@ test("every location of a run is inside its root and no setting of the caller's 
   const env = isolatedEnvironment(
     {
       PATH: "p",
-      CADRUMO_LOCAL_STORAGE_ROOT: "real",
+      CADRUMO_STORAGE_ROOT: "real",
       cadrumo_secret_store_dir: "real",
       PLAYWRIGHT_BROWSERS_PATH: "real",
       OLLAMA_MODELS: "real",
@@ -1270,11 +1270,11 @@ test("every location of a run is inside its root and no setting of the caller's 
       TEMP: "real",
     },
     layout,
-    "CADRUMO_LOCAL_STORAGE_ROOT",
+    "CADRUMO_STORAGE_ROOT",
   );
   assert.deepEqual(env, {
     PATH: "p",
-    CADRUMO_LOCAL_STORAGE_ROOT: layout.storage,
+    CADRUMO_STORAGE_ROOT: layout.storage,
     LOCALAPPDATA: layout.local,
     APPDATA: layout.roaming,
     TEMP: layout.temporary,

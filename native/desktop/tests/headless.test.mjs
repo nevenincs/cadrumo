@@ -26,8 +26,7 @@ const cwd = resolve(buildPath("desktop_testing"), "headless");
 mkdirSync(cwd, { recursive: true });
 const env = {
   ...process.env,
-  CADRUMO_LOCAL_STORAGE_ROOT: resolve(cwd, "storage"),
-  CADRUMO_LOG_DIR: resolve(cwd, "logs"),
+  CADRUMO_STORAGE_ROOT: resolve(cwd, "storage"),
   PYTHONHOME: "Z:/hostile-python",
   PYTHONPATH: "Z:/hostile-imports",
 };
@@ -89,7 +88,7 @@ if (process.env.CADRUMO_TEST_HEADLESS_SESSION === "1") {
 const invalid = run(host, ["--gui", "--help"]);
 assert.equal(invalid.status, 64);
 assert.equal(JSON.parse(invalid.stderr).code, "invalid_arguments");
-const records = readFileSync(resolve(cwd, "logs/cadrumo-native.jsonl"), "utf8")
+const records = readFileSync(resolve(cwd, "storage/logs/cadrumo-native.jsonl"), "utf8")
   .trim()
   .split("\n")
   .map(JSON.parse);

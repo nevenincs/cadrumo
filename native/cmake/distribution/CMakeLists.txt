@@ -6,7 +6,6 @@ endif()
 include(../Identity.cmake)
 file(MAKE_DIRECTORY "${CADRUMO_PATH_TEMPORARY}")
 set(distribution_environment "${CMAKE_COMMAND}" -E env
-  "CADRUMO_TEMP_DIR=${CADRUMO_PATH_TEMPORARY}"
   "TEMP=${CADRUMO_PATH_TEMPORARY}" "TMP=${CADRUMO_PATH_TEMPORARY}" "TMPDIR=${CADRUMO_PATH_TEMPORARY}")
 include(../ToolchainFloor.cmake)
 file(READ "${CADRUMO_SOURCE_ROOT}/native/toolchain.json" toolchain)

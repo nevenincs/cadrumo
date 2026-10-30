@@ -28,12 +28,12 @@ def test_cached_command_pins_temporary_environment_to_its_build(
 ) -> None:
     (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"temporary": "temporary"}}), encoding="utf-8")
     monkeypatch.setattr(tempfile, "tempdir", None)
-    for name in ("CADRUMO_TEMP_DIR", "TEMP", "TMP", "TMPDIR"):
+    for name in ("TEMP", "TMP", "TMPDIR"):
         monkeypatch.setenv(name, str(tmp_path / "external"))
     _configure_temporary(tmp_path)
     expected = str(tmp_path / "temporary")
     assert (tmp_path / "temporary").is_dir()
-    assert all(os.environ[name] == expected for name in ("CADRUMO_TEMP_DIR", "TEMP", "TMP", "TMPDIR"))
+    assert all(os.environ[name] == expected for name in ("TEMP", "TMP", "TMPDIR"))
     assert tempfile.gettempdir() == expected
 
 

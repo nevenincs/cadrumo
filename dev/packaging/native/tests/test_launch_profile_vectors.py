@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath, PureWindowsPath
@@ -149,7 +150,7 @@ def test_vectors_cover_the_closed_environment_and_the_kdf_child_on_both_families
 
 _AGENT = "cadrumo-agent"
 _AGENT_SLOTS = {
-    "CADRUMO_LOCAL_STORAGE_ROOT",
+    "CADRUMO_STORAGE_ROOT",
     "CADRUMO_AGENT_HOSTED_ROOT",
     "CADRUMO_AGENT_PORT",
     "CADRUMO_AGENT_WORKER_PORT",
@@ -382,12 +383,16 @@ def test_the_replay_detects_a_planted_disagreement() -> None:
 
 
 @pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
-def test_the_contract_carries_the_target_familys_vectors(tmp_path: Path, target: str) -> None:
+def test_the_target_familys_vectors_are_test_inputs_the_packaged_contract_never_carries(
+    tmp_path: Path, target: str
+) -> None:
     generate(REPO_ROOT, tmp_path, target=target)
     section = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))["application_environment"]
     family = "windows" if target.startswith("windows") else "posix"
     expected = [vector["name"] for vector in _DECLARATION.launch_vectors if vector["platform"] == family]
-    assert [vector["name"] for vector in section["vectors"]] == expected
+    assert "vectors" not in section
+    packaged = (tmp_path / "contract.rs").read_text(encoding="utf-8")
+    assert "LAUNCH_VECTORS" not in packaged and "LaunchVector" not in packaged
+    replayed = (tmp_path / "contract_vectors.rs").read_text(encoding="utf-8")
+    assert re.findall(r'LaunchVector \{ name: "([^"]+)"', replayed) == expected
     assert section == compile_section(load_for_build(REPO_ROOT), load_layout(target))
-    generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
-    assert generated.count("    LaunchVector { name: ") == len(expected)

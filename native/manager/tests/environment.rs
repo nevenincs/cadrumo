@@ -2,7 +2,7 @@
 
 use cadrumo_manager::contract::{
     AUTHORITY, HOST_INHERITED_ENV, LAUNCH_NAMES, LAUNCH_PROFILES, NATIVE, PINNED_ENV,
-    ROOT_VARIABLE, TEMPORARY_DEFAULT, TEMPORARY_ENV,
+    ROOT_VARIABLE, TEMPORARY_MEMBER,
 };
 use cadrumo_manager::supervision::environment::{ManagedLocations, runtime_environment};
 use std::ffi::OsString;
@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[cfg(unix)]
 use cadrumo_manager::{
-    contract::{EXECUTABLE, INSTALLED_DEFAULTS, INSTALLED_ROOT_PRECEDENCE, MODE_PACKAGE_MANIFEST},
+    contract::{EXECUTABLE, INSTALLED_DEFAULTS, MODE_PACKAGE_MANIFEST},
     supervision::{boot_record::boot_record_path, launch::LaunchTarget},
 };
 
@@ -84,8 +84,7 @@ fn runtime_children_pin_canonical_paths_and_never_inherit_operator_settings() {
     assert!(path.contains(&package.join(NATIVE)));
     assert!(!path.contains(&PathBuf::from("os-path")));
     assert_eq!(value("PYTHONPATH"), None);
-    assert_eq!(value(TEMPORARY_ENV), None);
-    let temporary = TEMPORARY_DEFAULT
+    let temporary = TEMPORARY_MEMBER
         .split('/')
         .fold(storage.clone(), |path, part| path.join(part));
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
@@ -279,7 +278,7 @@ fn normalized_default_root_is_shared_by_manager_arguments_and_child_pins() {
             candidate.variable,
             fixture.0.join("unused").join("..").join("selected"),
         );
-    for name in INSTALLED_ROOT_PRECEDENCE.iter().chain(HOST_INHERITED_ENV) {
+    for name in std::iter::once(&ROOT_VARIABLE).chain(HOST_INHERITED_ENV) {
         child.env_remove(name);
     }
     let outcome = child.output().unwrap();

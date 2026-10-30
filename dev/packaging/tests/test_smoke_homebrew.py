@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.mark.parametrize("override", [None, "packages/brew", "absolute"])
 def test_homebrew_installation_target_is_controlled(tmp_path: Path, monkeypatch, override) -> None:
     root = tmp_path / "storage"
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(root))
     monkeypatch.delenv("CADRUMO_HOMEBREW_PREFIX", raising=False)
     expected = root / "development/packages/homebrew"
     if override == "absolute":
@@ -80,8 +80,7 @@ def test_homebrew_storage_controls_resolve_refinements_under_the_local_root(
     cache_relative = "development/cache/brew-custom"
     log_absolute = tmp_path / "external-homebrew-logs"
     temp_relative = "scratch/brew"
-    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "shared-storage"))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(root))
     monkeypatch.setenv("CADRUMO_HOMEBREW_CACHE_DIR", cache_relative)
     monkeypatch.setenv("CADRUMO_HOMEBREW_LOGS_DIR", str(log_absolute))
     monkeypatch.setenv("CADRUMO_HOMEBREW_TEMP_DIR", temp_relative)
@@ -114,7 +113,6 @@ def test_homebrew_temp_refuses_a_different_filesystem(
 
     monkeypatch.setattr(Path, "stat", stat_with_different_prefix_device)
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
     monkeypatch.delenv("CADRUMO_HOMEBREW_TEMP_DIR", raising=False)
     environment = _homebrew_storage_environment()
     with pytest.raises((SystemExit, acquire_homebrew.AcquisitionError), match="share a filesystem"):
@@ -127,7 +125,6 @@ def test_homebrew_smoke_relative_evidence_is_stored_under_configured_root(
 ) -> None:
     root = tmp_path / "storage"
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(root))
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
 
     run_root = _new_run_root(Path("development/releases/homebrew/evidence"))
 

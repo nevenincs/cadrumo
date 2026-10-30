@@ -33,7 +33,7 @@ def isolated_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[
     home = tmp_path
     monkeypatch.setenv("HOME", str(tmp_path / "foreign-home"))
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "foreign-data"))
-    with override_settings(cadrumo_local_storage_root=home / "storage"):
+    with override_settings(cadrumo_storage_root=home / "storage"):
         yield home
 
 

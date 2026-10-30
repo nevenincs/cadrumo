@@ -1001,11 +1001,10 @@ mod relocated {
     }
 
     fn settings_storage_names() -> Vec<String> {
-        serde_json::from_value(contract()["application_environment"]["location_names"].clone())
-            .unwrap()
+        vec![root_variable()]
     }
 
-    /// The canonical root override, which wins in every mode.
+    /// The one storage variable, which wins in every mode.
     fn root_variable() -> String {
         contract()["root"]["variable"].as_str().unwrap().to_owned()
     }
@@ -1233,8 +1232,7 @@ mod relocated {
     }
 
     /// The webview profile and the window state live in the declared storage
-    /// member beneath the explicit root, not under the development tool cache,
-    /// and an absolute override of that member is honoured.
+    /// member beneath the explicit root, not under the development tool cache.
     #[tokio::test]
     async fn the_webview_profile_and_window_state_live_at_the_declared_location() {
         use crate::shell::window_state::{self, Placement};

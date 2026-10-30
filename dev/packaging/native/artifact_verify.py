@@ -55,7 +55,7 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
     if contract["backend"] == "windows" and (package / "app").is_dir():
         package /= "app"
     environment = dict(os.environ)
-    environment.update(CADRUMO_LOCAL_STORAGE_ROOT=str(destination / "state"), CADRUMO_EXTERNAL_BIN_DIRS=str(external))
+    environment.update(CADRUMO_STORAGE_ROOT=str(destination / "state"), CADRUMO_EXTERNAL_BIN_DIRS=str(external))
     manifest_path = package / contract["files"]["package_manifest"]
     if digest(manifest_path) != artifacts["manifest_sha256"]:
         raise AssertionError("ZIP manifest differs from the packaged artifact locator")

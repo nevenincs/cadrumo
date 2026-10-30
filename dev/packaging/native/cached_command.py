@@ -271,7 +271,7 @@ def _configure_temporary(build: Path) -> None:
     """Keep this CMake action and its child process in the build's temporary directory."""
     temporary = build_paths(build)["temporary"]
     temporary.mkdir(parents=True, exist_ok=True)
-    os.environ.update(dict.fromkeys(("CADRUMO_TEMP_DIR", "TEMP", "TMP", "TMPDIR"), str(temporary)))
+    os.environ.update(dict.fromkeys(("TEMP", "TMP", "TMPDIR"), str(temporary)))
     tempfile.tempdir = str(temporary)
 
 

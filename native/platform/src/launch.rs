@@ -10,7 +10,7 @@ use crate::{
     LAUNCH_IMAGES, LAUNCH_INVOCATIONS, LAUNCH_PACKAGE_FIXED, LAUNCH_PATH_ENTRIES,
     LAUNCH_POSIX_SYSTEM_PATH, LAUNCH_PROFILES, LAUNCH_REFUSALS, LAUNCH_TEMPORARY_PINS,
     LAUNCH_WINDOWS_SYSTEM_SUBPATHS, LAUNCH_WINDOWS_SYSTEM_VARIABLE, LaunchInvocation,
-    LaunchProfile, NATIVE, ROOT_VARIABLE, TEMPORARY_ENV, storage,
+    LaunchProfile, NATIVE, ROOT_VARIABLE, storage,
 };
 use std::{
     collections::BTreeMap,
@@ -465,14 +465,7 @@ pub fn define_environment(
             directories.push(root.clone());
         }
         if pinned("temporary") {
-            let member = |name: &str| {
-                if name == TEMPORARY_ENV && !admits(profile, TEMPORARY_ENV) {
-                    None
-                } else {
-                    lookup(ambient, name)
-                }
-            };
-            let temporary = storage::temporary_path(&root, &member)
+            let temporary = storage::temporary_path(&root)
                 .map_err(|refused| DefineError::Failed(refused.to_string()))?;
             let temporary = crate::normalize_absolute_path(&temporary)
                 .map_err(|error| DefineError::Failed(error.to_string()))?;
@@ -620,7 +613,7 @@ mod tests {
             assert!(get(environment, refused).is_none(), "{refused}");
         }
         assert_eq!(get(environment, ROOT_VARIABLE).unwrap(), root.as_os_str());
-        let temporary = root.join(storage::relative_components(crate::TEMPORARY_DEFAULT));
+        let temporary = root.join(storage::relative_components(crate::TEMPORARY_MEMBER));
         for name in LAUNCH_TEMPORARY_PINS {
             assert_eq!(get(environment, name).unwrap(), temporary.as_os_str());
         }
@@ -646,22 +639,31 @@ mod tests {
         let ambient = os(&[
             (system_name(), "C:\\Windows"),
             ("CADRUMO_LOG_LEVEL", "DEBUG"),
-            (TEMPORARY_ENV, "elsewhere"),
+            (
+                crate::conformance_tests::RETIRED_TEMPORARY_OVERRIDE,
+                "elsewhere",
+            ),
             ("CADRUMO_EXTERNAL_BIN_DIRS", "not-a-directory"),
         ]);
         let defined =
             define_environment(profile, &ambient, &scratch.0, &fixed_root(root.clone())).unwrap();
         assert!(get(&defined.environment, "CADRUMO_LOG_LEVEL").is_none());
-        assert!(get(&defined.environment, TEMPORARY_ENV).is_none());
+        assert!(
+            get(
+                &defined.environment,
+                crate::conformance_tests::RETIRED_TEMPORARY_OVERRIDE
+            )
+            .is_none()
+        );
         assert_eq!(
             get(&defined.environment, LAUNCH_TEMPORARY_PINS[0]).unwrap(),
-            root.join(storage::relative_components(crate::TEMPORARY_DEFAULT))
+            root.join(storage::relative_components(crate::TEMPORARY_MEMBER))
                 .as_os_str()
         );
     }
 
     #[test]
-    fn an_operator_image_honours_its_admitted_temporary_and_external_directories() {
+    fn an_operator_image_ignores_a_temporary_override_and_honours_its_external_directories() {
         let scratch = Scratch::new("define-operator");
         let root = scratch.0.join("root");
         let external = scratch.0.join("tools");
@@ -669,7 +671,10 @@ mod tests {
         let profile = select("aeat", &[]).unwrap();
         let ambient = vec![
             (OsString::from(system_name()), OsString::from("C:\\Windows")),
-            (OsString::from(TEMPORARY_ENV), OsString::from("scratch")),
+            (
+                OsString::from(crate::conformance_tests::RETIRED_TEMPORARY_OVERRIDE),
+                OsString::from("scratch"),
+            ),
             (
                 OsString::from("CADRUMO_EXTERNAL_BIN_DIRS"),
                 external.clone().into_os_string(),
@@ -679,7 +684,8 @@ mod tests {
             define_environment(profile, &ambient, &scratch.0, &fixed_root(root.clone())).unwrap();
         assert_eq!(
             get(&defined.environment, LAUNCH_TEMPORARY_PINS[0]).unwrap(),
-            root.join("scratch").as_os_str()
+            root.join(storage::relative_components(crate::TEMPORARY_MEMBER))
+                .as_os_str()
         );
         let path: Vec<PathBuf> =
             env::split_paths(get(&defined.environment, "PATH").unwrap()).collect();

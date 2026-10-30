@@ -20,7 +20,7 @@ set(desktop_temporary "${CADRUMO_PATH_DESKTOP_TESTING}/temporary")
 cadrumo_require_physical_build_member("${desktop_temporary}" "Desktop test temporary directory")
 file(MAKE_DIRECTORY "${desktop_temporary}")
 list(APPEND desktop_environment
-  "CADRUMO_TEMP_DIR=${desktop_temporary}" "TEMP=${desktop_temporary}" "TMP=${desktop_temporary}" "TMPDIR=${desktop_temporary}")
+  "TEMP=${desktop_temporary}" "TMP=${desktop_temporary}" "TMPDIR=${desktop_temporary}")
 set(desktop_configuration "CADRUMO_BUILD_CONFIG=$<CONFIG>")
 set(desktop_server_contract "${CMAKE_CURRENT_SOURCE_DIR}/development-server.json")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${desktop_server_contract}")

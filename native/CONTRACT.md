@@ -182,14 +182,18 @@ selected artifact and does not establish a successful fresh `bundle` build.
 
 `P` means installed package root; `U` means the effective storage root. The rule
 that selects it is declared in `native/application-environment.toml` and applied
-by the platform crate to every packaged image. An absolute
-`CADRUMO_LOCAL_STORAGE_ROOT` wins in every mode. Without it, a source checkout
-uses `var/storage` beneath the checkout and an installed package uses the
-per-user, per-channel default in the mutable-root row. The platform crate decides
-the mode by where the package tree lives, never by the working directory. The
-command line keeps its own resolver and built-in default for runs outside a
-package. The package takes nothing from it; the package-side conformance check
-only compares the two defaults.
+by the platform crate to every packaged image. `CADRUMO_STORAGE_ROOT` is the only
+variable that places storage; it names an absolute directory and wins in every
+image, and a relative value is refused. Without it, an installed package uses the
+per-user, per-channel default in the mutable-root row, and a Debug image uses the
+`var/storage` directory of the checkout its build ran in, which CMake bakes into
+the Debug image at compile time (a Release image bakes nothing and holds no trace of
+the checkout). Every other location is a declared path beneath the root. The
+platform crate decides between the two by whether the image was built with a baked
+root and, for an installed image, by the package manifest beside it, never by the
+working directory or a search for a checkout. The command line keeps its own
+resolver and built-in default for runs outside a package. The package takes nothing
+from it; the package-side conformance check only compares the two defaults.
 `<name>` is `cadrumo` for the stable channel and `cadrumo-<channel>` for any
 other, such as `cadrumo-preview`; the channel comes from the identity projection.
 
@@ -199,7 +203,7 @@ other, such as `cadrumo-preview`; the channel comes from the identity projection
 | Python | `P/python.zip`; dependencies in `P/cadrumo/site-packages/`; controlled `P/cadrumo/python.pth` | `P/python.zip`, `P/lib/cadrumo/site-packages/`, controlled `P/lib/cadrumo/python.pth` | Same declared Python placement as Linux |
 | Native modules/libraries | `P/bin/`, qualified extensions beneath `bin/packages/` | `P/bin/`; qualified extension identities retained | `P/bin/`; qualified extensions and relocated install names |
 | Immutable resources | `P/data/`, `P/docs/` | `P/data/`, `P/docs/` | `P/data/`, `P/docs/` |
-| Mutable root | `%LOCALAPPDATA%\<name>`; checkout `var/storage`; delivered-artifact tests supply an explicit root | `$XDG_DATA_HOME/<name>` when `XDG_DATA_HOME` is absolute, else `$HOME/.local/share/<name>` | `$HOME/Library/Application Support/<name>` |
+| Mutable root | `%LOCALAPPDATA%\<name>`; a Debug image defaults to its build checkout's `var/storage`; delivered-artifact tests supply an explicit root | `$XDG_DATA_HOME/<name>` when `XDG_DATA_HOME` is absolute, else `$HOME/.local/share/<name>` | `$HOME/Library/Application Support/<name>` |
 | Secure state | Existing Settings/taxonomy beneath the selected root | Same logical owner | Same logical owner |
 | Transient IPC sockets | Native named pipes | Canonical runtime socket directory | Installed default: private product-family directory beneath the native per-user cache base |
 | Loader | Static bootstrap CRT; explicit absolute DLL load with restricted search, then registered bundle directories | Relative ELF RUNPATH for every transitive dependency; audit LD_* and libc floor | Relative install names and rpaths; signing and hardened-runtime validation |
@@ -306,8 +310,8 @@ dotenv override. Contract caching binds the publisher client's digest without
 recording the provisioning contents in its receipt.
 The host passes an operator or pass-through name unchanged and does not judge how
 a component uses it; the command line validates its own settings as before. The
-operator groups are the relocatable storage members, presentation settings,
-remote-interaction timings and display settings, and the two package overrides.
+operator groups are presentation settings, remote-interaction timings and display
+settings, and the two package overrides.
 No secret, authority, endpoint or consent name is in them. The runtime image's
 profile admits no operator names, so the runtime and the workers it starts take no
 operator overrides. The generated environment reference lists each group and which
@@ -324,8 +328,8 @@ names each program passes.
   the runtime, whose profile fixes it, relays it to the profile workers it starts
   on that image, which ask the bundled agent for its provider catalog.
 - A profile that pins the root resolves it by the package's rule and sets
-  `CADRUMO_LOCAL_STORAGE_ROOT`, the temporary variables beneath it and the
-  authority root. A profile may instead take the root as a launch parameter
+  `CADRUMO_STORAGE_ROOT`, the temporary variables to the `tmp` member beneath it
+  and the authority root. A profile may instead take the root as a launch parameter
   without pinning it.
 - `PATH` is set by the host and by no parent. For a profile whose policy is
   `package`, it holds the directory of the package's interpreter, the existing
@@ -593,11 +597,11 @@ disagreement. Its comparisons are:
   fixed agent, relay, `aeat` and interpreter paths the runtime reads;
 - the native-host exit range, the refusal status and the refusal codes, against the
   runtime's reserved table;
-- the command line's built-in storage-root rule (its variables, development
-  default and the directory names of the `stable` and `preview` channels) and the
-  installed default it resolves, against the declared root rule;
-- the command line's diagnostic-log directory and file name, including a relative
-  relocation anchored beneath the root, against the declared components.
+- the command line's built-in storage-root rule (its variable and the directory
+  names of the `stable` and `preview` channels) and the installed default it
+  resolves, against the declared root rule;
+- the command line's diagnostic-log directory and file name beneath the root,
+  against the declared components.
 
 `bundle.environment-launch` starts the assembled package's agent image the way the
 runtime does, through the runtime's own composer, and checks that a launch the
@@ -609,6 +613,15 @@ admits, an unlisted name under the agent's prefix included, sets the declared `P
 and pins the root to the command line's default.
 The agent's names are read from the contract and from the installed agent, never
 spelled in the probe.
+
+`bundle.release-image-scan` runs on a Release package only. It refuses a package whose
+product-owned files spell a storage variable the declaration retired, the development
+`var/storage` default, the checkout marker or the path of the checkout the build ran in; the
+Python standard library, dependencies and the Node runtime are not scanned. A Release build
+therefore compiles Rust with the checkout path remapped to a neutral prefix, writes the desktop
+configuration's icon paths relative to it, records only checkout-relative locations and no agent
+project location in the package manifest, and drops the installer's `direct_url.json` records of
+wheels on the build host.
 
 ### Application images
 
@@ -718,8 +731,8 @@ learns that the setup ended or died by taking the item's lock shared once the ke
 releases it, on a thread of its own, and a follower's cancellation ends its wait at once.
 
 The desktop resolves the installation from its own image: the package's pin tables and
-bundled browser driver, and the storage root with its relocatable browsers, models and
-server-home members, by the same rules every other Cadrumo process uses. It honours the
+bundled browser driver, and the storage root with its fixed browsers, models and
+server-home locations beneath it, by the same rules every other Cadrumo process uses. It honours the
 `CADRUMO_PROXY_*` settings. On Windows the desktop places itself in a kill-on-close job
 before it starts anything; on Linux and macOS it first starts a guardian process whose
 process group every browser check and hardware query it starts is created into, and
@@ -737,29 +750,29 @@ without a manager the setup fails with `program_not_running`.
 
 The native bootstrap applies the storage-root rule that
 `native/application-environment.toml` declares. Python continues to own bucket
-routing, encryption, authorization and member defaults. A checkout keeps its
-repository-local default and an installed package uses the per-user, per-channel
-default of the platform mappings. A relative `CADRUMO_LOCAL_STORAGE_ROOT` anchors
-at the checkout in development and is refused when installed. The command line's
-own built-in default is the stable channel's; a native package pins the root for
-its own channel before Python starts, and a pinned root is never re-resolved. The
-native host is installed when its package root holds the package manifest and
-in development when a checkout marker is above the executable; otherwise it
-refuses. It never reads the working directory. Installed Windows resolves the
+routing, encryption, authorization and member defaults. An installed package uses
+the per-user, per-channel default of the platform mappings, and a Debug image the
+root its build baked in. A relative `CADRUMO_STORAGE_ROOT` is refused. The command
+line's own built-in default is the stable channel's; a native package pins the root
+for its own channel before Python starts, and a pinned root is never re-resolved.
+The native host is installed when its package root holds the package manifest and
+in development when its build baked a root; otherwise it refuses. It never reads
+the working directory and never looks for a checkout. Installed Windows resolves the
 default through `FOLDERID_LocalAppData`, not the environment, and replays the
 generated storage-root vectors in the `platform.resolver` test. No
 storage is migrated: a tree that an earlier installed build created beneath a
 launch directory is neither read nor moved, and an operator who wants it sets
-`CADRUMO_LOCAL_STORAGE_ROOT` to it.
+`CADRUMO_STORAGE_ROOT` to it.
 
 The package declares its own names and locations once, in
 `native/application-environment.toml`. The command line's taxonomy declares only
 the locations the command line creates under a root it is given; it is not an
-environment source for the package. The file's `locations` group names the storage
-members an operator may relocate, and each launch profile says which name groups it
-passes, so an inherited Python variable or any other name no profile declares never
-reaches a packaged image. The development root variable `CADRUMO_STORAGE_ROOT` and
-the development tool locations are declared for no installed profile. Package-owned
+environment source for the package. The root variable is the one location name the
+file declares: no variable relocates a member of the root, so the log, temporary,
+component and model locations are fixed paths beneath it. Each launch profile says
+which name groups it passes, so an inherited Python variable or any other name no
+profile declares never reaches a packaged image. The development tool locations are
+declared for no installed profile. Package-owned
 `CADRUMO_EXTERNAL_BIN_DIRS` accepts existing absolute directories for external
 executables. These directories affect child-process PATH, not DLL search.
 `CADRUMO_CLI_REVEAL_IDENTIFIERS` is in the same group, so the installed command
@@ -1374,7 +1387,7 @@ platform and ABI against the generated contract and the interpreter against its
 manifest digest. It then defines the environment its children receive with the
 platform crate, by applying the `python` launch profile to its own environment,
 without starting Python and on every platform. The result carries
-`CADRUMO_LOCAL_STORAGE_ROOT` set to the root the package's rule resolved; every
+`CADRUMO_STORAGE_ROOT` set to the root the package's rule resolved; every
 other name is one that profile passes or sets (see Launch profiles). The host
 spawns no Python process to learn a location. Profile and pointer validation
 stays with the canonical account CLI read after the window opens.
@@ -1383,16 +1396,13 @@ The projection reports the child environment, the storage root, the webview, the
 console workspace and the manager log, the log directory, log file, line format
 and rotation limits, and the output language. The webview, workspace and manager
 log are package component locations that the file declares beneath the pinned root.
-The log directory is the declared `logs` location, moved to the value of
-`CADRUMO_LOG_DIR` when the profile passed that override, with a relative value
-anchored beneath the root. The log file name, line format and rotation limits are
+The log directory is the declared `logs` location beneath the root. The log file name, line format and rotation limits are
 the package's declared copy of the command line's own, which a package-side test
 holds equal. The output language is the value the profile passed for
 `CADRUMO_OUTPUT_LANGUAGE`, or the declared default. The host refuses a projection
 with a relative path, a log file outside the log directory, an empty line format,
-an output language that is not lowercase ASCII, a root variable the package does
-not declare as a location, or an environment that does not carry exactly that root
-under that name. The host, every terminal kind and the CLI passthrough therefore
+an output language that is not lowercase ASCII, or an environment that does not
+carry exactly that root under the declared root variable. The host, every terminal kind and the CLI passthrough therefore
 share one root whatever their working directory. The host adds no storage, log or
 Settings variable of its own.
 
@@ -1879,7 +1889,7 @@ The window cannot be checked without an interactive desktop. A process in
 Windows Session 0, where services and service-hosted runners and agents run, has
 no visible window station, so the host selects the CLI passthrough and `--gui` exits
 with 69. A person therefore runs the window smoke from an interactive logon
-session. Set `CADRUMO_LOCAL_STORAGE_ROOT` to a disposable absolute directory first
+session. Set `CADRUMO_STORAGE_ROOT` to a disposable absolute directory first
 unless the run should use the default root, build `desktop-run`, and check:
 
 - The window opens on the documentation index in the output language, and a

@@ -37,8 +37,6 @@ from .environment_conformance_types import Finding, Reference
 from .environment_declaration_primitives import DECLARATION
 from .environment_root import channel_directory
 
-LOG_RELOCATION: Final = "relocated-logs"
-"""A relative diagnostic-log directory the command line must anchor beneath its storage root."""
 CHANNELS: Final = ("stable", "preview")
 """The release channels a package is built for."""
 _INTERPRETER_IMAGE: Final = "python"
@@ -81,7 +79,7 @@ def build_request(reference: Reference) -> dict[str, Any]:
     for name in ("ANTHROPIC_API_KEY", "AWS_SECRET_ACCESS_KEY", declaration.root["variable"]):
         received[name] = "conformance-noise"
     received.update(dict.fromkeys(reference.agent["never_admitted"], "conformance-noise"))
-    return {"received": received, "channels": list(CHANNELS), "log_relative": LOG_RELOCATION}
+    return {"received": received, "channels": list(CHANNELS)}
 
 
 def _fold(reference: Reference, name: str) -> str:
@@ -474,7 +472,7 @@ def check_storage_root(reference: Reference, cli: Mapping[str, Any], received: M
 
 
 def check_log_location(reference: Reference, cli: Mapping[str, Any]) -> list[Finding]:
-    """Hold the command line's diagnostic-log placement to the package's, including a relative relocation."""
+    """Hold the command line's diagnostic-log placement beneath its storage root to the package's."""
     check = "log-location"
     components, log = reference.declaration.components, cli["log"]
     findings: list[Finding] = []
@@ -484,15 +482,6 @@ def check_log_location(reference: Reference, cli: Mapping[str, Any]) -> list[Fin
                 check,
                 "default",
                 f"the package places logs at {components['logs']!r}; the command line at {log['default']!r}",
-            )
-        )
-    if log["relocated"] != LOG_RELOCATION:
-        findings.append(
-            Finding(
-                check,
-                components["log_variable"],
-                f"a relative value {LOG_RELOCATION!r} is anchored beneath the storage root by the package's host; "
-                f"the command line placed it at {log['relocated']!r}",
             )
         )
     if log["file_name"] != PurePosixPath(components["log_file"]).name:

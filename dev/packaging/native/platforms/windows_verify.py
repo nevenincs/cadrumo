@@ -52,7 +52,7 @@ assert PIL.Image.new('RGB', (2,2)).size == (2,2)
 child = subprocess.check_output([sys.executable, '-c',
     'import json,sys,pikepdf; print(json.dumps([sys.executable,sys.flags.isolated]))'], text=True)
 assert json.loads(child) == [sys.executable, 1]
-user = pathlib.Path(os.environ['CADRUMO_LOCAL_STORAGE_ROOT']).resolve()
+user = pathlib.Path(os.environ['CADRUMO_STORAGE_ROOT']).resolve()
 import win32com
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
@@ -89,7 +89,7 @@ from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 
 runtime = Path(sys.argv[1]).resolve(strict=True)
-storage_root = Path(os.environ['CADRUMO_LOCAL_STORAGE_ROOT']).resolve(strict=True)
+storage_root = Path(os.environ['CADRUMO_STORAGE_ROOT']).resolve(strict=True)
 product = version('cadrumo')
 with ExitStack() as cleanup:
     endpoint = WindowsEndpoint(storage_root=storage_root)
@@ -250,9 +250,7 @@ def _acceptance_environment(cwd: Path, temporary_root: Path) -> tuple[dict[str, 
             "VIRTUAL_ENV": str(cwd),
             "CONDA_PREFIX": str(cwd),
             "PATH": str(cwd) + os.pathsep + environment.get("PATH", ""),
-            "CADRUMO_STORAGE_ROOT": str(cwd / "canonical-storage"),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-            "CADRUMO_TEMP_DIR": str(temporary_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             # Neither the former tool-cache override nor an ambient XDG cache may place packaged state.
             "CADRUMO_TOOL_CACHE_DIR": str(cwd / "hostile-tool-cache"),
             "XDG_CACHE_HOME": str(cwd / "hostile-xdg-cache"),

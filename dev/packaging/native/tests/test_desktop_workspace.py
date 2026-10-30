@@ -24,8 +24,8 @@ def test_the_contract_carries_every_location_the_desktop_projects(tmp_path: Path
     assert {key: defaults[key] for key in ("console_workspace", "webview", "manager_log_file", "logs")} == {
         key: components[key] for key in ("console_workspace", "webview", "manager_log_file", "logs")
     }
-    # Only the command line's log directory may be relocated, by the one declared location name.
-    assert defaults["log_variable"] in load(REPO_ROOT).groups["locations"]
+    # No variable relocates the command line's log directory: it is the declared member beneath the root.
+    assert "log_variable" not in defaults
     assert defaults["output_language_variable"] == components["language_variable"]
 
 

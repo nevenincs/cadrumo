@@ -94,11 +94,8 @@ try {
         Set-TestEnvironment $entry.Name ([string]$entry.Value)
     }
     Set-TestEnvironment 'CARGO_BUILD_TARGET' $null
-    $rootVariable = & $DevPython -B -c 'from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)'
-    if ($LASTEXITCODE -ne 0 -or -not $rootVariable) { throw 'Cannot resolve the canonical storage-root variable.' }
-    $allowlist = & $DevPython -B -c 'import json, sys; print("\n".join(json.load(open(sys.argv[1], encoding="utf-8"))["application_environment"]["location_names"]))' (Join-Path $generated 'contract.json')
-    if ($LASTEXITCODE -ne 0) { throw 'Cannot read the generated storage environment allow-list.' }
-    foreach ($name in $allowlist) { Set-TestEnvironment $name $null }
+    $rootVariable = & $DevPython -B -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["root"]["variable"])' (Join-Path $generated 'contract.json')
+    if ($LASTEXITCODE -ne 0 -or -not $rootVariable) { throw 'Cannot read the storage-root variable from the generated contract.' }
     $runRoot = Join-Path $testing ('backend-runs\' + [Guid]::NewGuid().ToString('N'))
     $storage = Join-Path $runRoot 'storage'
     $temporary = Join-Path $runRoot 'temporary'
@@ -107,8 +104,6 @@ try {
     New-Item -ItemType Directory -Path $storage -Force | Out-Null
     New-Item -ItemType Directory -Path $temporary -Force | Out-Null
     Set-TestEnvironment $rootVariable.Trim() $storage
-    Set-TestEnvironment 'CADRUMO_STORAGE_ROOT' $storage
-    Set-TestEnvironment 'CADRUMO_LOCAL_STORAGE_ROOT' $storage
     Set-TestEnvironment 'TEMP' $temporary
     Set-TestEnvironment 'TMP' $temporary
     Set-TestEnvironment 'TMPDIR' $temporary

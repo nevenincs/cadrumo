@@ -92,7 +92,7 @@ async function launch(t, name, overrides = {}) {
     env,
     {
       CADRUMO_DESKTOP_PACKAGE_ROOT: packageRoot,
-      CADRUMO_LOCAL_STORAGE_ROOT: storage,
+      CADRUMO_STORAGE_ROOT: storage,
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port}`,
       [contract.desktop_defaults.output_language_variable]: "en",
     },

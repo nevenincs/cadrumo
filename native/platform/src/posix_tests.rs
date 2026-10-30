@@ -1,5 +1,4 @@
-use crate::conformance_tests::Scratch;
-use crate::conformance_tests::operator_environment;
+use crate::conformance_tests::{RETIRED_TEMPORARY_OVERRIDE, Scratch, operator_environment};
 use crate::storage::{Mode, child_environment, resolve_root_vector};
 use crate::*;
 use std::ffi::OsString;
@@ -66,7 +65,7 @@ fn child_pins_refuse_relative_roots_and_symlinks_and_create_private_directories(
     let received = vec![
         (OsString::from("PYTHONPATH"), OsString::from("hostile")),
         (
-            OsString::from(TEMPORARY_ENV),
+            OsString::from(RETIRED_TEMPORARY_OVERRIDE),
             OsString::from("operator-temp"),
         ),
     ];
@@ -78,7 +77,7 @@ fn child_pins_refuse_relative_roots_and_symlinks_and_create_private_directories(
     assert!(
         !strict
             .iter()
-            .any(|(key, _)| key == "PYTHONPATH" || key == TEMPORARY_ENV)
+            .any(|(key, _)| key == "PYTHONPATH" || key == RETIRED_TEMPORARY_OVERRIDE)
     );
     assert!(
         strict
@@ -86,7 +85,11 @@ fn child_pins_refuse_relative_roots_and_symlinks_and_create_private_directories(
             .any(|(key, value)| key == ROOT_VARIABLE && value == root.as_os_str())
     );
     let operator = operator_environment(received, &root).unwrap();
-    assert!(operator.iter().any(|(key, _)| key == TEMPORARY_ENV));
+    assert!(
+        !operator
+            .iter()
+            .any(|(key, _)| key == RETIRED_TEMPORARY_OVERRIDE)
+    );
     symlink(&root, scratch.join("link")).unwrap();
     assert!(child_environment(Vec::new(), &scratch.join("link/child")).is_err());
     fs::remove_dir_all(scratch).unwrap();
@@ -147,7 +150,7 @@ fn installed_and_development_evidence_come_from_absolute_executable_ancestors() 
 fn lower_case_posix_names_do_not_override_declared_paths_or_authority() {
     let scratch = Scratch::new("case");
     let root = scratch.0.join("root");
-    let lower_temporary = TEMPORARY_ENV.to_lowercase();
+    let lower_temporary = RETIRED_TEMPORARY_OVERRIDE.to_lowercase();
     let lower_pin = HOST_INHERITED_ENV[0].to_lowercase();
     let ambient = vec![
         (OsString::from(&lower_temporary), OsString::from("other")),
@@ -170,11 +173,7 @@ fn lower_case_posix_names_do_not_override_declared_paths_or_authority() {
     assert!(!environment.iter().any(|(key, _)| key == "LD_PRELOAD"));
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert!(environment.iter().any(|(key, value)| {
-            key == *name
-                && value
-                    == root
-                        .join(storage::relative_components(TEMPORARY_DEFAULT))
-                        .as_os_str()
+            key == *name && value == root.join(TEMPORARY_MEMBER).as_os_str()
         }));
     }
 }
@@ -197,36 +196,20 @@ fn normalization_does_not_hide_symlinks_before_parent_components() {
     let root = scratch.0.join("root");
     fs::create_dir(&root).unwrap();
     symlink(&destination, root.join("link")).unwrap();
-    assert!(
-        operator_environment(
-            vec![(
-                OsString::from(TEMPORARY_ENV),
-                OsString::from("link/../temporary"),
-            )],
-            &root,
-        )
-        .is_err()
-    );
-    assert!(!root.join("temporary").exists());
+    // The temporary member is declared beneath the root, so a link there is refused.
+    symlink(&destination, root.join(TEMPORARY_MEMBER)).unwrap();
+    assert!(operator_environment(Vec::new(), &root).is_err());
 }
 
 #[test]
 fn nested_new_storage_and_temporary_directories_are_private() {
     let scratch = Scratch::new("permissions");
     let root = scratch.0.join("new-parent/state");
-    operator_environment(
-        vec![(
-            OsString::from(TEMPORARY_ENV),
-            OsString::from("nested/scratch"),
-        )],
-        &root,
-    )
-    .unwrap();
+    operator_environment(Vec::new(), &root).unwrap();
     for path in [
         scratch.0.join("new-parent"),
         root.clone(),
-        root.join("nested"),
-        root.join("nested/scratch"),
+        root.join(TEMPORARY_MEMBER),
     ] {
         assert_eq!(
             fs::metadata(path).unwrap().permissions().mode() & 0o777,

@@ -7,15 +7,15 @@
 //! package or the environment.
 //!
 //! The image's package names the pins and the bundled browser driver; the storage root
-//! and its relocatable members come from the package's storage rules, the same ones every
-//! other process of the installation reads. The free space comes from the platform's
+//! comes from the package's storage rules, the same ones every other process of the
+//! installation reads, and every component location is a fixed path beneath it. The free space comes from the platform's
 //! volume query, and the local AI server's fixed address from the package's contract.
 //! The owner contains the process before the engine starts anything: a kill-on-close job
 //! on Windows, and on Linux and macOS a process scope every browser check and hardware
 //! query is created into, so whatever the engine starts ends with its owner.
 
 use super::{
-    browser::{self, DRIVER_PACKAGE, DriverManifest},
+    browser::{DRIVER_PACKAGE, DriverManifest},
     connection::Network,
     engine::EngineConfig,
     items::Locations,
@@ -30,15 +30,6 @@ use std::{
     ffi::OsString,
     path::{Path, PathBuf},
 };
-
-/// The location setting that relocates the local AI's models folder.
-pub const MODELS_DIR_VARIABLE: &str = "CADRUMO_OLLAMA_MODELS_DIR";
-/// The models folder under the storage root when no setting relocates it.
-pub const MODELS_DEFAULT: &str = "models/ollama";
-/// The location setting that relocates the local AI server's home.
-pub const HOME_DIR_VARIABLE: &str = "CADRUMO_OLLAMA_HOME_DIR";
-/// The server's home under the storage root when no setting relocates it.
-pub const HOME_DEFAULT: &str = "components/ollama/home";
 
 /// The operating system settings a browser check passes on from the engine's own
 /// environment; its temporary folders are the owner's.
@@ -66,14 +57,8 @@ fn package_path(package: &Path, relative: &str) -> PathBuf {
         .fold(package.to_path_buf(), |path, part| path.join(part))
 }
 
-fn member(
-    root: &Path,
-    variable: &str,
-    default: &str,
-    lookup: &dyn Fn(&str) -> Option<OsString>,
-) -> Result<PathBuf, Error> {
-    storage::member_path(root, variable, default, lookup)
-        .map_err(|refusal| Error::Invalid(format!("location refused: {}", refusal.code)))
+fn refused(refusal: storage::Refusal) -> Error {
+    Error::Invalid(format!("location refused: {}", refusal.code))
 }
 
 /// What the engine of this process's installation is built from, for an owner that
@@ -87,15 +72,15 @@ pub fn installation_config() -> Result<EngineConfig, Error> {
         .map_err(|refusal| Error::Invalid(format!("storage root refused: {}", refusal.code)))?
         .root;
     let mut locations = Locations::under(&root);
-    locations.browsers = browser::browsers_root(&root, &lookup)?;
-    locations.models = member(&root, MODELS_DIR_VARIABLE, MODELS_DEFAULT, &lookup)?;
-    locations.ollama_home = member(&root, HOME_DIR_VARIABLE, HOME_DEFAULT, &lookup)?;
-    let scratch = member(
-        &root,
-        cadrumo_platform::TEMPORARY_ENV,
-        cadrumo_platform::TEMPORARY_DEFAULT,
-        &lookup,
-    )?;
+    for member in [
+        &mut locations.browsers,
+        &mut locations.models,
+        &mut locations.ollama_home,
+    ] {
+        *member = storage::validated_absolute_path(member).map_err(refused)?;
+    }
+    let scratch =
+        storage::member_path(&root, cadrumo_platform::TEMPORARY_MEMBER).map_err(refused)?;
     let package = evidence.package;
     let pins = ComponentPins::load(&package_path(&package, cadrumo_platform::COMPONENT_PINS))?;
     let driver = DriverManifest::read(

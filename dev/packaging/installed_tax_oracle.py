@@ -186,7 +186,7 @@ def isolated_product_environment(storage_root: Path) -> dict[str, str]:
     environment.update(
         {
             "CADRUMO_CLI_REVEAL_IDENTIFIERS": "1",
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(resolved_root),
+            "CADRUMO_STORAGE_ROOT": str(resolved_root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             # Packaging oracles use an isolated disposable root and explicitly
             # select the non-keychain test posture. This avoids host keyring

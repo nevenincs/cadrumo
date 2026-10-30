@@ -198,7 +198,6 @@ def verify_health(executable: Path, storage_variable: str, *, scratch_root: Path
         environment = health_environment(root, os.environ)
         environment.update(
             {
-                "CADRUMO_TEMP_DIR": str(temporary_root),
                 "TEMP": str(temporary_root),
                 "TMP": str(temporary_root),
                 "TMPDIR": str(temporary_root),

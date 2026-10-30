@@ -25,7 +25,6 @@ from .stable_output import write_text
 from .storage_vectors import (
     INVALID_NATIVE_PATH_BYTES,
     INVALID_NATIVE_PATH_UTF16,
-    storage_member_vectors,
     storage_path_vectors,
     storage_root_vectors,
 )
@@ -85,36 +84,12 @@ def _mode_section(layout: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-# Development storage rules belong to the build: a Debug build bakes its storage root into
-# its images at compile time, so a packaged contract carries only the installed rules.
-_DEVELOPMENT_ROOT_KEYS = frozenset({"development_variable", "development_default", "checkout_marker"})
-_DEVELOPMENT_REFUSALS = frozenset({"checkout_unavailable"})
-
-
-def _packaged_root(root: dict[str, Any]) -> dict[str, Any]:
-    """Project the installed storage-root rules every packaged image carries."""
-    packaged = {key: value for key, value in root.items() if key not in _DEVELOPMENT_ROOT_KEYS}
-    packaged["precedence"] = {"installed": list(root["precedence"]["installed"])}
-    packaged["relative_override"] = {"installed": root["relative_override"]["installed"]}
-    packaged["refusals"] = [refusal for refusal in root["refusals"] if refusal not in _DEVELOPMENT_REFUSALS]
-    return packaged
-
-
 class _PathVector(TypedDict):
     name: str
     components: list[str]
     directories: list[str]
     files: list[str]
     links: list[list[str]]
-    expected_components: list[str] | None
-    refusal: str | None
-
-
-class _MemberVector(TypedDict):
-    name: str
-    platform: str
-    variable: str
-    value: str
     expected_components: list[str] | None
     refusal: str | None
 
@@ -133,19 +108,6 @@ def _rust_path_vectors(lines: list[str], vectors: list[_PathVector]) -> None:
         )
 
 
-def _rust_member_vectors(lines: list[str], vectors: list[_MemberVector]) -> None:
-    for vector in vectors:
-        expected = (
-            "None" if vector["expected_components"] is None else f"Some({_rust_strings(vector['expected_components'])})"
-        )
-        lines.append(
-            f"StorageMemberVector {{ name: {_rust_string(vector['name'])}, "
-            f"platform: {_rust_string(vector['platform'])}, variable: {_rust_string(vector['variable'])}, "
-            f"value: {_rust_string(vector['value'])}, "
-            f"expected_components: {expected}, refusal: {_rust_option(vector['refusal'])} }},"
-        )
-
-
 def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
     root, environment, mode = contract["root"], contract["environment"], contract["mode"]
     lines = [
@@ -158,11 +120,9 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         f"pub const CONTRACT_SCHEMA: u32 = {contract['schema']};",
         f"pub const BUILD_CHANNEL: &str = {_rust_string(contract['channel']['build'])};",
         f"pub const ROOT_VARIABLE: &str = {_rust_string(root['variable'])};",
-        f"pub const INSTALLED_ROOT_PRECEDENCE: &[&str] = {_rust_strings(root['precedence']['installed'])};",
         f"pub const PRODUCT_DIRECTORY: &str = {_rust_string(root['channel']['product_directory'])};",
         f"pub const STABLE_CHANNEL: &str = {_rust_string(root['channel']['stable'])};",
         f"pub const CHANNEL_SEPARATOR: &str = {_rust_string(root['channel']['separator'])};",
-        f"pub const INSTALLED_RELATIVE_OVERRIDE: &str = {_rust_string(root['relative_override']['installed'])};",
         f"pub const POSIX_DIRECTORY_MODE: u32 = {root['posix_directory_mode']:#o};",
         f"pub const ROOT_REFUSALS: &[&str] = {_rust_strings(root['refusals'])};",
         "pub const INSTALLED_DEFAULTS: &[InstalledDefault] = &[",
@@ -217,19 +177,11 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
     ]
     _rust_path_vectors(lines, contract["path_vectors"])
     lines.append("];")
-    lines += [
-        "pub struct StorageMemberVector { pub name: &'static str, pub platform: &'static str, "
-        "pub variable: &'static str, pub value: &'static str, "
-        "pub expected_components: Option<&'static [&'static str]>, pub refusal: Option<&'static str> }",
-        "pub const STORAGE_MEMBER_VECTORS: &[StorageMemberVector] = &[",
-    ]
-    _rust_member_vectors(lines, contract["member_vectors"])
-    lines.append("];")
     return lines
 
 
 def _rust_root_vectors(vectors: list[dict[str, Any]]) -> list[str]:
-    """Project the installed-mode root vectors the native resolver replays in its tests only."""
+    """Project the root vectors the native resolver replays in its tests only."""
     lines = [
         "pub struct StorageRootVector {",
         "    pub name: &'static str,",
@@ -268,12 +220,8 @@ def _entrypoint_names(layout: dict[str, object]) -> list[str]:
     return entrypoints
 
 
-def generate(root: Path, destination: Path, channel: str = "stable", *, target: str | None = None) -> None:
-    """Write C, Rust and inspection projections from their authored owners in one run.
-
-    ``channel`` is the release channel the identity projection validated for this build.
-    """
-    layout = load_layout(target, root=root)
+def _build_contract(root: Path, layout: dict[str, Any], channel: str) -> tuple[dict[str, Any], ApplicationEnvironment]:
+    """Resolve authored build inputs and assemble the shared generated contract."""
     declaration = application_environment.load_for_build(root)
     launch = environment_compile.compile_section(declaration, layout)
     release = identity(distribution_target(layout), channel, project_file=root / "pyproject.toml")
@@ -281,7 +229,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     version = (root / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
     if not version.startswith((root / ".python-version").read_text(encoding="utf-8").strip() + "."):
         raise ValueError("Exact CPython build must belong to the development minor")
-    components, temporary = declaration.components, declaration.temporary_member
+    components = declaration.components
     environment = _environment_section(declaration)
     invalid_path_refusal = "invalid_path_input"
     if invalid_path_refusal not in declaration.root["refusals"]:
@@ -302,12 +250,11 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "channel": release.channel,
             "cohort": list(PRODUCT_IDENTITY.cohort_distributions),
         },
-        "root": _packaged_root(dict(declaration.root)),
+        "root": dict(declaration.root),
         "runtime_transport": transport_section(),
         "environment": environment,
         "mode": _mode_section(layout),
         "path_vectors": [vector.as_contract() for vector in storage_path_vectors()],
-        "member_vectors": [vector.as_contract() for vector in storage_member_vectors()],
         "invalid_native_path": {
             "posix_bytes": list(INVALID_NATIVE_PATH_BYTES),
             "windows_utf16": list(INVALID_NATIVE_PATH_UTF16),
@@ -320,7 +267,6 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "console_workspace": components["console_workspace"],
             "webview": components["webview"],
             "logs": components["logs"],
-            "log_variable": components["log_variable"],
             "log_file": components["log_file"],
             "manager_log_file": components["manager_log_file"],
             "log_format": components["log_format"],
@@ -331,10 +277,23 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "profile_variable": components["profile_variable"],
         },
     }
+
+    return contract, declaration
+
+
+def generate(root: Path, destination: Path, channel: str = "stable", *, target: str | None = None) -> None:
+    """Write C, Rust and inspection projections from their authored owners in one run.
+
+    ``channel`` is the release channel the identity projection validated for this build.
+    """
+    layout = load_layout(target, root=root)
+    contract, declaration = _build_contract(root, layout, channel)
+    components, temporary = declaration.components, declaration.temporary_member
+    version = contract["python"]
+    launch = contract["application_environment"]
     package_strings = {
         **{key.upper(): value for key, value in layout["paths"].items()},
-        "TEMPORARY_ENV": temporary["name"],
-        "TEMPORARY_DEFAULT": temporary["default"],
+        "TEMPORARY_MEMBER": temporary["default"],
     }
     rust = [
         f"pub const ABI: u32 = {layout['abi']};",
@@ -357,7 +316,6 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         ]
     )
     rust.extend(f"pub const {key}: &str = {_rust_string(value)};" for key, value in package_strings.items())
-    rust.append(f"pub const TEMPORARY_CREATE_EXPLICIT: bool = {str(temporary['create_explicit']).lower()};")
     # Declared entrypoint images live in NATIVE; the platform context maps them back to the package root.
     entrypoints = _entrypoint_names(layout)
     rust.append(f"pub const ENTRYPOINT_FILES: &[&str] = {_rust_strings(entrypoints)};")
@@ -374,8 +332,12 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         + "".join(f"{line}\n" for line in environment_compile.c_lines(launch)),
     )
     write_text(destination / "contract.json", json.dumps(contract, indent=2) + "\n")
-    installed_vectors = [vector.as_contract() for vector in storage_root_vectors(root) if vector.mode == "installed"]
-    write_text(destination / "contract_vectors.rs", "\n".join(_rust_root_vectors(installed_vectors)) + "\n")
+    root_vectors = [vector.as_contract() for vector in storage_root_vectors(root)]
+    vectors = [
+        *_rust_root_vectors(root_vectors),
+        *environment_compile.rust_vector_lines(environment_compile.vectors_for(declaration, layout)),
+    ]
+    write_text(destination / "contract_vectors.rs", "\n".join(vectors) + "\n")
 
 
 if __name__ == "__main__":

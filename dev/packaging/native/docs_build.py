@@ -14,7 +14,6 @@ from pathlib import Path
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo.core.storage_environment import STORAGE_ROOT
 from dev._paths import REPO_ROOT
 
 from ..authority_staging import selected_published_authority
@@ -63,10 +62,8 @@ def compile_environment(storage: Path) -> dict[str, str]:
     temporary.mkdir(parents=True, exist_ok=True)
     environment.update(
         {
-            STORAGE_ROOT.variable: str(storage),
-            "CADRUMO_LOG_DIR": str(storage / "logs"),
+            "CADRUMO_STORAGE_ROOT": str(storage),
             "CADRUMO_DEV_CACHE_ROOT": str(storage.parent / "cache"),
-            "CADRUMO_TEMP_DIR": str(temporary),
             "TEMP": str(temporary),
             "TMP": str(temporary),
             "TMPDIR": str(temporary),
@@ -74,7 +71,6 @@ def compile_environment(storage: Path) -> dict[str, str]:
             "PYTHONIOENCODING": "utf-8",
         }
     )
-    environment[STORAGE_ROOT.development_variable] = str(storage)
     for name in (
         "CADRUMO_REGISTRY_DISK_CACHE_DIR",
         "CADRUMO_RECORD_DESIGN_CACHE_DIR",

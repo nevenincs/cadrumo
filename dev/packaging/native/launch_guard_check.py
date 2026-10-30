@@ -51,8 +51,6 @@ def check(executable: Path, contract_path: Path, *, scratch_root: Path) -> None:
             for key in tuple(environment):
                 if key.upper() in {
                     "CADRUMO_STORAGE_ROOT",
-                    "CADRUMO_LOCAL_STORAGE_ROOT",
-                    "CADRUMO_TEMP_DIR",
                     "CADRUMO_TOOL_CACHE_DIR",
                     "XDG_CACHE_HOME",
                     "TEMP",
@@ -63,8 +61,6 @@ def check(executable: Path, contract_path: Path, *, scratch_root: Path) -> None:
             environment.update(
                 {
                     "CADRUMO_STORAGE_ROOT": str(storage),
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(storage),
-                    "CADRUMO_TEMP_DIR": str(temporary_root),
                     "CADRUMO_TOOL_CACHE_DIR": str(cache_root),
                     "XDG_CACHE_HOME": str(cache_root),
                     "TEMP": str(temporary_root),

@@ -2,19 +2,19 @@
 //!
 //! A release image resolves the declared platform user-data base joined with the build
 //! channel's directory. A Debug build's images carry the storage root its build environment
-//! baked in at compile time, so a release image holds no development location or rule. An
-//! absolute root override wins in both. Mode never comes from the working directory.
+//! baked in at compile time, so a release image holds no development location or rule. The
+//! one root variable, when set, must be absolute and wins in both. Every other location is a
+//! declared path beneath the root. Mode never comes from the working directory.
 
 use crate::{
     BUILD_CHANNEL, CHANNEL_SEPARATOR, CLEARED_NAMES, CLEARED_PREFIXES, ENTRYPOINT_FILES,
     HOST_INHERITED_ENV, HOST_INHERITED_FIELDS, INHERITED_KIND_DIRECTORY_PATH, INSTALLED_DEFAULTS,
-    INSTALLED_ROOT_PRECEDENCE, InstalledDefault, MODE_PACKAGE_MANIFEST,
-    MODE_PACKAGE_ROOT_FROM_EXECUTABLE, NAMESPACE_PREFIX, NATIVE, PINNED_ENV, PRODUCT_DIRECTORY,
-    ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED, ROOT_REFUSAL_HOME_UNAVAILABLE,
-    ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE, ROOT_REFUSAL_INVALID_PATH_INPUT,
-    ROOT_REFUSAL_NON_ABSOLUTE_PIN, ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED, ROOT_REFUSALS,
-    ROOT_VARIABLE, STABLE_CHANNEL, STORAGE_NORMALIZE_ABSOLUTE, STORAGE_REFUSE_LINKS,
-    STORAGE_UNICODE_REQUIRED, TEMPORARY_CREATE_EXPLICIT, TEMPORARY_DEFAULT, TEMPORARY_ENV,
+    InstalledDefault, MODE_PACKAGE_MANIFEST, MODE_PACKAGE_ROOT_FROM_EXECUTABLE, NAMESPACE_PREFIX,
+    NATIVE, PINNED_ENV, PRODUCT_DIRECTORY, ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
+    ROOT_REFUSAL_HOME_UNAVAILABLE, ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE,
+    ROOT_REFUSAL_INVALID_PATH_INPUT, ROOT_REFUSAL_NON_ABSOLUTE_PIN,
+    ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED, ROOT_REFUSALS, ROOT_VARIABLE, STABLE_CHANNEL,
+    STORAGE_NORMALIZE_ABSOLUTE, STORAGE_REFUSE_LINKS, STORAGE_UNICODE_REQUIRED, TEMPORARY_MEMBER,
 };
 #[cfg(windows)]
 use std::os::windows::ffi::OsStringExt;
@@ -77,8 +77,8 @@ impl From<Refusal> for std::io::Error {
 /// What selected a resolved storage root.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RootSource {
-    /// An operator override; `variable` is the root variable that supplied it.
-    Override { variable: &'static str },
+    /// The operator's absolute root variable.
+    Override,
     /// The storage root a development build baked in.
     BuildDefault,
     /// The per-user, per-channel installed default.
@@ -327,19 +327,12 @@ fn anchored_root(
     known_folder: Option<&Path>,
     channel: &str,
 ) -> Result<ResolvedRoot, Refusal> {
-    let mut selected = None;
-    for name in INSTALLED_ROOT_PRECEDENCE {
-        if let Some(value) = nonblank(lookup, name)? {
-            selected = Some((*name, value));
-            break;
-        }
-    }
-    if let Some((variable, raw)) = selected {
+    if let Some(raw) = nonblank(lookup, ROOT_VARIABLE)? {
         let candidate = expand_home(&raw, lookup)?;
         if candidate.is_absolute() {
             return Ok(ResolvedRoot {
                 root: candidate,
-                source: RootSource::Override { variable },
+                source: RootSource::Override,
             });
         }
         return Err(refusal(
@@ -504,62 +497,14 @@ pub fn resolve_storage_root_with(
     )
 }
 
-/// A member `variable` may relocate: an override in `lookup` (absolute, `~`-relative or
-/// relative to `root`), else `default`, a slash-separated path beneath `root`. Also reports
-/// whether an override selected it.
-fn located_member(
-    root: &Path,
-    variable: &str,
-    default: &str,
-    lookup: &dyn Fn(&str) -> Option<OsString>,
-) -> Result<(PathBuf, bool), Refusal> {
-    let explicit = nonblank(lookup, variable)?;
-    let path = match &explicit {
-        Some(value) => expand_home(value, lookup)?,
-        None => relative_components(default),
-    };
-    if !path.is_absolute()
-        && (path.has_root()
-            || path
-                .components()
-                .any(|part| matches!(part, Component::Prefix(_))))
-    {
-        return Err(refusal(
-            ROOT_REFUSAL_NON_ABSOLUTE_PIN,
-            "A relative member cannot replace its root anchor".into(),
-        ));
-    }
-    let path = validated_absolute_path(&if path.is_absolute() {
-        path
-    } else {
-        root.join(path)
-    })?;
-    Ok((path, explicit.is_some()))
+/// A location beneath `root`: the slash-separated declared `relative` path, without creating it.
+pub fn member_path(root: &Path, relative: &str) -> Result<PathBuf, Refusal> {
+    validated_absolute_path(&root.join(relative_components(relative)))
 }
 
-/// The location of a member `variable` may relocate beneath `root`, without creating it.
-pub fn member_path(
-    root: &Path,
-    variable: &str,
-    default: &str,
-    lookup: &dyn Fn(&str) -> Option<OsString>,
-) -> Result<PathBuf, Refusal> {
-    located_member(root, variable, default, lookup).map(|(path, _)| path)
-}
-
-/// The temporary-files member beneath `root`, honouring an operator override in `lookup`.
-pub(crate) fn temporary_path(
-    root: &Path,
-    lookup: &dyn Fn(&str) -> Option<OsString>,
-) -> Result<PathBuf, Refusal> {
-    let (path, explicit) = located_member(root, TEMPORARY_ENV, TEMPORARY_DEFAULT, lookup)?;
-    if explicit && !TEMPORARY_CREATE_EXPLICIT && !path.is_dir() {
-        return Err(refusal(
-            ROOT_REFUSAL_FILESYSTEM_PATH_REFUSED,
-            "An explicit member must already exist".into(),
-        ));
-    }
-    Ok(path)
+/// The temporary-files member beneath `root`.
+pub(crate) fn temporary_path(root: &Path) -> Result<PathBuf, Refusal> {
+    member_path(root, TEMPORARY_MEMBER)
 }
 
 /// Whether a strict child filter clears `name`: the declared host classes and every
@@ -650,8 +595,7 @@ where
             validate_inherited_pin(field, value)?;
         }
     }
-    let lookup = |name: &str| lookup_os(name).map(std::ffi::OsStr::to_owned);
-    let temporary = temporary_path(&root, &lookup).map_err(std::io::Error::from)?;
+    let temporary = temporary_path(&root).map_err(std::io::Error::from)?;
     let temporary = crate::normalize_absolute_path(&temporary)?;
     crate::create_private_directory(&root)?;
     crate::create_private_directory(&temporary)?;
@@ -787,12 +731,7 @@ mod tests {
         assert_eq!(development.root, baked);
         let overridden = |name: &str| (name == ROOT_VARIABLE).then(|| OsString::from(r"D:\data"));
         let explicit = resolve_root(&overridden, Some(baked), Some(base), STABLE_CHANNEL).unwrap();
-        assert_eq!(
-            explicit.source,
-            RootSource::Override {
-                variable: ROOT_VARIABLE
-            }
-        );
+        assert_eq!(explicit.source, RootSource::Override);
         assert_eq!(explicit.root, PathBuf::from(r"D:\data"));
     }
 
@@ -849,7 +788,10 @@ mod tests {
             ("PATH", "ambient-path"),
             ("SYSTEMROOT", "ambient-system-root"),
             (ROOT_VARIABLE, r"C:\parent-root"),
-            (TEMPORARY_ENV, "worker-temp"),
+            (
+                crate::conformance_tests::RETIRED_TEMPORARY_OVERRIDE,
+                "worker-temp",
+            ),
             ("PYTHONPATH", "must-not-cross"),
             ("XDG_CACHE_HOME", r"C:\former-cache"),
         ]
@@ -897,8 +839,14 @@ mod tests {
             1
         );
         // A received temporary override is a product setting: the declared member applies.
-        assert!(value(&environment, TEMPORARY_ENV).is_none());
-        let temporary = root.join(relative_components(TEMPORARY_DEFAULT));
+        assert!(
+            value(
+                &environment,
+                crate::conformance_tests::RETIRED_TEMPORARY_OVERRIDE
+            )
+            .is_none()
+        );
+        let temporary = root.join(relative_components(TEMPORARY_MEMBER));
         assert_eq!(value(&environment, "TEMP").unwrap(), temporary.as_os_str());
         assert!(temporary.is_dir() && !root.join("worker-temp").exists());
     }

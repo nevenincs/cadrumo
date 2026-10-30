@@ -3,6 +3,9 @@ use crate::*;
 use std::ffi::{OsStr, OsString};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// A relocation variable the contract no longer declares; every environment ignores it.
+pub(crate) const RETIRED_TEMPORARY_OVERRIDE: &str = "CADRUMO_TEMP_DIR";
+
 pub(crate) struct Scratch(pub PathBuf);
 
 impl Scratch {
@@ -49,17 +52,10 @@ pub(crate) fn operator_environment(
 }
 
 #[test]
-fn defined_pins_normalize_absolute_root_and_relative_temporary_member() {
+fn defined_pins_normalize_the_absolute_root_and_place_the_temporary_member_beneath_it() {
     let scratch = Scratch::new("normalized");
     let root = scratch.0.join("unused").join("..").join("datos con ñ");
-    let environment = operator_environment(
-        vec![(
-            OsString::from(TEMPORARY_ENV),
-            OsString::from("unused-temp/../scratch"),
-        )],
-        &root,
-    )
-    .unwrap();
+    let environment = operator_environment(Vec::new(), &root).unwrap();
     let expected_root = scratch.0.join("datos con ñ");
     assert_eq!(
         value(&environment, ROOT_VARIABLE),
@@ -68,15 +64,14 @@ fn defined_pins_normalize_absolute_root_and_relative_temporary_member() {
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
             value(&environment, name),
-            expected_root.join("scratch").as_os_str()
+            expected_root.join(TEMPORARY_MEMBER).as_os_str()
         );
     }
     assert!(!scratch.0.join("unused").exists());
-    assert!(!expected_root.join("unused-temp").exists());
 }
 
 #[test]
-fn temporary_override_expands_the_current_user_and_strict_children_keep_inherited_pins() {
+fn a_temporary_override_is_ignored_and_strict_children_keep_inherited_pins() {
     let scratch = Scratch::new("home");
     let root = scratch.0.join("root");
     let rule = INSTALLED_DEFAULTS
@@ -88,7 +83,10 @@ fn temporary_override_expands_the_current_user_and_strict_children_keep_inherite
             OsString::from(rule.home_variable),
             scratch.0.as_os_str().to_owned(),
         ),
-        (OsString::from(TEMPORARY_ENV), OsString::from("~/scratch")),
+        (
+            OsString::from(RETIRED_TEMPORARY_OVERRIDE),
+            OsString::from("~/scratch"),
+        ),
     ];
     let inherited = scratch.0.join("authority con ñ");
     ambient.extend(
@@ -106,14 +104,21 @@ fn temporary_override_expands_the_current_user_and_strict_children_keep_inherite
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
             value(&operator, name),
-            scratch.0.join("scratch").as_os_str()
+            root.join(TEMPORARY_MEMBER).as_os_str()
         );
         assert_eq!(
             value(&strict, name),
-            root.join(storage::relative_components(TEMPORARY_DEFAULT))
-                .as_os_str()
+            root.join(TEMPORARY_MEMBER).as_os_str()
         );
     }
+    for environment in [&operator, &strict] {
+        assert!(
+            !environment
+                .iter()
+                .any(|(name, _)| name == RETIRED_TEMPORARY_OVERRIDE)
+        );
+    }
+    assert!(!scratch.0.join("scratch").exists());
 }
 
 fn empty_buffer() -> Buffer {
@@ -265,17 +270,26 @@ pub(crate) fn invalid_unicode() -> OsString {
 }
 
 #[test]
-fn invalid_temporary_override_refuses_without_effects_or_lossy_replacement() {
+fn a_temporary_override_that_is_not_unicode_changes_neither_image_environment() {
     let scratch = Scratch::new("invalid-temp");
     let root = scratch.0.join("root");
-    let invalid = vec![(OsString::from(TEMPORARY_ENV), invalid_unicode())];
-    assert!(matches!(
-        operator_environment(invalid.clone(), &root),
-        Err(launch::DefineError::Failed(_))
-    ));
-    assert!(!root.exists());
+    let invalid = vec![(
+        OsString::from(RETIRED_TEMPORARY_OVERRIDE),
+        invalid_unicode(),
+    )];
+    let operator = operator_environment(invalid.clone(), &root).unwrap();
     let strict = child_environment(invalid, &root).unwrap();
-    assert!(!strict.iter().any(|(name, _)| name == TEMPORARY_ENV));
+    for environment in [&operator, &strict] {
+        assert!(
+            !environment
+                .iter()
+                .any(|(name, _)| name == RETIRED_TEMPORARY_OVERRIDE)
+        );
+        assert_eq!(
+            value(environment, PINNED_ENV[1]),
+            root.join(TEMPORARY_MEMBER).as_os_str()
+        );
+    }
 }
 
 #[test]
@@ -290,13 +304,12 @@ fn native_bootstrap_does_not_ignore_an_invalid_selected_root_override() {
 }
 
 #[test]
-fn an_image_honours_no_storage_variable_outside_the_installed_precedence() {
+fn an_image_honours_no_storage_variable_but_the_root_variable() {
     let scratch = Scratch::new("ignored-variable");
     let baked = scratch.0.join("baked");
     // A variable the contract does not declare never selects or refuses a root.
     let foreign = |name: &str| {
-        (!INSTALLED_ROOT_PRECEDENCE.contains(&name) && name.starts_with(NAMESPACE_PREFIX))
-            .then(invalid_unicode)
+        (name != ROOT_VARIABLE && name.starts_with(NAMESPACE_PREFIX)).then(invalid_unicode)
     };
     let development = storage::resolve_root(&foreign, Some(&baked), None, BUILD_CHANNEL).unwrap();
     assert_eq!(development.root, baked);
@@ -346,36 +359,6 @@ fn generated_filesystem_vectors_preserve_original_link_evidence_and_have_no_effe
         }
         assert!(!scratch.0.join("selected").exists());
         assert!(!scratch.0.join("missing").exists());
-    }
-}
-
-#[test]
-fn member_overrides_reproduce_every_generated_member_vector() {
-    let host = if cfg!(windows) { "windows" } else { "posix" };
-    let vectors: Vec<_> = STORAGE_MEMBER_VECTORS
-        .iter()
-        .filter(|vector| vector.platform == host)
-        .collect();
-    assert!(
-        vectors.len() >= 3,
-        "the contract carries this platform's member vectors"
-    );
-    for vector in vectors {
-        let scratch = Scratch::new("member");
-        let root = scratch.0.join("root");
-        let lookup = |name: &str| (name == vector.variable).then(|| OsString::from(vector.value));
-        let outcome = storage::member_path(&root, vector.variable, "default", &lookup);
-        match (outcome, vector.expected_components, vector.refusal) {
-            (Ok(path), Some(parts), None) => assert_eq!(
-                path,
-                root.join(parts.iter().collect::<PathBuf>()),
-                "{}",
-                vector.name
-            ),
-            (Err(refused), None, Some(code)) => assert_eq!(refused.code, code, "{}", vector.name),
-            outcome => panic!("{}: {outcome:?}", vector.name),
-        }
-        assert!(!root.exists(), "{}", vector.name);
     }
 }
 
@@ -473,12 +456,7 @@ fn a_debug_image_stores_at_its_baked_root_and_a_release_image_at_the_installed_d
         // An absolute operator root wins in either build; a relative one is refused.
         let resolved = storage::resolve_storage_root_with(&evidence, &pin).unwrap();
         assert_eq!(resolved.root, pinned, "{configuration}");
-        assert_eq!(
-            resolved.source,
-            storage::RootSource::Override {
-                variable: ROOT_VARIABLE
-            }
-        );
+        assert_eq!(resolved.source, storage::RootSource::Override);
         let refused = storage::resolve_storage_root_with(&evidence, &relative).unwrap_err();
         assert_eq!(refused.code, ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED);
     }
@@ -499,29 +477,6 @@ fn an_image_without_a_baked_root_or_a_package_manifest_is_refused() {
 }
 
 #[test]
-fn absolute_temporary_override_normalizes_without_changing_the_root_pin() {
-    let scratch = Scratch::new("absolute-member");
-    let root = scratch.0.join("root");
-    let temporary = scratch.0.join("unused-member/../temporary con ñ");
-    let environment = operator_environment(
-        vec![(
-            OsString::from(TEMPORARY_ENV),
-            temporary.as_os_str().to_owned(),
-        )],
-        &root,
-    )
-    .unwrap();
-    assert_eq!(value(&environment, ROOT_VARIABLE), root.as_os_str());
-    for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
-        assert_eq!(
-            value(&environment, name),
-            scratch.0.join("temporary con ñ").as_os_str()
-        );
-    }
-    assert!(!scratch.0.join("unused-member").exists());
-}
-
-#[test]
 fn defined_directory_refusal_reports_a_failure_and_keeps_the_existing_file() {
     let scratch = Scratch::new("define-refusal");
     let file = scratch.0.join("file");
@@ -537,21 +492,23 @@ fn defined_directory_refusal_reports_a_failure_and_keeps_the_existing_file() {
     assert_eq!(fs::read(file).unwrap(), b"preserved");
 }
 
+/// An operator setting the `aeat` image admits; its spelling carries a letter whose Unicode
+/// case mapping differs from ASCII.
+#[cfg(windows)]
+const OPERATOR_SETTING: &str = "CADRUMO_LOG_LEVEL";
+
 #[cfg(windows)]
 #[test]
 fn windows_environment_names_follow_the_declarations_unicode_uppercase_rule() {
     let scratch = Scratch::new("unicode-case");
     let root = scratch.0.join("root");
-    let temporary_name = TEMPORARY_ENV.to_lowercase().replace('i', "ı");
-    assert_eq!(temporary_name.to_uppercase(), TEMPORARY_ENV);
+    let operator_name = OPERATOR_SETTING.to_lowercase().replace('i', "ı");
+    assert_eq!(operator_name.to_uppercase(), OPERATOR_SETTING);
     let inherited_name = HOST_INHERITED_ENV[0].to_lowercase().replace('i', "ı");
     assert_eq!(inherited_name.to_uppercase(), HOST_INHERITED_ENV[0]);
     let authority = scratch.0.join("authority");
     let ambient = vec![
-        (
-            OsString::from(temporary_name),
-            OsString::from("worker-temp"),
-        ),
+        (OsString::from(operator_name), OsString::from("DEBUG")),
         (
             OsString::from(inherited_name),
             authority.as_os_str().to_owned(),
@@ -559,13 +516,13 @@ fn windows_environment_names_follow_the_declarations_unicode_uppercase_rule() {
     ];
     assert!(storage::authority_override_present(ambient.clone()));
     let environment = operator_environment(ambient.clone(), &root).unwrap();
-    assert_eq!(value(&environment, TEMPORARY_ENV), "worker-temp");
+    assert_eq!(value(&environment, OPERATOR_SETTING), "DEBUG");
     let strict = child_environment(ambient, &root).unwrap();
     assert_eq!(value(&strict, HOST_INHERITED_ENV[0]), authority.as_os_str());
     for name in PINNED_ENV.iter().filter(|name| **name != ROOT_VARIABLE) {
         assert_eq!(
             value(&environment, name),
-            root.join("worker-temp").as_os_str()
+            root.join(TEMPORARY_MEMBER).as_os_str()
         );
     }
 }

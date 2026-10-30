@@ -380,7 +380,6 @@ function Invoke-ContainerAcquisition {
         "-v", "${resolvedCohort}:C:\cohort:ro",
         "-v", "${resolvedEvidence}:C:\evidence",
         "-e", "CADRUMO_STORAGE_ROOT=C:\evidence\storage",
-        "-e", "CADRUMO_LOCAL_STORAGE_ROOT=C:\evidence\storage",
         "-e", "CADRUMO_SCOOP_INSTALL_ROOT=development/packages/scoop",
         "--workdir", "C:\repo",
         $Image,

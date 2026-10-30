@@ -153,7 +153,7 @@ function settings() {
     stamp,
     packageRoot,
     storageVariable:
-      process.env.CADRUMO_STORAGE_ROOT_VARIABLE || "CADRUMO_LOCAL_STORAGE_ROOT",
+      process.env.CADRUMO_STORAGE_ROOT_VARIABLE || "CADRUMO_STORAGE_ROOT",
     run,
     storage: layout ? layout.storage : resolve(run, "storage"),
     setupParent,
@@ -250,10 +250,6 @@ function projection(config, env) {
   const defaults = contract.desktop_defaults;
   const storage = env[config.storageVariable];
   assert(isAbsolute(storage), "the host environment pins the storage root");
-  assert(
-    !(defaults.log_variable in env),
-    "the packaged run relocates no log directory",
-  );
   const logs = resolve(storage, defaults.logs);
   return {
     storage,

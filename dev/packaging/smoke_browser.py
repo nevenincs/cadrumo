@@ -53,10 +53,9 @@ def _browser_env(work_dir: Path) -> dict[str, str]:
     return {
         **os.environ,
         "CADRUMO_BROWSER_HEADLESS": "true",
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+        "CADRUMO_STORAGE_ROOT": str(storage_root),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "PLAYWRIGHT_BROWSERS_PATH": str(browser_cache),
-        "CADRUMO_PLAYWRIGHT_BROWSERS_DIR": str(browser_cache),
     }
 
 

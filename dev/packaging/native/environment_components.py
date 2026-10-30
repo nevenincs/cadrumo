@@ -10,18 +10,10 @@ from .environment_declaration_constants import _BASE_NAME, _SLOT
 from .environment_declaration_primitives import _fail, _integer, _keys, _relative, _strings, _table
 
 
-def _temporary_member(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
+def _temporary_member(raw: object) -> dict[str, Any]:
     entry = _table(raw, "pins.temporary_member")
-    _keys(entry, "pins.temporary_member", {"name", "default", "create_explicit"})
-    if names.get(entry["name"], {}).get("role") != "location":
-        raise _fail("pins.temporary_member must name a declared location")
-    if not isinstance(entry["create_explicit"], bool):
-        raise _fail("pins.temporary_member.create_explicit must be a boolean")
-    return {
-        "name": entry["name"],
-        "default": _relative(entry["default"], "pins.temporary_member.default"),
-        "create_explicit": entry["create_explicit"],
-    }
+    _keys(entry, "pins.temporary_member", {"default"})
+    return {"default": _relative(entry["default"], "pins.temporary_member.default")}
 
 
 def _host_classes(raw: object) -> dict[str, Any]:
@@ -67,7 +59,6 @@ _COMPONENT_PATHS = (
     "log_file",
 )
 _COMPONENT_VALUES = (
-    "log_variable",
     "log_format",
     "log_max_bytes",
     "log_backups",
@@ -89,8 +80,6 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
     components: dict[str, Any] = {key: _relative(entry[key], f"components.{key}") for key in _COMPONENT_PATHS}
     if not components["log_file"].startswith(components["logs"] + "/"):
         raise _fail("components.log_file must lie in components.logs")
-    if names.get(entry["log_variable"], {}).get("role") != "location":
-        raise _fail("components.log_variable must name a declared location")
     if not isinstance(entry["log_format"], str) or not entry["log_format"]:
         raise _fail("components.log_format must be a non-empty string")
     if names.get(entry["language_variable"], {}).get("kind") != "language":
@@ -102,7 +91,6 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
         raise _fail("components.profile_variable must name a declared directory slot")
     address = _local_ai_address(entry)
     components.update(
-        log_variable=entry["log_variable"],
         log_format=entry["log_format"],
         log_max_bytes=_integer(entry["log_max_bytes"], "components.log_max_bytes"),
         log_backups=_integer(entry["log_backups"], "components.log_backups", minimum=0),

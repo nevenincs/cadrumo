@@ -204,7 +204,7 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
     assert providers["package_path"]
     gateway = next(profile for profile in section["profiles"] if profile["name"] == "agent-gateway")
     assert {slot["name"]: slot["kind"] for slot in gateway["slots"]} == {
-        "CADRUMO_LOCAL_STORAGE_ROOT": "directory",
+        "CADRUMO_STORAGE_ROOT": "directory",
         "CADRUMO_PROFILE_ROOT": "directory",
         "CADRUMO_AGENT_HOSTED_ROOT": "directory",
         "CADRUMO_AGENT_PORT": "port",
@@ -215,8 +215,8 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
     # by its kind alone: whoever the caller is, the compiled slot names no parent.
     worker = next(profile for profile in section["profiles"] if profile["name"] == "agent-worker")
     for profile in (gateway, worker):
-        root_slot = next(slot for slot in profile["slots"] if slot["name"] == "CADRUMO_LOCAL_STORAGE_ROOT")
-        assert root_slot == {"name": "CADRUMO_LOCAL_STORAGE_ROOT", "kind": "directory", "required": False}
+        root_slot = next(slot for slot in profile["slots"] if slot["name"] == "CADRUMO_STORAGE_ROOT")
+        assert root_slot == {"name": "CADRUMO_STORAGE_ROOT", "kind": "directory", "required": False}
         assert all(set(slot) == {"name", "kind", "required"} for slot in profile["slots"])
         assert "root" not in profile["pins"]
     runtime = next(profile for profile in section["profiles"] if profile["name"] == "cadrumo-runtime")

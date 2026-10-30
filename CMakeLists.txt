@@ -148,17 +148,14 @@ execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
 string(JSON CADRUMO_PLATFORM GET "${package_layout}" platform)
 string(JSON CADRUMO_BACKEND GET "${package_layout}" backend)
 cadrumo_build_fact("Package layout" "${CADRUMO_PLATFORM}, ${CADRUMO_BACKEND} assembly backend")
+# The package declaration owns the storage variable's name; the build only passes it on.
 execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
-  "from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)"
+  "from pathlib import Path; from dev.packaging.native.application_environment import load; print(load(Path('.')).root['variable'])"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE CADRUMO_STORAGE_ROOT_VARIABLE
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
-# A Debug build bakes the checkout's development storage root into its native images at compile
-# time; release images receive none, so nothing in them names this checkout's storage.
-execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
-  "from cadrumo.core.storage_environment import STORAGE_ROOT; print('/'.join(STORAGE_ROOT.development_default))"
-  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE development_storage_root
-  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
-cmake_path(APPEND PROJECT_SOURCE_DIR "${development_storage_root}" OUTPUT_VARIABLE development_storage_root)
+# A Debug build bakes this checkout's var/storage into its native images as their default root at
+# compile time. A release build receives none, so no release image names a checkout or its storage.
+cmake_path(APPEND PROJECT_SOURCE_DIR var storage OUTPUT_VARIABLE development_storage_root)
 cmake_path(NATIVE_PATH development_storage_root NORMALIZE CADRUMO_BUILD_STORAGE_ROOT)
 include(CTest)
 include(native/cmake/CTestEnvironment.cmake)

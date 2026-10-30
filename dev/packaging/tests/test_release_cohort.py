@@ -59,7 +59,7 @@ def _assert_clean_builder_invocation(
     assert child_output.parent == cwd / "build"
     assert "--use-prepared-source" in argv
     assert "--defer-output-validation" in argv
-    for name in ("CADRUMO_STORAGE_ROOT", "CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_TEMP_DIR"):
+    for name in ("CADRUMO_STORAGE_ROOT", "TEMP"):
         assert Path(env[name]).is_relative_to(TEMP_ROOT)
 
 

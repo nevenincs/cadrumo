@@ -1064,7 +1064,7 @@ async def _call_dev_installed_mcp_authenticate(
     from mcp.client.stdio import StdioServerParameters, stdio_client
 
     environment = clean_product_env()
-    environment.update({"CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
+    environment.update({"CADRUMO_STORAGE_ROOT": str(storage_root), "PYTHONIOENCODING": "utf-8"})
     server = StdioServerParameters(
         command=str(executable.resolve(strict=True)),
         args=["--profile-id", profile_id, "--credential-reference", credential_reference],
@@ -1158,7 +1158,7 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
         runtime_environment = {
             key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
         }
-        runtime_environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
+        runtime_environment["CADRUMO_STORAGE_ROOT"] = str(storage_root)
         process_scope.launch(
             executable=runtime_executable.resolve(strict=True),
             arguments=(

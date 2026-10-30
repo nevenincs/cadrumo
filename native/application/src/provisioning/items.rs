@@ -105,8 +105,7 @@ pub struct Locations {
 }
 
 impl Locations {
-    /// The default layout under `root`, the owner-resolved storage root. An owner that
-    /// honours a relocated browsers, models or home folder replaces that member.
+    /// The layout under `root`, the owner-resolved storage root.
     pub fn under(root: &std::path::Path) -> Self {
         let components = root.join("components");
         Self {

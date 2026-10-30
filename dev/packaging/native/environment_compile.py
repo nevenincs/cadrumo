@@ -58,7 +58,6 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
         "schema": SCHEMA,
         "platform_family": family,
         "names": {name: dict(entry) for name, entry in sorted(declaration.names.items())},
-        "location_names": _location_names(declaration),
         "images": list(built),
         "pins": {
             "temporary": list(declaration.temporary),
@@ -88,12 +87,17 @@ def compile_section(declaration: ApplicationEnvironment, layout: Mapping[str, An
             "launch_profile_refused": declaration.native_host["launch_profile_refused"],
             "refusals": list(declaration.native_host["refusals"]),
         },
-        "vectors": [dict(vector) for vector in declaration.launch_vectors if vector["platform"] == family],
     }
 
 
-def _location_names(declaration: ApplicationEnvironment) -> list[str]:
-    return sorted(name for name, entry in declaration.names.items() if entry["role"] == "location")
+def vectors_for(declaration: ApplicationEnvironment, layout: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Select the launch conformance vectors of the layout's platform family.
+
+    They are test inputs: the native resolver replays them in its tests, and no packaged
+    contract carries them.
+    """
+    family = _platform_family(layout)
+    return [dict(vector) for vector in declaration.launch_vectors if vector["platform"] == family]
 
 
 def _compiled_invocations(declaration: ApplicationEnvironment, family: str) -> list[dict[str, Any]]:
@@ -308,18 +312,18 @@ def rust_lines(section: Mapping[str, Any]) -> list[str]:
             f"distinct: {_rust_pairs(invocation['distinct'])}, greater: {_rust_pairs(invocation['greater'])} }},"
         )
     lines.append("];")
-    lines.append(
-        "pub struct LaunchVector { pub name: &'static str, pub image: &'static str, "
-        "pub arguments: &'static [&'static str], pub ambient: &'static [(&'static str, &'static str)], "
-        "pub profile: Option<&'static str>, pub environment: &'static [(&'static str, &'static str)], "
-        "pub path: Option<&'static [&'static str]>, pub refusal: Option<(&'static str, &'static str)> }"
-    )
-    lines.append("pub const LAUNCH_VECTORS: &[LaunchVector] = &[")
-    _append_rust_vectors(lines, section["vectors"])
     return lines
 
 
-def _append_rust_vectors(lines: list[str], vectors: Sequence[Mapping[str, Any]]) -> None:
+def rust_vector_lines(vectors: Sequence[Mapping[str, Any]]) -> list[str]:
+    """Emit the launch conformance vectors for the native resolver's tests only."""
+    lines = [
+        "pub struct LaunchVector { pub name: &'static str, pub image: &'static str, "
+        "pub arguments: &'static [&'static str], pub ambient: &'static [(&'static str, &'static str)], "
+        "pub profile: Option<&'static str>, pub environment: &'static [(&'static str, &'static str)], "
+        "pub path: Option<&'static [&'static str]>, pub refusal: Option<(&'static str, &'static str)> }",
+        "pub const LAUNCH_VECTORS: &[LaunchVector] = &[",
+    ]
     for vector in vectors:
 
         def pairs(table: Mapping[str, str]) -> str:
@@ -338,6 +342,7 @@ def _append_rust_vectors(lines: list[str], vectors: Sequence[Mapping[str, Any]])
             f"profile: {profile}, environment: {pairs(vector['environment'])}, path: {path}, refusal: {refusal} }},"
         )
     lines.append("];")
+    return lines
 
 
 def c_lines(section: Mapping[str, Any]) -> list[str]:

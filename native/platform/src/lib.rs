@@ -64,8 +64,7 @@ fn context_for(
         .map_err(|refused| refused.to_string())?
         .root;
     let user = normalize_absolute_path(&user).map_err(|e| e.to_string())?;
-    let temporary =
-        storage::temporary_path(&user, lookup).map_err(|refused| refused.to_string())?;
+    let temporary = storage::temporary_path(&user).map_err(|refused| refused.to_string())?;
     let temporary = normalize_absolute_path(&temporary).map_err(|e| e.to_string())?;
     let package = evidence.package;
     let authority = package.join(AUTHORITY);

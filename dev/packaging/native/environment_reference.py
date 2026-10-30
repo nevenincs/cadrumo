@@ -214,10 +214,7 @@ def _reference_fixed_values(
     if "root" in pins:
         put(declaration.root["variable"], str(path_type(root)))
     if "temporary" in pins:
-        member = declaration.temporary_member["name"]
-        admitted = member in profile["operator"] or member in profile["pass"]
-        override = get(member) if admitted else None
-        temporary = path_type(root) / (override or declaration.temporary_member["default"])
+        temporary = path_type(root) / declaration.temporary_member["default"]
         for name in declaration.temporary:
             put(name, str(temporary))
     if "authority" in pins:

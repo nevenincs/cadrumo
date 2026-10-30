@@ -1,7 +1,7 @@
 //! Persist startup failures before the fallible Python environment projection.
 //!
-//! Location authority stays with the generated contract and native root resolver.
-//! Member overrides whose semantics belong to Settings defer file setup to it.
+//! Location authority stays with the generated contract and native root resolver:
+//! the log directory is a declared path beneath the storage root.
 
 use crate::environment::Parent;
 use cadrumo_application::diagnostics::Diagnostics;
@@ -20,14 +20,6 @@ use std::path::{Path, PathBuf};
 #[derive(Deserialize)]
 struct Contract {
     desktop_defaults: Defaults,
-    application_environment: ApplicationEnvironment,
-}
-
-/// The storage root and the member locations an operator may relocate.
-#[cfg(windows)]
-#[derive(Deserialize)]
-struct ApplicationEnvironment {
-    location_names: Vec<String>,
 }
 
 #[cfg(windows)]
@@ -58,13 +50,12 @@ fn configure_for(executable: &Path, parent: &Parent, diagnostics: &Diagnostics) 
         let contract: Contract =
             serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
                 .map_err(|error| unavailable().caused_by(error))?;
-        if let Some(directory) = location(executable, parent, &contract)? {
-            diagnostics.configure(
-                &directory,
-                contract.desktop_defaults.log_max_bytes,
-                contract.desktop_defaults.log_backups,
-            )?;
-        }
+        let directory = location(executable, parent, &contract)?;
+        diagnostics.configure(
+            &directory,
+            contract.desktop_defaults.log_max_bytes,
+            contract.desktop_defaults.log_backups,
+        )?;
         Ok(())
     })();
     if let Err(error) = outcome {
@@ -78,24 +69,10 @@ fn unavailable() -> ApplicationError {
 }
 
 #[cfg(windows)]
-fn location(executable: &Path, parent: &Parent, contract: &Contract) -> Result<Option<PathBuf>> {
-    use cadrumo_platform::{
-        ROOT_VARIABLE,
-        storage::{detect_mode, resolve_storage_root_with, validated_absolute_path},
+fn location(executable: &Path, parent: &Parent, contract: &Contract) -> Result<PathBuf> {
+    use cadrumo_platform::storage::{
+        detect_mode, resolve_storage_root_with, validated_absolute_path,
     };
-    if parent.environment.iter().any(|(key, value)| {
-        contract
-            .application_environment
-            .location_names
-            .iter()
-            .any(|name| {
-                key.to_string_lossy().eq_ignore_ascii_case(name)
-                    && !name.eq_ignore_ascii_case(ROOT_VARIABLE)
-                    && !value.to_string_lossy().trim().is_empty()
-            })
-    }) {
-        return Ok(None);
-    }
     let lookup = |name: &str| {
         parent
             .environment
@@ -109,9 +86,8 @@ fn location(executable: &Path, parent: &Parent, contract: &Contract) -> Result<O
     let root = resolve_storage_root_with(&evidence, &lookup)
         .map_err(|error| unavailable().caused_by(std::io::Error::from(error)))?
         .root;
-    let directory = validated_absolute_path(&contract.desktop_defaults.logs.under(&root))
-        .map_err(|error| unavailable().caused_by(std::io::Error::from(error)))?;
-    Ok(Some(directory))
+    validated_absolute_path(&contract.desktop_defaults.logs.under(&root))
+        .map_err(|error| unavailable().caused_by(std::io::Error::from(error)))
 }
 
 #[cfg(all(test, windows))]
@@ -184,7 +160,7 @@ mod tests {
         // The writer publishes the file's paths and replays buffered events.
         delivered(&diagnostics);
         let paths = diagnostics.snapshot(u64::MAX).paths.unwrap();
-        let expected = location(&host, &parent, &contract()).unwrap().unwrap();
+        let expected = location(&host, &parent, &contract()).unwrap();
         assert_eq!(paths.current.parent(), Some(expected.as_path()));
         diagnostics.failure(
             ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Environment)
@@ -200,17 +176,22 @@ mod tests {
     }
 
     #[test]
-    fn member_overrides_remain_with_python_without_opening_a_default_log() {
+    fn a_retired_log_directory_override_does_not_move_the_startup_log() {
         let scratch = Scratch::new();
+        let host = packaged_host(&scratch);
         let mut parent = parent(&scratch.0.join("storage"));
         parent
             .environment
             .push(("CADRUMO_LOG_DIR".into(), "custom-logs".into()));
         let diagnostics = Diagnostics::default();
         diagnostics.event(EventKind::HostStarted, None, None);
-        configure(&parent, &diagnostics);
-        assert!(diagnostics.snapshot(u64::MAX).paths.is_none());
-        assert!(!scratch.0.join("storage").exists());
+        configure_for(&host, &parent, &diagnostics);
+        delivered(&diagnostics);
+        let paths = diagnostics.snapshot(u64::MAX).paths.unwrap();
+        let expected = location(&host, &parent, &contract()).unwrap();
+        assert_eq!(paths.current.parent(), Some(expected.as_path()));
+        assert!(expected.starts_with(scratch.0.join("storage")));
+        assert!(!scratch.0.join("storage").join("custom-logs").exists());
     }
 
     #[test]

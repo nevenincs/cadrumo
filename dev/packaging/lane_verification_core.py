@@ -343,7 +343,7 @@ def isolated_product_env(storage_root: Path) -> dict[str, str]:
     """Return a clean product environment rooted in isolated temporary storage."""
     return {
         **clean_product_env(),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+        "CADRUMO_STORAGE_ROOT": str(storage_root),
         "CADRUMO_DATABASE_URL": f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}",
     }
 
@@ -431,7 +431,7 @@ root = Path({runtime_root_literal})
 root.mkdir(parents=True, exist_ok=True)
 settings = Settings(
     cadrumo_database_url=f"sqlite:///{{(root / 'attachments.db').as_posix()}}",
-    cadrumo_local_storage_root=root / "state",
+    cadrumo_storage_root=root / "state",
 )
 opened_at = datetime.now(UTC).replace(microsecond=0)
 session = BucketSession.open_resumed(
@@ -481,7 +481,7 @@ agent_request = LLMRequest(
     model_role=ModelRole.TEXT_EXTRACTION,
 )
 try:
-    asyncio.run(LLMClient(settings=Settings(cadrumo_local_storage_root=root / "llm-state")).complete(agent_request))
+    asyncio.run(LLMClient(settings=Settings(cadrumo_storage_root=root / "llm-state")).complete(agent_request))
 except LLMConfigError as exc:
     if (exc.context or dict()).get("model_run_refusal") != "service_unavailable":
         raise SystemExit("an agent dispatch outside an operation refused for the wrong reason")

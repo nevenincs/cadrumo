@@ -1,11 +1,11 @@
-"""Refuse a staged release package that knows about a source checkout.
+"""Refuse a staged release package that knows about a source checkout or a retired storage override.
 
-A release image resolves storage from the installed per-user default or an absolute operator
-override only; a Debug build's development root is baked in at compile time. So no
-product-owned file of a release package may name the development storage variable, the
-development default root, the checkout marker or the checkout the build ran in. Third-party
-payloads (the Python standard library and dependencies, the Node runtime and modules) are
-outside this product's control and are not scanned.
+A release image resolves storage from the one storage variable, which names an absolute
+directory, or from the per-user default; a Debug build's development root is baked in at compile
+time. So no product-owned file of a release package may name a storage variable the package
+declaration retired, the development default root, the checkout marker or the checkout the
+build ran in. Third-party payloads (the Python standard library and dependencies, the Node
+runtime and modules) are outside this product's control and are not scanned.
 """
 
 from __future__ import annotations
@@ -16,14 +16,48 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path, PurePath
 
-from cadrumo.core.storage_environment import STORAGE_ROOT
-
 _PRODUCT_PREFIX = "cadrumo"
 # Directories whose members are third-party except the product's own entries.
 _VENDORED_PARENTS = frozenset({"site-packages", "node_modules", "packages"})
 # Third-party files and trees the package carries verbatim.
 _VENDORED_NAMES = frozenset({"python.zip", "node"})
 _NATIVE_SUFFIXES = frozenset({".exe", ".dll", ".so", ".dylib", ".pyd"})
+# CADRUMO_STORAGE_ROOT is the only variable that places storage. Every other storage variable the
+# package once declared is retired for good, whichever surface used to read it.
+RETIRED_STORAGE_VARIABLES = (
+    "CADRUMO_LOCAL_STORAGE_ROOT",
+    "CADRUMO_ATTACHMENTS_DIR",
+    "CADRUMO_BLOB_STORE_DIR",
+    "CADRUMO_CHROMIUM_DATA_ROOT",
+    "CADRUMO_CORPUS_SEARCH_CACHE_DIR",
+    "CADRUMO_DRAFTS_DIR",
+    "CADRUMO_FILED_DECLARATIONS_DIR",
+    "CADRUMO_FILING_HISTORY_DIR",
+    "CADRUMO_FINANCIAL_TXS_DIR",
+    "CADRUMO_GNOME_EXTENSIONS_DIR",
+    "CADRUMO_INVOICES_DIR",
+    "CADRUMO_IVA_COMPENSATION_HISTORY_DIR",
+    "CADRUMO_IVA_READ_EVIDENCE_DIR",
+    "CADRUMO_JUSTIFICANTES_DIR",
+    "CADRUMO_LIVE_STATE_DIR",
+    "CADRUMO_LLM_CACHE_DIR",
+    "CADRUMO_LLM_RUN_RECORD_DIR",
+    "CADRUMO_LLM_USAGE_DIR",
+    "CADRUMO_LOG_DIR",
+    "CADRUMO_OLLAMA_HOME_DIR",
+    "CADRUMO_OLLAMA_MODELS_DIR",
+    "CADRUMO_PLAYWRIGHT_BROWSERS_DIR",
+    "CADRUMO_RUNS_DIR",
+    "CADRUMO_RUNTIME_SOCKET_DIR",
+    "CADRUMO_SECRET_STORE_DIR",
+    "CADRUMO_SUBMISSIONS_DIR",
+    "CADRUMO_TEMP_DIR",
+    "CADRUMO_TOKEN_DIR",
+    "CADRUMO_USAGE_RATIOS_PATH",
+    "CADRUMO_WORKFLOW_RUNS_DIR",
+)
+_DEVELOPMENT_DEFAULT = ("var", "storage")
+_CHECKOUT_MARKER = "pyproject.toml"
 
 
 @dataclass(frozen=True)
@@ -36,13 +70,13 @@ class Finding:
 
 def development_spellings(checkout: Path) -> dict[str, tuple[str, ...]]:
     """Every development-only fact a release image must not carry, by every spelling it can take."""
-    default = STORAGE_ROOT.development_default
+    default = _DEVELOPMENT_DEFAULT
     native = str(checkout)
     posix = checkout.as_posix()
     return {
-        "development storage variable": (STORAGE_ROOT.development_variable,),
+        **{f"retired storage variable {name}": (name,) for name in RETIRED_STORAGE_VARIABLES},
         "development storage default": ("/".join(default), "\\".join(default), "\\\\".join(default)),
-        "checkout marker": (STORAGE_ROOT.checkout_marker,),
+        "checkout marker": (_CHECKOUT_MARKER,),
         "checkout path": tuple(dict.fromkeys((native, posix, native.replace("\\", "\\\\")))),
     }
 

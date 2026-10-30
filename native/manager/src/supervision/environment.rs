@@ -180,7 +180,6 @@ pub fn runtime_environment(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::contract::ROOT_VARIABLE;
 
     #[test]
     fn host_cannot_turn_relative_paths_into_package_or_storage_authority() {
@@ -208,13 +207,7 @@ mod tests {
         let path = std::env::temp_dir();
         for (mode, source, accepted) in [
             (Mode::Installed, RootSource::InstalledDefault, true),
-            (
-                Mode::Installed,
-                RootSource::Override {
-                    variable: ROOT_VARIABLE,
-                },
-                false,
-            ),
+            (Mode::Installed, RootSource::Override, false),
             (Mode::Development, RootSource::BuildDefault, false),
         ] {
             let result = ManagedLocations::from_resolved(

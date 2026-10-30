@@ -6,9 +6,10 @@ from pathlib import Path, PurePath
 
 import pytest
 
-from cadrumo.core.storage_environment import STORAGE_ROOT
+from dev._paths import REPO_ROOT
 
-from ..release_image_scan import Finding, main, scan
+from ..application_environment import load
+from ..release_image_scan import RETIRED_STORAGE_VARIABLES, Finding, main, scan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -24,7 +25,8 @@ def _clean_package(root: Path) -> Path:
     _write(package / "bin" / "aeat.exe", b"MZ" + "LOCALAPPDATA".encode("utf-16-le"))
     _write(package / "data" / "package-manifest.json", b'{"files": []}')
     site = package / "cadrumo" / "site-packages"
-    _write(site / "cadrumo" / "core" / "config.py", b"ROOT = 'CADRUMO_LOCAL_STORAGE_ROOT'\n")
+    # The one storage variable is not a development fact: the release resolver reads it.
+    _write(site / "cadrumo" / "core" / "config.py", b"ROOT = 'CADRUMO_STORAGE_ROOT'\n")
     # Third-party payloads describe their own builds; they are not the product's to change.
     _write(site / "attrs-25.1.0.dist-info" / "METADATA", b"Built from pyproject.toml\n")
     _write(package / "cadrumo" / "node_modules" / "ajv" / "package.json", b'{"files": ["var/storage"]}')
@@ -45,20 +47,41 @@ def test_every_development_fact_in_a_product_file_is_found(tmp_path: Path) -> No
     checkout = tmp_path / "Checkout"
     package = _clean_package(tmp_path)
     site = package / "cadrumo" / "site-packages"
-    default = "/".join(STORAGE_ROOT.development_default)
-    _write(site / "cadrumo" / "core" / "storage.py", f"DEFAULT = {default!r}\n".encode())
-    _write(package / "bin" / "aeat.exe", b"MZ" + STORAGE_ROOT.development_variable.encode("utf-16-le"))
+    _write(site / "cadrumo" / "core" / "storage.py", b"DEFAULT = 'var/storage'\n")
+    _write(package / "bin" / "aeat.exe", b"MZ" + "CADRUMO_LOCAL_STORAGE_ROOT".encode("utf-16-le"))
     # A checkout path, spelled with another case and escaped as JSON, inside a distribution record.
     escaped = str(checkout).lower().replace("\\", "\\\\")
     _write(site / "cadrumo-1.0.dist-info" / "direct_url.json", f'{{"url": "{escaped}"}}'.encode())
-    _write(package / "docs" / "overrides.html", f"<p>{STORAGE_ROOT.checkout_marker}</p>".encode())
+    _write(package / "docs" / "overrides.html", b"<p>pyproject.toml</p>")
 
     findings = scan(package, checkout)
 
     assert sorted(findings, key=lambda finding: finding.path.as_posix()) == [
-        Finding(PurePath("bin/aeat.exe"), "development storage variable"),
+        Finding(PurePath("bin/aeat.exe"), "retired storage variable CADRUMO_LOCAL_STORAGE_ROOT"),
         Finding(PurePath("cadrumo/site-packages/cadrumo-1.0.dist-info/direct_url.json"), "checkout path"),
         Finding(PurePath("cadrumo/site-packages/cadrumo/core/storage.py"), "development storage default"),
         Finding(PurePath("docs/overrides.html"), "checkout marker"),
     ]
     assert main(["--package", str(package), "--checkout", str(tmp_path)]) == 1
+
+
+@pytest.mark.parametrize("name", RETIRED_STORAGE_VARIABLES)
+def test_each_retired_storage_variable_is_found_in_either_encoding(tmp_path: Path, name: str) -> None:
+    package = _clean_package(tmp_path)
+    _write(package / "cadrumo" / "site-packages" / "cadrumo" / "core" / "settings.py", f"X = {name!r}\n".encode())
+    _write(package / "cadrumo-manager.exe", b"MZ" + name.lower().encode("utf-16-le"))
+
+    findings = scan(package, tmp_path / "checkout")
+
+    fact = f"retired storage variable {name}"
+    assert sorted(findings, key=lambda finding: finding.path.as_posix()) == [
+        Finding(PurePath("cadrumo-manager.exe"), fact),
+        Finding(PurePath("cadrumo/site-packages/cadrumo/core/settings.py"), fact),
+    ]
+
+
+def test_the_retired_variables_are_exactly_the_names_the_package_declaration_no_longer_has() -> None:
+    declared = set(load(REPO_ROOT).names)
+
+    assert not declared & set(RETIRED_STORAGE_VARIABLES)
+    assert "CADRUMO_STORAGE_ROOT" in declared

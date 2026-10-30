@@ -14,22 +14,22 @@ from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.storage_environment import (
     STORAGE_ROOT,
     ChildEnvironmentProfile,
-    StorageMode,
-    StorageModeEvidence,
     StoragePlatform,
     StorageRootRefusal,
     child_environment,
     ensure_storage_root,
     storage_root_for,
 )
-from cadrumo.core.tests.checkout import project_root
 from cadrumo.core.tests.storage_roots import resolve_storage_root
 from cadrumo.core.type_guards import is_str_keyed_dict
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
+from dev._paths import REPO_ROOT
 
 from ..storage_vectors import StorageRootVector, invalid_native_path_value, storage_root_vectors
 
-_VECTORS = storage_root_vectors(project_root())
+_VECTORS = storage_root_vectors(REPO_ROOT)
+# The storage variable this package used to read first; no resolver reads it any more.
+RETIRED_ROOT_VARIABLE = "CADRUMO_LOCAL_STORAGE_ROOT"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -40,9 +40,7 @@ def _replay(vector: StorageRootVector) -> tuple[str | None, StorageRootRefusal |
     try:
         root = resolve_storage_root(
             platform=StoragePlatform(vector.platform),
-            mode=StorageMode(vector.mode),
             environ=environment,
-            checkout=invalid_native_path_value(vector.platform) if vector.invalid_checkout else vector.checkout,
             channel=vector.channel,
         )
     except CoreValidationError as error:
@@ -56,13 +54,11 @@ def test_python_resolver_reproduces_every_vector(vector: StorageRootVector) -> N
     assert _replay(vector) == (vector.expected_root, refusal)
 
 
-def test_vectors_are_well_formed_and_cover_every_platform_and_mode() -> None:
+def test_vectors_are_well_formed_and_cover_every_platform() -> None:
     vectors = _VECTORS
     assert len({vector.name for vector in vectors}) == len(vectors)
     assert all((vector.expected_root is None) != (vector.refusal is None) for vector in vectors)
-    assert {(vector.platform, vector.mode) for vector in vectors} == {
-        (platform.value, mode.value) for platform in StoragePlatform for mode in StorageMode
-    }
+    assert {vector.platform for vector in vectors} == {platform.value for platform in StoragePlatform}
     assert {vector.refusal for vector in vectors} >= {
         StorageRootRefusal.INSTALLED_BASE_UNAVAILABLE.value,
         StorageRootRefusal.RELATIVE_OVERRIDE_INSTALLED.value,
@@ -73,43 +69,28 @@ def test_vectors_are_well_formed_and_cover_every_platform_and_mode() -> None:
             assert environment["LOCALAPPDATA"] == vector.known_folder
         if vector.platform != StoragePlatform.WINDOWS.value:
             assert vector.known_folder is None
-        if vector.mode == StorageMode.DEVELOPMENT.value:
-            assert vector.checkout is not None
 
 
 def test_vectors_project_onto_json() -> None:
     projected = [vector.as_contract() for vector in _VECTORS]
     assert json.loads(json.dumps(projected)) == projected
     assert projected[0] == {
-        "name": "windows-installed-default",
+        "name": "windows-default",
         "platform": "windows",
-        "mode": "installed",
-        "environment": {"LOCALAPPDATA": r"C:\Users\ada\AppData\Local"},
-        "checkout": None,
-        "known_folder": r"C:\Users\ada\AppData\Local",
+        "environment": {"LOCALAPPDATA": "C:\\Users\\ada\\AppData\\Local"},
+        "known_folder": "C:\\Users\\ada\\AppData\\Local",
         "channel": "stable",
-        "expected_root": r"C:\Users\ada\AppData\Local\cadrumo",
+        "expected_root": "C:\\Users\\ada\\AppData\\Local\\cadrumo",
         "refusal": None,
         "invalid_environment": [],
-        "invalid_checkout": False,
         "invalid_known_folder": False,
     }
 
 
 def test_home_override_without_home_is_refused() -> None:
     with pytest.raises(CoreValidationError) as raised:
-        resolve_storage_root(
-            platform=StoragePlatform.LINUX,
-            mode=StorageMode.INSTALLED,
-            environ={STORAGE_ROOT.variable: "~/data"},
-        )
+        resolve_storage_root(platform=StoragePlatform.LINUX, environ={STORAGE_ROOT.variable: "~/data"})
     assert (raised.value.context or {})["storage_root_refusal"] == StorageRootRefusal.HOME_UNAVAILABLE.value
-
-
-def test_development_without_checkout_is_refused() -> None:
-    with pytest.raises(CoreValidationError) as raised:
-        resolve_storage_root(platform=StoragePlatform.LINUX, mode=StorageMode.DEVELOPMENT, environ={})
-    assert (raised.value.context or {})["storage_root_refusal"] == StorageRootRefusal.CHECKOUT_UNAVAILABLE.value
 
 
 _PROBE = """
@@ -117,12 +98,11 @@ import json, sys
 sys.path.insert(0, sys.argv[1])
 from cadrumo.core import storage_environment as declaration
 from cadrumo.core.errors.hierarchy import CoreValidationError
-result = {"module": declaration.__file__, "mode": declaration.storage_mode().mode.value}
+result = {"module": declaration.__file__}
 try:
     result["root"] = str(declaration.configured_storage_root())
 except CoreValidationError as error:
     result["refusal"] = error.context["storage_root_refusal"]
-result["checkout"] = "absent" if declaration.storage_mode().checkout is None else "present"
 print(json.dumps(result))
 """
 
@@ -131,7 +111,7 @@ print(json.dumps(result))
 def installed_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Copy the importable core package into a site directory outside any checkout."""
     site = tmp_path_factory.mktemp("installed") / "Lib" / "site-packages"
-    source = project_root() / "src" / "cadrumo"
+    source = REPO_ROOT / "src" / "cadrumo"
     package = site / "cadrumo"
     package.mkdir(parents=True)
     shutil.copy2(source / "__init__.py", package / "__init__.py")
@@ -143,7 +123,7 @@ def _installed_probe(site: Path, cwd: Path, environment: dict[str, str]) -> dict
     inherited = {
         name: value
         for name, value in os.environ.items()
-        if name.upper() not in {*STORAGE_ROOT.precedence, "LOCALAPPDATA", "XDG_DATA_HOME", "HOME"}
+        if name.upper() not in {STORAGE_ROOT.variable, "LOCALAPPDATA", "XDG_DATA_HOME", "HOME"}
     }
     completed = ensure_text_completed_process(
         run_audited_process(
@@ -163,8 +143,6 @@ def _installed_probe(site: Path, cwd: Path, environment: dict[str, str]) -> dict
         assert isinstance(value, str), (key, value)
         result[key] = value
     assert Path(result.pop("module")).is_relative_to(site)
-    assert result.pop("mode") == StorageMode.INSTALLED.value
-    assert result.pop("checkout") == "absent"
     return result
 
 
@@ -197,7 +175,7 @@ def test_installed_root_is_the_same_from_any_directory(installed_site: Path, tmp
 def test_installed_relative_override_is_refused(installed_site: Path, tmp_path: Path) -> None:
     variable, _missing = _host_base()
     result = _installed_probe(
-        installed_site, tmp_path, {variable: str(tmp_path / "user-data"), STORAGE_ROOT.variable: "var/storage"}
+        installed_site, tmp_path, {variable: str(tmp_path / "user-data"), STORAGE_ROOT.variable: "data/storage"}
     )
     assert result == {"refusal": StorageRootRefusal.RELATIVE_OVERRIDE_INSTALLED.value}
 
@@ -213,18 +191,18 @@ def test_installed_absolute_override_wins_without_a_base(installed_site: Path, t
     result = _installed_probe(
         installed_site,
         tmp_path,
-        {STORAGE_ROOT.variable: str(explicit), STORAGE_ROOT.development_variable: str(tmp_path / "ignored")},
+        {STORAGE_ROOT.variable: str(explicit), RETIRED_ROOT_VARIABLE: str(tmp_path / "ignored")},
     )
     assert result == {"root": str(explicit.resolve())}
 
 
-def test_installed_ignores_the_development_variable(installed_site: Path, tmp_path: Path) -> None:
+def test_installed_ignores_the_retired_root_variable(installed_site: Path, tmp_path: Path) -> None:
     variable, _missing = _host_base()
     base = tmp_path / "user-data"
     result = _installed_probe(
         installed_site,
         tmp_path,
-        {variable: str(base), STORAGE_ROOT.development_variable: str(tmp_path / "shared")},
+        {variable: str(base), RETIRED_ROOT_VARIABLE: str(tmp_path / "shared")},
     )
     assert result == {"root": str(_expected_installed_root(base).resolve())}
 
@@ -265,24 +243,16 @@ def test_storage_root_is_created_owner_only(tmp_path: Path) -> None:
     assert ensure_storage_root(root) == root
 
 
-def test_a_checkout_resolves_on_an_undeclared_platform(tmp_path: Path) -> None:
-    checkout = StorageModeEvidence(StorageMode.DEVELOPMENT, tmp_path)
-    assert storage_root_for({}, checkout, sys_platform="plan9") == (tmp_path / "var" / "storage").resolve()
-    relative = {STORAGE_ROOT.variable: "var/alternate"}
-    assert storage_root_for(relative, checkout, sys_platform="plan9") == (tmp_path / "var" / "alternate").resolve()
-    assert resolve_storage_root(platform=None, mode=StorageMode.DEVELOPMENT, environ={}, checkout=tmp_path)
+def test_an_explicit_root_resolves_on_an_undeclared_platform(tmp_path: Path) -> None:
+    explicit = tmp_path / "operator-root"
+    assert storage_root_for({STORAGE_ROOT.variable: str(explicit)}, sys_platform="plan9") == explicit.resolve()
     environment = child_environment(
         ChildEnvironmentProfile.STRICT, tmp_path / "root", received={}, base={}, sys_platform="plan9"
     )
     assert environment[STORAGE_ROOT.variable] == str((tmp_path / "root").resolve())
 
 
-def test_an_installed_package_on_an_undeclared_platform_is_refused(tmp_path: Path) -> None:
-    installed = StorageModeEvidence(StorageMode.INSTALLED, None)
+def test_the_per_user_default_on_an_undeclared_platform_is_refused(tmp_path: Path) -> None:
     with pytest.raises(CoreValidationError) as raised:
-        storage_root_for({"HOME": str(tmp_path)}, installed, sys_platform="plan9")
+        storage_root_for({"HOME": str(tmp_path)}, sys_platform="plan9")
     assert (raised.value.context or {})["storage_root_refusal"] == StorageRootRefusal.UNSUPPORTED_PLATFORM.value
-    explicit = tmp_path / "operator-root"
-    assert (
-        storage_root_for({STORAGE_ROOT.variable: str(explicit)}, installed, sys_platform="plan9") == explicit.resolve()
-    )

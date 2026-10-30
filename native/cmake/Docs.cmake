@@ -9,12 +9,10 @@ include("${CMAKE_CURRENT_LIST_DIR}/CachedCommand.cmake")
 # subset into the published layout and writes the docs manifest that the package delegates to.
 set(docs_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build run
   --build "${CMAKE_BINARY_DIR}"
-  --env "CADRUMO_LOCAL_STORAGE_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/storage"
   --env "CADRUMO_STORAGE_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/storage"
   --env "CADRUMO_DEV_CACHE_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/cache"
   --env "CADRUMO_TEST_LOG_ROOT=${CADRUMO_PATH_USER_DOCS_WORK}/test-logs"
   --env "CADRUMO_SCRATCH_BASE=${CADRUMO_PATH_USER_DOCS_WORK}/scratch"
-  --env "CADRUMO_TEMP_DIR=${CADRUMO_PATH_USER_DOCS_WORK}/temporary"
   --
   "${CADRUMO_DEV_PYTHON}" -B -m)
 set(docs_target_args)

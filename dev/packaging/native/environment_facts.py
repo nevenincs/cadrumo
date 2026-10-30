@@ -90,15 +90,10 @@ def _without_environment(names: set[str]) -> Generator[None]:
 
 
 def _storage_root_facts() -> dict[str, object]:
-    from cadrumo.core.storage_environment import STORAGE_PATH_RULES, STORAGE_ROOT, StorageMode, StorageRootRefusal
+    from cadrumo.core.storage_environment import STORAGE_PATH_RULES, STORAGE_ROOT, StorageRootRefusal
 
     root: dict[str, object] = {
         "variable": STORAGE_ROOT.variable,
-        "development_variable": STORAGE_ROOT.development_variable,
-        "development_default": Path(*STORAGE_ROOT.development_default).as_posix(),
-        "checkout_marker": STORAGE_ROOT.checkout_marker,
-        "precedence": {mode.value: list(STORAGE_ROOT.root_variables(mode)) for mode in StorageMode},
-        "relative_override": {mode.value: STORAGE_ROOT.relative_override(mode).value for mode in StorageMode},
         "installed_defaults": [
             {
                 "platform": rule.platform.value,
@@ -153,11 +148,7 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
     log_root = scratch / "log-root"
     # The settings are built from their arguments alone: this process's own overrides place its logs elsewhere.
     with _without_environment(set(settings)):
-        default_logs = storage_path(StorageCategory.LOGS, settings=Settings(cadrumo_local_storage_root=log_root))
-        relocated_logs = storage_path(
-            StorageCategory.LOGS,
-            settings=Settings(cadrumo_local_storage_root=log_root, cadrumo_log_dir=Path(request["log_relative"])),
-        )
+        default_logs = storage_path(StorageCategory.LOGS, settings=Settings(cadrumo_storage_root=log_root))
     return {
         "settings": settings,
         "root": root,
@@ -168,7 +159,6 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
         "profile_variables": [PROFILE_ROOT_VARIABLE],
         "log": {
             "default": _relative(default_logs, log_root),
-            "relocated": _relative(relocated_logs, log_root),
             "file_name": PurePath(storage_location(StorageCategory.LOG_FILE).subpath).name,
         },
     }

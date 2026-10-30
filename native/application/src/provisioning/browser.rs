@@ -69,13 +69,6 @@ pub const COMPLETION_MARKER: &str = "INSTALLATION_COMPLETE";
 /// The bundled driver's package folder, relative to the site-packages folder it ships in.
 pub const DRIVER_PACKAGE: &str = "playwright/driver/package";
 
-/// The location setting that relocates the browsers folder, declared in the package's
-/// environment definition and honoured by the Python consumer the same way.
-pub const BROWSERS_DIR_VARIABLE: &str = "CADRUMO_PLAYWRIGHT_BROWSERS_DIR";
-
-/// The browsers folder under the storage root when no setting relocates it.
-pub const BROWSERS_DEFAULT: &str = "components/playwright";
-
 /// The fact a browser receipt's location carries: the driver version its builds belong to.
 pub const DRIVER_FACT: &str = "playwright_driver";
 
@@ -910,22 +903,6 @@ pub fn failure_category(error: &Error) -> FailureCategory {
         }
         _ => FailureCategory::Unexpected,
     }
-}
-
-/// The browsers folder under `storage_root`, relocated by [`BROWSERS_DIR_VARIABLE`] in
-/// `lookup` by the package's member rule: absolute, home-relative or root-relative.
-#[cfg(feature = "platform")]
-pub fn browsers_root(
-    storage_root: &Path,
-    lookup: &dyn Fn(&str) -> Option<std::ffi::OsString>,
-) -> Result<PathBuf, Error> {
-    cadrumo_platform::storage::member_path(
-        storage_root,
-        BROWSERS_DIR_VARIABLE,
-        BROWSERS_DEFAULT,
-        lookup,
-    )
-    .map_err(|refusal| Error::Invalid(format!("browsers location refused: {}", refusal.code)))
 }
 
 fn pinned_builds(
@@ -2163,22 +2140,12 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn the_browsers_folder_setting_is_a_declared_location_with_the_default_layout() {
-        let native = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
-        let declared: toml::Table = toml::from_str(
-            &fs::read_to_string(native.join("application-environment.toml")).unwrap(),
-        )
-        .unwrap();
-        assert_eq!(
-            declared["names"][BROWSERS_DIR_VARIABLE]["role"].as_str(),
-            Some("location")
-        );
+    fn the_browsers_folder_is_the_default_layout_beneath_the_root() {
         let root = std::env::temp_dir();
         assert_eq!(
             crate::provisioning::items::Locations::under(&root).browsers,
             root.join("components").join("playwright")
         );
-        assert_eq!(BROWSERS_DEFAULT, "components/playwright");
     }
 
     #[test]
@@ -2215,28 +2182,5 @@ pub(crate) mod tests {
             .receipt(&reading)
             .expect("the record describes the builds it was written for");
         assert_eq!(receipt.location.as_ref().unwrap().root(), layout.root());
-    }
-
-    #[cfg(feature = "platform")]
-    #[test]
-    fn the_browsers_folder_follows_the_package_member_rule() {
-        let root = std::env::temp_dir().join("cadrumo-browsers-root");
-        let none = |_: &str| None;
-        assert_eq!(
-            browsers_root(&root, &none).unwrap(),
-            crate::provisioning::items::Locations::under(&root).browsers
-        );
-        let absolute = std::env::temp_dir().join("elsewhere");
-        let moved = absolute.clone();
-        let set = move |name: &str| {
-            (name == BROWSERS_DIR_VARIABLE).then(|| moved.clone().into_os_string())
-        };
-        assert_eq!(browsers_root(&root, &set).unwrap(), absolute);
-        let relative =
-            |name: &str| (name == BROWSERS_DIR_VARIABLE).then(|| "shared/browsers".into());
-        assert_eq!(
-            browsers_root(&root, &relative).unwrap(),
-            root.join("shared").join("browsers")
-        );
     }
 }
