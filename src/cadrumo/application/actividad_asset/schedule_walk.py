@@ -22,6 +22,7 @@ from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimCoverageGap,
     asset_schedule_history,
+    claims_through_year,
     current_revisions,
     select_effective_claims,
     uncovered_claim_intervals,
@@ -216,7 +217,7 @@ def _span_charge(
     reads.  Claims inside the year do not reduce it and later years do not touch it.
     """
     summary = asset_schedule_history(
-        tuple(claim for claim in history.claims if claim.tax_year <= tax_year),
+        claims_through_year(history.claims, tax_year),
         history.revisions,
         asset_id=revision.asset_id,
         tax_year=tax_year,
@@ -378,15 +379,18 @@ def _m130_free_accrual(
         for claim in select_effective_claims(history.claims, tax_year=period_end.year, through=period_end)
         if claim.asset_id == revision.asset_id
     )
-    if claims:
+    accrued = tuple(claim for claim in claims if claim.amount > Decimal("0"))
+    if accrued:
         return M130ElementAccrual(
             revision=revision,
             outcome=M130ElementOutcome.ACCRUED,
             contributions=tuple(
                 M130Contribution(asset_id=revision.asset_id, amount=claim.amount, claim_id=claim.claim_id)
-                for claim in claims
+                for claim in accrued
             ),
         )
+    if claims:
+        return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)
     if free_base_remains(revision, history, tax_year=period_end.year):
         return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.FREE_GAP)
     return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)
@@ -397,7 +401,7 @@ def free_base_remains(revision: ActivityAssetRevision, history: ActivityAssetHis
     if revision.opening_history.status is OpeningHistoryStatus.MISSING:
         return True
     summary = asset_schedule_history(
-        tuple(claim for claim in history.claims if claim.tax_year <= tax_year),
+        claims_through_year(history.claims, tax_year),
         history.revisions,
         asset_id=revision.asset_id,
         tax_year=tax_year,

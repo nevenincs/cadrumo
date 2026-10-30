@@ -110,6 +110,7 @@ def memory_register_authority(
     today: date = date(2025, 12, 31),
     consumers: Mapping[str, tuple[str, ...]] | None = None,
     territory: ResidenceTerritory = ResidenceTerritory.COMMON,
+    last_admitted_year: int | None = None,
 ) -> ActivityAssetRegisterAuthority:
     """Answer the register's profile and edition questions with fixed facts."""
 
@@ -128,6 +129,7 @@ def memory_register_authority(
             _published_modelo_100(),
         ),
         admits_filing_year=_published_support().admits_filing_year,
+        last_admitted_year=lambda: last_admitted_year or max(today.year, _published_support().horizon),
         agrarian_activities=lambda _on: frozenset(),
         residence_territory=lambda: territory,
         claim_consumers=claim_consumers,

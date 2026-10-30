@@ -13,6 +13,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     asset_schedule_history,
+    claims_through_year,
     current_revisions,
     effective_claims,
     record_claim,
@@ -309,7 +310,7 @@ class ActivityAssetHistory(BaseModel):
         for claim in superseding_claims:
             candidate._require_claim_invariants(
                 claim,
-                tuple(item for item in claims if item.tax_year <= claim.tax_year),
+                claims_through_year(claims, claim.tax_year),
             )
         return candidate
 

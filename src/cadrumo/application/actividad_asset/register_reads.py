@@ -86,6 +86,7 @@ class RegisterReadContext:
     forecast: ActivityAssetForecastOperation
     edition: Callable[[int], ActivityAssetEdition]
     admits_filing_year: Callable[[int], bool]
+    last_admitted_year: int
     today: date
     minimum_bounds: DisposalBoundsReader
 
@@ -365,6 +366,7 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
     basis = revision.amortizable_ceiling()
     pending = None if accumulated is None else max(basis - accumulated, Decimal("0"))
     descriptor = context.history.current_descriptor(revision.asset_id)
+    readable = tuple(row.tax_year for row in plan if context.admits_filing_year(row.tax_year))
     return ActivityAssetListRow(
         asset_id=revision.asset_id,
         name=None if descriptor is None else descriptor.facts.name,
@@ -385,7 +387,8 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
             conflict=sum(row.absence in {PlanFigureAbsence.CONFLICT, PlanFigureAbsence.UNSUPPORTED} for row in plan),
             stale=sum(_matches_current_schedule(claim, revision, context) is not None for claim in claims),
         ),
-        years=tuple(row.tax_year for row in plan if context.admits_filing_year(row.tax_year)),
+        years=tuple(year for year in readable if year <= context.last_admitted_year),
+        projected_years=tuple(year for year in readable if year > context.last_admitted_year),
     )
 
 

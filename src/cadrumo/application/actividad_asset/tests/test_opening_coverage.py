@@ -11,7 +11,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetRegisterState
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory
+from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence, WalkedYear, walk_element
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -36,7 +38,16 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
     schedule_charge,
 )
 
+from .ledger_support import MemoryLedger, acquisition_transaction
+from .register_support import MemoryRepository, describing, memory_register_authority
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_ACQUISITION = acquisition_transaction(
+    amount=Decimal("12100.00"),
+    taxable_base=Decimal("10000.00"),
+    iva_amount=Decimal("2100.00"),
+)
 
 
 def _revision(*, opening_through: int) -> ActivityAssetRevision:
@@ -44,7 +55,7 @@ def _revision(*, opening_through: int) -> ActivityAssetRevision:
         asset_id="machine-1",
         revision_number=1,
         acquisition=AcquisitionLineageReference(
-            observed_transaction_id="a" * 64,
+            observed_transaction_id=_ACQUISITION.transaction_id,
             invoice_evidence_id="invoice-1",
             evidence_fingerprint="b" * 64,
         ),
@@ -120,9 +131,72 @@ def test_years_after_the_opening_year_are_missing_gaps_that_consume_nothing() ->
         assert charge.amount == Decimal("1000.00")
         assert len(rows[year].gaps) == 1
     assert rows[2024].consumed_before == Decimal("0")
-    # 10,000 basis - 3,000 opening - no effective claims = 7,000 pending; the missing years take nothing.
     assert rows[2025].consumed_before == Decimal("0")
-    assert Decimal("10000") - Decimal("3000") - rows[2025].consumed_before == Decimal("7000")
+
+
+def _register(opening_through: int, *, today: date) -> tuple[ActivityAssetOperations, ActivityAssetRevision]:
+    revision = _revision(opening_through=opening_through)
+    operations = ActivityAssetOperations(
+        repository=MemoryRepository(),
+        ledger=MemoryLedger(_ACQUISITION),
+        forecast_operation=_forecast,
+        taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
+        register_authority=memory_register_authority(today=today),
+    )
+    operations.create(revision, describing(revision))
+    return operations, revision
+
+
+def test_the_read_model_shows_the_basis_less_the_opening_as_pending_whatever_years_are_missing() -> None:
+    operations, _ = _register(2022, today=date(2025, 12, 31))
+
+    (row,) = operations.list_elements()
+
+    # 10,000.00 basis less the 3,000.00 opening; 2023 to 2025 are missing and take nothing.
+    assert row.pending is not None
+    assert Decimal(row.pending.decimal) == Decimal("7000.00")
+    assert row.accumulated is not None
+    assert Decimal(row.accumulated.decimal) == Decimal("3000.00")
+    assert row.findings.missing == 3
+
+
+def test_a_later_year_charges_its_full_figure_after_missing_years_and_a_claim_lowers_pending() -> None:
+    operations, _ = _register(2022, today=date(2025, 12, 31))
+
+    plan = {item.tax_year: item for item in operations.plan("machine-1")}
+    for year in (2023, 2024, 2025, 2026):
+        figure = plan[year].planned
+        assert figure is not None
+        assert Decimal(figure.decimal) == Decimal("1000.00")
+
+    charge = operations.forecast(
+        asset_id="machine-1",
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+    )
+    assert charge.amount == Decimal("1000.00")
+    operations.record_claim(charge, creating_operation="test.2025")
+
+    (row,) = operations.list_elements()
+    assert row.pending is not None
+    assert Decimal(row.pending.decimal) == Decimal("6000.00")
+
+
+def test_the_maximum_period_stops_the_plan_with_the_unclaimed_value_still_pending() -> None:
+    operations, _ = _register(2022, today=date(2041, 6, 30))
+
+    plan = {item.tax_year: item for item in operations.plan("machine-1")}
+
+    # The table period ends on 1 January 2040, so 2039 is the last charge and 2040 has none.
+    figure = plan[2039].planned
+    assert figure is not None
+    assert Decimal(figure.decimal) == Decimal("1000.00")
+    assert plan[2040].planned is None
+    assert plan[2040].absence is PlanFigureAbsence.PERIOD_ELAPSED
+    (row,) = operations.list_elements()
+    assert row.pending is not None
+    assert Decimal(row.pending.decimal) == Decimal("7000.00")
+    assert row.state is ActivityAssetRegisterState.IN_SERVICE
 
 
 def test_an_opening_through_the_last_walked_year_leaves_no_gap_year() -> None:

@@ -436,6 +436,7 @@ class ActivityAssetRevision(CachedIdentityModel):
                 },
                 translated_message="ledger.actividad_asset.errors.disposal_before_service",
             )
+        _require_later_affectation_in_order(self, disposal)
         facts = {name: getattr(self, name) for name in type(self).model_fields}
         facts.update(
             revision_number=self.revision_number + 1,
@@ -486,6 +487,23 @@ def _validate_service_dates(revision: ActivityAssetRevision) -> None:
     if revision.out_of_service_date != disposal.boundary:
         raise ActividadAssetValidationError(
             translated_message="ledger.actividad_asset.errors.out_of_service_date_not_the_boundary",
+        )
+    _require_later_affectation_in_order(revision, disposal)
+
+
+def _require_later_affectation_in_order(revision: ActivityAssetRevision, disposal: ActivityAssetDisposal) -> None:
+    """Refuse an affectation after the element entered service, whose charge starts with it.
+
+    A baja never predates entry into service, so this also keeps the affectation before the baja.
+    """
+    affected = disposal.later_affectation_on
+    if affected is not None and affected > revision.in_service_date:
+        raise ActividadAssetValidationError(
+            context={
+                "later_affectation_on": affected.isoformat(),
+                "in_service_date": revision.in_service_date.isoformat(),
+            },
+            translated_message="ledger.actividad_asset.errors.later_affectation_out_of_order",
         )
 
 

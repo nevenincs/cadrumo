@@ -33,6 +33,8 @@ ACTIVITY_ASSET_LABEL_NAMESPACE: Final = "ledger.actividad_asset."
 """Where the catalogue holds one word per token, as ``<namespace><family>.<token>``."""
 
 DISPOSAL_FINDING_FAMILY: Final = "disposal_finding"
+_REASON_FACT_KEY_LIMIT: Final = 64
+_REASON_FACT_VALUE_LIMIT: Final = 2048
 NON_DEDUCTIBLE_IVA_STATE_FAMILY: Final = "non_deductible_iva_state"
 
 TIMELINE_TOKEN_FAMILIES: Final[Mapping[str, tuple[str, type[StrEnum]]]] = MappingProxyType(
@@ -65,13 +67,16 @@ class ActivityAssetReasonFact(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    key: str = Field(min_length=1, max_length=64)
-    value: str = Field(max_length=2048)
+    key: str = Field(min_length=1, max_length=_REASON_FACT_KEY_LIMIT)
+    value: str = Field(max_length=_REASON_FACT_VALUE_LIMIT)
 
 
 def project_reason_facts(facts: Mapping[str, str]) -> tuple[ActivityAssetReasonFact, ...]:
     """Preserve every reason fact in deterministic key order."""
-    return tuple(ActivityAssetReasonFact(key=key, value=value) for key, value in sorted(facts.items()))
+    return tuple(
+        ActivityAssetReasonFact(key=key[:_REASON_FACT_KEY_LIMIT], value=value[:_REASON_FACT_VALUE_LIMIT])
+        for key, value in sorted(facts.items())
+    )
 
 
 class ActivityAssetRegisterState(StrEnum):
@@ -148,7 +153,9 @@ class ActivityAssetListRow(_ReadModel):
     pending: PublicDecimal | None = None
     findings: ActivityAssetFindingCounts
     years: tuple[int, ...] = ()
-    """The tax years the element can be read in: its service window within the registry's support."""
+    """The tax years the element can be read in with an edition: its service window through the registry's last."""
+    projected_years: tuple[int, ...] = ()
+    """The later service years, whose figures are a projection until the registry publishes their edition."""
 
 
 class ActivityAssetPlanClaim(_ReadModel):

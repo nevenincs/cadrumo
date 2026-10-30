@@ -28,7 +28,7 @@ from cadrumo.domain.renta.actividad_asset.election import (
     AmortizationMethod,
     DirectEstimationRegime,
 )
-from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetPeriodElapsedError
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetPeriodElapsedError, ActividadAssetUnsupportedError
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -291,7 +291,8 @@ def test_the_plan_projection_is_display_only_and_forecast_and_claim_never_read_i
     assert rows[2035].absence is PlanFigureAbsence.BASIS_EXHAUSTED
     late = _year(operations, 2035)
     assert late.amount == Decimal("1000.00")
-    assert operations.record_claim(late, creating_operation="test.2035").claim.amount == Decimal("1000.00")
+    with pytest.raises(ActividadAssetUnsupportedError, match="claim_year_beyond_registry"):
+        operations.record_claim(late, creating_operation="test.2035")
     (listed,) = operations.list_elements()
     assert listed.pending is not None
-    assert listed.pending.decimal == "9000.00"
+    assert listed.pending.decimal == "10000.00"

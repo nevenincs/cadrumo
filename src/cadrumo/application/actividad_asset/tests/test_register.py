@@ -548,6 +548,11 @@ def _slow_rate_forecast(
     )
 
 
+def _published_horizon() -> int:
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon
+
+
 def _supported_floor() -> int:
     with bundled_indexed_authority().operation() as operation:
         return operation.supported_filing_years().floor
@@ -559,8 +564,9 @@ def test_the_years_of_an_element_are_its_service_window_inside_the_registry_supp
 
     row = operations.list_elements()[0]
 
-    assert row.years == tuple(plan_row.tax_year for plan_row in operations.plan("laptop-1"))
-    assert row.years == (2025, 2026, 2027, 2028, 2029)
+    assert (*row.years, *row.projected_years) == tuple(plan_row.tax_year for plan_row in operations.plan("laptop-1"))
+    assert row.years == (2025, 2026)
+    assert row.projected_years == (2027, 2028, 2029)
     assert register_years([row]) == row.years
 
 
@@ -579,7 +585,8 @@ def test_a_decades_old_element_is_offered_only_the_years_the_registry_supports()
     # 2,000.00 at 2% charges 40.00 a year, so 50 projected years from 2025 run to 2074 and 2075 is exhausted.
     floor = _supported_floor()
     assert min(plan_row.tax_year for plan_row in operations.plan("laptop-1")) == 2001 < floor
-    assert row.years == tuple(range(floor, 2025 + 50 + 1))
+    assert row.years == tuple(range(floor, _published_horizon() + 1))
+    assert row.projected_years == tuple(range(_published_horizon() + 1, 2025 + 50 + 1))
     assert register_years([row]) == row.years
 
 
@@ -587,9 +594,9 @@ def test_the_register_years_merge_every_element_once_in_ascending_order() -> Non
     operations, _ = _operations()
     operations.create(_revision(), _NAME)
     row = operations.list_elements()[0]
-    other: ActivityAssetListRow = row.model_copy(update={"years": (2028, 2029, 2030, 2031)})
+    other: ActivityAssetListRow = row.model_copy(update={"years": (2024, 2025)})
 
-    assert register_years([other, row]) == (2025, 2026, 2027, 2028, 2029, 2030, 2031)
+    assert register_years([other, row]) == (2024, 2025, 2026)
     assert register_years([]) == ()
 
 

@@ -154,7 +154,7 @@ class CalculationSourceIssue(BaseModel):
     category no registered element owns. ``activity_asset_foral_territory`` is a
     foral resident whose registered assets cannot reach these forms.
     ``activity_asset_residence_unresolved`` is a tax residence that could not be
-    read while the register holds elements. These seven
+    read while the register holds elements. These
     block filing until a recalculation clears them. ``terminal_origin_mismatch`` is a
     value that reached the declaration by an undeclared route; it persists so
     a reopened declaration still shows it, but withholds nothing, because the

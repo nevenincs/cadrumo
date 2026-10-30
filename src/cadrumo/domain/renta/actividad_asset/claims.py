@@ -193,6 +193,10 @@ def record_claim(
     """Apply exact-retry, overlap-conflict, and explicit-supersession rules."""
     reused = _matching_claim_id(existing_claims, candidate.claim_id)
     if reused is not None:
+        if any(claim.supersedes_claim_id == reused.claim_id for claim in existing_claims):
+            raise ActividadAssetClaimConflictError(
+                translated_message="ledger.actividad_asset.errors.claim_superseded_replay",
+            )
         return ClaimRecordResult(claims=existing_claims, claim=reused, reused_existing_claim=True)
     matching_superseded = _superseded_claim(existing_claims, candidate)
     _validate_claim_interval(existing_claims, candidate, matching_superseded)
@@ -351,6 +355,11 @@ def amount_before_baja_zeroed(claim: AmortizationClaim, claims: tuple[Amortizati
             break
         current = predecessor
     return current.amount
+
+
+def claims_through_year(claims: tuple[AmortizationClaim, ...], tax_year: int) -> tuple[AmortizationClaim, ...]:
+    """Return the claims a year's charge can rest on: nothing recorded for a later year moves it."""
+    return tuple(claim for claim in claims if claim.tax_year <= tax_year)
 
 
 def effective_free_depreciation_claims(
@@ -567,6 +576,7 @@ __all__ = [
     "ClaimRecordResult",
     "amount_before_baja_zeroed",
     "asset_schedule_history",
+    "claims_through_year",
     "current_revisions",
     "effective_claims",
     "effective_free_depreciation_claims",

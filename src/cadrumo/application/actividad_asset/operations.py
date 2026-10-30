@@ -1,4 +1,7 @@
-"""Shared application operations for IRPF activity-asset frontends."""
+"""Shared application operations for IRPF activity-asset frontends.
+
+Its pinned edition lookup returns the :class:`ModeloRevision` used by each tax-year operation.
+"""
 
 from __future__ import annotations
 
@@ -28,6 +31,7 @@ from ...domain.renta.actividad_asset.claims import (
     ClaimProjection,
     amount_before_baja_zeroed,
     asset_schedule_history,
+    claims_through_year,
     effective_claims,
     project_m100,
     record_claim,
@@ -38,11 +42,16 @@ from ...domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
     ActividadAssetError,
     ActividadAssetIncompleteError,
+    ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
 )
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
-from ...domain.renta.actividad_asset.schedule import ScheduleAuthority, ScheduledAmortizationCharge
+from ...domain.renta.actividad_asset.schedule import (
+    ScheduleAuthority,
+    ScheduledAmortizationCharge,
+    require_method_continuity,
+)
 from ..operations.public_scalar import project_scalar
 from .acquisition_ledger import require_acquisition_in_ledger
 from .activity_asset_read_models import (
@@ -137,6 +146,7 @@ class ActivityAssetRegisterAuthority:
 
     edition: Callable[[int], tuple[ActivityAssetEdition, ModeloRevision]]
     admits_filing_year: Callable[[int], bool]
+    last_admitted_year: Callable[[], int]
     agrarian_activities: Callable[[date], frozenset[TipoActividad]]
     residence_territory: Callable[[], ResidenceTerritory]
     claim_consumers: Callable[[Iterable[str]], Mapping[str, tuple[str, ...]]]
@@ -174,13 +184,22 @@ class ActivityAssetOperations:
         recorded_at: datetime | None = None,
         origin: str | None = None,
     ) -> ActivityAssetHistory:
-        """Create an asset from its first immutable revision and first descriptor, in one write."""
+        """Create an asset from its first immutable revision and first descriptor, in one write.
+
+        An identical retry returns the recorded history; a differing one is refused.
+        """
         if revision.revision_number != 1:
             raise ActividadAssetValidationError(
                 translated_message="ledger.actividad_asset.errors.creation_requires_first_revision"
             )
         history = self._service.reopen()
-        if any(item.asset_id == revision.asset_id for item in history.revisions):
+        recorded = next((item for item in history.revisions if item.asset_id == revision.asset_id), None)
+        if recorded is not None:
+            if recorded.revision_id == revision.revision_id and any(
+                item.asset_id == revision.asset_id and item.descriptor_number == 1 and item.facts == descriptor
+                for item in history.descriptors
+            ):
+                return history
             raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.asset_already_exists")
         require_acquisition_in_ledger(revision, self._ledger)
         return self._service.apply(
@@ -294,7 +313,7 @@ class ActivityAssetOperations:
                 covered_from=superseded.covered_from,
                 covered_until=superseded.covered_until,
                 history=asset_schedule_history(
-                    tuple(claim for claim in working if claim.tax_year <= superseded.tax_year),
+                    claims_through_year(working, superseded.tax_year),
                     revisions,
                     asset_id=revision.asset_id,
                     tax_year=superseded.tax_year,
@@ -386,7 +405,7 @@ class ActivityAssetOperations:
             covered_from=claim.covered_from,
             covered_until=boundary if boundary is not None and crossing else claim.covered_until,
             history=asset_schedule_history(
-                tuple(item for item in working if item.tax_year <= claim.tax_year),
+                claims_through_year(working, claim.tax_year),
                 revisions,
                 asset_id=revision.asset_id,
                 tax_year=claim.tax_year,
@@ -414,12 +433,15 @@ class ActivityAssetOperations:
     ) -> ActivityAssetHistory:
         """Record a baja and the claims it replaces in one compare-and-swap.
 
-        A missing opening history does not stop the baja, only its calculation.  A
-        recorded baja changes only through a correction.
+        A missing opening history does not stop the baja, only its calculation.  An
+        identical retry returns the recorded history; otherwise a recorded baja changes
+        only through a correction.
         """
         self._require_common_territory()
         history = self._service.reopen()
         current = self.inspect(asset_id)[-1]
+        if current.disposal == disposal:
+            return history
         if current.disposal is not None:
             raise ActividadAssetClaimConflictError(
                 context={"disposal_date": current.disposal.disposal_date.isoformat()},
@@ -513,15 +535,52 @@ class ActivityAssetOperations:
         history = self._service.reopen()
         revision = self.inspect(asset_id)[-1]
         _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
+        return self._charge_for_year(
+            revision,
+            history,
+            covered_from=covered_from,
+            covered_until=covered_until,
+            requested_free_amount=requested_free_amount,
+            excluding_claim_id=excluding_claim_id,
+        )
+
+    def _charge_for_year(
+        self,
+        revision: ActivityAssetRevision,
+        history: ActivityAssetHistory,
+        *,
+        covered_from: date,
+        covered_until: date,
+        requested_free_amount: Decimal | None,
+        excluding_claim_id: str | None,
+    ) -> ScheduledAmortizationCharge:
+        """Work out a charge as the walk does, on the claims through its year.
+
+        A later claim moves no figure.  It can still refuse the charge outright, for a
+        method whose amount follows the pending value, so that rule reads every claim.
+        """
+        tax_year = covered_from.year
+        election = revision.amortization
+        require_method_continuity(
+            election.method,
+            election.fingerprint,
+            asset_schedule_history(
+                history.claims,
+                history.revisions,
+                asset_id=revision.asset_id,
+                tax_year=tax_year,
+                excluding_claim_id=excluding_claim_id,
+            ),
+        )
         return self._forecast_operation(
             revision,
             covered_from=covered_from,
             covered_until=covered_until,
             history=asset_schedule_history(
-                history.claims,
+                claims_through_year(history.claims, tax_year),
                 history.revisions,
-                asset_id=asset_id,
-                tax_year=covered_from.year,
+                asset_id=revision.asset_id,
+                tax_year=tax_year,
                 excluding_claim_id=excluding_claim_id,
             ),
             requested_free_amount=requested_free_amount,
@@ -563,19 +622,20 @@ class ActivityAssetOperations:
         )
         if any(existing.claim_id == claim.claim_id for existing in current_history.claims):
             return self._service.record_claim(claim)
+        last_admitted_year = self._authority.last_admitted_year()
+        if forecast.tax_year > last_admitted_year:
+            raise ActividadAssetUnsupportedError(
+                context={"tax_year": forecast.tax_year, "last_admitted_year": last_admitted_year},
+                translated_message="ledger.actividad_asset.errors.claim_year_beyond_registry",
+            )
         _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
-        recomputed = self._forecast_operation(
+        recomputed = self._charge_for_year(
             revision,
+            current_history,
             covered_from=forecast.covered_from,
             covered_until=forecast.covered_until,
-            history=asset_schedule_history(
-                current_history.claims,
-                current_history.revisions,
-                asset_id=forecast.asset_id,
-                tax_year=forecast.covered_from.year,
-                excluding_claim_id=supersedes_claim_id,
-            ),
             requested_free_amount=(forecast.amount if forecast.method in FREE_AMOUNT_METHODS else None),
+            excluding_claim_id=supersedes_claim_id,
         )
         if recomputed != forecast:
             raise ActividadAssetValidationError(
@@ -652,6 +712,7 @@ class ActivityAssetOperations:
             forecast=self._forecast_operation,
             edition=lambda tax_year: self._authority.edition(tax_year)[0],
             admits_filing_year=self._authority.admits_filing_year,
+            last_admitted_year=self._authority.last_admitted_year(),
             today=self._authority.today(),
             minimum_bounds=self._authority.disposal_bounds,
         )
