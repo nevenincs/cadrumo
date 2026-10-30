@@ -180,6 +180,7 @@ def test_an_electric_vehicle_under_the_accelerated_regime_refuses_in_every_langu
             created = invoke_cached_cli(
                 [
                     *("--format", "json", "app", "ledger", "actividad-asset", "create"),
+                    *("--name", asset_id),
                     _electric_van(asset_id, in_service, payment),
                 ],
             )
