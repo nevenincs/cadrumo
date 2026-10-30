@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:963fb9111500fc992a820bef0cf396cf7c2eba905af33eba42bcfb35dee8a647'
+body_hash: 'sha256:55084abf93c38e6581a2f8e54899a449c10543a1d9a89e995b064d5a7266d954'
 related:
   - "[[2026-09-23-assets-core-amortization-method-set-research]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
@@ -192,9 +192,12 @@ Authorized by the operator's registry conformance rectification brief of 2026-09
 
 ## Amendment 2026-10-30
 
-Authorized by the operator on 2026-10-30, who directed reconciliation of the amortization decisions with no divergent routes, on the evidence in `2026-10-30-assets-core-amortization-law-and-form-placement-research`. The accepted body and earlier amendments are preserved; where they differ, this section governs.
+Authorized by the operator on 2026-10-30, who directed reconciliation of the amortization decisions with no divergent routes and a settled legal basis, on the evidence in `2026-10-30-assets-core-amortization-law-and-form-placement-research`. The accepted body and earlier amendments are preserved; where they differ, this section governs.
 
 - Years and projection: `2026-08-27-registry-dated-validity-adr` keeps its exact-year refusal for the corpora it migrated and excludes Modelo revision directories, so it does not govern this resolver. The temporal-coverage gate of `2026-08-14-registry-temporal-coverage-adr` still governs a filing-grade Modelo 100 snapshot. A projected edition therefore serves an asset forecast and the Modelo 130 of that year, and it does not admit a Modelo 100 of a year without its own edition.
 - Incentive windows: each year admits only that year's entries into service, which reads the 2026-09-23 and 2026-09-27 wording as one rule. For IRPF 2025, LIS DA 17 rests on RDL 16/2025 with the AEAT note and remains an advisory gap, and LIS DA 18 rests on RDL 4/2024. RDL 7/2026 art. 37 reaches only periods not concluded at 22 March 2026, so it does not ground IRPF 2025. It grounds 2026 once a 2026 edition authors those parameters; until then a projected 2026 admits neither incentive.
 - Workforce methods: the refusal of job-creating and renewable free depreciation ended when the fact of `2026-09-24-assets-core-average-workforce-write-path-adr` landed. They are admitted under their registry conditions.
 - Regimes: this method set covers direct estimation. Estimación objetiva stays refused until it has its own table and destinations. It is a later slice, not a mode of these methods.
+- Proration: days of operation over days of the year for every method. The 2026-09-23 ground is withdrawn, because V1978-24 concerns a first-year quota in módulos and says nothing on direct estimation or quarters. The rule rests on RIS art. 4.1, which makes the table a corridor between the maximum coefficient and the one derived from the maximum period, and on the precedence of regulation over manual examples. The days figure is the maximum, and a month-based example below it is a lawful lower amount: 36,000 at 24% for December allows at most 733.81 and admits the manual's 720. That is reached through an elected coefficient inside the corridor, never through a caller-stated amount, and the oracle is tested as admissible rather than as the ceiling.
+- EUR 300 test: the valor unitario is the precio de adquisición under NRV 12.ª, so it includes non-deductible IVA and excludes deductible IVA.
+- Free depreciation not taken: it cannot be taken later for that year by rectification, and it remains available in later years within its conditions. The source, TEAC 01524/2017, was read through a secondary report, so its original must be read before this rule is cited in product text.

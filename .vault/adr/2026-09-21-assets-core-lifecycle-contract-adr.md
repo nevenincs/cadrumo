@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:27c06aa6240f5d5a2fd4ace03776ca5e07ba2d2ef9810a521bf26defad434249'
+body_hash: 'sha256:3d0e4baa49dbcd93a40c115ee7350bc9ebc6f531396d569771fc94b8852848b4'
 related:
   - "[[2026-09-21-assets-core-ownership-contracts-reference]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
@@ -191,13 +191,18 @@ Authorized by the operator's registry conformance rectification brief of 2026-09
 
 ## Amendment 2026-10-30
 
-Authorized by the operator on 2026-10-30, who directed reconciliation of the amortization decisions with no divergent routes, on the evidence in `2026-10-30-assets-core-amortization-law-and-form-placement-research` and `2026-10-30-assets-core-implementation-state-against-law-reference`. The accepted body and earlier amendment are preserved; where they differ, this section governs.
+Authorized by the operator on 2026-10-30, who directed reconciliation of the amortization decisions with no divergent routes and a settled legal basis, on the evidence in `2026-10-30-assets-core-amortization-law-and-form-placement-research` and `2026-10-30-assets-core-implementation-state-against-law-reference`. The accepted body and earlier amendment are preserved; where they differ, this section governs.
 
-- Period amounts: claims are recorded by period and project whole. A Modelo 130 period counts each effective claim whose covered interval ends within that period's year-to-date span, and it never prorates a claim. This replaces the Implementation wording that an M130 projection multiplies the full-year charge by service days; the day-count rule now applies when the claim is computed.
-- Absence: for a Modelo 100 or Modelo 130 calculation, an element in service with lawful base remaining and no contiguous effective claims through the calculated period's end carries a blocking note. It is never read as zero. Calculate, preview, verify and export still create no charges.
-- Rounding: for every method charged by time, an emitted amount is the difference of the rounded cumulative charge of the tax year at the interval's two ends, so contiguous claims sum exactly to the annual figure.
+- Modelo 130: casilla 02 carries the amortization accrued from 1 January to the quarter's end under RIRPF art. 110.1.a, computed read-only from the element's schedule with the cumulative function below, so it needs no recorded claim and creates none. An element on a free method has no computable accrual, so it contributes its effective claims whose covered interval ends within the span.
+- Agrarian activities: casilla 02 excludes the elements of an agrarian activity, whose instalment is 2% of ingresos under RIRPF art. 110.1.c in every determination method. The filter is by activity, not by taxpayer. Modelo 100 is unaffected.
+- Modelo 100: casillas 0208 and 0227 carry effective claims only. An element in service with lawful base remaining and no contiguous effective claims through 31 December carries a non-blocking finding naming the element, the uncovered interval and the accrued amount. The deduction is not invented and the return is not refused, because a gap reduces a deduction without invalidating the return. Calculate, preview, verify and export still create no charges.
+- Earlier years: each year's deduction stays within that year's maximum, so a gap is never caught up above it and never blocks a later year. The minimum amortization still reduces cost under RIRPF art. 40. An ordinary amortization may be corrected for its own year within prescription, recorded locally and never submitted by the product.
+- Acquisition base: the basis is price plus the non-deductible IVA at acquisition, with that component taken from the acquisition. A later LIVA art. 107 to 110 regularization changes neither the basis nor the schedule. An inspection correcting a wrong deduction does restate them.
+- Later afectación: the base is the value under RIRPF art. 23.1 with no deemed amortization for private years, and amortization starts at afectación.
+- Leasing: an element under a financial lease has no register entry until the option is exercised; its cuotas follow LIS art. 106.
+- Rounding: for every method charged by time, an emitted amount is the difference of the rounded cumulative charge of the tax year at the interval's two ends, so contiguous amounts sum exactly to the annual figure.
 - Collision: the same-asset and same-year scope of the collision rule is replaced by the unconditional route in the 2026-10-30 amendment of `2026-08-23-amortization-casilla-mapping-adr`.
-- Consumption: a claim does not carry the calculation or filing revision that consumes it, because claim identity hashes its content and cannot change afterwards. The calculation revision records the effective claim IDs it consumed, and the existing drift gate treats a change to that set as staleness. The two unused fields leave the claim; there is no released compatibility floor.
+- Consumption: a claim does not carry the calculation or filing revision that consumes it, because claim identity hashes its content and cannot change afterwards. The calculation revision records the effective claim IDs and, for Modelo 130, the schedule fingerprints it consumed, and the existing drift gate treats a change to that set as staleness. The two unused fields leave the claim; there is no released compatibility floor.
 - Corrections: a superseding revision is refused while effective claims exceed its amortizable basis. The operator supersedes the affected claims in the same correction flow.
-- One projection: the Modelo 100 and Modelo 130 selection of effective claims has one defining function, used by both calculation and filing handoff.
-- Boundaries: the cost-basis rule is read with `2026-09-21-assets-core-cost-basis-stages-adr`. IVA amounts and shares come from their own owners and never scale the IRPF base directly. Residents of foral territories are refused with a typed reason, because Modelo 100 is not their return. Disposal gain or loss remains outside this decision and needs its own.
+- One projection: the selection of effective claims has one defining function, used by calculation and filing handoff.
+- Boundaries: the cost-basis rule is read with `2026-09-21-assets-core-cost-basis-stages-adr`. IVA amounts and shares come from their own owners and never scale the IRPF base directly. Residents of foral territories are refused with a typed reason, because Modelo 100 and Modelo 130 of the AEAT do not apply to them. Disposal gain or loss remains outside this decision and needs its own.
