@@ -781,15 +781,17 @@ def _observe_at_aeat(work: Any) -> None:
 
     from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
     from cadrumo.adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
-    from cadrumo.core.config import Settings, load_settings
+    from cadrumo.core.config import Settings
     from cadrumo.core.period import Period
+    from cadrumo.core.storage_taxonomy import StorageCategory
+    from cadrumo.core.storage_taxonomy_locations import storage_path
 
     modelo, period_code = AEAT_ONLY
     year = work.work_unit.filing_year
     period = Period.from_year_and_code(year, period_code)
     aeat = Settings.external_constants().aeat
     body = f"{modelo}{year}{period_code}-register-row".encode()
-    store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
+    store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
     expediente = f"{year}1001{modelo}DESKTOPA"
     artefact = store.persist_artefact(
         (modelo, year, period, expediente),
