@@ -115,6 +115,23 @@ def _extract_sdk(
     return selected
 
 
+def _discard_derived_sdk(destination: Path, archive: Path, contract: Mapping[str, object]) -> None:
+    # The build graph may create declared output directories before this runs, and a rebuild
+    # finds the previous extraction. Both are derived from the verified archive.
+    root = destination / str(cast(dict[str, str], contract["sdk"])["root"])
+    derived = (destination / "cpython-sdk-decoded.tar", destination / "sdk-extraction", root)
+    for path in derived:
+        if path.is_symlink():
+            raise ValueError("Derived SDK state must not be a symlink")
+        resolved = path.resolve()
+        if resolved in (destination, archive) or not resolved.is_relative_to(destination):
+            raise ValueError("Derived SDK state must be a child of the build destination")
+        if path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists():
+            path.unlink()
+
+
 def acquire_sdk(destination: Path, pin: str, tools: Mapping[str, object], contract: Mapping[str, object]) -> Path:
     """Acquire only a reviewed, hash-pinned SDK archive supplied by the build owner."""
     provenance, url, archive_format, decoder = _sdk_source(pin, tools, contract)
@@ -127,6 +144,7 @@ def acquire_sdk(destination: Path, pin: str, tools: Mapping[str, object], contra
         download_sdk(url, archive)
     if archive.is_symlink() or not archive.is_file() or digest(archive) != tools["cpython_sha256"]:
         raise ValueError("CPython SDK SHA256 mismatch")
+    _discard_derived_sdk(destination, archive, contract)
     selected = _extract_sdk(destination, archive, decoder, contract)
     (destination / "sdk-provenance.json").write_text(
         json.dumps(
