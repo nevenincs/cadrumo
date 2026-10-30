@@ -82,7 +82,7 @@ source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
 
 [[revisions.2023.lineage_attestations]]
 family = "casillas"
-continuidad_id = "dr303-71"
+continuidad_id = "iva-resultado-final"
 from_revision = "2022"
 to_revision = "2023"
 origin = "seeded"
