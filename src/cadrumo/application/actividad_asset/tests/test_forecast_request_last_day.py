@@ -18,13 +18,13 @@ from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 
 from .ledger_support import MemoryLedger, acquisition_transaction
+from .operations_support import build_forecast, build_revision
 from .register_support import MemoryRepository, memory_register_authority
-from .test_filing_handoff_without_period import _forecast, _revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = uuid4()
-_ACQUISITION = acquisition_transaction()
+ACQUISITION = acquisition_transaction()
 
 
 def _decode(**interval: str | None) -> ActivityAssetForecastRequest:
@@ -75,12 +75,12 @@ def test_a_disagreeing_or_missing_end_is_refused(interval: dict[str, str | None]
 def test_the_stated_form_does_not_change_the_forecast_or_its_fingerprint() -> None:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
-        ledger=MemoryLedger(_ACQUISITION),
-        forecast_operation=_forecast,
+        ledger=MemoryLedger(ACQUISITION),
+        forecast_operation=build_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(),
     )
-    operations.create(_revision(), ActivityAssetDescriptorFacts(name="Office laptop"))
+    operations.create(build_revision(), ActivityAssetDescriptorFacts(name="Office laptop"))
 
     def forecast(request: ActivityAssetForecastRequest) -> object:
         return operations.forecast(

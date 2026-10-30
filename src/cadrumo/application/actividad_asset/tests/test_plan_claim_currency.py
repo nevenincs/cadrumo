@@ -27,8 +27,8 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
 )
 
 from .ledger_support import MemoryLedger, acquisition_transaction
+from .operations_support import build_operations, build_revision
 from .register_support import MemoryRepository, memory_register_authority
-from .test_filing_handoff_without_period import _operations, _revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -57,7 +57,7 @@ def _timeline_use(
 
 
 def test_a_claim_under_the_current_schedule_matches_it() -> None:
-    operations = _operations()
+    operations = build_operations()
     claim_id = _recorded_claim(operations)
 
     claim = _plan_claim(operations, claim_id)
@@ -68,10 +68,10 @@ def test_a_claim_under_the_current_schedule_matches_it() -> None:
 
 
 def test_a_claim_recorded_under_an_earlier_revision_is_stale_with_the_timelines_reason() -> None:
-    operations = _operations()
+    operations = build_operations()
     claim_id = _recorded_claim(operations)
     first = operations.inspect("laptop-1")[0]
-    operations.correct(_revision(number=2, supersedes=first.revision_id, basis="1000"), origin="test.correct")
+    operations.correct(build_revision(number=2, supersedes=first.revision_id, basis="1000"), origin="test.correct")
 
     claim = _plan_claim(operations, claim_id)
 
@@ -81,11 +81,11 @@ def test_a_claim_recorded_under_an_earlier_revision_is_stale_with_the_timelines_
 
 
 def test_the_plan_and_the_timeline_agree_on_every_claim_of_the_element() -> None:
-    operations = _operations()
+    operations = build_operations()
     first_year = _recorded_claim(operations, year=2025)
     second_year = _recorded_claim(operations, year=2026)
     operations.correct(
-        _revision(number=2, supersedes=operations.inspect("laptop-1")[0].revision_id, basis="1500"),
+        build_revision(number=2, supersedes=operations.inspect("laptop-1")[0].revision_id, basis="1500"),
         origin="test.correct",
     )
 
@@ -95,7 +95,7 @@ def test_the_plan_and_the_timeline_agree_on_every_claim_of_the_element() -> None
 
 
 def test_the_stale_reason_is_stated_exactly_when_the_claim_no_longer_matches() -> None:
-    operations = _operations()
+    operations = build_operations()
     document = _plan_claim(operations, _recorded_claim(operations)).model_dump(mode="json")
 
     assert ActivityAssetPlanClaim.model_validate_json(json.dumps(document)).stale_reason is None
@@ -163,7 +163,7 @@ def test_a_moved_authority_makes_the_claim_stale_for_the_plan_as_for_the_timelin
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=memory_register_authority(),
     )
-    operations.create(_revision(), ActivityAssetDescriptorFacts(name="Office laptop"))
+    operations.create(build_revision(), ActivityAssetDescriptorFacts(name="Office laptop"))
     claim_id = _recorded_claim(operations)
 
     move(authority)

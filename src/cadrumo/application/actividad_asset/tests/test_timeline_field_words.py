@@ -22,7 +22,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
 )
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 
-from .test_filing_handoff_without_period import _ACQUISITION, _operations, _revision
+from .operations_support import ACQUISITION, build_operations, build_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -76,12 +76,12 @@ def test_a_path_that_is_no_fact_of_the_timeline_has_no_key() -> None:
 
 
 def test_the_timeline_states_the_key_of_each_change_and_never_shows_an_identity() -> None:
-    operations = _operations()
+    operations = build_operations()
     first = operations.inspect("laptop-1")[0]
-    corrected = _revision(number=2, supersedes=first.revision_id, basis="1500").model_copy(
+    corrected = build_revision(number=2, supersedes=first.revision_id, basis="1500").model_copy(
         update={
             "acquisition": AcquisitionLineageReference(
-                observed_transaction_id=_ACQUISITION.transaction_id,
+                observed_transaction_id=ACQUISITION.transaction_id,
                 invoice_evidence_id="invoice-2",
                 evidence_fingerprint="c" * 64,
             )
@@ -108,7 +108,7 @@ def test_the_timeline_states_the_key_of_each_change_and_never_shows_an_identity(
 
 
 def test_a_claim_states_the_key_of_its_amount() -> None:
-    operations = _operations()
+    operations = build_operations()
     operations.record_claim(
         operations.forecast(
             asset_id="laptop-1",

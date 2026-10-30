@@ -10,7 +10,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
-from .test_filing_handoff_without_period import _operations, _revision
+from .operations_support import build_operations, build_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -18,7 +18,7 @@ _YEAR = 2025
 
 
 def _options(asset_kind: AssetKind) -> ActivityAssetFormOptionsView:
-    return _operations().form_options(asset_kind=asset_kind, tax_year=_YEAR)
+    return build_operations().form_options(asset_kind=asset_kind, tax_year=_YEAR)
 
 
 def _asks_for_a_vehicle_declaration(class_key: str) -> bool:
@@ -28,7 +28,7 @@ def _asks_for_a_vehicle_declaration(class_key: str) -> bool:
             resolve_activity_asset_schedule_authority(
                 operation.revision_for_context("100", filing_year=_YEAR, period="0A"),
                 tax_year=_YEAR,
-                asset_revision=_revision(class_key=class_key),
+                asset_revision=build_revision(class_key=class_key),
                 authority_generation="vehicle-class-test",
                 workforce=(),
                 legal_reference=operation.legal_reference,

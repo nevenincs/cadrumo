@@ -22,7 +22,7 @@ from cadrumo.domain.renta.actividad_asset.disposal import (
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetUnsupportedError
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
-from .test_filing_handoff_without_period import _operations
+from .operations_support import build_operations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -36,7 +36,7 @@ def _accepts(reason: ActivityAssetDisposalReason) -> bool:
 
 
 def _options(asset_kind: AssetKind = AssetKind.MATERIAL) -> ActivityAssetFormOptionsView:
-    return _operations().form_options(asset_kind=asset_kind, tax_year=2025)
+    return build_operations().form_options(asset_kind=asset_kind, tax_year=2025)
 
 
 @pytest.mark.parametrize("asset_kind", list(AssetKind))
