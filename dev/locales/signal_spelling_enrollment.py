@@ -750,6 +750,17 @@ def check_dictionary_spelling_words(
         ):
             continue
         for owner_locale, key in words[word]:
+            # Generated legal reference pages contain curated English notes
+            # alongside Spanish statutory wording. Honor the Spanish source
+            # dictionary for a token on that explicitly bilingual surface;
+            # words unknown to both dictionaries still reach the finding path.
+            if (
+                dictionary_locale == "en"
+                and key.startswith("parallel:docs/_generated/legal/")
+                and ".rst:line[" in key
+                and dictionaries["es"].lookup(word)
+            ):
+                continue
             record_unknown_spelling_word(
                 owner_locale, key, word, dictionary_locale, dictionaries, cell_text, unknown_words, unknown_by_cell
             )
