@@ -8,7 +8,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
 modified: '2026-10-30'
 body_schema: body-v2
-body_hash: 'sha256:f96966d40776f6b95fb96df64efdad037a1ccc74b316b7e38a0dd0531599c79a'
+body_hash: 'sha256:e2d888e4ea35ef26b29b7bcce89c0d80d679873c34c53b6e9ead54ee1b0d33ff'
 ---
 
 <!-- LINK RULES:
@@ -113,17 +113,17 @@ body_hash: 'sha256:f96966d40776f6b95fb96df64efdad037a1ccc74b316b7e38a0dd0531599c
 
 ## Description
 
-<!-- First line after approval: `Approved yyyy-mm-dd`, written by the
-orchestrator after establishing scoped authorization, including an explicit
-advance authorization. Record its basis; ask only when it is absent. Then briefly describe the proposed work.
-Reference `{adr}`s, `{research}`, `{reference}`. Supporting documentation
-must be read when relevant. State the decision coverage assessment; when no
-costly decision is involved and no ADR governs, say so. With several ADRs,
-map their scope to Steps at L1 or the relevant containers at higher tiers. -->
+Approved 2026-10-30
+
+The operator asked to cut the full test lane from about 3.5 hours to 30 minutes, reduce the suite to what it needs, and remove all copy-paste from the test trees. That request authorizes these Steps. Coverage: `2026-08-14-test-harness-sanity-successor-adr` governs fixture ownership and worker width, and S08 amends its width.
+
+Measured baseline, 2026-10-30, on a shared loaded box: 67,703 collected tests in 6,068 files and 76,213 worker-seconds. The phase split is call 87.7%, setup 11.4%, teardown 0.9%. Tests under 0.05s number 44,669 and total 359s; the 6,070 tests over 2s hold 92% of the time. The 30-minute target means 21,600 worker-seconds at 12 workers.
+
+Speed comes first from removing repeated work in the slowest tests. A removal needs evidence that nothing the test proves is lost; official examples, independent oracles and refusal paths are not cut on overlap alone.
 
 ## Steps
 
-- [ ] `S01` - Compose the conformance runtime once per worker instead of per case: registered-executor conformance and subject binding (7,100s); `src/cadrumo/entrypoints/tests/registered_executor_case_support.py`.
+- [x] `S01` - Compose the conformance runtime once per worker instead of per case: registered-executor conformance and subject binding (7,100s); `src/cadrumo/entrypoints/tests/registered_executor_case_support.py`.
 - [ ] `S02` - Share the remaining per-case composition across the actor-by-frontend and parity families (about 3,500s); `src/cadrumo/entrypoints/tests`.
 - [ ] `S03` - Reuse one compiled tree across generated-export trees and inheritance cases (2,500s); `dev/registry/pipeline/tests`.
 - [ ] `S04` - Replace per-defect real-gate launches in the import quality gate with one shared baseline (2,255s); `dev/tests/test_import_quality_gate.py`.

@@ -84,6 +84,7 @@ from ...application.user_profile.login_session import authenticate_profile_for_i
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import override_settings
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.operations import OperationLifecycle, profile_operation_subject
 from ...core.time.clock import now
