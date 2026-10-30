@@ -160,6 +160,9 @@ def test_unit_threshold_new_material_and_explicit_amount_fail_closed() -> None:
     late = revision.model_copy(update={"in_service_date": date(2024, 1, 1)})
     with pytest.raises(ActividadAssetUnsupportedError, match="low_value_requires_entry_year"):
         _schedule(late)
+    used = revision.model_copy(update={"acquired_condition": AcquiredCondition.USED})
+    with pytest.raises(ActividadAssetUnsupportedError, match="low_value_requires_entry_year"):
+        _schedule(used)
 
 
 def test_unit_value_is_price_plus_non_deductible_iva_against_the_300_euro_threshold() -> None:

@@ -29,6 +29,7 @@ from ....core.money.rounding import round_to_cents
 from .election import (
     FREE_AMOUNT_METHODS,
     WORKFORCE_CONDITIONED_METHODS,
+    AcquiredCondition,
     AmortizationMethod,
     DigitOrder,
     ElectionReference,
@@ -781,7 +782,10 @@ def _require_low_value_election(
     annual_cap = authority.free_depreciation_annual_cap
     if election is None or threshold is None or annual_cap is None:  # defensive: authority validation proves this
         raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.authority_incomplete")
-    if context.revision.in_service_date.year != authority.tax_year:
+    if (
+        context.revision.acquired_condition is not AcquiredCondition.NEW
+        or context.revision.in_service_date.year != authority.tax_year
+    ):
         raise ActividadAssetUnsupportedError(
             translated_message="ledger.actividad_asset.errors.low_value_requires_entry_year"
         )
