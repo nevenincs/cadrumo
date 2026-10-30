@@ -244,7 +244,7 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=True, context_parameter=None),
         parameters=(),
-        policy=_POLICY_1,
+        policy=_POLICY_5,
         handler=None,
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),

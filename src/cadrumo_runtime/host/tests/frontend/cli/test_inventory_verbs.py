@@ -25,6 +25,7 @@ from cadrumo.domain.contribuyente.inventory.closing_foundations import (
     PriorClosingContinuityEvidence,
     fingerprint_prior_authoritative_closing,
 )
+from cadrumo.domain.contribuyente.inventory.records import InventoryHistoryKind
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
@@ -350,6 +351,21 @@ def test_native_inventory_create_list_movement_and_preview_use_profile_worker(
         assert preview_payload["derived_closing_value"] == "155.00"
         assert preview_payload["cogs"] == "0.00"
         assert len(preview_payload["bucket_event_ids"]) == 1
+
+
+def test_native_inventory_options_serve_history_kinds_and_marked_roles(tmp_path: Path) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-inventory-options", facts=_PROFILE_FACTS)
+
+        served = _invoke(profile, "app", "ledger", "inventory", "options")
+
+        assert served.exit_code == 0, served.output
+        families = {item["family"]: item["options"] for item in unwrap_cli_result(served)["families"]}
+        assert {item["value"] for item in families["history_kind"]} == {kind.value for kind in InventoryHistoryKind}
+        assert {item["role"]: item["value"] for item in families["acquisition_evidence_kind"] if item["role"]} == {
+            "cost_check": "attributable_cost_review",
+            "iva_check": "iva_recoverability_review",
+        }
 
 
 def test_native_inventory_inspect_names_held_documents_and_the_list_does_not(tmp_path: Path) -> None:

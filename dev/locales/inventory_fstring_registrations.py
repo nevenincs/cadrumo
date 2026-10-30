@@ -16,13 +16,11 @@ def inventory_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
         InventoryLedgerChangeProjection,
     )
     from cadrumo.domain.contribuyente.inventory.corrections import INVENTORY_CORRECTION_REFUSAL_REASONS
-    from cadrumo.domain.contribuyente.inventory.records import InventoryHistoryKind
-
     from .fstring_registry import FStringKeyRegistration
 
     label_keys = tuple(
         f"application.inventory.labels.{family}.{member.value}"
-        for family, enum in (*INVENTORY_OPTION_FAMILIES, ("history_kind", InventoryHistoryKind))
+        for family, enum in INVENTORY_OPTION_FAMILIES
         for member in enum
     )
     advisory_keys = tuple(

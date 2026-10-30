@@ -6,7 +6,7 @@ Every value comes from its canonical enum, so a frontend holds no list of its ow
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final
+from typing import Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -27,6 +27,7 @@ from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionEvidenceKind,
     InventoryAttributableCostKind,
     InventoryCorrectionReason,
+    InventoryHistoryKind,
     InventoryRetirementReason,
     MovementKind,
     ValuationMethod,
@@ -54,12 +55,23 @@ INVENTORY_OPTION_FAMILIES: Final[tuple[tuple[str, type[StrEnum]], ...]] = (
     ("closing_valuation_basis", InventoryClosingValuationBasis),
     ("correction_reason", InventoryCorrectionReason),
     ("decision_evidence_role", InventoryClosingDecisionEvidenceRole),
+    ("history_kind", InventoryHistoryKind),
     ("movement_kind", MovementKind),
     ("physical_evidence_role", PhysicalClosingEvidenceRole),
     ("retirement_reason", InventoryRetirementReason),
     ("valuation_method", ValuationMethod),
 )
 """Each form vocabulary and the enum that owns it; its words live under one label family."""
+
+type InventoryOptionRole = Literal["cost_check", "iva_check", "count_authority", "purchase"]
+
+_OPTION_ROLES: Final[dict[StrEnum, InventoryOptionRole]] = {
+    InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW: "cost_check",
+    InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW: "iva_check",
+    InventoryClosingAuthority.PHYSICAL_OBSERVATION: "count_authority",
+    MovementKind.PURCHASE: "purchase",
+}
+"""The members a form treats specially, named by the enums themselves so a rename cannot leave a stale copy."""
 
 
 class InventoryOptionsRequest(BaseModel):
@@ -77,6 +89,7 @@ class InventoryOptionProjection(BaseModel):
 
     value: str
     label_key: str
+    role: InventoryOptionRole | None = None
 
 
 class InventoryOptionFamilyProjection(BaseModel):
@@ -116,6 +129,7 @@ def inventory_options(profile_id: UUID) -> InventoryOptionsProjection:
                     InventoryOptionProjection(
                         value=member.value,
                         label_key=f"application.inventory.labels.{family}.{member.value}",
+                        role=_OPTION_ROLES.get(member),
                     )
                     for member in enum
                 ),

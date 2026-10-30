@@ -229,6 +229,7 @@ class InventoryOptionPayload(OutputSchema):
 
     value: NonEmptyStr
     label_key: NonEmptyStr
+    role: str | None = None
 
 
 class InventoryOptionFamilyPayload(OutputSchema):
