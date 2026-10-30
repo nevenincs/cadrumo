@@ -221,8 +221,10 @@ class ProfileTransport(ProfileOperationsTransport):
                 changed.set()
 
         unsubscribe: Callable[[], None] | None = None
+        claimed = False
         try:
             with self._exchange(deadline=deadline, secret=secret):
+                claimed = True
                 unsubscribe = self.subscribe_session_events(receive, disconnected=changed.set)
                 if self._closed:
                     raise RefusalError(RefusalCode.CONNECTION_CLOSED)
@@ -240,7 +242,10 @@ class ProfileTransport(ProfileOperationsTransport):
             self._close_after_failure(refusal)
             raise refusal from error
         except BaseException as error:
-            self._close_after_failure(error)
+            # A login that never reached the front of the queue wrote nothing,
+            # so its timeout must not end the exchange another caller holds.
+            if claimed:
+                self._close_after_failure(error)
             raise
         finally:
             secret[:] = bytes(len(secret))
