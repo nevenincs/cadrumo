@@ -510,17 +510,17 @@ mod tests {
     fn projection(environment: serde_json::Value) -> Projection {
         serde_json::from_value(serde_json::json!({
             "environment": environment,
-            "storage": "C:/state/var/storage",
+            "storage": "C:/state/storage",
             "storage_variable": "CADRUMO_STORAGE_ROOT",
-            "webview": "C:/state/var/storage/webview",
-            "logs": "C:/state/var/storage/logs",
-            "log_file": "C:/state/var/storage/logs/cadrumo.log",
-            "manager_log_file": "C:/state/var/storage/logs/cadrumo-manager.log",
+            "webview": "C:/state/storage/webview",
+            "logs": "C:/state/storage/logs",
+            "log_file": "C:/state/storage/logs/cadrumo.log",
+            "manager_log_file": "C:/state/storage/logs/cadrumo-manager.log",
             "log_format": "%(message)s",
             "log_max_bytes": 1,
             "log_backups": 1,
             "output_language": "es",
-            "console_workspace": "C:/state/var/storage/workspace",
+            "console_workspace": "C:/state/storage/workspace",
         }))
         .unwrap()
     }
