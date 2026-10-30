@@ -4672,6 +4672,8 @@ ledger:
       authority_incomplete: A módszerhez közzétett hatósági adat hiányos.
       business_use_share_missing: Egy rendes eszközhöz hiányzik az üzleti felhasználási
         arány.
+      acquisition_row_named_twice: Ez az eszköz kétszer nevezi meg ugyanazt a naplótételt
+        a beszerzési sorai között.
       charging_infrastructure_new_only: A töltőinfrastruktúra szabad értékcsökkenése
         csak új elemekre alkalmazható.
       charging_infrastructure_period_not_enrolled: A töltőinfrastruktúrának olyan

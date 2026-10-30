@@ -4695,6 +4695,8 @@ ledger:
         uso empresarial.
       charging_infrastructure_new_only: La libertad de amortización de infraestructuras
         de recarga solo se aplica a elementos nuevos.
+      acquisition_row_named_twice: Este elemento nombra dos veces el mismo apunte
+        del libro entre sus filas de adquisición.
       charging_infrastructure_period_not_enrolled: La infraestructura de recarga debe
         entrar en funcionamiento en un periodo impositivo que inscribe la LIS DA 18a.2.
       claim_not_under_current_revision: Un cargo nuevo debe registrarse con la revisión

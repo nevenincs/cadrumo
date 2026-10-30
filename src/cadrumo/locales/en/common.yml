@@ -4618,6 +4618,8 @@ ledger:
       authority_incomplete: The published authority for this method is incomplete.
       business_use_share_missing: An ordinary asset lacks its business-use share.
       charging_infrastructure_new_only: Charging-infrastructure free depreciation
+      acquisition_row_named_twice: This element names the same ledger entry twice
+        among its acquisition rows.
         applies only to new elements.
       charging_infrastructure_period_not_enrolled: Charging infrastructure must enter
         service in a tax period LIS DA 18a.2 enrols.

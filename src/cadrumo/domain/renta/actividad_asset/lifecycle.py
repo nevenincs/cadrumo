@@ -68,6 +68,24 @@ class AcquisitionLineageReference(BaseModel):
     evidence_fingerprint: Hex64Str
 
 
+class FurtherAcquisitionRow(BaseModel):
+    """One more ledger row of an element's acquisition: a later instalment or an ancillary cost.
+
+    The row reconciles against the register's basis and deducts nothing itself.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    shape: AcquisitionShape
+    lineage: AcquisitionLineageReference
+
+    @model_validator(mode="after")
+    def _require_a_further_shape(self) -> Self:
+        if self.shape not in {AcquisitionShape.SPLIT_PAYMENT, AcquisitionShape.ANCILLARY_COST}:
+            raise ValueError("a further acquisition row is a split payment or an ancillary cost")
+        return self
+
+
 class OpeningAmortizationHistory(BaseModel):
     """Recorded pre-onboarding amortization, deliberately distinct from zero."""
 
@@ -329,6 +347,7 @@ class ActivityAssetRevision(CachedIdentityModel):
     supersedes_revision_id: Hex64Str | None = None
     acquisition: AcquisitionLineageReference
     acquisition_shape: AcquisitionShape
+    further_acquisitions: tuple[FurtherAcquisitionRow, ...] = ()
     asset_kind: AssetKind
     basis: ActivityAssetBasis
     residual_value: Decimal = Decimal("0")
@@ -362,6 +381,7 @@ class ActivityAssetRevision(CachedIdentityModel):
     def _validate_revision_shape(self) -> Self:
         _validate_revision_lineage(self)
         _validate_primary_purchase(self)
+        _validate_further_acquisitions(self)
         _validate_service_dates(self)
         _validate_opening_year(self)
         _validate_residual_basis(self)
@@ -377,13 +397,25 @@ class ActivityAssetRevision(CachedIdentityModel):
         """Return the most that charges, each emitted in cents, can lawfully add up to."""
         return round_to_cents(self.amortizable_basis())
 
+    @property
+    def acquisition_transaction_ids(self) -> tuple[str, ...]:
+        """Return every ledger row this revision owns as its acquisition, the primary one first."""
+        return (
+            self.acquisition.observed_transaction_id,
+            *(row.lineage.observed_transaction_id for row in self.further_acquisitions),
+        )
+
     @cached_property
     def revision_id(self) -> str:
         """Return the deterministic identity of this immutable revision.
 
-        A revision with no baja omits the field, so its identity is unchanged by it.
+        A revision with no baja or no further acquisition row omits that field, so its identity is unchanged by it.
         """
-        excluded = {"supersedes_revision_id"} if self.disposal is not None else {"supersedes_revision_id", "disposal"}
+        excluded = {"supersedes_revision_id"}
+        if self.disposal is None:
+            excluded.add("disposal")
+        if not self.further_acquisitions:
+            excluded.add("further_acquisitions")
         payload = self.model_dump(mode="json", exclude=excluded)
         payload["supersedes_revision_id"] = self.supersedes_revision_id
         return content_hash_hex(payload)
@@ -429,6 +461,14 @@ def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
         )
     if revision.acquisition_shape is not AcquisitionShape.PRIMARY_PURCHASE:
         raise ValueError("initial activity-asset support requires one primary purchase transaction")
+
+
+def _validate_further_acquisitions(revision: ActivityAssetRevision) -> None:
+    owned = revision.acquisition_transaction_ids
+    if len(set(owned)) != len(owned):
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_row_named_twice",
+        )
 
 
 def _validate_service_dates(revision: ActivityAssetRevision) -> None:
@@ -486,6 +526,7 @@ __all__ = [
     "ActivityAssetRevision",
     "AssetBasisStage",
     "AssetKind",
+    "FurtherAcquisitionRow",
     "OpeningAmortizationHistory",
     "OpeningHistoryStatus",
     "OwnershipMode",

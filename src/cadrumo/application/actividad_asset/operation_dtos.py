@@ -53,6 +53,7 @@ from ...domain.renta.actividad_asset.lifecycle import (
     ActivityAssetRevision,
     AssetBasisStage,
     AssetKind,
+    FurtherAcquisitionRow,
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
     OwnershipMode,
@@ -115,6 +116,20 @@ class AcquisitionLineageSnapshot(BaseModel):
 
     def to_domain(self) -> AcquisitionLineageReference:
         return AcquisitionLineageReference(**self.model_dump(mode="python"))
+
+
+class FurtherAcquisitionSnapshot(BaseModel):
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    shape: AcquisitionShape
+    lineage: AcquisitionLineageSnapshot
+
+    @classmethod
+    def from_domain(cls, value: FurtherAcquisitionRow) -> Self:
+        return cls(shape=value.shape, lineage=AcquisitionLineageSnapshot.from_domain(value.lineage))
+
+    def to_domain(self) -> FurtherAcquisitionRow:
+        return FurtherAcquisitionRow(shape=self.shape, lineage=self.lineage.to_domain())
 
 
 class OpeningHistorySnapshot(BaseModel):
@@ -479,6 +494,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
     supersedes_revision_id: Hex64Str | None = None
     acquisition: AcquisitionLineageSnapshot
     acquisition_shape: AcquisitionShape
+    further_acquisitions: tuple[FurtherAcquisitionSnapshot, ...] = ()
     asset_kind: AssetKind
     basis: ActivityAssetBasisSnapshot
     residual_value: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
@@ -500,6 +516,9 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             supersedes_revision_id=value.supersedes_revision_id,
             acquisition=AcquisitionLineageSnapshot.from_domain(value.acquisition),
             acquisition_shape=value.acquisition_shape,
+            further_acquisitions=tuple(
+                FurtherAcquisitionSnapshot.from_domain(row) for row in value.further_acquisitions
+            ),
             asset_kind=value.asset_kind,
             basis=ActivityAssetBasisSnapshot.from_domain(value.basis),
             residual_value=project_scalar(value.residual_value),
@@ -521,6 +540,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             supersedes_revision_id=self.supersedes_revision_id,
             acquisition=self.acquisition.to_domain(),
             acquisition_shape=self.acquisition_shape,
+            further_acquisitions=tuple(row.to_domain() for row in self.further_acquisitions),
             asset_kind=self.asset_kind,
             basis=self.basis.to_domain(),
             residual_value=Decimal(self.residual_value.decimal),

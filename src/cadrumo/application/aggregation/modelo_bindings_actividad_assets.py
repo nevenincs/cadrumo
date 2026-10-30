@@ -1251,23 +1251,27 @@ def register_owned_acquisition_diagnostics(
 def _current_acquisition_owners(
     assets: tuple[ActivityAssetRevision, ...],
 ) -> tuple[tuple[str, str], ...]:
-    """Return ``(asset_id, acquisition transaction id)`` for each asset's current revision.
+    """Return ``(asset_id, acquisition transaction id)`` for each row of each asset's current revision.
 
     A superseding revision may restate the acquisition linkage, so only the
-    highest revision number of each asset declares which transaction the
+    highest revision number of each asset declares which transactions the
     register owns. Pairs are returned rather than a mapping so two assets that
     name the same transaction both keep their disposition instead of one
     silently displacing the other.
     """
     current = current_revisions(assets)
-    return tuple((asset_id, current[asset_id].acquisition.observed_transaction_id) for asset_id in sorted(current))
+    return tuple(
+        (asset_id, transaction_id)
+        for asset_id in sorted(current)
+        for transaction_id in current[asset_id].acquisition_transaction_ids
+    )
 
 
 def register_acquisition_transaction_ids(assets: tuple[ActivityAssetRevision, ...]) -> frozenset[str]:
     """Return the ledger transactions the register declares as an asset's acquisition.
 
     Returns:
-        The acquisition transaction id of every asset's current revision.
+        Every acquisition transaction id of every asset's current revision.
     """
     return frozenset(transaction_id for _asset_id, transaction_id in _current_acquisition_owners(assets))
 
