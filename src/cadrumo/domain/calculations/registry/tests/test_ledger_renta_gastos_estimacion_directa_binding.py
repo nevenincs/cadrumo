@@ -13,6 +13,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ....categories.registry import resolve_category_profiles
 from ....categories.spending_category import SpendingCategory
+from ....renta.first_slice_routing_integrity import check_first_slice_routing
 from ....renta.ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibleExpenseFact,
@@ -22,12 +23,11 @@ from ....renta.ledger_expenses import (
 )
 from ..authority import PinnedAuthorityOperation
 from ..binding_selector_utils import selector_as_dict
-from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..ledger_renta_gastos_estimacion_directa_bindings import (
+    renta_first_slice_binding_target_casillas,
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
-    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
 )
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
@@ -57,10 +57,6 @@ _M100_GASTO_OTROS_CONCEPTOS_CASILLA: CasillaId = validated_casilla_id(
 _M100_GASTO_AMORTIZACIONES_CASILLA: CasillaId = validated_casilla_id(
     "0203",
     surface="_M100_GASTO_AMORTIZACIONES_CASILLA",
-)
-_UNKNOWN_RENTA_EXPENSE_CASILLA: CasillaId = validated_casilla_id(
-    "9999",
-    surface="_UNKNOWN_RENTA_EXPENSE_CASILLA",
 )
 
 
@@ -324,32 +320,17 @@ def test_modelo_100_renta_ledger_expense_bindings_cite_year_manual(
         assert fase_heading in required_text
 
 
-def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
-    # Use model_validate(dict) rather than the keyword constructor so the
-    # schema-hygiene gate (test_registry_tests_do_not_define_schema_authority_objects)
-    # stays clean. The gate forbids the direct keyword-constructor syntax for
-    # schema-authority types in test files; the validator under test still
-    # needs an invalid binding instance to exercise the target_casilla_id
-    # allow-list error path.
-    binding = BindingDefinition.model_validate(
-        {
-            "id": "bad-renta-binding",
-            "provider": {
-                "kind": "ledger_renta_gastos_estimacion_directa_aggregation",
-                "modelo": "100",
-                "period": "0A",
-                "target_casilla_id": _UNKNOWN_RENTA_EXPENSE_CASILLA,
-                "fact": "deductible_amount_sum",
-            },
-            "value": {"data_type": "money", "channel": "decimal"},
-            "aggregation": {"op": "sum"},
-            "legal_refs": ("ley-35-2006:art-28",),
-            "source_refs": ("aeat-renta-2025-manual-parte1",),
-        },
-    )
+def test_a_binding_target_is_checked_against_the_revision_it_belongs_to() -> None:
+    revision = _reviewed_edition_snapshot().revision
+    targets = renta_first_slice_binding_target_casillas(revision)
+    declared = frozenset(casilla.id for casilla in revision.casillas)
 
-    with pytest.raises(RegistryValidationError, match="outside the first Modelo 100 Renta ledger gastos slice"):
-        validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition(binding)
+    assert {_M100_GASTO_AMORTIZACIONES_CASILLA, "0208", "0227"} <= targets
+    assert check_first_slice_routing("100", declared, targets, filing_year=_REVIEWED_EDITION) == []
+
+    failures = check_first_slice_routing("100", declared - {"0227"}, targets, filing_year=_REVIEWED_EDITION)
+    assert len(failures) == 1
+    assert "0227" in failures[0]
 
 
 def test_renta_ledger_expense_binding_rejects_legacy_target_casilla_key() -> None:

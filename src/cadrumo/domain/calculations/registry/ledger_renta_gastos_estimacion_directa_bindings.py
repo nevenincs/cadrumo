@@ -22,40 +22,16 @@ from ._ledger_binding_resolution import (
 from .binding_selector_utils import provider_member
 from .errors import RegistryError
 from .ids import BindingId
-from .ledger_binding_selector_support import casilla_id_set
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
     ledger_binding_selector,
     require_ledger_aggregation_op,
     require_ledger_fact,
-    require_ledger_target_casilla,
 )
 from .schema_base import coerce_enum_member
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
-
-# The casillas a ledger category routes to, plus 0208 and 0227, which only the
-# activity-asset register reaches and no category routes to.
-_RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
-    "_RENTA_100_FIRST_SLICE_CASILLAS",
-    "0183",
-    "0186",
-    "0191",
-    "0192",
-    "0193",
-    "0194",
-    "0195",
-    "0199",
-    "0200",
-    "0202",
-    "0203",
-    "0206",
-    "0208",
-    "0217",
-    "0227",
-)
-
 
 _DEDUCTIBLE_AMOUNT_FACTS: frozenset[str] = frozenset({"deductible_amount_sum"})
 
@@ -126,12 +102,6 @@ def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definiti
         binding,
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
         LedgerRentaGastosEstimacionDirectaProvider,
-    )
-    require_ledger_target_casilla(
-        binding,
-        selector.target_casilla_id,
-        _RENTA_100_FIRST_SLICE_CASILLAS,
-        scope="first Modelo 100 Renta ledger gastos slice",
     )
     require_ledger_aggregation_op(binding)
     require_ledger_fact(binding, selector.fact, _DEDUCTIBLE_AMOUNT_FACTS)
