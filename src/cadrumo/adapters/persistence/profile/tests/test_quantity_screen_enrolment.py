@@ -26,6 +26,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
@@ -280,6 +281,8 @@ def _renta_net_paid_invoice() -> Transaction:
 def _resolve_renta(repository: TransactionCatalogueRepository) -> CalculationSourceResolution:
     repository.save(TransactionCatalogue.from_transactions((_renta_net_paid_invoice(),)))
     return LedgerRentaIncomeAggregationSourceResolver(
+        activity_asset_history_repository=ActividadAssetHistoryRepository(bucket_id=_BUCKET_ID),
+        transaction_repository=repository,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=repository.load(),

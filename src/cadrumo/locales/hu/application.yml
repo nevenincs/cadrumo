@@ -821,10 +821,19 @@ application:
           a rész nem kerül levonásra.
         what_to_do: Ha le szeretnéd vonni, rögzítsd az adott időszak amortizációját,
           majd számolj újra.
+      activity_asset_disposal_finding:
+        what: Egy eszköz kivezetésénél van egy pont, amelyet ellenőrizned kell, bár
+          ez nem állítja meg ezt a nyomtatványt.
+        what_to_do: Olvasd el az eszköz kivezetéséhez tartozó megjegyzést, és rögzítsd
+          vagy javítsd, amit megnevez, ha rád vonatkozik.
       activity_asset_foral_territory:
         what: Olyan önálló adóhatóságú területen élsz, ahol ez a nyomtatvány nem alkalmazható,
           ezért a nyilvántartott eszközeid nem szerepelnek benne.
         what_to_do: Ezeket az eszközöket a területed adóhatóságánál jelentsd be.
+      activity_asset_residence_unresolved:
+        what: A rögzített adóügyi illetőséged nem olvasható, ezért a nyilvántartott
+          eszközeid nem szerepelnek benne.
+        what_to_do: Add meg az adóügyi illetőségedet a profilodban, majd számolj újra.
       administrador_retencion_rate_mismatch:
         what: Egy ügyvezetői tétel levonási kulcsa eltér az alkalmazandó kulcstól.
         what_to_do: Hasonlítsd össze a kulcsot a hivatalos útmutatóval, és szükség
@@ -1566,8 +1575,8 @@ application:
       activity_asset_register_drift: 'Az eszköznyilvántartásod megváltozott a Modelo
         %{modelo} nyomtatvány (%{filing_year}, %{period} időszak) kiszámítása óta
         (hozzáadott értékcsökkenési leírások: %{claims_added}, felváltott vagy törölt:
-        %{claims_removed}, módosult leírási ütemtervek: %{schedules_changed}). Számítsd
-        ki újra.'
+        %{claims_removed}, módosult leírási ütemtervek: %{schedules_changed}, módosult
+        kivezetések: %{disposals_changed}). Számítsd ki újra.'
       art20_reduccion_possible: A(z) [%{rnt_id}] rovat %{rnt_value} EUR nettó munkajövedelmet
         (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
         belül, ezért a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet

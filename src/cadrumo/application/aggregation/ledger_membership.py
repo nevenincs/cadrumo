@@ -167,7 +167,11 @@ def _collect_ledger_membership(
             investment_asset_register=investment,
             investment_asset_profile_id=work_unit.bucket_id,
         ),
-        LedgerRentaIncomeAggregationSourceResolver(ports=ports.invoice_catalogue_read_ports),
+        LedgerRentaIncomeAggregationSourceResolver(
+            ports=ports.invoice_catalogue_read_ports,
+            activity_asset_history_repository=ports.activity_asset_history_repository,
+            transaction_repository=ports.transaction_repository,
+        ),
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
             ports=ports.invoice_catalogue_read_ports,
             prorrata_register_repository=ports.prorrata_register_repository,

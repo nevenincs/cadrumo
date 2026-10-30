@@ -23,6 +23,8 @@ from ...application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
@@ -35,6 +37,8 @@ from ...application.actividad_asset.activity_asset_contracts import (
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
     ActivityAssetDescribeRequest,
+    ActivityAssetDisposalCalculateRequest,
+    ActivityAssetDisposeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
     ActivityAssetFormOptionsRequest,
@@ -50,6 +54,8 @@ from ...application.actividad_asset.activity_asset_projections import (
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
     ActivityAssetDescribeProjection,
+    ActivityAssetDisposalCalculateProjection,
+    ActivityAssetDisposeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
     ActivityAssetFormOptionsProjection,
@@ -59,6 +65,7 @@ from ...application.actividad_asset.activity_asset_projections import (
     ActivityAssetTimelineProjection,
 )
 from ...application.actividad_asset.operation_dtos import (
+    ActivityAssetDisposalSnapshot,
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
 )
@@ -79,6 +86,8 @@ type _ActivityAssetProjection = (
     | ActivityAssetClaimProjection
     | ActivityAssetFilingHandoffProjection
     | ActivityAssetDescribeProjection
+    | ActivityAssetDisposeProjection
+    | ActivityAssetDisposalCalculateProjection
     | ActivityAssetListProjection
     | ActivityAssetPlanProjection
     | ActivityAssetTimelineProjection
@@ -132,6 +141,8 @@ def _validate_terminal(
             ActivityAssetClaimProjection,
             ActivityAssetFilingHandoffProjection,
             ActivityAssetDescribeProjection,
+            ActivityAssetDisposeProjection,
+            ActivityAssetDisposalCalculateProjection,
             ActivityAssetListProjection,
             ActivityAssetPlanProjection,
             ActivityAssetTimelineProjection,
@@ -381,6 +392,26 @@ def describe_activity_asset(
     return result
 
 
+def dispose_activity_asset(
+    ctx: typer.Context,
+    *,
+    asset_id: str,
+    disposal: ActivityAssetDisposalSnapshot,
+) -> ActivityAssetDisposeProjection:
+    """Record one element's baja under the repository's guarded commit."""
+    client = _client(ctx)
+    completed = _submit(
+        client,
+        ActivityAssetDisposeRequest(profile_id=client.profile_id, asset_id=asset_id, disposal=disposal),
+        definition_id=ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
+        result_type=ActivityAssetDisposeProjection,
+    )
+    result = _finish(completed, success_effect=OperationEffect.UPDATED)
+    if result.history is None:
+        raise invalid_completion_error(completed)
+    return result
+
+
 def _read[ResultT: _ActivityAssetProjection](
     ctx: typer.Context,
     build: Callable[[UUID], BaseModel],
@@ -400,6 +431,25 @@ def list_activity_assets(ctx: typer.Context) -> ActivityAssetListProjection:
         lambda profile_id: ActivityAssetListRequest(profile_id=profile_id),
         definition_id=ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
         result_type=ActivityAssetListProjection,
+    )
+
+
+def calculate_activity_asset_disposal(
+    ctx: typer.Context,
+    *,
+    asset_id: str,
+    disposal: ActivityAssetDisposalSnapshot | None,
+) -> ActivityAssetDisposalCalculateProjection:
+    """Work out a baja's figures: the stated one as a preview, or else the recorded one."""
+    return _read(
+        ctx,
+        lambda profile_id: ActivityAssetDisposalCalculateRequest(
+            profile_id=profile_id,
+            asset_id=asset_id,
+            disposal=disposal,
+        ),
+        definition_id=ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
+        result_type=ActivityAssetDisposalCalculateProjection,
     )
 
 
@@ -454,10 +504,12 @@ def acquisition_candidates_activity_asset(ctx: typer.Context) -> ActivityAssetAc
 
 __all__ = [
     "acquisition_candidates_activity_asset",
+    "calculate_activity_asset_disposal",
     "claim_activity_asset",
     "correct_activity_asset",
     "create_activity_asset",
     "describe_activity_asset",
+    "dispose_activity_asset",
     "filing_handoff_activity_asset",
     "forecast_activity_asset",
     "form_options_activity_asset",

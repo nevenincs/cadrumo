@@ -797,7 +797,7 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
                 f"ledger.actividad-asset.{action}",
                 OperationTerminalCondition.SUCCEEDED,
                 OperationEffect.UPDATED
-                if action in {"create", "correct", "claim", "describe"}
+                if action in {"create", "correct", "claim", "describe", "dispose"}
                 else OperationEffect.NONE,
                 (f"ledger.actividad-asset.{action}",),
             )
@@ -809,6 +809,8 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
                 "claim",
                 "filing-handoff",
                 "describe",
+                "dispose",
+                "disposal-calculate",
                 "list",
                 "plan",
                 "timeline",

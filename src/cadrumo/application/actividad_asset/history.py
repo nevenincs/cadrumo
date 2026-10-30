@@ -86,6 +86,21 @@ class ActivityAssetHistory(BaseModel):
                 raise ValueError("activity asset claim identity does not match its revision")
             if revision.asset_kind is not claim.asset_kind:
                 raise ValueError("activity asset claim kind does not match its revision")
+            self._validate_baja_reference(claim, revisions_by_id)
+
+    @staticmethod
+    def _validate_baja_reference(
+        claim: AmortizationClaim,
+        revisions_by_id: dict[str, ActivityAssetRevision],
+    ) -> None:
+        if claim.disposal_revision_id is None:
+            return
+        baja = revisions_by_id.get(claim.disposal_revision_id)
+        if baja is None or baja.asset_id != claim.asset_id or baja.disposal is None:
+            raise ValueError("activity asset claim names a baja its asset does not have")
+        boundary = baja.disposal.boundary
+        if claim.covered_until != boundary and not (claim.amount == Decimal("0") and claim.covered_from >= boundary):
+            raise ValueError("a claim a baja wrote ends at its boundary or lies after it at amount zero")
 
     def _validate_claim_replay(self) -> None:
         replayed_claims: tuple[AmortizationClaim, ...] = ()
@@ -131,8 +146,12 @@ class ActivityAssetHistory(BaseModel):
 
     def _record_ids(self) -> dict[tuple[ActivityAssetEventKind, str], str]:
         """Map every record's kind and identity to its asset, revisions before claims before descriptors."""
+        revisions_by_id = {item.revision_id: item for item in self.revisions}
         return {
-            **{(ActivityAssetEventKind.REVISION, item.revision_id): item.asset_id for item in self.revisions},
+            **{
+                (_revision_event_kind(item, revisions_by_id), item.revision_id): item.asset_id
+                for item in self.revisions
+            },
             **{(ActivityAssetEventKind.CLAIM, item.claim_id): item.asset_id for item in self.claims},
             **{(ActivityAssetEventKind.DESCRIPTOR, item.descriptor_id): item.asset_id for item in self.descriptors},
         }
@@ -263,7 +282,7 @@ class ActivityAssetHistory(BaseModel):
         for claim in superseding_claims:
             claims = record_claim(claims, claim).claims
         logged = self._next_event(
-            ActivityAssetEventKind.REVISION,
+            _revision_event_kind(revision, {item.revision_id: item for item in self.revisions}),
             revision.asset_id,
             revision.revision_id,
             recorded_at=recorded_at,
@@ -287,6 +306,7 @@ class ActivityAssetHistory(BaseModel):
             events=(*self.events, *events),
         )
         candidate._require_claims_within_basis(revision)
+        candidate._require_claims_within_boundary(revision)
         for claim in superseding_claims:
             candidate._require_claim_invariants(
                 claim,
@@ -325,6 +345,11 @@ class ActivityAssetHistory(BaseModel):
             raise ActividadAssetClaimConflictError(
                 translated_message="ledger.actividad_asset.errors.correction_below_effective_claims",
             )
+
+    def _require_claims_within_boundary(self, revision: ActivityAssetRevision) -> None:
+        for claim in effective_claims(self.claims):
+            if claim.asset_id == revision.asset_id:
+                _require_claim_within_boundary(claim, revision)
 
     def record_claim(
         self,
@@ -371,6 +396,7 @@ class ActivityAssetHistory(BaseModel):
             raise ActividadAssetClaimConflictError(
                 translated_message="ledger.actividad_asset.errors.claim_not_under_current_revision",
             )
+        _require_claim_within_boundary(claim, current)
         summary = asset_schedule_history(
             claims_after,
             self.revisions,
@@ -396,6 +422,28 @@ class ActivityAssetHistory(BaseModel):
             raise ActividadAssetClaimConflictError(
                 translated_message="ledger.actividad_asset.errors.claims_exceed_amortizable_basis",
             )
+
+
+def _revision_event_kind(
+    revision: ActivityAssetRevision,
+    revisions_by_id: dict[str, ActivityAssetRevision],
+) -> ActivityAssetEventKind:
+    """Name a revision a baja when it states a disposal its predecessor did not."""
+    if revision.disposal is None:
+        return ActivityAssetEventKind.REVISION
+    previous = revisions_by_id.get(revision.supersedes_revision_id or "")
+    if previous is not None and previous.disposal == revision.disposal:
+        return ActivityAssetEventKind.REVISION
+    return ActivityAssetEventKind.BAJA
+
+
+def _require_claim_within_boundary(claim: AmortizationClaim, revision: ActivityAssetRevision) -> None:
+    boundary = revision.out_of_service_date
+    if boundary is not None and claim.amount > Decimal("0") and claim.covered_until > boundary:
+        raise ActividadAssetClaimConflictError(
+            context={"covered_until": claim.covered_until.isoformat(), "boundary": boundary.isoformat()},
+            translated_message="ledger.actividad_asset.errors.disposal_claim_past_boundary",
+        )
 
 
 class ActivityAssetHistoryClaimResult(BaseModel):

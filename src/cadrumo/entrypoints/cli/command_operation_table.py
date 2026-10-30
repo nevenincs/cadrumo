@@ -48,6 +48,8 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("app", "ledger", "actividad-asset", "correct"), "ledger.actividad-asset.correct"),
     (("app", "ledger", "actividad-asset", "create"), "ledger.actividad-asset.create"),
     (("app", "ledger", "actividad-asset", "describe"), "ledger.actividad-asset.describe"),
+    (("app", "ledger", "actividad-asset", "dispose"), "ledger.actividad-asset.dispose"),
+    (("app", "ledger", "actividad-asset", "disposal-calculate"), "ledger.actividad-asset.disposal-calculate"),
     (("app", "ledger", "actividad-asset", "filing-handoff"), "ledger.actividad-asset.filing-handoff"),
     (("app", "ledger", "actividad-asset", "forecast"), "ledger.actividad-asset.forecast"),
     (("app", "ledger", "actividad-asset", "form-options"), "ledger.actividad-asset.form-options"),

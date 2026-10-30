@@ -4604,6 +4604,24 @@ ledger:
         töltött nap abban az adóévben.
       creation_requires_first_revision: Az eszköz létrehozásához az egyes számú változat
         szükséges.
+      disposal_already_recorded: Ennek az eszköznek már van kivezetése %{disposal_date}
+        dátummal. Helyesbítéssel módosítsd.
+      disposal_amount_invalid: A kivezetés összegei nem negatív, legfeljebb két tizedesjegyű
+        euróösszegek lehetnek.
+      disposal_before_service: A kivezetés dátuma nem lehet korábbi az eszköz üzembe
+        helyezésénél.
+      disposal_claim_past_boundary: Ez az elszámolás %{covered_until} dátumig tart,
+        az eszköz kivezetésén túl, amely %{boundary} dátummal lezárja az elszámolásokat.
+      disposal_donation_refused: Az ajándékozás nem fogadható el a tevékenység eszközének
+        kivezetéseként.
+      disposal_excess_without_table_class: A(z) %{tax_year}. évi többlethez táblázati
+        csoport kell a választásban, de nincs.
+      disposal_not_recorded: Ennek az eszköznek nincs kivezetése. Adj meg egyet a
+        számadatok megtekintéséhez.
+      disposal_scrapping_with_proceeds: A selejtezésnek nincs bevétele. A hulladékként
+        történő eladást eladásként rögzítsd.
+      disposal_withdrawal_with_amounts: A tevékenységből való kivonás nem számol nyereséget,
+        ezért nem ad meg bevételt, költséget vagy piaci értéket.
       earlier_year_depends_on_pending_value: Egy későbbi évre már van elszámolás,
         és ez a módszer a fennmaradó értékből számol, ezért most nem számolhatsz el
         korábbi évet.
@@ -4705,6 +4723,10 @@ ledger:
       opening_history_missing: Hiányzik az elem nyitó értékcsökkenési előzménye.
       opening_year_before_in_service: A nyitó összeg utolsó fedett éve (%{opening_tax_year})
         nem lehet korábbi az elem üzembe helyezésének événél (%{in_service_tax_year}).
+      out_of_service_date_not_the_boundary: Az üzemen kívül helyezés dátumának a kivezetés
+        dátumát követő napnak kell lennie.
+      out_of_service_date_without_disposal: Az üzemen kívül helyezés dátuma csak kivezetésből
+        származhat. Rögzítsd a kivezetést.
       ownership_treatment_unknown: Az egész ingatlanra vonatkozó alap tulajdonosi
         kezelése ismeretlen.
       parameter_absent: A(z) %{parameter_id} tevékenységieszköz-hatósági paraméter
@@ -5857,6 +5879,18 @@ tui:
       correct: Javítás
       create: Létrehozás
       describe: Leírás mentése
+      disposal_calculate: Kivezetés számadatai
+      disposal_costs: Átruházási költségek
+      disposal_date: Kivezetés dátuma, az utolsó szolgálati nap
+      disposal_later_affectation: A tevékenységhez való későbbi hozzárendelés dátuma,
+        ha van
+      disposal_market_value: Piaci érték, ha megadod
+      disposal_prior_regime: 'Igazolt korábbi szabad értékcsökkenés: trlis_da_11 vagy
+        trlis_dt_37'
+      disposal_proceeds: Bevétel
+      disposal_reason: 'Ok: sale, part_exchange, theft, destruction, scrapping vagy
+        withdrawal'
+      dispose: Kivezetés rögzítése
       filing: Adónyomtatványra átvitel előkészítése
       forecast: Előrejelzés kiszámítása
       form_options: Űrlapbeállítások

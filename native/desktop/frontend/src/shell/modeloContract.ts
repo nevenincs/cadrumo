@@ -439,6 +439,7 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "m193_settled_row_amounts_unresolved_authority"
     | "ledger_amortization_row_unregistered"
     | "activity_asset_foral_territory"
+    | "activity_asset_residence_unresolved"
     | "activity_asset_claim_gap"
     | "activity_asset_accrual_unavailable"
     | "activity_asset_agrarian_excluded"
@@ -495,7 +496,9 @@ export type CalculationSourceDiagnosticSnapshot = {
  * invoice whose IVA owed could not be derived.
  * `ledger_amortization_row_unregistered` is a ledger row in an amortization
  * category no registered element owns. `activity_asset_foral_territory` is a
- * foral resident whose registered assets cannot reach these forms. These six
+ * foral resident whose registered assets cannot reach these forms.
+ * `activity_asset_residence_unresolved` is a tax residence that could not be
+ * read while the register holds elements. These seven
  * block filing until a recalculation clears them. `terminal_origin_mismatch` is a value that
  * reached the declaration by an undeclared route; it persists so a reopened
  * declaration still shows it, but withholds nothing, because the route it
@@ -515,7 +518,8 @@ export type CalculationSourceIssue = {
     | "source_domain_not_ready"
     | "invoice_reverse_charge_cuota_not_derivable"
     | "ledger_amortization_row_unregistered"
-    | "activity_asset_foral_territory";
+    | "activity_asset_foral_territory"
+    | "activity_asset_residence_unresolved";
   binding_source: BindingSourceKind | null;
   message: string;
   resolver_id: string | null;

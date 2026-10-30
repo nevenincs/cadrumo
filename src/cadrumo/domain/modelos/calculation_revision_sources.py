@@ -152,7 +152,9 @@ class CalculationSourceIssue(BaseModel):
     reverse-charge invoice whose IVA owed could not be derived.
     ``ledger_amortization_row_unregistered`` is a ledger row in an amortization
     category no registered element owns. ``activity_asset_foral_territory`` is a
-    foral resident whose registered assets cannot reach these forms. These six
+    foral resident whose registered assets cannot reach these forms.
+    ``activity_asset_residence_unresolved`` is a tax residence that could not be
+    read while the register holds elements. These seven
     block filing until a recalculation clears them. ``terminal_origin_mismatch`` is a
     value that reached the declaration by an undeclared route; it persists so
     a reopened declaration still shows it, but withholds nothing, because the
@@ -176,6 +178,7 @@ class CalculationSourceIssue(BaseModel):
         "invoice_reverse_charge_cuota_not_derivable",
         "ledger_amortization_row_unregistered",
         "activity_asset_foral_territory",
+        "activity_asset_residence_unresolved",
     ]
     binding_source: BindingSourceKind | None
     message: str = Field(min_length=1, max_length=512)
@@ -191,6 +194,10 @@ ACTIVITY_ASSET_SCHEDULE_REF_PREFIX: Final = "activity-asset-schedule:"
 """Prefix of the source reference naming one element schedule by its fingerprint."""
 
 
+ACTIVITY_ASSET_DISPOSAL_REF_PREFIX: Final = "activity-asset-disposal:"
+"""Prefix of the source reference naming one baja by the revision that records it."""
+
+
 class ActivityAssetConsumption(BaseModel):
     """The activity-asset register state one calculation rested on.
 
@@ -203,29 +210,40 @@ class ActivityAssetConsumption(BaseModel):
         claim_ids: Sorted identities of the effective claims consumed.
         schedule_fingerprints: Sorted fingerprints of the element schedules
             consumed where no claim stood behind the amount (Modelo 130 accrual).
+        disposal_revision_ids: Sorted identities of the revisions recording a baja
+            the calculation's period reaches, so a late baja reads as drift even
+            where it changed no claim.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     claim_ids: tuple[str, ...] = ()
     schedule_fingerprints: tuple[str, ...] = ()
+    disposal_revision_ids: tuple[str, ...] = ()
 
     @classmethod
     def from_source_refs(cls, source_refs: Iterable[str]) -> ActivityAssetConsumption:
         """Read the consumption out of source references, ignoring every other kind."""
         claims: set[str] = set()
         schedules: set[str] = set()
+        disposals: set[str] = set()
         for source_ref in source_refs:
             if source_ref.startswith(ACTIVITY_ASSET_CLAIM_REF_PREFIX):
                 claims.add(source_ref.removeprefix(ACTIVITY_ASSET_CLAIM_REF_PREFIX))
             elif source_ref.startswith(ACTIVITY_ASSET_SCHEDULE_REF_PREFIX):
                 schedules.add(source_ref.removeprefix(ACTIVITY_ASSET_SCHEDULE_REF_PREFIX))
-        return cls(claim_ids=tuple(sorted(claims)), schedule_fingerprints=tuple(sorted(schedules)))
+            elif source_ref.startswith(ACTIVITY_ASSET_DISPOSAL_REF_PREFIX):
+                disposals.add(source_ref.removeprefix(ACTIVITY_ASSET_DISPOSAL_REF_PREFIX))
+        return cls(
+            claim_ids=tuple(sorted(claims)),
+            schedule_fingerprints=tuple(sorted(schedules)),
+            disposal_revision_ids=tuple(sorted(disposals)),
+        )
 
     @property
     def is_empty(self) -> bool:
         """Whether the calculation rested on no register state."""
-        return not self.claim_ids and not self.schedule_fingerprints
+        return not self.claim_ids and not self.schedule_fingerprints and not self.disposal_revision_ids
 
 
 def validate_revision_source_provenance(rows: Sequence[CalculationSourceRef]) -> None:

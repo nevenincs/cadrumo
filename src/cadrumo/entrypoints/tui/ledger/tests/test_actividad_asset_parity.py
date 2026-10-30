@@ -9,10 +9,13 @@ from threading import Event
 import pytest
 from textual.widgets import Button, Input, Static
 
+from .....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
 from .....application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
+from .....application.operations.public_scalar import PublicDecimal
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.operations import OperationEffect
+from .....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from .....domain.renta.actividad_asset.errors import (
     ActividadAssetIncompleteError,
     ActividadAssetValidationError,
@@ -277,7 +280,7 @@ async def test_activity_asset_forecast_refuses_the_shapes_the_command_line_refus
     assert actions.requests == []
 
 
-_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe")
+_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe", "#asset-dispose")
 
 
 def _writes_disabled(screen: ActivityAssetScreen) -> list[bool]:
@@ -299,13 +302,13 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_offered_again
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown\t")
 
         # The asset may already be created: no write is offered over the asset as last read.
-        assert _writes_disabled(screen) == [True, True, True, True]
+        assert _writes_disabled(screen) == [True, True, True, True, True]
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
         assert [name for name, _request in actions.requests] == ["create"]
 
         await _activate(pilot=pilot, screen=screen, selector="#asset-inspect")
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset\tunknown-then-reread")
-        assert _writes_disabled(screen) == [False, False, False, False]
+        assert _writes_disabled(screen) == [False, False, False, False, False]
 
         actions.create_error = None
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
@@ -326,19 +329,19 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_released_only
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown	")
-        assert _writes_disabled(screen) == [True, True, True, True]
+        assert _writes_disabled(screen) == [True, True, True, True, True]
 
         # Reading another asset says nothing about whether the held creation landed.
         screen.query_one("#asset-id", Input).value = "another-asset"
         # Pressed directly: a key press on a button still showing its last press is ignored.
         screen.query_one("#asset-inspect", Button).press()
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset	another-asset")
-        assert _writes_disabled(screen) == [True, True, True, True]
+        assert _writes_disabled(screen) == [True, True, True, True, True]
 
         screen.query_one("#asset-id", Input).value = revision.asset_id
         screen.query_one("#asset-inspect", Button).press()
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset	held-asset")
-        assert _writes_disabled(screen) == [False, False, False, False]
+        assert _writes_disabled(screen) == [False, False, False, False, False]
 
     assert actions.requests[1:] == [("inspect", "another-asset"), ("inspect", "held-asset")]
 
@@ -363,7 +366,7 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_stays_withheld_w
         await _activate(pilot=pilot, screen=screen, selector="#asset-inspect")
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
 
-        assert _writes_disabled(screen) == [True, True, True, True]
+        assert _writes_disabled(screen) == [True, True, True, True, True]
 
 
 @pytest.mark.asyncio
@@ -390,7 +393,7 @@ async def test_an_activity_asset_write_whose_session_is_lost_with_its_outcome_un
             # The private facts still go with the lost session.
             assert not screen.query_one("#asset-id", Input).value
             assert not screen.query_one("#asset-revision-json", Input).value
-            assert _writes_disabled(screen) == [True, True, True, True]
+            assert _writes_disabled(screen) == [True, True, True, True, True]
 
 
 @pytest.mark.asyncio
@@ -418,3 +421,35 @@ async def test_activity_asset_screen_reaches_describe_and_every_register_read() 
         (revision.asset_id, ActivityAssetDescriptorFacts(name="Renamed laptop", serial_number="SN-2")),
     )
     assert actions.requests[1] == ("plan", revision.asset_id)
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_screen_records_a_baja_and_reads_its_figures() -> None:
+    revision = activity_asset_revision("tui-baja")
+    actions = ActivityAssetActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 70)) as pilot:
+        screen.query_one("#asset-id", Input).value = revision.asset_id
+        screen.query_one("#asset-disposal-date", Input).value = "2026-06-30"
+        screen.query_one("#asset-disposal-reason", Input).value = "sale"
+        screen.query_one("#asset-disposal-proceeds", Input).value = "2000.00"
+        screen.query_one("#asset-disposal-costs", Input).value = "100.00"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-disposal-calculate")
+        figures = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="disposal\t")
+        assert figures == "disposal\tnet_value=1222.14\texcess=0.00\tresult=677.86"
+
+        await _activate(pilot=pilot, screen=screen, selector="#asset-dispose")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="disposed\ttui-baja")
+
+    stated = ActivityAssetDisposalSnapshot(
+        disposal_date=date(2026, 6, 30),
+        reason=ActivityAssetDisposalReason.SALE,
+        proceeds=PublicDecimal(decimal="2000.00"),
+        transmission_costs=PublicDecimal(decimal="100.00"),
+    )
+    assert actions.requests == [
+        ("disposal_calculate", (revision.asset_id, stated)),
+        ("dispose", (revision.asset_id, stated)),
+    ]

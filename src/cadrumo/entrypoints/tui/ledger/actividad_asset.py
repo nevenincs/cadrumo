@@ -14,18 +14,22 @@ from ....application.actividad_asset.activity_asset_contracts import ActivityAss
 from ....application.actividad_asset.activity_asset_projections import ActivityAssetPlanProjection
 from ....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
+    ActivityAssetDisposalCalculationView,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
     ActivityAssetTimelineEvent,
 )
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
+from ....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
+from ....application.operations.public_scalar import PublicDecimal
 from ....application.operator_actions.models import PreconditionVerdict
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date
 from ....core.period import Period
+from ....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason, PriorFreeDepreciationRegime
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
@@ -45,15 +49,27 @@ from .models_actividad_asset import (
 from .workspace_screen import LedgerWorkspaceScreen
 
 #: The actions that change records; an unknown outcome withholds them until the asset is read again.
-_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe")
+_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe", "#asset-dispose")
 
 _SUPERSEDING_CLAIMS = TypeAdapter(tuple[ActivityAssetSupersedingClaim, ...])
+
+#: The baja's inputs with literal keys, shared by rendering, clearing and locale discovery.
+_DISPOSAL_INPUT_LOCALE_KEYS = {
+    "asset-disposal-date": "tui.ledger.activity_asset.disposal_date",
+    "asset-disposal-reason": "tui.ledger.activity_asset.disposal_reason",
+    "asset-disposal-proceeds": "tui.ledger.activity_asset.disposal_proceeds",
+    "asset-disposal-costs": "tui.ledger.activity_asset.disposal_costs",
+    "asset-disposal-market-value": "tui.ledger.activity_asset.disposal_market_value",
+    "asset-disposal-prior-regime": "tui.ledger.activity_asset.disposal_prior_regime",
+    "asset-disposal-later-affectation": "tui.ledger.activity_asset.disposal_later_affectation",
+}
 
 #: Closed read controls with literal keys, shared by rendering and locale discovery.
 _READ_BUTTON_LOCALE_KEYS = {
     "asset-list": "tui.ledger.activity_asset.list",
     "asset-plan": "tui.ledger.activity_asset.plan",
     "asset-timeline": "tui.ledger.activity_asset.timeline",
+    "asset-disposal-calculate": "tui.ledger.activity_asset.disposal_calculate",
     "asset-acquisition-candidates": "tui.ledger.activity_asset.acquisition_candidates",
 }
 
@@ -93,6 +109,18 @@ class ActivityAssetTuiActionsV1(Protocol):
 
     def describe(self, asset_id: str, descriptor: ActivityAssetDescriptorFacts) -> ActivityAssetHistory:
         """Append an element's descriptive facts."""
+        ...
+
+    def dispose(self, asset_id: str, disposal: ActivityAssetDisposalSnapshot) -> ActivityAssetHistory:
+        """Record an element's baja and the claims it supersedes."""
+        ...
+
+    def disposal_calculate(
+        self,
+        asset_id: str,
+        disposal: ActivityAssetDisposalSnapshot | None,
+    ) -> ActivityAssetDisposalCalculationView:
+        """Work out a baja's figures: the stated one as a preview, or else the recorded one."""
         ...
 
     def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
@@ -184,6 +212,12 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         )
         yield localized(
             Button(tr("tui.ledger.activity_asset.correct"), id="asset-correct"), "tui.ledger.activity_asset.correct"
+        )
+        for input_id, key in _DISPOSAL_INPUT_LOCALE_KEYS.items():
+            yield localized(Input(placeholder=tr(key), id=input_id), key)
+        yield localized(
+            Button(tr("tui.ledger.activity_asset.dispose"), id="asset-dispose"),
+            "tui.ledger.activity_asset.dispose",
         )
         for button_id, key in _READ_BUTTON_LOCALE_KEYS.items():
             yield localized(Button(tr(key), id=button_id), key)
@@ -314,6 +348,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             "#asset-options-kind",
             "#asset-filing-tax-year",
             "#asset-filing-m130-period",
+            *(f"#{input_id}" for input_id in _DISPOSAL_INPUT_LOCALE_KEYS),
         ):
             self.query_one(selector, Input).value = ""
         self.query_one("#asset-current-revision-id", Static).update("")
@@ -414,6 +449,22 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self._named_asset_id = asset_id
             history = self._actions.describe(asset_id, self._descriptor())
             return _ActivityAssetScreenResult(message=f"described\t{asset_id}\tdescriptors={len(history.descriptors)}")
+        if button_id == "asset-dispose":
+            self._named_asset_id = asset_id
+            history = self._actions.dispose(asset_id, self._stated_disposal())
+            return _ActivityAssetScreenResult(
+                message=f"disposed\t{asset_id}\trevisions={len(history.revisions)}\tclaims={len(history.claims)}"
+            )
+        if button_id == "asset-disposal-calculate":
+            self._named_asset_id = asset_id
+            stated = self._stated_disposal() if self._disposal_text("asset-disposal-date") else None
+            calculation = self._actions.disposal_calculate(asset_id, stated)
+            return _ActivityAssetScreenResult(
+                message=(
+                    f"disposal\tnet_value={calculation.net_value.decimal}\texcess={calculation.excess.decimal}"
+                    f"\tresult={calculation.result.decimal if calculation.result else ''}"
+                ),
+            )
         if button_id == "asset-list":
             rows = self._actions.list_elements()
             return _ActivityAssetScreenResult(
@@ -470,6 +521,24 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 ),
             )
         raise ValueError("unknown activity-asset action")
+
+    def _disposal_text(self, input_id: str) -> str:
+        return self.query_one(f"#{input_id}", Input).value.strip()
+
+    def _stated_disposal(self) -> ActivityAssetDisposalSnapshot:
+        """Read the baja's inputs; the operation judges the reason and the amounts."""
+        market_value = self._disposal_text("asset-disposal-market-value")
+        prior_regime = self._disposal_text("asset-disposal-prior-regime")
+        later_affectation = self._disposal_text("asset-disposal-later-affectation")
+        return ActivityAssetDisposalSnapshot(
+            disposal_date=require_iso8601_date(self._disposal_text("asset-disposal-date")),
+            reason=ActivityAssetDisposalReason(self._disposal_text("asset-disposal-reason")),
+            proceeds=PublicDecimal(decimal=self._disposal_text("asset-disposal-proceeds") or "0.00"),
+            transmission_costs=PublicDecimal(decimal=self._disposal_text("asset-disposal-costs") or "0.00"),
+            market_value=PublicDecimal(decimal=market_value) if market_value else None,
+            prior_free_depreciation_regime=PriorFreeDepreciationRegime(prior_regime) if prior_regime else None,
+            later_affectation_on=require_iso8601_date(later_affectation) if later_affectation else None,
+        )
 
     def _descriptor(self) -> ActivityAssetDescriptorFacts:
         return ActivityAssetDescriptorFacts(

@@ -30,6 +30,7 @@ from ...adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SO
 from ...adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
 from ...application.actividad_asset.operation_dtos import (
+    ActivityAssetDisposalSnapshot,
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
 )
@@ -83,6 +84,7 @@ from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliat
 from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.public_period import PublicPeriod
+from ...application.operations.public_scalar import PublicDecimal
 from ...application.overview.read_request import OVERVIEW_READ_DEFINITION_IDS, OverviewReadKind
 from ...application.user_profile.automation_operations import build_automation_operation_definitions
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
@@ -115,6 +117,7 @@ from ...domain.iva.schema import InvoiceKind
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...domain.modelos.filing_record import ExternalEvidenceKind
+from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.lifecycle import AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -1448,6 +1451,8 @@ def _payload(
             | "ledger.actividad-asset.claim"
             | "ledger.actividad-asset.filing-handoff"
             | "ledger.actividad-asset.describe"
+            | "ledger.actividad-asset.dispose"
+            | "ledger.actividad-asset.disposal-calculate"
             | "ledger.actividad-asset.list"
             | "ledger.actividad-asset.plan"
             | "ledger.actividad-asset.timeline"
@@ -1469,6 +1474,16 @@ def _payload(
                 values.update(
                     asset_id=asset_seed.revision.asset_id,
                     descriptor=ActivityAssetDescriptorFacts(name="Conformance element", serial_number="SN-1"),
+                )
+            elif action in {"dispose", "disposal-calculate"}:
+                values.update(
+                    asset_id=asset_seed.revision.asset_id,
+                    disposal=ActivityAssetDisposalSnapshot(
+                        disposal_date=date(2025, 6, 30),
+                        reason=ActivityAssetDisposalReason.SALE,
+                        proceeds=PublicDecimal(decimal="250.00"),
+                        transmission_costs=PublicDecimal(decimal="10.00"),
+                    ),
                 )
             elif action == "form-options":
                 values.update(asset_kind=AssetKind.MATERIAL, tax_year=2025)

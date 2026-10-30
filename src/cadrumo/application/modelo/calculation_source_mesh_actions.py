@@ -322,6 +322,8 @@ def _resolve_mesh_families(
             resolve_declared(
                 LedgerRentaIncomeAggregationSourceResolver(
                     ports=renta_catalogue_read_ports,
+                    activity_asset_history_repository=ports.activity_asset_history_repository,
+                    transaction_repository=memoized_transaction_repository,
                 )
             ),
             resolve_declared(

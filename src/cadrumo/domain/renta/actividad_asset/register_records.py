@@ -74,6 +74,7 @@ class ActivityAssetEventKind(StrEnum):
     """The kinds of record the register's history orders."""
 
     REVISION = "revision"
+    BAJA = "baja"
     CLAIM = "claim"
     DESCRIPTOR = "descriptor"
 

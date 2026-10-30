@@ -33,6 +33,7 @@ from ._modelo_bindings_support import (
 from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_actividad_assets import (
     LedgerRentaExpenseTreatment,
+    activity_asset_disposal_provenance,
     activity_asset_provenance,
     amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
@@ -254,6 +255,11 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             )
             + activity_asset_provenance(
                 asset_observations,
+                resolver_id=self.resolver_id,
+                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+            )
+            + activity_asset_disposal_provenance(
+                asset_projection.disposal_revision_ids,
                 resolver_id=self.resolver_id,
                 resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
             ),

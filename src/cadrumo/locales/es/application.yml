@@ -861,10 +861,19 @@ application:
           esa parte no se deduce.
         what_to_do: Registra la dotación de ese periodo si quieres deducirla y vuelve
           a calcular.
+      activity_asset_disposal_finding:
+        what: La baja de un elemento tiene un punto que debes revisar, aunque no detiene
+          este modelo.
+        what_to_do: Lee la nota sobre la baja del elemento y registra o corrige lo
+          que indica si te afecta.
       activity_asset_foral_territory:
         what: Resides en un territorio foral, donde este modelo no se aplica, así
           que tus bienes registrados no se incluyen.
         what_to_do: Declara estos bienes ante la Hacienda foral de tu territorio.
+      activity_asset_residence_unresolved:
+        what: No se ha podido leer la residencia fiscal registrada, así que tus bienes
+          registrados no se incluyen.
+        what_to_do: Indica tu residencia fiscal en tu perfil y vuelve a calcular.
       administrador_retencion_rate_mismatch:
         what: El tipo de retención de un registro de administrador no coincide con
           el que corresponde.
@@ -1614,7 +1623,8 @@ application:
       activity_asset_register_drift: 'Tu registro de activos ha cambiado desde que
         se calculó el modelo %{modelo} de %{filing_year}, periodo %{period} (amortizaciones
         añadidas: %{claims_added}, sustituidas o retiradas: %{claims_removed}, cuadros
-        de amortización modificados: %{schedules_changed}). Vuelve a calcularlo.'
+        de amortización modificados: %{schedules_changed}, bajas modificadas: %{disposals_changed}).
+        Vuelve a calcularlo.'
       art20_reduccion_possible: La casilla [%{rnt_id}] recoge %{rnt_value} EUR de
         rendimiento neto del trabajo, dentro del límite del art. 20 LIRPF, así que
         la casilla [%{reduccion_id}] puede darte una reducción que aún no aplicas.

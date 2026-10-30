@@ -4549,6 +4549,23 @@ ledger:
       covered_interval_without_service_days: The covered interval has no days in service
         in that tax year.
       creation_requires_first_revision: Asset creation requires revision number one.
+      disposal_already_recorded: This element already has a baja dated %{disposal_date}.
+        Change it with a correction.
+      disposal_amount_invalid: The baja's amounts must be non-negative euro figures
+        with at most two decimals.
+      disposal_before_service: The baja date cannot be before the element entered
+        service.
+      disposal_claim_past_boundary: This claim runs to %{covered_until}, past the
+        element's baja, which ends its charges at %{boundary}.
+      disposal_donation_refused: A donation is not supported as a baja of an activity
+        asset.
+      disposal_excess_without_table_class: The excess for %{tax_year} needs a table
+        class on the election, and it has none.
+      disposal_not_recorded: This element has no baja. State one to preview its figures.
+      disposal_scrapping_with_proceeds: Scrapping has no proceeds. Record a scrap
+        sale as a sale.
+      disposal_withdrawal_with_amounts: A withdrawal from the activity computes no
+        gain, so it states no proceeds, costs or market value.
       earlier_year_depends_on_pending_value: A later year is already claimed, and
         this method's charge follows the pending value, so an earlier year cannot
         be claimed now.
@@ -4647,6 +4664,10 @@ ledger:
       opening_history_missing: The element's opening amortization history is missing.
       opening_year_before_in_service: The opening amount cannot cover the years through
         %{opening_tax_year}, which is before the element's in-service year %{in_service_tax_year}.
+      out_of_service_date_not_the_boundary: The out-of-service date must be the day
+        after the baja date.
+      out_of_service_date_without_disposal: An out-of-service date comes only from
+        a baja. Record the baja instead.
       ownership_treatment_unknown: The whole-property basis has an unknown ownership
         treatment.
       parameter_absent: The activity-asset authority parameter %{parameter_id} is
@@ -5772,6 +5793,17 @@ tui:
       correct: Correct
       create: Create
       describe: Save description
+      disposal_calculate: Baja figures
+      disposal_costs: Transmission costs
+      disposal_date: Baja date, the last service day
+      disposal_later_affectation: Date of a later affectation to the activity, if
+        any
+      disposal_market_value: Market value, if stated
+      disposal_prior_regime: 'Attested prior free depreciation: trlis_da_11 or trlis_dt_37'
+      disposal_proceeds: Proceeds
+      disposal_reason: 'Reason: sale, part_exchange, theft, destruction, scrapping
+        or withdrawal'
+      dispose: Record baja
       filing: Prepare tax form transfer
       forecast: Calculate forecast
       form_options: Form options

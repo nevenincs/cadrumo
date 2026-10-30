@@ -6,7 +6,10 @@ import typer
 from pydantic import BaseModel, TypeAdapter
 
 from ...application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
+from ...application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
+from ...application.operations.public_scalar import PublicDecimal
 from ...core.errors.hierarchy import InternalInvariantError
+from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason, PriorFreeDepreciationRegime
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...domain.renta.actividad_asset.register_records import AcquisitionDocumentKind, ActivityAssetDescriptorFacts
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
@@ -21,10 +24,12 @@ from .actividad_asset_receipts import claim_receipt, inspection_receipt
 from .common import emit_envelope
 from .operation_ledger_actividad_asset import (
     acquisition_candidates_activity_asset,
+    calculate_activity_asset_disposal,
     claim_activity_asset,
     correct_activity_asset,
     create_activity_asset,
     describe_activity_asset,
+    dispose_activity_asset,
     filing_handoff_activity_asset,
     forecast_activity_asset,
     form_options_activity_asset,
@@ -239,6 +244,109 @@ def actividad_asset_describe(
     )
 
 
+def _disposal(
+    disposal_date: str,
+    reason: str,
+    proceeds: str,
+    transmission_costs: str,
+    market_value: str | None,
+    prior_free_depreciation_regime: str | None,
+    later_affectation_on: str | None,
+) -> ActivityAssetDisposalSnapshot:
+    return ActivityAssetDisposalSnapshot(
+        disposal_date=_parse_iso_date(disposal_date, label="disposal-date"),
+        reason=ActivityAssetDisposalReason(reason),
+        proceeds=PublicDecimal(decimal=proceeds),
+        transmission_costs=PublicDecimal(decimal=transmission_costs),
+        market_value=None if market_value is None else PublicDecimal(decimal=market_value),
+        prior_free_depreciation_regime=(
+            None
+            if prior_free_depreciation_regime is None
+            else PriorFreeDepreciationRegime(prior_free_depreciation_regime)
+        ),
+        later_affectation_on=(
+            None
+            if later_affectation_on is None
+            else _parse_iso_date(later_affectation_on, label="later-affectation-on")
+        ),
+    )
+
+
+def actividad_asset_dispose(
+    ctx: typer.Context,
+    asset_id: str,
+    disposal_date: str,
+    reason: str,
+    proceeds: str,
+    transmission_costs: str,
+    market_value: str | None = None,
+    prior_free_depreciation_regime: str | None = None,
+    later_affectation_on: str | None = None,
+) -> None:
+    """Record one element's baja, superseding the claims past its last service day in the same write."""
+    result = dispose_activity_asset(
+        ctx,
+        asset_id=asset_id,
+        disposal=_disposal(
+            disposal_date,
+            reason,
+            proceeds,
+            transmission_costs,
+            market_value,
+            prior_free_depreciation_regime,
+            later_affectation_on,
+        ),
+    )
+    if result.history is None:
+        raise InternalInvariantError("successful activity-asset baja omitted its history")
+    history = result.history.to_domain()
+    emit_envelope(
+        ctx,
+        command="ledger.actividad_asset.dispose",
+        result=ActivityAssetHistoryPayload(root=history.model_dump(mode="json")),
+        lines=(f"revisions\t{len(history.revisions)}", f"claims\t{len(history.claims)}"),
+    )
+
+
+def actividad_asset_disposal_calculate(
+    ctx: typer.Context,
+    asset_id: str,
+    disposal_date: str | None = None,
+    reason: str | None = None,
+    proceeds: str | None = None,
+    transmission_costs: str | None = None,
+    market_value: str | None = None,
+    prior_free_depreciation_regime: str | None = None,
+    later_affectation_on: str | None = None,
+) -> None:
+    """Work out a baja's figures: the one these options state as a preview, or else the recorded one."""
+    stated = (
+        None
+        if disposal_date is None
+        else _disposal(
+            disposal_date,
+            reason or "",
+            proceeds or "0.00",
+            transmission_costs or "0.00",
+            market_value,
+            prior_free_depreciation_regime,
+            later_affectation_on,
+        )
+    )
+    result = calculate_activity_asset_disposal(ctx, asset_id=asset_id, disposal=stated)
+    calculation = result.calculation
+    if calculation is None:
+        raise InternalInvariantError("successful activity-asset baja calculation omitted its figures")
+    _emit_read(
+        ctx,
+        "ledger.actividad_asset.disposal_calculate",
+        result,
+        f"net_value\t{calculation.net_value.decimal}",
+        f"excess\t{calculation.excess.decimal}",
+        f"result\t{calculation.result.decimal if calculation.result else ''}",
+    )
+
+
 def actividad_asset_list(ctx: typer.Context) -> None:
     """List the register's elements with their figures and findings."""
     result = list_activity_assets(ctx)
@@ -306,6 +414,8 @@ __all__ = [
     "actividad_asset_correct",
     "actividad_asset_create",
     "actividad_asset_describe",
+    "actividad_asset_disposal_calculate",
+    "actividad_asset_dispose",
     "actividad_asset_filing_handoff",
     "actividad_asset_forecast",
     "actividad_asset_form_options",

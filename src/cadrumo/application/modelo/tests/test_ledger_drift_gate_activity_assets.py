@@ -24,10 +24,10 @@ from cadrumo.domain.modelos.calculation_revision_sources import ActivityAssetCon
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.transactions.models import TransactionCatalogue
 
 from ...aggregation.ledger_membership import LedgerSourceMembership
 from .._ledger_drift_gate import ledger_drift_findings
+from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -36,13 +36,6 @@ _AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
 _KEY = "application.modelo.findings.activity_asset_register_drift"
 _C1, _C2 = "1" * 64, "2" * 64
 _F1, _F2 = "a" * 64, "b" * 64
-
-
-class _Transactions:
-    """The ledger side is not under test: no row contributes, so the anchor is absent."""
-
-    def load(self) -> TransactionCatalogue:
-        return TransactionCatalogue()
 
 
 def _provenance(*source_refs: str) -> tuple[CalculationSourceRef, ...]:
@@ -110,7 +103,7 @@ def _gate(draft: tuple[WorkUnit, CalculationRevision], *current_refs: str) -> li
     return ledger_drift_findings(
         target=revision,
         work_unit=work_unit,
-        transaction_repository=_Transactions(),
+        transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=_BUCKET),
         current_membership=LedgerSourceMembership(
             activity_asset_consumption=ActivityAssetConsumption.from_source_refs(current_refs),
         ),
@@ -122,6 +115,17 @@ def _facts(findings: list[ModeloVerificationFinding]) -> tuple[object, object, o
     assert finding.message_locale_key == _KEY
     facts = finding.message_facts
     return facts["claims_added"], facts["claims_removed"], facts["schedules_changed"]
+
+
+def test_a_late_baja_is_drift_even_when_it_changes_no_claim() -> None:
+    disposal = "activity-asset-disposal:" + "d" * 64
+    draft = _draft(f"activity-asset-claim:{_C1}")
+
+    (finding,) = _gate(draft, f"activity-asset-claim:{_C1}", disposal)
+
+    assert finding.message_facts["disposals_changed"] == 1
+    assert _facts([finding]) == (0, 0, 0)
+    assert _gate(_draft(f"activity-asset-claim:{_C1}", disposal), f"activity-asset-claim:{_C1}", disposal) == []
 
 
 def test_the_revision_records_the_claims_and_schedules_it_consumed() -> None:

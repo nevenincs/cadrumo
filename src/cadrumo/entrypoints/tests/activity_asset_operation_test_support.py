@@ -28,6 +28,7 @@ from ...application.actividad_asset.activity_asset_contracts import (
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
     ActivityAssetDescribeRequest,
+    ActivityAssetDisposeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
     ActivityAssetInspectRequest,
@@ -38,6 +39,8 @@ from ...application.actividad_asset.activity_asset_projections import (
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
     ActivityAssetDescribeProjection,
+    ActivityAssetDisposalCalculateProjection,
+    ActivityAssetDisposeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
     ActivityAssetFormOptionsProjection,
@@ -223,6 +226,8 @@ def assert_activity_asset_conformance_result(
             ActivityAssetClaimProjection,
             ActivityAssetFilingHandoffProjection,
             ActivityAssetDescribeProjection,
+            ActivityAssetDisposeProjection,
+            ActivityAssetDisposalCalculateProjection,
             ActivityAssetListProjection,
             ActivityAssetPlanProjection,
             ActivityAssetTimelineProjection,
@@ -347,6 +352,27 @@ def assert_activity_asset_conformance_result(
         assert handoff.material_m130.amount == Decimal("75.00")
         assert [item.amount for item in handoff.material_m130.contributions] == [Decimal("75.00")]
         assert handoff.intangible_m130.contributions == ()
+        return
+
+    if isinstance(projection, ActivityAssetDisposeProjection):
+        assert isinstance(payload, ActivityAssetDisposeRequest)
+        assert projection.history is not None
+        assert projection.history.to_domain() == after
+        recorded = after.revisions[-1].disposal
+        assert recorded is not None
+        assert recorded.disposal_date == payload.disposal.disposal_date
+        assert after.revisions[-1].out_of_service_date == date(2025, 7, 1)
+        return
+
+    if isinstance(projection, ActivityAssetDisposalCalculateProjection):
+        assert after == before
+        assert projection.calculation is not None
+        # 250.00 received, 10.00 of costs: the seeded element's cost of 300.00 has no claim
+        # behind it, so the reduction is the 2025 minimum and it is the same under any table.
+        assert projection.calculation.transmission_value is not None
+        assert projection.calculation.transmission_value.decimal == "250.00"
+        assert projection.calculation.transmission_costs is not None
+        assert projection.calculation.transmission_costs.decimal == "10.00"
         return
 
     assert after == before or definition_id == ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID

@@ -29,6 +29,7 @@ from ...renta.actividad_asset.election import (
 )
 from ...renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
+    ActividadAssetError,
     ActividadAssetIncompleteError,
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
@@ -269,6 +270,57 @@ def resolve_activity_asset_schedule_authority(
             **resolution.method_facts,
         },
     )
+
+
+@dataclass(frozen=True, slots=True)
+class ActivityAssetDisposalBounds:
+    """What the registry supplies for one service year of a baja's reduction of cost.
+
+    A null coefficient means the year has no maximum period, fixed percentage or
+    table class, so it counts only what was deducted.
+    """
+
+    minimum_coefficient: Decimal | None = None
+    maximum_coefficient: Decimal | None = None
+    useful_life_ends_on: date | None = None
+
+
+def resolve_activity_asset_disposal_bounds(
+    modelo_revision: ModeloRevision,
+    *,
+    tax_year: int,
+    asset_revision: ActivityAssetRevision,
+) -> ActivityAssetDisposalBounds:
+    """Read one year's minimum and maximum coefficient for a baja, without judging the election.
+
+    A baja looks back over years the element's election may no longer resolve in,
+    so what the edition cannot supply stays absent rather than refused.
+    """
+    parameters = _Parameters(
+        by_id={parameter.id: parameter for parameter in modelo_revision.parameters},
+        revision_id=modelo_revision.id,
+        tax_year=tax_year,
+    )
+    election = asset_revision.amortization
+    try:
+        if election.method in {AmortizationMethod.GOODWILL, AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE}:
+            parameter_id = (
+                _GOODWILL_RATE_ID if election.method is AmortizationMethod.GOODWILL else _INDEFINITE_LIFE_RATE_ID
+            )
+            rate = parameters.value(parameter_id) / Decimal("100")
+            return ActivityAssetDisposalBounds(minimum_coefficient=rate, maximum_coefficient=rate)
+        if election.method is AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING:
+            rate = Decimal("1") / parameters.value(_RND_BUILDING_PERIOD_ID)
+            return ActivityAssetDisposalBounds(minimum_coefficient=rate, maximum_coefficient=rate)
+        if election.method is AmortizationMethod.INTANGIBLE_USEFUL_LIFE:
+            useful_life = election.useful_life
+            return ActivityAssetDisposalBounds(useful_life_ends_on=None if useful_life is None else useful_life.ends_on)
+        if election.authority_class_key is None:
+            return ActivityAssetDisposalBounds()
+        bounds = _table_bounds(parameters, asset_revision)
+    except ActividadAssetError:
+        return ActivityAssetDisposalBounds()
+    return ActivityAssetDisposalBounds(minimum_coefficient=bounds.minimum, maximum_coefficient=bounds.maximum)
 
 
 def _require_method_admitted(
@@ -1068,10 +1120,11 @@ def activity_asset_form_options(
         revision_id=modelo_revision.id,
         tax_year=tax_year,
     )
+    # Inside the resolver a missing row is a refusal; for a form it only means "not offered".
     methods = tuple(
         method
         for method in AmortizationMethod
-        if method not in _REFUSED_METHODS
+        if method not in _REFUSED_METHOD_LOCALE_KEYS
         and parameters.keyed(_METHOD_ADMISSION_IDS[regime], f"{asset_kind.value}:{method.value}") == Decimal("1")
     )
     kind_parameter = _INTANGIBLE_CLASS_ID if asset_kind is AssetKind.INTANGIBLE else _MATERIAL_CLASS_ID

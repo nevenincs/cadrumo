@@ -39,6 +39,10 @@ cli:
           (JSON).
         describe_help: Rögzíti egy elem nevét, sorozatszámát és nyilvántartási adatait;
           egyetlen számítás sem változik.
+        disposal_calculate_help: 'Helyben kiszámítja a kivezetés számadatait: a kapcsolókban
+          megadottét, különben a rögzítettét.'
+        dispose_help: Rögzíti az eszköz kivezetését, és ugyanabban az írásban felváltja
+          az utolsó szolgálati napján túli elszámolásokat.
         filing_handoff_help: Megmutatja a 100-as modellbe vetített rögzített elszámolásokat
           és a 130-as modellbe vetített időbeli elhatárolást.
         forecast_help: A változat választása szerinti értékcsökkenés kiszámítása egy

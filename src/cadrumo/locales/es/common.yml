@@ -4625,6 +4625,24 @@ ledger:
         servicio en ese ejercicio.
       creation_requires_first_revision: La creación del elemento requiere la revisión
         número uno.
+      disposal_already_recorded: Este elemento ya tiene una baja con fecha %{disposal_date}.
+        Cámbiala con una corrección.
+      disposal_amount_invalid: Los importes de la baja deben ser cifras en euros no
+        negativas, con dos decimales como máximo.
+      disposal_before_service: La fecha de baja no puede ser anterior a la puesta
+        en servicio del elemento.
+      disposal_claim_past_boundary: Esta dotación llega hasta %{covered_until}, más
+        allá de la baja del elemento, que termina sus dotaciones el %{boundary}.
+      disposal_donation_refused: La donación no se admite como baja de un elemento
+        de la actividad.
+      disposal_excess_without_table_class: El exceso de %{tax_year} necesita un grupo
+        de tabla en la elección y no lo tiene.
+      disposal_not_recorded: Este elemento no tiene baja. Indica una para ver sus
+        cifras.
+      disposal_scrapping_with_proceeds: El achatarramiento no tiene importe de venta.
+        Registra la venta como chatarra como una venta.
+      disposal_withdrawal_with_amounts: La desafectación no calcula ganancia, así
+        que no indica importe de venta, gastos ni valor de mercado.
       earlier_year_depends_on_pending_value: Ya hay un ejercicio posterior con cargo
         y este método calcula sobre el valor pendiente, así que ahora no puedes reclamar
         un ejercicio anterior.
@@ -4728,6 +4746,10 @@ ledger:
       opening_year_before_in_service: El importe inicial no puede cubrir los años
         hasta %{opening_tax_year}, que es anterior al año de puesta en funcionamiento
         del elemento, %{in_service_tax_year}.
+      out_of_service_date_not_the_boundary: La fecha de fin de servicio debe ser el
+        día siguiente a la fecha de baja.
+      out_of_service_date_without_disposal: La fecha de fin de servicio solo procede
+        de una baja. Registra la baja.
       ownership_treatment_unknown: La base del inmueble completo tiene un tratamiento
         de titularidad desconocido.
       parameter_absent: El parámetro de autoridad %{parameter_id} del inmovilizado
@@ -5888,6 +5910,18 @@ tui:
       correct: Corregir
       create: Crear
       describe: Guardar descripción
+      disposal_calculate: Cifras de la baja
+      disposal_costs: Gastos de transmisión
+      disposal_date: Fecha de baja, último día de servicio
+      disposal_later_affectation: Fecha de una afectación posterior a la actividad,
+        si la hay
+      disposal_market_value: Valor de mercado, si lo indicas
+      disposal_prior_regime: 'Libertad de amortización anterior acreditada: trlis_da_11
+        o trlis_dt_37'
+      disposal_proceeds: Importe de venta
+      disposal_reason: 'Motivo: sale, part_exchange, theft, destruction, scrapping
+        o withdrawal'
+      dispose: Registrar baja
       filing: Preparar traslado a modelos
       forecast: Calcular previsión
       form_options: Opciones del formulario

@@ -16,6 +16,8 @@ from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
@@ -29,6 +31,8 @@ from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
     ActivityAssetDescribeRequest,
+    ActivityAssetDisposalCalculateRequest,
+    ActivityAssetDisposeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
     ActivityAssetFormOptionsRequest,
@@ -43,6 +47,8 @@ from cadrumo.application.actividad_asset.activity_asset_projections import (
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
     ActivityAssetDescribeProjection,
+    ActivityAssetDisposalCalculateProjection,
+    ActivityAssetDisposeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
     ActivityAssetFormOptionsProjection,
@@ -53,12 +59,14 @@ from cadrumo.application.actividad_asset.activity_asset_projections import (
 )
 from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
+    ActivityAssetDisposalCalculationView,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
     ActivityAssetTimelineEvent,
 )
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operation_dtos import (
+    ActivityAssetDisposalSnapshot,
     ActivityAssetHistorySnapshot,
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
@@ -93,6 +101,8 @@ type _ActivityAssetProjection = (
     | ActivityAssetClaimProjection
     | ActivityAssetFilingHandoffProjection
     | ActivityAssetDescribeProjection
+    | ActivityAssetDisposeProjection
+    | ActivityAssetDisposalCalculateProjection
     | ActivityAssetListProjection
     | ActivityAssetPlanProjection
     | ActivityAssetTimelineProjection
@@ -397,6 +407,42 @@ class RuntimeActivityAssetTuiActionsV1:
             definition_id=ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
             result_type=ActivityAssetDescribeProjection,
             success_effect=OperationEffect.UPDATED,
+            correlate=correlate,
+        )
+
+    def dispose(self, asset_id: str, disposal: ActivityAssetDisposalSnapshot) -> ActivityAssetHistory:
+        """Record an element's baja and return the persisted history."""
+
+        def correlate(projection: ActivityAssetDisposeProjection) -> ActivityAssetHistory:
+            if projection.history is None:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return projection.history.to_domain()
+
+        return self._call(
+            ActivityAssetDisposeRequest(profile_id=self._profile_id, asset_id=asset_id, disposal=disposal),
+            definition_id=ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
+            result_type=ActivityAssetDisposeProjection,
+            success_effect=OperationEffect.UPDATED,
+            correlate=correlate,
+        )
+
+    def disposal_calculate(
+        self,
+        asset_id: str,
+        disposal: ActivityAssetDisposalSnapshot | None,
+    ) -> ActivityAssetDisposalCalculationView:
+        """Work out a baja's figures: the stated one as a preview, or else the recorded one."""
+
+        def correlate(projection: ActivityAssetDisposalCalculateProjection) -> ActivityAssetDisposalCalculationView:
+            if projection.calculation is None or projection.asset_id != asset_id:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return projection.calculation
+
+        return self._call(
+            ActivityAssetDisposalCalculateRequest(profile_id=self._profile_id, asset_id=asset_id, disposal=disposal),
+            definition_id=ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
+            result_type=ActivityAssetDisposalCalculateProjection,
+            success_effect=OperationEffect.NONE,
             correlate=correlate,
         )
 

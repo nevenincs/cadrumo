@@ -15,7 +15,10 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...core.tipos_actividad import TipoActividad
-from ...domain.calculations.registry.actividad_asset_bindings import activity_asset_form_options
+from ...domain.calculations.registry.actividad_asset_bindings import (
+    ActivityAssetDisposalBounds,
+    activity_asset_form_options,
+)
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.contribuyente.tax_residence import ResidenceTerritory
@@ -27,10 +30,12 @@ from ...domain.renta.actividad_asset.claims import (
     project_m100,
     record_claim,
 )
+from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalCalculation
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
     ActividadAssetError,
+    ActividadAssetIncompleteError,
     ActividadAssetValidationError,
 )
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
@@ -49,6 +54,7 @@ from .activity_asset_read_models import (
     ActivityAssetTableGroup,
     ActivityAssetTimelineEvent,
 )
+from .disposal_calculation import calculate_element_disposal
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .ports import (
     AcquisitionLedgerReader,
@@ -127,12 +133,14 @@ class ActivityAssetRegisterAuthority:
     """The pinned-authority and profile facts the register's reads and handoff depend on."""
 
     edition: Callable[[int], tuple[ActivityAssetEdition, ModeloRevision]]
+    admits_filing_year: Callable[[int], bool]
     agrarian_activities: Callable[[date], frozenset[TipoActividad]]
     residence_territory: Callable[[], ResidenceTerritory]
     claim_consumers: Callable[[Iterable[str]], Mapping[str, tuple[str, ...]]]
     today: Callable[[], date]
     schedule_authority: Callable[[ActivityAssetRevision, int], ScheduleAuthority]
     class_labels: Callable[[DirectEstimationRegime, int], Mapping[str, str]]
+    disposal_bounds: Callable[[ActivityAssetRevision, int], ActivityAssetDisposalBounds]
 
 
 class ActivityAssetOperations:
@@ -225,7 +233,21 @@ class ActivityAssetOperations:
                 translated_message="ledger.actividad_asset.errors.correction_must_supersede_current"
             )
         require_acquisition_in_ledger(revision, self._ledger)
-        claims = self._superseding_claims(revision, superseding_claims, history, origin=origin)
+        baja_claims: tuple[AmortizationClaim, ...] = ()
+        if revision.disposal is not None and revision.disposal != current.disposal:
+            self._require_common_territory()
+            baja_claims = self._baja_supersessions(revision, history, origin=origin)
+        replaced = {claim.supersedes_claim_id for claim in baja_claims}
+        claims = (
+            *baja_claims,
+            *self._superseding_claims(
+                revision,
+                tuple(item for item in superseding_claims if item.supersedes_claim_id not in replaced),
+                history,
+                origin=origin,
+                starting_from=baja_claims,
+            ),
+        )
 
         def mutation(latest: ActivityAssetHistory) -> ActivityAssetHistory:
             if not latest.same_tax_facts(history):
@@ -243,6 +265,7 @@ class ActivityAssetOperations:
         history: ActivityAssetHistory,
         *,
         origin: str | None,
+        starting_from: tuple[AmortizationClaim, ...] = (),
     ) -> tuple[AmortizationClaim, ...]:
         """Forecast each replacement under the new revision, earliest first, on the state the earlier ones leave."""
         if not requests:
@@ -259,7 +282,7 @@ class ActivityAssetOperations:
             targets.append((superseded, request))
         _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
         revisions = (*history.revisions, revision)
-        working = history.claims
+        working = (*history.claims, *starting_from)
         recorded: list[AmortizationClaim] = []
         for superseded, request in sorted(targets, key=lambda item: item[0].covered_from):
             charge = self._forecast_operation(
@@ -284,6 +307,126 @@ class ActivityAssetOperations:
             working = record_claim(working, claim).claims
             recorded.append(claim)
         return tuple(recorded)
+
+    def _baja_supersessions(
+        self,
+        revision: ActivityAssetRevision,
+        history: ActivityAssetHistory,
+        *,
+        origin: str | None,
+    ) -> tuple[AmortizationClaim, ...]:
+        """Work out what a baja replaces: claims after its boundary go to zero, a crossing one is shortened.
+
+        The claims after the boundary go first, so that the shortened claim's charge
+        is judged without them.  A free amount is the taxpayer's election and carries
+        over; any other amount is recomputed for the shorter interval.
+        """
+        disposal = revision.disposal
+        if disposal is None:  # defensive: every caller passes a baja
+            return ()
+        boundary = disposal.boundary
+        creating_operation = origin or revision.asset_id
+        standing = tuple(claim for claim in effective_claims(history.claims) if claim.asset_id == revision.asset_id)
+        recorded = [
+            claim.set_to_zero_by_baja(revision.revision_id, creating_operation=creating_operation)
+            for claim in standing
+            if claim.covered_from >= boundary and claim.amount > Decimal("0")
+        ]
+        crossing = next((c for c in standing if c.covered_from < boundary < c.covered_until), None)
+        if crossing is None:
+            return tuple(recorded)
+        _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
+        working = (*history.claims, *recorded)
+        charge = self._forecast_operation(
+            revision,
+            covered_from=crossing.covered_from,
+            covered_until=boundary,
+            history=asset_schedule_history(
+                tuple(claim for claim in working if claim.tax_year <= crossing.tax_year),
+                (*history.revisions, revision),
+                asset_id=revision.asset_id,
+                tax_year=crossing.tax_year,
+                excluding_claim_id=crossing.claim_id,
+            ),
+            requested_free_amount=crossing.amount if revision.amortization.method in FREE_AMOUNT_METHODS else None,
+        )
+        recorded.append(
+            AmortizationClaim.from_schedule(
+                charge,
+                asset_kind=revision.asset_kind,
+                creating_operation=creating_operation,
+                supersedes_claim_id=crossing.claim_id,
+                disposal_revision_id=revision.revision_id,
+            ),
+        )
+        return tuple(recorded)
+
+    def dispose(
+        self,
+        asset_id: str,
+        disposal: ActivityAssetDisposal,
+        *,
+        recorded_at: datetime | None = None,
+        origin: str | None = None,
+    ) -> ActivityAssetHistory:
+        """Record a baja and the claims it replaces in one compare-and-swap.
+
+        A missing opening history does not stop the baja, only its calculation.  A
+        recorded baja changes only through a correction.
+        """
+        self._require_common_territory()
+        history = self._service.reopen()
+        current = self.inspect(asset_id)[-1]
+        if current.disposal is not None:
+            raise ActividadAssetClaimConflictError(
+                context={"disposal_date": current.disposal.disposal_date.isoformat()},
+                translated_message="ledger.actividad_asset.errors.disposal_already_recorded",
+            )
+        revision = current.with_disposal(disposal)
+        claims = self._baja_supersessions(revision, history, origin=origin)
+
+        def mutation(latest: ActivityAssetHistory) -> ActivityAssetHistory:
+            if not latest.same_tax_facts(history):
+                raise ActividadAssetClaimConflictError(
+                    translated_message="ledger.actividad_asset.errors.history_changed_after_forecast",
+                )
+            return latest.apply_correction(revision, claims, recorded_at=recorded_at, origin=origin)
+
+        return self._service.apply(mutation)
+
+    def disposal_calculation(
+        self,
+        asset_id: str,
+        disposal: ActivityAssetDisposal | None = None,
+    ) -> tuple[ActivityAssetDisposal, ActivityAssetDisposalCalculation]:
+        """Work out a baja's figures, recording nothing: the stated one as a preview, else the recorded one.
+
+        A preview sees the history as that baja would leave it.
+        """
+        self._require_common_territory()
+        history = self._service.reopen()
+        current = self.inspect(asset_id)[-1]
+        if disposal is None:
+            if current.disposal is None:
+                raise ActividadAssetValidationError(
+                    translated_message="ledger.actividad_asset.errors.disposal_not_recorded",
+                )
+            return current.disposal, self._calculate(current, current.disposal, history)
+        revision = current.with_disposal(disposal)
+        if revision.opening_history.accumulated_amount is None:
+            raise ActividadAssetIncompleteError(
+                translated_message="ledger.actividad_asset.errors.opening_history_missing",
+            )
+        preview = history.apply_correction(revision, self._baja_supersessions(revision, history, origin=None))
+        return disposal, self._calculate(revision, disposal, preview)
+
+    def _calculate(
+        self,
+        revision: ActivityAssetRevision,
+        disposal: ActivityAssetDisposal,
+        history: ActivityAssetHistory,
+    ) -> ActivityAssetDisposalCalculation:
+        return calculate_element_disposal(revision, disposal, history, bounds=self._authority.disposal_bounds)
 
     def forecast(
         self,
@@ -465,6 +608,7 @@ class ActivityAssetOperations:
             history=history,
             forecast=self._forecast_operation,
             edition=lambda tax_year: self._authority.edition(tax_year)[0],
+            admits_filing_year=self._authority.admits_filing_year,
             today=self._authority.today(),
         )
 

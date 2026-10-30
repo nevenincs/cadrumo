@@ -493,7 +493,14 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
                     objects=secure_objects,
                 ),
             ).resolve(context),
-            LedgerRentaIncomeAggregationSourceResolver(ports=catalogue_read_ports).resolve(context),
+            LedgerRentaIncomeAggregationSourceResolver(
+                ports=catalogue_read_ports,
+                activity_asset_history_repository=ActividadAssetHistoryRepository(
+                    bucket_id=_BUCKET_ID,
+                    objects=secure_objects,
+                ),
+                transaction_repository=tx_repo,
+            ).resolve(context),
             OssIossLedgerSourceResolver(ports=catalogue_read_ports, candidates=()).resolve(context),
             InvoiceCatalogueSourceResolver(
                 ports=InvoiceSourceResolverPorts(catalogue_reader=invoice_repo),

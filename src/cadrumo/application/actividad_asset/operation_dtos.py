@@ -11,7 +11,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from ...application.operations.public_scalar import PublicDecimal, project_scalar
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -20,6 +20,12 @@ from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection
+from ...domain.renta.actividad_asset.disposal import (
+    ActivityAssetDisposal,
+    ActivityAssetDisposalReason,
+    PriorFreeDepreciationRegime,
+    require_admissible_disposal,
+)
 from ...domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -37,6 +43,7 @@ from ...domain.renta.actividad_asset.election import (
     RenewableSelfConsumptionEvidence,
     SmallEnterpriseEvidence,
 )
+from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -367,6 +374,69 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
         return self
 
 
+class ActivityAssetDisposalSnapshot(BaseModel):
+    """Public baja statement; its reason and amount rules are judged when it becomes the record.
+
+    A request carries this unjudged so that a refused reason reaches the operator as
+    its registered refusal and not as a malformed request.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    disposal_date: date
+    reason: ActivityAssetDisposalReason
+    proceeds: PublicDecimal
+    transmission_costs: PublicDecimal
+    market_value: PublicDecimal | None = None
+    prior_free_depreciation_regime: PriorFreeDepreciationRegime | None = None
+    later_affectation_on: date | None = None
+
+    @classmethod
+    def from_domain(cls, value: ActivityAssetDisposal) -> Self:
+        """Project one baja record without changing its facts."""
+        return cls(
+            disposal_date=value.disposal_date,
+            reason=value.reason,
+            proceeds=project_scalar(value.proceeds),
+            transmission_costs=project_scalar(value.transmission_costs),
+            market_value=None if value.market_value is None else project_scalar(value.market_value),
+            prior_free_depreciation_regime=value.prior_free_depreciation_regime,
+            later_affectation_on=value.later_affectation_on,
+        )
+
+    def to_domain(self) -> ActivityAssetDisposal:
+        """Judge the statement and restore the canonical record.
+
+        Raises:
+            ActividadAssetValidationError: When the reason cannot carry these amounts
+                or an amount is not a non-negative figure in euro cents.
+            ActividadAssetUnsupportedError: When the reason is a donation.
+        """
+        proceeds = Decimal(self.proceeds.decimal)
+        costs = Decimal(self.transmission_costs.decimal)
+        market_value = _decimal(self.market_value)
+        require_admissible_disposal(
+            self.reason,
+            proceeds=proceeds,
+            transmission_costs=costs,
+            market_value=market_value,
+        )
+        try:
+            return ActivityAssetDisposal(
+                disposal_date=self.disposal_date,
+                reason=self.reason,
+                proceeds=proceeds,
+                transmission_costs=costs,
+                market_value=market_value,
+                prior_free_depreciation_regime=self.prior_free_depreciation_regime,
+                later_affectation_on=self.later_affectation_on,
+            )
+        except ValidationError as error:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.disposal_amount_invalid",
+            ) from error
+
+
 class ActivityAssetRevisionSnapshot(BaseModel):
     """Public revision DTO with all monetary and fractional facts explicit."""
 
@@ -382,6 +452,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
     residual_value: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
     in_service_date: date
     out_of_service_date: date | None = None
+    disposal: ActivityAssetDisposalSnapshot | None = None
     opening_history: OpeningHistorySnapshot
     acquired_condition: AcquiredCondition
     building_construction_date: date | None = None
@@ -402,6 +473,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             residual_value=project_scalar(value.residual_value),
             in_service_date=value.in_service_date,
             out_of_service_date=value.out_of_service_date,
+            disposal=None if value.disposal is None else ActivityAssetDisposalSnapshot.from_domain(value.disposal),
             opening_history=OpeningHistorySnapshot.from_domain(value.opening_history),
             acquired_condition=value.acquired_condition,
             building_construction_date=value.building_construction_date,
@@ -422,6 +494,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             residual_value=Decimal(self.residual_value.decimal),
             in_service_date=self.in_service_date,
             out_of_service_date=self.out_of_service_date,
+            disposal=None if self.disposal is None else self.disposal.to_domain(),
             opening_history=self.opening_history.to_domain(),
             acquired_condition=self.acquired_condition,
             building_construction_date=self.building_construction_date,
@@ -458,6 +531,7 @@ class AmortizationClaimSnapshot(BaseModel):
     free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: PublicDecimal | None = None
     free_depreciation_annual_cap: PublicDecimal | None = None
+    disposal_revision_id: Hex64Str | None = None
 
     @classmethod
     def from_domain(cls, value: AmortizationClaim) -> Self:
@@ -676,6 +750,7 @@ class ActivityAssetHistoryClaimResultSnapshot(BaseModel):
 __all__ = [
     "ActivityAssetAmortizationElectionSnapshot",
     "ActivityAssetBasisSnapshot",
+    "ActivityAssetDisposalSnapshot",
     "ActivityAssetFilingHandoffSnapshot",
     "ActivityAssetHistoryClaimResultSnapshot",
     "ActivityAssetHistorySnapshot",

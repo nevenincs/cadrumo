@@ -4622,6 +4622,24 @@ ledger:
         en aquest exercici.
       creation_requires_first_revision: La creació de l'element requereix la revisió
         número u.
+      disposal_already_recorded: Aquest element ja té una baixa amb data %{disposal_date}.
+        Canvia-la amb una correcció.
+      disposal_amount_invalid: Els imports de la baixa han de ser xifres en euros
+        no negatives, amb dos decimals com a màxim.
+      disposal_before_service: La data de baixa no pot ser anterior a la posada en
+        servei de l'element.
+      disposal_claim_past_boundary: Aquesta dotació arriba fins a %{covered_until},
+        més enllà de la baixa de l'element, que acaba les dotacions el %{boundary}.
+      disposal_donation_refused: La donació no s'admet com a baixa d'un element de
+        l'activitat.
+      disposal_excess_without_table_class: L'excés de %{tax_year} necessita un grup
+        de taula a l'elecció i no en té.
+      disposal_not_recorded: Aquest element no té baixa. Indica'n una per veure'n
+        les xifres.
+      disposal_scrapping_with_proceeds: La ferralla no pot tenir cap import de venda.
+        Si la vens, registra-la com una venda.
+      disposal_withdrawal_with_amounts: La desafectació no calcula guany, així que
+        no indica import de venda, despeses ni valor de mercat.
       earlier_year_depends_on_pending_value: Ja hi ha un exercici posterior amb càrrec
         i aquest mètode calcula sobre el valor pendent, així que ara no pots reclamar
         un exercici anterior.
@@ -4725,6 +4743,10 @@ ledger:
       opening_year_before_in_service: L'import inicial no pot cobrir els anys fins
         a %{opening_tax_year}, que és anterior a l'any de posada en funcionament de
         l'element, %{in_service_tax_year}.
+      out_of_service_date_not_the_boundary: La data de fi de servei ha de ser l'endemà
+        de la data de baixa.
+      out_of_service_date_without_disposal: La data de fi de servei només prové d'una
+        baixa. Registra la baixa.
       ownership_treatment_unknown: La base de l'immoble complet té un tractament de
         titularitat desconegut.
       parameter_absent: El paràmetre d'autoritat %{parameter_id} de l'immobilitzat
@@ -5880,6 +5902,18 @@ tui:
       correct: Corregir
       create: Crear
       describe: Desar la descripció
+      disposal_calculate: Xifres de la baixa
+      disposal_costs: Despeses de transmissió
+      disposal_date: Data de baixa, últim dia de servei
+      disposal_later_affectation: Data d'una afectació posterior a l'activitat, si
+        n'hi ha
+      disposal_market_value: Valor de mercat, si l'indiques
+      disposal_prior_regime: 'Llibertat d''amortització anterior acreditada: trlis_da_11
+        o trlis_dt_37'
+      disposal_proceeds: Import de venda
+      disposal_reason: 'Motiu: sale, part_exchange, theft, destruction, scrapping
+        o withdrawal'
+      dispose: Registra la baixa
       filing: Preparar trasllat a models
       forecast: Calcular previsió
       form_options: Opcions del formulari

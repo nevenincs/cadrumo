@@ -39,6 +39,10 @@ cli:
         create_help: Crea un activo a partir de su primera revisión inmutable (JSON).
         describe_help: Registra el nombre, el número de serie y los datos de registro
           de un elemento; ningún cálculo cambia.
+        disposal_calculate_help: 'Calcula localmente las cifras de una baja: la que
+          indican las opciones o, si no, la registrada.'
+        dispose_help: Registra la baja de un elemento y sustituye en la misma escritura
+          las dotaciones posteriores a su último día de servicio.
         filing_handoff_help: Muestra los cargos registrados proyectados al Modelo
           100 y el devengo proyectado al Modelo 130.
         forecast_help: Calcula, sin registrarla, la amortización que admite la elección

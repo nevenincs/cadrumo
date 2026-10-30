@@ -31,6 +31,7 @@ from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..user_profile.profile_read_ports import ProfilePathValuesReadPort
 from .activity_asset_read_models import ActivityAssetReasonFact
 from .operation_dtos import (
+    ActivityAssetDisposalSnapshot,
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
 )
@@ -49,6 +50,10 @@ ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID = "ledger.actividad-asset.claim"
 ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID = "ledger.actividad-asset.filing-handoff"
 
 ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.describe"
+
+ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.dispose"
+
+ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID = "ledger.actividad-asset.disposal-calculate"
 
 ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID = "ledger.actividad-asset.list"
 
@@ -212,6 +217,26 @@ class ActivityAssetDescribeRequest(BaseModel):
     profile_id: UUID
     asset_id: ActivityAssetId
     descriptor: ActivityAssetDescriptorFacts
+
+
+class ActivityAssetDisposeRequest(BaseModel):
+    """Record one element's baja and supersede the claims it invalidates, as one change."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+    disposal: ActivityAssetDisposalSnapshot
+
+
+class ActivityAssetDisposalCalculateRequest(BaseModel):
+    """Work out a baja's figures: the stated one as a preview, or else the recorded one."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    asset_id: ActivityAssetId
+    disposal: ActivityAssetDisposalSnapshot | None = None
 
 
 class ActivityAssetInspectRequest(BaseModel):

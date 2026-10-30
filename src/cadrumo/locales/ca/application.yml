@@ -858,10 +858,19 @@ application:
           aquesta part no es dedueix.
         what_to_do: Registra la dotació d'aquest període si la vols deduir i torna
           a calcular.
+      activity_asset_disposal_finding:
+        what: La baixa d'un element té un punt que has de revisar, encara que no atura
+          aquest model.
+        what_to_do: Llegeix la nota sobre la baixa de l'element i registra o corregeix
+          el que indica si t'afecta.
       activity_asset_foral_territory:
         what: Resideixes en un territori foral, on aquest model no s'aplica, de manera
           que els teus béns registrats no s'hi inclouen.
         what_to_do: Declara aquests béns davant la hisenda foral del teu territori.
+      activity_asset_residence_unresolved:
+        what: No s'ha pogut llegir la residència fiscal registrada, de manera que
+          els teus béns registrats no s'hi inclouen.
+        what_to_do: Indica la teva residència fiscal al teu perfil i torna a calcular.
       administrador_retencion_rate_mismatch:
         what: El tipus de retenció d'un registre d'administrador no coincideix amb
           el que correspon.
@@ -1611,7 +1620,8 @@ application:
       activity_asset_register_drift: 'El teu registre d''actius ha canviat des que
         es va calcular el model %{modelo} de %{filing_year}, període %{period} (amortitzacions
         afegides: %{claims_added}, substituïdes o retirades: %{claims_removed}, quadres
-        d''amortització modificats: %{schedules_changed}). Torna a calcular-lo.'
+        d''amortització modificats: %{schedules_changed}, baixes modificades: %{disposals_changed}).
+        Torna a calcular-lo.'
       art20_reduccion_possible: La casella [%{rnt_id}] recull %{rnt_value} EUR de
         rendiment net del treball, dins del límit de l'art. 20 LIRPF, així que la
         casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.

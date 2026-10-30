@@ -56,6 +56,8 @@ from .activity_asset_contracts import (
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
@@ -75,6 +77,8 @@ from .activity_asset_contracts import (
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
     ActivityAssetDescribeRequest,
+    ActivityAssetDisposalCalculateRequest,
+    ActivityAssetDisposeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
     ActivityAssetFormOptionsRequest,
@@ -92,6 +96,8 @@ from .activity_asset_results import (
     ActivityAssetCorrectResult,
     ActivityAssetCreateResult,
     ActivityAssetDescribeResult,
+    ActivityAssetDisposalCalculateResult,
+    ActivityAssetDisposeResult,
     ActivityAssetFilingHandoffResult,
     ActivityAssetForecastResult,
     ActivityAssetFormOptionsResult,
@@ -103,9 +109,11 @@ from .activity_asset_results import (
     ActivityAssetRefusalResult,
     ActivityAssetTimelineResult,
 )
+from .disposal_calculation import pinned_disposal_bounds, project_disposal_calculation
 from .modality import direct_estimation_modality
 from .operation_dtos import ActivityAssetRevisionSnapshot
 from .operations import ActivityAssetOperations, ActivityAssetRegisterAuthority, SupersedingClaimRequest
+from .register_reads import register_years
 
 _AGRARIAN_INSTALMENT_SELECTOR = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras"
 """The activities whose instalment is a share of income under RIRPF art. 110.1.c."""
@@ -208,6 +216,7 @@ def _activity_asset_operations(
         taxpayer_modality=taxpayer_modality,
         register_authority=ActivityAssetRegisterAuthority(
             edition=edition,
+            admits_filing_year=operation.supported_filing_years().admits_filing_year,
             agrarian_activities=agrarian_activities,
             residence_territory=lambda: resident_territory(bucket_id=bucket_id, operation=operation),
             claim_consumers=ports.claim_consumers,
@@ -218,6 +227,7 @@ def _activity_asset_operations(
                 regime=regime,
                 tax_year=tax_year,
             ),
+            disposal_bounds=pinned_disposal_bounds(operation),
         ),
     )
 
@@ -304,7 +314,13 @@ async def _store_refusal(
         refusal=refusal,
         **(
             {"asset_id": asset_id}
-            if result_type in {ActivityAssetInspectResult, ActivityAssetPlanResult, ActivityAssetTimelineResult}
+            if result_type
+            in {
+                ActivityAssetInspectResult,
+                ActivityAssetPlanResult,
+                ActivityAssetTimelineResult,
+                ActivityAssetDisposalCalculateResult,
+            }
             else {}
         ),
         **(
@@ -793,8 +809,65 @@ class ActivityAssetDescribeExecutor:
         return await await_cancellation_complete(commit(), task_name="activity-asset-describe")
 
 
+class ActivityAssetDisposeExecutor:
+    """Record one element's baja through the exact profile repository."""
+
+    def __init__(self, ports_factory: ActivityAssetOperationPortsFactory) -> None:
+        """Bind the worker-scoped history port factory."""
+        self._ports_factory = ports_factory
+
+    async def execute(
+        self,
+        request: OperationRequest[ActivityAssetDisposeRequest],
+        context: OperationExecutorContext,
+    ) -> str | OperationRefusalEvidence:
+        """Run the typed operation and return its terminal reference or refusal."""
+        payload = request.payload
+        definition_id = ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID
+        bucket_id = _worker_bucket(request, context, definition_id=definition_id, profile_id=payload.profile_id)
+        authority = _authority_provenance(context.authority_operation)
+        await context.events.phase(definition_id)
+
+        async def commit() -> str | OperationRefusalEvidence:
+            async with context.cancellation.irreversible_section():
+                operations = await _load_operations(
+                    self._ports_factory,
+                    bucket_id=bucket_id,
+                    operation=context.authority_operation,
+                )
+                await context.events.effect(OperationEffect.UNKNOWN)
+                try:
+                    history = await asyncio.to_thread(
+                        operations.dispose,
+                        payload.asset_id,
+                        payload.disposal.to_domain(),
+                        recorded_at=now(),
+                        origin=definition_id,
+                    )
+                except ActividadAssetError as error:
+                    return await _store_refusal(
+                        context,
+                        result_type=ActivityAssetDisposeResult,
+                        profile_id=payload.profile_id,
+                        authority=authority,
+                        error=error,
+                    )
+                result = ActivityAssetDisposeResult(
+                    profile_id=payload.profile_id,
+                    authority=authority,
+                    outcome="succeeded",
+                    history=history,
+                )
+                reference = await context.operands.put(result, written_at=now())
+                await context.events.effect(OperationEffect.UPDATED)
+                return reference
+
+        return await await_cancellation_complete(commit(), task_name="activity-asset-dispose")
+
+
 type _ReadRequest = (
     ActivityAssetListRequest
+    | ActivityAssetDisposalCalculateRequest
     | ActivityAssetPlanRequest
     | ActivityAssetTimelineRequest
     | ActivityAssetFormOptionsRequest
@@ -864,7 +937,8 @@ class ActivityAssetListExecutor(_ActivityAssetReadExecutor[ActivityAssetListRequ
     @override
     def _read(self, operations: ActivityAssetOperations, payload: ActivityAssetListRequest) -> dict[str, object]:
         del payload
-        return {"rows": operations.list_elements()}
+        rows = operations.list_elements()
+        return {"rows": rows, "years": register_years(rows)}
 
 
 class ActivityAssetPlanExecutor(_ActivityAssetReadExecutor[ActivityAssetPlanRequest]):
@@ -891,6 +965,23 @@ class ActivityAssetTimelineExecutor(_ActivityAssetReadExecutor[ActivityAssetTime
     @override
     def _read(self, operations: ActivityAssetOperations, payload: ActivityAssetTimelineRequest) -> dict[str, object]:
         return {"asset_id": payload.asset_id, "events": operations.timeline(payload.asset_id)}
+
+
+class ActivityAssetDisposalCalculateExecutor(_ActivityAssetReadExecutor[ActivityAssetDisposalCalculateRequest]):
+    """Work out one baja's figures, recording nothing."""
+
+    definition_id = ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID
+    result_type = ActivityAssetDisposalCalculateResult
+
+    @override
+    def _read(
+        self,
+        operations: ActivityAssetOperations,
+        payload: ActivityAssetDisposalCalculateRequest,
+    ) -> dict[str, object]:
+        stated = None if payload.disposal is None else payload.disposal.to_domain()
+        disposal, calculation = operations.disposal_calculation(payload.asset_id, stated)
+        return {"asset_id": payload.asset_id, "calculation": project_disposal_calculation(disposal, calculation)}
 
 
 class ActivityAssetFormOptionsExecutor(_ActivityAssetReadExecutor[ActivityAssetFormOptionsRequest]):

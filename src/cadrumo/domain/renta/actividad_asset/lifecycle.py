@@ -15,6 +15,7 @@ from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
+from .disposal import ActivityAssetDisposal
 from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
 from .vehicle_affectation import VehicleAffectation
@@ -265,6 +266,29 @@ class ActivityAssetBasis(BaseModel):
         """
         return self.basis_amount + self.non_deductible_iva
 
+    def allocation_share(self) -> Decimal:
+        """Return the share of the whole element that this taxpayer's activity holds.
+
+        A business-allocated cost is already that share, so nothing reduces it again.
+        """
+        if self.stage is AssetBasisStage.BUSINESS_ALLOCATED:
+            return Decimal("1")
+        if self.stage is AssetBasisStage.TAXPAYER_OWNED:
+            if self.business_use_share is None:  # defensive: validator proves unreachable
+                raise ActividadAssetValidationError(
+                    translated_message="ledger.actividad_asset.errors.business_use_share_missing"
+                )
+            return self.business_use_share
+        if self.ownership_share is None or self.office_area is None or self.total_area is None:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.allocation_components_missing"
+            )
+        return self.ownership_share * self.office_area / self.total_area
+
+    def allocated_acquisition_value(self) -> Decimal:
+        """Return the allocated price plus non-deductible IVA, keeping the land the basis leaves out."""
+        return self.acquisition_cost() * self.allocation_share()
+
     def deductible_basis(self) -> Decimal:
         """Return final depreciation basis without reapplying any allocation fact."""
         if self.stage is AssetBasisStage.BUSINESS_ALLOCATED:
@@ -303,6 +327,8 @@ class ActivityAssetRevision(BaseModel):
     residual_value: Decimal = Decimal("0")
     in_service_date: date
     out_of_service_date: date | None = None
+    """The exclusive end of the charge window, which only a baja states."""
+    disposal: ActivityAssetDisposal | None = None
     opening_history: OpeningAmortizationHistory
     acquired_condition: AcquiredCondition
     building_construction_date: date | None = None
@@ -342,10 +368,33 @@ class ActivityAssetRevision(BaseModel):
 
     @property
     def revision_id(self) -> str:
-        """Return the deterministic identity of this immutable revision."""
-        payload = self.model_dump(mode="json", exclude={"supersedes_revision_id"})
+        """Return the deterministic identity of this immutable revision.
+
+        A revision with no baja omits the field, so its identity is unchanged by it.
+        """
+        excluded = {"supersedes_revision_id"} if self.disposal is not None else {"supersedes_revision_id", "disposal"}
+        payload = self.model_dump(mode="json", exclude=excluded)
         payload["supersedes_revision_id"] = self.supersedes_revision_id
         return content_hash_hex(payload)
+
+    def with_disposal(self, disposal: ActivityAssetDisposal) -> ActivityAssetRevision:
+        """Return the superseding revision recording a baja, every other fact copied unchanged."""
+        if disposal.disposal_date < self.in_service_date:
+            raise ActividadAssetValidationError(
+                context={
+                    "disposal_date": disposal.disposal_date.isoformat(),
+                    "in_service_date": self.in_service_date.isoformat(),
+                },
+                translated_message="ledger.actividad_asset.errors.disposal_before_service",
+            )
+        facts = {name: getattr(self, name) for name in type(self).model_fields}
+        facts.update(
+            revision_number=self.revision_number + 1,
+            supersedes_revision_id=self.revision_id,
+            out_of_service_date=disposal.boundary,
+            disposal=disposal,
+        )
+        return ActivityAssetRevision(**facts)
 
 
 def _validate_revision_lineage(revision: ActivityAssetRevision) -> None:
@@ -366,8 +415,21 @@ def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
 
 
 def _validate_service_dates(revision: ActivityAssetRevision) -> None:
-    if revision.out_of_service_date is not None and revision.out_of_service_date <= revision.in_service_date:
-        raise ValueError("out_of_service_date must be after in_service_date")
+    disposal = revision.disposal
+    if disposal is None:
+        if revision.out_of_service_date is not None:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.out_of_service_date_without_disposal",
+            )
+        return
+    if disposal.disposal_date < revision.in_service_date:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.disposal_before_service",
+        )
+    if revision.out_of_service_date != disposal.boundary:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.out_of_service_date_not_the_boundary",
+        )
 
 
 def _validate_opening_year(revision: ActivityAssetRevision) -> None:

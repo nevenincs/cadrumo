@@ -37,6 +37,10 @@ cli:
         create_help: Create an activity asset from its first immutable revision (JSON).
         describe_help: Record an element's name, serial number and register details;
           no calculation changes.
+        disposal_calculate_help: 'Work out a baja''s figures locally: the one the
+          options state, or else the recorded one.'
+        dispose_help: Record an element's baja and supersede the claims past its last
+          service day in the same write.
         filing_handoff_help: Show the recorded claims projected to Modelo 100 and
           the accrual projected to Modelo 130.
         forecast_help: Preview, without recording it, the amortization the revision's

@@ -18,6 +18,7 @@ from .activity_asset_contracts import (
 )
 from .activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
+    ActivityAssetDisposalCalculationView,
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
@@ -156,10 +157,36 @@ class ActivityAssetDescribeProjection(_ActivityAssetOperationProjection):
         return self
 
 
+class ActivityAssetDisposeProjection(_ActivityAssetOperationProjection):
+    """Public baja result with the complete persisted history."""
+
+    history: ActivityAssetHistorySnapshot | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.history is not None)
+        return self
+
+
+class ActivityAssetDisposalCalculateProjection(_ActivityAssetOperationProjection):
+    """Public figures of one baja, recorded or previewed."""
+
+    asset_id: ActivityAssetId | None = None
+    calculation: ActivityAssetDisposalCalculationView | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.calculation is not None)
+        return self
+
+
 class ActivityAssetListProjection(_ActivityAssetOperationProjection):
     """Public summary of the register."""
 
     rows: tuple[ActivityAssetListRow, ...] | None = None
+    years: tuple[int, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

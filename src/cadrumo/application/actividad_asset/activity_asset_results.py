@@ -24,6 +24,7 @@ from .activity_asset_contracts import (
 )
 from .activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
+    ActivityAssetDisposalCalculationView,
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
@@ -231,10 +232,36 @@ class ActivityAssetDescribeResult(ActivityAssetOperationResult):
         return self
 
 
+class ActivityAssetDisposeResult(ActivityAssetOperationResult):
+    """Private terminal result for recording one baja."""
+
+    history: ActivityAssetHistory | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.history is not None)
+        return self
+
+
+class ActivityAssetDisposalCalculateResult(ActivityAssetOperationResult):
+    """Private terminal result with one baja's figures."""
+
+    asset_id: ActivityAssetId | None = None
+    calculation: ActivityAssetDisposalCalculationView | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.calculation is not None)
+        return self
+
+
 class ActivityAssetListResult(ActivityAssetOperationResult):
     """Private terminal result summarising the register."""
 
     rows: tuple[ActivityAssetListRow, ...] | None = None
+    years: tuple[int, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

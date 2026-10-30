@@ -759,6 +759,8 @@ def _durable_invoice_source_reason(diagnostic: CalculationSourceDiagnostic) -> _
         return "ledger_amortization_row_unregistered"
     if diagnostic.reason == "activity_asset_foral_territory":
         return "activity_asset_foral_territory"
+    if diagnostic.reason == "activity_asset_residence_unresolved":
+        return "activity_asset_residence_unresolved"
     return None
 
 
@@ -941,6 +943,7 @@ _DurableSourceIssueReason = Literal[
     "invoice_reverse_charge_cuota_not_derivable",
     "ledger_amortization_row_unregistered",
     "activity_asset_foral_territory",
+    "activity_asset_residence_unresolved",
 ]
 
 

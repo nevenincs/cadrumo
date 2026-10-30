@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -17,6 +17,7 @@ from ..claims import (
     select_effective_claims,
     uncovered_claim_intervals,
 )
+from ..disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
 from ..election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -140,6 +141,16 @@ def _revision(*, in_service: date, out_of_service: date | None = None) -> Activi
         ),
         in_service_date=in_service,
         out_of_service_date=out_of_service,
+        disposal=(
+            None
+            if out_of_service is None
+            else ActivityAssetDisposal(
+                disposal_date=out_of_service - timedelta(days=1),
+                reason=ActivityAssetDisposalReason.WITHDRAWAL,
+                proceeds=Decimal("0.00"),
+                transmission_costs=Decimal("0.00"),
+            )
+        ),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),

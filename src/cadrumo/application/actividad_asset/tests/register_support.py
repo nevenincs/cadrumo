@@ -10,7 +10,9 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import Activ
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import ActivityAssetRegisterAuthority
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
+    ActivityAssetDisposalBounds,
     resolve_activity_asset_class_labels,
+    resolve_activity_asset_disposal_bounds,
     resolve_activity_asset_schedule_authority,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -85,6 +87,15 @@ def _published_class_labels(regime: DirectEstimationRegime, tax_year: int) -> Ma
         return resolve_activity_asset_class_labels(operation, regime=regime, tax_year=tax_year)
 
 
+def _published_disposal_bounds(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_activity_asset_disposal_bounds(
+            operation.revision_for_context("100", filing_year=tax_year, period="0A"),
+            tax_year=tax_year,
+            asset_revision=revision,
+        )
+
+
 def memory_register_authority(
     *,
     today: date = date(2025, 12, 31),
@@ -112,6 +123,7 @@ def memory_register_authority(
         claim_consumers=claim_consumers,
         today=lambda: today,
         schedule_authority=_published_authority,
+        disposal_bounds=_published_disposal_bounds,
         class_labels=_published_class_labels,
     )
 

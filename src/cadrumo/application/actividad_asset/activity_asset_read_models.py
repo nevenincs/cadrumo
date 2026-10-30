@@ -9,18 +9,55 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Literal
+from types import MappingProxyType
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field
 
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
-from ...domain.renta.actividad_asset.lifecycle import AssetKind
+from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind, ActivityAssetDisposalReason
+from ...domain.renta.actividad_asset.election import AcquiredCondition, AmortizationMethod, DirectEstimationRegime
+from ...domain.renta.actividad_asset.lifecycle import (
+    AcquisitionShape,
+    AssetBasisStage,
+    AssetKind,
+    OpeningHistoryStatus,
+)
 from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
 from ..operations.public_scalar import PublicDecimal
 from .schedule_walk import PlanFigureAbsence
+
+ACTIVITY_ASSET_LABEL_NAMESPACE: Final = "ledger.actividad_asset."
+"""Where the catalogue holds one word per token, as ``<namespace><family>.<token>``."""
+
+DISPOSAL_FINDING_FAMILY: Final = "disposal_finding"
+NON_DEDUCTIBLE_IVA_STATE_FAMILY: Final = "non_deductible_iva_state"
+
+TIMELINE_TOKEN_FAMILIES: Final[Mapping[str, tuple[str, type[StrEnum]]]] = MappingProxyType(
+    {
+        "acquired_condition": ("acquired_condition", AcquiredCondition),
+        "acquisition_shape": ("acquisition_shape", AcquisitionShape),
+        "basis.stage": ("basis_stage", AssetBasisStage),
+        "opening_history.status": ("opening_history_status", OpeningHistoryStatus),
+    }
+)
+"""The timeline fields whose values are tokens, with the catalogue family and enum that word them."""
+
+
+def activity_asset_label_key(family: str, token: StrEnum) -> str:
+    """Name the catalogue key that words one token of a family."""
+    return f"{ACTIVITY_ASSET_LABEL_NAMESPACE}{family}.{token.value}"
+
+
+def timeline_token_key(field: str, value: str | None) -> str | None:
+    """Name the catalogue key of a timeline value, or ``None`` when the field carries no token or is unset."""
+    family = TIMELINE_TOKEN_FAMILIES.get(field)
+    if family is None or value is None:
+        return None
+    name, enum = family
+    return activity_asset_label_key(name, enum(value))
 
 
 class ActivityAssetReasonFact(BaseModel):
@@ -109,6 +146,8 @@ class ActivityAssetListRow(_ReadModel):
     accumulated: PublicDecimal | None = None
     pending: PublicDecimal | None = None
     findings: ActivityAssetFindingCounts
+    years: tuple[int, ...] = ()
+    """The tax years the element can be read in: its service window within the registry's support."""
 
 
 class ActivityAssetPlanClaim(_ReadModel):
@@ -186,6 +225,9 @@ class ActivityAssetTimelineChange(_ReadModel):
     field: str = Field(min_length=1, max_length=256)
     before: str | None = None
     after: str | None = None
+    before_key: str | None = None
+    after_key: str | None = None
+    """The catalogue keys that word ``before`` and ``after`` when the field carries a token."""
 
 
 class ActivityAssetTimelineClaimUse(_ReadModel):
@@ -209,6 +251,44 @@ class ActivityAssetTimelineEvent(_ReadModel):
     changes: tuple[ActivityAssetTimelineChange, ...] = ()
     affects_calculation: bool
     claim: ActivityAssetTimelineClaimUse | None = None
+
+
+class ActivityAssetDisposalFindingView(_ReadModel):
+    """One non-blocking finding of a baja's calculation."""
+
+    kind: ActivityAssetDisposalFindingKind
+    label_key: str
+    tax_year: int | None = None
+    effect_on_cost: PublicDecimal | None = None
+
+
+class ActivityAssetDisposalYearView(_ReadModel):
+    """One service year's cumulative figures."""
+
+    tax_year: int
+    claims: PublicDecimal
+    deducted_through: PublicDecimal
+    minimum_through: PublicDecimal
+    reduction_through: PublicDecimal
+
+
+class ActivityAssetDisposalCalculationView(_ReadModel):
+    """The figures of one baja; a withdrawal has no transmission value, costs or result."""
+
+    disposal_date: date
+    reason: ActivityAssetDisposalReason
+    acquisition_value: PublicDecimal
+    deducted: PublicDecimal
+    minimum: PublicDecimal
+    reduction: PublicDecimal
+    excess: PublicDecimal
+    net_value: PublicDecimal
+    transmission_value: PublicDecimal | None = None
+    transmission_costs: PublicDecimal | None = None
+    result: PublicDecimal | None = None
+    route_changed_by_later_affectation: bool
+    years: tuple[ActivityAssetDisposalYearView, ...]
+    findings: tuple[ActivityAssetDisposalFindingView, ...]
 
 
 class ActivityAssetTableGroup(_ReadModel):
@@ -244,6 +324,7 @@ class ActivityAssetAcquisitionCandidate(_ReadModel):
     taxable_base: PublicDecimal | None = None
     iva_amount: PublicDecimal | None = None
     non_deductible_iva_state: ActivityAssetNonDeductibleIvaState
+    non_deductible_iva_state_key: str
     non_deductible_iva: PublicDecimal | None = None
     invoice_evidence_id: str | None = None
     evidence_fingerprint: Hex64Str | None = None
@@ -269,10 +350,17 @@ class ActivityAssetM130ProjectionSnapshot(_ReadModel):
 
 
 __all__ = [
+    "ACTIVITY_ASSET_LABEL_NAMESPACE",
+    "DISPOSAL_FINDING_FAMILY",
+    "NON_DEDUCTIBLE_IVA_STATE_FAMILY",
+    "TIMELINE_TOKEN_FAMILIES",
     "ActivityAssetAcquisitionCandidate",
     "ActivityAssetClaimStaleReason",
     "ActivityAssetClaimState",
     "ActivityAssetClaimableInterval",
+    "ActivityAssetDisposalCalculationView",
+    "ActivityAssetDisposalFindingView",
+    "ActivityAssetDisposalYearView",
     "ActivityAssetEdition",
     "ActivityAssetElectionLimits",
     "ActivityAssetFindingCounts",
@@ -290,5 +378,7 @@ __all__ = [
     "ActivityAssetTimelineChange",
     "ActivityAssetTimelineClaimUse",
     "ActivityAssetTimelineEvent",
+    "activity_asset_label_key",
     "project_reason_facts",
+    "timeline_token_key",
 ]

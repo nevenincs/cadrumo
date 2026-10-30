@@ -19,6 +19,7 @@ from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.retencion_facts import load_retencion_actividades_rates
+from ...actividad_asset.tests.register_support import MemoryRepository
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
@@ -34,6 +35,7 @@ from .renta_income_aggregation_support import (
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
+from .test_modelo_source_mesh_ledger import InMemoryTransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -122,7 +124,11 @@ def _m130_2026_q1_revision() -> ModeloRevision:
 
 def _income_resolver(transactions: TransactionCatalogue) -> LedgerRentaIncomeAggregationSourceResolver:
     """Build the resolver with the application-owned inward read fakes."""
+    repository = InMemoryTransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID)
+    repository.save(transactions)
     return LedgerRentaIncomeAggregationSourceResolver(
+        activity_asset_history_repository=MemoryRepository(),
+        transaction_repository=repository,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=transactions,

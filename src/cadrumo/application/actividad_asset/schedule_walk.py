@@ -94,10 +94,8 @@ def walk_element(
     Returns:
         One row per year in order, stopping at the year of the element's baja.
     """
-    last_service_day = (
-        None if revision.out_of_service_date is None else revision.out_of_service_date - timedelta(days=1)
-    )
-    last_year = through_year if last_service_day is None else min(through_year, last_service_day.year)
+    disposal = revision.disposal
+    last_year = through_year if disposal is None else min(through_year, disposal.disposal_date.year)
     rows: list[WalkedYear] = []
     consumed = Decimal("0")
     opening_covers_through = revision.opening_history.covered_through_tax_year
@@ -329,7 +327,7 @@ def _m130_element_accrual(
     tax_year = period_end.year
     until = period_end + timedelta(days=1)
     if revision.in_service_date >= until or (
-        revision.out_of_service_date is not None and revision.out_of_service_date <= date(tax_year, 1, 1)
+        revision.disposal is not None and revision.disposal.disposal_date.year < tax_year
     ):
         return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)
     if revision.amortization.method in FREE_AMOUNT_METHODS:

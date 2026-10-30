@@ -99,7 +99,11 @@ from .errors import AggregationValidationError
 from .impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
 from .irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
 from .modelo_bindings_actividad_assets import (
+    ActivityAssetDisposalExcess,
     LedgerRentaExpenseTreatment,
+    activity_asset_disposal_excess,
+    activity_asset_disposal_excess_m131_findings,
+    activity_asset_disposal_provenance,
     activity_asset_provenance,
     amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
@@ -255,9 +259,13 @@ class LedgerRentaIncomeAggregationSourceResolver:
         self,
         *,
         ports: InvoiceCatalogueReadPorts,
+        activity_asset_history_repository: ActivityAssetHistoryRepository,
+        transaction_repository: TransactionCatalogueRepositoryProtocol,
     ) -> None:
-        """Bind invoice-catalogue ports used by the Renta income resolver."""
+        """Bind the catalogue ports and the register, whose bajas can add income to Modelos 130 and 131."""
         self._ports = ports
+        self._activity_asset_history_repository = activity_asset_history_repository
+        self._transaction_repository = transaction_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve Renta activity-income observations for one context."""
@@ -320,6 +328,17 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
                     )
+                disposal_excess = (
+                    ()
+                    if context.modelo == Modelo("100").value
+                    else activity_asset_disposal_excess(
+                        self._activity_asset_history_repository.load(),
+                        context=context,
+                        period=aggregation_period,
+                        transactions=self._transaction_repository,
+                        operation=operation,
+                    )
+                )
             except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
                 return storage_degradation_resolution(
                     resolver_id=self.resolver_id,
@@ -327,17 +346,23 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
-        return self._assemble_resolution(context, aggregation, profile_decode_context)
+        return self._assemble_resolution(context, aggregation, profile_decode_context, disposal_excess)
 
     def _assemble_resolution(
         self,
         context: CalculationSourceContext,
         aggregation: RentaIncomeLedgerAggregation,
         profile_decode_context: ProfileDecodeContext,
+        disposal_excess: tuple[ActivityAssetDisposalExcess, ...],
     ) -> CalculationSourceResolution:
+        declared_excess = (
+            tuple(row for row in disposal_excess if not row.agrarian and row.error is None)
+            if context.modelo == Modelo("130").value
+            else ()
+        )
         binding_values = resolve_ledger_renta_income_aggregation_binding_values(
             context.revision,
-            aggregation.observations,
+            (*aggregation.observations, *declared_excess),
         )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
         # income whose target_casilla_id matches no ledger_renta_income_aggregation
@@ -427,8 +452,26 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 aggregation,
                 context.revision,
                 resolver_id=self.resolver_id,
+            )
+            + (
+                activity_asset_disposal_excess_m131_findings(disposal_excess, resolver_id=self.resolver_id)
+                if context.modelo == Modelo("131").value
+                else ()
             ),
-            provenance=_provenance_for(
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    resolved_binding_source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+                    contributor_source_kind="activity_asset_disposal_excess",
+                    contributor_binding_source=None,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=row.source_ref,
+                    parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+                )
+                for row in declared_excess
+            )
+            + _provenance_for(
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
@@ -1180,6 +1223,11 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
             )
             + activity_asset_provenance(
                 asset_observations,
+                resolver_id=self.resolver_id,
+                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+            )
+            + activity_asset_disposal_provenance(
+                asset_projection.disposal_revision_ids,
                 resolver_id=self.resolver_id,
                 resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
             ),

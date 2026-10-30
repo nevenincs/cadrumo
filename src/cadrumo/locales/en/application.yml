@@ -791,10 +791,19 @@ application:
           part is not deducted.
         what_to_do: Record the depreciation charge for that period if you want to
           deduct it, then calculate again.
+      activity_asset_disposal_finding:
+        what: The disposal of an asset has a point you should check, though it does
+          not stop this form.
+        what_to_do: Read the note on the asset's disposal, and record or correct what
+          it names if it applies to you.
       activity_asset_foral_territory:
         what: You live in the Basque Country or Navarre, where this form does not
           apply, so your registered assets are not included.
         what_to_do: Declare these assets with the tax authority of your territory.
+      activity_asset_residence_unresolved:
+        what: Your recorded tax residence could not be read, so your registered assets
+          are not included.
+        what_to_do: State your tax residence in your profile, then calculate again.
       administrador_retencion_rate_mismatch:
         what: The withholding rate on a record for a company director differs from
           the rate that applies.
@@ -1502,7 +1511,7 @@ application:
       activity_asset_register_drift: 'Your asset register changed after modelo %{modelo}
         %{filing_year}, period %{period}, was calculated (amortization charges added:
         %{claims_added}, replaced or removed: %{claims_removed}, schedules changed:
-        %{schedules_changed}). Calculate it again.'
+        %{schedules_changed}, bajas changed: %{disposals_changed}). Calculate it again.'
       art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
         from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
         so box [%{reduccion_id}] may give you a reduction you are not using yet. Check

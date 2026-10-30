@@ -12,41 +12,67 @@ import pytest
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....application.actividad_asset.activity_asset_contracts import (
+    ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID,
+    ActivityAssetAcquisitionCandidatesRequest,
     ActivityAssetAuthorityProvenance,
     ActivityAssetClaimRequest,
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
     ActivityAssetDescribeRequest,
+    ActivityAssetDisposalCalculateRequest,
+    ActivityAssetDisposeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
+    ActivityAssetFormOptionsRequest,
     ActivityAssetInspectRequest,
+    ActivityAssetListRequest,
     ActivityAssetPlanRequest,
+    ActivityAssetRefusal,
+    ActivityAssetTimelineRequest,
 )
 from ....application.actividad_asset.activity_asset_projections import (
+    ActivityAssetAcquisitionCandidatesProjection,
     ActivityAssetClaimProjection,
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
     ActivityAssetDescribeProjection,
+    ActivityAssetDisposalCalculateProjection,
+    ActivityAssetDisposeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
+    ActivityAssetFormOptionsProjection,
     ActivityAssetInspectProjection,
+    ActivityAssetListProjection,
     ActivityAssetPlanProjection,
+    ActivityAssetTimelineProjection,
 )
-from ....application.actividad_asset.activity_asset_read_models import ActivityAssetElectionLimits
+from ....application.actividad_asset.activity_asset_read_models import (
+    ActivityAssetDisposalCalculationView,
+    ActivityAssetEdition,
+    ActivityAssetElectionLimits,
+    ActivityAssetFormOptionsView,
+)
 from ....application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operation_dtos import (
+    ActivityAssetDisposalSnapshot,
     ActivityAssetFilingHandoffSnapshot,
     ActivityAssetHistoryClaimResultSnapshot,
     ActivityAssetHistorySnapshot,
@@ -59,14 +85,16 @@ from ....application.actividad_asset.operations import (
     M130Contribution,
 )
 from ....application.operations.public_scalar import PublicDecimal
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection, asset_schedule_history
+from ....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from ....domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
     AmortizationMethod,
     DirectEstimationRegime,
 )
+from ....domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -458,3 +486,206 @@ def test_plan_bridge_returns_rows_and_limits_with_no_effect(monkeypatch: pytest.
 
     assert bridge.plan_activity_asset(_context(), asset_id="bridge-asset") is projection
     assert cast(ActivityAssetPlanRequest, requests[0]).asset_id == "bridge-asset"
+
+
+def _read_completion(projection: BaseModel) -> RegisteredOperationCompletion[Any]:
+    return RegisteredOperationCompletion(
+        operation_id=_OPERATION_ID,
+        projection=projection,
+        effect=OperationEffect.NONE,
+    )
+
+
+def test_list_bridge_sends_the_exact_profile_and_reports_no_effect(monkeypatch: pytest.MonkeyPatch) -> None:
+    projection = ActivityAssetListProjection(profile_id=_PROFILE, authority=_AUTHORITY, outcome="succeeded", rows=())
+    requests = _bind(
+        monkeypatch,
+        completion=_read_completion(projection),
+        definition_id=ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetListRequest,
+    )
+
+    assert bridge.list_activity_assets(_context()) is projection
+    assert cast(ActivityAssetListRequest, requests[0]).profile_id == _PROFILE
+
+
+def test_timeline_bridge_carries_the_asset_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    projection = ActivityAssetTimelineProjection(
+        profile_id=_PROFILE,
+        authority=_AUTHORITY,
+        outcome="succeeded",
+        asset_id="bridge-asset",
+        events=(),
+    )
+    requests = _bind(
+        monkeypatch,
+        completion=_read_completion(projection),
+        definition_id=ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetTimelineRequest,
+    )
+
+    assert bridge.timeline_activity_asset(_context(), asset_id="bridge-asset") is projection
+    assert cast(ActivityAssetTimelineRequest, requests[0]).asset_id == "bridge-asset"
+
+
+def test_form_options_bridge_carries_the_kind_and_year(monkeypatch: pytest.MonkeyPatch) -> None:
+    projection = ActivityAssetFormOptionsProjection(
+        profile_id=_PROFILE,
+        authority=_AUTHORITY,
+        outcome="succeeded",
+        options=ActivityAssetFormOptionsView(
+            tax_year=2025,
+            asset_kind=AssetKind.MATERIAL,
+            regime=DirectEstimationRegime.NORMAL,
+            edition=ActivityAssetEdition(revision_id="bridge-edition", authored_filing_year=2025, projected=False),
+            methods=(AmortizationMethod.LINEAR,),
+            table_groups=(),
+        ),
+    )
+    requests = _bind(
+        monkeypatch,
+        completion=_read_completion(projection),
+        definition_id=ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetFormOptionsRequest,
+    )
+
+    assert bridge.form_options_activity_asset(_context(), asset_kind=AssetKind.MATERIAL, tax_year=2025) is projection
+    request = cast(ActivityAssetFormOptionsRequest, requests[0])
+    assert (request.asset_kind, request.tax_year) == (AssetKind.MATERIAL, 2025)
+
+
+def test_acquisition_candidates_bridge_sends_the_exact_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    projection = ActivityAssetAcquisitionCandidatesProjection(
+        profile_id=_PROFILE,
+        authority=_AUTHORITY,
+        outcome="succeeded",
+        candidates=(),
+    )
+    requests = _bind(
+        monkeypatch,
+        completion=_read_completion(projection),
+        definition_id=ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetAcquisitionCandidatesRequest,
+    )
+
+    assert bridge.acquisition_candidates_activity_asset(_context()) is projection
+    assert cast(ActivityAssetAcquisitionCandidatesRequest, requests[0]).profile_id == _PROFILE
+
+
+def test_read_bridge_rebuilds_the_registered_refusal_as_its_domain_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    projection = ActivityAssetTimelineProjection(
+        profile_id=_PROFILE,
+        authority=_AUTHORITY,
+        outcome="refused",
+        refusal=ActivityAssetRefusal(code="REFUSED_ACTIVIDAD_ASSET_VALIDATION"),
+    )
+    completion = RegisteredOperationCompletion(
+        operation_id=_OPERATION_ID,
+        projection=projection,
+        effect=OperationEffect.NONE,
+        terminal_condition=OperationTerminalCondition.REFUSED,
+        refusal_code="REFUSED_ACTIVIDAD_ASSET_VALIDATION",
+    )
+    _bind(
+        monkeypatch,
+        completion=completion,
+        definition_id=ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetTimelineRequest,
+    )
+
+    with pytest.raises(ActividadAssetValidationError):
+        bridge.timeline_activity_asset(_context(), asset_id="bridge-asset")
+
+
+def test_read_bridge_refuses_a_refusal_the_receipt_did_not_settle(monkeypatch: pytest.MonkeyPatch) -> None:
+    projection = ActivityAssetListProjection(
+        profile_id=_PROFILE,
+        authority=_AUTHORITY,
+        outcome="refused",
+        refusal=ActivityAssetRefusal(code="REFUSED_ACTIVIDAD_ASSET_VALIDATION"),
+    )
+    _bind(
+        monkeypatch,
+        completion=_read_completion(projection),
+        definition_id=ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetListRequest,
+    )
+
+    with pytest.raises(CliRefusedBoundaryError):
+        bridge.list_activity_assets(_context())
+
+
+def _baja_snapshot() -> ActivityAssetDisposalSnapshot:
+    return ActivityAssetDisposalSnapshot(
+        disposal_date=date(2026, 6, 30),
+        reason=ActivityAssetDisposalReason.SALE,
+        proceeds=PublicDecimal(decimal="900.00"),
+        transmission_costs=PublicDecimal(decimal="10.00"),
+    )
+
+
+def test_dispose_bridge_carries_the_baja_and_reports_an_update(monkeypatch: pytest.MonkeyPatch) -> None:
+    revision = _revision()
+    projection = ActivityAssetDisposeProjection(
+        profile_id=_PROFILE,
+        authority=_AUTHORITY,
+        outcome="succeeded",
+        history=ActivityAssetHistorySnapshot.from_domain(ActivityAssetHistory(revisions=(revision,))),
+    )
+    requests = _bind(
+        monkeypatch,
+        completion=RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID,
+            projection=projection,
+            effect=OperationEffect.UPDATED,
+        ),
+        definition_id=ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetDisposeRequest,
+    )
+
+    assert (
+        bridge.dispose_activity_asset(_context(), asset_id=revision.asset_id, disposal=_baja_snapshot()) is projection
+    )
+    request = cast(ActivityAssetDisposeRequest, requests[0])
+    assert (request.asset_id, request.disposal) == (revision.asset_id, _baja_snapshot())
+
+
+@pytest.mark.parametrize("disposal", [None, _baja_snapshot()])
+def test_disposal_calculate_bridge_has_no_effect_with_or_without_a_stated_baja(
+    monkeypatch: pytest.MonkeyPatch,
+    disposal: ActivityAssetDisposalSnapshot | None,
+) -> None:
+    projection = ActivityAssetDisposalCalculateProjection(
+        profile_id=_PROFILE,
+        authority=_AUTHORITY,
+        outcome="succeeded",
+        asset_id="bridge-asset",
+        calculation=ActivityAssetDisposalCalculationView(
+            disposal_date=date(2026, 6, 30),
+            reason=ActivityAssetDisposalReason.WITHDRAWAL,
+            acquisition_value=PublicDecimal(decimal="900.00"),
+            deducted=PublicDecimal(decimal="100.00"),
+            minimum=PublicDecimal(decimal="50.00"),
+            reduction=PublicDecimal(decimal="100.00"),
+            excess=PublicDecimal(decimal="0.00"),
+            net_value=PublicDecimal(decimal="800.00"),
+            route_changed_by_later_affectation=False,
+            years=(),
+            findings=(),
+        ),
+    )
+    requests = _bind(
+        monkeypatch,
+        completion=RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID,
+            projection=projection,
+            effect=OperationEffect.NONE,
+        ),
+        definition_id=ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetDisposalCalculateRequest,
+    )
+
+    assert (
+        bridge.calculate_activity_asset_disposal(_context(), asset_id="bridge-asset", disposal=disposal) is projection
+    )
+    assert cast(ActivityAssetDisposalCalculateRequest, requests[0]).disposal == disposal

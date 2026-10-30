@@ -160,6 +160,8 @@ _PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_actividad_asset_claim",
         "app_ledger_actividad_asset_filing_handoff",
         "app_ledger_actividad_asset_describe",
+        "app_ledger_actividad_asset_dispose",
+        "app_ledger_actividad_asset_disposal_calculate",
         "app_ledger_actividad_asset_list",
         "app_ledger_actividad_asset_plan",
         "app_ledger_actividad_asset_timeline",

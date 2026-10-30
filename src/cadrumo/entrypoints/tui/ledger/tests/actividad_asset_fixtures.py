@@ -17,6 +17,7 @@ from .....application.actividad_asset.activity_asset_projections import Activity
 from .....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
     ActivityAssetClaimState,
+    ActivityAssetDisposalCalculationView,
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
@@ -24,10 +25,12 @@ from .....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetTimelineEvent,
 )
 from .....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
+from .....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
 from .....application.actividad_asset.operations import ActivityAssetFilingHandoff, M130AccrualProjection
 from .....application.actividad_asset.schedule_walk import PlanFigureAbsence
 from .....application.operations.public_scalar import PublicDecimal
 from .....domain.renta.actividad_asset.claims import ClaimProjection
+from .....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from .....domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -210,6 +213,31 @@ class ActivityAssetActionStub:
                 class_key="equipo-informacion-software",
                 maximum_period_ends_on=date(2035, 1, 1),
             ),
+        )
+
+    def dispose(self, asset_id: str, disposal: ActivityAssetDisposalSnapshot) -> ActivityAssetHistory:
+        self.requests.append(("dispose", (asset_id, disposal)))
+        return ActivityAssetHistory(revisions=(self.revision,))
+
+    def disposal_calculate(
+        self, asset_id: str, disposal: ActivityAssetDisposalSnapshot | None
+    ) -> ActivityAssetDisposalCalculationView:
+        self.requests.append(("disposal_calculate", (asset_id, disposal)))
+        return ActivityAssetDisposalCalculationView(
+            disposal_date=date(2026, 6, 30),
+            reason=ActivityAssetDisposalReason.SALE,
+            acquisition_value=PublicDecimal(decimal="2000.00"),
+            deducted=PublicDecimal(decimal="777.86"),
+            minimum=PublicDecimal(decimal="299.18"),
+            reduction=PublicDecimal(decimal="777.86"),
+            excess=PublicDecimal(decimal="0.00"),
+            net_value=PublicDecimal(decimal="1222.14"),
+            transmission_value=PublicDecimal(decimal="2000.00"),
+            transmission_costs=PublicDecimal(decimal="100.00"),
+            result=PublicDecimal(decimal="677.86"),
+            route_changed_by_later_affectation=False,
+            years=(),
+            findings=(),
         )
 
     def acquisition_candidates(self) -> tuple[ActivityAssetAcquisitionCandidate, ...]:

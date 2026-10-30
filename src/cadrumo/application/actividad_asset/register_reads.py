@@ -35,6 +35,7 @@ from ...domain.transactions.enums import BusinessClassification, TransactionDire
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.public_scalar import PublicDecimal, project_scalar
 from .activity_asset_read_models import (
+    NON_DEDUCTIBLE_IVA_STATE_FAMILY,
     ActivityAssetAcquisitionCandidate,
     ActivityAssetClaimableInterval,
     ActivityAssetClaimStaleReason,
@@ -51,7 +52,9 @@ from .activity_asset_read_models import (
     ActivityAssetTimelineChange,
     ActivityAssetTimelineClaimUse,
     ActivityAssetTimelineEvent,
+    activity_asset_label_key,
     project_reason_facts,
+    timeline_token_key,
 )
 from .history import ActivityAssetHistory
 from .ports import ActivityAssetForecastOperation
@@ -79,6 +82,7 @@ class RegisterReadContext:
     history: ActivityAssetHistory
     forecast: ActivityAssetForecastOperation
     edition: Callable[[int], ActivityAssetEdition]
+    admits_filing_year: Callable[[int], bool]
     today: date
 
 
@@ -268,6 +272,8 @@ def _matches_current_schedule(
     context: RegisterReadContext,
 ) -> ActivityAssetClaimStaleReason | None:
     """Compare a claim's fingerprint with what the current revision and authority would stamp."""
+    if claim.disposal_revision_id is not None and claim.amount == Decimal("0"):
+        return None
     if claim.asset_revision_id != current.revision_id:
         return ActivityAssetClaimStaleReason.REVISION_CHANGED
     try:
@@ -296,13 +302,20 @@ def element_list(context: RegisterReadContext) -> tuple[ActivityAssetListRow, ..
     return tuple(_list_row(current[asset_id], context) for asset_id in sorted(current))
 
 
+def register_years(rows: Iterable[ActivityAssetListRow]) -> tuple[int, ...]:
+    """Name every tax year some element can be read in, in ascending order."""
+    return tuple(sorted({year for row in rows for year in row.years}))
+
+
 def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> ActivityAssetListRow:
     plan = element_plan(revision, context)
     claims = tuple(claim for claim in effective_claims(context.history.claims) if claim.asset_id == revision.asset_id)
     opening = revision.opening_history.accumulated_amount
     accumulated = None if opening is None else opening + sum((claim.amount for claim in claims), Decimal("0"))
     basis = round_to_cents(revision.amortizable_basis())
-    settled = any(row.absence in _NOT_ACCRUING and row.tax_year <= context.today.year for row in plan)
+    settled = _left_service(revision, context.today) or any(
+        row.absence in _NOT_ACCRUING and row.tax_year <= context.today.year for row in plan
+    )
     pending = None if accumulated is None else (Decimal("0.00") if settled else max(basis - accumulated, Decimal("0")))
     descriptor = context.history.current_descriptor(revision.asset_id)
     return ActivityAssetListRow(
@@ -325,6 +338,7 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
             conflict=sum(row.absence in {PlanFigureAbsence.CONFLICT, PlanFigureAbsence.UNSUPPORTED} for row in plan),
             stale=sum(_matches_current_schedule(claim, revision, context) is not None for claim in claims),
         ),
+        years=tuple(row.tax_year for row in plan if context.admits_filing_year(row.tax_year)),
     )
 
 
@@ -334,11 +348,15 @@ def _register_state(
     *,
     today: date,
 ) -> ActivityAssetRegisterState:
-    if revision.out_of_service_date is not None and revision.out_of_service_date <= today:
+    if _left_service(revision, today):
         return ActivityAssetRegisterState.OUT_OF_SERVICE
     if pending is not None and pending <= Decimal("0"):
         return ActivityAssetRegisterState.FULLY_AMORTIZED
     return ActivityAssetRegisterState.IN_SERVICE
+
+
+def _left_service(revision: ActivityAssetRevision, today: date) -> bool:
+    return revision.disposal is not None and revision.disposal.boundary <= today
 
 
 def _flatten(value: object, prefix: str = "") -> dict[str, str | None]:
@@ -362,7 +380,13 @@ def _changes(
     old = {} if before is None else _flatten(before.model_dump(mode="json", exclude=set(excluding)))
     new = _flatten(after.model_dump(mode="json", exclude=set(excluding)))
     return tuple(
-        ActivityAssetTimelineChange(field=name, before=old.get(name), after=new.get(name))
+        ActivityAssetTimelineChange(
+            field=name,
+            before=old.get(name),
+            after=new.get(name),
+            before_key=timeline_token_key(name, old.get(name)),
+            after_key=timeline_token_key(name, new.get(name)),
+        )
         for name in sorted({*old, *new})
         if old.get(name) != new.get(name)
     )
@@ -396,11 +420,15 @@ def element_timeline(
         effect_date: date | None = None
         changes: tuple[ActivityAssetTimelineChange, ...]
         claim_use: ActivityAssetTimelineClaimUse | None = None
-        if event.kind is ActivityAssetEventKind.REVISION:
+        if event.kind in {ActivityAssetEventKind.REVISION, ActivityAssetEventKind.BAJA}:
             revision = revisions[event.record_id]
             previous = revisions.get(revision.supersedes_revision_id or "")
             changes = _changes(previous, revision, excluding=_REVISION_LINK_FIELDS)
-            effect_date = revision.in_service_date
+            effect_date = (
+                revision.disposal.disposal_date
+                if event.kind is ActivityAssetEventKind.BAJA and revision.disposal is not None
+                else revision.in_service_date
+            )
         elif event.kind is ActivityAssetEventKind.CLAIM:
             claim = claims[event.record_id]
             replaced = claims.get(claim.supersedes_claim_id or "")
@@ -486,6 +514,11 @@ def _non_deductible_iva(row: Transaction) -> Decimal | None:
 
 def _candidate(row: Transaction) -> ActivityAssetAcquisitionCandidate:
     non_deductible = _non_deductible_iva(row)
+    state = (
+        ActivityAssetNonDeductibleIvaState.UNKNOWN
+        if non_deductible is None
+        else ActivityAssetNonDeductibleIvaState.KNOWN
+    )
     evidence_id = row.purchase_invoice_evidence_id
     paid = row.raw.amount if row.raw.currency == DEFAULT_CURRENCY else row.value_in_eur
     return ActivityAssetAcquisitionCandidate(
@@ -497,11 +530,8 @@ def _candidate(row: Transaction) -> ActivityAssetAcquisitionCandidate:
         paid_in_euro=_optional_amount(paid),
         taxable_base=_optional_amount(row.taxable_base),
         iva_amount=_optional_amount(row.iva_amount),
-        non_deductible_iva_state=(
-            ActivityAssetNonDeductibleIvaState.UNKNOWN
-            if non_deductible is None
-            else ActivityAssetNonDeductibleIvaState.KNOWN
-        ),
+        non_deductible_iva_state=state,
+        non_deductible_iva_state_key=activity_asset_label_key(NON_DEDUCTIBLE_IVA_STATE_FAMILY, state),
         non_deductible_iva=_optional_amount(non_deductible),
         invoice_evidence_id=evidence_id,
         evidence_fingerprint=evidence_id if _is_digest(evidence_id) else None,
@@ -519,4 +549,5 @@ __all__ = [
     "element_list",
     "element_plan",
     "element_timeline",
+    "register_years",
 ]

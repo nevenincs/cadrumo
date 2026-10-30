@@ -42,6 +42,8 @@ from .activity_asset_contracts import (
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID,
@@ -55,6 +57,8 @@ from .activity_asset_contracts import (
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
     ActivityAssetDescribeRequest,
+    ActivityAssetDisposalCalculateRequest,
+    ActivityAssetDisposeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
     ActivityAssetFormOptionsRequest,
@@ -71,6 +75,8 @@ from .activity_asset_executors import (
     ActivityAssetCorrectExecutor,
     ActivityAssetCreateExecutor,
     ActivityAssetDescribeExecutor,
+    ActivityAssetDisposalCalculateExecutor,
+    ActivityAssetDisposeExecutor,
     ActivityAssetFilingHandoffExecutor,
     ActivityAssetForecastExecutor,
     ActivityAssetFormOptionsExecutor,
@@ -85,6 +91,8 @@ from .activity_asset_projections import (
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
     ActivityAssetDescribeProjection,
+    ActivityAssetDisposalCalculateProjection,
+    ActivityAssetDisposeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
     ActivityAssetFormOptionsProjection,
@@ -100,6 +108,8 @@ from .activity_asset_results import (
     ActivityAssetCorrectResult,
     ActivityAssetCreateResult,
     ActivityAssetDescribeResult,
+    ActivityAssetDisposalCalculateResult,
+    ActivityAssetDisposeResult,
     ActivityAssetFilingHandoffResult,
     ActivityAssetForecastResult,
     ActivityAssetFormOptionsResult,
@@ -125,6 +135,8 @@ type _ActivityAssetRequest = (
     | ActivityAssetClaimRequest
     | ActivityAssetFilingHandoffRequest
     | ActivityAssetDescribeRequest
+    | ActivityAssetDisposeRequest
+    | ActivityAssetDisposalCalculateRequest
     | ActivityAssetListRequest
     | ActivityAssetPlanRequest
     | ActivityAssetTimelineRequest
@@ -169,6 +181,8 @@ def resolve_activity_asset_access(
         ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID: (ActivityAssetClaimRequest, True),
         ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID: (ActivityAssetFilingHandoffRequest, False),
         ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID: (ActivityAssetDescribeRequest, True),
+        ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID: (ActivityAssetDisposeRequest, True),
+        ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID: (ActivityAssetDisposalCalculateRequest, False),
         ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID: (ActivityAssetListRequest, False),
         ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID: (ActivityAssetPlanRequest, False),
         ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID: (ActivityAssetTimelineRequest, False),
@@ -458,6 +472,23 @@ def _project_describe(result: BaseModel, receipt: OperationTerminalReceipt, /) -
     )
 
 
+def _project_dispose(result: BaseModel, receipt: OperationTerminalReceipt, /) -> ActivityAssetDisposeProjection:
+    private = _private_result(result, ActivityAssetDisposeResult)
+    _verify_private_receipt(
+        private,
+        receipt,
+        definition_id=ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
+        success_effect=OperationEffect.UPDATED,
+    )
+    return ActivityAssetDisposeProjection(
+        profile_id=private.profile_id,
+        authority=private.authority,
+        outcome=private.outcome,
+        refusal=_project_refusal(private.refusal),
+        history=ActivityAssetHistorySnapshot.from_domain(private.history) if private.history is not None else None,
+    )
+
+
 def _read_projector[R: ActivityAssetOperationResult, P: BaseModel](
     definition_id: str,
     result_type: type[R],
@@ -508,6 +539,14 @@ _READS: dict[
         ActivityAssetTimelineProjection,
         ActivityAssetTimelineExecutor,
         ("asset_id", "events"),
+        True,
+    ),
+    ACTIVITY_ASSET_DISPOSAL_CALCULATE_OPERATION_DEFINITION_ID: (
+        ActivityAssetDisposalCalculateRequest,
+        ActivityAssetDisposalCalculateResult,
+        ActivityAssetDisposalCalculateProjection,
+        ActivityAssetDisposalCalculateExecutor,
+        ("asset_id", "calculation"),
         True,
     ),
     ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID: (
@@ -579,6 +618,30 @@ def build_activity_asset_describe_registration(
         definition,
         projection_type=ActivityAssetDescribeProjection,
         result_projector=_project_describe,
+    )
+
+
+def build_activity_asset_dispose_definition(ports_factory: ActivityAssetOperationPortsFactory) -> OperationDefinition:
+    """Build the guarded operation that records one element's baja."""
+    return _definition(
+        definition_id=ACTIVITY_ASSET_DISPOSE_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetDisposeRequest,
+        result_type=ActivityAssetDisposeResult,
+        executor_type=ActivityAssetDisposeExecutor,
+        ports_factory=ports_factory,
+        sensitive_input=True,
+        mutation=True,
+    )
+
+
+def build_activity_asset_dispose_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Register the typed baja request and projection schemas."""
+    return _registration(
+        definition,
+        projection_type=ActivityAssetDisposeProjection,
+        result_projector=_project_dispose,
     )
 
 
@@ -735,6 +798,8 @@ __all__ = [
     "build_activity_asset_create_registration",
     "build_activity_asset_describe_definition",
     "build_activity_asset_describe_registration",
+    "build_activity_asset_dispose_definition",
+    "build_activity_asset_dispose_registration",
     "build_activity_asset_filing_handoff_definition",
     "build_activity_asset_filing_handoff_registration",
     "build_activity_asset_forecast_definition",

@@ -55,6 +55,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "source_domain_not_ready",
         "ledger_amortization_row_unregistered",
         "activity_asset_foral_territory",
+        "activity_asset_residence_unresolved",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on: a figure left out or unworked."""
@@ -98,6 +99,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         # lists it as assumed, so nothing in the editor can confirm it, and the
         # filer checks it against their records instead.
         "operator_override_diverges_from_computed": _C,
+        "activity_asset_disposal_finding": _C,
         "orphaned_override": _C,
         "devengo_date_proxy_attribution": _C,
         "m349_clave_inferred_from_category": _C,

@@ -86,6 +86,22 @@ _DESCRIPTOR_OPTIONS = (
     _option("supplier_tax_id", "--supplier-tax-id", optional=True),
 )
 
+_DISPOSAL_AMOUNT_OPTIONS = (
+    _option("market_value", "--market-value", optional=True),
+    _option("prior_free_depreciation_regime", "--prior-free-depreciation-regime", optional=True),
+    _option("later_affectation_on", "--later-affectation-on", optional=True),
+)
+
+#: Closed read-command vocabulary; every help key remains visible to locale discovery.
+_READ_HELP_LOCALE_KEYS = {
+    "list": TranslationKey("cli.app.ledger.actividad_asset.list_help"),
+    "plan": TranslationKey("cli.app.ledger.actividad_asset.plan_help"),
+    "disposal-calculate": TranslationKey("cli.app.ledger.actividad_asset.disposal_calculate_help"),
+    "timeline": TranslationKey("cli.app.ledger.actividad_asset.timeline_help"),
+    "form-options": TranslationKey("cli.app.ledger.actividad_asset.form_options_help"),
+    "acquisition-candidates": TranslationKey("cli.app.ledger.actividad_asset.acquisition_candidates_help"),
+}
+
 
 def _read_leaf(
     token: str,
@@ -195,6 +211,34 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         schema_module="._actividad_asset_payloads",
         schema_name="ActivityAssetHistoryPayload",
         policy=_POLICY_4,
+    ),
+    _leaf(
+        "app_ledger_actividad_asset_dispose",
+        "dispose",
+        "actividad_asset_dispose",
+        (
+            _argument("asset_id"),
+            _option("disposal_date", "--disposal-date"),
+            _option("reason", "--reason"),
+            _option("proceeds", "--proceeds"),
+            _option("transmission_costs", "--transmission-costs"),
+            *_DISPOSAL_AMOUNT_OPTIONS,
+        ),
+        help_key=TranslationKey("cli.app.ledger.actividad_asset.dispose_help"),
+        schema_module="._actividad_asset_payloads",
+        schema_name="ActivityAssetHistoryPayload",
+        policy=_POLICY_4,
+    ),
+    _read_leaf(
+        "disposal-calculate",
+        (
+            _argument("asset_id"),
+            _option("disposal_date", "--disposal-date", optional=True),
+            _option("reason", "--reason", optional=True),
+            _option("proceeds", "--proceeds", optional=True),
+            _option("transmission_costs", "--transmission-costs", optional=True),
+            *_DISPOSAL_AMOUNT_OPTIONS,
+        ),
     ),
     _read_leaf("list"),
     _read_leaf("plan", (_argument("asset_id"),)),

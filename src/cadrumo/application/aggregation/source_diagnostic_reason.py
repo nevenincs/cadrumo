@@ -254,6 +254,10 @@ CalculationSourceDiagnosticReason = Literal[
     # register may reach them. Blocking, and distinct from a source that could not
     # be read: there is nothing to retry.
     "activity_asset_foral_territory",
+    # A recorded tax residence that could not be read while the register holds
+    # elements. It establishes neither territory, so no figure from the register
+    # reaches the form until the profile states the residence. Blocking.
+    "activity_asset_residence_unresolved",
     # An element in service with lawful base remaining and no effective claim for
     # part of the year. The deduction is not invented and the return is not
     # refused, because a gap reduces a deduction without invalidating the return.
@@ -261,6 +265,10 @@ CalculationSourceDiagnosticReason = Literal[
     # The schedule refused to work out what an element accrued, so the element
     # contributes nothing and the amount it may be owed is unknown, not zero.
     "activity_asset_accrual_unavailable",
+    # What a baja's calculation tells the filer without stopping the return: a
+    # missing claim, a minimum above the deduction, a year with no minimum, a gain
+    # with no exemption computed, or an excess the instructions do not route.
+    "activity_asset_disposal_finding",
     # An element of an agrarian activity left out of the Modelo 130 expense box
     # because that activity's instalment is a share of income (RIRPF art. 110.1.c).
     "activity_asset_agrarian_excluded",

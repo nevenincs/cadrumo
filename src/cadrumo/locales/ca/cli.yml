@@ -38,6 +38,10 @@ cli:
         create_help: Crea un actiu a partir de la seva primera revisió immutable (JSON).
         describe_help: Registra el nom, el número de sèrie i les dades de registre
           d'un element; cap càlcul canvia.
+        disposal_calculate_help: 'Calcula localment les xifres d''una baixa: la que
+          indiquen les opcions o, si no, la registrada.'
+        dispose_help: Registra la baixa d'un element i substitueix en la mateixa escriptura
+          les dotacions posteriors al seu últim dia de servei.
         filing_handoff_help: Mostra els càrrecs registrats projectats al Model 100
           i la meritació projectada al Model 130.
         forecast_help: Calcula, sense registrar-la, l'amortització que admet l'elecció
