@@ -9,6 +9,10 @@
 // test evidence only. Its call lines name a definition, never a value.
 
 import {
+  isProvisionalOperation,
+  type ProvisionalOperationId,
+} from "@/components/ledger/assets/assetsContract";
+import {
   LEDGER_UPDATE_FIELDS,
   isLedgerDefinition,
   type CatalogueInvoice,
@@ -1878,7 +1882,10 @@ export function ledgerFixture(options: Options): LedgerPort {
     readerMissing: shape === "reader_missing",
   });
   const reads: Partial<
-    Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>
+    Record<
+      LedgerDefinitionId | ProvisionalOperationId,
+      (request: JsonObject) => JsonObject
+    >
   > = {
     ...invoiceWork.reads,
     ...evidenceWork.reads,
@@ -1917,7 +1924,10 @@ export function ledgerFixture(options: Options): LedgerPort {
     }),
   };
   const writes: Partial<
-    Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>
+    Record<
+      LedgerDefinitionId | ProvisionalOperationId,
+      (request: JsonObject) => JsonObject
+    >
   > = {
     "ledger.update": update,
     "ledger.classify.single": classify,
@@ -2004,7 +2014,7 @@ export function ledgerFixture(options: Options): LedgerPort {
 
   /** Whether settling `definition` may change records: the host's class of
    * the definition alone decides it, whatever the request names. */
-  const changes = (definition: LedgerDefinitionId) =>
+  const changes = (definition: LedgerDefinitionId | ProvisionalOperationId) =>
     ledgerClassOf(definition) !== "read";
 
   async function run(
@@ -2021,7 +2031,8 @@ export function ledgerFixture(options: Options): LedgerPort {
         pendingTracks--;
       }
     }
-    if (!isLedgerDefinition(definition)) return reject("not_admitted");
+    if (!isLedgerDefinition(definition) && !isProvisionalOperation(definition))
+      return reject("not_admitted");
     if (
       typeof payload !== "object" ||
       payload === null ||

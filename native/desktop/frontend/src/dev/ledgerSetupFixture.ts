@@ -12,7 +12,9 @@ import type {
   JsonValue,
   LedgerDefinitionId,
 } from "../shell/ledger";
+import type { ProvisionalOperationId } from "@/components/ledger/assets/assetsContract";
 import { isSpendingCategory } from "../shell/ledgerVocabulary";
+import { assetOperations } from "./assetsFixture";
 import { RATIO_ELIGIBLE_FIXTURE } from "./fixtures/ledgerRatios";
 import type {
   FixtureLedger,
@@ -1482,7 +1484,20 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     ];
   }
 
-  const reads: Partial<Record<LedgerDefinitionId, Handler>> = {
+  const provisional = assetOperations(
+    {
+      now,
+      hex64,
+      invalid,
+      stop: (reason, detail) => {
+        throw new SetupStopped(reason, detail);
+      },
+    },
+    () => assets,
+  );
+  const reads: Partial<
+    Record<LedgerDefinitionId | ProvisionalOperationId, Handler>
+  > = {
     "ledger.rule.list": (request) => {
       fromKeys(request, []);
       return {
@@ -1625,8 +1640,11 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       };
     },
     ...assetReads,
+    ...provisional.reads,
   };
-  const writes: Partial<Record<LedgerDefinitionId, Handler>> = {
+  const writes: Partial<
+    Record<LedgerDefinitionId | ProvisionalOperationId, Handler>
+  > = {
     "ledger.rule.add": addRule,
     "ledger.rule.apply": applyRules,
     "ledger.ratios.set": (request) => {
@@ -1667,6 +1685,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     "ledger.bienes_inversion.declare": declareCapital,
     ...inventoryWrites,
     ...assetWrites,
+    ...provisional.writes,
     "ledger.participation.rebuild": (request) => {
       fromKeys(request, []);
       return {

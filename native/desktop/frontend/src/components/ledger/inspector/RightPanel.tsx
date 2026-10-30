@@ -53,8 +53,9 @@ export function fittedPanelWidth(
   room: number | null,
   rem: number,
   columnFloor: number | null = null,
+  defaultRem: number = DEFAULT_REM,
 ): number | null {
-  const wanted = width ?? DEFAULT_REM * rem;
+  const wanted = width ?? defaultRem * rem;
   if (room === null) return width;
   const fitted = Math.max(
     MIN_REM * rem,
@@ -79,6 +80,7 @@ export function RightPanel({
   onWidth,
   panelRef,
   onKeyDown,
+  defaultRem = DEFAULT_REM,
   children,
 }: {
   mode: RightPanelMode;
@@ -90,6 +92,10 @@ export function RightPanel({
   onWidth: (width: number | null) => void;
   panelRef?: Ref<HTMLElement>;
   onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void;
+  /** The width, in rem, the panel opens at and a reset returns to, where
+   * its content needs more than the token's; it is still held to the least
+   * and the most the panel keeps. */
+  defaultRem?: number;
   /** The movement inspector. */
   children: ReactNode;
 }) {
@@ -140,8 +146,8 @@ export function RightPanel({
   const rem = remPx();
   const least = MIN_REM * rem;
   const most = Math.max(least, window.innerWidth * MAX_SHARE);
-  const fitted = fittedPanelWidth(width, room, rem, columnFloor);
-  const drawn = fitted ?? DEFAULT_REM * rem;
+  const fitted = fittedPanelWidth(width, room, rem, columnFloor, defaultRem);
+  const drawn = fitted ?? defaultRem * rem;
   const value = Math.max(
     0,
     Math.min(100, ((drawn - least) / (most - least || 1)) * 100),
@@ -180,7 +186,13 @@ export function RightPanel({
         }
         data-mode={shown}
         className="ledger-panel flex min-h-0 w-inspector min-w-inspector-min shrink-0 flex-col bg-background"
-        style={fitted === null ? undefined : { width: `${fitted}px` }}
+        style={
+          fitted !== null
+            ? { width: `${fitted}px` }
+            : defaultRem !== DEFAULT_REM
+              ? { width: `${defaultRem}rem` }
+              : undefined
+        }
         onKeyDown={onKeyDown}
       >
         {matchPanel !== undefined && (
