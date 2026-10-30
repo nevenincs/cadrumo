@@ -103,6 +103,47 @@ test("a view is found by its label, its keywords and its register id", async ({
   ).toHaveCount(1);
 });
 
+test("a view is found by its keywords in the person's language", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.evaluate(() =>
+    window.__scenarioLanguage!.publish({
+      language: "hu",
+      persisted: true,
+      profile: "Demo profile",
+      revision: 10,
+    }),
+  );
+  await expect(target.locator("html")).toHaveAttribute("lang", "hu");
+  const movements = label("navigation.view.ledger.movements.label", {}, "hu");
+  const hungarian = label(
+    "navigation.view.ledger.movements.keywords",
+    {},
+    "hu",
+  ).split(" ");
+  const english = label(
+    "navigation.view.ledger.movements.keywords",
+    {},
+    "en",
+  ).split(" ");
+  // A Hungarian word the English keywords lack, and the Spanish word printed
+  // on a bank statement, which every language keeps.
+  const own = hungarian.find(
+    (word) => !english.includes(word) && !movements.includes(word),
+  );
+  expect(own).toBeDefined();
+  for (const query of [own!, "extracto"]) {
+    await target.keyboard.press("ControlOrMeta+Shift+KeyK");
+    await palette(target)
+      .getByRole("combobox", { name: label("desktop.palette.label", {}, "hu") })
+      .fill(query);
+    await expect(optionTitled(target, movements), query).toHaveCount(1);
+    await target.keyboard.press("Escape");
+    await expect(palette(target)).toHaveCount(0);
+  }
+});
+
 test("choosing a Ledger section opens that section with the keyboard in it", async ({
   page: target,
 }) => {

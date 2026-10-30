@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
+import { chordAria, chordText } from "@/shared/chords";
+import { INSPECTOR_CHORD } from "../ledgerChords";
+import { facts, listed, noted } from "../../../shell/compose";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { ClassifySelection } from "../../../shell/ledgerCommands";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
@@ -328,11 +331,11 @@ export function MovementInspector({
               {tx.description}
             </h2>
             <p className="text-sm text-muted-foreground break-words">
-              {[
+              {facts(t, [
                 tx.counterparty ||
                   t("desktop.ledger.inspector.no_counterparty"),
                 dateText(locale, tx.date, true),
-              ].join(" · ")}
+              ])}
             </p>
           </div>
           <DropdownMenu>
@@ -399,8 +402,8 @@ export function MovementInspector({
           </DropdownMenu>
           <IconButton
             label={t("desktop.ledger.inspector.close")}
-            shortcut="Alt+I"
-            aria-keyshortcuts="Alt+I"
+            shortcut={chordText(INSPECTOR_CHORD)}
+            aria-keyshortcuts={chordAria(INSPECTOR_CHORD)}
             onClick={onClose}
           >
             <Icon name="close" />
@@ -447,12 +450,21 @@ export function MovementInspector({
           <p className="flex items-start gap-1 text-sm text-muted-foreground">
             <Icon name="lock" size="xs" className="mt-0.5" />
             {t("desktop.ledger.inspector.sealed", {
-              declarations: sealing
-                .map(
-                  (use) =>
-                    `${declarationName(t, use.modelo, use.period.filing_year, use.period.code)} (${revisionStateLabel(t, use)})`,
-                )
-                .join(", "),
+              declarations: listed(
+                t,
+                sealing.map((use) =>
+                  noted(
+                    t,
+                    declarationName(
+                      t,
+                      use.modelo,
+                      use.period.filing_year,
+                      use.period.code,
+                    ),
+                    revisionStateLabel(t, use),
+                  ),
+                ),
+              ),
             })}
           </p>
         )}

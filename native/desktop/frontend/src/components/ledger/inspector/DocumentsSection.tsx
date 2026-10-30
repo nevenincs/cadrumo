@@ -3,6 +3,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
+import { facts, listed } from "@/shell/compose";
 import type {
   EvidenceListResult,
   LedgerPort,
@@ -92,9 +93,7 @@ export function DocumentsSection({
     .map((record) => ({
       value: record.evidence_id,
       label: fileName(record.source_path),
-      note: [record.supplier, record.invoice_number]
-        .filter(Boolean)
-        .join(" · "),
+      note: facts(t, [record.supplier, record.invoice_number]),
     }));
 
   const detach = (attachment: string) => {
@@ -230,10 +229,10 @@ export function DocumentsSection({
                                   record.evidence_id === action.evidenceId,
                               )?.source_path ?? action.evidenceId,
                             )
-                          : action.attachmentIds.map(nameOf).join(", "),
+                          : listed(t, action.attachmentIds.map(nameOf)),
                       })
                     : t("desktop.ledger.inspector.documents.detaching", {
-                        file: action.attachmentIds.map(nameOf).join(", "),
+                        file: listed(t, action.attachmentIds.map(nameOf)),
                       })}
               </span>
               <Button

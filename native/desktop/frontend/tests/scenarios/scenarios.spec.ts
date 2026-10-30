@@ -391,9 +391,13 @@ test("session failure: the failure is written into the terminal and the tab says
   page: target,
 }) => {
   await open(target, "session-failure");
-  await expect(
-    target.locator('[data-terminal="console"] .xterm-rows'),
-  ).toContainText(label("desktop.session.failed", { reason: "read_failed" }));
+  const rows = target.locator('[data-terminal="console"] .xterm-rows');
+  await expect(rows).toContainText(
+    label("desktop.session.failed", {
+      reason: label("desktop.session.reason.output"),
+    }),
+  );
+  await expect(rows).not.toContainText("read_failed");
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.console") }),
   ).toContainText(label("desktop.session.exited", { code: 1 }));
@@ -2154,6 +2158,7 @@ test("the rail keeps its order: search, window toggles, shortcuts, panel toggle"
       "desktop.rail.tui",
       "desktop.rail.docs",
       "desktop.profile.title",
+      "desktop.aeat_sync.title",
       "desktop.ledger.title",
       "workspace.declarations.destination.overview",
       "desktop.calendar.title",

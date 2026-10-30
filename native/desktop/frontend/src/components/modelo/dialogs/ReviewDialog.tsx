@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
+import { facts, listed } from "../../../shell/compose";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
   ModeloFormTypingEffect,
@@ -78,9 +79,9 @@ function unattributedText(t: Translate, session: FormSession) {
     return t("workspace.modelo.review.operator_entries_unknown");
   const named =
     boxes.length <= NAMED_BOXES
-      ? boxes.join(", ")
+      ? listed(t, boxes)
       : t("workspace.modelo.review.and_more", {
-          shown: boxes.slice(0, NAMED_BOXES).join(", "),
+          shown: listed(t, boxes.slice(0, NAMED_BOXES), "plain"),
           count: boxes.length - NAMED_BOXES,
         });
   return t("workspace.modelo.review.operator_entries_at_risk", {
@@ -128,9 +129,10 @@ function ChangeLine({
             ) : (
               replaces && <Icon name="swap" size="xs" />
             )}
-            {[effect, changed && t("workspace.modelo.review.before_changed")]
-              .filter(Boolean)
-              .join(" · ")}
+            {facts(t, [
+              effect,
+              changed && t("workspace.modelo.review.before_changed"),
+            ])}
           </span>
         </>
       )}

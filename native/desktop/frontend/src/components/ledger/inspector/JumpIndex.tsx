@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Icon } from "@/components/ui/icon";
+import { described } from "@/shell/compose";
 import { useStrings } from "../../../shell/strings";
 import { fittingEntries, type InspectorSection } from "./inspectorModel";
 
@@ -79,7 +80,9 @@ export function JumpIndex({
         // The name keeps the visible words, the count included, and adds what
         // the count counts.
         aria-label={
-          badge ? `${names[section]} ${badge.count}, ${badge.label}` : undefined
+          badge
+            ? described(t, `${names[section]} ${badge.count}`, badge.label)
+            : undefined
         }
         className="ledger-jump shrink-0 rounded-none border-b-2 border-transparent aria-[current=location]:border-muted-foreground aria-[current=location]:text-foreground"
         onClick={() => onJump(section)}

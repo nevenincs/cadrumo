@@ -11,8 +11,9 @@ import {
   MAX_CONTINUATION_CHARS,
   characters,
 } from "../../shell/agentClarification";
+import { described, facts } from "../../shell/compose";
 import { readPx } from "../../shell/metrics";
-import { useStrings } from "../../shell/strings";
+import { useStrings, type Translate } from "../../shell/strings";
 import { AgentIconAction, AgentTextAction } from "./AgentAction";
 import { AgentSettingsPopover } from "./AgentSettingsPopover";
 import { AttachmentWell } from "./AttachmentWell";
@@ -51,6 +52,7 @@ const MAX_LINES = 8;
 /** The model and effort, as the settings button names them, and the way into
  * its provider; null while none is chosen. */
 function selectionWords(
+  t: Translate,
   providers: readonly ProviderOption[],
   models: Readonly<Record<string, readonly ModelOption[]>>,
   selection: AgentSelection,
@@ -71,7 +73,7 @@ function selectionWords(
   return {
     provider,
     way,
-    words: effort ? `${name} · ${effort.name}` : name,
+    words: facts(t, [name, effort?.name]),
   };
 }
 
@@ -241,12 +243,12 @@ export function Composer({
     send();
   };
 
-  const current = selectionWords(providers, models, selection);
+  const current = selectionWords(t, providers, models, selection);
   const settingsText = current?.words ?? t("desktop.agent.choose_model");
   // The name says which provider the words are for.
   const settingsName = t("desktop.agent.settings_label", {
     current: current
-      ? `${current.provider.name}, ${current.words}`
+      ? described(t, current.provider.name, current.words)
       : settingsText,
   });
   const settingsLook = (
@@ -306,7 +308,11 @@ export function Composer({
               variant="ghost"
               size="xs"
               className="min-w-0"
-              aria-label={`${settingsName}, ${t("desktop.agent.unavailable")}`}
+              aria-label={described(
+                t,
+                settingsName,
+                t("desktop.agent.unavailable"),
+              )}
             >
               {settingsLook}
             </AgentTextAction>

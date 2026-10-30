@@ -67,7 +67,6 @@ export function AssetsPane({ port, locale }: SetupProps) {
   const [until, setUntil] = useState("");
   const [free, setFree] = useState("");
   const [forecast, setForecast] = useState<ActivityAssetForecast | null>(null);
-  const [creatingOperation, setCreatingOperation] = useState("");
   const [taxYear, setTaxYear] = useState("");
   const [quarter, setQuarter] = useState("");
   const [handoff, setHandoff] = useState<ActivityAssetFilingResult | null>(
@@ -75,8 +74,7 @@ export function AssetsPane({ port, locale }: SetupProps) {
   );
   // A form with anything typed into it that is not yet written.
   useSetupDraft(
-    task !== null &&
-      [from, until, free, creatingOperation, taxYear, quarter].some(Boolean),
+    task !== null && [from, until, free, taxYear, quarter].some(Boolean),
   );
 
   const inspect = async (id = assetId) => {
@@ -203,13 +201,13 @@ export function AssetsPane({ port, locale }: SetupProps) {
     if (done.kind === "done") setHandoff(done.result);
   };
   const claim = async () => {
-    if (!forecast || !creatingOperation.trim()) return;
+    if (!forecast) return;
     await write.run(
       () =>
         setupCall(
           port,
           "ledger.actividad-asset.claim",
-          { forecast, creating_operation: creatingOperation.trim() },
+          { forecast, supersedes_claim_id: null },
           true,
         ),
       // No read lists an asset's claims; a claim sent again for the same
@@ -430,24 +428,14 @@ export function AssetsPane({ port, locale }: SetupProps) {
             </span>
           </Alert>
           <div className="flex flex-wrap items-end gap-2">
-            <TextField
-              label={t("desktop.ledger.assets.creating_operation")}
-              value={creatingOperation}
-              onValue={setCreatingOperation}
-              hint={t("desktop.ledger.assets.creating_hint")}
-              maxLength={256}
-              className="w-72"
-            />
             <WriteHold>
               <Button
                 size="sm"
                 className="ledger-assets-claim"
-                aria-disabled={
-                  !creatingOperation.trim() || write.busy || undefined
-                }
+                aria-disabled={write.busy || undefined}
                 onClick={() => void claim()}
               >
-                {t("desktop.ledger.assets.claim")}
+                {t("desktop.ledger.assets.action.claim")}
               </Button>
             </WriteHold>
           </div>

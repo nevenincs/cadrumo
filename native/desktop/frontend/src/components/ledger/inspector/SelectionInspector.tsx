@@ -16,6 +16,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
+import { facts, listed } from "@/shell/compose";
 import {
   ledgerFailure,
   type LedgerLlmSuggestion,
@@ -288,14 +289,16 @@ export function SelectionInspector({
       unread,
       visible,
     });
-    const skipped = Object.entries(found.skipped)
-      .map(([reason, count]) =>
+    const skipped = listed(
+      t,
+      Object.entries(found.skipped).map(([reason, count]) =>
         t("desktop.ledger.inspector.selection.skipped_reason", {
           count,
           reason: skipName(t, reason as Parameters<typeof skipName>[1]),
         }),
-      )
-      .join(", ");
+      ),
+      "plain",
+    );
     if (found.cells.length === 0) {
       say(skipped || t("desktop.ledger.inspector.selection.nothing"));
       return;
@@ -305,14 +308,12 @@ export function SelectionInspector({
       label: "bulk_set",
       cells: found.cells,
     };
-    const done = [
+    const done = facts(t, [
       t("desktop.ledger.inspector.selection.staged", {
         count: found.cells.length,
       }),
       skipped,
-    ]
-      .filter(Boolean)
-      .join(" · ");
+    ]);
     if (!force) {
       const before = planApply(content, { rows, sealed, unread }).summary;
       const after = planApply(reduceStage(stage, event).content, {
@@ -357,9 +358,13 @@ export function SelectionInspector({
     return (
       <div className="grid gap-0.5">
         <span className="text-sm text-muted-foreground">
-          {label}
-          {skipped > 0 &&
-            ` · ${t("desktop.ledger.inspector.selection.skipped", { count: skipped })}`}
+          {facts(t, [
+            label,
+            skipped > 0 &&
+              t("desktop.ledger.inspector.selection.skipped", {
+                count: skipped,
+              }),
+          ])}
         </span>
         <Combobox
           label={label}
@@ -842,12 +847,14 @@ export function SelectionInspector({
                       </span>
                       {suggestion ? (
                         <span>
-                          {suggestionWrites(suggestion)
-                            .filter((write) => !write.derived)
-                            .map((write) =>
-                              valueText(t, locale, write.field, write.value),
-                            )
-                            .join(" · ")}
+                          {facts(
+                            t,
+                            suggestionWrites(suggestion)
+                              .filter((write) => !write.derived)
+                              .map((write) =>
+                                valueText(t, locale, write.field, write.value),
+                              ),
+                          )}
                         </span>
                       ) : (
                         entry.failed !== null && (

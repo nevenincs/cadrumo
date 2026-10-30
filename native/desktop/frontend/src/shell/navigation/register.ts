@@ -19,6 +19,7 @@ export type NavigationElement = {
   readonly parent: string | null;
   /** The locale key every palette shows. */
   readonly label: string;
+  /** The locale key of its search words, in the person's language. */
   readonly keywords: string;
   readonly surfaces: readonly Surface[];
   /** Parameter name to value kind name. */

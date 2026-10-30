@@ -4,6 +4,7 @@ import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Spinner } from "@/components/ui/spinner";
+import { listed } from "../../../shell/compose";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
   ModeloCasillaHelpCardV1,
@@ -304,7 +305,7 @@ function CardParts({
           {card.feeds.length > 0 && (
             <p className="text-sm">
               {t("workspace.modelo.help.feeds", {
-                boxes: card.feeds.join(", "),
+                boxes: listed(t, card.feeds),
               })}
             </p>
           )}

@@ -33,6 +33,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { facts, listed } from "../../../shell/compose";
 import type {
   CatalogueInvoice,
   ConfirmationBlocker,
@@ -840,10 +841,11 @@ export function DraftReview({
                 className="w-dialog-md"
                 options={nearby.map((option): ComboboxOption => ({
                   value: option.row.transaction.transaction_id,
-                  label: `${option.row.transaction.description} · ${dayText(
-                    locale,
-                    option.row.transaction.date,
-                  )} · ${figureText(locale, option.row.transaction.amount)}`,
+                  label: facts(t, [
+                    option.row.transaction.description,
+                    dayText(locale, option.row.transaction.date),
+                    figureText(locale, option.row.transaction.amount),
+                  ]),
                   group: option.settles
                     ? t("desktop.ledger.inspector.invoice.group_settles")
                     : t("desktop.ledger.documents.group_near", {
@@ -1091,9 +1093,12 @@ export function DraftReview({
           <AlertTitle>{t("desktop.ledger.documents.unread")}</AlertTitle>
           <AlertDescription className="grid gap-2">
             <span>
-              {view.label_reading_fallback.unread_fields
-                .map((field) => fieldLabel(t, field))
-                .join(" · ")}
+              {listed(
+                t,
+                view.label_reading_fallback.unread_fields.map((field) =>
+                  fieldLabel(t, field),
+                ),
+              )}
             </span>
             <SetupOffer
               action={provisionActionOf(view.label_reading_fallback)}
@@ -1404,7 +1409,10 @@ export function DraftReview({
               id={`${countryId}-holds`}
               className="ledger-draft-holds text-sm text-muted-foreground"
             >
-              {holds.map((hold) => holdText(t, hold)).join(" · ")}
+              {facts(
+                t,
+                holds.map((hold) => holdText(t, hold)),
+              )}
             </span>
           )}
         </div>

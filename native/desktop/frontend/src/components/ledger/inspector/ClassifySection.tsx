@@ -8,6 +8,7 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
+import { facts } from "@/shell/compose";
 import type {
   LedgerHistoryTypedResult,
   LedgerPort,
@@ -108,16 +109,18 @@ export function ClassifySection({
   const t = useStrings();
   const { row, changes, locale, onStage } = scope;
   const id = row.transaction.transaction_id;
-  const facts = effectiveFacts(row, changes);
+  const effective = effectiveFacts(row, changes);
   const lock = fieldLock(scope, "business_classification");
-  const transfer = facts.direction === "INTERNAL_TRANSFER";
+  const transfer = effective.direction === "INTERNAL_TRANSFER";
   const shareId = useId();
   const [share, setShare] = useState("");
   const [shareError, setShareError] = useState<string | null>(null);
   useEffect(() => {
-    setShare(facts.business_pct ? (percentOf(facts.business_pct) ?? "") : "");
+    setShare(
+      effective.business_pct ? (percentOf(effective.business_pct) ?? "") : "",
+    );
     setShareError(null);
-  }, [id, facts.business_pct]);
+  }, [id, effective.business_pct]);
   const [deriveCategory, setDeriveCategory] = useState<string | null>(null);
 
   const suggestion = actions.find(
@@ -158,7 +161,7 @@ export function ClassifySection({
     });
   };
 
-  const decided = KIND_OF[facts.business_classification ?? ""] ?? "";
+  const decided = KIND_OF[effective.business_classification ?? ""] ?? "";
   const stagedClass = changes?.business_classification;
   const earlier = (history?.events ?? []).filter(
     (event) =>
@@ -226,9 +229,11 @@ export function ClassifySection({
             {classificationText(t, row.transaction)}
           </span>
           <span className="text-muted-foreground">
-            {decidedBy(t, row.transaction.classified_by)}
-            {row.transaction.classified_at &&
-              ` · ${stampText(locale, row.transaction.classified_at)}`}
+            {facts(t, [
+              decidedBy(t, row.transaction.classified_by),
+              row.transaction.classified_at &&
+                stampText(locale, row.transaction.classified_at),
+            ])}
           </span>
         </p>
         <SegmentedControl
@@ -263,13 +268,14 @@ export function ClassifySection({
             />
             {t("desktop.ledger.inspector.unsaved_classification", {
               classification: classificationText(t, {
-                business_classification: facts.business_classification ?? "",
-                business_pct: facts.business_pct ?? null,
+                business_classification:
+                  effective.business_classification ?? "",
+                business_pct: effective.business_pct ?? null,
               }),
             })}
           </p>
         )}
-        {facts.business_classification === "MIXED" && (
+        {effective.business_classification === "MIXED" && (
           <div className="grid gap-1">
             <label htmlFor={shareId} className="text-sm">
               {t("desktop.ledger.inspector.share")}
@@ -300,7 +306,7 @@ export function ClassifySection({
                   if (
                     now.kind !== "value" ||
                     canonicalDecimal(now.value) !==
-                      canonicalDecimal(facts.business_pct ?? "")
+                      canonicalDecimal(effective.business_pct ?? "")
                   )
                     if (share.trim() !== "") stageShare();
                 }}
@@ -328,7 +334,7 @@ export function ClassifySection({
         </dt>
         <dd className="px-1.5 py-1 text-sm">
           {row.transaction.usage_ratio_id ??
-            (facts.business_classification === "MIXED"
+            (effective.business_classification === "MIXED"
               ? t("desktop.ledger.inspector.ratio_missing")
               : t("desktop.ledger.inspector.ratio_not_needed"))}
         </dd>
@@ -451,13 +457,17 @@ export function ClassifySection({
             {[...earlier].reverse().map((event) => (
               <li key={event.event_id} className="grid text-sm">
                 <span>
-                  {eventName(t, event.event_type)}
-                  {event.details.classification &&
-                    ` · ${classificationLabel(t, event.details.classification)}`}
+                  {facts(t, [
+                    eventName(t, event.event_type),
+                    event.details.classification &&
+                      classificationLabel(t, event.details.classification),
+                  ])}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {decidedBy(t, event.details.classified_by ?? event.actor)} ·{" "}
-                  {stampText(locale, event.occurred_at)}
+                  {facts(t, [
+                    decidedBy(t, event.details.classified_by ?? event.actor),
+                    stampText(locale, event.occurred_at),
+                  ])}
                 </span>
               </li>
             ))}

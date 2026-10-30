@@ -81,6 +81,7 @@ export function RightPanel({
   panelRef,
   onKeyDown,
   defaultRem = DEFAULT_REM,
+  label,
   children,
 }: {
   mode: RightPanelMode;
@@ -96,6 +97,8 @@ export function RightPanel({
    * its content needs more than the token's; it is still held to the least
    * and the most the panel keeps. */
   defaultRem?: number;
+  /** What the panel is called, where it isn't the movement inspector. */
+  label?: string;
   /** The movement inspector. */
   children: ReactNode;
 }) {
@@ -180,9 +183,10 @@ export function RightPanel({
           else if (panelRef) panelRef.current = element;
         }}
         aria-label={
-          shown === "match"
+          label ??
+          (shown === "match"
             ? t("desktop.ledger.inspector.panel_match")
-            : t("desktop.ledger.inspector.panel")
+            : t("desktop.ledger.inspector.panel"))
         }
         data-mode={shown}
         className="ledger-panel flex min-h-0 w-inspector min-w-inspector-min shrink-0 flex-col bg-background"

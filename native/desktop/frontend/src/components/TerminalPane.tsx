@@ -8,6 +8,7 @@ import {
   type TerminalKind,
   type TerminalSession,
 } from "../shell/host";
+import { sessionFailedText } from "../shell/sessionWords";
 import { useStrings } from "../shell/strings";
 import { failureCode } from "../errors";
 import { terminalFont } from "../shell/terminalFont";
@@ -195,7 +196,7 @@ export function TerminalPane({
             session = null;
             exited = true;
             term.write(
-              `\r\n${DIM}${live.current.t("desktop.session.failed", { reason: event.message })}${RESET}\r\n`,
+              `\r\n${DIM}${sessionFailedText(live.current.t, event.message)}${RESET}\r\n`,
             );
             status({ phase: "failed", message: event.message });
           }

@@ -7,6 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { facts } from "@/shell/compose";
 import { useStrings } from "../../../shell/strings";
 
 /**
@@ -56,24 +57,20 @@ export function StagedValue({
             <Icon name="alert" size="xs" className="shrink-0 text-warning" />
           )}
           <span className="sr-only">
-            {[
+            {facts(t, [
               t("desktop.ledger.edit.changed_was", { was }),
               identity ? t("desktop.ledger.edit.new_identity") : "",
-              cannot ?? "",
-            ]
-              .filter(Boolean)
-              .join(" · ")}
+              cannot,
+            ])}
           </span>
         </span>
       </TooltipTrigger>
       <TooltipContent>
-        {[
+        {facts(t, [
           t("desktop.ledger.edit.not_saved_was", { was }),
           identity ? t("desktop.ledger.edit.new_identity") : "",
-          cannot ?? "",
-        ]
-          .filter(Boolean)
-          .join(" · ")}
+          cannot,
+        ])}
       </TooltipContent>
     </Tooltip>
   );

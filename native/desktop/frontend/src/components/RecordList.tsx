@@ -17,6 +17,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import type { LogRecord, LogSourceStates } from "../ipc/contract";
+import { labelled } from "../shell/compose";
 import { useMetric } from "../shell/metrics";
 import { fromPointer } from "../shell/pointer";
 import {
@@ -674,7 +675,11 @@ export const RecordList = memo(function RecordList({
               {filters.logger}
             </span>
             <IconButton
-              label={`${t("desktop.logs.clear_logger")}: ${filters.logger}`}
+              label={labelled(
+                t,
+                t("desktop.logs.clear_logger"),
+                filters.logger,
+              )}
               onClick={() => {
                 setFilters({ ...filters, logger: null });
                 filterInput.current?.focus();
@@ -723,7 +728,11 @@ export const RecordList = memo(function RecordList({
             icon={<Icon name="alert" />}
           >
             <AlertTitle className="font-normal">
-              {`${sourceLabel(source)}: ${t("desktop.logs.state_missing_detail")}`}
+              {labelled(
+                t,
+                sourceLabel(source),
+                t("desktop.logs.state_missing_detail"),
+              )}
             </AlertTitle>
           </Alert>
         ) : state.kind === "unreadable" ? (
@@ -735,9 +744,17 @@ export const RecordList = memo(function RecordList({
             icon={<Icon name="alert" />}
           >
             <AlertTitle className="font-normal">
-              {state.detail
-                ? `${sourceLabel(source)}: ${t("desktop.logs.state_unreadable")}: ${state.detail}`
-                : `${sourceLabel(source)}: ${t("desktop.logs.state_unreadable")}`}
+              {labelled(
+                t,
+                sourceLabel(source),
+                state.detail
+                  ? labelled(
+                      t,
+                      t("desktop.logs.state_unreadable"),
+                      state.detail,
+                    )
+                  : t("desktop.logs.state_unreadable"),
+              )}
             </AlertTitle>
           </Alert>
         ) : null,
@@ -752,7 +769,11 @@ export const RecordList = memo(function RecordList({
             icon={<Icon name="alert" />}
           >
             <AlertTitle className="font-normal">
-              {`${sourceLabel(source)}: ${t("desktop.logs.rejected", { count: state.rejected })}`}
+              {labelled(
+                t,
+                sourceLabel(source),
+                t("desktop.logs.rejected", { count: state.rejected }),
+              )}
             </AlertTitle>
           </Alert>
         ) : null,

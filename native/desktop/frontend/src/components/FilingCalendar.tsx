@@ -31,6 +31,7 @@ import {
   type CalendarState,
 } from "../shell/calendar";
 import { entryKey, STATE_ORDER } from "../shell/calendarEntries";
+import { factsGap, listed } from "../shell/compose";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
 import type { CalendarEntry, CalendarEvent } from "../shell/views";
@@ -753,9 +754,9 @@ export function FilingCalendarView({
                       <time dateTime={event.event_date}>
                         {short.format(day(event.event_date))}
                       </time>
-                      {" · "}
+                      {factsGap(t)}
                       {t(`desktop.calendar.event.${event.event_type}`)}
-                      {" · "}
+                      {factsGap(t)}
                       <span className="text-foreground">{event.summary}</span>
                     </span>
                   </li>
@@ -772,7 +773,10 @@ export function FilingCalendarView({
     const note = coverage.advised.length > 0 && (
       <p className="px-4 py-3 text-sm text-muted-foreground">
         {t("desktop.calendar.undetermined", {
-          modelos: coverage.advised.map((item) => item.modelo).join(", "),
+          modelos: listed(
+            t,
+            coverage.advised.map((item) => item.modelo),
+          ),
         })}
       </p>
     );

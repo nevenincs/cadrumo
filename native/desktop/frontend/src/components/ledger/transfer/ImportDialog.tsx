@@ -34,6 +34,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
+import { facts, listed } from "../../../shell/compose";
 import type {
   FilePick,
   FilePurpose,
@@ -53,6 +54,7 @@ import {
 import type { ShowImportBatch } from "../../../shell/ledgerImports";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
+import { listOf } from "../../../shared/lists";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { PeriodSelector } from "../PeriodSelector";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
@@ -196,7 +198,7 @@ function DuplicateCompare({
       active = false;
     };
   }, [open, existing, failed, port, imported]);
-  const facts = (movement: LedgerTransaction) => (
+  const card = (movement: LedgerTransaction) => (
     <div className="grid gap-0.5 rounded-md bg-accent p-2 text-sm">
       <span className="font-medium [overflow-wrap:anywhere]">
         {movement.description}
@@ -205,11 +207,13 @@ function DuplicateCompare({
         <span className="text-muted-foreground">{movement.counterparty}</span>
       )}
       <span className="tabular-nums">
-        {amountText(locale, movement.amount, movement.currency)} ·{" "}
-        {t(
-          `desktop.ledger.import.direction.${movement.direction.toLowerCase()}`,
-        )}{" "}
-        · {dayText(locale, movement.date)}
+        {facts(t, [
+          amountText(locale, movement.amount, movement.currency),
+          t(
+            `desktop.ledger.import.direction.${movement.direction.toLowerCase()}`,
+          ),
+          dayText(locale, movement.date),
+        ])}
       </span>
     </div>
   );
@@ -232,7 +236,7 @@ function DuplicateCompare({
           <span className="text-xs text-muted-foreground">
             {t("desktop.ledger.import.compare_imported")}
           </span>
-          {facts(imported)}
+          {card(imported)}
         </div>
         <div className="grid gap-1">
           <span className="text-xs text-muted-foreground">
@@ -250,7 +254,7 @@ function DuplicateCompare({
             </p>
           ) : (
             existing.map((movement) => (
-              <div key={movement.transaction_id}>{facts(movement)}</div>
+              <div key={movement.transaction_id}>{card(movement)}</div>
             ))
           )}
         </div>
@@ -537,14 +541,17 @@ export function ImportDialog({
   const readPreviews = previews.filter(
     (preview): preview is ReadPreview => preview.kind === "read",
   );
-  const facts = new Map(
+  const accountFacts = new Map(
     readPreviews.map((preview) => [
       preview.file.token,
       accountFact(preview, accounts ?? []),
     ]),
   );
   const accountOf = (preview: ReadPreview) =>
-    accountFor(facts.get(preview.file.token)!, choices[preview.file.token]);
+    accountFor(
+      accountFacts.get(preview.file.token)!,
+      choices[preview.file.token],
+    );
   const shown = (preview: ReadPreview) =>
     shownResult(preview, accountOf(preview));
   const sendable = readPreviews.filter(
@@ -629,7 +636,10 @@ export function ImportDialog({
         item.kind === "unknown" ? [item] : [],
       );
       if (unseen.length) {
-        const what = unseen.map((item) => item.file.name).join(", ");
+        const what = listed(
+          t,
+          unseen.map((item) => item.file.name),
+        );
         pause.hold({
           what,
           outcome: unseen.every((item) => item.code === "saved_unread")
@@ -695,7 +705,10 @@ export function ImportDialog({
       setStep("result");
       const unseen = applied.stopped?.code;
       if (unseen === "unknown" || unseen === "saved_unread") {
-        const what = applied.stopped!.files.map((file) => file.name).join(", ");
+        const what = listed(
+          t,
+          applied.stopped!.files.map((file) => file.name),
+        );
         pause.hold({
           what,
           outcome: unseen,
@@ -806,7 +819,7 @@ export function ImportDialog({
           previews={previews}
           progressText={progressText}
           accounts={accounts ?? []}
-          facts={facts}
+          accountFacts={accountFacts}
           choices={choices}
           reading={reading}
           onChoose={(preview, account) => void chooseAccount(preview, account)}
@@ -1252,7 +1265,7 @@ function BankPreview({
   previews,
   progressText,
   accounts,
-  facts,
+  accountFacts,
   choices,
   reading,
   onChoose,
@@ -1264,7 +1277,7 @@ function BankPreview({
   previews: BankFilePreview[];
   progressText: string | null;
   accounts: OwnAccount[];
-  facts: Map<string, ReturnType<typeof accountFact>>;
+  accountFacts: Map<string, ReturnType<typeof accountFact>>;
   choices: Record<string, AccountKey>;
   reading: Set<string>;
   onChoose(preview: ReadPreview, account: AccountKey): void;
@@ -1286,7 +1299,7 @@ function BankPreview({
     read.reduce((sum, preview) => sum + pick(shown(preview)), 0);
   const accountName = (id: string) => {
     const account = accounts.find((held) => held.id === id);
-    return account ? `${account.label} · ${account.masked}` : id;
+    return account ? facts(t, [account.label, account.masked]) : id;
   };
   return (
     <>
@@ -1345,7 +1358,7 @@ function BankPreview({
               </FileRow>
             );
           const result = shown(preview);
-          const fact = facts.get(preview.file.token)!;
+          const fact = accountFacts.get(preview.file.token)!;
           const select = `${ids}-${preview.file.token}`;
           return (
             <FileRow key={preview.file.token} name={preview.file.name}>
@@ -1446,7 +1459,7 @@ function BankPreview({
         <ul className="mt-1 grid gap-0.5 font-mono">
           {read.map((preview) => (
             <li key={preview.file.token} className="[overflow-wrap:anywhere]">
-              {preview.file.name} · sha256 {preview.digest ?? "-"}
+              {facts(t, [preview.file.name, `sha256 ${preview.digest ?? "-"}`])}
             </li>
           ))}
         </ul>
@@ -1591,7 +1604,7 @@ function ResultStep({
       <AlertTitle>{t("desktop.ledger.import.unknown")}</AlertTitle>
       <AlertDescription>
         {t("desktop.ledger.import.unknown_note", {
-          names: new Intl.ListFormat(locale).format(names),
+          names: listOf(locale, names),
         })}
       </AlertDescription>
     </Alert>
@@ -1686,8 +1699,10 @@ function ResultStep({
                 >
                   <Icon name="alert" size="xs" className="text-warning" />
                   <span className="tabular-nums">
-                    {dayText(locale, movement.date)} ·{" "}
-                    {amountText(locale, movement.amount, movement.currency)}
+                    {facts(t, [
+                      dayText(locale, movement.date),
+                      amountText(locale, movement.amount, movement.currency),
+                    ])}
                   </span>
                   <span className="min-w-0 [overflow-wrap:anywhere]">
                     {movement.description}
@@ -1753,9 +1768,7 @@ function ResultStep({
         {result.unmapped_column_headers.length > 0 && (
           <p className="text-sm text-muted-foreground">
             {t("desktop.ledger.import.unmapped", {
-              columns: new Intl.ListFormat(locale).format(
-                result.unmapped_column_headers,
-              ),
+              columns: listOf(locale, result.unmapped_column_headers),
             })}
           </p>
         )}
@@ -1764,7 +1777,7 @@ function ResultStep({
             {t("desktop.ledger.import.technical")}
           </summary>
           <p className="mt-1 font-mono [overflow-wrap:anywhere]">
-            {outcome.file.name} · sha256 {result.source_sha256}
+            {facts(t, [outcome.file.name, `sha256 ${result.source_sha256}`])}
           </p>
         </details>
       </>
@@ -1801,7 +1814,8 @@ function ResultStep({
               {t("desktop.ledger.apply.outcome.saved_unread")}
             </AlertTitle>
             <AlertDescription>
-              {new Intl.ListFormat(locale).format(
+              {listOf(
+                locale,
                 applied.stopped.files.map((file) => file.name),
               )}
             </AlertDescription>

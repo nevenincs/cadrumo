@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
+import { facts, factsGap, labelled, listed } from "@/shell/compose";
 import type {
   CatalogueInvoice,
   LedgerRow,
@@ -106,7 +107,7 @@ function planLine(t: Translate, plan: LedgerPlan, held: number): string {
     0,
   );
   const single = summary.singleClassifications + summary.corrections + actions;
-  return [
+  return facts(t, [
     summary.together
       ? t("desktop.ledger.apply.together", { count: summary.together })
       : "",
@@ -122,9 +123,7 @@ function planLine(t: Translate, plan: LedgerPlan, held: number): string {
       ? t("desktop.ledger.apply.new", { count: summary.newMovements })
       : "",
     held ? t("desktop.ledger.apply.held", { count: held }) : "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  ]);
 }
 
 // ---- Actions in words -------------------------------------------------------
@@ -168,7 +167,7 @@ function actionLines(
   if (action.kind === "split")
     for (const child of action.children)
       lines.push(
-        [
+        facts(t, [
           valueText(t, locale, "amount", child.amount),
           child.description,
           child.classify
@@ -180,9 +179,7 @@ function actionLines(
           child.classify?.category_id
             ? categoryLabel(t, child.classify.category_id)
             : "",
-        ]
-          .filter(Boolean)
-          .join(" · "),
+        ]),
       );
   return lines;
 }
@@ -607,13 +604,14 @@ function blockerFields(t: Translate, blocker: PlanBlocker): string | null {
       ? (blocker.fields as (StageField | DraftField | string)[])
       : null;
   if (!fields?.length) return null;
-  return fields
-    .map((field) =>
+  return listed(
+    t,
+    fields.map((field) =>
       field === "m210_income_classification"
         ? t("desktop.ledger.field.m210_income_classification")
         : fieldName(t, field as StageField),
-    )
-    .join(", ");
+    ),
+  );
 }
 
 function NeedsYouFirst({
@@ -709,16 +707,17 @@ function NeedsYouFirst({
               </p>
             )}
             <p className="text-sm text-muted-foreground">
-              {held
-                .slice(0, 4)
-                .map((entry) =>
-                  entry.draft
-                    ? draftTitle(entry.id)
-                    : titleOf(t, rows, entry.id),
-                )
-                .join(" · ")}
-              {held.length > 4 &&
-                ` · ${t("desktop.ledger.apply.more", { count: held.length - 4 })}`}
+              {facts(t, [
+                ...held
+                  .slice(0, 4)
+                  .map((entry) =>
+                    entry.draft
+                      ? draftTitle(entry.id)
+                      : titleOf(t, rows, entry.id),
+                  ),
+                held.length > 4 &&
+                  t("desktop.ledger.apply.more", { count: held.length - 4 }),
+              ])}
             </p>
           </div>
         );
@@ -771,8 +770,6 @@ function PermanentLinks({
 }) {
   const t = useStrings();
   if (!links.length) return null;
-  const side = (parts: (string | null | undefined)[]) =>
-    parts.filter(Boolean).join(" · ");
   return (
     <section
       className="ledger-permanent grid gap-3 rounded-lg bg-muted p-3"
@@ -792,7 +789,7 @@ function PermanentLinks({
         return (
           <div key={link.id} data-link={link.id} className="grid gap-1.5">
             <p className="text-sm">
-              {side([
+              {facts(t, [
                 transaction &&
                   valueText(t, locale, "amount", transaction.amount),
                 transaction?.counterparty || transaction?.description,
@@ -801,7 +798,7 @@ function PermanentLinks({
               ])}
               {" ↔ "}
               {link.invoice
-                ? side([
+                ? facts(t, [
                     link.invoice.invoice_number,
                     valueText(
                       t,
@@ -927,18 +924,21 @@ function Approvals({
                     key={write.field}
                     data-derived={write.derived || undefined}
                   >
-                    {fieldName(t, write.field)}:{" "}
-                    {valueText(
+                    {labelled(
                       t,
-                      locale,
-                      write.field,
-                      row ? (storedFieldValue(row, write.field) ?? null) : null,
+                      fieldName(t, write.field),
+                      `${valueText(
+                        t,
+                        locale,
+                        write.field,
+                        row
+                          ? (storedFieldValue(row, write.field) ?? null)
+                          : null,
+                      )} → ${valueText(t, locale, write.field, write.value)}`,
                     )}
-                    {" → "}
-                    {valueText(t, locale, write.field, write.value)}
                     {write.derived && (
                       <span className="text-muted-foreground">
-                        {` · ${t("desktop.ledger.edit.lock.derived")}`}
+                        {`${factsGap(t)}${t("desktop.ledger.edit.lock.derived")}`}
                       </span>
                     )}
                   </li>
@@ -975,16 +975,20 @@ function entriesOf(
     const changes = content.rows[entry.transactionId] ?? {};
     const lines = entry.fields.map((field) => {
       const change = changes[field]!;
-      return `${fieldName(t, field)}: ${valueText(
+      return labelled(
         t,
-        locale,
-        field,
-        row ? (storedFieldValue(row, field) ?? null) : null,
-      )} → ${
-        change.kind === "set"
-          ? valueText(t, locale, field, change.value)
-          : t("desktop.ledger.edit.cleared")
-      }`;
+        fieldName(t, field),
+        `${valueText(
+          t,
+          locale,
+          field,
+          row ? (storedFieldValue(row, field) ?? null) : null,
+        )} → ${
+          change.kind === "set"
+            ? valueText(t, locale, field, change.value)
+            : t("desktop.ledger.edit.cleared")
+        }`,
+      );
     });
     for (const action of content.actions)
       if (actionRows(action).includes(entry.transactionId))
@@ -1004,10 +1008,12 @@ function entriesOf(
       draft: true,
       title: draft.fields.description ?? t("desktop.ledger.draft.untitled"),
       lines: [
-        (Object.entries(draft.fields) as [DraftField, string][])
-          .filter(([field]) => field !== "description")
-          .map(([field, value]) => valueText(t, locale, field, value))
-          .join(" · "),
+        facts(
+          t,
+          (Object.entries(draft.fields) as [DraftField, string][])
+            .filter(([field]) => field !== "description")
+            .map(([field, value]) => valueText(t, locale, field, value)),
+        ),
       ],
       blocked: (checked?.blockers.length ?? 0) > 0,
     });
@@ -1051,7 +1057,10 @@ function MovementList({
       onToggle={(event) => onOpen(event.currentTarget.open)}
     >
       <summary className="ledger-review-rows-toggle flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground">
-        {`${t("desktop.ledger.apply.summary_movements")} · ${entries.length}`}
+        {facts(t, [
+          t("desktop.ledger.apply.summary_movements"),
+          entries.length,
+        ])}
         <Icon name={open ? "chevronDown" : "forward"} size="xs" />
       </summary>
       {open && (
@@ -1102,7 +1111,7 @@ function MovementList({
                 <span className="grid min-w-0 flex-1">
                   <span className="truncate font-medium">{entry.title}</span>
                   <span className="truncate text-sm text-muted-foreground">
-                    {entry.lines.join(" · ")}
+                    {facts(t, entry.lines)}
                   </span>
                 </span>
                 <Button
@@ -1160,9 +1169,14 @@ function stepTitle(
       });
     case "classify":
     case "update":
-      return `${titleOf(t, rows, step.transactionId)}: ${step.fields
-        .map((field) => fieldName(t, field))
-        .join(", ")}`;
+      return labelled(
+        t,
+        titleOf(t, rows, step.transactionId),
+        listed(
+          t,
+          step.fields.map((field) => fieldName(t, field)),
+        ),
+      );
     case "add":
       return t("desktop.ledger.apply.step.add", {
         movement:
@@ -1173,11 +1187,10 @@ function stepTitle(
     case "answer":
       return step.action.kind === "rule_apply"
         ? actionText(t, "", step.action)
-        : `${actionText(t, "", step.action)} · ${titleOf(
-            t,
-            rows,
-            actionRows(step.action)[0] ?? "",
-          )}`;
+        : facts(t, [
+            actionText(t, "", step.action),
+            titleOf(t, rows, actionRows(step.action)[0] ?? ""),
+          ]);
   }
 }
 
@@ -1799,9 +1812,10 @@ export function ReviewDialog({
           name={OUTCOME_ICONS[headline]}
           className={outcomeTone(headline)}
         />
-        {`${t(`desktop.ledger.apply.tally.${headline}`)} · ${
-          worst ? counts[worst]! : saved || (counts.unchanged ?? 0)
-        }`}
+        {facts(t, [
+          t(`desktop.ledger.apply.tally.${headline}`),
+          worst ? counts[worst]! : saved || (counts.unchanged ?? 0),
+        ])}
       </span>
     );
     const items = outcomeItems(
@@ -1882,11 +1896,12 @@ export function ReviewDialog({
             <ul className="mt-2 grid gap-1 font-mono text-xs">
               {refusals.map((item) => (
                 <li key={item.key}>
-                  {`${item.title} · ${
+                  {facts(t, [
+                    item.title,
                     item.outcome.kind === "refused"
                       ? (item.outcome.reason ?? "refused")
-                      : ""
-                  }`}
+                      : "",
+                  ])}
                 </li>
               ))}
             </ul>

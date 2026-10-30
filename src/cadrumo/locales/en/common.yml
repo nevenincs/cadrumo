@@ -1343,6 +1343,20 @@ desktop:
         stock: Stock
       areas: Asset areas
       asset_id: Asset id
+      baja:
+        acquisition_value: Acquisition value
+        deducted: Depreciation deducted
+        excess: Excess
+        figures: Figures of the baja (nothing is saved)
+        findings: Findings
+        minimum: Minimum amortization
+        net_value: Net value
+        preview: Calculate the figures
+        reduction: Reduction of the acquisition value
+        result: Gain or loss
+        route_changed: A later affectation to the activity changes how this baja is
+          taxed.
+        transmission_value: Transmission value
       claim_reused: 'Already claimed: nothing was recorded twice.'
       claimed: Claim recorded.
       column:
@@ -1386,6 +1400,8 @@ desktop:
         document_number: Document number
         in_service_date: In service from
         kind: Kind
+        later_affectation: Later affectation to the activity on
+        market_value: Market value (if stated)
         method: Method
         name: Name
         non_deductible_iva: Non-deductible IVA
@@ -1393,6 +1409,7 @@ desktop:
           is not the same as 0.
         not_known: 'Not known for this purchase: state it yourself.'
         out_of_service_date: Out of service from
+        prior_regime: Attested prior free depreciation
         proceeds: Proceeds
         residual_value: Residual value
         serial: Serial number
@@ -1453,7 +1470,7 @@ desktop:
           references: Legal basis
           title: Limits for this election
         matches: Matches the current schedule
-        no_claims: No dotación recorded for this year.
+        no_claims: No claim is recorded for this year.
         no_match: No longer matches the schedule
         projected: Projected
         projected_note: Projected tables serve the forecast and Modelo 130. Modelo
@@ -4821,6 +4838,11 @@ ledger:
       tax_year_without_edition: No Modelo 100 edition covers tax year {tax_year}.
       used_building_requires_construction_date: A used building requires its construction
         date.
+      used_original_price_not_enrolled: The RIS art. 4.3 originating-price base is
+        not enrolled for the %{regime} modality.
+      used_original_price_requires_used_asset: RIS art. 4.3.b and 4.3.c take the originating
+        price as the base only for an element acquired used. A new element, or a building
+        under ten years old, is not one.
       useful_life_evidence_required: A definite-life election requires its useful-life
         evidence.
       useful_life_must_end_after_service: A definite useful life must end after the
@@ -4838,11 +4860,6 @@ ledger:
       vehicle_shared_use: A vehicle shared between the activity and private needs
         is not an affected asset, and a vehicle cannot be partially affected (RIRPF
         art. 22.2.1º and 22.3; LIRPF art. 29.2).
-      used_original_price_not_enrolled: The RIS art. 4.3 originating-price base is
-        not enrolled for the %{regime} modality.
-      used_original_price_requires_used_asset: RIS art. 4.3.b and 4.3.c take the originating
-        price as the base only for an element acquired used. A new element, or a building
-        under ten years old, is not one.
       workforce_fell_below: The average workforce of the 24 months after the entry
         year's start falls below that of the 12 months before (LIS DA 17a.1).
       workforce_increase_not_kept: The workforce increase is not kept for the further
@@ -4895,6 +4912,9 @@ ledger:
       incomplete: 'Missing facts: cannot be worked out'
       period_elapsed: Maximum period elapsed
       unsupported: Not supported yet
+    prior_free_depreciation_regime:
+      trlis_da_11: TRLIS additional provision 11
+      trlis_dt_37: TRLIS transitional provision 37
     regime:
       normal: Direct estimation, normal
       simplified: Direct estimation, simplified
@@ -5978,6 +5998,8 @@ tui:
       name: Element name
       non_deductible_iva: Non-deductible IVA, replaces the revision's amount
       plan: Amortization plan
+      plan_minimum: Minimum amortization
+      plan_minimum_incomplete: incomplete
       price: Price without IVA, replaces the revision's price
       revision: Asset revision (JSON)
       serial: Serial number
@@ -5998,8 +6020,6 @@ tui:
       choose_entry: Choose an entry
       locked: Locked
       never_captured: Not read yet
-      plan_minimum: Minimum amortization
-      plan_minimum_incomplete: incomplete
       stale: Out of date
       unavailable: Unavailable
     categorisation:

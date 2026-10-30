@@ -134,10 +134,11 @@ class LocaleManager:
            TypeScript frontend reads from its generated strings file. No
            Python call site names them, so they are declared once by the
            generator. See :mod:`locales.desktop_chrome`.
-        7. Navigation register - the label key of every element in the
-           client's navigation register, which every palette shows. The
-           register is TOML data, so no source scan sees its keys; they are
-           read through the register's own validating loader.
+        7. Navigation register - the label and search-keyword keys of every
+           element in the client's navigation register, which every palette
+           shows and searches. The register is TOML data, so no source scan
+           sees its keys; they are read through the register's own
+           validating loader.
 
         Dynamic namespaces (open-ended f-string and concatenation forms)
         are returned by :meth:`get_codebase_namespaces` and checked
@@ -174,7 +175,7 @@ class LocaleManager:
         keys.update(wizard_descriptor_keys())
         keys.update(DESKTOP_CHROME_KEYS)
         keys.update(MANAGER_CHROME_KEYS)
-        keys.update(element.label for element in load_navigation_register().elements)
+        keys.update(key for element in load_navigation_register().elements for key in (element.label, element.keywords))
         from ._paths import LOCALES_DIR
         from .service_catalogues import SERVICE_FAMILIES, SERVICE_KEYS
 

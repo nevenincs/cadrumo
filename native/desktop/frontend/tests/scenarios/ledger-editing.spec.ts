@@ -155,6 +155,30 @@ test("an edit is staged beside the stored value, and the strip and counts stay s
   expect(await trayCount(target)).toBe(1);
 });
 
+test("the review opens on the chord the tray shows, from either Enter key, and not with Shift", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  const row = dataRows(target).first();
+  await typeInto(target, cellOf(row, "counterparty"), "Gráficas Turia SL");
+  await expect(tray(target)).toBeVisible();
+  await expect(tray(target).locator(".ledger-tray-review")).toHaveAttribute(
+    "aria-keyshortcuts",
+    "Control+Enter",
+  );
+  await cellOf(row, "description").click();
+  await target.keyboard.press("Control+Shift+Enter");
+  await target.keyboard.press("Alt+Enter");
+  await expect(review(target)).toHaveCount(0);
+  await target.keyboard.press("Control+Enter");
+  await expect(review(target)).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(review(target)).toHaveCount(0);
+  await cellOf(row, "description").click();
+  await target.keyboard.press("Control+NumpadEnter");
+  await expect(review(target)).toBeVisible();
+});
+
 test("the amount editor refuses what could be read two ways, echoing it, and saves the shortest form", async ({
   page: target,
 }) => {

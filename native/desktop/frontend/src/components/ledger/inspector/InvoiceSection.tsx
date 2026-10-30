@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
+import { facts } from "@/shell/compose";
 import type {
   CatalogueInvoice,
   InvoiceListResult,
@@ -224,7 +225,11 @@ export function InvoiceSection({
           : undefined;
         return {
           value: option.invoice.invoice_id,
-          label: `${seriesAndNumber(option.invoice)} · ${option.invoice.counterparty_name} · ${figureText(locale, option.invoice.grand_total.decimal)}`,
+          label: facts(t, [
+            seriesAndNumber(option.invoice),
+            option.invoice.counterparty_name,
+            figureText(locale, option.invoice.grand_total.decimal),
+          ]),
           group:
             group === "settles"
               ? t("desktop.ledger.inspector.invoice.group_settles")

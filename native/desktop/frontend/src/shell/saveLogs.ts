@@ -10,8 +10,10 @@ type SavePicker = (options: {
   }>;
 }>;
 
-/** Browser development uses the browser's picker; the host owns native exports. */
-export async function saveLogs(text: string): Promise<void> {
+/** Browser development uses the browser's picker; the host owns native exports.
+ * `fileType` names the kind of file in the picker's type list, in the
+ * person's language. */
+export async function saveLogs(text: string, fileType: string): Promise<void> {
   const suggestedName = `cadrumo-session-${Date.now()}.log`;
   const picker = (window as Window & { showSaveFilePicker?: SavePicker })
     .showSaveFilePicker;
@@ -20,7 +22,7 @@ export async function saveLogs(text: string): Promise<void> {
       suggestedName,
       startIn: "downloads",
       types: [
-        { description: "Log", accept: { "text/plain": [".log", ".txt"] } },
+        { description: fileType, accept: { "text/plain": [".log", ".txt"] } },
       ],
     });
     const stream = await file.createWritable();

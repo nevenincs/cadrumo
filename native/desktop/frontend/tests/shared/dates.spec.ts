@@ -11,6 +11,14 @@ import {
 import { dateFormats } from "../../src/shared/dateFormats";
 import { evaluatedLabel, evaluatedWord } from "../../src/shell/calendar";
 
+// The translator the shell builds reads the generated catalogue, which a
+// plain test has no build for; this one joins the pieces as English does.
+const words = Object.assign(
+  (key: string, values?: Record<string, string | number>) =>
+    key === "desktop.compose.facts" ? `${values?.head} · ${values?.tail}` : key,
+  { locale: "en-US" },
+);
+
 test("local date conversion keeps the day and discards the time", () => {
   for (const iso of ["2026-01-01", "2028-02-29", "2026-12-31"]) {
     const date = isoDay(iso);
@@ -71,13 +79,13 @@ test("named date formats preserve localized dates and distinct label lengths", (
   expect(formats.weekdayNarrow.format(date)).toBe("F");
   expect(dateFormats("es-ES").month.format(date)).toBe("octubre de 2026");
   expect(evaluatedWord("2026-10-09", "2026-10-09", "en-US")).toBe("Today");
-  expect(evaluatedLabel("2026-10-09", "2026-10-09", "en-US")).toBe(
+  expect(evaluatedLabel(words, "2026-10-09", "2026-10-09", "en-US")).toBe(
     "Today · Oct 9",
   );
-  expect(evaluatedLabel("2026-10-09", "2026-10-10", "en-US")).toBe(
+  expect(evaluatedLabel(words, "2026-10-09", "2026-10-10", "en-US")).toBe(
     "Oct 9, 2026",
   );
-  expect(evaluatedLabel("2026-10-09", "2026-10-10", "en-US", true)).toBe(
+  expect(evaluatedLabel(words, "2026-10-09", "2026-10-10", "en-US", true)).toBe(
     "Friday, October 9, 2026",
   );
 });

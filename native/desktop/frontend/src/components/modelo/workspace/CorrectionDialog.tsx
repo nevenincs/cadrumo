@@ -16,6 +16,7 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
+import { facts } from "../../../shell/compose";
 import type {
   CalculationRevisionAmendmentKind,
   M303RectificativaMotive,
@@ -165,12 +166,12 @@ export function CorrectionDialog({
         {context && (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
-              {[
+              {facts(t, [
                 context.filed.modelo_title,
                 context.filed.period_words,
                 context.filed.declaration_kind_words,
                 context.filed.filed_on,
-              ].join(" · ")}
+              ])}
             </p>
             <Field>
               <FieldLabel id={`${ids}-kind`}>

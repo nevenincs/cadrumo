@@ -88,7 +88,8 @@ import {
   readinessSets,
 } from "./movements/movementsModel";
 import { ReadinessStrip } from "./movements/ReadinessStrip";
-import { exactly } from "@/components/ui/dataGridModel";
+import { chordMatches } from "@/shared/chords";
+import { INSPECTOR_CHORD } from "./ledgerChords";
 import type { SectionInspectorContext } from "./inspector/inspectorContext";
 import type { InspectorSection } from "./inspector/inspectorModel";
 import { LedgerInspector } from "./inspector/LedgerInspector";
@@ -277,11 +278,7 @@ export function LedgerPage({
     inspectorContext?.focusActive();
   };
   const onInspectorKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (
-      event.code !== "KeyI" ||
-      !exactly(event, { alt: true }) ||
-      event.nativeEvent.isComposing
-    )
+    if (!chordMatches(INSPECTOR_CHORD, event) || event.nativeEvent.isComposing)
       return;
     event.preventDefault();
     if (!view.inspectorOpen) openInspector(null, true);

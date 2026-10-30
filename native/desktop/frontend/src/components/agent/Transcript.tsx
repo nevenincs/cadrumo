@@ -12,6 +12,8 @@ import { cn } from "@/components/ui/cn";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
+import { listOf } from "@/shared/lists";
+import { describedGap } from "../../shell/compose";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
 import { KIND_GLYPH } from "./files";
@@ -32,21 +34,6 @@ const NEWEST_SLACK = 8;
 
 /** How much of the agent's thinking the preview keeps: its newest part. */
 const THINKING_SHOWN = 4_000;
-
-const lists = new Map<string, Intl.ListFormat>();
-
-/** Names joined as the locale joins a list of things. */
-function listFormat(locale: string): Intl.ListFormat {
-  let format = lists.get(locale);
-  if (!format) {
-    format = new Intl.ListFormat(locale, {
-      style: "long",
-      type: "conjunction",
-    });
-    lists.set(locale, format);
-  }
-  return format;
-}
 
 function toolWords(t: Translate): Record<ToolActivityState, string> {
   return {
@@ -82,7 +69,12 @@ function SentFiles({
         </li>
       ))}
       {folded.length > 0 && (
-        <li title={listFormat(locale).format(folded.map((file) => file.name))}>
+        <li
+          title={listOf(
+            locale,
+            folded.map((file) => file.name),
+          )}
+        >
           <Badge className="h-control-xs">
             {t("desktop.agent.more_files", { count: folded.length })}
           </Badge>
@@ -322,6 +314,7 @@ const ToolRow = memo(function ToolRow({
   const t = useStrings();
   const { state } = activity;
   const failed = state === "failed";
+  const outcome = toolWords(t)[state];
   return (
     <li className="flex min-w-0 items-start gap-2 pr-4 text-sm text-muted-foreground">
       {state === "pending" || state === "in_progress" ? (
@@ -339,8 +332,7 @@ const ToolRow = memo(function ToolRow({
               {activity.label}
               {/* A failed call is said in words, not by its icon alone. */}
               <span className={failed ? "ml-1.5 text-destructive" : "sr-only"}>
-                {failed ? "" : ", "}
-                {toolWords(t)[state]}
+                {failed ? outcome : `${describedGap(t)}${outcome}`}
               </span>
             </span>
           }

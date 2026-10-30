@@ -9,6 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { described, describedGap } from "../../shell/compose";
 import { useStrings, type Translate } from "../../shell/strings";
 
 /**
@@ -61,7 +62,7 @@ export function AgentIconAction({
       hint={blocked ?? hint}
       accessibleName={
         accessibleName && blocked
-          ? `${accessibleName}, ${blocked}`
+          ? described(t, accessibleName, blocked)
           : accessibleName
       }
       aria-disabled={blocked ? true : undefined}
@@ -104,7 +105,12 @@ export function AgentTextAction({
           onClick={blocked ? undefined : onAction}
         >
           {children}
-          {blocked && <span className="sr-only">, {blocked}</span>}
+          {blocked && (
+            <span className="sr-only">
+              {describedGap(t)}
+              {blocked}
+            </span>
+          )}
         </Button>
       </TooltipTrigger>
       <TooltipContent>{blocked}</TooltipContent>

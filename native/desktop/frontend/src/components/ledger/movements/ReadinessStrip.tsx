@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { facts } from "@/shell/compose";
 import {
   Tooltip,
   TooltipContent,
@@ -34,9 +35,6 @@ type Pill = {
   /** The share of what it counts that a staged change classifies. */
   staged?: number;
 };
-
-/** A pill's sentence and its notes, as one line. */
-const said = (...parts: string[]) => parts.filter(Boolean).join(" · ");
 
 function pillsOf(
   t: Translate,
@@ -109,11 +107,11 @@ function pillsOf(
       count: fix,
       ...(counts.fixAtLeast ? { atLeast: true } : {}),
       filter: "issues",
-      label: said(
+      label: facts(t, [
         t("desktop.ledger.readiness.not_ready", { count: fix }),
         counts.fixAtLeast ? t("desktop.ledger.readiness.listed_only") : "",
         unsaved,
-      ),
+      ]),
     });
   // Not ready with nothing on any movement is the period's own reason:
   // said without a count.
@@ -122,7 +120,10 @@ function pillsOf(
       key: "issues",
       icon: "alert",
       tone: "warning",
-      label: said(t("desktop.ledger.readiness.not_ready_period"), unsaved),
+      label: facts(t, [
+        t("desktop.ledger.readiness.not_ready_period"),
+        unsaved,
+      ]),
     });
   const toClassify = counts.toClassify;
   if (toClassify > 0)
@@ -133,7 +134,7 @@ function pillsOf(
       count: toClassify,
       filter: "to_classify",
       staged: notes.stagedClassify / toClassify,
-      label: said(
+      label: facts(t, [
         t("desktop.ledger.count.to_classify", { count: toClassify }),
         notes.stagedClassify > 0
           ? t("desktop.ledger.readiness.staged", {
@@ -141,7 +142,7 @@ function pillsOf(
             })
           : "",
         unsaved,
-      ),
+      ]),
     });
   const noRate = counts.noRate;
   if (noRate > 0)
@@ -349,10 +350,10 @@ export function ReadinessStrip({
                     aria-pressed={filters.reason === reason}
                     // Named by what it shows, so the name holds the visible
                     // label; the sentence and what pressing does describe it.
-                    aria-description={said(
+                    aria-description={facts(t, [
                       reasonDetail(t, reason),
                       t("desktop.ledger.readiness.reason_action"),
-                    )}
+                    ])}
                     onClick={() =>
                       onReason(filters.reason === reason ? null : reason)
                     }
@@ -362,7 +363,7 @@ export function ReadinessStrip({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {reasonDetail(t, reason)} · {ids.size}
+                  {facts(t, [reasonDetail(t, reason), ids.size])}
                 </TooltipContent>
               </Tooltip>
             </li>

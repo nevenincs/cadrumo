@@ -13,6 +13,7 @@ import type {
   PublicModeloFormContextFieldBlock,
   PublicModeloFormField,
 } from "../../../shell/modeloContract";
+import { factsGap } from "../../../shell/compose";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { calm, FieldRow } from "./FieldRow";
 import { useForm } from "./formContext";
@@ -213,7 +214,8 @@ export function SectionView({
         )}
         {uncalculated && (
           <span className="text-sm text-faint">
-            · {t("workspace.modelo.legend.meaning.origin.not_calculated_yet")}
+            {factsGap(t).trimStart()}
+            {t("workspace.modelo.legend.meaning.origin.not_calculated_yet")}
           </span>
         )}
         {todo > 0 && (

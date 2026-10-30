@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { PaneHeaderFrame } from "@/components/ui/pane-header";
+import { described } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 import type { OpenMenu } from "../ContextMenu";
 import { AgentIconAction } from "./AgentAction";
@@ -137,7 +138,7 @@ export function AgentHeader({
         hint={attached}
         // The name holds the badge as it is drawn, then the exact count.
         accessibleName={
-          attached ? `${documents}, ${shown}, ${attached}` : undefined
+          attached ? described(t, documents, shown, attached) : undefined
         }
         aria-pressed={documentsOpen}
         onAction={onToggleDocuments}

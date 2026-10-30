@@ -15,6 +15,7 @@ import type {
   AgentSkillVerification,
   SkillCommand,
 } from "../../shell/agentSkills";
+import { listed } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 
 type Answer =
@@ -23,10 +24,10 @@ type Answer =
   | { kind: "review"; skill: AgentSkillDetail }
   | { kind: "verify"; result: AgentSkillVerification };
 
-const listed = (values: readonly unknown[]) =>
-  values
-    .map((value) => (typeof value === "string" ? value : JSON.stringify(value)))
-    .join(", ");
+const valueWords = (values: readonly unknown[]) =>
+  values.map((value) =>
+    typeof value === "string" ? value : JSON.stringify(value),
+  );
 
 /** When the agent applies the skill on its own, line by line, from what its
  * frontmatter says. Keys it does not know yet are not shown. */
@@ -45,7 +46,11 @@ function AppliesWhen({ rule }: { rule: AgentSkillAppliesWhen }) {
           {facts.map((fact, index) => (
             <li key={index}>
               {fact.fact} {fact.match}{" "}
-              {listed(Array.isArray(fact.values) ? fact.values : [])}
+              {listed(
+                t,
+                valueWords(Array.isArray(fact.values) ? fact.values : []),
+                "plain",
+              )}
             </li>
           ))}
         </ul>

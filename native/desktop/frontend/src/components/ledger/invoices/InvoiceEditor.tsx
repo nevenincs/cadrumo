@@ -18,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { facts, labelGap } from "../../../shell/compose";
 import type {
   CatalogueInvoice,
   InvoiceAddRequest,
@@ -1713,13 +1714,13 @@ function Confirmation({
     return (
       <Alert icon={<Icon name="info" />} className="ledger-invoice-confirm">
         <AlertTitle>
-          {[
+          {facts(t, [
             kindLabel(t, draftRequest.kind),
             draftRequest.invoice_number,
             dayText(locale, draftRequest.issued_at),
             draftRequest.counterparty_name,
             amountText(locale, totals.total, draftRequest.currency),
-          ].join(" · ")}
+          ])}
         </AlertTitle>
         <AlertDescription>
           {t("desktop.ledger.invoices.confirm_new")}
@@ -1772,7 +1773,7 @@ function Confirmation({
             <span className="font-medium">
               {t(`desktop.ledger.invoices.field.${FIELD_LABELS[field]}`)}
             </span>
-            {": "}
+            {labelGap(t)}
             {field === "payment_id" ? null : (
               <>
                 <span className="text-muted-foreground">

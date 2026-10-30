@@ -13,8 +13,9 @@ import type {
   EditorContext,
   GridRow,
 } from "@/components/ui/data-grid";
-import { exactly, type CellRange } from "@/components/ui/dataGridModel";
+import type { CellRange } from "@/components/ui/dataGridModel";
 import { chordMatches, type ChordKeys } from "@/shared/chords";
+import { REDO_CHORDS, REVIEW_CHORDS, UNDO_CHORD } from "../ledgerChords";
 import type { LedgerRow } from "../../../shell/ledger";
 import { percentOf, copyAmount } from "../../../shell/ledgerGrammar";
 import { planApply, routeChange } from "../../../shell/ledgerPlan";
@@ -765,19 +766,15 @@ export function useMovementEditing(input: MovementEditingInput) {
   /** Undo, redo and review, wherever the section's keys reach. */
   const onKeyDown = (event: KeyboardEvent<HTMLElement>): boolean => {
     if (event.defaultPrevented || inField(event.target)) return false;
-    if (event.code === "KeyZ" && exactly(event, { primary: true })) {
+    if (chordMatches(UNDO_CHORD, event)) {
       undo();
       return true;
     }
-    if (
-      (event.code === "KeyZ" &&
-        exactly(event, { primary: true, shift: true })) ||
-      (event.code === "KeyY" && exactly(event, { primary: true }))
-    ) {
+    if (REDO_CHORDS.some((chord) => chordMatches(chord, event))) {
       redo();
       return true;
     }
-    if (event.key === "Enter" && exactly(event, { primary: true })) {
+    if (REVIEW_CHORDS.some((chord) => chordMatches(chord, event))) {
       input.openReview();
       return true;
     }

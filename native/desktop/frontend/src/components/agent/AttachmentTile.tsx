@@ -1,5 +1,6 @@
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
+import { facts, listed } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 import { AgentIconAction } from "./AgentAction";
 import {
@@ -104,7 +105,7 @@ export function AttachmentTile({
   return (
     <li
       data-state={state}
-      title={refused ? `${name} · ${reason}` : `${name} · ${size}`}
+      title={facts(t, [name, refused ? reason : size])}
       className={cn(
         "group/tile relative flex aspect-square min-w-0 flex-col overflow-hidden rounded-lg bg-accent",
         refused && "bg-destructive/5 ring-1 ring-destructive ring-inset",
@@ -163,7 +164,7 @@ export function AttachmentTile({
         )}
       </div>
       <span className="sr-only">
-        {[size, members, stateWords[state]].filter(Boolean).join(", ")}
+        {listed(t, [size, members, stateWords[state]], "plain")}
       </span>
       <AgentIconAction
         icon="close"

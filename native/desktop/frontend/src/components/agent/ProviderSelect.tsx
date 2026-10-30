@@ -14,6 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { described, labelled } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 import { ProviderMark } from "./ProviderMark";
 import type { ProviderOption, ProviderTransport, ProviderWay } from "./types";
@@ -84,7 +85,15 @@ export function ProviderSelect({
           type="button"
           aria-label={
             chosen
-              ? `${t("desktop.agent.provider")}: ${chosen.provider.name}, ${connectionWords(t, chosen.way.transport)}`
+              ? labelled(
+                  t,
+                  t("desktop.agent.provider"),
+                  described(
+                    t,
+                    chosen.provider.name,
+                    connectionWords(t, chosen.way.transport),
+                  ),
+                )
               : t("desktop.agent.provider")
           }
           data-slot="provider-select"

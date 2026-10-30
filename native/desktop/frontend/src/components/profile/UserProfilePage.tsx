@@ -38,6 +38,7 @@ import { chordMatches, type ChordKeys } from "@/shared/chords";
 import type { Action, Chord } from "../../shell/actions";
 import type { Host } from "../../shell/host";
 import type { ProfileView } from "../../shell/layout";
+import { facts, labelled, listed, noted } from "../../shell/compose";
 import { useNavigationGuard } from "../../shell/navigation/hooks";
 import { useCensoSync, type CensoSnapshot } from "../../shell/profileCenso";
 import {
@@ -797,12 +798,10 @@ export const UserProfilePage = memo(function UserProfilePage({
         [
           "place",
           fieldAt(data, "contact.fiscal_address"),
-          [
+          facts(t, [
             fieldAt(data, "contact.fiscal_address")?.value,
             fieldAt(data, "contact.postcode")?.value,
-          ]
-            .filter(Boolean)
-            .join(" · "),
+          ]),
         ],
       ]}
       missing={missing}
@@ -1035,13 +1034,17 @@ export const UserProfilePage = memo(function UserProfilePage({
       <li
         key={row.id}
         {...navProps(row.id, "row", row.section.key)}
-        aria-label={`${field.label}${required ? ` (${t("desktop.profile.required")})` : ""}: ${
+        aria-label={labelled(
+          t,
+          required
+            ? noted(t, field.label, t("desktop.profile.required"))
+            : field.label,
           row.state === "filled"
-            ? shownValue(field)
+            ? (shownValue(field) ?? t("desktop.profile.not_set"))
             : row.state === "required"
               ? t("desktop.profile.missing")
-              : t("desktop.profile.not_set")
-        }`}
+              : t("desktop.profile.not_set"),
+        )}
         aria-keyshortcuts="Enter"
         onDoubleClick={() => {
           if (writable) editRow(row);
@@ -1191,15 +1194,13 @@ export const UserProfilePage = memo(function UserProfilePage({
       ? t("desktop.profile.required_missing", { count: c.missing })
       : "";
     return section.repeatable
-      ? [
+      ? facts(t, [
           c.entries
             ? t("desktop.profile.entries_count", { count: c.entries })
             : t("desktop.profile.entries_none"),
           needed,
-        ]
-          .filter(Boolean)
-          .join(" · ")
-      : [`${c.filled}/${c.total}`, needed].filter(Boolean).join(" · ");
+        ])
+      : facts(t, [`${c.filled}/${c.total}`, needed]);
   };
 
   const detailList = (rows: Row[], prefix = false) => (
@@ -1276,19 +1277,29 @@ export const UserProfilePage = memo(function UserProfilePage({
                         {(lead && shownValue(lead)) || <Unset />}
                       </span>
                       <span className="block truncate text-sm text-muted-foreground">
-                        {rest
-                          .map((field) =>
+                        {facts(
+                          t,
+                          rest.map((field) =>
                             field.value
-                              ? `${field.label}: ${shownValue(field)}`
+                              ? labelled(
+                                  t,
+                                  field.label,
+                                  shownValue(field) ?? "",
+                                )
                               : null,
-                          )
-                          .filter(Boolean)
-                          .join(" · ") || "–"}
+                          ),
+                        ) || "–"}
                       </span>
                       {needs.length > 0 && (
                         <span className="block text-sm font-medium text-foreground italic">
-                          {t("desktop.profile.missing")}:{" "}
-                          {needs.map((field) => field.label).join(", ")}
+                          {labelled(
+                            t,
+                            t("desktop.profile.missing"),
+                            listed(
+                              t,
+                              needs.map((field) => field.label),
+                            ),
+                          )}
                         </span>
                       )}
                     </span>

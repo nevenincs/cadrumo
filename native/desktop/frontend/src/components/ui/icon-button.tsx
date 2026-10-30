@@ -6,6 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { listOf } from "@/shared/lists";
 
 type IconButtonProps = Omit<ButtonProps, "size" | "aria-label" | "title"> & {
   /** The accessible name, also shown as the tooltip. */
@@ -45,7 +46,16 @@ function IconButton({
           data-slot="icon-button"
           variant={variant}
           size={`icon-${size}`}
-          aria-label={accessibleName ?? (hint ? `${label}, ${hint}` : label)}
+          aria-label={
+            accessibleName ??
+            (hint
+              ? listOf(
+                  document.documentElement.lang || undefined,
+                  [label, hint],
+                  "plain",
+                )
+              : label)
+          }
           {...props}
         >
           {children}

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { facts, listed } from "@/shell/compose";
 import type {
   LedgerHistoryTypedResult,
   LedgerRow,
@@ -73,7 +74,10 @@ export function HistorySection({
           <li className="grid border-l-2 border-dashed border-foreground pl-2 text-sm">
             <span className="font-medium">
               {t("desktop.ledger.inspector.history.unsaved", {
-                fields: pending.map((field) => fieldName(t, field)).join(", "),
+                fields: listed(
+                  t,
+                  pending.map((field) => fieldName(t, field)),
+                ),
               })}
             </span>
           </li>
@@ -99,15 +103,14 @@ export function HistorySection({
                 t("desktop.ledger.inspector.history.parts", {
                   count: event.details.child_count,
                 }),
-            ].filter(Boolean);
+            ];
             return (
               <li
                 key={event.event_id}
                 className="grid border-l-2 border-border pl-2 text-sm"
               >
                 <span>
-                  {eventName(t, event.event_type)}
-                  {detail.length > 0 && ` · ${detail.join(" · ")}`}
+                  {facts(t, [eventName(t, event.event_type), ...detail])}
                 </span>
                 {reason && (
                   <span className="text-muted-foreground">“{reason}”</span>
@@ -118,7 +121,10 @@ export function HistorySection({
                   </span>
                 )}
                 <span className="text-xs text-muted-foreground">
-                  {event.actor} · {stampText(locale, event.occurred_at)}
+                  {facts(t, [
+                    event.actor,
+                    stampText(locale, event.occurred_at),
+                  ])}
                 </span>
               </li>
             );

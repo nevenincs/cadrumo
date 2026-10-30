@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { listed } from "@/shell/compose";
 import { useStrings } from "../../../shell/strings";
 import type { PastePlan } from "./editingModel";
 import { refusalText } from "./editingWords";
@@ -60,7 +61,7 @@ export function PasteDialog({
         <DialogHeader>
           <DialogTitle>
             {t("desktop.ledger.paste.title_into", {
-              columns: columns.join(", "),
+              columns: listed(t, columns),
             })}
           </DialogTitle>
           <DialogDescription>

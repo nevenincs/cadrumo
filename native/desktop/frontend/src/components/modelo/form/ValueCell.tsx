@@ -21,6 +21,7 @@ import type {
   PublicModeloFormField,
   SourceSurface,
 } from "../../../shell/modeloContract";
+import { factsGap } from "../../../shell/compose";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { ORIGIN_LOOK, TONE_TEXT } from "./originLook";
 import type { EntryOutcome, FormSession, StagedEdit } from "./session";
@@ -251,7 +252,12 @@ function ReplaceSource({
           <span className="font-medium tabular-nums">
             {field.value_text ?? "—"}
           </span>
-          {field.origin_words && <> · {field.origin_words}</>}
+          {field.origin_words && (
+            <>
+              {factsGap(t)}
+              {field.origin_words}
+            </>
+          )}
         </p>
         <p className="text-sm text-muted-foreground">
           {t("workspace.modelo.legend.meaning.origin.overrides_source")}

@@ -25,6 +25,7 @@ import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Toast } from "@/components/ui/toast";
 import { chordMatches, type ChordKeys } from "@/shared/chords";
+import { facts, labelled, listed } from "@/shell/compose";
 import {
   ContextMenu,
   type MenuAnchor,
@@ -960,15 +961,13 @@ export function MovementsSection({
           ? "MIXED"
           : "PERSONAL",
     );
-    const detail = [
+    const detail = facts(t, [
       answer.share ? `${answer.share.trim().replace(/\s*%$/, "")}%` : "",
       answer.category && categorySplit(ids, byId, stage.content).expenses > 0
         ? categoryLabel(t, answer.category)
         : "",
-    ]
-      .filter(Boolean)
-      .join(" · ");
-    const said = [
+    ]);
+    const said = facts(t, [
       detail
         ? t("desktop.ledger.classify.staged_detail", {
             classification,
@@ -982,9 +981,7 @@ export function MovementsSection({
       overwritten > 0
         ? t("desktop.ledger.classify.overwritten", { count: overwritten })
         : "",
-    ]
-      .filter(Boolean)
-      .join(" · ");
+    ]);
     edit.stageChecked(outcome.event, () => setToast(said));
     return null;
   }
@@ -1134,13 +1131,16 @@ export function MovementsSection({
       .find((entry) => entry && order.includes(entry)) ?? "status") as ColumnId;
     setSelection(new Set([next]));
     grid.current?.focusCell(next, column);
+    const description = byId.get(next)?.transaction.description ?? "";
+    const found = listed(
+      t,
+      reasons.map((reason) => reasonDetail(t, reason)),
+      "plain",
+    );
     setSpoken(
-      [
-        byId.get(next)?.transaction.description ?? "",
-        reasons.map((reason) => reasonDetail(t, reason)).join(", "),
-      ]
-        .filter(Boolean)
-        .join(": "),
+      description && found
+        ? labelled(t, description, found)
+        : description || found,
     );
   };
 
@@ -1201,7 +1201,10 @@ export function MovementsSection({
           id: `ledger.classify.${kind}`,
           label:
             availability.kind === "blocked"
-              ? `${t(`desktop.ledger.classify.as_${kind}`)} · ${blockText(t, availability.block)}`
+              ? facts(t, [
+                  t(`desktop.ledger.classify.as_${kind}`),
+                  blockText(t, availability.block),
+                ])
               : t(`desktop.ledger.classify.as_${kind}`),
           group: "ledger",
           icon: "tick",
@@ -1449,7 +1452,7 @@ export function MovementsSection({
           shown: numbers.format(filtered.length),
           total: numbers.format(rows.length),
         });
-  const status = [shownNote, selectedNote].filter(Boolean).join(" · ");
+  const status = facts(t, [shownNote, selectedNote]);
   const unsaved = stageTally(stage.content).units;
   const stagedClassify = stagedClassifyCount(sets.toClassify, stage.content);
   const groupLabels = useMemo(

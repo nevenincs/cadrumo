@@ -12,6 +12,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { listed } from "@/shell/compose";
 import {
   ledgerFailure,
   type LedgerPort,
@@ -269,17 +270,18 @@ export function ActionDialog({
                     0 && (
                     <li>
                       {t("desktop.ledger.inspector.remove.stale", {
-                        declarations:
-                          preview.report.stale_draft_revision_references
-                            .map((found) =>
+                        declarations: listed(
+                          t,
+                          preview.report.stale_draft_revision_references.map(
+                            (found) =>
                               declarationName(
                                 t,
                                 found.modelo,
                                 found.filing_year,
                                 found.period,
                               ),
-                            )
-                            .join(", "),
+                          ),
+                        ),
                       })}
                     </li>
                   )}

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Specimen } from "@/dev/catalogue/Frame";
+import { sessionFailedText } from "../shell/sessionWords";
 import { useStrings } from "../shell/strings";
 import {
   PaneHeader,
@@ -221,7 +222,7 @@ function Headers() {
             title={t("desktop.pane.tui")}
             status={{
               phase: "failed",
-              note: t("desktop.session.failed", { code: 1 }),
+              note: sessionFailedText(t, "spawn_failed"),
             }}
             controls={controls}
             onToggleMaximize={noop}

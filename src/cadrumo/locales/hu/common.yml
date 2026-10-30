@@ -184,7 +184,7 @@ aggregation:
         felosztás(ok) kézzel is rögzítve vannak, és a rögzített tőkejövedelem-visszatartásból
         is származnak. Töröld a kézi sort.'
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
-      perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
+      perceptor_observations_missing: Nincsenek kedvezményezettenkénti forrásadó-megfigyelések
         a Modelo %{modelo} (%{filing_year}, %{period}) bevalláshoz; a(z) %{source_kind}
         forrás nem oldható fel.
       withholding_annual_source_not_quarterly: 'Az éves összesítő nem készíthető el:
@@ -227,7 +227,7 @@ aggregation:
         van a forráshálón.'
       duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő tulajdonos egy értékforrással
         rendelkező rovatnál a forráshálón.'
-      duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
+      duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálón.'
       duplicate_row_binding_coordinate: 'Belső hiba: duplikált sorérték-forrás koordináta.'
       duplicate_row_binding_owner: 'Belső hiba: ugyanannak a sorérték-forrásnak két
         tulajdonosa van a forráshálón.'
@@ -1355,6 +1355,20 @@ desktop:
         stock: Készlet
       areas: Eszközterületek
       asset_id: Eszköz azonosítója
+      baja:
+        acquisition_value: Beszerzési érték
+        deducted: Elszámolt értékcsökkenés
+        excess: Többlet
+        figures: A kivezetés számai (semmi sem mentődik)
+        findings: Megállapítások
+        minimum: Minimális értékcsökkenés
+        net_value: Nettó érték
+        preview: Számok kiszámítása
+        reduction: A beszerzési érték csökkentése
+        result: Nyereség vagy veszteség
+        route_changed: A tevékenységhez történt későbbi hozzárendelés megváltoztatja
+          a kivezetés adózását.
+        transmission_value: Átruházási érték
       claim_reused: 'Már elszámolva: semmi sem került kétszer rögzítésre.'
       claimed: Elszámolás rögzítve.
       column:
@@ -1398,6 +1412,8 @@ desktop:
         document_number: Okmány száma
         in_service_date: Üzembe helyezés napja
         kind: Típus
+        later_affectation: Későbbi hozzárendelés a tevékenységhez ekkor
+        market_value: Piaci érték (ha van)
         method: Módszer
         name: Név
         non_deductible_iva: Le nem vonható IVA
@@ -1405,6 +1421,7 @@ desktop:
           Az üres mező nem ugyanaz, mint a 0.
         not_known: 'Ennél a beszerzésnél nem ismert: add meg te.'
         out_of_service_date: Kivezetés dátuma
+        prior_regime: Igazolt korábbi szabad értékcsökkenés
         proceeds: Bevétel
         residual_value: Maradványérték
         serial: Gyártási szám
@@ -4807,13 +4824,13 @@ ledger:
         származhat. Rögzítsd a kivezetést.
       ownership_treatment_unknown: Az egész ingatlanra vonatkozó alap tulajdonosi
         kezelése ismeretlen.
-      parameter_absent: A(z) %{parameter_id} tevékenységieszköz-hatósági paraméter
+      parameter_absent: A(z) %{parameter_id} tevékenységi eszközre vonatkozó hatósági paraméter
         hiányzik a Modelo 100 %{revision_id} változatából.
-      parameter_not_declared: A(z) %{parameter_id} tevékenységieszköz-paraméter nem
+      parameter_not_declared: A(z) %{parameter_id} tevékenységi eszközre vonatkozó paraméter nem
         szerepel a feloldó deklarált olvasási készletében.
-      parameter_not_resolvable_for_date: 'A(z) %{parameter_id} tevékenységieszköz-hatósági
+      parameter_not_resolvable_for_date: 'A(z) %{parameter_id} tevékenységi eszközre vonatkozó hatósági
         paraméter nem oldható fel erre: %{axis} %{on_date}.'
-      parameter_not_resolvable_for_year: A(z) %{parameter_id} tevékenységieszköz-hatósági
+      parameter_not_resolvable_for_year: A(z) %{parameter_id} tevékenységi eszközre vonatkozó hatósági
         paraméter nem oldható fel a(z) %{tax_year}. évre.
       profile_modality_mismatch: Az eszköz a(z) %{elected} módozatot választja, de
         az adózói profil %{declared} módozatot jelöl meg.
@@ -4888,6 +4905,11 @@ ledger:
       tax_year_without_edition: A(z) {tax_year}. adóévre nincs 100-as modell kiadás.
       used_building_requires_construction_date: Használt épülethez meg kell adni az
         építés dátumát.
+      used_original_price_not_enrolled: A RIS 4.3 cikk szerinti eredeti ár alap nincs
+        bevezetve a(z) %{regime} módozatra.
+      used_original_price_requires_used_asset: A RIS 4.3.b és 4.3.c cikke az eredeti
+        árat csak használtan szerzett elemnél veszi alapul. Az új elem, illetve a
+        tíz évnél fiatalabb épület nem ilyen.
       useful_life_evidence_required: A meghatározott élettartam szerinti választáshoz
         igazolni kell a hasznos élettartamot.
       useful_life_must_end_after_service: A meghatározott hasznos élettartamnak az
@@ -4905,11 +4927,6 @@ ledger:
         használható.
       vehicle_shared_use: A tevékenység és magáncélok között megosztott jármű nem
         tartozik a tevékenységhez kötött eszközök közé, és egy jármű nem köthető részlegesen
-      used_original_price_not_enrolled: A RIS 4.3 cikk szerinti eredeti ár alap nincs
-        bevezetve a(z) %{regime} módozatra.
-      used_original_price_requires_used_asset: A RIS 4.3.b és 4.3.c cikke az eredeti
-        árat csak használtan szerzett elemnél veszi alapul. Az új elem, illetve a
-        tíz évnél fiatalabb épület nem ilyen.
         a tevékenységhez (RIRPF 22.2.1º és 22.3 cikk; LIRPF 29.2 cikk).
       workforce_fell_below: Az üzembe állítás évének kezdetét követő 24 hónap átlagos
         létszáma elmarad az azt megelőző 12 hónapétól (LIS DA 17a.1).
@@ -4963,6 +4980,9 @@ ledger:
       incomplete: 'Hiányzó adatok: nem számítható ki'
       period_elapsed: A maximális időszak lejárt
       unsupported: Még nem támogatott
+    prior_free_depreciation_regime:
+      trlis_da_11: TRLIS 11. kiegészítő rendelkezés
+      trlis_dt_37: TRLIS 37. átmeneti rendelkezés
     regime:
       normal: Közvetlen becslés, normál
       simplified: Közvetlen becslés, egyszerűsített
@@ -6069,6 +6089,8 @@ tui:
       name: Elem neve
       non_deductible_iva: Le nem vonható IVA, felülírja a revízió összegét
       plan: Értékcsökkenési terv
+      plan_minimum: Minimális értékcsökkenés
+      plan_minimum_incomplete: hiányos
       price: IVA nélküli ár, felülírja a revízióét
       revision: Eszközverzió (JSON)
       serial: Sorozatszám
@@ -6089,8 +6111,6 @@ tui:
       choose_entry: Válassz tételt
       locked: Zárolva
       never_captured: Még nincs beolvasva
-      plan_minimum: Minimális értékcsökkenés
-      plan_minimum_incomplete: hiányos
       stale: Elavult
       unavailable: Nem érhető el
     categorisation:

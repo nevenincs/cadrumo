@@ -85,3 +85,16 @@ export function chordParts(chord: ChordKeys): string[] {
 export function chordText(chord: ChordKeys): string {
   return chordParts(chord).join(IS_MAC ? "" : "+");
 }
+
+/** The chord in ARIA aria-keyshortcuts notation: modifiers named in full
+ * (Meta on macOS, Control elsewhere), a single letter upper-cased, joined by +. */
+export function chordAria(chord: ChordKeys): string {
+  const m = chordModifiers(chord);
+  const parts: string[] = [];
+  if (m.ctrlKey) parts.push("Control");
+  if (m.altKey) parts.push("Alt");
+  if (m.shiftKey) parts.push("Shift");
+  if (m.metaKey) parts.push("Meta");
+  parts.push(chord.key.length === 1 ? chord.key.toUpperCase() : chord.key);
+  return parts.join("+");
+}

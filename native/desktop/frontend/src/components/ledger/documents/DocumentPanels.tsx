@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
+import { listed } from "../../../shell/compose";
 import { useProvisioning } from "../../../shell/provisioning";
 import {
   provisionActionOf,
@@ -418,7 +419,10 @@ export function FolderIntake({
     setApplied(done);
     const unseen = done.stopped?.code;
     if (unseen === "unknown" || unseen === "saved_unread") {
-      const what = done.stopped!.files.map((file) => file.name).join(", ");
+      const what = listed(
+        t,
+        done.stopped!.files.map((file) => file.name),
+      );
       pause.hold({
         what,
         outcome: unseen,
@@ -559,7 +563,10 @@ export function FolderIntake({
                     : t("desktop.ledger.documents.not_done")}
               </AlertTitle>
               <AlertDescription>
-                {applied.stopped.files.map((file) => file.name).join(" · ")}
+                {listed(
+                  t,
+                  applied.stopped.files.map((file) => file.name),
+                )}
               </AlertDescription>
             </Alert>
           )}

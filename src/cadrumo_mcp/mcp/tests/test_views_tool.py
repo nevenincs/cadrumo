@@ -93,6 +93,8 @@ async def test_every_surface_advertises_views_as_a_local_read(surface: Any) -> N
 @pytest.mark.anyio
 async def test_an_exact_id_answers_every_fact_of_the_view_with_its_label_in_the_profiles_language() -> None:
     found = await _call({"id": "ledger/invoices"}, language="ca")
+    keywords = lookup_translation("navigation.view.ledger.invoices.keywords", locale="ca")
+    assert keywords is not None
 
     assert found["outcome"] == "found"
     assert found["language"] == "ca"
@@ -102,13 +104,15 @@ async def test_an_exact_id_answers_every_fact_of_the_view_with_its_label_in_the_
             "parent": "ledger",
             "surfaces": ["gui"],
             "params": {"select": {"kind": "invoice", "alphabet": "0123456789abcdef", "length": 64}},
-            "keywords": ["invoices", "bills", "facturas"],
+            "keywords": keywords.split(),
             "label": lookup_translation("navigation.view.ledger.invoices.label", locale="ca"),
             "label_key": "navigation.view.ledger.invoices.label",
             "link": "cadrumo://view/ledger/invoices",
         }
     ]
     assert found["views"][0]["label"] not in {None, "", "navigation.view.ledger.invoices.label"}
+    # The search words are the Catalan ones, with the Spanish term a document carries.
+    assert {"factures", "facturas"} <= set(found["views"][0]["keywords"])
 
 
 @pytest.mark.anyio
@@ -131,6 +135,12 @@ async def test_a_search_matches_labels_keywords_and_ids_best_first() -> None:
     folded = await _call({"query": "sincronización"}, language="es")
     assert [row["id"] for row in folded["views"]] == ["aeat-sync"]
     assert (await _call({"query": "zzzz"}))["views"] == []
+
+    # Keywords are searched in the profile's language: a Hungarian word finds
+    # its view for a Hungarian profile and nothing for an English one.
+    hungarian = await _call({"query": "bankszámlakivonat"}, language="hu")
+    assert [row["id"] for row in hungarian["views"]] == ["ledger/movements"]
+    assert (await _call({"query": "bankszámlakivonat"}, language="en"))["views"] == []
 
 
 @pytest.mark.anyio

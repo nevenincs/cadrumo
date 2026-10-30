@@ -2,7 +2,7 @@
 
 The register is neutral data in ``navigation.toml``, packaged beside this
 module: each element has an id that is also its link path, an optional parent,
-one label locale key, search keywords and the surfaces that implement it
+one label locale key, one search-keywords locale key and the surfaces that implement it
 (``gui``, the window, is the only one). An element may
 also declare link parameters, each taking values of one register-declared
 value kind, such as ``select`` taking an invoice id. The register never says
@@ -120,6 +120,7 @@ class NavigationElement(BaseModel):
     parent: str | None = None
     label: str
     keywords: str
+    """The locale key of the element's space-separated search words, never the words themselves."""
     surfaces: tuple[NavigationSurface, ...] = Field(min_length=1)
     params: Mapping[str, str] = Field(default_factory=lambda: MappingProxyType({}))
 
@@ -130,11 +131,11 @@ class NavigationElement(BaseModel):
             raise ValueError(f"element id {value!r} is not one to four lowercase segments joined by '/'")
         return value
 
-    @field_validator("label")
+    @field_validator("label", "keywords")
     @classmethod
-    def _label_key_grammar(cls, value: str) -> str:
+    def _locale_key_grammar(cls, value: str) -> str:
         if _LABEL_KEY.fullmatch(value) is None:
-            raise ValueError(f"label {value!r} is not a dotted locale key")
+            raise ValueError(f"{value!r} is not a dotted locale key")
         return value
 
     @field_validator("surfaces", mode="before")

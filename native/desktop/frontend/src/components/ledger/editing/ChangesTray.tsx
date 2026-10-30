@@ -2,11 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Icon } from "@/components/ui/icon";
+import { Kbd } from "@/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { chordAria, chordText } from "@/shared/chords";
+import { REVIEW_CHORD, UNDO_CHORD } from "../ledgerChords";
+import { described, facts } from "../../../shell/compose";
 import { useStrings } from "../../../shell/strings";
 import type { StageTally } from "./editingModel";
 
@@ -18,20 +22,18 @@ export function tallyText(
   t: ReturnType<typeof useStrings>,
   tally: StageTally,
 ): string {
-  return [
+  return facts(t, [
     tally.movements
       ? t("desktop.ledger.tray.edits", {
           edits: tally.edits,
           movements: tally.movements,
         })
-      : "",
-    tally.drafts ? t("desktop.ledger.tray.new", { count: tally.drafts }) : "",
+      : null,
+    tally.drafts ? t("desktop.ledger.tray.new", { count: tally.drafts }) : null,
     tally.actions
       ? t("desktop.ledger.tray.actions", { count: tally.actions })
-      : "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
+      : null,
+  ]);
 }
 
 /**
@@ -88,7 +90,7 @@ export function ChangesTray({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {[what, t("desktop.ledger.tray.window_only")].join(" · ")}
+          {facts(t, [what, t("desktop.ledger.tray.window_only")])}
         </TooltipContent>
       </Tooltip>
       {open ? (
@@ -112,8 +114,8 @@ export function ChangesTray({
         <>
           <IconButton
             label={t("desktop.ledger.tray.undo")}
-            shortcut="Ctrl+Z"
-            aria-keyshortcuts="Control+Z"
+            shortcut={chordText(UNDO_CHORD)}
+            aria-keyshortcuts={chordAria(UNDO_CHORD)}
             size="sm"
             aria-disabled={canUndo ? undefined : true}
             onClick={() => {
@@ -137,11 +139,11 @@ export function ChangesTray({
           <Button
             size="sm"
             className="ledger-tray-review"
-            aria-keyshortcuts="Control+Enter"
+            aria-keyshortcuts={chordAria(REVIEW_CHORD)}
             aria-disabled={paused || tally.units === 0 ? true : undefined}
             aria-label={
               paused
-                ? `${t("desktop.ledger.tray.review")}, ${paused}`
+                ? described(t, t("desktop.ledger.tray.review"), paused)
                 : t("desktop.ledger.tray.review_count", { count: tally.units })
             }
             onClick={() => {
@@ -152,9 +154,14 @@ export function ChangesTray({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {paused
-            ? paused
-            : `${t("desktop.ledger.tray.review_count", { count: tally.units })} · Ctrl+Enter`}
+          {paused ? (
+            paused
+          ) : (
+            <>
+              {t("desktop.ledger.tray.review_count", { count: tally.units })}
+              <Kbd>{chordText(REVIEW_CHORD)}</Kbd>
+            </>
+          )}
         </TooltipContent>
       </Tooltip>
     </div>

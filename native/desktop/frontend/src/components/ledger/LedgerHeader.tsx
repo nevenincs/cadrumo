@@ -16,6 +16,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { described, facts } from "@/shell/compose";
 import { PaneHeader, type PaneControl } from "../PaneHeader";
 import type { LedgerSection } from "../../shell/layout";
 import { useStrings } from "../../shell/strings";
@@ -48,12 +49,13 @@ export function HeldButton({
   children: ReactNode;
   className?: string;
 }) {
+  const t = useStrings();
   const button = (
     <Button
       variant="outline"
       size="xs"
       className={className}
-      aria-label={action.reason ? `${name}, ${action.reason}` : name}
+      aria-label={described(t, name, action.reason)}
       aria-disabled={action.reason ? true : undefined}
       onClick={action.run}
     >
@@ -64,9 +66,7 @@ export function HeldButton({
   return (
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent>
-        {action.reason ? `${name} · ${action.reason}` : name}
-      </TooltipContent>
+      <TooltipContent>{facts(t, [name, action.reason])}</TooltipContent>
     </Tooltip>
   );
 }

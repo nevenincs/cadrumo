@@ -14,6 +14,7 @@ import {
   type GridColumn,
 } from "@/components/ui/data-grid";
 import { Icon } from "@/components/ui/icon";
+import { facts, listed } from "@/shell/compose";
 import type { LedgerRow } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { GridRoomContext } from "../gridRoom";
@@ -372,13 +373,15 @@ export function MovementsGrid({
     const reasons = context.readiness.issues.get(key) ?? [];
     const counted = context.readiness.checked ? reasons.length : null;
     const word = statusWord(row.review_status, counted);
-    return [
+    return facts(t, [
       statusLabel(t, word, counted),
       reasons.length
         ? t("desktop.ledger.describe.readiness", {
-            reasons: reasons
-              .map((reason) => reasonDetail(t, reason))
-              .join(", "),
+            reasons: listed(
+              t,
+              reasons.map((reason) => reasonDetail(t, reason)),
+              "plain",
+            ),
           })
         : "",
       row.transaction.lifecycle_state !== "ACTIVE"
@@ -389,9 +392,7 @@ export function MovementsGrid({
         ? t("desktop.ledger.import_issue.duplicate")
         : "",
       edited ?? "",
-    ]
-      .filter(Boolean)
-      .join(" · ");
+    ]);
   };
   const { onLeast } = useContext(GridRoomContext);
   const describeCell = (key: string, column: string) => {

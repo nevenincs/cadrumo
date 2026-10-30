@@ -41,6 +41,7 @@ import {
   type SelectionCause,
 } from "@/components/ui/dataGridModel";
 import { chordMatches } from "@/shared/chords";
+import { listOf } from "@/shared/lists";
 
 /** What a cell's renderer knows of where it stands. */
 type CellContext = {
@@ -873,7 +874,7 @@ function DataGrid<R>({
     if (note?.readOnlyReason) parts.push(note.readOnlyReason);
     const status = describeRow?.(row.key);
     if (status) parts.push(status);
-    return parts.join(", ");
+    return listOf(document.documentElement.lang || undefined, parts, "plain");
   }
 
   // ── Ranges and selection ──────────────────────────────────────────────
@@ -1755,7 +1756,11 @@ function DataGrid<R>({
               ? editorFor(row.key, column.id, editing.initial)
               : null;
             const noteId = `${id}-note`;
-            const noteText = [note?.text, reason].filter(Boolean).join(", ");
+            const noteText = listOf(
+              document.documentElement.lang || undefined,
+              [note?.text, reason].filter((part): part is string => !!part),
+              "plain",
+            );
             return (
               <div
                 key={column.id}

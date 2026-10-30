@@ -2,6 +2,7 @@
 // period is written in the chrome, and the code a failed read is shown with.
 
 import type { IconName } from "@/components/ui/icon";
+import { facts } from "@/shell/compose";
 import type { LedgerSection } from "../../shell/layout";
 import {
   periodGranularity,
@@ -63,8 +64,11 @@ export function periodText(
   if (mode === "year") return String(period.year);
   const granularity = periodGranularity(period.code);
   if (granularity === "year") return String(period.year);
-  if (granularity === "quarter") return `${period.year} · ${period.code}`;
-  return `${period.year} · ${monthNames(locale)[Number(period.code) - 1] ?? period.code}`;
+  if (granularity === "quarter") return facts(t, [period.year, period.code]);
+  return facts(t, [
+    period.year,
+    monthNames(locale)[Number(period.code) - 1] ?? period.code,
+  ]);
 }
 
 /** The code a failed read is shown with, for the person to quote. */

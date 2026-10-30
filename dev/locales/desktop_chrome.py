@@ -39,6 +39,7 @@ from cadrumo_client.contracts.navigation import load_navigation_register
 
 from ._paths import LOCALES_DIR, RUNTIME_SRC_DIR, SRC_DIR
 from ._status import CatalogueLeafState, classify_catalogue_leaf
+from .desktop_assets_keys import ASSET_FAMILIES, ASSET_KEYS, ASSET_PERCENT_PLACEHOLDER_PREFIXES
 from .desktop_interface_keys import DESKTOP_INTERFACE_KEYS
 from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
@@ -842,6 +843,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.ledger.rules.area.": ("rules", "ratios", "counterparties", "diagnostics"),
         "desktop.ledger.rules.refusal.": ("empty_pattern", "invalid_pattern", "category", "invalid_command"),
         **WORKSPACE_FAMILIES,
+        **ASSET_FAMILIES,
     }
 )
 
@@ -851,6 +853,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | DESKTOP_LEDGER_CATALOGUE_KEYS
     | DESKTOP_INTERFACE_KEYS
     | WORKSPACE_KEYS
+    | ASSET_KEYS
 )
 
 #: Declared keys no shell source names yet, because their view is still being
@@ -862,9 +865,11 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
-    r"""["'`]((?:desktop|workspace|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]"""
+    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]"""
 )
-_SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(r"`((?:desktop|workspace)\.[A-Za-z0-9_.]*)\$\{")
+_SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(
+    r"`((?:desktop|workspace|ledger\.actividad_asset)\.[A-Za-z0-9_.]*)\$\{"
+)
 
 
 def shell_key_references(source: Path) -> tuple[frozenset[str], frozenset[str]]:
@@ -951,6 +956,13 @@ DESKTOP_NAVIGATION_LABEL_KEYS: Final[frozenset[str]] = frozenset(
     element.label for element in load_navigation_register().elements
 )
 
+#: The navigation register's search-keyword keys, read the same way. The
+#: palette finds an element by its keywords in the person's language, so each
+#: is generated in every locale beside its label.
+DESKTOP_NAVIGATION_KEYWORD_KEYS: Final[frozenset[str]] = frozenset(
+    element.keywords for element in load_navigation_register().elements
+)
+
 
 def _shell_placeholders(key: str, locale: str, value: str) -> frozenset[str]:
     """Return the ``{name}`` placeholders of ``value``, refusing any other form."""
@@ -960,6 +972,21 @@ def _shell_placeholders(key: str, locale: str, value: str) -> frozenset[str]:
             f"{locale}:{key} carries a placeholder the desktop shell cannot substitute; use plain {{name}}"
         )
     return shell
+
+
+_PERCENT_PLACEHOLDER: Final[re.Pattern[str]] = re.compile(r"%\{([A-Za-z_][A-Za-z0-9_]*)\}")
+
+
+def _in_shell_form(key: str, value: str) -> str:
+    """Write the ``%{name}`` placeholders of a backend-rendered key as the ``{name}`` the shell substitutes.
+
+    Only the families the backend renders itself are converted: it renders a
+    ``%{name}`` placeholder and a ``{name}`` one the same way, so the sentence is
+    unchanged. Every other key still refuses the form.
+    """
+    if not key.startswith(ASSET_PERCENT_PLACEHOLDER_PREFIXES):
+        return value
+    return _PERCENT_PLACEHOLDER.sub(r"{\1}", value)
 
 
 def _project_locale(locales_dir: Path, locale: str, keys: frozenset[str], refusals: list[str]) -> dict[str, str]:
@@ -981,14 +1008,14 @@ def _project_locale(locales_dir: Path, locale: str, keys: frozenset[str], refusa
         if state is not CatalogueLeafState.AUTHORED or value is None:
             refusals.append(f"{locale}:{key} is {state.value}")
             continue
-        values[key] = value
+        values[key] = _in_shell_form(key, value)
     return values
 
 
 def desktop_chrome_strings(
     locales_dir: Path = LOCALES_DIR,
     *,
-    keys: frozenset[str] = DESKTOP_CHROME_KEYS | DESKTOP_NAVIGATION_LABEL_KEYS,
+    keys: frozenset[str] = DESKTOP_CHROME_KEYS | DESKTOP_NAVIGATION_LABEL_KEYS | DESKTOP_NAVIGATION_KEYWORD_KEYS,
     locales: Sequence[str] = DESKTOP_LOCALES,
 ) -> dict[str, dict[str, str]]:
     """Project the declared keys out of every locale catalogue.

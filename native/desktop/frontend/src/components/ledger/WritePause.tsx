@@ -19,6 +19,7 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { facts } from "@/shell/compose";
 import {
   Tooltip,
   TooltipContent,
@@ -241,7 +242,7 @@ export function PausedBanner({
     said: string;
   } | null>(null);
   if (pause.writes.length === 0 && !pause.findings) return null;
-  const said = (pause.findings ?? []).map(findingText).join(" · ");
+  const said = facts(t, (pause.findings ?? []).map(findingText));
   const counted = [
     ...new Set(
       (pause.findings ?? []).flatMap((finding) =>
@@ -273,8 +274,8 @@ export function PausedBanner({
       {pause.writes.length > 0 ? (
         <Alert tone="warning" role="alert" icon={<Icon name="unknown" />}>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="min-w-0 flex-1" title={names.join(" · ")}>
-              {[
+            <span className="min-w-0 flex-1" title={facts(t, names)}>
+              {facts(t, [
                 own
                   ? own.title
                   : t(
@@ -283,7 +284,7 @@ export function PausedBanner({
                         : "desktop.ledger.paused.saved_unread",
                     ),
                 ...named,
-              ].join(" · ")}
+              ])}
             </span>
             {own?.look && (
               <Button

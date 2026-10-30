@@ -1379,6 +1379,20 @@ desktop:
         stock: Existències
       areas: Àrees d'actius
       asset_id: Identificador de l'element
+      baja:
+        acquisition_value: Valor d'adquisició
+        deducted: Amortització deduïda
+        excess: Excés
+        figures: Xifres de la baixa (no es desa res)
+        findings: Observacions
+        minimum: Amortització mínima
+        net_value: Valor net
+        preview: Calcula les xifres
+        reduction: Reducció del valor d'adquisició
+        result: Guany o pèrdua
+        route_changed: Una afectació posterior a l'activitat canvia com tributa aquesta
+          baixa.
+        transmission_value: Valor de transmissió
       claim_reused: 'Ja reclamada: no s''ha registrat dues vegades.'
       claimed: Reclamació registrada.
       column:
@@ -1422,6 +1436,8 @@ desktop:
         document_number: Número de document
         in_service_date: En servei des de
         kind: Tipus
+        later_affectation: Afectació posterior a l'activitat el
+        market_value: Valor de mercat (si s'indica)
         method: Mètode
         name: Nom
         non_deductible_iva: IVA no deduïble
@@ -1429,6 +1445,7 @@ desktop:
           no és el mateix que 0.
         not_known: 'No es coneix per a aquesta compra: indica-ho tu.'
         out_of_service_date: Baixa a partir del
+        prior_regime: Llibertat d'amortització anterior acreditada
         proceeds: Import obtingut
         residual_value: Valor residual
         serial: Número de sèrie
@@ -4905,6 +4922,11 @@ ledger:
       tax_year_without_edition: Cap edició del Model 100 cobreix l'exercici {tax_year}.
       used_building_requires_construction_date: Un edifici usat requereix la seva
         data de construcció.
+      used_original_price_not_enrolled: La base del preu originari del RIS art. 4.3
+        no està habilitada per a la modalitat %{regime}.
+      used_original_price_requires_used_asset: El RIS art. 4.3.b i 4.3.c prenen el
+        preu originari com a base només per a un element adquirit usat. Un element
+        nou, o un edifici de menys de deu anys, no ho és.
       useful_life_evidence_required: L'elecció de vida útil definida requereix la
         seva justificació de vida útil.
       useful_life_must_end_after_service: Una vida útil definida ha d'acabar després
@@ -4922,11 +4944,6 @@ ledger:
       vehicle_shared_use: Un vehicle compartit entre l'activitat i les necessitats
         privades no és un element afecte, i un vehicle no pot estar afecte parcialment
         (RIRPF art. 22.2.1º i 22.3; LIRPF art. 29.2).
-      used_original_price_not_enrolled: La base del preu originari del RIS art. 4.3
-        no està habilitada per a la modalitat %{regime}.
-      used_original_price_requires_used_asset: El RIS art. 4.3.b i 4.3.c prenen el
-        preu originari com a base només per a un element adquirit usat. Un element
-        nou, o un edifici de menys de deu anys, no ho és.
       workforce_fell_below: La plantilla mitjana dels 24 mesos posteriors a l'inici
         de l'any d'entrada en funcionament queda per sota de la dels 12 mesos anteriors
         (LIS DA 17a.1).
@@ -4980,6 +4997,9 @@ ledger:
       incomplete: 'Falten dades: no es pot calcular'
       period_elapsed: Període màxim transcorregut
       unsupported: Encara no admès
+    prior_free_depreciation_regime:
+      trlis_da_11: TRLIS, disposició addicional 11a
+      trlis_dt_37: TRLIS, disposició transitòria 37a
     regime:
       normal: Estimació directa normal
       simplified: Estimació directa simplificada
@@ -5119,7 +5139,7 @@ operation:
   modal:
     action:
       apply: Aplica
-      cancel: Cancelar
+      cancel: Cancel·la
       close: Tanca
       detach: Desvincula
       reject: Rebutja
@@ -6091,6 +6111,8 @@ tui:
       name: Nom de l'element
       non_deductible_iva: IVA no deduïble, substitueix l'import de la revisió
       plan: Pla d'amortització
+      plan_minimum: Amortització mínima
+      plan_minimum_incomplete: incompleta
       price: Preu sense IVA, substitueix el de la revisió
       revision: Revisió de l’actiu (JSON)
       serial: Número de sèrie
@@ -6111,8 +6133,6 @@ tui:
       choose_entry: Tria un apunt
       locked: Bloquejat
       never_captured: Encara sense llegir
-      plan_minimum: Amortització mínima
-      plan_minimum_incomplete: incompleta
       stale: Desactualitzat
       unavailable: No disponible
     categorisation:

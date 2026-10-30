@@ -4,7 +4,7 @@ The register is neutral, versioned data shipped with the client contracts. This
 module answers three questions about it and nothing else: which views match a
 text, what one view id names, and whether one ``cadrumo://view`` link is valid.
 Every row names the view's id, parent, surfaces, link parameters with their
-value grammar, keywords, label key and the label in the profile's language,
+value grammar, label key, and the keywords and label in the profile's language,
 plus the link that opens it. Retired ids are never answered as views.
 
 A view link only shows, selects or focuses; it grants nothing and carries no
@@ -55,13 +55,19 @@ def _words(text: str) -> tuple[str, ...]:
     return tuple(match.group() for match in _WORD.finditer(bare))
 
 
+def _translated(key: str, language: str) -> str:
+    """The text of ``key`` in ``language``, else in English, else the key itself."""
+    return lookup_translation(key, locale=language) or lookup_translation(key, locale="en") or key
+
+
 def _label(element: NavigationElement, language: str) -> str:
-    """The element's label in ``language``, else in English, else its key."""
-    return (
-        lookup_translation(element.label, locale=language)
-        or lookup_translation(element.label, locale="en")
-        or (element.label)
-    )
+    """The element's label in ``language``."""
+    return _translated(element.label, language)
+
+
+def _keywords(element: NavigationElement, language: str) -> tuple[str, ...]:
+    """The element's search words in ``language``, as the catalogue spells them."""
+    return tuple(_translated(element.keywords, language).split())
 
 
 def _row(register: NavigationRegister, element: NavigationElement, language: str) -> dict[str, Any]:
@@ -79,18 +85,18 @@ def _row(register: NavigationRegister, element: NavigationElement, language: str
         "parent": element.parent,
         "surfaces": [surface.value for surface in element.surfaces],
         "params": params,
-        "keywords": list(element.keywords.split()),
+        "keywords": list(_keywords(element, language)),
         "label": _label(element, language),
         "label_key": element.label,
         "link": view_link(element.id, register=register),
     }
 
 
-def _score(element: NavigationElement, label: str, query: tuple[str, ...]) -> int:
+def _score(element: NavigationElement, language: str, query: tuple[str, ...]) -> int:
     """How well every query word matches the view's id, label and keywords; zero when one word matches nothing."""
     segments = set(_words(element.id.replace("/", " ")))
-    label_words = set(_words(label))
-    keywords = set(_words(element.keywords))
+    label_words = set(_words(_label(element, language)))
+    keywords = set(_words(" ".join(_keywords(element, language))))
     everything = segments | label_words | keywords
     total = 0
     for word in query:
@@ -171,7 +177,7 @@ def _search_views(register: NavigationRegister, args: dict[str, Any], language: 
         (
             (score, index, element)
             for index, element in enumerate(register.elements)
-            if (score := _score(element, _label(element, language), query))
+            if (score := _score(element, language, query))
         ),
         key=lambda match: (-match[0], match[1]),
     )

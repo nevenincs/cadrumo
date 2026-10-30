@@ -279,7 +279,7 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "person is told it opened other than asked) or invalid with the parser's reason; or nothing to list "
         "every view. Each "
         "view carries id, parent, surfaces (gui is the window), params (each name "
-        "with its value kind, alphabet and exact length), keywords, label in the profile's language, label_key "
+        "with its value kind, alphabet and exact length), keywords and label in the profile's language, label_key "
         "and the link that opens it. Copy the links operation results carry rather than composing record links",
         _schema(
             {},

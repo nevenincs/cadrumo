@@ -12,6 +12,7 @@ import {
   type GridWeek,
 } from "@/shell/calendarGrid";
 import { evaluatedLabel } from "@/shell/calendar";
+import { labelled, listed, noted } from "@/shell/compose";
 import { entryKey, entrySpan } from "@/shell/calendarEntries";
 import { isoDay as day } from "@/shared/dates";
 import { dateFormats } from "@/shared/dateFormats";
@@ -58,9 +59,18 @@ export function CalendarMonth({
     const span = entrySpan(bar.entry);
     const days =
       bar.entry.opens_on === null
-        ? `${formats.short.format(day(span.to))} (${t("desktop.calendar.window_unknown")})`
+        ? noted(
+            t,
+            formats.short.format(day(span.to)),
+            t("desktop.calendar.window_unknown"),
+          )
         : formats.short.formatRange(day(span.from), day(span.to));
-    return `${t("desktop.calendar.modelo", { modelo: bar.entry.modelo })} ${bar.entry.period}, ${days}, ${t(`desktop.calendar.state.${bar.entry.user_state}`)}`;
+    return t("desktop.calendar.window_label", {
+      modelo: t("desktop.calendar.modelo", { modelo: bar.entry.modelo }),
+      period: bar.entry.period,
+      days,
+      state: t(`desktop.calendar.state.${bar.entry.user_state}`),
+    });
   };
   const title = formats.month.format(new Date(month.year, month.month - 1, 1));
   const toggle = t(
@@ -95,7 +105,7 @@ export function CalendarMonth({
             ref={wholeControl}
             className="calendar-whole -my-1"
             aria-expanded={whole}
-            aria-label={`${toggle}: ${title}`}
+            aria-label={labelled(t, toggle, title)}
             onClick={() => onWhole(!whole)}
           >
             {toggle}
@@ -145,13 +155,19 @@ export function CalendarMonth({
                     </span>
                     {cell.today && (
                       <span className="sr-only">
-                        {evaluatedLabel(cell.iso, today, locale, true)}
+                        {evaluatedLabel(t, cell.iso, today, locale, true)}
                       </span>
                     )}
                     {cell.events.length > 0 && (
                       <span className="flex gap-0.5">
                         {cell.events.map((event) => {
-                          const said = `${formats.full.format(day(cell.iso))}: ${t(`desktop.calendar.event.${event.event_type}`)}. ${event.summary}`;
+                          const said = t("desktop.calendar.day_event", {
+                            date: formats.full.format(day(cell.iso)),
+                            kind: t(
+                              `desktop.calendar.event.${event.event_type}`,
+                            ),
+                            summary: event.summary,
+                          });
                           return (
                             <span
                               key={event.reference_id}
@@ -259,9 +275,13 @@ export function CalendarMonth({
                 aria-hidden="true"
                 className="calendar-more flex h-control-xs min-w-0 cursor-pointer items-center px-1.5 text-left text-xs text-muted-foreground hover:text-foreground hover:underline"
                 style={{ gridColumn: "1 / -1", gridRow: LANES_SHOWN + 1 }}
-                title={(drawn.get(week)?.hidden ?? [])
-                  .map((bar) => `${bar.entry.modelo} ${bar.entry.period}`)
-                  .join(", ")}
+                title={listed(
+                  t,
+                  (drawn.get(week)?.hidden ?? []).map(
+                    (bar) => `${bar.entry.modelo} ${bar.entry.period}`,
+                  ),
+                  "plain",
+                )}
                 onClick={(event) => {
                   // The month grows above and below this week. It is drawn
                   // at once and the week put back where it was pressed, so

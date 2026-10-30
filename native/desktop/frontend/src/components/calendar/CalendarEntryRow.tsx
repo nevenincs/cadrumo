@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { deadlineDistance } from "@/shell/calendar";
+import { facts, labelled } from "@/shell/compose";
 import { daysBetween, isoDay as day } from "@/shared/dates";
 import { dateFormats } from "@/shared/dateFormats";
 import { entryKey } from "@/shell/calendarEntries";
@@ -91,9 +92,7 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
           <span className="font-medium">{name}</span>
           <span className="text-muted-foreground">{entry.period}</span>
         </button>
-        <span className="text-sm text-muted-foreground">
-          {notes.join(" · ")}
-        </span>
+        <span className="text-sm text-muted-foreground">{facts(t, notes)}</span>
         {/* In a narrow pane the distance moves under the notes: it is what
             the person came for, and is never the thing left out. */}
         {relative && (
@@ -116,7 +115,11 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
         {onOpen && (
           <IconButton
             label={t("desktop.calendar.open_tui")}
-            accessibleName={`${t("desktop.calendar.open_tui")}: ${name} ${entry.period}`}
+            accessibleName={labelled(
+              t,
+              t("desktop.calendar.open_tui"),
+              `${name} ${entry.period}`,
+            )}
             side="left"
             onClick={() => onOpen(entry)}
           >

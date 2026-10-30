@@ -1384,6 +1384,20 @@ desktop:
         stock: Existencias
       areas: Áreas de activos
       asset_id: Identificador del elemento
+      baja:
+        acquisition_value: Valor de adquisición
+        deducted: Amortización deducida
+        excess: Exceso
+        figures: Cifras de la baja (no se guarda nada)
+        findings: Observaciones
+        minimum: Amortización mínima
+        net_value: Valor neto
+        preview: Calcular las cifras
+        reduction: Reducción del valor de adquisición
+        result: Ganancia o pérdida
+        route_changed: Una afectación posterior a la actividad cambia cómo tributa
+          esta baja.
+        transmission_value: Valor de transmisión
       claim_reused: 'Ya reclamada: no se ha registrado dos veces.'
       claimed: Reclamación registrada.
       column:
@@ -1427,6 +1441,8 @@ desktop:
         document_number: Número de documento
         in_service_date: En servicio desde
         kind: Tipo
+        later_affectation: Afectación posterior a la actividad el
+        market_value: Valor de mercado (si se indica)
         method: Método
         name: Nombre
         non_deductible_iva: IVA no deducible
@@ -1434,6 +1450,7 @@ desktop:
           no es lo mismo que 0.
         not_known: 'No se conoce para esta compra: indícalo tú.'
         out_of_service_date: Baja a partir del
+        prior_regime: Libertad de amortización anterior acreditada
         proceeds: Importe obtenido
         residual_value: Valor residual
         serial: Número de serie
@@ -4912,6 +4929,11 @@ ledger:
         {tax_year}.
       used_building_requires_construction_date: Un edificio usado requiere su fecha
         de construcción.
+      used_original_price_not_enrolled: La base del precio originario del RIS art.
+        4.3 no está habilitada para la modalidad %{regime}.
+      used_original_price_requires_used_asset: El RIS art. 4.3.b y 4.3.c toman el
+        precio originario como base solo para un elemento adquirido usado. Un elemento
+        nuevo, o un edificio de menos de diez años, no lo es.
       useful_life_evidence_required: La elección de vida útil definida requiere su
         justificación de vida útil.
       useful_life_must_end_after_service: Una vida útil definida debe terminar después
@@ -4929,11 +4951,6 @@ ledger:
         el RIRPF art. 22.4 (a)-(e); en caso contrario debe usarse exclusivamente para
         la actividad.
       vehicle_shared_use: Un vehículo compartido entre la actividad y las necesidades
-      used_original_price_not_enrolled: La base del precio originario del RIS art.
-        4.3 no está habilitada para la modalidad %{regime}.
-      used_original_price_requires_used_asset: El RIS art. 4.3.b y 4.3.c toman el
-        precio originario como base solo para un elemento adquirido usado. Un elemento
-        nuevo, o un edificio de menos de diez años, no lo es.
         privadas no es un elemento afecto, y un vehículo no puede estar afecto parcialmente
         (RIRPF art. 22.2.1º y 22.3; LIRPF art. 29.2).
       workforce_fell_below: La plantilla media de los 24 meses posteriores al inicio
@@ -4989,6 +5006,9 @@ ledger:
       incomplete: 'Faltan datos: no se puede calcular'
       period_elapsed: Período máximo transcurrido
       unsupported: Aún no admitido
+    prior_free_depreciation_regime:
+      trlis_da_11: TRLIS, disposición adicional 11.ª
+      trlis_dt_37: TRLIS, disposición transitoria 37.ª
     regime:
       normal: Estimación directa normal
       simplified: Estimación directa simplificada
@@ -6100,6 +6120,8 @@ tui:
       name: Nombre del elemento
       non_deductible_iva: IVA no deducible, sustituye al importe de la revisión
       plan: Plan de amortización
+      plan_minimum: Amortización mínima
+      plan_minimum_incomplete: incompleta
       price: Precio sin IVA, sustituye al de la revisión
       revision: Revisión del activo (JSON)
       serial: Número de serie
@@ -6120,8 +6142,6 @@ tui:
       choose_entry: Elige un apunte
       locked: Bloqueado
       never_captured: Aún sin leer
-      plan_minimum: Amortización mínima
-      plan_minimum_incomplete: incompleta
       stale: Desactualizado
       unavailable: No disponible
     categorisation:

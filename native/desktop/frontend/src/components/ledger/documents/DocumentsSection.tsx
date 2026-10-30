@@ -11,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { facts } from "../../../shell/compose";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
@@ -293,9 +294,10 @@ export function DocumentsSection({
                   aria-label={t("desktop.ledger.documents.findings_open", {
                     count: row.blocking_count,
                   })}
-                  title={(row.reasons ?? [])
-                    .map((reason) => reasonLabel(t, reason))
-                    .join(" · ")}
+                  title={facts(
+                    t,
+                    (row.reasons ?? []).map((reason) => reasonLabel(t, reason)),
+                  )}
                 >
                   <Icon name="alert" size="xs" />
                   {row.blocking_count}

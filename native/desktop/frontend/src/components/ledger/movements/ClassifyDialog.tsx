@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
+import { facts } from "@/shell/compose";
 import type {
   ClassifyKind,
   RatioCoverage,
@@ -154,7 +155,7 @@ export function ClassifyDialog({
                   })}
             </DialogTitle>
             <DialogDescription>
-              {[t("desktop.ledger.classify.not_saved"), ...notes].join(" · ")}
+              {facts(t, [t("desktop.ledger.classify.not_saved"), ...notes])}
             </DialogDescription>
           </DialogHeader>
           {range && (
@@ -280,7 +281,7 @@ function RatioLine({
   if (coverage.staged + coverage.missing + coverage.unread === 0) return null;
   const split = coverage.staged > 0 && coverage.missing > 0;
   const counted = (text: string, count: number) =>
-    split ? `${text} · ${count}` : text;
+    split ? facts(t, [text, count]) : text;
   return (
     <div className="ledger-classify-ratio grid gap-1 text-sm">
       {coverage.staged > 0 && (

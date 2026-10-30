@@ -1,5 +1,6 @@
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
+import { facts, listed } from "@/shell/compose";
 import type { LedgerTrackResult } from "../../../shell/ledger";
 import { effectiveFacts } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
@@ -31,12 +32,12 @@ export function DetailsSection({
   const t = useStrings();
   const { row, changes, locale } = scope;
   const tx = row.transaction;
-  const facts = effectiveFacts(row, changes);
-  const moved = quarterMove(tx, facts);
+  const effective = effectiveFacts(row, changes);
+  const moved = quarterMove(tx, effective);
   const tracked = track?.kind === "ready" ? track.result : null;
   const uses = tracked?.participated_in ?? [];
   const moveNote = moved
-    ? [
+    ? facts(t, [
         t("desktop.ledger.inspector.moves_to", {
           period: periodText(t, locale, moved.to),
         }),
@@ -50,7 +51,7 @@ export function DetailsSection({
             ),
           }),
         ),
-      ].join(" · ")
+      ])
     : null;
   const identity =
     changes?.amount || changes?.description || changes?.own_account_id
@@ -215,9 +216,13 @@ export function DetailsSection({
                 {t("desktop.ledger.inspector.earlier_ids")}
               </dt>
               <dd className="break-all">
-                {tracked!.tracking.edit_lineage
-                  .map((entry) => entry.previous_transaction_id)
-                  .join(", ")}
+                {listed(
+                  t,
+                  tracked!.tracking.edit_lineage.map(
+                    (entry) => entry.previous_transaction_id,
+                  ),
+                  "plain",
+                )}
               </dd>
             </>
           )}

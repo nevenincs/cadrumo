@@ -18,6 +18,7 @@ const CHANNEL = "cadrumo-desktop";
 const VERSION = 1;
 const SEARCH_LIMIT = 8;
 const SEARCH_TIMEOUT_MS = 4000;
+const SEARCH_TOTAL_TIMEOUT_MS = 30000;
 const EXTERNAL_BURST = 3;
 const EXTERNAL_WINDOW_MS = 10000;
 const MAX_SELECTION = 65536;
@@ -133,7 +134,13 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
     const frame = useRef<HTMLIFrameElement>(null);
     const features = useRef<BridgeFeature[]>([]);
     const pending = useRef(
-      new Map<string, (results: DocsSearchResult[] | null) => void>(),
+      new Map<
+        string,
+        {
+          receive: (results: DocsSearchResult[] | null) => void;
+          progress: () => void;
+        }
+      >(),
     );
     const nextId = useRef(1);
     const externals = useRef<number[]>([]);
@@ -264,10 +271,15 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
           }
           case "search-results": {
             if (typeof data.id !== "string") break;
-            const resolve = searches.get(data.id);
-            if (!resolve) break;
+            const request = searches.get(data.id);
+            if (!request) break;
             searches.delete(data.id);
-            resolve(readResults(data.results, origin));
+            request.receive(readResults(data.results, origin));
+            break;
+          }
+          case "search-progress": {
+            if (typeof data.id !== "string") break;
+            searches.get(data.id)?.progress();
             break;
           }
           default:
@@ -276,7 +288,7 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
       window.addEventListener("message", receive);
       return () => {
         window.removeEventListener("message", receive);
-        for (const resolve of searches.values()) resolve(null);
+        for (const request of searches.values()) request.receive(null);
         searches.clear();
       };
     }, [origin, post]);
@@ -341,15 +353,34 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
               return;
             }
             const id = `search-${nextId.current++}`;
-            const timer = window.setTimeout(() => {
+            const started = performance.now();
+            let timer: number;
+            const expire = () => {
               pending.current.delete(id);
               reject(new Error("docs-search-timeout"));
-            }, SEARCH_TIMEOUT_MS);
-            pending.current.set(id, (results) => {
+            };
+            // The docs page acknowledges and reports progress while Pagefind
+            // loads and searches. Silence remains bounded to four seconds;
+            // progress cannot keep an abandoned request alive indefinitely.
+            const arm = () => {
               window.clearTimeout(timer);
-              if (results) resolve(results);
-              else reject(new Error("docs-search-malformed"));
+              const remaining =
+                SEARCH_TOTAL_TIMEOUT_MS - (performance.now() - started);
+              if (remaining <= 0) return expire();
+              timer = window.setTimeout(
+                expire,
+                Math.min(SEARCH_TIMEOUT_MS, remaining),
+              );
+            };
+            pending.current.set(id, {
+              progress: arm,
+              receive: (results) => {
+                window.clearTimeout(timer);
+                if (results) resolve(results);
+                else reject(new Error("docs-search-malformed"));
+              },
             });
+            arm();
             post("search", {
               id,
               query: query.slice(0, MAX_QUERY),

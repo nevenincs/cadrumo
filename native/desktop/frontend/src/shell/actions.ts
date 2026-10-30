@@ -156,7 +156,7 @@ export function viewActions(
       ...(parent ? { context: t(parent.label) } : {}),
       group: spec?.group ?? "views",
       icon: spec?.icon ?? "page",
-      keywords: element.keywords,
+      keywords: t(element.keywords),
       ...(spec?.chords ? { chords: spec.chords } : {}),
       quiet: element.parent !== null && !spec?.chords?.length,
       enabled: () => opens && (spec?.enabled?.() ?? true),

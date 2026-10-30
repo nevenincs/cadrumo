@@ -4,8 +4,9 @@
 # An element's `id` is also its link path: one to four lowercase segments
 # joined by `/`. A child names its `parent`, which is the id without its last
 # segment; a root has none. `label` is the one locale key every palette shows,
-# `keywords` are extra search words, and `surfaces` lists which interfaces
-# implement the element. How a surface implements an element is that surface's
+# `keywords` is the locale key of its extra search words, translated like the
+# label so a palette searches in the person's language, and `surfaces` lists
+# which interfaces implement the element. How a surface implements an element is that surface's
 # own table, never this file. An element the window has not built yet is still
 # declared with `gui`; resolving it against the window's table, which does not
 # list it, refuses it as `not_implemented`.
@@ -38,13 +39,13 @@ length = 64
 [[element]]
 id = "home"
 label = "navigation.view.home.label"
-keywords = "overview start summary inicio"
+keywords = "navigation.view.home.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "ledger"
 label = "navigation.view.ledger.label"
-keywords = "records books bank movements libro registros"
+keywords = "navigation.view.ledger.keywords"
 surfaces = ["gui"]
 params = { select = "transaction" }
 
@@ -52,7 +53,7 @@ params = { select = "transaction" }
 id = "ledger/movements"
 parent = "ledger"
 label = "navigation.view.ledger.movements.label"
-keywords = "transactions bank statement movimientos"
+keywords = "navigation.view.ledger.movements.keywords"
 surfaces = ["gui"]
 params = { select = "transaction" }
 
@@ -60,7 +61,7 @@ params = { select = "transaction" }
 id = "ledger/invoices"
 parent = "ledger"
 label = "navigation.view.ledger.invoices.label"
-keywords = "invoices bills facturas"
+keywords = "navigation.view.ledger.invoices.keywords"
 surfaces = ["gui"]
 params = { select = "invoice" }
 
@@ -68,132 +69,132 @@ params = { select = "invoice" }
 id = "ledger/documents"
 parent = "ledger"
 label = "navigation.view.ledger.documents.label"
-keywords = "documents evidence attachments receipts documentos"
+keywords = "navigation.view.ledger.documents.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "ledger/rules"
 parent = "ledger"
 label = "navigation.view.ledger.rules.label"
-keywords = "rules classification categories reglas"
+keywords = "navigation.view.ledger.rules.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "ledger/registers"
 parent = "ledger"
 label = "navigation.view.ledger.registers.label"
-keywords = "registers prorrata libros registro"
+keywords = "navigation.view.ledger.registers.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "ledger/health"
 parent = "ledger"
 label = "navigation.view.ledger.health.label"
-keywords = "health readiness checks findings estado"
+keywords = "navigation.view.ledger.health.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "withholding"
 label = "navigation.view.withholding.label"
-keywords = "withholding retenciones irpf"
+keywords = "navigation.view.withholding.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "declarations"
 label = "navigation.view.declarations.label"
-keywords = "declarations returns modelo filing declaraciones"
+keywords = "navigation.view.declarations.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "aeat-sync"
 label = "navigation.view.aeat_sync.label"
-keywords = "aeat sync capture sede notifications sincronizacion"
+keywords = "navigation.view.aeat_sync.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "operations"
 label = "navigation.view.operations.label"
-keywords = "operations runs jobs history operaciones"
+keywords = "navigation.view.operations.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "installation"
 label = "navigation.view.installation.label"
-keywords = "installation runtime version instalacion"
+keywords = "navigation.view.installation.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "reference"
 label = "navigation.view.reference.label"
-keywords = "reference law sources corpus referencia"
+keywords = "navigation.view.reference.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "profile"
 label = "navigation.view.profile.label"
-keywords = "profile taxpayer details perfil contribuyente"
+keywords = "navigation.view.profile.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "profile/aeat-access"
 parent = "profile"
 label = "navigation.view.profile.aeat_access.label"
-keywords = "aeat access sign-in certificate clave acceso"
+keywords = "navigation.view.profile.aeat_access.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "calendar"
 label = "navigation.view.calendar.label"
-keywords = "calendar deadlines obligations plazos calendario"
+keywords = "navigation.view.calendar.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "browser"
 label = "navigation.view.browser.label"
-keywords = "browser web sede aeat agencia tributaria navegador internet"
+keywords = "navigation.view.browser.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "docs"
 label = "navigation.view.docs.label"
-keywords = "docs documentation help guide ayuda"
+keywords = "navigation.view.docs.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "agent"
 label = "navigation.view.agent.label"
-keywords = "agent assistant chat agente"
+keywords = "navigation.view.agent.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "terminal"
 label = "navigation.view.terminal.label"
-keywords = "terminal workspace tui workbench"
+keywords = "navigation.view.terminal.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "panel"
 label = "navigation.view.panel.label"
-keywords = "panel bottom panel"
+keywords = "navigation.view.panel.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "panel/console"
 parent = "panel"
 label = "navigation.view.panel.console.label"
-keywords = "console shell command consola"
+keywords = "navigation.view.panel.console.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "panel/python"
 parent = "panel"
 label = "navigation.view.panel.python.label"
-keywords = "python shell repl"
+keywords = "navigation.view.panel.python.keywords"
 surfaces = ["gui"]
 
 [[element]]
 id = "panel/logs"
 parent = "panel"
 label = "navigation.view.panel.logs.label"
-keywords = "logs log diagnostics registros"
+keywords = "navigation.view.panel.logs.keywords"
 surfaces = ["gui"]

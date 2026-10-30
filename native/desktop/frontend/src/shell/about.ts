@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { AboutInfo } from "../ipc/contract";
 import { failureCode } from "../errors";
 import type { Host } from "./host";
+import { labelled } from "./compose";
 import type { Translate } from "./strings";
 
 /** What the shell knows of this installation: not asked for yet, read, or
@@ -43,7 +44,7 @@ function field(t: Translate, value: string | null): string {
 /** The plain-text report the Copy button puts on the clipboard. */
 export function aboutReport(t: Translate, info: AboutInfo): string {
   const row = (label: string, value: string | null) =>
-    `${t(label)}: ${field(t, value)}`;
+    labelled(t, t(label), field(t, value));
   const lines = [
     `${field(t, info.product)} ${field(t, versionLine(info))}`,
     row("desktop.about.build_id", info.build_id),
@@ -66,18 +67,22 @@ export function aboutReport(t: Translate, info: AboutInfo): string {
       .filter((part) => part !== null)
       .join(" ");
   for (const c of components.filter((c) => c.role === "interpreter"))
-    lines.push(`${t("desktop.about.interpreter")}: ${describe(c)}`);
+    lines.push(labelled(t, t("desktop.about.interpreter"), describe(c)));
   lines.push("", `[${t("desktop.about.managers")}]`);
   for (const c of components.filter((c) => c.role === "manager"))
-    lines.push(`${t("desktop.about.manager")}: ${describe(c)}`);
+    lines.push(labelled(t, t("desktop.about.manager"), describe(c)));
   lines.push(
-    `${t("desktop.about.desktop_host")}: ${[
-      field(t, info.desktop.version),
-      info.desktop.build_id,
-      info.desktop.build_type,
-    ]
-      .filter((part) => part !== null)
-      .join(" ")}`,
+    labelled(
+      t,
+      t("desktop.about.desktop_host"),
+      [
+        field(t, info.desktop.version),
+        info.desktop.build_id,
+        info.desktop.build_type,
+      ]
+        .filter((part) => part !== null)
+        .join(" "),
+    ),
   );
   if (info.agent) {
     lines.push(
@@ -87,7 +92,7 @@ export function aboutReport(t: Translate, info: AboutInfo): string {
     );
     if (info.agent.dependencies.length > 0)
       lines.push(
-        `${t("desktop.about.dependencies", { count: info.agent.dependencies.length })}:`,
+        `[${t("desktop.about.dependencies", { count: info.agent.dependencies.length })}]`,
         ...info.agent.dependencies.map((d) => `  ${d.name} ${d.version}`),
       );
   }
@@ -96,7 +101,7 @@ export function aboutReport(t: Translate, info: AboutInfo): string {
     lines.push(
       "",
       `[${t("desktop.about.tools")}]`,
-      ...tools.map(([name, version]) => `${name}: ${version}`),
+      ...tools.map(([name, version]) => labelled(t, name, version)),
     );
   if (info.distributions.length > 0)
     lines.push(

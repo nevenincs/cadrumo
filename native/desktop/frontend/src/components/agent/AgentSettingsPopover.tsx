@@ -7,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { listOf } from "@/shared/lists";
 import { startingSelection } from "../../shell/agentCatalog";
 import { useStrings } from "../../shell/strings";
 import { ProviderSelect } from "./ProviderSelect";
@@ -121,10 +122,10 @@ export function AgentSettingsPopover({
             <FieldDescription>
               {t("desktop.agent.capabilities", {
                 // In the language the shell shows, which the page carries.
-                list: new Intl.ListFormat(
+                list: listOf(
                   document.documentElement.lang || undefined,
-                  { type: "conjunction" },
-                ).format(way.capabilities),
+                  way.capabilities,
+                ),
               })}
             </FieldDescription>
           )}

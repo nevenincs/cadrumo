@@ -1,4 +1,5 @@
 import type { IconName } from "@/components/ui/icon";
+import { facts } from "../../../shell/compose";
 import type { LedgerFailure } from "../../../shell/ledger";
 import type { ModeloDeclarationListRowV1 } from "../../../shell/modeloContract";
 import type { Translate } from "../../../shell/strings";
@@ -15,9 +16,11 @@ export function aeatWords(
   const state = row.aeat_submission_state;
   if (state === null) return null;
   const word = t(`workspace.declarations.calendar.aeat.${state}`);
-  return row.evidence_conflicted
-    ? `${word} · ${t("workspace.declarations.calendar.evidence.disagrees")}`
-    : word;
+  return facts(t, [
+    word,
+    row.evidence_conflicted &&
+      t("workspace.declarations.calendar.evidence.disagrees"),
+  ]);
 }
 
 export type Mark = { icon: IconName; tone: string };

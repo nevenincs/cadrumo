@@ -7,6 +7,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { facts } from "../../../shell/compose";
 import {
   EVIDENCE_UPDATE_FIELDS,
   type EvidenceRecord,
@@ -525,10 +526,11 @@ export function EvidenceRecords({
                     )}
                   </span>
                   <span className="truncate text-sm text-muted-foreground">
-                    {[found.supplier, found.invoice_number, found.invoice_date]
-                      .filter(Boolean)
-                      .join(" · ") ||
-                      t("desktop.ledger.documents.nothing_stated")}
+                    {facts(t, [
+                      found.supplier,
+                      found.invoice_number,
+                      found.invoice_date,
+                    ]) || t("desktop.ledger.documents.nothing_stated")}
                   </span>
                 </button>
               </li>

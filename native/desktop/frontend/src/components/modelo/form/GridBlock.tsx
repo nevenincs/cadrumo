@@ -9,6 +9,7 @@ import type {
   PublicModeloFormGridBlock,
   PublicModeloFormGridCell,
 } from "../../../shell/modeloContract";
+import { factsGap } from "../../../shell/compose";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "./BoxNumber";
 import { calm, Label, useChosenFocus } from "./FieldRow";
@@ -89,6 +90,7 @@ function GridBox({ field }: { field: PublicModeloFormField }) {
 }
 
 export function GridBlock({ block }: { block: PublicModeloFormGridBlock }) {
+  const t = useStrings();
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full border-collapse">
@@ -122,7 +124,7 @@ export function GridBlock({ block }: { block: PublicModeloFormGridBlock }) {
                   {calm(row.heading.text)}
                   {rateText && (
                     <span className="text-muted-foreground">
-                      {" · "}
+                      {factsGap(t)}
                       {rateText}
                     </span>
                   )}

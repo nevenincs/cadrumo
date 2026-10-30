@@ -38,10 +38,10 @@ length = 64
 
 def _element(view_id: str, *, parent: str | None = None, extra: str = "", surfaces: str = '["gui"]') -> str:
     parent_line = "" if parent is None else f'parent = "{parent}"\n'
-    label = "nav." + view_id.replace("/", ".").replace("-", "_") + ".label"
+    key = "nav." + view_id.replace("/", ".").replace("-", "_")
     return (
-        f'\n[[element]]\nid = "{view_id}"\n{parent_line}label = "{label}"\n'
-        f'keywords = "words"\nsurfaces = {surfaces}\n{extra}'
+        f'\n[[element]]\nid = "{view_id}"\n{parent_line}label = "{key}.label"\n'
+        f'keywords = "{key}.keywords"\nsurfaces = {surfaces}\n{extra}'
     )
 
 
@@ -111,12 +111,20 @@ def test_the_fixture_baseline_loads(tmp_path: Path) -> None:
         pytest.param(_VALID + _element("docs", surfaces='["web"]'), "surfaces", id="unknown-surface"),
         pytest.param(_VALID + _element("docs", surfaces='["gui", "gui"]'), "at most once", id="repeated-surface"),
         pytest.param(
-            _VALID + '\n[[element]]\nid = "docs"\nkeywords = "w"\nsurfaces = ["gui"]\n', "label", id="missing-label"
+            _VALID + '\n[[element]]\nid = "docs"\nkeywords = "nav.docs.keywords"\nsurfaces = ["gui"]\n',
+            "label",
+            id="missing-label",
         ),
         pytest.param(
-            _VALID + '\n[[element]]\nid = "docs"\nlabel = "Docs"\nkeywords = "w"\nsurfaces = ["gui"]\n',
+            _VALID + '\n[[element]]\nid = "docs"\nlabel = "Docs"\nkeywords = "nav.docs.keywords"\nsurfaces = ["gui"]\n',
             "not a dotted locale key",
             id="label-not-a-key",
+        ),
+        pytest.param(
+            _VALID
+            + '\n[[element]]\nid = "docs"\nlabel = "nav.docs.label"\nkeywords = "docs help"\nsurfaces = ["gui"]\n',
+            "not a dotted locale key",
+            id="keywords-not-a-key",
         ),
         pytest.param(_VALID + _element("docs", extra='target = "x"\n'), "target", id="unknown-field"),
         pytest.param(
@@ -318,7 +326,7 @@ def test_an_element_added_without_growing_the_baseline_breaks_it() -> None:
     data = _shipped_register_data()
     data["element"] = [
         *data["element"],
-        {"id": "notes", "label": "nav.notes.label", "keywords": "w", "surfaces": ["gui"]},
+        {"id": "notes", "label": "nav.notes.label", "keywords": "nav.notes.keywords", "surfaces": ["gui"]},
     ]
     assert _lifecycle_breaches(NavigationRegister.model_validate(data), _shipped_ids()) == [
         "id 'notes' is missing from the shipped baseline"

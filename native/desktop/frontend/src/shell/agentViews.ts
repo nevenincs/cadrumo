@@ -15,6 +15,7 @@ import type {
   AgentTransport,
 } from "./agentSession";
 import { conditionWords, toolKindWords } from "./agentWords";
+import { listed } from "./compose";
 import type { Translate } from "./strings";
 
 // What a host serves the agent column, as the host answers it. A desktop
@@ -721,11 +722,15 @@ export function replyFacts(
   );
   const selection = newestRanWith(records);
   const ranWith = selection
-    ? [
-        selection.provider_display_name || selection.provider,
-        selection.model_display_name || selection.model,
-        ...(selection.effort ? [effortWords(t, selection.effort)] : []),
-      ].join(", ")
+    ? listed(
+        t,
+        [
+          selection.provider_display_name || selection.provider,
+          selection.model_display_name || selection.model,
+          ...(selection.effort ? [effortWords(t, selection.effort)] : []),
+        ],
+        "plain",
+      )
     : null;
   const counted = replies.flatMap((reply) =>
     reply.usage ? [reply.usage] : [],

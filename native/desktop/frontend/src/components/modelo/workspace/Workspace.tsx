@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { dateFormats } from "../../../shared/dateFormats";
+import { facts } from "../../../shell/compose";
 import type {
   ModeloFormAttention,
   ModeloFormNextAction,
@@ -97,10 +98,12 @@ function ResultLine({
           {result.amount_text}
         </span>
         <span className="text-sm text-muted-foreground">
-          {result.words}
-          {stagedCount > 0
-            ? ` · ${t("workspace.modelo.header.result.out_of_date_until_applied")}`
-            : result.out_of_date_words && ` · ${result.out_of_date_words}`}
+          {facts(t, [
+            result.words,
+            stagedCount > 0
+              ? t("workspace.modelo.header.result.out_of_date_until_applied")
+              : result.out_of_date_words,
+          ])}
         </span>
       </span>
     ) : (
@@ -244,10 +247,12 @@ export function ModeloWorkspace({
   };
   const recorded = action === "recorded" && (
     <span className="max-w-xs text-sm text-muted-foreground">
-      {t("workspace.modelo.next.recorded", {
-        date: day(next?.recorded_at ?? null),
-      })}
-      {envelope.receipt && ` · ${envelope.receipt.words}`}
+      {facts(t, [
+        t("workspace.modelo.next.recorded", {
+          date: day(next?.recorded_at ?? null),
+        }),
+        envelope.receipt?.words,
+      ])}
     </span>
   );
   const nextShown =

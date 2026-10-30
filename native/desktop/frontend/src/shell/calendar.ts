@@ -2,6 +2,8 @@ import { dateFormats } from "../shared/dateFormats";
 import { isoDay, localDay } from "../shared/dates";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { failureCode } from "../errors";
+import { facts } from "./compose";
+import type { Translate } from "./strings";
 import type { FilingCalendar, ProfileViews } from "./views";
 
 /** What the calendar page has to show: the read in flight, that the account
@@ -44,6 +46,7 @@ export function evaluatedDay(calendar: FilingCalendar): string | null {
  * where there is no month heading beside it to complete it.
  */
 export function evaluatedLabel(
+  t: Translate,
   on: string,
   today: string,
   locale: string,
@@ -54,7 +57,7 @@ export function evaluatedLabel(
   if (on !== today) return (full ? formats.full : formats.medium).format(day);
   const word = evaluatedWord(on, today, locale);
   const date = (full ? formats.full : formats.short).format(day);
-  return `${word} · ${date}`;
+  return facts(t, [word, date]);
 }
 
 /** The label for returning to the evaluated day, in the locale's own words. */
