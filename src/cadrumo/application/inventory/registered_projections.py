@@ -30,6 +30,8 @@ if TYPE_CHECKING:
 
 from .registered_requests import InventoryRefusalCode, InventoryRefusalReason
 
+_RETIRED_BOOK_UNRESOLVED_LOCALE_KEY = "application.inventory.advisories.retired_book_leaves_year_unresolved"
+
 
 class InventoryAdvisoryProjection(BaseModel):
     """Something the operator should know about a book, as a stable code and its sentence's key."""
@@ -48,7 +50,7 @@ def inventory_advisories(*, year: int, leaves_year_unresolved: bool) -> tuple[In
     return (
         InventoryAdvisoryProjection(
             code="retired_book_leaves_year_unresolved",
-            key="application.inventory.advisories.retired_book_leaves_year_unresolved",
+            key=_RETIRED_BOOK_UNRESOLVED_LOCALE_KEY,
             year=year,
         ),
     )
