@@ -27,7 +27,7 @@ from cadrumo_client.commands.secure_input import (
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-from ...application.filing.producer_snapshot_m360 import Modelo360ProfileFacts
+from ...application.modelo.m360_solicitud_input import Modelo360ProfileInput
 from ...application.modelo.m360_solicitud_operation import (
     MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID,
     Modelo360RepresentanteAccountInput,
@@ -59,7 +59,7 @@ class _SolicitudDocument(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    facts: Modelo360ProfileFacts
+    facts: Modelo360ProfileInput
     own_account_id: OwnAccountId | None = None
     representante_account: Modelo360RepresentanteAccountInput | None = None
 
@@ -110,8 +110,8 @@ def _profile_id() -> UUID:
 def _line(solicitud: Modelo360SolicitudProjection) -> str:
     account = solicitud.own_account_id or solicitud.masked_iban or "-"
     return (
-        f"{solicitud.filing_year}\t{solicitud.pais_destino}\t{solicitud.causa_presentacion.value}"
-        f"\t{solicitud.titular_en_calidad_de.value}\t{account}"
+        f"{solicitud.filing_year}\t{solicitud.pais_destino}\t{solicitud.causa_presentacion}"
+        f"\t{solicitud.titular_en_calidad_de}\t{account}"
     )
 
 

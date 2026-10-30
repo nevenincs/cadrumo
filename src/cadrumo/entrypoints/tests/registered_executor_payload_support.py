@@ -978,7 +978,7 @@ def _payload(
                         titular_en_calidad_de=M360TitularEnCalidadDe.REPRESENTANTE,
                         divisa="EUR",
                     ),
-                ),
+                ).model_dump(),
                 "representante_account": Modelo360RepresentanteAccountInput(
                     iban=_OWN_ACCOUNT_SYNTHETIC_IBAN, swift_bic="CAIXESBBXXX"
                 ),

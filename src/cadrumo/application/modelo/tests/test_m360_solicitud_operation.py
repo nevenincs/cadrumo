@@ -7,6 +7,7 @@ every account number is a synthetic published example.
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextvars import Context
 from typing import get_args
 from uuid import UUID
 
@@ -45,6 +46,7 @@ from ...operations.access_resolution import (
 )
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ..m360_solicitud_input import Modelo360ProfileInput
 from ..m360_solicitud_operation import (
     Modelo360RepresentanteAccountInput,
     Modelo360SolicitudAction,
@@ -94,13 +96,13 @@ def _own_accounts(*, bic: str = "CAIXESBBXXX", closed: bool = False) -> Callable
     return lambda: register
 
 
-def _facts(holder: M360TitularEnCalidadDe) -> Modelo360ProfileFacts:
+def _facts(holder: M360TitularEnCalidadDe) -> Modelo360ProfileInput:
     representante = (
         Modelo360RepresentanteFacts(tax_id="00000000T", full_name="ASESORES PRUEBA SL")
         if holder is M360TitularEnCalidadDe.REPRESENTANTE
         else None
     )
-    return Modelo360ProfileFacts(
+    facts = Modelo360ProfileFacts(
         solicitud=Modelo360SolicitudFacts(
             nivel_calidad_datos=M360NivelCalidadDatos.MAXIMA,
             pais_destino="FR",
@@ -113,6 +115,7 @@ def _facts(holder: M360TitularEnCalidadDe) -> Modelo360ProfileFacts:
         representante=representante,
         cuenta=Modelo360CuentaTitularFacts(titular_nombre="TITULAR PRUEBA", titular_en_calidad_de=holder, divisa="EUR"),
     )
+    return Modelo360ProfileInput.model_validate(facts.model_dump())
 
 
 def _declare_own(year: int = 2025) -> Modelo360SolicitudRequest:
@@ -123,6 +126,17 @@ def _declare_own(year: int = 2025) -> Modelo360SolicitudRequest:
         facts=_facts(M360TitularEnCalidadDe.SOLICITANTE),
         own_account_id="acc-01",
     )
+
+
+def test_the_public_request_parses_and_composes_without_an_authority_scope() -> None:
+    encoded = _declare_own().model_dump_json()
+
+    def unscoped() -> Modelo360SolicitudRequest:
+        definition = build_modelo_360_solicitud_definition(_unused_solicitudes, _unused_own_accounts)
+        build_modelo_360_solicitud_registration(definition)
+        return Modelo360SolicitudRequest.model_validate_json(encoded)
+
+    assert Context().run(unscoped).model_dump_json() == encoded
 
 
 def test_a_solicitante_solicitud_references_its_own_account_and_lists_masked() -> None:
@@ -168,6 +182,30 @@ def test_a_representante_account_is_embedded_and_shown_only_by_its_mask() -> Non
     assert (row.account_kind, row.masked_iban, row.has_representante) == ("representante", "DE ···· 3000", True)
     assert _DE_IBAN not in result.model_dump_json()
     assert "ASESORES" not in result.model_dump_json()
+
+
+@pytest.mark.parametrize(
+    ("section", "field", "value"),
+    [
+        ("solicitud", "nivel_calidad_datos", "unknown-quality"),
+        ("solicitud", "pais_destino", "GR"),
+        ("solicitante", "email", "invalid-email"),
+        ("cuenta", "titular_en_calidad_de", "unknown-holder"),
+    ],
+)
+def test_public_input_is_validated_as_governed_facts_before_writing(section: str, field: str, value: str) -> None:
+    request = _declare_own()
+    document = request.model_dump()
+    document["facts"][section][field] = value
+    entered = Modelo360SolicitudRequest.model_validate(document)
+    solicitudes = _Solicitudes()
+
+    with pytest.raises(Modelo360SolicitudRefusedError) as refused:
+        apply_solicitud_request(entered, repository=solicitudes, own_accounts=_own_accounts())
+
+    assert refused.value.translated_message == "errors.refused.refused_modelo_360_solicitud"
+    assert value not in str(refused.value)
+    assert solicitudes.register == Modelo360SolicitudRegister()
 
 
 @pytest.mark.parametrize(

@@ -33,11 +33,8 @@ from ...domain.deadlines.models import RefundAccount
 from ...domain.modelos.errors import ModeloError
 from ...domain.transactions.own_accounts import OwnAccountId, OwnAccountRegister
 from ..filing.producer_snapshot_m360 import (
-    M360CausaPresentacion,
-    M360TitularEnCalidadDe,
     Modelo360AccountChoice,
     Modelo360OwnAccountChoice,
-    Modelo360ProfileFacts,
     Modelo360RepresentanteAccountChoice,
     Modelo360SolicitudEntry,
     Modelo360SolicitudRegister,
@@ -54,6 +51,7 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .m360_solicitud_input import Modelo360ProfileInput
 
 MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID = "modelo.m360_solicitud"
 #: The Modelo 360 revision addresses one solicitud per filing year through its annual period.
@@ -118,7 +116,7 @@ class Modelo360SolicitudRequest(BaseModel):
     profile_id: UUID
     action: Modelo360SolicitudAction
     filing_year: FilingYear | None = None
-    facts: Modelo360ProfileFacts | None = None
+    facts: Modelo360ProfileInput | None = None
     own_account_id: OwnAccountId | None = None
     representante_account: Modelo360RepresentanteAccountInput | None = None
 
@@ -140,8 +138,8 @@ class Modelo360SolicitudProjection(BaseModel):
 
     filing_year: FilingYear
     pais_destino: str = Field(min_length=2, max_length=2)
-    causa_presentacion: M360CausaPresentacion
-    titular_en_calidad_de: M360TitularEnCalidadDe
+    causa_presentacion: str = Field(min_length=1)
+    titular_en_calidad_de: str = Field(min_length=1)
     has_representante: bool
     account_kind: Literal["own_account", "representante"] | None = None
     own_account_id: OwnAccountId | None = None
@@ -160,8 +158,8 @@ class Modelo360SolicitudProjection(BaseModel):
         return cls(
             filing_year=entry.period.filing_year,
             pais_destino=entry.facts.solicitud.pais_destino,
-            causa_presentacion=entry.facts.solicitud.causa_presentacion,
-            titular_en_calidad_de=entry.facts.cuenta.titular_en_calidad_de,
+            causa_presentacion=entry.facts.solicitud.causa_presentacion.code,
+            titular_en_calidad_de=entry.facts.cuenta.titular_en_calidad_de.code,
             has_representante=entry.facts.representante is not None,
             account_kind=None if account is None else account.kind,
             own_account_id=own_account_id,
@@ -266,7 +264,13 @@ def apply_solicitud_request(
     account = _account_choice(payload)
     _require_admissible_own_account(account, own_accounts())
     try:
-        entry = Modelo360SolicitudEntry(period=period, facts=_required(payload.facts, "facts"), account=account)
+        facts = _required(payload.facts, "facts").to_facts()
+    except pydantic.ValidationError:
+        raise Modelo360SolicitudRefusedError(
+            translated_message="errors.refused.refused_modelo_360_solicitud",
+        ) from None
+    try:
+        entry = Modelo360SolicitudEntry(period=period, facts=facts, account=account)
     except pydantic.ValidationError:
         raise Modelo360SolicitudRefusedError(
             translated_message="errors.refused.refused_modelo_360_solicitud_holder_mismatch",
