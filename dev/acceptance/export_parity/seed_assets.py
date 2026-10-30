@@ -87,7 +87,11 @@ class AssetSeedStage(SeedState):
                 "prior_allocation_provenance": "synthetic export-parity allocation",
             },
             "in_service_date": asset.in_service.isoformat(),
-            "opening_history": {"status": "known", "accumulated_amount": _money(accumulated)},
+            "opening_history": {
+                "status": "known",
+                "accumulated_amount": _money(accumulated),
+                **({"covered_through_tax_year": self.first_year - 1} if accumulated else {}),
+            },
             "acquired_condition": "new",
             "amortization": {"regime": "normal", "method": asset.method, "authority_class_key": asset.class_key},
         }

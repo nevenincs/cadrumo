@@ -4532,6 +4532,8 @@ ledger:
         current revision.
       claim_revision_absent: A recorded claim names a revision that is not in the
         history.
+      claim_year_not_after_opening_year: 'A claim for %{claim_tax_year} cannot be
+        recorded: the opening amount already covers the years through %{opening_tax_year}.'
       claims_exceed_amortizable_basis: The opening amount and the effective claims
         exceed the lawful amortizable basis.
       claims_overlap: Claims of one element cannot cover overlapping intervals.
@@ -4643,6 +4645,8 @@ ledger:
         it.
       opening_history_amount_missing: The known opening history lacks its amount.
       opening_history_missing: The element's opening amortization history is missing.
+      opening_year_before_in_service: The opening amount cannot cover the years through
+        %{opening_tax_year}, which is before the element's in-service year %{in_service_tax_year}.
       ownership_treatment_unknown: The whole-property basis has an unknown ownership
         treatment.
       parameter_absent: The activity-asset authority parameter %{parameter_id} is

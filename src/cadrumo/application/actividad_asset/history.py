@@ -30,7 +30,11 @@ from ...domain.renta.actividad_asset.register_records import (
     ActivityAssetEventKind,
     ActivityAssetHistoryEvent,
 )
-from ...domain.renta.actividad_asset.schedule import require_method_continuity, require_opening_method
+from ...domain.renta.actividad_asset.schedule import (
+    require_claim_after_opening_year,
+    require_method_continuity,
+    require_opening_method,
+)
 
 
 class ActivityAssetHistory(BaseModel):
@@ -314,6 +318,8 @@ class ActivityAssetHistory(BaseModel):
             raise ActividadAssetIncompleteError(
                 translated_message="ledger.actividad_asset.errors.opening_history_missing",
             )
+        for claim in recorded:
+            require_claim_after_opening_year(revision, claim.tax_year)
         consumed = opening + sum((claim.amount for claim in recorded), Decimal("0"))
         if consumed > round_to_cents(revision.amortizable_basis()):
             raise ActividadAssetClaimConflictError(
@@ -374,6 +380,7 @@ class ActivityAssetHistory(BaseModel):
         election = revision.amortization
         require_method_continuity(election.method, election.fingerprint, summary)
         require_opening_method(revision, election.method)
+        require_claim_after_opening_year(revision, claim.tax_year)
         opening = revision.opening_history.accumulated_amount
         if opening is None:
             raise ActividadAssetIncompleteError(

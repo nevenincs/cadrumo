@@ -4606,6 +4606,8 @@ ledger:
         vigente del elemento.
       claim_revision_absent: Un cargo registrado cita una revisión que no está en
         el historial.
+      claim_year_not_after_opening_year: 'No se puede registrar un cargo de %{claim_tax_year}:
+        el importe inicial ya cubre los años hasta %{opening_tax_year}.'
       claims_exceed_amortizable_basis: El importe inicial y los cargos vigentes superan
         la base amortizable legal.
       claims_overlap: Los cargos de un elemento no pueden cubrir intervalos que se
@@ -4723,6 +4725,9 @@ ledger:
         números dígitos lo continúen.
       opening_history_amount_missing: El historial inicial conocido no indica su importe.
       opening_history_missing: Falta el historial inicial de amortización del elemento.
+      opening_year_before_in_service: El importe inicial no puede cubrir los años
+        hasta %{opening_tax_year}, que es anterior al año de puesta en funcionamiento
+        del elemento, %{in_service_tax_year}.
       ownership_treatment_unknown: La base del inmueble completo tiene un tratamiento
         de titularidad desconocido.
       parameter_absent: El parámetro de autoridad %{parameter_id} del inmovilizado

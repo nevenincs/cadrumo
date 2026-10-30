@@ -203,6 +203,48 @@ def test_spousal_property_and_missing_opening_history_fail_closed() -> None:
         )
 
 
+def test_a_non_zero_opening_amount_requires_the_last_tax_year_it_covers() -> None:
+    with pytest.raises(ValidationError, match="covered_through_tax_year"):
+        OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("3000"))
+    with pytest.raises(ValidationError, match="non-zero opening amount"):
+        OpeningAmortizationHistory(
+            status=OpeningHistoryStatus.KNOWN,
+            accumulated_amount=Decimal("0"),
+            covered_through_tax_year=2022,
+        )
+    with pytest.raises(ValidationError, match="non-zero opening amount"):
+        OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING, covered_through_tax_year=2022)
+
+
+def test_an_opening_year_before_the_in_service_year_is_refused_and_the_in_service_year_is_accepted() -> None:
+    def opening_through(year: int) -> OpeningAmortizationHistory:
+        return OpeningAmortizationHistory(
+            status=OpeningHistoryStatus.KNOWN,
+            accumulated_amount=Decimal("3000"),
+            covered_through_tax_year=year,
+        )
+
+    with pytest.raises(ValidationError, match="opening_year_before_in_service"):
+        _revision(in_service_date=date(2020, 7, 1), opening_history=opening_through(2019))
+
+    accepted = _revision(in_service_date=date(2020, 7, 1), opening_history=opening_through(2020))
+    assert accepted.opening_history.covered_through_tax_year == 2020
+
+
+def test_opening_year_changes_the_revision_identity() -> None:
+    def revision_through(year: int) -> ActivityAssetRevision:
+        return _revision(
+            in_service_date=date(2020, 1, 1),
+            opening_history=OpeningAmortizationHistory(
+                status=OpeningHistoryStatus.KNOWN,
+                accumulated_amount=Decimal("3000"),
+                covered_through_tax_year=year,
+            ),
+        )
+
+    assert revision_through(2022).revision_id != revision_through(2023).revision_id
+
+
 def test_schedule_distinguishes_material_intangible_and_uses_actual_service_days() -> None:
     material_revision = _revision(in_service_date=date(2025, 7, 1))
     material = schedule_charge(
@@ -238,6 +280,7 @@ def test_rate_applies_to_the_basis_less_residual_value_and_is_capped_at_the_rema
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("7100"),
+            covered_through_tax_year=2025,
         ),
     )
 

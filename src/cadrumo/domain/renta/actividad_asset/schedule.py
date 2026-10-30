@@ -450,6 +450,16 @@ def require_opening_method(revision: ActivityAssetRevision, method: Amortization
         )
 
 
+def require_claim_after_opening_year(revision: ActivityAssetRevision, claim_tax_year: int) -> None:
+    """Refuse a claim recorded for a year the opening amount already covers."""
+    covered_through = revision.opening_history.covered_through_tax_year
+    if covered_through is not None and claim_tax_year <= covered_through:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.claim_year_not_after_opening_year",
+            context={"claim_tax_year": claim_tax_year, "opening_tax_year": covered_through},
+        )
+
+
 def parse_requested_free_amount(raw: str | None) -> Decimal | None:
     """Read an operator-typed elected free-depreciation amount.
 
@@ -751,6 +761,7 @@ __all__ = [
     "add_fractional_years",
     "add_years",
     "calendar_days_in_tax_year",
+    "require_claim_after_opening_year",
     "require_method_continuity",
     "require_opening_method",
     "schedule_charge",

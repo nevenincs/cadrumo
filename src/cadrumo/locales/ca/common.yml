@@ -4604,6 +4604,8 @@ ledger:
       claim_not_under_current_revision: Un càrrec nou s'ha de registrar amb la revisió
         vigent de l'element.
       claim_revision_absent: Un càrrec registrat cita una revisió que no és a l'historial.
+      claim_year_not_after_opening_year: 'No es pot registrar un càrrec de %{claim_tax_year}:
+        l''import inicial ja cobreix els anys fins a %{opening_tax_year}.'
       claims_exceed_amortizable_basis: L'import inicial i els càrrecs vigents superen
         la base amortitzable legal.
       claims_overlap: Els càrrecs d'un element no poden cobrir intervals que se solapin.
@@ -4720,6 +4722,9 @@ ledger:
       opening_history_amount_missing: L'historial inicial conegut no indica el seu
         import.
       opening_history_missing: Falta l'historial inicial d'amortització de l'element.
+      opening_year_before_in_service: L'import inicial no pot cobrir els anys fins
+        a %{opening_tax_year}, que és anterior a l'any de posada en funcionament de
+        l'element, %{in_service_tax_year}.
       ownership_treatment_unknown: La base de l'immoble complet té un tractament de
         titularitat desconegut.
       parameter_absent: El paràmetre d'autoritat %{parameter_id} de l'immobilitzat

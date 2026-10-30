@@ -114,6 +114,7 @@ class OpeningHistorySnapshot(BaseModel):
     status: OpeningHistoryStatus
     accumulated_amount: PublicDecimal | None = None
     amortization_method: AmortizationMethod | None = None
+    covered_through_tax_year: FilingYear | None = None
 
     @classmethod
     def from_domain(cls, value: OpeningAmortizationHistory) -> Self:
@@ -123,6 +124,7 @@ class OpeningHistorySnapshot(BaseModel):
                 project_scalar(value.accumulated_amount) if value.accumulated_amount is not None else None
             ),
             amortization_method=value.amortization_method,
+            covered_through_tax_year=value.covered_through_tax_year,
         )
 
     def to_domain(self) -> OpeningAmortizationHistory:
@@ -130,6 +132,7 @@ class OpeningHistorySnapshot(BaseModel):
             status=self.status,
             accumulated_amount=_decimal(self.accumulated_amount),
             amortization_method=self.amortization_method,
+            covered_through_tax_year=self.covered_through_tax_year,
         )
 
     @model_validator(mode="after")

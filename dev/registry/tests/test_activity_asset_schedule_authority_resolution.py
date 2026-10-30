@@ -155,6 +155,7 @@ def _asset(
     condition: AcquiredCondition = AcquiredCondition.NEW,
     residual: str = "0",
     opening: str = "0",
+    opening_through: int | None = None,
     opening_method: AmortizationMethod | None = None,
     built: date | None = None,
     asset_id: str = "asset",
@@ -182,6 +183,7 @@ def _asset(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal(opening),
             amortization_method=opening_method,
+            covered_through_tax_year=(opening_through or in_service.year) if Decimal(opening) else None,
         ),
         acquired_condition=condition,
         building_construction_date=built,
@@ -1603,6 +1605,7 @@ def _ten_percent_furniture() -> ActivityAssetRevision:
         basis="10000",
         in_service=date(2005, 3, 15),
         opening="9000",
+        opening_through=2024,
         asset_id="twenty-year-furniture",
     )
 

@@ -15,7 +15,7 @@ from ....domain.renta.actividad_asset.election import (
     AmortizationMethod,
     DirectEstimationRegime,
 )
-from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
+from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError, ActividadAssetValidationError
 from ....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -38,6 +38,8 @@ def _revision(
     evidence_marker: str = "a",
     basis_amount: str = "1000",
     opening_amount: str = "0",
+    in_service: date = date(2025, 1, 1),
+    opening_through: int | None = None,
 ) -> ActivityAssetRevision:
     return ActivityAssetRevision(
         asset_id="asset-history-test",
@@ -56,10 +58,11 @@ def _revision(
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="reviewed allocation record",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=in_service,
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal(opening_amount),
+            covered_through_tax_year=(opening_through or in_service.year) if Decimal(opening_amount) else None,
         ),
         acquired_condition=AcquiredCondition.NEW,
         amortization=ActivityAssetAmortizationElection(
@@ -201,6 +204,7 @@ def test_superseding_revision_counts_its_opening_amount_with_effective_claims() 
         evidence_marker="c",
         basis_amount="500.00",
         opening_amount="100.00",
+        in_service=date(2024, 1, 1),
     )
     one_cent_short = _revision(
         number=2,
@@ -208,11 +212,45 @@ def test_superseding_revision_counts_its_opening_amount_with_effective_claims() 
         evidence_marker="e",
         basis_amount="499.99",
         opening_amount="100.00",
+        in_service=date(2024, 1, 1),
     )
 
     assert history.append_revision(equal).revisions[-1] == equal
     with pytest.raises(ActividadAssetClaimConflictError, match="correction_below_effective_claims"):
         history.append_revision(one_cent_short)
+
+
+def test_a_claim_in_or_before_the_opening_year_is_refused_and_a_later_one_recorded() -> None:
+    opened = _revision(opening_amount="100.00", in_service=date(2024, 1, 1))
+    history = ActivityAssetHistory().append_revision(opened)
+
+    for covered_year in (2024, 2023):
+        claim = _claim(
+            opened,
+            tax_year=covered_year,
+            covered_from=date(covered_year, 1, 1),
+            covered_until=date(covered_year, 4, 1),
+        )
+        with pytest.raises(ActividadAssetValidationError, match="claim_year_not_after_opening_year"):
+            history.record_claim(claim)
+
+    assert len(history.record_claim(_claim(opened)).history.claims) == 1
+
+
+def test_a_correction_whose_opening_year_reaches_a_recorded_claim_is_refused() -> None:
+    initial = _revision(in_service=date(2024, 1, 1))
+    history = ActivityAssetHistory().append_revision(initial).record_claim(_claim(initial)).history
+    reaching = _revision(
+        number=2,
+        supersedes_revision_id=initial.revision_id,
+        evidence_marker="c",
+        opening_amount="100.00",
+        in_service=date(2024, 1, 1),
+        opening_through=2025,
+    )
+
+    with pytest.raises(ActividadAssetValidationError, match="claim_year_not_after_opening_year"):
+        history.append_revision(reaching)
 
 
 def test_superseding_revision_ignores_superseded_claims() -> None:

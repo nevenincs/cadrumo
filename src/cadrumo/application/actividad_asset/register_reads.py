@@ -89,7 +89,6 @@ def _walk_to_settlement(revision: ActivityAssetRevision, context: RegisterReadCo
         context.history,
         forecast=context.forecast,
         through_year=revision.in_service_date.year + _WALK_YEARS_LIMIT,
-        opening_speaks_before=context.today.year,
         settled_after=max([context.today.year, *claim_years]),
     )
 

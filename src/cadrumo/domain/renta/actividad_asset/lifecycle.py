@@ -10,6 +10,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
 from ....core.identity.transaction_ids import TransactionId
@@ -72,6 +73,8 @@ class OpeningAmortizationHistory(BaseModel):
     accumulated_amount: Decimal | None = None
     amortization_method: AmortizationMethod | None = None
     """The method under which the opening amount was charged, when attested."""
+    covered_through_tax_year: FilingYear | None = None
+    """The last tax year the opening amount covers; a non-zero known amount requires it."""
 
     @field_validator("accumulated_amount")
     @classmethod
@@ -88,6 +91,11 @@ class OpeningAmortizationHistory(BaseModel):
             self.accumulated_amount is not None or self.amortization_method is not None
         ):
             raise ValueError("missing opening history cannot declare an amount or its method")
+        has_amount = bool(self.accumulated_amount)
+        if has_amount and self.covered_through_tax_year is None:
+            raise ValueError("a non-zero opening amount requires covered_through_tax_year")
+        if not has_amount and self.covered_through_tax_year is not None:
+            raise ValueError("covered_through_tax_year is only a fact of a non-zero opening amount")
         return self
 
 
@@ -322,6 +330,7 @@ class ActivityAssetRevision(BaseModel):
         _validate_revision_lineage(self)
         _validate_primary_purchase(self)
         _validate_service_dates(self)
+        _validate_opening_year(self)
         _validate_residual_basis(self)
         _validate_building_construction_date(self)
         _validate_vehicle_affectation(self)
@@ -359,6 +368,18 @@ def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
 def _validate_service_dates(revision: ActivityAssetRevision) -> None:
     if revision.out_of_service_date is not None and revision.out_of_service_date <= revision.in_service_date:
         raise ValueError("out_of_service_date must be after in_service_date")
+
+
+def _validate_opening_year(revision: ActivityAssetRevision) -> None:
+    covered_through = revision.opening_history.covered_through_tax_year
+    if covered_through is not None and covered_through < revision.in_service_date.year:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.opening_year_before_in_service",
+            context={
+                "opening_tax_year": covered_through,
+                "in_service_tax_year": revision.in_service_date.year,
+            },
+        )
 
 
 def _validate_residual_basis(revision: ActivityAssetRevision) -> None:

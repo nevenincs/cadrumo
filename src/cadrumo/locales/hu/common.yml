@@ -4585,6 +4585,9 @@ ledger:
         kell rögzíteni.
       claim_revision_absent: Egy rögzített elszámolás olyan változatra hivatkozik,
         amely nincs az előzményekben.
+      claim_year_not_after_opening_year: 'A(z) %{claim_tax_year}. évi elszámolás nem
+        rögzíthető: a nyitó összeg már lefedi a(z) %{opening_tax_year}. évig tartó
+        éveket.'
       claims_exceed_amortizable_basis: A nyitó összeg és az érvényes elszámolások
         meghaladják a törvényes leírható alapot.
       claims_overlap: Egy elem elszámolásai nem fedhetnek át egymással átfedő időszakokat.
@@ -4700,6 +4703,8 @@ ledger:
         folytathassa.
       opening_history_amount_missing: Az ismert nyitó előzményből hiányzik az összeg.
       opening_history_missing: Hiányzik az elem nyitó értékcsökkenési előzménye.
+      opening_year_before_in_service: A nyitó összeg utolsó fedett éve (%{opening_tax_year})
+        nem lehet korábbi az elem üzembe helyezésének événél (%{in_service_tax_year}).
       ownership_treatment_unknown: Az egész ingatlanra vonatkozó alap tulajdonosi
         kezelése ismeretlen.
       parameter_absent: A(z) %{parameter_id} tevékenységieszköz-hatósági paraméter
