@@ -9,16 +9,21 @@ days over 365 for 2025).
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date, timedelta
 from decimal import Decimal
+from functools import cache
 from itertools import pairwise
 
 import pytest
 
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
+from cadrumo.application.actividad_asset.tests.ledger_support import MemoryLedger, acquisition_transaction
 from cadrumo.application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from cadrumo.application.operator_actions.models import PreconditionVerdict
+from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
     ACTIVITY_ASSET_PARAMETER_IDS,
@@ -68,11 +73,45 @@ from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
     VehicleListedUse,
     VehiclePrivateUse,
 )
+from cadrumo.domain.transactions.models import Transaction
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_ERRORS = "ledger.actividad_asset.errors."
+
+
+@contextmanager
+def _refused(
+    error_type: type[Exception],
+    key: str,
+    *,
+    rendered: str | None = None,
+    **context: object,
+) -> Iterator[None]:
+    """Expect a refusal that carries catalogue ``key`` and the named context facts.
+
+    ``rendered`` additionally matches the English text the catalogue produces for
+    the refusal, so a legal citation the message must keep is still asserted.
+    """
+    with pytest.raises(error_type) as caught:
+        yield
+    error = caught.value
+    assert getattr(error, "translated_message", None) == _ERRORS + key
+    recorded = getattr(error, "context", None) or {}
+    for name, value in context.items():
+        assert recorded.get(name) == value, (name, recorded)
+    if rendered is not None:
+        assert re.search(rendered, resolve_error_message(error, locale="en")), rendered
+
+
+@cache
+def _acquisition() -> Transaction:
+    """One payment large enough to bear every asset the tests register; the check bounds, not equates."""
+    return acquisition_transaction(amount=Decimal("10000000.00"), taxable_base=None, iva_amount=None)
+
 
 _YEAR_START = date(2025, 1, 1)
 _YEAR_END = date(2026, 1, 1)
@@ -114,7 +153,7 @@ def _asset(
         asset_id=asset_id,
         revision_number=1,
         acquisition=AcquisitionLineageReference(
-            observed_transaction_id="a" * 64,
+            observed_transaction_id=_acquisition().transaction_id,
             invoice_evidence_id=f"invoice-{asset_id}",
             evidence_fingerprint="b" * 64,
         ),
@@ -123,6 +162,7 @@ def _asset(
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
             basis_amount=Decimal(basis),
+            non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="reviewed business allocation",
         ),
         residual_value=Decimal(residual),
@@ -211,7 +251,7 @@ def test_elected_linear_coefficient_is_bounded_by_the_maximum_and_the_maximum_pe
     assert elected.amount == Decimal("400.00")  # 2,000 x 20%
     assert floor.amount == Decimal("250.00")  # 2,000 x 12.5%
     for outside in ("0.12", "0.26"):
-        with pytest.raises(ActividadAssetValidationError, match="admissible range"):
+        with _refused(ActividadAssetValidationError, "elected_coefficient_out_of_range"):
             _charge(_asset(_linear("equipo-proceso-informacion", linear_coefficient=Decimal(outside)), basis="2000"))
 
 
@@ -254,7 +294,7 @@ def test_a_building_under_ten_years_old_is_not_a_used_asset() -> None:
 
     assert young.amount == Decimal("3000.00")  # five years old: 100,000 x 3%
     assert old.amount == Decimal("6000.00")  # exactly ten years old: 100,000 x (2 x 3%)
-    with pytest.raises(ActividadAssetIncompleteError, match="construction date"):
+    with _refused(ActividadAssetIncompleteError, "used_building_requires_construction_date"):
         _charge(_asset(_linear("edificio-industrial"), basis="100000", condition=AcquiredCondition.USED))
 
 
@@ -263,9 +303,9 @@ def test_multi_shift_coefficient_follows_the_hours_formula() -> None:
     charge = _charge(_asset(_linear("maquinaria", shift_hours_per_day=Decimal("16")), basis="18000"))
 
     assert charge.amount == Decimal("3320.00")  # 18,000 x 24% - 18,000/18 = 4,320 - 1,000
-    with pytest.raises(ActividadAssetValidationError, match="more than one normal shift"):
+    with _refused(ActividadAssetValidationError, "multi_shift_requires_extra_shift"):
         _charge(_asset(_linear("maquinaria", shift_hours_per_day=Decimal("8")), basis="18000"))
-    with pytest.raises(ActividadAssetUnsupportedError, match="not enrolled for the simplified modality"):
+    with _refused(ActividadAssetUnsupportedError, "multi_shift_not_enrolled", regime="simplified"):
         _charge(_asset(_linear("maquinaria", _SIMPLIFIED, shift_hours_per_day=Decimal("16")), basis="18000"))
 
 
@@ -291,7 +331,7 @@ def test_reduced_size_acceleration_doubles_the_maximum_for_a_new_element() -> No
     )
 
     assert charge.amount == Decimal("733.81")
-    with pytest.raises(ActividadAssetUnsupportedError, match="reduced-size threshold"):
+    with _refused(ActividadAssetUnsupportedError, "reduced_size_turnover_reached"):
         _charge(
             _asset(
                 _linear("maquinaria", small_enterprise=_small_enterprise("10000000", made_available=_YEAR_START)),
@@ -304,7 +344,7 @@ def test_reduced_size_acceleration_doubles_the_maximum_for_a_new_element() -> No
             basis="36000",
         ),
     ).amount == Decimal("8640.00")  # 36,000 x 24%
-    with pytest.raises(ActividadAssetUnsupportedError, match="new elements"):
+    with _refused(ActividadAssetUnsupportedError, "reduced_size_acceleration_new_only"):
         _charge(
             _asset(
                 _linear("maquinaria", small_enterprise=_small_enterprise("100", made_available=_YEAR_START)),
@@ -381,8 +421,9 @@ def test_constant_percentage_applies_to_the_value_pending_at_the_start_of_the_ye
     assert first_partial.amount == Decimal("1512.33")  # 10,000 x 30% x 184/365 = 1,512.3288
     assert second_year.amount == Decimal("2100.00")  # (10,000 - 3,000) x 30%
     assert with_residual.amount == Decimal("2700.00")  # (10,000 - 1,000) x 30%
-    # In-year claims do not change the start-of-year pending value: 10,000 x 30% x 91/365.
-    assert quarter_after_claim.amount == Decimal("747.95")
+    # In-year claims do not change the start-of-year pending value: 10,000 x 30% accrues
+    # 739.726 by 1 April and 1,487.671 by 1 July, so the quarter is 1,487.67 - 739.73.
+    assert quarter_after_claim.amount == Decimal("747.94")
 
 
 def test_constant_percentage_amortizes_everything_pending_in_the_final_year() -> None:
@@ -439,9 +480,13 @@ def test_a_from_start_method_refuses_an_unattested_opening_amount() -> None:
 
 def test_constant_percentage_excludes_buildings_furniture_and_the_simplified_modality() -> None:
     for class_key in ("mobiliario", "edificio-industrial", "almacen-deposito", "util-herramienta"):
-        with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("RIS art. 5.2")):
+        with _refused(
+            ActividadAssetUnsupportedError, "method_excludes_buildings_and_furniture", provision="RIS art. 5.2"
+        ):
             _charge(_asset(_constant(class_key), basis="1000"))
-    with pytest.raises(ActividadAssetUnsupportedError, match=r"excluded by law.*rd-439-2007:art-30"):
+    with _refused(
+        ActividadAssetUnsupportedError, "method_excluded_by_law", rendered=r"excluded by law.*rd-439-2007:art-30"
+    ):
         _charge(_asset(_constant("maquinaria", regime=_SIMPLIFIED), basis="1000"))
 
 
@@ -468,7 +513,11 @@ def test_simplified_intangible_table_methods_refuse_with_the_sources_that_leave_
             digit_order=DigitOrder.DESCENDING,
         ),
     ):
-        with pytest.raises(ActividadAssetUnsupportedError, match=r"RIRPF art\. 30\.1a.*Orden of 27 March 1998"):
+        with _refused(
+            ActividadAssetUnsupportedError,
+            "simplified_intangible_table_method",
+            rendered=r"RIRPF art\. 30\.1a.*Orden of 27 March 1998",
+        ):
             _charge(_asset(election, basis="3000", kind=AssetKind.INTANGIBLE))
 
 
@@ -499,7 +548,7 @@ def test_sum_of_digits_period_lies_between_the_coefficient_and_the_maximum_perio
     # Machinery: 12% implies 8.33 years, so whole-year periods run from 9 to the 18-year maximum.
     assert _charge(_asset(_digits("maquinaria", 18), basis="171000")).amount == Decimal("18000.00")  # 171,000 x 18/171
     for period in (8, 19):
-        with pytest.raises(ActividadAssetValidationError, match="whole-year range"):
+        with _refused(ActividadAssetValidationError, "sum_of_digits_period_out_of_range"):
             _charge(_asset(_digits("maquinaria", period), basis="45000"))
 
 
@@ -518,7 +567,9 @@ def test_sum_of_digits_final_life_year_reaches_exactly_the_basis() -> None:
 
 def test_sum_of_digits_excludes_buildings_and_furniture() -> None:
     for class_key in ("edificio-comercial-administrativo-servicios-vivienda", "enseres-otros"):
-        with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("RIS art. 6.2")):
+        with _refused(
+            ActividadAssetUnsupportedError, "method_excludes_buildings_and_furniture", provision="RIS art. 6.2"
+        ):
             _charge(_asset(_digits(class_key, 20), basis="1000"))
 
 
@@ -548,14 +599,16 @@ def test_approved_plan_charges_its_annual_distribution_over_service_days() -> No
 
 
 def test_approved_plan_refusals() -> None:
-    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("RIS art. 7.8")):
+    with _refused(
+        ActividadAssetUnsupportedError, "approved_plan_not_yet_effective", rendered=re.escape("RIS art. 7.8")
+    ):
         _charge(_asset(_plan(submitted=date(2026, 1, 10)), basis="12000"))
     with pytest.raises(ActividadAssetValidationError, match="more than the amortizable basis"):
         _charge(_asset(_plan(amounts=((2025, "5000"), (2026, "8000"))), basis="12000"))
-    with pytest.raises(ActividadAssetUnsupportedError, match="no amortization to this tax year"):
+    with _refused(ActividadAssetUnsupportedError, "approved_plan_without_distribution"):
         _charge(_asset(_plan(amounts=((2026, "5000"),)), basis="12000"))
     simplified_plan = _plan().model_copy(update={"regime": _SIMPLIFIED})
-    with pytest.raises(ActividadAssetUnsupportedError, match="excluded by law"):
+    with _refused(ActividadAssetUnsupportedError, "method_excluded_by_law"):
         _charge(_asset(simplified_plan, basis="12000"))
 
 
@@ -571,7 +624,7 @@ def test_definite_life_intangible_amortizes_over_its_evidenced_life() -> None:
 
     assert _charge(asset).amount == Decimal("1825.00")  # 3,650 x 365/730
     assert _charge(asset, covered_until=date(2025, 4, 1)).amount == Decimal("450.00")  # 3,650 x 90/730
-    with pytest.raises(ActividadAssetValidationError, match="must end after"):
+    with _refused(ActividadAssetValidationError, "useful_life_must_end_after_service"):
         _charge(
             _asset(
                 _election(
@@ -607,7 +660,7 @@ def test_reduced_size_goodwill_and_indefinite_life_intangibles_deduct_150_percen
     # art. 103.1, the element need not be new, so acquired goodwill qualifies.
     assert goodwill.amount == Decimal("3000.00")
     assert indefinite.amount == Decimal("1500.00")
-    with pytest.raises(ActividadAssetUnsupportedError, match="reduced-size threshold"):
+    with _refused(ActividadAssetUnsupportedError, "reduced_size_turnover_reached"):
         _charge(
             _asset(
                 _election(
@@ -630,7 +683,7 @@ def test_indefinite_life_and_goodwill_are_limited_to_one_twentieth_in_both_modal
 
     assert indefinite.amount == Decimal("1000.00")  # 20,000 / 20
     assert goodwill.amount == Decimal("2000.00")  # 40,000 / 20
-    with pytest.raises(ActividadAssetUnsupportedError, match="not enrolled for material"):
+    with _refused(ActividadAssetUnsupportedError, "method_not_enrolled_for_kind", asset_kind="material"):
         _charge(_asset(_election(AmortizationMethod.GOODWILL), basis="40000"))
 
 
@@ -685,7 +738,7 @@ def test_research_development_free_and_building_methods() -> None:
     assert _charge(building).amount == Decimal("10000.00")  # 100,000 / 10 years
     with pytest.raises(ActividadAssetValidationError, match="remaining lawful basis"):
         _charge(machine, free_amount="10000.01")
-    with pytest.raises(ActividadAssetUnsupportedError, match="excludes buildings"):
+    with _refused(ActividadAssetUnsupportedError, "research_development_free_excludes_buildings"):
         _charge(
             _asset(
                 _election(
@@ -697,7 +750,7 @@ def test_research_development_free_and_building_methods() -> None:
             ),
             free_amount="1",
         )
-    with pytest.raises(ActividadAssetValidationError, match="building table class"):
+    with _refused(ActividadAssetValidationError, "research_development_building_requires_building_class"):
         _charge(
             _asset(
                 _election(
@@ -728,24 +781,27 @@ def test_charging_infrastructure_free_depreciation_window() -> None:
 
     assert _charge(charger(date(2025, 3, 1)), free_amount="2500").amount == Decimal("2500.00")
     assert _charge(charger(date(2024, 6, 1)), free_amount="1500").amount == Decimal("1500.00")
-    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("DA 18a.2")):
+    with _refused(
+        ActividadAssetUnsupportedError, "charging_infrastructure_period_not_enrolled", rendered=re.escape("DA 18a.2")
+    ):
         _charge(charger(date(2023, 6, 1)), free_amount="1500")
-    with pytest.raises(ActividadAssetUnsupportedError, match="new elements"):
+    with _refused(ActividadAssetUnsupportedError, "charging_infrastructure_new_only"):
         _charge(charger(date(2025, 3, 1), AcquiredCondition.USED), free_amount="100")
 
 
 @pytest.mark.parametrize(
-    ("method", "provision"),
+    ("method", "key", "provision"),
     [
-        (AmortizationMethod.JUSTIFIED_AMOUNT, "LIS art. 12.1.e"),
-        (AmortizationMethod.ENTITY_REGIME_FREE, "LIS art. 12.3.a and 12.3.d"),
+        (AmortizationMethod.JUSTIFIED_AMOUNT, "justified_amount_unvalidated", "LIS art. 12.1.e"),
+        (AmortizationMethod.ENTITY_REGIME_FREE, "entity_regime_not_individual", "LIS art. 12.3.a and 12.3.d"),
     ],
 )
 def test_statutory_methods_the_product_cannot_validate_refuse_with_their_provision(
     method: AmortizationMethod,
+    key: str,
     provision: str,
 ) -> None:
-    with pytest.raises(ActividadAssetUnsupportedError, match=provision):
+    with _refused(ActividadAssetUnsupportedError, key, rendered=provision):
         _charge(_asset(_election(method), basis="1000"))
 
 
@@ -773,7 +829,11 @@ def _vehicle(
 def test_a_vehicle_class_charges_only_on_a_declaration_that_proves_affectation() -> None:
     car = _linear("transporte-externo")
 
-    with pytest.raises(ActividadAssetIncompleteError, match="requires a vehicle affectation declaration"):
+    with _refused(
+        ActividadAssetIncompleteError,
+        "vehicle_affectation_required_for_class",
+        rendered="requires a vehicle affectation declaration",
+    ):
         _charge(_asset(car, basis="20000"))
     # External transport is 16%: 20,000 x 16% = 3,200.00 for a car used only for the activity.
     assert _charge(_asset(car, basis="20000", vehicle=_vehicle())).amount == Decimal("3200.00")
@@ -792,16 +852,28 @@ def test_a_vehicle_class_charges_only_on_a_declaration_that_proves_affectation()
 def test_a_vehicle_not_proven_affected_refuses_with_its_provision() -> None:
     car = _linear("transporte-externo")
     refusals = (
-        (_vehicle(private_use=VehiclePrivateUse.SHARED), "22.2.1"),
-        (_vehicle(private_use=VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME), "22.4"),
-        (_vehicle(VehicleCategory.MOTORCYCLE, VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME), "22.4"),
-        (_vehicle(in_books=False), "22.2.2"),
+        (_vehicle(private_use=VehiclePrivateUse.SHARED), "vehicle_shared_use", "22.2.1"),
+        (
+            _vehicle(private_use=VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME),
+            "vehicle_private_use_category_restricted",
+            "22.4",
+        ),
+        (
+            _vehicle(VehicleCategory.MOTORCYCLE, VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME),
+            "vehicle_private_use_category_restricted",
+            "22.4",
+        ),
+        (_vehicle(in_books=False), "vehicle_missing_from_books", "22.2.2"),
     )
-    for declaration, provision in refusals:
-        with pytest.raises(ActividadAssetUnsupportedError, match=re.escape(provision)):
+    for declaration, key, provision in refusals:
+        with _refused(ActividadAssetUnsupportedError, key, rendered=re.escape(provision)):
             _charge(_asset(car, basis="20000", vehicle=declaration))
     # Simplified modality: the transport group is flagged too.
-    with pytest.raises(ActividadAssetIncompleteError, match="requires a vehicle affectation declaration"):
+    with _refused(
+        ActividadAssetIncompleteError,
+        "vehicle_affectation_required_for_class",
+        rendered="requires a vehicle affectation declaration",
+    ):
         _charge(_asset(_linear("transporte", _SIMPLIFIED), basis="20000"))
 
 
@@ -825,16 +897,18 @@ def test_electric_vehicle_free_depreciation_needs_an_affected_new_vehicle_in_the
     charged = _charge(_asset(election, basis="30000", vehicle=electric), free_amount="30000")
 
     assert charged.amount == Decimal("30000.00")
-    with pytest.raises(ActividadAssetIncompleteError, match="annex II propulsion"):
+    with _refused(ActividadAssetIncompleteError, "electric_vehicle_propulsion_required"):
         _charge(_asset(election, basis="30000", vehicle=_vehicle()), free_amount="100")
-    with pytest.raises(ActividadAssetUnsupportedError, match="new vehicles"):
+    with _refused(ActividadAssetUnsupportedError, "electric_vehicle_new_only"):
         _charge(
             _asset(election, basis="30000", vehicle=electric, condition=AcquiredCondition.USED),
             free_amount="100",
         )
-    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("DA 18a.1")):
+    with _refused(
+        ActividadAssetUnsupportedError, "electric_vehicle_period_not_enrolled", rendered=re.escape("DA 18a.1")
+    ):
         _charge(_asset(election, basis="30000", vehicle=electric, in_service=date(2023, 6, 1)), free_amount="100")
-    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("22.2.1")):
+    with _refused(ActividadAssetUnsupportedError, "vehicle_shared_use", rendered=re.escape("22.2.1")):
         shared = _vehicle(private_use=VehiclePrivateUse.SHARED, propulsion=ElectricPropulsion.BEV)
         _charge(_asset(election, basis="30000", vehicle=shared), free_amount="100")
 
@@ -904,12 +978,12 @@ def test_job_creating_free_depreciation_caps_the_investment_by_the_workforce_inc
 def test_job_creating_free_depreciation_refuses_each_unmet_condition() -> None:
     machine = _asset(_employment(), basis="200000", in_service=date(2025, 3, 1))
 
-    with pytest.raises(ActividadAssetIncompleteError, match="average workforce of 2027 is not declared"):
+    with _refused(ActividadAssetIncompleteError, "workforce_year_not_declared", year=2027):
         _charge(machine, free_amount="1", workforce=tuple(item for item in _GROWING if item.year != 2027))
-    with pytest.raises(ActividadAssetIncompleteError, match="average workforce of 2024 is not declared"):
+    with _refused(ActividadAssetIncompleteError, "workforce_year_not_declared", year=2024):
         _charge(machine, free_amount="1")
     flat = _workforce(*((year, "10.00", _OBSERVED) for year in range(2024, 2029)))
-    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("does not exceed")):
+    with _refused(ActividadAssetUnsupportedError, "workforce_increase_not_reached"):
         _charge(machine, free_amount="1", workforce=flat)
     lost = _workforce(
         (2024, "10.00", _OBSERVED),
@@ -918,9 +992,9 @@ def test_job_creating_free_depreciation_refuses_each_unmet_condition() -> None:
         (2027, "11.00", _COMMITTED),
         (2028, "11.00", _COMMITTED),
     )
-    with pytest.raises(ActividadAssetUnsupportedError, match="not kept for the further 24 months"):
+    with _refused(ActividadAssetUnsupportedError, "workforce_increase_not_kept"):
         _charge(machine, free_amount="1", workforce=lost)
-    with pytest.raises(ActividadAssetUnsupportedError, match="new elements"):
+    with _refused(ActividadAssetUnsupportedError, "job_creation_new_only"):
         _charge(
             _asset(_employment(), basis="200000", in_service=date(2025, 3, 1), condition=AcquiredCondition.USED),
             free_amount="1",
@@ -931,9 +1005,11 @@ def test_job_creating_free_depreciation_refuses_each_unmet_condition() -> None:
         authority_class_key="maquinaria",
         small_enterprise=_small_enterprise("12000000", made_available=date(2025, 2, 15)),
     )
-    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("LIS art. 101.1")):
+    with _refused(
+        ActividadAssetUnsupportedError, "reduced_size_turnover_reached", rendered=re.escape("LIS art. 101.1")
+    ):
         _charge(_asset(large, basis="200000", in_service=date(2025, 3, 1)), free_amount="1", workforce=_GROWING)
-    with pytest.raises(ActividadAssetUnsupportedError, match="excluded by law for intangible"):
+    with _refused(ActividadAssetUnsupportedError, "method_excluded_by_law", asset_kind="intangible"):
         _charge(
             _asset(
                 _election(
@@ -1048,14 +1124,15 @@ def test_renewable_free_depreciation_charges_a_2025_installation_up_to_the_inves
 def test_renewable_free_depreciation_refuses_each_unmet_condition() -> None:
     def refused(
         election: ActivityAssetAmortizationElection,
-        pattern: str,
+        key: str,
         *,
         in_service: date = date(2025, 2, 1),
+        rendered: str | None = None,
     ) -> None:
-        with pytest.raises(ActividadAssetUnsupportedError, match=pattern):
+        with _refused(ActividadAssetUnsupportedError, key, rendered=rendered):
             _charge(_asset(election, basis="40000", in_service=in_service), free_amount="1", workforce=_KEPT)
 
-    refused(_renewable(class_key="edificio-industrial"), "buildings cannot")
+    refused(_renewable(class_key="edificio-industrial"), "renewable_excludes_buildings")
     refused(
         _renewable(
             _renewable_evidence(
@@ -1063,15 +1140,27 @@ def test_renewable_free_depreciation_refuses_each_unmet_condition() -> None:
                 RenewableDocumentationKind.THERMAL_PROCESS_REGISTRATION,
             ),
         ),
-        "fossil energy",
+        "renewable_thermal_requires_fossil_replacement",
+        rendered="fossil energy",
     )
-    refused(_renewable(_renewable_evidence(building_code=True)), re.escape("DA 17a.5"))
-    refused(_renewable(_renewable_evidence(made_available=date(2022, 10, 19))), "made available before")
-    refused(_renewable(_renewable_evidence(made_available=date(2024, 1, 10))), "enrols", in_service=date(2024, 6, 1))
+    refused(
+        _renewable(_renewable_evidence(building_code=True)),
+        "renewable_mandatory_installation_unsupported",
+        rendered=re.escape("DA 17a.5"),
+    )
+    refused(
+        _renewable(_renewable_evidence(made_available=date(2022, 10, 19))),
+        "renewable_made_available_before_admitted_date",
+    )
+    refused(
+        _renewable(_renewable_evidence(made_available=date(2024, 1, 10))),
+        "renewable_entry_year_not_enrolled",
+        in_service=date(2024, 6, 1),
+    )
     shrinking = _workforce((2024, "10.00", _OBSERVED), (2025, "9.00", _OBSERVED), (2026, "9.50", _COMMITTED))
-    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("LIS DA 17a.1")):
+    with _refused(ActividadAssetUnsupportedError, "workforce_fell_below", rendered=re.escape("LIS DA 17a.1")):
         _charge(_asset(_renewable(), basis="40000", in_service=date(2025, 2, 1)), free_amount="1", workforce=shrinking)
-    with pytest.raises(ActividadAssetUnsupportedError, match="excluded by law for intangible"):
+    with _refused(ActividadAssetUnsupportedError, "method_excluded_by_law", asset_kind="intangible"):
         _charge(
             _asset(
                 _renewable(class_key="equipo-proceso-informacion"),
@@ -1111,7 +1200,7 @@ def test_renewable_free_depreciation_is_taken_only_in_the_entry_year() -> None:
         in_service=date(2024, 6, 1),
     )
 
-    with pytest.raises(ActividadAssetUnsupportedError, match="only in the tax period the installation enters service"):
+    with _refused(ActividadAssetUnsupportedError, "renewable_only_in_entry_period"):
         resolve_activity_asset_schedule_authority(
             widened,
             tax_year=2025,
@@ -1141,9 +1230,9 @@ def test_methods_the_workforce_does_not_condition_never_read_it() -> None:
 
 
 def test_unknown_class_and_kind_mismatch_fail_closed() -> None:
-    with pytest.raises(ActividadAssetUnsupportedError, match="no enrolled group classification"):
+    with _refused(ActividadAssetUnsupportedError, "table_class_without_group_classification"):
         _charge(_asset(_linear("caller-invented-class"), basis="1000"))
-    with pytest.raises(ActividadAssetUnsupportedError, match="does not classify intangible assets"):
+    with _refused(ActividadAssetUnsupportedError, "table_class_wrong_kind", asset_kind="intangible"):
         _charge(_asset(_linear("mobiliario"), basis="1000", kind=AssetKind.INTANGIBLE))
 
 
@@ -1166,7 +1255,7 @@ def test_an_absent_admission_parameter_fails_closed() -> None:
         },
     )
 
-    with pytest.raises(ActividadAssetUnsupportedError, match="authority parameter"):
+    with _refused(ActividadAssetUnsupportedError, "parameter_absent"):
         resolve_activity_asset_schedule_authority(
             stripped,
             tax_year=2025,
@@ -1231,6 +1320,7 @@ def _operations(
     return (
         ActivityAssetOperations(
             repository=repository,
+            ledger=MemoryLedger(_acquisition()),
             forecast_operation=forecast,
             taxpayer_modality=lambda: DirectEstimationRegime.NORMAL,
         ),
@@ -1297,8 +1387,9 @@ def test_an_undeclared_vehicle_refuses_with_its_correction_action_until_correcte
     assert verdict.missing_argument_names == ("revision_json",)
     assert verdict.evidence[0].values["asset_id"] == "undeclared-car"
     assert verdict.evidence[0].values["revision_id"] == car.revision_id
-    assert "undeclared-car" in str(refused.value)
-    assert "aeat " not in str(refused.value)
+    assert refused.value.context == {"asset_id": "undeclared-car", "class_key": "transporte-externo"}
+    assert "undeclared-car" in resolve_error_message(refused.value, locale="en")
+    assert "aeat " not in resolve_error_message(refused.value, locale="en")
     corrected = car.model_copy(
         update={"revision_number": 2, "supersedes_revision_id": car.revision_id, "vehicle_affectation": _vehicle()},
     )
@@ -1360,7 +1451,7 @@ def test_a_forecast_cannot_supersede_a_claim_the_asset_does_not_have() -> None:
     machine = _asset(_linear("maquinaria"), basis="1000", asset_id="no-claims-machine")
     operations.create(machine)
 
-    with pytest.raises(ActividadAssetValidationError, match="not an effective claim of this asset"):
+    with pytest.raises(ActividadAssetValidationError, match="superseded_claim_not_effective"):
         operations.forecast(
             asset_id=machine.asset_id,
             covered_from=_YEAR_START,
@@ -1423,7 +1514,7 @@ def test_a_hand_edited_forecast_is_refused_at_record_time() -> None:
     forecast = operations.forecast(asset_id=machine.asset_id, covered_from=_YEAR_START, covered_until=_YEAR_END)
     inflated = forecast.model_copy(update={"amount": Decimal("5000.00")})
 
-    with pytest.raises(ActividadAssetValidationError, match="no longer matches"):
+    with pytest.raises(ActividadAssetValidationError, match="forecast_no_longer_matches"):
         operations.record_claim(inflated, creating_operation="test.inflated")
 
 
