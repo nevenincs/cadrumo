@@ -88,7 +88,10 @@ if (process.env.CADRUMO_TEST_HEADLESS_SESSION === "1") {
 const invalid = run(host, ["--gui", "--help"]);
 assert.equal(invalid.status, 64);
 assert.equal(JSON.parse(invalid.stderr).code, "invalid_arguments");
-const records = readFileSync(resolve(cwd, "storage/logs/cadrumo-native.jsonl"), "utf8")
+const records = readFileSync(
+  resolve(cwd, "storage/logs/cadrumo-native.jsonl"),
+  "utf8",
+)
   .trim()
   .split("\n")
   .map(JSON.parse);
