@@ -141,9 +141,9 @@ reviewed_by = "operator"
 notes = """\
 Declaraciones, autoliquidaciones y comunicaciones complementarias o sustitutivas. Filed \
 within the original presentation window or extemporaneously while the right to determine \
-the deuda has not prescribed. Complementarias are used when the new autoliquidacion yields \
+the deuda has not prescribed. Complementarias are used when the new autoliquidación yields \
 a higher importe a ingresar or a lower devolution / compensation; otherwise art-120 \
-rectificacion procedures apply. Loss-of-incentive scenarios (failed deduction conditions) \
+rectificación procedures apply. Loss-of-incentive scenarios (failed deduction conditions) \
 are reported as a complementaria for the period of the breach with intereses de demora."""
 required_text = [
     "Los obligados tributarios podrán presentar autoliquidaciones complementarias",

@@ -11,7 +11,7 @@ effective_from = 2004-03-10
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "TRLRHL art 78: naturaleza y hecho imponible del Impuesto sobre Actividades Economicas (IAE)."
+notes = "TRLRHL art 78: naturaleza y hecho imponible del Impuesto sobre Actividades Económicas (IAE)."
 required_text = [
     "naturaleza",
     "hecho imponible",
@@ -31,7 +31,7 @@ effective_from = 2004-03-10
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "TRLRHL art 82: exenciones del IAE. Estaran exentos los sujetos pasivos cuyo importe neto de la cifra de negocios sea inferior a 1.000.000 EUR."
+notes = "TRLRHL art 82: exenciones del IAE. Estarán exentos los sujetos pasivos cuyo importe neto de la cifra de negocios sea inferior a 1.000.000 EUR."
 required_text = [
     "exentos del impuesto",
     "importe neto de la cifra de negocios",

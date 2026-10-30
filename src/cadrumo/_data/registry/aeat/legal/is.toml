@@ -1556,7 +1556,7 @@ effective_from = 2002-05-25
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against official BOE-A-2002-9969 consolidated art. 15; corpus excerpt bundled"
-notes = "Concierto Economico Pais Vasco art 15: Impuesto sobre Sociedades taxpayers that tribute jointly to the Diputaciones Forales and the Administracion del Estado allocate the tax in proportion to the volume of operations in each territory, expressed as a percentage. Grounds the Modelo 200 Estado/foral percentage profile fact."
+notes = "Concierto Económico País Vasco art 15: Impuesto sobre Sociedades taxpayers that tribute jointly to the Diputaciones Forales and the Administración del Estado allocate the tax in proportion to the volume of operations in each territory, expressed as a percentage. Grounds the Modelo 200 Estado/foral percentage profile fact."
 required_text = [
     "Impuesto sobre Sociedades",
     "Diputaciones Forales",
@@ -1578,7 +1578,7 @@ effective_from = 2003-07-17
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against official BOE-A-1990-31117 consolidated art. 19; corpus excerpt bundled"
-notes = "Convenio Economico Navarra art 19: Impuesto sobre Sociedades taxpayers operating in common and Navarra territories tribute jointly to both Administrations in proportion to operation volume, expressed as a percentage. Grounds the Modelo 200 Estado/Navarra percentage profile fact."
+notes = "Convenio Económico Navarra art 19: Impuesto sobre Sociedades taxpayers operating in common and Navarra territories tribute jointly to both Administrations in proportion to operation volume, expressed as a percentage. Grounds the Modelo 200 Estado/Navarra percentage profile fact."
 required_text = [
     "Comunidad Foral de Navarra",
     "Impuesto sobre Sociedades",

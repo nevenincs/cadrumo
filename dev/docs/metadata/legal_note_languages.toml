@@ -15,23 +15,23 @@ text = "LIRPF art 101: importe de los pagos a cuenta. Base sustantiva del régim
 
 [[legal."ley-35-2006:art-103"]]
 language = "es"
-text = "LIRPF art 103: devolucion derivada de la normativa del tributo. Establece que cuando la suma de retenciones, ingresos a cuenta, pagos fraccionados y deducciones art 81 / 81 bis supera la cuota resultante de la autoliquidación, la Administración práctica liquidacion provisional en seis meses y devuelve de oficio el exceso. Base sustantiva del Modelo 100 casilla 0670 (resultado de la declaración) cuando es a devolver."
+text = "LIRPF art 103: devolución derivada de la normativa del tributo. Establece que cuando la suma de retenciones, ingresos a cuenta, pagos fraccionados y deducciones art 81 / 81 bis supera la cuota resultante de la autoliquidación, la Administración práctica liquidación provisional en seis meses y devuelve de oficio el exceso. Base sustantiva del Modelo 100 casilla 0670 (resultado de la declaración) cuando es a devolver."
 
 [[legal."ley-35-2006:art-14.2.m"]]
 language = "es"
-text = "LIRPF art 14.2.m: imputación temporal de rendimientos del trabajo en especie por entrega de acciones o participaciones de empresa emergente que cumplen art 42.3.f pero no estan exentos por superar la cuantía prevista. Se imputan al admitirse a negociacion, salir del patrimonio del contribuyente, o cumplirse el plazo de diez años."
+text = "LIRPF art 14.2.m: imputación temporal de rendimientos del trabajo en especie por entrega de acciones o participaciones de empresa emergente que cumplen art 42.3.f pero no están exentos por superar la cuantía prevista. Se imputan al admitirse a negociación, salir del patrimonio del contribuyente, o cumplirse el plazo de diez años."
 
 [[legal."ley-35-2006:art-16"]]
 language = "es"
-text = "LIRPF art 16: métodos de determinación de la base imponible. Nombra la estimación directa como método general y declara sus dos modalidades, normal y simplificada, que es exactamente lo que irpf-regime-vocabulary cita para directa_normal y directa_simplificada. El artículo remite al 28 para el calculo del rendimiento, de ahi que ambos se citen juntos."
+text = "LIRPF art 16: métodos de determinación de la base imponible. Nombra la estimación directa como método general y declara sus dos modalidades, normal y simplificada, que es exactamente lo que irpf-regime-vocabulary cita para directa_normal y directa_simplificada. El artículo remite al 28 para el cálculo del rendimiento, de ahí que ambos se citen juntos."
 
 [[legal."ley-35-2006:art-27"]]
 language = "es"
-text = "LIRPF art 27: define los rendimientos integros de actividades económicas por la ordenacion por cuenta propia de medios de produccion o recursos humanos y concreta el arrendamiento de inmuebles como actividad económica cuando existe al menos una persona empleada a jornada completa."
+text = "LIRPF art 27: define los rendimientos íntegros de actividades económicas por la ordenación por cuenta propia de medios de producción o recursos humanos y concreta el arrendamiento de inmuebles como actividad económica cuando existe al menos una persona empleada a jornada completa."
 
 [[legal."ley-35-2006:art-28"]]
 language = "es"
-text = "LIRPF art 28: fija las reglas generales de calculo del rendimiento neto de actividades económicas, remitiendo a las normas del Impuesto sobre Sociedades y separando las ganancias o pérdidas de elementos patrimoniales afectos."
+text = "LIRPF art 28: fija las reglas generales de cálculo del rendimiento neto de actividades económicas, remitiendo a las normas del Impuesto sobre Sociedades y separando las ganancias o pérdidas de elementos patrimoniales afectos."
 
 [[legal."ley-35-2006:art-30"]]
 language = "es"
@@ -39,7 +39,7 @@ text = "LIRPF art 30: regula la determinación del rendimiento neto de actividad
 
 [[legal."ley-35-2006:art-31"]]
 language = "es"
-text = "LIRPF art 31: regula la determinación del rendimiento neto en estimación objetiva, su renuncia o exclusion, sus límites reglamentarios y el uso de signos, índices o módulos."
+text = "LIRPF art 31: regula la determinación del rendimiento neto en estimación objetiva, su renuncia o exclusión, sus límites reglamentarios y el uso de signos, índices o módulos."
 
 [[legal."ley-35-2006:art-32"]]
 language = "es"
@@ -47,11 +47,11 @@ text = "LIRPF art 32: regula las reducciones aplicables a determinados rendimien
 
 [[legal."ley-35-2006:art-33"]]
 language = "es"
-text = "LIRPF art 33: define el concepto de ganancias y pérdidas patrimoniales, identifica supuestos sin alteracion patrimonial, exenciones y pérdidas no computables. Base legal de la fundacion de ganancias y pérdidas patrimoniales en Modelo 100."
+text = "LIRPF art 33: define el concepto de ganancias y pérdidas patrimoniales, identifica supuestos sin alteración patrimonial, exenciones y pérdidas no computables. Base legal de la fundación de ganancias y pérdidas patrimoniales en Modelo 100."
 
 [[legal."ley-35-2006:art-34"]]
 language = "es"
-text = "LIRPF art 34: fija la norma general para calcular el importe de ganancias o pérdidas patrimoniales por diferencia entre valores de adquisicion y transmisión, o por valor de mercado en otros supuestos."
+text = "LIRPF art 34: fija la norma general para calcular el importe de ganancias o pérdidas patrimoniales por diferencia entre valores de adquisición y transmisión, o por valor de mercado en otros supuestos."
 
 [[legal."ley-35-2006:art-37"]]
 language = "es"
@@ -355,15 +355,15 @@ text = "Fase 2a agraria: rendimiento neto minorado. Se obtiene deduciendo del re
 
 [[legal."orden-hfp-1172-2022:anexo-i-instruccion-2-3"]]
 language = "es"
-text = "Fase 3a agraria: rendimiento neto de módulos. Sobre el rendimiento neto minorado se aplican en secuencia, cuando correspondan, los índices correctores de las letras a) a h), cada uno sobre el rendimiento ya rectificado por los anteriores, con sus incompatibilidades: el índice por personal asalariado no se aplica cuando procede el de medios de produccion ajenos, y a las actividades forestales solo les es aplicable el índice de la letra h). Base de la casilla 1548 del Modelo 100 del ejercicio 2023 (índices declarados en las casillas 1540 a 1547)."
+text = "Fase 3a agraria: rendimiento neto de módulos. Sobre el rendimiento neto minorado se aplican en secuencia, cuando correspondan, los índices correctores de las letras a) a h), cada uno sobre el rendimiento ya rectificado por los anteriores, con sus incompatibilidades: el índice por personal asalariado no se aplica cuando procede el de medios de producción ajenos, y a las actividades forestales solo les es aplicable el índice de la letra h). Base de la casilla 1548 del Modelo 100 del ejercicio 2023 (índices declarados en las casillas 1540 a 1547)."
 
 [[legal."orden-hfp-1172-2022:anexo-i-instruccion-3"]]
 language = "es"
-text = "Fase 4a agraria: reducción agricultores jovenes. Los agricultores jovenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de módulos de su actividad agraria durante los períodos impositivos cerrados en los cinco años siguientes a su primera instalación como titulares de una explotación prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2023 la disposición adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2023."
+text = "Fase 4a agraria: reducción agricultores jóvenes. Los agricultores jóvenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de módulos de su actividad agraria durante los períodos impositivos cerrados en los cinco años siguientes a su primera instalación como titulares de una explotación prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2023 la disposición adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2023."
 
 [[legal."orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-1"]]
 language = "es"
-text = "Fase 3a: índice corrector para empresas de pequena dimension. Se aplica el índice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona física, un solo local, no más de un vehículo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del índice 0,90)."
+text = "Fase 3a: índice corrector para empresas de pequeña dimensión. Se aplica el índice que corresponda (0,70/0,75/0,80 según la población del municipio, o 0,90 si además hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona física, un solo local, no más de un vehículo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del índice 0,90)."
 
 [[legal."orden-hfp-1172-2022:anexo-ii-instruccion-2-3-b-2"]]
 language = "es"
@@ -375,7 +375,7 @@ text = "Fase 3a: índice corrector por inicio de nuevas actividades. Aplica al c
 
 [[legal."orden-hfp-1172-2022:anexo-ii-instruccion-2-3-incompatibilidades"]]
 language = "es"
-text = "Fase 3a: incompatibilidades entre los índices correctores. El índice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los índices correctores especiales (a.2 a a.5), y cuando resulte aplicable el índice b.1 tampoco se aplica el índice corrector de exceso (b.3); el índice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si."
+text = "Fase 3a: incompatibilidades entre los índices correctores. El índice corrector para empresas de pequeña dimensión (b.1) nunca se aplica a las actividades que tienen asignados los índices correctores especiales (a.2 a a.5), y cuando resulte aplicable el índice b.1 tampoco se aplica el índice corrector de exceso (b.3); el índice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre sí."
 
 [[legal."orden-hfp-1172-2022:art-4"]]
 language = "es"
@@ -387,11 +387,11 @@ text = "Reducción general del 10 por ciento del rendimiento neto de módulos pa
 
 [[legal."orden-hfp-1172-2022:da-3"]]
 language = "es"
-text = "Medida excepcional para 2023: el rendimiento neto previo de las actividades agrícolas y ganaderas en estimación objetiva, calculado según la instruccion 2.1 del anexo I de esta orden, puede reducirse en el 35 por ciento del precio de adquisicion del gasoleo agrícola y en el 15 por ciento del de los fertilizantes adquiridos y facturados en 2023. Base de las casillas 0158 y 0159 que minoran el rendimiento neto previo al obtener el rendimiento neto minorado (casilla 1539) del Modelo 100 del ejercicio 2023."
+text = "Medida excepcional para 2023: el rendimiento neto previo de las actividades agrícolas y ganaderas en estimación objetiva, calculado según la instrucción 2.1 del anexo I de esta orden, puede reducirse en el 35 por ciento del precio de adquisición del gasóleo agrícola y en el 15 por ciento del de los fertilizantes adquiridos y facturados en 2023. Base de las casillas 0158 y 0159 que minoran el rendimiento neto previo al obtener el rendimiento neto minorado (casilla 1539) del Modelo 100 del ejercicio 2023."
 
 [[legal."orden-hfp-1172-2022:da-7"]]
 language = "es"
-text = "Medida excepcional para 2022 (Orden HFP/1172/2022, en vigor el día siguiente a su publicación; rige el período impositivo 2022, cuyo devengo es posterior): el rendimiento neto previo de las actividades agrícolas y ganaderas en estimación objetiva, calculado según la instruccion 2.1 del anexo I de la Orden HFP/1335/2021, puede reducirse en el 35 por ciento del precio de adquisicion del gasoleo agrícola y en el 15 por ciento del de los fertilizantes adquiridos y facturados en 2022. Apartado 2: los índices correctores por piensos adquiridos a terceros y por regadio con energía electrica de la Orden HFP/1172/2022 sustituyen en 2022 a los de la Orden HFP/1335/2021. Base de las casillas 0158 y 0159 que minoran el rendimiento neto previo al obtener el rendimiento neto minorado (casilla 1539) del Modelo 100 del ejercicio 2022."
+text = "Medida excepcional para 2022 (Orden HFP/1172/2022, en vigor el día siguiente a su publicación; rige el período impositivo 2022, cuyo devengo es posterior): el rendimiento neto previo de las actividades agrícolas y ganaderas en estimación objetiva, calculado según la instrucción 2.1 del anexo I de la Orden HFP/1335/2021, puede reducirse en el 35 por ciento del precio de adquisición del gasóleo agrícola y en el 15 por ciento del de los fertilizantes adquiridos y facturados en 2022. Apartado 2: los índices correctores por piensos adquiridos a terceros y por regadío con energía eléctrica de la Orden HFP/1172/2022 sustituyen en 2022 a los de la Orden HFP/1335/2021. Base de las casillas 0158 y 0159 que minoran el rendimiento neto previo al obtener el rendimiento neto minorado (casilla 1539) del Modelo 100 del ejercicio 2022."
 
 [[legal."orden-hfp-1172-2022:da-8"]]
 language = "es"
@@ -431,11 +431,11 @@ text = "Fase 2a agraria: rendimiento neto minorado. Se obtiene deduciendo del re
 
 [[legal."orden-hfp-1359-2023:anexo-i-instruccion-2-3"]]
 language = "es"
-text = "Fase 3a agraria: rendimiento neto de módulos. Sobre el rendimiento neto minorado se aplican en secuencia, cuando correspondan, los índices correctores de las letras a) a h), cada uno sobre el rendimiento ya rectificado por los anteriores, con sus incompatibilidades: el índice por personal asalariado no se aplica cuando procede el de medios de produccion ajenos, y a las actividades forestales solo les es aplicable el índice de la letra h). Base de la casilla 1548 del Modelo 100 del ejercicio 2024 (índices declarados en las casillas 1540 a 1547)."
+text = "Fase 3a agraria: rendimiento neto de módulos. Sobre el rendimiento neto minorado se aplican en secuencia, cuando correspondan, los índices correctores de las letras a) a h), cada uno sobre el rendimiento ya rectificado por los anteriores, con sus incompatibilidades: el índice por personal asalariado no se aplica cuando procede el de medios de producción ajenos, y a las actividades forestales solo les es aplicable el índice de la letra h). Base de la casilla 1548 del Modelo 100 del ejercicio 2024 (índices declarados en las casillas 1540 a 1547)."
 
 [[legal."orden-hfp-1359-2023:anexo-i-instruccion-3"]]
 language = "es"
-text = "Fase 4a agraria: reducción agricultores jovenes. Los agricultores jovenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de módulos de su actividad agraria durante los períodos impositivos cerrados en los cinco años siguientes a su primera instalación como titulares de una explotación prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2024 la disposición adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2024."
+text = "Fase 4a agraria: reducción agricultores jóvenes. Los agricultores jóvenes o asalariados agrarios pueden reducir en un 25 por ciento el rendimiento neto de módulos de su actividad agraria durante los períodos impositivos cerrados en los cinco años siguientes a su primera instalación como titulares de una explotación prioritaria, acreditando un plan de mejora. Desarrolla para el ejercicio 2024 la disposición adicional sexta de la Ley del IRPF; base de la casilla 1551 del Modelo 100 del ejercicio 2024."
 
 [[legal."orden-hfp-1359-2023:art-4"]]
 language = "es"
@@ -447,7 +447,7 @@ text = "Reducción general del 5 por ciento del rendimiento neto de módulos par
 
 [[legal."orden-hfp-1359-2023:da-3"]]
 language = "es"
-text = "Medida excepcional para 2024: el rendimiento neto previo de las actividades agrícolas y ganaderas en estimación objetiva, calculado según la instruccion 2.1 del anexo I de esta orden, puede reducirse en el 35 por ciento del precio de adquisicion del gasoleo agrícola y en el 15 por ciento del de los fertilizantes adquiridos y facturados en 2024. Base de las casillas 0158 y 0159 que minoran el rendimiento neto previo al obtener el rendimiento neto minorado (casilla 1539) del Modelo 100 del ejercicio 2024."
+text = "Medida excepcional para 2024: el rendimiento neto previo de las actividades agrícolas y ganaderas en estimación objetiva, calculado según la instrucción 2.1 del anexo I de esta orden, puede reducirse en el 35 por ciento del precio de adquisición del gasóleo agrícola y en el 15 por ciento del de los fertilizantes adquiridos y facturados en 2024. Base de las casillas 0158 y 0159 que minoran el rendimiento neto previo al obtener el rendimiento neto minorado (casilla 1539) del Modelo 100 del ejercicio 2024."
 
 [[legal."orden-hfp-1359-2023:da-5"]]
 language = "es"
@@ -1102,11 +1102,11 @@ text = "Esa mutabilidad es la razon de que la geografia se cite siempre con cons
 
 [[legal."orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]]
 language = "es"
-text = "Fase 3a: incompatibilidades entre los indices correctores."
+text = "Fase 3a: incompatibilidades entre los índices correctores."
 
 [[legal."orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]]
 language = "es"
-text = "El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si."
+text = "El índice corrector para empresas de pequeña dimensión (b.1) nunca se aplica a las actividades que tienen asignados los índices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el índice b.1 tampoco se aplica el índice corrector de exceso (b.3); el índice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre sí."
 
 [[legal."rd-1065-2007:art-32"]]
 language = "es"
@@ -1351,3 +1351,43 @@ text = "LIRPF disposición transitoria 18ª: régimen transitorio de la deducci�
 [[legal."ley-35-2006:dt-9"]]
 language = "es"
 text = "LIRPF disposición transitoria 9ª: régimen transitorio (coeficientes de abatimiento) de las ganancias patrimoniales derivadas de elementos patrimoniales adquiridos antes del 31-12-1994, con el límite acumulado de 400.000 € de valor de transmisión. Base legal de la reducción DT-9ª en las casillas de ganancia patrimonial por transmisión de inmuebles en Modelo 100."
+
+[[legal."ley-12-2002:art-15"]]
+language = "es"
+text = "Concierto Económico País Vasco"
+
+[[legal."ley-12-2002:art-15"]]
+language = "es"
+text = "Diputaciones Forales"
+
+[[legal."ley-12-2002:art-15"]]
+language = "es"
+text = "Administración del Estado"
+
+[[legal."ley-28-1990:art-19"]]
+language = "es"
+text = "Convenio Económico Navarra"
+
+[[legal."rdl-2-2004:art-78"]]
+language = "es"
+text = "naturaleza y hecho imponible del Impuesto sobre Actividades Económicas"
+
+[[legal."rdl-2-2004:art-82"]]
+language = "es"
+text = "exenciones del IAE. Estarán exentos los sujetos pasivos cuyo importe neto de la cifra de negocios sea inferior a 1.000.000 EUR."
+
+[[legal."ley-58-2003:art-122"]]
+language = "es"
+text = "Declaraciones, autoliquidaciones y comunicaciones complementarias o sustitutivas."
+
+[[legal."ley-58-2003:art-122"]]
+language = "es"
+text = "Complementarias"
+
+[[legal."ley-58-2003:art-122"]]
+language = "es"
+text = "autoliquidación"
+
+[[legal."ley-58-2003:art-122"]]
+language = "es"
+text = "rectificación"
