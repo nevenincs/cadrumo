@@ -545,7 +545,11 @@ def acquisition_candidates(
     Returns:
         One candidate per row.  What the ledger does not know is null, never zero.
     """
-    owned = {revision.acquisition.observed_transaction_id for revision in current_revisions(history.revisions).values()}
+    owned = {
+        transaction_id
+        for revision in current_revisions(history.revisions).values()
+        for transaction_id in revision.acquisition_transaction_ids
+    }
     rows = (
         row
         for row in catalogue.transactions.values()

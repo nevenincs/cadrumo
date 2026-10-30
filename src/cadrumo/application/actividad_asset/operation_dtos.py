@@ -105,10 +105,10 @@ def _domain_charge_fields(snapshot: BaseModel) -> dict[str, object]:
 class AcquisitionLineageSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    observed_transaction_id: TransactionId
+    observed_transaction_id: TransactionId | None = None
     observed_lineage_event_id: Hex64Str | None = None
-    invoice_evidence_id: str = Field(min_length=1, max_length=256)
-    evidence_fingerprint: Hex64Str
+    invoice_evidence_id: str = Field(max_length=256)
+    evidence_fingerprint: Hex64Str | None = None
 
     @classmethod
     def from_domain(cls, value: AcquisitionLineageReference) -> Self:
@@ -495,6 +495,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
     acquisition: AcquisitionLineageSnapshot
     acquisition_shape: AcquisitionShape
     further_acquisitions: tuple[FurtherAcquisitionSnapshot, ...] = ()
+    declared_acquisition_date: date | None = None
     asset_kind: AssetKind
     basis: ActivityAssetBasisSnapshot
     residual_value: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
@@ -519,6 +520,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             further_acquisitions=tuple(
                 FurtherAcquisitionSnapshot.from_domain(row) for row in value.further_acquisitions
             ),
+            declared_acquisition_date=value.declared_acquisition_date,
             asset_kind=value.asset_kind,
             basis=ActivityAssetBasisSnapshot.from_domain(value.basis),
             residual_value=project_scalar(value.residual_value),
@@ -541,6 +543,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             acquisition=self.acquisition.to_domain(),
             acquisition_shape=self.acquisition_shape,
             further_acquisitions=tuple(row.to_domain() for row in self.further_acquisitions),
+            declared_acquisition_date=self.declared_acquisition_date,
             asset_kind=self.asset_kind,
             basis=self.basis.to_domain(),
             residual_value=Decimal(self.residual_value.decimal),

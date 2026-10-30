@@ -433,6 +433,10 @@ def test_form_options_come_from_the_published_registry() -> None:
     assert Decimal(computers.maximum_coefficient.decimal) == Decimal("0.26")
     assert AmortizationMethod.LINEAR in options.methods
     assert options.edition.authored_filing_year == 2025
+    assert set(options.acquisition_shapes) == {
+        AcquisitionShape.PRIMARY_PURCHASE,
+        AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER,
+    }
 
 
 def test_the_handoff_reads_the_accrual_route_with_or_without_claims() -> None:

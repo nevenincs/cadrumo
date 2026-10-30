@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from functools import cached_property
-from typing import Self
+from typing import Final, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -40,6 +41,14 @@ class AcquisitionShape(StrEnum):
     PRODUCED = "produced"
     HISTORICAL_WITHOUT_EVIDENCE = "historical_without_evidence"
     FINANCIAL_LEASE_UNEXERCISED = "financial_lease_unexercised"
+    ACQUIRED_OUTSIDE_LEDGER = "acquired_outside_ledger"
+
+
+REGISTERABLE_ACQUISITION_SHAPES: Final[tuple[AcquisitionShape, ...]] = (
+    AcquisitionShape.PRIMARY_PURCHASE,
+    AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER,
+)
+"""The shapes an element can be registered under, which is all a form may offer."""
 
 
 class OwnershipMode(StrEnum):
@@ -58,14 +67,18 @@ class OpeningHistoryStatus(StrEnum):
 
 
 class AcquisitionLineageReference(BaseModel):
-    """Canonical transaction evidence observed by one immutable asset revision."""
+    """The evidence one immutable asset revision observed for its acquisition.
+
+    An element acquired outside the ledger has no row and no fingerprint; its
+    ``invoice_evidence_id`` is the reference to the document the filer holds.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    observed_transaction_id: TransactionId
+    observed_transaction_id: TransactionId | None = None
     observed_lineage_event_id: Hex64Str | None = None
-    invoice_evidence_id: str = Field(min_length=1, max_length=256)
-    evidence_fingerprint: Hex64Str
+    invoice_evidence_id: str = Field(max_length=256)
+    evidence_fingerprint: Hex64Str | None = None
 
 
 class FurtherAcquisitionRow(BaseModel):
@@ -83,6 +96,8 @@ class FurtherAcquisitionRow(BaseModel):
     def _require_a_further_shape(self) -> Self:
         if self.shape not in {AcquisitionShape.SPLIT_PAYMENT, AcquisitionShape.ANCILLARY_COST}:
             raise ValueError("a further acquisition row is a split payment or an ancillary cost")
+        if self.lineage.observed_transaction_id is None:
+            raise ValueError("a further acquisition row names a ledger row")
         return self
 
 
@@ -348,6 +363,8 @@ class ActivityAssetRevision(CachedIdentityModel):
     acquisition: AcquisitionLineageReference
     acquisition_shape: AcquisitionShape
     further_acquisitions: tuple[FurtherAcquisitionRow, ...] = ()
+    declared_acquisition_date: date | None = None
+    """When an element acquired outside the ledger was acquired; a ledger row states its own date."""
     asset_kind: AssetKind
     basis: ActivityAssetBasis
     residual_value: Decimal = Decimal("0")
@@ -398,24 +415,36 @@ class ActivityAssetRevision(CachedIdentityModel):
         return round_to_cents(self.amortizable_basis())
 
     @property
-    def acquisition_transaction_ids(self) -> tuple[str, ...]:
-        """Return every ledger row this revision owns as its acquisition, the primary one first."""
-        return (
-            self.acquisition.observed_transaction_id,
-            *(row.lineage.observed_transaction_id for row in self.further_acquisitions),
+    def acquisition_transaction_ids(self) -> tuple[TransactionId, ...]:
+        """Return every ledger row this revision owns as its acquisition, the primary one first; possibly none."""
+        return tuple(
+            transaction_id
+            for transaction_id in (
+                self.acquisition.observed_transaction_id,
+                *(row.lineage.observed_transaction_id for row in self.further_acquisitions),
+            )
+            if transaction_id is not None
         )
+
+    def acquisition_row_in[RowT](self, rows: Mapping[str, RowT]) -> RowT | None:
+        """Return the primary acquisition row from ``rows``; an element outside the ledger has none."""
+        transaction_id = self.acquisition.observed_transaction_id
+        return None if transaction_id is None else rows.get(transaction_id)
 
     @cached_property
     def revision_id(self) -> str:
         """Return the deterministic identity of this immutable revision.
 
-        A revision with no baja or no further acquisition row omits that field, so its identity is unchanged by it.
+        A revision with no baja, further acquisition row or declared acquisition date omits
+        that field, so its identity is unchanged by it.
         """
         excluded = {"supersedes_revision_id"}
         if self.disposal is None:
             excluded.add("disposal")
         if not self.further_acquisitions:
             excluded.add("further_acquisitions")
+        if self.declared_acquisition_date is None:
+            excluded.add("declared_acquisition_date")
         payload = self.model_dump(mode="json", exclude=excluded)
         payload["supersedes_revision_id"] = self.supersedes_revision_id
         return content_hash_hex(payload)
@@ -460,8 +489,44 @@ def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
             translated_message="ledger.actividad_asset.errors.financial_lease_unexercised",
             context={"legal_reference": "LIS art. 106"},
         )
-    if revision.acquisition_shape is not AcquisitionShape.PRIMARY_PURCHASE:
-        raise ValueError("initial activity-asset support requires one primary purchase transaction")
+    if revision.acquisition_shape not in REGISTERABLE_ACQUISITION_SHAPES:
+        raise ValueError("an element is registered as a primary purchase or as acquired outside the ledger")
+    if not revision.acquisition.invoice_evidence_id.strip():
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_evidence_reference_required",
+        )
+    if revision.acquisition_shape is AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER:
+        _validate_acquired_outside_ledger(revision)
+    elif (
+        revision.acquisition.observed_transaction_id is None
+        or revision.acquisition.evidence_fingerprint is None
+        or revision.declared_acquisition_date is not None
+    ):
+        raise ValueError("a primary purchase names its ledger row and evidence fingerprint and declares no date")
+
+
+def _validate_acquired_outside_ledger(revision: ActivityAssetRevision) -> None:
+    lineage = revision.acquisition
+    if (
+        lineage.observed_transaction_id is not None
+        or lineage.observed_lineage_event_id is not None
+        or lineage.evidence_fingerprint is not None
+        or revision.further_acquisitions
+    ):
+        raise ValueError("an element acquired outside the ledger names no ledger row")
+    declared = revision.declared_acquisition_date
+    if declared is None:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.declared_acquisition_date_required",
+        )
+    if declared > revision.in_service_date:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.declared_acquisition_after_service",
+            context={
+                "declared_acquisition_date": declared.isoformat(),
+                "in_service_date": revision.in_service_date.isoformat(),
+            },
+        )
 
 
 def _validate_further_acquisitions(revision: ActivityAssetRevision) -> None:
@@ -538,6 +603,7 @@ def _validate_vehicle_affectation(revision: ActivityAssetRevision) -> None:
 
 
 __all__ = [
+    "REGISTERABLE_ACQUISITION_SHAPES",
     "AcquisitionLineageReference",
     "AcquisitionShape",
     "ActivityAssetBasis",

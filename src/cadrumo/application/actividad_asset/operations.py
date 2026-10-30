@@ -46,7 +46,7 @@ from ...domain.renta.actividad_asset.errors import (
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
 )
-from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
+from ...domain.renta.actividad_asset.lifecycle import REGISTERABLE_ACQUISITION_SHAPES, ActivityAssetRevision, AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...domain.renta.actividad_asset.schedule import (
     ScheduleAuthority,
@@ -656,16 +656,14 @@ class ActivityAssetOperations:
         period_end = m130_period.end_date
         current = {revision.asset_id: revision for revision in history.revisions}
         rows = self._ledger.load_by_ids(
-            {revision.acquisition.observed_transaction_id for revision in current.values()},
+            {owned for revision in current.values() for owned in revision.acquisition_transaction_ids},
         ).transactions
         accruals = m130_register_accruals(
             history,
             forecast=self._forecast_operation,
             period_end=period_end,
             activities={
-                asset_id: (
-                    row.tipo_actividad if (row := rows.get(revision.acquisition.observed_transaction_id)) else None
-                )
+                asset_id: row.tipo_actividad if (row := revision.acquisition_row_in(rows)) else None
                 for asset_id, revision in current.items()
             },
             agrarian=self._authority.agrarian_activities(period_end) if current else frozenset(),
@@ -762,6 +760,8 @@ class ActivityAssetOperations:
             class_key=revision.amortization.authority_class_key,
             not_table_bound=ActivityAssetNotTableBoundReason.AUTHORITY_UNAVAILABLE,
             unavailable_reason_key=reason_key,
+        )
+
     def plan_advisories(self, asset_id: str) -> tuple[ActivityAssetPlanAdvisory, ...]:
         """Say what the plan warns about the element's election, under this year's edition.
 
@@ -778,8 +778,6 @@ class ActivityAssetOperations:
             return ()
         kind = ActivityAssetPlanAdvisoryKind.USED_ELEMENT_GROUP_LIMIT
         return (ActivityAssetPlanAdvisory(kind=kind, label_key=activity_asset_label_key(PLAN_ADVISORY_FAMILY, kind)),)
-
-        )
 
     def timeline(self, asset_id: str) -> tuple[ActivityAssetTimelineEvent, ...]:
         """List one element's history in order, with what each record changed and what used each claim."""
@@ -808,6 +806,7 @@ class ActivityAssetOperations:
             asset_kind=asset_kind,
             regime=regime,
             edition=edition,
+            acquisition_shapes=REGISTERABLE_ACQUISITION_SHAPES,
             methods=options.methods,
             table_groups=tuple(
                 ActivityAssetTableGroup(

@@ -33,8 +33,8 @@ ACTIVITY_ASSET_LABEL_NAMESPACE: Final = "ledger.actividad_asset."
 """Where the catalogue holds one word per token, as ``<namespace><family>.<token>``."""
 
 DISPOSAL_FINDING_FAMILY: Final = "disposal_finding"
-_REASON_FACT_KEY_LIMIT: Final = 64
 PLAN_ADVISORY_FAMILY: Final = "plan_advisory"
+_REASON_FACT_KEY_LIMIT: Final = 64
 _REASON_FACT_VALUE_LIMIT: Final = 2048
 NON_DEDUCTIBLE_IVA_STATE_FAMILY: Final = "non_deductible_iva_state"
 
@@ -99,13 +99,13 @@ class ActivityAssetClaimState(StrEnum):
     EDITION_UNAVAILABLE = "edition_unavailable"
 
 
-class ActivityAssetClaimStaleReason(StrEnum):
 class ActivityAssetPlanAdvisoryKind(StrEnum):
     """What the plan tells the operator about an election, changing no figure and refusing nothing."""
 
     USED_ELEMENT_GROUP_LIMIT = "used_element_group_limit"
 
 
+class ActivityAssetClaimStaleReason(StrEnum):
     """Why a claim no longer matches the element's current schedule."""
 
     REVISION_CHANGED = "revision_changed"
@@ -220,7 +220,6 @@ class ActivityAssetPlanRow(_ReadModel):
     """False when a year up to this one has no minimum authority, so ``minimum_through`` leaves it out."""
 
 
-class ActivityAssetLegalCitation(_ReadModel):
 class ActivityAssetPlanAdvisory(_ReadModel):
     """One non-blocking advisory on an element's plan, worded by its catalogue key."""
 
@@ -228,6 +227,7 @@ class ActivityAssetPlanAdvisory(_ReadModel):
     label_key: str
 
 
+class ActivityAssetLegalCitation(_ReadModel):
     """One legal provision, cited from its own identifier, with its official link."""
 
     text: str
@@ -344,6 +344,7 @@ class ActivityAssetFormOptionsView(_ReadModel):
     asset_kind: AssetKind
     regime: DirectEstimationRegime
     edition: ActivityAssetEdition
+    acquisition_shapes: tuple[AcquisitionShape, ...]
     methods: tuple[AmortizationMethod, ...]
     table_groups: tuple[ActivityAssetTableGroup, ...]
 
@@ -389,9 +390,9 @@ __all__ = [
     "ACTIVITY_ASSET_LABEL_NAMESPACE",
     "DISPOSAL_FINDING_FAMILY",
     "NON_DEDUCTIBLE_IVA_STATE_FAMILY",
+    "PLAN_ADVISORY_FAMILY",
     "TIMELINE_TOKEN_FAMILIES",
     "ActivityAssetAcquisitionCandidate",
-    "PLAN_ADVISORY_FAMILY",
     "ActivityAssetClaimStaleReason",
     "ActivityAssetClaimState",
     "ActivityAssetClaimableInterval",
@@ -407,10 +408,10 @@ __all__ = [
     "ActivityAssetM130ProjectionSnapshot",
     "ActivityAssetNonDeductibleIvaState",
     "ActivityAssetNotTableBoundReason",
-    "ActivityAssetPlanClaim",
-    "ActivityAssetPlanRow",
     "ActivityAssetPlanAdvisory",
     "ActivityAssetPlanAdvisoryKind",
+    "ActivityAssetPlanClaim",
+    "ActivityAssetPlanRow",
     "ActivityAssetReasonFact",
     "ActivityAssetRegisterState",
     "ActivityAssetTableGroup",

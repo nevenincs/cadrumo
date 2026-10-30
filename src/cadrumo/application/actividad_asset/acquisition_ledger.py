@@ -13,7 +13,9 @@ from ...domain.transactions.models import Transaction
 from .ports import AcquisitionLedgerReader
 
 
-def require_acquisition_in_ledger(revision: ActivityAssetRevision, ledger: AcquisitionLedgerReader) -> Transaction:
+def require_acquisition_in_ledger(
+    revision: ActivityAssetRevision, ledger: AcquisitionLedgerReader
+) -> Transaction | None:
     """Refuse a revision whose acquisition the ledger does not bear out.
 
     Every row the revision owns must exist and be a payment.  The cost the basis
@@ -24,14 +26,18 @@ def require_acquisition_in_ledger(revision: ActivityAssetRevision, ledger: Acqui
     business-allocated basis is already reduced to the taxpayer's share.  The
     basis stays the register's; the rows only reconcile against it.
 
+    An element acquired outside the ledger owns no row, so there is nothing to reconcile.
+
     Returns:
-        The primary acquisition transaction.
+        The primary acquisition transaction, or ``None`` when the element owns no row.
 
     Raises:
         ActividadAssetValidationError: When a transaction is absent, is not a
             payment, has no EUR amount, or the rows are smaller than the stated cost.
     """
     owned = revision.acquisition_transaction_ids
+    if not owned:
+        return None
     found = ledger.load_by_ids(owned).transactions
     transactions: list[Transaction] = []
     for transaction_id in owned:
