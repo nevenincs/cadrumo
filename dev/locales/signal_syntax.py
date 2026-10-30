@@ -207,6 +207,11 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<=without a )|(?<=without the )|(?<=years without a )|"
     r"(?<=the )|(?<=a )|(?<=this )|(?<=that ))dotación(?=\b)|"
     r"dotación(?= (?:of|from|for|already|can|is|was|recorded)\b)|"
+    # The plural loses the singular's accent. Keep its attested English asset
+    # register collocations as narrow as the singular's, rather than accepting
+    # the word globally or overlooking a misspelled Spanish form.
+    r"(?:(?<=the )|(?<=these )|(?<=overlapping ))dotaciones(?=\b)|"
+    r"dotaciones(?= (?:after|for|in your tax returns|that no longer match)\b)|"
     # `sede` is preserved only as the named AEAT filing service.
     r"(?<=AEAT )sede(?=\b)|(?<=service \()sede(?=\))|"
     # `compensación` is the Spanish Modelo 303 carry-forward term.
