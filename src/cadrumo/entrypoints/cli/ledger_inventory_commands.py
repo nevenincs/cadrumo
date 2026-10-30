@@ -32,11 +32,11 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
 from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ...domain.contribuyente.inventory.records import (
-    InventoryAcquisitionCost,
     InventoryCorrectionReason,
     InventoryRetirementReason,
     MovementKind,
     ValuationMethod,
+    load_inventory_acquisition_cost,
 )
 from ._date_parsing import _parse_iso_date
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
@@ -61,7 +61,7 @@ def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCostRequ
         return None
     value = typer.get_text_stream("stdin").read()
     try:
-        acquisition = InventoryAcquisitionCost.model_validate_json(value)
+        acquisition = load_inventory_acquisition_cost(value)
         return InventoryAcquisitionCostRequest.from_domain(acquisition)
     except ValidationError as exc:
         details = "; ".join(f"{'.'.join(str(item) for item in error['loc'])}: {error['msg']}" for error in exc.errors())

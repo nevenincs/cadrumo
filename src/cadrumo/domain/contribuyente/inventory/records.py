@@ -17,7 +17,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, NamedTuple
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
@@ -265,26 +265,108 @@ def _validate_acquisition_evidence_roles(
         raise InventoryValidationError("purchase consideration requires acquisition evidence, not review evidence")
 
 
-def _validate_acquisition_amount_decomposition(acquisition: InventoryAcquisitionCost) -> None:
-    attributable = sum((item.taxable_base for item in acquisition.attributable_cost_components), MONEY_ZERO)
+class InventoryAcquisitionTotals(NamedTuple):
+    """What a purchase's components add up to."""
+
+    directly_attributable_cost_total: Decimal
+    recoverable_iva_excluded: Decimal
+    nonrecoverable_iva_included: Decimal
+    total_acquisition_cost: Decimal
+
+
+def derive_inventory_acquisition_totals(
+    *,
+    consideration_excluding_iva: Decimal,
+    consideration_iva_amount: Decimal,
+    consideration_deductible_iva_ratio: Decimal,
+    attributable_cost_components: tuple[InventoryAttributableCostComponent, ...],
+) -> InventoryAcquisitionTotals:
+    """Add up one purchase: cost holds the price, attributable costs and the IVA that cannot be recovered."""
+    attributable = sum((item.taxable_base for item in attributable_cost_components), MONEY_ZERO)
     recoverable = _quantize(
-        acquisition.consideration_iva_amount * acquisition.consideration_deductible_iva_ratio,
-    ) + sum((item.recoverable_iva for item in acquisition.attributable_cost_components), MONEY_ZERO)
-    total_iva = acquisition.consideration_iva_amount + sum(
-        (item.iva_amount for item in acquisition.attributable_cost_components),
+        consideration_iva_amount * consideration_deductible_iva_ratio,
+    ) + sum((item.recoverable_iva for item in attributable_cost_components), MONEY_ZERO)
+    total_iva = consideration_iva_amount + sum(
+        (item.iva_amount for item in attributable_cost_components),
         MONEY_ZERO,
     )
     nonrecoverable = total_iva - recoverable
-    total = acquisition.consideration_excluding_iva + attributable + nonrecoverable
-    expected = {
-        "directly_attributable_cost_total": _quantize(attributable),
-        "recoverable_iva_excluded": _quantize(recoverable),
-        "nonrecoverable_iva_included": _quantize(nonrecoverable),
-        "total_acquisition_cost": _quantize(total),
-    }
-    for field_name, expected_value in expected.items():
+    total = consideration_excluding_iva + attributable + nonrecoverable
+    return InventoryAcquisitionTotals(
+        directly_attributable_cost_total=_quantize(attributable),
+        recoverable_iva_excluded=_quantize(recoverable),
+        nonrecoverable_iva_included=_quantize(nonrecoverable),
+        total_acquisition_cost=_quantize(total),
+    )
+
+
+def _validate_acquisition_amount_decomposition(acquisition: InventoryAcquisitionCost) -> None:
+    totals = derive_inventory_acquisition_totals(
+        consideration_excluding_iva=acquisition.consideration_excluding_iva,
+        consideration_iva_amount=acquisition.consideration_iva_amount,
+        consideration_deductible_iva_ratio=acquisition.consideration_deductible_iva_ratio,
+        attributable_cost_components=acquisition.attributable_cost_components,
+    )
+    for field_name, expected_value in totals._asdict().items():
         if getattr(acquisition, field_name) != expected_value:
             raise InventoryValidationError(f"{field_name} does not match the acquisition decomposition")
+
+
+class InventoryAcquisitionFacts(BaseModel):
+    """A purchase as an operator states it; :meth:`to_cost` adds up the totals left out."""
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    consideration_excluding_iva: Decimal = Field(ge=MONEY_ZERO)
+    consideration_iva_amount: Decimal = Field(ge=MONEY_ZERO)
+    consideration_deductible_iva_ratio: Decimal = Field(ge=MONEY_ZERO, le=ONE)
+    attributable_cost_components: tuple[InventoryAttributableCostComponent, ...]
+    evidence: tuple[InventoryAcquisitionEvidence, ...] = Field(min_length=1)
+    completeness: InventoryAcquisitionCompleteness
+    directly_attributable_cost_total: Decimal | None = None
+    nonrecoverable_iva_included: Decimal | None = None
+    recoverable_iva_excluded: Decimal | None = None
+    total_acquisition_cost: Decimal | None = None
+
+    def to_cost(self) -> InventoryAcquisitionCost:
+        """Build the complete cost; a stated total stays stated, so the cost's validators can refuse it."""
+        totals = derive_inventory_acquisition_totals(
+            consideration_excluding_iva=self.consideration_excluding_iva,
+            consideration_iva_amount=self.consideration_iva_amount,
+            consideration_deductible_iva_ratio=self.consideration_deductible_iva_ratio,
+            attributable_cost_components=self.attributable_cost_components,
+        )
+        return InventoryAcquisitionCost(
+            consideration_excluding_iva=self.consideration_excluding_iva,
+            consideration_iva_amount=self.consideration_iva_amount,
+            consideration_deductible_iva_ratio=self.consideration_deductible_iva_ratio,
+            attributable_cost_components=self.attributable_cost_components,
+            evidence=self.evidence,
+            completeness=self.completeness,
+            directly_attributable_cost_total=(
+                totals.directly_attributable_cost_total
+                if self.directly_attributable_cost_total is None
+                else self.directly_attributable_cost_total
+            ),
+            nonrecoverable_iva_included=(
+                totals.nonrecoverable_iva_included
+                if self.nonrecoverable_iva_included is None
+                else self.nonrecoverable_iva_included
+            ),
+            recoverable_iva_excluded=(
+                totals.recoverable_iva_excluded
+                if self.recoverable_iva_excluded is None
+                else self.recoverable_iva_excluded
+            ),
+            total_acquisition_cost=(
+                totals.total_acquisition_cost if self.total_acquisition_cost is None else self.total_acquisition_cost
+            ),
+        )
+
+
+def load_inventory_acquisition_cost(text: str) -> InventoryAcquisitionCost:
+    """Read a purchase-cost JSON document: totals it states are checked, totals it omits are derived."""
+    return InventoryAcquisitionFacts.model_validate_json(text).to_cost()
 
 
 class ValuationMethod(StrEnum):

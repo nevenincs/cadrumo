@@ -96,7 +96,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
-from cadrumo.domain.contribuyente.inventory.records import InventoryAcquisitionCost
+from cadrumo.domain.contribuyente.inventory.records import load_inventory_acquisition_cost
 from cadrumo.entrypoints.tui.ledger.registers_capital_goods import LedgerCapitalGoodsDoorV1, capital_goods_tool
 from cadrumo.entrypoints.tui.ledger.registers_inventory import LedgerInventoryDoorV1, inventory_tool
 from cadrumo.entrypoints.tui.ledger.registers_prorrata import (
@@ -596,7 +596,16 @@ def _read_closing_value_facts(path: str) -> InventoryClosingValueFactsInput:
 
 
 def _read_acquisition_cost(path: str) -> InventoryAcquisitionCostRequest:
-    return InventoryAcquisitionCostRequest.from_domain(_read_typed_file(path, InventoryAcquisitionCost))
+    try:
+        text = Path(path).expanduser().read_text(encoding=UTF_8_ENCODING)
+    except OSError:
+        raise ValueError(tr("tui.ledger.registers.inventory.source_unreadable", path=path)) from None
+    try:
+        return InventoryAcquisitionCostRequest.from_domain(load_inventory_acquisition_cost(text))
+    except ValidationError as error:
+        raise ValueError(
+            tr("tui.ledger.registers.inventory.source_invalid", path=path, count=error.error_count())
+        ) from None
 
 
 def _read_closing_authority(path: str) -> InventoryClosingAuthorityRecordInput:

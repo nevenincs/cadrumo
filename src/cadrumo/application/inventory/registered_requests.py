@@ -37,6 +37,7 @@ from ...domain.contribuyente.inventory.records import (
     InventoryRetirementReason,
     MovementKind,
     ValuationMethod,
+    derive_inventory_acquisition_totals,
 )
 from ...domain.filing_evidence import FilingEvidenceReference
 from ..operations.public_scalar import PublicDecimal
@@ -119,6 +120,10 @@ class InventoryCreateRequest(_InventoryRequest):
     opening_stock: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
 
 
+def _stated_or(stated: PublicDecimal | None, derived: Decimal) -> Decimal:
+    return derived if stated is None else Decimal(stated.decimal)
+
+
 class InventoryAttributableCostComponentRequest(BaseModel):
     """Closed input row with decimal strings at the public operation boundary."""
 
@@ -158,10 +163,10 @@ class InventoryAcquisitionCostRequest(BaseModel):
     attributable_cost_components: tuple[InventoryAttributableCostComponentRequest, ...]
     evidence: tuple[InventoryAcquisitionEvidence, ...] = Field(min_length=1)
     completeness: InventoryAcquisitionCompleteness
-    directly_attributable_cost_total: PublicDecimal
-    nonrecoverable_iva_included: PublicDecimal
-    recoverable_iva_excluded: PublicDecimal
-    total_acquisition_cost: PublicDecimal
+    directly_attributable_cost_total: PublicDecimal | None = None
+    nonrecoverable_iva_included: PublicDecimal | None = None
+    recoverable_iva_excluded: PublicDecimal | None = None
+    total_acquisition_cost: PublicDecimal | None = None
 
     @classmethod
     def from_domain(cls, acquisition: InventoryAcquisitionCost) -> InventoryAcquisitionCostRequest:
@@ -185,28 +190,46 @@ class InventoryAcquisitionCostRequest(BaseModel):
         )
 
     def to_domain(self) -> InventoryAcquisitionCost:
-        """Build the existing canonical domain operand inside worker custody."""
+        """Build the canonical domain operand inside worker custody.
+
+        Totals the request omits are derived from its components; totals it states
+        are checked against that same derivation by the domain's validators.
+        """
+        components = tuple(
+            InventoryAttributableCostComponent(
+                component_id=component.component_id,
+                kind=component.kind,
+                taxable_base=Decimal(component.taxable_base.decimal),
+                iva_amount=Decimal(component.iva_amount.decimal),
+                deductible_iva_ratio=Decimal(component.deductible_iva_ratio.decimal),
+                evidence_references=component.evidence_references,
+            )
+            for component in self.attributable_cost_components
+        )
+        consideration = Decimal(self.consideration_excluding_iva.decimal)
+        iva = Decimal(self.consideration_iva_amount.decimal)
+        ratio = Decimal(self.consideration_deductible_iva_ratio.decimal)
+        derived = derive_inventory_acquisition_totals(
+            consideration_excluding_iva=consideration,
+            consideration_iva_amount=iva,
+            consideration_deductible_iva_ratio=ratio,
+            attributable_cost_components=components,
+        )
         return InventoryAcquisitionCost(
-            consideration_excluding_iva=Decimal(self.consideration_excluding_iva.decimal),
-            consideration_iva_amount=Decimal(self.consideration_iva_amount.decimal),
-            consideration_deductible_iva_ratio=Decimal(self.consideration_deductible_iva_ratio.decimal),
-            attributable_cost_components=tuple(
-                InventoryAttributableCostComponent(
-                    component_id=component.component_id,
-                    kind=component.kind,
-                    taxable_base=Decimal(component.taxable_base.decimal),
-                    iva_amount=Decimal(component.iva_amount.decimal),
-                    deductible_iva_ratio=Decimal(component.deductible_iva_ratio.decimal),
-                    evidence_references=component.evidence_references,
-                )
-                for component in self.attributable_cost_components
-            ),
+            consideration_excluding_iva=consideration,
+            consideration_iva_amount=iva,
+            consideration_deductible_iva_ratio=ratio,
+            attributable_cost_components=components,
             evidence=self.evidence,
             completeness=self.completeness,
-            directly_attributable_cost_total=Decimal(self.directly_attributable_cost_total.decimal),
-            nonrecoverable_iva_included=Decimal(self.nonrecoverable_iva_included.decimal),
-            recoverable_iva_excluded=Decimal(self.recoverable_iva_excluded.decimal),
-            total_acquisition_cost=Decimal(self.total_acquisition_cost.decimal),
+            directly_attributable_cost_total=_stated_or(
+                self.directly_attributable_cost_total, derived.directly_attributable_cost_total
+            ),
+            nonrecoverable_iva_included=_stated_or(
+                self.nonrecoverable_iva_included, derived.nonrecoverable_iva_included
+            ),
+            recoverable_iva_excluded=_stated_or(self.recoverable_iva_excluded, derived.recoverable_iva_excluded),
+            total_acquisition_cost=_stated_or(self.total_acquisition_cost, derived.total_acquisition_cost),
         )
 
 

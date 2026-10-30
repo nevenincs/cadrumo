@@ -110,6 +110,37 @@ class InventoryAcquisitionCostSummaryPayload(OutputSchema):
     complete: bool
 
 
+class InventoryAttributableCostDetailPayload(OutputSchema):
+    """One directly attributable cost as the operator stated it."""
+
+    component_id: NonEmptyStr
+    kind: NonEmptyStr
+    taxable_base: str
+    iva_amount: str
+    deductible_iva_ratio: str
+    evidence_references: list[str]
+
+
+class InventoryAcquisitionDocumentPayload(OutputSchema):
+    """One purchase document's identity."""
+
+    reference: NonEmptyStr
+    evidence_kind: NonEmptyStr
+    content_digest: NonEmptyStr
+
+
+class InventoryAcquisitionDetailPayload(OutputSchema):
+    """The private facts of one purchase, shown only by ``inventory inspect``."""
+
+    consideration_iva_amount: str
+    consideration_deductible_iva_ratio: str
+    components: list[InventoryAttributableCostDetailPayload]
+    documents: list[InventoryAcquisitionDocumentPayload]
+    consideration_evidence: NonEmptyStr
+    attributable_cost_review_evidence: NonEmptyStr
+    iva_recoverability_review_evidence: NonEmptyStr
+
+
 class InventoryMovementPayload(OutputSchema):
     """One :class:`MovementRecord` transport row."""
 
@@ -125,6 +156,7 @@ class InventoryMovementPayload(OutputSchema):
     deductible_iva_ratio: _DeductibleRatio  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     acquisition_cost: InventoryAcquisitionCostSummaryPayload | None = None
     schema_version: _InventorySchemaVersion
+    acquisition_detail: InventoryAcquisitionDetailPayload | None = None
 
 
 class InventoryClosingAuthorityFingerprintPayload(OutputSchema):

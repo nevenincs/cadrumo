@@ -10,6 +10,9 @@ from pydantic import BaseModel, Field, NonNegativeInt, PositiveInt, model_valida
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.contribuyente.inventory.records import (
+    InventoryAcquisitionCost,
+    InventoryAcquisitionEvidenceKind,
+    InventoryAttributableCostKind,
     InventoryCorrectionReason,
     InventoryHistoryKind,
     InventoryLedger,
@@ -70,8 +73,77 @@ class InventoryAcquisitionCostProjection(BaseModel):
     complete: Literal[True]
 
 
+class InventoryAttributableCostDetailProjection(BaseModel):
+    """One directly attributable cost as the operator stated it."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    component_id: str
+    kind: InventoryAttributableCostKind
+    taxable_base: PublicDecimal
+    iva_amount: PublicDecimal
+    deductible_iva_ratio: PublicDecimal
+    evidence_references: tuple[str, ...]
+
+
+class InventoryAcquisitionDocumentProjection(BaseModel):
+    """One purchase document's identity; its bytes stay in custody."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    reference: str
+    evidence_kind: InventoryAcquisitionEvidenceKind
+    content_digest: str
+
+
+class InventoryAcquisitionDetailProjection(BaseModel):
+    """The private facts of one purchase, released only by the exact-profile inspect read."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    consideration_iva_amount: PublicDecimal
+    consideration_deductible_iva_ratio: PublicDecimal
+    components: tuple[InventoryAttributableCostDetailProjection, ...]
+    documents: tuple[InventoryAcquisitionDocumentProjection, ...]
+    consideration_evidence: str
+    attributable_cost_review_evidence: str
+    iva_recoverability_review_evidence: str
+
+    @classmethod
+    def from_acquisition(cls, acquisition: InventoryAcquisitionCost) -> InventoryAcquisitionDetailProjection:
+        """Project what correcting this purchase would otherwise ask for again."""
+        return cls(
+            consideration_iva_amount=PublicDecimal(decimal=str(acquisition.consideration_iva_amount)),
+            consideration_deductible_iva_ratio=PublicDecimal(
+                decimal=str(acquisition.consideration_deductible_iva_ratio)
+            ),
+            components=tuple(
+                InventoryAttributableCostDetailProjection(
+                    component_id=item.component_id,
+                    kind=item.kind,
+                    taxable_base=PublicDecimal(decimal=str(item.taxable_base)),
+                    iva_amount=PublicDecimal(decimal=str(item.iva_amount)),
+                    deductible_iva_ratio=PublicDecimal(decimal=str(item.deductible_iva_ratio)),
+                    evidence_references=tuple(reference.reference for reference in item.evidence_references),
+                )
+                for item in acquisition.attributable_cost_components
+            ),
+            documents=tuple(
+                InventoryAcquisitionDocumentProjection(
+                    reference=item.reference.reference,
+                    evidence_kind=item.evidence_kind,
+                    content_digest=item.content_digest,
+                )
+                for item in acquisition.evidence
+            ),
+            consideration_evidence=acquisition.completeness.consideration_evidence.reference,
+            attributable_cost_review_evidence=acquisition.completeness.attributable_cost_review_evidence.reference,
+            iva_recoverability_review_evidence=acquisition.completeness.iva_recoverability_review_evidence.reference,
+        )
+
+
 class InventoryMovementProjection(BaseModel):
-    """One stored movement with sensitive acquisition evidence removed."""
+    """One stored movement; acquisition detail stays out unless a caller asks for it by name."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -87,10 +159,13 @@ class InventoryMovementProjection(BaseModel):
     deductible_iva_ratio: PublicDecimal
     acquisition_cost: InventoryAcquisitionCostProjection | None
     schema_version: str
+    acquisition_detail: InventoryAcquisitionDetailProjection | None = None
 
     @classmethod
-    def from_movement(cls, movement: MovementRecord) -> InventoryMovementProjection:
-        """Project one movement while excluding its evidence payloads."""
+    def from_movement(
+        cls, movement: MovementRecord, *, with_acquisition_detail: bool = False
+    ) -> InventoryMovementProjection:
+        """Project one movement; its evidence payloads are excluded unless asked for by name."""
         acquisition = movement.acquisition_cost
         return cls(
             movement_id=movement.movement_id,
@@ -122,6 +197,11 @@ class InventoryMovementProjection(BaseModel):
                 else None
             ),
             schema_version=movement.schema_version,
+            acquisition_detail=(
+                InventoryAcquisitionDetailProjection.from_acquisition(acquisition)
+                if with_acquisition_detail and acquisition is not None
+                else None
+            ),
         )
 
 
@@ -220,6 +300,7 @@ class InventoryLedgerProjection(BaseModel):
         ledger: InventoryLedger,
         *,
         bucket_event_ids: tuple[str, ...] = (),
+        with_acquisition_detail: bool = False,
     ) -> InventoryLedgerProjection:
         """Project every public ledger field while excluding evidence payloads."""
         record = ledger.closing_authority_record
@@ -250,7 +331,10 @@ class InventoryLedgerProjection(BaseModel):
                 for layer in ledger.opening_layers
             ),
             closing_authority_fingerprints=fingerprints,
-            period_movements=tuple(InventoryMovementProjection.from_movement(item) for item in ledger.period_movements),
+            period_movements=tuple(
+                InventoryMovementProjection.from_movement(item, with_acquisition_detail=with_acquisition_detail)
+                for item in ledger.period_movements
+            ),
             schema_version=ledger.schema_version,
             bucket_event_ids=bucket_event_ids,
             descriptor=(
