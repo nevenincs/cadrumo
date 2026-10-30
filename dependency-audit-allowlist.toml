@@ -11,17 +11,6 @@ id = "RUSTSEC-2024-0429"
 reason = "glib 0.18.5 VariantStrIter unsoundness (GHSA-wrw7-89jp-8q8g): patched only in glib 0.20, which the gtk 0.18 bindings pinned by tauri's Linux stack cannot use; Linux-only and cadrumo calls no glib API"
 expires = 2027-01-21
 
-# The upstream maintainer limits this issue to >=0.11.0. In 0.10.4 the
-# cursor is a separate field, so overwriting a block cannot corrupt it. OSV's
-# wider range includes 0.10.4; scope this exception to that exact coordinate.
-[[suppression]]
-id = "GHSA-qwgh-2vcv-g2f7"
-ecosystem = "crates.io"
-package = "block-buffer"
-version = "0.10.4"
-reason = "Upstream advisory https://github.com/RustCrypto/utils/security/advisories/GHSA-qwgh-2vcv-g2f7 identifies >=0.11.0; 0.10.4 stores pos separately from the block, unlike the affected inline cursor. Recheck if the upstream assessment changes."
-expires = 2027-01-21
-
 [[suppression]]
 id = "RUSTSEC-2024-0370"
 reason = "proc-macro-error 1.0.4 is unmaintained and has no patched release: a compile-time dependency of glib-macros and gtk3-macros in the same Linux-only gtk3 stack"
