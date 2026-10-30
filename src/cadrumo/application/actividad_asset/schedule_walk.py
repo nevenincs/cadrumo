@@ -194,7 +194,7 @@ def _walk_year(
             charge=None,
             absence=_absence_of(error),
             reason_key=_reason_key(error),
-            reason_facts=_reason_facts(error),
+            reason_facts=error_reason_facts(error),
             consumed_through=consumed_before + claimed,
         )
     return WalkedYear(
@@ -255,7 +255,8 @@ def _reason_key(error: Exception) -> str | None:
     return error.translated_message if isinstance(error, ActividadAssetError) else None
 
 
-def _reason_facts(error: Exception) -> dict[str, str]:
+def error_reason_facts(error: Exception) -> dict[str, str]:
+    """Return the facts a refusal's reason is worded with, or none for an error that carries no reason."""
     if not isinstance(error, ActividadAssetError):
         return {}
     return {name: str(value) for name, value in (error.context or {}).items()}

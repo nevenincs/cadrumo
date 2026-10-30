@@ -53,7 +53,7 @@ from .fact_wording import token_family
 from .history import ActivityAssetHistory
 from .legal_citations import ResolvedLegalCitations
 from .ports import ActivityAssetForecastOperation
-from .schedule_walk import PlanFigureAbsence, WalkedYear, walk_element
+from .schedule_walk import PlanFigureAbsence, WalkedYear, error_reason_facts, walk_element
 
 _WALK_YEARS_LIMIT = 100
 """How far a plan looks ahead; every method settles long before this."""
@@ -99,12 +99,12 @@ def _claimable(
     revision: ActivityAssetRevision,
     row: WalkedYear,
     history: ActivityAssetHistory,
-) -> tuple[tuple[ActivityAssetClaimableInterval, ...], str | None]:
-    """Clip the year's gaps to what its charge covers, or say why nothing there can be claimed."""
+) -> tuple[tuple[ActivityAssetClaimableInterval, ...], str | None, Mapping[str, str]]:
+    """Clip the year's gaps to what its charge covers, or say why nothing there can be claimed, and with which facts."""
     if row.absence in _NOT_ACCRUING or row.absence is PlanFigureAbsence.COVERED_BY_OPENING:
-        return (), None
+        return (), None, {}
     if row.absence is not None and row.absence is not PlanFigureAbsence.FREE_ELECTION:
-        return (), row.reason_key
+        return (), row.reason_key, row.reason_facts
     election = revision.amortization
     try:
         require_method_continuity(
@@ -118,8 +118,8 @@ def _claimable(
             ),
         )
     except ActividadAssetError as error:
-        return (), error.translated_message
-    return _claimable_gaps(row), None
+        return (), error.translated_message, error_reason_facts(error)
+    return _claimable_gaps(row), None, {}
 
 
 def _claimable_gaps(row: WalkedYear) -> tuple[ActivityAssetClaimableInterval, ...]:
@@ -238,7 +238,7 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
     minimum = Decimal("0")
     minimum_complete = True
     for row in _walk_to_settlement(revision, context):
-        intervals, refusal_key = _claimable(revision, row, context.history)
+        intervals, refusal_key, refusal_facts = _claimable(revision, row, context.history)
         year = year_minimum(
             revision,
             tax_year=row.tax_year,
@@ -260,6 +260,7 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
                 claim_state=_claim_state(row, intervals, today=context.today),
                 claimable_intervals=intervals,
                 claimable_refusal_key=refusal_key,
+                claimable_refusal_facts=project_reason_facts(refusal_facts),
                 edition=_edition_or_none(context, row.tax_year),
                 service_days=None if row.charge is None else row.charge.service_days,
                 calendar_days=None if row.charge is None else row.charge.calendar_days,
