@@ -116,15 +116,28 @@ def test_density_separates_a_real_containment_from_a_large_container() -> None:
     )
 
 
-def test_empty_populations_are_excluded_rather_than_compared() -> None:
+@pytest.fixture(scope="module")
+def live_populations() -> dict[str, ConditionPopulation]:
+    """The bundled corpus's condition populations, derived once for the module.
+
+    Every consumer only reads them, and the derivation runs every screen over the corpus.
+    """
+    return condition_populations(compiled_bundled_authority(), bundled_modelo_ids())
+
+
+@pytest.fixture(scope="module")
+def live_report(live_populations: dict[str, ConditionPopulation]) -> tuple[ConditionRelation, ...]:
+    return overlapping_conditions(live_populations)
+
+
+def test_empty_populations_are_excluded_rather_than_compared(live_populations: dict[str, ConditionPopulation]) -> None:
     """Two conditions with nothing to compare are not thereby identical.
 
     Several screens report per modelo or per design and carry no revision, so
     their populations are empty. Comparing them would make every pair of them
     identical - the report inventing in bulk the exact defect it exists to find.
     """
-    authority = compiled_bundled_authority()
-    populations = condition_populations(authority, bundled_modelo_ids())
+    populations = live_populations
     assert populations, "no condition had a population, so this proves nothing"
     for population in populations.values():
         assert population.units, "a condition was kept with no unit at all"
@@ -134,7 +147,9 @@ def test_empty_populations_are_excluded_rather_than_compared() -> None:
     assert all("revision" in population.units for population in populations.values())
 
 
-def test_census_and_derived_screens_are_excluded_from_the_comparison() -> None:
+def test_census_and_derived_screens_are_excluded_from_the_comparison(
+    live_populations: dict[str, ConditionPopulation],
+) -> None:
     """One is too large to be informative, the other identical by construction.
 
     A census's population is every revision with fields, so it would contain
@@ -149,19 +164,22 @@ def test_census_and_derived_screens_are_excluded_from_the_comparison() -> None:
         if entry.entry_returns == "census" or entry.derives_from is not None
     }
     assert excluded, "no screen is census or derived, so this proves nothing"
-    named = {key.split(".", 1)[0] for key in condition_populations(compiled_bundled_authority(), bundled_modelo_ids())}
+    named = {key.split(".", 1)[0] for key in live_populations}
     assert not (named & excluded)
 
 
-def test_every_live_row_really_holds_the_relation_it_claims() -> None:
+def test_every_live_row_really_holds_the_relation_it_claims(
+    live_populations: dict[str, ConditionPopulation],
+    live_report: tuple[ConditionRelation, ...],
+) -> None:
     """The report is checked against the populations it drew the rows from.
 
     Set relations are cheap to assert and easy to invert, and an inverted
     containment would name the wrong side as the special case - which is the
     only thing the row is for.
     """
-    populations = condition_populations(compiled_bundled_authority(), bundled_modelo_ids())
-    reported = overlapping_conditions(populations)
+    populations = live_populations
+    reported = live_report
     assert reported, "no pair coincided, so this proves nothing"
     for item in reported:
         assert item.relation in RELATIONS
@@ -177,9 +195,11 @@ def test_every_live_row_really_holds_the_relation_it_claims() -> None:
         assert 0.0 < item.density <= 1.0
 
 
-def test_the_live_report_is_ordered_with_the_densest_relationship_first() -> None:
+def test_the_live_report_is_ordered_with_the_densest_relationship_first(
+    live_report: tuple[ConditionRelation, ...],
+) -> None:
     """The ordering is the report's whole output, so it is asserted."""
-    reported = overlapping_conditions(condition_populations(compiled_bundled_authority(), bundled_modelo_ids()))
+    reported = live_report
     assert reported, "no pair coincided, so this proves nothing"
     densities = [item.density for item in reported]
     assert densities == sorted(densities, reverse=True)
@@ -209,14 +229,16 @@ def test_a_pair_speaking_of_fields_is_not_compared_at_the_revision() -> None:
     assert reported[0].relation == "contained"
 
 
-def test_a_finer_unit_is_kept_only_when_every_finding_carries_it() -> None:
+def test_a_finer_unit_is_kept_only_when_every_finding_carries_it(
+    live_populations: dict[str, ConditionPopulation],
+) -> None:
     """A partial unit would make two conditions look disjoint by miskeying.
 
     Half the rows keyed at the field and half at the revision cannot be compared
     with anything, and the failure is silent: the pair reads as unrelated. That
     is a false negative in a report whose whole purpose is to find a relation.
     """
-    populations = condition_populations(compiled_bundled_authority(), bundled_modelo_ids())
+    populations = live_populations
     assert populations, "no condition had a population, so this proves nothing"
     fine = [name for name, population in populations.items() if "field" in population.units]
     assert fine, "no condition carries a field, so this proves nothing"
