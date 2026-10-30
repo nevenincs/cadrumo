@@ -959,6 +959,7 @@ class TestLedgerCorrections:
         assert len(retired.ledger.period_movements) == 3
         (row,) = svc.list_all(bucket_id=bucket)
         assert row.retired is True and row.retirement_reason is InventoryRetirementReason.ACTIVITY_CEASED
+        assert row.leaves_year_unresolved is True
         with pytest.raises(InventoryServiceInputError) as blocked:
             svc.movement_add(
                 bucket_id=bucket, actividad_id="A1", year=2025, movement=_sale("SELL-2", month=6, quantity="1")

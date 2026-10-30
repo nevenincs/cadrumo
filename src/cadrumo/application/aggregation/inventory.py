@@ -244,7 +244,7 @@ def _load_inventory_ledgers(
     # holding facts refuses rather than dropping them from the Anexo D rows,
     # because retirement is not proof that the stock never existed.
     selected = tuple(item for item in document.ledgers if item.year == filing_year)
-    if any(item.is_retired and item.has_economic_facts for item in selected):
+    if any(item.leaves_year_unresolved for item in selected):
         return CalculationSourceResolution(
             resolver_id=resolver_id,
             owned_sources=owned_sources,

@@ -36,6 +36,7 @@ from .registered_projections import (
     InventoryRefusalProjection,
     InventoryValuationOperationProjection,
     InventoryValuationPreviewProjection,
+    inventory_advisories,
 )
 from .registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
@@ -123,6 +124,7 @@ def project_inventory_list_result(result: BaseModel, receipt: OperationTerminalR
                 retired=row.retired,
                 retirement_reason=row.retirement_reason,
                 correction_count=row.correction_count,
+                advisories=inventory_advisories(year=row.year, leaves_year_unresolved=row.leaves_year_unresolved),
             )
             for row in private.rows
         ),

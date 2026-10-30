@@ -507,6 +507,8 @@ application:
       validator_id_unknown: Nincs {validator_id} azonosítójú folyamat-ellenőrző regisztrálva;
         összesen {registered_count} ellenőrző van regisztrálva.
   inventory:
+    advisories:
+      retired_book_leaves_year_unresolved: "Ez a készlet ki van vezetve, de még vannak tételei, ezért a %{year}. évi D melléklet megoldatlan marad. Állítsd vissza, vagy töröld a tételeit."
     labels:
       correction_reason:
         duplicate_entry: Kettős rögzítés

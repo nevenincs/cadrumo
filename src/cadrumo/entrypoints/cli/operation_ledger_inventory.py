@@ -224,6 +224,7 @@ def read_inventory_catalogue(
                     "year": row.year,
                     "valuation_method": row.valuation_method.value,
                     "opening_stock": row.opening_stock.decimal,
+                    "advisories": [item.model_dump(mode="json") for item in row.advisories],
                     "movement_count": row.movement_count,
                     "label": row.label,
                     "retired": row.retired,

@@ -31,6 +31,29 @@ if TYPE_CHECKING:
 from .registered_requests import InventoryRefusalCode, InventoryRefusalReason
 
 
+class InventoryAdvisoryProjection(BaseModel):
+    """Something the operator should know about a book, as a stable code and its sentence's key."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    code: Literal["retired_book_leaves_year_unresolved"]
+    key: str
+    year: int
+
+
+def inventory_advisories(*, year: int, leaves_year_unresolved: bool) -> tuple[InventoryAdvisoryProjection, ...]:
+    """Say so when a retired book holding entries keeps its year's Anexo D unresolved."""
+    if not leaves_year_unresolved:
+        return ()
+    return (
+        InventoryAdvisoryProjection(
+            code="retired_book_leaves_year_unresolved",
+            key="application.inventory.advisories.retired_book_leaves_year_unresolved",
+            year=year,
+        ),
+    )
+
+
 class InventoryListRowProjection(BaseModel):
     """Safe inventory-list facts; no acquisition or evidence detail is included."""
 
@@ -45,6 +68,7 @@ class InventoryListRowProjection(BaseModel):
     retired: bool = False
     retirement_reason: InventoryRetirementReason | None = None
     correction_count: NonNegativeInt = 0
+    advisories: tuple[InventoryAdvisoryProjection, ...] = ()
 
 
 class InventoryStockLayerProjection(BaseModel):
@@ -293,6 +317,7 @@ class InventoryLedgerProjection(BaseModel):
     retired: bool = False
     retirement_reason: InventoryRetirementReason | None = None
     history: tuple[InventoryHistoryEntryProjection, ...] = ()
+    advisories: tuple[InventoryAdvisoryProjection, ...] = ()
 
     @classmethod
     def from_ledger(
@@ -345,6 +370,7 @@ class InventoryLedgerProjection(BaseModel):
             retired=ledger.is_retired,
             retirement_reason=ledger.retirement_reason,
             history=tuple(InventoryHistoryEntryProjection.from_entry(entry) for entry in ledger.history),
+            advisories=inventory_advisories(year=ledger.year, leaves_year_unresolved=ledger.leaves_year_unresolved),
         )
 
 

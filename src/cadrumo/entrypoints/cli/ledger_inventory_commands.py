@@ -200,6 +200,7 @@ def inventory_inspect(ctx: typer.Context, actividad_id: str, year: int) -> None:
         for item in payload.period_movements
     )
     lines.extend(f"history\t{item.correction_id}\t{item.kind}\t{item.recorded_at}" for item in payload.history)
+    lines.extend(f"advisory\t{tr(item.key, year=item.year)}" for item in payload.advisories)
     emit_envelope(ctx, command="ledger.inventory.inspect", result=payload, lines=lines)
 
 

@@ -77,6 +77,7 @@ class InventoryActividadSummary(BaseModel):
     movement_count: NonNegativeInt
     label: str | None = None
     retired: bool = False
+    leaves_year_unresolved: bool = False
     retirement_reason: InventoryRetirementReason | None = None
     correction_count: NonNegativeInt = 0
 
@@ -338,6 +339,7 @@ class InventoryService:
                 movement_count=len(ledger.period_movements),
                 label=ledger.descriptor.label if ledger.descriptor is not None else None,
                 retired=ledger.is_retired,
+                leaves_year_unresolved=ledger.leaves_year_unresolved,
                 retirement_reason=ledger.retirement_reason,
                 correction_count=sum(entry.correction_reason is not None for entry in ledger.history),
             )

@@ -765,6 +765,15 @@ class InventoryLedger(BaseModel):
         return bool(self.period_movements) or self.opening_stock != MONEY_ZERO
 
     @property
+    def leaves_year_unresolved(self) -> bool:
+        """Whether this retired book's facts stop its year's Anexo D from being resolved.
+
+        Retirement is not proof that the stock never existed, so the facts are neither
+        declared nor dropped.
+        """
+        return self.is_retired and self.has_economic_facts
+
+    @property
     def known_movement_ids(self) -> frozenset[str]:
         """Every movement identity ever used here; a superseded one is never reissued."""
         return frozenset(

@@ -372,6 +372,7 @@ def _ledger_detail_lines(ledger: InventoryLedgerProjection) -> tuple[str, ...]:
             for item in ledger.period_movements
         ),
         *(_history_line(entry) for entry in ledger.history),
+        *(tr(item.key, year=item.year) for item in ledger.advisories),
     )
 
 

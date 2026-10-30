@@ -191,6 +191,14 @@ class InventoryHistoryEntryPayload(OutputSchema):
     prior_descriptor: InventoryDescriptorPayload | None = None
 
 
+class InventoryAdvisoryPayload(OutputSchema):
+    """A stable advisory code and the key of its sentence."""
+
+    code: NonEmptyStr
+    key: NonEmptyStr
+    year: InventoryYear
+
+
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
@@ -212,6 +220,7 @@ class InventoryLedgerPayload(OutputSchema):
     retired: bool = False
     retirement_reason: str | None = None
     history: list[InventoryHistoryEntryPayload] = []
+    advisories: list[InventoryAdvisoryPayload] = []
 
 
 class InventoryEvidenceAddResult(OutputSchema):

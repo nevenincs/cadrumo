@@ -482,6 +482,8 @@ application:
       validator_id_unknown: No flow validator is registered under id {validator_id};
         {registered_count} validators are registered.
   inventory:
+    advisories:
+      retired_book_leaves_year_unresolved: "This inventory was retired but still holds entries, so the %{year} Anexo D stays unresolved. Restore it, or remove its entries."
     labels:
       correction_reason:
         duplicate_entry: Duplicate entry

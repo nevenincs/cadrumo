@@ -525,6 +525,8 @@ application:
       validator_id_unknown: No hi ha cap validador de flux registrat amb l'identificador
         {validator_id}; hi ha {registered_count} validadors registrats.
   inventory:
+    advisories:
+      retired_book_leaves_year_unresolved: "Aquest inventari està retirat però encara té apunts, de manera que l'Annex D de %{year} queda sense resoldre. Restaura'l o elimina'n els apunts."
     labels:
       correction_reason:
         duplicate_entry: Entrada duplicada

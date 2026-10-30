@@ -526,6 +526,8 @@ application:
       validator_id_unknown: No hay ningún validador de flujo registrado con el identificador
         {validator_id}; hay {registered_count} validadores registrados.
   inventory:
+    advisories:
+      retired_book_leaves_year_unresolved: "Este inventario está retirado pero aún tiene apuntes, así que el Anexo D de %{year} queda sin resolver. Restáuralo o elimina sus apuntes."
     labels:
       correction_reason:
         duplicate_entry: Entrada duplicada
