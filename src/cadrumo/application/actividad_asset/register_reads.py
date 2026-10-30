@@ -235,6 +235,9 @@ def election_limits(
         twentieth = _NOT_TABLE_BOUND.get(election.method) is ActivityAssetNotTableBoundReason.TWENTIETH_LIMIT
         return ActivityAssetElectionLimits(
             class_key=election.authority_class_key,
+            class_label=(
+                None if election.authority_class_key is None else options.class_labels.get(election.authority_class_key)
+            ),
             maximum_coefficient=_optional_amount(authority.annual_rate if twentieth else None),
             maximum_period_ends_on=ends_on,
             legal_references=references,
@@ -243,6 +246,7 @@ def election_limits(
     group = next(item for item in options.table_groups if item.class_key == election.authority_class_key)
     return ActivityAssetElectionLimits(
         class_key=group.class_key,
+        class_label=group.class_label,
         maximum_coefficient=_amount(group.maximum_coefficient),
         minimum_coefficient=_amount(group.minimum_coefficient),
         maximum_period_years=_amount(group.maximum_period_years),

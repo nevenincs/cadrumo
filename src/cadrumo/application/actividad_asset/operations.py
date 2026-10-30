@@ -132,6 +132,7 @@ class ActivityAssetRegisterAuthority:
     claim_consumers: Callable[[Iterable[str]], Mapping[str, tuple[str, ...]]]
     today: Callable[[], date]
     schedule_authority: Callable[[ActivityAssetRevision, int], ScheduleAuthority]
+    class_labels: Callable[[DirectEstimationRegime, int], Mapping[str, str]]
 
 
 class ActivityAssetOperations:
@@ -490,6 +491,7 @@ class ActivityAssetOperations:
                     tax_year=tax_year,
                     asset_kind=revision.asset_kind,
                     regime=revision.amortization.regime,
+                    class_labels=self._authority.class_labels(revision.amortization.regime, tax_year),
                 ),
             )
         except RegistryError:
@@ -517,7 +519,13 @@ class ActivityAssetOperations:
         """Read what the registry admits for an asset kind and tax year under the profile's modality."""
         regime = self._taxpayer_modality()
         edition, revision = self._authority.edition(tax_year)
-        options = activity_asset_form_options(revision, tax_year=tax_year, asset_kind=asset_kind, regime=regime)
+        options = activity_asset_form_options(
+            revision,
+            tax_year=tax_year,
+            asset_kind=asset_kind,
+            regime=regime,
+            class_labels=self._authority.class_labels(regime, tax_year),
+        )
         return ActivityAssetFormOptionsView(
             tax_year=tax_year,
             asset_kind=asset_kind,
@@ -527,6 +535,7 @@ class ActivityAssetOperations:
             table_groups=tuple(
                 ActivityAssetTableGroup(
                     class_key=group.class_key,
+                    class_label=group.class_label,
                     maximum_coefficient=project_scalar(group.maximum_coefficient),
                     minimum_coefficient=project_scalar(group.minimum_coefficient),
                     maximum_period_years=project_scalar(group.maximum_period_years),

@@ -18,7 +18,10 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...core.tipos_actividad import TipoActividad
-from ...domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
+from ...domain.calculations.registry.actividad_asset_bindings import (
+    resolve_activity_asset_class_labels,
+    resolve_activity_asset_schedule_authority,
+)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -210,6 +213,11 @@ def _activity_asset_operations(
             claim_consumers=ports.claim_consumers,
             today=lambda: now().date(),
             schedule_authority=schedule_authority,
+            class_labels=lambda regime, tax_year: resolve_activity_asset_class_labels(
+                operation,
+                regime=regime,
+                tax_year=tax_year,
+            ),
         ),
     )
 

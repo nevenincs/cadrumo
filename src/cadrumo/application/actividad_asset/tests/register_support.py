@@ -9,11 +9,15 @@ from functools import cache
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetEdition
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import ActivityAssetRegisterAuthority
-from cadrumo.domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
+from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
+    resolve_activity_asset_class_labels,
+    resolve_activity_asset_schedule_authority,
+)
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
+from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
@@ -76,6 +80,11 @@ def _published_authority(revision: ActivityAssetRevision, tax_year: int) -> Sche
         )
 
 
+def _published_class_labels(regime: DirectEstimationRegime, tax_year: int) -> Mapping[str, str]:
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_activity_asset_class_labels(operation, regime=regime, tax_year=tax_year)
+
+
 def memory_register_authority(
     *,
     today: date = date(2025, 12, 31),
@@ -103,6 +112,7 @@ def memory_register_authority(
         claim_consumers=claim_consumers,
         today=lambda: today,
         schedule_authority=_published_authority,
+        class_labels=_published_class_labels,
     )
 
 

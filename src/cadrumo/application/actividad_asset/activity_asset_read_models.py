@@ -170,6 +170,7 @@ class ActivityAssetElectionLimits(_ReadModel):
     """
 
     class_key: str | None = None
+    class_label: str | None = None
     maximum_coefficient: PublicDecimal | None = None
     minimum_coefficient: PublicDecimal | None = None
     maximum_period_years: PublicDecimal | None = None
@@ -214,6 +215,7 @@ class ActivityAssetTableGroup(_ReadModel):
     """One amortization table class with its coefficient corridor."""
 
     class_key: str = Field(min_length=1, max_length=64)
+    class_label: str = Field(min_length=1, max_length=256)
     maximum_coefficient: PublicDecimal
     minimum_coefficient: PublicDecimal
     maximum_period_years: PublicDecimal

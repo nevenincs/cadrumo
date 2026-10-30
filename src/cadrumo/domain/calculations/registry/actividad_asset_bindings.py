@@ -12,7 +12,7 @@ exclusion the parameter's legal references ground.
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -39,7 +39,10 @@ from ...renta.actividad_asset.schedule import ScheduleAuthority, add_fractional_
 from ...renta.actividad_asset.vehicle_affectation import require_vehicle_affected
 from ...renta.actividad_asset.workforce import job_creation_increase, renewable_workforce_maintained
 from ...user_profile.plantilla_media import PlantillaMediaYear
+from .errors import RegistryValidationError
+from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, StringMappingPolicy
 from .formula_runtime_ops import resolve_dated_value, resolve_keyed_bracket
+from .governed_fact_scope import GovernedFactSource
 from .schema import ModeloRevision
 from .schema_base import DateAxis, ThresholdComparison
 from .schema_formula import ParameterDefinition
@@ -992,6 +995,7 @@ _METHOD_RESOLVERS: dict[AmortizationMethod, _MethodResolver] = {
     ),
 }
 
+
 @dataclass(frozen=True, slots=True)
 class ActivityAssetTableGroup:
     """One amortization table class with the corridor RIS art. 4.1 draws from it."""
@@ -1000,14 +1004,50 @@ class ActivityAssetTableGroup:
     maximum_coefficient: Decimal
     minimum_coefficient: Decimal
     maximum_period_years: Decimal
+    class_label: str
 
 
 @dataclass(frozen=True, slots=True)
 class ActivityAssetFormOptions:
-    """What one Modelo 100 edition admits for an asset kind, modality and tax year."""
+    """What one Modelo 100 edition admits for an asset kind, modality and tax year.
+
+    ``class_labels`` names every table class of the modality, not only the
+    classes this asset kind admits, because an election keeps its class under a
+    method the table does not bound.
+    """
 
     methods: tuple[AmortizationMethod, ...]
     table_groups: tuple[ActivityAssetTableGroup, ...]
+    class_labels: Mapping[str, str]
+
+
+_CLASS_LABELS_FACT = StringMappingFact(
+    fact_id="renta-actividad-inmovilizado-amortizacion-clase-denominacion",
+    date_axis=DateAxis.FILING_PERIOD,
+    policy=StringMappingPolicy(
+        subject="activity-asset table class names", value_whitespace=MappingValueWhitespace.STRIP
+    ),
+)
+_CLASS_LABEL_PREFIXES: dict[DirectEstimationRegime, str] = {
+    DirectEstimationRegime.NORMAL: "normal.",
+    DirectEstimationRegime.SIMPLIFIED: "simplificada.",
+}
+
+
+def resolve_activity_asset_class_labels(
+    authority: GovernedFactSource,
+    *,
+    regime: DirectEstimationRegime,
+    tax_year: int,
+) -> Mapping[str, str]:
+    """Read the official names of a modality's table classes for the end of a tax year.
+
+    Returns:
+        Each class key mapped to the name its legal table gives it.
+    """
+    prefix = _CLASS_LABEL_PREFIXES[regime]
+    entries = _CLASS_LABELS_FACT.resolve_entries(authority, effective_date=date(tax_year, 12, 31))
+    return {key.removeprefix(prefix): name for key, name in entries.items() if key.startswith(prefix)}
 
 
 def activity_asset_form_options(
@@ -1016,8 +1056,13 @@ def activity_asset_form_options(
     tax_year: int,
     asset_kind: AssetKind,
     regime: DirectEstimationRegime,
+    class_labels: Mapping[str, str],
 ) -> ActivityAssetFormOptions:
-    """Read the admitted methods and table groups from the same parameters the resolver charges by."""
+    """Read the admitted methods and table groups from the same parameters the resolver charges by.
+
+    Raises:
+        RegistryValidationError: When an offered table class has no official name.
+    """
     parameters = _Parameters(
         by_id={parameter.id: parameter for parameter in modelo_revision.parameters},
         revision_id=modelo_revision.id,
@@ -1040,15 +1085,21 @@ def activity_asset_form_options(
             or parameters.keyed(kind_parameter, class_key) != Decimal("1")
         ):
             continue
+        class_label = class_labels.get(class_key)
+        if class_label is None:
+            raise RegistryValidationError(
+                f"table class {class_key!r} has no official name for modality {regime.value!r}"
+            )
         groups.append(
             ActivityAssetTableGroup(
                 class_key=class_key,
                 maximum_coefficient=maximum_percent / Decimal("100"),
                 minimum_coefficient=Decimal("1") / period_years,
                 maximum_period_years=period_years,
+                class_label=class_label,
             ),
         )
-    return ActivityAssetFormOptions(methods=methods, table_groups=tuple(groups))
+    return ActivityAssetFormOptions(methods=methods, table_groups=tuple(groups), class_labels=class_labels)
 
 
 __all__ = [
@@ -1056,5 +1107,6 @@ __all__ = [
     "ActivityAssetFormOptions",
     "ActivityAssetTableGroup",
     "activity_asset_form_options",
+    "resolve_activity_asset_class_labels",
     "resolve_activity_asset_schedule_authority",
 ]
