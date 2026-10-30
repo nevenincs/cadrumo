@@ -126,6 +126,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "advisory_retencion_credit_grade": _C,
         "register_acquisition_exceeds_ledger": _C,
         "register_acquisition_partly_accounted": _C,
+        "register_acquisition_row_missing": _C,
+        "ledger_expense_may_be_durable": _C,
         # For the filer's information.
         "deferred_binding_source": _I,
         "oss_no_live_source": _I,

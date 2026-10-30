@@ -855,9 +855,9 @@ application:
           it names if it applies to you.
       activity_asset_foral_territory:
         what: You live in the Basque Country or Navarre in this period, where other
-          rules govern amortization. It is outside this calculation and no figure is
+          rules govern amortisation. It is outside this calculation and no figure is
           deducted.
-        what_to_do: Work out the amortization under the foral rules of your
+        what_to_do: Work out the amortisation under the foral rules of your
           territory and declare it with its tax authority.
       activity_asset_residence_period_unknown:
         what: Your profile records a tax residence, but none for this period, so your
@@ -865,7 +865,7 @@ application:
         what_to_do: State where you lived in this period in your profile, then calculate
           again.
       activity_asset_residence_unresolved:
-        what: Your recorded tax residence could not be read, so the amortization of
+        what: Your recorded tax residence could not be read, so the amortisation of
           your registered assets is outside this calculation and no figure is
           deducted.
         what_to_do: State your tax residence in your profile, then calculate again.
@@ -1586,7 +1586,7 @@ application:
       value_absent: an empty value
     findings:
       activity_asset_register_drift: 'Your asset register changed after modelo %{modelo}
-        %{filing_year}, period %{period}, was calculated (amortization charges added:
+        %{filing_year}, period %{period}, was calculated (amortisation charges added:
         %{claims_added}, replaced or removed: %{claims_removed}, schedules changed:
         %{schedules_changed}, bajas changed: %{disposals_changed}). Calculate it again.'
       art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income

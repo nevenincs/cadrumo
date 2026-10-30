@@ -272,6 +272,12 @@ CalculationSourceDiagnosticReason = Literal[
     # Findings for the filer, who decides which side is wrong; neither withholds anything.
     "register_acquisition_exceeds_ledger",
     "register_acquisition_partly_accounted",
+    # An element names a ledger entry the ledger no longer holds. A finding: the
+    # element keeps its figures and the filer decides which side is wrong.
+    "register_acquisition_row_missing",
+    # A row deducted as a current expense whose own words, or its purchase invoice's,
+    # describe an amortizable element. A question for the filer: the row keeps deducting.
+    "ledger_expense_may_be_durable",
     # The schedule refused to work out what an element accrued, so the element
     # contributes nothing and the amount it may be owed is unknown, not zero.
     "activity_asset_accrual_unavailable",
