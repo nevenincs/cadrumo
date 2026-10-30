@@ -6656,6 +6656,10 @@ tui:
       extract: Llegeix el document
       loading: S'estan llegint els documents…
       path_placeholder: Escriu el camí del fitxer
+        stale_filing_register: 'El Model {modelo} {year} {period} es va presentar
+          amb un registre d''actius que ha canviat: {changes} canvis'
+        stale_filing_register_unavailable: No s'ha pogut comparar el Model {modelo}
+          {year} {period} amb el registre d'actius
       pending: Pendent
       printed_total_disagrees: El total imprès al document no coincideix amb el registrat.
         Revisa la factura.

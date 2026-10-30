@@ -20,6 +20,7 @@ from ....application.operations.public_period import PublicPeriod
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.invoice_link import LinkInconsistencyDirection
+from ....domain.modelos.ledger_filing_snapshot import FiledRegisterState
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..components.theme import tokenised
@@ -82,6 +83,28 @@ def status_lines(status: LedgerStatusProjection) -> tuple[str, ...]:
             removed=filing.removed_count,
         )
         for filing in status.stale_filings
+        if filing.changed_count or filing.removed_count
+    )
+    lines.extend(
+        tr(
+            "tui.ledger.entry_tools.health.stale_filing_register",
+            modelo=filing.modelo,
+            year=filing.filing_year,
+            period=filing.period,
+            changes=filing.register_change_count,
+        )
+        for filing in status.stale_filings
+        if filing.register_state is FiledRegisterState.CHANGED
+    )
+    lines.extend(
+        tr(
+            "tui.ledger.entry_tools.health.stale_filing_register_unavailable",
+            modelo=filing.modelo,
+            year=filing.filing_year,
+            period=filing.period,
+        )
+        for filing in status.stale_filings
+        if filing.register_state is FiledRegisterState.UNAVAILABLE
     )
     return tuple(lines)
 

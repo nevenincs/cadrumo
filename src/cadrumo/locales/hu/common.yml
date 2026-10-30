@@ -6631,6 +6631,10 @@ tui:
       printed_total_disagrees: A dokumentumon szereplő végösszeg eltér a rögzítettől.
         Ellenőrizd a számlát.
       queue_heading: Ellenőrzésre váró mellékletek
+        stale_filing_register: 'A(z) {modelo} {year} {period} modelót olyan eszköznyilvántartással
+          nyújtottad be, amely azóta megváltozott: {changes} változás'
+        stale_filing_register_unavailable: A(z) {modelo} {year} {period} modelót nem
+          sikerült összevetni az eszköznyilvántartással
       read_done: Beolvasva. Ellenőrizd az értékeket, majd erősítsd meg a számlát.
       read_failed: A dokumentumot nem sikerült beolvasni.
       reading: A dokumentum beolvasása ezen a gépen…

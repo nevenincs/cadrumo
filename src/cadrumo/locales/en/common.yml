@@ -6540,6 +6540,10 @@ tui:
       pending: Pending
       printed_total_disagrees: The total printed on the document differs from the
         recorded total. Check the invoice.
+        stale_filing_register: 'Modelo {modelo} {year} {period} was filed on an asset
+          register that changed since: {changes} changes'
+        stale_filing_register_unavailable: Modelo {modelo} {year} {period} could not
+          be compared with the asset register
       queue_heading: Attachments awaiting review
       read_done: Read. Check the values, then confirm the invoice.
       read_failed: The document could not be read.

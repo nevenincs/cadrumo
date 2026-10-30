@@ -6672,6 +6672,10 @@ tui:
       loading: Leyendo los documentos…
       path_placeholder: Escribe la ruta del fichero
       pending: Pendiente
+        stale_filing_register: 'El Modelo {modelo} {year} {period} se presentó con
+          un registro de activos que ha cambiado: {changes} cambios'
+        stale_filing_register_unavailable: No se ha podido comparar el Modelo {modelo}
+          {year} {period} con el registro de activos
       printed_total_disagrees: El total impreso en el documento no coincide con el
         registrado. Revisa la factura.
       queue_heading: Adjuntos pendientes de revisión
