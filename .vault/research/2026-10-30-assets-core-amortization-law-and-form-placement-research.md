@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:25362d97f4d593b0859e835bce4c129b77db17ebe5e49c2992dcb0332b7c2c8d'
+body_hash: 'sha256:9305732b40c2e721996d545d991431459887e28d3100583ea5adfe50a37412dc'
 related:
   - "[[2026-09-23-assets-core-amortization-method-set-research]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
@@ -98,6 +98,20 @@ Each rule below is what the product implements. Precedence is statute and regula
 - Foral tables, because foral residents are refused.
 - No official worked example of a used asset was found. Twelve official worked examples for other cases exist and serve as independent oracles, including an accelerated part-year charge of 720, a leasing limit of 3,840, a módulos bar of 6,050 and an agrarian case of 11,185.
 
+
+## RIS art. 4.3 group paragraph and an individual buyer
+
+Not established. No law, binding consulta, TEAC resolution or AEAT manual found settles whether the last paragraph of RIS art. 4.3 reaches an IRPF taxpayer. Petete was not queried directly, and V2838-19 and V0534-20 could not be read.
+
+- The IS rules reach IRPF through LIRPF art. 28.1; DGT V0190-19 applies RIS art. 3 to an individual that way, without addressing art. 4.3 or groups.
+- Código de Comercio art. 42.1 defines a group by a sociedad holding control of another. LIS art. 18.2 lists an entity and its socios separately from entities in a group. Both favour not folding an individual into the group, by inference only.
+- DGT V1791/2025 (IS, obiter) ties the restriction to the acquirer: "salvo que la sociedad forme parte de un grupo mercantil en el sentido del artículo 42 del Código de Comercio".
+- Unread pointers to the contrary: a Audiencia Provincial de Madrid judgment of 16-01-2026 and STS 113/2021 reportedly accept natural-person control under art. 42, in other contexts.
+- Separately, LIRPF art. 41 and LIS art. 18.2.a require market value on a purchase from a company the individual controls. LIRPF art. 41 still cites the repealed TRLIS art. 16.
+
+Consequence for implementation: letter a stays available and the calculator infers nothing about the seller; a non-blocking advisory states the limit and that its reach is unsettled.
+
+Sources: https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764 ; https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627 ; https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328 ; https://www.fiscal-impuestos.com/sites/fiscal-impuestos.com/files/V1791-25.pdf ; https://aedaf.es/es/documentos/descarga/43168/como-deben-amortizarse-los-elementos-patrimoniales-integrantes-del-negocio-adquirido-mediante-traspaso
 ## Sources
 
 - `normatives/html/ley-35-2006.html.extracted.md`, `rd-439-2007.html.extracted.md`, `ley-27-2014.html.extracted.md`, `ley-27-2014-art-12-full.html.extracted.md`, `rd-634-2015.html.extracted.md`, `ley-37-1992.html.extracted.md`, `rd-1624-1992.html.extracted.md`, `orden-hac-1347-2024.html.extracted.md`, `orden-hac-1425-2025.html.extracted.md`, `boe-a-2026-2024-derogacion-rdl-16-2025.html.extracted.md`, all under `src/cadrumo/_data/corpus/`.
