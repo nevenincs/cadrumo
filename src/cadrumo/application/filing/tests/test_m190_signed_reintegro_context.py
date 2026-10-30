@@ -5,65 +5,33 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.filing.m190_context_validation import require_m190_signed_reintegro_context
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 from cadrumo.domain.filing.errors import FilingExportValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_PAIRS = ((81, 82), (108, 109), (255, 256), (282, 283))
-_NAMES = (
-    ("percepcion-dineraria", "percepcion-dineraria", "modelo-190-perceptor-row-percibido-dinerario"),
-    ("percepcion-especie", "percepcion-especie", "modelo-190-perceptor-row-percibido-especie"),
-    (
-        "incapacidad-dineraria",
-        "incapacidad-dineraria-percepcion",
-        "modelo-190-perceptor-row-incapacidad-dineraria-percepcion",
-    ),
-    (
-        "incapacidad-especie",
-        "incapacidad-especie-valoracion",
-        "modelo-190-perceptor-row-incapacidad-especie-valoracion",
-    ),
-)
-_SOURCE_DIGESTS = {"aeat-dr-190-2025": "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d"}
-_CONTEXT_FIELDS = (
-    ("modelo-190-perc-clave", 78, 1),
-    ("modelo-190-perc-subclave", 79, 2),
-    ("modelo-190-perc-ejercicio-devengo", 148, 4),
-    ("modelo-190-perc-retenciones-practicadas", 95, 13),
-    ("modelo-190-perc-ingresos-a-cuenta", 122, 13),
-    ("modelo-190-perc-incapacidad-dineraria-retenciones", 269, 13),
-    ("modelo-190-perc-incapacidad-especie-ingresos-a-cuenta", 296, 13),
-)
+_REVISIONS = ("2022", "2023", "2024", "2025-y-siguientes")
+_SOURCE_DIGESTS = {
+    "aeat-dr-190-2020": "4cefd924a7dda3ac5159582f728a72f6f162d3344b8e87f2d17900e6fdcf3b32",
+    "aeat-dr-190-2023": "430daf439ed645155ffc6096b65c4da5b26dd2e6c16b8e4781f9be145b3792cb",
+    "aeat-dr-190-2024": "20bc8086525ce850063b9ae8644b8514483e5c34f90c8e47cfadc6c52cf7390e",
+    "aeat-dr-190-2025": "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d",
+}
 
 
-def _record() -> ExportRecordDefinition:
-    fields = []
-    for (sign_offset, amount_offset), (sign_name, amount_name, binding) in zip(_PAIRS, _NAMES, strict=True):
-        for field_id, offset, length, policy in (
-            (f"modelo-190-perc-signo-{sign_name}", sign_offset, 1, ExportValuePolicy.SIGNED_COMPONENT_SIGN),
-            (f"modelo-190-perc-{amount_name}", amount_offset, 13, ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE),
-        ):
-            fields.append(
-                ExportFieldDefinition.model_construct(
-                    id=field_id,
-                    offset=offset,
-                    length=length,
-                    kind=CasillaFieldKind.BINDING,
-                    binding=binding,
-                    value_policy=policy,
-                    source_refs=("aeat-dr-190-2025",),
-                )
-            )
-    fields.extend(
-        ExportFieldDefinition.model_construct(
-            id=field_id, offset=offset, length=length, source_refs=("aeat-dr-190-2025",)
-        )
-        for field_id, offset, length in _CONTEXT_FIELDS
-    )
-    return ExportRecordDefinition.model_construct(id="modelo-190-perceptor", fields=tuple(fields))
+def _record(revision: str) -> ExportRecordDefinition:
+    layout = published_revision("190", revision).export_layouts[0]
+    return next(record for record in layout.records if record.id == "modelo-190-perceptor")
+
+
+def _field(record: ExportRecordDefinition, field_id: str) -> ExportFieldDefinition:
+    return next(field for field in record.fields if field.id == field_id)
+
+
+@pytest.fixture(params=_REVISIONS)
+def record(request: pytest.FixtureRequest) -> ExportRecordDefinition:
+    return _record(request.param)
 
 
 def _wire(*, key: str = "A", subkey: str = "01", devengo: str = "2024", filing: str = "2025") -> list[str]:
@@ -74,8 +42,7 @@ def _wire(*, key: str = "A", subkey: str = "01", devengo: str = "2024", filing: 
     return wire
 
 
-def test_negative_reintegro_requires_prior_devengo_and_zero_withholding() -> None:
-    record = _record()
+def test_negative_reintegro_requires_prior_devengo_and_zero_withholding(record: ExportRecordDefinition) -> None:
     wire = _wire()
     wire[80], wire[81:94] = "N", list("0" * 12 + "1")
     require_m190_signed_reintegro_context(record, "".join(wire), source_digests=_SOURCE_DIGESTS)
@@ -87,8 +54,7 @@ def test_negative_reintegro_requires_prior_devengo_and_zero_withholding() -> Non
             require_m190_signed_reintegro_context(record, "".join(changed), source_digests=_SOURCE_DIGESTS)
 
 
-def test_incapacity_key_conditions_apply_to_positive_and_negative_amounts() -> None:
-    record = _record()
+def test_incapacity_key_conditions_apply_to_positive_and_negative_amounts(record: ExportRecordDefinition) -> None:
     monetary = _wire(key="B", subkey="01")
     monetary[254], monetary[255:268] = "N", list("0" * 12 + "1")
     require_m190_signed_reintegro_context(record, "".join(monetary), source_digests=_SOURCE_DIGESTS)
@@ -103,17 +69,44 @@ def test_incapacity_key_conditions_apply_to_positive_and_negative_amounts() -> N
         require_m190_signed_reintegro_context(record, "".join(in_kind), source_digests=_SOURCE_DIGESTS)
 
 
-def test_signed_context_refuses_stale_source_and_inconsistent_pair() -> None:
-    record = _record()
+def _with_field(record: ExportRecordDefinition, field_id: str, **update: object) -> ExportRecordDefinition:
+    fields = tuple(field.model_copy(update=update) if field.id == field_id else field for field in record.fields)
+    return record.model_copy(update={"fields": fields})
+
+
+def test_signed_context_refuses_stale_source_and_inconsistent_pair(record: ExportRecordDefinition) -> None:
     wire = "".join(_wire())
+    sign = _field(record, "modelo-190-perc-signo-percepcion-dineraria")
+    ref = str(sign.source_refs[0])
     with pytest.raises(FilingExportValidationError, match="reviewed source digest"):
-        require_m190_signed_reintegro_context(record, wire, source_digests={"aeat-dr-190-2025": "0" * 64})
-    changed = record.model_copy(
-        update={"fields": (record.fields[0].model_copy(update={"binding": "other"}), *record.fields[1:])}
-    )
+        require_m190_signed_reintegro_context(record, wire, source_digests={ref: "0" * 64})
+    changed = _with_field(record, sign.id, binding="other")
     with pytest.raises(FilingExportValidationError, match="declaration is incomplete or changed"):
         require_m190_signed_reintegro_context(changed, wire, source_digests=_SOURCE_DIGESTS)
     negative_zero = _wire()
     negative_zero[80] = "N"
     with pytest.raises(FilingExportValidationError, match="nonzero magnitude"):
         require_m190_signed_reintegro_context(record, "".join(negative_zero), source_digests=_SOURCE_DIGESTS)
+
+
+def test_signed_context_refuses_a_wire_that_is_not_the_declared_record_width(record: ExportRecordDefinition) -> None:
+    with pytest.raises(FilingExportValidationError, match="record is incomplete"):
+        require_m190_signed_reintegro_context(record, "".join(_wire())[:-1], source_digests=_SOURCE_DIGESTS)
+
+
+def test_signed_context_refuses_a_component_pair_that_is_no_longer_adjacent(record: ExportRecordDefinition) -> None:
+    moved = _with_field(record, "modelo-190-perc-percepcion-dineraria", offset=83)
+    with pytest.raises(FilingExportValidationError, match="declaration is incomplete or changed"):
+        require_m190_signed_reintegro_context(moved, "".join(_wire()), source_digests=_SOURCE_DIGESTS)
+
+
+def test_signed_context_reads_the_withholding_where_the_layout_declares_it(record: ExportRecordDefinition) -> None:
+    relocated = _with_field(record, "modelo-190-perc-retenciones-practicadas", offset=400)
+    wire = _wire()
+    wire[80], wire[81:94] = "N", list("0" * 12 + "1")
+    wire[94:107] = list("0" * 12 + "1")
+    wire[399:412] = list("0" * 13)
+    require_m190_signed_reintegro_context(relocated, "".join(wire), source_digests=_SOURCE_DIGESTS)
+    wire[399:412] = list("0" * 12 + "1")
+    with pytest.raises(FilingExportValidationError, match="earlier devengo year and zero"):
+        require_m190_signed_reintegro_context(relocated, "".join(wire), source_digests=_SOURCE_DIGESTS)

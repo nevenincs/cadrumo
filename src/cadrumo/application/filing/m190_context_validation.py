@@ -3,9 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from decimal import Decimal
 
 from ...domain.calculations.export_field_kind import CasillaFieldKind
-from ...domain.calculations.registry.export_value_policy import ExportValuePolicy
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.export_value_policy import (
+    ExportValuePolicy,
+    export_value_policy_wire_length,
+    project_export_value,
+    validate_export_wire_value,
+)
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportValidationError
 
@@ -14,39 +21,35 @@ _M190_SIGNED_PAIRS = (
         "modelo-190-perc-signo-percepcion-dineraria",
         "modelo-190-perc-percepcion-dineraria",
         "modelo-190-perceptor-row-percibido-dinerario",
-        81,
-        82,
-        95,
+        "modelo-190-perc-retenciones-practicadas",
         None,
     ),
     (
         "modelo-190-perc-signo-percepcion-especie",
         "modelo-190-perc-percepcion-especie",
         "modelo-190-perceptor-row-percibido-especie",
-        108,
-        109,
-        122,
+        "modelo-190-perc-ingresos-a-cuenta",
         None,
     ),
     (
         "modelo-190-perc-signo-incapacidad-dineraria",
         "modelo-190-perc-incapacidad-dineraria-percepcion",
         "modelo-190-perceptor-row-incapacidad-dineraria-percepcion",
-        255,
-        256,
-        269,
+        "modelo-190-perc-incapacidad-dineraria-retenciones",
         "a-or-b01",
     ),
     (
         "modelo-190-perc-signo-incapacidad-especie",
         "modelo-190-perc-incapacidad-especie-valoracion",
         "modelo-190-perceptor-row-incapacidad-especie-valoracion",
-        282,
-        283,
-        296,
+        "modelo-190-perc-incapacidad-especie-ingresos-a-cuenta",
         "a-only",
     ),
 )
+_M190_CLAVE_ID = "modelo-190-perc-clave"
+_M190_SUBCLAVE_ID = "modelo-190-perc-subclave"
+_M190_FILING_YEAR_ID = "modelo-190-perc-year"
+_M190_DEVENGO_YEAR_ID = "modelo-190-perc-ejercicio-devengo"
 
 
 _M190_REVIEWED_SOURCES = {
@@ -57,15 +60,26 @@ _M190_REVIEWED_SOURCES = {
 }
 
 
-_M190_CONTEXT_FIELDS = (
-    ("modelo-190-perc-clave", 78, 1),
-    ("modelo-190-perc-subclave", 79, 2),
-    ("modelo-190-perc-ejercicio-devengo", 148, 4),
-    ("modelo-190-perc-retenciones-practicadas", 95, 13),
-    ("modelo-190-perc-ingresos-a-cuenta", 122, 13),
-    ("modelo-190-perc-incapacidad-dineraria-retenciones", 269, 13),
-    ("modelo-190-perc-incapacidad-especie-ingresos-a-cuenta", 296, 13),
+_M190_CONTEXT_FIELD_IDS = (
+    _M190_CLAVE_ID,
+    _M190_SUBCLAVE_ID,
+    _M190_FILING_YEAR_ID,
+    _M190_DEVENGO_YEAR_ID,
+    *(pair[3] for pair in _M190_SIGNED_PAIRS),
 )
+_M190_NEGATIVE_SIGN = project_export_value(ExportValuePolicy.SIGNED_COMPONENT_SIGN, Decimal(-1))
+
+
+def _span(field: ExportFieldDefinition) -> tuple[int, int]:
+    """Return the field's one-based start and exclusive end as the layout declares them."""
+    if field.offset is None or field.length is None:
+        raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
+    return field.offset, field.offset + field.length
+
+
+def _field_wire(wire: str, field: ExportFieldDefinition) -> str:
+    start, end = _span(field)
+    return wire[start - 1 : end - 1]
 
 
 def _m190_reviewed_source_ref(signed: ExportFieldDefinition, source_digests: Mapping[str, str] | None) -> str:
@@ -79,26 +93,21 @@ def _m190_reviewed_source_ref(signed: ExportFieldDefinition, source_digests: Map
 
 
 def _require_m190_reviewed_context(by_id: Mapping[str, ExportFieldDefinition], refs: tuple[str, ...]) -> None:
-    for identifier, offset, length in _M190_CONTEXT_FIELDS:
+    for identifier in _M190_CONTEXT_FIELD_IDS:
         context_field = by_id.get(identifier)
-        if (
-            context_field is None
-            or (context_field.offset, context_field.length) != (offset, length)
-            or tuple(map(str, context_field.source_refs)) != refs
-        ):
+        if context_field is None or tuple(map(str, context_field.source_refs)) != refs:
             raise FilingExportValidationError("modelo 190 signed condition context differs from reviewed source")
 
 
 def _m190_component_shape_matches(
-    sign: ExportFieldDefinition, amount: ExportFieldDefinition, sign_offset: int, amount_offset: int
+    sign: ExportFieldDefinition, amount: ExportFieldDefinition, retention: ExportFieldDefinition
 ) -> bool:
     return (
         sign.value_policy is ExportValuePolicy.SIGNED_COMPONENT_SIGN
         and amount.value_policy is ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE
-        and sign.offset == sign_offset
-        and amount.offset == amount_offset
-        and sign.length == 1
-        and amount.length == 13
+        and sign.length == export_value_policy_wire_length(ExportValuePolicy.SIGNED_COMPONENT_SIGN)
+        and amount.offset == _span(sign)[1]
+        and amount.length == retention.length
         and sign.kind is CasillaFieldKind.BINDING
         and amount.kind is CasillaFieldKind.BINDING
     )
@@ -119,26 +128,32 @@ def _m190_component_sources_match(sign: ExportFieldDefinition, amount: ExportFie
 
 def _require_m190_component_declaration(
     by_id: Mapping[str, ExportFieldDefinition],
-    pair: tuple[str, str, str, int, int, int, str | None],
+    pair: tuple[str, str, str, str, str | None],
     source_ref: str,
-) -> tuple[ExportFieldDefinition, ExportFieldDefinition]:
-    sign_id, amount_id, binding, sign_offset, amount_offset, _, _ = pair
-    sign, amount = by_id.get(sign_id), by_id.get(amount_id)
-    if sign is None or amount is None:
+) -> tuple[ExportFieldDefinition, ExportFieldDefinition, ExportFieldDefinition]:
+    sign_id, amount_id, binding, retention_id, _ = pair
+    sign, amount, retention = by_id.get(sign_id), by_id.get(amount_id), by_id.get(retention_id)
+    if sign is None or amount is None or retention is None:
         raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
-    if not _m190_component_shape_matches(sign, amount, sign_offset, amount_offset):
+    if not _m190_component_shape_matches(sign, amount, retention):
         raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
     if not _m190_component_binding_matches(sign, amount, binding):
         raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
     if not _m190_component_sources_match(sign, amount, source_ref):
         raise FilingExportValidationError("modelo 190 signed component declaration is incomplete or changed")
-    return sign, amount
+    return sign, amount, retention
 
 
-def _require_m190_component_wire(wire: str, sign_offset: int, amount_offset: int) -> tuple[str, str]:
-    marker = wire[sign_offset - 1]
-    magnitude = wire[amount_offset - 1 : amount_offset + 12]
-    if not magnitude.isascii() or not magnitude.isdigit() or marker not in {" ", "N"}:
+def _require_m190_component_wire(
+    wire: str, sign: ExportFieldDefinition, amount: ExportFieldDefinition
+) -> tuple[str, str]:
+    marker = _field_wire(wire, sign)
+    magnitude = _field_wire(wire, amount)
+    try:
+        validate_export_wire_value(ExportValuePolicy.SIGNED_COMPONENT_SIGN, marker)
+    except RegistryValidationError as exc:
+        raise FilingExportValidationError("modelo 190 signed component has invalid wire bytes") from exc
+    if not magnitude.isascii() or not magnitude.isdigit():
         raise FilingExportValidationError("modelo 190 signed component has invalid wire bytes")
     return marker, magnitude
 
@@ -161,20 +176,18 @@ def _m190_prior_year_is_valid(filing_year: str, devengo_year: str) -> bool:
 
 
 def _require_m190_reintegro_context(
-    wire: str,
     *,
     marker: str,
     magnitude: str,
-    retention_offset: int,
+    retention: str,
     filing_year: str,
     devengo_year: str,
 ) -> None:
-    if marker != "N":
+    if marker != _M190_NEGATIVE_SIGN:
         return
-    if magnitude == "0" * 13:
+    if magnitude == "0" * len(magnitude):
         raise FilingExportValidationError("modelo 190 negative reintegro requires a nonzero magnitude")
-    retention = wire[retention_offset - 1 : retention_offset + 12]
-    if not _m190_prior_year_is_valid(filing_year, devengo_year) or retention != "0" * 13:
+    if not _m190_prior_year_is_valid(filing_year, devengo_year) or retention != "0" * len(retention):
         raise FilingExportValidationError(
             "modelo 190 reintegro requires an earlier devengo year and zero associated withholding"
         )
@@ -190,24 +203,25 @@ def require_m190_signed_reintegro_context(
     signed = by_id.get(_M190_SIGNED_PAIRS[0][0])
     if signed is None or signed.value_policy is not ExportValuePolicy.SIGNED_COMPONENT_SIGN:
         return  # Superseded manually authored layouts do not claim this contract.
-    if len(wire) != 500:
+    if len(wire) != max(_span(field)[1] - 1 for field in record.fields):
         raise FilingExportValidationError("modelo 190 signed perceptor record is incomplete")
     refs = tuple(map(str, signed.source_refs))
     source_ref = _m190_reviewed_source_ref(signed, source_digests)
     _require_m190_reviewed_context(by_id, refs)
-    key, subkey = wire[77], wire[78:80]
-    filing_year, devengo_year = wire[4:8], wire[147:151]
+    key = _field_wire(wire, by_id[_M190_CLAVE_ID])
+    subkey = _field_wire(wire, by_id[_M190_SUBCLAVE_ID])
+    filing_year = _field_wire(wire, by_id[_M190_FILING_YEAR_ID])
+    devengo_year = _field_wire(wire, by_id[_M190_DEVENGO_YEAR_ID])
     for pair in _M190_SIGNED_PAIRS:
-        _, _, _, sign_offset, amount_offset, retention_offset, restricted = pair
-        _require_m190_component_declaration(by_id, pair, source_ref)
-        marker, magnitude = _require_m190_component_wire(wire, sign_offset, amount_offset)
-        occupied = marker == "N" or any(char != "0" for char in magnitude)
+        restricted = pair[4]
+        sign, amount, retention = _require_m190_component_declaration(by_id, pair, source_ref)
+        marker, magnitude = _require_m190_component_wire(wire, sign, amount)
+        occupied = marker == _M190_NEGATIVE_SIGN or any(char != "0" for char in magnitude)
         _require_m190_incapacity_context(occupied=occupied, restricted=restricted, key=key, subkey=subkey)
         _require_m190_reintegro_context(
-            wire,
             marker=marker,
             magnitude=magnitude,
-            retention_offset=retention_offset,
+            retention=_field_wire(wire, retention),
             filing_year=filing_year,
             devengo_year=devengo_year,
         )
