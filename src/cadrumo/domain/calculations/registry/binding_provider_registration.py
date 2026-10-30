@@ -43,6 +43,10 @@ from ....core.aggregation import (
     BindingSourceKind,
     RowSetGroupingKind,
 )
+from .actividad_asset_disposal_bindings import (
+    ActivityAssetDisposalProvider,
+    validate_activity_asset_disposal_binding,
+)
 from .afiliado_contribution_bindings import AfiliadoContributionProvider, validate_afiliado_contribution_binding
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
 from .binding_aggregation import binding_aggregation_op
@@ -492,6 +496,12 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
         LedgerRentaGastosEstimacionDirectaProvider,
         validate_ledger_renta_gastos_estimacion_directa_aggregation_binding,
+        resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
+    ),
+    _ledger_aggregation(
+        BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
+        ActivityAssetDisposalProvider,
+        validate_activity_asset_disposal_binding,
         resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
     ),
     _ledger_aggregation(

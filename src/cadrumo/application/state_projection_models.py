@@ -228,6 +228,7 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (
             "cli.app.modelo.bindings.readiness.datos_libro"
         ),
+        BindingSourceKind.ACTIVITY_ASSET_DISPOSAL: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION: (
             "cli.app.modelo.bindings.readiness.datos_libro"
@@ -278,6 +279,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.LEDGER_OSS_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_IVA_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (OperatorActionAxis.IMPORT_LEDGER_DATA),
+        BindingSourceKind.ACTIVITY_ASSET_DISPOSAL: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION: (OperatorActionAxis.IMPORT_LEDGER_DATA),
         BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,

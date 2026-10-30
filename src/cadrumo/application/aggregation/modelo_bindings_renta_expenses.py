@@ -12,6 +12,9 @@ from datetime import date
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
+    resolve_activity_asset_disposal_binding_values,
+)
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
@@ -77,6 +80,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
     resolver_id: ClassVar[str] = "ledger_renta_gastos_estimacion_directa_aggregation"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
     )
 
     def __init__(
@@ -190,6 +194,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 period=aggregation.period,
                 operation=operation,
                 resolver_id=self.resolver_id,
+                transactions=self._ports.transaction_reader,
             )
         refused_owned = refused_register_owned_rows(
             aggregation.issues,
@@ -212,10 +217,16 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
-                context.revision,
-                all_observations,
-            ),
+            binding_values={
+                **resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
+                    context.revision,
+                    all_observations,
+                ),
+                **resolve_activity_asset_disposal_binding_values(
+                    context.revision,
+                    asset_projection.disposal_observations,
+                ),
+            },
             source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
             diagnostics=source_issue_diagnostics(
                 issues,
@@ -261,7 +272,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             + activity_asset_disposal_provenance(
                 asset_projection.disposal_revision_ids,
                 resolver_id=self.resolver_id,
-                resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+                resolved_binding_source=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
             ),
         )
 

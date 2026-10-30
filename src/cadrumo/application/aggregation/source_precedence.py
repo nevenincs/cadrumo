@@ -84,6 +84,11 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
         ),
         disposition=CallerOverrideDisposition.CARRY,
     ),
+    CallerOverridePrecedenceTier(
+        name="box_shared_with_the_filer",
+        source_kinds=frozenset({BindingSourceKind.ACTIVITY_ASSET_DISPOSAL}),
+        disposition=CallerOverrideDisposition.CARRY,
+    ),
 )
 
 

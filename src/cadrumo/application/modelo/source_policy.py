@@ -97,6 +97,7 @@ _FAMILY_AND_SURFACE: Final[Mapping[BindingSourceKind, tuple[SourceFamily, Source
             SourceFamily.RECORDS,
             SourceSurface.LEDGER,
         ),
+        BindingSourceKind.ACTIVITY_ASSET_DISPOSAL: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION: (
             SourceFamily.RECORDS,

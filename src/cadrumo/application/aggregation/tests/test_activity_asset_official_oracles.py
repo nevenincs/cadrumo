@@ -611,8 +611,11 @@ def test_the_manuals_sold_building_reduces_cost_by_the_day_count_charge(operatio
     assert calculation.result == Decimal("169726.01")
     box_0208, _, resolution = _m100(register)
     assert box_0208 == Decimal("482.01")
-    routed = [item for item in resolution.diagnostics if item.reason == "unrouted_observation"]
-    assert any("169726.01" in item.message and "1843" in item.message for item in routed)
+    gains = [
+        value for binding, value in resolution.binding_values.items() if str(binding).endswith("gain-property-1843")
+    ]
+    assert gains == [Decimal("169726.01")]
+    assert "unrouted_observation" not in {item.reason for item in resolution.diagnostics}
 
 
 # --- Invariants over a mixed register ----------------------------------------------------------

@@ -1,6 +1,8 @@
 docs:
   casilla:
     binding_source:
+      activity_asset_disposal: Guany, pèrdua o excés d'una baixa del registre d'elements
+        de l'activitat, sumat a la casella que li dona aquesta edició
       afiliado_cotizacion: des del calendari de quotes d'afiliats que vas aportar
       atribucion_member: des dels membres en atribució de rendes
       bienes_inversion_regularizacion: des de la regularització de béns d'inversió

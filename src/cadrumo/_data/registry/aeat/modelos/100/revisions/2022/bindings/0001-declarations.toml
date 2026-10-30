@@ -680,3 +680,115 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd", "boe-model
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
+
+# A baja's figure from the activity-asset register. The box holds other facts of the
+# same kind too, so the filer's own entry stays admissible over it.
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-excess-direct-0179"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", route = "excess_direct_estimation", target_casilla_id = "0179", fact = "amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:da-30"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["libertad de amortización"]
+
+# A baja's figure from the activity-asset register. The box holds other facts of the
+# same kind too, so the filer's own entry stays admissible over it.
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-excess-objective-1478"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", route = "excess_objective_estimation", target_casilla_id = "1478", fact = "amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:da-30"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Otras percepciones empresariales"]
+
+# A baja's figure from the activity-asset register. The box holds other facts of the
+# same kind too, so the filer's own entry stays admissible over it.
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-gain-element-1654"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", route = "transmission_gain_element", target_casilla_id = "1654", fact = "amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+# A baja's figure from the activity-asset register. The box holds other facts of the
+# same kind too, so the filer's own entry stays admissible over it.
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-loss-element-1639"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", route = "transmission_loss_element", target_casilla_id = "1639", fact = "amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+# A baja's figure from the activity-asset register. The box holds other facts of the
+# same kind too, so the filer's own entry stays admissible over it.
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-gain-property-1843"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", route = "transmission_gain_property", target_casilla_id = "1843", fact = "amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+# A baja's figure from the activity-asset register. The box holds other facts of the
+# same kind too, so the filer's own entry stays admissible over it.
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-loss-property-1832"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", route = "transmission_loss_property", target_casilla_id = "1832", fact = "amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+# A baja's figure from the activity-asset register. The box holds other facts of the
+# same kind too, so the filer's own entry stays admissible over it.
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-gain-no-transmission-0304"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", route = "no_transmission_gain", target_casilla_id = "0304", fact = "amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]
+
+# A baja's figure from the activity-asset register. The box holds other facts of the
+# same kind too, so the filer's own entry stays admissible over it.
+[[revisions."2022".bindings]]
+id = "renta-activity-asset-disposal-loss-no-transmission-0305"
+provider = { kind = "activity_asset_disposal", modelo = "100", period = "0A", route = "no_transmission_loss", target_casilla_id = "0305", fact = "amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-33"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Ganancias y pérdidas patrimoniales"]

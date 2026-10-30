@@ -1,6 +1,8 @@
 docs:
   casilla:
     binding_source:
+      activity_asset_disposal: A tevékenységi eszköznyilvántartás kivezetéséből származó
+        nyereség, veszteség vagy többlet, az ezen kiadás szerinti mezőbe összeadva
       afiliado_cotizacion: az általad megadott tagi befizetési naptárból
       atribucion_member: az atribución de rentas tagjaiból
       bienes_inversion_regularizacion: a beruházási javak korrekciójából

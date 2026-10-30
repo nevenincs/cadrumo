@@ -298,6 +298,10 @@ class BindingSourceKind(StrEnum):
     # distinct from the transaction-ledger aggregation family and from capital-
     # goods IVA regularisation.
     INVENTORY = "inventory"
+    # A baja's gain, loss or excess, from the activity-asset register, routed to the
+    # boxes each Modelo 100 revision gives them. The boxes hold other facts of the
+    # same kind too, so the filer's own entry stays admissible over the figure.
+    ACTIVITY_ASSET_DISPOSAL = "activity_asset_disposal"
     # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
     # 104-105): the source that would materialise Modelo 303 casilla 44 / the
     # Modelo 390 annual regularización field from the provisional percentage

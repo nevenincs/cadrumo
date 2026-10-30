@@ -665,6 +665,8 @@ additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022
 [[revisions."2022".casillas]]
 id = "1832"
 number = "1832"
+input_kind = "bound"
+binding = "renta-activity-asset-disposal-loss-property-1832"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_perdida_inmueble_imputable_ejercicio"
 continuidad_id = "irpf-perdida-inmueble-imputable-ejercicio"
@@ -758,6 +760,8 @@ additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022
 [[revisions."2022".casillas]]
 id = "1843"
 number = "1843"
+input_kind = "bound"
+binding = "renta-activity-asset-disposal-gain-property-1843"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_no_exenta_imputable"
 continuidad_id = "irpf-ganancia-inmueble-no-exenta-imputable"

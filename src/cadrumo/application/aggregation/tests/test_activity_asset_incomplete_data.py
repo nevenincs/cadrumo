@@ -117,7 +117,7 @@ def test_a_possible_excess_with_an_unknown_opening_is_a_finding_in_the_instalmen
     )
 
 
-def test_a_possible_excess_with_an_unknown_opening_still_stops_the_annual_return() -> None:
+def test_a_possible_excess_with_an_unknown_opening_is_a_finding_in_the_annual_return() -> None:
     history = _disposed_with_unknown_opening(
         ActivityAssetDisposalReason.SALE,
         regime=PriorFreeDepreciationRegime.TRLIS_DT_37,
@@ -125,7 +125,9 @@ def test_a_possible_excess_with_an_unknown_opening_still_stops_the_annual_return
 
     resolution = resolve_m100(history)
 
-    assert _blocks(resolution) == {"unrouted_observation"}
+    assert _blocks(resolution) == set()
+    (finding,) = (item for item in resolution.diagnostics if item.reason == "activity_asset_disposal_finding")
+    assert "activity income may be understated" in finding.message
 
 
 def test_a_registry_failure_behind_a_baja_is_an_unresolved_finding(monkeypatch: pytest.MonkeyPatch) -> None:

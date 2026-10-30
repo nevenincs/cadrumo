@@ -1,6 +1,8 @@
 docs:
   casilla:
     binding_source:
+      activity_asset_disposal: Gain, loss or excess from a baja in the activity-asset
+        register, added to the box this edition gives it
       afiliado_cotizacion: from the member contribution calendar you supplied
       atribucion_member: from the atribución de rentas members you recorded
       bienes_inversion_regularizacion: from your bienes de inversión regularisation

@@ -31,9 +31,14 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.tipos_actividad import TipoActividad
+from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
+    ActivityAssetDisposalRoute,
+    activity_asset_disposal_route_casillas,
+)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
+from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
 from ...domain.categories.spending_category_catalogue import amortizable_spending_categories
 from ...domain.contribuyente.tax_residence import ResidenceTerritory
 from ...domain.modelos.calculation_revision_sources import (
@@ -44,6 +49,7 @@ from ...domain.modelos.calculation_revision_sources import (
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     asset_schedule_history,
+    claims_through_year,
     current_revisions,
     m100_casilla_id,
     select_effective_claims,
@@ -79,7 +85,9 @@ from ..actividad_asset.schedule_walk import (
     m130_register_accruals,
 )
 from ..calculations.actividad_asset_schedule import forecast_activity_asset_charge
+from ..invoices.catalogue_reads_ports import TransactionCatalogueReader
 from ..user_profile.plantilla_media_rows import plantilla_media_years_of
+from ..user_profile.projections import record_to_path_values
 from . import _shared_issue_reasons
 from .renta_ledger import resident_territory
 from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceProvenance
@@ -194,12 +202,22 @@ class ActivityAssetExpenseObservation(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
+class ActivityAssetDisposalObservation:
+    """One figure of a baja on its way to the box the revision gives its route."""
+
+    revision_id: str
+    route: ActivityAssetDisposalRoute
+    amount: Decimal
+
+
+@dataclass(frozen=True, slots=True)
 class ActivityAssetProjection:
     """What the register contributes to one calculation, and what it has to say about it."""
 
     observations: tuple[ActivityAssetExpenseObservation, ...] = ()
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     disposal_revision_ids: tuple[str, ...] = ()
+    disposal_observations: tuple[ActivityAssetDisposalObservation, ...] = ()
 
 
 class _Forecast:
@@ -244,6 +262,7 @@ def m100_activity_asset_projection(
     period: Period,
     operation: PinnedAuthorityOperation,
     resolver_id: str,
+    transactions: TransactionCatalogueReader,
 ) -> ActivityAssetProjection:
     """Project effective claims into casillas 0208 and 0227, reporting this year's uncovered intervals.
 
@@ -280,18 +299,17 @@ def m100_activity_asset_projection(
         for asset_id in sorted(current)
         if (baja := current[asset_id].disposal) is not None and baja.disposal_date.year == period.filing_year
     )
+    reader = _BajaReader(context, operation, period=period, transactions=transactions, resolver_id=resolver_id)
+    bajas = tuple(reader.read(revision, history) for revision in disposed)
     return ActivityAssetProjection(
         observations=observations,
         diagnostics=(
             *_residence_period_findings(territory, period=period, resolver_id=resolver_id),
             *diagnostics,
-            *(
-                note
-                for revision in disposed
-                for note in _m100_disposal_notes(revision, history, operation=operation, resolver_id=resolver_id)
-            ),
+            *(note for baja in bajas for note in baja.notes),
         ),
         disposal_revision_ids=tuple(revision.revision_id for revision in disposed),
+        disposal_observations=tuple(item for baja in bajas for item in baja.observations),
     )
 
 
@@ -331,10 +349,10 @@ def m130_activity_asset_projection(
         )
     )
     rows = transactions.load_by_ids(
-        revision.acquisition.observed_transaction_id for revision in current.values()
+        transaction_id for revision in current.values() for transaction_id in revision.acquisition_transaction_ids
     ).transactions
     activities = {
-        asset_id: (row.tipo_actividad if (row := rows.get(revision.acquisition.observed_transaction_id)) else None)
+        asset_id: (row.tipo_actividad if (row := revision.acquisition_row_in(rows)) else None)
         for asset_id, revision in current.items()
     }
     observations: list[ActivityAssetExpenseObservation] = []
@@ -449,7 +467,7 @@ def _m130_excess_rows(
 ) -> tuple[ActivityAssetDisposalExcess, ...]:
     found: list[ActivityAssetDisposalExcess] = []
     for revision in disposed:
-        row = rows.get(revision.acquisition.observed_transaction_id)
+        row = revision.acquisition_row_in(rows)
         is_agrarian = row is not None and row.tipo_actividad in agrarian
         disposal = revision.disposal
         if disposal is None or not disposal_excess_applies(revision, disposal):
@@ -492,7 +510,9 @@ def activity_asset_disposal_excess(
             authority=operation,
         )
     )
-    rows = transactions.load_by_ids(revision.acquisition.observed_transaction_id for revision in disposed).transactions
+    rows = transactions.load_by_ids(
+        transaction_id for revision in disposed for transaction_id in revision.acquisition_transaction_ids
+    ).transactions
     return _m130_excess_rows(disposed, history, operation=operation, agrarian=agrarian, rows=rows)
 
 
@@ -506,17 +526,6 @@ def _calculate(
     if disposal is None:  # defensive: callers select revisions with a baja
         raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.disposal_not_recorded")
     return calculate_element_disposal(revision, disposal, history, bounds=pinned_disposal_bounds(operation))
-
-
-def _unrouted_note(revision: ActivityAssetRevision, message: str, *, resolver_id: str) -> CalculationSourceDiagnostic:
-    return CalculationSourceDiagnostic(
-        reason="unrouted_observation",
-        source_kind=resolver_id,
-        resolver_id=resolver_id,
-        source_ref=f"activity-asset:{revision.asset_id}",
-        message=f"baja of element {revision.asset_id!r}: {message}",
-        remedy="complete the row on the form yourself, or correct the baja in the register",
-    )
 
 
 def _disposal_finding(
@@ -537,16 +546,19 @@ def _m100_unresolved_disposal(
     *,
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Leave a baja's figures unresolved; only a possible excess, which is activity income, still stops the return.
+    """Leave a baja's figures unresolved and say so; incomplete history never stops the return.
 
-    A withdrawal computes no gain, so it has nothing to say.
+    A withdrawal computes no gain, so it has nothing to say.  A possible excess is
+    activity income the filer has to account for, so the finding says that too.
     """
     disposal = revision.disposal
     if disposal is None or disposal.reason is ActivityAssetDisposalReason.WITHDRAWAL:
         return ()
     message = f"its result could not be worked out ({error})"
     if disposal_excess_applies(revision, disposal):
-        return (_unrouted_note(revision, f"{message}, so activity income may be understated", resolver_id=resolver_id),)
+        return (
+            _disposal_finding(revision, f"{message}, so activity income may be understated", resolver_id=resolver_id),
+        )
     return (_disposal_finding(revision, f"{message}; no box carries it", resolver_id=resolver_id),)
 
 
@@ -565,9 +577,10 @@ def _m130_excess_notes(
         )
     if row.agrarian:
         return (
-            _unrouted_note(
+            _disposal_finding(
                 row.revision,
-                f"{row.amount} EUR of excess in an agrarian activity has no established instalment line",
+                f"{row.amount} EUR of excess in an agrarian activity has no established instalment line; "
+                "it is left to you",
                 resolver_id=resolver_id,
             ),
         )
@@ -600,96 +613,182 @@ def activity_asset_disposal_excess_m131_findings(
     )
 
 
-def _m100_disposal_notes(
-    revision: ActivityAssetRevision,
-    history: ActivityAssetHistory,
-    *,
-    operation: PinnedAuthorityOperation,
-    resolver_id: str,
-) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Say where a baja's figures belong; this edition binds none of those rows, so none is declared here.
+@dataclass(frozen=True, slots=True)
+class _BajaReading:
+    observations: tuple[ActivityAssetDisposalObservation, ...] = ()
+    notes: tuple[CalculationSourceDiagnostic, ...] = ()
 
-    A gain or loss never reaches casilla 02 or the rendimiento neto.  Each figure
-    the return needs is a blocking note carrying the amount and its destination,
-    which keeps the calculated figure in front of the filer.
+
+class _BajaReader:
+    """Read each baja of one Modelo 100 calculation into the boxes its revision binds.
+
+    A gain or loss never reaches casilla 02 or the rendimiento neto.  A figure the
+    edition does not bind, or whose line is not established, stays in front of the
+    filer as a finding.
     """
-    try:
-        calculation = _calculate(revision, history, operation=operation)
-    except (ActividadAssetError, RegistryError) as error:
-        return _m100_unresolved_disposal(revision, error, resolver_id=resolver_id)
-    notes: list[CalculationSourceDiagnostic] = []
-    route = _m100_result_route(revision, calculation)
-    if route is not None:
-        notes.append(
-            _unrouted_note(
+
+    def __init__(
+        self,
+        context: CalculationSourceContext,
+        operation: PinnedAuthorityOperation,
+        *,
+        period: Period,
+        transactions: TransactionCatalogueReader,
+        resolver_id: str,
+    ) -> None:
+        self._context = context
+        self._operation = operation
+        self._period = period
+        self._transactions = transactions
+        self._resolver_id = resolver_id
+        self._routes = activity_asset_disposal_route_casillas(context.revision)
+
+    def read(self, revision: ActivityAssetRevision, history: ActivityAssetHistory) -> _BajaReading:
+        try:
+            calculation = _calculate(revision, history, operation=self._operation)
+        except (ActividadAssetError, RegistryError) as error:
+            return _BajaReading(notes=_m100_unresolved_disposal(revision, error, resolver_id=self._resolver_id))
+        figures: list[tuple[ActivityAssetDisposalRoute, Decimal]] = []
+        notes: list[CalculationSourceDiagnostic] = []
+        if calculation.route_changed_by_later_affectation:
+            notes.append(self._finding(revision, _later_affectation_message(calculation)))
+        elif (route := _result_route(revision, calculation)) is not None and calculation.result is not None:
+            figures.append((route, abs(calculation.result)))
+        if calculation.excess > Decimal("0"):
+            excess_route = self._excess_route(revision)
+            if excess_route is None:
+                notes.append(
+                    self._finding(
+                        revision,
+                        f"{calculation.excess} EUR of excess in an agrarian activity under modulos has no established "
+                        "line; it is left to you",
+                    ),
+                )
+            else:
+                figures.append((excess_route, calculation.excess))
+        notes.extend(self._figure_finding(revision, route, amount) for route, amount in figures)
+        notes.extend(
+            self._finding(
                 revision,
-                f"a {_result_word(calculation)} of {calculation.result} EUR belongs in {route}; this edition binds no "
-                "source to those boxes and the meaning of clave 1626 on the row is not established",
-                resolver_id=resolver_id,
-            ),
-        )
-    if calculation.route_changed_by_later_affectation:
-        notes.append(
-            _unrouted_note(
-                revision,
-                "the sale falls within three years of a later affectation, which changes its route (LIRPF art. 28.3)",
-                resolver_id=resolver_id,
-            ),
-        )
-    if calculation.excess > Decimal("0"):
-        notes.append(
-            _unrouted_note(
-                revision,
-                f"{calculation.excess} EUR of excess is income of the activity: box {_M100_EXCESS_ROUTE}; no "
-                "line is established for an agrarian activity under modulos",
-                resolver_id=resolver_id,
-            ),
-        )
-    notes.extend(
-        CalculationSourceDiagnostic(
-            reason="activity_asset_disposal_finding",
-            source_kind=resolver_id,
-            resolver_id=resolver_id,
-            source_ref=f"activity-asset:{revision.asset_id}",
-            message=(
-                f"baja of element {revision.asset_id!r}: {finding.kind.value}"
+                finding.kind.value
                 + ("" if finding.tax_year is None else f" in {finding.tax_year}")
-                + ("" if finding.effect_on_cost is None else f", raising the reduction by {finding.effect_on_cost} EUR")
-            ),
+                + (
+                    "" if finding.effect_on_cost is None else f", raising the reduction by {finding.effect_on_cost} EUR"
+                ),
+            )
+            for finding in calculation.findings
         )
-        for finding in calculation.findings
+        return _BajaReading(
+            observations=tuple(
+                ActivityAssetDisposalObservation(revision_id=revision.revision_id, route=route, amount=amount)
+                for route, amount in figures
+                if route in self._routes
+            ),
+            notes=tuple(notes),
+        )
+
+    def _finding(self, revision: ActivityAssetRevision, message: str) -> CalculationSourceDiagnostic:
+        return _disposal_finding(revision, message, resolver_id=self._resolver_id)
+
+    def _figure_finding(
+        self,
+        revision: ActivityAssetRevision,
+        route: ActivityAssetDisposalRoute,
+        amount: Decimal,
+    ) -> CalculationSourceDiagnostic:
+        box = self._routes.get(route)
+        if box is None:
+            return self._finding(revision, f"{amount} EUR ({route.value}) reaches no box of this edition")
+        return self._finding(revision, f"{amount} EUR ({route.value}) enters box {box}{self._row_entry(route)}")
+
+    def _row_entry(self, route: ActivityAssetDisposalRoute) -> str:
+        if route in _ELEMENT_ROW_ROUTES:
+            clave = next(
+                (
+                    casilla.number
+                    for casilla in self._context.revision.casillas
+                    if casilla.semantic_role == _ELEMENT_TYPE_CLAVE_ROLE
+                ),
+                None,
+            )
+            return (
+                f"; on its row, enter clave {_AFFECTED_ELEMENT_CLAVE} in box {clave}, for an element affected to an "
+                "activity, with the dates and values"
+            )
+        if route in _PROPERTY_ROW_ROUTES:
+            return "; on its row, mark the property as affected to an activity and enter the dates and values"
+        return ""
+
+    def _excess_route(self, revision: ActivityAssetRevision) -> ActivityAssetDisposalRoute | None:
+        """Follow the determination method of the disposal year: an agrarian one under modulos has no line."""
+        profile = self._context.profile
+        token = (
+            None
+            if profile is None
+            else record_to_path_values(profile.record, as_of=self._period.end_date).get(_ESTIMATION_REGIME_PATH)
+        )
+        if token != str(irpf_estimation_regime_objetiva_token(authority=self._operation)):
+            return ActivityAssetDisposalRoute.EXCESS_DIRECT_ESTIMATION
+        row = revision.acquisition_row_in(self._transactions.load().transactions)
+        agrarian = frozenset(
+            TipoActividad(code)
+            for code in tipo_actividad_code_set(
+                _AGRARIAN_INSTALMENT_SELECTOR,
+                effective_date=self._period.end_date,
+                authority=self._operation,
+            )
+        )
+        if row is not None and row.tipo_actividad in agrarian:
+            return None
+        return ActivityAssetDisposalRoute.EXCESS_OBJECTIVE_ESTIMATION
+
+
+_ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
+_ELEMENT_TYPE_CLAVE_ROLE: Final[str] = "irpf_ganancia_otros_tipo_elemento_clave"
+_AFFECTED_ELEMENT_CLAVE: Final[str] = "5"
+"""AEAT's Renta help for 2022 to 2025 gives clave 5 to other elements affected to economic activities."""
+
+_ELEMENT_ROW_ROUTES: Final[frozenset[ActivityAssetDisposalRoute]] = frozenset(
+    {ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT, ActivityAssetDisposalRoute.TRANSMISSION_LOSS_ELEMENT},
+)
+_PROPERTY_ROW_ROUTES: Final[frozenset[ActivityAssetDisposalRoute]] = frozenset(
+    {ActivityAssetDisposalRoute.TRANSMISSION_GAIN_PROPERTY, ActivityAssetDisposalRoute.TRANSMISSION_LOSS_PROPERTY},
+)
+
+
+def _later_affectation_message(calculation: ActivityAssetDisposalCalculation) -> str:
+    return (
+        f"the sale falls within three years of a later affectation, which changes its route (LIRPF art. 28.3), so its "
+        f"result of {calculation.result} EUR enters no box and is left to you"
     )
-    return tuple(notes)
 
 
-_M100_EXCESS_ROUTE: Final[str] = "0179 under estimacion directa, 1478 under modulos outside agriculture"
-
-_M100_TRANSMISSION_ROUTES: Final[dict[tuple[bool, bool], str]] = {
-    (True, False): "boxes 1654 to 0387 (ahorro)",
-    (True, True): "boxes 1843 to 1846 (ahorro)",
-    (False, False): "boxes 1639 to 0385 (ahorro)",
-    (False, True): "boxes 1832 to 1844 (ahorro)",
-}
-"""Where a transmission's result goes, by whether it is a gain and whether the element is a property."""
-
-_M100_NO_TRANSMISSION_ROUTE: Final[str] = "boxes 0304 or 0305 to 0306 or 0307 (general)"
-
-
-def _m100_result_route(
+def _result_route(
     revision: ActivityAssetRevision,
     calculation: ActivityAssetDisposalCalculation,
-) -> str | None:
+) -> ActivityAssetDisposalRoute | None:
     disposal = revision.disposal
     result = calculation.result
     if disposal is None or result is None or result == Decimal("0"):
         return None
-    if disposal.reason in TRANSMISSION_REASONS:
-        return _M100_TRANSMISSION_ROUTES[(result > Decimal("0"), revision.basis.is_property)]
-    return _M100_NO_TRANSMISSION_ROUTE if disposal.reason in BAJA_WITHOUT_TRANSMISSION_REASONS else None
-
-
-def _result_word(calculation: ActivityAssetDisposalCalculation) -> str:
-    return "gain" if calculation.result is not None and calculation.result > Decimal("0") else "loss"
+    gain = result > Decimal("0")
+    if disposal.reason in BAJA_WITHOUT_TRANSMISSION_REASONS:
+        return (
+            ActivityAssetDisposalRoute.NO_TRANSMISSION_GAIN if gain else ActivityAssetDisposalRoute.NO_TRANSMISSION_LOSS
+        )
+    if disposal.reason not in TRANSMISSION_REASONS:
+        return None
+    if revision.basis.is_property:
+        return (
+            ActivityAssetDisposalRoute.TRANSMISSION_GAIN_PROPERTY
+            if gain
+            else ActivityAssetDisposalRoute.TRANSMISSION_LOSS_PROPERTY
+        )
+    return (
+        ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT
+        if gain
+        else ActivityAssetDisposalRoute.TRANSMISSION_LOSS_ELEMENT
+    )
 
 
 def activity_asset_disposal_provenance(
@@ -707,8 +806,8 @@ def activity_asset_disposal_provenance(
         CalculationSourceProvenance(
             resolver_id=resolver_id,
             resolved_binding_source=resolved_binding_source,
-            contributor_source_kind="activity_asset_disposal",
-            contributor_binding_source=None,
+            contributor_source_kind=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL.value,
+            contributor_binding_source=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
             lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref=f"{ACTIVITY_ASSET_DISPOSAL_REF_PREFIX}{revision_id}",
             parent_source_ref=None,
@@ -884,7 +983,7 @@ def _year_history(
 ) -> AssetScheduleHistory:
     """Summarise history up to ``tax_year``: a later year's claim does not change this year's figure."""
     return asset_schedule_history(
-        tuple(claim for claim in history.claims if claim.tax_year <= tax_year),
+        claims_through_year(history.claims, tax_year),
         history.revisions,
         asset_id=revision.asset_id,
         tax_year=tax_year,
@@ -1299,6 +1398,7 @@ def dwelling_ownership_share(assets: tuple[ActivityAssetRevision, ...]) -> Decim
 __all__ = [
     "ActivityAssetClaimSource",
     "ActivityAssetDisposalExcess",
+    "ActivityAssetDisposalObservation",
     "ActivityAssetExpenseObservation",
     "ActivityAssetProjection",
     "ActivityAssetScheduleSource",

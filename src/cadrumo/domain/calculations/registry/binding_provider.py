@@ -31,6 +31,7 @@ from typing import Annotated
 
 from pydantic import Field
 
+from .actividad_asset_disposal_bindings import ActivityAssetDisposalProvider
 from .afiliado_contribution_bindings import AfiliadoContributionProvider
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
 from .bindings_previous_filing import PreviousFilingProvider
@@ -84,6 +85,7 @@ BindingProvider = Annotated[
     | LedgerOssProvider
     | LedgerRentaIncomeProvider
     | LedgerRentaGastosEstimacionDirectaProvider
+    | ActivityAssetDisposalProvider
     | LedgerRentaGastosPagoFraccionadoProvider
     | LedgerImpatriadoIncomeProvider
     | LedgerIrnrIncomeProvider

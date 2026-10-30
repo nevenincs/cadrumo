@@ -1,6 +1,8 @@
 docs:
   casilla:
     binding_source:
+      activity_asset_disposal: Ganancia, pérdida o exceso de una baja del registro
+        de elementos de la actividad, sumado a la casilla que le da esta edición
       afiliado_cotizacion: desde el calendario de cuotas de afiliados que aportaste
       atribucion_member: desde los miembros en atribución de rentas
       bienes_inversion_regularizacion: desde la regularización de bienes de inversión
