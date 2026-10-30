@@ -17,6 +17,7 @@ from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.prorrata_vocabulary import resolve_input_classification_definition
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
+    ClaimCoverageGap,
     asset_schedule_history,
     current_revisions,
     effective_claims,
@@ -132,9 +133,16 @@ def _claimable(
             covered_until=min(gap.covered_until, end),
         )
         for gap in row.gaps
-        if max(gap.covered_from, start) < min(gap.covered_until, end)
+        if max(gap.covered_from, start) < min(gap.covered_until, end) and not _gap_lies_on_a_claim(gap, row)
     )
     return intervals, None
+
+
+def _gap_lies_on_a_claim(gap: ClaimCoverageGap, row: WalkedYear) -> bool:
+    """Say whether a gap is a zero claim's interval, which a correction supersedes and a new claim cannot take."""
+    return any(
+        claim.covered_from < gap.covered_until and gap.covered_from < claim.covered_until for claim in row.claims
+    )
 
 
 def _claim_state(
@@ -149,7 +157,11 @@ def _claim_state(
         if row.tax_year > today.year:
             return ActivityAssetClaimState.NOT_DUE
         return ActivityAssetClaimState.MISSING
-    if intervals or (row.gaps and row.charge is None and row.absence is not PlanFigureAbsence.PERIOD_ELAPSED):
+    if (
+        intervals
+        or any(_gap_lies_on_a_claim(gap, row) for gap in row.gaps)
+        or (row.gaps and row.charge is None and row.absence is not PlanFigureAbsence.PERIOD_ELAPSED)
+    ):
         return ActivityAssetClaimState.PARTIAL
     if any(claim.supersedes_claim_id is not None for claim in row.claims):
         return ActivityAssetClaimState.SUPERSEDED

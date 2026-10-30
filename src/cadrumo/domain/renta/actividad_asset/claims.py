@@ -306,15 +306,19 @@ def uncovered_claim_intervals(
 
     Only the element's service window counts: from its in-service date to its
     out-of-service date when set, clipped to the span.  Superseded claims and
-    claims of other assets are ignored.  No amount is computed; callers call
-    once per tax year.
+    claims of other assets are ignored.  A zero claim covers its interval only once
+    no lawful base remains, which is when the schedule charges zero there too;
+    otherwise a deduction would vanish without a finding.  No amount is computed;
+    callers call once per tax year.
     """
     if end <= start:
         raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.covered_interval_empty")
     window_start = max(start, revision.in_service_date)
     window_end = end if revision.out_of_service_date is None else min(end, revision.out_of_service_date)
+    own = tuple(claim for claim in effective_claims(claims) if claim.asset_id == revision.asset_id)
+    base_exhausted = _lawful_base_exhausted(revision, own)
     covering = sorted(
-        (claim for claim in effective_claims(claims) if claim.asset_id == revision.asset_id),
+        (claim for claim in own if claim.amount > Decimal("0") or base_exhausted),
         key=lambda claim: claim.covered_from,
     )
     gaps: list[ClaimCoverageGap] = []
@@ -330,6 +334,23 @@ def uncovered_claim_intervals(
     if cursor < window_end:
         gaps.append(ClaimCoverageGap(covered_from=cursor, covered_until=window_end))
     return tuple(gaps)
+
+
+def _lawful_base_exhausted(revision: ActivityAssetRevision, own: tuple[AmortizationClaim, ...]) -> bool:
+    opening = revision.opening_history.accumulated_amount
+    return opening is not None and opening + _amount_sum(own) >= revision.amortizable_ceiling()
+
+
+def amount_before_baja_zeroed(claim: AmortizationClaim, claims: tuple[AmortizationClaim, ...]) -> Decimal:
+    """Return the amount a zero claim a baja wrote replaced, following the chain of replacements."""
+    by_id = {item.claim_id: item for item in claims}
+    current = claim
+    while current.amount == Decimal("0") and current.disposal_revision_id is not None:
+        predecessor = by_id.get(current.supersedes_claim_id or "")
+        if predecessor is None:
+            break
+        current = predecessor
+    return current.amount
 
 
 def effective_free_depreciation_claims(
@@ -544,6 +565,7 @@ __all__ = [
     "ClaimCoverageGap",
     "ClaimProjection",
     "ClaimRecordResult",
+    "amount_before_baja_zeroed",
     "asset_schedule_history",
     "current_revisions",
     "effective_claims",

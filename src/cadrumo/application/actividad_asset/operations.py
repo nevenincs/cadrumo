@@ -26,6 +26,7 @@ from ...domain.contribuyente.tax_residence import ResidenceTerritory
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimProjection,
+    amount_before_baja_zeroed,
     asset_schedule_history,
     effective_claims,
     project_m100,
@@ -237,7 +238,7 @@ class ActivityAssetOperations:
             )
         require_acquisition_in_ledger(revision, self._ledger)
         baja_claims: tuple[AmortizationClaim, ...] = ()
-        if revision.disposal is not None and revision.disposal != current.disposal:
+        if revision.disposal != current.disposal:
             self._require_common_territory()
             baja_claims = self._baja_supersessions(revision, history, origin=origin)
         replaced = {claim.supersedes_claim_id for claim in baja_claims}
@@ -318,51 +319,90 @@ class ActivityAssetOperations:
         *,
         origin: str | None,
     ) -> tuple[AmortizationClaim, ...]:
-        """Work out what a baja replaces: claims after its boundary go to zero, a crossing one is shortened.
+        """Work out what a baja, or its removal or new date, replaces in one write.
 
-        The claims after the boundary go first, so that the shortened claim's charge
-        is judged without them.  A free amount is the taxpayer's election and carries
-        over; any other amount is recomputed for the shorter interval.
+        Claims after the boundary go to zero and a crossing one is shortened.  A zero
+        claim an earlier baja wrote comes back inside the service window: with no
+        boundary or a later one it would otherwise keep the year's deduction at zero.
+        The claims after the boundary go first, so that later charges are judged
+        without them, and the rest run in date order on the state the earlier ones
+        leave.  A free amount is the taxpayer's election and carries over; any other
+        amount is recomputed.  A shortened claim keeps its interval, because a claim
+        never widens: the rest of its year reads as a gap.
         """
         disposal = revision.disposal
-        if disposal is None:  # defensive: every caller passes a baja
-            return ()
-        boundary = disposal.boundary
+        boundary = None if disposal is None else disposal.boundary
         creating_operation = origin or revision.asset_id
         standing = tuple(claim for claim in effective_claims(history.claims) if claim.asset_id == revision.asset_id)
         recorded = [
             claim.set_to_zero_by_baja(revision.revision_id, creating_operation=creating_operation)
             for claim in standing
-            if claim.covered_from >= boundary and claim.amount > Decimal("0")
+            if boundary is not None and claim.covered_from >= boundary and claim.amount > Decimal("0")
         ]
-        crossing = next((c for c in standing if c.covered_from < boundary < c.covered_until), None)
-        if crossing is None:
+        recompute = sorted(
+            (
+                claim
+                for claim in standing
+                if (boundary is not None and claim.covered_from < boundary < claim.covered_until)
+                or (
+                    claim.disposal_revision_id is not None
+                    and claim.amount == Decimal("0")
+                    and (boundary is None or claim.covered_until <= boundary)
+                )
+            ),
+            key=lambda claim: claim.covered_from,
+        )
+        if not recompute:
             return tuple(recorded)
         _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
-        working = (*history.claims, *recorded)
+        for claim in recompute:
+            replacement = self._baja_recomputed_claim(
+                claim,
+                revision,
+                (*history.claims, *recorded),
+                (*history.revisions, revision),
+                boundary=boundary,
+                creating_operation=creating_operation,
+            )
+            if replacement is not None:
+                recorded.append(replacement)
+        return tuple(recorded)
+
+    def _baja_recomputed_claim(
+        self,
+        claim: AmortizationClaim,
+        revision: ActivityAssetRevision,
+        working: tuple[AmortizationClaim, ...],
+        revisions: tuple[ActivityAssetRevision, ...],
+        *,
+        boundary: date | None,
+        creating_operation: str,
+    ) -> AmortizationClaim | None:
+        """Replace one claim under the new boundary; a zero claim stays where the schedule also charges zero."""
+        crossing = boundary is not None and claim.covered_until > boundary
+        free = revision.amortization.method in FREE_AMOUNT_METHODS
         charge = self._forecast_operation(
             revision,
-            covered_from=crossing.covered_from,
-            covered_until=boundary,
+            covered_from=claim.covered_from,
+            covered_until=boundary if boundary is not None and crossing else claim.covered_until,
             history=asset_schedule_history(
-                tuple(claim for claim in working if claim.tax_year <= crossing.tax_year),
-                (*history.revisions, revision),
+                tuple(item for item in working if item.tax_year <= claim.tax_year),
+                revisions,
                 asset_id=revision.asset_id,
-                tax_year=crossing.tax_year,
-                excluding_claim_id=crossing.claim_id,
+                tax_year=claim.tax_year,
+                excluding_claim_id=claim.claim_id,
             ),
-            requested_free_amount=crossing.amount if revision.amortization.method in FREE_AMOUNT_METHODS else None,
+            requested_free_amount=amount_before_baja_zeroed(claim, working) if free else None,
         )
-        recorded.append(
-            AmortizationClaim.from_schedule(
-                charge,
-                asset_kind=revision.asset_kind,
-                creating_operation=creating_operation,
-                supersedes_claim_id=crossing.claim_id,
-                disposal_revision_id=revision.revision_id,
-            ),
+        if not crossing and charge.amount <= Decimal("0"):
+            return None
+        return AmortizationClaim.from_schedule(
+            charge,
+            asset_kind=revision.asset_kind,
+            creating_operation=creating_operation,
+            supersedes_claim_id=claim.claim_id,
+            disposal_revision_id=revision.revision_id if crossing else None,
         )
-        return tuple(recorded)
 
     def dispose(
         self,

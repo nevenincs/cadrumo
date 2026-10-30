@@ -305,3 +305,30 @@ def test_a_cached_identity_changes_neither_equality_nor_the_dump() -> None:
     assert read.claim_id == unread.claim_id
     assert read == _claim()
     assert read.model_dump(mode="json") == dumped
+
+
+def test_a_zero_claim_with_base_remaining_covers_nothing() -> None:
+    revision = _revision(in_service=_START)
+    zero = _claim(
+        covered_from=_START,
+        covered_until=_END,
+        amount=Decimal("0.00"),
+    ).model_copy(update={"asset_id": revision.asset_id})
+
+    assert uncovered_claim_intervals(revision, (zero,), start=_START, end=_END) == _gaps((_START, _END))
+
+
+def test_a_zero_claim_covers_its_interval_once_no_base_remains() -> None:
+    revision = _revision(in_service=_START)
+    earlier_year = _YEAR - 1
+    consumed = _claim(
+        year=earlier_year,
+        covered_from=date(earlier_year, 1, 1),
+        covered_until=date(earlier_year + 1, 1, 1),
+        amount=revision.amortizable_ceiling(),
+    ).model_copy(update={"asset_id": revision.asset_id})
+    zero = _claim(covered_from=_START, covered_until=_END, amount=Decimal("0.00")).model_copy(
+        update={"asset_id": revision.asset_id},
+    )
+
+    assert uncovered_claim_intervals(revision, (consumed, zero), start=_START, end=_END) == ()
