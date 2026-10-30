@@ -22,6 +22,7 @@ if not (__package__ is not None and __package__):
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.storage_environment import STORAGE_ROOT, storage_root_override
 from dev._paths import REPO_ROOT
 from dev.temporary_output import prepare_temp_root
 
@@ -303,9 +304,28 @@ def ensure_isolated_storage_root() -> None:
     ``aeat`` state. Callers that deliberately pin a storage root keep it.
     """
     scratch = prepare_temp_root() / "cadrumo-docs-build-storage"
-    os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(scratch))
-    Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
+    os.environ.setdefault(STORAGE_ROOT.variable, str(scratch))
+    root = resolved_storage_root_pin()
+    root.mkdir(parents=True, exist_ok=True)
     ensure_private_diagnostic_log()
+
+
+def resolved_storage_root_pin() -> Path:
+    """Replace this process's root pin with the absolute root it names, and return it.
+
+    A caller may pin a relative root (the sample ``env/.env`` does). Every path this
+    module derives from the pin must start from the resolved root: a member path
+    derived from the relative spelling is itself relative, and the settings layer
+    anchors a relative member beneath the resolved root a second time.
+    """
+    root = storage_root_override(os.environ[STORAGE_ROOT.variable])
+    os.environ[STORAGE_ROOT.variable] = str(root)
+    return root
+
+
+def private_log_directory() -> Path:
+    """This process's private diagnostic log directory, beneath the resolved root pin."""
+    return resolved_storage_root_pin() / "logs" / f"pid-{os.getpid()}"
 
 
 def ensure_private_diagnostic_log() -> None:
@@ -340,7 +360,7 @@ def ensure_private_diagnostic_log() -> None:
 
     from .logging_rebind import allow_logging_reconfiguration
 
-    private_log_dir = Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]) / "logs" / f"pid-{os.getpid()}"
+    private_log_dir = private_log_directory()
     if os.environ.get("CADRUMO_LOG_DIR") == str(private_log_dir):
         return
     private_log_dir.mkdir(parents=True, exist_ok=True)
