@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+from .signal_command_paths import command_path_pattern
 from .signal_contracts import DictionaryLike
 from .signal_policy import LOCALES
 from .signal_syntax import (
@@ -89,7 +90,13 @@ def legal_title_spelling_segments(
 ) -> None:
     """Legal title spelling segments."""
     if default_locale != "es":
-        literal_ranges = tuple((match.start(), match.end()) for match in TRANSLATION_LITERAL_RE.finditer(value))
+        # A complete command is transport syntax. Extracting a Spanish word
+        # such as "modelo" first would split its path before command masking.
+        literal_ranges = tuple(
+            (match.start(), match.end())
+            for pattern in (TRANSLATION_LITERAL_RE, command_path_pattern())
+            for match in pattern.finditer(value)
+        )
         for pattern in (
             MODELO_FORM_RE,
             TRANSLATION_LEGAL_TITLE_RE,

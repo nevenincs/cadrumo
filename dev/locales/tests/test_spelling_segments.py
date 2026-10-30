@@ -354,3 +354,16 @@ def test_hungarian_abbreviation_keeps_dictionary_significant_period() -> None:
     assert words_by_language("pl. hibásszó. pl hibásszó", "hu") == {
         "hu": {"pl.", "hibásszó.", "pl", "hibásszó"},
     }
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_spanish_tax_words_inside_complete_commands_do_not_split_the_path(locale: str) -> None:
+    assert words_by_language("aeat app modelo work verify misspeling", locale) == {
+        locale: {"misspeling"},
+    }
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_misspelled_commands_keep_the_verb_visible_to_spelling(locale: str) -> None:
+    words = words_by_language("aeat app modelo work verfy misspeling", locale)
+    assert {"verfy", "misspeling"} <= words[locale]
