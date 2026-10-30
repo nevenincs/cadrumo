@@ -20,7 +20,7 @@ from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from .controller import LedgerWorkspaceController
-from .invoice_entry_wording import invoice_line_row, supplemental_summary_lines
+from .invoice_entry_wording import SITUACION_LOCALE_KEYS, invoice_line_row, supplemental_summary_lines
 from .models import LedgerFlowState, LedgerInvoiceClassChoice, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
 from .workspace_screen import LedgerInvoiceEntryRequested
@@ -108,12 +108,6 @@ _LEASE_CHOICES: Final[tuple[tuple[str, bool], ...]] = (
     ("tui.ledger.invoice.lease.yes", True),
 )
 #: The record design's SITUACIÓN DEL INMUEBLE codes, each offered with its meaning.
-_SITUACION_LOCALE_KEYS: Final[dict[SituacionInmueble, str]] = {
-    SituacionInmueble.SPAIN_OTHER_THAN_BASQUE_NAVARRE: "tui.ledger.invoice.situacion.1",
-    SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE: "tui.ledger.invoice.situacion.2",
-    SituacionInmueble.SPAIN_WITHOUT_CATASTRAL_REFERENCE: "tui.ledger.invoice.situacion.3",
-    SituacionInmueble.ABROAD: "tui.ledger.invoice.situacion.4",
-}
 _CLASS_LOCALE_KEYS: Final[dict[LedgerInvoiceClassChoice, str]] = {
     LedgerInvoiceClassChoice.ORDINARIA: "tui.ledger.invoice.class.ordinaria",
     LedgerInvoiceClassChoice.SIMPLIFICADA: "tui.ledger.invoice.class.simplificada",
@@ -334,7 +328,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 label=_field_label("situacion_inmueble"),
             )
             yield Select[str](
-                tuple((tr(key), code.value) for code, key in _SITUACION_LOCALE_KEYS.items()),
+                tuple((tr(key), code.value) for code, key in SITUACION_LOCALE_KEYS.items()),
                 prompt=tr("tui.ledger.invoice.situacion_none"),
                 allow_blank=True,
                 id="ledger-invoice-situacion-inmueble",

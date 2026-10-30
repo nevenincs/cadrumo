@@ -46,6 +46,7 @@ from ...domain.calculations.registry.export_xml_dictionary import (
     xml_dictionary_entries,
 )
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
@@ -95,9 +96,7 @@ _DATE_DICTIONARY_TYPE = "FEC"
 _DATE_DICTIONARY_TEXT = re.compile(r"[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}")
 
 _HOLDER_DICTIONARY_TYPE = "TIT"
-_HOLDER_CODES: Mapping[str, str] = MappingProxyType(
-    {"declarante": "2", "conyuge": "3", "hijo1": "4", "hijo2": "5", "hijo3": "6", "hijo4": "7"}
-)
+_HOLDER_CODES_FACT = "modelo-100-profile-form-codes"
 
 # The dictionary's numeric type codes are self-describing: ``P<width><scale>``
 # and ``N<width><scale>`` name the field's integer width and its fractional-digit
@@ -934,13 +933,14 @@ def format_xml_dictionary_value(data_type: str, value: object) -> str:
         return _format_xml_dictionary_numeric_value(data_type, value, numeric)
     if normalized_type == _HOLDER_DICTIONARY_TYPE:
         holder = str(value).strip().casefold()
-        if holder in _HOLDER_CODES.values():
+        holder_codes = resolve_form_codes(_HOLDER_CODES_FACT).under("holder")
+        if holder in holder_codes.values():
             return holder
         try:
-            return _HOLDER_CODES[holder]
+            return holder_codes[holder]
         except KeyError as exc:
             raise FilingExportValidationError(
-                f"holder for a {data_type} row must be one of {', '.join(_HOLDER_CODES)}, got {value!r}"
+                f"holder for a {data_type} row must be one of {', '.join(holder_codes)}, got {value!r}"
             ) from exc
     return _format_xml_dictionary_text_value(data_type, normalized_type, value)
 

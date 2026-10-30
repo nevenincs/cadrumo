@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
@@ -379,20 +380,21 @@ class SupervisorReconciliationMixin(SupervisorHost):
         )
         self._contexts[snapshot.identity.operation_id] = context
         try:
-            result_ref = await self._execute_with_deadlines(
-                identity=snapshot.identity,
-                context=context,
-                executor=invoke_authorized(
-                    self._execution_authority,
+            with validating_governed_facts(self._authority_operation):
+                result_ref = await self._execute_with_deadlines(
                     identity=snapshot.identity,
-                    request=request,
-                    action=AccessAction.RESUME,
-                    executor=lambda: run_with_model_runs(
-                        operation_model_run_port(self._execution_authority, snapshot.identity),
-                        resumable_executor.resume(request, checkpoint, executor_context),
+                    context=context,
+                    executor=invoke_authorized(
+                        self._execution_authority,
+                        identity=snapshot.identity,
+                        request=request,
+                        action=AccessAction.RESUME,
+                        executor=lambda: run_with_model_runs(
+                            operation_model_run_port(self._execution_authority, snapshot.identity),
+                            resumable_executor.resume(request, checkpoint, executor_context),
+                        ),
                     ),
-                ),
-            )
+                )
         except OperationDeclarationError:
             raise
         except Exception as error:

@@ -156,9 +156,9 @@ def m360_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProduce
     values.update(
         {
             FilingProducerKey.M360_PRESENTACION_EN_PRUEBAS: _m360_zero_one(solicitud.presentacion_en_pruebas),
-            FilingProducerKey.M360_NIVEL_CALIDAD_DATOS: solicitud.nivel_calidad_datos.value,
+            FilingProducerKey.M360_NIVEL_CALIDAD_DATOS: solicitud.nivel_calidad_datos.code,
             FilingProducerKey.M360_PAIS_DESTINO_SOLICITUD: solicitud.pais_destino,
-            FilingProducerKey.M360_CAUSA_PRESENTACION: solicitud.causa_presentacion.value,
+            FilingProducerKey.M360_CAUSA_PRESENTACION: solicitud.causa_presentacion.code,
             FilingProducerKey.M360_COMUNICACION_PRORRATA_DEFINITIVA: _m360_zero_one(
                 solicitud.comunicacion_prorrata_definitiva
             ),
@@ -173,15 +173,15 @@ def m360_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProduce
                 establecimiento.establecido_en_territorio_de_aplicacion
             ),
             FilingProducerKey.M360_SOLICITANTE_HACIENDA_FORAL: (
-                establecimiento.hacienda_foral.value if establecimiento.hacienda_foral is not None else None
+                establecimiento.hacienda_foral.code if establecimiento.hacienda_foral is not None else None
             ),
             FilingProducerKey.M360_SOLICITANTE_DELEGACION_CANARIAS_CEUTA_MELILLA: (
-                establecimiento.delegacion_canarias_ceuta_melilla.value
+                establecimiento.delegacion_canarias_ceuta_melilla.code
                 if establecimiento.delegacion_canarias_ceuta_melilla is not None
                 else None
             ),
             FilingProducerKey.M360_CUENTA_TITULAR_NOMBRE: profile.cuenta.titular_nombre,
-            FilingProducerKey.M360_CUENTA_TITULAR_EN_CALIDAD_DE: profile.cuenta.titular_en_calidad_de.value,
+            FilingProducerKey.M360_CUENTA_TITULAR_EN_CALIDAD_DE: profile.cuenta.titular_en_calidad_de.code,
             FilingProducerKey.M360_CUENTA_DIVISA: profile.cuenta.divisa,
         }
     )

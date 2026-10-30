@@ -1,0 +1,29 @@
+[fact]
+fact_id = "modelo-303-identification-form-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-303-identification-form-codes:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-303-2026"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2026"
+required_text = ["declarado en concurso de acreedores", "Preconcursal", "Postconcursal", "Autoliquidación conjunta", "exclusivamente en régimen simplificado", "Para los periodos 1T, 2T, 3T, 4T y 01", "Marca SEPA"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "answer.yes", value = "1" },
+  { key = "answer.no", value = "2" },
+  { key = "insolvency_subtype.pre_order", value = "1" },
+  { key = "insolvency_subtype.post_order", value = "2" },
+  { key = "regime_composition.general_only", value = "3" },
+  { key = "answer.outside_period", value = "0" },
+  { key = "hydrocarbon_entitlement.applicable_periods", value = "02,03,04,05,06,07,08,09,10,11,12" },
+  { key = "sepa_marca.espana", value = "1" },
+  { key = "sepa_marca.ue_sepa", value = "2" },
+  { key = "sepa_marca.resto_paises", value = "3" },
+]

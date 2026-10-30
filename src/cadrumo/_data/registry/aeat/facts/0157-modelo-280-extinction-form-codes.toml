@@ -1,0 +1,22 @@
+[fact]
+fact_id = "modelo-280-extinction-form-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-280-extinction-form-codes:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-280-2022"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-280-2022"
+required_text = ["EXTINCIÓN DEL PLAN DE AHORRO", "en circunstancias distintas", "por fallecimiento del tomador"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "extinction.early_disposal_or_excess", value = "1" },
+  { key = "extinction.other_circumstances", value = "2" },
+  { key = "extinction.death_of_holder", value = "3" },
+]

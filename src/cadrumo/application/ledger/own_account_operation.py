@@ -29,6 +29,7 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.transactions.own_accounts import (
     OwnAccountDesignation,
     OwnAccountHolding,
@@ -155,7 +156,7 @@ class OwnAccountProjection(BaseModel):
             holding=account.holding,
             masked_iban=account.masked_iban,
             country_code=account.country_code,
-            sepa_marca=account.sepa_marca.value,
+            sepa_marca=account.sepa_marca.code,
             has_swift_bic=bool(account.swift_bic),
             has_bank_block=bool(account.bank_name),
             currency=account.currency,
@@ -355,15 +356,16 @@ class LedgerOwnAccountExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID)
-        return await await_cancellation_complete(
-            _publish_own_account_action(
-                context,
-                payload=payload,
-                bucket_id=str(payload.profile_id),
-                repository_factory=self._repository_factory,
-            ),
-            task_name="ledger-own-account",
-        )
+        with validating_governed_facts(context.authority_operation):
+            return await await_cancellation_complete(
+                _publish_own_account_action(
+                    context,
+                    payload=payload,
+                    bucket_id=str(payload.profile_id),
+                    repository_factory=self._repository_factory,
+                ),
+                task_name="ledger-own-account",
+            )
 
 
 def build_ledger_own_account_definition(repository_factory: OwnAccountRepositoryFactory) -> OperationDefinition:

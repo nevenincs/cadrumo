@@ -469,7 +469,7 @@ def _sepa_marca(
     return derive_sepa_marca(
         iban=selected.account.iban,
         bank_country_code=selected.account.bank_country_code,
-    ).value
+    ).code
 
 
 def continuation_page_marker(

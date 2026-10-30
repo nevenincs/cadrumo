@@ -65,6 +65,10 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    GovernedFactSource,
+    governed_facts_in_scope,
+)
 
 from .supervision_support import run_to_settlement
 
@@ -416,3 +420,52 @@ def test_elapsed_cleanup_deadline_retains_uncertainty_while_an_owned_resource_cl
             assert resource.close_calls == 1
 
         asyncio.run(outrun_the_cleanup())
+
+
+class ScopeObservingExecutor(HeldExecutor):
+    """Record which governed-fact scope reaches the executor's worker thread."""
+
+    observed_scope: GovernedFactSource | None = None
+    pinned: GovernedFactSource | None = None
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        self.pinned = context.authority_operation
+        self.observed_scope = await asyncio.to_thread(governed_facts_in_scope)
+        return await super().execute(request, context)
+
+
+def test_an_operation_reads_governed_facts_from_its_pinned_generation(tmp_path: Path) -> None:
+    """A stored form code decoded in the worker thread finds the operation's own generation."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state",
+            profile_objects=profile.repository,
+        )
+        executor = ScopeObservingExecutor(resource_root=tmp_path / "owned-files", hold_before_acknowledge=False)
+        supervisor = _supervisor(
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            executor=executor,
+            execution_timeout=_EXECUTION_WINDOW,
+            cleanup_timeout=_WIDE_CLEANUP_WINDOW,
+        )
+
+        async def run() -> None:
+            operation_id = "c" * 64
+            await supervisor.submit(_request(subject_ref="subject:scope"), operation_id=operation_id)
+            settling = asyncio.create_task(run_to_settlement(supervisor, operation_id))
+            await _reach(executor.started, described_as="executor entry")
+            assert executor.resource is not None
+            executor.resource.release()
+            await settling
+            assert governed_facts_in_scope() is None
+
+        asyncio.run(run())
+
+    assert executor.pinned is not None
+    assert executor.observed_scope is executor.pinned

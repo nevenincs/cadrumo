@@ -12,6 +12,9 @@ legal_refs = [
 source_refs = [
     "aeat-modelo-190-procedure",
     "aeat-modelo-193-procedure",
+    "aeat-dr-190-2025",
+    "aeat-dr-193-2025",
+    "aeat-dr-194-2024",
 ]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -23,6 +26,16 @@ required_text = ["Modelo"]
 source_ref = "aeat-modelo-193-procedure"
 required_text = ["Modelo"]
 
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-190-2025"
+required_text = ["CEUTA O MELILLA", "Se consignará el número 2"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-193-2025"
+required_text = ["TIPO DE PERCEPCIÓN"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-194-2024"
+required_text = ["ORIGEN"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -33,4 +46,10 @@ entries = [
     { key = "modelo.190.subclave.field", value = "subclave" },
     { key = "modelo.193.numero_orden.minimum", value = "1" },
     { key = "modelo.193.numero_orden.maximum", value = "9999999" },
+    { key = "modelo.190.territorial_deduction.codes", value = "0,1,2" },
+    { key = "modelo.190.perceptor_situacion_familiar.codes", value = "1,2,3" },
+    { key = "modelo.193.tipo_percepcion.codes", value = "1,2" },
+    { key = "modelo.193.pendiente.flag", value = "X" },
+    { key = "modelo.194.origin.codes", value = "A,B,C,D,E" },
+    { key = "modelo.194.related_entity.flag", value = "V" },
 ]

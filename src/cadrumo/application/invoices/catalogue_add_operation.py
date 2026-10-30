@@ -278,10 +278,11 @@ def _prepare_invoice_add(
     profile: str,
     authority_operation: PinnedAuthorityOperation,
 ) -> tuple[CatalogueCreationPorts, Invoice, bool]:
-    # model_construct can bypass the transport validator; re-enter the domain owner before port creation.
-    business_premises_lease = (
-        None if payload.business_premises_lease is None else payload.business_premises_lease.to_domain()
-    )
+    # The transport carries plain text; re-enter the domain owner before port creation.
+    with validating_governed_facts(authority_operation):
+        business_premises_lease = (
+            None if payload.business_premises_lease is None else payload.business_premises_lease.to_domain()
+        )
     ports = factory(bucket_id=profile)
     effective_date = payload.operation_date or payload.issued_at
     with validating_governed_facts(authority_operation):

@@ -1,0 +1,23 @@
+[fact]
+fact_id = "modelo-347-premises-form-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-347-premises-form-codes:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-347-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2025"
+required_text = ["Inmueble con referencia catastral situado en cualquier punto", "Comunidad Foral de Navarra"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "situacion_inmueble.spain_other_than_basque_navarre", value = "1" },
+  { key = "situacion_inmueble.basque_country_or_navarre", value = "2" },
+  { key = "situacion_inmueble.spain_without_catastral_reference", value = "3" },
+  { key = "situacion_inmueble.abroad", value = "4" },
+]

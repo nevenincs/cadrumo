@@ -11,13 +11,12 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.iva_rate_kind_catalogue import IvaRateKindCatalogue
 from ...domain.invoices.business_premises import (
     BusinessPremisesLease,
-    SituacionInmueble,
     business_premises_lease_from_inputs,
 )
 from ...domain.invoices.enums import IvaRate
@@ -113,14 +112,23 @@ class InvoiceAddBusinessPremisesLease(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    situacion_inmueble: SituacionInmueble | None = None
+    situacion_inmueble: str | None = Field(default=None, min_length=1)
     referencia_catastral: str | None = Field(default=None, max_length=25)
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_valid_domain_facts(self) -> InvoiceAddBusinessPremisesLease:
-        self._construct_domain()
-        return self
+    @classmethod
+    def from_inputs(
+        cls,
+        *,
+        lease_selected: bool,
+        situacion_inmueble: str | None,
+        referencia_catastral: str | None,
+    ) -> InvoiceAddBusinessPremisesLease | None:
+        """Carry the operator's typed premises facts to the worker, which reads the situation."""
+        if lease_selected:
+            return cls(situacion_inmueble=situacion_inmueble, referencia_catastral=referencia_catastral)
+        if situacion_inmueble is not None or referencia_catastral is not None:
+            raise InvoiceValidationError("premises facts require the business-premises lease choice")
+        return None
 
     @classmethod
     def from_domain(
@@ -131,7 +139,7 @@ class InvoiceAddBusinessPremisesLease(BaseModel):
         if lease is None:
             return None
         return cls(
-            situacion_inmueble=lease.situacion_inmueble,
+            situacion_inmueble=None if lease.situacion_inmueble is None else lease.situacion_inmueble.value,
             referencia_catastral=lease.referencia_catastral,
         )
 
