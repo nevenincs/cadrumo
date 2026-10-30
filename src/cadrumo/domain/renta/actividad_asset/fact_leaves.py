@@ -86,18 +86,21 @@ def _unwrap(annotation: object, markers: tuple[FactKind, ...] = ()) -> _Unwrappe
         if origin is typing.Annotated:
             args: tuple[object, ...] = typing.get_args(annotation)
             annotation, *metadata = args
-            for item in metadata:
-                if isinstance(item, FactKind):
-                    collected_markers.append(item)
+            collected_markers.extend(item for item in metadata if isinstance(item, FactKind))
             continue
         if origin in {typing.Union, types.UnionType}:
-            members = [member for member in typing.get_args(annotation) if member is not type(None)]
-            if len(members) != 1:
-                raise TypeError(f"a fact of several types cannot be worded: {annotation!r}")
-            optional = optional or len(members) != len(typing.get_args(annotation))
-            annotation = members[0]
+            annotation, union_optional = _unwrap_union(annotation)
+            optional = optional or union_optional
             continue
         return _Unwrapped(annotation, tuple(collected_markers), optional)
+
+
+def _unwrap_union(annotation: object) -> tuple[object, bool]:
+    args = typing.get_args(annotation)
+    members = [member for member in args if member is not type(None)]
+    if len(members) != 1:
+        raise TypeError(f"a fact of several types cannot be worded: {annotation!r}")
+    return members[0], len(members) != len(args)
 
 
 def _field_markers(field: FieldInfo) -> tuple[FactKind, ...]:
@@ -107,12 +110,9 @@ def _field_markers(field: FieldInfo) -> tuple[FactKind, ...]:
 def _kind_of(base: object, markers: tuple[FactKind, ...], path: str) -> tuple[FactKind, type[StrEnum] | None]:
     if isinstance(base, type) and issubclass(base, StrEnum):
         return FactKind.CHOICE, base
-    if base is bool:
-        return FactKind.FLAG, None
-    if base is int:
-        return FactKind.WHOLE, None
-    if base is date:
-        return FactKind.DATE, None
+    for primitive, kind in ((bool, FactKind.FLAG), (int, FactKind.WHOLE), (date, FactKind.DATE)):
+        if base is primitive:
+            return kind, None
     if base is Decimal:
         return (markers[0] if markers else FactKind.DECIMAL), None
     if isinstance(base, type) and issubclass(base, str):
@@ -139,36 +139,37 @@ def fact_leaves(
     """
     leaves: list[FactLeaf] = []
     for name, field in model.model_fields.items():
-        path = (*_prefix, name)
-        unwrapped = _unwrap(field.annotation, _field_markers(field))
-        base = unwrapped.base
-        optional = unwrapped.optional or not field.is_required()
-        if isinstance(base, type) and issubclass(base, BaseModel):
-            leaves.extend(
-                fact_leaves(
-                    base,
-                    descend_rows=descend_rows,
-                    _prefix=path,
-                    _in_optional_group=_in_optional_group or optional,
-                )
-            )
-        elif typing.get_origin(base) is tuple:
-            item = _unwrap(typing.get_args(base)[0])
-            if descend_rows and isinstance(item.base, type) and issubclass(item.base, BaseModel):
-                leaves.extend(
-                    fact_leaves(
-                        item.base,
-                        descend_rows=descend_rows,
-                        _prefix=(*_prefix, f"{name}{SEQUENCE_STEP}"),
-                        _in_optional_group=_in_optional_group or optional,
-                    )
-                )
-            else:
-                leaves.append(FactLeaf(path, FactKind.ROWS, None, optional, _in_optional_group))
-        else:
-            kind, tokens = _kind_of(unwrapped.base, unwrapped.markers, ".".join(path))
-            leaves.append(FactLeaf(path, kind, tokens, optional, _in_optional_group))
+        leaves.extend(_field_leaves(name, field, descend_rows, _prefix, _in_optional_group))
     return tuple(leaves)
+
+
+def _field_leaves(
+    name: str,
+    field: FieldInfo,
+    descend_rows: bool,
+    prefix: tuple[str, ...],
+    in_optional_group: bool,
+) -> tuple[FactLeaf, ...]:
+    path = (*prefix, name)
+    unwrapped = _unwrap(field.annotation, _field_markers(field))
+    base: object = unwrapped.base
+    optional = unwrapped.optional or not field.is_required()
+    if isinstance(base, type) and issubclass(base, BaseModel):
+        return fact_leaves(
+            base, descend_rows=descend_rows, _prefix=path, _in_optional_group=in_optional_group or optional
+        )
+    if typing.get_origin(base) is tuple:
+        item = _unwrap(typing.get_args(base)[0])
+        if descend_rows and isinstance(item.base, type) and issubclass(item.base, BaseModel):
+            return fact_leaves(
+                item.base,
+                descend_rows=descend_rows,
+                _prefix=(*prefix, f"{name}{SEQUENCE_STEP}"),
+                _in_optional_group=in_optional_group or optional,
+            )
+        return (FactLeaf(path, FactKind.ROWS, None, optional, in_optional_group),)
+    kind, tokens = _kind_of(unwrapped.base, unwrapped.markers, ".".join(path))
+    return (FactLeaf(path, kind, tokens, optional, in_optional_group),)
 
 
 def indexed_to_step_path(path: str) -> str:
