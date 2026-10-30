@@ -208,6 +208,12 @@ impl DarwinTransport {
         Ok(result)
     }
 
+    /// The namespace beneath a caller's base directory, so tests need no account cache.
+    #[cfg(test)]
+    pub(crate) fn beneath(base: &Path, create: bool) -> io::Result<Self> {
+        Self::prepare(&Directory::open(base)?, create)
+    }
+
     pub fn directory(&self) -> &Path {
         &self.directory.path
     }
