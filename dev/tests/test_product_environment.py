@@ -16,7 +16,7 @@ _UNRELATED = {"PATH": "/usr/bin", "HOME": "/home/user", "TERM": "xterm"}
 def test_ambient_product_settings_removed_drops_current_and_former_prefixes_case_insensitively() -> None:
     environ = {
         **_UNRELATED,
-        "CADRUMO_LOCAL_STORAGE_ROOT": "/store",
+        "CADRUMO_STORAGE_ROOT": "/store",
         "cadrumo_output_language": "es",
         "AEAT_LOCAL_STORAGE_ROOT": "/former",
         "PYTHONPATH": "/checkout/src",

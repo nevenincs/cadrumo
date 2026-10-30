@@ -33,7 +33,6 @@ def test_an_explicit_root_relocates_every_cache(tmp_path: Path) -> None:
 
 
 def test_a_relative_cache_root_is_anchored_to_the_storage_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv(DEV_CACHE_ROOT_ENV, "development/cache")
 

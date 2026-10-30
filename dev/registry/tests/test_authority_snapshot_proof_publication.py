@@ -60,7 +60,7 @@ _Statements = tuple[tuple[str, tuple[object, ...]], ...]
 @pytest.fixture(autouse=True)
 def _own_storage(tmp_path: Path) -> Iterator[None]:
     """Keep admission receipts to a provisioned storage root of this test's own."""
-    with override_settings(cadrumo_local_storage_root=tmp_path / "storage"):
+    with override_settings(cadrumo_storage_root=tmp_path / "storage"):
         ensure_storage_tree()
         yield
 

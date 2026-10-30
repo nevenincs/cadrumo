@@ -25,32 +25,29 @@ def _checkout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     )
     monkeypatch.setattr(temporary_output, "REPO_ROOT", root)
     monkeypatch.setattr(temporary_output, "TEMP_ROOT", root / ".tmp")
-    monkeypatch.delenv("CADRUMO_TEMP_DIR", raising=False)
     return root
 
 
 def test_general_temporary_output_uses_only_the_checkout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = _checkout(tmp_path, monkeypatch)
     external = tmp_path / "external-scratch"
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(external))
     assert temporary_output.prepare_temp_root() == root / ".tmp"
+    assert temporary_output.prepare_temp_root(override=external) == root / ".tmp"
     assert not external.exists()
 
 
 def test_temporary_output_refuses_traversal_before_writing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = _checkout(tmp_path, monkeypatch)
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(root / ".tmp" / ".." / "escaped"))
     with pytest.raises(ValueError, match="escapes"):
-        temporary_output.prepare_temp_root()
+        temporary_output.prepare_temp_root(override=root / ".tmp" / ".." / "escaped")
     assert not (root / "escaped").exists()
 
 
 def test_native_temporary_override_requires_its_build_manifest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = _checkout(tmp_path, monkeypatch)
     destination = root / "build" / "windows-x64" / "temporary"
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(destination))
     with pytest.raises(ValueError, match="manifest"):
-        temporary_output.prepare_temp_root()
+        temporary_output.prepare_temp_root(override=destination)
     assert not destination.exists()
 
 
@@ -62,8 +59,7 @@ def test_native_temporary_output_remains_in_the_declared_build(tmp_path: Path, m
         json.dumps({"source": str(root), "paths": {"temporary": "temporary"}}), encoding="utf-8"
     )
     destination = build / "temporary"
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(destination))
-    assert temporary_output.prepare_temp_root() == destination
+    assert temporary_output.prepare_temp_root(override=destination) == destination
     assert not (root / ".tmp").exists()
 
 

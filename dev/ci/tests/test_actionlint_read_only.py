@@ -32,7 +32,6 @@ def test_check_path_reports_remediation_without_calling_installer(
 
 def test_actionlint_cache_uses_cadrumo_storage_override(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     storage = tmp_path / "storage"
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage))
     monkeypatch.setenv("CADRUMO_ACTIONLINT_DIR", "tools/actionlint")
     monkeypatch.setenv("RUNNER_TOOL_CACHE", str(tmp_path / "runner-tool-cache"))

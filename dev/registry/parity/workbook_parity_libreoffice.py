@@ -176,7 +176,7 @@ def _libreoffice_workspace() -> Generator[_LibreOfficeWorkspace]:
     The tree uses the controlled temporary root with one-letter member names
     because LibreOffice's user installation beneath it is path-length sensitive
     (see ``_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS``). Operators with a long checkout
-    path can point ``CADRUMO_TEMP_DIR`` at a shorter controlled location.
+    path must run from a shorter one.
     """
     with TemporaryDirectory(prefix="lo-", dir=prepare_temp_root()) as tmp:
         root = Path(tmp).resolve()
@@ -204,7 +204,7 @@ def _convert_with_libreoffice(
             LibreOfficeFailureCause.PROFILE_PATH_TOO_LONG,
             f"LibreOffice {operation} refused: its user profile root would be {profile_chars} characters "
             f"long, above the {_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS} LibreOffice can initialise on this "
-            "platform without silently producing no output; set CADRUMO_TEMP_DIR to a shorter directory",
+            "platform without silently producing no output; run from a checkout with a shorter path",
         )
     try:
         completed = _run_libreoffice(

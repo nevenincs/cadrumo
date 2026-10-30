@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 from ._paths import REPO_ROOT, TEMP_ROOT
@@ -62,7 +61,7 @@ def _validate_native_output(candidate: Path, build_root: Path) -> None:
 def resolve_temporary_output(*, override: str | Path | None = None) -> Path:
     """Validate a complete temporary destination before any write or removal."""
     selected = TEMP_ROOT
-    value = os.environ.get("CADRUMO_TEMP_DIR", "") if override is None else str(override)
+    value = "" if override is None else str(override)
     candidate = Path(value.strip()) if value.strip() else TEMP_ROOT
     if ".." in candidate.parts:
         raise ValueError(f"Temporary output escapes its declared root through traversal: {candidate}")

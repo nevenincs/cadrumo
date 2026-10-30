@@ -25,7 +25,6 @@ from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import content_hash_hex, sha256_hex
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.type_guards import is_str_keyed_dict
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.registry.compiler import record_design_schema
 from dev.registry.compiler.record_design_schema import RecordDesignExtraction
@@ -44,7 +43,7 @@ def record_design_cache_dir() -> Path:
     """Resolve the runner-local record-design extraction cache directory."""
     override = os.environ.get(RECORD_DESIGN_CACHE_DIR_ENV)
     if (override is not None and override) and override.strip():
-        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
+        return resolve_storage_path(override, root=configured_storage_root())
     return dev_cache_dir("record-design")
 
 

@@ -42,7 +42,6 @@ from cadrumo.core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_l
 from cadrumo.core.pid_liveness import pid_is_alive
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.type_guards import is_str_keyed_dict
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 
 VERDICT_CACHE_DIR_ENV: Final = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
@@ -62,7 +61,7 @@ def verdict_cache_dir() -> Path:
     """Resolve the runner-local validation verdict directory."""
     override = os.environ.get(VERDICT_CACHE_DIR_ENV)
     if (override is not None and override) and override.strip():
-        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
+        return resolve_storage_path(override, root=configured_storage_root())
     return dev_cache_dir("registry-validation-verdicts")
 
 

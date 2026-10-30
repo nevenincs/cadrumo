@@ -47,7 +47,6 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
 )
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 
 from ._toml_helpers import as_toml_table as _as_toml_table
@@ -515,7 +514,7 @@ def registry_disk_cache_dir() -> Path:
     """
     override = os.environ.get(REGISTRY_DISK_CACHE_DIR_ENV)
     if (override is not None and override) and override.strip():
-        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
+        return resolve_storage_path(override, root=configured_storage_root())
     return dev_cache_dir("registry-disk-cache")
 
 

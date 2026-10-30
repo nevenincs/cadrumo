@@ -57,6 +57,18 @@ one is not made deaf to the other."""
 if not os.environ.get(AUTHORITY_ROOT_ENV, "").strip():
     os.environ[AUTHORITY_ROOT_ENV] = str(DEFAULT_AUTHORITY_ROOT)
 
+STORAGE_ROOT_ENV: Final[str] = "CADRUMO_STORAGE_ROOT"
+"""Environment variable naming the one storage root, as an absolute path."""
+
+DEVELOPMENT_STORAGE_ROOT: Final[Path] = REPO_ROOT / "var" / "storage"
+"""The checkout's storage root, supplied to the product through its one root variable.
+
+The product knows no repository, so the development environment names this root
+itself. An explicit value always wins; a blank one is unset, as in the product."""
+
+if not os.environ.get(STORAGE_ROOT_ENV, "").strip():
+    os.environ[STORAGE_ROOT_ENV] = str(DEVELOPMENT_STORAGE_ROOT)
+
 # Windows starts a Python process with its streams bound to the ANSI codepage
 # (cp1252 on a stock installation). Configure the developer process at the
 # shared path-constants entry point, after the package initializer has loaded,
@@ -69,7 +81,9 @@ for _stream in (sys.stdout, sys.stderr):
 __all__ = [
     "AUTHORITY_ROOT_ENV",
     "DEFAULT_AUTHORITY_ROOT",
+    "DEVELOPMENT_STORAGE_ROOT",
     "REPO_ROOT",
+    "STORAGE_ROOT_ENV",
     "TEMP_ROOT",
     "UTF_8",
 ]

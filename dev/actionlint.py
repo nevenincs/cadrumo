@@ -53,7 +53,6 @@ import zipfile
 from pathlib import Path
 
 from cadrumo.core.storage_environment import configured_storage_root, storage_directory
-from dev._paths import REPO_ROOT
 
 VERSION = "1.7.12"
 
@@ -123,7 +122,7 @@ def _cache_root() -> Path:
         storage_directory(
             "CADRUMO_ACTIONLINT_DIR",
             "development/tools/actionlint",
-            root=configured_storage_root(repository_root=REPO_ROOT),
+            root=configured_storage_root(),
         )
         / VERSION
     )

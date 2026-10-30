@@ -32,13 +32,12 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Final
 
 from cadrumo.core.storage_environment import configured_storage_root, storage_directory
-from dev._paths import REPO_ROOT
 
 DEV_CACHE_ROOT_ENV: Final[str] = "CADRUMO_DEV_CACHE_ROOT"
 """Environment variable relocating every development cache at once."""
 
 DEFAULT_DEV_CACHE_ROOT: Final[Path] = storage_directory(
-    DEV_CACHE_ROOT_ENV, "development/cache", root=configured_storage_root(repository_root=REPO_ROOT)
+    DEV_CACHE_ROOT_ENV, "development/cache", root=configured_storage_root()
 )
 """Where the caches land when :data:`DEV_CACHE_ROOT_ENV` is unset or blank."""
 
@@ -54,9 +53,7 @@ def dev_cache_root() -> Path:
     Returns:
         The configured root, or ``<Cadrumo storage root>/development/cache``.
     """
-    return storage_directory(
-        DEV_CACHE_ROOT_ENV, "development/cache", root=configured_storage_root(repository_root=REPO_ROOT)
-    )
+    return storage_directory(DEV_CACHE_ROOT_ENV, "development/cache", root=configured_storage_root())
 
 
 def dev_cache_dir(name: str) -> Path:

@@ -155,7 +155,7 @@ one directory is how an operator ends up trusting the wrong one.
 VAR_APPLICATION_STORAGE: Final = "var/storage"
 """The dev loop's application storage root, which is not build scratch.
 
-``CADRUMO_LOCAL_STORAGE_ROOT`` is pointed here by the justfile, so this tree is
+``CADRUMO_STORAGE_ROOT`` is pointed here by the justfile, so this tree is
 the application's own cache and logs rather than anything the release build
 minted. It stays with the worktree section, which is what owns caches.
 """
@@ -309,7 +309,7 @@ the thing that should find out.
 
 ``var/storage/cache`` is the dev loop's own application cache, and it is here
 rather than in :data:`CACHE_DIRECTORY_NAMES` for exactly that reason: the
-justfile points ``CADRUMO_LOCAL_STORAGE_ROOT`` into the checkout, so this one
+justfile points ``CADRUMO_STORAGE_ROOT`` into the checkout, so this one
 path is derived output by construction, while a bare ``cache`` anywhere else
 still earns a report line instead of a removal.
 """

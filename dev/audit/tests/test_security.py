@@ -34,8 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_scanner_state_uses_existing_controlled_directories(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Native scanner overrides cannot redirect the managed scan outside storage."""
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
-    for variable in ("CADRUMO_TOOL_CONFIG_DIR", "CADRUMO_TOOL_CACHE_DIR", "CADRUMO_TOOL_STATE_DIR", "CADRUMO_TEMP_DIR"):
+    for variable in ("CADRUMO_TOOL_CONFIG_DIR", "CADRUMO_TOOL_CACHE_DIR", "CADRUMO_TOOL_STATE_DIR"):
         monkeypatch.delenv(variable, raising=False)
     monkeypatch.setenv("SEMGREP_SETTINGS_FILE", str(tmp_path / "ambient-settings.yml"))
     monkeypatch.setenv("CADRUMO_TOOL_STATE_DIR", "scanner-state")

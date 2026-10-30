@@ -149,7 +149,7 @@ def _prove_staged_database(path: Path, logical_generation: str) -> SnapshotProof
         )
         path.replace(admitted)
         try:
-            with override_settings(cadrumo_local_storage_root=private_root / "unprovisioned-storage"):
+            with override_settings(cadrumo_storage_root=private_root / "unprovisioned-storage"):
                 authority = IndexedRegistryAuthority(descriptor_path)
                 try:
                     with authority.operation() as operation:

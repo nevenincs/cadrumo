@@ -25,14 +25,13 @@
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-CommandWithArgs", '''$global:LASTEXITCODE = 0; . ([scriptblock]::Create($args[0] + [Environment]::NewLine + 'if (-not $?) { exit $(if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 }) }'))''']
 
 # ── Shared application and development storage root ─────────────────────────
+# The product knows no repository: the development root reaches it through the
+# one storage variable, as an absolute path. An operator-supplied value wins; a
+# relative one reaches the product unchanged and is refused there.
 storage_root_override := trim(env_var_or_default("CADRUMO_STORAGE_ROOT", ""))
 export CADRUMO_STORAGE_ROOT := if storage_root_override == "" { justfile_directory() / "var" / "storage" } else { storage_root_override }
-
-# Resolve local storage before calculating the documentation build root.
-local_storage_root := trim(env_var_or_default("CADRUMO_LOCAL_STORAGE_ROOT", ""))
-resolved_storage_root := absolute_path(if local_storage_root == "" { CADRUMO_STORAGE_ROOT } else { local_storage_root })
 docs_build_root_override := trim(env_var_or_default("CADRUMO_DOCS_BUILD_ROOT", ""))
-export CADRUMO_DOCS_BUILD_ROOT := if docs_build_root_override == "" { justfile_directory() / "build" / "docs" } else if docs_build_root_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { docs_build_root_override } else { resolved_storage_root / docs_build_root_override }
+export CADRUMO_DOCS_BUILD_ROOT := if docs_build_root_override == "" { justfile_directory() / "build" / "docs" } else if docs_build_root_override =~ '^(?:[A-Za-z]:[\\/]|/|\\\\)' { docs_build_root_override } else { CADRUMO_STORAGE_ROOT / docs_build_root_override }
 # Tool caches and installed tools retain the machine configuration.
 
 # Direct product commands use the same published generation as the developer

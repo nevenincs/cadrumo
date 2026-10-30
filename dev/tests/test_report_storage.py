@@ -18,7 +18,6 @@ def test_relative_report_destinations_follow_storage(
 ) -> None:
     root = tmp_path / "storage"
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(root))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
     monkeypatch.setenv("CADRUMO_CI_REPORTS_DIR", "")
     monkeypatch.setenv("VAULTSPEC_CI_REPORTS", "")
     monkeypatch.setenv(control, "reports")

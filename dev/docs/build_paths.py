@@ -26,7 +26,7 @@ def docs_build_root(
     configured = environment.get(DOCS_BUILD_ROOT_ENV, "").strip()
     if not configured:
         return (REPO_ROOT if repo_root is None else repo_root).resolve() / DEFAULT_DOCS_BUILD_ROOT
-    storage_root = configured_storage_root(environ=environment, repository_root=repo_root)
+    storage_root = configured_storage_root(environ=environment)
     return resolve_storage_path(configured, root=storage_root)
 
 

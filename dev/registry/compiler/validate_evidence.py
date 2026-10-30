@@ -21,7 +21,6 @@ from cadrumo.core.storage_environment import configured_storage_root, resolve_st
 from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
@@ -258,7 +257,7 @@ def corpus_text_cache_dir() -> Path:
     """
     override = os.environ.get(CORPUS_TEXT_CACHE_DIR_ENV)
     if (override is not None and override) and override.strip():
-        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
+        return resolve_storage_path(override, root=configured_storage_root())
     return dev_cache_dir("corpus-text")
 
 

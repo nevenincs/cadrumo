@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
 def test_source_bootstrap_retains_console_root_and_authority_from_another_cwd(tmp_path: Path) -> None:
-    """Checkout tooling inherits the console root without selecting another runtime store."""
+    """Checkout tooling inherits the console's one storage root."""
     root = tmp_path / "console storage"
     workspace = root / "workspace"
     workspace.mkdir(parents=True)
@@ -30,8 +30,7 @@ def test_source_bootstrap_retains_console_root_and_authority_from_another_cwd(tm
     environment["CARGO_HOME"] = str(tmp_path / "machine cargo")
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-            "CADRUMO_STORAGE_ROOT": str(tmp_path / "different checkout storage"),
+            "CADRUMO_STORAGE_ROOT": str(root),
             "CADRUMO_AUTHORITY_ROOT": str(authority),
         }
     )
@@ -68,7 +67,6 @@ def test_just_and_python_resolve_the_documentation_build_root(
     assert executable is not None, "the repository task runner is required"
     storage_root = tmp_path / "shared storage"
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage_root))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
     override = str(tmp_path / member) if member == "absolute-docs" else member
     monkeypatch.setenv(DOCS_BUILD_ROOT_ENV, override)
     environment = dict(os.environ)
