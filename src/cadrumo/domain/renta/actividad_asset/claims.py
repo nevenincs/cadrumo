@@ -71,6 +71,8 @@ class AmortizationClaim(BaseModel):
     free_depreciation_new_material_evidence_reference: EvidenceReference | None = None
     free_depreciation_unit_acquisition_value: Decimal | None = None
     free_depreciation_annual_cap: Decimal | None = None
+    disposal_revision_id: Hex64Str | None = None
+    """The baja revision that wrote this claim; only such a claim may shorten or zero its predecessor."""
 
     @field_validator("amount")
     @classmethod
@@ -104,8 +106,12 @@ class AmortizationClaim(BaseModel):
 
     @property
     def claim_id(self) -> str:
-        """Return deterministic claim identity, including every replay discriminator."""
-        return content_hash_hex(self.model_dump(mode="json"))
+        """Return deterministic claim identity, including every replay discriminator.
+
+        A claim no baja wrote omits the reference, so its identity is unchanged by the field.
+        """
+        exclude = {"disposal_revision_id"} if self.disposal_revision_id is None else None
+        return content_hash_hex(self.model_dump(mode="json", exclude=exclude))
 
     @classmethod
     def from_schedule(
@@ -115,6 +121,7 @@ class AmortizationClaim(BaseModel):
         asset_kind: AssetKind,
         creating_operation: str,
         supersedes_claim_id: str | None = None,
+        disposal_revision_id: str | None = None,
     ) -> AmortizationClaim:
         """Materialise an explicit recorded claim from a schedule forecast."""
         return cls(
@@ -135,6 +142,19 @@ class AmortizationClaim(BaseModel):
             free_depreciation_new_material_evidence_reference=schedule.free_depreciation_new_material_evidence_reference,
             free_depreciation_unit_acquisition_value=schedule.free_depreciation_unit_acquisition_value,
             free_depreciation_annual_cap=schedule.free_depreciation_annual_cap,
+            disposal_revision_id=disposal_revision_id,
+        )
+
+    def set_to_zero_by_baja(self, disposal_revision_id: str, *, creating_operation: str) -> AmortizationClaim:
+        """Return the superseding claim that keeps this interval, wholly after a baja, at amount zero."""
+        return self.model_copy(
+            update={
+                "asset_revision_id": disposal_revision_id,
+                "amount": Decimal("0.00"),
+                "creating_operation": creating_operation,
+                "supersedes_claim_id": self.claim_id,
+                "disposal_revision_id": disposal_revision_id,
+            },
         )
 
 
@@ -204,10 +224,13 @@ def _validate_supersession_identity(
     superseded: AmortizationClaim,
     candidate: AmortizationClaim,
 ) -> None:
-    if (
-        superseded.asset_id != candidate.asset_id
-        or superseded.covered_from != candidate.covered_from
-        or superseded.covered_until != candidate.covered_until
+    shortened_by_baja = (
+        candidate.disposal_revision_id is not None
+        and superseded.covered_from == candidate.covered_from
+        and candidate.covered_until < superseded.covered_until
+    )
+    if superseded.asset_id != candidate.asset_id or not (
+        shortened_by_baja or _has_same_interval(superseded, candidate)
     ):
         raise ActividadAssetClaimConflictError(
             translated_message="ledger.actividad_asset.errors.superseding_claim_changes_interval"
@@ -220,11 +243,9 @@ def _validate_claim_interval(
     matching_superseded: AmortizationClaim | None,
 ) -> None:
     for existing in effective_claims(existing_claims):
-        if existing.asset_id != candidate.asset_id:
+        if existing.asset_id != candidate.asset_id or matching_superseded is existing:
             continue
         if _has_same_interval(existing, candidate):
-            if matching_superseded is existing:
-                continue
             raise ActividadAssetClaimConflictError(
                 translated_message="ledger.actividad_asset.errors.interval_has_different_claim"
             )
