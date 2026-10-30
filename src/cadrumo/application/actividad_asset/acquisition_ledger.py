@@ -32,51 +32,53 @@ def require_acquisition_in_ledger(revision: ActivityAssetRevision, ledger: Acqui
     transaction_id = revision.acquisition.observed_transaction_id
     transaction = ledger.load_by_ids((transaction_id,)).transactions.get(transaction_id)
     if transaction is None:
-        raise _refusal("ledger.actividad_asset.errors.acquisition_transaction_missing", transaction_id=transaction_id)
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_transaction_missing",
+            context=_context(transaction_id=transaction_id),
+        )
     if transaction.direction is not TransactionDirection.OUTGOING:
-        raise _refusal(
-            "ledger.actividad_asset.errors.acquisition_transaction_not_payment", transaction_id=transaction_id
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_transaction_not_payment",
+            context=_context(transaction_id=transaction_id),
         )
     basis = revision.basis
     paid = _paid_in_euro(transaction)
     if basis.acquisition_cost() > paid:
-        raise _refusal(
-            "ledger.actividad_asset.errors.acquisition_cost_exceeds_payment",
-            cost=basis.acquisition_cost(),
-            price=basis.basis_amount,
-            non_deductible_iva=basis.non_deductible_iva,
-            paid=paid,
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_cost_exceeds_payment",
+            context=_context(
+                cost=basis.acquisition_cost(),
+                price=basis.basis_amount,
+                non_deductible_iva=basis.non_deductible_iva,
+                paid=paid,
+            ),
         )
     if transaction.raw.currency != DEFAULT_CURRENCY:
         return transaction
     if transaction.taxable_base is not None and basis.basis_amount > transaction.taxable_base:
-        raise _refusal(
-            "ledger.actividad_asset.errors.acquisition_price_exceeds_base",
-            price=basis.basis_amount,
-            taxable_base=transaction.taxable_base,
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_price_exceeds_base",
+            context=_context(price=basis.basis_amount, taxable_base=transaction.taxable_base),
         )
     if transaction.iva_amount is not None and basis.non_deductible_iva > transaction.iva_amount:
-        raise _refusal(
-            "ledger.actividad_asset.errors.acquisition_iva_exceeds_transaction_iva",
-            non_deductible_iva=basis.non_deductible_iva,
-            iva_amount=transaction.iva_amount,
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_iva_exceeds_transaction_iva",
+            context=_context(non_deductible_iva=basis.non_deductible_iva, iva_amount=transaction.iva_amount),
         )
     return transaction
 
 
-def _refusal(key: str, **context: object) -> ActividadAssetValidationError:
-    return ActividadAssetValidationError(
-        translated_message=key,
-        context={name: str(value) for name, value in context.items()},
-    )
+def _context(**values: object) -> dict[str, str]:
+    return {name: str(value) for name, value in values.items()}
 
 
 def _paid_in_euro(transaction: Transaction) -> Decimal:
     if transaction.raw.currency == DEFAULT_CURRENCY:
         return transaction.raw.amount
     if transaction.value_in_eur is None:
-        raise _refusal(
-            "ledger.actividad_asset.errors.acquisition_currency_unconverted", currency=transaction.raw.currency
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_currency_unconverted",
+            context=_context(currency=transaction.raw.currency),
         )
     return transaction.value_in_eur
 
