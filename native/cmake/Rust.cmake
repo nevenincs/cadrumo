@@ -10,7 +10,9 @@ function(cadrumo_cargo_command output)
     --env "RUSTDOC=${CADRUMO_RUST_ROOT}/bin/rustdoc${CMAKE_EXECUTABLE_SUFFIX}"
     --env "CARGO_TARGET_DIR=${cargo_directory}"
     --env "CARGO_BUILD_TARGET_DIR=${cargo_directory}"
-    --env "CARGO_BUILD_BUILD_DIR=${cargo_directory}")
+    --env "CARGO_BUILD_BUILD_DIR=${cargo_directory}"
+    # Only a Debug build bakes its development storage root; a release image carries none.
+    --env "CADRUMO_BUILD_STORAGE_ROOT=$<$<CONFIG:Debug>:${CADRUMO_BUILD_STORAGE_ROOT}>")
   foreach(name IN LISTS CADRUMO_RUST_ENVIRONMENT_NAMES)
     string(REPLACE ";" "\\;" value "${CADRUMO_RUST_ENV_${name}}")
     list(APPEND command --env "${name}=${value}")

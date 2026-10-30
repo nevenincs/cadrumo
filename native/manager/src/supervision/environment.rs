@@ -21,8 +21,9 @@ pub struct ManagedLocations {
 
 impl ManagedLocations {
     /// Admit a packaged desktop host's actual canonical root, including an
-    /// explicit operator-selected root. This does not manufacture installation
-    /// evidence or convert an authority override into trusted package authority.
+    /// explicit operator-selected root or the root a development build baked
+    /// in. This does not manufacture installation evidence or convert an
+    /// authority override into trusted package authority.
     pub fn for_host(executable: &Path, package: &Path, root: &Path) -> io::Result<Self> {
         if !executable.is_absolute() || !package.is_absolute() || !root.is_absolute() {
             return Err(io::ErrorKind::InvalidInput.into());
@@ -35,7 +36,7 @@ impl ManagedLocations {
         }
         let evidence = storage::detect_mode(executable).map_err(io::Error::other)?;
         let resolved = storage::resolve_storage_root(&evidence).map_err(io::Error::from)?;
-        if evidence.mode != Mode::Installed
+        if !evidence.packaged
             || std::fs::canonicalize(&evidence.package)? != std::fs::canonicalize(package)?
             || std::fs::canonicalize(&resolved.root)? != std::fs::canonicalize(root)?
         {
@@ -87,7 +88,8 @@ impl ManagedLocations {
             Evidence {
                 mode: Mode::Installed,
                 package,
-                checkout: None,
+                build_root: None,
+                packaged: true,
             },
             ResolvedRoot {
                 root: storage,
@@ -213,13 +215,14 @@ mod tests {
                 },
                 false,
             ),
-            (Mode::Development, RootSource::CheckoutDefault, false),
+            (Mode::Development, RootSource::BuildDefault, false),
         ] {
             let result = ManagedLocations::from_resolved(
                 Evidence {
                     mode,
                     package: path.clone(),
-                    checkout: None,
+                    build_root: None,
+                    packaged: true,
                 },
                 ResolvedRoot {
                     root: path.clone(),

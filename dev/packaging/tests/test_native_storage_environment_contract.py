@@ -146,15 +146,17 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
         generate(REPO_ROOT, tmp_path / "unknown", "nightly")
 
     root = contract["root"]
-    assert root == dict(declaration.root)
+    # A packaged image carries only the installed rule; a Debug build's root is baked in by CMake.
+    assert set(root) == set(declaration.root) - {"development_variable", "development_default", "checkout_marker"}
+    installed = StorageMode.INSTALLED
     # The command line keeps its own built-in rule for runs outside a package; both state the same rule.
     assert root["variable"] == STORAGE_ROOT.variable
-    assert root["precedence"] == {mode.value: list(STORAGE_ROOT.root_variables(mode)) for mode in StorageMode}
-    assert root["development_default"] == Path(*STORAGE_ROOT.development_default).as_posix()
-    assert root["relative_override"] == {mode.value: STORAGE_ROOT.relative_override(mode).value for mode in StorageMode}
+    assert root["precedence"] == {installed.value: list(STORAGE_ROOT.root_variables(installed))}
+    assert root["relative_override"] == {installed.value: STORAGE_ROOT.relative_override(installed).value}
     assert root["path_rules"] == STORAGE_PATH_RULES._asdict()
-    assert root["refusals"] == [refusal.value for refusal in StorageRootRefusal]
-    assert root["checkout_marker"] == STORAGE_ROOT.checkout_marker
+    assert root["refusals"] == [
+        refusal.value for refusal in StorageRootRefusal if refusal is not StorageRootRefusal.CHECKOUT_UNAVAILABLE
+    ]
     assert root["posix_directory_mode"] == STORAGE_ROOT.posix_directory_mode
     for platform in StoragePlatform:
         rule = STORAGE_ROOT.installed_rule(platform)
@@ -177,23 +179,37 @@ def test_schema_one_contract_projects_the_storage_declaration(tmp_path: Path) ->
     assert contract["mode"] == {
         "package_manifest": layout["files"]["package_manifest"],
         "package_root_from_executable": layout["package_root_from_executable"],
-        "checkout_marker": root["checkout_marker"],
     }
-    assert contract["vectors"] == [vector.as_contract() for vector in storage_root_vectors(REPO_ROOT)]
+    assert "vectors" not in contract
     assert contract["path_vectors"] == [vector.as_contract() for vector in storage_path_vectors()]
     assert contract["member_vectors"] == [vector.as_contract() for vector in storage_member_vectors()]
     assert contract["invalid_native_path"]["refusal"] == StorageRootRefusal.INVALID_PATH_INPUT.value
-    assert len(contract["vectors"]) >= 1
 
     # contract.rs carries the same data from the same run.
     assert _rust_strings(generated, "ROOT_VARIABLE") == [root["variable"]]
     assert _rust_strings(generated, "INSTALLED_ROOT_PRECEDENCE") == root["precedence"]["installed"]
     assert _rust_strings(generated, "PINNED_ENV") == environment["pinned"]
     assert _rust_strings(generated, "MODE_PACKAGE_MANIFEST") == [contract["mode"]["package_manifest"]]
-    rust_vectors = re.findall(r'StorageRootVector \{ name: "([^"]+)"', generated)
-    assert rust_vectors == [vector["name"] for vector in contract["vectors"]]
+    # The resolver's test vectors live apart from the contract every image includes.
+    vectors = (tmp_path / "contract_vectors.rs").read_text(encoding="utf-8")
+    rust_vectors = re.findall(r'StorageRootVector \{ name: "([^"]+)"', vectors)
+    installed_vectors = [vector.name for vector in storage_root_vectors(REPO_ROOT) if vector.mode == installed.value]
+    assert rust_vectors == installed_vectors and rust_vectors
+    assert "StorageRootVector" not in generated
     rust_member_vectors = re.findall(r'StorageMemberVector \{ name: "([^"]+)"', generated)
     assert rust_member_vectors == [vector["name"] for vector in contract["member_vectors"]]
+
+
+def test_packaged_contract_carries_no_development_storage_rule(tmp_path: Path) -> None:
+    generate(REPO_ROOT, tmp_path)
+    development = (
+        STORAGE_ROOT.development_variable,
+        Path(*STORAGE_ROOT.development_default).as_posix(),
+        STORAGE_ROOT.checkout_marker,
+    )
+    for name in ("contract.rs", "contract.json", "contract.h"):
+        text = (tmp_path / name).read_text(encoding="utf-8")
+        assert not [spelling for spelling in development if spelling in text], name
 
 
 def test_packaged_contract_carries_no_development_tool_location(tmp_path: Path) -> None:

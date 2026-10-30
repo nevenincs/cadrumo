@@ -49,7 +49,8 @@ if(APPLE)
   list(APPEND CADRUMO_RUST_ENVIRONMENT_NAMES MACOSX_DEPLOYMENT_TARGET)
   set(CADRUMO_RUST_ENV_MACOSX_DEPLOYMENT_TARGET "${CMAKE_OSX_DEPLOYMENT_TARGET}")
 endif()
-cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs")
+cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
+  --env "CADRUMO_CONTRACT_VECTORS_RS=${CONTRACT_DIR}/contract_vectors.rs")
 set(platform_dir "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/${rust_profile}")
 set(platform_static "${platform_dir}/libcadrumo_platform.a")
 # Separate crate types let one native library be rebuilt without linking its sibling.

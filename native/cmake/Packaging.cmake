@@ -290,6 +290,12 @@ if(BUILD_TESTING)
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/native/tests/package_smoke.py" "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${CADRUMO_PACKAGE_MANIFEST}")
   set_tests_properties(bundle.python PROPERTIES RESOURCE_LOCK package_inventory)
+  # A release package carries no development storage rule and no trace of the checkout it was built in.
+  add_test(NAME bundle.release-image-scan CONFIGURATIONS Release COMMAND "${CADRUMO_DEV_PYTHON}" -B -m
+    dev.packaging.native.release_image_scan --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
+    --checkout "${PROJECT_SOURCE_DIR}")
+  set_tests_properties(bundle.release-image-scan PROPERTIES RESOURCE_LOCK package_inventory
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 900)
   # The package declaration is the reference: ask the assembled package's own interpreter what the installed
   # command line, runtime and bundled agent declare, and fail on any disagreement with it.
   add_test(NAME bundle.environment-conformance COMMAND "${CMAKE_COMMAND}" -E env

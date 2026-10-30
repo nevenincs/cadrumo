@@ -280,55 +280,29 @@ fn invalid_temporary_override_refuses_without_effects_or_lossy_replacement() {
 
 #[test]
 fn native_bootstrap_does_not_ignore_an_invalid_selected_root_override() {
+    let scratch = Scratch::new("effective-root");
+    let baked = scratch.0.join("baked");
     let lookup = |name: &str| (name == ROOT_VARIABLE).then(invalid_unicode);
-    for mode in [storage::Mode::Installed, storage::Mode::Development] {
-        let refusal = storage::resolve_root(mode, &lookup, None, None, BUILD_CHANNEL).unwrap_err();
+    for build_root in [None, Some(baked.as_path())] {
+        let refusal = storage::resolve_root(&lookup, build_root, None, BUILD_CHANNEL).unwrap_err();
         assert_eq!(refusal.code, ROOT_REFUSAL_INVALID_PATH_INPUT);
     }
+}
 
-    let scratch = Scratch::new("effective-root");
-    let root = scratch.0.join("selected");
-    let selected = |name: &str| {
-        if name == ROOT_VARIABLE {
-            Some(root.as_os_str().to_owned())
-        } else if name == DEVELOPMENT_ROOT_VARIABLE {
-            Some(invalid_unicode())
-        } else {
-            None
-        }
+#[test]
+fn an_image_honours_no_storage_variable_outside_the_installed_precedence() {
+    let scratch = Scratch::new("ignored-variable");
+    let baked = scratch.0.join("baked");
+    // A variable the contract does not declare never selects or refuses a root.
+    let foreign = |name: &str| {
+        (!INSTALLED_ROOT_PRECEDENCE.contains(&name) && name.starts_with(NAMESPACE_PREFIX))
+            .then(invalid_unicode)
     };
-    assert!(
-        storage::resolve_root(
-            storage::Mode::Development,
-            &selected,
-            None,
-            None,
-            BUILD_CHANNEL
-        )
-        .is_ok()
-    );
-    let lower = |name: &str| (name == DEVELOPMENT_ROOT_VARIABLE).then(invalid_unicode);
-    if let Err(refused) = storage::resolve_root(
-        storage::Mode::Installed,
-        &lower,
-        None,
-        Some(&scratch.0),
-        BUILD_CHANNEL,
-    ) {
-        assert_eq!(refused.code, ROOT_REFUSAL_INSTALLED_BASE_UNAVAILABLE);
-    }
-    assert_eq!(
-        storage::resolve_root(
-            storage::Mode::Development,
-            &lower,
-            None,
-            None,
-            BUILD_CHANNEL
-        )
-        .unwrap_err()
-        .code,
-        ROOT_REFUSAL_INVALID_PATH_INPUT
-    );
+    let development = storage::resolve_root(&foreign, Some(&baked), None, BUILD_CHANNEL).unwrap();
+    assert_eq!(development.root, baked);
+    assert_eq!(development.source, storage::RootSource::BuildDefault);
+    let installed = storage::resolve_root(&foreign, None, Some(&scratch.0), BUILD_CHANNEL).unwrap();
+    assert_eq!(installed.source, storage::RootSource::InstalledDefault);
 }
 
 #[test]
@@ -359,8 +333,7 @@ fn generated_filesystem_vectors_preserve_original_link_evidence_and_have_no_effe
             .0
             .join(vector.components.iter().collect::<PathBuf>());
         let lookup = |name: &str| (name == ROOT_VARIABLE).then(|| original.as_os_str().to_owned());
-        let actual =
-            storage::resolve_root(storage::Mode::Installed, &lookup, None, None, BUILD_CHANNEL);
+        let actual = storage::resolve_root(&lookup, None, None, BUILD_CHANNEL);
         match (actual, vector.expected_components, vector.refusal) {
             (Ok(resolved), Some(parts), None) => assert_eq!(
                 resolved.root,
@@ -427,9 +400,7 @@ fn child_and_public_root_share_normalized_spelling_without_discarded_creation() 
     let scratch = Scratch::new("resolved-pin");
     let raw = scratch.0.join("unused/../selected");
     let lookup = |name: &str| (name == ROOT_VARIABLE).then(|| raw.as_os_str().to_owned());
-    let resolved =
-        storage::resolve_root(storage::Mode::Installed, &lookup, None, None, BUILD_CHANNEL)
-            .unwrap();
+    let resolved = storage::resolve_root(&lookup, None, None, BUILD_CHANNEL).unwrap();
     assert_eq!(resolved.root, scratch.0.join("selected"));
     assert!(!resolved.root.exists() && !scratch.0.join("unused").exists());
     let environment = child_environment(Vec::new(), &resolved.root).unwrap();
@@ -444,6 +415,87 @@ fn child_and_public_root_share_normalized_spelling_without_discarded_creation() 
 fn mode_detection_refuses_relative_executable_input() {
     assert!(storage::detect_mode(Path::new(EXECUTABLE)).is_err());
     assert!(storage::detect_mode(&Path::new(NATIVE).join(ENTRYPOINT_FILES[0])).is_err());
+}
+
+/// Write a staged package, with or without its manifest, under `package`.
+fn package_fixture(package: &Path, manifest: bool) {
+    fs::create_dir_all(package).unwrap();
+    if manifest {
+        let path = package.join(storage::relative_components(MODE_PACKAGE_MANIFEST));
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, b"{}").unwrap();
+    }
+}
+
+#[test]
+fn a_debug_image_stores_at_its_baked_root_and_a_release_image_at_the_installed_default() {
+    let scratch = Scratch::new("staged-packages");
+    let baked = scratch.0.join("var").join("storage");
+    let pinned = scratch.0.join("pinned");
+    let base = scratch.0.join("local-app-data");
+    let none = |_: &str| None;
+    let pin = |name: &str| (name == ROOT_VARIABLE).then(|| pinned.as_os_str().to_owned());
+    let relative = |name: &str| (name == ROOT_VARIABLE).then(|| OsString::from("relative"));
+    for (configuration, build_root) in [("Debug", Some(baked.as_path())), ("Release", None)] {
+        let package = scratch.0.join("stage").join(configuration).join("app");
+        package_fixture(&package, true);
+        let entrypoint = package.join(NATIVE).join(ENTRYPOINT_FILES[0]);
+        let evidence = storage::evidence_for(&entrypoint, build_root).unwrap();
+        assert!(evidence.packaged, "{configuration}");
+        assert_eq!(evidence.package, package, "{configuration}");
+        assert_eq!(
+            evidence.build_root.as_deref(),
+            build_root,
+            "{configuration}"
+        );
+        let resolved = storage::resolve_root(
+            &none,
+            evidence.build_root.as_deref(),
+            Some(&base),
+            BUILD_CHANNEL,
+        )
+        .unwrap();
+        match build_root {
+            Some(root) => {
+                assert_eq!(evidence.mode, storage::Mode::Development);
+                assert_eq!(resolved.root, root);
+                assert_eq!(resolved.source, storage::RootSource::BuildDefault);
+            }
+            None => {
+                assert_eq!(evidence.mode, storage::Mode::Installed);
+                assert_eq!(
+                    resolved.root,
+                    base.join(storage::channel_directory(BUILD_CHANNEL))
+                );
+                assert_eq!(resolved.source, storage::RootSource::InstalledDefault);
+            }
+        }
+        // An absolute operator root wins in either build; a relative one is refused.
+        let resolved = storage::resolve_storage_root_with(&evidence, &pin).unwrap();
+        assert_eq!(resolved.root, pinned, "{configuration}");
+        assert_eq!(
+            resolved.source,
+            storage::RootSource::Override {
+                variable: ROOT_VARIABLE
+            }
+        );
+        let refused = storage::resolve_storage_root_with(&evidence, &relative).unwrap_err();
+        assert_eq!(refused.code, ROOT_REFUSAL_RELATIVE_OVERRIDE_INSTALLED);
+    }
+}
+
+#[test]
+fn an_image_without_a_baked_root_or_a_package_manifest_is_refused() {
+    let scratch = Scratch::new("unpackaged");
+    let package = scratch.0.join("app");
+    package_fixture(&package, false);
+    let entrypoint = package.join(NATIVE).join(ENTRYPOINT_FILES[0]);
+    let refused = storage::evidence_for(&entrypoint, None).unwrap_err();
+    assert!(refused.contains(MODE_PACKAGE_MANIFEST), "{refused}");
+    let baked = scratch.0.join("baked");
+    let development = storage::evidence_for(&entrypoint, Some(&baked)).unwrap();
+    assert_eq!(development.mode, storage::Mode::Development);
+    assert!(!development.packaged);
 }
 
 #[test]

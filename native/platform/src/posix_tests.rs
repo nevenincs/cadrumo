@@ -24,17 +24,7 @@ fn generated_target_root_vectors() {
                 .find(|(key, _)| *key == name)
                 .map(|(_, value)| OsString::from(*value))
         };
-        let mode = match vector.mode {
-            "installed" => Mode::Installed,
-            "development" => Mode::Development,
-            _ => panic!("Unknown mode"),
-        };
-        let checkout = if vector.invalid_checkout {
-            Some(PathBuf::from(crate::conformance_tests::invalid_unicode()))
-        } else {
-            vector.checkout.map(PathBuf::from)
-        };
-        let actual = resolve_root_vector(mode, &lookup, checkout.as_deref(), None, vector.channel);
+        let actual = resolve_root_vector(&lookup, None, vector.channel);
         match (actual, vector.expected_root, vector.refusal) {
             (Ok(root), Some(expected), None) => {
                 assert_eq!(root.root, Path::new(expected), "{}", vector.name)
@@ -132,23 +122,25 @@ fn package_root_entrypoint_mapping_and_case_match_the_generated_projection() {
 }
 
 #[test]
-fn installed_and_checkout_evidence_come_from_absolute_executable_ancestors() {
+fn installed_and_development_evidence_come_from_absolute_executable_ancestors() {
     let scratch = Scratch::new("mode");
     let package = scratch.0.join("package");
     let manifest = package.join(storage::relative_components(MODE_PACKAGE_MANIFEST));
     fs::create_dir_all(manifest.parent().unwrap()).unwrap();
     fs::write(manifest, b"{}").unwrap();
-    let installed = storage::detect_mode(&package.join(EXECUTABLE)).unwrap();
+    let installed = storage::evidence_for(&package.join(EXECUTABLE), None).unwrap();
     assert_eq!(installed.mode, Mode::Installed);
     assert_eq!(installed.package, package);
     let installed_entrypoint =
-        storage::detect_mode(&package.join(NATIVE).join(ENTRYPOINT_FILES[0])).unwrap();
+        storage::evidence_for(&package.join(NATIVE).join(ENTRYPOINT_FILES[0]), None).unwrap();
     assert_eq!(installed_entrypoint.mode, Mode::Installed);
     assert_eq!(installed_entrypoint.package, package);
-    fs::write(scratch.0.join(MODE_CHECKOUT_MARKER), b"[project]\n").unwrap();
-    let checkout = storage::detect_mode(&scratch.0.join("build").join(EXECUTABLE)).unwrap();
-    assert_eq!(checkout.mode, Mode::Development);
-    assert_eq!(checkout.checkout.as_deref(), Some(scratch.0.as_path()));
+    let baked = scratch.0.join("storage");
+    let built =
+        storage::evidence_for(&scratch.0.join("build").join(EXECUTABLE), Some(&baked)).unwrap();
+    assert_eq!(built.mode, Mode::Development);
+    assert_eq!(built.build_root.as_deref(), Some(baked.as_path()));
+    assert!(!built.packaged);
 }
 
 #[test]

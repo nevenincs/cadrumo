@@ -87,7 +87,8 @@ set(CADRUMO_RUST_ENV_LIB "${msvc_root}/lib/x64;${sdk_root}/Lib/${windows_sdk_ver
 set(CADRUMO_RUST_ENV_INCLUDE "${msvc_root}/include;${sdk_root}/Include/${windows_sdk_version}/ucrt;${sdk_root}/Include/${windows_sdk_version}/shared;${sdk_root}/Include/${windows_sdk_version}/um;${sdk_root}/Include/${windows_sdk_version}/winrt")
 set("CADRUMO_RUST_ENV_CC_${CADRUMO_PIN_rust_target}" "${CMAKE_C_COMPILER}")
 set("CADRUMO_RUST_ENV_AR_${CADRUMO_PIN_rust_target}" "${CMAKE_AR}")
-cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs")
+cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
+  --env "CADRUMO_CONTRACT_VECTORS_RS=${CONTRACT_DIR}/contract_vectors.rs")
 set(platform_dir "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/${rust_profile}")
 set(platform_static "${platform_dir}/cadrumo_platform.lib")
 set(platform_import "${platform_dir}/cadrumo_platform.dll.lib")

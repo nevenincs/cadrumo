@@ -160,19 +160,23 @@ mod tests {
         }
     }
 
-    /// A development host inside a scratch checkout, so mode detection never depends on
-    /// where the test binary itself was built.
-    fn development_host(scratch: &Scratch) -> PathBuf {
-        let checkout = scratch.0.join("checkout");
-        fs::create_dir_all(&checkout).unwrap();
-        fs::write(checkout.join(cadrumo_platform::MODE_CHECKOUT_MARKER), "").unwrap();
-        checkout.join("target").join("debug").join("cadrumo.exe")
+    /// A host inside a scratch package, so mode detection never depends on where the test
+    /// binary itself was built: a Debug test build bakes its development root and a release
+    /// one reads the package manifest; the parent's root override selects the root in both.
+    fn packaged_host(scratch: &Scratch) -> PathBuf {
+        let package = scratch.0.join("package");
+        let manifest = cadrumo_platform::MODE_PACKAGE_MANIFEST
+            .split('/')
+            .fold(package.clone(), |path, part| path.join(part));
+        fs::create_dir_all(manifest.parent().unwrap()).unwrap();
+        fs::write(manifest, "{}").unwrap();
+        package.join("cadrumo.exe")
     }
 
     #[test]
     fn a_projection_failure_is_written_before_the_projection_can_run() {
         let scratch = Scratch::new();
-        let host = development_host(&scratch);
+        let host = packaged_host(&scratch);
         let parent = parent(&scratch.0.join("storage"));
         let diagnostics = Diagnostics::default();
         diagnostics.event(EventKind::HostStarted, None, None);

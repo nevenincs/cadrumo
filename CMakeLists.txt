@@ -152,6 +152,14 @@ execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
   "from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE CADRUMO_STORAGE_ROOT_VARIABLE
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+# A Debug build bakes the checkout's development storage root into its native images at compile
+# time; release images receive none, so nothing in them names this checkout's storage.
+execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+  "from cadrumo.core.storage_environment import STORAGE_ROOT; print('/'.join(STORAGE_ROOT.development_default))"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE development_storage_root
+  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+cmake_path(APPEND PROJECT_SOURCE_DIR "${development_storage_root}" OUTPUT_VARIABLE development_storage_root)
+cmake_path(NATIVE_PATH development_storage_root NORMALIZE CADRUMO_BUILD_STORAGE_ROOT)
 include(CTest)
 include(native/cmake/CTestEnvironment.cmake)
 cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL cadrumo_finalize_ctest_environment)

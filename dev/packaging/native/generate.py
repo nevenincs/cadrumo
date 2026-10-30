@@ -78,12 +78,26 @@ def _environment_section(declaration: ApplicationEnvironment) -> dict[str, Any]:
     }
 
 
-def _mode_section(layout: dict[str, Any], declaration: ApplicationEnvironment) -> dict[str, Any]:
+def _mode_section(layout: dict[str, Any]) -> dict[str, Any]:
     return {
         "package_manifest": layout["files"]["package_manifest"],
         "package_root_from_executable": layout["package_root_from_executable"],
-        "checkout_marker": declaration.root["checkout_marker"],
     }
+
+
+# Development storage rules belong to the build: a Debug build bakes its storage root into
+# its images at compile time, so a packaged contract carries only the installed rules.
+_DEVELOPMENT_ROOT_KEYS = frozenset({"development_variable", "development_default", "checkout_marker"})
+_DEVELOPMENT_REFUSALS = frozenset({"checkout_unavailable"})
+
+
+def _packaged_root(root: dict[str, Any]) -> dict[str, Any]:
+    """Project the installed storage-root rules every packaged image carries."""
+    packaged = {key: value for key, value in root.items() if key not in _DEVELOPMENT_ROOT_KEYS}
+    packaged["precedence"] = {"installed": list(root["precedence"]["installed"])}
+    packaged["relative_override"] = {"installed": root["relative_override"]["installed"]}
+    packaged["refusals"] = [refusal for refusal in root["refusals"] if refusal not in _DEVELOPMENT_REFUSALS]
+    return packaged
 
 
 class _PathVector(TypedDict):
@@ -141,31 +155,13 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         "    pub candidates: &'static [InstalledBaseCandidate],",
         "    pub home_variable: &'static str,",
         "}",
-        "pub struct StorageRootVector {",
-        "    pub name: &'static str,",
-        "    pub platform: &'static str,",
-        "    pub mode: &'static str,",
-        "    pub environment: &'static [(&'static str, &'static str)],",
-        "    pub checkout: Option<&'static str>,",
-        "    pub known_folder: Option<&'static str>,",
-        "    pub channel: &'static str,",
-        "    pub expected_root: Option<&'static str>,",
-        "    pub refusal: Option<&'static str>,",
-        "    pub invalid_environment: &'static [&'static str],",
-        "    pub invalid_checkout: bool,",
-        "    pub invalid_known_folder: bool,",
-        "}",
         f"pub const CONTRACT_SCHEMA: u32 = {contract['schema']};",
         f"pub const BUILD_CHANNEL: &str = {_rust_string(contract['channel']['build'])};",
         f"pub const ROOT_VARIABLE: &str = {_rust_string(root['variable'])};",
-        f"pub const DEVELOPMENT_ROOT_VARIABLE: &str = {_rust_string(root['development_variable'])};",
-        f"pub const DEVELOPMENT_ROOT_PRECEDENCE: &[&str] = {_rust_strings(root['precedence']['development'])};",
         f"pub const INSTALLED_ROOT_PRECEDENCE: &[&str] = {_rust_strings(root['precedence']['installed'])};",
-        f"pub const DEVELOPMENT_DEFAULT: &str = {_rust_string(root['development_default'])};",
         f"pub const PRODUCT_DIRECTORY: &str = {_rust_string(root['channel']['product_directory'])};",
         f"pub const STABLE_CHANNEL: &str = {_rust_string(root['channel']['stable'])};",
         f"pub const CHANNEL_SEPARATOR: &str = {_rust_string(root['channel']['separator'])};",
-        f"pub const DEVELOPMENT_RELATIVE_OVERRIDE: &str = {_rust_string(root['relative_override']['development'])};",
         f"pub const INSTALLED_RELATIVE_OVERRIDE: &str = {_rust_string(root['relative_override']['installed'])};",
         f"pub const POSIX_DIRECTORY_MODE: u32 = {root['posix_directory_mode']:#o};",
         f"pub const ROOT_REFUSALS: &[&str] = {_rust_strings(root['refusals'])};",
@@ -209,25 +205,7 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         + "];",
         f"pub const MODE_PACKAGE_MANIFEST: &str = {_rust_string(mode['package_manifest'])};",
         f"pub const MODE_PACKAGE_ROOT_FROM_EXECUTABLE: &str = {_rust_string(mode['package_root_from_executable'])};",
-        f"pub const MODE_CHECKOUT_MARKER: &str = {_rust_string(mode['checkout_marker'])};",
-        "pub const STORAGE_ROOT_VECTORS: &[StorageRootVector] = &[",
     ]
-    for vector in contract["vectors"]:
-        pairs = ", ".join(
-            f"({_rust_string(name)}, {_rust_string(value)})" for name, value in sorted(vector["environment"].items())
-        )
-        lines.append(
-            "    StorageRootVector { "
-            f"name: {_rust_string(vector['name'])}, platform: {_rust_string(vector['platform'])}, "
-            f"mode: {_rust_string(vector['mode'])}, environment: &[{pairs}], "
-            f"checkout: {_rust_option(vector['checkout'])}, known_folder: {_rust_option(vector['known_folder'])}, "
-            f"channel: {_rust_string(vector['channel'])}, expected_root: {_rust_option(vector['expected_root'])}, "
-            f"refusal: {_rust_option(vector['refusal'])}, "
-            f"invalid_environment: {_rust_strings(vector['invalid_environment'])}, "
-            f"invalid_checkout: {str(vector['invalid_checkout']).lower()}, "
-            f"invalid_known_folder: {str(vector['invalid_known_folder']).lower()} }},"
-        )
-    lines.append("];")
     lines += [
         f"pub const INVALID_NATIVE_PATH_BYTES: &[u8] = &{list(INVALID_NATIVE_PATH_BYTES)};",
         f"pub const INVALID_NATIVE_PATH_UTF16: &[u16] = &{list(INVALID_NATIVE_PATH_UTF16)};",
@@ -246,6 +224,39 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         "pub const STORAGE_MEMBER_VECTORS: &[StorageMemberVector] = &[",
     ]
     _rust_member_vectors(lines, contract["member_vectors"])
+    lines.append("];")
+    return lines
+
+
+def _rust_root_vectors(vectors: list[dict[str, Any]]) -> list[str]:
+    """Project the installed-mode root vectors the native resolver replays in its tests only."""
+    lines = [
+        "pub struct StorageRootVector {",
+        "    pub name: &'static str,",
+        "    pub platform: &'static str,",
+        "    pub environment: &'static [(&'static str, &'static str)],",
+        "    pub known_folder: Option<&'static str>,",
+        "    pub channel: &'static str,",
+        "    pub expected_root: Option<&'static str>,",
+        "    pub refusal: Option<&'static str>,",
+        "    pub invalid_environment: &'static [&'static str],",
+        "    pub invalid_known_folder: bool,",
+        "}",
+        "pub const STORAGE_ROOT_VECTORS: &[StorageRootVector] = &[",
+    ]
+    for vector in vectors:
+        pairs = ", ".join(
+            f"({_rust_string(name)}, {_rust_string(value)})" for name, value in sorted(vector["environment"].items())
+        )
+        lines.append(
+            "    StorageRootVector { "
+            f"name: {_rust_string(vector['name'])}, platform: {_rust_string(vector['platform'])}, "
+            f"environment: &[{pairs}], known_folder: {_rust_option(vector['known_folder'])}, "
+            f"channel: {_rust_string(vector['channel'])}, expected_root: {_rust_option(vector['expected_root'])}, "
+            f"refusal: {_rust_option(vector['refusal'])}, "
+            f"invalid_environment: {_rust_strings(vector['invalid_environment'])}, "
+            f"invalid_known_folder: {str(vector['invalid_known_folder']).lower()} }},"
+        )
     lines.append("];")
     return lines
 
@@ -291,11 +302,10 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
             "channel": release.channel,
             "cohort": list(PRODUCT_IDENTITY.cohort_distributions),
         },
-        "root": dict(declaration.root),
+        "root": _packaged_root(dict(declaration.root)),
         "runtime_transport": transport_section(),
         "environment": environment,
-        "mode": _mode_section(layout, declaration),
-        "vectors": [vector.as_contract() for vector in storage_root_vectors(root)],
+        "mode": _mode_section(layout),
         "path_vectors": [vector.as_contract() for vector in storage_path_vectors()],
         "member_vectors": [vector.as_contract() for vector in storage_member_vectors()],
         "invalid_native_path": {
@@ -364,6 +374,8 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         + "".join(f"{line}\n" for line in environment_compile.c_lines(launch)),
     )
     write_text(destination / "contract.json", json.dumps(contract, indent=2) + "\n")
+    installed_vectors = [vector.as_contract() for vector in storage_root_vectors(root) if vector.mode == "installed"]
+    write_text(destination / "contract_vectors.rs", "\n".join(_rust_root_vectors(installed_vectors)) + "\n")
 
 
 if __name__ == "__main__":

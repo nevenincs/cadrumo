@@ -815,11 +815,11 @@ fn target_from(
         })
 }
 
-/// Why this image supervises no package: only the installed image of the selected
+/// Why this image supervises no package: only the packaged image of the selected
 /// package, serving that package's own resolved storage root, supervises.
 #[cfg(windows)]
 fn unmanaged(launch: &Launch) -> Result<Option<&'static str>> {
-    use cadrumo_platform::storage::{self, Mode};
+    use cadrumo_platform::storage;
     if storage::authority_override_present(std::env::vars_os()) {
         return Err(failure(ErrorCode::EnvironmentFailed));
     }
@@ -827,7 +827,7 @@ fn unmanaged(launch: &Launch) -> Result<Option<&'static str>> {
         .map_err(|error| failure(ErrorCode::EnvironmentFailed).caused_by(error))?;
     let evidence =
         storage::detect_mode(&executable).map_err(|_| failure(ErrorCode::EnvironmentFailed))?;
-    if evidence.mode != Mode::Installed {
+    if !evidence.packaged {
         return Ok(Some("image_not_installed"));
     }
     let actual_package = std::fs::canonicalize(&evidence.package)

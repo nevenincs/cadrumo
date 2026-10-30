@@ -9,6 +9,9 @@ use std::{
     ptr,
 };
 include!(env!("CADRUMO_CONTRACT_RS"));
+// The generated resolver vectors exist only in test builds.
+#[cfg(test)]
+include!(env!("CADRUMO_CONTRACT_VECTORS_RS"));
 #[cfg(test)]
 mod conformance_tests;
 #[cfg(windows)]

@@ -59,7 +59,8 @@ cadrumo_cached_command(contract_command native_contract SHARED
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/release-python-version" "${CADRUMO_SOURCE_ROOT}/.python-version"
     "${CADRUMO_BUILD_HELPER}"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cargo_command.py"
-  OUTPUTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json")
+  OUTPUTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
+    "${CONTRACT_DIR}/contract_vectors.rs")
 cadrumo_build_step(contract_comment native_contract GROUP contract
   SUMMARY "generate the native package contract for Rust, C and the assembler"
   OUTPUTS "${CONTRACT_DIR}/contract.json" "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h")
@@ -68,6 +69,7 @@ add_custom_target(native_contract
     -m dev.packaging.native.generate "${CONTRACT_DIR}"
     --channel "${CADRUMO_ID_CHANNEL}" --target "${CADRUMO_TARGET}"
   BYPRODUCTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
+    "${CONTRACT_DIR}/contract_vectors.rs"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${contract_comment}" VERBATIM)
 # Each native component resolves its own build identity just before it compiles
 # (dev/packaging/native/build_stamp.py): a content fingerprint of its inputs keys the
