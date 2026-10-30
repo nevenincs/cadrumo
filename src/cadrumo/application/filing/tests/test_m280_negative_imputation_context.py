@@ -12,7 +12,6 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import (
     ExportJustification,
     ExportPadding,
@@ -20,6 +19,7 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
     render_fixed_width_export_record_body,
 )
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing.schema import ModeloDraft
 
@@ -27,46 +27,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SOURCE_DIGESTS = {"aeat-dr-280-2022": "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701"}
 
 
+_GUARDED_IDS = (
+    "modelo-280-t2-rendimientos-negativos-imputables-sign",
+    "modelo-280-t2-rendimientos-negativos-imputables-component-177",
+    "modelo-280-t2-rendimientos-negativos-imputables-component-185",
+    "modelo-280-t2-extincion-plan",
+)
+
+
 def _record() -> ExportRecordDefinition:
-    fields = tuple(
-        ExportFieldDefinition.model_construct(
-            id=field_id,
-            offset=offset,
-            length=length,
-            kind=CasillaFieldKind.CASILLA,
-            casilla_id="rendimientos-negativos-imputables",
-            value_policy=policy,
-            source_refs=("aeat-dr-280-2022",),
-        )
-        for field_id, offset, length, policy in (
-            (
-                "modelo-280-t2-rendimientos-negativos-imputables-sign",
-                176,
-                1,
-                ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
-            ),
-            (
-                "modelo-280-t2-rendimientos-negativos-imputables-component-177",
-                177,
-                8,
-                ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
-            ),
-            (
-                "modelo-280-t2-rendimientos-negativos-imputables-component-185",
-                185,
-                2,
-                ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
-            ),
-        )
-    )
-    key = ExportFieldDefinition.model_construct(
-        id="modelo-280-t2-extincion-plan",
-        offset=137,
-        length=1,
-        casilla_id="extincion-plan",
-        source_refs=("aeat-dr-280-2022",),
-    )
-    return ExportRecordDefinition.model_construct(id="modelo-280-declarado", fields=(*fields, key))
+    """The published declarado record exactly as the hydrated layout declares it."""
+    layout = published_revision("280", "2025").export_layouts[0]
+    return next(record for record in layout.records if record.id == "modelo-280-declarado")
 
 
 def _wire(*, key: str, sign: str, magnitude: str) -> str:
@@ -78,7 +50,7 @@ def _wire(*, key: str, sign: str, magnitude: str) -> str:
 def _renderable_record() -> ExportRecordDefinition:
     """Keep the exact guarded source fields while supplying their wire shapes."""
     source = _record()
-    sign, integer, fraction, key = source.fields
+    sign, integer, fraction, key = (next(field for field in source.fields if field.id == i) for i in _GUARDED_IDS)
     components = (
         sign.model_copy(
             update={
@@ -101,16 +73,7 @@ def _renderable_record() -> ExportRecordDefinition:
             )
             for field in (integer, fraction)
         ),
-        key.model_copy(
-            update={
-                "kind": CasillaFieldKind.CASILLA,
-                "data_type": "text",
-                "required": True,
-                "padding": ExportPadding.NONE,
-                "justification": ExportJustification.NONE,
-                "signed": False,
-            }
-        ),
+        key,
         ExportFieldDefinition.model_construct(id="record-tail", offset=187, length=314, kind=CasillaFieldKind.FILLER),
     )
     return source.model_copy(update={"fields": components, "encoding": "ascii"})
@@ -227,12 +190,37 @@ def test_negative_imputation_refuses_changed_source_and_component() -> None:
         require_m280_negative_imputation_context(record, wire, source_digests={"aeat-dr-280-2022": "0" * 64})
     changed = record.model_copy(
         update={
-            "fields": (
-                record.fields[0],
-                record.fields[1].model_copy(update={"source_refs": ("wrong",)}),
-                *record.fields[2:],
+            "fields": tuple(
+                field.model_copy(update={"source_refs": ("wrong",)}) if field.id == _GUARDED_IDS[1] else field
+                for field in record.fields
             )
         }
     )
     with pytest.raises(FilingExportValidationError, match="reviewed source"):
         require_m280_negative_imputation_context(changed, wire, source_digests=_SOURCE_DIGESTS)
+
+
+def test_guard_reads_the_key_and_amount_where_the_layout_declares_them() -> None:
+    record = _renderable_record()
+    key_field = next(field for field in record.fields if field.id == "modelo-280-t2-extincion-plan")
+    moved = record.model_copy(
+        update={
+            "fields": tuple(
+                field.model_copy(update={"offset": 300}) if field is key_field else field for field in record.fields
+            )
+        }
+    )
+    wire = list(_wire(key="1", sign="0", magnitude="0" * 10))
+    wire[299] = "2"
+    with pytest.raises(FilingExportValidationError, match="requires key 2"):
+        require_m280_negative_imputation_context(moved, "".join(wire), source_digests=_SOURCE_DIGESTS)
+    wire[175] = "N"
+    require_m280_negative_imputation_context(moved, "".join(wire), source_digests=_SOURCE_DIGESTS)
+
+
+def test_guard_refuses_a_wire_that_is_not_the_declared_record_width() -> None:
+    record = _renderable_record()
+    with pytest.raises(FilingExportValidationError, match="record is incomplete"):
+        require_m280_negative_imputation_context(
+            record, _wire(key="1", sign="0", magnitude="0" * 10)[:-1], source_digests=_SOURCE_DIGESTS
+        )
