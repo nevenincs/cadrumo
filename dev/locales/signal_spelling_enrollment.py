@@ -178,6 +178,11 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "Scoop",
             "PyPI",
             "Claude",
+            # These lowercase provider IDs are shown in CLI provider-help
+            # examples across current locales; preserve the canonical IDs.
+            "claude",
+            "antigravity",
+            "codex",
             "snapshot",
             "snapshots",
             "bucket",
@@ -329,6 +334,11 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "Scoop",
             "PyPI",
             "Claude",
+            # These lowercase provider IDs are shown in CLI provider-help
+            # examples across current locales; preserve the canonical IDs.
+            "claude",
+            "antigravity",
+            "codex",
             "snapshot",
             "snapshots",
             "bucket",
@@ -420,6 +430,11 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "Scoop",
             "PyPI",
             "Claude",
+            # These lowercase provider IDs are shown in CLI provider-help
+            # examples across current locales; preserve the canonical IDs.
+            "claude",
+            "antigravity",
+            "codex",
             "OAuth",
             "DEHú",
             # These exact Hungarian forms are attested in common.yml/errors.yml

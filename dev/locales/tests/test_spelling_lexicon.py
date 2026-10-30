@@ -142,6 +142,28 @@ def test_platform_and_product_names_are_exact_and_language_scoped() -> None:
     assert not is_project_spelling("es", "Codex")
 
 
+def test_cli_provider_ids_are_exact_lowercase_and_language_scoped() -> None:
+    for locale in ("ca", "es", "hu"):
+        for provider in ("claude", "antigravity", "codex"):
+            assert is_project_spelling(locale, provider)
+        for near_miss in (
+            "claudee",
+            "antigravty",
+            "codx",
+            "Antigravity",
+            "Codex",
+        ):
+            assert not is_project_spelling(locale, near_miss)
+
+    # English already accepts these through its dictionary or enrollment;
+    # codex itself needs no English project-spelling exception.
+    for provider in ("claude", "antigravity"):
+        assert is_project_spelling("en", provider)
+    assert not is_project_spelling("en", "claudee")
+    assert not is_project_spelling("en", "antigravty")
+    assert not is_project_spelling("en", "codx")
+
+
 def test_attested_english_domain_terms_are_exact_and_language_scoped() -> None:
     terms = (
         "counterparty",
