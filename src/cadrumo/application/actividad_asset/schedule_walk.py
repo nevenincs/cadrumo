@@ -1,10 +1,11 @@
 """Walk an element's schedule year by year: the one route to accrued amortization.
 
 The plan, the Modelo 130 calculation and the filing handoff all read this route.
-A year with no claim still consumes what the schedule charged for it, so an element
-reaches the end of its amortization on the same date whether or not anyone recorded
-those years (DGT V3655-16: the elapsed maximum period leaves nothing to amortize).
-Nothing here records a claim.
+The deductible value pending is the basis less the opening amount and the effective
+claims.  A past year with no claim is a missing deduction: it shows its planned figure
+and takes nothing from later years, which stay within their own maximum and stop at the
+maximum period (DGT V3655-16).  The minimum amortization reduces cost at a baja under
+RIRPF art. 40 and is a separate figure, never subtracted here.  Nothing here records a claim.
 """
 
 from __future__ import annotations
@@ -81,11 +82,12 @@ def walk_element(
 ) -> tuple[WalkedYear, ...]:
     """Work out each service year from entry to ``through_year`` under the current revision.
 
-    A covered year consumes its claims.  A year with an uncovered interval
-    consumes the larger of its claims and its charge.  A year the schedule cannot
-    work out consumes its claims and carries the typed reason.  With
-    ``settled_after``, the walk ends at the first such reason from that year on,
-    which is where a plan stops having anything further to say.
+    Every year consumes its effective claims and nothing else.  A year the schedule
+    cannot work out also carries the typed reason.  With ``settled_after``, the walk
+    ends at the first such reason from that year on, which is where a plan stops
+    having anything further to say.  From that year on an uncovered charge is a
+    projection: it lowers the figures of the years after it, so the plan's remaining
+    figures never exceed the value pending, and it is never counted as consumed.
 
     A non-zero opening amount states what was amortized through its last covered
     tax year.  Those years are the opening's: they neither charge nor consume, which
@@ -98,6 +100,7 @@ def walk_element(
     last_year = through_year if disposal is None else min(through_year, disposal.disposal_date.year)
     rows: list[WalkedYear] = []
     consumed = Decimal("0")
+    projected = Decimal("0")
     opening_covers_through = revision.opening_history.covered_through_tax_year
     for tax_year in range(revision.in_service_date.year, last_year + 1):
         claims = tuple(
@@ -131,9 +134,12 @@ def walk_element(
             claims=claims,
             gaps=gaps,
             consumed_before=consumed,
+            projected_before=projected,
         )
         rows.append(row)
         consumed = row.consumed_through
+        if settled_after is not None and tax_year >= settled_after and row.charge is not None and gaps:
+            projected += max(row.charge.amount - row.claimed, Decimal("0"))
         if settled_after is not None and tax_year >= settled_after and row.absence is not None:
             break
     return tuple(rows)
@@ -148,6 +154,7 @@ def _walk_year(
     claims: tuple[AmortizationClaim, ...],
     gaps: tuple[ClaimCoverageGap, ...],
     consumed_before: Decimal,
+    projected_before: Decimal,
 ) -> WalkedYear:
     claimed = sum((claim.amount for claim in claims), Decimal("0"))
     if revision.amortization.method in FREE_AMOUNT_METHODS:
@@ -168,7 +175,7 @@ def _walk_year(
             forecast=forecast,
             tax_year=tax_year,
             until=date(tax_year + 1, 1, 1),
-            consumed_before=consumed_before,
+            projected_before=projected_before,
         )
     except (ActividadAssetError, RegistryError) as error:
         return WalkedYear(
@@ -182,7 +189,6 @@ def _walk_year(
             reason_facts=_reason_facts(error),
             consumed_through=consumed_before + claimed,
         )
-    consumed_in_year = max(claimed, charge.amount) if gaps else claimed
     return WalkedYear(
         tax_year=tax_year,
         claims=claims,
@@ -191,7 +197,7 @@ def _walk_year(
         charge=charge,
         absence=PlanFigureAbsence.BASIS_EXHAUSTED if charge.amount <= Decimal("0") else None,
         reason_key=None,
-        consumed_through=consumed_before + consumed_in_year,
+        consumed_through=consumed_before + claimed,
     )
 
 
@@ -202,21 +208,22 @@ def _span_charge(
     forecast: ActivityAssetForecastOperation,
     tax_year: int,
     until: date,
-    consumed_before: Decimal,
+    projected_before: Decimal = Decimal("0"),
 ) -> ScheduledAmortizationCharge:
     """Charge from 1 January to ``until`` as the schedule's own figure.
 
-    Claims inside the year do not reduce it and later years do not touch it; what
-    earlier years consumed comes from the walk.
+    Earlier years count through their effective claims, the same summary a forecast
+    reads.  Claims inside the year do not reduce it and later years do not touch it.
     """
     summary = asset_schedule_history(
         tuple(claim for claim in history.claims if claim.tax_year <= tax_year),
         history.revisions,
         asset_id=revision.asset_id,
         tax_year=tax_year,
-    ).model_copy(
+    )
+    summary = summary.model_copy(
         update={
-            "accumulated_before_tax_year": consumed_before,
+            "accumulated_before_tax_year": summary.accumulated_before_tax_year + projected_before,
             "accumulated_in_tax_year": Decimal("0"),
             "election_fingerprints_in_tax_year": (),
         },
@@ -332,12 +339,6 @@ def _m130_element_accrual(
         return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)
     if revision.amortization.method in FREE_AMOUNT_METHODS:
         return _m130_free_accrual(revision, history, period_end=period_end)
-    earlier = walk_element(
-        revision,
-        history,
-        forecast=forecast,
-        through_year=tax_year - 1,
-    )
     try:
         charge = _span_charge(
             revision,
@@ -345,7 +346,6 @@ def _m130_element_accrual(
             forecast=forecast,
             tax_year=tax_year,
             until=until,
-            consumed_before=earlier[-1].consumed_through if earlier else Decimal("0"),
         )
     except ActividadAssetPeriodElapsedError:
         return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)

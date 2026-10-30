@@ -109,7 +109,7 @@ def _walk(opening_through: int) -> dict[int, WalkedYear]:
     return {row.tax_year: row for row in rows}
 
 
-def test_years_after_the_opening_year_are_gaps_that_consume_their_charge() -> None:
+def test_years_after_the_opening_year_are_missing_gaps_that_consume_nothing() -> None:
     rows = _walk(2022)
 
     covered = [year for year, row in rows.items() if row.absence is PlanFigureAbsence.COVERED_BY_OPENING]
@@ -119,11 +119,10 @@ def test_years_after_the_opening_year_are_gaps_that_consume_their_charge() -> No
         assert charge is not None
         assert charge.amount == Decimal("1000.00")
         assert len(rows[year].gaps) == 1
-    assert rows[2023].consumed_before == Decimal("0")
-    assert rows[2024].consumed_before == Decimal("1000.00")
-    # 10,000 basis - 3,000 opening - (1,000 + 1,000) consumed by the 2023 and 2024 gaps = 5,000 pending.
-    assert rows[2025].consumed_before == Decimal("2000.00")
-    assert Decimal("10000") - Decimal("3000") - rows[2025].consumed_before == Decimal("5000")
+    assert rows[2024].consumed_before == Decimal("0")
+    # 10,000 basis - 3,000 opening - no effective claims = 7,000 pending; the missing years take nothing.
+    assert rows[2025].consumed_before == Decimal("0")
+    assert Decimal("10000") - Decimal("3000") - rows[2025].consumed_before == Decimal("7000")
 
 
 def test_an_opening_through_the_last_walked_year_leaves_no_gap_year() -> None:
