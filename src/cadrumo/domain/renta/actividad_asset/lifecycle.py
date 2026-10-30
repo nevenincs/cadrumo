@@ -315,6 +315,10 @@ class ActivityAssetBasis(BaseModel):
         return building_cost * self.ownership_share * self.office_area / self.total_area
 
 
+_BAJA_AND_CHAIN_FIELDS: set[str] = {"revision_number", "supersedes_revision_id", "out_of_service_date", "disposal"}
+"""A revision's place in its chain and its baja, which leave every earlier charge's facts unchanged."""
+
+
 class ActivityAssetRevision(CachedIdentityModel):
     """One immutable revision of an independently identified activity asset."""
 
@@ -383,6 +387,12 @@ class ActivityAssetRevision(CachedIdentityModel):
         payload = self.model_dump(mode="json", exclude=excluded)
         payload["supersedes_revision_id"] = self.supersedes_revision_id
         return content_hash_hex(payload)
+
+    def same_tax_facts(self, other: ActivityAssetRevision) -> bool:
+        """Say whether two revisions state the same element, whatever baja each records."""
+        return self.model_dump(exclude=_BAJA_AND_CHAIN_FIELDS) == other.model_dump(
+            exclude=_BAJA_AND_CHAIN_FIELDS,
+        )
 
     def with_disposal(self, disposal: ActivityAssetDisposal) -> ActivityAssetRevision:
         """Return the superseding revision recording a baja, every other fact copied unchanged."""

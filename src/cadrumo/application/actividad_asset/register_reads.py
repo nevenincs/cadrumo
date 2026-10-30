@@ -293,6 +293,21 @@ def _edition_or_none(context: RegisterReadContext, tax_year: int) -> ActivityAss
         return None
 
 
+def _history_before_claim(claim: AmortizationClaim, history: ActivityAssetHistory) -> AssetScheduleHistory:
+    """Summarise what a claim's charge rested on: everything recorded for time before it."""
+    return asset_schedule_history(
+        tuple(
+            item
+            for item in history.claims
+            if item.tax_year < claim.tax_year
+            or (item.tax_year == claim.tax_year and item.covered_from < claim.covered_from)
+        ),
+        history.revisions,
+        asset_id=claim.asset_id,
+        tax_year=claim.tax_year,
+    )
+
+
 def _matches_current_schedule(
     claim: AmortizationClaim,
     current: ActivityAssetRevision,
@@ -301,14 +316,15 @@ def _matches_current_schedule(
     """Compare a claim's fingerprint with what the current revision and authority would stamp."""
     if claim.disposal_revision_id is not None and claim.amount == Decimal("0"):
         return None
-    if claim.asset_revision_id != current.revision_id:
+    recorded_under = next(item for item in context.history.revisions if item.revision_id == claim.asset_revision_id)
+    if not recorded_under.same_tax_facts(current):
         return ActivityAssetClaimStaleReason.REVISION_CHANGED
     try:
         charge = context.forecast(
             current,
             covered_from=claim.covered_from,
             covered_until=claim.covered_until,
-            history=AssetScheduleHistory(),
+            history=_history_before_claim(claim, context.history),
             requested_free_amount=claim.amount if current.amortization.method in FREE_AMOUNT_METHODS else None,
         )
     except (ActividadAssetError, RegistryError):

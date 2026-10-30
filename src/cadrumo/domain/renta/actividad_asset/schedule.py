@@ -11,11 +11,12 @@ charge at the remaining lawful basis.
 from __future__ import annotations
 
 import calendar
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Self
+from enum import Enum
+from typing import Self, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -181,9 +182,14 @@ class ScheduleAuthority(BaseModel):
 
     @property
     def fingerprint(self) -> str:
-        """Return a stable digest of the governing authority selection."""
-        absent_facts = {"original_price_basis"} if self.original_price_basis is None else set()
-        return content_hash_hex(self.model_dump(mode="json", exclude=absent_facts))
+        """Return a digest of what the law resolves to for this election and tax year.
+
+        The generation and the source references say where those facts came from.
+        A new publication that resolves to the same facts charges the same amounts,
+        so neither takes part, and a figure's scale does not either.
+        """
+        facts = self.model_dump(mode="python", exclude={"authority_generation", "source_reference"}, exclude_none=True)
+        return content_hash_hex(_canonical_facts(facts))
 
 
 class ScheduledAmortizationCharge(BaseModel):
@@ -240,6 +246,22 @@ class ScheduledAmortizationCharge(BaseModel):
         return self
 
 
+def _canonical_amount(value: Decimal) -> str:
+    return format(value.normalize(), "f")
+
+
+def _canonical_facts(value: object) -> object:
+    if isinstance(value, Mapping):
+        return {str(name): _canonical_facts(item) for name, item in cast("Mapping[object, object]", value).items()}
+    if isinstance(value, Decimal):
+        return _canonical_amount(value)
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, date):
+        return value.isoformat()
+    return value
+
+
 def schedule_charge(
     revision: ActivityAssetRevision,
     authority: ScheduleAuthority,
@@ -281,20 +303,15 @@ def schedule_charge(
         interval_start=interval_start,
         interval_end=interval_end,
     )
-    amount = _method_amount(context, history=history, requested_free_amount=requested_free_amount)
-    amount = min(amount, round_to_cents(remaining_base))
-    schedule_fingerprint = content_hash_hex(
-        {
-            "asset_id": revision.asset_id,
-            "asset_revision_id": revision.revision_id,
-            "authority_fingerprint": authority.fingerprint,
-            "tax_year": authority.tax_year,
-            "amortizable_basis": str(amortizable_basis),
-            "opening_amount": str(opening_amount),
-            "method": authority.method.value,
-        },
-    )
+    method_amount = _method_amount(context, history=history, requested_free_amount=requested_free_amount)
+    amount_limit = round_to_cents(remaining_base)
+    amount = min(method_amount, amount_limit)
     low_value = authority.low_value
+    schedule_fingerprint = _charge_fingerprint(
+        context,
+        opening_amount=opening_amount,
+        capped_at=amount_limit if method_amount > amount_limit else None,
+    )
     return ScheduledAmortizationCharge(
         asset_id=revision.asset_id,
         asset_revision_id=revision.revision_id,
@@ -329,6 +346,39 @@ class _ChargeContext:
     year_end: date
     interval_start: date
     interval_end: date
+
+
+def _charge_fingerprint(
+    context: _ChargeContext,
+    *,
+    opening_amount: Decimal,
+    capped_at: Decimal | None,
+) -> str:
+    """Hash exactly what this charge's amount rests on, so equal digests mean equal figures.
+
+    The revision's identity stays out, because a revision that changes none of these
+    facts changes no charge.  What earlier years consumed takes part only where it
+    moves the figure: the pending value a constant percentage runs on, and the limit
+    of a charge that reached the remaining basis.  A claim's identity carries this
+    digest and its own revision, so it remains exact.
+    """
+    authority = context.authority
+    facts: dict[str, str] = {
+        "asset_id": context.revision.asset_id,
+        "authority": authority.fingerprint,
+        "in_service_date": context.revision.in_service_date.isoformat(),
+        "covered_from": context.interval_start.isoformat(),
+        "covered_until": context.interval_end.isoformat(),
+        "amortizable_basis": _canonical_amount(context.amortizable_basis),
+        "opening_amount": _canonical_amount(opening_amount),
+    }
+    if authority.method is AmortizationMethod.CONSTANT_PERCENTAGE:
+        facts["pending_at_year_start"] = _canonical_amount(context.pending_at_year_start)
+    if capped_at is not None:
+        facts["capped_at"] = _canonical_amount(capped_at)
+    if authority.low_value is not None:
+        facts["unit_acquisition_value"] = _canonical_amount(context.revision.basis.acquisition_cost())
+    return content_hash_hex(facts)
 
 
 def _validate_charge_scope(
