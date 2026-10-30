@@ -4561,6 +4561,25 @@ google_review:
   value: Valor
 ledger:
   actividad_asset:
+    acquired_condition:
+      new: Nou
+      used: Usat
+    acquisition_shape:
+      ancillary_cost: Cost accessori d'un element
+      financial_lease_unexercised: Arrendament financer, opció de compra sense exercir
+      historical_without_evidence: Històric, sense justificant
+      primary_purchase: Compra
+      produced: Producció pròpia
+      split_payment: Compra pagada en diversos pagaments
+    basis_stage:
+      business_allocated: Imputat a l'activitat
+      taxpayer_owned: Propietat del contribuent, abans de l'ús en l'activitat
+      whole_property: Immoble complet
+    disposal_finding:
+      claim_gap: Any amb amortització sense registrar
+      exemption_not_computed: Exempció del guany no calculada
+      minimum_exceeded_deduction: Deducció superior a l'amortització mínima
+      no_minimum_authority: Sense amortització mínima publicada per a aquest any
     errors:
       accelerated_da18_depreciation: Per a l'exercici %{tax_year}, la LIS DA 18 concedeix
         als vehicles elèctrics nous i als punts de recàrrega amortització accelerada
@@ -4853,6 +4872,12 @@ ledger:
         a l'inici de l'any d'entrada en funcionament no supera la dels 12 mesos anteriors
         (LIS art. 102.1).
       workforce_year_not_declared: La plantilla mitjana de %{year} no està declarada.
+    non_deductible_iva_state:
+      known: IVA no deduïble conegut
+      unknown: IVA no deduïble desconegut
+    opening_history_status:
+      known: Amortització acumulada coneguda
+      missing: Amortització acumulada sense informar
   evidence:
     reader:
       operation_failed: Ha fallat l'operació del lector de justificants

@@ -4563,6 +4563,26 @@ google_review:
   value: Valor
 ledger:
   actividad_asset:
+    acquired_condition:
+      new: Nuevo
+      used: Usado
+    acquisition_shape:
+      ancillary_cost: Gasto accesorio de un elemento
+      financial_lease_unexercised: Arrendamiento financiero, opción de compra sin
+        ejercer
+      historical_without_evidence: Histórico, sin justificante
+      primary_purchase: Compra
+      produced: Producción propia
+      split_payment: Compra pagada en varios pagos
+    basis_stage:
+      business_allocated: Imputado a la actividad
+      taxpayer_owned: Propiedad del contribuyente, antes del uso en la actividad
+      whole_property: Inmueble completo
+    disposal_finding:
+      claim_gap: Año con amortización sin registrar
+      exemption_not_computed: Exención de la ganancia no calculada
+      minimum_exceeded_deduction: Deducción superior a la amortización mínima
+      no_minimum_authority: Sin amortización mínima publicada para este año
     errors:
       accelerated_da18_depreciation: Para el ejercicio %{tax_year}, la LIS DA 18 concede
         a los vehículos eléctricos nuevos y a los puntos de recarga amortización acelerada
@@ -4860,6 +4880,12 @@ ledger:
         al inicio del año de entrada en funcionamiento no supera la de los 12 meses
         anteriores (LIS art. 102.1).
       workforce_year_not_declared: La plantilla media de %{year} no está declarada.
+    non_deductible_iva_state:
+      known: IVA no deducible conocido
+      unknown: IVA no deducible desconocido
+    opening_history_status:
+      known: Amortización acumulada conocida
+      missing: Amortización acumulada sin informar
   evidence:
     reader:
       operation_failed: Falló la operación del lector de justificantes

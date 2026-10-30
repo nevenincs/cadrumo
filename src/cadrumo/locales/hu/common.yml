@@ -4539,6 +4539,26 @@ google_review:
   value: Érték
 ledger:
   actividad_asset:
+    acquired_condition:
+      new: Új
+      used: Használt
+    acquisition_shape:
+      ancillary_cost: Egy eszköz járulékos költsége
+      financial_lease_unexercised: Pénzügyi lízing, a vételi opció még nem él
+      historical_without_evidence: Múltbeli, bizonylat nélkül
+      primary_purchase: Vásárlás
+      produced: Saját előállítás
+      split_payment: Részletekben fizetett vásárlás
+    basis_stage:
+      business_allocated: A tevékenységhez rendelve
+      taxpayer_owned: Az adózó tulajdona, az üzleti használat előtt
+      whole_property: Teljes ingatlan
+    disposal_finding:
+      claim_gap: Elszámolatlan értékcsökkenési leírású év
+      exemption_not_computed: A nyereség mentessége nincs kiszámítva
+      minimum_exceeded_deduction: A minimális értékcsökkenési leírást meghaladó levonás
+      no_minimum_authority: Ehhez az évhez nincs közzétett minimális értékcsökkenési
+        leírás
     errors:
       accelerated_da18_depreciation: A(z) %{tax_year}. adóévre a LIS DA 18 az új elektromos
         járművekre és töltőpontokra a maximális lineáris együttható kétszeresével
@@ -4833,6 +4853,12 @@ ledger:
         hónap átlagos létszáma nem haladja meg az azt megelőző 12 hónapét (LIS 102.1
         cikk).
       workforce_year_not_declared: A(z) %{year}. évi átlagos létszám nincs megadva.
+    non_deductible_iva_state:
+      known: Ismert nem levonható áfa
+      unknown: Ismeretlen nem levonható áfa
+    opening_history_status:
+      known: Ismert halmozott értékcsökkenés
+      missing: Hiányzó halmozott értékcsökkenés
   evidence:
     reader:
       operation_failed: A bizonylatolvasó művelete sikertelen volt

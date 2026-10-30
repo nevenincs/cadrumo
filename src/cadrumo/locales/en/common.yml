@@ -4489,6 +4489,25 @@ google_review:
   value: Value
 ledger:
   actividad_asset:
+    acquired_condition:
+      new: New
+      used: Used
+    acquisition_shape:
+      ancillary_cost: Ancillary cost of an element
+      financial_lease_unexercised: Financial lease, option not exercised
+      historical_without_evidence: Historical, without evidence
+      primary_purchase: Purchase
+      produced: Own production
+      split_payment: Purchase paid in parts
+    basis_stage:
+      business_allocated: Allocated to the activity
+      taxpayer_owned: Owned by the taxpayer, before business use
+      whole_property: Whole property
+    disposal_finding:
+      claim_gap: Year with depreciation not recorded
+      exemption_not_computed: Gain exemption not computed
+      minimum_exceeded_deduction: Deduction above the minimum amortization
+      no_minimum_authority: No minimum amortization published for this year
     errors:
       accelerated_da18_depreciation: For tax year %{tax_year}, LIS DA 18 grants new
         electric vehicles and charging points accelerated depreciation at twice the
@@ -4768,6 +4787,12 @@ ledger:
         the entry year's start does not exceed that of the 12 months before (LIS art.
         102.1).
       workforce_year_not_declared: The average workforce of %{year} is not declared.
+    non_deductible_iva_state:
+      known: Non-deductible IVA known
+      unknown: Non-deductible IVA unknown
+    opening_history_status:
+      known: Accumulated amortization known
+      missing: Accumulated amortization missing
   evidence:
     reader:
       operation_failed: Evidence reader operation failed
