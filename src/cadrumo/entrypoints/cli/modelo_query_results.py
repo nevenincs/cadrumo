@@ -334,13 +334,13 @@ class M100ProjectionPayload(OutputSchema):
     ``ModeloProjectResult.casilla_observations``.
     """
 
-    base_liquidable_general_0505: str
-    pagos_fraccionados_0604: str
-    cuota_integra_estatal_0545: str
-    cuota_integra_autonomica_0546: str
-    cuota_liquida_estatal_0595: str
-    cuota_liquida_autonomica_0596: str
-    cuota_resultante_0597: str
+    base_liquidable_general: str
+    pagos_fraccionados: str
+    cuota_integra_estatal: str
+    cuota_integra_autonomica: str
+    cuota_liquida_estatal: str
+    cuota_liquida_autonomica: str
+    cuota_resultante: str
 
 
 class ModeloProjectResult(OutputSchema):

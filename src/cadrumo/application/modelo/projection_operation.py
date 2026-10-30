@@ -112,13 +112,13 @@ class ProjectM100SummaryProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    base_liquidable_general_0505: _Value
-    pagos_fraccionados_0604: _Value
-    cuota_integra_estatal_0545: _Value
-    cuota_integra_autonomica_0546: _Value
-    cuota_liquida_estatal_0595: _Value
-    cuota_liquida_autonomica_0596: _Value
-    cuota_resultante_0597: _Value
+    base_liquidable_general: _Value
+    pagos_fraccionados: _Value
+    cuota_integra_estatal: _Value
+    cuota_integra_autonomica: _Value
+    cuota_liquida_estatal: _Value
+    cuota_liquida_autonomica: _Value
+    cuota_resultante: _Value
 
 
 class ProjectCasillaObservationProjection(BaseModel):
@@ -188,13 +188,13 @@ class ModeloProjectOperationProjection(BaseModel):
                 for row in result.casilla_observations
             ),
             m100_projection=ProjectM100SummaryProjection(
-                base_liquidable_general_0505=_decimal(result.m100_projection.base_liquidable_general_0505),
-                pagos_fraccionados_0604=_decimal(result.m100_projection.pagos_fraccionados_0604),
-                cuota_integra_estatal_0545=_decimal(result.m100_projection.cuota_integra_estatal_0545),
-                cuota_integra_autonomica_0546=_decimal(result.m100_projection.cuota_integra_autonomica_0546),
-                cuota_liquida_estatal_0595=_decimal(result.m100_projection.cuota_liquida_estatal_0595),
-                cuota_liquida_autonomica_0596=_decimal(result.m100_projection.cuota_liquida_autonomica_0596),
-                cuota_resultante_0597=_decimal(result.m100_projection.cuota_resultante_0597),
+                base_liquidable_general=_decimal(result.m100_projection.base_liquidable_general),
+                pagos_fraccionados=_decimal(result.m100_projection.pagos_fraccionados),
+                cuota_integra_estatal=_decimal(result.m100_projection.cuota_integra_estatal),
+                cuota_integra_autonomica=_decimal(result.m100_projection.cuota_integra_autonomica),
+                cuota_liquida_estatal=_decimal(result.m100_projection.cuota_liquida_estatal),
+                cuota_liquida_autonomica=_decimal(result.m100_projection.cuota_liquida_autonomica),
+                cuota_resultante=_decimal(result.m100_projection.cuota_resultante),
             ),
         )
 

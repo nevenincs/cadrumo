@@ -186,13 +186,13 @@ def test_public_request_and_result_validators_reject_incomplete_values() -> None
                 },
                 "casilla_observations": [],
                 "m100_projection": {
-                    "base_liquidable_general_0505": "0",
-                    "pagos_fraccionados_0604": "0",
-                    "cuota_integra_estatal_0545": "0",
-                    "cuota_integra_autonomica_0546": "0",
-                    "cuota_liquida_estatal_0595": "0",
-                    "cuota_liquida_autonomica_0596": "0",
-                    "cuota_resultante_0597": "0",
+                    "base_liquidable_general": "0",
+                    "pagos_fraccionados": "0",
+                    "cuota_integra_estatal": "0",
+                    "cuota_integra_autonomica": "0",
+                    "cuota_liquida_estatal": "0",
+                    "cuota_liquida_autonomica": "0",
+                    "cuota_resultante": "0",
                 },
             }
         )

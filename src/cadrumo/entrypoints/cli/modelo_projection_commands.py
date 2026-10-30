@@ -143,23 +143,13 @@ def modelo_project(
             for entry in service_result.casilla_observations
         ],
         m100_projection=M100ProjectionPayload(
-            base_liquidable_general_0505=_decimal_wire(
-                Decimal(service_result.m100_projection.base_liquidable_general_0505)
-            ),
-            pagos_fraccionados_0604=_decimal_wire(Decimal(service_result.m100_projection.pagos_fraccionados_0604)),
-            cuota_integra_estatal_0545=_decimal_wire(
-                Decimal(service_result.m100_projection.cuota_integra_estatal_0545)
-            ),
-            cuota_integra_autonomica_0546=_decimal_wire(
-                Decimal(service_result.m100_projection.cuota_integra_autonomica_0546)
-            ),
-            cuota_liquida_estatal_0595=_decimal_wire(
-                Decimal(service_result.m100_projection.cuota_liquida_estatal_0595)
-            ),
-            cuota_liquida_autonomica_0596=_decimal_wire(
-                Decimal(service_result.m100_projection.cuota_liquida_autonomica_0596)
-            ),
-            cuota_resultante_0597=_decimal_wire(Decimal(service_result.m100_projection.cuota_resultante_0597)),
+            base_liquidable_general=_decimal_wire(Decimal(service_result.m100_projection.base_liquidable_general)),
+            pagos_fraccionados=_decimal_wire(Decimal(service_result.m100_projection.pagos_fraccionados)),
+            cuota_integra_estatal=_decimal_wire(Decimal(service_result.m100_projection.cuota_integra_estatal)),
+            cuota_integra_autonomica=_decimal_wire(Decimal(service_result.m100_projection.cuota_integra_autonomica)),
+            cuota_liquida_estatal=_decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_estatal)),
+            cuota_liquida_autonomica=_decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_autonomica)),
+            cuota_resultante=_decimal_wire(Decimal(service_result.m100_projection.cuota_resultante)),
         ),
     )
     extrapolation_note = (
@@ -175,12 +165,12 @@ def modelo_project(
         f"m130_rendimiento_neto\t{service_result.m130_accumulated.rendimiento_neto}",
         f"m130_pagos_fraccionados\t{service_result.m130_accumulated.pagos_fraccionados}",
         "---",
-        f"m100_base_liquidable_general\t{service_result.m100_projection.base_liquidable_general_0505}",
-        f"m100_cuota_integra_estatal\t{service_result.m100_projection.cuota_integra_estatal_0545}",
-        f"m100_cuota_integra_autonomica\t{service_result.m100_projection.cuota_integra_autonomica_0546}",
-        f"m100_cuota_liquida_estatal\t{service_result.m100_projection.cuota_liquida_estatal_0595}",
-        f"m100_cuota_liquida_autonomica\t{service_result.m100_projection.cuota_liquida_autonomica_0596}",
-        f"m100_cuota_resultante\t{service_result.m100_projection.cuota_resultante_0597}",
+        f"m100_base_liquidable_general\t{service_result.m100_projection.base_liquidable_general}",
+        f"m100_cuota_integra_estatal\t{service_result.m100_projection.cuota_integra_estatal}",
+        f"m100_cuota_integra_autonomica\t{service_result.m100_projection.cuota_integra_autonomica}",
+        f"m100_cuota_liquida_estatal\t{service_result.m100_projection.cuota_liquida_estatal}",
+        f"m100_cuota_liquida_autonomica\t{service_result.m100_projection.cuota_liquida_autonomica}",
+        f"m100_cuota_resultante\t{service_result.m100_projection.cuota_resultante}",
     ]
     emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 

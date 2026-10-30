@@ -170,15 +170,15 @@ _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
     surface="_M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA",
 )
 _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
-    "0595",
+    "0570",
     surface="_M100_CUOTA_LIQUIDA_ESTATAL_CASILLA",
 )
 _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
-    "0596",
+    "0571",
     surface="_M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA",
 )
 _M100_CUOTA_RESULTANTE_CASILLA: CasillaId = validated_casilla_id(
-    "0597",
+    "0595",
     surface="_M100_CUOTA_RESULTANTE_CASILLA",
 )
 
@@ -591,11 +591,11 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     proj_m100 = proj_payload["m100_projection"]
 
     casilla_map: dict[CasillaId, str] = {
-        _M100_CUOTA_INTEGRA_ESTATAL_CASILLA: "cuota_integra_estatal_0545",
-        _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: "cuota_integra_autonomica_0546",
-        _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: "cuota_liquida_estatal_0595",
-        _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: "cuota_liquida_autonomica_0596",
-        _M100_CUOTA_RESULTANTE_CASILLA: "cuota_resultante_0597",
+        _M100_CUOTA_INTEGRA_ESTATAL_CASILLA: "cuota_integra_estatal",
+        _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: "cuota_integra_autonomica",
+        _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: "cuota_liquida_estatal",
+        _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: "cuota_liquida_autonomica",
+        _M100_CUOTA_RESULTANTE_CASILLA: "cuota_resultante",
     }
 
     for casilla_id, payload_key in casilla_map.items():

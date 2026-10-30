@@ -167,13 +167,13 @@ class ModeloProjectM100Projection(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    base_liquidable_general_0505: Decimal
-    pagos_fraccionados_0604: Decimal
-    cuota_integra_estatal_0545: Decimal
-    cuota_integra_autonomica_0546: Decimal
-    cuota_liquida_estatal_0595: Decimal
-    cuota_liquida_autonomica_0596: Decimal
-    cuota_resultante_0597: Decimal
+    base_liquidable_general: Decimal
+    pagos_fraccionados: Decimal
+    cuota_integra_estatal: Decimal
+    cuota_integra_autonomica: Decimal
+    cuota_liquida_estatal: Decimal
+    cuota_liquida_autonomica: Decimal
+    cuota_resultante: Decimal
 
 
 class ModeloProjectServiceResult(BaseModel):
@@ -395,8 +395,6 @@ def _source_quarter_count(
         filing_year=year,
         period=period.registry_token,
     )
-    if revision.period_selector is None:
-        raise RegistryValidationError("projection source revision declares no period selector")
     return len(revision.period_selector.periods_for_year(year))
 
 
@@ -660,19 +658,13 @@ def _m100_projection_result(
 ) -> ModeloProjectM100Projection:
     source = f"modelo {declaration.target_modelo} projection engine result"
     return ModeloProjectM100Projection(
-        base_liquidable_general_0505=_required_casilla_value(
-            values, declaration.base_liquidable_general, source=source
-        ),
-        pagos_fraccionados_0604=_required_casilla_value(values, declaration.pagos_fraccionados, source=source),
-        cuota_integra_estatal_0545=_required_casilla_value(values, declaration.cuota_integra_estatal, source=source),
-        cuota_integra_autonomica_0546=_required_casilla_value(
-            values, declaration.cuota_integra_autonomica, source=source
-        ),
-        cuota_liquida_estatal_0595=_required_casilla_value(values, declaration.cuota_liquida_estatal, source=source),
-        cuota_liquida_autonomica_0596=_required_casilla_value(
-            values, declaration.cuota_liquida_autonomica, source=source
-        ),
-        cuota_resultante_0597=_required_casilla_value(values, declaration.cuota_resultante, source=source),
+        base_liquidable_general=_required_casilla_value(values, declaration.base_liquidable_general, source=source),
+        pagos_fraccionados=_required_casilla_value(values, declaration.pagos_fraccionados, source=source),
+        cuota_integra_estatal=_required_casilla_value(values, declaration.cuota_integra_estatal, source=source),
+        cuota_integra_autonomica=_required_casilla_value(values, declaration.cuota_integra_autonomica, source=source),
+        cuota_liquida_estatal=_required_casilla_value(values, declaration.cuota_liquida_estatal, source=source),
+        cuota_liquida_autonomica=_required_casilla_value(values, declaration.cuota_liquida_autonomica, source=source),
+        cuota_resultante=_required_casilla_value(values, declaration.cuota_resultante, source=source),
     )
 
 
