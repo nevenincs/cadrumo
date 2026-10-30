@@ -12,10 +12,12 @@ not it was claimed, so a missing claim is a finding and never a refusal.
 from __future__ import annotations
 
 import calendar
+from collections.abc import Mapping
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Self
+from types import MappingProxyType
+from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -44,6 +46,16 @@ class ActivityAssetDisposalReason(StrEnum):
     WITHDRAWAL = "withdrawal"
     DONATION = "donation"
 
+
+REFUSED_DISPOSAL_REASONS: Final[Mapping[ActivityAssetDisposalReason, str]] = MappingProxyType(
+    {ActivityAssetDisposalReason.DONATION: "ledger.actividad_asset.errors.disposal_donation_refused"},
+)
+"""The reasons a baja is refused, each with the catalogue key of its refusal; no record carries one."""
+
+ADMITTED_DISPOSAL_REASONS: Final[tuple[ActivityAssetDisposalReason, ...]] = tuple(
+    reason for reason in ActivityAssetDisposalReason if reason not in REFUSED_DISPOSAL_REASONS
+)
+"""The reasons a baja is accepted with, in declaration order; what a form offers is this and nothing else."""
 
 TRANSMISSION_REASONS: frozenset[ActivityAssetDisposalReason] = frozenset(
     {ActivityAssetDisposalReason.SALE, ActivityAssetDisposalReason.PART_EXCHANGE},
@@ -79,11 +91,9 @@ def require_admissible_disposal(
     The record applies this too, but a validator can only report a shape error,
     so an operation owing the registered refusal calls this before building one.
     """
-    if reason is ActivityAssetDisposalReason.DONATION:
-        raise ActividadAssetUnsupportedError(
-            context={"reason": reason.value},
-            translated_message="ledger.actividad_asset.errors.disposal_donation_refused",
-        )
+    refusal_key = REFUSED_DISPOSAL_REASONS.get(reason)
+    if refusal_key is not None:
+        raise ActividadAssetUnsupportedError(context={"reason": reason.value}, translated_message=refusal_key)
     if reason is ActivityAssetDisposalReason.SCRAPPING and proceeds != Decimal("0"):
         raise ActividadAssetValidationError(
             context={"proceeds": str(proceeds)},
@@ -438,4 +448,6 @@ __all__ = [
     "PriorFreeDepreciationRegime",
     "calculate_disposal",
     "require_admissible_disposal",
+    "ADMITTED_DISPOSAL_REASONS",
 ]
+    "REFUSED_DISPOSAL_REASONS",

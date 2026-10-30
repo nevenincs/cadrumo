@@ -38,7 +38,12 @@ from ...domain.renta.actividad_asset.claims import (
     project_m100,
     record_claim,
 )
-from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalCalculation
+from ...domain.renta.actividad_asset.disposal import (
+    ADMITTED_DISPOSAL_REASONS,
+    ActivityAssetDisposal,
+    ActivityAssetDisposalCalculation,
+    ActivityAssetDisposalReason,
+)
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, DirectEstimationRegime
 from ...domain.renta.actividad_asset.election_facts import method_is_statable
 from ...domain.renta.actividad_asset.errors import (
@@ -61,6 +66,7 @@ from .activity_asset_read_models import (
     PLAN_ADVISORY_FAMILY,
     ActivityAssetAcquisitionCandidate,
     ActivityAssetEdition,
+    ActivityAssetDisposalReasonOption,
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
@@ -74,6 +80,7 @@ from .activity_asset_read_models import (
 )
 from .disposal_calculation import calculate_element_disposal
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
+from .fact_wording import token_family
 from .legal_citations import resolve_legal_citations
 from .ports import (
     AcquisitionLedgerReader,
@@ -865,6 +872,13 @@ class ActivityAssetOperations:
                     maximum_coefficient=project_scalar(group.maximum_coefficient),
                     minimum_coefficient=project_scalar(group.minimum_coefficient),
                     maximum_period_years=project_scalar(group.maximum_period_years),
+            disposal_reasons=tuple(
+                ActivityAssetDisposalReasonOption(
+                    reason=reason,
+                    label_key=activity_asset_label_key(token_family(ActivityAssetDisposalReason), reason),
+                )
+                for reason in ADMITTED_DISPOSAL_REASONS
+            ),
                 )
                 for group in options.table_groups
             ),

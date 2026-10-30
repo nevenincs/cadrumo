@@ -391,6 +391,13 @@ class ActivityAssetMethodFacts(_ReadModel):
     facts: tuple[ActivityAssetMethodFact, ...]
 
 
+class ActivityAssetDisposalReasonOption(_ReadModel):
+    """One reason a baja is accepted with, and the catalogue key that words it."""
+
+    reason: ActivityAssetDisposalReason
+    label_key: str
+
+
 class ActivityAssetFormOptionsView(_ReadModel):
     """What the registry admits for one asset kind and tax year."""
 
@@ -405,6 +412,8 @@ class ActivityAssetFormOptionsView(_ReadModel):
     method_facts: tuple[ActivityAssetMethodFacts, ...]
     """The facts of each offered method, in the order of ``methods``."""
     table_groups: tuple[ActivityAssetTableGroup, ...]
+    disposal_reasons: tuple[ActivityAssetDisposalReasonOption, ...]
+    """The reasons a baja is accepted with, in the order the record's own check admits them."""
 
 
 class ActivityAssetAcquisitionCandidate(_ReadModel):
@@ -458,6 +467,7 @@ __all__ = [
     "ActivityAssetCoveredInterval",
     "ActivityAssetDisposalCalculationView",
     "ActivityAssetDisposalFindingView",
+    "ActivityAssetDisposalReasonOption",
     "ActivityAssetDisposalYearView",
     "ActivityAssetEdition",
     "ActivityAssetElectionLimits",

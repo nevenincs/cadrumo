@@ -544,6 +544,7 @@ def test_form_options_bridge_carries_the_kind_and_year(monkeypatch: pytest.Monke
             table_groups=(),
         ),
     )
+            disposal_reasons=(),
     requests = _bind(
         monkeypatch,
         completion=_read_completion(projection),
