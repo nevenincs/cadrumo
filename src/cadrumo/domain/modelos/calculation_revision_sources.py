@@ -150,15 +150,17 @@ class CalculationSourceIssue(BaseModel):
     executable route. ``source_domain_not_ready`` is a source store that could
     not be read yet. ``invoice_reverse_charge_cuota_not_derivable`` is a
     reverse-charge invoice whose IVA owed could not be derived.
-    ``ledger_amortization_row_unregistered`` is a ledger row in an amortization
-    category no registered element owns. ``activity_asset_foral_territory`` is a
-    foral resident whose registered assets cannot reach these forms.
+    These block filing until a recalculation clears them.
+    ``terminal_origin_mismatch`` is a value that reached the declaration by an
+    undeclared route; it persists so a reopened declaration still shows it, but
+    withholds nothing, because the route it reports may lack a terminal origin by
+    design. ``ledger_amortization_row_unregistered`` is a ledger row in an
+    amortization category no registered element owns.
+    ``activity_asset_foral_territory`` is a period in a foral territory, whose
+    amortization is determined under foral rules.
     ``activity_asset_residence_unresolved`` is a tax residence that could not be
-    read while the register holds elements. These
-    block filing until a recalculation clears them. ``terminal_origin_mismatch`` is a
-    value that reached the declaration by an undeclared route; it persists so
-    a reopened declaration still shows it, but withholds nothing, because the
-    route it reports may lack a terminal origin by design.
+    read while the register holds elements. These three persist in the same way:
+    the amortization is left out and the rest of the declaration stands.
     ``binding_source`` is ``None`` only where the condition names no binding
     source kind.
     """

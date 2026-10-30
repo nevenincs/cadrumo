@@ -13,7 +13,6 @@ import { Spinner } from "@/components/ui/spinner";
 import type { EvidencePageResult, LedgerPort } from "../../../shell/ledger";
 import type { LedgerReadFailure } from "../../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { failureCode } from "../ledgerWords";
 import { referenceFields, type DocumentReference } from "./documentsModel";
 import { useLedgerRead } from "./useLedgerRead";
 
@@ -207,14 +206,7 @@ export function DocumentViewer({
             className="ledger-document-refused m-2"
           >
             <AlertDescription className="flex flex-wrap items-center gap-2">
-              {refusal ?? (
-                <>
-                  {t("desktop.ledger.documents.viewer.failed")}
-                  <code className="font-mono text-xs">
-                    {failureCode(read.failure)}
-                  </code>
-                </>
-              )}
+              {refusal ?? <>{t("desktop.ledger.documents.viewer.failed")}</>}
               {!refusal && (
                 <Button size="xs" variant="outline" onClick={reread}>
                   {t("desktop.ledger.retry")}

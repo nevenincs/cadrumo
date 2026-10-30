@@ -4,7 +4,10 @@
 //! parse.
 use super::*;
 use cadrumo_application::error::application::{Cause, ErrorCode, Operation};
-use std::{collections::BTreeMap, sync::Mutex};
+use std::{
+    collections::{BTreeMap, VecDeque},
+    sync::Mutex,
+};
 
 pub const LOCAL: &str = "synthetic_local_api";
 pub const HOSTED: &str = "synthetic_hosted_api";
@@ -47,6 +50,9 @@ impl Replies {
 }
 
 impl Agent for Replies {
+    fn generation(&self) -> Result<u64, ApplicationError> {
+        Ok(0)
+    }
     fn exchange(&self, request: Value) -> Result<Value, ApplicationError> {
         let action = request["action"].as_str().unwrap_or_default().to_owned();
         self.asked
@@ -180,6 +186,357 @@ pub fn requested(lane: &str, model: &str) -> ModelDownload {
 
 fn admitted(model: &str, size: Option<u64>) -> LocalModels {
     LocalModels::new(vec![SelectedModel::new("download", model, size).unwrap()]).unwrap()
+}
+
+/// Override one read with a sequence, leaving the other service replies intact.
+struct ScriptedRead {
+    replies: Replies,
+    action: &'static str,
+    answers: Mutex<VecDeque<Result<Value, ApplicationError>>>,
+}
+
+impl Agent for ScriptedRead {
+    fn generation(&self) -> Result<u64, ApplicationError> {
+        Ok(0)
+    }
+    fn exchange(&self, request: Value) -> Result<Value, ApplicationError> {
+        if request["action"] == self.action {
+            self.replies.asked.lock().unwrap().push(self.action.into());
+            self.answers
+                .lock()
+                .unwrap()
+                .pop_front()
+                .expect("unexpected retry")
+        } else {
+            self.replies.exchange(request)
+        }
+    }
+}
+
+fn scripted(
+    action: &'static str,
+    answers: Vec<Result<Value, ApplicationError>>,
+) -> (Admission, Arc<ScriptedRead>) {
+    let agent = Arc::new(ScriptedRead {
+        replies: Replies::serving(&[TEXT], &[ADDED], &[(TEXT, Some(GB))]),
+        action,
+        answers: Mutex::new(answers.into()),
+    });
+    (Admission::new(agent.clone()), agent)
+}
+
+fn busy() -> Result<Value, ApplicationError> {
+    Ok(json!({"kind": "refused", "code": "busy"}))
+}
+
+#[test]
+fn admission_collects_busy_catalogue_and_local_model_reads() {
+    let (admission, service) = scripted(
+        "catalog",
+        vec![busy(), Ok(served(&[TEXT], &[(TEXT, Some(GB))]))],
+    );
+    assert_eq!(
+        admission.download(&requested(LOCAL, TEXT)).unwrap(),
+        admitted(TEXT, Some(GB))
+    );
+    assert_eq!(service.replies.asked(), ["status", "catalog", "catalog"]);
+
+    let (admission, service) = scripted("local_models", vec![busy(), Ok(list(&[ADDED]))]);
+    let listed = admission.listed().unwrap();
+    assert!(
+        listed
+            .as_slice()
+            .iter()
+            .any(|model| model.name.to_string() == ADDED)
+    );
+    assert_eq!(
+        service.replies.asked(),
+        ["status", "catalog", "local_models", "local_models"]
+    );
+}
+
+#[test]
+fn admission_stops_after_bounded_busy_replies_and_keeps_the_cause() {
+    for action in ["catalog", "local_models"] {
+        let (admission, service) = scripted(action, (0..READ_ATTEMPTS).map(|_| busy()).collect());
+        let error = cause(admission.download(&requested(LOCAL, ADDED)));
+        assert_eq!(
+            error.reason.as_deref(),
+            Some(if action == "catalog" {
+                "setup_catalogue_refused"
+            } else {
+                "setup_local_models_refused"
+            })
+        );
+        assert!(
+            matches!(first_link(&error), Cause::Child(refusal) if refusal.code.as_deref() == Some("busy"))
+        );
+        assert_eq!(
+            service
+                .replies
+                .asked()
+                .iter()
+                .filter(|asked| *asked == action)
+                .count(),
+            READ_ATTEMPTS
+        );
+    }
+}
+
+#[test]
+fn admission_does_not_retry_sign_out_transport_failure_or_an_untyped_busy_code() {
+    for action in ["catalog", "local_models"] {
+        let (admission, service) = scripted(
+            action,
+            vec![busy(), Ok(json!({"kind": "refused", "code": "signed_out"}))],
+        );
+        assert_eq!(
+            refusal(admission.download(&requested(LOCAL, ADDED))),
+            Err(Refusal::NotSignedIn)
+        );
+        assert_eq!(
+            service
+                .replies
+                .asked()
+                .iter()
+                .filter(|asked| *asked == action)
+                .count(),
+            2
+        );
+
+        let (admission, service) = scripted(
+            action,
+            vec![
+                busy(),
+                Err(ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)
+                    .with_reason("synthetic_timeout")),
+            ],
+        );
+        let error = cause(admission.download(&requested(LOCAL, ADDED)));
+        assert!(
+            matches!(first_link(&error), Cause::Application { code: ErrorCode::TimedOut, reason: Some(reason), .. } if reason == "synthetic_timeout")
+        );
+        assert_eq!(
+            service
+                .replies
+                .asked()
+                .iter()
+                .filter(|asked| *asked == action)
+                .count(),
+            2
+        );
+    }
+
+    let (admission, service) = scripted("catalog", vec![Ok(json!({"code": "busy"}))]);
+    assert_eq!(
+        refusal(admission.download(&requested(LOCAL, TEXT))),
+        Err(Refusal::ModelSelectionUnusable)
+    );
+    assert_eq!(
+        service.replies.asked(),
+        ["status", "catalog", "local_models"]
+    );
+}
+
+#[test]
+fn pending_download_collects_a_catalogue_after_more_than_four_busy_answers() {
+    let mut answers: Vec<_> = (0..5).map(|_| busy()).collect();
+    answers.push(Ok(served(&[TEXT], &[(TEXT, Some(GB))])));
+    let (admission, service) = scripted("catalog", answers);
+    let cancellation = Cancellation::default();
+    assert_eq!(
+        admission
+            .download_with_budget(
+                &requested(LOCAL, TEXT),
+                &cancellation,
+                Duration::from_secs(4)
+            )
+            .unwrap(),
+        admitted(TEXT, Some(GB))
+    );
+    assert_eq!(
+        service
+            .replies
+            .asked()
+            .iter()
+            .filter(|asked| *asked == "catalog")
+            .count(),
+        6
+    );
+}
+
+#[test]
+fn pending_download_stops_at_its_deadline_and_keeps_busy() {
+    let (admission, service) = scripted("catalog", vec![busy(), busy()]);
+    let cancellation = Cancellation::default();
+    let error = cause(admission.download_with_budget(
+        &requested(LOCAL, TEXT),
+        &cancellation,
+        Duration::from_millis(50),
+    ));
+    assert!(
+        matches!(first_link(&error), Cause::Child(refusal) if refusal.code.as_deref() == Some("busy"))
+    );
+    assert_eq!(service.replies.asked(), ["status", "catalog"]);
+}
+
+#[test]
+fn pending_download_collects_added_models_and_stops_on_other_answers() {
+    let cancellation = Cancellation::default();
+    let (admission, service) = scripted("local_models", vec![busy(), Ok(list(&[ADDED]))]);
+    assert_eq!(
+        admission
+            .download_with_budget(
+                &requested(LOCAL, ADDED),
+                &cancellation,
+                Duration::from_secs(4)
+            )
+            .unwrap(),
+        admitted(ADDED, None)
+    );
+    assert_eq!(
+        service.replies.asked(),
+        ["status", "catalog", "local_models", "local_models"]
+    );
+
+    for action in ["status", "catalog", "local_models"] {
+        let (admission, service) = scripted(
+            action,
+            vec![busy(), Ok(json!({"kind":"refused", "code":"signed_out"}))],
+        );
+        assert_eq!(
+            refusal(admission.download_with_budget(
+                &requested(LOCAL, ADDED),
+                &cancellation,
+                Duration::from_secs(4)
+            )),
+            Err(Refusal::NotSignedIn)
+        );
+        assert_eq!(
+            service
+                .replies
+                .asked()
+                .iter()
+                .filter(|asked| *asked == action)
+                .count(),
+            2
+        );
+
+        let (admission, service) = scripted(
+            action,
+            vec![
+                busy(),
+                Err(ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)
+                    .with_reason("synthetic_timeout")),
+            ],
+        );
+        let error = cause(admission.download_with_budget(
+            &requested(LOCAL, ADDED),
+            &cancellation,
+            Duration::from_secs(4),
+        ));
+        assert!(
+            matches!(first_link(&error), Cause::Application { code: ErrorCode::TimedOut, reason: Some(reason), .. } if reason == "synthetic_timeout")
+        );
+        assert_eq!(
+            service
+                .replies
+                .asked()
+                .iter()
+                .filter(|asked| *asked == action)
+                .count(),
+            2
+        );
+    }
+    let (admission, service) = scripted("catalog", vec![Ok(json!({"code":"busy"}))]);
+    assert_eq!(
+        refusal(admission.download_with_budget(
+            &requested(LOCAL, TEXT),
+            &cancellation,
+            Duration::from_secs(4)
+        )),
+        Err(Refusal::ModelSelectionUnusable)
+    );
+    assert_eq!(
+        service.replies.asked(),
+        ["status", "catalog", "local_models"]
+    );
+}
+
+struct HeldCatalog {
+    generation: std::sync::atomic::AtomicU64,
+    started: std::sync::mpsc::Sender<()>,
+    release: Mutex<std::sync::mpsc::Receiver<()>>,
+    asked: Mutex<Vec<String>>,
+}
+
+impl Agent for HeldCatalog {
+    fn generation(&self) -> Result<u64, ApplicationError> {
+        Ok(self.generation.load(std::sync::atomic::Ordering::Acquire))
+    }
+    fn exchange(&self, request: Value) -> Result<Value, ApplicationError> {
+        let action = request["action"].as_str().unwrap().to_owned();
+        self.asked.lock().unwrap().push(action.clone());
+        if action == "status" {
+            return Ok(status());
+        }
+        self.started.send(()).unwrap();
+        self.release.lock().unwrap().recv().unwrap();
+        Ok(served(&[TEXT], &[(TEXT, Some(GB))]))
+    }
+}
+
+#[test]
+fn pending_download_discards_a_reply_after_cancellation_or_service_replacement() {
+    for cancel in [true, false] {
+        let (started, waiting) = std::sync::mpsc::channel();
+        let (release, released) = std::sync::mpsc::channel();
+        let service = Arc::new(HeldCatalog {
+            generation: std::sync::atomic::AtomicU64::new(1),
+            started,
+            release: Mutex::new(released),
+            asked: Mutex::new(Vec::new()),
+        });
+        let cancellation = Arc::new(Cancellation::default());
+        let worker = {
+            let service = service.clone();
+            let cancellation = cancellation.clone();
+            std::thread::spawn(move || {
+                Admission::new(service).download_with_budget(
+                    &requested(LOCAL, TEXT),
+                    &cancellation,
+                    Duration::from_secs(4),
+                )
+            })
+        };
+        waiting.recv().unwrap();
+        if cancel {
+            cancellation.cancel();
+        } else {
+            service
+                .generation
+                .store(2, std::sync::atomic::Ordering::Release);
+        }
+        release.send(()).unwrap();
+        let error = cause(worker.join().unwrap());
+        assert!(
+            matches!(first_link(&error), Cause::Application { reason: Some(reason), .. } if reason == if cancel { "setup_admission_cancelled" } else { "agent_admin_generation_changed" })
+        );
+        assert_eq!(*service.asked.lock().unwrap(), ["status", "catalog"]);
+    }
+    let (admission, service) = scripted("catalog", vec![]);
+    let cancellation = Cancellation::default();
+    cancellation.cancel();
+    assert!(
+        admission
+            .download_with_budget(
+                &requested(LOCAL, TEXT),
+                &cancellation,
+                Duration::from_secs(4)
+            )
+            .is_err()
+    );
+    assert!(service.replies.asked().is_empty());
 }
 
 #[test]

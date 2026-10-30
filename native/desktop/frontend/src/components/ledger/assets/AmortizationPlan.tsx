@@ -1,36 +1,48 @@
-import { Fragment, useCallback, useId, useMemo, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useId,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { useTableView } from "@/components/ui/table-view";
+import { facts } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
-import { useStrings } from "../../../shell/strings";
-import { dateText } from "../movements/movementWords";
+import { useStrings, type Translate } from "../../../shell/strings";
+import { dateText, percentText } from "../movements/movementWords";
 import { CallLine, Reading } from "../setup/SetupParts";
-import type { AssetBaja, PlanClaim, PlanRow } from "./assetsContract";
+import type {
+  ElectionLimits,
+  LegalCitation,
+  PlanClaim,
+  PlanRow,
+} from "../../../shell/ledgerSetup";
 import {
-  absentWord,
   ASSET_KEYS,
-  findingWord,
-  STATE_ICON,
-  stateOf,
-  stateWord,
+  reasonText,
+  refusalText,
+  fieldWord,
+  keyedText,
+  stateIcon,
+  tokenWord,
 } from "./assetsWords";
 import {
   DASH,
   figureText,
   isStatedZero,
-  methodWord,
   PLAN_KEYS,
-  reasonWord,
   stateTone,
 } from "./planWords";
 import { readPlan, useAssetRead } from "./planRead";
 
 // One element's amortization plan, a row for each tax year it has. The plan
-// is current: it answers what the schedule allows now, what is recorded as
-// effective, and what is still to amortize, every figure as the backend
-// states it. Nothing here adds, subtracts or derives a date; a figure the
-// backend does not state is a dash with its reason, never zero.
+// is current: it answers what the schedule allows now and what is recorded as
+// effective, every figure as the backend states it. Nothing here adds,
+// subtracts or derives a date; a figure the backend does not state is a dash
+// with its reason, never zero.
 
 /** A figure the backend states, or a dash with the reason it does not. */
 function Figure({
@@ -82,6 +94,19 @@ function Interval({
   );
 }
 
+/** Why a year has no planned figure: the typed absence, and the reason the
+ * backend gives for it where it gives one. */
+function absentText(t: Translate, planned: PlanRow): string | null {
+  if (planned.absence === null) return null;
+  const word = tokenWord(t, "plan_absence", planned.absence);
+  const why = reasonText(
+    t,
+    planned.absence_reason_key,
+    planned.absence_reason_facts,
+  );
+  return facts(t, [word, why]);
+}
+
 /** Every claim a year holds, the replaced ones with the claim that replaced
  * them. Each distinction is a glyph and a word as well as a tone. */
 function Claims({ locale, planned }: { locale: string; planned: PlanRow }) {
@@ -95,16 +120,25 @@ function Claims({ locale, planned }: { locale: string; planned: PlanRow }) {
     <div className="flex flex-col gap-2 py-1 ps-6 text-xs">
       <p className="text-muted-foreground">
         <span className="font-medium text-foreground">
-          {t(ASSET_KEYS.plan.claims)}
-        </span>{" "}
-        {t(ASSET_KEYS.plan.edition)} {planned.authority.edition}
+          {t(ASSET_KEYS.plan.claims, { year: planned.tax_year })}
+        </span>
+        {planned.edition && (
+          <>
+            {" "}
+            {t(ASSET_KEYS.plan.edition, {
+              edition: planned.edition.authored_filing_year,
+            })}
+          </>
+        )}
       </p>
       {planned.claims.length === 0 ? (
         <p className="text-muted-foreground">{t(PLAN_KEYS.no_claims)}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
-            <caption className="sr-only">{t(ASSET_KEYS.plan.claims)}</caption>
+            <caption className="sr-only">
+              {t(ASSET_KEYS.plan.claims, { year: planned.tax_year })}
+            </caption>
             <thead>
               <tr className="text-left text-muted-foreground">
                 {[
@@ -112,10 +146,7 @@ function Claims({ locale, planned }: { locale: string; planned: PlanRow }) {
                   PLAN_KEYS.until,
                   column.claimed,
                   column.status,
-                  column.revision,
-                  column.matches,
                   column.replaced_by,
-                  column.used_by,
                 ].map((key) => (
                   <th
                     key={key}
@@ -130,7 +161,6 @@ function Claims({ locale, planned }: { locale: string; planned: PlanRow }) {
             <tbody>
               {planned.claims.map((claim) => {
                 const next = replacement(claim);
-                const amount = figureText(locale, claim.amount);
                 return (
                   <tr
                     key={claim.claim_id}
@@ -140,13 +170,13 @@ function Claims({ locale, planned }: { locale: string; planned: PlanRow }) {
                     )}
                   >
                     <td className="px-2 py-1 whitespace-nowrap tabular-nums">
-                      {dateText(locale, claim.from, true)}
+                      {dateText(locale, claim.covered_from, true)}
                     </td>
                     <td className="px-2 py-1 whitespace-nowrap tabular-nums">
-                      {dateText(locale, claim.until, true)}
+                      {dateText(locale, claim.covered_until, true)}
                     </td>
                     <td className="px-2 py-1 text-right tabular-nums">
-                      {amount ?? DASH}
+                      {figureText(locale, claim.amount)}
                       {isStatedZero(claim.amount) && (
                         <span className="block text-muted-foreground">
                           {t(ASSET_KEYS.plan.recorded_zero)}
@@ -169,49 +199,21 @@ function Claims({ locale, planned }: { locale: string; planned: PlanRow }) {
                           : t(ASSET_KEYS.plan.replaced)}
                       </span>
                     </td>
-                    <td className="px-2 py-1 tabular-nums">
-                      {claim.revision_number}
-                    </td>
-                    <td className="px-2 py-1">
-                      <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                        <Icon
-                          name={
-                            claim.matches_current_schedule ? "check" : "alert"
-                          }
-                          size="xs"
-                          className={
-                            claim.matches_current_schedule
-                              ? "text-success"
-                              : "text-warning"
-                          }
-                        />
-                        {claim.matches_current_schedule
-                          ? t(ASSET_KEYS.plan.matches)
-                          : t(ASSET_KEYS.plan.no_match)}
-                      </span>
-                    </td>
                     <td className="px-2 py-1">
                       {next ? (
                         <span className="inline-flex flex-wrap items-center gap-x-1">
                           <Icon name="arrow" size="xs" />
                           <Interval
                             locale={locale}
-                            from={next.from}
-                            until={next.until}
+                            from={next.covered_from}
+                            until={next.covered_until}
                           />
                           <span className="tabular-nums">
-                            {figureText(locale, next.amount) ?? DASH}
+                            {figureText(locale, next.amount)}
                           </span>
                         </span>
                       ) : (
                         <span aria-hidden="true">{DASH}</span>
-                      )}
-                    </td>
-                    <td className="px-2 py-1 [overflow-wrap:anywhere]">
-                      {claim.used_by.length === 0 ? (
-                        <span aria-hidden="true">{DASH}</span>
-                      ) : (
-                        claim.used_by.join(", ")
                       )}
                     </td>
                   </tr>
@@ -225,54 +227,51 @@ function Claims({ locale, planned }: { locale: string; planned: PlanRow }) {
   );
 }
 
-/** What a year's state says beyond its glyph and word: the findings the
- * backend raised, the span still open to claim, and the rates it stands on. */
+/** What a year's claim state says beyond its glyph and word: the spans still
+ * open to claim and the rates it stands on. */
 function Status({ locale, planned }: { locale: string; planned: PlanRow }) {
   const t = useStrings();
-  const state = stateOf(planned.state_key);
+  const state = planned.claim_state;
   const open = state === "missing" || state === "partial";
+  const refusal = reasonText(t, planned.claimable_refusal_key);
   return (
     <div className="flex flex-col gap-0.5">
       <span className="inline-flex items-center gap-1 whitespace-nowrap">
-        <Icon
-          name={STATE_ICON[state]}
-          size="xs"
-          className={stateTone(planned.state_key)}
-        />
-        {stateWord(t, planned.state_key)}
+        <Icon name={stateIcon(state)} size="xs" className={stateTone(state)} />
+        {tokenWord(t, "claim_state", state)}
       </span>
-      {planned.finding_keys.map((key) => (
+      {planned.claimable_intervals.map((interval) => (
         <span
-          key={key}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground"
+          key={`${interval.covered_from}/${interval.covered_until}`}
+          className="text-xs text-muted-foreground"
         >
-          <Icon name="alert" size="xs" className="text-warning" />
-          {findingWord(t, key)}
+          {t(
+            state === "partial"
+              ? ASSET_KEYS.plan.gap
+              : ASSET_KEYS.plan.claimable,
+            {
+              from: dateText(locale, interval.covered_from, true),
+              until: dateText(locale, interval.covered_until, true),
+            },
+          )}
         </span>
       ))}
-      {planned.claimable ? (
-        <span className="flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
-          {state === "partial"
-            ? t(ASSET_KEYS.plan.gap)
-            : t(ASSET_KEYS.plan.claimable)}
-          <Interval
-            locale={locale}
-            from={planned.claimable.from}
-            until={planned.claimable.until}
-          />
-        </span>
-      ) : (
-        open && (
-          <span className="text-xs text-muted-foreground">
-            {t(ASSET_KEYS.plan.claimable_none)}
-          </span>
-        )
-      )}
-      {planned.authority.projected && (
+      {planned.claimable_intervals.length === 0 &&
+        (refusal !== null ? (
+          <span className="text-xs text-muted-foreground">{refusal}</span>
+        ) : (
+          open && (
+            <span className="text-xs text-muted-foreground">
+              {t(ASSET_KEYS.plan.claimable_none)}
+            </span>
+          )
+        ))}
+      {planned.edition?.projected && (
         <span className="inline-flex items-start gap-1 text-xs text-muted-foreground">
           <Icon name="arrow" size="xs" className="mt-0.5" />
           <span>
-            {t(ASSET_KEYS.plan.projected)}. {t(ASSET_KEYS.plan.projected_note)}
+            {t(ASSET_KEYS.plan.projected)}.{" "}
+            {t(ASSET_KEYS.plan.projected_note, { year: planned.tax_year })}
           </span>
         </span>
       )}
@@ -292,16 +291,149 @@ function Days({ planned }: { planned: PlanRow }) {
   );
 }
 
+function Fact({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 [overflow-wrap:anywhere] tabular-nums">
+        {children}
+      </dd>
+    </>
+  );
+}
+
+/** The provisions behind the limits, behind a disclosure with their count,
+ * each as its own text. Where the window can open an address, the text is a
+ * link to the official publication. A list the backend could not resolve whole
+ * says so. */
+function Citations({
+  citations,
+  complete,
+  onOpenLink,
+}: {
+  citations: readonly LegalCitation[];
+  complete: boolean;
+  onOpenLink?: (url: string) => void;
+}) {
+  const t = useStrings();
+  const text = ASSET_KEYS.plan.limits;
+  const partial = !complete && (
+    <p className="ledger-assets-citations-partial flex items-start gap-1 text-xs text-muted-foreground">
+      <Icon name="alert" size="xs" className="mt-0.5" />
+      <span>{t(text.citations_partial)}</span>
+    </p>
+  );
+  if (citations.length === 0) return partial || null;
+  return (
+    <div className="ledger-assets-citations flex flex-col gap-1">
+      <details>
+        <summary className="cursor-pointer text-muted-foreground">
+          {t(text.citations, { count: citations.length })}
+        </summary>
+        <ul className="mt-1 flex flex-col gap-0.5 ps-4">
+          {citations.map((citation) => (
+            <li key={citation.permalink} className="[overflow-wrap:anywhere]">
+              {onOpenLink ? (
+                <a
+                  href={citation.permalink}
+                  title={citation.permalink}
+                  className="text-primary underline underline-offset-2 hover:text-primary/80"
+                  // The window never leaves the app: the address opens in the browser.
+                  onClick={(event) => {
+                    event.preventDefault();
+                    onOpenLink(citation.permalink);
+                  }}
+                  onAuxClick={(event) => event.preventDefault()}
+                >
+                  {citation.text}
+                </a>
+              ) : (
+                citation.text
+              )}
+            </li>
+          ))}
+        </ul>
+      </details>
+      {partial}
+    </div>
+  );
+}
+
+/** What the registry allows the element's election: a table method's class
+ * and corridor, or the limit it has instead and why. Each figure is the
+ * backend's; a limit it does not state is not drawn. */
+function Limits({
+  locale,
+  limits,
+  onOpenLink,
+}: {
+  locale: string;
+  limits: ElectionLimits;
+  onOpenLink?: (url: string) => void;
+}) {
+  const t = useStrings();
+  const text = ASSET_KEYS.plan.limits;
+  const why = reasonText(t, limits.unavailable_reason_key);
+  return (
+    <section
+      aria-label={t(text.title)}
+      className="ledger-assets-limits flex flex-col gap-1 border-b px-3 py-2 text-sm"
+    >
+      <h4 className="font-medium">{t(text.title)}</h4>
+      {limits.not_table_bound !== null && (
+        <p className="text-muted-foreground">
+          {facts(t, [
+            tokenWord(t, "not_table_bound", limits.not_table_bound),
+            why,
+          ])}
+        </p>
+      )}
+      <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-0.5">
+        {limits.class_label !== null && (
+          <Fact label={fieldWord(t, "amortization.authority_class_key")}>
+            {limits.class_label}
+          </Fact>
+        )}
+        {limits.maximum_coefficient !== null && (
+          <Fact label={t(text.maximum_coefficient)}>
+            {percentText(locale, limits.maximum_coefficient.decimal)}
+          </Fact>
+        )}
+        {limits.minimum_coefficient !== null && (
+          <Fact label={t(text.minimum_coefficient)}>
+            {percentText(locale, limits.minimum_coefficient.decimal)}
+          </Fact>
+        )}
+        {limits.maximum_period_years !== null && (
+          <Fact label={t(text.maximum_period)}>
+            {t(text.period_years, {
+              years: limits.maximum_period_years.decimal,
+            })}
+          </Fact>
+        )}
+        {limits.maximum_period_ends_on !== null && (
+          <Fact label={t(text.ends_on)}>
+            {dateText(locale, limits.maximum_period_ends_on, true)}
+          </Fact>
+        )}
+      </dl>
+      <Citations
+        citations={limits.legal_citations}
+        complete={limits.legal_citations_complete}
+        onOpenLink={onOpenLink}
+      />
+    </section>
+  );
+}
+
 function PlanTable({
   locale,
   rows,
   year,
-  baja,
 }: {
   locale: string;
   rows: readonly PlanRow[];
   year: number | null;
-  baja: AssetBaja | null;
 }) {
   const t = useStrings();
   const base = useId();
@@ -318,6 +450,12 @@ function PlanTable({
         name: t(ASSET_KEYS.list.column.method),
       },
       {
+        id: "rate",
+        label: t(column.rate),
+        name: t(column.rate),
+        align: "end" as const,
+      },
+      {
         id: "planned",
         label: t(column.planned),
         name: t(column.planned),
@@ -330,9 +468,9 @@ function PlanTable({
         align: "end" as const,
       },
       {
-        id: "pending",
-        label: t(PLAN_KEYS.pending),
-        name: t(PLAN_KEYS.pending),
+        id: "minimum",
+        label: t(column.minimum),
+        name: t(column.minimum),
         align: "end" as const,
       },
       {
@@ -376,18 +514,9 @@ function PlanTable({
           {view.rows.map((planned, at) => {
             const before = at === 0 ? undefined : view.rows[at - 1];
             const changed =
-              before !== undefined &&
-              before.election.fingerprint !== planned.election.fingerprint;
+              before !== undefined && before.method !== planned.method;
             const shown = open.has(planned.tax_year);
             const detail = `${base}-${planned.tax_year}`;
-            const election = (
-              <>
-                {methodWord(t, planned.election.method_key)}
-                <span className="block text-xs text-muted-foreground tabular-nums">
-                  {t(column.revision)} {planned.election.revision_number}
-                </span>
-              </>
-            );
             return (
               <Fragment key={planned.tax_year}>
                 {changed && (
@@ -398,11 +527,7 @@ function PlanTable({
                         <span className="font-medium">
                           {t(ASSET_KEYS.plan.election_changed)}
                         </span>
-                        {methodWord(t, planned.election.method_key)}
-                        <span className="text-muted-foreground tabular-nums">
-                          {t(column.revision)}{" "}
-                          {planned.election.revision_number}
-                        </span>
+                        {tokenWord(t, "method", planned.method)}
                       </span>
                     </td>
                   </tr>
@@ -428,7 +553,9 @@ function PlanTable({
                         size="xs"
                       />
                       <span className="sr-only">
-                        {t(ASSET_KEYS.plan.claims)}{" "}
+                        {t(ASSET_KEYS.plan.claims, {
+                          year: planned.tax_year,
+                        })}{" "}
                       </span>
                       {planned.tax_year}
                     </button>
@@ -436,50 +563,57 @@ function PlanTable({
                   <td className="px-2 py-1.5">
                     <Status locale={locale} planned={planned} />
                   </td>
-                  <td className="px-2 py-1.5">{election}</td>
+                  <td className="px-2 py-1.5">
+                    {tokenWord(t, "method", planned.method)}
+                  </td>
+                  <td className="px-2 py-1.5 text-right tabular-nums">
+                    {planned.coefficient === null ? (
+                      <span aria-hidden="true">{DASH}</span>
+                    ) : (
+                      percentText(locale, planned.coefficient.decimal)
+                    )}
+                  </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     <Figure
                       locale={locale}
                       amount={planned.planned}
-                      absent={absentWord(
-                        t,
-                        planned.planned_absent_key ?? "not_computed",
+                      absent={absentText(t, planned)}
+                    />
+                  </td>
+                  <td className="px-2 py-1.5 text-right tabular-nums">
+                    {/* No claim in effect is no figure to draw: the state says why. */}
+                    <Figure
+                      locale={locale}
+                      amount={
+                        planned.claims.some((claim) => claim.effective)
+                          ? planned.claimed
+                          : null
+                      }
+                      said={tokenWord(t, "claim_state", planned.claim_state)}
+                    />
+                    {planned.claims.some((claim) => claim.effective) &&
+                      isStatedZero(planned.claimed) && (
+                        <span className="block text-xs text-muted-foreground">
+                          {t(ASSET_KEYS.plan.recorded_zero)}
+                        </span>
                       )}
-                    />
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     <Figure
                       locale={locale}
-                      amount={planned.claimed}
-                      said={stateWord(t, planned.state_key)}
+                      amount={planned.minimum_through}
+                      absent={
+                        planned.minimum_complete
+                          ? null
+                          : t(ASSET_KEYS.plan.minimum_incomplete)
+                      }
                     />
-                    {isStatedZero(planned.claimed) && (
-                      <span className="block text-xs text-muted-foreground">
-                        {t(ASSET_KEYS.plan.recorded_zero)}
-                      </span>
-                    )}
-                    {stateOf(planned.state_key) === "partial" &&
-                      planned.claims
-                        .filter((claim) => claim.effective)
-                        .map((claim) => (
-                          <span
-                            key={claim.claim_id}
-                            className="block text-xs text-muted-foreground"
-                          >
-                            <Interval
-                              locale={locale}
-                              from={claim.from}
-                              until={claim.until}
-                            />
-                          </span>
-                        ))}
-                  </td>
-                  <td className="px-2 py-1.5 text-right tabular-nums">
-                    <Figure
-                      locale={locale}
-                      amount={planned.pending_end}
-                      absent={absentWord(t, "not_computed")}
-                    />
+                    {!planned.minimum_complete &&
+                      planned.minimum_through !== null && (
+                        <span className="block text-xs text-muted-foreground">
+                          {t(ASSET_KEYS.plan.minimum_incomplete)}
+                        </span>
+                      )}
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     <Days planned={planned} />
@@ -493,21 +627,6 @@ function PlanTable({
               </Fragment>
             );
           })}
-          {baja && (
-            <tr className="border-t border-border bg-accent">
-              <td colSpan={span} className="px-2 py-1.5">
-                <span className="inline-flex flex-wrap items-center gap-x-1.5">
-                  <Icon name="archive" size="xs" />
-                  <span className="font-medium">
-                    {t(ASSET_KEYS.list.disposed, {
-                      date: dateText(locale, baja.date, true),
-                    })}
-                  </span>
-                  {reasonWord(t, baja.reason_key)}
-                </span>
-              </td>
-            </tr>
-          )}
         </tbody>
       </table>
     </div>
@@ -515,9 +634,9 @@ function PlanTable({
 }
 
 /**
- * One element's plan, read from the ledger. `year` is the year the pane
- * stands on, which the plan scrolls to and marks. `baja` closes the plan
- * where the element left service: no year follows it.
+ * One element's plan, read from the ledger, with the limits the registry puts
+ * on its election above it. `year` is the year the pane stands on, which the
+ * plan scrolls to and marks.
  */
 export function AmortizationPlan({
   port,
@@ -525,7 +644,7 @@ export function AmortizationPlan({
   locale,
   year = null,
   reader,
-  baja = null,
+  onOpenLink,
 }: {
   port: LedgerPort;
   assetId: string;
@@ -533,34 +652,47 @@ export function AmortizationPlan({
   year?: number | null;
   /** Whose ledger; null while the account withholds it. */
   reader?: string | null;
-  baja?: AssetBaja | null;
+  /** Opens an official address in the system browser. */
+  onOpenLink?: (url: string) => void;
 }) {
   const t = useStrings();
   const { read } = useAssetRead(readPlan, port, reader, assetId);
   if (read === null) return <Reading label={t(PLAN_KEYS.reading)} />;
   if (read.kind !== "done") return <CallLine call={read} />;
-  if (read.result.outcome === "refused")
+  const { outcome, refusal, rows, limits, advisories } = read.result;
+  if (outcome === "refused" || rows === null)
     return (
-      <CallLine
-        call={{
-          kind: "refused",
-          reason: read.result.refusal?.code ?? null,
-          detail: null,
-        }}
-      />
+      <p role="alert" className="p-3 text-sm text-destructive">
+        {refusalText(t, refusal)}
+      </p>
     );
-  if (read.result.rows.length === 0)
+  if (rows.length === 0)
     return (
       <p className="p-3 text-sm text-muted-foreground">
         {t(PLAN_KEYS.plan_empty)}
       </p>
     );
   return (
-    <PlanTable
-      locale={locale}
-      rows={read.result.rows}
-      year={year}
-      baja={baja}
-    />
+    <>
+      {advisories.map((advisory) => (
+        <p
+          key={advisory.kind}
+          className="ledger-assets-advisory flex items-start gap-1 border-b px-3 py-2 text-sm text-muted-foreground"
+        >
+          <Icon name="info" size="xs" className="mt-0.5" />
+          <span>
+            {keyedText(
+              t,
+              advisory.label_key,
+              tokenWord(t, "plan_advisory", advisory.kind),
+            )}
+          </span>
+        </p>
+      ))}
+      {limits && (
+        <Limits locale={locale} limits={limits} onOpenLink={onOpenLink} />
+      )}
+      <PlanTable locale={locale} rows={rows} year={year} />
+    </>
   );
 }

@@ -394,8 +394,32 @@
         "path": []
       }
     },
+    "ledger.inventory.correct": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.inventory.create": {
       "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.inventory.describe": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.inventory.inspect": {
+      "may_write": false,
       "review": false,
       "subject": {
         "kind": "profile",
@@ -411,6 +435,38 @@
       }
     },
     "ledger.inventory.movement.add": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.inventory.movement.correct": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.inventory.movement.reverse": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.inventory.restore": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.inventory.retire": {
       "may_write": true,
       "review": false,
       "subject": {

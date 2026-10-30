@@ -450,12 +450,37 @@ export type CapitalGoodDeclareResult = {
 
 export type ValuationMethod = "fifo" | "pmp" | "coste_medio";
 export type InventoryMovementKind = "opening" | "purchase" | "cogs" | "count";
+/** The kinds of proof a purchase or an extra cost can rest on, and the two
+ * checks a purchase states it made. */
+export type InventoryProofKind =
+  | "purchase_invoice"
+  | "transport_document"
+  | "insurance_document"
+  | "customs_declaration"
+  | "contract"
+  | "other_acquisition_evidence"
+  | "attributable_cost_review"
+  | "iva_recoverability_review";
+export type InventoryCostKind =
+  | "freight"
+  | "insurance"
+  | "customs_duty"
+  | "handling"
+  | "professional_fee"
+  | "other_directly_attributable";
+export type InventoryRetirementReason =
+  "created_in_error" | "activity_ceased" | "no_stock_held";
 export type InventoryBookRow = {
   actividad_id: string;
   year: number;
   valuation_method: ValuationMethod;
   opening_stock: PublicDecimal;
   movement_count: number;
+  /** The name given to the book, where one has been. */
+  label?: string | null;
+  retired?: boolean;
+  retirement_reason?: InventoryRetirementReason | null;
+  correction_count?: number;
 };
 export type InventoryListResult = {
   profile_id: string;
@@ -470,11 +495,36 @@ export type InventoryRefusal = {
     | "duplicate_movement_id"
     | "inventory_validation"
     | "closing_authority_conflict"
-    | "closing_authority_invalid";
+    | "closing_authority_invalid"
+    | "closing_authority_recorded"
+    | "later_closing_authority_recorded"
+    | "inventory_retired"
+    | "inventory_already_retired"
+    | "inventory_not_retired"
+    | "movement_not_found"
+    | "movement_already_superseded"
+    | "movement_outside_year"
+    | "stock_would_go_negative"
+    | "count_would_raise_stock"
+    | "correction_id_conflict"
+    | "correction_changes_nothing";
   actividad_id: string | null;
   year: number | null;
   movement_id: string | null;
   valuation_method: string | null;
+  reason_key?: string | null;
+  reason_facts?: ReasonFact[];
+};
+/** The totals of a purchase's cost, as a movement shows them. */
+export type InventoryAcquisitionSummary = {
+  consideration_excluding_iva: PublicDecimal;
+  directly_attributable_cost_total: PublicDecimal;
+  nonrecoverable_iva_included: PublicDecimal;
+  recoverable_iva_excluded: PublicDecimal;
+  total_acquisition_cost: PublicDecimal;
+  component_count: number;
+  evidence_count: number;
+  complete: true;
 };
 export type InventoryMovement = {
   movement_id: string;
@@ -487,15 +537,52 @@ export type InventoryMovement = {
   iva_rate: PublicDecimal;
   iva_amount: PublicDecimal | null;
   deductible_iva_ratio: PublicDecimal;
+  acquisition_cost?: InventoryAcquisitionSummary | null;
+};
+export type InventoryCorrectionReason =
+  | "keying_error"
+  | "source_document_corrected"
+  | "duplicate_entry"
+  | "operation_did_not_occur";
+export type InventoryHistoryKind =
+  | "described"
+  | "opening_corrected"
+  | "movement_corrected"
+  | "movement_reversed"
+  | "retired"
+  | "restored";
+export type InventoryDescriptor = {
+  label: string;
+  description: string | null;
+};
+/** One change kept with what it displaced. */
+export type InventoryHistoryEntry = {
+  correction_id: string;
+  kind: InventoryHistoryKind;
+  recorded_at: string;
+  actor: string;
+  correction_reason: InventoryCorrectionReason | null;
+  retirement_reason: InventoryRetirementReason | null;
+  superseded_movement: InventoryMovement | null;
+  replacement_movement_id: string | null;
+  prior_opening_stock: PublicDecimal | null;
+  prior_valuation_method: ValuationMethod | null;
+  prior_descriptor: InventoryDescriptor | null;
 };
 export type InventoryBook = {
   actividad_id: string;
   year: number;
   valuation_method: ValuationMethod;
   opening_stock: PublicDecimal;
+  /** The effective movements: what a correction or a reversal took out is
+   * not here but in the history. */
   period_movements: InventoryMovement[];
   closing_authority_fingerprints: JsonObject | null;
   schema_version: string;
+  descriptor?: InventoryDescriptor | null;
+  retired?: boolean;
+  retirement_reason?: InventoryRetirementReason | null;
+  history?: InventoryHistoryEntry[];
 };
 export type InventoryCreateRequest = {
   actividad_id: string;
@@ -519,8 +606,41 @@ export type InventoryMovementAddRequest = {
   quantity: PublicDecimal;
   unit_cost?: PublicDecimal | null;
   taxable_base?: PublicDecimal | null;
-  /** A purchase's cost evidence, as the person's typed document. */
-  acquisition_cost?: JsonObject | null;
+  /** What a purchase cost, and what proves it. Only a purchase states it,
+   * and a purchase states no unit cost or taxable base beside it. */
+  acquisition_cost?: InventoryAcquisitionCostRequest | null;
+};
+/** A named piece of proof: a fingerprint of the file the person attached,
+ * under a reference minted for it. */
+export type InventoryProof = {
+  reference: { reference: string };
+  evidence_kind: InventoryProofKind;
+  content_digest: string;
+};
+/** A cost that goes into the purchase besides its price. */
+export type InventoryCostComponent = {
+  component_id: string;
+  kind: InventoryCostKind;
+  taxable_base: PublicDecimal;
+  iva_amount: PublicDecimal;
+  deductible_iva_ratio: PublicDecimal;
+  evidence_references: { reference: string }[];
+};
+export type InventoryAcquisitionCostRequest = {
+  consideration_excluding_iva: PublicDecimal;
+  consideration_iva_amount: PublicDecimal;
+  consideration_deductible_iva_ratio: PublicDecimal;
+  attributable_cost_components: InventoryCostComponent[];
+  evidence: InventoryProof[];
+  completeness: {
+    consideration_evidence: { reference: string };
+    attributable_cost_review_evidence: { reference: string };
+    iva_recoverability_review_evidence: { reference: string };
+  };
+  directly_attributable_cost_total: PublicDecimal;
+  nonrecoverable_iva_included: PublicDecimal;
+  recoverable_iva_excluded: PublicDecimal;
+  total_acquisition_cost: PublicDecimal;
 };
 export type InventoryMovementAddResult = {
   outcome: "added" | "refused";
@@ -565,6 +685,54 @@ export type InventoryClosingAuthorityResult = {
   refusal: InventoryRefusal | null;
 };
 
+/** One change to a book. Sent again under the same reference it changes
+ * nothing: the reference is minted when the form opens. */
+export type InventoryChangeRequest = InventoryBookRequest & {
+  correction_id: string;
+};
+export type InventoryInspectResult = {
+  outcome: "found" | "refused";
+  profile_id: string;
+  ledger: InventoryBook | null;
+  refusal: InventoryRefusal | null;
+};
+export type InventoryDescribeRequest = InventoryChangeRequest & {
+  label: string;
+  description: string | null;
+};
+export type InventoryCorrectRequest = InventoryChangeRequest & {
+  reason: InventoryCorrectionReason;
+  opening_stock: PublicDecimal | null;
+  valuation_method: ValuationMethod | null;
+};
+export type InventoryMovementCorrectRequest = InventoryChangeRequest & {
+  target_movement_id: string;
+  reason: InventoryCorrectionReason;
+  movement_id: string;
+  movement_date: string;
+  kind: InventoryMovementKind;
+  quantity: PublicDecimal;
+  unit_cost?: PublicDecimal | null;
+  taxable_base?: PublicDecimal | null;
+  acquisition_cost?: InventoryAcquisitionCostRequest | null;
+};
+export type InventoryMovementReverseRequest = InventoryChangeRequest & {
+  target_movement_id: string;
+  reason: InventoryCorrectionReason;
+};
+export type InventoryRetireRequest = InventoryChangeRequest & {
+  reason: InventoryRetirementReason;
+};
+export type InventoryRestoreRequest = InventoryChangeRequest;
+/** A change applied, or found already applied under the same reference. */
+export type InventoryChangeResult = {
+  outcome: "applied" | "replayed" | "refused";
+  profile_id: string;
+  ledger: InventoryBook | null;
+  bucket_event_ids: string[];
+  refusal: InventoryRefusal | null;
+};
+
 // ---- Activity assets -----------------------------------------------------
 
 /** One revision of an activity asset. Revisions are never edited: a
@@ -574,12 +742,22 @@ export type ActivityAssetRevision = JsonObject & {
   revision_number: number;
   supersedes_revision_id?: string | null;
 };
+/** One fact that fills a reason's sentence. */
+export type ReasonFact = { key: string; value: string };
+/** Why the backend refused: a coarse code, and the catalogue key that says
+ * why with the facts that fill it in. */
 export type ActivityAssetRefusal = {
   code: string;
+  /** Holds `missing_field_keys` where fields are still to state. */
   precondition_verdict: JsonObject | null;
   accelerated_da18: JsonObject | null;
+  reason_key: string | null;
+  reason_facts: ReasonFact[];
 };
-type ActivityAssetResultBase = {
+/** An amount the backend states or does not. Null is unknown and never
+ * zero; a recorded zero is `{ decimal: "0.00" }`. */
+export type Amount = PublicDecimal | null;
+export type ActivityAssetResultBase = {
   profile_id: string;
   authority: { logical_generation: string; reader_incarnation: string };
   outcome: "succeeded" | "refused";
@@ -588,9 +766,22 @@ type ActivityAssetResultBase = {
 export type ActivityAssetHistory = {
   revisions: ActivityAssetRevision[];
   claims: JsonObject[];
+  descriptors?: JsonObject[];
+  events?: JsonObject[];
 };
-export type ActivityAssetRevisionRequest = {
+/** A recorded claim a correction replaces; the backend works out the new
+ * figure, and a free method states the amount it asks for. */
+export type ActivityAssetSupersedingClaim = {
+  supersedes_claim_id: string;
+  requested_free_amount: PublicDecimal | null;
+};
+export type ActivityAssetCreateRequest = {
   revision: ActivityAssetRevision;
+  descriptor: DescriptorFacts;
+};
+export type ActivityAssetCorrectRequest = {
+  revision: ActivityAssetRevision;
+  superseding_claims: ActivityAssetSupersedingClaim[];
 };
 export type ActivityAssetChangeResult = ActivityAssetResultBase & {
   history: ActivityAssetHistory | null;
@@ -623,7 +814,8 @@ export type ActivityAssetForecastResult = ActivityAssetResultBase & {
 };
 export type ActivityAssetClaimRequest = {
   forecast: ActivityAssetForecast;
-  creating_operation: string;
+  /** The claim this one replaces, in the same write. */
+  supersedes_claim_id: string | null;
 };
 export type ActivityAssetClaimResult = ActivityAssetResultBase & {
   claim_result: {
@@ -637,11 +829,29 @@ export type ActivityAssetFilingRequest = {
   tax_year: number;
   m130_period: string;
 };
+/** What the effective claims of a year add up to in a Modelo 100 casilla. */
 export type ClaimProjection = {
   target_casilla_id: string;
   tax_year: number;
   claim_ids: string[];
   amount: PublicDecimal;
+};
+/** One amount behind Modelo 130 casilla 02: a recorded claim, or else the
+ * element's schedule. */
+export type M130Contribution = {
+  asset_id: string;
+  amount: PublicDecimal;
+  claim_id: string | null;
+  schedule_fingerprint: string | null;
+};
+/** The accrual of one asset kind for Modelo 130. Elements it could not work
+ * out are named: their share is missing from `amount`, not zero. */
+export type M130Projection = {
+  target_casilla_id: string;
+  tax_year: number;
+  amount: PublicDecimal;
+  contributions: M130Contribution[];
+  unavailable_asset_ids: string[];
 };
 export type ActivityAssetFilingResult = ActivityAssetResultBase & {
   tax_year: number | null;
@@ -649,9 +859,301 @@ export type ActivityAssetFilingResult = ActivityAssetResultBase & {
   filing_handoff: {
     material_m100: ClaimProjection;
     intangible_m100: ClaimProjection;
-    material_m130: ClaimProjection;
-    intangible_m130: ClaimProjection;
+    material_m130: M130Projection;
+    intangible_m130: M130Projection;
   } | null;
+};
+
+// ---- The element list ----------------------------------------------------
+
+/** How many years or claims of an element need a person's attention, by kind. */
+export type AssetCounts = {
+  missing: number;
+  incomplete: number;
+  conflict: number;
+  stale: number;
+};
+
+export type AssetListRow = {
+  asset_id: string;
+  /** From the element's latest descriptor; null until one is recorded. */
+  name: string | null;
+  serial_number: string | null;
+  asset_kind: string;
+  state: string;
+  in_service_date: string;
+  method: string;
+  revision_number: number;
+  basis: PublicDecimal;
+  /** The opening amount plus the effective claims; null where the opening
+   * history is not known. */
+  accumulated: Amount;
+  /** The basis left to amortize; null where `accumulated` is. */
+  pending: Amount;
+  findings: AssetCounts;
+  /** The tax years the element can be read in. */
+  years: number[];
+  /** The later service years, whose figures are an estimate until the
+   * registry publishes their tables. */
+  projected_years: number[];
+};
+
+/** `years` are the register's: every year of any element, in order. */
+export type AssetListResult = { rows: AssetListRow[] | null; years: number[] };
+
+// ---- The amortization plan -----------------------------------------------
+
+/** The Modelo 100 edition a year stands on. */
+export type PlanEdition = {
+  revision_id: string;
+  authored_filing_year: number;
+  /** Rates carried forward from the nearest authored edition: they serve a
+   * forecast and Modelo 130, not a filed Modelo 100. */
+  projected: boolean;
+};
+
+export type PlanClaim = {
+  claim_id: string;
+  amount: PublicDecimal;
+  covered_from: string;
+  covered_until: string;
+  effective: boolean;
+  superseded_by: string | null;
+  revision_id: string;
+};
+
+export type ClaimableInterval = { covered_from: string; covered_until: string };
+
+export type PlanRow = {
+  /** Minimum amortization from entry to this year's end, which reduces cost at
+   * a baja; `minimum_complete` is false where an earlier year has none. */
+  minimum_through: Amount;
+  minimum_complete: boolean;
+  tax_year: number;
+  method: string;
+  coefficient: Amount;
+  planned: Amount;
+  /** Why `planned` is null: the typed absence, and the reason when the
+   * backend gives one. */
+  absence: string | null;
+  absence_reason_key: string | null;
+  absence_reason_facts: ReasonFact[];
+  claimed: PublicDecimal;
+  claim_state: string;
+  claimable_intervals: ClaimableInterval[];
+  claimable_refusal_key: string | null;
+  edition: PlanEdition | null;
+  service_days: number | null;
+  calendar_days: number | null;
+  claims: PlanClaim[];
+};
+
+/** What the registry allows the element's election. A table method carries
+ * its class and corridor; any other states the limit it has instead and why. */
+export type LegalCitation = { text: string; permalink: string };
+export type ElectionLimits = {
+  class_key: string | null;
+  /** The class's official name, as served; null where there is no class. */
+  class_label: string | null;
+  maximum_coefficient: Amount;
+  minimum_coefficient: Amount;
+  maximum_period_years: Amount;
+  maximum_period_ends_on: string | null;
+  /** The provisions behind the figures, each with its official link. */
+  legal_citations: LegalCitation[];
+  /** False where a cited provision could not be resolved, so the list is
+   * partial. */
+  legal_citations_complete: boolean;
+  not_table_bound: string | null;
+  unavailable_reason_key: string | null;
+};
+
+/** A warning on the plan that changes no figure and refuses nothing; the
+ * backend words it by the catalogue key it serves. */
+export type PlanAdvisory = { kind: string; label_key: string };
+
+export type PlanResult = {
+  asset_id: string | null;
+  rows: PlanRow[] | null;
+  limits: ElectionLimits | null;
+  advisories: PlanAdvisory[];
+};
+
+// ---- The append-only timeline --------------------------------------------
+
+export type TimelineChange = {
+  /** The record's field as the backend names it, a dotted path. */
+  field: string;
+  before: string | null;
+  /** The catalogue keys that word `before` and `after` where the field
+   * carries a token. */
+  before_key: string | null;
+  after_key: string | null;
+  after: string | null;
+};
+
+export type TimelineClaimUse = {
+  used_by: string[];
+  matches_current_schedule: boolean;
+  stale_reason: string | null;
+};
+
+export type TimelineEvent = {
+  sequence: number;
+  /** Null for a record written before time was kept. */
+  recorded_at: string | null;
+  kind: string;
+  asset_id: string;
+  /** The record's identity: a claim's id for a claim event. */
+  record_id: string;
+  effect_date: string | null;
+  /** The operation that wrote the record; free text, null when none stated. */
+  origin: string | null;
+  changes: TimelineChange[];
+  affects_calculation: boolean;
+  claim: TimelineClaimUse | null;
+};
+
+export type TimelineResult = {
+  asset_id: string | null;
+  events: TimelineEvent[] | null;
+};
+
+// ---- Form options and purchases ------------------------------------------
+
+/** One table class with its coefficient corridor. */
+export type TableGroup = {
+  class_key: string;
+  /** The class's official name, as served. */
+  class_label: string;
+  maximum_coefficient: PublicDecimal;
+  minimum_coefficient: PublicDecimal;
+  maximum_period_years: PublicDecimal;
+};
+
+/** What the registry admits for one asset kind and tax year. */
+export type FormOptions = {
+  tax_year: number;
+  asset_kind: string;
+  regime: string;
+  edition: PlanEdition;
+  methods: string[];
+  table_groups: TableGroup[];
+};
+
+/** A ledger payment an element could name as its acquisition. What the
+ * ledger does not know is null, never zero. */
+export type AcquisitionCandidate = {
+  transaction_id: string;
+  booked_date: string;
+  description: string;
+  amount: PublicDecimal;
+  currency: string;
+  paid_in_euro: Amount;
+  taxable_base: Amount;
+  iva_amount: Amount;
+  non_deductible_iva_state: string;
+  non_deductible_iva_state_key: string;
+  non_deductible_iva: Amount;
+  invoice_evidence_id: string | null;
+  evidence_fingerprint: string | null;
+};
+
+/** What the operator states about an element, none of it a tax fact. */
+export type DescriptorFacts = {
+  name: string;
+  serial_number: string | null;
+  description: string | null;
+  document_kind: string | null;
+  document_number: string | null;
+  supplier_name: string | null;
+  supplier_tax_id: string | null;
+};
+
+// ---- A baja ----------------------------------------------------------------
+
+/** What a baja states. The disposal date is the last day of service; the
+ * backend judges the rest of it by the reason. */
+export type DisposalFacts = {
+  disposal_date: string;
+  reason: string;
+  proceeds: PublicDecimal;
+  transmission_costs: PublicDecimal;
+  market_value: PublicDecimal | null;
+  prior_free_depreciation_regime: string | null;
+  later_affectation_on: string | null;
+};
+
+export type DisposalFinding = {
+  kind: string;
+  /** The catalogue key that words the finding. */
+  label_key: string;
+  tax_year: number | null;
+  effect_on_cost: Amount;
+};
+
+export type DisposalYear = {
+  tax_year: number;
+  claims: PublicDecimal;
+  deducted_through: PublicDecimal;
+  /** Null from the first year no edition covers. */
+  minimum_through: Amount;
+  reduction_through: PublicDecimal;
+};
+
+/** The figures of one baja, as the backend works them out. A figure the reason
+ * does not compute is null. */
+export type DisposalCalculation = {
+  disposal_date: string;
+  reason: string;
+  acquisition_value: PublicDecimal;
+  deducted: PublicDecimal;
+  /** Null where a year in service has no edition, so it is not worked out. */
+  minimum: Amount;
+  reduction: PublicDecimal;
+  excess: PublicDecimal;
+  net_value: PublicDecimal;
+  transmission_value: Amount;
+  transmission_costs: Amount;
+  result: Amount;
+  route_changed_by_later_affectation: boolean;
+  years: DisposalYear[];
+  findings: DisposalFinding[];
+};
+
+// ---- The register's reads and the baja, in the shapes the tab sends ---------
+
+export type ActivityAssetListResult = ActivityAssetResultBase & AssetListResult;
+export type ActivityAssetPlanRequest = { asset_id: string };
+export type ActivityAssetPlanResult = ActivityAssetResultBase & PlanResult;
+export type ActivityAssetTimelineRequest = { asset_id: string };
+export type ActivityAssetTimelineResult = ActivityAssetResultBase &
+  TimelineResult;
+export type ActivityAssetFormOptionsRequest = {
+  asset_kind: string;
+  tax_year: number;
+};
+export type ActivityAssetFormOptionsResult = ActivityAssetResultBase & {
+  options: FormOptions | null;
+};
+export type ActivityAssetAcquisitionCandidatesResult =
+  ActivityAssetResultBase & { candidates: AcquisitionCandidate[] | null };
+export type ActivityAssetDescribeRequest = {
+  asset_id: string;
+  descriptor: DescriptorFacts;
+};
+export type ActivityAssetDisposeRequest = {
+  asset_id: string;
+  disposal: DisposalFacts;
+};
+export type ActivityAssetDisposalCalculateRequest = {
+  asset_id: string;
+  /** Null reads the recorded baja; a stated one is a preview. */
+  disposal: DisposalFacts | null;
+};
+export type ActivityAssetDisposalCalculateResult = ActivityAssetResultBase & {
+  asset_id: string | null;
+  calculation: DisposalCalculation | null;
 };
 
 // ---- Declaration links and reset ----------------------------------------------------

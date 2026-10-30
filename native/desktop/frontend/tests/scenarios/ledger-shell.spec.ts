@@ -308,7 +308,7 @@ test("an empty period says so in one line with its ways in", async ({
   await expect(page(target).locator(".ledger-draft-status")).toHaveCount(1);
 });
 
-test("a failed read says so with its code and reads again only when asked", async ({
+test("a failed read says so without a code and reads again only when asked", async ({
   page: target,
 }) => {
   await openLedger(target, "&ledger=unavailable");
@@ -316,7 +316,7 @@ test("a failed read says so with its code and reads again only when asked", asyn
   await expect(failed.getByRole("alert")).toContainText(
     label("desktop.ledger.failed"),
   );
-  await expect(failed.locator("code")).not.toBeEmpty();
+  await expect(failed.locator("code")).toHaveCount(0);
   // Nothing reads again by itself.
   await target.waitForTimeout(1500);
   await expect(page(target).locator(".ledger-loading")).toHaveCount(0);

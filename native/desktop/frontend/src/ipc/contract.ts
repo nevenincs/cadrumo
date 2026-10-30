@@ -625,6 +625,7 @@ export type HelperTiming = {
 export type WebviewFailure =
   | {
       event: "process_failed";
+      webview: "startup" | "main" | "other";
       kind:
         | "browser_process_exited"
         | "render_process_exited"
@@ -662,6 +663,7 @@ export type WebviewFailure =
     }
   | {
       event: "monitor_unavailable";
+      webview: "startup" | "main" | "other";
       operation: "dispatch" | "core_webview" | "register";
       hresult: number | null;
     };
@@ -2383,6 +2385,11 @@ export type DocsSearchResults = BridgeEnvelope<"search-results"> & {
   results: DocsSearchResult[];
 };
 
+/** The accepted search is still running; the final answer remains search-results. */
+export type DocsSearchProgress = BridgeEnvelope<"search-progress"> & {
+  id: string;
+};
+
 export type DocsToShell =
   | (BridgeEnvelope<"language-change"> & { language: string })
   | DocsReady
@@ -2391,6 +2398,7 @@ export type DocsToShell =
   | DocsShortcut
   | DocsOpenExternal
   | DocsContextMenu
+  | DocsSearchProgress
   | DocsSearchResults;
 
 // Shell to documentation page.

@@ -1,5 +1,6 @@
 import { Alert } from "@/components/ui/alert";
 import type { SetupPlanEntry, SetupReview } from "../../ipc/contract";
+import { labelled, listed } from "../../shell/compose";
 import { useStrings, type Translate } from "../../shell/strings";
 import { formatSize } from "../agent/files";
 import { itemName, partName } from "./setupWords";
@@ -93,8 +94,9 @@ export function PlanEntry({
               className="flex flex-wrap justify-between gap-x-2"
             >
               <span>
-                {partName(t, part.part)}
-                {part.model && <>: {part.model}</>}
+                {part.model
+                  ? labelled(t, partName(t, part.part), part.model)
+                  : partName(t, part.part)}
               </span>
               {part.download_bytes !== 0 && (
                 <span>{size(part.download_bytes)}</span>
@@ -116,7 +118,7 @@ export function PlanEntry({
       {entry.source_hosts.length > 0 && (
         <p className="text-muted-foreground wrap-anywhere">
           {t("desktop.setup.plan_from", {
-            hosts: entry.source_hosts.join(", "),
+            hosts: listed(t, entry.source_hosts),
           })}
         </p>
       )}

@@ -1352,8 +1352,7 @@ function BankPreview({
                 refused
               >
                 <span className="text-sm">
-                  {t("desktop.ledger.import.preview_failed")}{" "}
-                  <code className="font-mono text-xs">{preview.code}</code>
+                  {t("desktop.ledger.import.preview_failed")}
                 </span>
               </FileRow>
             );
@@ -1740,11 +1739,6 @@ function ResultStep({
       return (
         <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
           <AlertTitle>{t("desktop.ledger.import.book_refused")}</AlertTitle>
-          <AlertDescription>
-            <code className="font-mono text-xs">
-              {answer.reason ?? (answer.kind === "failed" ? answer.code : "")}
-            </code>
-          </AlertDescription>
         </Alert>
       );
     const result = answer.result;
@@ -1825,9 +1819,6 @@ function ResultStep({
             <AlertTitle>
               {t("desktop.ledger.import.documents_refused")}
             </AlertTitle>
-            <AlertDescription>
-              <code className="font-mono text-xs">{applied.stopped.code}</code>
-            </AlertDescription>
           </Alert>
         ))}
       {applied.paused && (

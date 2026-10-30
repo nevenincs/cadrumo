@@ -65,6 +65,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
 
     result = _run_python(
         """
+        from datetime import date
         import sys
 
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -81,7 +82,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
             "no cross-domain checks must be registered before the snapshot build"
         )
 
-        snapshot = _published_snapshot("100", filing_year=2025, period="0A")
+        snapshot = _published_snapshot("100", filing_year=2025, period="0A", on=date(2025, 12, 31))
         assert snapshot.modelo.id == "100"
         assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"], (
             "building an M100 snapshot must register the renta first-slice "
@@ -115,6 +116,7 @@ def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
 
     result = _run_python(
         """
+        from datetime import date
         import cadrumo.domain.renta.first_slice_routing_integrity  # registration side effect
 
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -128,7 +130,7 @@ def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
             "importing the check module must register at least one cross-domain check"
         )
 
-        snapshot = _published_snapshot("100", filing_year=2025, period="0A")
+        snapshot = _published_snapshot("100", filing_year=2025, period="0A", on=date(2025, 12, 31))
         assert snapshot.modelo.id == "100"
         print("M100_BUILD_OK")
         """,

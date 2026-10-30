@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { facts } from "@/shell/compose";
 import {
   parseAmount,
   TAX_AMOUNT_RULE,
@@ -186,7 +187,10 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
       sort: (good) => good.disposal?.year ?? null,
       cell: (good) =>
         good.disposal
-          ? `${good.disposal.year} · ${tokenText(t, "capital.disposal", good.disposal.regime)}`
+          ? facts(t, [
+              good.disposal.year,
+              tokenText(t, "capital.disposal", good.disposal.regime),
+            ])
           : "—",
     },
   ];

@@ -208,15 +208,12 @@ def unsupported_ledger_renta_gastos_estimacion_directa_observations(
 def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
     """Return the ``target_casilla_id`` set this revision's own bindings route to.
 
-    Unlike the universal BOE-prescribed first-slice routing projection spanning
-    every filing year the
-    application supports), this returns only the casillas a
-    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on THIS revision actually
-    targets. Older Modelo 100 revisions (2020-2023) declare no such bindings
-    at all -- the first-slice ledger-aggregation mechanism did not yet exist
-    for them -- so their required set is legitimately empty even though the
-    universal routing table's codomain is wider. The snapshot-time
-    referential-integrity gate
+    Unlike the universal first-slice routing projection spanning supported
+    filing years, this returns only the casillas a
+    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on this revision
+    actually targets. It includes asset-register-only targets as well as
+    category-routing targets. A revision with no such bindings has an empty
+    required set. The snapshot-time referential-integrity gate
     (:mod:`cadrumo.domain.renta.first_slice_routing_integrity`) uses this
     per-revision set rather than the universal table so it only fails when a
     binding THIS revision actually declares points at a casilla absent from

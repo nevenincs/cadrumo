@@ -187,11 +187,7 @@ export function AttendanceRequests({
             />
           );
         })}
-      {state.failure && (
-        <p role="alert">
-          {t("desktop.attendance.failed", { code: state.failure })}
-        </p>
-      )}
+      {state.failure && <p role="alert">{t("desktop.attendance.failed")}</p>}
     </aside>
   );
 }

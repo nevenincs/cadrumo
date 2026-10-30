@@ -14563,7 +14563,7 @@ modelo:
               help: Add meg azt az adózót, aki az entitás tagja, közös tulajdonosa
                 vagy résztvevője.
             '1562':
-              help: Add meg a jövedelemattribúciós rendszer alá tartozó entitás NIF-jét.
+              help: Add meg a jövedelem-hozzárendelési rendszer alá tartozó entitás NIF-jét.
             '1563':
               help: Jelöljön "X"-et, ha a [1562] mezőben más országbeli NIF-et adott
                 meg.
@@ -14605,7 +14605,7 @@ modelo:
               help: Írjon be egy "X"-et, ha a jövedelmek időbeli elszámolásához a
                 pénzforgalmi szemléletet választja.
             '1577':
-              help: Add meg a jövedelemattribúciós rendszer alá tartozó entitások
+              help: Add meg a jövedelem-hozzárendelési rendszer alá tartozó entitások
                 által hozzárendelt gazdasági tevékenység nettó hozamát.
             '1578':
               help: Add meg az alkalmazható csökkentéseket.
@@ -14739,7 +14739,7 @@ modelo:
             '1620':
               help: Add meg a kataszteri hivatkozást.
             '1621':
-              help: Add meg a jövedelemattribúciós entitás NIF-jét, vagy nem rezidens
+              help: Add meg a jövedelem-hozzárendelési entitás NIF-jét, vagy nem rezidens
                 entitások esetén a lakóhely szerinti ország azonosító számát.
             '1622':
               help: Jelöljön "X"-et, ha a [1562] mezőben más országbeli NIF-et adott

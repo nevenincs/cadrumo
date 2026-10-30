@@ -129,13 +129,17 @@ TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
 # must stay whole so their prepositions do not become global exceptions.
 # Owners: _data/terminology/concepts and the bienes de inversión register.
 TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w'’])(?:bienes de inversión|recargo de equivalencia|"
+    r"(?<![\w'’-])(?:bienes de inversión|recargo de equivalencia|"
     r"regla de prorrata|prorrata especial|datos censales|"
     r"declaración (?:tributaria|censal|de la renta)|"
     r"justificante de presentación|retenciones (?:del trabajo|de alquiler)|"
     r"atribución de rentas|impuesto sobre sociedades|"
     r"operaciones (?:vinculadas|intracomunitarias|con terceros)|"
-    r"sede electrónica|casillas?|modelos?|borrador(?:es)?|censos?|"
+    r"sede electrónica|cuenta corriente tributaria|domiciliación bancaria|"
+    r"autoliquidación conjunta|referencia catastral|situación catastral|"
+    r"diseño de registros|consulta de declaraciones presentadas|fichero BOE|"
+    r"cotejo por CSV|CSV cotejo|"
+    r"casillas?|modelos?|borrador(?:es)?|censos?|"
     r"expedientes?|justificantes?|prorratas?|prorrateo|renta)(?![\w'’])",
     re.IGNORECASE,
 )
@@ -157,6 +161,14 @@ TRANSLATION_HUNGARIAN_DATE_RE: Final[re.Pattern[str]] = re.compile(r"(?<![\w])É
 TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w-])(?P<stem>(?:[^\W\d_][\w.-]*|\d+))-"
     r"(?P<suffix>ból|ből|tól|től|nál|nél|ról|ről|os|ös|es)(?![\w-])"
+)
+
+
+# Hungarian attaches grammatical endings to percentages with a hyphen. Keep
+# only these endings structural, since the numeric filter removes the number
+# and percent sign later; unrelated endings remain spelling input.
+TRANSLATION_HUNGARIAN_PERCENT_SUFFIX_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w-])(?P<stem>\d+\s*%)-(?P<suffix>os|ot|ban|ig|tól)(?![\w-])"
 )
 
 

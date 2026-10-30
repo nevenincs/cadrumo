@@ -92,7 +92,9 @@ class ActividadAssetHistoryRepository:
         if replay.reused_existing_claim:
             return replay
         if expected_history is not None and not current.same_tax_facts(expected_history):
-            raise ActividadAssetClaimConflictError(translated_message="ledger.actividad_asset.errors.history_changed_after_forecast")
+            raise ActividadAssetClaimConflictError(
+                translated_message="ledger.actividad_asset.errors.history_changed_after_forecast"
+            )
 
         mutation_result: list[ActivityAssetHistoryClaimResult] = []
 
@@ -103,7 +105,9 @@ class ActividadAssetHistoryRepository:
                 and not history.same_tax_facts(expected_history)
                 and not result.reused_existing_claim
             ):
-                raise ActividadAssetClaimConflictError(translated_message="ledger.actividad_asset.errors.history_changed_after_forecast")
+                raise ActividadAssetClaimConflictError(
+                    translated_message="ledger.actividad_asset.errors.history_changed_after_forecast"
+                )
             mutation_result[:] = [result]
             return result.history
 

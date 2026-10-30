@@ -30,7 +30,7 @@ import type {
   OutputLanguage,
 } from "../../../shell/modeloContract";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { aeatWords, failureText, rowMark } from "./declarationsWords";
+import { aeatWords, rowMark } from "./declarationsWords";
 import {
   NewDeclarationDialog,
   type NewDeclarationStart,
@@ -413,12 +413,7 @@ export function DeclarationsPage({
         className="declarations-failed"
         icon="alert"
         description={
-          <span role="alert">
-            {t("desktop.declarations.read_failed")}{" "}
-            <code className="font-mono text-xs">
-              {failureText(read.failure)}
-            </code>
-          </span>
+          <span role="alert">{t("desktop.declarations.read_failed")}</span>
         }
       >
         <Button variant="outline" onClick={reread}>

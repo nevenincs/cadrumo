@@ -46,6 +46,7 @@ from cadrumo.application.user_profile.view_operation import (
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.core.period import Period
+from cadrumo_client.contracts import deadline_budget
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -377,6 +378,63 @@ def test_frontend_zero_timeout_keeps_deadline_refusal_without_requesting_a_page(
 
     assert raised.value.reason is RefusalCode.TIMEOUT
     assert requests == []
+
+
+@pytest.mark.parametrize("page_timeout", [0.0, -1.0, float("nan"), float("inf")])
+def test_frontend_rejects_invalid_page_budget_before_request(page_timeout: float) -> None:
+    requests: list[object] = []
+
+    def read_page(*args: object, **kwargs: object) -> NoReturn:
+        requests.append((args, kwargs))
+        raise AssertionError("invalid page budget must not reach the runtime")
+
+    client = cast(FrontendClient, SimpleNamespace(read_result_page=read_page))
+    with pytest.raises(RefusalError) as refused:
+        FrontendClient.read_result_document(client, _result(), page_timeout=page_timeout)
+    assert refused.value.reason is RefusalCode.TIMEOUT
+    assert requests == []
+
+
+@pytest.mark.parametrize(
+    ("durations", "total_timeout", "expected_deadlines", "succeeds"),
+    [
+        ((20.0, 20.0, 20.0), 120.0, (130.0, 150.0, 170.0), True),
+        ((31.0,), 120.0, (130.0,), False),
+        ((20.0, 20.0, 20.0), 50.0, (130.0, 150.0, 150.0), False),
+    ],
+    ids=["total-exceeds-one-page-budget", "page-expires", "total-expires"],
+)
+def test_document_budget_is_distinct_from_each_page_budget(
+    monkeypatch: pytest.MonkeyPatch,
+    durations: tuple[float, ...],
+    total_timeout: float,
+    expected_deadlines: tuple[float, ...],
+    succeeds: bool,
+) -> None:
+    now = [100.0]
+    monkeypatch.setattr(deadline_budget, "time", SimpleNamespace(monotonic=lambda: now[0]))
+    document: dict[str, JsonValue] = {"message": "x" * (PROJECTION_PAGE_BYTES * 2)}
+    deadlines: list[float] = []
+
+    def read_page(
+        _result: OperationResultProjectionRequestV1, request: ProjectionPageRequest, *, deadline: float
+    ) -> ProjectionPage:
+        deadlines.append(deadline)
+        now[0] += durations[len(deadlines) - 1]
+        if now[0] >= deadline:
+            raise RefusalError(RefusalCode.TIMEOUT)
+        return project_document_page(document, request)
+
+    client = cast(FrontendClient, SimpleNamespace(read_result_page=read_page))
+    if succeeds:
+        assert (
+            FrontendClient.read_result_document(client, _result(), timeout=total_timeout, page_timeout=30) == document
+        )
+    else:
+        with pytest.raises(RefusalError) as refused:
+            FrontendClient.read_result_document(client, _result(), timeout=total_timeout, page_timeout=30)
+        assert refused.value.reason is RefusalCode.TIMEOUT
+    assert tuple(deadlines) == expected_deadlines
 
 
 @lru_cache(maxsize=1)

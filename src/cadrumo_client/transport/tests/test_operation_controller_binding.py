@@ -216,6 +216,30 @@ def test_retained_exchange_bounds_call_budget_without_replacing_original_deadlin
     assert controller.deadline == deadline
 
 
+@pytest.mark.parametrize(("deadline", "expected"), [(110.0, 110.0), (200.0, 200.0), (None, 130.0)])
+def test_result_collection_keeps_owned_deadline_or_bounded_fallback(
+    monkeypatch: pytest.MonkeyPatch, deadline: float | None, expected: float
+) -> None:
+    monkeypatch.setattr(time, "monotonic", lambda: 100.0)
+    client = _RecordingClient()
+    controller = OperationController(
+        client=cast(FrontendClient, client), operation_id=_OPERATION_ID, session_id=client.session_id, deadline=deadline
+    )
+    assert controller._result_deadline() == expected
+
+
+@pytest.mark.parametrize("deadline", [float("nan"), float("inf"), float("-inf"), 99.0])
+def test_result_collection_refuses_invalid_owned_deadline(monkeypatch: pytest.MonkeyPatch, deadline: float) -> None:
+    monkeypatch.setattr(time, "monotonic", lambda: 100.0)
+    client = _RecordingClient()
+    controller = OperationController(
+        client=cast(FrontendClient, client), operation_id=_OPERATION_ID, session_id=client.session_id, deadline=deadline
+    )
+    with pytest.raises(RefusalError) as refused:
+        controller._result_deadline()
+    assert refused.value.reason is RefusalCode.TIMEOUT
+
+
 @pytest.mark.parametrize(("original", "expected"), [(None, 110.0), (105.0, 105.0), (120.0, 110.0)])
 def test_terminal_wait_applies_its_deadline_to_the_wire_exchange(
     monkeypatch: pytest.MonkeyPatch, original: float | None, expected: float

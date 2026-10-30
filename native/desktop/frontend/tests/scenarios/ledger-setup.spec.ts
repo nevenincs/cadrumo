@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import { RATIO_ELIGIBLE_FIXTURE } from "../../src/dev/fixtures/ledgerRatios";
 import { label } from "../support/strings";
 
-// The Ledger page's Setup sections over the scenario host's made-up ledger:
+// The Ledger page's Setup sections, and the Assets tab's Stock area, over the
+// scenario host's made-up ledger:
 // a rule made from a selection and its run staged, ratios by year, an own
 // account added through the protected body and shown masked only, an
 // account closed on a date it asks for, a prorrata election the register
@@ -55,6 +56,15 @@ async function openSetup(
   await expect(target.locator(`.ledger-setup-${section}`)).toBeVisible();
   // The menu has closed and given the page back.
   await expect(target.getByRole("menu")).toHaveCount(0);
+}
+
+/** Opens the Assets tab, on its Stock area where `stock` is given. */
+async function openAssets(target: Page, stock = false) {
+  await head(target)
+    .getByRole("tab", { name: label("desktop.ledger.section.assets") })
+    .click();
+  await expect(target.locator(".ledger-assets")).toBeVisible();
+  if (stock) await area(target, "desktop.ledger.assets.area.stock");
 }
 
 async function area(target: Page, key: string) {
@@ -385,8 +395,7 @@ test("an inventory valuation preview records nothing", async ({
   page: target,
 }) => {
   await openLedger(target);
-  await openSetup(target, "registers");
-  await area(target, "desktop.ledger.registers.area.inventory");
+  await openAssets(target, true);
   await button(target, "desktop.ledger.inventory.preview").click();
   const valuation = target.locator(".ledger-inventory-valuation");
   await expect(valuation).toContainText(
@@ -405,11 +414,10 @@ test("a closing authority or a purchase's cost is read from a file the person pi
   page: target,
 }) => {
   await openLedger(target);
-  await openSetup(target, "registers");
-  await area(target, "desktop.ledger.registers.area.inventory");
+  await openAssets(target, true);
   await button(target, "desktop.ledger.inventory.task.closing").click();
   const record = field(target, "desktop.ledger.inventory.authority");
-  const picker = target.locator(".ledger-setup-registers input[type=file]");
+  const picker = target.locator(".ledger-assets input[type=file]");
   const document = JSON.stringify({ decision: {}, prior_closing_link: {} });
   await picker.setInputFiles({
     name: "cierre.json",
@@ -423,7 +431,7 @@ test("a closing authority or a purchase's cost is read from a file the person pi
     mimeType: "application/json",
     buffer: Buffer.alloc(1024 * 1024 + 1, 0x20),
   });
-  await expect(target.locator(".ledger-setup-registers")).toContainText(
+  await expect(target.locator(".ledger-assets")).toContainText(
     label("desktop.ledger.inventory.authority_file_too_large"),
   );
   await expect(record).toHaveValue(document);

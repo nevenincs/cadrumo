@@ -90,6 +90,31 @@ def _catalogue_counts(po_path: Path) -> tuple[int, int, str]:
     return untranslated, fuzzy, str(dict(catalogue.mime_headers).get("Language", ""))
 
 
+@pytest.mark.parametrize(
+    ("page", "official_name"),
+    [
+        (
+            "how-to/modelo-036.md",
+            "Modelo 036. Censo de empresarios, profesionales y retenedores - "
+            "Declaración censal de alta, modificación y baja.",
+        ),
+        ("how-to/modelo-390.md", "Modelo 390. IVA. Declaración Resumen Anual."),
+    ],
+)
+def test_official_modelo_name_span_survives_every_translation(page: str, official_name: str) -> None:
+    """Official AEAT procedure names stay marked Spanish in every catalogue."""
+    source = " ".join((_DOCS / page).read_text(encoding="utf-8").split())
+    assert f'<span lang="es">{official_name}</span>' in source
+
+    for language in TARGET_LANGUAGES:
+        with _catalogue_path(language, page).open("rb") as handle:
+            catalogue = read_po(handle)
+        message = next(message for message in catalogue if "official procedure name" in message.id)
+        assert not message.fuzzy
+        assert isinstance(message.string, str)
+        assert f'<span lang="es">{official_name}</span>' in message.string
+
+
 @pytest.mark.parametrize("language", TARGET_LANGUAGES)
 def test_every_user_page_catalogue_is_complete_and_declares_its_language(language: str) -> None:
     """Every user-scope page has a complete catalogue, declaring the language it sits under.

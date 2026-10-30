@@ -300,7 +300,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     read = read_authority(args.root, args.config)
-    if read.authority is not None and not read.findings and args.compile_targets:
+    if args.compile_targets:
+        if read.authority is None or read.findings:
+            print("; ".join(read.findings) or "authority is unavailable", file=sys.stderr)
+            return 7
         for output in write_load_target_inventory(read.authority):
             print(f"compiled import load targets: {output}")
         return 0

@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import pytest
 
 from ..command import run
+from ..locales_status_signal import _LocalesStatusSignalProcessor
 from ..paths import SCRATCH_BASE_ENV
 from ..pytest_transcript_syntax import _normalize_root_cause
+from ..reaper import assess_run_directories, reclaim_run_directories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -31,6 +34,7 @@ def test_command_run_streams_and_persists_identity(tmp_path: Path, capsys: pytes
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["command"] == list(command)
     assert metadata["exit_status"] == 0
+    assert metadata["status"] == "completed"
     assert "COMMAND " in (run_dir / "run.log").read_text(encoding="utf-8")
 
 
@@ -90,6 +94,11 @@ def test_command_run_finalizes_metadata_when_interrupted(
             seeded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
             assert seeded["exit_status"] == 130
             assert seeded["finished_at"]
+            assert seeded["status"] == "running"
+            verdicts = assess_run_directories(tmp_path / "logs" / "audit-runs")
+            assert len(verdicts) == 1 and not verdicts[0].reclaimable
+            assert reclaim_run_directories(verdicts) == 0
+            assert (run_dir / "artifacts").is_dir()
             raise KeyboardInterrupt
 
     class InterruptingProcess:
@@ -124,6 +133,7 @@ def test_command_run_finalizes_metadata_when_interrupted(
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["exit_status"] == 130
     assert metadata["finished_at"]
+    assert metadata["status"] == "completed"
     transcript = (run_dir / "run.log").read_text(encoding="utf-8")
     assert "INTERRUPTED exit=130" in transcript
     assert "FINISH " in transcript
@@ -202,7 +212,37 @@ def test_locale_signal_reads_a_report_longer_than_the_default_stream_limit(
 def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    original_envelope = _LocalesStatusSignalProcessor.envelope
+
+    def envelope_while_running(
+        self: _LocalesStatusSignalProcessor,
+        *,
+        label: str,
+        run_dir: Path,
+        log_path: Path,
+        exit_status: int,
+        started: datetime,
+        finished: datetime,
+    ) -> dict[str, object]:
+        """Run the real reaper while the real signal writer still owns its output."""
+        metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        assert metadata["status"] == "running"
+        verdicts = assess_run_directories(run_dir.parent.parent)
+        assert len(verdicts) == 1 and not verdicts[0].reclaimable
+        assert reclaim_run_directories(verdicts) == 0
+        return original_envelope(
+            self,
+            label=label,
+            run_dir=run_dir,
+            log_path=log_path,
+            exit_status=exit_status,
+            started=started,
+            finished=finished,
+        )
+
+    monkeypatch.setattr(_LocalesStatusSignalProcessor, "envelope", envelope_while_running)
     payload = {
         "outcome": "backlog",
         "headline": "Translate 1 locale cell for 1 unique key: es 1.",

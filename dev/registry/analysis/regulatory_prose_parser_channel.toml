@@ -65,9 +65,9 @@ corpus = "AEAT diseños de registro"
 reason = "Schema-side companion to the record-design authority; validates the shapes that reader produces."
 
 [[parser]]
-module = "src/cadrumo/domain/calculations/registry/export_parse.py"
-corpus = "AEAT diseños de registro"
-reason = "Parses the fixed-width export field grammar the record designs declare."
+module = "src/cadrumo/domain/calculations/registry/export_xml_dictionary.py"
+corpus = "Official AEAT XML export dictionaries"
+reason = "Reads the published dictionary row grammar to resolve field identifiers, XML paths, data types and casilla identifiers for payload parsing and rendering. Values come from the published source payload; path overrides remain declared by the export layout."
 
 [[parser]]
 module = "dev/registry/compiler/validate_layout_authority_content.py"
@@ -163,3 +163,13 @@ reason = "Reads the declared scale, constants, enumerations and date patterns fo
 module = "dev/registry/pipeline/render_profile_authority.py"
 corpus = "AEAT diseños de registro (PDF)"
 reason = "Compares printed signed-composite prose and geometry with an independently reviewed render profile. Text or shape disagreement refuses the profile; the comparison establishes no new rendering policy."
+
+[[parser]]
+module = "dev/locales/signal_document_prose.py"
+corpus = "Generated documentation RST markers"
+reason = "Recognises the generated cadrumo-casilla-section-identifier marker to validate its exact adjacent section heading before excluding that identifier from spelling prose. The detector matches casilla in generator syntax; this module derives no regulatory value from official prose."
+
+[[parser]]
+module = "dev/locales/signal_syntax.py"
+corpus = "Locale catalogue and documentation syntax"
+reason = "Recognises translation syntax and Spanish tax terminology for language-aware spelling checks. The detector matches casilla in the terminology pattern; these matches route prose to its language dictionary and establish no regulatory value."

@@ -5,10 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final, cast
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_references import legal_note_language_ranges
-
 from .legal_catalogue_fields import _validate_authored_text, _validate_boe_permalink
+from .legal_note_languages import legal_note_language_ranges
 from .legal_reference_models import LegalProvisionRecord, LegalReferenceError
 from .legal_reference_routing import legal_document_slug
 
@@ -42,7 +40,7 @@ def _validate_rendered_record(candidate: object, seen_ids: set[str], page_slugs:
     _validate_record_text(record)
     try:
         legal_note_language_ranges(record.notes, record.notes_language_spans)
-    except RegistryValidationError as exc:
+    except LegalReferenceError as exc:
         raise LegalReferenceError(f"legal entry {record.legal_id!r}: {exc}") from exc
     _validate_record_window(record)
     if record.legal_id in seen_ids:

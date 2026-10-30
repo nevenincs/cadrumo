@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import tomllib
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path, PurePath
@@ -24,37 +25,10 @@ _VENDORED_NAMES = frozenset({"python.zip", "node"})
 _NATIVE_SUFFIXES = frozenset({".exe", ".dll", ".so", ".dylib", ".pyd"})
 # CADRUMO_STORAGE_ROOT is the only variable that places storage. Every other storage variable the
 # package once declared is retired for good, whichever surface used to read it.
-RETIRED_STORAGE_VARIABLES = (
-    "CADRUMO_LOCAL_STORAGE_ROOT",
-    "CADRUMO_ATTACHMENTS_DIR",
-    "CADRUMO_BLOB_STORE_DIR",
-    "CADRUMO_CHROMIUM_DATA_ROOT",
-    "CADRUMO_CORPUS_SEARCH_CACHE_DIR",
-    "CADRUMO_DRAFTS_DIR",
-    "CADRUMO_FILED_DECLARATIONS_DIR",
-    "CADRUMO_FILING_HISTORY_DIR",
-    "CADRUMO_FINANCIAL_TXS_DIR",
-    "CADRUMO_GNOME_EXTENSIONS_DIR",
-    "CADRUMO_INVOICES_DIR",
-    "CADRUMO_IVA_COMPENSATION_HISTORY_DIR",
-    "CADRUMO_IVA_READ_EVIDENCE_DIR",
-    "CADRUMO_JUSTIFICANTES_DIR",
-    "CADRUMO_LIVE_STATE_DIR",
-    "CADRUMO_LLM_CACHE_DIR",
-    "CADRUMO_LLM_RUN_RECORD_DIR",
-    "CADRUMO_LLM_USAGE_DIR",
-    "CADRUMO_LOG_DIR",
-    "CADRUMO_OLLAMA_HOME_DIR",
-    "CADRUMO_OLLAMA_MODELS_DIR",
-    "CADRUMO_PLAYWRIGHT_BROWSERS_DIR",
-    "CADRUMO_RUNS_DIR",
-    "CADRUMO_RUNTIME_SOCKET_DIR",
-    "CADRUMO_SECRET_STORE_DIR",
-    "CADRUMO_SUBMISSIONS_DIR",
-    "CADRUMO_TEMP_DIR",
-    "CADRUMO_TOKEN_DIR",
-    "CADRUMO_USAGE_RATIOS_PATH",
-    "CADRUMO_WORKFLOW_RUNS_DIR",
+RETIRED_STORAGE_VARIABLES = tuple(
+    tomllib.loads(Path(__file__).with_name("retired_storage_variables.toml").read_text(encoding="utf-8"))[
+        "retired_storage_variables"
+    ]
 )
 _DEVELOPMENT_DEFAULT = ("var", "storage")
 

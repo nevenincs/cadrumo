@@ -166,7 +166,7 @@ def test_removing_a_baja_is_refused_for_a_foral_resident_and_writes_nothing() ->
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
         register_authority=replace(
             memory_register_authority(today=date(2028, 12, 31)),
-            residence_territory=lambda: ResidenceTerritory.FORAL,
+            residence_territory=lambda _on: ResidenceTerritory.FORAL,
         ),
     )
 

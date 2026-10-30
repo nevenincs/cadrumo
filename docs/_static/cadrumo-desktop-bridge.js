@@ -19,6 +19,7 @@
  * Page to window: ready {url, title, lang, theme, features},
  * location {url, title}, theme {theme}, shortcut {id}, open-external {url},
  * context-menu {x, y, selection, link: {href, external} | null, pointer},
+ * search-progress {id} while the accepted request is active, then
  * search-results {id, results: [{kind, title, url, excerpt, ranges, crumb}]}.
  * Window to page: keymap {chords: [{id, code, ctrlKey, shiftKey, altKey,
  * metaKey}]}, command {name: back | forward | open-search | home} and
@@ -68,6 +69,7 @@
 
   var CHANNEL = "cadrumo-desktop";
   var VERSION = 1;
+  var SEARCH_PROGRESS_MS = 2000;
   var MAX_SELECTION = 65536;
   var MAX_CHORDS = 64;
   var MAX_CHORD_ID = 64;
@@ -358,6 +360,13 @@
     if (searchCount >= MAX_SEARCHES_IN_FLIGHT) return refuse("too many searches in flight");
     searchesInFlight[id] = true;
     searchCount += 1;
+    // A cold Pagefind load and its sequential ranking passes can exceed the
+    // shell's silence deadline. Report that this accepted request is still
+    // alive without changing the one final search-results answer.
+    post("search-progress", { id: id });
+    var heartbeat = window.setInterval(function () {
+      post("search-progress", { id: id });
+    }, SEARCH_PROGRESS_MS);
     Promise.resolve()
       .then(function () {
         return search(words);
@@ -373,7 +382,13 @@
       .then(function (results) {
         delete searchesInFlight[id];
         searchCount -= 1;
+        window.clearInterval(heartbeat);
         post("search-results", { id: id, results: results });
+      }, function () {
+        delete searchesInFlight[id];
+        searchCount -= 1;
+        window.clearInterval(heartbeat);
+        post("search-results", { id: id, results: [] });
       });
   }
 

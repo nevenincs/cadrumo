@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from enum import StrEnum, auto
-from itertools import pairwise
 from typing import Annotated, Final, Literal, Self
 from typing import override as typing_override
 
@@ -40,7 +39,6 @@ from .schema_base import (
 
 __all__ = [
     "DateSupportEnvelope",
-    "LegalNoteLanguageSpan",
     "LegalReference",
     "OrderedSupportEnvelope",
     "PeriodOverride",
@@ -54,7 +52,6 @@ __all__ = [
     "TemporalProjectionDirection",
     "TemporalSupportEnvelope",
     "date_within_validity_window",
-    "legal_note_language_ranges",
     "source_window_applies_across",
 ]
 
@@ -483,33 +480,6 @@ def _validate_legal_governed_periods(
         )
 
 
-class LegalNoteLanguageSpan(RegistryModel):
-    """Reviewed language of an exact substring of a catalogue note.
-
-    This annotates curator prose; it does not assert that the text is an
-    official quotation or change the provision's legal review status.
-    """
-
-    text: str = Field(min_length=1)
-    language: Literal["en", "es", "ca", "hu"]
-
-
-def legal_note_language_ranges(
-    notes: str | None, spans: tuple[LegalNoteLanguageSpan, ...]
-) -> tuple[tuple[int, int, str], ...]:
-    """Resolve explicit annotations, refusing stale, ambiguous or overlapping text."""
-    ranges: list[tuple[int, int, str]] = []
-    for span in spans:
-        start = -1 if notes is None else notes.find(span.text)
-        if not span.text.strip() or notes is None or start < 0 or notes.find(span.text, start + 1) >= 0:
-            raise RegistryValidationError("legal note language span must match exactly once in notes")
-        ranges.append((start, start + len(span.text), span.language))
-    ordered = sorted(ranges)
-    if any(left[1] > right[0] for left, right in pairwise(ordered)):
-        raise RegistryValidationError("legal note language spans must not overlap")
-    return tuple(ordered)
-
-
 class LegalReference(RegistryModel):
     """Legal-authority citation row carried by registry definitions."""
 
@@ -530,7 +500,6 @@ class LegalReference(RegistryModel):
     reviewed_at: date | None = None
     reviewed_by: str | None = Field(default=None, min_length=1)
     notes: str | None = None
-    notes_language_spans: tuple[LegalNoteLanguageSpan, ...] = ()
     required_text: tuple[str, ...] = Field(min_length=1)
     forbidden_text: tuple[str, ...] = ()
     corpus_tier: CorpusTierField | None = None
@@ -586,7 +555,6 @@ class LegalReference(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_legal_reference(self) -> LegalReference:
-        legal_note_language_ranges(self.notes, self.notes_language_spans)
         _validate_legal_review_metadata(self.review_status, self.reviewed_by, self.reviewed_at)
         if self.effective_to is not None and self.effective_to < self.effective_from:
             raise RegistryValidationError("legal reference effective_to must be on or after effective_from")

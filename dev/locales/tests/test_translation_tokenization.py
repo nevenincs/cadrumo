@@ -6,7 +6,7 @@ import pytest
 
 from cadrumo.core.i18n.render import tr
 
-from ..signal_spelling_segments import locale_spelling_words
+from ..signal_spelling_segments import _CATALAN_HYPHENATED_CLITIC_RE, locale_spelling_words
 from ..signal_tokens import filtered_translation_text, translation_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -32,6 +32,31 @@ def test_catalan_elisions_still_expose_the_lexical_word() -> None:
         ("l", "instal·lació", "d", "un", "col·legi"),
         0,
     )
+
+
+@pytest.mark.parametrize(
+    ("value", "host"),
+    [("Mantén-lo", "Mantén"), ("revisar-los", "revisar")],
+)
+def test_catalan_hyphenated_clitics_keep_the_host_as_dictionary_input(value: str, host: str) -> None:
+    assert locale_spelling_words(value, "ca") == ((host,), 1)
+
+
+@pytest.mark.parametrize("value", ["-ne", "-lo"])
+def test_bare_or_malformed_catalan_clitics_are_not_silently_excluded(value: str) -> None:
+    words, excluded = locale_spelling_words(value, "ca")
+    assert excluded == 0
+    assert words
+
+
+@pytest.mark.parametrize("value", ["Manténn-lo", "revisarr-los", "Mantén-los", "revisar-lo"])
+def test_unattested_catalan_clitic_forms_do_not_match_the_closed_exception(value: str) -> None:
+    assert _CATALAN_HYPHENATED_CLITIC_RE.subn(lambda match: match.group("form").split("-")[0], value)[1] == 0
+
+
+def test_catalan_clitic_exception_does_not_apply_to_other_locales() -> None:
+    assert locale_spelling_words("Mantén-lo", "ca") == (("Mantén",), 1)
+    assert locale_spelling_words("Mantén-lo", "es") != (("Mantén",), 1)
 
 
 def test_acronym_masking_preserves_entire_mixed_case_prose_words() -> None:

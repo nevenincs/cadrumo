@@ -163,6 +163,7 @@ def _repository_cli_tree(root: Path, *, with_writer: bool) -> None:
     """Build a miniature packaged repository for exercising the CLI boundary."""
     _write(root, "conftest.py")
     (root / "dev").mkdir()
+    (root / "packaging").mkdir()
     _write(
         root,
         "pyproject.toml",
@@ -308,7 +309,7 @@ def test_cli_returns_ok_for_the_same_tree_with_a_real_writer(
     assert advisory_result(exit_code) == OK
 
 
-@pytest.mark.parametrize("unavailable", ["malformed-module", "lost-anchor"])
+@pytest.mark.parametrize("unavailable", ["malformed-module", "lost-anchor", "missing-packaging"])
 def test_cli_reports_tool_broken_without_advisory_suppression(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], unavailable: str
 ) -> None:
@@ -316,18 +317,22 @@ def test_cli_reports_tool_broken_without_advisory_suppression(
     _repository_cli_tree(tmp_path, with_writer=False)
     if unavailable == "malformed-module":
         _write(tmp_path, "src/cadrumo/cli.py", "def main(:\n")
-    else:
+    elif unavailable == "lost-anchor":
         _write(
             tmp_path,
             "src/cadrumo/application/live/snapshot_base.py",
             "class RenamedSnapshotService:\n    pass\n",
         )
+    else:
+        (tmp_path / "packaging").rmdir()
 
     exit_code = main([], repo_root=tmp_path)
 
     captured = capsys.readouterr()
     assert exit_code == TOOL_BROKEN
     assert "write-path scan unavailable" in captured.err
+    if unavailable == "missing-packaging":
+        assert "packaging" in captured.err
     assert advisory_result(exit_code) == TOOL_BROKEN
 
 

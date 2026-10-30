@@ -246,17 +246,18 @@ CalculationSourceDiagnosticReason = Literal[
     # A ledger row in an amortization category that no registered element claims
     # as its acquisition. The register is the only route to the activity
     # amortization boxes, so the row deducts nothing, and leaving it at that would
-    # silently drop a real element from the return. Blocking until the element is
-    # registered or the row is reclassified.
+    # silently drop a real element from the return. A finding, not a block, until
+    # the element is registered or the row is reclassified.
     "ledger_amortization_row_unregistered",
     # A resident of a foral territory holding registered activity assets. Modelo
     # 100 and Modelo 130 of the AEAT do not apply there, so no figure from the
-    # register may reach them. Blocking, and distinct from a source that could not
-    # be read: there is nothing to retry.
+    # register may reach them, and Cadrumo cannot work the figure out under foral
+    # rules. A finding, not a block, and distinct from a source that could not be
+    # read: there is nothing to retry.
     "activity_asset_foral_territory",
     # A recorded tax residence that could not be read while the register holds
     # elements. It establishes neither territory, so no figure from the register
-    # reaches the form until the profile states the residence. Blocking.
+    # reaches the form until the profile states the residence. A finding, not a block.
     "activity_asset_residence_unresolved",
     # A residence is recorded, but none is in force in this period. The register
     # still counts, because nothing places the period in a foral territory; only

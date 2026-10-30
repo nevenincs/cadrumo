@@ -1,20 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMemo } from "react";
 import { userEvent, waitFor, within } from "storybook/test";
-import { Button } from "@/components/ui/button";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
 import { translator, useStrings } from "../../../shell/strings";
-import { Panel } from "../setup/SetupParts";
 import { AssetsSection } from "./AssetsSection";
-import type { AssetFormArgs, AssetSlots } from "./FixedAssetsPane";
 import { ASSET_KEYS } from "./assetsWords";
 
-// The Assets tab over the scenario's ledger: a register that spans decades,
-// its list, the detail of one element, the filing handoff, and the states a
-// read can end in. The plan, the timeline, the forms and the Stock area are
-// other parts' views; here each is a stand-in that names its place.
+// The Assets tab over the scenario's ledger: its list, the detail of one
+// element with its plan and timeline, the forms, the filing handoff, and the
+// states a read can end in. Stock is another part's view and stays a stand-in
+// that names its place.
 
 type Answer = "register" | "empty" | "refused" | "loading";
 
@@ -27,41 +24,10 @@ type Args = {
   locale: string;
 };
 
-const ACT_WORD = {
-  element: "add",
-  descriptor: "describe",
-  correction: "correct",
-  claim: "claim",
-  baja: "dispose",
-} as const;
-
-function FormStandIn({ request, onClose }: AssetFormArgs) {
-  const t = useStrings();
-  return (
-    <Panel
-      title={t(ASSET_KEYS.action[ACT_WORD[request.kind]])}
-      className="ledger-assets-form-stand-in"
-      actions={
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          {t("desktop.ledger.form.cancel")}
-        </Button>
-      }
-    >
-      {null}
-    </Panel>
-  );
-}
-
 function ViewStandIn({ word }: { word: string }) {
   const t = useStrings();
   return <p className="p-3 text-sm text-muted-foreground">{t(word)}</p>;
 }
-
-const SLOTS: AssetSlots = {
-  planView: () => <ViewStandIn word={ASSET_KEYS.detail.plan} />,
-  timelineView: () => <ViewStandIn word={ASSET_KEYS.detail.timeline} />,
-  forms: (args) => <FormStandIn {...args} />,
-};
 
 /** The scenario's port, with the list read answered as the story asks. */
 function withListAnswer(port: LedgerPort, answer: Answer): LedgerPort {
@@ -92,8 +58,10 @@ function withListAnswer(port: LedgerPort, answer: Answer): LedgerPort {
           code: "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
           precondition_verdict: null,
           accelerated_da18: null,
+          reason_key: "ledger.actividad_asset.errors.modality_not_declared",
+          reason_facts: [],
         },
-        rows: [],
+        rows: null,
         years: [],
       });
     }) as LedgerPort["submit"],
@@ -109,7 +77,7 @@ function Stage({ shape, answer = "register", signedOut, parts, locale }: Args) {
         port={port}
         reader={signedOut ? null : STORY_READER}
         locale={locale}
-        {...(parts === false ? {} : { slots: SLOTS })}
+        onOpenLink={() => undefined}
         {...(parts === false
           ? {}
           : { stock: <ViewStandIn word={ASSET_KEYS.area.stock} /> })}
@@ -155,8 +123,8 @@ export const OneElement: Story = {
   play: (context) => press(context, "button", "Furgoneta de reparto"),
 };
 
-export const ElementWithABaja: Story = {
-  name: "An element given a baja, its record",
+export const ElementOutOfService: Story = {
+  name: "An element out of service, its record",
   play: async (context) => {
     await press(context, "button", "Cámara de revelado");
     await press(context, "tab", wordsOf(context)(ASSET_KEYS.detail.record));
@@ -191,8 +159,8 @@ export const FilingHandoff: Story = {
   },
 };
 
-export const WithoutParts: Story = {
-  name: "Without the other parts",
+export const WithoutStock: Story = {
+  name: "Without the Stock area",
   args: { parts: false },
   play: (context) => press(context, "button", "Furgoneta de reparto"),
 };

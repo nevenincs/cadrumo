@@ -6,12 +6,12 @@ import io
 import json
 import re
 from collections.abc import Mapping
-from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from dev._paths import UTF_8
 
+from .signal_command_paths import executable_command_paths
 from .signal_policy import LOCALES
 from .signal_syntax import TRANSLATION_HTML_LANGUAGE_RE
 from .signal_tokens import filtered_translation_text
@@ -120,12 +120,12 @@ def _exclude_generated_cli_command_headings(
     """Exclude exact generated CLI headings that name executable commands.
 
     A title is exempt only when its complete extracted text is a path in the
-    canonical CLI graph. Embedded command mentions, options, and unknown paths
-    remain ordinary prose for spelling checks.
+    canonical command graphs. Other text remains enrolled for spelling, whose
+    syntax filter can also classify exact embedded executable path spans.
     """
     if path.suffix != ".rst" or not _is_generated_cli_path(path):
         return prose
-    command_paths = _executable_cli_command_paths()
+    command_paths = executable_command_paths()
     excluded_lines = {
         line
         for line, titles in parsed_titles.items()
@@ -138,16 +138,6 @@ def _is_generated_cli_path(path: Path) -> bool:
     """Return whether a source path belongs to the generated docs/cli tree."""
     parts = path.parts
     return any(parts[index : index + 2] == ("docs", "cli") for index in range(len(parts) - 1))
-
-
-@lru_cache(maxsize=1)
-def _executable_cli_command_paths() -> frozenset[tuple[str, ...]]:
-    """Cache executable paths from the canonical CLI command graph."""
-    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-
-    return frozenset(
-        node.path for node in COMMAND_GRAPH.nodes() if node.spec.kind == "leaf" and node.spec.handler is not None
-    )
 
 
 _CASILLA_SECTION_MARKER_PREFIX = ".. cadrumo-casilla-section-identifier"

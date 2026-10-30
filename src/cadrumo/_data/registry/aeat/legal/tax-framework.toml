@@ -19,7 +19,6 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 1: naturaleza del IVA (impuesto indirecto sobre el consumo)."
-notes_language_spans = [{language = "es", text = "LIVA art. 1: naturaleza del IVA (impuesto indirecto sobre el consumo)."}]
 required_text = ["tributo de naturaleza indirecta que recae sobre el consumo"]
 
 [legal."ley-37-1992:art-3.dos"]
@@ -111,7 +110,6 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 1: naturaleza del IRPF (tributo personal y directo sobre la renta)."
-notes_language_spans = [{language = "es", text = "LIRPF art. 1: naturaleza del IRPF (tributo personal y directo sobre la renta)."}]
 required_text = ["tributo de carácter personal y directo"]
 
 [legal."ley-58-2003:art-5"]
@@ -128,7 +126,6 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 5: la Administración tributaria; competencias de la AEAT."
-notes_language_spans = [{language = "es", text = "LGT art. 5: la Administración tributaria; competencias de la AEAT."}]
 required_text = ["la Administración Tributaria estará integrada por los órganos y entidades"]
 
 [legal."ley-58-2003:art-26"]
@@ -167,7 +164,6 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 148: régimen especial del recargo de equivalencia."
-notes_language_spans = [{language = "es", text = "LIVA art. 148: régimen especial del recargo de equivalencia."}]
 required_text = ["El régimen especial del recargo de equivalencia se aplicará"]
 
 [legal."ley-37-1992:art-164"]
@@ -184,7 +180,6 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 164: obligaciones de los sujetos pasivos (autoliquidación, M303/M390)."
-notes_language_spans = [{language = "es", text = "LIVA art. 164: obligaciones de los sujetos pasivos (autoliquidación, M303/M390)."}]
 required_text = ["Sin perjuicio de lo establecido en el"]
 
 [legal."ley-35-2006:art-96"]
@@ -201,7 +196,6 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 96: obligación de declarar (M100)."
-notes_language_spans = [{language = "es", text = "LIRPF art. 96: obligación de declarar (M100)."}]
 required_text = [
     "Los contribuyentes estarán obligados a presentar y suscribir",
     # Apartado 9 (the Ley de Presupuestos may alter the filing thresholds),
@@ -227,7 +221,6 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 98: borrador de declaración."
-notes_language_spans = [{language = "es", text = "LIRPF art. 98: borrador de declaración."}]
 required_text = [
     "La Administración tributaria podrá poner a disposición de los",
     "siempre que obtengan rentas procedentes exclusivamente de las siguientes fuentes",
@@ -247,7 +240,6 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LGT art. 98: iniciación de los procedimientos tributarios (declaraciones, modelos, casillas)."
-notes_language_spans = [{language = "es", text = "LGT art. 98: iniciación de los procedimientos tributarios (declaraciones, modelos, casillas)."}]
 required_text = ["Las actuaciones y procedimientos tributarios podrán iniciarse"]
 
 [legal."ley-58-2003:art-99"]

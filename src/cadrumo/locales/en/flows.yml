@@ -160,6 +160,7 @@ flows:
     filter:
       option:
         binding_source:
+          activity_asset_disposal: Activity asset disposal
           afiliado_cotizacion: Member contributions
           atribucion_member: Income-attribution member
           bienes_inversion_regularizacion: Investment-goods adjustment

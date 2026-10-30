@@ -115,8 +115,6 @@ class ProviderStatusEntry(OutputSchema):
 class ProviderSettingsStatus(OutputSchema):
     """Masked status of every catalogued provider, in catalog order."""
 
-    development: bool
-    """Whether this is a development build."""
     providers: tuple[ProviderStatusEntry, ...] = Field(min_length=1)
 
 

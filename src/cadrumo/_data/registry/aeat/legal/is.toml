@@ -2760,7 +2760,7 @@ effective_from = 2003-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a20 resolved to exactly one unit through the production resolver against the bundled consolidated Ley 49/2002 (55 units, zero colliding canonical anchors in that corpus); required_text confirmed present. IMPORTANT distinction checked rather than assumed: art. 19 of this same Ley is the IRPF deduction and art. 20 is the Impuesto sobre Sociedades one, so the catalogued ley-49-2002:art-19 grounds Modelo 100 and must NOT be used for Modelo 200. The deduction percentages are described in notes and deliberately kept OUT of required_text pending a live-BOE numeric cross-check; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "Ley 49/2002 art. 20: deduccion de la cuota del Impuesto sobre Sociedades por donativos, donaciones y aportaciones. Los sujetos pasivos del IS deducen de la cuota integra, minorada en las deducciones y bonificaciones de los capitulos correspondientes, un porcentaje de la base de deduccion determinada segun el art. 18. Es la contrapartida en el IS del art. 19, que es la deduccion en el IRPF. Funda la seccion de donativos a entidades sin fines lucrativos del Modelo 200."
+notes = "Ley 49/2002 art. 20: deducción de la cuota del Impuesto sobre Sociedades por donativos, donaciones y aportaciones. Los sujetos pasivos del IS deducen de la cuota íntegra, minorada en las deducciones y bonificaciones de los capítulos correspondientes, un porcentaje de la base de deducción determinada según el art. 18. Es la contrapartida en el IS del art. 19, que es la deducción en el IRPF. Funda la sección de donativos a entidades sin fines lucrativos del Modelo 200."
 required_text = [
     "Deducción de la cuota del Impuesto sobre Sociedades",
     "tendrán derecho a deducir de la cuota íntegra",
@@ -2780,7 +2780,7 @@ effective_from = 2003-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a22 resolved to exactly one unit through the production resolver against the bundled consolidated Ley 49/2002; required_text confirmed present in that unit; corroborated by the AEAT Manual practico de Sociedades 2024, whose donativos chapter cites arts. 16 to 22 of this Ley; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "Ley 49/2002 art. 22: actividades prioritarias de mecenazgo. Habilita a la Ley de Presupuestos Generales del Estado para establecer una relacion de actividades prioritarias de mecenazgo dentro de los fines de interes general de la Ley, y para elevar en su caso los porcentajes y limites de deduccion aplicables a esas actividades. Funda la subseccion de donaciones para actividades prioritarias de mecenazgo del Modelo 200, que es exactamente la poblacion cuyo porcentaje esa habilitacion eleva."
+notes = "Ley 49/2002 art. 22: actividades prioritarias de mecenazgo. Habilita a la Ley de Presupuestos Generales del Estado para establecer una relación de actividades prioritarias de mecenazgo dentro de los fines de interés general de la Ley, y para elevar en su caso los porcentajes y límites de deducción aplicables a esas actividades. Funda la subsección de donaciones para actividades prioritarias de mecenazgo del Modelo 200, que es exactamente la población cuyo porcentaje esa habilitación eleva."
 required_text = [
     "Actividades prioritarias de mecenazgo",
     "La Ley de Presupuestos Generales del Estado podrá establecer una relación de actividades prioritarias de mecenazgo",

@@ -46,7 +46,9 @@ from .signal_spelling_segments import spanish_word_context, translation_spelling
 # cli.yml and errors.yml. These are exact observed forms, not inflection families.
 # Only dictionary gaps are enrolled; enumerating spellings does not admit
 # arbitrary inflections or name typos.
-_SHARED_SPELLINGS = frozenset({"Cadrumo", "AEAT"})
+# Identifier labels occur as standalone technical terms in diagnostics and
+# error prose across all locale catalogues. Preserve only observed casing.
+_SHARED_SPELLINGS = frozenset({"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs"})
 _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     # These ordinary English technical/domain terms are absent from the pinned
     # dictionary-en-gb data, but are attested in the canonical English catalogue:
@@ -94,6 +96,60 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "reviewable",
             "fileable",
             "resumable",
+            # Established CLI and application vocabulary, attested in the
+            # English operator catalogues: provider names (claude,
+            # antigravity), secure-storage and key terms (keychain,
+            # unencrypted, keypair), and standard implementation concepts.
+            # Preserve only the observed forms and casing.
+            "claude",
+            "antigravity",
+            "keychain",
+            "unencrypted",
+            "keypair",
+            "auditable",
+            "backend",
+            "Backend",
+            "validator",
+            "validators",
+            "enum",
+            "Enum",
+            "datetime",
+            "filesystem",
+            "subcommand",
+            "stdin",
+            "json",
+            "csv",
+            "tsv",
+            "xls",
+            "xlsm",
+            "xlsx",
+            "loopback",
+            # AEAT legal vocabulary is deliberately preserved in English
+            # operator messages where the Spanish term names a filing
+            # procedure, status, or tax concept. These exact forms occur in
+            # adapters.yml, application.yml, common.yml, and cli.yml; keep
+            # the enrollment narrow and language-scoped.
+            "comparecencia",
+            "Sede",
+            "certificado",
+            "autoliquidación",
+            "rectificativa",
+            "rectificación",
+            "complementaria",
+            "solicitud",
+            "ejercicio",
+            "cuota",
+            "prorrata",
+            "Reglamento",
+            "apoderado",
+            "foral",
+            "Navarra",
+            "Beckham",
+            "impatriado",
+            # The Spanish Modelo 130 adjustment term is retained verbatim in
+            # translated operator guidance and official legal references.
+            "minoración",
+            "autoconsumo",
         }
     ),
     "es": frozenset(
@@ -117,8 +173,21 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "buckets",
             "OAuth",
             "DEHú",
+            # Spanish CLI and runtime prose uses ``arts.`` as the legal
+            # abbreviation for artículos (LIVA/RIS citations), ``hash`` for
+            # content and storage-state digests, and ``backend`` for the
+            # encrypted calculation/storage implementation. These are exact
+            # technical terms used in src/cadrumo/locales/es/{cli,application,
+            # common,adapters}.yml; do not infer other English terms.
+            "arts",
+            "hash",
+            "backend",
             "desactualizado",
             "Desactualizado",
+            # Current filing-calendar prose uses the plural form
+            # desactualizados for stale census facts; enroll the observed
+            # inflection without admitting a general suffix rule.
+            "desactualizados",
             "recalcular",
             "Recalcular",
             "recálculo",
@@ -134,8 +203,16 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "intracomunitaria",
             "recapitulativa",
             "minoración",
+            "Minoración",
+            # AEAT legal titles use the exact capitalized tax label
+            # Minoración; the IVA and Spanish legal texts also use
+            # autoconsumo as a standard tax-domain compound.
+            "autoconsumo",
             "previsualiza",
             "sobrescritura",
+            # The Spanish binding-resolution help and evidence reference use
+            # sobrescrituras for user-supplied overrides.
+            "sobrescrituras",
             "intracomunitario",
             "tipados",
             "autenticarte",
@@ -147,12 +224,84 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # and previsualizar for inspecting proposed values before writing.
             "confírmalo",
             "Combínalo",
+            # Repeated operator instructions attest these Spanish forms in
+            # runtime catalogues: Reintentar as a retry action, Reintenta and
+            # Configúralo in Cl@ve guidance, Previsualiza for dry-run help,
+            # sectorizada in IVA prorrata errors, and contrafirma in review
+            # package help. Enroll only the exact observed spellings.
+            "Reintentar",
+            "Reintenta",
+            "Configúralo",
+            "Previsualiza",
+            "sectorizada",
+            "contrafirma",
             "idempotente",
             "bloqueante",
             "bloqueantes",
             "tipado",
             "tipada",
             "previsualizar",
+            # AEAT census-form values exposed by CLI period help are exact
+            # token spellings (alta, modificacion, baja), not running prose.
+            "alta",
+            "modificacion",
+            "baja",
+            # Current Spanish CLI help uses token/tokens for AEAT period and
+            # scope values, app as the literal command namespace, and ledger
+            # as the literal subcommand. Keep these runtime forms exact.
+            "token",
+            "tokens",
+            "Token",
+            "Tokens",
+            "app",
+            "ledger",
+            # Exact Spanish operator-catalogue forms: resolutor names a
+            # registered resolver; Intro is the terminal's displayed key;
+            # flags and config name CLI options and command namespaces.
+            "resolutor",
+            "Intro",
+            "flags",
+            "config",
+            # Current Modelo 390 help and workbench guidance use the exact
+            # AEAT tax-domain term exoneración.
+            "exoneración",
+            # Repeated Spanish operator and tax-domain prose uses these exact
+            # forms: operandos in calculation explanations, fiscalmente in tax
+            # rules, direccionado/a in content-addressing docs, cotitular in
+            # account labels, subclave/atribuyente in Modelo 184 fields, and
+            # pymes in legal-form guidance. Keep each observed form exact.
+            "operandos",
+            "Operandos",
+            "fiscalmente",
+            "direccionado",
+            "direccionados",
+            "cotitular",
+            "Cotitular",
+            "subclave",
+            "Subclave",
+            "atribuyente",
+            "pymes",
+            "reintentarlo",
+            "reintentado",
+            # These exact informal imperatives and clitic forms recur in
+            # operator instructions across the Spanish runtime and translated
+            # how-to pages (application.yml, cli.yml, common.yml, and the
+            # Spanish how-to catalogue). Enroll observed casing only; this
+            # does not admit other clitic or imperative forms.
+            "configurarlo",
+            "Escríbelo",
+            "escríbelo",
+            "reintenta",
+            "revísala",
+            "Revísala",
+            "escríbela",
+            "Escríbela",
+            "actívala",
+            "regístrala",
+            "Regístrala",
+            "impórtalo",
+            "Impórtalo",
+            "confírmala",
         }
     ),
     "ca": frozenset(
@@ -189,6 +338,8 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # subcomandament/coteig/indiques in cli.yml and wizard.yml.
             # The documentation also uses tipats and subpaquets in
             # reference/registry-legal-api.po and architecture/index.po.
+            # The Spanish Modelo 130 guide retains the tax label minoración.
+            "minoración",
             "inclusiva",
             "tipat",
             "tipats",
@@ -197,6 +348,45 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "subcomandament",
             "coteig",
             "indiques",
+            # practiques is the second-person singular present of practicar,
+            # used in cli.yml's Catalan guidance about withholding practice.
+            # It is not the accented noun pràctiques.
+            "practiques",
+            # recapitulativa is standard Catalan terminology, attested by the
+            # Modelo 349 catalogue and its translated operator documentation.
+            "recapitulativa",
+            # The CLI documents AEAT's literal census period values; preserve
+            # these Spanish protocol spellings alongside Catalan explanation.
+            "alta",
+            "modificacion",
+            "baja",
+            "comunicacion",
+            "variacion",
+            # Catalan CLI help names the ledger subcommand in its command
+            # examples and operator instructions; preserve that exact token.
+            "ledger",
+            # Runtime catalogue prose and command examples use these exact
+            # technical tokens: `aeat`/`config`/`flags`/`status` in setup and
+            # authentication instructions; `hash`/`payload` in storage errors;
+            # `backend` and `runtime` in repository and storage diagnostics.
+            # Keep the observed lowercase forms and language scope. These are
+            # not spelling families or exceptions to ordinary Catalan prose.
+            "aeat",
+            "config",
+            "flags",
+            "status",
+            "hash",
+            "payload",
+            "backend",
+            "runtime",
+            # These exact Catalan forms are valid but absent from the pinned
+            # dictionary: sublímit in a reduction warning, preomplert in
+            # filing-record guidance, and reanomenament in work guidance.
+            # reprenable describes a session that can be resumed.
+            "sublímit",
+            "preomplert",
+            "reanomenament",
+            "reprenable",
         }
     ),
     "hu": frozenset(
@@ -294,6 +484,122 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "bájtjainak",
             "bájtokhoz",
             "látás",
+            # Modelo 130 documentation retains this Spanish tax label in
+            # explanatory prose and legal citations.
+            "minoración",
+            # Spanish legal and jurisdiction names are retained in Hungarian
+            # tax guidance: Navarra in common.yml/profile.yml/Modelo schemas,
+            # Beckham in wizard.yml/profile.yml and the Modelo catalogue.
+            # Keep the proper names exact and Hungarian-scoped.
+            "Navarra",
+            "Beckham",
+            # The official Spanish AEAT name is retained in Hungarian docs;
+            # the final Hungarian case ending is part of the observed token.
+            "Agencia",
+            "Estatal",
+            "Administración",
+            "Tributariánál",
+            # Exact Hungarian terminology used in the current localized tax
+            # catalogues: the compound stem hozzáadottérték, the adapted
+            # prorrata inflections, HÉA's lowercase prose form, the common
+            # intraközösségi adjective, and Baleár as part of Baleár-szigetek.
+            # Keep these observed forms exact; they do not admit arbitrary
+            # inflections or spelling variants.
+            "hozzáadottérték",
+            "Hozzáadottérték",
+            "prorratája",
+            "prorratájának",
+            "héa",
+            "intraközösségi",
+            "Baleár",
+            # Exact Hungarian catalogue forms that preserve the AEAT's
+            # Spanish filing vocabulary (alta/modificacion, filing classes,
+            # official document titles and tax-law terms). These spellings
+            # are repeated across cli.yml, application.yml, errors.yml,
+            # categories.yml and wizard.yml; retain the authored source form.
+            "alta",
+            "modificacion",
+            "complementaria",
+            "rectificativa",
+            "Rectificativa",
+            "cuota",
+            "Reglamento",
+            "Censal",
+            "censal",
+            "Certificado",
+            "certificado",
+            "Situación",
+            "Sede",
+            "sede",
+            "retenciones",
+            "Retenciones",
+            "autoliquidación",
+            "estimación",
+            "compensación",
+            # Project storage/ledger terminology occurs in Hungarian operator
+            # text and CLI identifiers. Hungarian suffixes attach directly;
+            # admit only the exact forms observed by this audit batch.
+            "bucket",
+            "bucket.",
+            "bucketjéhez",
+            "bucketet",
+            "bucketje",
+            "bucketjével",
+            "bucketjével.",
+            "buckethez",
+            "bucketben",
+            "bucketben.",
+            "bucketnek",
+            "bucketek",
+            "ledger",
+            "Ledger",
+            "ledgerbe",
+            "ledgerbe.",
+            "ledgert",
+            "ledgerben",
+            "ledgerből.",
+            "registry",
+            "Registry",
+            "registryben",
+            "registryt",
+            "registryjét",
+            "registryje",
+            "hash",
+            "hashje",
+            "sidecar",
+            "sidecarja",
+            "sidecarját.",
+            "sidecarokat",
+            "payload",
+            "payloadját.",
+            # Exact Hungarian forms found in operator prose and the tax
+            # catalogue. A manifest is called a manifeszt in Hungarian IT
+            # usage; admit only the inflections actually present in source.
+            "manifeszt",
+            "manifesztjét",
+            "manifesztjének",
+            "manifesztje",
+            "manifesztet",
+            "manifesztjének.",
+            "kisméretű",
+            "forális",
+            "Forális",
+            "intrakomunitáris",
+            "társaságiadó",
+            "Társaságiadó",
+            "gyorsparancs",
+            # These are literal values or names in Hungarian CLI/help text:
+            # option values and the command namespace stay untranslated.
+            "aeat",
+            "compensar",
+            "devolver",
+            "ingreso",
+            "domiciliación",
+            "config",
+            "relation",
+            "notifications",
+            "LongPathsEnabled",
+            "Decimal",
         }
     ),
 }

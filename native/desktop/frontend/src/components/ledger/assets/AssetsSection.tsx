@@ -3,7 +3,7 @@ import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import { SetupTabs } from "../setup/SetupParts";
 import { ASSET_KEYS } from "./assetsWords";
-import { FixedAssetsPane, type AssetSlots } from "./FixedAssetsPane";
+import { FixedAssetsPane } from "./FixedAssetsPane";
 
 type Area = "fixed" | "stock";
 
@@ -17,16 +17,18 @@ export function AssetsSection({
   port,
   reader,
   locale,
-  slots,
   stock,
+  onOpenLink,
 }: {
   port: LedgerPort;
   /** Whose ledger; null while the account withholds it. */
   reader: string | null;
   locale: string;
-  slots?: AssetSlots;
   /** The Stock area's content. */
   stock?: ReactNode;
+  /** Opens an official address in the system browser, as the window does for
+   * any external link; where it is not given, a citation is text only. */
+  onOpenLink?: (url: string) => void;
 }) {
   const t = useStrings();
   const [area, setArea] = useState<Area>("fixed");
@@ -50,7 +52,7 @@ export function AssetsSection({
             port={port}
             reader={reader}
             locale={locale}
-            {...(slots ? { slots } : {})}
+            onOpenLink={onOpenLink}
           />
         )}
         {stock && area === "stock" && stock}

@@ -1,156 +1,40 @@
-// What the Assets tab's forms decide without drawing: how typed text becomes
-// the values of a request, how each act is sent, how a read of the register
-// says whether a write held in doubt landed, and how a refusal is worded.
-// The options a form shows, the units of a request and every verdict come
-// from the backend; nothing here lists a method, a reason or a field.
+// What the Assets tab's forms decide without drawing: how each act's request
+// is put together from the values a form states, how a read of the register
+// says whether a write held in doubt landed, and how a refusal is read. The
+// options a form shows, the units of a request and every verdict come from the
+// backend; nothing here lists a method, a reason or a year.
 
+import { listed } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
-import {
-  parseDecimal,
-  parseIsoDate,
-  parseLine,
-  sameDecimal,
-  TAX_AMOUNT_RULE,
-  type GrammarRefusal,
-  type Parsed,
-} from "../../../shell/ledgerGrammar";
-import type { ActivityAssetForecastRequest } from "../../../shell/ledgerSetup";
+import { sameDecimal } from "../../../shell/ledgerGrammar";
+import type {
+  AcquisitionCandidate,
+  ActivityAssetDescribeRequest,
+  ActivityAssetForecastRequest,
+  ActivityAssetListResult,
+  DescriptorFacts,
+  DisposalFacts,
+  PlanClaim,
+  PlanRow,
+  ReasonFact,
+  TimelineEvent,
+} from "../../../shell/ledgerSetup";
 import type { Translate } from "../../../shell/strings";
-import { callFailure, callOutcome, type SetupCall } from "../setup/setupModel";
+import { setupCall, type SetupCall } from "../setup/setupModel";
 import type { Landing, LandingCheck } from "../WritePause";
-import {
-  submitDrafted,
-  submitProvisional,
-  type AssetListResult,
-  type ClaimConflict,
-  type DraftedOperationId,
-  type DraftedRequests,
-  type DraftedResults,
-  type FormField,
-  type FormOptions,
-  type FormValue,
-  type FormValues,
-  type PlanClaim,
-  type PlanRow,
-  type ProvisionalOperationId,
-  type ProvisionalRequests,
-  type ProvisionalResults,
-  type TimelineEvent,
-} from "./assetsContract";
-import { fieldWord } from "./assetsWords";
+import type { FormField, FormValue, FormValues } from "./assetFields";
+import { fieldWord, reasonText } from "./assetsWords";
 
-// ---- Sending ----------------------------------------------------------------
-
-/** One attempt at a provisional operation, and how it ended. A write that was
- * not seen to settle is unknown and is never sent again from here. */
-export async function provisionalCall<D extends ProvisionalOperationId>(
-  port: LedgerPort,
-  id: D,
-  payload: ProvisionalRequests[D],
-  writes: boolean,
-): Promise<SetupCall<ProvisionalResults[D]>> {
-  try {
-    return callOutcome(await submitProvisional(port, id, payload), writes);
-  } catch (error) {
-    return callFailure(error);
-  }
-}
-
-/** The same for an admitted operation sent in its drafted shape. */
-export async function draftedCall<D extends DraftedOperationId>(
-  port: LedgerPort,
-  id: D,
-  payload: DraftedRequests[D],
-  writes: boolean,
-): Promise<SetupCall<DraftedResults[D]>> {
-  try {
-    return callOutcome(await submitDrafted(port, id, payload), writes);
-  } catch (error) {
-    return callFailure(error);
-  }
-}
-
-// ---- Typed text into values ---------------------------------------------------
-
-/** The text typed into each field of a form, by field key. */
-export type FormDraft = Record<string, string>;
-
-/** Each field starting from what the record states now. */
-export const draftOf = (options: FormOptions): FormDraft =>
-  Object.fromEntries(
-    options.fields.map((field) => [field.key, field.current ?? ""]),
-  );
-
-/** What the options state as current, which is all a form's start depends
- * on: an answer that changes nothing there leaves what was typed alone. */
-export const optionsSignature = (options: FormOptions): string =>
-  JSON.stringify([
-    options.kind,
-    options.tax_year,
-    options.fields.map((field) => [field.key, field.current ?? null]),
-  ]);
-
-const empty: Parsed<FormValue> = { kind: "empty" };
-const value = (found: FormValue): Parsed<FormValue> => ({
-  kind: "value",
-  value: found,
-});
-
-/** One field's text as the value its control takes. Nothing typed is empty;
- * a refusal says why the text cannot be read. */
-export function parseField(field: FormField, raw: string): Parsed<FormValue> {
-  switch (field.control) {
-    case "text":
-      return parseLine(raw, 200);
-    case "date":
-      return parseIsoDate(raw);
-    case "amount": {
-      const parsed = parseDecimal(raw, TAX_AMOUNT_RULE);
-      return parsed.kind === "value"
-        ? value({ decimal: parsed.value })
-        : parsed;
-    }
-    case "whole": {
-      const text = raw.trim();
-      if (text === "") return { kind: "empty" };
-      return /^\d{1,9}$/.test(text)
-        ? value(Number(text))
-        : { kind: "refused", refusal: { key: "not_a_number", raw } };
-    }
-    case "flag":
-      return raw === "yes" ? value(true) : raw === "no" ? value(false) : empty;
-    case "choice":
-    case "candidate":
-      return raw === "" ? empty : value(raw);
-  }
-}
-export type Answered = {
-  values: FormValues;
-  problems: Record<string, GrammarRefusal>;
-};
-
-/**
- * What a form's text says. A full form states every field, null where
- * nothing was typed, so the backend names what is missing. Given `initial`,
- * only the fields changed from it and not emptied are stated, and the rest
- * are left as the record has them.
- */
-export function answer(
-  options: FormOptions,
-  draft: FormDraft,
-  initial: FormDraft | null,
-): Answered {
-  const values: FormValues = {};
-  const problems: Record<string, GrammarRefusal> = {};
-  for (const field of options.fields) {
-    const raw = draft[field.key] ?? "";
-    if (initial !== null && raw === (initial[field.key] ?? "")) continue;
-    const parsed = parseField(field, raw);
-    if (parsed.kind === "refused") problems[field.key] = parsed.refusal;
-    else if (parsed.kind === "value") values[field.key] = parsed.value;
-    else if (initial === null) values[field.key] = null;
-  }
-  return { values, problems };
+/** The year the pane opens on among the years the list serves: the latest that
+ * has begun by `thisYear`, else the earliest served. A year to come is never
+ * the default, and the pane invents none. */
+export function openingYear(
+  offered: readonly number[],
+  thisYear: number,
+): number | null {
+  if (offered.length === 0) return null;
+  const begun = offered.filter((year) => year <= thisYear);
+  return begun.length > 0 ? Math.max(...begun) : Math.min(...offered);
 }
 
 const textOf = (found: FormValue | undefined): string | null =>
@@ -158,30 +42,60 @@ const textOf = (found: FormValue | undefined): string | null =>
 const amountOf = (found: FormValue | undefined) =>
   found !== null && typeof found === "object" ? found : null;
 
+/** The descriptor a description states: every fact the form holds, so what
+ * the person left as it was is stated again as it was. */
 export const describeRequest = (
   assetId: string,
   values: FormValues,
-): ProvisionalRequests["ledger.actividad-asset.describe"] => {
-  const { name, serial, ...rest } = values;
-  return {
-    asset_id: assetId,
-    name: textOf(name),
-    serial: textOf(serial),
-    fields: Object.entries(rest).map(([key, found]) => ({
-      key,
-      value: textOf(found),
-    })),
+): ActivityAssetDescribeRequest => {
+  const descriptor: DescriptorFacts = {
+    name: textOf(values.name) ?? "",
+    serial_number: textOf(values.serial_number),
+    description: textOf(values.description),
+    document_kind: textOf(values.document_kind),
+    document_number: textOf(values.document_number),
+    supplier_name: textOf(values.supplier_name),
+    supplier_tax_id: textOf(values.supplier_tax_id),
   };
+  return { asset_id: assetId, descriptor };
 };
 
-export const disposeRequest = (
-  assetId: string,
-  values: FormValues,
-): ProvisionalRequests["ledger.actividad-asset.dispose"] => ({
-  asset_id: assetId,
-  date: textOf(values.date),
-  reason_key: textOf(values.reason_key),
-});
+/** What a purchase states for the figures of the add form, by field key; null
+ * where the ledger does not know it, which is never read as zero. */
+export function purchaseValues(
+  purchase: AcquisitionCandidate | undefined,
+): Record<string, string | null> {
+  return {
+    basis_amount: purchase?.taxable_base?.decimal ?? null,
+    non_deductible_iva:
+      purchase?.non_deductible_iva_state === "known"
+        ? (purchase.non_deductible_iva?.decimal ?? null)
+        : null,
+  };
+}
+
+/** What a baja states, from the form: the last day of service, the reason, the
+ * amounts and the optional facts. Null while a fact every baja states is
+ * missing: none is read as zero. The backend judges the rest by the reason. */
+export function disposalOf(values: FormValues): DisposalFacts | null {
+  const date = textOf(values.date);
+  const reason = textOf(values.reason);
+  const proceeds = amountOf(values.proceeds);
+  const costs = amountOf(values.transmission_costs);
+  if (date === null || reason === null || proceeds === null || costs === null)
+    return null;
+  return {
+    disposal_date: date,
+    reason,
+    proceeds,
+    transmission_costs: costs,
+    market_value: amountOf(values.market_value),
+    prior_free_depreciation_regime: textOf(
+      values.prior_free_depreciation_regime,
+    ),
+    later_affectation_on: textOf(values.later_affectation_on),
+  };
+}
 
 /** The forecast of a span; null while the span is not both dates. */
 export function forecastRequest(
@@ -189,8 +103,8 @@ export function forecastRequest(
   values: FormValues,
   supersedes: string | null,
 ): ActivityAssetForecastRequest | null {
-  const from = textOf(values.from);
-  const until = textOf(values.until);
+  const from = textOf(values.covered_from);
+  const until = textOf(values.covered_until);
   if (from === null || until === null) return null;
   return {
     asset_id: assetId,
@@ -204,9 +118,12 @@ export function forecastRequest(
 // ---- What the register says of a write held in doubt ---------------------------
 
 const listLanding =
-  (port: LedgerPort, judge: (list: AssetListResult) => Landing): LandingCheck =>
+  (
+    port: LedgerPort,
+    judge: (list: ActivityAssetListResult) => Landing,
+  ): LandingCheck =>
   async () => {
-    const read = await provisionalCall(
+    const read = await setupCall(
       port,
       "ledger.actividad-asset.list",
       {},
@@ -222,20 +139,20 @@ export const correctionLanding = (
   assetId: string,
   revision: number,
 ) => listLanding(port, (list) => correctionLanded(list, assetId, revision));
-export const bajaLanding = (port: LedgerPort, assetId: string) =>
-  listLanding(port, (list) => bajaLanded(list, assetId));
 
+/** A description landed if the element's history holds as many as the write
+ * would have made. */
 export const descriptorLanding =
-  (port: LedgerPort, assetId: string, sequence: number): LandingCheck =>
+  (port: LedgerPort, assetId: string, count: number): LandingCheck =>
   async () => {
-    const read = await provisionalCall(
+    const read = await setupCall(
       port,
       "ledger.actividad-asset.timeline",
       { asset_id: assetId },
       false,
     );
-    return read.kind === "done"
-      ? descriptorLanded(read.result.events, sequence)
+    return read.kind === "done" && read.result.events !== null
+      ? descriptorLanded(read.result.events, count)
       : null;
   };
 
@@ -249,18 +166,23 @@ export type SentClaim = {
 export const claimLanding =
   (port: LedgerPort, assetId: string, sent: SentClaim): LandingCheck =>
   async () => {
-    const read = await provisionalCall(
+    const read = await setupCall(
       port,
       "ledger.actividad-asset.plan",
       { asset_id: assetId },
       false,
     );
-    return read.kind === "done" ? claimLanded(read.result.rows, sent) : null;
+    return read.kind === "done" && read.result.rows !== null
+      ? claimLanded(read.result.rows, sent)
+      : null;
   };
 
 /** An add landed if the register lists the id the window minted. */
-export function elementLanded(list: AssetListResult, assetId: string): Landing {
-  return list.rows.some((row) => row.asset_id === assetId)
+export function elementLanded(
+  list: ActivityAssetListResult,
+  assetId: string,
+): Landing {
+  return (list.rows ?? []).some((row) => row.asset_id === assetId)
     ? "saved"
     : "not_saved";
 }
@@ -268,25 +190,22 @@ export function elementLanded(list: AssetListResult, assetId: string): Landing {
 /** A correction landed if the element stands at the revision it would have
  * made; an element the register no longer lists cannot be told. */
 export function correctionLanded(
-  list: AssetListResult,
+  list: ActivityAssetListResult,
   assetId: string,
   revision: number,
 ): Landing {
-  const found = list.rows.find((row) => row.asset_id === assetId);
+  const found = (list.rows ?? []).find((row) => row.asset_id === assetId);
   if (!found) return "untold";
   return found.revision_number >= revision ? "saved" : "not_saved";
 }
 
-/** A description landed if the element has as many descriptors as the
- * sequence the write would have taken. */
+/** A description landed if the element's history holds at least `count`. */
 export function descriptorLanded(
   events: readonly TimelineEvent[],
-  sequence: number,
+  count: number,
 ): Landing {
-  const described = events.filter(
-    (event) => event.type_key === "description_added",
-  ).length;
-  return described >= sequence ? "saved" : "not_saved";
+  const described = events.filter((event) => event.kind === "descriptor");
+  return described.length >= count ? "saved" : "not_saved";
 }
 
 /** A claim landed if its year holds an effective claim of that span and
@@ -300,47 +219,68 @@ export function claimLanded(
   return year.claims.some(
     (claim) =>
       claim.effective &&
-      claim.from === sent.from &&
-      claim.until === sent.until &&
-      claim.amount !== null &&
+      claim.covered_from === sent.from &&
+      claim.covered_until === sent.until &&
       sameDecimal(claim.amount.decimal, sent.amount),
   )
     ? "saved"
     : "not_saved";
 }
 
-/** A baja landed if the register lists the element with a baja. */
-export function bajaLanded(list: AssetListResult, assetId: string): Landing {
-  const found = list.rows.find((row) => row.asset_id === assetId);
-  if (!found) return "untold";
-  return found.baja ? "saved" : "not_saved";
-}
-
 /** The effective claims that no longer match the schedule, with their year:
- * the ones a correction can record again in the same write. */
+ * the ones a correction can record again in the same write. The plan says
+ * which claims are in effect and the timeline which of them no longer match. */
 export function staleClaims(
   rows: readonly PlanRow[],
+  events: readonly TimelineEvent[],
 ): { year: number; claim: PlanClaim }[] {
+  const stale = new Set(
+    events
+      .filter(
+        (event) =>
+          event.claim !== null && !event.claim.matches_current_schedule,
+      )
+      .map((event) => event.record_id),
+  );
   return rows.flatMap((row) =>
     row.claims
-      .filter((claim) => claim.effective && !claim.matches_current_schedule)
+      .filter((claim) => claim.effective && stale.has(claim.claim_id))
       .map((claim) => ({ year: row.tax_year, claim })),
   );
 }
 
+/** The element's descriptor as it stands: for each fact, the latest value the
+ * history states for it. A fact the history has cleared is null. */
+export function currentDescriptor(
+  events: readonly TimelineEvent[],
+): DescriptorFacts {
+  const facts: Record<string, string | null> = {};
+  for (const event of events) {
+    if (event.kind !== "descriptor") continue;
+    for (const change of event.changes) facts[change.field] = change.after;
+  }
+  return {
+    name: facts.name ?? "",
+    serial_number: facts.serial_number ?? null,
+    description: facts.description ?? null,
+    document_kind: facts.document_kind ?? null,
+    document_number: facts.document_number ?? null,
+    supplier_name: facts.supplier_name ?? null,
+    supplier_tax_id: facts.supplier_tax_id ?? null,
+  };
+}
+
 // ---- How a write ended -----------------------------------------------------------
 
-/** The backend's refusal codes this tab treats apart. */
+/** The refusal code this tab treats apart. */
 export const INCOMPLETE = "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE";
-export const CONFLICT = "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT";
 
 export type Refusal = {
   code: string | null;
   reasonKey: string | null;
+  reasonFacts: ReasonFact[];
   /** The fields the backend says are still to fill in. */
   missing: string[];
-  /** The claim a new claim overlaps. */
-  conflict: ClaimConflict | null;
 };
 
 export type WriteView =
@@ -366,28 +306,20 @@ export function refusalOf(body: unknown): Refusal {
         (key): key is string => typeof key === "string",
       )
     : [];
-  const existing = asRecord(result?.conflicting_claim);
-  const amount = asRecord(existing?.amount);
+  const facts = Array.isArray(refusal?.reason_facts)
+    ? refusal.reason_facts.flatMap((fact): ReasonFact[] => {
+        const found = asRecord(fact);
+        return typeof found?.key === "string" && typeof found.value === "string"
+          ? [{ key: found.key, value: found.value }]
+          : [];
+      })
+    : [];
   return {
     code: typeof refusal?.code === "string" ? refusal.code : null,
     reasonKey:
       typeof refusal?.reason_key === "string" ? refusal.reason_key : null,
+    reasonFacts: facts,
     missing,
-    conflict:
-      existing &&
-      typeof existing.claim_id === "string" &&
-      typeof existing.from === "string" &&
-      typeof existing.until === "string"
-        ? {
-            claim_id: existing.claim_id,
-            from: existing.from,
-            until: existing.until,
-            amount:
-              amount && typeof amount.decimal === "string"
-                ? { decimal: amount.decimal }
-                : null,
-          }
-        : null,
   };
 }
 
@@ -408,71 +340,31 @@ export function viewOf(
   return { kind: call.kind };
 }
 
-export const createReused = (result: unknown) =>
-  asRecord(result)?.reused_existing_element === true;
 export const claimReused = (result: unknown) =>
-  asRecord(result)?.reused_existing_claim === true;
+  asRecord(asRecord(result)?.claim_result)?.reused_existing_claim === true;
 export const neverReused = () => false;
 
 // ---- Words for a refusal ---------------------------------------------------------
 
-/** The sub-reasons the backend gives, each to the line that says it. */
-const REASON: Record<string, string> = {
-  asset_not_found: "desktop.ledger.assets.reason.asset_not_found",
-  already_disposed: "desktop.ledger.assets.reason.already_disposed",
-  baja_before_service: "desktop.ledger.assets.reason.baja_before_service",
-  option_not_offered: "desktop.ledger.assets.reason.option_not_offered",
-  reason_not_offered: "desktop.ledger.assets.reason.option_not_offered",
-  acquisition_not_found: "desktop.ledger.assets.reason.acquisition_not_found",
-  asset_exists: "desktop.ledger.assets.reason.asset_exists",
-  revision_stale: "desktop.ledger.assets.reason.revision_stale",
-  nothing_changed: "desktop.ledger.assets.reason.nothing_changed",
-  span_crosses_years: "desktop.ledger.assets.reason.span_crosses_years",
-  year_not_in_plan: "desktop.ledger.assets.reason.year_not_in_plan",
-  projected_authority: "desktop.ledger.assets.reason.projected_authority",
-  opening_history_unknown:
-    "desktop.ledger.assets.reason.opening_history_unknown",
-  claim_not_found: "desktop.ledger.assets.reason.claim_not_found",
-  claim_not_effective: "desktop.ledger.assets.reason.claim_not_effective",
-};
-
-/** The refusal codes whose own line exists, by lower-cased code. */
-const CODE: Record<string, string> = {
-  refused_actividad_asset_accelerated_da18_depreciation_not_computed:
-    "desktop.ledger.assets.refusal.refused_actividad_asset_accelerated_da18_depreciation_not_computed",
-  refused_actividad_asset_claim_conflict:
-    "desktop.ledger.assets.refusal.refused_actividad_asset_claim_conflict",
-  refused_actividad_asset_incomplete:
-    "desktop.ledger.assets.refusal.refused_actividad_asset_incomplete",
-  refused_actividad_asset_unsupported:
-    "desktop.ledger.assets.refusal.refused_actividad_asset_unsupported",
-  refused_actividad_asset_validation:
-    "desktop.ledger.assets.refusal.refused_actividad_asset_validation",
-};
-
-/** A refusal in words, by its backend keys: the sub-reason's line, else the
- * code's, else null where the tab has none and the caller shows the token. */
-export function refusalWord(
+/** A refusal in words by its reason: the catalogue sentence the backend named,
+ * filled in with its facts, else null where the caller shows the generic
+ * refused word. */
+export const refusalWord = (
   t: Translate,
-  refusal: Pick<Refusal, "code" | "reasonKey">,
-): string | null {
-  if (refusal.reasonKey !== null && Object.hasOwn(REASON, refusal.reasonKey))
-    return t(REASON[refusal.reasonKey]!);
-  const code = refusal.code?.toLowerCase();
-  if (code !== undefined && Object.hasOwn(CODE, code)) return t(CODE[code]!);
-  return null;
-}
+  refusal: Pick<Refusal, "reasonKey" | "reasonFacts">,
+): string | null => reasonText(t, refusal.reasonKey, refusal.reasonFacts);
 
 /** The fields still to fill in, by their labels. */
 export function missingLabels(
   t: Translate,
-  options: FormOptions | null,
+  fields: readonly FormField[],
   keys: readonly string[],
 ): string {
-  return keys
-    .map((key) => {
-      const found = options?.fields.find((field) => field.key === key);
+  return listed(
+    t,
+    keys.map((key) => {
+      const found = fields.find((field) => field.key === key);
       return found ? t(found.label_key) : fieldWord(t, key);
-    })
-    .join(", ");
+    }),
+  );
 }

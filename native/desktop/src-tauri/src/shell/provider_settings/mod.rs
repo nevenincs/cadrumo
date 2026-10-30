@@ -26,7 +26,7 @@ fn target(provider: &str, revision: &str) -> Result<Value, CommandFailure> {
     }
     Ok(json!({"provider":provider,"expected_revision":revision}))
 }
-fn outcome(result: Value) -> Outcome {
+pub(crate) fn outcome(result: Value) -> Outcome {
     let result = if result["kind"] == "refused"
         || (result
             .as_object()

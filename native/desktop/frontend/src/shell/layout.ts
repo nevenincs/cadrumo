@@ -42,11 +42,12 @@ const legacyShow = (filter: unknown): ProfileView["show"] =>
     ? LEGACY_FILTER[filter as keyof typeof LEGACY_FILTER]
     : "all";
 
-/** The Ledger page's sections: three tabs, and three under its setup menu. */
+/** The Ledger page's sections: four tabs, and three under its setup menu. */
 export const LEDGER_SECTIONS = [
   "movements",
   "invoices",
   "documents",
+  "assets",
   "rules",
   "registers",
   "health",

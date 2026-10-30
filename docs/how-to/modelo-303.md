@@ -6,8 +6,8 @@ the Spanish VAT (value-added tax) self-assessment (`autoliquidación`) used here
 to calculate standard quarterly VAT filings. Monthly VAT-liquidation profiles,
 such as those in the Registro de Devolución Mensual (REDEME) or large-company
 taxpayers, use monthly Modelo 303 periods. Voluntary enrolment in the
-Suministro Inmediato de Información (SII) alone remains quarterly. Its official title is "Modelo 303.
-Impuesto sobre el Valor Añadido. Autoliquidación."
+Suministro Inmediato de Información (SII) alone remains quarterly. Its official title is "<span lang="es">Modelo 303.
+Impuesto sobre el Valor Añadido. Autoliquidación.</span>"
 
 Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
 Tributaria (AEAT). `export` writes the filing layout, but its envelope header

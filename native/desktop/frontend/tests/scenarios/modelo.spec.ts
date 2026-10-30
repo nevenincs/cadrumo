@@ -942,10 +942,9 @@ test("a refused correction says so and keeps the dialog", async ({
 }) => {
   const dialog = await correct(target, "correction-refused", "150");
   await expect(dialog).toBeVisible();
-  // The catalogue sentence names the code the host refused it with.
-  await expect(dialog).toContainText(
-    label("workspace.modelo.outcome.refused", { code: "operation_denied" }),
-  );
+  // The sentence does not name the code the host refused it with.
+  await expect(dialog).toContainText(label("workspace.modelo.outcome.refused"));
+  await expect(dialog).not.toContainText("operation_denied");
 });
 
 test("a correction whose settlement was not seen is unknown and sends nothing more", async ({

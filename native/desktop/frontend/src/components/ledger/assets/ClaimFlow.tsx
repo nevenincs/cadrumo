@@ -2,36 +2,39 @@ import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import type { ActivityAssetForecast } from "../../../shell/ledgerSetup";
+import { facts } from "../../../shell/compose";
+import type {
+  ActivityAssetForecast,
+  ActivityAssetForecastResult,
+} from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import { amountText, dateText } from "../movements/movementWords";
 import {
+  ChoiceField,
   Panel,
   Reading,
   useSetupDraft,
   useSetupWrite,
 } from "../setup/SetupParts";
-import type { SetupCall } from "../setup/setupModel";
+import { setupCall, type SetupCall } from "../setup/setupModel";
+import { answer, claimFields, draftOf, type FormField } from "./assetFields";
 import {
-  OptionsFields,
+  FieldsGrid,
   OptionsRead,
   useAssetRow,
-  useOptionsDraft,
-  useProvisionalRead,
+  useFieldsDraft,
+  useLedgerRead,
   WriteLine,
   type ActProps,
 } from "./AssetForm";
 import {
-  answer,
   claimLanding,
   claimReused,
-  draftedCall,
   forecastRequest,
   neverReused,
   viewOf,
 } from "./assetWrites";
-import type { DraftedResults, FormField } from "./assetsContract";
 import { ASSET_KEYS } from "./assetsWords";
 
 const NO_FIELDS = new Set<string>();
@@ -39,11 +42,10 @@ const NO_FIELDS = new Set<string>();
 /**
  * Records a year's depreciation in two steps: the forecast first, which works
  * out the span and records nothing, then the claim. The span starts from what
- * is still claimable, or from the claim being corrected, as the backend
- * states it. A claim that overlaps another is refused naming it, and offers
- * to correct that one instead; a claim sent again for the same forecast is
- * answered as already recorded. The claim's landing is read from the plan's
- * claims.
+ * the plan says is still claimable, or from the claim being replaced; a claim
+ * that overlaps another is refused with the backend's reason, and a claim
+ * sent again for the same forecast is answered as already recorded. The
+ * claim's landing is read from the plan's claims.
  */
 export function ClaimFlow({
   port,
@@ -63,51 +65,46 @@ export function ClaimFlow({
   const t = useStrings();
   const [replaces, setReplaces] = useState<string | null>(supersedes);
   const asset = useAssetRow(port, reader, assetId);
-  const options = useProvisionalRead(
+  const plan = useLedgerRead(
     port,
     reader,
-    "ledger.actividad-asset.form-options",
-    {
-      kind: "claim",
-      asset_id: assetId,
-      tax_year: taxYear,
-      ...(replaces === null ? {} : { supersedes_claim_id: replaces }),
-    },
-    `claim:${assetId}:${taxYear}:${replaces ?? ""}`,
+    "ledger.actividad-asset.plan",
+    { asset_id: assetId },
+    assetId,
   );
-  const form = useOptionsDraft(
-    options.read?.kind === "done" ? options.read.result.options : null,
-  );
+  const rows = plan.read?.kind === "done" ? plan.read.result.rows : null;
+  const year = rows?.find((row) => row.tax_year === taxYear) ?? null;
+  const effective = (year?.claims ?? []).filter((claim) => claim.effective);
+  const replaced =
+    effective.find((claim) => claim.claim_id === replaces) ?? null;
+  const fields = claimFields(year, replaced);
+  const form = useFieldsDraft(draftOf(fields));
   const [forecast, setForecast] = useState<ActivityAssetForecast | null>(null);
-  const [forecastCall, setForecastCall] = useState<SetupCall<
-    DraftedResults["ledger.actividad-asset.forecast"]
-  > | null>(null);
+  const [forecastCall, setForecastCall] =
+    useState<SetupCall<ActivityAssetForecastResult> | null>(null);
   const [reading, setReading] = useState(false);
   const write = useSetupWrite(
-    [t(ASSET_KEYS.action.claim), asset.row?.name].filter(Boolean).join(" · "),
+    facts(t, [t(ASSET_KEYS.action.claim), asset.row?.name]),
   );
   useSetupDraft(form.dirty);
 
-  const answered = form.options ? answer(form.options, form.draft, null) : null;
-  const request = answered
-    ? forecastRequest(assetId, answered.values, replaces)
-    : null;
-  const ready =
-    answered !== null &&
-    Object.keys(answered.problems).length === 0 &&
-    request !== null;
-  const view = viewOf(write.last, claimReused);
+  const answered = answer(fields, form.draft, null);
+  const request = forecastRequest(assetId, answered.values, replaces);
+  const ready = Object.keys(answered.problems).length === 0 && request !== null;
   const forecastView = viewOf(forecastCall, neverReused);
   const missing = new Set(
     forecastView.kind === "refused" ? forecastView.missing : [],
   );
 
   // A different span is a different forecast.
-  const onField = (field: FormField, value: string) => {
-    form.set({ [field.key]: value });
+  const changed = () => {
     setForecast(null);
     setForecastCall(null);
     write.clear();
+  };
+  const onField = (field: FormField, value: string) => {
+    form.set({ [field.key]: value });
+    changed();
   };
 
   const preview = async () => {
@@ -115,7 +112,7 @@ export function ClaimFlow({
     setReading(true);
     setForecast(null);
     write.clear();
-    const call = await draftedCall(
+    const call = await setupCall(
       port,
       "ledger.actividad-asset.forecast",
       request,
@@ -131,7 +128,7 @@ export function ClaimFlow({
     if (forecast === null || write.busy) return;
     const done = await write.run(
       () =>
-        draftedCall(
+        setupCall(
           port,
           "ledger.actividad-asset.claim",
           { forecast, supersedes_claim_id: replaces },
@@ -145,30 +142,22 @@ export function ClaimFlow({
       }),
     );
     if (viewOf(done, claimReused).kind === "saved") {
-      options.reload();
+      plan.reload();
       onWritten?.();
     }
   };
 
-  const supersede = (claimId: string) => {
-    setReplaces(claimId);
-    setForecast(null);
-    setForecastCall(null);
-    write.clear();
-  };
-
-  const shown = form.options;
   return (
     <Panel
       title={t(
         replaces === null
           ? ASSET_KEYS.action.claim
-          : "desktop.ledger.assets.claim.correct_title",
+          : "desktop.ledger.assets.correct_claim_title",
       )}
       className="ledger-asset-form ledger-asset-form-claim"
     >
-      {shown === null ? (
-        <OptionsRead call={options.read} />
+      {year === null ? (
+        <OptionsRead call={plan.read} />
       ) : (
         <form
           noValidate
@@ -178,11 +167,32 @@ export function ClaimFlow({
             void preview();
           }}
         >
-          <OptionsFields
-            options={shown}
+          {effective.length > 0 && (
+            <ChoiceField
+              label={t("desktop.ledger.assets.replace_claim")}
+              value={replaces ?? ""}
+              onValue={(value) => {
+                setReplaces(value === "" ? null : value);
+                changed();
+              }}
+              placeholder={t("desktop.ledger.assets.replace_none")}
+              options={effective.map((claim) => ({
+                value: claim.claim_id,
+                label: t("desktop.ledger.assets.correct.claim_item", {
+                  year: taxYear,
+                  amount: amountText(locale, claim.amount.decimal),
+                  from: dateText(locale, claim.covered_from, true),
+                  until: dateText(locale, claim.covered_until, true),
+                }),
+              }))}
+            />
+          )}
+          <FieldsGrid
+            fields={fields}
+            options={null}
             draft={form.draft}
             onField={onField}
-            problems={answered?.problems ?? {}}
+            problems={answered.problems}
             missing={missing}
             candidates={[]}
             purchaseKnown={NO_FIELDS}
@@ -213,12 +223,7 @@ export function ClaimFlow({
             </Button>
           </div>
           {reading && <Reading label={t("desktop.ledger.form.reading")} />}
-          <WriteLine
-            call={forecastCall}
-            locale={locale}
-            options={shown}
-            saved={null}
-          />
+          <WriteLine call={forecastCall} fields={fields} saved={null} />
           {forecast && (
             <div className="ledger-asset-forecast-result flex flex-col gap-2">
               <Alert icon={<Icon name="info" />}>
@@ -245,7 +250,7 @@ export function ClaimFlow({
                   >
                     {write.busy
                       ? t("desktop.ledger.form.saving")
-                      : t("desktop.ledger.assets.claim")}
+                      : t(ASSET_KEYS.action.claim)}
                   </Button>
                 </WriteHold>
               </div>
@@ -253,14 +258,12 @@ export function ClaimFlow({
           )}
           <WriteLine
             call={write.last}
-            locale={locale}
-            options={shown}
+            fields={fields}
             saved={{
               done: t("desktop.ledger.assets.claimed"),
               reused: t("desktop.ledger.assets.claim_reused"),
               reusedOf: claimReused,
             }}
-            onSupersede={view.kind === "refused" ? supersede : undefined}
           />
         </form>
       )}

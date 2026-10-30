@@ -53,9 +53,6 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "unresolved_binding",
         "unhandled_binding_source",
         "source_domain_not_ready",
-        "ledger_amortization_row_unregistered",
-        "activity_asset_foral_territory",
-        "activity_asset_residence_unresolved",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on: a figure left out or unworked."""
@@ -96,6 +93,10 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "activity_asset_accrual_unavailable": _M,
         "activity_asset_activity_undeclared": _M,
         "activity_asset_residence_period_unknown": _M,
+        # Amortization left out, never a refusal: the rest of the declaration stands.
+        "ledger_amortization_row_unregistered": _M,
+        "activity_asset_foral_territory": _M,
+        "activity_asset_residence_unresolved": _M,
         # Worth checking. A value Cadrumo inferred or kept is among them: no box
         # lists it as assumed, so nothing in the editor can confirm it, and the
         # filer checks it against their records instead.

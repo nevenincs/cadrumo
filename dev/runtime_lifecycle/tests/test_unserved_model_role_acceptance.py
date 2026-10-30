@@ -72,10 +72,10 @@ class _UnservedAgent(RecordingModelRuns):
 @pytest.mark.parametrize(
     ("language", "message"),
     [
-        ("en", "Check the model you picked in the agent's model picker in the Cadrumo desktop app"),
-        ("es", "Revisa el modelo que elegiste en el selector de modelos del agente"),
-        ("ca", "Revisa el model que has triat al selector de models de l'agent a l'aplicació d'escriptori de Cadrumo"),
-        ("hu", "Ellenőrizd a kiválasztott modellt az ügynök modellválasztójában a Cadrumo asztali alkalmazásában"),
+        ("en", "The automatic reader could not run, so nothing was read."),
+        ("es", "El lector automático no ha podido funcionar, así que no se ha leído nada."),
+        ("ca", "El lector automàtic no ha pogut funcionar, així que no s'ha llegit res."),
+        ("hu", "Az automatikus olvasó nem tudott elindulni, ezért semmi sem lett beolvasva."),
     ],
 )
 def test_cli_renders_no_selection_in_the_requested_language(tmp_path: Path, language: str, message: str) -> None:

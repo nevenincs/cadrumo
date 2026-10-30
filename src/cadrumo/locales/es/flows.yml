@@ -164,6 +164,7 @@ flows:
     filter:
       option:
         binding_source:
+          activity_asset_disposal: Baja de bienes de la actividad
           afiliado_cotizacion: Cuotas de afiliados
           atribucion_member: Miembro de atribución de rentas
           bienes_inversion_regularizacion: Regularización de bienes de inversión

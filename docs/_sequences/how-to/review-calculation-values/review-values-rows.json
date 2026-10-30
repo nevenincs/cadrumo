@@ -142,7 +142,7 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "a31b5a0e87f0261f373b6dc68d75c1cefd582c9d39504aebc3d930bd91124c3a",
+          "calculation_revision_id": "fb7bd231f29dc1c44cd31d36d4da631bc3adfdc3bb9def6c18b7cb8125383b2c",
           "casilla_values": {
             "decl.ejercicio": "2024",
             "decl.entidad-extranjera.porcentaje-renta-residentes": "0",
@@ -327,7 +327,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a31b5a0e87f0261f373b6dc68d75c1cefd582c9d39504aebc3d930bd91124c3a (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision fb7bd231f29dc1c44cd31d36d4da631bc3adfdc3bb9def6c18b7cb8125383b2c (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [],
           "state": "borrador",
           "superseded_at": null,

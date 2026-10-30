@@ -49,6 +49,7 @@ def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProc
     """Build the committed M100 snapshot with ``declared`` peer modules installed."""
 
     script = f"""
+        from datetime import date
         import cadrumo.domain.calculations.registry.snapshot as internals
 
         internals._CROSS_DOMAIN_CHECK_MODULES = {declared}
@@ -62,7 +63,7 @@ def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProc
         import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         try:
-            _published_snapshot("100", filing_year=2025, period="0A")
+            _published_snapshot("100", filing_year=2025, period="0A", on=date(2025, 12, 31))
         except RegistryValidationError as error:
             registered = sorted(
                 check.__module__ for check in vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]

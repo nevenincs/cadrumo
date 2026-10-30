@@ -1677,7 +1677,7 @@
             ],
             "help": [
               "IRPF special regime (Beckham Law / Art. 93 LIRPF)",
-              "The inpatriate (Beckham Law) regime applies for the first 6 tax years after relocation. Most taxpayers are on the general regime.",
+              "The impatriate (Beckham Law) regime applies for the first 6 tax years after relocation. Most taxpayers are on the general regime.",
               "General regime: You are taxed under the general IRPF regime (Modelo 100).",
               "Inbound expatriate - Beckham Law (Art. 93 LIRPF): You have opted for the Article 93 LIRPF special regime (Modelo 151)."
             ],
@@ -1694,7 +1694,7 @@
             "choices": [],
             "help": [
               "Special regime election date (YYYY-MM-DD)",
-              "Date the worker opted into the inpatriate regime (RIRPF Art. 116). The regime expires at the end of the 6th calendar year."
+              "Date the worker opted into the impatriate regime (RIRPF Art. 116). The regime expires at the end of the 6th calendar year."
             ],
             "about": "Opt-in election date for the IRPF special regime (RIRPF Art. 116). Required to compute the six-year impatriado window. Blank when no special regime is in effect.",
             "row_index": null

@@ -306,7 +306,6 @@ class _Subject:
             browser_session_factory=unopened_browser_session_factory,
             operator_scope_ports=build_inward_operator_scope_ports_for_active_route(),
             browser_resources_factory=_Resources,
-            provider_preflight=lambda profile_id, operation: None,
             view_browser_factory=self.open_browser,
             stream_opener=self.open_stream,
         )
@@ -332,7 +331,6 @@ def _registry() -> OperationRegistry:
         browser_session_factory=unopened_browser_session_factory,
         operator_scope_ports=build_inward_operator_scope_ports_for_active_route(),
         browser_resources_factory=_Resources,
-        provider_preflight=lambda profile_id, operation: None,
         view_browser_factory=_unopened_view_browser,
         stream_opener=None,
     )

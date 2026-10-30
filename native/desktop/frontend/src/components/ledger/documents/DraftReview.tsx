@@ -53,7 +53,6 @@ import { SetupOffer } from "../../setup/SetupOffer";
 import { seriesAndNumber } from "../invoices/invoiceModel";
 import { figureText, kindChoice, problemText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
-import { failureCode } from "../ledgerWords";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
   movementPicker,
@@ -922,12 +921,7 @@ export function DraftReview({
         className="ledger-draft-failed"
         icon="alert"
         description={
-          <span role="alert">
-            {t("desktop.ledger.documents.read_failed")}{" "}
-            <code className="font-mono text-xs">
-              {failureCode(read.failure)}
-            </code>
-          </span>
+          <span role="alert">{t("desktop.ledger.documents.read_failed")}</span>
         }
       >
         <Button variant="outline" onClick={reread}>
@@ -1050,7 +1044,6 @@ export function DraftReview({
         <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
           <AlertTitle>{t("desktop.ledger.documents.not_done")}</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center gap-2">
-            <code className="font-mono text-xs">{notice.code}</code>
             {notice.kind === "refused" && (
               <SetupOffer action={notice.recovery} />
             )}
@@ -1416,17 +1409,6 @@ export function DraftReview({
             </span>
           )}
         </div>
-        <details className="text-xs text-muted-foreground">
-          <summary className="cursor-pointer">
-            {t("desktop.ledger.documents.technical")}
-          </summary>
-          <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 font-mono [overflow-wrap:anywhere]">
-            <dt>{t("desktop.ledger.documents.source_digest")}</dt>
-            <dd>{binding?.sourceSha256 ?? record?.source_sha256 ?? "—"}</dd>
-            <dt>{t("desktop.ledger.documents.reading_digest")}</dt>
-            <dd>{binding?.draftReviewSha256 ?? "—"}</dd>
-          </dl>
-        </details>
       </section>
       {offHost && (
         <OffHostDialog

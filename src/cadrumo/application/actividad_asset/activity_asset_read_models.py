@@ -9,7 +9,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from enum import StrEnum
-from types import MappingProxyType
 from typing import Final, Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
@@ -19,15 +18,12 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.renta.actividad_asset.claims import last_day_covered
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind, ActivityAssetDisposalReason
-from ...domain.renta.actividad_asset.election import AcquiredCondition, AmortizationMethod, DirectEstimationRegime
-from ...domain.renta.actividad_asset.lifecycle import (
-    AcquisitionShape,
-    AssetBasisStage,
-    AssetKind,
-    OpeningHistoryStatus,
-)
+from ...domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
+from ...domain.renta.actividad_asset.fact_leaves import FactKind, indexed_to_step_path
+from ...domain.renta.actividad_asset.lifecycle import AcquisitionShape, AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
 from ..operations.public_scalar import PublicDecimal
+from .fact_wording import timeline_labelled_fields, timeline_token_families
 from .schedule_walk import PlanFigureAbsence
 
 ACTIVITY_ASSET_LABEL_NAMESPACE: Final = "ledger.actividad_asset."
@@ -39,15 +35,14 @@ _REASON_FACT_KEY_LIMIT: Final = 64
 _REASON_FACT_VALUE_LIMIT: Final = 2048
 NON_DEDUCTIBLE_IVA_STATE_FAMILY: Final = "non_deductible_iva_state"
 
-TIMELINE_TOKEN_FAMILIES: Final[Mapping[str, tuple[str, type[StrEnum]]]] = MappingProxyType(
-    {
-        "acquired_condition": ("acquired_condition", AcquiredCondition),
-        "acquisition_shape": ("acquisition_shape", AcquisitionShape),
-        "basis.stage": ("basis_stage", AssetBasisStage),
-        "opening_history.status": ("opening_history_status", OpeningHistoryStatus),
-    }
-)
-"""The timeline fields whose values are tokens, with the catalogue family and enum that word them."""
+TIMELINE_TOKEN_FAMILIES: Final[Mapping[str, tuple[str, type[StrEnum]]]] = timeline_token_families()
+"""The timeline fields whose values are tokens or flags, with the catalogue family and enum that word them.
+
+Derived from the models a record is made of, with a repeated row's index replaced by ``[]``.
+"""
+
+TIMELINE_LABELLED_FIELDS: Final[Mapping[str, FactKind]] = timeline_labelled_fields()
+"""The timeline fields whose values are worded by a label: a share, or a table class."""
 
 
 def activity_asset_label_key(family: str, token: StrEnum) -> str:
@@ -57,7 +52,7 @@ def activity_asset_label_key(family: str, token: StrEnum) -> str:
 
 def timeline_token_key(field: str, value: str | None) -> str | None:
     """Name the catalogue key of a timeline value, or ``None`` when the field carries no token or is unset."""
-    family = TIMELINE_TOKEN_FAMILIES.get(field)
+    family = TIMELINE_TOKEN_FAMILIES.get(indexed_to_step_path(field))
     if family is None or value is None:
         return None
     name, enum = family
@@ -277,7 +272,14 @@ class ActivityAssetTimelineChange(_ReadModel):
     after: str | None = None
     before_key: str | None = None
     after_key: str | None = None
-    """The catalogue keys that word ``before`` and ``after`` when the field carries a token."""
+    """The catalogue keys that word ``before`` and ``after`` when the field carries a token or a flag."""
+    before_label: str | None = None
+    after_label: str | None = None
+    """The text that words ``before`` and ``after`` when the field carries a share or a table class.
+
+    A share reads as a percentage and a class as the official name of its table class.  A class
+    the pinned authority does not name has no label, and its key shows.
+    """
 
 
 class ActivityAssetTimelineClaimUse(_ReadModel):
@@ -405,6 +407,7 @@ __all__ = [
     "DISPOSAL_FINDING_FAMILY",
     "NON_DEDUCTIBLE_IVA_STATE_FAMILY",
     "PLAN_ADVISORY_FAMILY",
+    "TIMELINE_LABELLED_FIELDS",
     "TIMELINE_TOKEN_FAMILIES",
     "ActivityAssetAcquisitionCandidate",
     "ActivityAssetClaimStaleReason",

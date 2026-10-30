@@ -1,4 +1,7 @@
-"""Profile-bound execution stages for activity-asset operations."""
+"""Profile-bound execution stages for activity-asset operations.
+
+Each filing-year lookup pins a :class:`ModeloRevision` before the worker runs an operation.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +28,8 @@ from ...domain.calculations.registry.actividad_asset_bindings import (
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.temporal import TemporalProjectionDirection, revision_temporal_resolution
+from ...domain.calculations.registry.schema_references import TemporalProjectionDirection
+from ...domain.calculations.registry.temporal import revision_temporal_resolution
 from ...domain.renta.actividad_asset.election import WORKFORCE_CONDITIONED_METHODS
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
@@ -217,11 +221,11 @@ def _activity_asset_operations(
         register_authority=ActivityAssetRegisterAuthority(
             edition=edition,
             admits_filing_year=operation.supported_filing_years().admits_filing_year,
+            last_admitted_year=lambda: operation.supported_filing_years().horizon,
             agrarian_activities=agrarian_activities,
-            residence_territory=lambda: resident_territory(bucket_id=bucket_id, operation=operation),
+            residence_territory=lambda on: resident_territory(bucket_id=bucket_id, operation=operation, as_of=on),
             claim_consumers=ports.claim_consumers,
             today=lambda: now().date(),
-            last_admitted_year=lambda: operation.supported_filing_years().horizon,
             schedule_authority=schedule_authority,
             class_labels=lambda regime, tax_year: resolve_activity_asset_class_labels(
                 operation,
@@ -955,11 +959,11 @@ class ActivityAssetPlanExecutor(_ActivityAssetReadExecutor[ActivityAssetPlanRequ
             "asset_id": payload.asset_id,
             "rows": operations.plan(payload.asset_id),
             "limits": operations.plan_limits(payload.asset_id),
+            "advisories": operations.plan_advisories(payload.asset_id),
         }
 
 
 class ActivityAssetTimelineExecutor(_ActivityAssetReadExecutor[ActivityAssetTimelineRequest]):
-            "advisories": operations.plan_advisories(payload.asset_id),
     """List one element's ordered history."""
 
     definition_id = ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID

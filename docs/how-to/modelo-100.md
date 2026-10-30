@@ -3,8 +3,8 @@
 This page covers the annual Renta filing: creating the Modelo 100 declaration,
 letting the year's data flow in, supplying the manual values that apply to you,
 and checking and exporting the declaration. Modelo 100 is the annual IRPF
-(personal income tax) declaration; its official title is "Modelo 100. Declaración del Impuesto sobre la
-Renta de las Personas Físicas."
+(personal income tax) declaration; its official title is "<span lang="es">Modelo 100. Declaración del Impuesto sobre la
+Renta de las Personas Físicas.</span>"
 
 Modelo 100 is the largest form the tool prepares - the 2025 version carries
 over two thousand boxes and two hundred formulas - and it is the one

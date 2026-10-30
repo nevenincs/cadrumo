@@ -66,7 +66,8 @@ def test_no_fixture_from_another_module_pins_the_output_language() -> None:
     A fixture module registered session-wide by another evaluation module would
     reach this test too; its English pin is exactly what the product suites saw.
     """
-    assert _language_state().resolved == _ambient_language()
+    state = _language_state()
+    assert state.resolved == _ambient_language(), f"language state: {state!r}; ambient: {_ambient_language()}"
 
 
 def test_a_language_flagged_cli_invocation_leaves_process_language_unchanged() -> None:

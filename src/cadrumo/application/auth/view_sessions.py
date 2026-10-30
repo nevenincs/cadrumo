@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, SkipValidation
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.errors.hierarchy import (
+    AuthError,
     InternalInvariantError,
     ViewCaptureIdentityMismatchError,
 )
@@ -187,6 +188,8 @@ async def resume_view_session(
                 ),
                 storage_state=None,
             )
+            if signed_out.baseline.storage_state_sha256 is None:
+                return signed_out
             try:
                 settings, expected_identity = prepare_clave_auth(
                     settings,
@@ -238,8 +241,9 @@ def view_context_provisioner(
 
     A certificate session is valid only while the browser presents the same
     client certificate, and a certificate login in the view needs it too, so
-    the view context carries it exactly as the provider's own contexts do,
-    signed in or not. Cl@ve sessions live in the storage state alone.
+    the view context carries it exactly as the provider's own contexts do
+    when the certificate can be loaded. Otherwise the person can still browse
+    and sign in manually. Cl@ve sessions live in the storage state alone.
     """
     if baseline.provider_kind is not AuthProviderKind.CERTIFICATE:
         return None
@@ -258,7 +262,11 @@ def view_context_provisioner(
         )
         if not isinstance(provider, _ViewContextProvisioningProvider):
             raise InternalInvariantError("the certificate provider cannot provision a view context")
-        return provider.view_context_provisioner()
+        try:
+            return provider.view_context_provisioner()
+        except (AuthError, OSError):
+            # A missing or unusable certificate does not prevent manual browsing.
+            return None
 
 
 async def publish_view_session_state(

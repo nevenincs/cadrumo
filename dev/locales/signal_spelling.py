@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from itertools import combinations
 from pathlib import Path
 
 from ._spelling import SpellingToolError, load_dictionaries
@@ -94,6 +95,8 @@ def spellcheck_catalogues(
             failure_inventory,
             [failure],
         )
+    _discard_known_spanish_search_keywords(unknown_by_cell, dictionaries.get("es"))
+    unknown_words = _collect_unknown_words(unknown_by_cell)
     spelling = {cell: tuple(sorted(words, key=str.casefold)) for cell, words in unknown_by_cell.items()}
     unknown_findings: list[dict[str, object]] = [
         {
@@ -138,3 +141,46 @@ def spellcheck_catalogues(
         spelling_inventory,
         unknown_findings,
     )
+
+
+def _is_spanish_search_keyword(word: str, dictionary: object) -> bool:
+    """Accept Spanish search terms with omitted diacritics in keyword fields."""
+    lookup = getattr(dictionary, "lookup", None)
+    if not callable(lookup):
+        return False
+    if lookup(word):
+        return True
+    # Search keywords deliberately omit Spanish accents. Restore zero, one, or
+    # two diacritics and require an exact Spanish dictionary entry; unrelated
+    # misspellings therefore remain visible to the locale audit.
+    letters = tuple((index, char) for index, char in enumerate(word.casefold()) if char in "aeioun")
+    accent = {"a": "á", "e": "é", "i": "í", "o": "ó", "u": "ú", "n": "ñ"}
+    for count in (1, 2):
+        for selected in combinations(letters, count):
+            candidate = list(word.casefold())
+            for index, char in selected:
+                candidate[index] = accent[char]
+            if lookup("".join(candidate)):
+                return True
+    return False
+
+
+def _discard_known_spanish_search_keywords(
+    unknown_by_cell: dict[tuple[str, str], set[str]], spanish_dictionary: object | None
+) -> None:
+    """Remove dictionary-backed Spanish search terms from the keyword audit."""
+    if spanish_dictionary is None:
+        return
+    for cell, words in tuple(unknown_by_cell.items()):
+        _locale, key = cell
+        if not key.startswith("desktop.ledger.category_keywords."):
+            continue
+        accepted = {word for word in words if _is_spanish_search_keyword(word, spanish_dictionary)}
+        words.difference_update(accepted)
+        if not words:
+            del unknown_by_cell[cell]
+
+
+def _collect_unknown_words(unknown_by_cell: dict[tuple[str, str], set[str]]) -> set[tuple[str, str]]:
+    """Collect remaining unknown words by locale for the audit inventory."""
+    return {(locale, word) for (locale, _key), words in unknown_by_cell.items() for word in words}

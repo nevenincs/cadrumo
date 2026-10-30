@@ -35,6 +35,11 @@ def resolve_legal_citations(
     does not declare, or a provision the authority cannot load, is left out and marks the
     result incomplete; the read never fails for it.
 
+    Args:
+        source_references: The schedule authority's registry parameter and supporting evidence references.
+        modelo: The :class:`ModeloRevision` whose parameters declare the cited provisions.
+        legal_reference: Resolve a provision identifier against the pinned authority.
+
     Returns:
         The citations in first-cited order, each provision once.
     """

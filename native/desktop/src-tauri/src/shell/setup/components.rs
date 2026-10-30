@@ -137,12 +137,16 @@ fn admitted(
     engines: &Engines,
     admission: &Admission,
     download: Option<&wire::ModelDownload>,
+    cancellation: Option<&Cancellation>,
 ) -> Result<Engine, Unready> {
     let Installation { mut engine } = engines().map_err(|error| {
         Unready::Engine(failure(failure_category(&error)), engine_unavailable(error))
     })?;
     let models = match download {
-        Some(request) => admission.download(request),
+        Some(request) => match cancellation {
+            Some(cancellation) => admission.download_cancellable(request, cancellation),
+            None => admission.download(request),
+        },
         None => Ok(LocalModels::default()),
     }
     .map_err(Unready::Stopped)?;
@@ -465,6 +469,53 @@ impl Components {
         }
     }
 
+    /// Read the browser alone from fresh local facts and publish the checked row.
+    pub async fn check_browser(&self) -> Option<bool> {
+        let engines = self.engines.clone();
+        let admission = self.admission.clone();
+        let shared = self.shared.clone();
+        tokio::task::spawn_blocking(move || {
+            let mut engine = match admitted(&*engines, &admission, None, None) {
+                Ok(engine) => engine,
+                Err(unready) => {
+                    if let Some(cause) = unready.cause() {
+                        shared.reports.read_error(cause);
+                    }
+                    return None;
+                }
+            };
+            let cancellation = lock(&shared.window).checks.clone();
+            let report = engine.status(
+                CheckMode::Quick,
+                &[ItemId::Browser],
+                &mut |_| {},
+                &cancellation,
+            );
+            if !report.outcome.succeeded() {
+                return None;
+            }
+            let checked = report
+                .rows
+                .into_iter()
+                .find(|row| row.item == ItemId::Browser)?;
+            let usable = checked.state.usable();
+            shared.update(|window| {
+                let (_, rows) = window
+                    .rows
+                    .get_or_insert_with(|| (CheckMode::Quick, Vec::new()));
+                if let Some(row) = rows.iter_mut().find(|row| row.item == ItemId::Browser) {
+                    *row = checked;
+                } else {
+                    rows.push(checked);
+                }
+            });
+            Some(usable)
+        })
+        .await
+        .ok()
+        .flatten()
+    }
+
     /// Starts a status read, or joins the one running.
     pub fn check(&self, mode: wire::CheckMode) {
         let kind = match mode {
@@ -501,7 +552,7 @@ impl Components {
         let shared = self.shared.clone();
         let cancellation = window.checks.clone();
         let spawned = self.spawn(window, "setup-check", move || {
-            let report = admitted(&*engines, &admission, None).map(|mut engine| {
+            let report = admitted(&*engines, &admission, None, None).map(|mut engine| {
                 let engine = &mut engine;
                 match kind {
                     CheckKind::StatusQuick => {
@@ -890,7 +941,9 @@ impl Components {
         View {
             rows,
             rows_mode,
-            complete: read.map(|rows| rows.iter().all(|row| row.state.usable())),
+            complete: read.map(|rows| {
+                rows.len() == ItemId::ALL.len() && rows.iter().all(|row| row.state.usable())
+            }),
             hardware_limited: read.map(|rows| {
                 rows.iter()
                     .any(|row| row.state == ItemState::Blocked(BlockedReason::Hardware))
@@ -922,7 +975,7 @@ fn run_setup(
     let download = lock(&shared.window)
         .setup_of(id)
         .and_then(|track| track.download.clone());
-    let mut engine = match admitted(engines, admission, download.as_ref()) {
+    let mut engine = match admitted(engines, admission, download.as_ref(), Some(cancellation)) {
         Ok(engine) => engine,
         Err(Unready::Engine(category, cause)) => {
             // A setting the engine cannot use is a classified refusal of its own; the
@@ -949,6 +1002,9 @@ fn run_setup(
             return;
         }
     };
+    if cancellation.is_cancelled() {
+        return;
+    }
     let locations = engine.locations().clone();
     loop {
         let mut review = |plan: &SetupPlan| -> Answer {

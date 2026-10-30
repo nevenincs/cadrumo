@@ -41,16 +41,6 @@ from dev.corpus.text import resolve_anchored_extracted_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_HEADING_WINDOW: Final[int] = 220
-"""Characters of an excerpt treated as its heading.
-
-Wide enough to span an article title plus its numbering on the bundled HTML
-renderings, narrow enough that a phrase from the first operative point falls
-outside it. Measured against the corpus rather than chosen: the longest bundled
-article heading runs well under this, and every entry this gate counts was
-confirmed by reading its excerpt.
-"""
-
 _UNCHECKED_BODY_FLOOR: Final[int] = 1200
 """Body size above which a heading-only match leaves a real provision unchecked.
 
@@ -60,8 +50,8 @@ document and no gap exists. Counting those would inflate the population with
 entries that are correct, which is the over-claim this floor exists to avoid.
 """
 
-_HEADING_ONLY_CEILING: Final[int] = 34
-"""Entries whose required_text is satisfied by the heading alone, measured 2026-08-10.
+_HEADING_ONLY_CEILING: Final[int] = 12
+"""Entries whose required_text is satisfied by the heading alone, measured 2026-10-30.
 
 Shrink-only. Every one is stamped ``review_status = "reviewed"``, which is what
 makes the population worth pinning: the stamp says a human checked it, and the
@@ -153,6 +143,13 @@ grounding weakness, not a truncation. The
 remaining entries are unread either way; the finding is that a truncation in
 any of them would pass exactly as art. 94's did. Establishing more would take a
 tail-read per entry.
+
+The original 34-entry count used a 220-character prefix as a proxy for the
+heading. That was structurally wrong: long article titles caused the prefix to
+include the start of the operative provision, while different sidecar anchors
+could not be matched to their explicit title. The gate now compares the
+sidecar's resolved title field. The 12 entries above are the actual current
+heading-only set; the other 22 were false positives from the prefix heuristic.
 """
 
 
@@ -217,8 +214,31 @@ def _grounding_text(corpus_ref: str) -> str | None:
         return None
 
 
+def _grounding_heading(corpus_ref: str) -> str | None:
+    """Return the sidecar's explicit unit title for a grounded citation.
+
+    The prior fixed character window classified the start of the operative
+    text as heading when an article had a long title. Sidecars preserve the
+    title separately, so classify against that field rather than a guessed
+    prefix length.
+    """
+    path_text, _, anchor = corpus_ref.partition("#")
+    sidecar = Path(bundled_path("")) / (path_text + ".extracted.json")
+    if not sidecar.is_file():
+        return None
+    try:
+        full = resolve_anchored_extracted_unit(sidecar, anchor=anchor, required_text=(), include_title=True)
+        body = resolve_anchored_extracted_unit(sidecar, anchor=anchor, required_text=(), include_title=False)
+        marker = f"\n{body}"
+        if not full.endswith(marker):
+            return None
+        return normalise_corpus_text(full[: -len(marker)])
+    except Exception:
+        return None
+
+
 def _heading_only_entries() -> list[tuple[str, int]]:
-    """Return entries whose every required phrase sits inside the heading window.
+    """Return entries whose every required phrase sits inside the unit title.
 
     Phrases are normalised with the same function production compares them
     with, so casing and diacritics cannot make an entry look body-grounded
@@ -233,8 +253,8 @@ def _heading_only_entries() -> list[tuple[str, int]]:
         text = _grounding_text(corpus_ref)
         if text is None or len(text) <= _UNCHECKED_BODY_FLOOR:
             continue
-        heading = text[:_HEADING_WINDOW]
-        if all(normalise_corpus_text(phrase) in heading for phrase in required):
+        heading = _grounding_heading(corpus_ref)
+        if heading is not None and all(normalise_corpus_text(phrase) in heading for phrase in required):
             found.append((key, len(text)))
     return found
 
@@ -242,7 +262,7 @@ def _heading_only_entries() -> list[tuple[str, int]]:
 def test_the_heading_only_population_only_shrinks() -> None:
     """A new entry grounded on its own title must not be added silently.
 
-    Shrink-only rather than hard-zero because the 32 are a real backlog needing
+    Shrink-only rather than hard-zero because the 12 are a real backlog needing
     a legal decision each, and a hard-zero would either block every unrelated
     change or invite someone to satisfy it by quoting an arbitrary body phrase
     -- which looks like grounding and is not.
@@ -285,9 +305,9 @@ def test_the_measurement_would_notice_a_body_phrase() -> None:
     ``ley-37-1992:art-94`` is the worked example this gate was built from and
     is now the CORRECTED side: its excerpt was refreshed from live BOE and its
     required_text requoted onto the operative provision, so it must no longer
-    be selected. ``ley-37-1992:art-24`` is the uncorrected side, at 4,409
-    characters, grounded by a phrase that survives any truncation of it -- so it
-    must still be selected. An
+    be selected. ``orden-hfp-1335-2021:instruccion-2-3-b-3`` is the largest
+    remaining structurally heading-only entry, at 7,142 characters, so it must
+    still be selected. An
     entry moving across that line without the ceiling moving is exactly the
     drift the ratchet exists to catch.
 
@@ -302,9 +322,10 @@ def test_the_measurement_would_notice_a_body_phrase() -> None:
     assert art_94 is not None, "the worked example this gate was built from has gone"
     text = _grounding_text(str(art_94["corpus_ref"]))
     assert text is not None, "the sidecar production grounds on no longer resolves"
-    heading = text[:_HEADING_WINDOW]
+    heading = _grounding_heading(str(art_94["corpus_ref"]))
+    assert heading is not None, "the extracted unit's structural title no longer resolves"
 
-    # Its phrases now come from the body, so at least one falls outside the heading.
+    # Its phrases now come from the body, so at least one falls outside the title.
     assert not all(normalise_corpus_text(phrase) in heading for phrase in _required_phrases(art_94)), (
         "art. 94 was requoted onto its operative provision; a required_text that fits "
         "entirely in the heading means the correction was reverted"
@@ -324,8 +345,28 @@ def test_the_measurement_would_notice_a_body_phrase() -> None:
 
     # The other side: an entry still grounded on its title must still be selected,
     # or the predicate has stopped selecting anything and the ceiling is vacuous.
-    assert "ley-37-1992:art-24" in selected, (
+    assert "orden-hfp-1335-2021:instruccion-2-3-b-3" in selected, (
         "the predicate no longer selects a known heading-only entry, so the counts above "
         "would pass on an empty population. If art. 18 was corrected, move this to the "
         "next-largest remaining entry rather than deleting the assertion"
     )
+
+
+def test_long_article_title_does_not_absorb_operative_text_into_heading() -> None:
+    """A long title must not make the opening operative text look like heading."""
+    entries = dict(_legal_entries())
+    entry = entries.get("orden-hac-1431-2025:art-1")
+    assert entry is not None, "the Modelo 347 amendment article has gone"
+    corpus_ref = entry.get("corpus_ref")
+    assert isinstance(corpus_ref, str)
+    title = _grounding_heading(corpus_ref)
+    text = _grounding_text(corpus_ref)
+    assert title is not None and text is not None
+    phrases = _required_phrases(entry)
+    assert all(normalise_corpus_text(phrase) in text for phrase in phrases), (
+        "the operative wording must be present in the production grounding excerpt"
+    )
+    assert not all(normalise_corpus_text(phrase) in title for phrase in phrases), (
+        "operative wording was mistaken for the article title"
+    )
+    assert "orden-hac-1431-2025:art-1" not in {key for key, _ in _heading_only_entries()}

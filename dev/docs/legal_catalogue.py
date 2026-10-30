@@ -11,6 +11,7 @@ from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev._paths import UTF_8
 
 from .legal_catalogue_fields import _record_from_table, _validate_authored_text
+from .legal_note_languages import apply_legal_note_languages
 from .legal_reference_models import LegalProvisionRecord, LegalReferenceError
 
 #: The legal catalogue tree, relative to the repository root.  The leading
@@ -42,14 +43,17 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
     for fragment in scan_directory(catalogue, pattern="*.toml"):
         _read_legal_fragment(fragment, records, seen_ids)
 
-    return tuple(
-        sorted(
-            records,
-            key=lambda record: (
-                record.document_id,
-                record.article or "",
-                record.section or "",
-                record.legal_id,
+    return apply_legal_note_languages(
+        repo_root,
+        tuple(
+            sorted(
+                records,
+                key=lambda record: (
+                    record.document_id,
+                    record.article or "",
+                    record.section or "",
+                    record.legal_id,
+                ),
             ),
         ),
     )

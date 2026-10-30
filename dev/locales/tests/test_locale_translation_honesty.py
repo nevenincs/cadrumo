@@ -34,6 +34,19 @@ def test_runtime_locale_root_contains_no_development_metadata() -> None:
     assert list(LOCALES_DIR.glob("*.json")) == []
 
 
+def test_hungarian_diagnostics_use_correct_spelling() -> None:
+    leaves = _catalogue_leaves("hu")
+
+    assert (
+        leaves["aggregation.m303_arrivals.errors.supplier_regime_observations_outside_period"]
+        == "Az áfa-összesítés a kért bevallási időszakon kívüli keltezésű megfigyeléseket tartalmaz."
+    )
+    assert (
+        leaves["aggregation.source_mesh.errors.duplicate_relation_owner"]
+        == "Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálón."
+    )
+
+
 def _is_modelo_source_key(key: str) -> bool:
     """Return whether a Modelo leaf carries mandatory official source text."""
 

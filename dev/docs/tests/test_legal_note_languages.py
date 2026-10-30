@@ -9,14 +9,14 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry.schema_references import LegalNoteLanguageSpan, LegalReference
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from dev._paths import REPO_ROOT
 from dev.locales.signal_documentation_inventory import inventory_generated_document_file
 
 from ..legal_catalogue import load_legal_provisions
 from ..legal_catalogue_fields import _record_from_table
 from ..legal_reference import render_legal_reference
-from ..legal_reference_models import LegalProvisionRecord, LegalReferenceError
+from ..legal_reference_models import LegalNoteLanguageSpan, LegalProvisionRecord, LegalReferenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -90,24 +90,24 @@ def test_unsupported_language_and_unknown_annotation_fields_are_refused() -> Non
             LegalNoteLanguageSpan.model_validate(payload)
 
 
-def test_catalogue_loader_carries_typed_language_annotations() -> None:
-    record = _record_from_table(
-        Path("example.toml"),
-        "ley-example:art-1",
-        {
-            "kind": "ley",
-            "document_id": "BOE-A-2000-1",
-            "corpus_ref": "corpus/normatives/html/example.html#art-1",
-            "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2000-1#art-1",
-            "notes": "Una nota revisada.",
-            "notes_language_spans": [{"text": "Una nota revisada.", "language": "es"}],
-        },
-    )
-    assert record.notes_language_spans == (LegalNoteLanguageSpan(text="Una nota revisada.", language="es"),)
+def test_catalogue_loader_refuses_docs_metadata() -> None:
+    with pytest.raises(LegalReferenceError, match="unknown field"):
+        _record_from_table(
+            Path("example.toml"),
+            "ley-example:art-1",
+            {
+                "kind": "ley",
+                "document_id": "BOE-A-2000-1",
+                "corpus_ref": "corpus/normatives/html/example.html#art-1",
+                "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2000-1#art-1",
+                "notes": "Una nota revisada.",
+                "notes_language_spans": [{"text": "Una nota revisada.", "language": "es"}],
+            },
+        )
 
 
-def test_registry_model_refuses_stale_annotations() -> None:
-    with pytest.raises(ValidationError, match="exactly once"):
+def test_registry_model_refuses_docs_annotations() -> None:
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         LegalReference.model_validate(
             {
                 "id": "ley-example:art-1",

@@ -43,7 +43,7 @@ class ActivityAssetHistoryRepository(Protocol):
 
 
 class AcquisitionLedgerReader(Protocol):
-    """Read the profile ledger rows an asset revision names as its acquisition."""
+    """Read the :class:`TransactionCatalogue` rows an asset revision names as its acquisition."""
 
     def load(self) -> TransactionCatalogue:
         """Return every row of the profile ledger."""

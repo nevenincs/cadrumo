@@ -391,8 +391,7 @@ function Chooser({
                 attempt.kind === "refused"
                   ? "workspace.declarations.list.new.refused"
                   : "workspace.declarations.list.new.failed",
-              )}{" "}
-              <code className="font-mono text-xs">{attempt.code}</code>
+              )}
             </Alert>
           ) : attempt.kind === "saved_unread" ? (
             <Alert tone="success" role="status" icon={<Icon name="check" />}>

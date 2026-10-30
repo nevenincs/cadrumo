@@ -316,15 +316,7 @@ export function ModelSuggestion({
           }
           data-code={state.code}
         >
-          <span className="grid gap-0.5">
-            {failure.text}
-            {failure.technical && (
-              <details className="ledger-technical text-xs">
-                <summary>{t("desktop.ledger.apply.technical")}</summary>
-                <code className="font-mono">{state.code}</code>
-              </details>
-            )}
-          </span>
+          {failure}
         </Alert>
         {askButtons}
       </div>

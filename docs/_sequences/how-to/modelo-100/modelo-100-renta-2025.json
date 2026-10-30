@@ -125,7 +125,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "ae9664b12642324fef8ee8b25d523ae152ae526c2464a6ac9d9c7528d5b9f9ba"
+          "value": "02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63"
         }
       ],
       "envelope": {
@@ -175,6 +175,7 @@
             "renta-ledger-expense-0206-deductible": "0",
             "renta-ledger-expense-0208-deductible": "0",
             "renta-ledger-expense-0217-deductible": "0",
+            "renta-ledger-expense-0227-deductible": "0",
             "renta-ledger-income-0171": "0",
             "renta-maritime-annual-salary": "0",
             "renta-maritime-gross-navigation-income": "0",
@@ -196,7 +197,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "ae9664b12642324fef8ee8b25d523ae152ae526c2464a6ac9d9c7528d5b9f9ba",
+          "calculation_revision_id": "02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -2041,6 +2042,7 @@
             "0206": "0",
             "0208": "0",
             "0217": "0",
+            "0227": "0",
             "0596": "2400",
             "1388": "0",
             "DPNIF_D": "sha256:1c9f9632",
@@ -4129,7 +4131,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision ae9664b12642324fef8ee8b25d523ae152ae526c2464a6ac9d9c7528d5b9f9ba (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",
@@ -4179,7 +4181,7 @@
         "modelo",
         "work",
         "verify",
-        "ae9664b12642324fef8ee8b25d523ae152ae526c2464a6ac9d9c7528d5b9f9ba"
+        "02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63"
       ],
       "captures": [],
       "envelope": {
@@ -4244,7 +4246,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "ae9664b12642324fef8ee8b25d523ae152ae526c2464a6ac9d9c7528d5b9f9ba",
+          "calculation_revision_id": "02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4314,7 +4316,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "f4330caec8c56d2d24657c3cfc7f8a8798c74a98c3e7f8d68c71a79b1e9818e4",
+          "verification_report_id": "486ab3ce7b877b0399bad3377fc2404b454480c025cba527ccb171835271c95a",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

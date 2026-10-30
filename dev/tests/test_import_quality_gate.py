@@ -99,7 +99,7 @@ def _write_consumer(root: Path, declared: str, source: str) -> Path:
 
 
 def _layer_names(value: str) -> tuple[str, ...]:
-    return tuple(token.strip().strip("()") for token in value.replace("\n", " ").split(":") if token.strip())
+    return tuple(token.strip().strip("()") for line in value.splitlines() for token in line.split(":") if token.strip())
 
 
 def _words(value: str) -> tuple[str, ...]:

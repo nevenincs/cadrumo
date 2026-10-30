@@ -156,6 +156,7 @@ def _refused(
 def test_a_row_refused_once_its_route_is_gone_still_counts_as_unowned() -> None:
     """After the category leaves the routing the row never becomes an observation, and must still block."""
     asset = _asset(2025)
+    assert asset.acquisition.observed_transaction_id is not None
     with bundled_indexed_authority().operation():
         rows = refused_amortization_rows(
             (
@@ -204,6 +205,7 @@ def test_acquisition_purchase_is_withheld_instead_of_deducted_as_a_current_expen
     the register already accounts for this asset's depreciation.
     """
     asset = _asset(year)
+    assert asset.acquisition.observed_transaction_id is not None
 
     classified = classify_ledger_expenses_against_asset_register(
         (asset,),
@@ -237,6 +239,7 @@ def test_acquisition_purchase_is_withheld_before_any_charge_is_claimed(year: int
     is exactly what RIS art. 3.3's useful-life spread forbids.
     """
     asset = _asset(year)
+    assert asset.acquisition.observed_transaction_id is not None
 
     withheld = classify_ledger_expenses_against_asset_register(
         (asset,),
@@ -275,6 +278,7 @@ def test_only_the_current_asset_revision_declares_the_owned_acquisition(year: in
     """A superseding revision restates the acquisition linkage; the stale one stops owning it."""
     original = _asset(year)
     superseded_transaction_id = original.acquisition.observed_transaction_id
+    assert superseded_transaction_id is not None
     current_transaction_id = "f" * 64
     current = original.model_copy(
         update={
@@ -311,6 +315,7 @@ def test_only_the_current_asset_revision_declares_the_owned_acquisition(year: in
 @pytest.mark.parametrize("year", _supported_years())
 def test_withheld_acquisition_advisory_names_the_asset_and_the_amount(year: int) -> None:
     asset = _asset(year)
+    assert asset.acquisition.observed_transaction_id is not None
     withheld = classify_ledger_expenses_against_asset_register(
         (asset,),
         (

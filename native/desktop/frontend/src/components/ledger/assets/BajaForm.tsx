@@ -1,22 +1,26 @@
-import { Alert } from "@/components/ui/alert";
-import { Icon } from "@/components/ui/icon";
-import { useStrings } from "../../../shell/strings";
 import { AssetForm, type ActProps } from "./AssetForm";
-import { ASSET_KEYS } from "./assetsWords";
+import { DisposalFigures } from "./DisposalFigures";
 
 /**
- * Takes an element out of service. The date is its last day of service and
- * the reasons are the backend's. The note says what the write does that a
- * reversal does not undo: claims that cross the date are replaced in the same
- * step.
+ * Takes an element out of service on its last day of service. The form states
+ * the baja as the backend takes it; the backend judges the reason and the
+ * amounts and says by key why it refuses one, a donation among them. The
+ * figures preview asks the backend what the baja would come to and writes
+ * nothing.
  */
 export function BajaForm(props: ActProps & { assetId: string }) {
-  const t = useStrings();
   return (
     <AssetForm {...props} kind="baja">
-      <Alert icon={<Icon name="info" />} className="ledger-asset-dispose-note">
-        {t(ASSET_KEYS.write.dispose_note)}
-      </Alert>
+      {({ values, ready }) => (
+        <DisposalFigures
+          port={props.port}
+          reader={props.reader}
+          locale={props.locale}
+          assetId={props.assetId}
+          values={values}
+          ready={ready}
+        />
+      )}
     </AssetForm>
   );
 }

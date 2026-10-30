@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { facts, factsGap } from "@/shell/compose";
 import type {
   LedgerRuleApplyResult,
   LedgerRuleRow,
@@ -393,14 +394,17 @@ function RulesPane({
                   <li key={rule.rule_id} className="flex flex-col">
                     <span>
                       {ruleMatchText(t, rule.description_pattern)} →{" "}
-                      {classificationLabel(t, rule.classification)}{" "}
-                      <span className="tabular-nums">· {found.length}</span>
+                      {classificationLabel(t, rule.classification)}
+                      <span className="tabular-nums">
+                        {factsGap(t)}
+                        {found.length}
+                      </span>
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {found
-                        .slice(0, 4)
-                        .map((match) => match.description)
-                        .join(" · ")}
+                      {facts(
+                        t,
+                        found.slice(0, 4).map((match) => match.description),
+                      )}
                       {found.length > 4 ? " …" : ""}
                     </span>
                   </li>

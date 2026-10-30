@@ -96,7 +96,7 @@ from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
+from .filed_history_operation import FiledHistoryBrowserResourcesFactory
 from .live_operation_execution import (
     fenced_persistence_guard,
     own_provider_browser,
@@ -422,7 +422,6 @@ class SedeViewExecutor:
         browser_session_factory: BrowserSessionFactoryPort,
         operator_scope_ports: OperatorScopePorts,
         browser_resources_factory: FiledHistoryBrowserResourcesFactory,
-        provider_preflight: FiledHistoryProviderPreflight,
         view_browser_factory: SedeViewBrowserFactory,
         stream_opener: SedeViewStreamOpener,
     ) -> None:
@@ -431,7 +430,6 @@ class SedeViewExecutor:
         self._browser_session_factory = browser_session_factory
         self._operator_scope_ports = operator_scope_ports
         self._browser_resources_factory = browser_resources_factory
-        self._provider_preflight = provider_preflight
         self._view_browser_factory = view_browser_factory
         self._stream_opener = stream_opener
 
@@ -444,7 +442,6 @@ class SedeViewExecutor:
         bucket_id = require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
-        self._provider_preflight(payload.profile_id, context.authority_operation)
         resources = await own_provider_browser(
             context, self._browser_resources_factory, acquire_phase=SEDE_VIEW_ACQUIRE_PHASE
         )
@@ -535,7 +532,6 @@ def build_sede_view_definition(
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
     browser_resources_factory: FiledHistoryBrowserResourcesFactory,
-    provider_preflight: FiledHistoryProviderPreflight,
     view_browser_factory: SedeViewBrowserFactory,
     stream_opener: SedeViewStreamOpener | None,
 ) -> OperationDefinition:
@@ -548,7 +544,6 @@ def build_sede_view_definition(
             browser_session_factory=browser_session_factory,
             operator_scope_ports=operator_scope_ports,
             browser_resources_factory=browser_resources_factory,
-            provider_preflight=provider_preflight,
             view_browser_factory=view_browser_factory,
             stream_opener=opener,
         )

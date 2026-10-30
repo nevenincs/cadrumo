@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from .signal_contracts import DictionaryLike
 from .signal_policy import LOCALES
 from .signal_syntax import (
@@ -10,6 +12,7 @@ from .signal_syntax import (
     TRANSLATION_HTML_LANGUAGE_RE,
     TRANSLATION_HUNGARIAN_DATE_RE,
     TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE,
+    TRANSLATION_HUNGARIAN_PERCENT_SUFFIX_RE,
     TRANSLATION_LEGAL_TITLE_RE,
     TRANSLATION_LITERAL_RE,
     TRANSLATION_MARKDOWN_LINK_CONTEXT_RE,
@@ -18,6 +21,11 @@ from .signal_syntax import (
     TRANSLATION_SPANISH_TAX_TERM_RE,
 )
 from .signal_tokens import filtered_translation_text, translation_words
+
+# These two exact Catalan forms were attested by the locale findings. Keep the
+# exception closed over complete forms; a productive suffix rule could conceal
+# a misspelled or malformed host from the dictionary check.
+_CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?P<form>Mantén-lo|revisar-los)(?![^\W\d_])")
 
 
 def html_spelling_segments(value: str, foreign: list[tuple[int, int, str, str, int]]) -> None:
@@ -147,9 +155,16 @@ def locale_spelling_words(value: str, locale: str) -> tuple[tuple[str, ...], int
     if locale == "hu":
         value, matches = TRANSLATION_HUNGARIAN_DATE_RE.subn(" ", value)
         excluded += matches
+        # Preserve the numeric stem for the ordinary number filter; remove
+        # only the attested Hungarian suffix on percentage expressions.
+        value, matches = TRANSLATION_HUNGARIAN_PERCENT_SUFFIX_RE.subn(lambda match: match.group("stem"), value)
+        excluded += matches
         # Keep the stem visible to ordinary spelling checks; only the
         # recognized Hungarian suffix is structural notation.
         value, matches = TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE.subn(lambda match: match.group("stem"), value)
+        excluded += matches
+    elif locale == "ca":
+        value, matches = _CATALAN_HYPHENATED_CLITIC_RE.subn(lambda match: match.group("form").split("-")[0], value)
         excluded += matches
     filtered, structural_excluded = filtered_translation_text(value)
     # English dictionaries own contractions and possessives as complete words;

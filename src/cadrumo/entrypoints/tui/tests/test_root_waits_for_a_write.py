@@ -427,6 +427,7 @@ async def test_the_root_keeps_an_activity_asset_action_until_it_settles() -> Non
             assets = app.screen
             assert isinstance(assets, ActivityAssetScreen)
             assets.query_one("#asset-revision-json", Input).value = actions.revision.model_dump_json()
+            assets.query_one("#asset-name", Input).value = "Office laptop"
             assets.query_one("#asset-create", Button).press()
             assert await asyncio.to_thread(actions.started.wait, 10)
             assert assets.in_flight

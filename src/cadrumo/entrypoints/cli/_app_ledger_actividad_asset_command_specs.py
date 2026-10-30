@@ -113,7 +113,7 @@ def _read_leaf(
         token,
         f"actividad_asset_{name}",
         parameters,
-        help_key=TranslationKey(f"cli.app.ledger.actividad_asset.{name}_help"),
+        help_key=_READ_HELP_LOCALE_KEYS[token],
         schema_module="._actividad_asset_payloads",
         schema_name="ActivityAssetReadPayload",
         policy=_POLICY_6,

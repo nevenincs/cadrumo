@@ -12,7 +12,6 @@ from typing import Any
 
 from pydantic import SecretStr
 
-from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from .adapters.agent_background_runs import BackgroundRunEndpoint, HostedBackgroundRuns
@@ -107,7 +106,6 @@ class AgentServiceAdministration(ABC):
         self._providers = ProviderSettingsService(
             store=self._store,
             catalog_source=self._catalog,
-            storage_mode=storage_mode().mode,
             cli_state_probe=self._login_status.probe,
         )
         self._local_models = LocalModelListService(store=model_list, catalog_source=self._catalog)

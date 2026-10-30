@@ -4,6 +4,8 @@ import {
 } from "./shell/internalFailures";
 import { useLanguage } from "./shell/useLanguage";
 import { saveLogs } from "./shell/saveLogs";
+import { facts, labelled } from "./shell/compose";
+import { sessionFailedText } from "./shell/sessionWords";
 import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
 import { useWindowPresentation } from "./shell/useWindowPresentation";
 import {
@@ -194,7 +196,8 @@ const isAction = (item: MenuEntry): item is MenuAction => "id" in item;
 const exitCode = (status: TerminalStatus): number | null | undefined =>
   status.phase === "exited" ? status.code : undefined;
 
-/** Why a session could not start or carry on, when it has failed. */
+/** The host's code for why a session could not start or carry on, when it has
+ * failed; `sessionFailedText` words it. */
 const failure = (status: TerminalStatus): string | undefined =>
   status.phase === "failed" ? status.message : undefined;
 
@@ -1020,7 +1023,7 @@ export function App({ host }: { host: Host }) {
           const path = await host.exportLogs(text);
           say(t("desktop.logs.exported", { path }));
         } else {
-          await saveLogs(text);
+          await saveLogs(text, t("desktop.logs.file_type"));
         }
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError")
@@ -1634,7 +1637,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.about.open"),
         group: "general",
         icon: "info",
-        keywords: "version build",
+        keywords: t("desktop.palette.keywords.about"),
         enabled: () => about !== null,
         run: () => {
           setSettingsOpen(false);
@@ -1646,7 +1649,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.setup.palette_open"),
         group: "setup",
         icon: "download",
-        keywords: "components install download",
+        keywords: t("desktop.palette.keywords.setup_open"),
         enabled: () => setupOffered,
         run: () => openSetup(null),
       },
@@ -1655,7 +1658,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.setup.palette_check"),
         group: "setup",
         icon: "check",
-        keywords: "components verify status",
+        keywords: t("desktop.palette.keywords.setup_check"),
         enabled: () => setupOffered && setupLive.length === 0,
         run: () => {
           openSetup(null);
@@ -1926,7 +1929,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.palette.copy_link"),
         group: "views",
         icon: "link",
-        keywords: "cadrumo url address share",
+        keywords: t("desktop.palette.keywords.copy_link"),
         enabled: () => shownViewId !== undefined,
         run: () => {
           if (shownViewId !== undefined)
@@ -1938,7 +1941,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.rail.messages"),
         group: "views",
         icon: "mail",
-        keywords: "notifications notificaciones dehu inbox unread",
+        keywords: t("desktop.palette.keywords.messages"),
         enabled: () => views !== undefined,
         // The notifications are read in the TUI; the window shows the count.
         // Why there is no count is said where a tap reaches too, not only
@@ -1946,14 +1949,22 @@ export function App({ host }: { host: Host }) {
         run: () => {
           if (messages.kind === "failed")
             say(
-              `${t("desktop.rail.messages")}: ${t("desktop.messages.failed")}`,
+              labelled(
+                t,
+                t("desktop.rail.messages"),
+                t("desktop.messages.failed"),
+              ),
             );
           else if (
             messages.kind === "ready" &&
             messages.summary.captured_at === null
           )
             say(
-              `${t("desktop.rail.messages")}: ${t("desktop.messages.never")}`,
+              labelled(
+                t,
+                t("desktop.rail.messages"),
+                t("desktop.messages.never"),
+              ),
             );
           showTui();
         },
@@ -1964,7 +1975,7 @@ export function App({ host }: { host: Host }) {
         context: t("desktop.rail.aeat"),
         group: "links",
         icon: "external",
-        keywords: "sede agencia tributaria hacienda tax agency browser",
+        keywords: t("desktop.palette.keywords.aeat_link"),
         run: () => openLink(AEAT_SEDE),
       },
       {
@@ -1972,7 +1983,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.google.open_drive"),
         group: "links",
         icon: "folder",
-        keywords: "google drive profile folder browser",
+        keywords: t("desktop.palette.keywords.drive_link"),
         enabled: () => driveUrl !== null,
         run: () => {
           if (driveUrl) openLink(driveUrl);
@@ -1983,7 +1994,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.signin.submit"),
         group: "account",
         icon: "lock",
-        keywords: "login password",
+        keywords: t("desktop.palette.keywords.sign_in"),
         enabled: () => mayEnterPassword,
         run: askSignIn,
       },
@@ -1992,7 +2003,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.account.new_profile"),
         group: "account",
         icon: "userAdd",
-        keywords: "register new account add another",
+        keywords: t("desktop.palette.keywords.create_profile"),
         enabled: () => canCreateProfile && offersProfiles,
         run: askNewProfile,
       },
@@ -2001,7 +2012,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.account.sign_out"),
         group: "account",
         icon: "signOut",
-        keywords: "logout",
+        keywords: t("desktop.palette.keywords.sign_out"),
         enabled: () => signedIn,
         run: signOut,
       },
@@ -2011,7 +2022,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.google.palette_sign_in"),
         group: "account",
         icon: "user",
-        keywords: "google drive sign in login connect",
+        keywords: t("desktop.palette.keywords.google_sign_in"),
         enabled: () =>
           signedIn &&
           setupOffered &&
@@ -2023,7 +2034,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.account.manage.title"),
         group: "account",
         icon: "users",
-        keywords: "delete remove profiles accounts",
+        keywords: t("desktop.palette.keywords.manage_profiles"),
         enabled: () => host.profiles !== undefined,
         run: () => {
           setSignInDismissed(true);
@@ -2035,7 +2046,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.account.switch_profile"),
         group: "account",
         icon: "swap",
-        keywords: "change another user account choose",
+        keywords: t("desktop.palette.keywords.switch_profile"),
         enabled: () => signedIn && canCreateProfile,
         run: switchProfile,
       },
@@ -2045,7 +2056,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.profile.censo.title"),
         group: "profile",
         icon: "sync",
-        keywords: "census censo aeat pull import tax agency",
+        keywords: t("desktop.palette.keywords.census_sync"),
         enabled: () => signedIn && !!host.censo && !!host.userProfile,
         run: askCenso,
       },
@@ -2054,7 +2065,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.action.focus_next"),
         group: "general",
         icon: "arrow",
-        keywords: "pane area switch",
+        keywords: t("desktop.palette.keywords.focus"),
         chords: [{ code: "F6", key: "F6", scope: "global" }],
         run: () => cycleFocus(1),
       },
@@ -2063,7 +2074,7 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.action.focus_previous"),
         group: "general",
         icon: "back",
-        keywords: "pane area switch",
+        keywords: t("desktop.palette.keywords.focus"),
         chords: [{ shift: true, code: "F6", key: "F6", scope: "global" }],
         run: () => cycleFocus(-1),
       },
@@ -2569,10 +2580,13 @@ export function App({ host }: { host: Host }) {
   // could not start.
   const sessionNote = (kind: TerminalKind) => {
     const reason = failure(status[kind]);
-    if (reason !== undefined) return t("desktop.session.failed", { reason });
+    if (reason !== undefined) return sessionFailedText(t, reason);
     const code = exitCode(status[kind]);
     if (code === undefined) return undefined;
-    return `${t("desktop.session.exited", { code: code ?? "?" })} · ${t("desktop.session.enter_restarts")}`;
+    return facts(t, [
+      t("desktop.session.exited", { code: code ?? "?" }),
+      t("desktop.session.enter_restarts"),
+    ]);
   };
   const maximizeControl = (
     area: Exclude<Maximized, null>,
@@ -2950,6 +2964,7 @@ export function App({ host }: { host: Host }) {
             memory={ledgerKept.memory}
             contribute={contribute}
             copy={(text) => host.writeClipboard(text)}
+            onOpenLink={openLink}
             onFloor={setLedgerFloor}
             pane={{
               title: t("desktop.ledger.title"),
@@ -3596,9 +3611,10 @@ export function App({ host }: { host: Host }) {
                                   className="text-destructive"
                                 />
                                 <span className="sr-only">
-                                  {t("desktop.session.failed", {
-                                    reason: failure(status[tab]) ?? "",
-                                  })}
+                                  {sessionFailedText(
+                                    t,
+                                    failure(status[tab]) ?? "",
+                                  )}
                                 </span>
                               </>
                             )}

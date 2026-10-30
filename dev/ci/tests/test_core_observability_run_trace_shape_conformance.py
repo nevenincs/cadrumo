@@ -26,8 +26,6 @@ from cadrumo.core.observability.models import (
     RunTrace,
 )
 from cadrumo.core.observability.store import save_envelope, save_events_append, save_trace
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.tests.storage_scope import storage_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -62,7 +60,7 @@ def _event() -> RunEvent:
 
 def test_the_three_real_writers_land_at_their_declared_shapes(tmp_path: Path) -> None:
     root = tmp_path
-    with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
+    with override_settings(cadrumo_storage_root=tmp_path):
         # No explicit ``settings=`` kwarg: each writer's own ``load_settings()``
         # default is what actually honours the override_settings context.
         # A bare ``Settings()`` construction here does not -- measured

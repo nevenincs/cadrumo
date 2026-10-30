@@ -15,7 +15,6 @@ import { facts } from "../../../shell/compose";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
-import { failureCode } from "../ledgerWords";
 import { dayText } from "../transfer/transferWords";
 import {
   AttachmentQueue,
@@ -171,11 +170,14 @@ export function DocumentsSection({
       (found) =>
         found.evidence_id === reference || found.attachment_id === reference,
     );
-    return found
-      ? fileName(found.source_path)
-      : t("desktop.ledger.documents.attachment_named", {
-          id: reference.slice(0, 12),
-        });
+    if (found) return fileName(found.source_path);
+    // A document with no name is told apart by its place in the queue.
+    const place = waiting.findIndex(
+      (row) => row.evidence_reference === reference,
+    );
+    return t("desktop.ledger.documents.attachment_named", {
+      n: place >= 0 ? place + 1 : waiting.length + 1,
+    });
   };
   /** Moves the focus on to the next document still to review after the
    * one shown, wrapping round; with none left, to the one shown. */
@@ -204,23 +206,12 @@ export function DocumentsSection({
 
   let review;
   if (queue.read.phase === "failed" || records.read.phase === "failed") {
-    const failure =
-      queue.read.phase === "failed"
-        ? queue.read.failure
-        : records.read.phase === "failed"
-          ? records.read.failure
-          : null;
     review = (
       <EmptyState
         className="ledger-documents-failed"
         icon="alert"
         description={
-          <span role="alert">
-            {t("desktop.ledger.documents.read_failed")}{" "}
-            {failure && (
-              <code className="font-mono text-xs">{failureCode(failure)}</code>
-            )}
-          </span>
+          <span role="alert">{t("desktop.ledger.documents.read_failed")}</span>
         }
       >
         <Button variant="outline" onClick={rereadAll}>

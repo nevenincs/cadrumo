@@ -2,29 +2,40 @@ import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useStrings } from "../../../shell/strings";
-import { amountText, dateText } from "../movements/movementWords";
-import { AssetForm, useProvisionalRead, type ActProps } from "./AssetForm";
+import { dateText } from "../movements/movementWords";
+import { AssetForm, useLedgerRead, type ActProps } from "./AssetForm";
 import { staleClaims } from "./assetWrites";
+import { figureText } from "./planWords";
 
 /**
  * Corrects an element's tax facts or its method: a superseding revision, never
  * an edit of the last. The effective claims that no longer match the schedule
  * are offered to be recorded again under the corrected figures, in the same
- * write, so a failed correction leaves them as they were. Method changes
- * apply from a tax year the person states.
+ * write, so a failed correction leaves them as they were. The plan says which
+ * claims are in effect and the timeline which of them no longer match.
  */
 export function CorrectForm(props: ActProps & { assetId: string }) {
   const { port, reader, locale, assetId } = props;
   const t = useStrings();
-  const plan = useProvisionalRead(
+  const plan = useLedgerRead(
     port,
     reader,
     "ledger.actividad-asset.plan",
     { asset_id: assetId },
     assetId,
   );
+  const history = useLedgerRead(
+    port,
+    reader,
+    "ledger.actividad-asset.timeline",
+    { asset_id: assetId },
+    assetId,
+  );
+  const rows = plan.read?.kind === "done" ? plan.read.result.rows : null;
+  const events =
+    history.read?.kind === "done" ? history.read.result.events : null;
   const stale =
-    plan.read?.kind === "done" ? staleClaims(plan.read.result.rows) : [];
+    rows !== null && events !== null ? staleClaims(rows, events) : [];
   // Each is chosen until the person unchooses it.
   const [declined, setDeclined] = useState<ReadonlySet<string>>(new Set());
   const chosen = stale
@@ -53,11 +64,9 @@ export function CorrectForm(props: ActProps & { assetId: string }) {
               />
               {t("desktop.ledger.assets.correct.claim_item", {
                 year,
-                amount: claim.amount
-                  ? amountText(locale, claim.amount.decimal)
-                  : "—",
-                from: dateText(locale, claim.from, true),
-                until: dateText(locale, claim.until, true),
+                amount: figureText(locale, claim.amount) ?? "",
+                from: dateText(locale, claim.covered_from, true),
+                until: dateText(locale, claim.covered_until, true),
               })}
             </Label>
           ))}

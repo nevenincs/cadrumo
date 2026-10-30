@@ -43,7 +43,7 @@
         ],
         "result": {
           "bucket_id": "<bucket-id>",
-          "eligible_count": 9,
+          "eligible_count": 8,
           "findings": [],
           "missing_overrides": [],
           "overrides_count": 1,

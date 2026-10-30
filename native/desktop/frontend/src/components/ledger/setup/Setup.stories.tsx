@@ -14,12 +14,10 @@ import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { Readiness } from "../../../shell/ledgerWindow";
 import { usePagePause, WritePauseContext } from "../WritePause";
 import { AccountsPane } from "./AccountsPane";
-import { AssetsPane } from "./AssetsPane";
 import { CapitalGoodsPane } from "./CapitalGoodsPane";
 import { CounterpartiesPane } from "./CounterpartiesPane";
 import { DiagnosticsPane } from "./DiagnosticsPane";
 import { HealthSection } from "./HealthSection";
-import { InventoryPane } from "./InventoryPane";
 import { ProrrataPane } from "./ProrrataPane";
 import { RatiosPane } from "./RatiosPane";
 import { RegistersSection } from "./RegistersSection";
@@ -174,8 +172,6 @@ export const Prorrata: Story = pane((props) => <ProrrataPane {...props} />);
 export const CapitalGoods: Story = pane((props) => (
   <CapitalGoodsPane {...props} />
 ));
-export const Inventory: Story = pane((props) => <InventoryPane {...props} />);
-export const Assets: Story = pane((props) => <AssetsPane {...props} />);
 export const Ratios: Story = pane((props) => <RatiosPane {...props} />);
 export const Counterparties: Story = pane((props) => (
   <CounterpartiesPane {...props} />

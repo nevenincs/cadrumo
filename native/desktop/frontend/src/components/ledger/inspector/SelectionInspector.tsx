@@ -923,20 +923,12 @@ export function SelectionInspector({
   );
 }
 
-/** Why the model gave nothing to read for one movement, in words, with a
- * code the words do not name under Technical details. */
+/** Why the model gave nothing to read for one movement, in words. */
 function AskedFailure({ code }: { code: string }) {
   const t = useStrings();
-  const failure = modelFailureText(t, code);
   return (
     <span className="grid gap-0.5" data-code={code}>
-      {failure.text}
-      {failure.technical && (
-        <details className="ledger-technical text-xs">
-          <summary>{t("desktop.ledger.apply.technical")}</summary>
-          <code className="font-mono">{code}</code>
-        </details>
-      )}
+      {modelFailureText(t, code)}
     </span>
   );
 }

@@ -74,7 +74,8 @@ adapters:
           nem tartalmazta az openid+email hatókört.
         id_token_module_not_importable: A google-auth id_token modul nem importálható.
         id_token_verification_failed: A Google id_token ellenőrzése sikertelen.
-        loopback_bind_failed: A helyi visszahurkos OAuth-vevő nem tudott portot foglalni.
+        loopback_bind_failed: A helyi loopback OAuth-visszahívási végpont nem tudott
+          portot foglalni.
         non_interactive: 'A Google OAuth elutasítva: az interaktív böngészős hozzájárulási
           folyamathoz vezérlő terminál szükséges, de ezt a parancsot nem interaktívan
           futtatták.'
@@ -106,8 +107,8 @@ adapters:
         snapshot_modelo_conflict: A nyomtatványdefiníciók {snapshot_modelo!r} nyomtatványa
           ütközik az észlelt {detected!r} értékkel.
         tax_id_unresolved: Az adóazonosító nem volt meghatározható a PDF szövegéből.
-        template_not_detected: A(z) {path} sablonja nem észlelhető automatikusan; a
-          felülbíráláshoz add meg a --modelo és --year értékeket.
+        template_not_detected: A(z) {path} sablonja nem észlelhető automatikusan;
+          a felülbíráláshoz add meg a --modelo és --year értékeket.
         year_conflict: A --year {year} ütközik az észlelt {detected} értékkel.
     financial:
       providers:
@@ -192,9 +193,8 @@ adapters:
           namespace_blank: A helyi tárhely névtere nem lehet üres.
           namespace_create_path_too_long: 'A helyi tárhely nem tudta létrehozni a(z)
             {namespace} névteret: az útvonal hosszabb a Windows által megengedettnél.
-            Helyezd át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb
-            útvonalra, vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat
-            config storage check`).'
+            Helyezd át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy
+            engedélyezd a LongPathsEnabled beállítást (lásd `aeat config storage check`).'
           namespace_create_permission: 'A helyi tárhely nem tudta létrehozni a névteret:
             {namespace}.'
           namespace_forbidden_characters: A helyi tárhely névtere {namespace} tiltott
@@ -208,20 +208,18 @@ adapters:
             az objektum payloadját.
           payload_read_permission: A helyi tárhely nem tudta olvasni az objektum payloadját.
           payload_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
-            tartalmát: az útvonal hosszabb a Windows által megengedettnél.
-            Helyezd át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb útvonalra,
-            vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat config storage
-            check`).'
+            tartalmát: az útvonal hosszabb a Windows által megengedettnél. Helyezd
+            át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy engedélyezd
+            a LongPathsEnabled beállítást (lásd `aeat config storage check`).'
           payload_write_permission: A helyi tárhely nem tudta írni az objektum payloadját.
           sidecar_malformed: A helyi sidecar {sidecar_path} nem olvasható vagy hibás.
           sidecar_missing: A helyi objektum sidecarja hiányzik.
           sidecar_not_object: A helyi sidecar {sidecar_path} nem JSON objektum.
           sidecar_write_failed: A helyi tárhely nem tudta írni az objektum sidecarját.
           sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
-            sidecar fájlját: az útvonal hosszabb a Windows által megengedettnél.
-            Helyezd át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb útvonalra,
-            vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat config storage
-            check`).'
+            sidecar fájlját: az útvonal hosszabb a Windows által megengedettnél. Helyezd
+            át a CADRUMO_STORAGE_ROOT beállítást egy rövidebb útvonalra, vagy engedélyezd
+            a LongPathsEnabled beállítást (lásd `aeat config storage check`).'
           written_at_invalid: 'A helyi sidecar written_at mezője hiányzik, nem értelmezhető,
             vagy nem tartalmaz időzónát: {actual_value}.'
   persistence:
@@ -238,7 +236,6 @@ adapters:
             külföldi vagyonelem-nyilvántartás.
       inventory:
         errors:
-          inventory_ledger_absent: Ez a készletnyilvántartás nem létezik.
           inventory_ledger_already_exists: Ez a készletnyilvántartás már létezik.
           inventory_ledger_not_found: A kért készletnyilvántartás nem található.
           load_inventory_ledger_failed: A titkosított készletnyilvántartás nem tölthető
@@ -258,9 +255,9 @@ adapters:
         ehhez a nyomtatványhoz.
       empty_identity_nif: Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni
         az élő benyújtási megfigyelést.
-      form_render_timeout: Az AEAT nyilatkozatnyilvántartó űrlapja nem renderelődött
-        az időkorláton belül; a munkamenet lejárhatott, vagy az AEAT karbantartási
-        oldalt szolgál ki.
+      form_render_timeout: Az AEAT nyilatkozatnyilvántartó űrlapjának megjelenítése
+        nem készült el az időkorláton belül; a munkamenet lejárhatott, vagy az AEAT
+        karbantartási oldalt szolgál ki.
       iva_wallet_empty_amount_cell: Az IVA kompenzációs tárca összeg cellája üres.
       iva_wallet_empty_period_cell: Az IVA kompenzációs tárca időszak cellája üres.
       justificante_column_missing: Az AEAT nyilatkozatválasz hiányzik a justificante
@@ -278,8 +275,8 @@ adapters:
       listing_nav_failed: Az AEAT nyilatkozatlista navigáció sikertelen volt. Ellenőrizd
         a hálózati kapcsolatot, és próbáld újra.
       modelo_unavailable: Az AEAT bevallásnyilvántartója nem kínálja a kért nyomtatványt.
-      no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
-        futtasd először a `cadrumo-runtime config auth status` parancsot.
+      no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs tartósan
+        tárolva; futtasd először a `cadrumo-runtime config auth status` parancsot.
       notification_content_requires_operator: 'Nem nyitható meg olvasatlan értesítés
         tartalma: ez a lépés maga a kézbesítés (comparecencia), amely jogilag kézbesíti
         az értesítést és elindítja a határidőket; ehhez az aláírásodra van szükség.

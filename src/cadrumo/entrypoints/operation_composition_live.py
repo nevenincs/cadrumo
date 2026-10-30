@@ -201,14 +201,12 @@ def compose_live_sede_view_operation(inputs: OperationCompositionInputs) -> Oper
     from ..adapters.outbound.aeat.browser.sede_view import open_sede_view
     from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
     from ..application.live.sede_view_operation import build_sede_view_definition, build_sede_view_registration
-    from .live_state_composition import preflight_filed_history_provider
 
     definition = build_sede_view_definition(
         certificate_secret_backend_factory=build_certificate_secret_backend,
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=inputs.scope,
         browser_resources_factory=BrowserRuntimeResourceScope,
-        provider_preflight=preflight_filed_history_provider,
         view_browser_factory=open_sede_view,
         stream_opener=inputs.sede_view_stream_opener,
     )

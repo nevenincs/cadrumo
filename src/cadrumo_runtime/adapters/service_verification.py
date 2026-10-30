@@ -15,7 +15,6 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.logging import get_logger
 from cadrumo.core.path_confinement import HostPathRefusal, opened_confined_file
-from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.service_access import InstalledServiceDescriptor, VerifiedServicePeer
 from cadrumo_client.contracts.transport import ConnectionContext
@@ -340,7 +339,7 @@ class InstalledNativeServiceVerifier:
     def installed_parent_image_matches(self, image_path: str, descriptor_path: str, image_digest: str) -> bool:
         """Verify a desktop parent against its exact bounded package image."""
         try:
-            package = runtime_package_directory(Path(sys.executable), mode=storage_mode().mode)
+            package = runtime_package_directory(Path(sys.executable))
             if package is None:
                 return False
             resolved_expected = _installed_parent_path(package, image_path, descriptor_path)

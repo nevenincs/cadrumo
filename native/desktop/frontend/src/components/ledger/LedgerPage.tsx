@@ -56,7 +56,6 @@ import {
 import {
   SECTION_ICONS,
   TAB_SECTIONS,
-  failureCode,
   periodText,
   sectionName,
   sectionTabId,
@@ -78,6 +77,8 @@ import { ImportDialog } from "./transfer/ImportDialog";
 import { dayText } from "./transfer/transferWords";
 import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
 import { HealthSection } from "./setup/HealthSection";
+import { AssetsSection } from "./assets/AssetsSection";
+import { StockPane } from "./assets/StockPane";
 import { RegistersSection } from "./setup/RegistersSection";
 import { RuleDialog, type RuleDialogTarget } from "./setup/RuleDialog";
 import { RulesSection, type RulesArea } from "./setup/RulesSection";
@@ -129,6 +130,7 @@ export function LedgerPage({
   pane,
   contribute,
   copy,
+  onOpenLink,
   onFloor,
 }: {
   port: LedgerPort;
@@ -152,6 +154,9 @@ export function LedgerPage({
   contribute(actions: (() => Action[]) | null): void;
   /** Puts text on the clipboard through the host. */
   copy(text: string): Promise<void>;
+  /** Opens an official address in the system browser, as the window does
+   * for any external link. */
+  onOpenLink?(url: string): void;
   /** Tells the window the least width the page needs beside the agent, in
    * CSS pixels, or null where it needs no more than any pane. */
   onFloor?(width: number | null): void;
@@ -569,6 +574,16 @@ export function LedgerPage({
       />
     );
   else if (section === "registers") body = <RegistersSection {...setupProps} />;
+  else if (section === "assets")
+    body = (
+      <AssetsSection
+        port={setupProps.port}
+        reader={setupProps.reader}
+        locale={setupProps.locale}
+        stock={<StockPane {...setupProps} />}
+        onOpenLink={onOpenLink}
+      />
+    );
   else if (section === "health")
     body = (
       <HealthSection
@@ -621,10 +636,7 @@ export function LedgerPage({
         icon="alert"
         description={
           <span key={periodWindow.generation} role="alert">
-            {t("desktop.ledger.failed")}{" "}
-            <code className="font-mono text-xs">
-              {failureCode(periodWindow.failure)}
-            </code>
+            {t("desktop.ledger.failed")}
           </span>
         }
       >

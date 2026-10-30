@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
+import { facts } from "@/shell/compose";
 import { ownAccountChange, type OwnAccountChange } from "../../../shell/ledger";
 import { parseIsoDate } from "../../../shell/ledgerGrammar";
 import type {
@@ -352,11 +353,12 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     );
 
   const designationText = (found: OwnAccountDesignation) =>
-    `${t(`desktop.ledger.accounts.role.${found.role}`)} · ${
+    facts(t, [
+      t(`desktop.ledger.accounts.role.${found.role}`),
       found.modelo
         ? t("desktop.ledger.accounts.modelo", { modelo: found.modelo })
-        : t("desktop.ledger.accounts.every_modelo")
-    }`;
+        : t("desktop.ledger.accounts.every_modelo"),
+    ]);
   const day = (value: string | null) =>
     value ? dateText(locale, value, true) : null;
 

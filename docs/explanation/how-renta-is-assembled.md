@@ -29,7 +29,7 @@ filing year:
 ```
 
 - **Profile facts.** Who you are: tax id, residence comunidad, marital status, spouse and descendant data, disability grades, declaration type. These come from your taxpayer profile, one row per fact (the `renta-profile-*`, `renta-family-*`, and `renta-maritime-*` rows in the listing).
-- **Totals from your records.** What your activity earned and spent: the year's classified income and deductible expense entries, added up per box and listed as the `renta-ledger-*` rows. These are the same records your quarterly filings read - Renta reads the whole year at once.
+- **Totals from your records.** What your activity earned and spent: the year's classified income and deductible expense entries, added up per box and listed as the `renta-ledger-*` rows. These are the same records your quarterly filings read - Renta reads the whole year at once. The 2025 list also includes box 0227 for intangible-asset amortisation; those amounts come from the activity asset register, because no ledger expense category routes to that box.
 - **Prior filings folded in.** What you already reported during the year: the Modelo 130 or 131 instalments you paid, the retenciones reported on Modelos 111, 123, 190, and 193, and the activity income attributed on Modelo 184, where they exist (the rows the listing labels `relation_prefill`). The tool reads these from your own recorded filings, not from AEAT.
 - **Last year's declaration.** What carries across years: a negative base liquidable from an earlier Renta carries forward from your own prior declaration recorded as filed, listed under the source `previous_filing`, so this year's declaration can offset it.
 - **Stock inventory.** The closing-stock variation and stock purchases of an

@@ -400,6 +400,43 @@ impl Supervisor {
         endpoint.exchange(request, secret)
     }
 
+    /// The admitted service identity for a sequence of related administration reads.
+    pub fn admin_generation(&self) -> Result<u64> {
+        self.begin();
+        lock(&self.shared.admin)
+            .as_ref()
+            .map(|endpoint| endpoint.generation)
+            .ok_or_else(|| {
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("agent_admin_unavailable")
+            })
+    }
+
+    /// Exchange with the same admitted service, rejecting retirement or replacement.
+    pub fn administer_generation(
+        &self,
+        request: serde_json::Value,
+        generation: u64,
+    ) -> Result<serde_json::Value> {
+        let changed = || {
+            ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("agent_admin_generation_changed")
+        };
+        let endpoint = lock(&self.shared.admin)
+            .as_ref()
+            .filter(|endpoint| endpoint.generation == generation)
+            .cloned()
+            .ok_or_else(changed)?;
+        let answer = endpoint.exchange(request, None)?;
+        if !lock(&self.shared.admin)
+            .as_ref()
+            .is_some_and(|endpoint| endpoint.generation == generation)
+        {
+            return Err(changed());
+        }
+        Ok(answer)
+    }
+
     pub fn person_request(&self, request: serde_json::Value) -> Result<serde_json::Value> {
         self.begin();
         let person = lock(&self.shared.running)
@@ -1458,6 +1495,74 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bound_administration_rejects_replacement_before_and_during_an_exchange() {
+        use std::io::{Read, Write};
+        use std::net::TcpListener;
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let (arrived, waiting) = std::sync::mpsc::channel();
+        let (release, released) = std::sync::mpsc::channel();
+        let server = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut frame = || {
+                let mut header = [0; 4];
+                stream.read_exact(&mut header).unwrap();
+                let mut data = vec![0; u32::from_be_bytes(header) as usize];
+                stream.read_exact(&mut data).unwrap();
+                data
+            };
+            let _bearer = frame();
+            let request: serde_json::Value = serde_json::from_slice(&frame()).unwrap();
+            arrived.send(()).unwrap();
+            released.recv().unwrap();
+            let reply = serde_json::to_vec(&serde_json::json!({"version":1,"request_id":request["request_id"],"result":{"kind":"refused","code":"busy"}})).unwrap();
+            stream
+                .write_all(&(reply.len() as u32).to_be_bytes())
+                .unwrap();
+            stream.write_all(&reply).unwrap();
+        });
+        let observe: Observe = Arc::new(|| Box::pin(async { observed(false, true, None) }));
+        let supervisor = Arc::new(Supervisor::new(
+            observe,
+            every(Duration::from_secs(60)),
+            None,
+            Arc::new(Diagnostics::default()),
+        ));
+        let endpoint = super::super::admin::Endpoint {
+            port,
+            bearer: Arc::new(Zeroizing::new("test".to_owned())),
+            generation: 1,
+            gate: Default::default(),
+        };
+        *lock(&supervisor.shared.admin) = Some(endpoint.clone());
+        let error = supervisor
+            .administer_generation(serde_json::json!({"action":"catalog"}), 2)
+            .unwrap_err();
+        assert_eq!(
+            error.reason.as_deref(),
+            Some("agent_admin_generation_changed")
+        );
+        let worker = {
+            let supervisor = supervisor.clone();
+            std::thread::spawn(move || {
+                supervisor.administer_generation(serde_json::json!({"action":"catalog"}), 1)
+            })
+        };
+        waiting.recv().unwrap();
+        *lock(&supervisor.shared.admin) = Some(super::super::admin::Endpoint {
+            generation: 2,
+            ..endpoint
+        });
+        release.send(()).unwrap();
+        let error = worker.join().unwrap().unwrap_err();
+        assert_eq!(
+            error.reason.as_deref(),
+            Some("agent_admin_generation_changed")
+        );
+        server.join().unwrap();
+    }
 
     #[test]
     fn replacing_a_gateway_in_the_same_launcher_invalidates_its_admission() {

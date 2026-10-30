@@ -50,280 +50,26 @@
           }
         ],
         "result": {
-          "authority_generation": "4e93241b65ef5ea94a1ba3157b0ac87ce2c09944e90110128f67135a5bc9f523",
+          "authority_generation": "ad49e4630d2a56ee56ed2b825e25269260b62ccf25a7b8ece03d281019f4a397",
           "detail_row_fields": [],
           "filing_year": 2025,
           "ledger_derivable": [
-            {
-              "binding_id": "renta-ledger-income-0171",
-              "binding_source": "ledger_renta_income_aggregation",
-              "casilla_id": "0171",
-              "label": "Operating income",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0171",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0183-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0183",
-              "label": "Other operating consumables",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0183",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0186-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0186",
-              "label": "Social Security contributions of the activity holder",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0186",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0191-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0191",
-              "label": "Taxpayer's subsistence expenses",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0191",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0192-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0192",
-              "label": "Leases and royalties",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0192",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0193-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0193",
-              "label": "Repairs and maintenance",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0193",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0194-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0194",
-              "label": "Utility supplies",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0194",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0195-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0195",
-              "label": "Contributions to alternative mutual societies of the activity holder",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0195",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0199-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0199",
-              "label": "Services from independent professionals",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0199",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0200-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0200",
-              "label": "Insurance premiums",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0200",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0202-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0202",
-              "label": "Other external services",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0202",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0203-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0203",
-              "label": "Financial expenses",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0203",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0206-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0206",
-              "label": "Other tax-deductible levies",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0206",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0208-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0208",
-              "label": "Depreciation of tangible fixed assets",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0208",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": "renta-ledger-expense-0217-deductible",
-              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
-              "casilla_id": "0217",
-              "label": "Other tax-deductible items, excluding provisions",
-              "legal_refs": [
-                "ley-35-2006:art-27",
-                "ley-35-2006:art-28",
-                "ley-35-2006:art-30",
-                "ley-35-2006:art-31",
-                "ley-35-2006:art-32"
-              ],
-              "number": "0217",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ]
-            }
+            {"binding_id":"renta-ledger-income-0171","binding_source":"ledger_renta_income_aggregation","casilla_id":"0171","label":"Operating income","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0171","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0183-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0183","label":"Other operating consumables","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0183","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0186-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0186","label":"Social Security contributions of the activity holder","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0186","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0191-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0191","label":"Taxpayer's subsistence expenses","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0191","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0192-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0192","label":"Leases and royalties","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0192","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0193-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0193","label":"Repairs and maintenance","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0193","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0194-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0194","label":"Utility supplies","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0194","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0195-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0195","label":"Contributions to alternative mutual societies of the activity holder","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0195","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0199-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0199","label":"Services from independent professionals","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0199","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0200-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0200","label":"Insurance premiums","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0200","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0202-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0202","label":"Other external services","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0202","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0203-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0203","label":"Financial expenses","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0203","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0206-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0206","label":"Other tax-deductible levies","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0206","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0208-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0208","label":"Depreciation of tangible fixed assets","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0208","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0217-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0217","label":"Other tax-deductible items, excluding provisions","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0217","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
+            {"binding_id":"renta-ledger-expense-0227-deductible","binding_source":"ledger_renta_gastos_estimacion_directa_aggregation","casilla_id":"0227","label":"Depreciation of intangible fixed assets","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0227","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]}
           ],
           "live_observation": [],
           "modelo": "100",
@@ -504,7 +250,6 @@
             {"binding_id":null,"binding_source":null,"casilla_id":"0216","label":"Patronage incentives for general-interest activities","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0216","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0219","label":"Tax-deductible provisions","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0219","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0225","label":"Reductions for irregular income","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0225","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
-            {"binding_id":null,"binding_source":null,"casilla_id":"0227","label":"Depreciation of intangible fixed assets","legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"number":"0227","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0228","label":"For the lease of a primary residence by single-parent families (amount from box [1130] of Annex B.11)","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"0228","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0229","label":"For the lease of a primary residence by persons with a disability (amount from box [1130] of Annex B.11)","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"0229","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},
             {"binding_id":null,"binding_source":null,"casilla_id":"0230","label":"For the acquisition and renovation of dwellings under model-village projects","legal_refs":["ley-35-2006:art-77","orden-hac-277-2026:art-3"],"number":"0230","source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"]},

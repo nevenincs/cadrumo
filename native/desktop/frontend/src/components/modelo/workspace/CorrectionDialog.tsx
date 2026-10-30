@@ -137,9 +137,9 @@ export function CorrectionDialog({
       : outcome.kind === "said"
         ? outcome.words
         : outcome.kind === "refused"
-          ? t("workspace.modelo.outcome.refused", { code: outcome.code })
+          ? t("workspace.modelo.outcome.refused")
           : outcome.kind === "not_sent"
-            ? t("workspace.modelo.outcome.failed", { code: outcome.code })
+            ? t("workspace.modelo.outcome.failed")
             : outcome.kind === "unknown"
               ? t("workspace.modelo.outcome.unknown")
               : null;

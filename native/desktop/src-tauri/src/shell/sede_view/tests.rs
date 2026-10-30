@@ -1154,6 +1154,23 @@ fn refused_before_opening(needs: Option<ItemId>) -> (Arc<SedeViewHost>, Value) {
 }
 
 #[test]
+fn an_unusable_browser_check_ends_the_view_and_logs_its_component_refusal() {
+    let (host, _) = host();
+    let window = Arc::new(Window::default());
+    let view = host.component_not_ready(window.sink()).unwrap();
+    let ended = window.last("ended").unwrap();
+    assert_eq!(ended["view"], view);
+    assert_eq!(ended["reason"], "component_not_ready");
+    assert_eq!(ended["recovery_action_id"], "operator.provision.browser");
+    assert_eq!(ended["outcome"], Value::Null);
+    assert_eq!(
+        refusals(&host),
+        [json!({"event":"feature_refused","feature":"sede_view",
+            "refusal":"component_not_ready","item":"browser"})]
+    );
+}
+
+#[test]
 fn a_view_refused_for_a_component_ends_with_its_setup_and_is_logged_as_a_warning() {
     let (host, ended) = refused_before_opening(Some(ItemId::Browser));
     assert_eq!(ended["reason"], "component_not_ready");

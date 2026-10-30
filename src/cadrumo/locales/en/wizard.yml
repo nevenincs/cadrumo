@@ -317,7 +317,7 @@ wizard:
           workers who relocated to Spain and elected the Beckham Law regime (Art.
           93 LIRPF), available for the first 6 years after relocation.
       irpf-special-regime-start-date:
-        help: Date the worker elected the inpatriate regime (YYYY-MM-DD). Only when
+        help: Date the worker elected the impatriate regime (YYYY-MM-DD). Only when
           irpf-special-regime is "impatriado". RIRPF Art. 116. The regime expires
           at the end of the 6th calendar year.
       iva-cash-accounting-regime-enrolled:
@@ -545,11 +545,11 @@ wizard:
             description: You have opted for the Article 93 LIRPF special regime (Modelo
               151).
             label: Inbound expatriate - Beckham Law (Art. 93 LIRPF)
-        help: The inpatriate (Beckham Law) regime applies for the first 6 tax years
+        help: The impatriate (Beckham Law) regime applies for the first 6 tax years
           after relocation. Most taxpayers are on the general regime.
         prompt: IRPF special regime (Beckham Law / Art. 93 LIRPF)
       irpf-special-regime-start-date:
-        help: Date the worker opted into the inpatriate regime (RIRPF Art. 116). The
+        help: Date the worker opted into the impatriate regime (RIRPF Art. 116). The
           regime expires at the end of the 6th calendar year.
         prompt: Special regime election date (YYYY-MM-DD)
       modelo-111-no-retenciones-periods:

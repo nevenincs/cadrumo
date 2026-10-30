@@ -8,6 +8,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 
+from .signal_command_paths import command_path_pattern
 from .signal_syntax import (
     TRANSLATION_BRACKET_REFERENCE_RE,
     TRANSLATION_CODE_RE,
@@ -101,6 +102,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
         (TRANSLATION_URL_RE, " "),
         (TRANSLATION_PATH_RE, " "),
+        (command_path_pattern(), " "),
         (TRANSLATION_OPTION_RE, " "),
         (TRANSLATION_FORMULA_RE, " "),
         (TRANSLATION_NUMERIC_RE, " "),

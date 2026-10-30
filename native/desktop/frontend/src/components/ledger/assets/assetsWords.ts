@@ -1,11 +1,15 @@
-// The words the Assets tab shares: its fixed labels, and the chrome words for
-// the tokens the backend states about an element, a year of its plan and an
-// event of its timeline. A token this table does not know reads as "other",
+// The words the Assets tab shares. Its own labels are chrome under
+// the desktop.ledger.assets family. Every word for something the backend states comes
+// from the canonical catalogue, by the backend's own token: the members of its
+// enums are worded under `ledger.actividad_asset.<family>.<token>`, and a
+// refusal or an absence arrives as a catalogue key with the facts that fill it
+// in. A token or key the catalogue has no word for reads as a generic word,
 // never as the raw token. Nothing here decides anything.
 
 import type { IconName } from "@/components/ui/icon";
 import type { Translate } from "../../../shell/strings";
-import type { AssetCounts } from "./assetsContract";
+import type { AssetCounts, ReasonFact } from "../../../shell/ledgerSetup";
+import { dateText } from "../movements/movementWords";
 
 /** The labels the tab's parts name directly. */
 export const ASSET_KEYS = {
@@ -29,33 +33,37 @@ export const ASSET_KEYS = {
     label: "desktop.ledger.assets.list.label",
     empty: "desktop.ledger.assets.list.empty",
     no_name: "desktop.ledger.assets.list.no_name",
-    disposed: "desktop.ledger.assets.list.disposed",
     column: {
       name: "desktop.ledger.assets.list.column.name",
       serial: "desktop.ledger.assets.list.column.serial",
       kind: "desktop.ledger.assets.list.column.kind",
       method: "desktop.ledger.assets.list.column.method",
       in_service: "desktop.ledger.assets.list.column.in_service",
+      state: "desktop.ledger.assets.list.column.state",
+      basis: "desktop.ledger.assets.list.column.basis",
+      accumulated: "desktop.ledger.assets.list.column.accumulated",
+      pending: "desktop.ledger.assets.list.column.pending",
     },
   },
   plan: {
     column: {
       year: "desktop.ledger.assets.plan.column.year",
       status: "desktop.ledger.assets.plan.column.status",
+      rate: "desktop.ledger.assets.plan.column.rate",
       planned: "desktop.ledger.assets.plan.column.planned",
       claimed: "desktop.ledger.assets.plan.column.claimed",
       days: "desktop.ledger.assets.plan.column.days",
-      revision: "desktop.ledger.assets.plan.column.revision",
-      matches: "desktop.ledger.assets.plan.column.matches",
+      minimum: "tui.ledger.activity_asset.plan_minimum",
       replaced_by: "desktop.ledger.assets.plan.column.replaced_by",
-      used_by: "desktop.ledger.assets.plan.column.used_by",
+      revision: "desktop.ledger.assets.plan.column.revision",
     },
+    minimum_incomplete: "tui.ledger.activity_asset.plan_minimum_incomplete",
     claims: "desktop.ledger.assets.plan.claims",
     in_effect: "desktop.ledger.assets.plan.in_effect",
     replaced: "desktop.ledger.assets.plan.replaced",
+    recorded_zero: "desktop.ledger.assets.plan.recorded_zero",
     matches: "desktop.ledger.assets.plan.matches",
     no_match: "desktop.ledger.assets.plan.no_match",
-    recorded_zero: "desktop.ledger.assets.plan.recorded_zero",
     election_changed: "desktop.ledger.assets.plan.election_changed",
     projected: "desktop.ledger.assets.plan.projected",
     projected_note: "desktop.ledger.assets.plan.projected_note",
@@ -63,102 +71,241 @@ export const ASSET_KEYS = {
     claimable: "desktop.ledger.assets.plan.claimable",
     claimable_none: "desktop.ledger.assets.plan.claimable_none",
     gap: "desktop.ledger.assets.plan.gap",
+    limits: {
+      title: "desktop.ledger.assets.plan.limits.title",
+      maximum_coefficient:
+        "desktop.ledger.assets.plan.limits.maximum_coefficient",
+      minimum_coefficient:
+        "desktop.ledger.assets.plan.limits.minimum_coefficient",
+      maximum_period: "desktop.ledger.assets.plan.limits.maximum_period",
+      period_years: "desktop.ledger.assets.plan.limits.period_years",
+      ends_on: "desktop.ledger.assets.plan.limits.ends_on",
+      citations: "desktop.ledger.assets.plan.limits.citations",
+      citations_partial: "desktop.ledger.assets.plan.limits.citations_partial",
+    },
   },
   timeline: {
     column: {
       sequence: "desktop.ledger.assets.timeline.column.sequence",
       recorded: "desktop.ledger.assets.timeline.column.recorded",
       event: "desktop.ledger.assets.timeline.column.event",
-      origin: "desktop.ledger.assets.timeline.column.origin",
       effect: "desktop.ledger.assets.timeline.column.effect",
       changes: "desktop.ledger.assets.timeline.column.changes",
-      replaces: "desktop.ledger.assets.timeline.column.replaces",
     },
     time_not_recorded: "desktop.ledger.assets.timeline.time_not_recorded",
     not_in_calculation: "desktop.ledger.assets.timeline.not_in_calculation",
-    change: "desktop.ledger.assets.timeline.change",
+    used_by: "desktop.ledger.assets.timeline.used_by",
     change_added: "desktop.ledger.assets.timeline.change_added",
     change_cleared: "desktop.ledger.assets.timeline.change_cleared",
   },
   write: {
     reused: "desktop.ledger.assets.write.reused",
     incomplete: "desktop.ledger.assets.write.incomplete",
-    conflict: "desktop.ledger.assets.write.conflict",
-    dispose_note: "desktop.ledger.assets.write.dispose_note",
+    refused: "desktop.ledger.assets.refused",
+    fill_in: "desktop.ledger.assets.write.fill_in",
   },
+  baja: {
+    preview: "desktop.ledger.assets.baja.preview",
+    figures: "desktop.ledger.assets.baja.figures",
+    acquisition_value: "desktop.ledger.assets.baja.acquisition_value",
+    deducted: "desktop.ledger.assets.baja.deducted",
+    minimum: "tui.ledger.activity_asset.plan_minimum",
+    reduction: "desktop.ledger.assets.baja.reduction",
+    excess: "desktop.ledger.assets.baja.excess",
+    net_value: "desktop.ledger.assets.baja.net_value",
+    transmission_value: "desktop.ledger.assets.baja.transmission_value",
+    result: "desktop.ledger.assets.baja.result",
+    route_changed: "desktop.ledger.assets.baja.route_changed",
+    findings: "desktop.ledger.assets.baja.findings",
+  },
+  unrecognised: "desktop.ledger.assets.unrecognised",
   year: "desktop.ledger.assets.year",
+  year_estimated: "desktop.ledger.assets.year_estimated",
+  year_estimated_note: "desktop.ledger.assets.year_estimated_note",
 } as const;
 
-const OTHER = "other";
-
-const STATE = {
-  claimed: "desktop.ledger.assets.state.claimed",
-  missing: "desktop.ledger.assets.state.missing",
-  partial: "desktop.ledger.assets.state.partial",
-  incomplete: "desktop.ledger.assets.state.incomplete",
-  forecast: "desktop.ledger.assets.state.forecast",
-  [OTHER]: "desktop.ledger.assets.state.other",
+/** The catalogue families the tab words by the backend's token. Each is the
+ * head of the keys the generated strings carry for one of its enums. */
+export const ASSET_FAMILY = {
+  acquired_condition: "ledger.actividad_asset.acquired_condition.",
+  acquisition_shape: "ledger.actividad_asset.acquisition_shape.",
+  asset_kind: "ledger.actividad_asset.asset_kind.",
+  basis_stage: "ledger.actividad_asset.basis_stage.",
+  claim_state: "ledger.actividad_asset.claim_state.",
+  digit_order: "ledger.actividad_asset.digit_order.",
+  disposal_finding: "ledger.actividad_asset.disposal_finding.",
+  disposal_reason: "ledger.actividad_asset.disposal_reason.",
+  document_kind: "ledger.actividad_asset.document_kind.",
+  event_kind: "ledger.actividad_asset.event_kind.",
+  method: "ledger.actividad_asset.method.",
+  non_deductible_iva_state: "ledger.actividad_asset.non_deductible_iva_state.",
+  not_table_bound: "ledger.actividad_asset.not_table_bound.",
+  opening_history_status: "ledger.actividad_asset.opening_history_status.",
+  original_price_determination:
+    "ledger.actividad_asset.original_price_determination.",
+  plan_absence: "ledger.actividad_asset.plan_absence.",
+  plan_advisory: "ledger.actividad_asset.plan_advisory.",
+  prior_free_depreciation_regime:
+    "ledger.actividad_asset.prior_free_depreciation_regime.",
+  regime: "ledger.actividad_asset.regime.",
+  register_state: "ledger.actividad_asset.register_state.",
+  stale_reason: "ledger.actividad_asset.stale_reason.",
 } as const;
 
-/** The glyph a year's state is drawn with; the word sits in its tooltip and
- * accessible name, and colour never carries it alone. */
-export const STATE_ICON: Record<keyof typeof STATE, IconName> = {
+/** The family every reason key the backend serves belongs to. */
+export const ASSET_REASON_FAMILY = "ledger.actividad_asset.errors.";
+
+export type AssetFamily = keyof typeof ASSET_FAMILY;
+
+/** A value worded by the catalogue key the backend served with it, else the
+ * value as stated. A key outside the families, or one the generated strings
+ * lack, is never drawn raw: the value stands. */
+export function keyedText(
+  t: Translate,
+  key: string | null | undefined,
+  value: string,
+): string {
+  if (
+    key === null ||
+    key === undefined ||
+    !Object.values(ASSET_FAMILY).some((family) => key.startsWith(family))
+  )
+    return value;
+  const said = t(key);
+  return said === key ? value : said;
+}
+
+/** The word for a token of a family, else the generic word: never the raw
+ * token or key. */
+export function tokenWord(
+  t: Translate,
+  family: AssetFamily,
+  token: string | null,
+): string {
+  if (token === null) return t(ASSET_KEYS.unrecognised);
+  const key = `${ASSET_FAMILY[family]}${token}`;
+  const said = t(key);
+  return said === key ? t(ASSET_KEYS.unrecognised) : said;
+}
+
+/** A fact as the person reads it: a date in the language of the interface,
+ * any other value as the backend states it. */
+function factText(t: Translate, value: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? dateText(t.locale ?? "en", value, true)
+    : value;
+}
+
+/**
+ * A reason in words: the catalogue sentence of the key the backend gave,
+ * filled in with the facts it gave. Null where the sentence cannot be said
+ * whole: no key, a key outside the reason family or that the generated strings
+ * lack, or a fact the sentence needs that was not given. The caller then
+ * shows its own generic word.
+ */
+export function reasonText(
+  t: Translate,
+  key: string | null,
+  facts: readonly ReasonFact[] = [],
+): string | null {
+  if (key === null || !key.startsWith(ASSET_REASON_FAMILY)) return null;
+  const said = t(
+    key,
+    Object.fromEntries(
+      facts.map((fact) => [fact.key, factText(t, fact.value)]),
+    ),
+  );
+  return said === key || /\{\w+\}/.test(said) ? null : said;
+}
+
+/** A refusal in words: its reason, else the generic refused word. */
+export function refusalText(
+  t: Translate,
+  refusal: {
+    code?: string;
+    reason_key?: string | null;
+    reason_facts?: readonly ReasonFact[];
+  } | null,
+): string {
+  return (
+    reasonText(t, refusal?.reason_key ?? null, refusal?.reason_facts ?? []) ??
+    t(ASSET_KEYS.write.refused)
+  );
+}
+
+/** The glyph a year's claim state is drawn with; the word sits in its tooltip
+ * and accessible name, and colour never carries it alone. */
+const STATE_ICON: Record<string, IconName> = {
   claimed: "check",
+  superseded: "check",
   missing: "alert",
   partial: "pending",
-  incomplete: "unknown",
-  forecast: "clock",
-  other: "info",
+  not_due: "clock",
 };
+export const stateIcon = (token: string): IconName =>
+  Object.hasOwn(STATE_ICON, token) ? STATE_ICON[token]! : "info";
 
-const ABSENT = {
-  free_method: "desktop.ledger.assets.absent.free_method",
-  opening_history_unknown:
-    "desktop.ledger.assets.absent.opening_history_unknown",
-  not_computed: "desktop.ledger.assets.absent.not_computed",
-  [OTHER]: "desktop.ledger.assets.absent.other",
-} as const;
-
-const FINDING = {
-  claim_stale: "desktop.ledger.assets.finding.claim_stale",
-  claim_conflict: "desktop.ledger.assets.finding.claim_conflict",
-  opening_history_missing:
-    "desktop.ledger.assets.finding.opening_history_missing",
-  [OTHER]: "desktop.ledger.assets.finding.other",
-} as const;
-
-const EVENT = {
-  element_added: "desktop.ledger.assets.event.element_added",
-  correction_added: "desktop.ledger.assets.event.correction_added",
-  description_added: "desktop.ledger.assets.event.description_added",
-  claim_recorded: "desktop.ledger.assets.event.claim_recorded",
-  baja_recorded: "desktop.ledger.assets.event.baja_recorded",
-  [OTHER]: "desktop.ledger.assets.event.other",
-} as const;
-
-const ORIGIN = {
-  person: "desktop.ledger.assets.origin.person",
-  import: "desktop.ledger.assets.origin.import",
-  system: "desktop.ledger.assets.origin.system",
-  [OTHER]: "desktop.ledger.assets.origin.other",
-} as const;
-
-const FIELD = {
+/** The word and glyph of a field of a record, by the path the backend names
+ * it with. A path this table does not know shows as the backend states it. */
+const FIELD: Record<string, string> = {
   name: "desktop.ledger.assets.field.name",
-  serial: "desktop.ledger.assets.field.serial",
-  kind: "desktop.ledger.assets.field.kind",
-  method: "desktop.ledger.assets.field.method",
-  basis: "desktop.ledger.assets.field.basis",
+  serial_number: "desktop.ledger.assets.field.serial",
+  description: "desktop.ledger.assets.field.description",
+  document_kind: "desktop.ledger.assets.field.document_kind",
+  document_number: "desktop.ledger.assets.field.document_number",
+  supplier_name: "desktop.ledger.assets.field.supplier_name",
+  supplier_tax_id: "desktop.ledger.assets.field.supplier_tax_id",
+  asset_kind: "desktop.ledger.assets.field.kind",
+  acquisition_shape: "desktop.ledger.assets.field.acquisition_shape",
+  acquired_condition: "desktop.ledger.assets.field.acquired_condition",
+  "basis.stage": "desktop.ledger.assets.field.basis_stage",
+  "basis.business_use_share": "desktop.ledger.assets.field.business_use_share",
+  "basis.prior_allocation_provenance":
+    "desktop.ledger.assets.field.allocation_provenance",
+  "opening_history.status": "desktop.ledger.assets.field.opening_status",
+  "opening_history.accumulated_amount":
+    "desktop.ledger.assets.field.opening_amount",
+  "opening_history.covered_through_tax_year":
+    "desktop.ledger.assets.field.opening_through",
+  "opening_history.amortization_method":
+    "desktop.ledger.assets.field.opening_method",
+  "amortization.used_original_price.determination":
+    "desktop.ledger.assets.field.used_determination",
+  "amortization.used_original_price.original_price":
+    "desktop.ledger.assets.field.used_price",
+  "amortization.used_original_price.evidence_reference":
+    "desktop.ledger.assets.field.used_evidence",
+  "amortization.sum_of_digits_period_years":
+    "desktop.ledger.assets.field.digit_period",
+  "amortization.digit_order": "desktop.ledger.assets.field.digit_order",
+  "amortization.low_value.election_reference":
+    "desktop.ledger.assets.field.low_value_election",
+  "amortization.low_value.new_material_evidence_reference":
+    "desktop.ledger.assets.field.low_value_evidence",
+  "amortization.research_development_evidence_reference":
+    "desktop.ledger.assets.field.research_evidence",
   in_service_date: "desktop.ledger.assets.field.in_service_date",
+  out_of_service_date: "desktop.ledger.assets.field.out_of_service_date",
+  "disposal.disposal_date": "desktop.ledger.assets.field.disposal_date",
+  "disposal.reason": "desktop.ledger.assets.field.disposal_reason",
+  "disposal.proceeds": "desktop.ledger.assets.field.proceeds",
+  "disposal.transmission_costs":
+    "desktop.ledger.assets.field.transmission_costs",
   residual_value: "desktop.ledger.assets.field.residual_value",
+  "basis.basis_amount": "desktop.ledger.assets.field.basis",
+  "basis.non_deductible_iva": "desktop.ledger.assets.field.non_deductible_iva",
+  "amortization.method": "desktop.ledger.assets.field.method",
+  "amortization.authority_class_key": "desktop.ledger.assets.field.class",
+  "amortization.linear_coefficient": "desktop.ledger.assets.field.coefficient",
+  "disposal.market_value": "desktop.ledger.assets.field.market_value",
+  "disposal.prior_free_depreciation_regime":
+    "desktop.ledger.assets.field.prior_regime",
+  "disposal.later_affectation_on":
+    "desktop.ledger.assets.field.later_affectation",
   amount: "desktop.ledger.assets.field.amount",
-  baja_date: "desktop.ledger.assets.field.baja_date",
-  baja_reason: "desktop.ledger.assets.field.baja_reason",
-  // A claim's span is worded by the claim form's own labels.
-  from: "desktop.ledger.assets.from",
-  until: "desktop.ledger.assets.until",
-  [OTHER]: "desktop.ledger.assets.field.other",
-} as const;
+};
+export const fieldWord = (t: Translate, path: string) =>
+  Object.hasOwn(FIELD, path) ? t(FIELD[path]!) : path;
 
 const COUNT = {
   missing: "desktop.ledger.assets.count.missing",
@@ -177,31 +324,6 @@ export const COUNT_ICON: Record<keyof AssetCounts, IconName> = {
 
 /** The kinds of count a list row can carry, in the order they are shown. */
 export const COUNT_KINDS = Object.keys(COUNT) as (keyof AssetCounts)[];
-
-const known = <Table extends Record<string, string>>(
-  table: Table,
-  token: string,
-): Table[keyof Table] =>
-  (Object.hasOwn(table, token)
-    ? table[token]
-    : table[OTHER]) as Table[keyof Table];
-
-/** The token of a state the glyph table knows, else "other". */
-export const stateOf = (token: string): keyof typeof STATE =>
-  (Object.hasOwn(STATE, token) ? token : OTHER) as keyof typeof STATE;
-
-export const stateWord = (t: Translate, token: string) =>
-  t(known(STATE, token));
-export const absentWord = (t: Translate, token: string) =>
-  t(known(ABSENT, token));
-export const findingWord = (t: Translate, token: string) =>
-  t(known(FINDING, token));
-export const eventWord = (t: Translate, token: string) =>
-  t(known(EVENT, token));
-export const originWord = (t: Translate, token: string) =>
-  t(known(ORIGIN, token));
-export const fieldWord = (t: Translate, token: string) =>
-  t(known(FIELD, token));
 
 /** What a count of `kind` says in a tooltip or an accessible name. */
 export const countWord = (

@@ -37,13 +37,13 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
         yield pinned
 
 
-def _profile(residence: str) -> UserProfileRecord:
+def _profile(residence: str, *periods: UserProfileFact) -> UserProfileRecord:
     return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),
-            UserProfileFact(path="tax_residence.ccaa", value=residence),
+            *(periods or (UserProfileFact(path="tax_residence.ccaa", value=residence),)),
         ),
         context=leased_profile_create_context(),
     )
@@ -63,13 +63,14 @@ def _resident_of(
     repository: MemoryRepository,
     residence: str,
     operation: PinnedAuthorityOperation,
+    *periods: UserProfileFact,
 ) -> ActivityAssetOperations:
     """The same register, now answering the residence question from a real profile and the real catalogue."""
-    record = _profile(residence)
+    record = _profile(residence, *periods)
     authority = replace(
         memory_register_authority(),
-        residence_territory=lambda: resident_territory(
-            bucket_id=_BUCKET_ID, profile_record=record, operation=operation
+        residence_territory=lambda on: resident_territory(
+            bucket_id=_BUCKET_ID, profile_record=record, operation=operation, as_of=on
         ),
     )
     return ActivityAssetOperations(
@@ -125,6 +126,57 @@ def test_a_foral_resident_cannot_forecast_claim_correct_or_hand_off(
 
     assert [error.value.translated_message for error in (forecast, claim, correction, handoff)] == [_FORAL_KEY] * 4
     assert len(repository.history.claims) == 1
+
+
+def test_a_write_is_refused_only_for_the_period_truly_in_foral_territory(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    repository, asset_id, _ = _repository_with_a_claim()
+    moved = _resident_of(
+        repository,
+        "",
+        operation,
+        UserProfileFact(path="tax_residence.ccaa", value="madrid", valid_to=date(2025, 12, 30)),
+        UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(2025, 12, 31)),
+    )
+
+    with pytest.raises(ActividadAssetValidationError) as foral_year:
+        moved.forecast(asset_id=asset_id, covered_from=date(2025, 7, 1), covered_until=date(2026, 1, 1))
+
+    assert foral_year.value.translated_message == _FORAL_KEY
+
+
+def test_a_write_for_a_year_before_a_move_to_foral_territory_still_goes_through(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    repository, asset_id, _ = _repository_with_a_claim()
+    moved = _resident_of(
+        repository,
+        "",
+        operation,
+        UserProfileFact(path="tax_residence.ccaa", value="madrid", valid_to=date(2026, 12, 31)),
+        UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(2027, 1, 1)),
+    )
+
+    forecast = moved.forecast(asset_id=asset_id, covered_from=date(2025, 7, 1), covered_until=date(2026, 1, 1))
+
+    assert forecast.asset_id == asset_id
+
+
+def test_a_write_for_a_period_no_residence_covers_is_not_refused(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    repository, asset_id, _ = _repository_with_a_claim()
+    later_only = _resident_of(
+        repository,
+        "",
+        operation,
+        UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(2030, 1, 1)),
+    )
+
+    forecast = later_only.forecast(asset_id=asset_id, covered_from=date(2025, 7, 1), covered_until=date(2026, 1, 1))
+
+    assert forecast.asset_id == asset_id
 
 
 def test_an_unreadable_residence_is_refused_as_unresolved_not_treated_as_common(

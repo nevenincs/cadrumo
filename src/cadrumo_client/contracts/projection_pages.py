@@ -62,7 +62,12 @@ class ProjectionPage(BaseModel):
 
 def project_document_page(document: dict[str, JsonValue], request: ProjectionPageRequest) -> ProjectionPage:
     """Slice only while the operation owner retains its normal output guard."""
-    encoded = canonical_json_bytes(document)
+    try:
+        encoded = canonical_json_bytes(document)
+    except (TypeError, ValueError, RecursionError):
+        # A custom Pydantic serializer can return a non-JSON value even in
+        # JSON mode. Never let it publish a partial page or kill the worker.
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
     digest = sha256_hex(encoded)
     if (
         len(encoded) > PROJECTION_DOCUMENT_MAX_BYTES

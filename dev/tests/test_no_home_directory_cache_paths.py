@@ -78,7 +78,9 @@ _HOME_IS_REDACTED: Final[dict[str, str]] = {
     "src/cadrumo/core/tests/test_diagnostic_log.py": (
         "uses the real home spelling in an opaque extra to prove it cannot be promoted into exported diagnostic text"
     ),
-    "src/cadrumo/core/logging.py": "derives every spelling of the home directory so log output can be scrubbed of it",
+    "src/cadrumo/core/log_scrubbing.py": (
+        "derives every spelling of the home directory so log output can be scrubbed of it"
+    ),
     "src/cadrumo/core/tests/test_logging_private_helpers.py": (
         "exercises that scrubbing, so it must build the paths the redaction is meant to remove"
     ),

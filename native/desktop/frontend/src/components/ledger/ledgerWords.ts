@@ -1,5 +1,5 @@
-// Words and names the Ledger page's components share: its sections, how a
-// period is written in the chrome, and the code a failed read is shown with.
+// Words and names the Ledger page's components share: its sections, and how
+// a period is written in the chrome.
 
 import type { IconName } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
@@ -8,7 +8,6 @@ import {
   periodGranularity,
   type LedgerPeriod,
 } from "../../shell/ledgerGrammar";
-import type { LedgerReadFailure } from "../../shell/ledgerWindow";
 import type { Translate } from "../../shell/strings";
 
 /** The sections shown as tabs, and those under the setup menu. */
@@ -16,6 +15,7 @@ export const TAB_SECTIONS = [
   "movements",
   "invoices",
   "documents",
+  "assets",
 ] as const satisfies readonly LedgerSection[];
 export const SETUP_SECTIONS = [
   "rules",
@@ -27,6 +27,7 @@ export const SECTION_ICONS: Record<LedgerSection, IconName> = {
   movements: "ledger",
   invoices: "page",
   documents: "fileArchive",
+  assets: "archive",
   rules: "filter",
   registers: "office",
   health: "shield",
@@ -69,11 +70,4 @@ export function periodText(
     period.year,
     monthNames(locale)[Number(period.code) - 1] ?? period.code,
   ]);
-}
-
-/** The code a failed read is shown with, for the person to quote. */
-export function failureCode(failure: LedgerReadFailure): string {
-  if (failure.kind === "failed") return failure.reason ?? failure.code;
-  if (failure.kind === "refused") return failure.reason ?? "refused";
-  return "unsettled";
 }

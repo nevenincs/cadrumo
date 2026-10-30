@@ -2,6 +2,7 @@
 // ended, a rule's name, and the product's tokens in the chrome language.
 // Nothing here decides anything.
 
+import { facts } from "@/shell/compose";
 import type { GrammarRefusal } from "../../../shell/ledgerGrammar";
 import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
 import type { Translate } from "../../../shell/strings";
@@ -31,11 +32,8 @@ export function callText<R>(
   if (call.kind === "saved_unread")
     return t("desktop.ledger.apply.outcome.saved_unread");
   if (call.kind === "refused")
-    return (
-      refusal?.(call.reason) ??
-      t("desktop.ledger.form.refused", { code: call.reason ?? "refused" })
-    );
-  return t("desktop.ledger.form.failed", { code: call.reason ?? call.code });
+    return refusal?.(call.reason) ?? t("desktop.ledger.form.refused");
+  return t("desktop.ledger.form.failed");
 }
 
 /** What a rule matches, in plain words where it was written from them. */
@@ -49,9 +47,10 @@ export function ruleMatchText(t: Translate, pattern: string): string {
 /** A rule's name, made from what it matches and what it decides: rules
  * keep no name of their own. */
 export function ruleName(t: Translate, rule: LedgerRuleRow): string {
-  const target = rule.category_id
-    ? `${classificationLabel(t, rule.classification)} · ${categoryLabel(t, rule.category_id)}`
-    : classificationLabel(t, rule.classification);
+  const target = facts(t, [
+    classificationLabel(t, rule.classification),
+    rule.category_id && categoryLabel(t, rule.category_id),
+  ]);
   return `${ruleMatchText(t, rule.description_pattern)} → ${target}`;
 }
 

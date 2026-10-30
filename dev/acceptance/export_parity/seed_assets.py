@@ -11,9 +11,6 @@ from .scenario import (
     ASSETS,
     ActivityAsset,
 )
-from .seed_contracts import (
-    _ACTOR,
-)
 from .seed_inputs import (
     _money,
 )
@@ -96,7 +93,16 @@ class AssetSeedStage(SeedState):
             "amortization": {"regime": "normal", "method": asset.method, "authority_class_key": asset.class_key},
         }
         self._result(
-            ("app", "ledger", "actividad-asset", "create", json.dumps(revision, separators=(",", ":")), "--name", "Parity element"), stage=stage
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "create",
+                json.dumps(revision, separators=(",", ":")),
+                "--name",
+                "Parity element",
+            ),
+            stage=stage,
         )
         if asset.is_iva_investment_good and not carried_in:
             self._result(

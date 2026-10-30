@@ -148,6 +148,17 @@ impl AgentHost {
         self.supervisor.administer(request, secret)
     }
 
+    pub(crate) fn admin_generation(&self) -> Result<u64> {
+        self.supervisor.admin_generation()
+    }
+
+    pub(crate) fn administer_generation(&self, request: Value, generation: u64) -> Result<Value> {
+        if !matches!(request["action"].as_str(), Some("catalog" | "status")) {
+            self.require_person()?;
+        }
+        self.supervisor.administer_generation(request, generation)
+    }
+
     fn require_person(&self) -> Result<()> {
         let reply = self
             .supervisor

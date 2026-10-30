@@ -865,17 +865,20 @@ application:
         what_to_do: Read the note on the asset's disposal, and record or correct what
           it names if it applies to you.
       activity_asset_foral_territory:
-        what: You live in the Basque Country or Navarre, where this form does not
-          apply, so your registered assets are not included.
-        what_to_do: Declare these assets with the tax authority of your territory.
+        what: You live in the Basque Country or Navarre in this period, where other
+          rules govern amortization. It is outside this calculation and no figure is
+          deducted.
+        what_to_do: Work out the amortization under the foral rules of your
+          territory and declare it with its tax authority.
       activity_asset_residence_period_unknown:
         what: Your profile records a tax residence, but none for this period, so your
           assets are counted as if this form applies.
         what_to_do: State where you lived in this period in your profile, then calculate
           again.
       activity_asset_residence_unresolved:
-        what: Your recorded tax residence could not be read, so your registered assets
-          are not included.
+        what: Your recorded tax residence could not be read, so the amortization of
+          your registered assets is outside this calculation and no figure is
+          deducted.
         what_to_do: State your tax residence in your profile, then calculate again.
       administrador_retencion_rate_mismatch:
         what: The withholding rate on a record for a company director differs from

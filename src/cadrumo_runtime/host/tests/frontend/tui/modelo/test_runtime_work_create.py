@@ -83,12 +83,13 @@ class _Client:
         self.session_id = session_id
         self.frontend = OperationFrontendProjection.TUI
         self.result_requests: list[OperationResultProjectionRequestV1] = []
+        self.result_budgets: list[tuple[float, float, float]] = []
         self.result_document: dict[str, object] | None = None
 
     def read_result_document(
-        self, request: OperationResultProjectionRequestV1, *, deadline: float
+        self, request: OperationResultProjectionRequestV1, *, deadline: float, timeout: float, page_timeout: float
     ) -> dict[str, object]:
-        del deadline
+        self.result_budgets.append((deadline, timeout, page_timeout))
         self.result_requests.append(request)
         assert self.result_document is not None
         return self.result_document
@@ -506,7 +507,7 @@ def test_runtime_controller_requires_explicit_refusal_detail_optin() -> None:
         client=cast(FrontendClient, client),
         operation_id=_OPERATION_ID,
         session_id=_SESSION,
-        deadline=time.monotonic() + 30,
+        deadline=time.monotonic() + 120,
     )
 
     with pytest.raises(RefusalError) as raised:
@@ -527,6 +528,10 @@ def test_runtime_controller_requires_explicit_refusal_detail_optin() -> None:
 
     assert allowed == result
     assert len(client.result_requests) == 1
+    deadline, timeout, page_timeout = client.result_budgets[0]
+    assert deadline == controller.deadline
+    assert 30 < timeout <= 120
+    assert page_timeout == 30
     request = client.result_requests[0]
     assert request.operation_id == _OPERATION_ID
     assert request.terminal_revision == observation.projection.revision

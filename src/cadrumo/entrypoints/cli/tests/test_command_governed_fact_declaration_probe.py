@@ -91,6 +91,7 @@ from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, Enrollm
 from ....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from ....adapters.persistence.storage.custody.tests.enrollment_support import changed
 from ....application.user_profile import automation_administration_service
+from ....core.storage_environment import TEMPORARY_VARIABLES
 from ....domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     require_governed_fact_authority,
@@ -105,6 +106,14 @@ from .cli_runner import invoke_uncached_typer_app
 __all__ = ["offline_guard_fixture"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _restore_browser_driver_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return browser startup's process pins after the offline seal refuses its child."""
+    for name in ("PLAYWRIGHT_BROWSERS_PATH", *TEMPORARY_VARIABLES):
+        monkeypatch.setenv(name, os.environ[name])
+
 
 _MISSING_SCOPE_WORDING: Final = (
     "explicit authority operation or scope",

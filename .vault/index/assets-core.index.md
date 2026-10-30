@@ -6,7 +6,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:0941637553af59f6a532997d4ae7435418e62ee6d1016559120cd23bc2553901'
+body_hash: 'sha256:6f65cb892120d43b72271d1c4d93ed8523e016fb8026c71f9952b313c2dd3127'
 related:
   - '[[2026-09-21-assets-core-audit]]'
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
@@ -22,7 +22,10 @@ related:
   - '[[2026-09-24-assets-core-average-workforce-write-path-adr]]'
   - '[[2026-09-24-assets-core-profile-indexed-object-write-path-reference]]'
   - '[[2026-10-30-assets-core-amortization-law-and-form-placement-research]]'
+  - '[[2026-10-30-assets-core-disposal-adr]]'
   - '[[2026-10-30-assets-core-implementation-state-against-law-reference]]'
+  - '[[2026-10-30-assets-core-ledger]]'
+  - '[[2026-10-30-assets-core-plan]]'
 ---
 
 # `assets-core` feature index
@@ -38,10 +41,19 @@ Auto-generated index of all documents tagged with `#assets-core`.
 - `2026-09-23-assets-core-amortization-method-set-adr` - `assets-core` adr: `IRPF activity amortization method set and election contract` | (**status:** `accepted`)
 - `2026-09-23-assets-core-vehicle-affectation-adr` - `assets-core` adr: `Vehicles are amortized only on a typed affectation declaration` | (**status:** `accepted`)
 - `2026-09-24-assets-core-average-workforce-write-path-adr` - `assets-core` adr: `The average workforce is written per year through one typed profile subject` | (**status:** `accepted`)
+- `2026-10-30-assets-core-disposal-adr` - `assets-core` adr: `Disposal of activity assets` | (**status:** `accepted`)
 
 ### audit
 
 - `2026-09-21-assets-core-audit` - `assets-core` audit: `Integrated assets-core review`
+
+### exec
+
+- `2026-10-30-assets-core-ledger` - `assets-core` ledger
+
+### plan
+
+- `2026-10-30-assets-core-plan` - `assets-core` plan
 
 ### reference
 

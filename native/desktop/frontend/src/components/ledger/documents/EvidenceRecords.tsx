@@ -230,9 +230,6 @@ function RecordDetail({
       {notice?.kind === "refused" && (
         <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
           <AlertTitle>{t("desktop.ledger.documents.not_done")}</AlertTitle>
-          <AlertDescription>
-            <code className="font-mono text-xs">{notice.code}</code>
-          </AlertDescription>
         </Alert>
       )}
       {notice?.kind === "unknown" && (
@@ -490,8 +487,7 @@ export function EvidenceRecords({
           <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
             {addFailed === "unknown"
               ? t("desktop.ledger.documents.unknown")
-              : t("desktop.ledger.documents.not_done")}{" "}
-            <code className="font-mono text-xs">{addFailed}</code>
+              : t("desktop.ledger.documents.not_done")}
           </Alert>
         )}
         {records.length === 0 ? (

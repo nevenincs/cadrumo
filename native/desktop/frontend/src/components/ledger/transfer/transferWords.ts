@@ -35,7 +35,7 @@ export function importRefusal(
     return t("desktop.ledger.import.refusal.reader_unavailable_here");
   return IMPORT_REFUSALS.has(reason)
     ? t(`desktop.ledger.import.refusal.${reason}`)
-    : t("desktop.ledger.import.refusal.other", { code: reason });
+    : t("desktop.ledger.import.refusal.other");
 }
 
 const DIAGNOSTICS: Record<LedgerImportDiagnosticMessage, string> = {

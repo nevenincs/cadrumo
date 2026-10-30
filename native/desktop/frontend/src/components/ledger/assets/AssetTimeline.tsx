@@ -5,16 +5,22 @@ import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { dateText, stampText } from "../movements/movementWords";
 import { CallLine, Reading } from "../setup/SetupParts";
-import type { TimelineChange, TimelineEvent } from "./assetsContract";
-import { ASSET_KEYS, eventWord, fieldWord, originWord } from "./assetsWords";
+import type { TimelineChange, TimelineEvent } from "../../../shell/ledgerSetup";
+import {
+  ASSET_KEYS,
+  fieldWord,
+  keyedText,
+  refusalText,
+  tokenWord,
+} from "./assetsWords";
 import { changeValueText, DASH, PLAN_KEYS } from "./planWords";
 import { readTimeline, useAssetRead } from "./planRead";
 
-// One element's history: what was appended, in what order, from where, and
-// what it replaced. It is append-only. Events stay in the order the backend
-// numbered them and cannot be sorted; an event is never restyled or
-// rewritten by a later one, which names what it replaces in a column of its
-// own. Before and after values are the backend's, never a difference worked
+// One element's history: what was appended, in what order, from where. It is
+// append-only. Events stay in the order the backend numbered them and cannot
+// be sorted; an event is never restyled or rewritten by a later one, and a
+// claim that replaces another states the amount it replaced as its before
+// value. Before and after values are the backend's, never a difference worked
 // out here. Forecasts, findings and reads are not events.
 
 /** One changed field, as the backend stated its before and after. */
@@ -26,8 +32,11 @@ function Change({
   change: TimelineChange;
 }) {
   const t = useStrings();
-  const { field_key: field, before, after } = change;
-  const value = (text: string) => changeValueText(t, locale, field, text);
+  const { field, before, after } = change;
+  // A token the backend worded by catalogue key is drawn by that key; any
+  // other value is drawn as it is stated.
+  const value = (text: string, key?: string | null) =>
+    keyedText(t, key, changeValueText(t, locale, field, text));
   return (
     <li className="flex flex-wrap items-center gap-x-1.5">
       <span className="text-muted-foreground">{fieldWord(t, field)}</span>
@@ -37,7 +46,7 @@ function Change({
             <Icon name="plus" size="xs" />
             {t(ASSET_KEYS.timeline.change_added)}
           </span>
-          <span>{value(after)}</span>
+          <span>{value(after, change.after_key)}</span>
         </>
       )}
       {before !== null && after === null && (
@@ -46,15 +55,15 @@ function Change({
             <Icon name="erase" size="xs" />
             {t(ASSET_KEYS.timeline.change_cleared)}
           </span>
-          <span>{value(before)}</span>
+          <span>{value(before, change.before_key)}</span>
         </>
       )}
       {before !== null && after !== null && (
         <>
-          <span>{value(before)}</span>
+          <span>{value(before, change.before_key)}</span>
           <Icon name="arrow" size="xs" className="text-muted-foreground" />
           <span className="sr-only">{t(PLAN_KEYS.change_to)}</span>
-          <span>{value(after)}</span>
+          <span>{value(after, change.after_key)}</span>
         </>
       )}
     </li>
@@ -82,6 +91,38 @@ function Recorded({
   );
 }
 
+/** What the rest of the profile makes of a claim: whether it still matches
+ * the schedule, why not, and what uses it. */
+function ClaimUse({ event }: { event: TimelineEvent }) {
+  const t = useStrings();
+  const use = event.claim;
+  if (use === null) return null;
+  return (
+    <span className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+      <span className="inline-flex items-center gap-1">
+        <Icon
+          name={use.matches_current_schedule ? "check" : "alert"}
+          size="xs"
+          className={
+            use.matches_current_schedule ? "text-success" : "text-warning"
+          }
+        />
+        {use.matches_current_schedule
+          ? t(ASSET_KEYS.plan.matches)
+          : t(ASSET_KEYS.plan.no_match)}
+      </span>
+      {use.stale_reason !== null && (
+        <span>{tokenWord(t, "stale_reason", use.stale_reason)}</span>
+      )}
+      {use.used_by.length > 0 && (
+        <span className="[overflow-wrap:anywhere]">
+          {t(ASSET_KEYS.timeline.used_by, { count: use.used_by.length })}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function TimelineTable({
   locale,
   events,
@@ -98,10 +139,8 @@ function TimelineTable({
         column.sequence,
         column.recorded,
         column.event,
-        column.origin,
         column.effect,
         column.changes,
-        column.replaces,
       ].map((key) => ({ id: key, label: t(key), name: t(key) })),
     [t, column],
   );
@@ -133,15 +172,17 @@ function TimelineTable({
                 <Recorded t={t} locale={locale} event={event} />
               </td>
               <td className="px-2 py-1.5">
-                <span className="block">{eventWord(t, event.type_key)}</span>
+                <span className="block">
+                  {tokenWord(t, "event_kind", event.kind)}
+                </span>
                 {!event.affects_calculation && (
                   <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <Icon name="info" size="xs" />
                     {t(ASSET_KEYS.timeline.not_in_calculation)}
                   </span>
                 )}
+                <ClaimUse event={event} />
               </td>
-              <td className="px-2 py-1.5">{originWord(t, event.origin_key)}</td>
               <td className="px-2 py-1.5 tabular-nums">
                 {event.effect_date === null ? (
                   <span aria-hidden="true">{DASH}</span>
@@ -156,19 +197,12 @@ function TimelineTable({
                   <ul className="flex flex-col gap-0.5">
                     {event.changes.map((change) => (
                       <Change
-                        key={change.field_key}
+                        key={change.field}
                         locale={locale}
                         change={change}
                       />
                     ))}
                   </ul>
-                )}
-              </td>
-              <td className="px-2 py-1.5 tabular-nums">
-                {event.replaces_sequence === null ? (
-                  <span aria-hidden="true">{DASH}</span>
-                ) : (
-                  event.replaces_sequence
                 )}
               </td>
             </tr>
@@ -196,21 +230,18 @@ export function AssetTimeline({
   const { read } = useAssetRead(readTimeline, port, reader, assetId);
   if (read === null) return <Reading label={t(PLAN_KEYS.reading)} />;
   if (read.kind !== "done") return <CallLine call={read} />;
-  if (read.result.outcome === "refused")
+  const { outcome, refusal, events } = read.result;
+  if (outcome === "refused" || events === null)
     return (
-      <CallLine
-        call={{
-          kind: "refused",
-          reason: read.result.refusal?.code ?? null,
-          detail: null,
-        }}
-      />
+      <p role="alert" className="p-3 text-sm text-destructive">
+        {refusalText(t, refusal)}
+      </p>
     );
-  if (read.result.events.length === 0)
+  if (events.length === 0)
     return (
       <p className="p-3 text-sm text-muted-foreground">
         {t(PLAN_KEYS.timeline_empty)}
       </p>
     );
-  return <TimelineTable locale={locale} events={read.result.events} />;
+  return <TimelineTable locale={locale} events={events} />;
 }

@@ -53,6 +53,7 @@ from typing import Annotated, Final, Literal, cast
 
 from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, model_validator
 
+from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, MASK_SENTINEL
 from dev._paths import REPO_ROOT, UTF_8
@@ -525,16 +526,16 @@ def write_golden(
     hand-edited golden drifts from the executed truth and is overwritten by the
     next refresh. The file is key-sorted UTF-8 JSON with a trailing newline.
     Large arrays use bounded, one-record-per-line rows to limit whitespace and
-    keep individual observation changes reviewable.
+    keep individual observation changes reviewable. Publication replaces the
+    target only after the complete contents have been staged and synced.
     """
     target = golden_path(page, transcript.sequence_id, goldens_root=goldens_root)
     golden = build_golden(transcript)
     document = golden.model_dump(mode="json")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
+    atomic_write_text(
+        target,
         format_sequence_json(document) + "\n",
         encoding=_UTF_8,
-        newline="\n",
     )
     return target
 

@@ -10,7 +10,6 @@ from typing import cast
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.path_confinement import HostPathRefusal, opened_confined_file
-from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.contracts.service_access import InstalledServiceDescriptor
 
 from .boot_record import runtime_package_directory
@@ -85,7 +84,7 @@ def _descriptor(
 
 
 def _package_root() -> Path | None:
-    package = runtime_package_directory(Path(sys.executable), mode=storage_mode().mode)
+    package = runtime_package_directory(Path(sys.executable))
     if package is None:
         return None
     root = Path(package)

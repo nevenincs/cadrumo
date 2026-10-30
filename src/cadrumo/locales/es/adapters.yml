@@ -206,8 +206,8 @@ adapters:
             estar vacío.
           namespace_create_path_too_long: 'El almacenamiento local no pudo crear el
             espacio de nombres {namespace}: la ruta supera el límite de longitud de
-            ruta de Windows. Traslade CADRUMO_STORAGE_ROOT a una ruta más corta
-            o habilite LongPathsEnabled (véase `aeat config storage check`).'
+            ruta de Windows. Traslade CADRUMO_STORAGE_ROOT a una ruta más corta o
+            habilite LongPathsEnabled (véase `aeat config storage check`).'
           namespace_create_permission: El almacenamiento local no pudo crear el espacio
             de nombres {namespace}.
           namespace_forbidden_characters: El espacio de nombres local {namespace}
@@ -253,7 +253,6 @@ adapters:
             el extranjero del modelo 720.
       inventory:
         errors:
-          inventory_ledger_absent: Ese registro de inventario no existe.
           inventory_ledger_already_exists: Ese registro de inventario ya existe.
           inventory_ledger_not_found: No se encontró el registro de inventario solicitado.
           load_inventory_ledger_failed: No se pudo cargar el registro de inventario

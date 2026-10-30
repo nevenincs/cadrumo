@@ -107,7 +107,7 @@ def test_every_check_holds_for_a_host_that_defines_each_environment_from_the_dec
         ("hosted gateway", None),
         ("worker", None),
         ("generic interpreter", None),
-    ]
+    ], results
     assert "setup succeeded; stores-state reads current" in results[1].detail
     gateway = results[2]
     assert "refused hosted_lane_unproven" in gateway.detail

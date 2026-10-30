@@ -154,7 +154,7 @@ effective_from = 2024-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26632 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1397/2023 articulo sexto: modifica la subclave 03 de la clave A del registro de declarado del Modelo 345."
+notes = "Orden HFP/1397/2023 artículo sexto: modifica la subclave 03 de la clave A del registro de declarado del Modelo 345."
 required_text = [
     "Orden HFP/823/2022",
     "subclave",

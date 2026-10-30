@@ -24,10 +24,10 @@
 //! to publish its session and settle, and when the person's session is lost,
 //! which cancels it without publishing.
 //!
-//! A view whose operation the runtime refuses is logged as a warning. One
-//! refused because a component it needs is not set up ends `component_not_ready`
-//! with that component's setup action, read from the verdict the operation
-//! recorded and checked against the setup engine's own items.
+//! Before each open the setup engine checks the browser's current local state.
+//! A browser that is not usable ends `component_not_ready` with its setup action.
+//! The runtime's recorded refusal provides the same recovery if the browser
+//! becomes unavailable after the check. Other runtime refusals are logged.
 mod transfer;
 mod upstream;
 
@@ -73,7 +73,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri::{
-    State, Url, Webview,
+    Manager, State, Url, Webview,
     ipc::{Channel, InvokeResponseBody},
 };
 use transfer::{Dialogs, Download, NativeDialogs, upload_file};
@@ -1484,6 +1484,34 @@ impl SedeViewHost {
         Ok(())
     }
 
+    /// End a view before submission when the fresh browser check found it unusable.
+    fn component_not_ready(&self, sink: Sink) -> Result<u32> {
+        let current = lock(&self.current);
+        self.admits(current.as_ref())?;
+        let view = self.issued.fetch_add(1, Ordering::AcqRel) + 1;
+        drop(current);
+        self.diagnostics.service(
+            None,
+            ServiceFact::FeatureRefused {
+                feature: RefusedFeature::SedeView,
+                refusal: FeatureRefusal::ComponentNotReady,
+                item: Some(ItemId::Browser),
+            },
+        );
+        let message = Message::Ended {
+            view,
+            reason: Reason::ComponentNotReady,
+            code: None,
+            outcome: None,
+            recovery_action_id: Some(ItemId::Browser.declaration().recovery_action),
+        };
+        let body = serde_json::to_string(&message).map_err(|_| failure("unavailable"))?;
+        if !sink(InvokeResponseBody::Json(body)) {
+            return Err(failure("unavailable"));
+        }
+        Ok(view)
+    }
+
     /// Takes the one place for a submitted view and starts relaying it. A view
     /// that cannot take it is cancelled.
     fn open_with(self: &Arc<Self>, started: Started, sink: Sink) -> Result<u32> {
@@ -1652,6 +1680,19 @@ async fn sede_view_open<R: tauri::Runtime>(
 ) -> Result<Opened> {
     let size = Size::admit(css_width, css_height, scale)?;
     host.admit_open()?;
+    let setup = webview
+        .try_state::<Arc<super::setup::SetupHost>>()
+        .ok_or_else(|| failure("unavailable"))?
+        .inner()
+        .clone();
+    match setup.check_browser().await {
+        Some(true) => {}
+        Some(false) => {
+            let view = host.component_not_ready(channel_sink(webview, messages))?;
+            return Ok(Opened { view });
+        }
+        None => return Err(failure("unavailable")),
+    }
     let started = start(&profile, &size)
         .await
         .inspect_err(|failure| host.submission_refused(failure))?;

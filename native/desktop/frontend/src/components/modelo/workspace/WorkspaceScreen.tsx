@@ -54,14 +54,12 @@ function runNotice(t: Translate, run: OperationRun<unknown>): HistoryNotice {
     case "refused":
       return {
         tone: "warning",
-        words: t("workspace.modelo.outcome.refused", {
-          code: run.reason ?? "refused",
-        }),
+        words: t("workspace.modelo.outcome.refused"),
       };
     case "not_sent":
       return {
         tone: "warning",
-        words: t("workspace.modelo.outcome.failed", { code: run.code }),
+        words: t("workspace.modelo.outcome.failed"),
       };
     case "unknown":
       return { tone: "danger", words: t("workspace.modelo.outcome.unknown") };
@@ -170,9 +168,7 @@ function Ready({
         (said) =>
           said ?? {
             tone: "warning",
-            words: t("workspace.modelo.outcome.failed", {
-              code: "unavailable",
-            }),
+            words: t("workspace.modelo.outcome.failed"),
           },
       );
     return outcome;
@@ -684,7 +680,7 @@ export function WorkspaceScreen({
     return (
       <div className="mx-auto flex max-w-xl flex-col gap-3 p-6">
         <Alert tone="warning" icon={<Icon name="alert" />}>
-          {t("workspace.modelo.outcome.failed", { code: read.code })}
+          {t("workspace.modelo.outcome.failed")}
         </Alert>
         <Button
           variant="outline"

@@ -13,7 +13,8 @@ import {
   SetupTable,
   useSetupRead,
 } from "../setup/SetupParts";
-import { callRefusal, refusalText } from "./AssetList";
+import { callRefusal } from "./AssetList";
+import { refusalText } from "./assetsWords";
 
 /**
  * Which declaration boxes the claims of a year reach, read only. The year
@@ -93,6 +94,17 @@ export function FilingHandoffPanel({
             label: t("desktop.ledger.assets.column.amount"),
             numeric: true,
             cell: ([, found]) => amountText(locale, found.amount.decimal),
+          },
+          {
+            key: "unavailable",
+            label: t("desktop.ledger.assets.column.unavailable"),
+            cell: ([, found]) =>
+              "unavailable_asset_ids" in found &&
+              found.unavailable_asset_ids.length > 0
+                ? t("desktop.ledger.assets.handoff_unavailable", {
+                    count: found.unavailable_asset_ids.length,
+                  })
+                : "—",
           },
         ]}
         className="ledger-assets-handoff"

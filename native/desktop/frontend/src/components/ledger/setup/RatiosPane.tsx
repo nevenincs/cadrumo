@@ -8,6 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { listed } from "@/shell/compose";
 import {
   compareDecimal,
   parsePercent,
@@ -347,9 +348,12 @@ export function RatiosPane({
           {validationResult.findings.length
             ? t("desktop.ledger.ratios.findings", {
                 count: validationResult.findings.length,
-                categories: validationResult.findings
-                  .map((finding) => nameOf(finding.category))
-                  .join(", "),
+                categories: listed(
+                  t,
+                  validationResult.findings.map((finding) =>
+                    nameOf(finding.category),
+                  ),
+                ),
               })
             : t("desktop.ledger.ratios.valid", {
                 count: validationResult.overrides_count,

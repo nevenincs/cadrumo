@@ -314,7 +314,7 @@ wizard:
       enrollment-public-administration-budget-gt-6000000:
         help: Közigazgatási költségvetés meghaladja a 6 000 000-t
       entity-type:
-        help: Természetes személy, jogi személy vagy jövedelemattribúciós szervezet
+        help: Természetes személy, jogi személy vagy jövedelem-hozzárendelési szervezet
       family-descendants-eu-eea-deduction:
         help: EU/EEE leszármazottak a családi egység levonásban
       family-minor-children-in-unit:
@@ -866,7 +866,7 @@ wizard:
               szerint adózik.
             label: Természetes személy
         help: Természetes személy (IRPF), jogi személy (Impuesto sobre Sociedades)
-          vagy jövedelemattribúciós szervezet
+          vagy jövedelem-hozzárendelési szervezet
         prompt: Entitástípus
       incn-prior-12-months:
         help: Erre azért van szükségünk, hogy meghatározzuk, hogy a Modelo 202 az

@@ -151,7 +151,7 @@ def _split_words(value: str) -> list[str]:
 def _parse_layer_names(value: str, contract_name: str, findings: list[str]) -> tuple[str, ...]:
     """Parse layer tails so package coverage can be derived from the authority."""
     result: list[str] = []
-    for raw in value.replace("\n", " ").split(":"):
+    for raw in re.split(r"[:\n]", value):
         token = raw.strip()
         if not token:
             continue

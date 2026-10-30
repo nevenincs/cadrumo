@@ -55,6 +55,26 @@ def test_no_age_threshold_is_exposed_for_a_completed_run(tmp_path: Path) -> None
     )
 
 
+def test_seeded_running_record_does_not_authorize_reclaiming_live_artifacts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    now = 2_000_000_000.0
+    live = _run(tmp_path, "stamp-check-import-boundaries-301-aaaaaaaa", age=60, completed=False, now=now)
+    dead = _run(tmp_path, "stamp-locales-status-302-bbbbbbbb", age=3_600, completed=False, now=now)
+    for directory in (live, dead):
+        (directory / "artifacts").mkdir()
+        (directory / "run.json").write_text(json.dumps({"status": "running", "exit_status": 130}), encoding="utf-8")
+        os.utime(directory, (now - 3_600, now - 3_600))
+    monkeypatch.setattr(reaper, "process_is_live", lambda pid: pid == 301)
+
+    verdicts = reaper.assess_run_directories(tmp_path, now=now)
+
+    assert {row.directory: row.reclaimable for row in verdicts} == {live: False, dead: True}
+    assert reaper.reclaim_run_directories(verdicts) == 1
+    assert (live / "artifacts").is_dir()
+    assert not dead.exists()
+
+
 def test_a_recycled_pid_cannot_spare_unfinished_output_past_the_trust_ceiling(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

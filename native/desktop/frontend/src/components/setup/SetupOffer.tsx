@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
+import { labelled } from "../../shell/compose";
 import { useProvisioning } from "../../shell/provisioning";
 import { needsSetup } from "../../shell/setup";
 import { useStrings } from "../../shell/strings";
@@ -32,7 +33,7 @@ export function SetupOffer({
         className={cn("setup-held text-sm text-muted-foreground", className)}
         data-setup-held={target.item}
       >
-        {`${itemName(t, target.item)}: ${rowSentence(t, target)}`}
+        {labelled(t, itemName(t, target.item), rowSentence(t, target))}
       </span>
     );
   return (

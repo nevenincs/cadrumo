@@ -7,10 +7,10 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry.schema_references import legal_note_language_ranges
 
 from ._locale_chrome import chrome_anchor, docs_chrome, same_wording
 from .compile_slots import Rendering, language_text
+from .legal_note_languages import legal_note_language_ranges
 from .legal_reference_models import LegalPage, LegalProvisionRecord, LegalReferenceError
 from .legal_reference_routing import (
     legal_document_slug,

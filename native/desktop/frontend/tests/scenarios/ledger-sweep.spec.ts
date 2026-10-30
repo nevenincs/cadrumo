@@ -99,18 +99,19 @@ for (const scheme of ["light", "dark"] as const)
       expect(await audit(target), `rules ${name}`).toEqual([]);
     }
     await openSetup(target, "registers");
-    for (const name of [
-      "accounts",
-      "prorrata",
-      "capital",
-      "inventory",
-      "assets",
-    ]) {
+    for (const name of ["accounts", "prorrata", "capital"]) {
       await area(target, `desktop.ledger.registers.area.${name}`);
       expect(await audit(target), `registers ${name}`).toEqual([]);
     }
     await openSetup(target, "health");
     expect(await audit(target)).toEqual([]);
+    await head(target)
+      .getByRole("tab", { name: label("desktop.ledger.section.assets") })
+      .click();
+    for (const name of ["fixed", "stock"]) {
+      await area(target, `desktop.ledger.assets.area.${name}`);
+      expect(await audit(target), `assets ${name}`).toEqual([]);
+    }
     for (const section of ["invoices", "documents"]) {
       await head(target)
         .getByRole("tab", { name: label(`desktop.ledger.section.${section}`) })
@@ -289,7 +290,7 @@ test("Setup is opened by keys, and each area of its sections is chosen and enter
   await openLedger(target);
   const areas = [
     ["rules", 4, "desktop.ledger.rules.areas"],
-    ["registers", 5, "desktop.ledger.registers.areas"],
+    ["registers", 3, "desktop.ledger.registers.areas"],
   ] as const;
   for (const [section, count, group] of areas) {
     await setupByKeys(target, section);

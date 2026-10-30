@@ -342,6 +342,17 @@ impl SetupHost {
         .flatten()
     }
 
+    /// Check the browser afresh before a Sede view starts, and expose that row
+    /// to the setup offer even when the setup panel has not yet been opened.
+    pub(crate) async fn check_browser(&self) -> Option<bool> {
+        let usable = self.components.check_browser().await?;
+        let google = lock(&self.google).clone().unwrap_or_else(unread_account);
+        if let Some(snapshot) = compose(self.components.view(), google) {
+            self.publish(Availability::Ready, Some(snapshot));
+        }
+        Some(usable)
+    }
+
     fn publish(&self, state: Availability, snapshot: Option<Snapshot>) -> DesktopSetup {
         lock(&self.current).update(state, snapshot)
     }
@@ -1148,6 +1159,26 @@ mod tests {
 
         fn refused(answer: std::result::Result<DesktopSetup, Stop>) -> Option<Refusal> {
             answer.err().and_then(|stop| stop.refusal())
+        }
+
+        #[tokio::test]
+        async fn browser_check_publishes_fresh_row_without_starting_setup() {
+            let fixture = Fixture::new(Serving::Whole);
+            let host = host(window(&fixture));
+            assert_eq!(host.check_browser().await, Some(false));
+            let shown = lock(&host.current).value.clone();
+            let snapshot = shown.snapshot.expect("checked browser is published");
+            let browser = snapshot
+                .rows
+                .iter()
+                .find(|row| row.item == "browser")
+                .unwrap();
+            assert_eq!(browser.state, wire::State::Absent);
+            assert_eq!(browser.recovery, Some(wire::Recovery::SetUp));
+            assert_eq!(fixture.downloads(), 0);
+            assert_eq!(host.check_browser().await, Some(false));
+            assert_eq!(fixture.downloads(), 0);
+            host.close().await.unwrap();
         }
 
         #[tokio::test]

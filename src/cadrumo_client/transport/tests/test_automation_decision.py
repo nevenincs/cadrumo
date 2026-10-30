@@ -273,6 +273,7 @@ class _DecisionClient(FrontendClient):
         *,
         timeout: float = 60,
         deadline: float | None = None,
+        page_timeout: float | None = None,
     ) -> dict[str, JsonValue]:
         assert deadline is None or deadline > 0
         assert timeout > 0 and result.operation_id == self.operation_id

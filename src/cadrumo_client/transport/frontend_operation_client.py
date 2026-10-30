@@ -177,26 +177,36 @@ class OperationFrontend:
         return released
 
     def read_result_document(
-        self, result: OperationResultProjectionRequestV1, *, timeout: float = 60, deadline: float | None = None
+        self,
+        result: OperationResultProjectionRequestV1,
+        *,
+        timeout: float = 60,
+        deadline: float | None = None,
+        page_timeout: float | None = None,
     ) -> dict[str, JsonValue]:
         """Collect one canonical settled result with fresh consent for every page.
 
         The runtime applies the registered projector and current disclosure
         guard on every request. No cache, reference or digest grants access.
         A refusal, changed document or total deadline discards partial output.
+        When supplied, ``page_timeout`` also bounds each individual exchange.
         """
         timeout_deadline = deadline_after(timeout)
         if deadline is not None and not math.isfinite(deadline):
             raise ValueError("result deadline must be finite")
         deadline = timeout_deadline if deadline is None else min(timeout_deadline, deadline)
+        if page_timeout is not None:
+            # Validate before any page is requested, including for an empty budget.
+            deadline_after(page_timeout)
         collected = bytearray()
         digest: ContentDigest | None = None
         total: int | None = None
         try:
             while total is None or len(collected) < total:
                 remaining_budget(deadline)
+                page_deadline = deadline if page_timeout is None else min(deadline, deadline_after(page_timeout))
                 page = self.read_result_page(
-                    result, ProjectionPageRequest(offset=len(collected), expected_digest=digest), deadline=deadline
+                    result, ProjectionPageRequest(offset=len(collected), expected_digest=digest), deadline=page_deadline
                 )
                 if total is not None and page.total_bytes != total:
                     raise RefusalError(RefusalCode.INVALID_FRAME)

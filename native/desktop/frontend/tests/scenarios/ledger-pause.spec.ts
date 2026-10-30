@@ -166,7 +166,7 @@ test("a Setup write with an unknown outcome holds its form, and pressing it agai
   // Pressed anyway, it sends nothing.
   await held.click({ force: true });
   await expect(target.locator(".setup-call-line")).not.toContainText(
-    label("desktop.ledger.form.refused", { code: "precondition_failed" }),
+    label("desktop.ledger.form.refused"),
   );
   await expect(banner(target)).toBeVisible();
   // The re-read reads the rules, finds the move stored, and writes may
@@ -223,9 +223,7 @@ test("a saved write whose answer was not read is said as saved, never as failed"
   await expect(line).toContainText(
     label("desktop.ledger.apply.outcome.saved_unread"),
   );
-  await expect(line).not.toContainText(
-    label("desktop.ledger.form.failed", { code: "saved_unread" }),
-  );
+  await expect(line).not.toContainText(label("desktop.ledger.form.failed"));
   await expect(moveUp(target)).toHaveAccessibleName(
     new RegExp(escape(label("desktop.ledger.paused.saved_unread_reason"))),
   );

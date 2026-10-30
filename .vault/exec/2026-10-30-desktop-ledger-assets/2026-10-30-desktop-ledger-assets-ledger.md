@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:06829a8d5a46364845ed6723ee66a466ba99082b6e072dfbfd61d11f5a972e40'
+body_hash: 'sha256:451ae5e11694542c42a1bbecdf80eb39fc1e213130361a7d87b94c801db1f571'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -96,6 +96,112 @@ related:
 - `S04` `verify:` `prettier --check on S04 paths` -> `pass`
 - `S04` `verify:` `playwright (no-server config) ledger-assets-contract, ledger-setup-model, ledger-fixture-host, ledger-classes, ledger-grammar, ledger-stage, ledger-apply, ledger-plan, ledger-window, ledger-inspector-model, ledger-invoices-model, ledger-documents-model` -> `pass`
 - `S04` `by:` `implementation-engineer`
+- `S05` `A` `native/desktop/frontend/src/components/ledger/assets/assetFields.ts`
+- `S05` `A` `native/desktop/frontend/src/dev/assetsSeed.ts`
+- `S05` `A` `dev/locales/desktop_assets_keys.py`
+- `S05` `A` `dev/locales/tests/test_desktop_asset_vocabulary.py`
+- `S05` `A` `dev/registry/tests/test_desktop_asset_seed_follows_the_table.py`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/Amortization.stories.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/AmortizationPlan.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/AssetDetail.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/AssetForm.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/AssetForms.stories.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/AssetList.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/AssetTimeline.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/Assets.stories.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/AssetsSection.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/BajaForm.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/ClaimFlow.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/CorrectForm.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/FilingHandoffPanel.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/FixedAssetsPane.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/assetWrites.ts`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/assetsContract.ts`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/assetsWords.ts`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/assets/planWords.ts`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/inspector/RightPanel.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/setup/AssetsPane.tsx`
+- `S05` `M` `native/desktop/frontend/src/dev/assetsFixture.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S05` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S05` `M` `native/desktop/frontend/src/shell/strings.ts`
+- `S05` `M` `native/desktop/frontend/tests/ledger-assets-contract.spec.ts`
+- `S05` `M` `dev/locales/desktop_chrome.py`
+- `S05` `M` `dev/locales/desktop_ledger_workflow_keys.py`
+- `S05` `M` `src/cadrumo/locales/en/common.yml`
+- `S05` `M` `src/cadrumo/locales/es/common.yml`
+- `S05` `M` `src/cadrumo/locales/ca/common.yml`
+- `S05` `M` `src/cadrumo/locales/hu/common.yml`
+- `S05` `verify:` `npx tsc --noEmit` -> `pass`
+- `S05` `verify:` `ledger-assets-contract.spec` -> `pass`
+- `S05` `by:` `implementation-engineer`
+- `S05` `A` `native/desktop/frontend/src/components/ledger/assets/DisposalFigures.tsx`
+- `S05` `M` `dev/locales/desktop_assets_keys.py`
+- `S05` `M` `dev/locales/tests/test_desktop_asset_vocabulary.py`
+- `S05` `M` `dev/registry/tests/test_desktop_asset_seed_follows_the_table.py`
+- `S05` `M` `native/desktop/frontend/src/dev/assetsSeed.ts`
+- `S06` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/ledgerWords.ts`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.stories.tsx`
+- `S06` `M` `native/desktop/frontend/src/App.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/setup/RegistersSection.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/setup/Setup.stories.tsx`
+- `S06` `D` `native/desktop/frontend/src/components/ledger/setup/AssetsPane.tsx`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/ledger-sweep.spec.ts`
+- `S06` `M` `dev/locales/desktop_chrome.py`
+- `S06` `M` `dev/locales/desktop_ledger_workflow_keys.py`
+- `S06` `M` `dev/locales/desktop_ledger_catalogue_keys.py`
+- `S06` `M` `src/cadrumo/locales/en/common.yml`
+- `S06` `M` `src/cadrumo/locales/es/common.yml`
+- `S06` `M` `src/cadrumo/locales/ca/common.yml`
+- `S06` `M` `src/cadrumo/locales/hu/common.yml`
+- `S06` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py dev/locales/tests/test_parity.py` -> `pass`
+- `S06` `verify:` `eslint+prettier on changed frontend paths` -> `pass`
+- `S06` `by:` `implementer`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/about.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S06` `verify:` `uv run --no-sync pytest dev/locales/tests/test_desktop_chrome.py dev/locales/tests/test_parity.py dev/locales/tests/test_hungarian_dictionary.py dev/locales/tests/test_spelling_lexicon.py -q` -> `pass`
+- `S06` `verify:` `cmake --build build/windows-x64 --target desktop-frontend-chrome` -> `pass`
+- `S06` `by:` `implementation-engineer`
+- `S06` `M` `native/desktop/frontend/src/components/AboutDialog.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/AttendanceRequests.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/LanguageSelect.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/account/CreateProfile.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/agent/SkillDialog.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentsSection.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentViewer.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/documents/EvidenceRecords.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/inspector/ActionDialog.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/inspector/ModelSuggestion.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/inspector/SelectionInspector.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorWords.ts`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoiceEditor.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/setup/HealthSection.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/transfer/transferWords.ts`
+- `S06` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/modelo/declarations/NewDeclarationDialog.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/modelo/declarations/declarationsWords.ts`
+- `S06` `M` `native/desktop/frontend/src/components/modelo/workspace/CorrectionDialog.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/language.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/profiles.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/agent-skills.spec.ts`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorWords.ts`
+- `S06` `M` `dev/locales/desktop_ledger_document_keys.py`
+- `S06` `verify:` `npx eslint and npx prettier --check on the changed frontend files` -> `pass`
+- `S06` `by:` `implementer-standard`
 
 ## Notes
 
@@ -106,3 +212,7 @@ related:
 - `S04` S04 The new string keys the forms use are not yet in the locale catalogues or dev/locales; the locale gates fail on them until the strings owner adds them
 - `S04` S04 assetsFixture.ts also carries uncommitted pending-figure edits made for the plan views
 - `S04` S04 ledgerSetupFixture.ts gains one argument so the admitted create, correct, claim and forecast keep answering their admitted shapes
+- `S05` Corrective conformance to the landed backend tokens; S05 not closed, host admission waits. Uncommitted: shared files hold another session's edits.
+- `S05` Conformed to the served years, keys, class labels and the baja operations; S05 not closed. Uncommitted: shared files hold another session's edits.
+- `S06` Scenario specs ledger-setup and ledger-sweep not run: they need the served scenario bundle, and assets/StockPane.tsx did not exist yet (tsc fails only on that import).
+- `S06` tsc reports only another Step's tests/ledger-assets-contract.spec.ts unused port; desktop-frontend-chrome build refuses on `desktop.ledger.stock.field.*` keys not yet declared (another Step); locale pytest fails only on `desktop.ledger.assets.year_estimated*` undeclared (another Step)

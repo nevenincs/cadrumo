@@ -91,7 +91,6 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversion del sujeto pasivo (apartado uno 2o), donde el destinatario de la operacion asume la condicion de sujeto pasivo y debe autorepercutirse el IVA."
-notes_language_spans = [{language = "es", text = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversion del sujeto pasivo (apartado uno 2o), donde el destinatario de la operacion asume la condicion de sujeto pasivo y debe autorepercutirse el IVA."}]
 required_text = [
     "Sujetos pasivos",
     "Los empresarios o profesionales para quienes se realicen las operaciones",
@@ -472,7 +471,6 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = "LIVA art 117 bis: solicitudes de devolucion de empresarios o profesionales establecidos en el territorio de aplicacion del Impuesto, Islas Canarias, Ceuta y Melilla, correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepcion de las realizadas en el territorio de aplicacion del Impuesto. Base sustantiva del Modelo 360 (devolucion 8a Directiva)."
-notes_language_spans = [{language = "es", text = "LIVA art 117 bis: solicitudes de devolucion de empresarios o profesionales establecidos en el territorio de aplicacion del Impuesto, Islas Canarias, Ceuta y Melilla, correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepcion de las realizadas en el territorio de aplicacion del Impuesto. Base sustantiva del Modelo 360 (devolucion 8a Directiva)."}]
 required_text = [
     "Solicitudes de devolución",
     "empresarios o profesionales que estén establecidos en el territorio de aplicación del Impuesto",
@@ -513,7 +511,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Reglamento del IVA art 71: liquidacion del Impuesto, normas generales. Establece la obligacion de autoliquidacion de los sujetos pasivos, las periodicidades trimestral y mensual, la declaracion resumen anual y las exoneraciones. Base reglamentaria comun de los Modelos 303 (autoliquidacion), 309 (no periodica), 322 (REGE individual), 353 (REGE agregada) y 390 (resumen anual)."
+notes = "Reglamento del IVA art 71: liquidación del Impuesto, normas generales. Establece la obligación de autoliquidación de los sujetos pasivos, las periodicidades trimestral y mensual, la declaración resumen anual y las exoneraciones. Base reglamentaria común de los Modelos 303 (autoliquidación), 309 (no periódica), 322 (REGE individual), 353 (REGE agregada) y 390 (resumen anual)."
 required_text = [
     "Liquidación del Impuesto. Normas generales",
     "los sujetos pasivos deberán realizar por sí mismos la determinación de la deuda tributaria",
@@ -598,7 +596,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-05-19
 reviewed_by = "agent-review"
-notes = "Reglamento del IVA art 29: forma de las devoluciones de oficio vinculadas al articulo 115 LIVA."
+notes = "Reglamento del IVA art 29: forma de las devoluciones de oficio vinculadas al artículo 115 LIVA."
 required_text = [
     "Devoluciones de oficio",
     "se realizarán por transferencia bancaria",
@@ -618,7 +616,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-05-19
 reviewed_by = "agent-review"
-notes = "Reglamento del IVA art 30: registro de devolucion mensual y limites para solicitar devolucion en periodos distintos del ultimo periodo anual."
+notes = "Reglamento del IVA art 30: registro de devolución mensual y límites para solicitar devolución en períodos distintos del último periodo anual."
 required_text = [
     "Devoluciones al término de cada período de liquidación",
     "deberán estar inscritos en el registro de devolución mensual",
@@ -659,12 +657,12 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-06
 reviewed_by = "agent-review"
 notes = """RIVA art 69: plazos para las anotaciones registrales. Es la norma operativa a \
-la que remite el art 35 del RD 1065/2007 para fijar el periodo de imputacion del Modelo \
-347, de modo que citar el art 35 sin este articulo deja la referencia a un salto de \
+la que remite el art 35 del RD 1065/2007 para fijar el periodo de imputación del Modelo \
+347, de modo que citar el art 35 sin este artículo deja la referencia a un salto de \
 distancia de la regla efectiva. Las operaciones deben estar asentadas en los libros \
-registro en el momento de la liquidacion y pago del impuesto o, en todo caso, antes de \
-que finalice el plazo de presentacion en periodo voluntario. Texto extraido de la API de \
-datos abiertos del BOE el 2026-08-06 tomando la ultima version consolidada, redaccion \
+registro en el momento de la liquidación y pago del impuesto o, en todo caso, antes de \
+que finalice el plazo de presentación en periodo voluntario. Texto extraído de la API de \
+datos abiertos del BOE el 2026-08-06 tomando la última versión consolidada, redacción \
 BOE-A-2013-11216 en vigor desde 2013-10-27."""
 required_text = [
     "Plazos para las anotaciones registrales",

@@ -249,6 +249,9 @@ pub(super) fn entry(event: &Event) -> Entry {
         }
     }
     let mut message = token(event.kind);
+    if let Some(fact) = event.webview_failure {
+        message.push_str(&webview_message(fact));
+    }
     if let Some(fact) = &event.panic {
         message.push_str(&format!(": {}", token(fact.category)));
         if let (Some(file), Some(line)) = (&fact.file, fact.line) {
@@ -393,6 +396,7 @@ fn webview_context(
     use cadrumo_application::diagnostics::webview::WebviewFailure;
     match fact {
         WebviewFailure::ProcessFailed {
+            webview,
             kind,
             kind_code,
             reason,
@@ -400,6 +404,7 @@ fn webview_context(
             exit_code,
             read_failures,
         } => {
+            context.insert("webview_identity".into(), Value::from(token(webview)));
             context.insert("webview_event".into(), Value::from("process_failed"));
             if let Some(kind) = kind {
                 context.insert("webview_process_kind".into(), Value::from(token(kind)));
@@ -422,7 +427,12 @@ fn webview_context(
                 }
             }
         }
-        WebviewFailure::MonitorUnavailable { operation, hresult } => {
+        WebviewFailure::MonitorUnavailable {
+            webview,
+            operation,
+            hresult,
+        } => {
+            context.insert("webview_identity".into(), Value::from(token(webview)));
             context.insert("webview_event".into(), Value::from("monitor_unavailable"));
             context.insert(
                 "webview_monitor_operation".into(),
@@ -431,6 +441,51 @@ fn webview_context(
             if let Some(hresult) = hresult {
                 context.insert("webview_hresult".into(), Value::from(hresult));
             }
+        }
+    }
+}
+
+fn webview_message(fact: cadrumo_application::diagnostics::webview::WebviewFailure) -> String {
+    use cadrumo_application::diagnostics::webview::WebviewFailure;
+    match fact {
+        WebviewFailure::ProcessFailed {
+            webview,
+            kind,
+            kind_code,
+            reason,
+            reason_code,
+            exit_code,
+            ..
+        } => {
+            let label = |name, code| match (name, code) {
+                (Some(name), Some(code)) => format!("{name} ({code})"),
+                _ => "unavailable".to_owned(),
+            };
+            let exit = exit_code.map_or_else(
+                || "unavailable".to_owned(),
+                |code| format!("{code} (0x{:08X})", code as u32),
+            );
+            format!(
+                ": webview {}, kind {}, reason {}, exit code {exit}",
+                token(webview),
+                label(kind.map(token), kind_code),
+                label(reason.map(token), reason_code),
+            )
+        }
+        WebviewFailure::MonitorUnavailable {
+            webview,
+            operation,
+            hresult,
+        } => {
+            let result = hresult.map_or_else(
+                || "unavailable".to_owned(),
+                |code| format!("{code} (0x{:08X})", code as u32),
+            );
+            format!(
+                ": webview {}, monitor {}, HRESULT {result}",
+                token(webview),
+                token(operation)
+            )
         }
     }
 }
@@ -892,16 +947,18 @@ mod tests {
     #[test]
     fn webview_failure_context_keeps_numeric_telemetry_and_host_attribution() {
         use cadrumo_application::diagnostics::webview::{
-            MonitorOperation, ReadFailures, WebviewFailure,
+            MonitorOperation, ReadFailures, WebviewFailure, WebviewIdentity,
         };
         let diagnostics = Diagnostics::default();
         diagnostics.webview_failure(WebviewFailure::process(
+            WebviewIdentity::Main,
             Some(2),
             Some(1),
             Some(259),
             ReadFailures::default(),
         ));
         diagnostics.webview_failure(WebviewFailure::process(
+            WebviewIdentity::Main,
             Some(104),
             Some(-9),
             None,
@@ -911,9 +968,17 @@ mod tests {
             },
         ));
         diagnostics.webview_failure(WebviewFailure::MonitorUnavailable {
+            webview: WebviewIdentity::Startup,
             operation: MonitorOperation::Register,
             hresult: Some(-2_147_467_259),
         });
+        diagnostics.webview_failure(WebviewFailure::process(
+            WebviewIdentity::Startup,
+            Some(0),
+            Some(0),
+            Some(-2_147_483_645),
+            ReadFailures::default(),
+        ));
         let mut host = HostEvents::default();
         let entries = host.poll(&diagnostics);
         assert_eq!(
@@ -921,16 +986,26 @@ mod tests {
             "render_process_unresponsive"
         );
         assert_eq!(entries[0].context["webview_exit_code"], 259);
+        assert_eq!(entries[0].context["webview_identity"], "main");
+        assert!(entries[0].message.contains("exit code 259 (0x00000103)"));
         assert!(!entries[0].context.contains_key("exit_code"));
         assert_eq!(entries[1].context["webview_process_kind"], "unrecognized");
         assert_eq!(entries[1].context["webview_process_kind_code"], 104);
         assert_eq!(entries[1].context["webview_reason_code"], -9);
+        assert!(
+            entries[1].message.contains(
+                "kind unrecognized (104), reason unrecognized (-9), exit code unavailable"
+            )
+        );
         assert_eq!(
             entries[1].context["webview_exit_code_hresult"],
             -2_147_467_259_i32
         );
         assert_eq!(entries[2].context["webview_monitor_operation"], "register");
         assert_eq!(entries[2].context["webview_hresult"], -2_147_467_259_i32);
+        assert_eq!(entries[2].context["webview_identity"], "startup");
+        assert_eq!(entries[3].context["webview_identity"], "startup");
+        assert!(entries[3].message.contains("webview startup, kind browser_process_exited (0), reason unexpected (0), exit code -2147483645 (0x80000003)"));
         assert!(host.poll(&diagnostics).is_empty());
         for entry in entries {
             assert_eq!(entry.level, Some(Level::Error));

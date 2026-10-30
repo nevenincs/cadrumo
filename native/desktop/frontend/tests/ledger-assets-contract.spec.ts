@@ -1,43 +1,68 @@
 import { expect, test } from "@playwright/test";
 import {
-  answer,
-  bajaLanded,
   claimLanded,
   claimReused,
-  CONFLICT,
   correctionLanded,
-  createReused,
+  currentDescriptor,
   describeRequest,
   descriptorLanded,
-  disposeRequest,
-  draftedCall,
-  draftOf,
   elementLanded,
   forecastRequest,
   INCOMPLETE,
-  neverReused,
+  missingLabels,
+  openingYear,
+  purchaseValues,
+  refusalOf,
   refusalWord,
   staleClaims,
   viewOf,
 } from "../src/components/ledger/assets/assetWrites";
 import {
-  isProvisionalOperation,
-  PROVISIONAL_OPERATIONS,
-  submitProvisional,
-  type AssetListResult,
-  type FormKind,
-  type FormOptions,
-  type FormValues,
+  answer,
+  claimFields,
+  fieldsFor,
+  initialOf,
+  parseField,
+  type FormField,
+} from "../src/components/ledger/assets/assetFields";
+import {
+  type ActivityAssetListResult as AssetListResult,
+  type AssetListRow,
   type PlanRow,
   type TimelineEvent,
-} from "../src/components/ledger/assets/assetsContract";
+} from "../src/shell/ledgerSetup";
+import {
+  ASSET_FAMILY,
+  ASSET_REASON_FAMILY,
+  keyedText,
+  reasonText,
+  refusalText,
+  tokenWord,
+} from "../src/components/ledger/assets/assetsWords";
+import {
+  correctRequest,
+  createRequest,
+} from "../src/components/ledger/assets/assetRevision";
+import { changeValueText } from "../src/components/ledger/assets/planWords";
 import type { SetupCall } from "../src/components/ledger/setup/setupModel";
-import { LEDGER_DEFINITIONS, type LedgerPort } from "../src/shell/ledger";
+import {
+  LEDGER_DEFINITIONS,
+  type LedgerPort,
+  type LedgerResult,
+} from "../src/shell/ledger";
+import type { Translate } from "../src/shell/strings";
 import { ledgerClassOf } from "../src/dev/ledgerClassesFixture";
+import {
+  ADMITTED_METHODS,
+  SEED_ELEMENTS,
+  TABLE_GROUPS,
+} from "../src/dev/assetsSeed";
 
-// The Assets tab's provisional operations and the scenario ledger that
-// answers them. No page is opened. The scenario ledger needs a window; a
-// bare one stands in for it here.
+// The Assets tab's operations and the scenario ledger that answers them. No
+// page is opened. The scenario ledger needs a window; a bare one stands in
+// for it here. The seeded register is checked against the registry's own
+// amortization table and the linear schedule, worked out again here from
+// whole cents.
 
 const stand = globalThis as unknown as { window?: unknown };
 stand.window = {
@@ -51,8 +76,16 @@ const LIST = "ledger.actividad-asset.list";
 const PLAN = "ledger.actividad-asset.plan";
 const TIMELINE = "ledger.actividad-asset.timeline";
 const OPTIONS = "ledger.actividad-asset.form-options";
+const CANDIDATES = "ledger.actividad-asset.acquisition-candidates";
 const DESCRIBE = "ledger.actividad-asset.describe";
 const DISPOSE = "ledger.actividad-asset.dispose";
+const FORECAST = "ledger.actividad-asset.forecast";
+const CLAIM = "ledger.actividad-asset.claim";
+const CREATE = "ledger.actividad-asset.create";
+const CORRECT = "ledger.actividad-asset.correct";
+const INSPECT = "ledger.actividad-asset.inspect";
+const HANDOFF = "ledger.actividad-asset.filing-handoff";
+const CALCULATE = "ledger.actividad-asset.disposal-calculate";
 
 const portOf = (shape: "fixture" | "unknown" = "fixture"): LedgerPort =>
   ledgerFixture({
@@ -68,505 +101,1652 @@ async function settled<T>(outcome: Promise<{ kind: string }>): Promise<T> {
   return found.result as T;
 }
 
+type Refused = {
+  kind: "refused";
+  reason: string;
+  detail: {
+    refusal: {
+      code: string;
+      reason_key: string | null;
+      reason_facts: { key: string; value: string }[];
+      precondition_verdict: { missing_field_keys: string[] } | null;
+    };
+  };
+};
+async function refused(outcome: Promise<unknown>): Promise<Refused> {
+  const found = (await outcome) as { kind: string };
+  if (found.kind !== "refused") throw new Error(`not refused: ${found.kind}`);
+  return found as Refused;
+}
+
+const registerOf = (port: LedgerPort) =>
+  settled<AssetListResult>(port.submit(LIST, {}));
+const listOf = async (port: LedgerPort) =>
+  (await settled<AssetListResult>(port.submit(LIST, {})))
+    .rows as AssetListRow[];
 const planOf = async (port: LedgerPort, id: string) =>
   (
-    await settled<{ rows: PlanRow[] }>(
-      submitProvisional(port, PLAN, { asset_id: id }),
+    await settled<LedgerResult<typeof PLAN>>(
+      port.submit(PLAN, { asset_id: id }),
     )
-  ).rows;
+  ).rows as PlanRow[];
 const eventsOf = async (port: LedgerPort, id: string) =>
   (
-    await settled<{ events: TimelineEvent[] }>(
-      submitProvisional(port, TIMELINE, { asset_id: id }),
+    await settled<LedgerResult<typeof TIMELINE>>(
+      port.submit(TIMELINE, { asset_id: id }),
     )
-  ).events;
-const listOf = (port: LedgerPort) =>
-  settled<{
-    rows: {
-      asset_id: string;
-      name: string | null;
-      baja?: { date: string; reason_key: string } | null;
-      in_service_date: string;
-      counts: { missing: number };
-    }[];
-    years: number[];
-  }>(submitProvisional(port, LIST, {}));
+  ).events as TimelineEvent[];
 
-test("no provisional operation is admitted yet; once the host admits one, this module goes", () => {
-  const admitted = LEDGER_DEFINITIONS as readonly string[];
-  for (const id of Object.keys(PROVISIONAL_OPERATIONS)) {
-    expect(isProvisionalOperation(id), id).toBe(true);
-    expect(
-      admitted,
-      `${id} is admitted: conform and delete the draft`,
-    ).not.toContain(id);
-  }
-  for (const id of LEDGER_DEFINITIONS)
-    expect(isProvisionalOperation(id), id).toBe(false);
-});
+// ---- Whole-cent arithmetic, independent of the fixture ----------------------
 
-test("the scenario classes a provisional operation by its draft effect", () => {
-  for (const [id, draft] of Object.entries(PROVISIONAL_OPERATIONS))
-    expect(ledgerClassOf(id as keyof typeof PROVISIONAL_OPERATIONS), id).toBe(
-      draft.effect,
-    );
-});
+const cents = (text: string) => BigInt(text.replace(".", ""));
+/** round(basis * rate * numerator / denominator) in cents, half up, from the
+ * decimal text of the rate. */
+function roundedCharge(
+  basis: string,
+  rate: string,
+  numerator: number,
+  denominator: number,
+): bigint {
+  const [whole = "0", fraction = ""] = rate.split(".");
+  const scale = 10n ** BigInt(fraction.length);
+  const rateScaled = BigInt(whole + fraction);
+  const top = cents(basis) * rateScaled * BigInt(numerator);
+  const bottom = scale * BigInt(denominator);
+  return (top * 2n + bottom) / (bottom * 2n);
+}
 
-test("the register spans decades and offers each year it holds", async () => {
-  const listed = await listOf(portOf());
-  expect(listed.years).toEqual(assetFixtureYears());
-  expect([...listed.years].sort((a, b) => a - b)).toEqual(listed.years);
-  expect(new Set(listed.years).size).toBe(listed.years.length);
-  expect(listed.years.at(-1)! - listed.years[0]!).toBeGreaterThanOrEqual(25);
-  // Every element enters service in a year the stepper offers.
-  for (const row of listed.rows)
-    expect(listed.years).toContain(Number(row.in_service_date.slice(0, 4)));
-});
+// ---- The operations ---------------------------------------------------------
 
-test("the plans hold every state the tab shows, none of them as a zero by default", async () => {
-  const port = portOf();
-  const listed = await listOf(port);
-  const plans = await Promise.all(
-    listed.rows.map((row) => planOf(port, row.asset_id)),
-  );
-  const rows = plans.flat();
-  const states = new Set(rows.map((row) => row.state_key));
-  for (const state of [
-    "claimed",
-    "missing",
-    "partial",
-    "incomplete",
-    "forecast",
+test("the host admits every operation the tab uses, and the scenario classes each as the host does", () => {
+  const used = [
+    LIST,
+    PLAN,
+    TIMELINE,
+    OPTIONS,
+    CANDIDATES,
+    DESCRIBE,
+    DISPOSE,
+    FORECAST,
+    CLAIM,
+    CREATE,
+    CORRECT,
+    INSPECT,
+    HANDOFF,
+    CALCULATE,
+  ];
+  for (const id of used)
+    expect(LEDGER_DEFINITIONS as readonly string[], id).toContain(id);
+  for (const id of [DESCRIBE, DISPOSE, CREATE, CORRECT, CLAIM])
+    expect(ledgerClassOf(id as never), id).toBe("write");
+  for (const id of [
+    LIST,
+    PLAN,
+    TIMELINE,
+    OPTIONS,
+    CANDIDATES,
+    FORECAST,
+    INSPECT,
+    HANDOFF,
+    CALCULATE,
   ])
-    expect(states, state).toContain(state);
-  // A recorded zero is a claim; a missing year states no claimed figure.
-  expect(
-    rows.some(
-      (row) => row.claimed?.decimal === "0.00" && row.claims.length > 0,
-    ),
-  ).toBe(true);
-  for (const row of rows.filter((found) => found.state_key === "missing"))
-    expect(row.claimed).toBeNull();
-  for (const row of rows.filter((found) => found.state_key === "incomplete")) {
-    expect(row.planned).toBeNull();
-    expect(row.claimed).toBeNull();
-    expect(row.planned_absent_key).not.toBeNull();
-  }
-  const absent = new Set(rows.map((row) => row.planned_absent_key));
-  expect(absent).toContain("free_method");
-  expect(absent).toContain("opening_history_unknown");
-  // A superseded claim points to its replacement and is not counted claimed.
-  const claims = rows.flatMap((row) => row.claims);
-  const replaced = claims.find((claim) => claim.superseded_by !== null);
-  expect(replaced?.effective).toBe(false);
-  expect(
-    claims.some((claim) => claim.claim_id === replaced?.superseded_by),
-  ).toBe(true);
-  expect(claims.some((claim) => !claim.matches_current_schedule)).toBe(true);
-  expect(rows.some((row) => row.authority.projected)).toBe(true);
-  expect(rows.some((row) => row.claimable !== null)).toBe(true);
-  expect(rows.some((row) => row.finding_keys.includes("claim_conflict"))).toBe(
-    true,
+    expect(ledgerClassOf(id as never), id).toBe("read");
+});
+
+test("an operation that is not admitted is refused", async () => {
+  await expect(
+    portOf().submit("ledger.actividad-asset.unlisted" as never, {} as never),
+  ).rejects.toMatchObject({ code: "not_admitted" });
+});
+
+test("a write whose settlement was not seen is held by the host as for any write, and a read is not", async () => {
+  const port = portOf("unknown");
+  const failure = await port
+    .submit(DESCRIBE, {
+      asset_id: "taladro",
+      descriptor: {
+        name: "Taladro",
+        serial_number: null,
+        description: null,
+        document_kind: null,
+        document_number: null,
+        supplier_name: null,
+        supplier_tax_id: null,
+      },
+    })
+    .then(
+      () => null,
+      (error: { code: string; operation_id: string | null }) => error,
+    );
+  expect(failure?.code).toBe("unknown");
+  expect((await port.observe(failure!.operation_id!)).kind).toBe("settled");
+  expect((await port.submit(LIST, {})).kind).toBe("settled");
+});
+
+// ---- The seeded register and the law -------------------------------------------
+
+test("the list states the backend's fields, and the years on offer span the register", async () => {
+  const rows = await listOf(portOf());
+  expect(rows.map((row) => row.asset_id)).toEqual(
+    SEED_ELEMENTS.map((seed) => seed.id).sort(),
   );
-  // A method change shows as a new election within one plan.
-  expect(
-    plans.some(
-      (plan) => new Set(plan.map((row) => row.election.fingerprint)).size > 1,
-    ),
-  ).toBe(true);
-  // The list counts what its plan holds.
-  for (const [at, row] of listed.rows.entries()) {
-    const plan = plans[at]!;
-    expect(row.counts.missing).toBe(
-      plan.filter((year) => year.state_key === "missing").length,
+  for (const row of rows) {
+    expect(Object.keys(row).sort(), row.asset_id).toEqual(
+      [
+        "accumulated",
+        "asset_id",
+        "asset_kind",
+        "basis",
+        "findings",
+        "in_service_date",
+        "method",
+        "name",
+        "pending",
+        "projected_years",
+        "revision_number",
+        "serial_number",
+        "state",
+        "years",
+      ].sort(),
+    );
+    expect(["material", "intangible"]).toContain(row.asset_kind);
+    expect(["in_service", "fully_amortized", "out_of_service"]).toContain(
+      row.state,
     );
   }
+  const years = assetFixtureYears();
+  expect([...years].sort((a, b) => a - b)).toEqual(years);
+  // The first served year is the first the registry supports, even for an
+  // element in service before it.
+  expect(years[0]).toBe(2022);
+  // An element with no recorded description is listed without a name.
+  expect(rows.find((row) => row.asset_id === "herramienta")?.name).toBeNull();
+  // An opening history never stated leaves the amounts unknown, never zero.
+  const unknown = rows.find((row) => row.asset_id === "estanteria")!;
+  expect(unknown.accumulated).toBeNull();
+  expect(unknown.pending).toBeNull();
 });
 
-test("a baja keeps the element and its history and ends its plan", async () => {
-  const port = portOf();
-  const listed = await listOf(port);
-  const disposed = listed.rows.find((row) => row.baja);
-  expect(disposed).toBeDefined();
-  const plan = await planOf(port, disposed!.asset_id);
-  const last = Number(disposed!.baja!.date.slice(0, 4));
-  expect(Math.max(...plan.map((row) => row.tax_year))).toBe(last);
-  const types = (await eventsOf(port, disposed!.asset_id)).map(
-    (event) => event.type_key,
+test("the pending amount is the formula, and a schedule that ended over unclaimed years has not amortized the element", async () => {
+  const rows = await listOf(portOf());
+  for (const row of rows) {
+    if (row.accumulated === null) {
+      expect(row.pending, row.asset_id).toBeNull();
+      continue;
+    }
+    const left = cents(row.basis.decimal) - cents(row.accumulated.decimal);
+    expect(cents(row.pending!.decimal), row.asset_id).toBe(
+      left > 0n ? left : 0n,
+    );
+  }
+  // The glassware's period has elapsed, but two years were never claimed.
+  const glass = rows.find((row) => row.asset_id === "cristaleria")!;
+  expect(glass.pending!.decimal).toBe("400.00");
+  expect(glass.state).toBe("in_service");
+  expect(rows.find((row) => row.asset_id === "plotter")!.state).toBe(
+    "fully_amortized",
   );
-  expect(types).toContain("baja_recorded");
-  expect(types.filter((type) => type === "claim_recorded").length).toBe(
-    plan.flatMap((row) => row.claims).length,
+  // A year no edition covers is neither claimed nor missing.
+  const compressor = await planOf(portOf(), "compresor");
+  const early = compressor.filter((row) => row.tax_year < 2022);
+  expect(early.length).toBeGreaterThan(0);
+  for (const row of early) expect(row.claim_state).toBe("edition_unavailable");
+  const counted = rows.find((row) => row.asset_id === "compresor")!;
+  expect(counted.findings.missing).toBe(0);
+});
+
+test("every seeded element lies inside its table class's corridor and period", () => {
+  for (const seed of SEED_ELEMENTS) {
+    const limits = seed.limits;
+    if (limits.not_table_bound !== null) continue;
+    const groups = TABLE_GROUPS[seed.list.asset_kind]!;
+    const group = groups.find((found) => found.class_key === limits.class_key);
+    expect(
+      group,
+      `${seed.id} names a class the table lists for its kind`,
+    ).toBeDefined();
+    expect(limits.maximum_coefficient).toEqual(group!.maximum_coefficient);
+    expect(limits.minimum_coefficient).toEqual(group!.minimum_coefficient);
+    expect(limits.maximum_period_years).toEqual(group!.maximum_period_years);
+    expect(ADMITTED_METHODS[seed.list.asset_kind]).toContain(seed.list.method);
+    const rate = seed.rows.find((row) => row.coefficient !== null)?.coefficient;
+    if (rate) {
+      // Compared as scaled integers so no rounding enters.
+      const scaled = (text: string) => Number(text) * 1_000_000;
+      expect(scaled(rate.decimal)).toBeLessThanOrEqual(
+        scaled(group!.maximum_coefficient.decimal) + 1,
+      );
+      expect(scaled(rate.decimal)).toBeGreaterThanOrEqual(
+        scaled(group!.minimum_coefficient.decimal) - 1,
+      );
+    }
+    const ends = new Date(`${seed.list.in_service_date}T00:00:00Z`);
+    ends.setUTCFullYear(
+      ends.getUTCFullYear() + Number(group!.maximum_period_years.decimal),
+    );
+    expect(limits.maximum_period_ends_on).toBe(ends.toISOString().slice(0, 10));
+  }
+});
+
+test("a planned figure is the linear charge worked out again from whole cents", () => {
+  for (const seed of SEED_ELEMENTS) {
+    if (seed.list.method !== "linear") continue;
+    // What the opening amount covers is consumed before the first year.
+    const effective = seed.rows
+      .flatMap((row) => row.claims)
+      .filter((claim) => claim.effective)
+      .reduce((sum, claim) => sum + cents(claim.amount.decimal), 0n);
+    let consumed =
+      seed.list.accumulated === null
+        ? 0n
+        : cents(seed.list.accumulated.decimal) - effective;
+    for (const row of seed.rows) {
+      const claimed = cents(row.claimed.decimal);
+      if (row.planned === null || row.coefficient === null) {
+        consumed += claimed;
+        continue;
+      }
+      expect(row.service_days, `${seed.id} ${row.tax_year}`).not.toBeNull();
+      const worked = roundedCharge(
+        seed.list.basis.decimal,
+        row.coefficient.decimal,
+        row.service_days!,
+        row.calendar_days!,
+      );
+      const left = cents(seed.list.basis.decimal) - consumed;
+      const expected = worked < left ? worked : left;
+      expect(cents(row.planned.decimal), `${seed.id} ${row.tax_year}`).toBe(
+        expected,
+      );
+      // A year with an uncovered span consumes the larger of its claims and its charge.
+      const planned = cents(row.planned.decimal);
+      consumed +=
+        row.claimable_intervals.length > 0 && planned > claimed
+          ? planned
+          : claimed;
+    }
+  }
+});
+
+test("years before the first supported edition state their absence, never an amount", () => {
+  for (const seed of SEED_ELEMENTS)
+    for (const row of seed.rows) {
+      if (row.tax_year >= 2022) continue;
+      // The opening amount covers its years; every other year has no edition.
+      expect(
+        ["edition_unavailable", "covered_by_opening"],
+        `${seed.id} ${row.tax_year}`,
+      ).toContain(row.absence);
+      expect(row.planned).toBeNull();
+      expect(row.coefficient).toBeNull();
+      expect(row.edition).toBeNull();
+      expect(row.claimable_intervals).toEqual([]);
+    }
+  const plan = (id: string) =>
+    SEED_ELEMENTS.find((seed) => seed.id === id)!.rows.filter(
+      (row) => row.tax_year < 2022,
+    );
+  expect(plan("compresor").map((row) => row.absence)).toEqual([
+    "edition_unavailable",
+    "edition_unavailable",
+    "edition_unavailable",
+  ]);
+  expect(plan("plotter").map((row) => row.absence)).toEqual([
+    "covered_by_opening",
+    "covered_by_opening",
+    "covered_by_opening",
+  ]);
+});
+
+test("a plan states every absence with its figure null, and the years the tables are carried forward as projected", async () => {
+  const port = portOf();
+  for (const seed of SEED_ELEMENTS) {
+    const rows = await planOf(port, seed.id);
+    expect(rows.map((row) => row.tax_year)).toEqual(
+      [...rows.map((row) => row.tax_year)].sort((a, b) => a - b),
+    );
+    for (const row of rows) {
+      if (row.absence !== null)
+        expect(row.planned, `${seed.id} ${row.tax_year}`).toBeNull();
+      if (row.edition) expect(row.edition.projected).toBe(row.tax_year > 2025);
+      // What is claimed is the effective claims, to the cent.
+      const total = row.claims
+        .filter((claim) => claim.effective)
+        .reduce((sum, claim) => sum + cents(claim.amount.decimal), 0n);
+      expect(cents(row.claimed.decimal), `${seed.id} ${row.tax_year}`).toBe(
+        total,
+      );
+    }
+  }
+  const projected = (await planOf(port, "licencia")).find(
+    (row) => row.tax_year === 2027,
+  )!;
+  expect(projected.edition).toMatchObject({
+    projected: true,
+    authored_filing_year: 2025,
+  });
+});
+
+test("a plan past the maximum period states it, with the date it ended", async () => {
+  const port = portOf();
+  const rows = await planOf(port, "cristaleria");
+  const elapsed = rows.find((row) => row.absence === "period_elapsed")!;
+  expect(elapsed.planned).toBeNull();
+  expect(elapsed.claim_state).toBe("not_due");
+  expect(elapsed.absence_reason_key).toBe(
+    "ledger.actividad_asset.errors.amortization_period_elapsed",
+  );
+  const limits = SEED_ELEMENTS.find(
+    (seed) => seed.id === "cristaleria",
+  )!.limits;
+  expect(elapsed.absence_reason_facts).toEqual([
+    { key: "ended_on", value: limits.maximum_period_ends_on },
+  ]);
+  const forecast = await refused(
+    port.submit(
+      FORECAST as never,
+      {
+        asset_id: "cristaleria",
+        covered_from: "2026-01-01",
+        covered_until: "2027-01-01",
+        requested_free_amount: null,
+        supersedes_claim_id: null,
+      } as never,
+    ),
+  );
+  expect(forecast.detail.refusal).toMatchObject({
+    code: "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
+    reason_key: "ledger.actividad_asset.errors.amortization_period_elapsed",
+    reason_facts: [{ key: "ended_on", value: limits.maximum_period_ends_on }],
+  });
+});
+
+test("the plan states the limits of the election, or why it has none", async () => {
+  const port = portOf();
+  const table = await settled<LedgerResult<typeof PLAN>>(
+    port.submit(PLAN, { asset_id: "furgoneta" }),
+  );
+  expect(table.limits).toMatchObject({
+    class_key: "transporte-externo",
+    not_table_bound: null,
+    maximum_period_ends_on: "2037-04-01",
+  });
+  const free = await settled<LedgerResult<typeof PLAN>>(
+    port.submit(PLAN, { asset_id: "taladro" }),
+  );
+  expect(free.limits).toMatchObject({
+    class_key: null,
+    not_table_bound: "free_election",
+  });
+  const missing = await settled<LedgerResult<typeof PLAN>>(
+    port.submit(PLAN, { asset_id: "estanteria" }),
+  );
+  expect(missing.limits).toMatchObject({
+    not_table_bound: "authority_unavailable",
+    unavailable_reason_key:
+      "ledger.actividad_asset.errors.opening_history_missing",
+  });
+  const unknown = await refused(port.submit(PLAN, { asset_id: "nobody" }));
+  expect(unknown.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.asset_not_found",
   );
 });
 
-test("a timeline is ordered, never rewritten, and says what it replaced", async () => {
+// ---- The timeline -----------------------------------------------------------
+
+test("a timeline is ordered, names its origin and what each claim is used by", async () => {
   const port = portOf();
-  const listed = await listOf(port);
-  const all = await Promise.all(
-    listed.rows.map((row) => eventsOf(port, row.asset_id)),
-  );
-  for (const events of all)
+  for (const seed of SEED_ELEMENTS) {
+    const events = await eventsOf(port, seed.id);
     expect(events.map((event) => event.sequence)).toEqual(
       events.map((_, at) => at + 1),
     );
-  const events = all.flat();
-  expect(events.some((event) => event.recorded_at === null)).toBe(true);
-  expect(events.some((event) => event.replaces_sequence !== null)).toBe(true);
+    const claims = seed.rows.flatMap((row) =>
+      row.claims.map((claim) => claim.claim_id),
+    );
+    expect(
+      events
+        .filter((event) => event.kind === "claim")
+        .map((event) => event.record_id)
+        .sort(),
+    ).toEqual([...claims].sort());
+    for (const event of events) {
+      expect(["revision", "claim", "descriptor", "baja"]).toContain(event.kind);
+      expect(event.affects_calculation).toBe(event.kind !== "descriptor");
+      expect(event.claim === null).toBe(event.kind !== "claim");
+    }
+  }
+  const stale = (await eventsOf(port, "servidor")).filter(
+    (event) => event.claim,
+  )[0]!;
+  expect(stale.claim).toMatchObject({
+    matches_current_schedule: false,
+    stale_reason: "revision_changed",
+  });
   expect(
-    events.some(
-      (event) =>
-        event.type_key === "description_added" && !event.affects_calculation,
-    ),
-  ).toBe(true);
-  for (const events of all)
-    for (const event of events)
-      if (event.replaces_sequence !== null)
-        expect(event.replaces_sequence).toBeLessThan(event.sequence);
+    (await listOf(port)).find((row) => row.asset_id === "servidor")?.findings
+      .stale,
+  ).toBe(1);
 });
 
-test("describing appends a descriptor event and leaves every earlier event as it was", async () => {
+// ---- Options and purchases --------------------------------------------------
+
+test("the options are the registry's methods and table classes for the kind and year", async () => {
   const port = portOf();
-  const before = await eventsOf(port, "licencia");
-  const done = await settled<{
-    descriptor: { sequence: number; name: string; serial: string | null };
-  }>(
-    submitProvisional(port, DESCRIBE, {
-      asset_id: "licencia",
-      name: "Licencia de diseño",
-      serial: "LIC-0042",
-      fields: [],
+  const options = (
+    await settled<LedgerResult<typeof OPTIONS>>(
+      port.submit(OPTIONS, {
+        asset_kind: "material",
+        tax_year: 2025,
+      }),
+    )
+  ).options!;
+  expect(options.methods).toEqual(ADMITTED_METHODS.material);
+  expect(options.table_groups).toEqual(TABLE_GROUPS.material);
+  expect(options.edition).toEqual({
+    revision_id: "2025",
+    authored_filing_year: 2025,
+    projected: false,
+  });
+  const later = (
+    await settled<LedgerResult<typeof OPTIONS>>(
+      port.submit(OPTIONS, {
+        asset_kind: "intangible",
+        tax_year: 2027,
+      }),
+    )
+  ).options!;
+  expect(later.edition.projected).toBe(true);
+  expect(later.table_groups.map((group) => group.class_key)).toEqual(
+    TABLE_GROUPS.intangible!.map((group) => group.class_key),
+  );
+  const before = await refused(
+    port.submit(OPTIONS, {
+      asset_kind: "material",
+      tax_year: 2021,
     }),
   );
-  expect(done.descriptor.name).toBe("Licencia de diseño");
-  const after = await eventsOf(port, "licencia");
-  expect(after.slice(0, before.length)).toEqual(before);
-  expect(after).toHaveLength(before.length + 1);
-  const added = after.at(-1)!;
-  expect(added.type_key).toBe("description_added");
-  expect(added.affects_calculation).toBe(false);
-  expect(added.recorded_at).not.toBeNull();
-  const listed = await listOf(port);
-  expect(listed.rows.find((row) => row.asset_id === "licencia")?.name).toBe(
-    "Licencia de diseño",
+  expect(before.detail.refusal).toMatchObject({
+    reason_key: "ledger.actividad_asset.errors.tax_year_without_edition",
+    reason_facts: [{ key: "tax_year", value: "2021" }],
+  });
+});
+
+test("a purchase states what the ledger knows and leaves the rest null, and one used by an element is no longer offered", async () => {
+  const port = portOf();
+  const offered = (
+    await settled<LedgerResult<typeof CANDIDATES>>(port.submit(CANDIDATES, {}))
+  ).candidates!;
+  const known = offered.find((found) => found.transaction_id === "t-portatil")!;
+  const silent = offered.find((found) => found.transaction_id === "t-silla")!;
+  expect(purchaseValues(known)).toEqual({
+    basis_amount: "900.00",
+    non_deductible_iva: "0.00",
+  });
+  expect(purchaseValues(silent)).toEqual({
+    basis_amount: "200.00",
+    non_deductible_iva: null,
+  });
+  expect(purchaseValues(undefined)).toEqual({
+    basis_amount: null,
+    non_deductible_iva: null,
+  });
+  const noConversion = offered.find(
+    (found) => found.transaction_id === "t-monitor",
+  )!;
+  expect(noConversion.paid_in_euro).toBeNull();
+  await port.submit(
+    CREATE,
+    (await newRequest(port, NEW_ELEMENT, "made-1"))! as never,
   );
+  const after = (
+    await settled<LedgerResult<typeof CANDIDATES>>(port.submit(CANDIDATES, {}))
+  ).candidates!;
+  expect(after.some((found) => found.transaction_id === "t-portatil")).toBe(
+    false,
+  );
+});
+
+// ---- Writes -----------------------------------------------------------------
+
+test("describing appends a description and leaves every earlier event as it was", async () => {
+  const port = portOf();
+  const before = await eventsOf(port, "furgoneta");
+  const done = await settled<LedgerResult<typeof DESCRIBE>>(
+    port.submit(DESCRIBE, {
+      asset_id: "furgoneta",
+      descriptor: {
+        name: "Furgoneta de reparto",
+        serial_number: "FR-2023-0114",
+        description: "Furgoneta eléctrica",
+        document_kind: "invoice",
+        document_number: "F-8841",
+        supplier_name: null,
+        supplier_tax_id: null,
+      },
+    }),
+  );
+  expect(done.outcome).toBe("succeeded");
+  const after = await eventsOf(port, "furgoneta");
+  expect(after.slice(0, before.length)).toEqual(before);
+  const added = after.at(-1)!;
+  expect(added).toMatchObject({
+    kind: "descriptor",
+    affects_calculation: false,
+    origin: "ledger.actividad-asset.describe",
+  });
+  expect(added.changes.map((change) => change.field)).toEqual([
+    "description",
+    "document_kind",
+    "document_number",
+  ]);
+  expect(currentDescriptor(after)).toMatchObject({
+    name: "Furgoneta de reparto",
+    description: "Furgoneta eléctrica",
+    document_kind: "invoice",
+  });
+  expect(descriptorLanded(after, 2)).toBe("saved");
+  expect(descriptorLanded(after, 3)).toBe("not_saved");
 });
 
 test("a refused or incomplete write changes nothing and names what to fill in", async () => {
   const port = portOf();
-  const before = await eventsOf(port, "prensa");
-  const incomplete = await submitProvisional(port, DESCRIBE, {
-    asset_id: "prensa",
-    name: null,
-    serial: null,
-    fields: [],
+  const before = await eventsOf(port, "taladro");
+  const incomplete = await refused(
+    port.submit(DESCRIBE, {
+      asset_id: "taladro",
+      descriptor: {
+        name: "",
+        serial_number: null,
+        description: null,
+        document_kind: null,
+        document_number: null,
+        supplier_name: null,
+        supplier_tax_id: null,
+      },
+    }),
+  );
+  expect(incomplete.detail.refusal).toMatchObject({
+    code: INCOMPLETE,
+    precondition_verdict: { missing_field_keys: ["name"] },
   });
-  expect(incomplete.kind).toBe("refused");
-  expect((incomplete as { detail: unknown }).detail).toMatchObject({
-    refusal: {
-      code: "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE",
-      precondition_verdict: { missing_field_keys: ["name"] },
-    },
-  });
-  const unknownElement = await submitProvisional(port, DISPOSE, {
-    asset_id: "nobody",
-    date: "2026-01-31",
-    reason_key: "sale",
-  });
-  expect(unknownElement.kind).toBe("refused");
-  expect(await eventsOf(port, "prensa")).toEqual(before);
-  // A malformed request is refused before anything runs.
+  const unknown = await refused(
+    port.submit(DESCRIBE, {
+      asset_id: "nobody",
+      descriptor: {
+        name: "x",
+        serial_number: null,
+        description: null,
+        document_kind: null,
+        document_number: null,
+        supplier_name: null,
+        supplier_tax_id: null,
+      },
+    }),
+  );
+  expect(unknown.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.asset_not_found",
+  );
+  expect(await eventsOf(port, "taladro")).toEqual(before);
   await expect(
-    submitProvisional(port, DISPOSE, {
-      asset_id: "prensa",
-      date: "2026-01-31",
-      reason_key: "sale",
+    port.submit(DESCRIBE, {
+      asset_id: "taladro",
+      descriptor: {
+        name: "x",
+        serial_number: null,
+        description: null,
+        document_kind: null,
+        document_number: null,
+        supplier_name: null,
+        supplier_tax_id: null,
+      },
       // @ts-expect-error a field the contract does not have
       proceeds: "1",
     }),
   ).rejects.toMatchObject({ code: "refused", reason: "invalid" });
 });
 
-test("a baja ends the plan at its date, replaces the claims it crosses and cannot be given twice", async () => {
-  const port = portOf();
-  const done = await settled<{
-    baja: { date: string; reason_key: string };
-    superseded_claim_ids: string[];
-  }>(
-    submitProvisional(port, DISPOSE, {
-      asset_id: "furgoneta",
-      date: "2026-03-31",
-      reason_key: "theft",
-    }),
-  );
-  expect(done.baja).toEqual({ date: "2026-03-31", reason_key: "theft" });
-  // The half-year claim crosses the last day of service.
-  expect(done.superseded_claim_ids).toHaveLength(1);
-  const plan = await planOf(port, "furgoneta");
-  expect(Math.max(...plan.map((row) => row.tax_year))).toBe(2026);
-  expect(plan.find((row) => row.tax_year === 2026)?.claimed).toBeNull();
-  const listed = await listOf(port);
-  expect(listed.rows.find((row) => row.asset_id === "furgoneta")?.baja).toEqual(
-    { date: "2026-03-31", reason_key: "theft" },
-  );
-  for (const refused of [
-    { date: "2026-04-30", reason_key: "sale" },
-    { date: "2026-04-30", reason_key: "not_offered" },
-  ])
-    expect(
-      (
-        await submitProvisional(port, DISPOSE, {
-          asset_id: "furgoneta",
-          ...refused,
-        })
-      ).kind,
-    ).toBe("refused");
-  const early = await submitProvisional(port, DISPOSE, {
-    asset_id: "escaner",
-    date: "2018-12-31",
-    reason_key: "sale",
-  });
-  expect(early.kind).toBe("refused");
-});
+// ---- Creating and correcting, from the requests the forms make --------------------
 
-test("the forms are served as options, and a baja form bounds its date by the service date", async () => {
-  const port = portOf();
-  const baja = await settled<{
-    options: {
-      kind: string;
-      fields: {
-        key: string;
-        choices: unknown[];
-        bounds: { min: string | null } | null;
-      }[];
-    };
-  }>(submitProvisional(port, OPTIONS, { kind: "baja", asset_id: "plotter" }));
-  const date = baja.options.fields.find((found) => found.key === "date");
-  expect(date?.bounds?.min).toBe("1999-03-15");
-  expect(
-    baja.options.fields.find((found) => found.key === "reason_key")?.choices
-      .length,
-  ).toBeGreaterThan(0);
-  const correction = await settled<{
-    options: { fields: { key: string }[] };
-  }>(
-    submitProvisional(port, OPTIONS, {
-      kind: "correction",
-      asset_id: "plotter",
-    }),
-  );
-  expect(correction.options.fields.map((found) => found.key)).not.toContain(
-    "out_of_service_date",
-  );
-});
+type Options = NonNullable<LedgerResult<typeof OPTIONS>["options"]>;
 
-test("a write whose settlement was not seen is held by the host as for any write, and a read is not", async () => {
-  const port = portOf("unknown");
-  const failure = await submitProvisional(port, DESCRIBE, {
-    asset_id: "prensa",
-    name: "Prensa",
-    serial: null,
-    fields: [],
-  }).then(
-    () => null,
-    (error: { code: string; operation_id: string | null }) => error,
-  );
-  expect(failure?.code).toBe("unknown");
-  expect((await port.observe(failure!.operation_id!)).kind).toBe("settled");
-  expect((await submitProvisional(port, LIST, {})).kind).toBe("settled");
-});
-
-test("an operation that is neither admitted nor provisional is not admitted", async () => {
-  const port = portOf();
-  await expect(
-    port.submit("ledger.actividad-asset.unlisted" as never, {} as never),
-  ).rejects.toMatchObject({ code: "not_admitted" });
-});
-
-test("an element made through the admitted create appears in the register with its history", async () => {
-  const port = portOf();
-  const created = await port.submit("ledger.actividad-asset.create", {
-    revision: {
-      asset_id: "synthetic-created-1",
-      revision_number: 1,
-      acquisition: {
-        observed_transaction_id: "a".repeat(64),
-        invoice_evidence_id: "b".repeat(64),
-        evidence_fingerprint: "c".repeat(64),
-      },
-      acquisition_shape: "purchase",
-      asset_kind: "tangible",
-      basis: {
-        stage: "acquisition",
-        basis_amount: { decimal: "1000" },
-        non_deductible_iva: { decimal: "0" },
-      },
-      in_service_date: "2025-03-01",
-      opening_history: { status: "complete" },
-      acquired_condition: "new",
-      amortization: { regime: "linear", method: "linear_table" },
-    },
-  });
-  expect(created.kind).toBe("settled");
-  const listed = await listOf(port);
-  const found = listed.rows.find(
-    (row) => row.asset_id === "synthetic-created-1",
-  );
-  expect(found?.name).toBeNull();
-  const events = await eventsOf(port, "synthetic-created-1");
-  expect(events.map((event) => event.type_key)).toEqual(["element_added"]);
-  // It can be described like any other.
-  const described = await submitProvisional(port, DESCRIBE, {
-    asset_id: "synthetic-created-1",
-    name: "Nuevo",
-    serial: null,
-    fields: [],
-  });
-  expect(described.kind).toBe("settled");
-  expect(await eventsOf(port, "synthetic-created-1")).toHaveLength(2);
-});
-
-// ---- The forms: what typed text says, and how a write held in doubt landed --
-
-const CANDIDATES = "ledger.actividad-asset.acquisition-candidates";
-const CREATE = "ledger.actividad-asset.create";
-const CORRECT = "ledger.actividad-asset.correct";
-const FORECAST = "ledger.actividad-asset.forecast";
-const CLAIM = "ledger.actividad-asset.claim";
-
-const optionsOf = async (
+async function optionsOf(
   port: LedgerPort,
-  kind: FormKind,
-  extra: { asset_id?: string; tax_year?: number } = {},
-) =>
-  (
-    await settled<{ options: FormOptions }>(
-      submitProvisional(port, OPTIONS, { kind, ...extra }),
-    )
-  ).options;
-
-/** The first choice of a field the options served. */
-const firstChoice = (options: FormOptions, key: string) =>
-  options.fields.find((field) => field.key === key)!.choices[0]!.token;
-
-async function newElement(port: LedgerPort, assetId: string) {
-  const options = await optionsOf(port, "element");
-  const { candidates } = await settled<{
-    candidates: { candidate_id: string }[];
-  }>(submitProvisional(port, CANDIDATES, {}));
-  const values: FormValues = {
-    name: "Sierra de cinta",
-    serial: null,
-    kind_key: firstChoice(options, "kind_key"),
-    method_key: firstChoice(options, "method_key"),
-    in_service_date: "2026-06-15",
-    acquisition: candidates[0]!.candidate_id,
-    basis_amount: { decimal: "1500.00" },
-    non_deductible_iva: { decimal: "0.00" },
-  };
-  return {
-    values,
-    send: () => draftedCall(port, CREATE, { asset_id: assetId, values }, true),
-  };
+  kind = "material",
+): Promise<Options> {
+  const read = await settled<LedgerResult<typeof OPTIONS>>(
+    port.submit(OPTIONS, { asset_kind: kind, tax_year: 2026 }),
+  );
+  return read.options!;
 }
 
-const refusalIn = (call: SetupCall<unknown>) => {
-  const view = viewOf(call, neverReused);
-  if (view.kind !== "refused") throw new Error(`not refused: ${view.kind}`);
-  return view;
+/** The request the new-element form makes from what is typed in it. */
+async function newRequest(
+  port: LedgerPort,
+  draft: Record<string, string>,
+  assetId: string,
+) {
+  const options = await optionsOf(port, draft.asset_kind ?? "material");
+  const candidates = (
+    await settled<LedgerResult<typeof CANDIDATES>>(port.submit(CANDIDATES, {}))
+  ).candidates!;
+  const candidate = candidates.find(
+    (found) => found.transaction_id === draft.acquisition,
+  );
+  const fields = fieldsFor(
+    {
+      kind: "element",
+      row: null,
+      descriptor: null,
+      revision: null,
+      tokens: () => [],
+      options,
+    },
+    draft,
+  );
+  const stated = answer(fields, draft, null);
+  expect(stated.problems).toEqual({});
+  return createRequest(stated.values, {
+    assetId,
+    regime: options.regime,
+    candidate: candidate ?? null,
+    base: null,
+  });
+}
+
+const NEW_ELEMENT = {
+  asset_kind: "material",
+  name: "Sierra de cinta",
+  serial_number: "SC-0412",
+  acquisition: "t-portatil",
+  acquisition_shape: "primary_purchase",
+  in_service_date: "2026-06-15",
+  acquired_condition: "new",
+  basis_stage: "business_allocated",
+  basis_amount: "900.00",
+  non_deductible_iva: "0.00",
+  prior_allocation_provenance: "allocation booked in the ledger",
+  opening_status: "known",
+  opening_amount: "0.00",
+  method: "linear",
+  authority_class_key: "maquinaria",
 };
 
-test("typed text becomes the values of its control, and nothing typed is not zero", async () => {
-  const options = await optionsOf(portOf(), "element");
-  const full = answer(
-    options,
-    {
-      name: "  Sierra  ",
-      serial: "",
-      kind_key: "tangible",
-      method_key: "",
-      in_service_date: "2026-06-15",
-      acquisition: "",
-      basis_amount: "1500.5",
-      non_deductible_iva: "0",
-    },
-    null,
-  );
-  expect(full.problems).toEqual({});
-  expect(full.values.name).toBe("Sierra");
-  expect(full.values.serial).toBeNull();
-  expect(full.values.method_key).toBeNull();
-  expect(full.values.basis_amount).toEqual({ decimal: "1500.5" });
-  // A stated zero is a value; an empty field is not one.
-  expect(full.values.non_deductible_iva).toEqual({ decimal: "0" });
-  const unstated = answer(options, { non_deductible_iva: "" }, null);
-  expect(unstated.values.non_deductible_iva).toBeNull();
-  const refused = answer(
-    options,
-    { basis_amount: "1,5", in_service_date: "15/06/2026" },
-    null,
-  );
-  expect(refused.problems.basis_amount?.key).toBe("comma_decimal");
-  expect(refused.problems.in_service_date?.key).toBe("date_not_iso");
-  expect(refused.values.basis_amount).toBeUndefined();
-});
-
-test("the options number the next descriptor and revision, so a landing never counts for itself", async () => {
+test("adding an element sends the revision and descriptor the backend decodes, which judges the revision's facts", async () => {
   const port = portOf();
-  const next = async (kind: FormKind, asset: string) =>
-    (await optionsOf(port, kind, { asset_id: asset })).next_sequence;
-  // The plotter has one description and one revision; the server two revisions.
-  expect(await next("descriptor", "plotter")).toBe(2);
-  expect(await next("correction", "plotter")).toBe(2);
-  expect(await next("correction", "servidor")).toBe(3);
-  expect(await next("baja", "plotter")).toBeNull();
-});
-
-test("a correction states only what changed from the record, and never an emptied field", async () => {
-  const options = await optionsOf(portOf(), "correction", {
-    asset_id: "servidor",
+  const send = async (changes: Record<string, string>, id = "made-2") => {
+    const request = await newRequest(port, { ...NEW_ELEMENT, ...changes }, id);
+    expect(request, JSON.stringify(changes)).not.toBeNull();
+    return port.submit(CREATE, request! as never);
+  };
+  // The request carries the whole revision and the descriptor, and no drafted values.
+  const request = (await newRequest(port, NEW_ELEMENT, "made-2"))!;
+  expect(Object.keys(request).sort()).toEqual(["descriptor", "revision"]);
+  expect(request.descriptor).toMatchObject({
+    name: "Sierra de cinta",
+    serial_number: "SC-0412",
   });
-  const initial = draftOf(options);
-  expect(initial.method_key).toBe("constant_percentage");
-  const changed = answer(
-    options,
-    { ...initial, basis_amount: "19800.00", method_key: "" },
-    initial,
+  expect(request.revision).toMatchObject({
+    asset_id: "made-2",
+    revision_number: 1,
+    acquisition_shape: "primary_purchase",
+    basis: { stage: "business_allocated", basis_amount: { decimal: "900" } },
+    opening_history: { status: "known", accumulated_amount: { decimal: "0" } },
+    amortization: { regime: "normal", method: "linear" },
+  });
+  // No request is made while the person has not chosen a purchase.
+  expect(
+    await newRequest(port, { ...NEW_ELEMENT, acquisition: "" }, "made-2"),
+  ).toBeNull();
+
+  const noShare = await refused(send({ basis_stage: "taxpayer_owned" }));
+  expect(noShare.detail.refusal).toMatchObject({
+    code: INCOMPLETE,
+    reason_key: "ledger.actividad_asset.errors.business_use_share_missing",
+  });
+  const noProvenance = await refused(send({ prior_allocation_provenance: "" }));
+  expect(noProvenance.detail.refusal.precondition_verdict).toEqual({
+    missing_field_keys: ["basis.prior_allocation_provenance"],
+  });
+  const wrongMethod = await refused(send({ method: "goodwill" }));
+  expect(wrongMethod.detail.refusal).toMatchObject({
+    code: "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
+    reason_key: "ledger.actividad_asset.errors.method_not_enrolled_for_kind",
+  });
+  const noClass = await refused(send({ authority_class_key: "" }));
+  expect(noClass.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.table_class_required",
   );
-  // Text is sent in the product's canonical spelling.
-  expect(changed.values).toEqual({ basis_amount: { decimal: "19800" } });
-  expect(answer(options, initial, initial).values).toEqual({});
+  const noAmount = await refused(send({ opening_amount: "" }));
+  expect(noAmount.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.opening_history_amount_missing",
+  );
+  const noYear = await refused(send({ opening_amount: "100.00" }));
+  expect(noYear.detail.refusal.precondition_verdict).toEqual({
+    missing_field_keys: ["opening_history.covered_through_tax_year"],
+  });
+  const early = await refused(
+    send({ opening_amount: "100.00", opening_through: "2025" }),
+  );
+  expect(early.detail.refusal).toMatchObject({
+    reason_key: "ledger.actividad_asset.errors.opening_year_before_in_service",
+    reason_facts: [{ key: "opening_tax_year", value: "2025" }],
+  });
+  const outside = await refused(send({ linear_coefficient: "99" }));
+  expect(outside.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.elected_coefficient_out_of_range",
+  );
+  const lowValue = await refused(send({ method: "low_value_free" }));
+  expect(lowValue.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.low_value_election_required",
+  );
+  expect((await listOf(port)).some((row) => row.asset_id === "made-2")).toBe(
+    false,
+  );
+
+  expect((await port.submit(CREATE, request as never)).kind).toBe("settled");
+  const rows = await listOf(port);
+  const made = rows.find((row) => row.asset_id === "made-2")!;
+  expect(made).toMatchObject({
+    name: "Sierra de cinta",
+    accumulated: { decimal: "0.00" },
+    pending: { decimal: "900.00" },
+    revision_number: 1,
+  });
+  expect(elementLanded(await registerOf(port), "made-2")).toBe("saved");
+  // The first year is worked out on the table's maximum coefficient, by days.
+  const group = TABLE_GROUPS.material!.find(
+    (found) => found.class_key === "maquinaria",
+  )!;
+  const first = (await planOf(port, "made-2"))[0]!;
+  expect(first).toMatchObject({
+    tax_year: 2026,
+    absence: null,
+    service_days: 200,
+    calendar_days: 365,
+    minimum_complete: true,
+  });
+  const expected = roundedCharge(
+    "900.00",
+    group.maximum_coefficient.decimal,
+    200,
+    365,
+  );
+  expect(first.planned!.decimal).toBe(
+    `${expected / 100n}.${String(expected % 100n).padStart(2, "0")}`,
+  );
+  // Replaying the same request adds nothing.
+  expect((await port.submit(CREATE, request as never)).kind).toBe("settled");
+  expect(
+    (await listOf(port)).filter((row) => row.asset_id === "made-2"),
+  ).toHaveLength(1);
+  // The history holds the revision with the tokens it states, by catalogue key.
+  const events = await eventsOf(port, "made-2");
+  const stage = events[0]!.changes.find(
+    (change) => change.field === "basis.stage",
+  )!;
+  expect(stage).toMatchObject({
+    after: "business_allocated",
+    after_key: "ledger.actividad_asset.basis_stage.business_allocated",
+  });
 });
 
-test("each act's request is built from the values, and a span waits for both dates", () => {
+test("an element whose opening history is missing starts without figures, and says why", async () => {
+  const port = portOf();
+  const request = await newRequest(
+    port,
+    { ...NEW_ELEMENT, opening_status: "missing", opening_amount: "" },
+    "made-3",
+  );
+  expect((await port.submit(CREATE, request! as never)).kind).toBe("settled");
+  const made = (await listOf(port)).find((row) => row.asset_id === "made-3")!;
+  expect(made).toMatchObject({ accumulated: null, pending: null });
+  expect((await planOf(port, "made-3"))[0]).toMatchObject({
+    absence: "incomplete",
+    planned: null,
+    absence_reason_key: "ledger.actividad_asset.errors.opening_history_missing",
+  });
+});
+
+test("an originating price is stated only for a used element on the linear method", async () => {
+  const port = portOf();
+  const used = {
+    acquired_condition: "used",
+    used_determination: "expert_valuation",
+    used_price: "1500.00",
+    used_evidence: "valuation report of the appraiser",
+  };
+  const request = (await newRequest(
+    port,
+    { ...NEW_ELEMENT, ...used },
+    "made-4",
+  ))!;
   expect(
-    describeRequest("a", {
-      name: "Plotter",
-      serial: null,
-      libro_registro: "R-7",
-    }),
+    (request.revision.amortization as { used_original_price: unknown })
+      .used_original_price,
   ).toEqual({
-    asset_id: "a",
-    name: "Plotter",
-    serial: null,
-    fields: [{ key: "libro_registro", value: "R-7" }],
+    determination: "expert_valuation",
+    original_price: { decimal: "1500" },
+    evidence_reference: "valuation report of the appraiser",
   });
+  expect((await port.submit(CREATE, request as never)).kind).toBe("settled");
+  const inspected = await settled<LedgerResult<typeof INSPECT>>(
+    port.submit(INSPECT, { asset_id: "made-4" }),
+  );
+  expect(inspected.revisions).toHaveLength(1);
+  // A new element states none: the field is not even drawn.
+  const options = await optionsOf(port);
+  const fields = fieldsFor(
+    {
+      kind: "element",
+      row: null,
+      descriptor: null,
+      revision: null,
+      tokens: () => [],
+      options,
+    },
+    { ...NEW_ELEMENT },
+  );
+  expect(fields.some((found) => found.key === "used_price")).toBe(false);
+  const advised = await settled<LedgerResult<typeof PLAN>>(
+    port.submit(PLAN, { asset_id: "made-4" }),
+  );
+  expect(advised.advisories).toEqual([
+    {
+      kind: "used_element_group_limit",
+      label_key:
+        "ledger.actividad_asset.plan_advisory.used_element_group_limit",
+    },
+  ]);
+  const seeded = await settled<LedgerResult<typeof PLAN>>(
+    port.submit(PLAN, { asset_id: "servidor" }),
+  );
+  expect(seeded.advisories).toEqual([]);
+  const stray = structuredClone(request) as unknown as {
+    revision: { asset_id: string; acquired_condition: string };
+  };
+  stray.revision.asset_id = "made-5";
+  stray.revision.acquired_condition = "new";
+  const refusal = await refused(port.submit(CREATE, stray as never));
+  expect(refusal.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.used_original_price_requires_used_asset",
+  );
+});
+
+test("a correction names the revision it stands on, and the claims it records again leave the stale ones", async () => {
+  const port = portOf();
+  const inspected = await settled<LedgerResult<typeof INSPECT>>(
+    port.submit(INSPECT, { asset_id: "servidor" }),
+  );
+  const base = inspected.revisions!.at(-1)!;
+  expect(base.revision_id).toMatch(/^[0-9a-f]{64}$/);
+  const row = servidorRow();
+  const options = await optionsOf(port);
+  const context = {
+    kind: "correction" as const,
+    row,
+    descriptor: null,
+    revision: base.revision,
+    tokens: () => [],
+    options,
+  };
+  const initial = initialOf(context, fieldsFor(context, {}));
+  const draft = { ...initial, basis_amount: "3600" };
+  const stated = answer(fieldsFor(context, draft), draft, initial);
+  expect(stated.values).toEqual({ basis_amount: { decimal: "3600" } });
+  const stale = correctRequest(
+    stated.values,
+    {
+      assetId: "servidor",
+      regime: null,
+      candidate: null,
+      base: { ...base, revision_id: "0".repeat(64) },
+    },
+    [],
+  )!;
+  const refusal = await refused(port.submit(CORRECT, stale as never));
+  expect(refusal.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.correction_must_supersede_current",
+  );
+  const claim = (await planOf(port, "servidor"))[0]!.claims[0]!;
+  const request = correctRequest(
+    stated.values,
+    { assetId: "servidor", regime: null, candidate: null, base },
+    [claim.claim_id],
+  )!;
+  expect(request.revision).toMatchObject({
+    revision_number: base.revision.revision_number + 1,
+    supersedes_revision_id: base.revision_id,
+    basis: { basis_amount: { decimal: "3600" } },
+  });
+  expect(request.superseding_claims).toEqual([
+    { supersedes_claim_id: claim.claim_id, requested_free_amount: null },
+  ]);
+  const done = await settled<{ outcome: string }>(
+    port.submit(CORRECT, request as never),
+  );
+  expect(done.outcome).toBe("succeeded");
+  const after = (await listOf(port)).find(
+    (found) => found.asset_id === "servidor",
+  )!;
+  expect(after).toMatchObject({ revision_number: 3, findings: { stale: 0 } });
+  expect(after.basis.decimal).toBe("3600.00");
+  const claims = (await planOf(port, "servidor"))[0]!.claims;
   expect(
-    disposeRequest("a", { date: "2026-01-31", reason_key: "sale" }),
-  ).toEqual({ asset_id: "a", date: "2026-01-31", reason_key: "sale" });
-  expect(disposeRequest("a", {})).toEqual({
-    asset_id: "a",
-    date: null,
-    reason_key: null,
+    claims.find((found) => found.claim_id === claim.claim_id),
+  ).toMatchObject({ effective: false });
+  expect(claims.filter((found) => found.effective)).toHaveLength(1);
+  expect(
+    staleClaims(
+      await planOf(port, "servidor"),
+      await eventsOf(port, "servidor"),
+    ),
+  ).toEqual([]);
+  expect(correctionLanded(await registerOf(port), "servidor", 3)).toBe("saved");
+  // The new revision chains to the one it supersedes.
+  const chain = await settled<LedgerResult<typeof INSPECT>>(
+    port.submit(INSPECT, { asset_id: "servidor" }),
+  );
+  expect(chain.revisions!.at(-1)!.revision).toMatchObject({
+    supersedes_revision_id: base.revision_id,
   });
-  expect(forecastRequest("a", { from: "2026-01-01" }, null)).toBeNull();
+});
+
+test("the filing handoff reads the seeded claims, and names the element it cannot work out", async () => {
+  const port = portOf();
+  const handoff = await settled<LedgerResult<typeof HANDOFF>>(
+    port.submit(HANDOFF, { tax_year: 2025, m130_period: "4T" }),
+  );
+  const projection = handoff.filing_handoff!;
+  const effective = (kind: string) =>
+    SEED_ELEMENTS.filter((seed) => seed.list.asset_kind === kind).flatMap(
+      (seed) =>
+        seed.rows
+          .filter((row) => row.tax_year === 2025)
+          .flatMap((row) => row.claims.filter((claim) => claim.effective)),
+    );
+  for (const [kind, key] of [
+    ["material", "material_m100"],
+    ["intangible", "intangible_m100"],
+  ] as const) {
+    const claims = effective(kind);
+    const total = claims.reduce(
+      (sum, claim) => sum + cents(claim.amount.decimal),
+      0n,
+    );
+    expect(projection[key].claim_ids.sort()).toEqual(
+      claims.map((claim) => claim.claim_id).sort(),
+    );
+    expect(cents(projection[key].amount.decimal)).toBe(total);
+    expect(projection[key].amount.decimal).not.toBe("0.00");
+  }
+  expect(projection.material_m100.target_casilla_id).toBe("0208");
+  expect(projection.intangible_m100.target_casilla_id).toBe("0227");
+  // Every element of the year is behind casilla 02, and the one it cannot work out is named.
+  expect(projection.material_m130.target_casilla_id).toBe("02");
+  expect(projection.material_m130.unavailable_asset_ids).toEqual([
+    "estanteria",
+  ]);
+  expect(
+    projection.material_m130.contributions.some(
+      (item) => item.asset_id === "furgoneta" && item.claim_id !== null,
+    ),
+  ).toBe(true);
+  const quarter = await settled<LedgerResult<typeof HANDOFF>>(
+    port.submit(HANDOFF, { tax_year: 2025, m130_period: "1T" }),
+  );
+  expect(
+    cents(quarter.filing_handoff!.material_m130.amount.decimal),
+  ).toBeLessThanOrEqual(cents(projection.material_m130.amount.decimal));
+});
+
+test("each plan year states its minimum amortization, and says when it is incomplete", async () => {
+  const port = portOf();
+  const rows = await planOf(port, "plotter");
+  for (const row of rows) {
+    expect(row.minimum_through, String(row.tax_year)).not.toBeNull();
+    expect(typeof row.minimum_complete).toBe("boolean");
+  }
+  // Years before the first edition have no minimum, so every year after is incomplete.
+  expect(rows.every((row) => !row.minimum_complete)).toBe(true);
+  const complete = await planOf(port, "servidor");
+  expect(complete.every((row) => row.minimum_complete)).toBe(true);
+  const through = complete.map((row) => cents(row.minimum_through!.decimal));
+  expect(through).toEqual(
+    [...through].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+  );
+});
+
+test("the limits cite the provisions behind the election, each with its official link, and say when the list is partial", async () => {
+  const port = portOf();
+  const limitsOf = async (id: string) =>
+    (
+      await settled<LedgerResult<typeof PLAN>>(
+        port.submit(PLAN, { asset_id: id }),
+      )
+    ).limits!;
+  const long = await limitsOf("furgoneta");
+  expect(long.legal_citations.length).toBeGreaterThanOrEqual(10);
+  expect(long.legal_citations_complete).toBe(true);
+  expect(long.legal_citations[0]).toEqual({
+    text: "Ley 35/2006, art. 28",
+    permalink: "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28",
+  });
+  for (const citation of long.legal_citations)
+    expect(citation.permalink).toMatch(/^https:\/\/www\.boe\.es\//);
+  const partial = await limitsOf("herramienta");
+  expect(partial.legal_citations_complete).toBe(false);
+  expect(partial.legal_citations.length).toBeGreaterThan(0);
+  expect((await limitsOf("estanteria")).legal_citations).toEqual([]);
+  expect("legal_references" in long).toBe(false);
+});
+
+test("a date among the facts of a reason is worded for the language of the interface", () => {
+  const strings: Record<string, string> = {
+    [`${ASSET_REASON_FAMILY}amortization_period_elapsed`]:
+      "Ended on {ended_on}.",
+  };
+  const translate = (locale: string) =>
+    Object.assign(
+      (key: string, values?: Record<string, string | number>) =>
+        (strings[key] ?? key).replace(/\{(\w+)\}/g, (_, name: string) =>
+          String(values?.[name] ?? `{${name}}`),
+        ),
+      { locale },
+    ) as unknown as Translate;
+  const facts = [{ key: "ended_on", value: "2026-01-01" }];
+  const english = reasonText(
+    translate("en"),
+    `${ASSET_REASON_FAMILY}amortization_period_elapsed`,
+    facts,
+  );
+  const spanish = reasonText(
+    translate("es"),
+    `${ASSET_REASON_FAMILY}amortization_period_elapsed`,
+    facts,
+  );
+  expect(english).not.toContain("2026-01-01");
+  expect(spanish).not.toContain("2026-01-01");
+  expect(english).toContain("2026");
+  expect(english).not.toBe(spanish);
+});
+
+const sale = {
+  disposal_date: "2025-06-30",
+  reason: "sale",
+  proceeds: { decimal: "9000.00" },
+  transmission_costs: { decimal: "150.00" },
+  market_value: null,
+  prior_free_depreciation_regime: null,
+  later_affectation_on: null,
+};
+test("a baja is judged by the backend, which refuses by key and facts", async () => {
+  const port = portOf();
+  const dispose = (disposal: object, id = "furgoneta") =>
+    port.submit(DISPOSE, { asset_id: id, disposal } as never);
+  const reasonOf = async (disposal: object) => {
+    const found = await refused(dispose(disposal));
+    return [found.detail.refusal.code, found.detail.refusal.reason_key];
+  };
+  expect(await reasonOf({ ...sale, disposal_date: "2020-01-01" })).toEqual([
+    "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
+    "ledger.actividad_asset.errors.disposal_before_service",
+  ]);
+  // A donation is typed so that the backend refuses it, not the form.
+  expect(await reasonOf({ ...sale, reason: "donation" })).toEqual([
+    "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
+    "ledger.actividad_asset.errors.disposal_donation_refused",
+  ]);
+  expect(await reasonOf({ ...sale, reason: "scrapping" })).toEqual([
+    "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
+    "ledger.actividad_asset.errors.disposal_scrapping_with_proceeds",
+  ]);
+  expect(await reasonOf({ ...sale, reason: "withdrawal" })).toEqual([
+    "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
+    "ledger.actividad_asset.errors.disposal_withdrawal_with_amounts",
+  ]);
+  const unknown = await refused(dispose(sale, "nobody"));
+  expect(unknown.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.asset_not_found",
+  );
+  // Nothing was recorded by any refusal.
+  expect(
+    (await listOf(port)).find((row) => row.asset_id === "furgoneta"),
+  ).toMatchObject({ state: "in_service", revision_number: 1 });
+});
+
+test("a baja ends the plan at the year of its last day, lists the element out of service and is recorded once", async () => {
+  const port = portOf();
+  await settled(
+    port.submit(DISPOSE, {
+      asset_id: "furgoneta",
+      disposal: sale,
+    } as never),
+  );
+  const row = (await listOf(port)).find(
+    (found) => found.asset_id === "furgoneta",
+  )!;
+  expect(row).toMatchObject({ state: "out_of_service", revision_number: 2 });
+  expect((await planOf(port, "furgoneta")).at(-1)!.tax_year).toBe(2025);
+  const event = (await eventsOf(port, "furgoneta")).at(-1)!;
+  expect(event).toMatchObject({ kind: "baja", affects_calculation: true });
+  expect(event.changes).toEqual([
+    ...[
+      ["disposal.disposal_date", "2025-06-30"],
+      ["disposal.reason", "sale"],
+      ["disposal.proceeds", "9000.00"],
+      ["disposal.transmission_costs", "150.00"],
+    ].map(([field, after]) => ({
+      field,
+      before: null,
+      after,
+      before_key: null,
+      after_key: null,
+    })),
+  ]);
+  // The same baja stated again is the record already there, not a refusal.
+  const retried = await port.submit(DISPOSE, {
+    asset_id: "furgoneta",
+    disposal: sale,
+  } as never);
+  expect(retried.kind).toBe("settled");
+  expect(
+    (await eventsOf(port, "furgoneta")).filter((e) => e.kind === "baja"),
+  ).toHaveLength(1);
+  const again = await refused(
+    port.submit(DISPOSE, {
+      asset_id: "furgoneta",
+      disposal: { ...sale, proceeds: { decimal: "9100.00" } },
+    } as never),
+  );
+  expect(again.detail.refusal).toMatchObject({
+    reason_key: "ledger.actividad_asset.errors.disposal_already_recorded",
+    reason_facts: [{ key: "disposal_date", value: "2025-06-30" }],
+  });
+});
+
+test("the figures of a baja are the backend's: a stated baja previews and writes nothing, an unstated one reads the record", async () => {
+  const port = portOf();
+  const calculate = (disposal: object | null, id = "furgoneta") =>
+    port.submit(CALCULATE as never, { asset_id: id, disposal } as never);
+  const before = await listOf(port);
+  const events = await eventsOf(port, "furgoneta");
+  const preview = (
+    await settled<{
+      calculation: LedgerResult<typeof CALCULATE>["calculation"];
+    }>(calculate(sale))
+  ).calculation!;
+  // The result is what the sale brought less its costs and the net value.
+  expect(cents(preview.net_value.decimal)).toBe(
+    cents(preview.acquisition_value.decimal) - cents(preview.reduction.decimal),
+  );
+  expect(cents(preview.result!.decimal)).toBe(
+    cents(sale.proceeds.decimal) -
+      cents(sale.transmission_costs.decimal) -
+      cents(preview.net_value.decimal),
+  );
+  expect(preview.transmission_value).toEqual(sale.proceeds);
+  expect(preview.years.at(-1)).toMatchObject({ tax_year: 2026 });
+  expect(
+    preview.findings.every((finding) =>
+      finding.label_key.startsWith("ledger.actividad_asset.disposal_finding."),
+    ),
+  ).toBe(true);
+  // A withdrawal computes no transmission figure and no result.
+  const withdrawal = (
+    await settled<{
+      calculation: { result: unknown; transmission_value: unknown };
+    }>(
+      calculate({
+        ...sale,
+        reason: "withdrawal",
+        proceeds: { decimal: "0.00" },
+        transmission_costs: { decimal: "0.00" },
+      }),
+    )
+  ).calculation;
+  expect(withdrawal).toMatchObject({ result: null, transmission_value: null });
+  // A preview records nothing.
+  expect(await listOf(port)).toEqual(before);
+  expect(await eventsOf(port, "furgoneta")).toEqual(events);
+  // With no baja stated and none recorded the backend says so.
+  const none = await refused(calculate(null));
+  expect(none.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.disposal_not_recorded",
+  );
+  await settled(
+    port.submit(DISPOSE, {
+      asset_id: "furgoneta",
+      disposal: sale,
+    } as never),
+  );
+  const recorded = (
+    await settled<{ calculation: { disposal_date: string; reason: string } }>(
+      calculate(null),
+    )
+  ).calculation;
+  expect(recorded).toMatchObject({
+    disposal_date: "2025-06-30",
+    reason: "sale",
+  });
+  // An element whose opening history is unknown cannot be worked out.
+  const missing = await refused(calculate(sale, "estanteria"));
+  expect(missing.detail.refusal).toMatchObject({
+    code: INCOMPLETE,
+    reason_key: "ledger.actividad_asset.errors.opening_history_missing",
+  });
+  // The preview is judged like the record.
+  const donation = await refused(calculate({ ...sale, reason: "donation" }));
+  expect(donation.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.disposal_donation_refused",
+  );
+});
+
+test("a forecast works out a span and records nothing; a claim is recorded once and refused where it overlaps", async () => {
+  const port = portOf();
+  const ask = (extra: object) =>
+    port.submit(FORECAST, {
+      asset_id: "furgoneta",
+      covered_from: "2026-07-01",
+      covered_until: "2027-01-01",
+      requested_free_amount: null,
+      supersedes_claim_id: null,
+      ...extra,
+    } as never) as unknown as Promise<{
+      kind: string;
+      result?: {
+        forecast: {
+          amount: { decimal: string };
+          service_days: number;
+          asset_id: string;
+        } & Record<string, never>;
+      };
+    }>;
+  const before = await planOf(port, "furgoneta");
+  const forecast = (await ask({})).result!.forecast;
+  // The rest of the year, worked out again from whole cents.
+  const annual = roundedCharge("24000.00", "0.12", 1, 1);
+  const upTo = (n: number) => roundedCharge("24000.00", "0.12", n, 365);
+  expect(annual).toBe(288000n);
+  expect(cents(forecast.amount.decimal)).toBe(upTo(365) - upTo(181));
+  expect(forecast.service_days).toBe(184);
+  expect(await planOf(port, "furgoneta")).toEqual(before);
+  const claim = () =>
+    port.submit(CLAIM, {
+      forecast,
+      supersedes_claim_id: null,
+    } as never) as unknown as Promise<{
+      kind: string;
+      result?: {
+        claim_result: { reused_existing_claim: boolean };
+        claim_id: string;
+      };
+    }>;
+  const first = (await claim()).result!;
+  expect(first.claim_result.reused_existing_claim).toBe(false);
+  expect(claimReused(first)).toBe(false);
+  const again = (await claim()).result!;
+  expect(claimReused(again)).toBe(true);
+  expect(again.claim_id).toBe(first.claim_id);
+  const year = (await planOf(port, "furgoneta")).find(
+    (row) => row.tax_year === 2026,
+  )!;
+  expect(year).toMatchObject({
+    claim_state: "claimed",
+    claimable_intervals: [],
+  });
+  expect(year.claims.filter((found) => found.effective)).toHaveLength(2);
+  expect(cents(year.claimed.decimal)).toBe(cents("2880.00"));
+  const overlap = (await refused(
+    ask({ covered_from: "2026-01-01", covered_until: "2027-01-01" }),
+  )) as Refused;
+  expect(overlap.detail.refusal).toMatchObject({
+    code: "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT",
+    reason_key: "ledger.actividad_asset.errors.claims_overlap",
+  });
+  const crossing = await refused(
+    ask({ covered_from: "2026-07-01", covered_until: "2027-02-01" }),
+  );
+  expect(crossing.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.covered_interval_outside_tax_year",
+  );
+  expect(
+    claimLanded(await planOf(port, "furgoneta"), {
+      tax_year: 2026,
+      from: "2026-07-01",
+      until: "2027-01-01",
+      amount: forecast.amount.decimal,
+    }),
+  ).toBe("saved");
+});
+
+test("a free method asks for its amount, and a claim replaces the one it corrects", async () => {
+  const port = portOf();
+  const ask = (extra: object) =>
+    port.submit(FORECAST, {
+      asset_id: "impresora",
+      covered_from: "2026-09-01",
+      covered_until: "2027-01-01",
+      requested_free_amount: null,
+      supersedes_claim_id: null,
+      ...extra,
+    } as never) as unknown as Promise<unknown>;
+  const none = await refused(ask({}));
+  expect(none.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.free_amount_required",
+  );
+  const over = await refused(
+    ask({ requested_free_amount: { decimal: "400.00" } }),
+  );
+  expect(over.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.free_amount_exceeds_remaining_basis",
+  );
+  const forecast = (
+    (await ask({ requested_free_amount: { decimal: "100.00" } })) as {
+      result: { forecast: object };
+    }
+  ).result.forecast;
+  const first = (await port.submit(CLAIM, {
+    forecast,
+    supersedes_claim_id: null,
+  } as never)) as unknown as { result: { claim_id: string } };
+  const replacing = (await ask({
+    requested_free_amount: { decimal: "250.00" },
+    supersedes_claim_id: first.result.claim_id,
+  })) as { result: { forecast: object } };
+  await port.submit(CLAIM, {
+    forecast: replacing.result.forecast,
+    supersedes_claim_id: first.result.claim_id,
+  } as never);
+  const rows = await planOf(port, "impresora");
+  expect(rows[0]!.claims.map((claim) => claim.effective)).toEqual([
+    false,
+    true,
+  ]);
+  expect(rows[0]!.claims[0]!.superseded_by).toBe(rows[0]!.claims[1]!.claim_id);
+  expect(rows[0]!.claimed.decimal).toBe("250.00");
+});
+
+test("an element made through create is forecast and claimed like a seeded one", async () => {
+  const port = portOf();
+  await port.submit(
+    CREATE,
+    (await newRequest(port, NEW_ELEMENT, "made-1"))! as never,
+  );
+  const forecast = (await port.submit(FORECAST, {
+    asset_id: "made-1",
+    covered_from: "2026-06-15",
+    covered_until: "2027-01-01",
+    requested_free_amount: null,
+    supersedes_claim_id: null,
+  })) as { result?: { forecast: never } };
+  expect(forecast.result?.forecast).toBeDefined();
+  const claimed = (await port.submit(CLAIM, {
+    forecast: forecast.result!.forecast,
+    supersedes_claim_id: null,
+  })) as { result?: { claim_result: { reused_existing_claim: boolean } } };
+  expect(claimed.result?.claim_result.reused_existing_claim).toBe(false);
+  const inspected = await settled<LedgerResult<typeof INSPECT>>(
+    port.submit(INSPECT, { asset_id: "made-1" }),
+  );
+  const claim = (await planOf(port, "made-1"))[0]!.claims[0]!;
+  expect(claim.revision_id).toBe(inspected.revisions!.at(-1)!.revision_id);
+});
+
+test("a baja over a year no edition covers leaves the minimum unresolved, and says so", async () => {
+  const port = portOf();
+  const read = await settled<LedgerResult<typeof CALCULATE>>(
+    port.submit(CALCULATE, {
+      asset_id: "plotter",
+      disposal: { ...sale, disposal_date: "2026-06-30" },
+    } as never),
+  );
+  expect(read.calculation!.minimum).toBeNull();
+  expect(
+    read.calculation!.findings.filter(
+      (finding) => finding.kind === "minimum_unresolved",
+    ).length,
+  ).toBe(3);
+  const seed = SEED_ELEMENTS.find((found) => found.id === "plotter")!;
+  expect(seed.disposal!.minimum).toBeNull();
+  expect(
+    seed.disposal!.years.every((year) => year.minimum_through === null),
+  ).toBe(true);
+  expect(
+    seed
+      .disposal!.findings.filter(
+        (finding) => finding.kind === "minimum_unresolved",
+      )
+      .map((finding) => finding.tax_year),
+  ).toEqual([2019, 2020, 2021]);
+  // The reduction and the net value stay numbers.
+  expect(seed.disposal!.reduction).not.toBeNull();
+  expect(seed.disposal!.net_value).not.toBeNull();
+});
+
+test("a claim past the registry's last year is refused with the years it can take, and a replayed replaced claim is a conflict", async () => {
+  const port = portOf();
+  const forecast = (await port.submit(FORECAST, {
+    asset_id: "furgoneta",
+    covered_from: "2027-01-01",
+    covered_until: "2028-01-01",
+    requested_free_amount: null,
+    supersedes_claim_id: null,
+  })) as { result?: { forecast: never } };
+  expect(forecast.result?.forecast).toBeDefined();
+  const beyond = await refused(
+    port.submit(CLAIM, {
+      forecast: forecast.result!.forecast,
+      supersedes_claim_id: null,
+    }),
+  );
+  expect(beyond.detail.refusal).toMatchObject({
+    code: "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
+    reason_key: "ledger.actividad_asset.errors.claim_year_beyond_registry",
+    reason_facts: [
+      { key: "last_admitted_year", value: "2026" },
+      { key: "tax_year", value: "2027" },
+    ],
+  });
+  // A claim recorded and then replaced cannot be recorded again.
+  const span = {
+    ...(await planOf(port, "impresora"))[0]!.claimable_intervals[0]!,
+  };
+  const first = (await port.submit(FORECAST, {
+    asset_id: "impresora",
+    covered_from: span.covered_from,
+    covered_until: span.covered_until,
+    requested_free_amount: { decimal: "100.00" },
+    supersedes_claim_id: null,
+  })) as { result?: { forecast: never } };
+  const recorded = (await port.submit(CLAIM, {
+    forecast: first.result!.forecast,
+    supersedes_claim_id: null,
+  })) as { result?: { claim_id: string } };
+  const claimId = recorded.result!.claim_id;
+  const second = (await port.submit(FORECAST, {
+    asset_id: "impresora",
+    covered_from: span.covered_from,
+    covered_until: span.covered_until,
+    requested_free_amount: { decimal: "120.00" },
+    supersedes_claim_id: claimId,
+  })) as { result?: { forecast: never } };
+  expect(
+    (
+      await port.submit(CLAIM, {
+        forecast: second.result!.forecast,
+        supersedes_claim_id: claimId,
+      })
+    ).kind,
+  ).toBe("settled");
+  const replay = await refused(
+    port.submit(CLAIM, {
+      forecast: first.result!.forecast,
+      supersedes_claim_id: null,
+    }),
+  );
+  expect(replay.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.claim_superseded_replay",
+  );
+});
+
+test("a later affectation after the element entered service is refused", async () => {
+  const port = portOf();
+  const late = await refused(
+    port.submit(CALCULATE, {
+      asset_id: "furgoneta",
+      disposal: { ...sale, later_affectation_on: "2024-01-01" },
+    } as never),
+  );
+  expect(late.detail.refusal.reason_key).toBe(
+    "ledger.actividad_asset.errors.later_affectation_out_of_order",
+  );
+});
+
+// ---- Typed text, requests and how a write ended ------------------------------
+
+const idle: SetupCall<unknown> = {
+  kind: "failed",
+  code: "unavailable",
+  reason: null,
+};
+
+test("typed text becomes the values of its control, and nothing typed is not zero", () => {
+  const field = (control: FormField["control"]): FormField => ({
+    key: "k",
+    label_key: "l",
+    control,
+    required: false,
+    choices: [],
+  });
+  expect(parseField(field("amount"), "12.5")).toEqual({
+    kind: "value",
+    value: { decimal: "12.5" },
+  });
+  expect(parseField(field("amount"), "")).toEqual({ kind: "empty" });
+  expect(parseField(field("amount"), "1,2,3").kind).toBe("refused");
+  expect(parseField(field("date"), "2026-02-30").kind).toBe("refused");
+  expect(parseField(field("date"), "2026-02-28")).toEqual({
+    kind: "value",
+    value: "2026-02-28",
+  });
+  expect(parseField(field("whole"), "12")).toEqual({
+    kind: "value",
+    value: 12,
+  });
+  expect(parseField(field("whole"), "1e3").kind).toBe("refused");
+  expect(parseField(field("choice"), "")).toEqual({ kind: "empty" });
+});
+
+test("a correction states only what changed from the record, and never an emptied field", () => {
+  const row = servidorRow() as AssetListRow;
+  const context = {
+    kind: "correction" as const,
+    row,
+    descriptor: null,
+    revision: SEED_ELEMENTS.find(
+      (seed) => seed.id === "servidor",
+    )!.revisions.at(-1)!.revision as never,
+    tokens: () => [],
+    options: null,
+  };
+  const initial = initialOf(context, fieldsFor(context, {}));
+  const fields = fieldsFor(context, initial);
+  expect(initial).toMatchObject({
+    method: row.method,
+    basis_amount: row.basis.decimal,
+    in_service_date: row.in_service_date,
+  });
+  expect(answer(fields, initial, initial).values).toEqual({});
+  const changed = answer(fields, { ...initial, basis_amount: "3600" }, initial);
+  expect(changed.values).toEqual({ basis_amount: { decimal: "3600" } });
+  expect(
+    answer(fields, { ...initial, basis_amount: "" }, initial).values,
+  ).toEqual({});
+  // A full form states every field, null where nothing was typed.
+  const adding = fieldsFor({
+    kind: "element",
+    row: null,
+    descriptor: null,
+    revision: null,
+    tokens: () => [],
+    options: null,
+  });
+  expect(Object.keys(answer(adding, {}, null).values)).toEqual(
+    adding.map((found) => found.key),
+  );
+});
+
+function servidorRow(): AssetListRow {
+  return SEED_ELEMENTS.find((seed) => seed.id === "servidor")!.list;
+}
+
+test("each act's fields and requests come from the backend's choices", () => {
+  const options = {
+    tax_year: 2026,
+    asset_kind: "material",
+    regime: "normal",
+    edition: {
+      revision_id: "2025",
+      authored_filing_year: 2025,
+      projected: true,
+    },
+    methods: ["linear", "low_value_free"],
+    table_groups: TABLE_GROUPS.material!.slice(0, 2),
+  };
+  const fields = fieldsFor(
+    {
+      kind: "element",
+      row: null,
+      descriptor: null,
+      revision: null,
+      tokens: (family) =>
+        family === "asset_kind" ? ["material", "intangible"] : [],
+      options,
+    },
+    { method: "linear" },
+  );
+  const choices = (key: string) =>
+    fields.find((found) => found.key === key)!.choices;
+  expect(choices("asset_kind").map((choice) => choice.token)).toEqual([
+    "material",
+    "intangible",
+  ]);
+  expect(choices("method").map((choice) => choice.token)).toEqual([
+    "linear",
+    "low_value_free",
+  ]);
+  expect(choices("authority_class_key").map((choice) => choice.token)).toEqual(
+    options.table_groups.map((group) => group.class_key),
+  );
+  // A table class is drawn by the official name the backend serves with it.
+  expect(
+    choices("authority_class_key").map((choice) => [
+      choice.family,
+      choice.label,
+    ]),
+  ).toEqual(options.table_groups.map((group) => [null, group.class_label]));
+  const plan = SEED_ELEMENTS.find((seed) => seed.id === "furgoneta")!.rows.find(
+    (row) => row.tax_year === 2026,
+  )!;
+  const claim = claimFields(plan, null);
+  expect(claim.map((found) => [found.key, found.current])).toEqual([
+    ["covered_from", "2026-07-01"],
+    ["covered_until", "2027-01-01"],
+  ]);
+  const free = SEED_ELEMENTS.find((seed) => seed.id === "impresora")!.rows[0]!;
+  expect(claimFields(free, null).map((found) => found.key)).toEqual([
+    "covered_from",
+    "covered_until",
+    "free_amount",
+  ]);
   expect(
     forecastRequest(
       "a",
       {
-        from: "2026-01-01",
-        until: "2026-06-30",
-        free_amount: { decimal: "5" },
+        covered_from: "2026-01-01",
+        covered_until: "2026-06-30",
+        free_amount: { decimal: "5.00" },
       },
       "c",
     ),
@@ -574,19 +1754,128 @@ test("each act's request is built from the values, and a span waits for both dat
     asset_id: "a",
     covered_from: "2026-01-01",
     covered_until: "2026-06-30",
-    requested_free_amount: { decimal: "5" },
+    requested_free_amount: { decimal: "5.00" },
     supersedes_claim_id: "c",
+  });
+  expect(forecastRequest("a", { covered_from: "2026-01-01" }, null)).toBeNull();
+  expect(
+    describeRequest("a", { name: "Sierra", serial_number: "S1" }).descriptor,
+  ).toEqual({
+    name: "Sierra",
+    serial_number: "S1",
+    description: null,
+    document_kind: null,
+    document_number: null,
+    supplier_name: null,
+    supplier_tax_id: null,
   });
 });
 
-test("a write held in doubt is read against the register: found, not found, or not told", async () => {
-  const port = portOf();
-  const listed = await settled<AssetListResult>(
-    submitProvisional(port, LIST, {}),
+test("the add form does not offer a method whose facts it cannot state, and a correction keeps the element's own", () => {
+  const hidden = (kind: string, revision: never = null as never) => {
+    const context = {
+      kind: revision === null ? ("element" as const) : ("correction" as const),
+      row: null,
+      descriptor: null,
+      revision,
+      tokens: () => [],
+      options: {
+        tax_year: 2026,
+        asset_kind: kind,
+        regime: "normal",
+        edition: {
+          revision_id: "2025",
+          authored_filing_year: 2025,
+          projected: true,
+        },
+        methods: [...ADMITTED_METHODS[kind]!],
+        table_groups: [...TABLE_GROUPS[kind]!],
+      },
+    };
+    const offered = fieldsFor(context, {})
+      .find((found) => found.key === "method")!
+      .choices.map((choice) => choice.token);
+    return ADMITTED_METHODS[kind]!.filter(
+      (method) => !offered.includes(method),
+    );
+  };
+  expect(hidden("material")).toEqual([
+    "approved_plan",
+    "small_enterprise_employment_free",
+  ]);
+  expect(hidden("intangible")).toEqual([
+    "approved_plan",
+    "intangible_useful_life",
+  ]);
+  const plan = {
+    amortization: { regime: "normal", method: "approved_plan" },
+  } as never;
+  expect(hidden("material", plan)).toEqual([
+    "small_enterprise_employment_free",
+  ]);
+});
+
+test("a refusal is read by its reason key and facts, and what is still to fill in is named", () => {
+  const body = {
+    outcome: "refused",
+    refusal: {
+      code: INCOMPLETE,
+      precondition_verdict: { missing_field_keys: ["name", "basis_amount"] },
+      reason_key: "ledger.actividad_asset.errors.table_class_required",
+      reason_facts: [
+        { key: "method", value: "linear" },
+        { key: "bad", value: 3 },
+      ],
+    },
+  };
+  expect(refusalOf(body)).toEqual({
+    code: INCOMPLETE,
+    reasonKey: "ledger.actividad_asset.errors.table_class_required",
+    reasonFacts: [{ key: "method", value: "linear" }],
+    missing: ["name", "basis_amount"],
+  });
+  expect(refusalOf(null)).toEqual({
+    code: null,
+    reasonKey: null,
+    reasonFacts: [],
+    missing: [],
+  });
+  const view = viewOf({ kind: "done", result: body }, () => false);
+  expect(view).toMatchObject({ kind: "refused", code: INCOMPLETE });
+  expect(
+    viewOf({ kind: "refused", reason: "invalid", detail: null }, () => false),
+  ).toMatchObject({ kind: "refused", reason: "invalid", missing: [] });
+  expect(viewOf(idle, () => false).kind).toBe("failed");
+  expect(viewOf({ kind: "unknown" }, () => false).kind).toBe("unknown");
+  expect(viewOf(null, () => false).kind).toBe("none");
+  const labels = missingLabels(
+    ((key: string) => `<${key}>`) as Translate,
+    fieldsFor({
+      kind: "element",
+      row: null,
+      descriptor: null,
+      revision: null,
+      tokens: () => [],
+      options: null,
+    }),
+    ["name", "amortization.method"],
   );
-  const plotter = listed.rows.find((row) => row.asset_id === "plotter")!;
+  expect(labels).toContain("<desktop.ledger.assets.field.name>");
+  expect(labels).toContain("<desktop.ledger.assets.field.method>");
+  expect(
+    refusalWord(((key: string) => key) as Translate, {
+      reasonKey: null,
+      reasonFacts: [],
+    }),
+  ).toBeNull();
+});
+
+test("a held write is read against the register: found, not found, or not told", async () => {
+  const port = portOf();
+  const listed = await registerOf(port);
   expect(elementLanded(listed, "plotter")).toBe("saved");
   expect(elementLanded(listed, "minted-but-never-saved")).toBe("not_saved");
+  const plotter = listed.rows!.find((row) => row.asset_id === "plotter")!;
   expect(correctionLanded(listed, "plotter", plotter.revision_number)).toBe(
     "saved",
   );
@@ -594,393 +1883,196 @@ test("a write held in doubt is read against the register: found, not found, or n
     "not_saved",
   );
   expect(correctionLanded(listed, "nobody", 1)).toBe("untold");
-  expect(bajaLanded(listed, "plotter")).toBe("not_saved");
-  expect(bajaLanded(listed, "camara")).toBe("saved");
-  expect(bajaLanded(listed, "nobody")).toBe("untold");
-  const events = await eventsOf(port, "plotter");
-  expect(descriptorLanded(events, 1)).toBe("saved");
-  expect(descriptorLanded(events, 2)).toBe("not_saved");
   const rows = await planOf(port, "furgoneta");
   const sent = {
     tax_year: 2024,
     from: "2024-01-01",
-    until: "2024-12-31",
-    amount: "2100",
+    until: "2025-01-01",
+    amount: "2880",
   };
   // The same number however it is spelled; a different one is not found.
   expect(claimLanded(rows, sent)).toBe("saved");
-  expect(claimLanded(rows, { ...sent, amount: "2100.01" })).toBe("not_saved");
+  expect(claimLanded(rows, { ...sent, amount: "2880.01" })).toBe("not_saved");
   expect(claimLanded(rows, { ...sent, until: "2024-06-30" })).toBe("not_saved");
   expect(claimLanded(rows, { ...sent, tax_year: 1901 })).toBe("untold");
+  expect(descriptorLanded([], 1)).toBe("not_saved");
 });
 
-test("a refusal is read by its backend keys, and what is still to fill in is named", () => {
-  const incomplete = refusalIn({
-    kind: "refused",
-    reason: "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE",
-    detail: {
-      refusal: {
-        code: INCOMPLETE,
-        precondition_verdict: { missing_field_keys: ["name", "basis_amount"] },
-      },
-    } as never,
-  });
-  expect(incomplete.code).toBe(INCOMPLETE);
-  expect(incomplete.missing).toEqual(["name", "basis_amount"]);
-  const conflict = refusalIn({
-    kind: "refused",
-    reason: null,
-    detail: {
-      refusal: { code: CONFLICT, reason_key: "overlapping_claim" },
-      conflicting_claim: {
-        claim_id: "c1",
-        from: "2026-01-01",
-        until: "2026-06-30",
-        amount: { decimal: "1050.00" },
-      },
-    } as never,
-  });
-  expect(conflict.conflict).toEqual({
-    claim_id: "c1",
-    from: "2026-01-01",
-    until: "2026-06-30",
-    amount: { decimal: "1050.00" },
-  });
-  // A refusal settled as a result reads the same as a refused outcome.
-  expect(
-    refusalIn({
-      kind: "done",
-      result: { outcome: "refused", refusal: { code: "X", reason_key: "y" } },
-    }),
-  ).toMatchObject({ code: "X", reasonKey: "y" });
-  expect(viewOf(null, neverReused).kind).toBe("none");
-  expect(viewOf({ kind: "unknown" }, neverReused).kind).toBe("unknown");
-  expect(viewOf({ kind: "saved_unread" }, neverReused).kind).toBe(
-    "saved_unread",
-  );
-  expect(
-    viewOf({ kind: "failed", code: "too_large", reason: null }, neverReused)
-      .kind,
-  ).toBe("failed");
-  expect(viewOf({ kind: "done", result: {} }, () => true)).toEqual({
-    kind: "saved",
-    reused: true,
-  });
-  // The words are the backend key's; a key the tab has no line for is null.
-  const say = (key: string) => key;
-  expect(refusalWord(say, { code: null, reasonKey: "already_disposed" })).toBe(
-    "desktop.ledger.assets.reason.already_disposed",
-  );
-  expect(refusalWord(say, { code: INCOMPLETE, reasonKey: "unheard_of" })).toBe(
-    "desktop.ledger.assets.refusal.refused_actividad_asset_incomplete",
-  );
-  expect(
-    refusalWord(say, { code: "SOMETHING_NEW", reasonKey: null }),
-  ).toBeNull();
-});
+// ---- Words ------------------------------------------------------------------
 
-test("adding an element: incomplete names what to fill in, a purchase is used once, the same id is already there", async () => {
-  const port = portOf();
-  const made = await newElement(port, "added-1");
-  const empty = await draftedCall(
-    port,
-    CREATE,
-    {
-      asset_id: "added-1",
-      values: { ...made.values, name: null, non_deductible_iva: null },
-    },
-    true,
-  );
-  expect(refusalIn(empty).code).toBe(INCOMPLETE);
-  expect(refusalIn(empty).missing).toEqual(["name", "non_deductible_iva"]);
-  expect((await listOf(port)).rows.map((row) => row.asset_id)).not.toContain(
-    "added-1",
-  );
-
-  const first = await made.send();
-  expect(viewOf(first, createReused)).toEqual({
-    kind: "saved",
-    reused: false,
-  });
-  const again = await made.send();
-  expect(viewOf(again, createReused)).toEqual({ kind: "saved", reused: true });
-  expect(
-    (await eventsOf(port, "added-1")).map((event) => event.type_key),
-  ).toEqual(["element_added", "description_added"]);
-  // The id says the same act; other facts under it are another element's.
-  const clash = await draftedCall(
-    port,
-    CREATE,
-    { asset_id: "added-1", values: { ...made.values, name: "Otra" } },
-    true,
-  );
-  expect(refusalIn(clash).reasonKey).toBe("asset_exists");
-  // The purchase it was made from is no longer offered.
-  const left = await settled<{ candidates: { candidate_id: string }[] }>(
-    submitProvisional(port, CANDIDATES, {}),
-  );
-  expect(left.candidates.map((found) => found.candidate_id)).not.toContain(
-    made.values.acquisition,
-  );
-  const second = await draftedCall(
-    port,
-    CREATE,
-    { asset_id: "added-2", values: made.values },
-    true,
-  );
-  expect(refusalIn(second).reasonKey).toBe("acquisition_not_found");
-  // It is listed, so a lost answer to the add reads as saved.
-  const listed = await settled<AssetListResult>(
-    submitProvisional(port, LIST, {}),
-  );
-  expect(elementLanded(listed, "added-1")).toBe("saved");
-});
-
-test("a purchase that does not state its IVA leaves it unknown, and a stated zero is a value", async () => {
-  const { candidates } = await settled<{
-    candidates: { values: Record<string, string | null> }[];
-  }>(submitProvisional(portOf(), CANDIDATES, {}));
-  expect(
-    candidates.some((found) => found.values.non_deductible_iva === null),
-  ).toBe(true);
-  expect(
-    candidates.some((found) => found.values.non_deductible_iva === "0.00"),
-  ).toBe(true);
-});
-
-test("a correction is refused on a stale revision or no change, asks a year for a method, and records claims again atomically", async () => {
-  const port = portOf();
-  const send = (values: FormValues, claims: string[] = [], revision = 2) =>
-    draftedCall(
-      port,
-      CORRECT,
-      {
-        asset_id: "servidor",
-        revision_number: revision,
-        values,
-        supersede_claim_ids: claims,
-      },
-      true,
-    );
-  const revisionOf = async () =>
-    (
-      await settled<AssetListResult>(submitProvisional(port, LIST, {}))
-    ).rows.find((row) => row.asset_id === "servidor")?.revision_number;
-  expect(
-    refusalIn(await send({ basis_amount: { decimal: "1" } }, [], 1)).reasonKey,
-  ).toBe("revision_stale");
-  expect(refusalIn(await send({})).reasonKey).toBe("nothing_changed");
-  const options = await optionsOf(port, "correction", { asset_id: "servidor" });
-  const other = options.fields
-    .find((field) => field.key === "method_key")!
-    .choices.map((choice) => choice.token)
-    .find((token) => token !== "constant_percentage")!;
-  const noYear = refusalIn(await send({ method_key: other }));
-  expect(noYear.code).toBe(INCOMPLETE);
-  expect(noYear.missing).toEqual(["method_year"]);
-  // Nothing was written by any of those.
-  expect(await revisionOf()).toBe(2);
-
-  const stale = staleClaims(await planOf(port, "servidor"));
-  expect(stale.map((entry) => entry.year)).toEqual([2015]);
-  const done = await send(
-    { basis_amount: { decimal: "19800.00" } },
-    stale.map((entry) => entry.claim.claim_id),
-  );
-  expect(viewOf(done, neverReused).kind).toBe("saved");
-  const listed = await settled<AssetListResult>(
-    submitProvisional(port, LIST, {}),
-  );
-  expect(await revisionOf()).toBe(3);
-  expect(correctionLanded(listed, "servidor", 3)).toBe("saved");
-  const after = await planOf(port, "servidor");
-  const year = after.find((row) => row.tax_year === 2015)!;
-  // The old claim is replaced, not edited, and the new one matches.
-  const effective = year.claims.filter((claim) => claim.effective);
-  expect(effective).toHaveLength(1);
-  expect(effective[0]?.matches_current_schedule).toBe(true);
-  expect(year.claims.find((claim) => !claim.effective)?.superseded_by).toBe(
-    effective[0]?.claim_id,
-  );
-  // The claims left alone no longer match what was corrected.
-  expect(
-    after.find((row) => row.tax_year === 2016)?.claims[0]
-      ?.matches_current_schedule,
-  ).toBe(false);
-  const types = (await eventsOf(port, "servidor")).map(
-    (event) => event.type_key,
-  );
-  expect(types.slice(-2)).toEqual(["correction_added", "claim_recorded"]);
-});
-
-test("a forecast works out a span and records nothing; a claim is recorded once, refused where it overlaps, and replaces the claim it corrects", async () => {
-  const port = portOf();
-  const claimsOf = async (year: number) =>
-    (await planOf(port, "furgoneta")).find((row) => row.tax_year === year)!
-      .claims;
-  const before = await claimsOf(2025);
-  const forecast = (from: string, until: string, supersedes?: string) =>
-    draftedCall(
-      port,
-      FORECAST,
-      {
-        asset_id: "furgoneta",
-        covered_from: from,
-        covered_until: until,
-        requested_free_amount: null,
-        supersedes_claim_id: supersedes ?? null,
-      },
-      false,
-    );
-  const forecasted = async (
-    from: string,
-    until: string,
-    supersedes?: string,
-  ) => {
-    const call = await forecast(from, until, supersedes);
-    if (call.kind !== "done" || !call.result.forecast)
-      throw new Error("no forecast");
-    return call.result.forecast;
+/** A translator that knows only the keys it is given, as the shell's does. */
+const words =
+  (table: Record<string, string>): Translate =>
+  (key, values) => {
+    const template = table[key] ?? key;
+    return values
+      ? template.replace(/\{(\w+)\}/g, (whole, name: string) =>
+          name in values ? String(values[name]) : whole,
+        )
+      : template;
   };
-  const claim = (
-    worked: Awaited<ReturnType<typeof forecasted>>,
-    supersedes: string | null = null,
-  ) =>
-    draftedCall(
-      port,
-      CLAIM,
-      { forecast: worked, supersedes_claim_id: supersedes },
-      true,
-    );
 
-  const year = await forecasted("2025-01-01", "2025-12-31");
-  expect(year.amount).toEqual({ decimal: "2100.00" });
-  expect(year.service_days).toBe(365);
-  expect(await claimsOf(2025)).toEqual(before);
-
-  expect(viewOf(await claim(year), claimReused)).toEqual({
-    kind: "saved",
-    reused: false,
+test("a reason is said by its catalogue key with its facts, and anything else reads as the generic word", () => {
+  const t = words({
+    [`${ASSET_REASON_FAMILY}amortization_period_elapsed`]:
+      "Ended on {ended_on}.",
+    [`${ASSET_REASON_FAMILY}elected_coefficient_out_of_range`]:
+      "{elected} is outside [{minimum}, {maximum}].",
+    "desktop.ledger.assets.refused": "Not accepted.",
+    "desktop.ledger.assets.unrecognised": "Not recognised",
+    [`${ASSET_FAMILY.method}linear`]: "Linear",
   });
-  expect(viewOf(await claim(year), claimReused)).toEqual({
-    kind: "saved",
-    reused: true,
-  });
-  expect(await claimsOf(2025)).toHaveLength(1);
-  const rows = await planOf(port, "furgoneta");
-  expect(rows.find((row) => row.tax_year === 2025)?.state_key).toBe("claimed");
+  const elapsed = `${ASSET_REASON_FAMILY}amortization_period_elapsed`;
   expect(
-    claimLanded(rows, {
-      tax_year: 2025,
-      from: "2025-01-01",
-      until: "2025-12-31",
-      amount: "2100.00",
+    reasonText(t, elapsed, [{ key: "ended_on", value: "2026-01-01" }]),
+  ).toBe("Ended on Jan 1, 2026.");
+  // A fact the sentence needs and was not given: never a raw placeholder.
+  expect(reasonText(t, elapsed, [])).toBeNull();
+  expect(
+    reasonText(t, `${ASSET_REASON_FAMILY}elected_coefficient_out_of_range`, [
+      { key: "elected", value: "0.5" },
+      { key: "minimum", value: "0.1" },
+      { key: "maximum", value: "0.2" },
+    ]),
+  ).toBe("0.5 is outside [0.1, 0.2].");
+  // A key the generated strings lack, one outside the family, and none.
+  expect(reasonText(t, `${ASSET_REASON_FAMILY}not_generated`)).toBeNull();
+  expect(reasonText(t, "tui.ledger.activity_asset.plan")).toBeNull();
+  expect(reasonText(t, null)).toBeNull();
+  expect(
+    refusalText(t, {
+      reason_key: `${ASSET_REASON_FAMILY}not_generated`,
+      reason_facts: [],
     }),
-  ).toBe("saved");
-
-  // 2026 holds a half-year claim: a span over it names it and writes nothing.
-  const over = await forecasted("2026-01-01", "2026-12-31");
-  const conflict = refusalIn(await claim(over));
-  expect(conflict.code).toBe(CONFLICT);
-  expect(conflict.conflict).toMatchObject({
-    from: "2026-01-01",
-    until: "2026-06-30",
-  });
-  expect(await claimsOf(2026)).toHaveLength(1);
-  // Correcting that claim replaces it in the same write.
-  const replaced = conflict.conflict!.claim_id;
-  const half = await forecasted("2026-01-01", "2026-06-30", replaced);
-  expect(viewOf(await claim(half, replaced), claimReused).kind).toBe("saved");
-  const after = await claimsOf(2026);
-  expect(after.filter((found) => found.effective)).toHaveLength(1);
-  expect(after.find((found) => found.claim_id === replaced)).toMatchObject({
-    effective: false,
-  });
-  const events = await eventsOf(port, "furgoneta");
-  expect(events.at(-1)?.type_key).toBe("claim_recorded");
-  expect(events.at(-1)?.replaces_sequence).not.toBeNull();
+  ).toBe("Not accepted.");
+  expect(refusalText(t, null)).toBe("Not accepted.");
+  expect(
+    refusalText(t, {
+      reason_key: elapsed,
+      reason_facts: [{ key: "ended_on", value: "x" }],
+    }),
+  ).toBe("Ended on x.");
+  expect(tokenWord(t, "method", "linear")).toBe("Linear");
+  expect(tokenWord(t, "method", "invented")).toBe("Not recognised");
+  expect(tokenWord(t, "method", null)).toBe("Not recognised");
+  expect(changeValueText(t, "en", "amortization.method", "invented")).toBe(
+    "Not recognised",
+  );
+  expect(changeValueText(t, "en", "serial_number", "SC-1")).toBe("SC-1");
 });
 
-test("a forecast is refused with a reason where the year cannot be worked out, and a free method asks for its amount", async () => {
+test("the list serves the years, and the pane opens on one that has begun", async () => {
   const port = portOf();
-  const forecast = (id: string, from: string, until: string) =>
-    draftedCall(
-      port,
-      FORECAST,
-      {
-        asset_id: id,
-        covered_from: from,
-        covered_until: until,
-        requested_free_amount: null,
-        supersedes_claim_id: null,
-      },
-      false,
+  const register = await registerOf(port);
+  const served = [
+    ...new Set((register.rows ?? []).flatMap((row) => row.years)),
+  ].sort((a, b) => a - b);
+  expect(register.years).toEqual(served);
+  expect(register.years).toEqual(assetFixtureYears());
+  // No year before the first supported edition is served.
+  expect(Math.min(...register.years)).toBe(2022);
+  // Every year of an element is a year of its plan.
+  for (const row of register.rows ?? []) {
+    const plan = (await planOf(port, row.asset_id)).map(
+      (found) => found.tax_year,
     );
-  const reason = async (id: string, from: string, until: string) =>
-    refusalIn(await forecast(id, from, until)).reasonKey;
-  expect(await reason("furgoneta", "2027-01-01", "2027-12-31")).toBe(
-    "projected_authority",
-  );
-  expect(await reason("escaner", "2025-01-01", "2025-12-31")).toBe(
-    "opening_history_unknown",
-  );
-  expect(await reason("furgoneta", "1990-01-01", "1990-12-31")).toBe(
-    "year_not_in_plan",
-  );
-  expect(await reason("furgoneta", "2025-06-01", "2026-06-30")).toBe(
-    "span_crosses_years",
-  );
-  const free = refusalIn(await forecast("prensa", "2024-01-01", "2024-12-31"));
-  expect(free.code).toBe(INCOMPLETE);
-  expect(free.missing).toEqual(["free_amount"]);
-  const options = await optionsOf(port, "claim", {
-    asset_id: "prensa",
-    tax_year: 2024,
-  });
-  expect(options.fields.map((field) => field.key)).toContain("free_amount");
-  const plain = await optionsOf(port, "claim", {
-    asset_id: "furgoneta",
-    tax_year: 2025,
-  });
-  expect(plain.fields.map((field) => field.key)).not.toContain("free_amount");
-  // The span starts from what can still be claimed.
-  expect(plain.fields.find((field) => field.key === "from")?.current).toBe(
-    "2025-01-01",
-  );
+    // The years the registry carries tables for, then the estimated ones.
+    expect(row.years, row.asset_id).toEqual(
+      plan.filter((year) => year >= 2022 && year <= 2026),
+    );
+    expect(row.projected_years, row.asset_id).toEqual(
+      plan.filter((year) => year > 2026),
+    );
+  }
+  expect(
+    (register.rows ?? []).some((row) => row.projected_years.length > 0),
+  ).toBe(true);
+  expect(Math.max(...register.years)).toBe(2026);
+  // The default is the latest served year that has begun, never one to come.
+  expect(openingYear(register.years, 2026)).toBe(2026);
+  expect(openingYear(register.years, 2024)).toBe(2024);
+  expect(openingYear(register.years, 2021)).toBe(2022);
+  expect(openingYear([], 2026)).toBeNull();
+  expect(openingYear([2030, 2031], 2026)).toBe(2030);
 });
 
-test("the admitted shapes are still answered for an element made through the admitted operations", async () => {
+test("a table class is named as the backend serves it, in the options and in the plan", async () => {
   const port = portOf();
-  await port.submit(CREATE, {
-    revision: {
-      asset_id: "legacy-1",
-      revision_number: 1,
-      acquisition: {
-        observed_transaction_id: "a".repeat(64),
-        invoice_evidence_id: "b".repeat(64),
-        evidence_fingerprint: "c".repeat(64),
-      },
-      acquisition_shape: "purchase",
-      asset_kind: "tangible",
-      basis: {
-        stage: "acquisition",
-        basis_amount: { decimal: "1000" },
-        non_deductible_iva: { decimal: "0" },
-      },
-      in_service_date: "2025-03-01",
-      opening_history: { status: "complete" },
-      acquired_condition: "new",
-      amortization: { regime: "linear", method: "linear_table" },
-    },
+  const options = (
+    await settled<LedgerResult<typeof OPTIONS>>(
+      port.submit(OPTIONS, {
+        asset_kind: "material",
+        tax_year: 2025,
+      }),
+    )
+  ).options!;
+  const group = options.table_groups.find(
+    (found) => found.class_key === "transporte-externo",
+  )!;
+  expect(group.class_label.length).toBeGreaterThan(0);
+  const limits = (
+    await settled<LedgerResult<typeof PLAN>>(
+      port.submit(PLAN, { asset_id: "furgoneta" }),
+    )
+  ).limits!;
+  expect(limits.class_label).toBe(group.class_label);
+  // A free method has no class, so it has no name.
+  const free = (
+    await settled<LedgerResult<typeof PLAN>>(
+      port.submit(PLAN, { asset_id: "taladro" }),
+    )
+  ).limits!;
+  expect(free).toMatchObject({ class_key: null, class_label: null });
+});
+
+test("a value the backend worded by key is drawn by that key, and anything else as stated", () => {
+  const t = words({
+    "ledger.actividad_asset.basis_stage.business_allocated":
+      "Allocated to the activity",
+    "ledger.actividad_asset.disposal_finding.claim_gap":
+      "Year with depreciation not recorded",
+    "desktop.ledger.assets.unrecognised": "Not recognised",
   });
-  const legacy = await port.submit(FORECAST, {
-    asset_id: "legacy-1",
-    covered_from: "2025-03-01",
-    covered_until: "2025-12-31",
-  });
-  // The admitted answer carries the profile, which the drafted one does not.
-  expect(legacy).toMatchObject({
-    kind: "refused",
-    detail: { profile_id: expect.any(String) },
-  });
+  expect(
+    keyedText(
+      t,
+      "ledger.actividad_asset.basis_stage.business_allocated",
+      "business_allocated",
+    ),
+  ).toBe("Allocated to the activity");
+  expect(keyedText(t, null, "2026-01-01")).toBe("2026-01-01");
+  expect(keyedText(t, undefined, "x")).toBe("x");
+  // A key outside the families, or one the table lacks, is never drawn.
+  expect(keyedText(t, "tui.ledger.activity_asset.plan", "stated")).toBe(
+    "stated",
+  );
+  expect(
+    keyedText(t, "ledger.actividad_asset.basis_stage.invented", "stated"),
+  ).toBe("stated");
+  expect(
+    keyedText(t, "ledger.actividad_asset.disposal_finding.claim_gap", ""),
+  ).toBe("Year with depreciation not recorded");
+  expect(changeValueText(t, "en", "disposal.reason", "invented")).toBe(
+    "Not recognised",
+  );
+  expect(
+    changeValueText(
+      t,
+      "en",
+      "disposal.prior_free_depreciation_regime",
+      "invented",
+    ),
+  ).toBe("Not recognised");
+});
+
+test("a purchase states the ledger's own account of its non-deductible IVA", async () => {
+  const offered = (
+    await settled<LedgerResult<typeof CANDIDATES>>(
+      portOf().submit(CANDIDATES, {}),
+    )
+  ).candidates!;
+  for (const purchase of offered)
+    expect(purchase.non_deductible_iva_state_key).toBe(
+      `ledger.actividad_asset.non_deductible_iva_state.${purchase.non_deductible_iva_state}`,
+    );
 });

@@ -1855,7 +1855,8 @@ def test_an_unowned_amortization_row_blocks_both_returns_with_no_register_at_all
     for resolution in (annual, quarterly):
         notes = [item for item in resolution.diagnostics if item.reason == "ledger_amortization_row_unregistered"]
         assert [note.source_ref for note in notes] == [f"transaction:{row.transaction_id}"]
-        assert notes[0].reason in GATE_REFUSED_REASONS
+        assert notes[0].reason not in GATE_REFUSED_REASONS
+        assert note_attention(notes[0].reason, box=None) is ModeloFormAttention.MISSING
         assert resolution.source_transaction_ids == ()
     assert annual.binding_values.get(_renta_expense_binding_id(_revision("100", "2025"), "0208"), Decimal("0")) == 0
     assert _m130_box(quarterly) == Decimal("0")
@@ -1872,7 +1873,7 @@ def test_a_register_owned_row_is_withheld_not_blocked_even_with_no_claim() -> No
 
 
 @pytest.mark.parametrize("resolve", [resolve_m100, lambda history, **kwargs: resolve_m130(history, "1T", **kwargs)])
-def test_a_foral_resident_is_refused_for_registered_assets_with_a_typed_reason(resolve, operation) -> None:
+def test_a_foral_period_leaves_registered_assets_out_with_a_finding_and_refuses_nothing(resolve, operation) -> None:
     asset = register_asset("furniture", transaction_id="c" * 64)
     claim = _register_claim(asset, amount=Decimal("1200.00"))
     profile = ModeloWorkProfile(
@@ -1892,13 +1893,15 @@ def test_a_foral_resident_is_refused_for_registered_assets_with_a_typed_reason(r
     no_register = resolve(ActivityAssetHistory(), profile=profile)
 
     assert _reasons(resolution) == ["activity_asset_foral_territory"]
-    assert "activity_asset_foral_territory" in GATE_REFUSED_REASONS
+    assert "activity_asset_foral_territory" not in GATE_REFUSED_REASONS
+    assert "foral rules" in resolution.diagnostics[0].remedy
+    assert sum(resolution.binding_values.values(), Decimal("0")) == Decimal("0")
     assert resolution.provenance == ()
     assert _reasons(no_register) == []
 
 
 @pytest.mark.parametrize("resolve", [resolve_m100, lambda history, **kwargs: resolve_m130(history, "1T", **kwargs)])
-def test_an_unreadable_residence_is_refused_for_registered_assets_with_a_typed_reason(resolve, operation) -> None:
+def test_an_unreadable_residence_leaves_registered_assets_out_with_a_finding(resolve, operation) -> None:
     asset = register_asset("furniture", transaction_id="c" * 64)
     claim = _register_claim(asset, amount=Decimal("1200.00"))
     profile = ModeloWorkProfile(
@@ -1918,7 +1921,8 @@ def test_an_unreadable_residence_is_refused_for_registered_assets_with_a_typed_r
     no_register = resolve(ActivityAssetHistory(), profile=profile)
 
     assert _reasons(resolution) == ["activity_asset_residence_unresolved"]
-    assert "activity_asset_residence_unresolved" in GATE_REFUSED_REASONS
+    assert "activity_asset_residence_unresolved" not in GATE_REFUSED_REASONS
+    assert sum(resolution.binding_values.values(), Decimal("0")) == Decimal("0")
     assert resolution.provenance == ()
     assert _reasons(no_register) == []
 

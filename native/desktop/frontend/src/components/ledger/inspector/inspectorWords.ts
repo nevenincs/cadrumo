@@ -150,34 +150,18 @@ export function decidedBy(t: Translate, source: string): string {
   return t("desktop.ledger.inspector.by.you");
 }
 
-/** Why asking the model gave nothing to read, in words, and whether its
- * code says more than the words, for Technical details. `subject_busy` is
+/** Why asking the model gave nothing to read, in words. `subject_busy` is
  * an earlier review of the same movement still waiting. */
-export function modelFailureText(
-  t: Translate,
-  code: string,
-): { text: string; technical: boolean } {
+export function modelFailureText(t: Translate, code: string): string {
   switch (code) {
     case "subject_busy":
-      return {
-        text: t("desktop.ledger.inspector.model.busy"),
-        technical: false,
-      };
+      return t("desktop.ledger.inspector.model.busy");
     case "no_review":
-      return {
-        text: t("desktop.ledger.inspector.model.no_review"),
-        technical: false,
-      };
+      return t("desktop.ledger.inspector.model.no_review");
     case "refused":
-      return {
-        text: t("desktop.ledger.inspector.model.refused"),
-        technical: false,
-      };
+      return t("desktop.ledger.inspector.model.refused");
     default:
-      return {
-        text: t("desktop.ledger.inspector.model.unavailable"),
-        technical: true,
-      };
+      return t("desktop.ledger.inspector.model.unavailable");
   }
 }
 

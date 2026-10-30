@@ -1,7 +1,10 @@
 use cadrumo_application::{
     diagnostics::{
         Diagnostics, EventKind, HostStage,
-        webview::{FailureReason, MonitorOperation, ProcessKind, ReadFailures, WebviewFailure},
+        webview::{
+            FailureReason, MonitorOperation, ProcessKind, ReadFailures, WebviewFailure,
+            WebviewIdentity,
+        },
     },
     error::application::{ErrorCode, Operation},
     process::status::{ProcessRole, Stream},
@@ -23,6 +26,7 @@ fn browser_failure_persists_only_closed_numeric_metadata() {
         b"private-url-password-profile-payload",
     );
     let fact = WebviewFailure::process(
+        WebviewIdentity::Main,
         Some(3),
         Some(3),
         Some(0x8000_0003_u32 as i32),
@@ -52,6 +56,7 @@ fn browser_failure_persists_only_closed_numeric_metadata() {
         record["webviewFailure"],
         json!({
             "event": "process_failed",
+            "webview": "main",
             "kind": "frame_render_process_exited",
             "kindCode": 3,
             "reason": "crashed",
@@ -68,6 +73,7 @@ fn unresponsive_renderer_is_not_a_confirmed_exit_and_retention_stays_bounded() {
     let diagnostics = Diagnostics::default();
     for _ in 0..600 {
         diagnostics.webview_failure(WebviewFailure::process(
+            WebviewIdentity::Main,
             Some(2),
             Some(1),
             Some(259),
@@ -93,6 +99,7 @@ fn unresponsive_renderer_is_not_a_confirmed_exit_and_retention_stays_bounded() {
 fn unknown_codes_partial_reads_and_monitor_refusal_remain_explicit() {
     let diagnostics = Diagnostics::default();
     diagnostics.webview_failure(WebviewFailure::process(
+        WebviewIdentity::Main,
         Some(i32::MAX),
         Some(-9),
         None,
@@ -102,6 +109,7 @@ fn unknown_codes_partial_reads_and_monitor_refusal_remain_explicit() {
         },
     ));
     diagnostics.webview_failure(WebviewFailure::process(
+        WebviewIdentity::Main,
         None,
         None,
         None,
@@ -111,6 +119,7 @@ fn unknown_codes_partial_reads_and_monitor_refusal_remain_explicit() {
         },
     ));
     diagnostics.webview_failure(WebviewFailure::MonitorUnavailable {
+        webview: WebviewIdentity::Startup,
         operation: MonitorOperation::Register,
         hresult: Some(-2_147_467_259),
     });
@@ -137,7 +146,7 @@ fn unknown_codes_partial_reads_and_monitor_refusal_remain_explicit() {
     assert_eq!(
         serde_json::to_value(&snapshot.events[2]).unwrap()["webviewFailure"],
         json!({
-            "event": "monitor_unavailable", "operation": "register", "hresult": -2_147_467_259_i32
+            "event": "monitor_unavailable", "webview": "startup", "operation": "register", "hresult": -2_147_467_259_i32
         })
     );
     assert!(snapshot.processes.is_empty());

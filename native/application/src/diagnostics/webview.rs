@@ -1,6 +1,15 @@
 //! Browser-process observations contain only closed labels and numeric telemetry.
 use serde::Serialize;
 
+/// Shell-owned identity, never an arbitrary window label or browser profile path.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WebviewIdentity {
+    Startup,
+    Main,
+    Other,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ProcessKind {
@@ -92,6 +101,7 @@ pub enum MonitorOperation {
 )]
 pub enum WebviewFailure {
     ProcessFailed {
+        webview: WebviewIdentity,
         kind: Option<ProcessKind>,
         kind_code: Option<i32>,
         reason: Option<FailureReason>,
@@ -101,18 +111,21 @@ pub enum WebviewFailure {
         read_failures: ReadFailures,
     },
     MonitorUnavailable {
+        webview: WebviewIdentity,
         operation: MonitorOperation,
         hresult: Option<i32>,
     },
 }
 impl WebviewFailure {
     pub fn process(
+        webview: WebviewIdentity,
         kind_code: Option<i32>,
         reason_code: Option<i32>,
         exit_code: Option<i32>,
         read_failures: ReadFailures,
     ) -> Self {
         Self::ProcessFailed {
+            webview,
             kind: kind_code.map(ProcessKind::from_code),
             kind_code,
             reason: reason_code.map(FailureReason::from_code),

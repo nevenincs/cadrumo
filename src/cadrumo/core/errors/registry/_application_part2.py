@@ -1090,6 +1090,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.operations.errors.OperationContractStaleError",
+        ErrorCode(
+            code="INTERNAL_OPERATION_CONTRACT_STALE",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_operation_definition_contract_mismatch",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.operations.errors.OperationDeclarationError",
         ErrorCode(
             code="INTERNAL_OPERATION_DECLARATION_BREACH",

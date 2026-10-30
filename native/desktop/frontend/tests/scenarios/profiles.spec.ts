@@ -684,11 +684,11 @@ test("a creation that gets no answer is not said to have failed, and is not trie
   await repeated(target).fill("correct horse");
   await repeated(target).press("Enter");
   await expect(form(target).locator(".create-unknown")).toHaveText(
-    label("desktop.account.create.unknown", { code: "timed_out" }),
+    label("desktop.account.create.unknown"),
   );
   // It is not known, so it is not said that nothing was created.
   await expect(form(target)).not.toContainText(
-    label("desktop.account.create.refused", { code: "timed_out" }),
+    label("desktop.account.create.refused"),
   );
   await expect(newPassword(target)).toHaveValue("");
   await target.waitForTimeout(300);

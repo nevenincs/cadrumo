@@ -120,9 +120,11 @@ reviewed_at = 2026-05-06
 reviewed_by = "operator"
 notes = "Articulo 1 de la Orden HAC/1431/2025: modificacion de la Orden EHA/3012/2008 que aprobo el Modelo 347; ajusta los disenos logicos del anexo aplicables al ejercicio 2025 y siguientes."
 required_text = [
-    "Modificación de la Orden EHA/3012/2008",
-    "modelo 347",
-    "operaciones con terceras personas",
+    "Se introducen las siguientes modificaciones en la Orden EHA/3012/2008",
+    "Se crea un nuevo campo, de carácter numérico denominado «NÚMERO DE CONVOCATORIA BDNS»",
+    "Solo se podrá cumplimentar cuando la clave de operación sea \"E\".",
+    "El campo «BLANCOS» del tipo de registro 2 (registro de declarado) del anexo",
+    "pasa a ocupar las posiciones y longitud siguientes",
 ]
 
 [sources."aeat-dr-347-2025"]

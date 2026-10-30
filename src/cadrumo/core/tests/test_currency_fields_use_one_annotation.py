@@ -128,6 +128,12 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "annotation here, and the row it copies cannot hold a value the "
         "canonical policy would reject"
     ),
+    "application/actividad_asset/activity_asset_read_models.py::currency": (
+        "a registered operation's public acquisition-candidate projection, whose "
+        "schema contract forbids IsoCurrencyCode's core-schema hook; "
+        "register_reads._candidate copies RawTransaction.currency, whose "
+        "before validator applies the canonical ISO currency normalizer"
+    ),
     "application/ledger/transaction_projection.py::currency": (
         "a public projection of LedgerTransactionPayload.currency, which is "
         "already IsoCurrencyCode, under the same operation schema contract; "

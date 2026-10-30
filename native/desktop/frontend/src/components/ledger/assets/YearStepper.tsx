@@ -33,6 +33,7 @@ function neighbour(
 export function YearStepper({
   value,
   years,
+  estimated = [],
   onChange,
   className,
 }: {
@@ -40,6 +41,8 @@ export function YearStepper({
   value: number | null;
   /** The years on offer, in any order. */
   years: readonly number[];
+  /** Years on offer whose figures are estimates, said so in plain words. */
+  estimated?: readonly number[];
   onChange: (year: number) => void;
   className?: string;
 }) {
@@ -75,7 +78,9 @@ export function YearStepper({
         {chosen === null && <option value="" hidden />}
         {options.map((year) => (
           <option key={year} value={year}>
-            {year}
+            {estimated.includes(year)
+              ? t(ASSET_KEYS.year_estimated, { year })
+              : year}
           </option>
         ))}
       </NativeSelect>

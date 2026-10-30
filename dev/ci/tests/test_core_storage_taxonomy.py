@@ -38,9 +38,10 @@ from cadrumo.core.storage_taxonomy_locations import (
     storage_tree_targets,
     uses_external_transport,
 )
-from cadrumo.core.tests._settings_path_fields import path_typed_settings_fields
 from cadrumo.core.tests.storage_taxonomy_views import FINGERPRINT_EXCLUDED_STORAGE_CATEGORIES
 from cadrumo.tests.env_scope import derived_storage_settings
+
+from .settings_path_fields import path_typed_settings_fields
 
 _BUCKET_ID = "primary"
 

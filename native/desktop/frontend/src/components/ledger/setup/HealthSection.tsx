@@ -467,8 +467,6 @@ export function HealthSection({
             <Alert tone="success" icon={<Icon name="check" />}>
               {t("desktop.ledger.health.rebuilt", {
                 links: rebuilt.participation_count,
-                revisions: rebuilt.revision_count,
-                removed: rebuilt.stale_removed_count,
               })}
             </Alert>
           )}

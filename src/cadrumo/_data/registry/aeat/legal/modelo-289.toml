@@ -205,7 +205,7 @@ effective_from = 2018-12-30
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2018-17997 HTML from BOE on 2026-07-01"
-notes = "Orden HAC/1417/2018 articulo sexto: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
+notes = "Orden HAC/1417/2018 artículo sexto: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
 required_text = [
     "Orden HAP/1695/2016, de",
     "Se introducen las siguientes modificaciones",
@@ -225,7 +225,7 @@ effective_from = 2019-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2019-18752 HTML from BOE on 2026-07-01"
-notes = "Orden HAC/1276/2019 articulo septimo: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
+notes = "Orden HAC/1276/2019 artículo séptimo: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
 required_text = [
     "Orden HAP/1695/2016, de 25 de octubre",
     "Se introducen las siguientes modificaciones",
@@ -306,7 +306,7 @@ effective_from = 2023-12-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-24412 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1284/2023 articulo 15: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
+notes = "Orden HFP/1284/2023 artículo 15: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
 required_text = [
     "Orden HAP/1695/2016, de",
     "Se introducen las siguientes modificaciones",
@@ -346,7 +346,7 @@ effective_from = 2025-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2024-27528 HTML from BOE on 2026-07-01"
-notes = "Orden HAC/1504/2024 articulo septimo: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
+notes = "Orden HAC/1504/2024 artículo séptimo: modifica los anexos I y II de la Orden HAP/1695/2016 aplicables al Modelo 289."
 required_text = [
     "Orden HAP/1695/2016, de",
     "queda modificada como sigue",
@@ -366,7 +366,7 @@ effective_from = 2025-12-17
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01"
-notes = "Orden HAC/1430/2025 articulo sexto: modifica los anexos I y II de la Orden HAP/1695/2016 para el Modelo 289 aplicable a 2025 y siguientes."
+notes = "Orden HAC/1430/2025 artículo sexto: modifica los anexos I y II de la Orden HAP/1695/2016 para el Modelo 289 aplicable a 2025 y siguientes."
 required_text = [
     "Orden HAP/1695/2016, de",
     "2025 y siguientes",

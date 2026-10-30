@@ -2,9 +2,10 @@
 # Prepare the annual Modelo 390 VAT summary
 
 Use this guide when the active profile must prepare Modelo 390, the annual
-Impuesto sobre el Valor Añadido (VAT) summary. Modelo 390 is an annual return,
-but part of its review depends on the same year's periodic Modelo 303 VAT
-self-assessments.
+VAT summary under the official procedure name
+"<span lang="es">Modelo 390. IVA. Declaración Resumen Anual.</span>". Modelo
+390 is an annual return, but part of its review depends on the same year's
+periodic Modelo 303 VAT self-assessments.
 
 Cadrumo does not submit Modelo 390 to the Agencia Estatal de Administración
 Tributaria (AEAT). Export creates a local fichero-BOE file, but its envelope

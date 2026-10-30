@@ -1042,7 +1042,7 @@ effective_from = 2023-12-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Articulo 9 de la Orden HFP/1284/2023: crea en el registro de tipo 2 del modelo 296 el campo IDENTIFICADOR DE REGISTRO O NUMERO DE ORDEN (posiciones 77-84) y el Anexo de desglose (tipo de hoja F). Aplicable por primera vez al ejercicio 2023 segun su disposicion final unica; antes, las posiciones 77-90 eran blancos y no existia el anexo."
+notes = "Artículo 9 de la Orden HFP/1284/2023: crea en el registro de tipo 2 del modelo 296 el campo IDENTIFICADOR DE REGISTRO O NUMERO DE ORDEN (posiciones 77-84) y el Anexo de desglose (tipo de hoja F). Aplicable por primera vez al ejercicio 2023 según su disposición final unica; antes, las posiciones 77-90 eran blancos y no existia el anexo."
 required_text = [
     "Modificación de la Orden EHA/3290/2008",
     "IDENTIFICADOR DE REGISTRO O NÚMERO DE ORDEN",

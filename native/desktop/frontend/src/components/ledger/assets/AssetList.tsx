@@ -7,41 +7,25 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { ATTENTION_TONE, GlyphMark } from "../../modelo/workspace/Marks";
+import { ATTENTION_TONE } from "../../modelo/workspace/Marks";
 import type { ModeloFormAttention } from "../../../shell/modeloContract";
 import { dateText } from "../movements/movementWords";
-import { SetupTable, type Column } from "../setup/SetupParts";
+import { rankDecimal, SetupTable, type Column } from "../setup/SetupParts";
 import type { SetupCall } from "../setup/setupModel";
-import type { AssetCounts, AssetListRow } from "./assetsContract";
-import { ASSET_KEYS, COUNT_ICON, COUNT_KINDS, countWord } from "./assetsWords";
-
-/** A token the backend states, in the chrome's words for it; "other" where
- * the chrome has none, never the raw token. */
-export function tokenWord(
-  t: Translate,
-  family: "kind" | "method" | "reason",
-  token: string,
-): string {
-  const key = `desktop.ledger.assets.option.${family}.${token}`;
-  // A catalogue without the key answers with the key itself.
-  const word = /^[a-z0-9_]+$/.test(token) ? t(key) : key;
-  return word === key
-    ? t(`desktop.ledger.assets.option.${family}.other`)
-    : word;
-}
-
-/** A refusal in words: its own where the chrome has them, else the code. */
-export function refusalText(
-  t: Translate,
-  refusal: { code: string } | null,
-): string {
-  const code = (refusal?.code ?? "").toLowerCase();
-  const key = `desktop.ledger.assets.refusal.${code}`;
-  const word = /^[a-z0-9_]+$/.test(code) ? t(key) : key;
-  return word === key
-    ? t("desktop.ledger.form.refused", { code: refusal?.code || "refused" })
-    : word;
-}
+import type {
+  ActivityAssetRefusal,
+  AssetCounts,
+  AssetListRow,
+} from "../../../shell/ledgerSetup";
+import {
+  ASSET_KEYS,
+  COUNT_ICON,
+  COUNT_KINDS,
+  countWord,
+  refusalText,
+  tokenWord,
+} from "./assetsWords";
+import { DASH, figureText } from "./planWords";
 
 /** Words the refusal a settled-but-refused call carries, for a `CallLine`. */
 export function callRefusal(
@@ -50,8 +34,9 @@ export function callRefusal(
 ): () => string | null {
   return () => {
     if (call?.kind !== "refused") return null;
-    const found = (call.detail as { refusal?: { code: string } | null } | null)
-      ?.refusal;
+    const found = (
+      call.detail as { refusal?: ActivityAssetRefusal | null } | null
+    )?.refusal;
     return found ? refusalText(t, found) : null;
   };
 }
@@ -108,13 +93,12 @@ export function CountPills({ counts }: { counts: AssetCounts }) {
   );
 }
 
-const DASH = "—";
-
 /**
- * The register's elements, one row each: name, serial, kind, method, the day
- * it entered service, a baja mark where it has one and a pill for each kind
- * of year that needs attention. An element given a baja stays listed. No
- * identifier is drawn; the name is the way in to the element's detail.
+ * The register's elements, one row each: name, serial number, kind, method,
+ * the day it entered service, where it stands in the register, its basis and
+ * what is left of it, and a pill for each kind of year that needs attention.
+ * An element out of service stays listed. No identifier is drawn; the name is
+ * the way in to the element's detail.
  */
 export function AssetList({
   rows,
@@ -135,44 +119,33 @@ export function AssetList({
         label: t(ASSET_KEYS.list.column.name),
         sort: (row) => row.name,
         cell: (row) => (
-          <span className="flex items-center gap-1.5">
-            <Button
-              variant="link"
-              size="xs"
-              className="h-auto min-w-0 p-0 text-left whitespace-normal"
-              onClick={() => onSelect(row.asset_id)}
-            >
-              {row.name ?? t(ASSET_KEYS.list.no_name)}
-            </Button>
-            {row.baja && (
-              <GlyphMark
-                icon="archive"
-                words={t(ASSET_KEYS.list.disposed, {
-                  date: dateText(locale, row.baja.date, true),
-                })}
-                className="text-muted-foreground"
-              />
-            )}
-          </span>
+          <Button
+            variant="link"
+            size="xs"
+            className="h-auto min-w-0 p-0 text-left whitespace-normal"
+            onClick={() => onSelect(row.asset_id)}
+          >
+            {row.name ?? t(ASSET_KEYS.list.no_name)}
+          </Button>
         ),
       },
       {
         key: "serial",
         label: t(ASSET_KEYS.list.column.serial),
-        sort: (row) => row.serial,
-        cell: (row) => row.serial ?? DASH,
+        sort: (row) => row.serial_number,
+        cell: (row) => row.serial_number ?? DASH,
       },
       {
         key: "kind",
         label: t(ASSET_KEYS.list.column.kind),
-        sort: (row) => tokenWord(t, "kind", row.kind_key),
-        cell: (row) => tokenWord(t, "kind", row.kind_key),
+        sort: (row) => tokenWord(t, "asset_kind", row.asset_kind),
+        cell: (row) => tokenWord(t, "asset_kind", row.asset_kind),
       },
       {
         key: "method",
         label: t(ASSET_KEYS.list.column.method),
-        sort: (row) => tokenWord(t, "method", row.method_key),
-        cell: (row) => tokenWord(t, "method", row.method_key),
+        sort: (row) => tokenWord(t, "method", row.method),
+        cell: (row) => tokenWord(t, "method", row.method),
       },
       {
         key: "in_service",
@@ -181,9 +154,29 @@ export function AssetList({
         cell: (row) => dateText(locale, row.in_service_date, true),
       },
       {
-        key: "status",
+        key: "state",
+        label: t(ASSET_KEYS.list.column.state),
+        sort: (row) => tokenWord(t, "register_state", row.state),
+        cell: (row) => tokenWord(t, "register_state", row.state),
+      },
+      {
+        key: "basis",
+        label: t(ASSET_KEYS.list.column.basis),
+        numeric: true,
+        sort: (row) => rankDecimal(row.basis.decimal),
+        cell: (row) => figureText(locale, row.basis),
+      },
+      {
+        key: "pending",
+        label: t(ASSET_KEYS.list.column.pending),
+        numeric: true,
+        sort: (row) => rankDecimal(row.pending?.decimal),
+        cell: (row) => figureText(locale, row.pending) ?? DASH,
+      },
+      {
+        key: "findings",
         label: t(ASSET_KEYS.plan.column.status),
-        cell: (row) => <CountPills counts={row.counts} />,
+        cell: (row) => <CountPills counts={row.findings} />,
       },
     ],
     [t, locale, onSelect],

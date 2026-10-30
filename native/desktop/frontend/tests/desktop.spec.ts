@@ -1348,21 +1348,21 @@ const PAGES: Record<string, string> = {
   "/second.html": page("Second page", "<h1>Second page</h1>"),
 };
 
-async function serveDocs(target: Page) {
+async function serveDocs(target: Page, indexHtml = PAGES["/index.html"]) {
   await target.route(`${DOCS}/**`, (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path === "/bridge.js")
       return route.fulfill({ contentType: "text/javascript", body: bridge });
-    const html = PAGES[path];
+    const html = path === "/index.html" ? indexHtml : PAGES[path];
     return html
       ? route.fulfill({ contentType: "text/html", body: html })
       : route.fulfill({ status: 404, body: "" });
   });
 }
 
-async function openWithDocs(target: Page) {
+async function openWithDocs(target: Page, indexHtml?: string) {
   await seedLayout(target);
-  await serveDocs(target);
+  await serveDocs(target, indexHtml);
   await target.goto(`/?docs=${encodeURIComponent(`${DOCS}/index.html`)}`);
   await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
     "Stand-in documentation",
@@ -1688,6 +1688,42 @@ test("the palette lists actions and runs the chosen one", async ({
   await expect(palette).toBeHidden();
   await expect(target.locator(".pane-docs")).toBeHidden();
   await expect(target.locator(".pane-tui")).toBeVisible();
+});
+
+test("a live documentation search survives more than four seconds of Pagefind work", async ({
+  page: target,
+}) => {
+  const delayed = page(
+    "Slow documentation",
+    "<h1>Stand-in documentation</h1>",
+  ).replace(
+    "</head>",
+    `<script>
+      window.CadrumoDocs = {
+        search: () => new Promise((resolve) => setTimeout(() => resolve([{
+          kind: "concept", title: "modelo", href: "/second.html",
+          excerpt: "Official form", crumb: "Documentation"
+        }]), 4700))
+      };
+    </script></head>`,
+  );
+  await openWithDocs(target, delayed);
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  const palette = target.getByRole("dialog", {
+    name: label("desktop.palette.label"),
+  });
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill("modelo");
+  const result = palette.getByRole("option", { name: /modelo/i });
+  await expect(result).toBeVisible({ timeout: 10000 });
+  await expect(palette.locator(".palette-note")).toHaveCount(0);
+  await result.click();
+  await expect(target.frameLocator(".docs-frame").locator("h1")).toHaveText(
+    "Second page",
+  );
 });
 
 test("a forced appearance reaches the documentation through the bridge", async ({

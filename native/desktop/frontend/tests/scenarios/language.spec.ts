@@ -107,7 +107,7 @@ test("a refused write keeps the canonical language and reports the failure", asy
   await page.evaluate(() => window.__scenarioLanguage!.refuseNextSet());
   await choice.selectOption("hu");
   await expect(page.getByRole("alert")).toHaveText(
-    label("desktop.messages.failed", { code: "language_change_failed" }),
+    label("desktop.messages.failed"),
   );
   await expect(page.getByRole("alert")).not.toContainText(
     "language_change_failed",
@@ -150,7 +150,7 @@ test("a cached previous profile observation is refused and a fresh current profi
     window.__scenarioLanguage!.switchAccount("Other profile", "ca");
   });
   await expect(page.getByRole("alert")).toHaveText(
-    label("desktop.messages.failed", { code: "language_change_failed" }),
+    label("desktop.messages.failed"),
   );
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(
@@ -177,7 +177,7 @@ test("a cached previous profile observation is refused and a fresh current profi
     })
     .selectOption("es");
   await expect(page.getByRole("alert")).toHaveText(
-    label("desktop.messages.failed", { code: "language_change_failed" }, "ca"),
+    label("desktop.messages.failed", {}, "ca"),
   );
   await page.evaluate(() => {
     const controls = window.__scenarioLanguage!;
@@ -202,7 +202,7 @@ test("a cached previous profile observation is refused and a fresh current profi
   });
   await settleRendering(page);
   await expect(page.getByRole("alert")).toHaveText(
-    label("desktop.messages.failed", { code: "language_change_failed" }, "ca"),
+    label("desktop.messages.failed", {}, "ca"),
   );
   await expect(page.locator("html")).toHaveAttribute("lang", "ca");
   await page.evaluate(() =>

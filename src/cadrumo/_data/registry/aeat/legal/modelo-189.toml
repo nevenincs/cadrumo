@@ -71,7 +71,7 @@ effective_from = 2023-12-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-24412 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1284/2023 articulo 11: modifica los campos codigo pais, numero de valores y nominal unitario de los valores en el registro de declarado del Modelo 189."
+notes = "Orden HFP/1284/2023 artículo 11: modifica los campos código país, número de valores y nominal unitario de los valores en el registro de declarado del Modelo 189."
 required_text = [
     "Artículo 11. Modificación de la Orden EHA/3481/2008",
     "CÓDIGO PAÍS",

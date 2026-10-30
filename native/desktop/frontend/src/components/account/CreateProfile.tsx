@@ -206,9 +206,7 @@ export function CreateProfile({
           role="alert"
           icon={<Icon name="alert" />}
         >
-          {t("desktop.account.create.unknown", {
-            code: account.createUnknown.code,
-          })}
+          {t("desktop.account.create.unknown")}
         </Alert>
       )}
 

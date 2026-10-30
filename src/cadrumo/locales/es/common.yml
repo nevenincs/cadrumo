@@ -629,14 +629,15 @@ desktop:
     description: Versión y detalles de compilación de esta instalación.
     desktop_host: Escritorio
     interpreter: Intérprete
-    load_failed: No se pudieron leer los detalles de la versión ({code}).
+    load_failed: No se pudieron leer los detalles de la versión. Cierra esta ventana
+      y ábrela de nuevo.
     loading: Leyendo los detalles de la versión…
     manager: Gestor
     managers: Gestores
     open: Acerca de Cadrumo
     packages: Paquetes incluidos ({count})
     python: Python
-    runtime: Entorno de ejecución
+    runtime: Servicio en segundo plano
     settings_hint: Versión y detalles de compilación
     target: Plataforma
     title: Acerca de Cadrumo
@@ -791,7 +792,7 @@ desktop:
         other: Algo salió mal
         refused: La AEAT lo rechazó
         session_ended: Acceso caducado
-        unavailable: La AEAT no respondió
+        unavailable: La AEAT no está disponible ahora mismo
       resume: Iniciar sesión de nuevo
       running: Actualizando…
       stop: Detener
@@ -881,7 +882,7 @@ desktop:
         other: Algo salió mal.
         refused: La AEAT lo rechazó.
         session_ended: Acceso caducado.
-        unavailable: La AEAT no respondió.
+        unavailable: La AEAT no está disponible ahora mismo.
       retry: Inténtalo de nuevo
       retry_failed: No se pudo iniciar. Inténtalo de nuevo.
       retry_named: 'Inténtalo de nuevo: {name}'
@@ -1003,10 +1004,10 @@ desktop:
       conflict: El navegador todavía se está cerrando. Espera un momento y vuelve
         a intentarlo.
       file_unavailable: Cadrumo no pudo usar ese archivo.
-      invalid: Cadrumo no pudo usar esa petición.
+      invalid: Cadrumo no pudo hacer eso.
       not_admitted: El navegador ya no está abierto.
       not_signed_in: Inicia sesión para usar el navegador.
-      refused: Cadrumo rechazó esa petición.
+      refused: Cadrumo no puede hacer eso aquí.
       unavailable: El navegador no está disponible ahora.
       unknown: Cadrumo no pudo saber cómo terminó.
     forward: Adelante
@@ -1187,7 +1188,7 @@ desktop:
       not_closed: Sin cerrar
       not_known: Desconocida
       opened: Fecha de apertura
-      refused: 'Rechazado: el registro no acepta esos datos.'
+      refused: 'No aceptado: esos datos no encajan en este registro.'
       refused_remove: 'No se ha quitado: una cuenta que usan movimientos o una designación
         solo se puede cerrar.'
       remove: Quitar
@@ -1235,7 +1236,7 @@ desktop:
       blocker:
         action_and_edits: 'Una acción y ediciones a la vez: {count}'
         actions_conflict: 'Acciones incompatibles: {count}'
-        cannot_clear: 'Valor que ninguna operación vacía: {count}'
+        cannot_clear: 'Valores que no se pueden vaciar: {count}'
         draft_incomplete: 'Movimientos nuevos con datos pendientes: {count}'
         exclude_and_classification: 'Excluidos y clasificados a la vez: {count}'
         gone: 'Eliminados o movidos desde que los leíste: {count}'
@@ -1279,11 +1280,11 @@ desktop:
         set_share: Indicar la parte
         show: Mostrar en la tabla
       gone: Eliminado o movido fuera del periodo desde que lo leíste.
-      gone_mine: Mantenerlo preparado
+      gone_mine: Mantenerlo en mis cambios
       gone_movement: Un movimiento que ya no se lee
       gone_theirs: Quitar los cambios
       held: 'Retenidos: {count}'
-      held_note: 'Retenidos por los problemas de arriba, siguen preparados: {count}'
+      held_note: 'Retenidos por los problemas de arriba, siguen en tus cambios: {count}'
       keep_editing: Seguir editando
       link:
         amount_differs: El importe difiere en {amount}
@@ -1305,39 +1306,40 @@ desktop:
       outcome:
         applied: Guardado
         applied_new_id: Guardado con una nueva referencia
-        not_sent_after_part: 'No enviado: se rechazó entera una parte anterior.'
-        not_sent_after_refusal: 'No enviado: se rechazó un cambio anterior de este
+        not_sent_after_part: 'No enviado: una parte anterior no se aceptó entera.'
+        not_sent_after_refusal: 'No enviado: no se aceptó un cambio anterior de este
           movimiento.'
         not_sent_parts_unnamed: 'No enviado: la división se guardó sin nombrar sus
           partes, así que sus clasificaciones no tienen adónde ir. Clasifica las partes
           en la tabla.'
-        not_sent_paused: 'No enviado: escrituras en pausa tras un resultado desconocido.
-          Sigue preparado.'
-        not_sent_stopped: 'No enviado: la sesión se cerró. Sigue preparado.'
-        refused: 'No guardado: {reason} · sigue preparado'
-        saved_unread: Guardado, pero no se leyó la respuesta. Vuelve a leer para verlo.
+        not_sent_paused: 'No enviado: el guardado está en pausa porque no pudimos
+          confirmar uno anterior. Sigue en tus cambios.'
+        not_sent_stopped: 'No enviado: tu sesión terminó. Sigue en tus cambios.'
+        refused: 'No guardado: {reason} · sigue en tus cambios'
+        saved_unread: Guardado, pero todavía no podemos mostrarlo. Actualiza para
+          verlo.
         settled: Guardado o ya estaba así
         settled_value: 'Guardado o ya estaba así: {field} es {value}'
         unchanged: El libro ya lo tenía. No cambió nada.
-        unchanged_value: El libro ya tenía {field} {value} (leído de nuevo). No cambió
+        unchanged_value: El libro ya tenía {field} {value} (actualizado). No cambió
           nada.
-        unknown: Puede que se haya guardado o no. Las escrituras están en pausa; vuelve
-          a leer para saberlo.
-      outcomes: Lo que respondió el libro
+        unknown: No hemos podido confirmar que se guardara. El guardado está en pausa
+          hasta que actualices.
+      outcomes: Qué ha pasado
       part_refused: 'No guardado: el libro cambió mientras se guardaba. No se guardó
         nada de esta parte.'
-      part_unknown: Resultado desconocido para esta parte entera. Las escrituras están
+      part_unknown: No hemos podido confirmar esta parte entera. El guardado está
         en pausa.
       permanent: Permanente
       permanent_note: Un vínculo no se puede quitar después, ni aquí ni en ningún
         otro sitio. Marca cada uno del que estés seguro.
       progress: Progreso del guardado
       progress_count: '{done} de {total} guardados'
-      read_failed: 'No se ha podido volver a leer el libro: no se ha guardado nada'
-      reading: Leyendo el libro de nuevo…
+      read_failed: 'No se ha podido actualizar el libro: no se ha guardado nada'
+      reading: Actualizando el libro…
       refusal:
         changed_elsewhere: cambiado en otro sitio
-        other: el libro lo rechazó
+        other: el libro no lo aceptó
       reject: 'rechazado: {reason}'
       rows: Cambios por movimiento
       save: Guardar {count}
@@ -1350,7 +1352,7 @@ desktop:
       step:
         add: Movimiento nuevo · {movement}
         bulk: 'Parte {part} de {parts} · guardados juntos: {count}'
-      stopped: 'La sesión se cerró: lo que no se envió sigue preparado'
+      stopped: 'Tu sesión terminó: lo que no se envió sigue en tus cambios'
       summary: Resumen
       summary_change: Cambio
       summary_field: Campo
@@ -1358,8 +1360,8 @@ desktop:
       tally:
         applied: Guardados
         not_sent: No enviados
-        refused: Rechazados
-        saved_unread: Guardados, sin leer
+        refused: No aceptados
+        saved_unread: Guardados, aún sin mostrar
         settled: Guardados o ya así
         unchanged: Sin cambios
         unknown: Resultado desconocido
@@ -1368,10 +1370,10 @@ desktop:
       tick_links: Marca cada vínculo permanente para guardar.
       title: Revisar y guardar · {count}
       together: 'Guardados juntos: {count}'
-      unknown_note: 'Puede que se haya guardado o no. No se reintenta nada: las escrituras
-        esperan a que vuelvas a leer.'
+      unknown_note: No hemos podido confirmar que se guardara y no lo intentaremos
+        de nuevo por nuestra cuenta. El guardado está en pausa hasta que actualices.
       when_read: Cuando lo leíste
-      yours: Tu cambio preparado
+      yours: Tu cambio
     assets:
       action:
         add: Añadir elemento
@@ -1383,14 +1385,12 @@ desktop:
         fixed: Inmovilizado
         stock: Existencias
       areas: Áreas de activos
-      asset_id: Identificador del elemento
       baja:
         acquisition_value: Valor de adquisición
         deducted: Amortización deducida
         excess: Exceso
         figures: Cifras de la baja (no se guarda nada)
         findings: Observaciones
-        minimum: Amortización mínima
         net_value: Valor neto
         preview: Calcular las cifras
         reduction: Reducción del valor de adquisición
@@ -1403,10 +1403,6 @@ desktop:
       column:
         amount: Importe
         casilla: Casilla
-        claims: Reclamaciones
-        in_service: En uso desde
-        number: Revisión
-        revision: Id
         target: Declaración
         unavailable: Sin calcular
       correct:
@@ -1427,14 +1423,23 @@ desktop:
         tabs: Vistas del elemento
         timeline: Cronología
       field:
+        acquired_condition: Estado al adquirirlo
         acquisition: Compra
+        acquisition_no_evidence: Esta compra no tiene factura como justificante, así
+          que no puede indicarse como la adquisición.
         acquisition_none: Aún no hay compras entre las que elegir.
         acquisition_option: '{description} · {date} · {amount}'
+        acquisition_shape: Tipo de adquisición
+        allocation_provenance: Origen de la afectación anterior
         amount: Importe
         basis: Base amortizable
+        basis_stage: Origen de la base
+        business_use_share: Porcentaje de uso empresarial
         class: Clase de la tabla
         coefficient: Coeficiente
         description: Descripción
+        digit_order: Orden de los dígitos
+        digit_period: Periodo de la suma de dígitos (años)
         disposal_date: Último día de servicio
         disposal_reason: Motivo
         document_kind: Tipo de documento
@@ -1442,6 +1447,8 @@ desktop:
         in_service_date: En servicio desde
         kind: Tipo
         later_affectation: Afectación posterior a la actividad el
+        low_value_election: Referencia de la elección
+        low_value_evidence: Justificante de la elección
         market_value: Valor de mercado (si se indica)
         method: Método
         name: Nombre
@@ -1449,14 +1456,22 @@ desktop:
         non_deductible_iva_hint: Escribe 0 si nada del IVA es no deducible. Vacío
           no es lo mismo que 0.
         not_known: 'No se conoce para esta compra: indícalo tú.'
+        opening_amount: Amortización ya deducida
+        opening_method: Método aplicado antes
+        opening_status: Amortización anterior a la entrada
+        opening_through: Cubierta hasta el ejercicio
         out_of_service_date: Baja a partir del
         prior_regime: Libertad de amortización anterior acreditada
         proceeds: Importe obtenido
+        research_evidence: Justificante de investigación y desarrollo
         residual_value: Valor residual
         serial: Número de serie
         supplier_name: Proveedor
         supplier_tax_id: NIF del proveedor
         transmission_costs: Gastos de transmisión
+        used_determination: Cómo se fija el precio originario
+        used_evidence: Justificante del precio originario
+        used_price: Precio originario
       filing:
         choose: Elige un año y un trimestre del Modelo 130 para ver adónde van las
           dotaciones.
@@ -1468,7 +1483,6 @@ desktop:
       from: Desde
       handoff: Adónde van las reclamaciones
       handoff_unavailable: '{count} elementos sin calcular, no incluidos'
-      inspect: Consultar
       list:
         column:
           accumulated: Amortizado hasta ahora
@@ -1484,7 +1498,7 @@ desktop:
         label: Elementos
         no_name: Sin nombre registrado
         summary: Años que necesitan atención
-        unavailable: No se puede leer el registro ahora.
+        unavailable: El registro no está disponible ahora.
       plan:
         claimable: Se puede registrar del {from} al {until}
         claimable_none: Nada pendiente de registrar
@@ -1495,7 +1509,7 @@ desktop:
           planned: Prevista
           rate: Porcentaje
           replaced_by: Sustituida por
-          revision: Revisión
+          revision: Versión
           status: Estado
           year: Año
         edition: Edición de la tabla {edition}
@@ -1504,55 +1518,36 @@ desktop:
         gap: 'Sin registrar: del {from} al {until}'
         in_effect: Vigente
         limits:
+          citations: Base legal ({count})
+          citations_partial: 'La lista es parcial: no se pudieron resolver algunas
+            disposiciones.'
           ends_on: El período máximo termina el
           maximum_coefficient: Coeficiente máximo
           maximum_period: Período máximo
           minimum_coefficient: Coeficiente mínimo
           period_years: '{years} años'
-          references: Base legal
           title: Límites de esta elección
         matches: Coincide con el cuadro actual
         no_claims: No hay dotación registrada para este ejercicio.
         no_match: Ya no coincide con el cuadro
         projected: Proyectada
-        projected_note: Las tablas proyectadas sirven para la previsión y el modelo
+        projected_note: Las tablas proyectadas se usan para la previsión y el modelo
           130. El modelo 100 no está disponible para {year}.
         recorded_zero: Registrada como cero
         replaced: Sustituida
       quarter: Trimestre del modelo 130
-      refusal:
-        refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Rechazado:
-          la amortización acelerada no se calcula aquí.'
-        refused_actividad_asset_claim_conflict: 'Rechazado: choca con una reclamación
-          ya registrada.'
-        refused_actividad_asset_incomplete: 'Rechazado: aún faltan datos.'
-        refused_actividad_asset_unsupported: 'Rechazado: ese método aún no está soportado.'
-        refused_actividad_asset_validation: 'Rechazado: el registro de elementos no
-          lo acepta.'
       refused: El registro no lo admitió.
       replace_claim: Sustituir una dotación (opcional)
       replace_none: Registrar una dotación nueva
-      revision:
-        correct: Revisión que corrige (JSON)
-        create: Primera revisión (JSON)
-      revision_hint: Rellena cada dato vacío; una revisión no se edita una vez guardada.
-      revisions: Revisiones
       submit:
         correct: Guardar la corrección
         create: Crear el elemento
-        filing: Mostrar
         forecast: Calcular previsión
       target:
         intangible_m100: Modelo 100 · intangible
         intangible_m130: Modelo 130 · intangible
         material_m100: Modelo 100 · material
         material_m130: Modelo 130 · material
-      task:
-        correct: Corregir…
-        create: Crear…
-        filing: Para las declaraciones
-        forecast: Previsión
-      tax_year: Ejercicio
       timeline:
         change_added: '{field}: {after}'
         change_cleared: '{field}: se quita {before}'
@@ -1561,14 +1556,12 @@ desktop:
           changes: Cambios
           effect: Efecto
           event: Evento
-          origin: Origen
           recorded: Registrado
           sequence: N.º
         empty: Todavía no se ha añadido nada.
         not_in_calculation: No forma parte del cálculo
         time_not_recorded: Hora no registrada
         used_by: 'Cálculos que la usan: {count}'
-      title: Elementos afectos a la actividad
       unrecognised: No reconocido
       until: Hasta
       write:
@@ -1577,6 +1570,9 @@ desktop:
         kept: No se ha guardado nada. Lo que escribiste sigue aquí.
         reused: Ya estaba registrada; no se ha añadido nada.
       year: Año
+      year_estimated: '{year} (estimado)'
+      year_estimated_note: 'Estas cifras son estimaciones: todavía no hay tablas oficiales
+        para este año.'
     capital:
       art108: Acogido al art. 108
       column:
@@ -1603,13 +1599,13 @@ desktop:
         inmueble: Inmueble
         mueble: Mueble
       kind_label: Tipo
-      movement: Identificador del movimiento de compra
+      movement: Compra
       movement_hint: El movimiento del libro con el que se pagó
       prorrata: Prorrata inicial
       refusal:
-        disposal_incomplete: 'Rechazado: una transmisión necesita año y régimen.'
-        duplicate_identifier: 'Rechazado: esa referencia ya está declarada.'
-        validation: 'Rechazado: el registro no acepta esos datos.'
+        disposal_incomplete: 'No aceptado: una transmisión necesita año y régimen.'
+        duplicate_identifier: 'No aceptado: esa referencia ya está declarada.'
+        validation: 'No aceptado: esos datos no encajan en el registro.'
       title: Bienes de inversión
       year: Año de adquisición
     category:
@@ -1742,7 +1738,7 @@ desktop:
       inactive_only: Solo cambian los movimientos activos
       income_no_category: Ingresos {count} · sin categoría
       no_category_match: Ninguna categoría coincide
-      not_saved: Preparado, sin guardar
+      not_saved: Aún sin guardar
       nothing: Selecciona movimientos primero
       overwritten: 'antes con otra clasificación: {count}'
       partial: solo las filas cargadas
@@ -1758,10 +1754,10 @@ desktop:
       share_refused: '«{raw}» no es una parte: escribe un porcentaje, como 50 para
         el 50 %.'
       skipped: 'Se quedan como están: {count}'
-      stage: Prepara para {count}
-      staged: '{classification} · preparado para {count}'
-      staged_category: '{category} · preparado para {count}'
-      staged_detail: '{classification} · {detail} · preparado para {count}'
+      stage: Añadir a los cambios para {count}
+      staged: '{classification} · {count} sin guardar aún'
+      staged_category: '{category} · {count} sin guardar aún'
+      staged_detail: '{classification} · {detail} · {count} sin guardar aún'
       title_business: Clasificar {count} como Empresarial
       title_business_split: Empresarial · Gastos {expenses} · Ingresos {income}
       title_category: Poner la categoría de {count}
@@ -1811,12 +1807,12 @@ desktop:
     cost:
       cancel: Cancelar
       description: 'Cada uno carga y guarda todo el libro: unos {minutes} min al guardar.'
-      stage: Preparar igualmente
+      stage: Añadir a los cambios igualmente
       title: 'Guardados uno a uno: {count}'
     count:
       to_classify: '{count} por clasificar'
     counterparty:
-      answer: Lo que responde ahora el libro
+      answer: Valores actuales del libro
       confirm: Confirmar
       confirmed: Confirmada
       country: País
@@ -1835,7 +1831,7 @@ desktop:
         operator_assertion: confirmado por ti
         profile_authority: según tu perfil
       state: Estado de identificación a efectos del IVA
-      tax_id: NIF / identificador fiscal
+      tax_id: Identificación fiscal (NIF)
       title: Contrapartes
       undetermined: Sin determinar
       vat_state: Identificada a efectos del IVA en
@@ -1860,7 +1856,7 @@ desktop:
       since: Desde
       threshold: Confianza baja por debajo de
       title: Diagnóstico del modelo
-      tokens: Tokens
+      tokens: Texto procesado
       unpriced: 'Llamadas sin precio: {count}'
       until: Hasta
       usage: Uso por proveedor
@@ -1881,11 +1877,11 @@ desktop:
       already_confirmed: Ya confirmada como factura {number}
       answer: Respuesta
       as_read: 'Según la lectura: {value}'
-      attach_staged: Adjunto preparado · sin guardar
+      attach_staged: Adjunto aún sin guardar
       attach_to: Adjuntar a {number}
       attached_to: Adjunto a {description} · {amount}
       attachment_linked: 'Facturas vinculadas: {count}'
-      attachment_named: Adjunto {id}
+      attachment_named: Adjunto {n}
       attachment_waiting: Pendiente de revisión
       attachments_none: Ningún adjunto pendiente
       batch_results: Resultado por documento
@@ -1894,7 +1890,7 @@ desktop:
         no_op: Ya está en el libro
         paused: 'En pausa: el lector está ocupado'
         pending_review: Pendiente de tu revisión
-        refused: Rechazado
+        refused: No aceptado
       cancel: Cancelar
       check: Comprobar
       checked_not_saved: No se guardó.
@@ -2035,7 +2031,6 @@ desktop:
         unavailable: No disponible
         version: Versión {version}
       reading_changed: La lectura cambió. Revísala de nuevo.
-      reading_digest: Huella de la lectura
       readings: Lecturas
       reads_as: 'El documento parece: {kind}'
       ready_to_confirm: Lista para confirmar
@@ -2072,7 +2067,6 @@ desktop:
         inline: Incrustado
         local_file: Este equipo
         url: Dirección web
-      source_digest: Huella del origen
       tab:
         attachments: Adjuntos
         folder: Entrada por carpeta
@@ -2081,7 +2075,6 @@ desktop:
         review: Por revisar
         sent: Enviado fuera del equipo
       tabs: Documentos
-      technical: Detalles técnicos
       the_value: El valor correcto
       these_are: Estos documentos son
       this_is: Esto es
@@ -2152,7 +2145,7 @@ desktop:
       refusal:
         ambiguous_grouping: '«{raw}» se puede leer de dos maneras: escríbelo sin separador
           de miles, como 1000 o 1.5.'
-        cannot_clear: 'Ninguna operación lo vacía: escribe otro valor'
+        cannot_clear: Esto no se puede vaciar. Escribe otro valor en su lugar.
         comma_decimal: '«{raw}» usa coma decimal: escribe {suggestion}.'
         currency_symbol: '«{raw}» lleva símbolo de moneda: escribe solo el número.'
         date_not_in_calendar: «{raw}» no es un día del calendario.
@@ -2280,8 +2273,10 @@ desktop:
       unknown: Resultado desconocido
       unknown_note: 'Puede que el archivo se haya escrito. No se vuelve a enviar nada:
         revisa el archivo antes de exportar otra vez.'
-      unknown_title: 'Resultado de la exportación desconocido: escrituras en pausa'
-      unknown_untold: '{file}: volver a leer no aclara si se escribió; revisa el archivo'
+      unknown_title: 'No hemos podido confirmar la exportación: el guardado está en
+        pausa'
+      unknown_untold: '{file}: no hemos podido confirmar que se creara. Revisa el
+        archivo.'
       without_staged: Exportar sin ellos
     failed: No se ha podido leer el libro.
     field:
@@ -2335,18 +2330,18 @@ desktop:
       choose: Elige…
       close: Cerrar
       date_hint: Año-mes-día, p. ej. 2026-10-31
-      failed: Sin respuesta · {code}
+      failed: No ha funcionado
       'no': 'No'
       none: Ninguno
       percent_hint: Escribe 70 para el 70 %
       points_hint: Porcentaje, de 0 a 100
       reading: Leyendo…
-      refused: Rechazado · {code}
-      reread: Volver a leer
+      refused: No guardado.
+      reread: Actualizar
       save: Guardar
       saving: Guardando…
       two_letters: Dos letras, p. ej. ES
-      unknown: 'Resultado desconocido: puede que se haya guardado.'
+      unknown: No podemos saber si esto se guardó. Actualiza para comprobarlo.
       year_hint: Cuatro cifras, p. ej. 2024
       'yes': Sí
     grid: Movimientos, {period}
@@ -2400,7 +2395,7 @@ desktop:
         skipped: Omitidos por regla
         split: Divididos
         stashed: Apartados
-      dry_run: Hacer la prueba
+      dry_run: Hacer la vista previa
       expense: Gastos de la actividad, EUR
       income: Ingresos de la actividad, EUR
       links: Enlaces con declaraciones
@@ -2412,8 +2407,7 @@ desktop:
       of_active: De los activos
       one_sided: Enlaces de factura de un solo lado
       rebuild: Reconstruir los enlaces
-      rebuilt: 'Reconstruido · enlaces: {links} · revisiones: {revisions} · obsoletos
-        quitados: {removed}'
+      rebuilt: 'Reconstruido. Enlaces actualizados: {links}.'
       reset: Zona de peligro · reiniciar el libro
       reset_blocked: El reinicio está bloqueado
       reset_blocker: Modelo {modelo} · {year} {period} · {state} cita movimientos
@@ -2421,7 +2415,7 @@ desktop:
       reset_reason: Motivo
       reset_reason_hint: Queda en el registro de auditoría · hasta {limit} caracteres
       reset_what: Quita todos los movimientos y los documentos adjuntos. Primero va
-        una prueba.
+        una vista previa.
       reset_would: 'Quitaría · movimientos: {movements} · documentos: {documents}'
       run_check: Hacer la comprobación
       stale: Declaraciones por recalcular
@@ -2454,13 +2448,13 @@ desktop:
       book_created: 'Facturas creadas: {count}'
       book_kind: Facturas del libro
       book_no_preview: Los libros de facturas no tienen vista previa
-      book_no_preview_note: Las filas se comprueban al crearse. Las rechazadas se
+      book_no_preview_note: Las filas se comprueban al crearse. Las no aceptadas se
         listan después con su número de fila y motivo; el resto se conserva. {kind};
         país {country}.
-      book_note: 'Filas: {rows} · ya en el catálogo: {skipped} · rechazadas: {refused}'
+      book_note: 'Filas: {rows} · ya en el catálogo: {skipped} · no aceptadas: {refused}'
       book_refused: El libro no se ha importado
       bound_note: La importación usa exactamente estos archivos. Si uno cambia tras
-        esta vista previa, se rechaza.
+        esta vista previa, no se acepta.
       cancel: Cancelar
       choose_accounts: Elige la cuenta de cada archivo.
       choose_file: Elegir un archivo…
@@ -2480,7 +2474,7 @@ desktop:
       count:
         duplicates: Posibles duplicados
         new: Nuevas
-        refused: Archivos rechazados
+        refused: Archivos no aceptados
         rows: Filas
         skipped: Ya en el libro
       country: País de la contraparte
@@ -2566,7 +2560,7 @@ desktop:
       refusal:
         empty_directory: La carpeta no contiene ningún extracto.
         file_limit: Más de 128 archivos a la vez.
-        other: 'No importado: {code}'
+        other: No importado. Revisa el archivo y vuelve a intentarlo.
         own_account_mismatch: Sus filas indican otra cuenta.
         reader_unavailable: 'No se ha leído: la IA local, que lee este archivo, no
           está lista.'
@@ -2575,7 +2569,7 @@ desktop:
         result_limit: 'Más de 4.096 filas: impórtalo por partes.'
         source_changed: 'Ha cambiado tras la vista previa: vuelve a previsualizarlo.'
         transaction_validation: No se ha podido leer como extracto bancario.
-      refused_rows: Filas rechazadas
+      refused_rows: Filas no aceptadas
       remove: Quitar {name}
       row: Fila
       show_documents: Revisar en Documentos
@@ -2618,8 +2612,8 @@ desktop:
       affects: afecta a {declaration}
       allocate:
         prorrata: Referencia de prorrata
-        stage: Preparar asignación
-        staged: Asignación preparada · sin guardar
+        stage: Añadir la asignación a los cambios
+        staged: Asignación aún sin guardar
         title: Asignar una parte profesional
       by:
         derived: Calculado por Cadrumo
@@ -2632,28 +2626,28 @@ desktop:
       classification: Clasificación
       clear: Vaciar el valor
       close: Ocultar el inspector
-      copied_id: ID del movimiento copiado
-      copy_id: Copiar el ID completo
+      copied_id: Referencia del movimiento copiada
+      copy_id: Copiar la referencia
       derive:
         choose: Elige una categoría de IVA
         stage: Calcular importes
         staged: Cadrumo calculará los importes de {category} al guardar
-        staged_toast: Importes preparados · sin guardar
+        staged_toast: Importes aún sin guardar
         title: Calcular el IVA según una categoría
       documents:
         active_only: Solo los movimientos activos admiten documentos.
         add_file: Añadir desde este ordenador
-        add_staged: '{file} · adjunto preparado'
+        add_staged: '{file} · adjunto aún sin guardar'
         adding: Añadir {file} · sin guardar
         advisory: 'Aún no hay factura de compra. Solo es un aviso: nunca impide guardar
           ni calcular.'
         attach_existing: Adjuntar un documento
-        attach_staged: Adjunto preparado · sin guardar
+        attach_staged: Adjunto aún sin guardar
         attaching: Adjuntar {file} · sin guardar
         detach: Quitar
         detach_named: Quitar {file}
-        detach_pending: Quitar preparado
-        detach_staged: Quitar preparado · sin guardar
+        detach_pending: Quitar, aún sin guardar
+        detach_staged: Quitar, aún sin guardar
         detaching: Quitar {file} · sin guardar
         hint: Un PDF o una imagen, leído de este ordenador y guardado cifrado.
         no_free: No hay otro documento en el libro
@@ -2662,7 +2656,7 @@ desktop:
         purchase_invoice: Factura de compra · añadida {date}
       drop: Descartar
       earlier: Decisiones anteriores
-      earlier_ids: IDs anteriores
+      earlier_ids: Referencias anteriores
       effective_date: Fecha efectiva
       empty: vacío
       eur_same: 'Igual: movimiento en euros'
@@ -2691,7 +2685,7 @@ desktop:
         stashed: Apartado
         updated: Actualizado
       file_row: '{file}, fila {row}'
-      fingerprint: Huella de importación
+      fingerprint: Referencia de importación
       fix:
         derive: Calcular importes
         go: Corregir
@@ -2719,7 +2713,7 @@ desktop:
         issued: Emitida
         issued_on: Fecha de emisión
         link: Vincular · permanente
-        link_staged: Vínculo preparado · permanente al guardar
+        link_staged: Vínculo aún sin guardar · permanente al guardar
         linked: Movimientos
         linked_count: '{count} vinculados'
         none: Ninguna factura del catálogo liquida este importe.
@@ -2733,9 +2727,9 @@ desktop:
         received: Recibida
         rival: '{movement} la liquida igual de bien.'
         show_other: Ver el otro
-        staged: Vínculo con {invoice} preparado · permanente al guardar
-        staged_for: Preparada para {movement}
-        taken: '{invoice} está preparada para {movement}'
+        staged: Vínculo con {invoice} aún sin guardar · permanente al guardar
+        staged_for: Ya está en tus cambios para {movement}
+        taken: '{invoice} ya está en tus cambios para {movement}'
         transfer: Las transferencias entre tus cuentas no tienen factura.
       issue_count: '{count} por corregir'
       last_saved: Último guardado
@@ -2752,8 +2746,8 @@ desktop:
         incoming_only: Solo para rentas que un no residente obtiene en España.
         payer_id: Pagador
         payer_mode: Tipo de pagador
-        stage: Preparar datos del Modelo 210
-        staged: Datos del Modelo 210 preparados · sin guardar
+        stage: Añadir los datos del Modelo 210 a los cambios
+        staged: Datos del Modelo 210 aún sin guardar
         tipo_renta_code: Tipo de renta
         title: Modelo 210
       merge:
@@ -2765,14 +2759,14 @@ desktop:
       mode_movement: Movimiento
       model:
         about: Una propuesta del modelo local. Solo tú la apruebas.
-        approval_staged: Aprobación preparada · sin guardar
+        approval_staged: Aprobación aún sin guardar
         approve: Aprobar
         ask: Preguntar al modelo
         ask_how: Preguntar al modelo por
         ask_with_share: Preguntar con esta parte
         asking: Preguntando al modelo
         busy: Una revisión anterior de este movimiento sigue abierta. Vuelve a intentarlo
-          en un momento o respóndela donde se pidió.
+          en un momento o termínala donde se abrió.
         confidence: '{value} de confianza'
         continue_reject: Preguntar con este motivo
         derived: calculado por Cadrumo
@@ -2782,20 +2776,20 @@ desktop:
           split: Sugerir una división
         no_review: El modelo no dio ninguna propuesta que revisar.
         reason: Por qué no es correcta
-        refused: El libro rechazó la petición
+        refused: No se pudo hacer
         reject: Rechazar
         rejected_before: Rechazaste una sugerencia anterior para este movimiento.
         rejecting: Rechazando · {reason}
-        rejection_staged: Rechazo preparado · sin guardar
+        rejection_staged: Rechazo aún sin guardar
         share_needed: Indica una parte para aprobar
-        stage_rejection: Preparar rechazo
+        stage_rejection: Añadir el rechazo a los cambios
         title: Sugerencia del modelo
-        unavailable: El modelo no pudo responder
+        unavailable: El modelo de IA no está disponible ahora mismo
       more: Más
       more_tax: Más campos fiscales
-      movement_id: ID del movimiento
+      movement_id: Referencia del movimiento
       moves_to: Pasa a {period}
-      new_identity: Se guarda con un ID nuevo
+      new_identity: Referencia nueva
       no_counterparty: Sin contraparte
       no_match: Sin coincidencias
       no_rate: Sin tipo de cambio
@@ -2838,7 +2832,7 @@ desktop:
       selection:
         actions: Acciones
         approve_all: Aprobar las {count} leídas
-        approved_all: 'Aprobaciones preparadas: {count}'
+        approved_all: 'Aprobaciones aún sin guardar: {count}'
         ask_each: Preguntar al modelo por cada uno
         asked: 'Sugerencias para leer: {count}'
         body: Movimientos seleccionados
@@ -2861,8 +2855,8 @@ desktop:
         set_title: Para todos · se aplica al elegir
         skipped: 'Omitidos: {count}'
         skipped_reason: 'Omitidos, {reason}: {count}'
-        stage_anyway: Preparar igualmente
-        staged: 'Preparados: {count} · sin guardar'
+        stage_anyway: Añadir a los cambios igualmente
+        staged: 'Aún sin guardar: {count}'
         title: '{count} seleccionados'
         totals: Totales
       share: Parte profesional
@@ -2895,12 +2889,12 @@ desktop:
         remainder: Lo que falta
         remove_part: Quitar la parte {part}
         share_needed: Indica una parte profesional para la parte {part}.
-        stage: Preparar división
-        staged: División en {count} partes preparada · sin guardar
+        stage: Añadir la división a los cambios
+        staged: División en {count} partes, aún sin guardar
         title: Dividir en partes
         unclassified: Clasificar después
         under: A las partes les faltan {amount} para el movimiento.
-      stage: Preparar
+      stage: Añadir a los cambios
       technical: Detalles técnicos
       unread: No se pudo leer
       unsaved: 'Cambios: {count} · sin guardar'
@@ -2917,22 +2911,7 @@ desktop:
         title: Usado en
         verified: Verificado (sellado)
     inventory:
-      acquisition: Justificación del coste de compra (JSON)
-      acquisition_hint: 'Opcional: la contraprestación y su IVA, los costes imputables
-        y su justificación'
-      actividad: Identificador de la actividad
-      authority: Registro de la autoridad del cierre (JSON)
-      authority_file: Leer de un archivo…
-      authority_file_too_large: El archivo ocupa más de 1 MiB.
-      authority_file_unread: No se ha podido leer el archivo.
-      authority_hint: La decisión, el recuento físico si lo hay y el enlace con el
-        cierre anterior
-      authority_unread: No es un objeto JSON.
-      base: Base imponible
-      book: Libro
-      books: Libros de existencias {year}
       column:
-        actividad: Actividad
         date: Fecha
         kind: Tipo
         method: Valoración
@@ -2941,11 +2920,6 @@ desktop:
         quantity: Unidades
         unit_cost: Coste unitario
       date: Fecha
-      empty: No hay libro de existencias de {year}.
-      form:
-        closing: Autoridad del cierre de {actividad} · {year}
-        create: Nuevo libro de existencias de {year}
-        movement: Añadir un movimiento a {actividad} · {year}
       kind:
         cogs: Coste de ventas
         count: Recuento
@@ -2957,29 +2931,21 @@ desktop:
         fifo: FIFO
         pmp: Precio medio ponderado
       method_label: Método de valoración
-      movement_id: Identificador del movimiento
-      movements: Movimientos añadidos aquí
       opening: Valor de las existencias iniciales
-      preview: Valoración previa
       preview_note: 'Una vista previa: no se registra nada.'
       quantity: Unidades
       refusal:
         activity_conflict: 'Rechazado: esa actividad ya tiene libro ese año.'
         activity_not_found: 'Rechazado: no hay libro para esa actividad y año.'
-        closing_authority_conflict: 'Rechazado: ya hay registrada otra autoridad del
-          cierre.'
-        closing_authority_invalid: 'Rechazado: el registro no corresponde a este libro.'
-        duplicate_movement_id: 'Rechazado: ese identificador ya está en el libro.'
+        closing_authority_conflict: 'Rechazado: ya hay guardada otra decisión de cierre.'
+        closing_authority_invalid: 'Rechazado: la decisión de cierre no corresponde
+          a este libro.'
+        duplicate_movement_id: 'Rechazado: ese movimiento ya está en el libro.'
         invalid_valuation_method: 'Rechazado: no es un método de valoración.'
         inventory_validation: 'Rechazado: el libro no lo acepta.'
-      task:
-        closing: Registrar la autoridad del cierre
-        create: Nuevo libro
-        movement: Añadir movimiento
-      title: Libros de existencias
       unit_cost: Coste unitario
-      valuation: Existencias finales {closing} · coste de ventas {cogs} · {method}
-      year: Año de existencias
+      valuation: '{name} · existencias finales {closing} · coste de ventas {cogs}
+        · {method}'
     invoice:
       linked: Vinculada
     invoices:
@@ -3030,7 +2996,7 @@ desktop:
       duplicate: Ya está en el catálogo.
       empty: Aún no hay facturas. Añade una o importa un libro de facturas.
       empty_filtered: Ninguna factura coincide.
-      failed: 'No se ha enviado: {code}. No se ha guardado nada.'
+      failed: No se ha guardado nada. Inténtalo de nuevo.
       field:
         counterparty_country: País
         counterparty_name: Contraparte
@@ -3045,7 +3011,7 @@ desktop:
         notes: Notas
         operation_date: Fecha de operación
         operation_type: Clave del modelo 349
-        payment_id: Identificador del pago
+        payment_id: Referencia del pago
         payment_status: Pago
         printed_total: Total impreso
         recargo: Recargo de equivalencia
@@ -3072,7 +3038,7 @@ desktop:
         tax_id_optional: Opcional en una simplificada emitida
       identity_fixed: El tipo, el número, la fecha de emisión, el NIF, la moneda,
         los totales y las líneas son fijos.
-      invalid: 'No se ha añadido: el libro la rechaza por no válida.'
+      invalid: 'No se ha añadido: el libro no la acepta por no ser válida.'
       invariant:
         counterparty: Nombre de la contraparte
         country: País de dos letras
@@ -3178,7 +3144,8 @@ desktop:
         too_long: 'Demasiado largo: como mucho {limit} caracteres.'
         too_many_decimals: '"{raw}": como mucho {limit} decimales.'
         zero: Debe ser mayor que cero.
-      refused: 'No se ha guardado: el libro lo ha rechazado ({code}).'
+      refused: 'No se ha guardado: el libro no lo ha aceptado. Revisa los datos e
+        inténtalo de nuevo.'
       remove: Eliminar
       remove_confirm: Eliminar la factura
       remove_linked: Una factura vinculada se queda
@@ -3297,12 +3264,12 @@ desktop:
         son pagos parciales.
       read_failed: No se pudo leer
       repair: Reparar · permanente
-      repair_staged: Reparación preparada · sin guardar
+      repair_staged: Reparación aún sin guardar
       settles: Liquida {amount}
       settles_withheld: Liquida {amount} ({total} − {withheld} de retención)
       show_other: Mostrar {description}
-      staged: 'Vínculos preparados sin guardar: {count}'
-      staged_toast: Vínculo preparado · permanente al guardar
+      staged: 'Vínculos aún sin guardar: {count}'
+      staged_toast: Vínculo aún sin guardar · permanente al guardar
       suggestions: Parejas sugeridas
       title: Por conciliar
     maximize: Maximizar el libro
@@ -3318,33 +3285,35 @@ desktop:
       blanks_note: Una celda en blanco no cambia nada; solo Suprimir vacía.
       cancel: Cancelar
       changes: Celdas que cambian
-      description: 'Para pegar: {rows} · no se prepara nada hasta que pegues'
+      description: 'Para pegar: {rows} · no cambia nada hasta que pegues'
       done: 'Celdas pegadas: {count} · sin guardar'
-      done_refused: 'Celdas pegadas: {count} · rechazadas, marcadas en la tabla: {refused}'
+      done_refused: 'Celdas pegadas: {count} · no aceptadas, marcadas en la tabla:
+        {refused}'
       dropped: Más allá de la última fila o columna
       first_refusal: '{column}: {reason}'
       identity_note: Cambiar la descripción, el importe, la fecha o la cuenta da al
         movimiento una nueva referencia al guardarlo.
       new_identity: Nueva referencia
-      refused: Rechazadas
+      refused: No aceptadas
       refused_empty: Nada que pegar
       refused_unclosed_quote: 'No pegado: hay unas comillas sin cerrar'
       single_writes: Guardados uno a uno
       title_into: ¿Pegar en {columns}?
     paused:
-      counted_not_saved: 'Preparado de nuevo: {count}'
+      counted_not_saved: 'De nuevo en tus cambios: {count}'
       counted_saved: 'Guardado: {count}'
-      counted_undetermined: 'Sin aclarar, sigue preparado: {count}'
+      counted_undetermined: 'Sin aclarar, siguen en tus cambios: {count}'
       dismiss: Cerrar
-      found_not_saved: Sin guardar, preparado de nuevo · {movement}
+      found_not_saved: Sin guardar, de nuevo en tus cambios · {movement}
       found_saved: Guardado · {movement}
-      found_undetermined: '{movement}: la lectura no lo aclara; sigue preparado y
-        guardarlo de nuevo es el mismo guardado'
+      found_undetermined: '{movement}: no podemos saber si se guardó. Sigue en tus
+        cambios y guardarlo de nuevo no lo guarda dos veces.'
       repeatable: '{movement}: puede que se hiciera; repetirlo hace lo mismo'
-      reread: Volver a leer
-      saved_unread: 'Guardado, respuesta sin leer: escrituras en pausa'
-      saved_unread_reason: 'Vuelve a leer primero: no se leyó la respuesta de un guardado'
-      title: 'Resultado desconocido: escrituras en pausa'
+      reread: Actualizar
+      saved_unread: Guardado, aún sin mostrar. El guardado está en pausa
+      saved_unread_reason: 'Actualiza primero: todavía no podemos mostrar tu último
+        guardado'
+      title: 'No hemos podido confirmar un guardado: el guardado está en pausa'
       unsaved: Sin guardar · {movement}
       untold: '{movement}: no se sabe si se guardó; sigue en pausa'
       what_movements: 'Movimientos: {count}'
@@ -3414,25 +3383,26 @@ desktop:
       reference: Referencia
       reference_hint: La autorización o propuesta en la que se basa
       refusal:
-        provenance_not_electable: 'Rechazado: ese origen se calcula, no se elige.'
-        provenance_required: 'Rechazado: indica de dónde sale el porcentaje.'
-        reference_not_permitted: 'Rechazado: ese origen no tiene documento al que
+        provenance_not_electable: 'No aceptado: ese origen se calcula, no se elige.'
+        provenance_required: 'No aceptado: indica de dónde sale el porcentaje.'
+        reference_not_permitted: 'No aceptado: ese origen no tiene documento al que
           referirse.'
-        reference_required: 'Rechazado: ese origen necesita la referencia de su documento.'
-        regulated_override_standing: 'Rechazado: hay un porcentaje autorizado vigente.'
-        sector_prior_definitive_absent: 'Rechazado: el sector no tiene definitiva
-          anterior.'
-        sector_settlement_entry_absent: 'Rechazado: el sector no tiene entrada que
+        reference_required: 'No aceptado: ese origen necesita la referencia de su
+          documento.'
+        regulated_override_standing: 'No aceptado: hay un porcentaje autorizado vigente.'
+        sector_prior_definitive_absent: 'No aceptado: el sector no tiene un porcentaje
+          definitivo del año anterior.'
+        sector_settlement_entry_absent: 'No aceptado: el sector no tiene entrada que
           liquidar.'
-        seed_existing_blocked: 'Rechazado: este ejercicio ya tiene una entrada.'
-        seed_source_absent: 'Rechazado: el año anterior no tiene porcentaje definitivo.'
-        seed_source_blocked: 'Rechazado: el origen del año anterior está bloqueado.'
-        validation: 'Rechazado: el registro no lo acepta.'
+        seed_existing_blocked: 'No aceptado: este ejercicio ya tiene una entrada.'
+        seed_source_absent: 'No aceptado: el año anterior no tiene porcentaje definitivo.'
+        seed_source_blocked: 'No aceptado: el origen del año anterior está bloqueado.'
+        validation: 'No aceptado: no encaja en el registro.'
       regime:
         especial: Especial
         general: General
       sector: Sector
-      sector_id: Identificador del sector
+      sector_id: Sector
       sectors: 'Sectores diferenciados:'
       seed_what: Lee el porcentaje definitivo registrado de {prior} y lo traslada
         a {ejercicio}.
@@ -3456,7 +3426,7 @@ desktop:
         usage_ratio_home_area: Superficie de la vivienda afecta
         usage_ratio_personal: Uso en la actividad
       not_set: Sin fijar
-      refused: 'Rechazado: esa categoría no tiene porcentaje.'
+      refused: 'No aceptado: esa categoría no tiene porcentaje.'
       set: Fijar
       set_named: Fijar el porcentaje de {category}
       table: Porcentajes {year}
@@ -3484,7 +3454,7 @@ desktop:
       ready: Listo para calcular · comprobado a las {time}
       reason_action: Los muestra y cómo corregirlos
       reasons: Motivos de preparación
-      staged: '{count} preparados'
+      staged: '{count} sin guardar aún'
       title: Preparación
       unsaved: 'Cambios sin guardar no incluidos: {count}'
     readiness_filter:
@@ -3536,9 +3506,7 @@ desktop:
     registers:
       area:
         accounts: Cuentas propias
-        assets: Elementos afectos
         capital: Bienes de inversión
-        inventory: Existencias
         prorrata: Prorrata
       areas: Apartados de registros
     retry: Reintentar
@@ -3570,7 +3538,7 @@ desktop:
       areas: Apartados de reglas
       category: Categoría
       classification: Clasifica como
-      classify_now: Clasificarlos también ahora (pendiente)
+      classify_now: Clasificarlos también ahora (aún sin guardar)
       column:
         added: Añadida
         category: Categoría
@@ -3605,15 +3573,16 @@ desktop:
       refusal:
         category: No es una categoría de gasto.
         empty_pattern: Escribe las palabras que buscar.
-        invalid_command: El libro rechazó la regla.
+        invalid_command: El libro no aceptó la regla.
         invalid_pattern: El libro no puede leer esa expresión.
-      run_note: La vista previa no escribe nada; aplicarlas queda pendiente como cualquier
-        cambio.
-      run_staged: 'Aplicación de reglas pendiente · Movimientos: {count} · sin guardar'
+      run_note: La vista previa no cambia nada. Aplicarlas se añade a tus cambios,
+        como cualquier otro.
+      run_staged: 'Reglas añadidas a tus cambios · Movimientos: {count} · aún sin
+        guardar'
       run_title: Aplicar las reglas
       save: Guardar regla
       saved_toast: Regla guardada · orden {place}
-      stage_run: Dejar pendiente
+      stage_run: Añadir la aplicación a tus cambios
       title: Reglas de clasificación
       what: Busca palabras en la descripción del movimiento y decide su clasificación.
       words: La descripción contiene
@@ -3627,6 +3596,7 @@ desktop:
       placeholder: Buscar
       show: Ver
     section:
+      assets: Activos
       documents: Documentos
       health: Estado
       invoices: Facturas
@@ -3690,6 +3660,94 @@ desktop:
       needs_fixing_count: Por corregir · {count}
       pending: Por clasificar
       skipped: Omitido por una regla
+    stock:
+      action:
+        add_book: Añadir un libro de existencias
+        add_movement: Añadir un movimiento
+        preview: Ver una vista previa de la valoración
+      books: Libros de existencias de {year}
+      column:
+        cost: Coste
+        name: Actividad
+      cost_kind:
+        customs_duty: Aranceles
+        freight: Transporte
+        handling: Manipulación
+        insurance: Seguro
+        other_directly_attributable: Otro coste de la compra
+        professional_fee: Honorarios profesionales
+      count:
+        books: 'Libros de existencias: {count}'
+        retired: 'Dados de baja: {count}'
+      empty: Aún no hay libro de existencias de {year}. Añade uno para empezar a contar
+        lo que tienes.
+      extra:
+        add: Añadir un coste adicional
+        iva: IVA de ese coste
+        kind: Tipo de coste
+        none: No has añadido costes adicionales.
+        price: Importe sin IVA
+        remove: Quitar este coste adicional
+        share: Parte de su IVA que puedes deducir (%)
+      field:
+        cost_hint: Rellena el coste por unidad o el total, el que tengas.
+        extra_total: Costes adicionales sin IVA, en total
+        iva: IVA del precio
+        name: Actividad
+        name_hint: La actividad del negocio a la que pertenecen estas existencias,
+          como tú la llames.
+        price: Precio sin IVA
+        recoverable: IVA que puedes deducir, en total
+        share: Parte de ese IVA que puedes deducir (%)
+        total: Coste total de la compra
+        total_cost: Coste total sin IVA
+        unrecoverable: IVA que no puedes deducir (se suma al coste)
+      form:
+        book: Nuevo libro de existencias de {year}
+        movement: Añadir un movimiento a {name} · {year}
+      load_failed: No se pudieron cargar tus existencias.
+      load_refused: Tus existencias no se pueden mostrar ahora mismo.
+      loading: Cargando tus existencias…
+      movements_none: Este libro aún no tiene movimientos. Añade el primero.
+      movements_of: Movimientos de {name}
+      movements_unlisted: 'Movimientos de este libro: {count}. Los anteriores aún
+        no se pueden listar; los nuevos aparecen aquí a medida que los añades.'
+      proof:
+        change_file: Elegir otro archivo
+        check_hint: Cualquier archivo que muestre la revisión, como una nota o una
+          hoja de cálculo.
+        choose_file: Elegir un archivo
+        cost_check: Archivo que demuestra que revisaste los costes adicionales
+        extra: Archivo que demuestra este coste
+        file_too_large: El archivo pesa más de 50 MB.
+        file_unread: No se pudo abrir el archivo.
+        iva_check: Archivo que demuestra que revisaste cuánto IVA puedes deducir
+        kind: Tipo de archivo
+        price: Archivo que demuestra el precio
+      proof_kind:
+        contract: Contrato
+        customs_declaration: Declaración de aduanas
+        insurance_document: Póliza de seguro
+        other_acquisition_evidence: Otra prueba de la compra
+        purchase_invoice: Factura de compra
+        transport_document: Albarán de transporte
+      purchase:
+        extras: Costes adicionales de la compra
+        price: Precio de la compra
+        proofs: Archivos que lo demuestran
+        proofs_hint: Adjunta los archivos. Cadrumo guarda una marca que identifica
+          cada archivo, no el archivo en sí.
+        totals: Totales
+        totals_hint: Escribe los totales a los que llegan las cifras de arriba. Tienen
+          que coincidir con esas cifras.
+      refused: El libro de existencias no lo aceptó. No se guardó nada.
+      retired: Dado de baja
+      submit:
+        book: Añadir el libro
+        movement: Añadir el movimiento
+      summary: Resumen de existencias
+      title: Existencias
+      unavailable: Tus existencias no están disponibles ahora mismo.
     sum:
       in: Entradas {amount}
       out: Salidas {amount}
@@ -3703,8 +3761,8 @@ desktop:
       in_parts: se guarda por partes
       name: '{count} sin guardar: {what}'
       new: 'Nuevos: {count}'
-      paused: escrituras en pausa
-      paused_reason: 'Vuelve a leer primero: un guardado tiene un resultado desconocido'
+      paused: guardado en pausa
+      paused_reason: 'Actualiza primero: no hemos podido confirmar tu último guardado'
       region: Cambios sin guardar
       review: Revisar
       review_count: Revisar y guardar · {count}
@@ -3759,7 +3817,7 @@ desktop:
     source_python: Python
     state_available: cadrumo.log
     state_missing_detail: Aún no hay archivo de registro. Los registros aparecerán
-      cuando un proceso de Cadrumo escriba uno.
+      cuando Cadrumo cree uno.
     state_unreadable: No se puede leer el registro
     visible_count: '{visible} de {total} entradas'
     warnings: 'Avisos: {count}'
@@ -3834,24 +3892,21 @@ desktop:
     pending: Responde primero a la pregunta abierta.
     refused:
       credentials: Este enlace lleva un usuario o una contraseña, así que no se abre.
-      fragment: Este enlace tiene una parte con «#», y los enlaces de Cadrumo nunca
-        la tienen.
+      fragment: Este enlace no es válido.
       link: Cadrumo no puede abrir este enlace.
-      malformed: Este enlace no está escrito como los enlaces de Cadrumo.
-      not_a_view_link: Este enlace de Cadrumo no lleva a ninguna vista.
+      malformed: Este enlace no es válido.
+      not_a_view_link: Este enlace no es válido.
       not_implemented: Aquí no hay nada que pueda abrir {view}.
       param: Este enlace pide algo que su vista no puede mostrar.
-      param_malformed: Este enlace apunta a un elemento, pero su identificador no
-        tiene la forma correcta.
+      param_malformed: Este enlace no es válido.
       param_not_accepted: Este enlace pide a {view} algo que no puede mostrar.
-      percent_encoding: Este enlace tiene caracteres codificados, y los enlaces de
-        Cadrumo nunca los tienen.
-      query: Este enlace tiene opciones tras «?» que Cadrumo no entiende.
-      too_long: Este enlace es demasiado largo para ser un enlace de Cadrumo.
-      too_many_segments: La ruta de este enlace es más larga que la de cualquier vista.
-      unknown_param: Este enlace pide una opción que ninguna vista tiene.
+      percent_encoding: Este enlace no es válido.
+      query: Este enlace no es válido.
+      too_long: Este enlace no es válido.
+      too_many_segments: Este enlace no es válido.
+      unknown_param: Este enlace no es válido.
       unknown_view: Este enlace lleva a una vista que esta versión de Cadrumo no tiene.
-      uppercase: Los enlaces de Cadrumo van en minúsculas, y este no.
+      uppercase: Este enlace no es válido.
     sign_in: Inicia sesión para abrir {view}.
   palette:
     actions: Acciones
@@ -3955,14 +4010,14 @@ desktop:
       identity: Añadir NIF o NIE
       incoming: AEAT
       preserve: Conservar tu respuesta guardada.
-      profile_mismatch: La solicitud censal no coincide con el perfil de la sesión.
-        Actualiza tu perfil y, si persiste, comunica el código mostrado.
+      profile_mismatch: Estos datos del Censo no coinciden con el perfil con el que
+        has iniciado sesión. Actualiza tu perfil.
       pull: Consultar datos censales
       reading: Consultando datos censales…
       ready: El acceso a la AEAT está configurado. Podrás revisar los datos obtenidos
         antes de guardarlos.
-      refused: El servicio ha rechazado la sincronización. Comprueba el perfil y el
-        acceso a la AEAT antes de volver a intentarlo.
+      refused: No se pudo iniciar la sincronización. Comprueba tu perfil y los ajustes
+        de acceso a la AEAT y vuelve a intentarlo.
       reject: Descartar cambios
       review_count: 'Valores de la AEAT por revisar: {count}'
       review_hint: Los cambios se muestran abajo, en su sitio. No se guarda nada hasta
@@ -3977,9 +4032,8 @@ desktop:
         termine y, si sigue bloqueada, comunica el código mostrado.
       title: Sincronizar con la AEAT
       unavailable: No se ha podido comprobar la sincronización. Prueba a actualizar.
-      unknown: No se ha podido confirmar el estado de la sincronización. Actualiza
-        para comprobarlo de nuevo. No podrás iniciar otra hasta que se resuelva esta
-        operación.
+      unknown: No hemos podido confirmar que la sincronización haya terminado. Actualiza
+        para comprobarlo. No se puede iniciar otra hasta que esta se resuelva.
       unknown_start: No se ha podido confirmar si se inició la sincronización. No
         inicies otra; contacta con soporte e indica el código unknown.
       unsupported: Este acceso requiere una interacción disponible en el terminal.
@@ -4102,7 +4156,7 @@ desktop:
       input: no se ha podido enviar lo que has escrito
       other: ha ocurrido algo inesperado
       output: no se ha podido leer su salida
-      slow: ha tardado demasiado en responder
+      slow: ha tardado demasiado
       start: no se ha podido iniciar el programa
       stopped: el programa se ha detenido con un error
   settings:
@@ -4217,13 +4271,13 @@ desktop:
       la lista de modelos de la IA local en los ajustes del agente y vuelve a intentarlo.
     refused_not_cancellable: Ahora no se puede detener la configuración. Terminará
       en breve.
-    refused_not_pending: Ese plan ya no espera respuesta.
+    refused_not_pending: Ese plan ya no te está esperando.
     refused_not_signed_in: Primero inicia sesión en tu perfil.
     refused_other: No se ha podido contactar con la configuración. Inténtalo de nuevo
       en un momento.
     refused_plan_changed: Lo necesario ha cambiado. Revisa el nuevo plan y después
       apruébalo.
-    refused_unavailable: Los servicios de Cadrumo no responden. Inténtalo de nuevo
+    refused_unavailable: Cadrumo no está disponible ahora mismo. Inténtalo de nuevo
       en un momento.
     reject: No descargar
     remove: Quitar
@@ -4643,6 +4697,9 @@ ledger:
       not_due: Nada que registrar
       partial: Registrada en parte
       superseded: Registrada, corregida
+    digit_order:
+      ascending: Creciente
+      descending: Decreciente
     disposal_finding:
       claim_gap: Año con amortización sin registrar
       exemption_not_computed: Exención de la ganancia no calculada
@@ -4669,8 +4726,6 @@ ledger:
         al doble del coeficiente lineal máximo, no libertad de amortización. Ese régimen
         todavía no se calcula, así que la libertad de amortización que elegiste no
         genera ningún cargo.
-        al doble del coeficiente lineal máximo, no libertad de amortización. Ese régimen
-        no se calcula, por lo que la elección %{method} no genera ningún cargo.
       acquisition_cost_exceeds_payment: El coste indicado %{cost} (precio %{price}
         más IVA no deducible %{non_deductible_iva}) supera los %{paid} EUR que pagó
         la transacción de adquisición.
@@ -4682,6 +4737,8 @@ ledger:
         supera los %{iva_amount} de IVA de la transacción de adquisición.
       acquisition_price_exceeds_base: El precio indicado %{price} supera la base de
         %{taxable_base} de la transacción de adquisición.
+      acquisition_row_named_twice: Este elemento nombra dos veces el mismo apunte
+        del libro entre sus filas de adquisición.
       acquisition_transaction_missing: Una transacción de adquisición que indicaste
         no está en el libro mayor.
       acquisition_transaction_not_payment: Una transacción de adquisición que indicaste
@@ -4706,8 +4763,6 @@ ledger:
         uso empresarial.
       charging_infrastructure_new_only: La libertad de amortización de infraestructuras
         de recarga solo se aplica a elementos nuevos.
-      acquisition_row_named_twice: Este elemento nombra dos veces el mismo apunte
-        del libro entre sus filas de adquisición.
       charging_infrastructure_period_not_enrolled: 'Cadrumo todavía no admite esto:
         infraestructura de recarga que entra en funcionamiento en este periodo impositivo
         (LIS DA 18a.2).'
@@ -4715,6 +4770,11 @@ ledger:
         e inténtalo de nuevo.
       claim_revision_absent: Esto cambió desde que lo abriste. Actualiza e inténtalo
         de nuevo.
+      claim_superseded_replay: Esta dotación ya fue sustituida por una corrección
+        y no se puede registrar de nuevo.
+      claim_year_beyond_registry: 'Todavía no hay edición del Modelo 100 para %{tax_year}:
+        puedes registrar dotaciones hasta %{last_admitted_year}. La previsión de ese
+        año es una estimación.'
       claim_year_not_after_opening_year: 'No se puede registrar un cargo de %{claim_tax_year}:
         el importe inicial ya cubre los años hasta %{opening_tax_year}.'
       claims_exceed_amortizable_basis: El importe inicial y los cargos vigentes superan
@@ -4746,11 +4806,6 @@ ledger:
         en servicio del elemento.
       disposal_claim_past_boundary: Esta dotación llega hasta %{covered_until}, más
         allá de la baja del elemento, que termina sus dotaciones el %{boundary}.
-      claim_superseded_replay: Esta dotación ya fue sustituida por una corrección
-        y no se puede registrar de nuevo.
-      claim_year_beyond_registry: 'Todavía no hay edición del Modelo 100 para %{tax_year}:
-        puedes registrar dotaciones hasta %{last_admitted_year}. La previsión de ese
-        año es una estimación.'
       disposal_donation_refused: La donación no se admite como baja de un elemento
         de la actividad.
       disposal_excess_without_table_class: El exceso de %{tax_year} necesita un grupo
@@ -4825,6 +4880,8 @@ ledger:
       justified_amount_unvalidated: La LIS art. 12.1.e admite el importe que el contribuyente
         justifique, pero esa justificación todavía no se puede comprobar, así que
         un importe sin comprobar no puede convertirse en un cargo apto para la presentación.
+      later_affectation_out_of_order: La fecha de afectación posterior no puede ser
+        posterior a la entrada en funcionamiento del elemento ni a su baja.
       low_value_election_required: La libertad de amortización de bajo valor requiere
         una prueba expresa de la elección.
       low_value_new_only: La libertad de amortización de bajo valor solo se aplica
@@ -4853,8 +4910,6 @@ ledger:
         del inmovilizado de la actividad fuera de la estimación directa.'
       multi_shift_not_enrolled: 'Cadrumo todavía no admite esto: el coeficiente de
         varios turnos del RIS art. 4.2 en esta modalidad de estimación.'
-      later_affectation_out_of_order: La fecha de afectación posterior no puede ser
-        posterior a la entrada en funcionamiento del elemento ni a su baja.
       multi_shift_requires_extra_shift: El coeficiente de varios turnos requiere más
         de un turno normal al día.
       multi_shift_with_used_asset_unsupported: El RIS art. 4 no establece cómo se
@@ -4994,7 +5049,7 @@ ledger:
       baja: Baja registrada
       claim: Dotación registrada
       descriptor: Descripción añadida
-      revision: Revisión registrada
+      revision: Datos fiscales registrados
     method:
       approved_plan: Plan especial de amortización
       charging_infrastructure_free: Libertad de amortización, infraestructura de recarga
@@ -5025,6 +5080,9 @@ ledger:
     opening_history_status:
       known: Amortización acumulada conocida
       missing: Amortización acumulada sin informar
+    original_price_determination:
+      expert_valuation: Valoración pericial
+      known: Precio conocido
     plan_absence:
       basis_exhausted: Base totalmente amortizada
       conflict: Entra en conflicto con lo registrado
@@ -5034,12 +5092,6 @@ ledger:
       incomplete: 'Faltan datos: no se puede calcular'
       period_elapsed: Período máximo transcurrido
       unsupported: Aún no admitido
-    prior_free_depreciation_regime:
-      trlis_da_11: TRLIS, disposición adicional 11.ª
-      trlis_dt_37: TRLIS, disposición transitoria 37.ª
-    regime:
-      normal: Estimación directa normal
-      simplified: Estimación directa simplificada
     plan_advisory:
       used_element_group_limit: El último párrafo del art. 4.3 RIS limita los elementos
         usados adquiridos dentro de un grupo mercantil a la vía del precio original,
@@ -5048,6 +5100,12 @@ ledger:
         a una sociedad vinculada debe valorarse a valor de mercado según el art. 41
         LIRPF. Este aviso no examina ningún dato del vendedor y no cambia ninguna
         cifra.
+    prior_free_depreciation_regime:
+      trlis_da_11: TRLIS, disposición adicional 11.ª
+      trlis_dt_37: TRLIS, disposición transitoria 37.ª
+    regime:
+      normal: Estimación directa normal
+      simplified: Estimación directa simplificada
     register_state:
       fully_amortized: Totalmente amortizado
       in_service: En funcionamiento
@@ -9226,9 +9284,9 @@ workspace:
         registers: Tuyo, sustituye a tu registro
         your_entries: Tuyo, sustituye a lo que escribiste
     outcome:
-      failed: No se ha podido hacer ({code}).
+      failed: No se ha podido hacer. Inténtalo de nuevo.
       not_done: No se ha hecho; no ha cambiado nada.
-      refused: 'No se ha hecho: {code}. No ha cambiado nada.'
+      refused: No se ha hecho. No ha cambiado nada.
       unknown: Cadrumo no ha podido ver si terminó; puede que sí. No se vuelve a hacer.
         Vuelve a leer la declaración antes de seguir.
     page:

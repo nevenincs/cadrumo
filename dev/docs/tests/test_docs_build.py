@@ -40,6 +40,7 @@ from ..build import (
 )
 from ..build_paths import docs_build_root, docs_html_root, pin_docs_build_root
 from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+from ._sphinx_build_harness import gate_build_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -574,7 +575,7 @@ _ENVIRONMENT_UPDATE = re.compile(r"(\d+) added, (\d+) changed, (\d+) removed")
 _ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
 
 
-def test_a_changed_source_check_builds_the_stub_its_build_generates() -> None:
+def test_a_changed_source_check_builds_the_stub_its_build_generates(tmp_path: Path) -> None:
     """A changed module's API page is built from the stub the build itself writes.
 
     No stub exists before the build: the changed-page check copies ``docs/``
@@ -590,6 +591,9 @@ def test_a_changed_source_check_builds_the_stub_its_build_generates() -> None:
         cwd=_REPO_ROOT,
         capture_output=True,
         text=True,
+        # The lane's dedicated gates enforce sequence goldens and the CLI tree;
+        # this build proves that Sphinx reads the generated API stub.
+        env=gate_build_env(tmp_path),
         check=False,
     )
 

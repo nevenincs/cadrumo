@@ -896,9 +896,11 @@ application:
         what_to_do: Olvasd el az eszköz kivezetéséhez tartozó megjegyzést, és rögzítsd
           vagy javítsd, amit megnevez, ha rád vonatkozik.
       activity_asset_foral_territory:
-        what: Olyan önálló adóhatóságú területen élsz, ahol ez a nyomtatvány nem alkalmazható,
-          ezért a nyilvántartott eszközeid nem szerepelnek benne.
-        what_to_do: Ezeket az eszközöket a területed adóhatóságánál jelentsd be.
+        what: Ebben az időszakban önálló adóhatóságú területen élsz, ahol az
+          értékcsökkenésre más szabályok vonatkoznak. Ez kívül esik ezen a
+          számításon, és nem vonunk le összeget.
+        what_to_do: Az értékcsökkenést a területed szabályai szerint állapítsd meg,
+          és az ottani adóhatóságnál jelentsd be.
       activity_asset_residence_period_unknown:
         what: A profilod tartalmaz adóügyi illetőséget, de erre az időszakra nem,
           ezért az eszközeidet úgy számoljuk, mintha ez a nyomtatvány vonatkozna rád.
@@ -906,7 +908,8 @@ application:
           majd számolj újra.
       activity_asset_residence_unresolved:
         what: A rögzített adóügyi illetőséged nem olvasható, ezért a nyilvántartott
-          eszközeid nem szerepelnek benne.
+          eszközeid értékcsökkenése kívül esik ezen a számításon, és nem vonunk le
+          összeget.
         what_to_do: Add meg az adóügyi illetőségedet a profilodban, majd számolj újra.
       administrador_retencion_rate_mismatch:
         what: Egy ügyvezetői tétel levonási kulcsa eltér az alkalmazandó kulcstól.

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:0e485c6cf4bdfa6499233c56bc22090d65bcdfda786f6ab08a77ab6964f8afb3'
+body_hash: 'sha256:283bd1e6f4a24171b4b2ff6df31b1abcc2077f7fcf50daf2bf3950e2d1330a62'
 related:
   - "[[2026-09-21-assets-core-ownership-contracts-reference]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"

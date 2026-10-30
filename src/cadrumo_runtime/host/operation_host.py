@@ -18,7 +18,7 @@ from datetime import timedelta
 from importlib import import_module
 from threading import RLock
 from time import monotonic
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 from pydantic import BaseModel, JsonValue, TypeAdapter
@@ -86,6 +86,7 @@ if TYPE_CHECKING:
     from .operation_authority import ProfileWorkerOperationAuthority
 
 _PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+_PAGED_PROJECTION_DOCUMENT = TypeAdapter(dict[str, Any])
 _log = get_logger(__name__)
 _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
 # What the first composition imports: its own entry points, the persistence and
@@ -100,6 +101,16 @@ _COMPOSITION_MODULES = (
     "cadrumo.application.operations.composition",
     "cadrumo.application.user_profile.operations",
 )
+
+
+def _projection_document(result: BaseModel, *, paged: bool) -> dict[str, JsonValue]:
+    """Keep the full result shape and validate the paged document root once."""
+    serialized = result.model_dump(mode="json", serialize_as_any=True)
+    if paged:
+        # Pydantic already serialized the full model; the page encoder checks
+        # each value's JSON compatibility while producing canonical bytes.
+        return cast("dict[str, JsonValue]", _PAGED_PROJECTION_DOCUMENT.validate_python(serialized))
+    return _PROJECTION_DOCUMENT.validate_python(serialized)
 
 
 class ProfileWorkerOperationHost:
@@ -685,7 +696,7 @@ class ProfileWorkerOperationHost:
                 )
             # Polymorphic canonical projections retain their validated fields;
             # serializing as the BaseModel parameter would discard them.
-            document = _PROJECTION_DOCUMENT.validate_python(result.model_dump(mode="json", serialize_as_any=True))
+            document = _projection_document(result, paged=page is not None)
             yield document, authorization
 
     async def _require_owner(self, operation_id: OperationId, session_id: UUID) -> None:

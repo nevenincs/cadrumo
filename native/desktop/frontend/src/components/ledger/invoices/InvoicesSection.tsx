@@ -21,7 +21,6 @@ import type { CatalogueInvoice, LedgerPort } from "../../../shell/ledger";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { useFocusTarget } from "../../../shell/navigation/hooks";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { failureCode } from "../ledgerWords";
 import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
 import { INVOICE_TSV_COLUMNS, invoicesTsv } from "../transfer/tsv";
 import { dayText } from "../transfer/transferWords";
@@ -347,12 +346,7 @@ export function InvoicesSection({
         className="ledger-invoices-failed"
         icon="alert"
         description={
-          <span role="alert">
-            {t("desktop.ledger.invoices.read_failed")}{" "}
-            <code className="font-mono text-xs">
-              {failureCode(read.failure)}
-            </code>
-          </span>
+          <span role="alert">{t("desktop.ledger.invoices.read_failed")}</span>
         }
       >
         <Button variant="outline" onClick={reread}>

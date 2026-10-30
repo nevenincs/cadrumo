@@ -4,9 +4,9 @@ This page covers the quarterly Modelo 130 filing: the complete create, calculate
 check and record-filing chain, the cumulative year-to-date behaviour that makes
 each quarter build on the ones before it, and the prior-period values a later
 quarter carries in. Modelo 130 is the IRPF (personal income tax) payment on account
-for self-employed activity under estimación directa; its official title is "Impuesto sobre la Renta
+for self-employed activity under estimación directa; its official title is "<span lang="es">Impuesto sobre la Renta
 de las Personas Físicas. Actividades económicas en estimación directa. Pago
-fraccionado."
+fraccionado.</span>"
 
 `aeat` does not submit Modelo 130 to AEAT. It can produce the fichero-BOE
 file locally from the tax rules, with the software-identity fields left blank. You

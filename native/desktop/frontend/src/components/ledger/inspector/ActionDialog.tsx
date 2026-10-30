@@ -226,7 +226,6 @@ export function ActionDialog({
             <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
               <span className="grid gap-0.5">
                 {t("desktop.ledger.inspector.remove.unchecked")}
-                <code className="font-mono text-xs">{preview.code}</code>
               </span>
             </Alert>
           )}

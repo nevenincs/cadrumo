@@ -78,6 +78,21 @@ def test_hungarian_hyphenated_suffix_does_not_hide_a_misspelled_alphabetic_stem(
     assert {"Censel", "hibásszó"} <= words
 
 
+@pytest.mark.parametrize("token", ["40 %-os", "100%-ot", "50%-ban", "33%-ig", "33%-tól"])
+def test_hungarian_percentage_suffix_is_structural_but_surrounding_prose_is_checked(token: str) -> None:
+    words, excluded = locale_spelling_words(f"{token} hibásszó", "hu")
+    assert "hibásszó" in words
+    assert not {"os", "ot", "ban", "ig", "tól"}.intersection(words)
+    assert excluded >= 1
+
+
+@pytest.mark.parametrize("token", ["40%-oss", "100%-ott", "50%-bann", "33%-igg", "33%-tóll"])
+def test_malformed_hungarian_percentage_suffix_remains_spelling_input(token: str) -> None:
+    words = words_by_language(f"{token} hibásszó", "hu")["hu"]
+    assert "hibásszó" in words
+    assert token.rsplit("-", 1)[1] in words
+
+
 def test_malformed_date_and_suffix_are_not_suppressed() -> None:
     words = words_by_language("ÉÉÉÉ-HH-NNx AEAT-náll hibásszó", "hu")["hu"]
     assert {"ÉÉÉÉ", "náll", "hibásszó"} <= words
@@ -125,6 +140,54 @@ def test_exact_spanish_tax_terms_own_their_words_only(locale: str) -> None:
 def test_tax_term_prepositions_and_near_misses_stay_in_the_surrounding_language() -> None:
     assert words_by_language("de bienes de inversióm casillass misspeling") == {
         "en": {"de", "bienes", "inversióm", "casillass", "misspeling"},
+    }
+
+
+def test_hyphen_connected_spanish_tax_phrase_is_not_reassigned() -> None:
+    assert words_by_language("pre-situación catastral") == {
+        "en": {"pre", "situación", "catastral"},
+    }
+
+
+@pytest.mark.parametrize(
+    "term",
+    [
+        "domiciliación bancaria",
+        "cuenta corriente tributaria",
+        "autoliquidación conjunta",
+        "referencia catastral",
+        "situación catastral",
+        "Diseño de Registros",
+        "consulta de declaraciones presentadas",
+        "Fichero BOE",
+        "CSV cotejo",
+    ],
+)
+def test_exact_aeat_terms_in_english_ui_copy_are_checked_as_spanish(term: str) -> None:
+    expected_spanish = set(term.split()) - {"BOE", "CSV"}
+    assert words_by_language(f"Select {term} below") == {
+        "en": {"Select", "below"},
+        "es": expected_spanish,
+    }
+
+
+@pytest.mark.parametrize(
+    "term",
+    [
+        "domiciliación bancariaa",
+        "cuenta corriente tributariaa",
+        "autoliquidación conjuntas",
+        "referencia catastrala",
+        "diseño de registrosx",
+        "consulta de declaraciones presentadax",
+        "fichero BOEx",
+        "csv cotejoo",
+        "situación catastrall",
+    ],
+)
+def test_near_miss_aeat_terms_remain_english_spelling_input(term: str) -> None:
+    assert words_by_language(f"Select {term} below") == {
+        "en": {"Select", *term.split(), "below"},
     }
 
 

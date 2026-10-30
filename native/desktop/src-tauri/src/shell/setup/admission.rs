@@ -29,28 +29,128 @@ use super::wire::{ModelDownload, Refusal, Stop};
 use crate::{
     agent::{AgentHost, local_models},
     shell::provider_settings::{
-        read_status,
-        wire::{AuthKind, CommandFailure, Entry, Mode, Refusal as ProviderRefusal, Transport},
+        outcome, read_status,
+        wire::{
+            self, AuthKind, CommandFailure, Entry, Mode, Refusal as ProviderRefusal, Transport,
+        },
     },
 };
 use cadrumo_application::{
+    component::Cancellation,
     error::application::{ApplicationError, ChildRefusal, ErrorCode, Operation},
     provisioning::local_ai::models::{LocalModels, SelectedModel},
 };
 use serde_json::{Value, json};
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
-/// How long a status read that the service answered with `busy` waits before it asks again.
-const STATUS_PAUSE: Duration = Duration::from_millis(250);
+/// How long a read that the service answered with `busy` waits before it asks again.
+const READ_PAUSE: Duration = Duration::from_millis(250);
+const READ_ATTEMPTS: usize = 4;
+
+/// Only a definite busy answer is safe to collect again. An exchange error or another
+/// refusal is returned unchanged, and the last busy answer remains diagnostic evidence.
+fn read_busy(
+    mut request: impl FnMut() -> Result<Value, ApplicationError>,
+    pause: Duration,
+) -> Result<Value, ApplicationError> {
+    for attempt in 0..READ_ATTEMPTS {
+        let answer = request()?;
+        if answer["kind"] != "refused" || answer["code"] != "busy" || attempt + 1 == READ_ATTEMPTS {
+            return Ok(answer);
+        }
+        std::thread::sleep(pause);
+    }
+    unreachable!("the last attempt returns its answer")
+}
 
 /// The agent service as admission reads it: one administration exchange per read.
 pub trait Agent: Send + Sync {
     fn exchange(&self, request: Value) -> Result<Value, ApplicationError>;
+    fn generation(&self) -> Result<u64, ApplicationError>;
+    fn exchange_generation(
+        &self,
+        request: Value,
+        generation: u64,
+    ) -> Result<Value, ApplicationError> {
+        if self.generation()? != generation {
+            return Err(generation_changed());
+        }
+        let answer = self.exchange(request)?;
+        if self.generation()? != generation {
+            return Err(generation_changed());
+        }
+        Ok(answer)
+    }
 }
 
 impl Agent for AgentHost {
     fn exchange(&self, request: Value) -> Result<Value, ApplicationError> {
         self.administer(request, None)
+    }
+    fn generation(&self) -> Result<u64, ApplicationError> {
+        self.admin_generation()
+    }
+    fn exchange_generation(
+        &self,
+        request: Value,
+        generation: u64,
+    ) -> Result<Value, ApplicationError> {
+        self.administer_generation(request, generation)
+    }
+}
+
+fn generation_changed() -> ApplicationError {
+    ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+        .with_reason("agent_admin_generation_changed")
+}
+
+struct Pending<'a> {
+    cancellation: &'a Cancellation,
+    // Stops issuing reads at the owner budget. An already admitted exchange may
+    // finish within its existing queue and transport bounds; a late success is refused.
+    deadline: Instant,
+    generation: u64,
+}
+
+impl Pending<'_> {
+    fn check(&self, agent: &dyn Agent) -> Result<(), ApplicationError> {
+        if self.cancellation.is_cancelled() {
+            return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("setup_admission_cancelled"));
+        }
+        if agent.generation()? != self.generation {
+            return Err(generation_changed());
+        }
+        Ok(())
+    }
+
+    fn read(&self, agent: &dyn Agent, action: &str) -> Result<Value, ApplicationError> {
+        let mut busy = None;
+        loop {
+            self.check(agent)?;
+            if Instant::now() >= self.deadline {
+                return busy.ok_or_else(|| {
+                    ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)
+                        .with_reason("setup_admission_expired")
+                });
+            }
+            let answer = agent.exchange_generation(json!({"action": action}), self.generation)?;
+            self.check(agent)?;
+            if answer["kind"] != "refused" || answer["code"] != "busy" {
+                if Instant::now() >= self.deadline {
+                    return Err(ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)
+                        .with_reason("setup_admission_expired"));
+                }
+                return Ok(answer);
+            }
+            busy = Some(answer);
+            std::thread::sleep(
+                READ_PAUSE.min(self.deadline.saturating_duration_since(Instant::now())),
+            );
+        }
     }
 }
 
@@ -66,8 +166,53 @@ impl Admission {
 
     /// Admits the requested model alone, if it is on the requested local lane's list.
     pub fn download(&self, request: &ModelDownload) -> Result<LocalModels, Stop> {
+        self.download_with(request, None)
+    }
+
+    pub fn download_cancellable(
+        &self,
+        request: &ModelDownload,
+        cancellation: &Cancellation,
+    ) -> Result<LocalModels, Stop> {
+        self.download_with_budget(
+            request,
+            cancellation,
+            Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS),
+        )
+    }
+
+    fn download_with_budget(
+        &self,
+        request: &ModelDownload,
+        cancellation: &Cancellation,
+        budget: Duration,
+    ) -> Result<LocalModels, Stop> {
+        if cancellation.is_cancelled() {
+            return Err(unanswered(
+                ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                    .with_reason("setup_admission_cancelled"),
+                "setup_admission_unanswered",
+            ));
+        }
+        let generation = self
+            .agent
+            .generation()
+            .map_err(|error| unanswered(error, "setup_provider_status_unanswered"))?;
+        let pending = Pending {
+            cancellation,
+            deadline: Instant::now() + budget,
+            generation,
+        };
+        self.download_with(request, Some(&pending))
+    }
+
+    fn download_with(
+        &self,
+        request: &ModelDownload,
+        pending: Option<&Pending<'_>>,
+    ) -> Result<LocalModels, Stop> {
         let unusable = || Stop::Refused(Refusal::ModelSelectionUnusable);
-        let lanes = self.lanes()?;
+        let lanes = self.lanes(pending)?;
         let lane = lanes
             .iter()
             .find(|lane| {
@@ -76,10 +221,10 @@ impl Admission {
                     && lane.mode != Mode::Disabled
             })
             .ok_or_else(unusable)?;
-        let catalogue = self.catalogue()?;
+        let catalogue = self.catalogue(pending)?;
         let record = lane_record(&catalogue, lane);
         let recommended = record.is_some_and(|record| record.recommends(&request.model));
-        if !recommended && !self.added(&lane.id, &request.model)? {
+        if !recommended && !self.added(&lane.id, &request.model, pending)? {
             return Err(unusable());
         }
         let size = record
@@ -87,6 +232,11 @@ impl Admission {
             .filter(|size| *size > 0);
         // This part identifies the transfer in the engine plan, never a stored task.
         let model = SelectedModel::new("download", &request.model, size).map_err(|_| unusable())?;
+        if let Some(pending) = pending {
+            pending
+                .check(&*self.agent)
+                .map_err(|error| unanswered(error, "setup_admission_unanswered"))?;
+        }
         LocalModels::new(vec![model]).map_err(|_| unusable())
     }
 
@@ -94,9 +244,9 @@ impl Admission {
     /// the models the person manages here and a removal of the local AI takes with it. A
     /// model the person keeps off those lists is not among them.
     pub fn listed(&self) -> Result<LocalModels, Stop> {
-        let lanes = self.lanes()?;
-        let catalogue = self.catalogue()?;
-        let added = self.added_models()?;
+        let lanes = self.lanes(None)?;
+        let catalogue = self.catalogue(None)?;
+        let added = self.added_models(None)?;
         let mut names: Vec<String> = Vec::new();
         for lane in lanes
             .iter()
@@ -125,19 +275,21 @@ impl Admission {
     }
 
     /// Whether the person added `model` to `lane`'s list.
-    fn added(&self, lane: &str, model: &str) -> Result<bool, Stop> {
+    fn added(&self, lane: &str, model: &str, pending: Option<&Pending<'_>>) -> Result<bool, Stop> {
         Ok(self
-            .added_models()?
+            .added_models(pending)?
             .added_to(lane)
             .any(|added| added == model))
     }
 
     /// The models the person added to their lanes' lists. A record nobody can read lists
     /// no model.
-    fn added_models(&self) -> Result<local_models::LocalModels, Stop> {
+    fn added_models(
+        &self,
+        pending: Option<&Pending<'_>>,
+    ) -> Result<local_models::LocalModels, Stop> {
         let answer = self
-            .agent
-            .exchange(json!({"action": "local_models"}))
+            .read("local_models", pending)
             .map_err(|error| unanswered(error, "setup_local_models_unanswered"))?;
         if let Some(code) = local_models::refusal(&answer) {
             return Err(refused_by(
@@ -156,30 +308,38 @@ impl Admission {
     }
 
     /// Every lane the profile lists, with the kind of access it takes.
-    fn lanes(&self) -> Result<Vec<Entry>, Stop> {
-        read_status(
-            || self.agent.exchange(json!({"action": "status"})),
-            STATUS_PAUSE,
-        )
-        .map(|status| status.providers)
-        .map_err(|failure| match failure {
-            CommandFailure::Host(error) => unanswered(error, "setup_provider_status_unanswered"),
-            CommandFailure::Refused(refused) => refused_by(
-                matches!(
-                    refused.code,
-                    ProviderRefusal::NotSignedIn | ProviderRefusal::ProfileLocked
+    fn lanes(&self, pending: Option<&Pending<'_>>) -> Result<Vec<Entry>, Stop> {
+        let status = if let Some(pending) = pending {
+            self.read("status", Some(pending))
+                .map_err(CommandFailure::Host)
+                .and_then(|answer| wire::status(outcome(answer)))
+        } else {
+            read_status(
+                || self.agent.exchange(json!({"action": "status"})),
+                READ_PAUSE,
+            )
+        };
+        status
+            .map(|status| status.providers)
+            .map_err(|failure| match failure {
+                CommandFailure::Host(error) => {
+                    unanswered(error, "setup_provider_status_unanswered")
+                }
+                CommandFailure::Refused(refused) => refused_by(
+                    matches!(
+                        refused.code,
+                        ProviderRefusal::NotSignedIn | ProviderRefusal::ProfileLocked
+                    ),
+                    "setup_provider_status_refused",
+                    &json!({"code": refused.code}),
                 ),
-                "setup_provider_status_refused",
-                &json!({"code": refused.code}),
-            ),
-        })
+            })
     }
 
     /// cadrumo-agent's catalogue, as the service relays it.
-    fn catalogue(&self) -> Result<Value, Stop> {
+    fn catalogue(&self, pending: Option<&Pending<'_>>) -> Result<Value, Stop> {
         let answer = self
-            .agent
-            .exchange(json!({"action": "catalog"}))
+            .read("catalog", pending)
             .map_err(|error| unanswered(error, "setup_catalogue_unanswered"))?;
         if answer["kind"] == "refused" {
             return Err(refused_by(
@@ -189,6 +349,17 @@ impl Admission {
             ));
         }
         Ok(answer)
+    }
+
+    fn read(&self, action: &str, pending: Option<&Pending<'_>>) -> Result<Value, ApplicationError> {
+        if let Some(pending) = pending {
+            pending.read(&*self.agent, action)
+        } else {
+            read_busy(
+                || self.agent.exchange(json!({"action": action})),
+                READ_PAUSE,
+            )
+        }
     }
 }
 

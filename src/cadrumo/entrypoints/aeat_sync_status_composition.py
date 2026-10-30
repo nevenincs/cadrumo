@@ -1,4 +1,9 @@
-"""Bind the AEAT sync status read to one profile's encrypted stored captures."""
+"""Bind the AEAT sync status read to one profile's encrypted stored captures.
+
+Capture readers share the exact profile's
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`,
+opened lazily when a stored capture is requested.
+"""
 
 from __future__ import annotations
 

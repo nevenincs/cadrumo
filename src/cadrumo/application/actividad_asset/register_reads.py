@@ -23,8 +23,9 @@ from ...domain.renta.actividad_asset.claims import (
     effective_claims,
     last_day_covered,
 )
-from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, AmortizationMethod
+from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, AmortizationMethod, DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import ActividadAssetError
+from ...domain.renta.actividad_asset.fact_leaves import FactKind, indexed_to_step_path
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
 from ...domain.renta.actividad_asset.schedule import (
@@ -38,6 +39,7 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.public_scalar import PublicDecimal, project_scalar
 from .activity_asset_read_models import (
     NON_DEDUCTIBLE_IVA_STATE_FAMILY,
+    TIMELINE_LABELLED_FIELDS,
     ActivityAssetAcquisitionCandidate,
     ActivityAssetClaimableInterval,
     ActivityAssetClaimStaleReason,
@@ -59,6 +61,7 @@ from .activity_asset_read_models import (
     timeline_token_key,
 )
 from .disposal_calculation import DisposalBoundsReader, year_minimum
+from .fact_wording import ActivityAssetFlag, share_label
 from .history import ActivityAssetHistory
 from .legal_citations import ResolvedLegalCitations
 from .ports import ActivityAssetForecastOperation
@@ -90,6 +93,7 @@ class RegisterReadContext:
     last_admitted_year: int
     today: date
     minimum_bounds: DisposalBoundsReader
+    class_labels: Callable[[DirectEstimationRegime, int], Mapping[str, str]]
 
 
 def _walk_to_settlement(revision: ActivityAssetRevision, context: RegisterReadContext) -> tuple[WalkedYear, ...]:
@@ -427,15 +431,39 @@ def _left_service(revision: ActivityAssetRevision, today: date) -> bool:
 
 
 def _flatten(value: object, prefix: str = "") -> dict[str, str | None]:
+    """Flatten a dumped record into dotted fields; a repeated row is named by its position."""
     if isinstance(value, Mapping):
         flat: dict[str, str | None] = {}
         for name, item in cast("Mapping[str, object]", value).items():
             flat.update(_flatten(item, f"{prefix}.{name}" if prefix else str(name)))
         return flat
     if isinstance(value, list | tuple):
-        items = cast("Iterable[object]", value)
-        return {prefix: ", ".join(str(item) for item in items) or None}
+        items = tuple(cast("Iterable[object]", value))
+        if not items:
+            return {prefix: None}
+        flat = {}
+        for position, item in enumerate(items):
+            flat.update(_flatten(item, f"{prefix}[{position}]"))
+        return flat
+    if isinstance(value, bool):
+        return {prefix: ActivityAssetFlag(str(value).lower()).value}
     return {prefix: None if value is None else str(value)}
+
+
+ClassNames = Callable[[BaseModel], Mapping[str, str]]
+"""Reads the official names of the table classes a record's modality and year publish."""
+
+
+def _changed_value_label(field: str, value: str | None, names: Mapping[str, str]) -> str | None:
+    """Word a changed value that is a share or a table class, or return ``None`` for any other."""
+    if value is None:
+        return None
+    kind = TIMELINE_LABELLED_FIELDS.get(indexed_to_step_path(field))
+    if kind is FactKind.SHARE:
+        return share_label(value)
+    if kind is FactKind.CLASS:
+        return names.get(value)
+    return None
 
 
 def _changes(
@@ -443,9 +471,12 @@ def _changes(
     after: BaseModel,
     *,
     excluding: frozenset[str] = frozenset(),
+    class_names: ClassNames,
 ) -> tuple[ActivityAssetTimelineChange, ...]:
     old = {} if before is None else _flatten(before.model_dump(mode="json", exclude=set(excluding)))
     new = _flatten(after.model_dump(mode="json", exclude=set(excluding)))
+    old_names: Mapping[str, str] = dict[str, str]() if before is None else class_names(before)
+    new_names = class_names(after)
     return tuple(
         ActivityAssetTimelineChange(
             field=name,
@@ -453,10 +484,31 @@ def _changes(
             after=new.get(name),
             before_key=timeline_token_key(name, old.get(name)),
             after_key=timeline_token_key(name, new.get(name)),
+            before_label=_changed_value_label(name, old.get(name), old_names),
+            after_label=_changed_value_label(name, new.get(name), new_names),
         )
         for name in sorted({*old, *new})
         if old.get(name) != new.get(name)
     )
+
+
+def _class_names_reader(context: RegisterReadContext) -> ClassNames:
+    """Read the table class names of a revision's modality, under the year the plan limits read."""
+    cache: dict[tuple[DirectEstimationRegime, int], Mapping[str, str]] = {}
+
+    def names(record: BaseModel) -> Mapping[str, str]:
+        if not isinstance(record, ActivityAssetRevision):
+            return dict[str, str]()
+        regime = record.amortization.regime
+        tax_year = max(context.today.year, record.in_service_date.year)
+        if (regime, tax_year) not in cache:
+            try:
+                cache[regime, tax_year] = context.class_labels(regime, tax_year)
+            except (ActividadAssetError, RegistryError):
+                cache[regime, tax_year] = {}
+        return cache[regime, tax_year]
+
+    return names
 
 
 _REVISION_LINK_FIELDS = frozenset({"asset_id", "revision_number", "supersedes_revision_id"})
@@ -480,6 +532,7 @@ def element_timeline(
     claims = {item.claim_id: item for item in history.claims}
     descriptors = {item.descriptor_id: item for item in history.descriptors}
     current = current_revisions(history.revisions)[asset_id]
+    class_names = _class_names_reader(context)
     timeline: list[ActivityAssetTimelineEvent] = []
     for event in history.ordered_events():
         if event.asset_id != asset_id:
@@ -490,7 +543,7 @@ def element_timeline(
         if event.kind in {ActivityAssetEventKind.REVISION, ActivityAssetEventKind.BAJA}:
             revision = revisions[event.record_id]
             previous = revisions.get(revision.supersedes_revision_id or "")
-            changes = _changes(previous, revision, excluding=_REVISION_LINK_FIELDS)
+            changes = _changes(previous, revision, excluding=_REVISION_LINK_FIELDS, class_names=class_names)
             effect_date = (
                 revision.disposal.disposal_date
                 if event.kind is ActivityAssetEventKind.BAJA and revision.disposal is not None
@@ -523,7 +576,7 @@ def element_timeline(
                 ),
                 None,
             )
-            changes = _changes(None if earlier is None else earlier.facts, descriptor.facts)
+            changes = _changes(None if earlier is None else earlier.facts, descriptor.facts, class_names=class_names)
         timeline.append(
             ActivityAssetTimelineEvent(
                 sequence=event.sequence,

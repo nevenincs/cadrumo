@@ -55,7 +55,7 @@ const INTERNAL = [
   "digest",
 ];
 
-const BROWSER = "Browser for the tax agency website";
+const BROWSER = label("desktop.setup.item.browser");
 const LOCAL_AI = "Local AI";
 const NOT_SET_UP = "Not set up yet.";
 /** The fixture browser's download. */

@@ -934,16 +934,19 @@ application:
         what_to_do: Llegeix la nota sobre la baixa de l'element i registra o corregeix
           el que indica si t'afecta.
       activity_asset_foral_territory:
-        what: Resideixes en un territori foral, on aquest model no s'aplica, de manera
-          que els teus béns registrats no s'hi inclouen.
-        what_to_do: Declara aquests béns davant la hisenda foral del teu territori.
+        what: En aquest període resideixes en un territori foral, on l'amortització
+          es regeix per altres normes. Queda fora d'aquest càlcul i no es dedueix
+          cap xifra.
+        what_to_do: Determina l'amortització segons les normes forals del teu
+          territori i declara-la davant la seva hisenda foral.
       activity_asset_residence_period_unknown:
         what: El teu perfil recull una residència fiscal, però cap per a aquest període,
           així que els teus elements es compten com si aquest model fos aplicable.
         what_to_do: Indica al teu perfil on residies en aquest període i torna a calcular.
       activity_asset_residence_unresolved:
         what: No s'ha pogut llegir la residència fiscal registrada, de manera que
-          els teus béns registrats no s'hi inclouen.
+          l'amortització dels teus béns registrats queda fora d'aquest càlcul i no
+          es dedueix cap xifra.
         what_to_do: Indica la teva residència fiscal al teu perfil i torna a calcular.
       administrador_retencion_rate_mismatch:
         what: El tipus de retenció d'un registre d'administrador no coincideix amb

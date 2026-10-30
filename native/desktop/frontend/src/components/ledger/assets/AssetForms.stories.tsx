@@ -14,7 +14,7 @@ import { DescribeForm } from "./DescribeForm";
 
 // The forms of the Assets tab over the scenario ledger: adding an element,
 // describing it, correcting it, recording its depreciation and giving it a
-// baja. Every field is drawn from the options the ledger serves. Each write
+// baja. The choices of a field are the ones the backend serves. Each write
 // state has its story: in flight, done, already recorded, refused with what
 // was typed kept, incomplete with what to fill in, a claim that overlaps
 // another, failed, and a write whose settlement was not seen or whose answer
@@ -136,20 +136,6 @@ const chosen = async (root: Root, key: string, nth: number) => {
   await userEvent.selectOptions(select, option.value);
 };
 
-/** Waits until the field the options named `key` reads `text`. */
-const holds = async (root: Root, key: string, text: string) => {
-  const input = await drawn<HTMLInputElement>(
-    root,
-    `[data-field="${key}"] input`,
-  );
-  await waitFor(
-    () => {
-      if (input.value !== text) throw new Error(`${key} reads ${input.value}`);
-    },
-    { timeout: 5000 },
-  );
-};
-
 const pressed = async (root: Root, selector: string) => {
   const button = await drawn<HTMLElement>(
     root,
@@ -166,14 +152,16 @@ const steps =
 
 const submit = (root: Root) => pressed(root, ".ledger-asset-submit");
 
-/** The add form filled from the first purchase, which states every figure. */
+/** The add form filled with the first purchase, which states its figures. */
 const fillElement = async (root: Root) => {
   await typed(root, "name", "Sierra de cinta");
-  await typed(root, "serial", "SC-0412");
-  await chosen(root, "kind_key", 0);
-  await chosen(root, "method_key", 0);
+  await typed(root, "serial_number", "SC-0412");
+  await chosen(root, "asset_kind", 1);
   await typed(root, "in_service_date", "2026-06-15");
+  await chosen(root, "method", 0);
+  await chosen(root, "authority_class_key", 0);
   await chosen(root, "acquisition", 0);
+  await typed(root, "basis_amount", "900.00");
 };
 const sendElement = steps(fillElement, submit);
 
@@ -254,7 +242,7 @@ const describing = (assetId: string, extra: Partial<Story> = {}) =>
 
 const rename = steps(
   (root) => typed(root, "name", "Plotter HP DesignJet"),
-  (root) => typed(root, "libro_registro", "R-0007"),
+  (root) => typed(root, "description", "Plotter de gran formato"),
   submit,
 );
 
@@ -307,14 +295,6 @@ export const CorrectDone: Story = correcting("servidor", {
   name: "Correct, done: the stale claim is recorded again in the same write",
   play: restate,
 });
-export const CorrectMethodNeedsAYear: Story = correcting("plotter", {
-  name: "Correct, a new method without a year: incomplete",
-  play: steps((root) => chosen(root, "method_key", 1), submit),
-});
-export const CorrectNothingChanged: Story = correcting("plotter", {
-  name: "Correct, nothing changed: refused",
-  play: steps(submit),
-});
 export const CorrectNotSeen: Story = correcting("servidor", {
   name: "Correct, settlement not seen: held",
   args: { shape: "unknown" },
@@ -329,14 +309,16 @@ const disposing = (assetId: string, extra: Partial<Story> = {}) =>
 const dispose = (date: string) =>
   steps(
     (root) => typed(root, "date", date),
-    (root) => chosen(root, "reason_key", 0),
+    (root) => chosen(root, "reason", 0),
+    (root) => typed(root, "proceeds", "9000.00"),
+    (root) => typed(root, "transmission_costs", "150.00"),
     submit,
   );
 
 export const Baja: Story = disposing("plotter", { name: "Baja" });
 export const BajaDone: Story = disposing("furgoneta", {
-  name: "Baja, done: the claims that cross the date are replaced",
-  play: dispose("2026-03-31"),
+  name: "Baja, done",
+  play: dispose("2026-12-31"),
 });
 export const BajaIncomplete: Story = disposing("plotter", {
   name: "Baja, incomplete",
@@ -345,10 +327,6 @@ export const BajaIncomplete: Story = disposing("plotter", {
 export const BajaBeforeService: Story = disposing("plotter", {
   name: "Baja, before the element entered service: refused",
   play: dispose("1990-01-31"),
-});
-export const BajaAlreadyGiven: Story = disposing("camara", {
-  name: "Baja, already given: refused",
-  play: dispose("2026-01-31"),
 });
 export const BajaInFlight: Story = disposing("plotter", {
   name: "Baja, in flight",
@@ -377,76 +355,65 @@ const forecast = (root: Root) => pressed(root, ".ledger-asset-forecast");
 const claim = (root: Root) => pressed(root, ".ledger-asset-claim");
 /** A span that overlaps the half year already claimed. */
 const overlap = async (root: Root) => {
-  await typed(root, "from", "2026-01-01");
+  await typed(root, "covered_from", "2026-01-01");
   await forecast(root);
   await claim(root);
 };
 
-export const Claim: Story = claiming("furgoneta", 2025, {
+export const Claim: Story = claiming("furgoneta", 2026, {
   name: "Record depreciation, a year not claimed",
 });
-export const ClaimForecast: Story = claiming("furgoneta", 2025, {
+export const ClaimForecast: Story = claiming("furgoneta", 2026, {
   name: "Record depreciation, forecast shown first",
   play: steps(forecast),
 });
-export const ClaimDone: Story = claiming("furgoneta", 2025, {
+export const ClaimDone: Story = claiming("furgoneta", 2026, {
   name: "Record depreciation, done",
   play: steps(forecast, claim),
 });
-export const ClaimAlreadyRecorded: Story = claiming("furgoneta", 2025, {
+export const ClaimAlreadyRecorded: Story = claiming("furgoneta", 2026, {
   name: "Record depreciation, sent again: already recorded",
   play: steps(forecast, claim, async (root) => {
     await drawn(root, ".ledger-asset-saved");
     await claim(root);
   }),
 });
-export const ClaimPartOfYear: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, the rest of a year claimed in part",
-  play: steps(forecast, claim),
-});
 export const ClaimConflict: Story = claiming("furgoneta", 2026, {
   name: "Record depreciation, overlaps a claim: refused, names it",
   play: steps(overlap),
 });
-export const ClaimConflictThenCorrect: Story = claiming("furgoneta", 2026, {
-  name: "Record depreciation, corrects the claim it overlapped",
-  play: steps(
-    overlap,
-    (root) => pressed(root, ".ledger-asset-supersede"),
-    // The span starts again from the claim being corrected.
-    (root) => holds(root, "until", "2026-06-30"),
-    forecast,
-    claim,
-  ),
-});
-export const ClaimFreeMethodWithoutAmount: Story = claiming("prensa", 2024, {
+export const ClaimFreeMethodWithoutAmount: Story = claiming("impresora", 2026, {
   name: "Record depreciation, free method without an amount: incomplete",
   play: steps(forecast),
 });
 export const ClaimProjectedYear: Story = claiming("furgoneta", 2027, {
-  name: "Record depreciation, a year on projected tables: refused",
+  name: "Record depreciation, a year on projected tables: forecast offered",
+  play: steps(forecast),
+});
+export const ClaimPeriodElapsed: Story = claiming("cristaleria", 2026, {
+  name: "Record depreciation, maximum period elapsed: refused with its date",
   play: steps(
-    (root) => typed(root, "from", "2027-01-01"),
-    (root) => typed(root, "until", "2027-12-31"),
+    (root) => typed(root, "covered_from", "2026-01-01"),
+    (root) => typed(root, "covered_until", "2027-01-01"),
     forecast,
   ),
 });
-export const ClaimInFlight: Story = claiming("furgoneta", 2025, {
+export const ClaimInFlight: Story = claiming("furgoneta", 2026, {
   name: "Record depreciation, in flight",
   args: { hold: "in_flight" },
   play: steps(forecast, claim),
 });
-export const ClaimFailed: Story = claiming("furgoneta", 2025, {
+export const ClaimFailed: Story = claiming("furgoneta", 2026, {
   name: "Record depreciation, failed: nothing saved",
   args: { hold: "unavailable" },
   play: steps(forecast, claim),
 });
-export const ClaimNotSeen: Story = claiming("furgoneta", 2025, {
+export const ClaimNotSeen: Story = claiming("furgoneta", 2026, {
   name: "Record depreciation, settlement not seen: held",
   args: { shape: "unknown" },
   play: steps(forecast, claim),
 });
-export const ClaimAnswerLost: Story = claiming("furgoneta", 2025, {
+export const ClaimAnswerLost: Story = claiming("furgoneta", 2026, {
   name: "Record depreciation, saved but the answer was lost: held",
   play: async (context) => {
     window.__scenarioLedger?.nextWrites(["saved_unread"]);

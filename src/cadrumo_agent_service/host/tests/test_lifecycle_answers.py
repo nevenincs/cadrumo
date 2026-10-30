@@ -27,7 +27,6 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
@@ -199,9 +198,7 @@ def test_unsupported_sign_in_is_refused_before_retirement_or_auth_work(
     service = _service(storage_root, events)
     store = _SignedInStore()
     resolver = ProviderCredentialResolver(store=store, catalog_source=service._catalog)
-    service._providers = ProviderSettingsService(
-        store=store, catalog_source=service._catalog, storage_mode=storage_mode().mode
-    )
+    service._providers = ProviderSettingsService(store=store, catalog_source=service._catalog)
     service._credentials = GatewayCredentials(
         ProviderSettingsAgentCredentialSource(store=store, resolver=resolver, catalog_source=service._catalog),
         bytearray(b"g" * 43),

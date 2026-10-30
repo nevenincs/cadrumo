@@ -622,14 +622,15 @@ desktop:
     description: Versió i detalls de compilació d'aquesta instal·lació.
     desktop_host: Escriptori
     interpreter: Intèrpret
-    load_failed: No s'han pogut llegir els detalls de la versió ({code}).
+    load_failed: No s'han pogut llegir els detalls de la versió. Tanca aquesta finestra
+      i torna-la a obrir.
     loading: Llegint els detalls de la versió…
     manager: Gestor
     managers: Gestors
     open: Quant a Cadrumo
     packages: Paquets inclosos ({count})
     python: Python
-    runtime: Entorn d'execució
+    runtime: Servei en segon pla
     settings_hint: Versió i detalls de compilació
     target: Plataforma
     title: Quant a Cadrumo
@@ -785,7 +786,7 @@ desktop:
         other: Alguna cosa ha fallat
         refused: L'AEAT ho ha rebutjat
         session_ended: Accés caducat
-        unavailable: L'AEAT no ha respost
+        unavailable: L'AEAT no està disponible ara mateix
       resume: Inicia la sessió de nou
       running: Actualitzant…
       stop: Atura
@@ -875,7 +876,7 @@ desktop:
         other: Alguna cosa ha fallat.
         refused: L'AEAT ho ha rebutjat.
         session_ended: Accés caducat.
-        unavailable: L'AEAT no ha respost.
+        unavailable: L'AEAT no està disponible ara mateix.
       retry: Torna-ho a provar
       retry_failed: No s'ha pogut iniciar. Torna-ho a provar.
       retry_named: 'Torna-ho a provar: {name}'
@@ -997,10 +998,10 @@ desktop:
       conflict: El navegador encara s'està tancant. Espera un moment i torna-ho a
         provar.
       file_unavailable: Cadrumo no ha pogut fer servir aquest fitxer.
-      invalid: Cadrumo no ha pogut fer servir aquesta petició.
+      invalid: Cadrumo no ha pogut fer això.
       not_admitted: El navegador ja no és obert.
       not_signed_in: Inicia la sessió per fer servir el navegador.
-      refused: Cadrumo ha rebutjat aquesta petició.
+      refused: Cadrumo no pot fer això aquí.
       unavailable: El navegador no està disponible ara.
       unknown: Cadrumo no ha pogut saber com ha acabat.
     forward: Endavant
@@ -1181,7 +1182,7 @@ desktop:
       not_closed: Sense tancar
       not_known: Desconeguda
       opened: Data d'obertura
-      refused: 'Rebutjat: el registre no accepta aquestes dades.'
+      refused: 'No acceptat: aquestes dades no encaixen en aquest registre.'
       refused_remove: 'No s''ha tret: un compte que fan servir moviments o una designació
         només es pot tancar.'
       remove: Treu
@@ -1229,7 +1230,7 @@ desktop:
       blocker:
         action_and_edits: 'Una acció i edicions alhora: {count}'
         actions_conflict: 'Accions incompatibles: {count}'
-        cannot_clear: 'Valor que cap operació buida: {count}'
+        cannot_clear: 'Valors que no es poden buidar: {count}'
         draft_incomplete: 'Moviments nous amb dades pendents: {count}'
         exclude_and_classification: 'Exclosos i classificats alhora: {count}'
         gone: 'Eliminats o moguts des que els vas llegir: {count}'
@@ -1273,11 +1274,11 @@ desktop:
         set_share: Indica la part
         show: Mostra a la taula
       gone: Eliminat o mogut fora del període des que el vas llegir.
-      gone_mine: Mantén-lo preparat
+      gone_mine: Mantén-lo als meus canvis
       gone_movement: Un moviment que ja no es llegeix
       gone_theirs: Treu els canvis
       held: 'Retinguts: {count}'
-      held_note: 'Retinguts pels problemes de dalt, continuen preparats: {count}'
+      held_note: 'Retinguts pels problemes de dalt, continuen als teus canvis: {count}'
       keep_editing: Continua editant
       link:
         amount_differs: L'import difereix en {amount}
@@ -1299,40 +1300,40 @@ desktop:
       outcome:
         applied: Desat
         applied_new_id: Desat amb una nova referència
-        not_sent_after_part: 'No enviat: es va rebutjar sencera una part anterior.'
-        not_sent_after_refusal: 'No enviat: es va rebutjar un canvi anterior d''aquest
+        not_sent_after_part: 'No enviat: una part anterior no s''ha acceptat sencera.'
+        not_sent_after_refusal: 'No enviat: no s''ha acceptat un canvi anterior d''aquest
           moviment.'
         not_sent_parts_unnamed: 'No enviat: la divisió es va desar sense anomenar
           les seves parts, així que les seves classificacions no tenen on anar. Classifica
           les parts a la taula.'
-        not_sent_paused: 'No enviat: escriptures en pausa després d''un resultat desconegut.
-          Continua preparat.'
-        not_sent_stopped: 'No enviat: la sessió s''ha tancat. Continua preparat.'
-        refused: 'No desat: {reason} · continua preparat'
-        saved_unread: Desat, però no se'n va llegir la resposta. Torna a llegir per
-          veure-ho.
+        not_sent_paused: 'No enviat: el desament està en pausa perquè no hem pogut
+          confirmar-ne un d''anterior. Continua als teus canvis.'
+        not_sent_stopped: 'No enviat: la teva sessió ha acabat. Continua als teus
+          canvis.'
+        refused: 'No desat: {reason} · continua als teus canvis'
+        saved_unread: Desat, però encara no el podem mostrar. Actualitza per veure'l.
         settled: Desat o ja era així
         settled_value: 'Desat o ja era així: {field} és {value}'
         unchanged: El llibre ja ho tenia. No ha canviat res.
-        unchanged_value: El llibre ja tenia {field} {value} (llegit de nou). No ha
-          canviat res.
-        unknown: Pot ser que s'hagi desat o no. Les escriptures estan en pausa; torna
-          a llegir per saber-ho.
-      outcomes: El que va respondre el llibre
+        unchanged_value: El llibre ja tenia {field} {value} (actualitzat). No ha canviat
+          res.
+        unknown: No hem pogut confirmar que s'hagi desat. El desament està en pausa
+          fins que actualitzis.
+      outcomes: Què ha passat
       part_refused: 'No desat: el llibre va canviar mentre es desava. No s''ha desat
         res d''aquesta part.'
-      part_unknown: Resultat desconegut per a aquesta part sencera. Les escriptures
-        estan en pausa.
+      part_unknown: No hem pogut confirmar aquesta part sencera. El desament està
+        en pausa.
       permanent: Permanent
       permanent_note: Un vincle no es pot treure després, ni aquí ni enlloc. Marca
         cadascun del qual estiguis segur.
       progress: Progrés del desament
       progress_count: '{done} de {total} desaments'
-      read_failed: 'No s''ha pogut tornar a llegir el llibre: no s''ha desat res'
-      reading: Llegint el llibre de nou…
+      read_failed: 'No s''ha pogut actualitzar el llibre: no s''ha desat res'
+      reading: Actualitzant el llibre…
       refusal:
         changed_elsewhere: canviat en un altre lloc
-        other: el llibre l'ha rebutjat
+        other: el llibre no ho ha acceptat
       reject: 'rebutjat: {reason}'
       rows: Canvis per moviment
       save: Desa {count}
@@ -1345,7 +1346,8 @@ desktop:
       step:
         add: Moviment nou · {movement}
         bulk: 'Part {part} de {parts} · desats junts: {count}'
-      stopped: 'La sessió s''ha tancat: el que no s''ha enviat continua preparat'
+      stopped: 'La teva sessió ha acabat: el que no s''ha enviat continua als teus
+        canvis'
       summary: Resum
       summary_change: Canvi
       summary_field: Camp
@@ -1353,8 +1355,8 @@ desktop:
       tally:
         applied: Desats
         not_sent: No enviats
-        refused: Rebutjats
-        saved_unread: Desats, sense llegir
+        refused: No acceptats
+        saved_unread: Desats, encara sense mostrar
         settled: Desats o ja així
         unchanged: Sense canvis
         unknown: Resultat desconegut
@@ -1363,10 +1365,10 @@ desktop:
       tick_links: Marca cada vincle permanent per desar.
       title: Revisa i desa · {count}
       together: 'Desats junts: {count}'
-      unknown_note: 'Pot ser que s''hagi desat o no. No es reintenta res: les escriptures
-        esperen que tornis a llegir.'
+      unknown_note: No hem pogut confirmar que s'hagi desat i no ho tornarem a provar
+        pel nostre compte. El desament està en pausa fins que actualitzis.
       when_read: Quan el vas llegir
-      yours: El teu canvi preparat
+      yours: El teu canvi
     assets:
       action:
         add: Afegeix un element
@@ -1378,14 +1380,12 @@ desktop:
         fixed: Immobilitzat
         stock: Existències
       areas: Àrees d'actius
-      asset_id: Identificador de l'element
       baja:
         acquisition_value: Valor d'adquisició
         deducted: Amortització deduïda
         excess: Excés
         figures: Xifres de la baixa (no es desa res)
         findings: Observacions
-        minimum: Amortització mínima
         net_value: Valor net
         preview: Calcula les xifres
         reduction: Reducció del valor d'adquisició
@@ -1398,10 +1398,6 @@ desktop:
       column:
         amount: Import
         casilla: Casella
-        claims: Reclamacions
-        in_service: En ús des de
-        number: Revisió
-        revision: Id
         target: Declaració
         unavailable: Sense calcular
       correct:
@@ -1422,14 +1418,23 @@ desktop:
         tabs: Vistes de l'element
         timeline: Cronologia
       field:
+        acquired_condition: Estat en adquirir-lo
         acquisition: Compra
+        acquisition_no_evidence: Aquesta compra no té factura com a justificant, així
+          que no es pot indicar com l'adquisició.
         acquisition_none: Encara no hi ha compres per triar.
         acquisition_option: '{description} · {date} · {amount}'
+        acquisition_shape: Tipus d'adquisició
+        allocation_provenance: Origen de l'afectació anterior
         amount: Import
         basis: Base amortitzable
+        basis_stage: Origen de la base
+        business_use_share: Percentatge d'ús empresarial
         class: Classe de la taula
         coefficient: Coeficient
         description: Descripció
+        digit_order: Ordre dels dígits
+        digit_period: Període de la suma de dígits (anys)
         disposal_date: Últim dia de servei
         disposal_reason: Motiu
         document_kind: Tipus de document
@@ -1437,6 +1442,8 @@ desktop:
         in_service_date: En servei des de
         kind: Tipus
         later_affectation: Afectació posterior a l'activitat el
+        low_value_election: Referència de l'elecció
+        low_value_evidence: Justificant de l'elecció
         market_value: Valor de mercat (si s'indica)
         method: Mètode
         name: Nom
@@ -1444,14 +1451,22 @@ desktop:
         non_deductible_iva_hint: Escriu 0 si cap part de l'IVA és no deduïble. Buit
           no és el mateix que 0.
         not_known: 'No es coneix per a aquesta compra: indica-ho tu.'
+        opening_amount: Amortització ja deduïda
+        opening_method: Mètode aplicat abans
+        opening_status: Amortització anterior a l'entrada
+        opening_through: Coberta fins a l'exercici
         out_of_service_date: Baixa a partir del
         prior_regime: Llibertat d'amortització anterior acreditada
         proceeds: Import obtingut
+        research_evidence: Justificant de recerca i desenvolupament
         residual_value: Valor residual
         serial: Número de sèrie
         supplier_name: Proveïdor
         supplier_tax_id: NIF del proveïdor
         transmission_costs: Despeses de transmissió
+        used_determination: Com es fixa el preu originari
+        used_evidence: Justificant del preu originari
+        used_price: Preu originari
       filing:
         choose: Tria un any i un trimestre del Model 130 per veure on van les dotacions.
         unavailable: El traspàs a la declaració no està disponible.
@@ -1462,7 +1477,6 @@ desktop:
       from: Des de
       handoff: On van les reclamacions
       handoff_unavailable: '{count} elements sense calcular, no inclosos'
-      inspect: Consulta
       list:
         column:
           accumulated: Amortitzat fins ara
@@ -1478,7 +1492,7 @@ desktop:
         label: Elements
         no_name: Sense nom registrat
         summary: Anys que necessiten atenció
-        unavailable: No es pot llegir el registre ara.
+        unavailable: El registre no està disponible ara.
       plan:
         claimable: Es pot registrar del {from} al {until}
         claimable_none: No queda res per registrar
@@ -1489,7 +1503,7 @@ desktop:
           planned: Prevista
           rate: Percentatge
           replaced_by: Substituïda per
-          revision: Revisió
+          revision: Versió
           status: Estat
           year: Any
         edition: Edició de la taula {edition}
@@ -1498,56 +1512,36 @@ desktop:
         gap: 'Sense registrar: del {from} al {until}'
         in_effect: Vigent
         limits:
+          citations: Base legal ({count})
+          citations_partial: 'La llista és parcial: no s''han pogut resoldre algunes
+            disposicions.'
           ends_on: El període màxim acaba el
           maximum_coefficient: Coeficient màxim
           maximum_period: Període màxim
           minimum_coefficient: Coeficient mínim
           period_years: '{years} anys'
-          references: Base legal
           title: Límits d'aquesta elecció
         matches: Coincideix amb el quadre actual
         no_claims: No hi ha cap dotació registrada per a aquest exercici.
         no_match: Ja no coincideix amb el quadre
         projected: Projectada
-        projected_note: Les taules projectades serveixen per a la previsió i el model
+        projected_note: Les taules projectades s'usen per a la previsió i el model
           130. El model 100 no està disponible per a {year}.
         recorded_zero: Registrada com a zero
         replaced: Substituïda
       quarter: Trimestre del model 130
-      refusal:
-        refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Rebutjat:
-          l''amortització accelerada no es calcula aquí.'
-        refused_actividad_asset_claim_conflict: 'Rebutjat: xoca amb una reclamació
-          ja registrada.'
-        refused_actividad_asset_incomplete: 'Rebutjat: encara falten dades.'
-        refused_actividad_asset_unsupported: 'Rebutjat: aquest mètode encara no és
-          compatible.'
-        refused_actividad_asset_validation: 'Rebutjat: el registre d''elements no
-          ho accepta.'
       refused: El registre no ho ha admès.
       replace_claim: Substituir una dotació (opcional)
       replace_none: Registrar una dotació nova
-      revision:
-        correct: Revisió que corregeix (JSON)
-        create: Primera revisió (JSON)
-      revision_hint: Omple cada dada buida; una revisió no s'edita un cop desada.
-      revisions: Revisions
       submit:
         correct: Desa la correcció
         create: Crea l'element
-        filing: Mostra
         forecast: Calcula la previsió
       target:
         intangible_m100: Model 100 · intangible
         intangible_m130: Model 130 · intangible
         material_m100: Model 100 · material
         material_m130: Model 130 · material
-      task:
-        correct: Corregeix…
-        create: Crea…
-        filing: Per a les declaracions
-        forecast: Previsió
-      tax_year: Exercici
       timeline:
         change_added: '{field}: {after}'
         change_cleared: '{field}: es treu {before}'
@@ -1556,14 +1550,12 @@ desktop:
           changes: Canvis
           effect: Efecte
           event: Esdeveniment
-          origin: Origen
           recorded: Registrat
           sequence: Núm.
         empty: Encara no s'ha afegit res.
         not_in_calculation: No forma part del càlcul
         time_not_recorded: Hora no registrada
         used_by: 'Càlculs que la fan servir: {count}'
-      title: Elements afectes a l'activitat
       unrecognised: No reconegut
       until: Fins a
       write:
@@ -1572,6 +1564,9 @@ desktop:
         kept: No s'ha desat res. El que has escrit continua aquí.
         reused: Ja estava registrada; no s'ha afegit res.
       year: Any
+      year_estimated: '{year} (estimat)'
+      year_estimated_note: 'Aquestes xifres són estimacions: encara no hi ha taules
+        oficials per a aquest any.'
     capital:
       art108: Acollit a l'art. 108
       column:
@@ -1598,13 +1593,13 @@ desktop:
         inmueble: Immoble
         mueble: Moble
       kind_label: Tipus
-      movement: Identificador del moviment de compra
+      movement: Compra
       movement_hint: El moviment del llibre amb què es va pagar
       prorrata: Prorrata inicial
       refusal:
-        disposal_incomplete: 'Rebutjat: una transmissió necessita any i règim.'
-        duplicate_identifier: 'Rebutjat: aquesta referència ja està declarada.'
-        validation: 'Rebutjat: el registre no accepta aquestes dades.'
+        disposal_incomplete: 'No acceptat: una transmissió necessita any i règim.'
+        duplicate_identifier: 'No acceptat: aquesta referència ja està declarada.'
+        validation: 'No acceptat: aquestes dades no encaixen en el registre.'
       title: Béns d'inversió
       year: Any d'adquisició
     category:
@@ -1741,7 +1736,7 @@ desktop:
       inactive_only: Només canvien els moviments actius
       income_no_category: Ingressos {count} · sense categoria
       no_category_match: Cap categoria coincideix
-      not_saved: Preparat, sense desar
+      not_saved: Encara sense desar
       nothing: Selecciona moviments primer
       overwritten: 'abans amb una altra classificació: {count}'
       partial: només les files carregades
@@ -1757,10 +1752,10 @@ desktop:
       share_refused: '«{raw}» no és una part: escriu un percentatge, com 50 per al
         50 %.'
       skipped: 'Es queden com estan: {count}'
-      stage: Prepara per a {count}
-      staged: '{classification} · preparat per a {count}'
-      staged_category: '{category} · preparat per a {count}'
-      staged_detail: '{classification} · {detail} · preparat per a {count}'
+      stage: Afegeix als canvis per a {count}
+      staged: '{classification} · {count} encara sense desar'
+      staged_category: '{category} · {count} encara sense desar'
+      staged_detail: '{classification} · {detail} · {count} encara sense desar'
       title_business: Classifica {count} com a Empresarial
       title_business_split: Empresarial · Despeses {expenses} · Ingressos {income}
       title_category: Posa la categoria de {count}
@@ -1810,12 +1805,12 @@ desktop:
     cost:
       cancel: Cancel·la
       description: 'Cadascun carrega i desa tot el llibre: uns {minutes} min en desar.'
-      stage: Prepara igualment
+      stage: Afegeix als canvis igualment
       title: 'Desats un a un: {count}'
     count:
       to_classify: '{count} per classificar'
     counterparty:
-      answer: El que respon ara el llibre
+      answer: Valors actuals del llibre
       confirm: Confirma
       confirmed: Confirmada
       country: País
@@ -1834,7 +1829,7 @@ desktop:
         operator_assertion: confirmat per tu
         profile_authority: segons el teu perfil
       state: Estat d'identificació a efectes de l'IVA
-      tax_id: NIF / identificador fiscal
+      tax_id: Identificació fiscal (NIF)
       title: Contraparts
       undetermined: Sense determinar
       vat_state: Identificada a efectes de l'IVA a
@@ -1860,7 +1855,7 @@ desktop:
       since: Des de
       threshold: Confiança baixa per sota de
       title: Diagnòstic del model
-      tokens: Tokens
+      tokens: Text processat
       unpriced: 'Crides sense preu: {count}'
       until: Fins a
       usage: Ús per proveïdor
@@ -1881,11 +1876,11 @@ desktop:
       already_confirmed: Ja confirmada com a factura {number}
       answer: Resposta
       as_read: 'Segons la lectura: {value}'
-      attach_staged: Adjunt preparat · sense desar
+      attach_staged: Adjunt encara sense desar
       attach_to: Adjunta a {number}
       attached_to: Adjunt a {description} · {amount}
       attachment_linked: 'Factures vinculades: {count}'
-      attachment_named: Adjunt {id}
+      attachment_named: Adjunt {n}
       attachment_waiting: Pendent de revisió
       attachments_none: Cap adjunt pendent
       batch_results: Resultat per document
@@ -1894,7 +1889,7 @@ desktop:
         no_op: Ja és al llibre
         paused: 'En pausa: el lector està ocupat'
         pending_review: Pendent de la teva revisió
-        refused: Rebutjat
+        refused: No acceptat
       cancel: Cancel·la
       check: Comprova
       checked_not_saved: No s'ha desat.
@@ -2035,7 +2030,6 @@ desktop:
         unavailable: No disponible
         version: Versió {version}
       reading_changed: La lectura ha canviat. Torna-la a revisar.
-      reading_digest: Empremta de la lectura
       readings: Lectures
       reads_as: 'El document sembla: {kind}'
       ready_to_confirm: A punt per confirmar
@@ -2072,7 +2066,6 @@ desktop:
         inline: Incrustat
         local_file: Aquest ordinador
         url: Adreça web
-      source_digest: Empremta de l'origen
       tab:
         attachments: Adjunts
         folder: Entrada per carpeta
@@ -2081,7 +2074,6 @@ desktop:
         review: Per revisar
         sent: Enviat fora de l'ordinador
       tabs: Documents
-      technical: Detalls tècnics
       the_value: El valor correcte
       these_are: Aquests documents són
       this_is: Això és
@@ -2152,7 +2144,7 @@ desktop:
       refusal:
         ambiguous_grouping: '«{raw}» es pot llegir de dues maneres: escriu-lo sense
           separador de milers, com 1000 o 1.5.'
-        cannot_clear: 'Cap operació el buida: escriu un altre valor'
+        cannot_clear: Això no es pot buidar. Escriu-hi un altre valor.
         comma_decimal: '«{raw}» usa coma decimal: escriu {suggestion}.'
         currency_symbol: '«{raw}» porta símbol de moneda: escriu només el número.'
         date_not_in_calendar: «{raw}» no és un dia del calendari.
@@ -2278,9 +2270,9 @@ desktop:
       unknown: Resultat desconegut
       unknown_note: 'Pot ser que el fitxer s''hagi escrit. No es torna a enviar res:
         revisa el fitxer abans d''exportar un altre cop.'
-      unknown_title: 'Resultat de l''exportació desconegut: escriptures en pausa'
-      unknown_untold: '{file}: tornar a llegir no aclareix si es va escriure; revisa
-        el fitxer'
+      unknown_title: 'No hem pogut confirmar l''exportació: el desament està en pausa'
+      unknown_untold: '{file}: no hem pogut confirmar que s''hagi creat. Revisa el
+        fitxer.'
       without_staged: Exporta sense ells
     failed: No s'ha pogut llegir el llibre.
     field:
@@ -2334,18 +2326,18 @@ desktop:
       choose: Tria…
       close: Tanca
       date_hint: Any-mes-dia, p. ex. 2026-10-31
-      failed: Sense resposta · {code}
+      failed: No ha funcionat
       'no': 'No'
       none: Cap
       percent_hint: Escriu 70 per al 70 %
       points_hint: Percentatge, de 0 a 100
       reading: S'està llegint…
-      refused: Rebutjat · {code}
-      reread: Torna a llegir
+      refused: No desat.
+      reread: Actualitza
       save: Desa
       saving: S'està desant…
       two_letters: Dues lletres, p. ex. ES
-      unknown: 'Resultat desconegut: potser s''ha desat.'
+      unknown: No podem saber si això s'ha desat. Actualitza per comprovar-ho.
       year_hint: Quatre xifres, p. ex. 2024
       'yes': Sí
     grid: Moviments, {period}
@@ -2399,7 +2391,7 @@ desktop:
         skipped: Omesos per regla
         split: Dividits
         stashed: Apartats
-      dry_run: Fes la prova
+      dry_run: Fes la previsualització
       expense: Despeses de l'activitat, EUR
       income: Ingressos de l'activitat, EUR
       links: Enllaços amb declaracions
@@ -2411,8 +2403,7 @@ desktop:
       of_active: Dels actius
       one_sided: Enllaços de factura d'un sol costat
       rebuild: Reconstrueix els enllaços
-      rebuilt: 'Reconstruït · enllaços: {links} · revisions: {revisions} · obsolets
-        trets: {removed}'
+      rebuilt: 'Reconstruït. Enllaços actualitzats: {links}.'
       reset: Zona de perill · reinicia el llibre
       reset_blocked: El reinici està bloquejat
       reset_blocker: Model {modelo} · {year} {period} · {state} cita moviments
@@ -2420,7 +2411,7 @@ desktop:
       reset_reason: Motiu
       reset_reason_hint: Queda al registre d'auditoria · fins a {limit} caràcters
       reset_what: Treu tots els moviments i els documents adjunts. Primer es fa una
-        prova.
+        previsualització.
       reset_would: 'Trauria · moviments: {movements} · documents: {documents}'
       run_check: Fes la comprovació
       stale: Declaracions per recalcular
@@ -2453,13 +2444,13 @@ desktop:
       book_created: 'Factures creades: {count}'
       book_kind: Factures del llibre
       book_no_preview: Els llibres de factures no tenen previsualització
-      book_no_preview_note: Les files es comproven en crear-se. Les rebutjades es
-        llisten després amb el número de fila i el motiu; la resta es conserva. {kind};
-        país {country}.
-      book_note: 'Files: {rows} · ja al catàleg: {skipped} · rebutjades: {refused}'
+      book_no_preview_note: Les files es comproven en crear-se. Les no acceptades
+        es llisten després amb el número de fila i el motiu; la resta es conserva.
+        {kind}; país {country}.
+      book_note: 'Files: {rows} · ja al catàleg: {skipped} · no acceptades: {refused}'
       book_refused: El llibre no s'ha importat
       bound_note: La importació fa servir exactament aquests fitxers. Si un canvia
-        després d'aquesta previsualització, es rebutja.
+        després d'aquesta previsualització, no s'accepta.
       cancel: Cancel·la
       choose_accounts: Tria el compte de cada fitxer.
       choose_file: Tria un fitxer…
@@ -2479,7 +2470,7 @@ desktop:
       count:
         duplicates: Possibles duplicats
         new: Noves
-        refused: Fitxers rebutjats
+        refused: Fitxers no acceptats
         rows: Files
         skipped: Ja al llibre
       country: País de la contrapart
@@ -2565,7 +2556,7 @@ desktop:
       refusal:
         empty_directory: La carpeta no conté cap extracte.
         file_limit: Més de 128 fitxers alhora.
-        other: 'No importat: {code}'
+        other: No importat. Revisa el fitxer i torna-ho a provar.
         own_account_mismatch: Les seves files indiquen un altre compte.
         reader_unavailable: 'No s''ha llegit: la IA local, que llegeix aquest fitxer,
           no està a punt.'
@@ -2574,7 +2565,7 @@ desktop:
         result_limit: 'Més de 4.096 files: importa''l per parts.'
         source_changed: 'Ha canviat després de la previsualització: torna a previsualitzar-lo.'
         transaction_validation: No s'ha pogut llegir com a extracte bancari.
-      refused_rows: Files rebutjades
+      refused_rows: Files no acceptades
       remove: Treu {name}
       row: Fila
       show_documents: Revisa a Documents
@@ -2617,8 +2608,8 @@ desktop:
       affects: afecta {declaration}
       allocate:
         prorrata: Referència de prorrata
-        stage: Prepara l'assignació
-        staged: Assignació preparada · sense desar
+        stage: Afegeix l'assignació als canvis
+        staged: Assignació encara sense desar
         title: Assigna una part professional
       by:
         derived: Calculat per Cadrumo
@@ -2631,28 +2622,28 @@ desktop:
       classification: Classificació
       clear: Buida el valor
       close: Amaga l'inspector
-      copied_id: ID del moviment copiat
-      copy_id: Copia l'ID complet
+      copied_id: Referència del moviment copiada
+      copy_id: Copia la referència
       derive:
         choose: Tria una categoria d'IVA
         stage: Calcula imports
         staged: Cadrumo calcularà els imports de {category} en desar
-        staged_toast: Imports preparats · sense desar
+        staged_toast: Imports encara sense desar
         title: Calcula l'IVA segons una categoria
       documents:
         active_only: Només els moviments actius admeten documents.
         add_file: Afegeix des d'aquest ordinador
-        add_staged: '{file} · adjunt preparat'
+        add_staged: '{file} · adjunt encara sense desar'
         adding: Afegir {file} · sense desar
         advisory: 'Encara no hi ha factura de compra. Només és un avís: mai impedeix
           desar ni calcular.'
         attach_existing: Adjunta un document
-        attach_staged: Adjunt preparat · sense desar
+        attach_staged: Adjunt encara sense desar
         attaching: Adjuntar {file} · sense desar
         detach: Treu
         detach_named: Treu {file}
-        detach_pending: Treure preparat
-        detach_staged: Treure preparat · sense desar
+        detach_pending: Treure, encara sense desar
+        detach_staged: Treure, encara sense desar
         detaching: Treure {file} · sense desar
         hint: Un PDF o una imatge, llegit d'aquest ordinador i desat xifrat.
         no_free: No hi ha cap altre document al llibre
@@ -2661,7 +2652,7 @@ desktop:
         purchase_invoice: Factura de compra · afegida {date}
       drop: Descarta
       earlier: Decisions anteriors
-      earlier_ids: IDs anteriors
+      earlier_ids: Referències anteriors
       effective_date: Data efectiva
       empty: buit
       eur_same: 'Igual: moviment en euros'
@@ -2690,7 +2681,7 @@ desktop:
         stashed: Apartat
         updated: Actualitzat
       file_row: '{file}, fila {row}'
-      fingerprint: Empremta d'importació
+      fingerprint: Referència d'importació
       fix:
         derive: Calcula imports
         go: Corregeix
@@ -2718,7 +2709,7 @@ desktop:
         issued: Emesa
         issued_on: Data d'emissió
         link: Vincula · permanent
-        link_staged: Vincle preparat · permanent en desar
+        link_staged: Vincle encara sense desar · permanent en desar
         linked: Moviments
         linked_count: '{count} vinculats'
         none: Cap factura del catàleg liquida aquest import.
@@ -2732,9 +2723,9 @@ desktop:
         received: Rebuda
         rival: '{movement} la liquida igual de bé.'
         show_other: Mostra l'altre
-        staged: Vincle amb {invoice} preparat · permanent en desar
-        staged_for: Preparada per a {movement}
-        taken: '{invoice} està preparada per a {movement}'
+        staged: Vincle amb {invoice} encara sense desar · permanent en desar
+        staged_for: Ja és als teus canvis per a {movement}
+        taken: '{invoice} ja és als teus canvis per a {movement}'
         transfer: Les transferències entre els teus comptes no tenen factura.
       issue_count: '{count} per corregir'
       last_saved: Últim desat
@@ -2750,8 +2741,8 @@ desktop:
         incoming_only: Només per a rendes que un no resident obté a Espanya.
         payer_id: Pagador
         payer_mode: Tipus de pagador
-        stage: Prepara dades del Model 210
-        staged: Dades del Model 210 preparades · sense desar
+        stage: Afegeix les dades del Model 210 als canvis
+        staged: Dades del Model 210 encara sense desar
         tipo_renta_code: Tipus de renda
         title: Model 210
       merge:
@@ -2763,14 +2754,14 @@ desktop:
       mode_movement: Moviment
       model:
         about: Una proposta del model local. Només tu l'aproves.
-        approval_staged: Aprovació preparada · sense desar
+        approval_staged: Aprovació encara sense desar
         approve: Aprova
         ask: Pregunta al model
         ask_how: Pregunta al model per
         ask_with_share: Pregunta amb aquesta part
         asking: Preguntant al model
         busy: Una revisió anterior d'aquest moviment encara és oberta. Torna-ho a
-          provar d'aquí a un moment o respon-la on es va demanar.
+          provar d'aquí a un moment o acaba-la on es va obrir.
         confidence: '{value} de confiança'
         continue_reject: Pregunta amb aquest motiu
         derived: calculat per Cadrumo
@@ -2780,20 +2771,20 @@ desktop:
           split: Suggereix una divisió
         no_review: El model no ha donat cap proposta per revisar.
         reason: Per què no és correcta
-        refused: El llibre ha rebutjat la petició
+        refused: No s'ha pogut fer
         reject: Rebutja
         rejected_before: Vas rebutjar un suggeriment anterior per a aquest moviment.
         rejecting: Rebutjant · {reason}
-        rejection_staged: Rebuig preparat · sense desar
+        rejection_staged: Rebuig encara sense desar
         share_needed: Indica una part per aprovar
-        stage_rejection: Prepara el rebuig
+        stage_rejection: Afegeix el rebuig als canvis
         title: Suggeriment del model
-        unavailable: El model no ha pogut respondre
+        unavailable: El model d'IA no està disponible ara mateix
       more: Més
       more_tax: Més camps fiscals
-      movement_id: ID del moviment
+      movement_id: Referència del moviment
       moves_to: Passa a {period}
-      new_identity: Es desa amb un ID nou
+      new_identity: Referència nova
       no_counterparty: Sense contrapart
       no_match: Cap coincidència
       no_rate: Sense tipus de canvi
@@ -2836,7 +2827,7 @@ desktop:
       selection:
         actions: Accions
         approve_all: Aprova les {count} llegides
-        approved_all: 'Aprovacions preparades: {count}'
+        approved_all: 'Aprovacions encara sense desar: {count}'
         ask_each: Pregunta al model per cada un
         asked: 'Suggeriments per llegir: {count}'
         body: Moviments seleccionats
@@ -2859,8 +2850,8 @@ desktop:
         set_title: Per a tots · s'aplica en triar
         skipped: 'Omesos: {count}'
         skipped_reason: 'Omesos, {reason}: {count}'
-        stage_anyway: Prepara igualment
-        staged: 'Preparats: {count} · sense desar'
+        stage_anyway: Afegeix als canvis igualment
+        staged: 'Encara sense desar: {count}'
         title: '{count} seleccionats'
         totals: Totals
       share: Part professional
@@ -2894,12 +2885,12 @@ desktop:
         remainder: El que falta
         remove_part: Treu la part {part}
         share_needed: Indica una part professional per a la part {part}.
-        stage: Prepara la divisió
-        staged: Divisió en {count} parts preparada · sense desar
+        stage: Afegeix la divisió als canvis
+        staged: Divisió en {count} parts, encara sense desar
         title: Divideix en parts
         unclassified: Classifica després
         under: A les parts els falten {amount} per al moviment.
-      stage: Prepara
+      stage: Afegeix als canvis
       technical: Detalls tècnics
       unread: No s'ha pogut llegir
       unsaved: 'Canvis: {count} · sense desar'
@@ -2916,22 +2907,7 @@ desktop:
         title: Usat a
         verified: Verificat (segellat)
     inventory:
-      acquisition: Justificació del cost de compra (JSON)
-      acquisition_hint: 'Opcional: la contraprestació i el seu IVA, els costos imputables
-        i la seva justificació'
-      actividad: Identificador de l'activitat
-      authority: Registre de l'autoritat del tancament (JSON)
-      authority_file: Llegeix d'un fitxer…
-      authority_file_too_large: El fitxer ocupa més d'1 MiB.
-      authority_file_unread: No s'ha pogut llegir el fitxer.
-      authority_hint: La decisió, el recompte físic si n'hi ha i l'enllaç amb el tancament
-        anterior
-      authority_unread: No és un objecte JSON.
-      base: Base imposable
-      book: Llibre
-      books: Llibres d'existències {year}
       column:
-        actividad: Activitat
         date: Data
         kind: Tipus
         method: Valoració
@@ -2940,11 +2916,6 @@ desktop:
         quantity: Unitats
         unit_cost: Cost unitari
       date: Data
-      empty: No hi ha llibre d'existències de {year}.
-      form:
-        closing: Autoritat del tancament de {actividad} · {year}
-        create: Llibre d'existències nou de {year}
-        movement: Afegeix un moviment a {actividad} · {year}
       kind:
         cogs: Cost de vendes
         count: Recompte
@@ -2956,29 +2927,22 @@ desktop:
         fifo: FIFO
         pmp: Preu mitjà ponderat
       method_label: Mètode de valoració
-      movement_id: Identificador del moviment
-      movements: Moviments afegits aquí
       opening: Valor de les existències inicials
-      preview: Valoració prèvia
       preview_note: 'Una previsualització: no es registra res.'
       quantity: Unitats
       refusal:
         activity_conflict: 'Rebutjat: aquesta activitat ja té llibre aquell any.'
         activity_not_found: 'Rebutjat: no hi ha llibre per a aquesta activitat i any.'
-        closing_authority_conflict: 'Rebutjat: ja hi ha registrada una altra autoritat
-          del tancament.'
-        closing_authority_invalid: 'Rebutjat: el registre no correspon a aquest llibre.'
-        duplicate_movement_id: 'Rebutjat: aquest identificador ja és al llibre.'
+        closing_authority_conflict: 'Rebutjat: ja hi ha guardada una altra decisió
+          de tancament.'
+        closing_authority_invalid: 'Rebutjat: la decisió de tancament no correspon
+          a aquest llibre.'
+        duplicate_movement_id: 'Rebutjat: aquest moviment ja és al llibre.'
         invalid_valuation_method: 'Rebutjat: no és un mètode de valoració.'
         inventory_validation: 'Rebutjat: el llibre no ho accepta.'
-      task:
-        closing: Registra l'autoritat del tancament
-        create: Llibre nou
-        movement: Afegeix un moviment
-      title: Llibres d'existències
       unit_cost: Cost unitari
-      valuation: Existències finals {closing} · cost de vendes {cogs} · {method}
-      year: Any d'existències
+      valuation: '{name} · existències finals {closing} · cost de vendes {cogs} ·
+        {method}'
     invoice:
       linked: Vinculada
     invoices:
@@ -3029,7 +2993,7 @@ desktop:
       duplicate: Ja és al catàleg.
       empty: Encara no hi ha factures. Afegeix-ne una o importa un llibre de factures.
       empty_filtered: Cap factura no coincideix.
-      failed: 'No s''ha enviat: {code}. No s''ha desat res.'
+      failed: No s'ha desat res. Torna-ho a provar.
       field:
         counterparty_country: País
         counterparty_name: Contrapart
@@ -3044,7 +3008,7 @@ desktop:
         notes: Notes
         operation_date: Data d'operació
         operation_type: Clau del model 349
-        payment_id: Identificador del pagament
+        payment_id: Referència del pagament
         payment_status: Pagament
         printed_total: Total imprès
         recargo: Recàrrec d'equivalència
@@ -3071,7 +3035,7 @@ desktop:
         tax_id_optional: Opcional en una simplificada emesa
       identity_fixed: El tipus, el número, la data d'emissió, el NIF, la moneda, els
         totals i les línies són fixos.
-      invalid: 'No s''ha afegit: el llibre la rebutja per no vàlida.'
+      invalid: 'No s''ha afegit: el llibre no l''accepta perquè no és vàlida.'
       invariant:
         counterparty: Nom de la contrapart
         country: País de dues lletres
@@ -3176,7 +3140,8 @@ desktop:
         too_long: 'Massa llarg: com a màxim {limit} caràcters.'
         too_many_decimals: '"{raw}": com a màxim {limit} decimals.'
         zero: Ha de ser més gran que zero.
-      refused: 'No s''ha desat: el llibre ho ha rebutjat ({code}).'
+      refused: 'No s''ha desat: el llibre no ho ha acceptat. Revisa les dades i torna-ho
+        a provar.'
       remove: Elimina
       remove_confirm: Elimina la factura
       remove_linked: Una factura vinculada es queda
@@ -3295,12 +3260,12 @@ desktop:
         si són pagaments parcials.
       read_failed: No s'ha pogut llegir
       repair: Repara · permanent
-      repair_staged: Reparació preparada · sense desar
+      repair_staged: Reparació encara sense desar
       settles: Liquida {amount}
       settles_withheld: Liquida {amount} ({total} − {withheld} de retenció)
       show_other: Mostra {description}
-      staged: 'Vincles preparats sense desar: {count}'
-      staged_toast: Vincle preparat · permanent en desar
+      staged: 'Vincles encara sense desar: {count}'
+      staged_toast: Vincle encara sense desar · permanent en desar
       suggestions: Parelles suggerides
       title: Per conciliar
     maximize: Maximitza el llibre
@@ -3316,35 +3281,35 @@ desktop:
       blanks_note: Una cel·la en blanc no canvia res; només Supr buida.
       cancel: Cancel·la
       changes: Cel·les que canvien
-      description: 'Per enganxar: {rows} · no es prepara res fins que enganxis'
+      description: 'Per enganxar: {rows} · no canvia res fins que enganxis'
       done: 'Cel·les enganxades: {count} · sense desar'
-      done_refused: 'Cel·les enganxades: {count} · rebutjades, marcades a la taula:
+      done_refused: 'Cel·les enganxades: {count} · no acceptades, marcades a la taula:
         {refused}'
       dropped: Més enllà de l'última fila o columna
       first_refusal: '{column}: {reason}'
       identity_note: Canviar la descripció, l'import, la data o el compte dona al
         moviment una nova referència en desar-lo.
       new_identity: Nova referència
-      refused: Rebutjades
+      refused: No acceptades
       refused_empty: Res a enganxar
       refused_unclosed_quote: 'No enganxat: hi ha unes cometes sense tancar'
       single_writes: Desats un a un
       title_into: Enganxar a {columns}?
     paused:
-      counted_not_saved: 'Preparat de nou: {count}'
+      counted_not_saved: 'De nou als teus canvis: {count}'
       counted_saved: 'Desat: {count}'
-      counted_undetermined: 'Sense aclarir, continua preparat: {count}'
+      counted_undetermined: 'Sense aclarir, continuen als teus canvis: {count}'
       dismiss: Tanca
-      found_not_saved: Sense desar, preparat de nou · {movement}
+      found_not_saved: Sense desar, de nou als teus canvis · {movement}
       found_saved: Desat · {movement}
-      found_undetermined: '{movement}: la lectura no ho aclareix; continua preparat
-        i desar-lo de nou és el mateix desament'
+      found_undetermined: '{movement}: no podem saber si s''ha desat. Continua als
+        teus canvis i desar-lo de nou no el desa dues vegades.'
       repeatable: '{movement}: potser s''ha fet; repetir-ho fa el mateix'
-      reread: Torna a llegir
-      saved_unread: 'Desat, resposta sense llegir: escriptures en pausa'
-      saved_unread_reason: 'Torna a llegir primer: no es va llegir la resposta d''un
+      reread: Actualitza
+      saved_unread: Desat, encara sense mostrar. El desament està en pausa
+      saved_unread_reason: 'Actualitza primer: encara no podem mostrar el teu darrer
         desament'
-      title: 'Resultat desconegut: escriptures en pausa'
+      title: 'No hem pogut confirmar un desament: el desament està en pausa'
       unsaved: Sense desar · {movement}
       untold: '{movement}: no se sap si s''ha desat; continua en pausa'
       what_movements: 'Moviments: {count}'
@@ -3414,25 +3379,27 @@ desktop:
       reference: Referència
       reference_hint: L'autorització o proposta en què es basa
       refusal:
-        provenance_not_electable: 'Rebutjat: aquest origen es calcula, no es tria.'
-        provenance_required: 'Rebutjat: indica d''on surt el percentatge.'
-        reference_not_permitted: 'Rebutjat: aquest origen no té cap document a què
-          referir-se.'
-        reference_required: 'Rebutjat: aquest origen necessita la referència del seu
-          document.'
-        regulated_override_standing: 'Rebutjat: hi ha un percentatge autoritzat vigent.'
-        sector_prior_definitive_absent: 'Rebutjat: el sector no té definitiva anterior.'
-        sector_settlement_entry_absent: 'Rebutjat: el sector no té cap entrada per
-          liquidar.'
-        seed_existing_blocked: 'Rebutjat: aquest exercici ja té una entrada.'
-        seed_source_absent: 'Rebutjat: l''any anterior no té percentatge definitiu.'
-        seed_source_blocked: 'Rebutjat: l''origen de l''any anterior està bloquejat.'
-        validation: 'Rebutjat: el registre no ho accepta.'
+        provenance_not_electable: 'No acceptat: aquest origen es calcula, no es tria.'
+        provenance_required: 'No acceptat: indica d''on surt el percentatge.'
+        reference_not_permitted: 'No acceptat: aquest origen no té cap document a
+          què referir-se.'
+        reference_required: 'No acceptat: aquest origen necessita la referència del
+          seu document.'
+        regulated_override_standing: 'No acceptat: hi ha un percentatge autoritzat
+          vigent.'
+        sector_prior_definitive_absent: 'No acceptat: el sector no té cap percentatge
+          definitiu de l''any anterior.'
+        sector_settlement_entry_absent: 'No acceptat: el sector no té cap entrada
+          per liquidar.'
+        seed_existing_blocked: 'No acceptat: aquest exercici ja té una entrada.'
+        seed_source_absent: 'No acceptat: l''any anterior no té percentatge definitiu.'
+        seed_source_blocked: 'No acceptat: l''origen de l''any anterior està bloquejat.'
+        validation: 'No acceptat: no encaixa en el registre.'
       regime:
         especial: Especial
         general: General
       sector: Sector
-      sector_id: Identificador del sector
+      sector_id: Sector
       sectors: 'Sectors diferenciats:'
       seed_what: Llegeix el percentatge definitiu registrat de {prior} i el trasllada
         a {ejercicio}.
@@ -3456,7 +3423,7 @@ desktop:
         usage_ratio_home_area: Superfície de l'habitatge afecta
         usage_ratio_personal: Ús en l'activitat
       not_set: Sense fixar
-      refused: 'Rebutjat: aquesta categoria no té percentatge.'
+      refused: 'No acceptat: aquesta categoria no té percentatge.'
       set: Fixa
       set_named: Fixa el percentatge de {category}
       table: Percentatges {year}
@@ -3483,7 +3450,7 @@ desktop:
       ready: Llest per calcular · comprovat a les {time}
       reason_action: Els mostra i com corregir-los
       reasons: Motius de preparació
-      staged: '{count} preparats'
+      staged: '{count} encara sense desar'
       title: Preparació
       unsaved: 'Canvis sense desar no inclosos: {count}'
     readiness_filter:
@@ -3535,9 +3502,7 @@ desktop:
     registers:
       area:
         accounts: Comptes propis
-        assets: Elements afectes
         capital: Béns d'inversió
-        inventory: Existències
         prorrata: Prorrata
       areas: Apartats de registres
     retry: Torna-ho a provar
@@ -3569,7 +3534,7 @@ desktop:
       areas: Apartats de regles
       category: Categoria
       classification: Classifica com a
-      classify_now: Classifica'ls també ara (pendent)
+      classify_now: Classifica'ls també ara (encara sense desar)
       column:
         added: Afegida
         category: Categoria
@@ -3604,15 +3569,16 @@ desktop:
       refusal:
         category: No és una categoria de despesa.
         empty_pattern: Escriu les paraules que cal cercar.
-        invalid_command: El llibre ha rebutjat la regla.
+        invalid_command: El llibre no ha acceptat la regla.
         invalid_pattern: El llibre no pot llegir aquesta expressió.
-      run_note: La previsualització no escriu res; aplicar-les queda pendent com qualsevol
-        canvi.
-      run_staged: 'Aplicació de regles pendent · Moviments: {count} · sense desar'
+      run_note: La previsualització no canvia res. Aplicar-les s'afegeix als teus
+        canvis, com qualsevol altre.
+      run_staged: 'Regles afegides als teus canvis · Moviments: {count} · encara sense
+        desar'
       run_title: Aplica les regles
       save: Desa la regla
       saved_toast: Regla desada · ordre {place}
-      stage_run: Deixa-ho pendent
+      stage_run: Afegeix l'aplicació als teus canvis
       title: Regles de classificació
       what: Cerca paraules a la descripció del moviment i decideix la seva classificació.
       words: La descripció conté
@@ -3626,6 +3592,7 @@ desktop:
       placeholder: Cerca
       show: Mostra
     section:
+      assets: Actius
       documents: Documents
       health: Estat
       invoices: Factures
@@ -3689,6 +3656,94 @@ desktop:
       needs_fixing_count: Per corregir · {count}
       pending: Per classificar
       skipped: Omès per una regla
+    stock:
+      action:
+        add_book: Afegir un llibre d'existències
+        add_movement: Afegir un moviment
+        preview: Veure una previsualització de la valoració
+      books: Llibres d'existències de {year}
+      column:
+        cost: Cost
+        name: Activitat
+      cost_kind:
+        customs_duty: Aranzels
+        freight: Transport
+        handling: Manipulació
+        insurance: Assegurança
+        other_directly_attributable: Un altre cost de la compra
+        professional_fee: Honoraris professionals
+      count:
+        books: 'Llibres d''existències: {count}'
+        retired: 'Donats de baixa: {count}'
+      empty: Encara no hi ha llibre d'existències de {year}. Afegeix-ne un per començar
+        a comptar el que tens.
+      extra:
+        add: Afegir un cost addicional
+        iva: IVA d'aquest cost
+        kind: Tipus de cost
+        none: No has afegit costos addicionals.
+        price: Import sense IVA
+        remove: Treure aquest cost addicional
+        share: Part del seu IVA que pots deduir (%)
+      field:
+        cost_hint: Omple el cost per unitat o el total, el que tinguis.
+        extra_total: Costos addicionals sense IVA, en total
+        iva: IVA del preu
+        name: Activitat
+        name_hint: L'activitat del negoci a la qual pertanyen aquestes existències,
+          com tu l'anomenis.
+        price: Preu sense IVA
+        recoverable: IVA que pots deduir, en total
+        share: Part d'aquest IVA que pots deduir (%)
+        total: Cost total de la compra
+        total_cost: Cost total sense IVA
+        unrecoverable: IVA que no pots deduir (se suma al cost)
+      form:
+        book: Nou llibre d'existències de {year}
+        movement: Afegir un moviment a {name} · {year}
+      load_failed: No s'han pogut carregar les teves existències.
+      load_refused: Les teves existències no es poden mostrar ara mateix.
+      loading: Carregant les teves existències…
+      movements_none: Aquest llibre encara no té moviments. Afegeix-ne el primer.
+      movements_of: Moviments de {name}
+      movements_unlisted: 'Moviments d''aquest llibre: {count}. Els anteriors encara
+        no es poden llistar; els nous apareixen aquí a mesura que els afegeixes.'
+      proof:
+        change_file: Triar un altre fitxer
+        check_hint: Qualsevol fitxer que mostri la revisió, com una nota o un full
+          de càlcul.
+        choose_file: Triar un fitxer
+        cost_check: Fitxer que demostra que has revisat els costos addicionals
+        extra: Fitxer que demostra aquest cost
+        file_too_large: El fitxer pesa més de 50 MB.
+        file_unread: No s'ha pogut obrir el fitxer.
+        iva_check: Fitxer que demostra que has revisat quant d'IVA pots deduir
+        kind: Tipus de fitxer
+        price: Fitxer que demostra el preu
+      proof_kind:
+        contract: Contracte
+        customs_declaration: Declaració de duanes
+        insurance_document: Pòlissa d'assegurança
+        other_acquisition_evidence: Una altra prova de la compra
+        purchase_invoice: Factura de compra
+        transport_document: Albarà de transport
+      purchase:
+        extras: Costos addicionals de la compra
+        price: Preu de la compra
+        proofs: Fitxers que ho demostren
+        proofs_hint: Adjunta els fitxers. Cadrumo desa una marca que identifica cada
+          fitxer, no el fitxer en si.
+        totals: Totals
+        totals_hint: Escriu els totals als quals arriben les xifres de dalt. Han de
+          coincidir amb aquestes xifres.
+      refused: El llibre d'existències no ho ha acceptat. No s'ha desat res.
+      retired: Donat de baixa
+      submit:
+        book: Afegir el llibre
+        movement: Afegir el moviment
+      summary: Resum d'existències
+      title: Existències
+      unavailable: Les teves existències no estan disponibles ara mateix.
     sum:
       in: Entrades {amount}
       out: Sortides {amount}
@@ -3702,8 +3757,8 @@ desktop:
       in_parts: es desa per parts
       name: '{count} sense desar: {what}'
       new: 'Nous: {count}'
-      paused: escriptures en pausa
-      paused_reason: 'Torna a llegir primer: un desament té un resultat desconegut'
+      paused: desament en pausa
+      paused_reason: 'Actualitza primer: no hem pogut confirmar el teu darrer desament'
       region: Canvis sense desar
       review: Revisa
       review_count: Revisa i desa · {count}
@@ -3758,7 +3813,7 @@ desktop:
     source_python: Python
     state_available: cadrumo.log
     state_missing_detail: Encara no hi ha cap fitxer de registre. Els registres apareixeran
-      quan un procés de Cadrumo n'escrigui un.
+      quan Cadrumo en creï un.
     state_unreadable: No es pot llegir el registre
     visible_count: '{visible} de {total} entrades'
     warnings: 'Avisos: {count}'
@@ -3833,26 +3888,22 @@ desktop:
     pending: Respon primer la pregunta oberta.
     refused:
       credentials: Aquest enllaç porta un usuari o una contrasenya, així que no s'obre.
-      fragment: Aquest enllaç té una part amb «#», i els enllaços de Cadrumo no en
-        tenen mai.
+      fragment: Aquest enllaç no és vàlid.
       link: Cadrumo no pot obrir aquest enllaç.
-      malformed: Aquest enllaç no està escrit com els enllaços de Cadrumo.
-      not_a_view_link: Aquest enllaç de Cadrumo no porta a cap vista.
+      malformed: Aquest enllaç no és vàlid.
+      not_a_view_link: Aquest enllaç no és vàlid.
       not_implemented: Aquí no hi ha res que pugui obrir {view}.
       param: Aquest enllaç demana una cosa que la seva vista no pot mostrar.
-      param_malformed: Aquest enllaç apunta a un element, però el seu identificador
-        no té la forma correcta.
+      param_malformed: Aquest enllaç no és vàlid.
       param_not_accepted: Aquest enllaç demana a {view} una cosa que no pot mostrar.
-      percent_encoding: Aquest enllaç té caràcters codificats, i els enllaços de Cadrumo
-        no en tenen mai.
-      query: Aquest enllaç té opcions després de «?» que Cadrumo no entén.
-      too_long: Aquest enllaç és massa llarg per ser un enllaç de Cadrumo.
-      too_many_segments: El camí d'aquest enllaç és més llarg que el de qualsevol
-        vista.
-      unknown_param: Aquest enllaç demana una opció que cap vista no té.
+      percent_encoding: Aquest enllaç no és vàlid.
+      query: Aquest enllaç no és vàlid.
+      too_long: Aquest enllaç no és vàlid.
+      too_many_segments: Aquest enllaç no és vàlid.
+      unknown_param: Aquest enllaç no és vàlid.
       unknown_view: Aquest enllaç porta a una vista que aquesta versió de Cadrumo
         no té.
-      uppercase: Els enllaços de Cadrumo van en minúscules, i aquest no.
+      uppercase: Aquest enllaç no és vàlid.
     sign_in: Inicia la sessió per obrir {view}.
   palette:
     actions: Accions
@@ -3956,14 +4007,14 @@ desktop:
       identity: Afegeix el NIF o NIE
       incoming: AEAT
       preserve: Conserva la resposta desada.
-      profile_mismatch: La sol·licitud censal no coincideix amb el perfil de la sessió.
-        Actualitza el teu perfil i, si persisteix, comunica el codi mostrat.
+      profile_mismatch: Aquestes dades del Cens no coincideixen amb el perfil amb
+        què has iniciat la sessió. Actualitza el teu perfil.
       pull: Consulta les dades censals
       reading: Consultant les dades censals…
       ready: L’accés a l’AEAT està configurat. Podràs revisar les dades obtingudes
         abans de desar-les.
-      refused: El servei ha rebutjat la sincronització. Comprova el perfil i l’accés
-        a l’AEAT abans de tornar-ho a provar.
+      refused: No s'ha pogut iniciar la sincronització. Comprova el teu perfil i els
+        ajustos d'accés a l'AEAT i torna-ho a provar.
       reject: Descarta els canvis
       review_count: 'Valors de l’AEAT per revisar: {count}'
       review_hint: Els canvis es mostren a sota, al seu lloc. No es desa res fins
@@ -3978,9 +4029,8 @@ desktop:
         que acabi i, si continua bloquejada, comunica el codi mostrat.
       title: Sincronitza amb l’AEAT
       unavailable: No s’ha pogut comprovar la sincronització. Prova d’actualitzar.
-      unknown: No s’ha pogut confirmar l’estat de la sincronització. Actualitza per
-        tornar-lo a comprovar. No en podràs iniciar cap altra fins que es resolgui
-        aquesta operació.
+      unknown: No hem pogut confirmar que la sincronització hagi acabat. Actualitza
+        per comprovar-ho. No se'n pot iniciar cap altra fins que aquesta es resolgui.
       unknown_start: No s’ha pogut confirmar si s’ha iniciat la sincronització. No
         n’iniciïs cap altra; contacta amb suport i indica el codi unknown.
       unsupported: Aquest accés requereix una interacció disponible al terminal. Cancel·la
@@ -4105,7 +4155,7 @@ desktop:
       input: no s'ha pogut enviar el que has escrit
       other: ha passat alguna cosa inesperada
       output: no s'ha pogut llegir la seva sortida
-      slow: ha trigat massa a respondre
+      slow: ha trigat massa
       start: no s'ha pogut iniciar el programa
       stopped: el programa s'ha aturat amb un error
   settings:
@@ -4220,13 +4270,13 @@ desktop:
     refused_model_selection_unusable: Cadrumo no pot baixar aquest model. Revisa la
       llista de models de la IA local a la configuració de l'agent i torna-ho a provar.
     refused_not_cancellable: Ara no es pot aturar la configuració. Acabarà aviat.
-    refused_not_pending: Aquest pla ja no espera resposta.
+    refused_not_pending: Aquest pla ja no t'està esperant.
     refused_not_signed_in: Primer inicia la sessió al teu perfil.
     refused_other: No s'ha pogut contactar amb la configuració. Torna-ho a provar
       d'aquí a un moment.
     refused_plan_changed: El que cal ha canviat. Revisa el nou pla i després aprova'l.
-    refused_unavailable: Els serveis de Cadrumo no responen. Torna-ho a provar d'aquí
-      a un moment.
+    refused_unavailable: Cadrumo no està disponible ara mateix. Torna-ho a provar
+      d'aquí a un moment.
     reject: No baixis res
     remove: Elimina
     remove_confirm: Vols esborrar aquest navegador del teu ordinador? Pots tornar-lo
@@ -4639,6 +4689,9 @@ ledger:
       not_due: Res a registrar
       partial: Registrada en part
       superseded: Registrada, corregida
+    digit_order:
+      ascending: Creixent
+      descending: Decreixent
     disposal_finding:
       claim_gap: Any amb amortització sense registrar
       exemption_not_computed: Exempció del guany no calculada
@@ -4659,6 +4712,12 @@ ledger:
       customs_document: Document duaner
       invoice: Factura
       reception: Recepció
+    electric_propulsion:
+      bev: Vehicle elèctric de bateria (BEV)
+      fchv: Vehicle híbrid de pila de combustible (FCHV)
+      fcv: Vehicle de pila de combustible (FCV)
+      phev: Vehicle híbrid endollable (PHEV)
+      reev: Vehicle elèctric d'autonomia estesa (REEV)
     errors:
       accelerated_da18_depreciation: Per a l'exercici %{tax_year}, la LIS DA 18 concedeix
         als vehicles elèctrics nous i als punts de recàrrega amortització accelerada
@@ -4676,6 +4735,8 @@ ledger:
         supera els %{iva_amount} d'IVA de la transacció d'adquisició.
       acquisition_price_exceeds_base: El preu indicat %{price} supera la base de %{taxable_base}
         de la transacció d'adquisició.
+      acquisition_row_named_twice: Aquest element anomena dues vegades el mateix apunt
+        del llibre entre les seves files d'adquisició.
       acquisition_transaction_missing: Una transacció d'adquisició que has indicat
         no és al llibre major.
       acquisition_transaction_not_payment: Una transacció d'adquisició que has indicat
@@ -4700,13 +4761,6 @@ ledger:
         empresarial.
       charging_infrastructure_new_only: La llibertat d'amortització d'infraestructures
         de recàrrega només s'aplica a elements nous.
-      claim_superseded_replay: Aquesta dotació ja ha estat substituïda per una correcció
-        i no es pot tornar a registrar.
-      claim_year_beyond_registry: 'Encara no hi ha edició del Model 100 per a %{tax_year}:
-        pots registrar dotacions fins a %{last_admitted_year}. La previsió d''aquest
-        any és una estimació.'
-      acquisition_row_named_twice: Aquest element anomena dues vegades el mateix apunt
-        del llibre entre les seves files d'adquisició.
       charging_infrastructure_period_not_enrolled: 'Cadrumo encara no admet això:
         infraestructura de recàrrega que entra en funcionament en aquest període impositiu
         (LIS DA 18a.2).'
@@ -4714,6 +4768,11 @@ ledger:
         i torna-ho a provar.
       claim_revision_absent: Això ha canviat des que ho vas obrir. Actualitza i torna-ho
         a provar.
+      claim_superseded_replay: Aquesta dotació ja ha estat substituïda per una correcció
+        i no es pot tornar a registrar.
+      claim_year_beyond_registry: 'Encara no hi ha edició del Model 100 per a %{tax_year}:
+        pots registrar dotacions fins a %{last_admitted_year}. La previsió d''aquest
+        any és una estimació.'
       claim_year_not_after_opening_year: 'No es pot registrar un càrrec de %{claim_tax_year}:
         l''import inicial ja cobreix els anys fins a %{opening_tax_year}.'
       claims_exceed_amortizable_basis: L'import inicial i els càrrecs vigents superen
@@ -4811,8 +4870,6 @@ ledger:
         la llibertat d'amortització triada arribaria a {investment}, per sobre del
         límit de {investment_cap}; un element no es reparteix entre amortització lliure
         i ordinària.
-      later_affectation_out_of_order: La data d'afectació posterior no pot ser posterior
-        a l'entrada en funcionament de l'element ni a la seva baixa.
       job_creation_new_only: La llibertat d'amortització per creació d'ocupació només
         s'aplica a elements nous (LIS art. 102.1).
       job_creation_reduced_size_evidence_required: La llibertat d'amortització per
@@ -4820,6 +4877,8 @@ ledger:
       justified_amount_unvalidated: La LIS art. 12.1.e admet l'import que el contribuent
         justifiqui, però aquesta justificació encara no es pot comprovar, així que
         un import sense comprovar no pot esdevenir una càrrega apta per a la presentació.
+      later_affectation_out_of_order: La data d'afectació posterior no pot ser posterior
+        a l'entrada en funcionament de l'element ni a la seva baixa.
       low_value_election_required: La llibertat d'amortització de baix valor requereix
         una prova expressa de l'elecció.
       low_value_new_only: La llibertat d'amortització de baix valor només s'aplica
@@ -4986,7 +5045,10 @@ ledger:
       baja: Baixa registrada
       claim: Dotació registrada
       descriptor: Descripció afegida
-      revision: Revisió registrada
+      revision: Dades fiscals registrades
+    flag:
+      'false': 'No'
+      'true': Sí
     method:
       approved_plan: Pla especial d'amortització
       charging_infrastructure_free: Llibertat d'amortització, infraestructura de recàrrega
@@ -5017,6 +5079,13 @@ ledger:
     opening_history_status:
       known: Amortització acumulada coneguda
       missing: Amortització acumulada sense informar
+    original_price_determination:
+      expert_valuation: Valoració pericial
+      known: Preu conegut
+    ownership_mode:
+      fractional_direct: Titularitat per quotes (directa)
+      sole: Titularitat única
+      spousal_community: Societat de guanys
     plan_absence:
       basis_exhausted: Base totalment amortitzada
       conflict: Entra en conflicte amb el que hi ha registrat
@@ -5033,6 +5102,10 @@ ledger:
         El seu abast per a una persona física no està resolt. Una compra a una societat
         vinculada s'ha de valorar a valor de mercat segons l'art. 41 LIRPF. Aquest
         avís no examina cap dada del venedor i no canvia cap xifra.
+    plan_approval_kind:
+      amended_with_consent: Aprovat amb les modificacions acceptades
+      express: Aprovació expressa
+      silence: Aprovació per silenci
     prior_free_depreciation_regime:
       trlis_da_11: TRLIS, disposició addicional 11a
       trlis_dt_37: TRLIS, disposició transitòria 37a
@@ -5043,10 +5116,41 @@ ledger:
       fully_amortized: Totalment amortitzat
       in_service: En funcionament
       out_of_service: Donat de baixa
+    renewable_documentation_kind:
+      energy_efficiency_certificate: Certificat d'eficiència energètica
+      low_voltage_certificate: Certificat d'instal·lacions elèctriques de baixa tensió
+      operating_authorisation: Autorització d'explotació
+      renewable_gas_registration: Inscripció d'instal·lació de gas renovable
+      surplus_registration: Inscripció d'excedents (RAIPREE)
+      thermal_process_registration: Inscripció o informe de procés tèrmic
+    renewable_installation_purpose:
+      electricity_self_consumption: Electricitat per a autoconsum
+      thermal_own_use: Energia tèrmica per a ús propi
     stale_reason:
       authority_changed: Les taules van canviar després d'aquesta dotació
       revision_changed: L'element es va corregir després d'aquesta dotació
       schedule_unavailable: Ara no es pot calcular el quadre
+    vehicle_category:
+      aircraft: Aeronau
+      all_terrain: Tot terreny
+      leisure_boat: Embarcació d'esbarjo
+      mixed_vehicle: Vehicle mixt adaptable
+      moped: Ciclomotor
+      motorcycle: Motocicleta
+      other_vehicle: Un altre vehicle
+      passenger_car: Turisme
+      trailer: Remolc
+    vehicle_listed_use:
+      commercial_representative_travel: Desplaçaments de representants de comerç
+      habitual_onerous_hire: Lloguer habitual onerós
+      mixed_vehicle_goods_transport: Transport de mercaderies (vehicle mixt)
+      paid_driving_or_pilot_instruction: Ensenyament de conducció o pilotatge amb
+        contraprestació
+      paid_passenger_transport: Transport de viatgers amb contraprestació
+    vehicle_private_use:
+      accessory_non_working_time: Ús privat accessori fora de l'horari laboral
+      none: Sense ús privat
+      shared: Ús compartit amb ús privat
   evidence:
     reader:
       operation_failed: Ha fallat l'operació del lector de justificants
@@ -9213,9 +9317,9 @@ workspace:
         registers: Teu, substitueix el teu registre
         your_entries: Teu, substitueix el que vas escriure
     outcome:
-      failed: No s'ha pogut fer ({code}).
+      failed: No s'ha pogut fer. Torna-ho a provar.
       not_done: No s'ha fet; no ha canviat res.
-      refused: 'No s''ha fet: {code}. No ha canviat res.'
+      refused: No s'ha fet. No ha canviat res.
       unknown: Cadrumo no ha pogut veure si ha acabat; potser sí. No es torna a fer.
         Torna a llegir la declaració abans de continuar.
     page:
@@ -9392,54 +9496,4 @@ workspace:
         expand: Mostra les caselles
         go: Obre la casella
         open: Obre l'origen
-      lead: En calcular, les caselles s'emplenen amb aquestes dades. Corregeix un
-        valor on es desa i torna a calcular.
-      no_source: Aquesta casella no s'omple des d'un altre apartat.
-      no_surface: «{source}» no té un apartat propi per obrir.
-      none: Aquesta declaració no té caselles per mostrar.
-      none_found: '{source}: no s''ha trobat res'
-      not_here: Des d'aquí no es pot obrir aquest apartat; obre'l des del menú principal.
-      not_yet: '{source}: encara sense consultar'
-      title: D'on surten els valors
-    stage_refused:
-      not_editable: Aquesta casella no es pot canviar així.
-      nothing_to_clear: No hi ha cap valor teu per buidar en aquesta casella.
-      nothing_to_confirm: Aquesta casella no té cap valor suposat per confirmar.
-      nothing_to_restore: Aquesta casella ja mostra el valor del seu origen.
-    staged:
-      clear: (es buidarà)
-      restore: (torna a l'origen)
-    step:
-      calculate: Calcular
-      file: Registrar presentació
-      fill: Emplenar
-      review: Comprovar
-    summary:
-      blocked: No s'han pogut calcular
-      calculated: Calculades a partir d'altres caselles
-      entered: Introduïdes per tu
-      imported: Portades de les teves dades
-      needs_you: Et necessiten
-      not_calculated: 'Encara sense calcular: les caselles s''emplenen quan es calcula.'
-      title: Aquesta declaració
-    surface:
-      correct:
-        declarations: Obre aquella declaració i corregeix-ho allà
-        ledger: Obre els teus registres i corregeix-ho allà
-        profile: Obre el teu perfil i corregeix-ho allà
-        withholding: Obre les retencions i corregeix-ho allà
-      open:
-        declarations: Obrir aquella declaració
-        ledger: Obrir els teus registres
-        profile: Obrir el teu perfil
-        withholding: Obrir les retencions
-    todo:
-      failed: 'Caselles que no s''han pogut calcular: {count}'
-      failed_lead: Esperen alguna cosa que li faltava al càlcul. Tria'n una per veure
-        què.
-      none: Res d'aquest model no et necessita.
-      title: Pendent
-    value:
-      not_applicable: no s'aplica
-      not_known_yet: Encara no se sap
-    was: 'abans: {value}'
+      lead: En calcu

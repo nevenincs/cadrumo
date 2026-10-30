@@ -14,6 +14,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetRegisterState
+from cadrumo.application.actividad_asset.disposal_calculation import project_disposal_calculation
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
@@ -88,7 +89,6 @@ def test_an_identical_baja_retry_returns_the_recorded_history() -> None:
     operations.dispose(_ASSET, _sale())
     before = repository.history
 
-    with pytest.raises(ActividadAssetClaimConflictError, match="disposal_already_recorded"):
     assert operations.dispose(_ASSET, _sale()) == before
     assert repository.history == before
 
@@ -99,6 +99,7 @@ def test_a_differing_second_baja_is_refused() -> None:
     operations.dispose(_ASSET, recorded)
     before = repository.history
 
+    with pytest.raises(ActividadAssetClaimConflictError, match="disposal_already_recorded"):
         operations.dispose(_ASSET, recorded.model_copy(update={"proceeds": recorded.proceeds + Decimal("1.00")}))
 
     assert repository.history == before
@@ -153,6 +154,16 @@ def test_a_missing_claim_never_refuses_and_the_figures_use_the_minimum() -> None
     # 2,000.00 less 100.00 of costs, less the net value 1,480.00.
     assert calculation.result == Decimal("420.00")
     assert [finding.kind.value for finding in calculation.findings] == ["claim_gap", "exemption_not_computed"]
+
+    view = project_disposal_calculation(_sale(), calculation)
+
+    assert [finding.label_key for finding in view.findings] == [
+        "ledger.actividad_asset.disposal_finding.claim_gap",
+        "ledger.actividad_asset.disposal_finding.exemption_not_computed",
+    ]
+    assert [finding.kind for finding in view.findings] == [finding.kind for finding in calculation.findings]
+    assert [finding.tax_year for finding in view.findings] == [2026, None]
+    assert all(finding.effect_on_cost is None for finding in view.findings)
 
 
 def test_a_preview_writes_nothing_and_sees_the_shortened_charge() -> None:

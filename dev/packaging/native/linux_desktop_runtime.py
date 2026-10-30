@@ -38,14 +38,15 @@ DEPENDENCY_INPUTS = {
     # flate2 with zlib-rs, ruzstd, tar, toml, zeroize, sha2 0.11) are pure Rust or
     # statically linked: the Linux-target graph gains no sys-crate, and the platform crate
     # reaches only libc there. The locked GTK/WebKit sys-crates and rfd's GTK3-only backend
-    # are unchanged (rfd 0.16.1; no ashpd).
+    # are unchanged (rfd 0.16.1; no ashpd). A direct `log` dependency was added
+    # to the desktop crate; it is pure Rust and does not alter native providers.
     # The diagnostics test-support feature is empty and is selected only by tests;
-    # the distributed desktop still selects only application/platform. Dependency
-    # tables and the reviewed desktop lock are unchanged, so the prior provider
-    # evidence remains applicable.
+    # the distributed desktop still selects only application/platform. Desktop `log`
+    # is pure Rust. The refreshed lock and manifest digests bind both changes; neither
+    # adds a native dependency or distributed feature, so provider evidence remains valid.
     # This is source/feature evidence, not new artifact or minimum-host proof.
-    "native/desktop/src-tauri/Cargo.lock": "242ee51e510b32d9f872d405561b09530658fa7bfb89c063a3f61069fd6d836c",
-    "native/desktop/src-tauri/Cargo.toml": "be225b1da025a41482cddf26b757c13ecc418dec51f4997ff91b846db0d224a8",
+    "native/desktop/src-tauri/Cargo.lock": "17d460237dd1348bd33a812c3efe351b898f9f1bcce6f16a7d377dd53b10d9b2",
+    "native/desktop/src-tauri/Cargo.toml": "4d01f52a680bedd276929a8a249f630ff172b3e1f67dd7417469f086efda4a54",
     "native/application/Cargo.toml": "45b431600a5da6caa057865bdb39afc3aae4f9512d51d598f9d04e380cc03499",
     "native/platform/Cargo.toml": "45e633cefce86ce0a233670b94839e23bca14aba65b8d1c3b870718f50d01c37",
 }

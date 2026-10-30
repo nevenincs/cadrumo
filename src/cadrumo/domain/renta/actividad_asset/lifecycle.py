@@ -21,6 +21,7 @@ from ....core.money.rounding import round_to_cents
 from .disposal import ActivityAssetDisposal
 from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
+from .fact_leaves import Share
 from .identity_cache import CachedIdentityModel
 from .vehicle_affectation import VehicleAffectation
 
@@ -174,10 +175,10 @@ class ActivityAssetBasis(BaseModel):
     construction_cost: Decimal | None = None
     land_cost: Decimal | None = None
     ownership_mode: OwnershipMode | None = None
-    ownership_share: Decimal | None = None
+    ownership_share: Share | None = None
     office_area: Decimal | None = None
     total_area: Decimal | None = None
-    business_use_share: Decimal | None = None
+    business_use_share: Share | None = None
     prior_allocation_provenance: str | None = Field(default=None, min_length=1, max_length=512)
 
     @field_validator(

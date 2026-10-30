@@ -277,8 +277,8 @@ def m100_activity_asset_projection(
     if not current:
         return ActivityAssetProjection()
     territory = _territory(context, operation, as_of=period.end_date)
-    if (refused := _territory_refusal(territory, resolver_id)) is not None:
-        return refused
+    if (outside := _outside_this_calculation(territory, resolver_id)) is not None:
+        return outside
     observations = _m100_claim_observations(history.claims, period=period)
     reached = {observation.target_casilla_id for observation in observations}
     forecast = _Forecast(context, operation)
@@ -338,8 +338,8 @@ def m130_activity_asset_projection(
     if not current:
         return ActivityAssetProjection()
     territory = _territory(context, operation, as_of=period.end_date)
-    if (refused := _territory_refusal(territory, resolver_id)) is not None:
-        return refused
+    if (outside := _outside_this_calculation(territory, resolver_id)) is not None:
+        return outside
     agrarian = frozenset(
         TipoActividad(code)
         for code in tipo_actividad_code_set(
@@ -913,7 +913,7 @@ def _residence_period_findings(
     )
 
 
-def _territory_refusal(
+def _outside_this_calculation(
     territory: ResidenceTerritory,
     resolver_id: str,
 ) -> ActivityAssetProjection | None:
@@ -927,10 +927,10 @@ def _territory_refusal(
                     source_kind=resolver_id,
                     resolver_id=resolver_id,
                     message=(
-                        "the recorded tax residence could not be read, so it is not established that Modelos 100 "
-                        "and 130 of the AEAT apply; the activity-asset register contributes nothing to this calculation"
+                        "the recorded tax residence could not be read, so it is not established which rules govern "
+                        "the amortization of these assets; it is outside this calculation and no figure is deducted"
                     ),
-                    remedy="state the tax residence in the profile",
+                    remedy="state the tax residence in the profile, then calculate again",
                 ),
             ),
         )
@@ -945,10 +945,10 @@ def _foral_projection(resolver_id: str) -> ActivityAssetProjection:
                 source_kind=resolver_id,
                 resolver_id=resolver_id,
                 message=(
-                    "the taxpayer resides in a foral territory, where Modelos 100 and 130 of the AEAT do not apply; "
-                    "the activity-asset register contributes nothing to this calculation"
+                    "the taxpayer resides in a foral territory in this period, whose own rules govern the amortization "
+                    "of these assets; it is outside this calculation and no figure is deducted"
                 ),
-                remedy="declare these assets with the foral Hacienda of your territory",
+                remedy="determine the amortization under the foral rules of your territory",
             ),
         ),
     )
@@ -1127,7 +1127,7 @@ class UnregisteredAmortizationRow(BaseModel):
 
 @dataclass(frozen=True, slots=True)
 class LedgerExpenseRegisterClassification:
-    """Which ledger rows the register withholds, and which it refuses to leave unexplained."""
+    """Which ledger rows the register withholds, and which it will not leave unexplained."""
 
     withheld: tuple[RegisterOwnedAcquisition, ...]
     unregistered: tuple[UnregisteredAmortizationRow, ...]
@@ -1159,7 +1159,7 @@ def classify_ledger_expenses_against_asset_register(
       category it carries; the transaction and its IVA facts are untouched.
     - Any other row whose own destination is an activity amortization casilla is
       an element the register does not know. It is never deducted, and the
-      caller turns it into a blocking note whose remedy is to register the element.
+      caller turns it into a non-blocking finding whose remedy is to register the element.
 
     Returns:
         The withheld rows in asset order and the unregistered rows in ledger order.
@@ -1288,7 +1288,7 @@ def unregistered_amortization_row_diagnostics(
     *,
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Project each unowned amortization row into its blocking note.
+    """Project each unowned amortization row into its non-blocking finding.
 
     Returns:
         One note per row, naming the row and the remedy.

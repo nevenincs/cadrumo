@@ -8,7 +8,7 @@
 use cadrumo_application::{
     diagnostics::{
         Diagnostics,
-        webview::{MonitorOperation, ReadFailures, WebviewFailure},
+        webview::{MonitorOperation, ReadFailures, WebviewFailure, WebviewIdentity},
     },
     error::application::{ApplicationError, ErrorCode, Operation, Result},
 };
@@ -72,11 +72,12 @@ pub fn restrict<R: Runtime>(webview: &Webview<R>, diagnostics: Arc<Diagnostics>)
 /// telemetry is recorded but does not end or reload an otherwise usable shell.
 pub fn observe<R: Runtime>(webview: &Webview<R>, diagnostics: Arc<Diagnostics>) {
     use cadrumo_platform::desktop::webview_process::{self, MonitorOperation as PlatformOperation};
+    let identity = webview_identity(webview.label());
     let reporter = diagnostics.clone();
     let dispatched = webview.with_webview(move |platform| {
         let sink = reporter.clone();
         let result = webview_process::monitor(&platform.controller(), move |failure| {
-            sink.webview_failure(process_fact(failure));
+            sink.webview_failure(process_fact(identity, failure));
         });
         if let Err(failure) = result {
             let operation = match failure.operation {
@@ -84,6 +85,7 @@ pub fn observe<R: Runtime>(webview: &Webview<R>, diagnostics: Arc<Diagnostics>) 
                 PlatformOperation::Register => MonitorOperation::Register,
             };
             reporter.webview_failure(WebviewFailure::MonitorUnavailable {
+                webview: identity,
                 operation,
                 hresult: Some(failure.hresult),
             });
@@ -91,17 +93,28 @@ pub fn observe<R: Runtime>(webview: &Webview<R>, diagnostics: Arc<Diagnostics>) 
     });
     if dispatched.is_err() {
         diagnostics.webview_failure(WebviewFailure::MonitorUnavailable {
+            webview: identity,
             operation: MonitorOperation::Dispatch,
             hresult: None,
         });
     }
 }
 
+fn webview_identity(label: &str) -> WebviewIdentity {
+    match label {
+        "startup" => WebviewIdentity::Startup,
+        "main" => WebviewIdentity::Main,
+        _ => WebviewIdentity::Other,
+    }
+}
+
 fn process_fact(
+    identity: WebviewIdentity,
     failure: cadrumo_platform::desktop::webview_process::ProcessFailure,
 ) -> WebviewFailure {
     let reads = failure.read_failures;
     WebviewFailure::process(
+        identity,
         failure.kind,
         failure.reason,
         failure.exit_code,
@@ -120,6 +133,31 @@ mod tests {
     use super::*;
 
     #[test]
+    fn window_attribution_is_closed_and_survives_process_projection() {
+        use cadrumo_platform::desktop::webview_process::{ProcessFailure, ReadFailures as Reads};
+        for (label, expected) in [
+            ("startup", "startup"),
+            ("main", "main"),
+            ("private-url-profile-canary", "other"),
+        ] {
+            let fact = process_fact(
+                webview_identity(label),
+                ProcessFailure {
+                    kind: Some(0),
+                    reason: Some(0),
+                    exit_code: Some(-2_147_483_645),
+                    read_failures: Reads::default(),
+                },
+            );
+            let encoded = serde_json::to_value(fact).unwrap();
+            assert_eq!(encoded["webview"], expected);
+            assert_eq!(encoded["kind"], "browser_process_exited");
+            assert_eq!(encoded["exitCode"], -2_147_483_645_i32);
+            assert!(!encoded.to_string().contains("canary"));
+        }
+    }
+
+    #[test]
     fn a_missing_settings_interface_is_an_unsupported_platform() {
         verdict(Ok(())).unwrap();
         let missing =
@@ -135,15 +173,18 @@ mod tests {
     #[test]
     fn process_observations_preserve_partial_metadata_without_claiming_a_child_exit() {
         use cadrumo_platform::desktop::webview_process::{ProcessFailure, ReadFailures as Reads};
-        let fact = process_fact(ProcessFailure {
-            kind: Some(2),
-            reason: None,
-            exit_code: Some(259),
-            read_failures: Reads {
-                reason_hresult: Some(-2_147_467_259),
-                ..Reads::default()
+        let fact = process_fact(
+            WebviewIdentity::Main,
+            ProcessFailure {
+                kind: Some(2),
+                reason: None,
+                exit_code: Some(259),
+                read_failures: Reads {
+                    reason_hresult: Some(-2_147_467_259),
+                    ..Reads::default()
+                },
             },
-        });
+        );
         let diagnostics = Diagnostics::default();
         diagnostics.webview_failure(fact);
         let snapshot = diagnostics.snapshot(u64::MAX);

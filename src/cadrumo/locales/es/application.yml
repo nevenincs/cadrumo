@@ -937,17 +937,20 @@ application:
         what_to_do: Lee la nota sobre la baja del elemento y registra o corrige lo
           que indica si te afecta.
       activity_asset_foral_territory:
-        what: Resides en un territorio foral, donde este modelo no se aplica, así
-          que tus bienes registrados no se incluyen.
-        what_to_do: Declara estos bienes ante la Hacienda foral de tu territorio.
+        what: En este periodo resides en un territorio foral, donde la amortización
+          se rige por otras normas. Queda fuera de este cálculo y no se deduce
+          ninguna cifra.
+        what_to_do: Determina la amortización según las normas forales de tu
+          territorio y declárala ante su Hacienda foral.
       activity_asset_residence_period_unknown:
         what: Tu perfil recoge una residencia fiscal, pero ninguna para este periodo,
           así que tus elementos se cuentan como si este modelo fuera aplicable.
         what_to_do: Indica en tu perfil dónde residías en este periodo y vuelve a
           calcular.
       activity_asset_residence_unresolved:
-        what: No se ha podido leer la residencia fiscal registrada, así que tus bienes
-          registrados no se incluyen.
+        what: No se ha podido leer la residencia fiscal registrada, así que la
+          amortización de tus bienes registrados queda fuera de este cálculo y no se
+          deduce ninguna cifra.
         what_to_do: Indica tu residencia fiscal en tu perfil y vuelve a calcular.
       administrador_retencion_rate_mismatch:
         what: El tipo de retención de un registro de administrador no coincide con

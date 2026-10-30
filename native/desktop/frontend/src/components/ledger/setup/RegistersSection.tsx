@@ -1,26 +1,18 @@
 import { useState } from "react";
 import { useStrings } from "../../../shell/strings";
 import { AccountsPane } from "./AccountsPane";
-import { AssetsPane } from "./AssetsPane";
 import { CapitalGoodsPane } from "./CapitalGoodsPane";
-import { InventoryPane } from "./InventoryPane";
 import { ProrrataPane } from "./ProrrataPane";
 import { SetupTabs } from "./SetupParts";
 import type { SetupProps } from "./setupProps";
 
-const AREAS = [
-  "accounts",
-  "prorrata",
-  "capital",
-  "inventory",
-  "assets",
-] as const;
+const AREAS = ["accounts", "prorrata", "capital"] as const;
 type Area = (typeof AREAS)[number];
 
 /**
- * Setup › Registers: the person's own accounts, the prorrata register,
- * bienes de inversión, the inventory books and the activity's assets. Each
- * change here is its own write, confirmed in its form.
+ * Setup › Registers: the person's own accounts, the prorrata register and
+ * bienes de inversión. Each change here is its own write, confirmed in its
+ * form. The inventory books and the activity's assets are the Assets tab's.
  */
 export function RegistersSection(props: SetupProps) {
   const t = useStrings();
@@ -40,8 +32,6 @@ export function RegistersSection(props: SetupProps) {
         {area === "accounts" && <AccountsPane {...props} />}
         {area === "prorrata" && <ProrrataPane {...props} />}
         {area === "capital" && <CapitalGoodsPane {...props} />}
-        {area === "inventory" && <InventoryPane {...props} />}
-        {area === "assets" && <AssetsPane {...props} />}
       </SetupTabs>
     </div>
   );

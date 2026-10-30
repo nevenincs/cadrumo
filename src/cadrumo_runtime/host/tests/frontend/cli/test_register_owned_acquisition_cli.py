@@ -435,7 +435,7 @@ def test_a_separate_depreciation_row_is_withheld_with_a_blocking_note(tmp_path: 
         for notice in envelope["notices"]
         if (notice.get("context") or {}).get("reason") == "ledger_amortization_row_unregistered"
     )
-    assert note["level"] == "blocks"
+    assert note["level"] == "missing"
     assert note["remedy"]
     assert persisted["current_calculation_revision_id"] == envelope["result"]["calculation_revision_id"]
     assert persisted["filed_calculation_revision_id"] is None

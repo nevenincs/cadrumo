@@ -20,7 +20,7 @@ def calculation_revisions_consuming_claim(
     revisions: Iterable[CalculationRevision],
     work_units: StaleFilingWorkUnitLookupV1,
 ) -> tuple[CalculationRevision, ...]:
-    """List this bucket's calculation revisions that rested on the claim.
+    """List this bucket's :class:`CalculationRevision` records that rested on the claim.
 
     The revision catalogue is not bucket-scoped, so a revision whose work unit
     is missing or belongs to another profile is excluded.

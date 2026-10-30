@@ -40,7 +40,7 @@ The original lease-churn reproduction was repeated after the fix with ordinary l
 
 ## Sources
 
-Primary source: the actual Windows worker reproduction and py-spy folded stacks in `C:/Users/hello/AppData/Local/Temp/cadrumo-crash-analysis`; synthetic benchmark JSON and raw stacks under `var/storage/development/.logs`; test-run receipts under the same development log root. Implementation locators are `src/cadrumo/core/logging.py`, `src/cadrumo/core/diagnostic_dispatch.py`, `native/application/src/diagnostics/dispatch.rs` and `src/cadrumo_runtime/host/worker.py`.
+Primary source: the actual Windows worker reproduction and py-spy folded stacks in `<local-home>/AppData/Local/Temp/cadrumo-crash-analysis`; synthetic benchmark JSON and raw stacks under `var/storage/development/.logs`; test-run receipts under the same development log root. Implementation locators are `src/cadrumo/core/logging.py`, `src/cadrumo/core/diagnostic_dispatch.py`, `native/application/src/diagnostics/dispatch.rs` and `src/cadrumo_runtime/host/worker.py`.
 
 The repository-wide `just check-code` aggregate finished exit 0. Its import/type/dependency/usage/write-path/docstring/manifest checks all passed. Registry validity and runtime-load passed (58 modelos, 161 revisions); integrity refused the older published authority until the calendar session republishes its changed legal sources. The final change-scoped test gate runs the fixed contract fallback because core logging fans out beyond its 40-target limit.
 

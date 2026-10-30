@@ -1,17 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { userEvent, waitFor, within } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import type { LedgerPort } from "../../../shell/ledger";
 import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
-import { submitProvisional, type AssetBaja } from "./assetsContract";
 
 // One element's amortization plan and its append-only timeline over the
-// scenario's register, which spans decades. Each story names the element
-// whose plan or history shows one state of the audit: a method change, a
-// missing year, a recorded zero, a free method, an unknown opening history,
-// a baja, years on projected rates, and a plan of forty years.
+// scenario's register. Each story names the element whose plan or history
+// shows one state: a partly claimed year, years on projected rates, years
+// before the first edition, a maximum period that has elapsed, a free method,
+// an unknown opening history, a baja and a claim that no longer matches.
 
 type Answer = "register" | "empty" | "refused" | "loading" | "unavailable";
 
@@ -69,33 +68,14 @@ function withAnswer(port: LedgerPort, answer: Answer): LedgerPort {
           code: "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
           precondition_verdict: null,
           accelerated_da18: null,
+          reason_key: "ledger.actividad_asset.errors.asset_not_found",
+          reason_facts: [],
         },
         asset_id: null,
         ...shape,
       });
     }) as LedgerPort["submit"],
   };
-}
-
-/** The baja the list states for an element, as the detail would pass it. */
-function useBaja(port: LedgerPort, assetId: string): AssetBaja | null {
-  const [baja, setBaja] = useState<AssetBaja | null>(null);
-  useEffect(() => {
-    let active = true;
-    void submitProvisional(port, "ledger.actividad-asset.list", {}).then(
-      (outcome) => {
-        if (!active || outcome.kind !== "settled") return;
-        setBaja(
-          outcome.result.rows.find((row) => row.asset_id === assetId)?.baja ??
-            null,
-        );
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [port, assetId]);
-  return baja;
 }
 
 function Stage({
@@ -108,7 +88,6 @@ function Stage({
 }: Args & { view: "plan" | "timeline" }) {
   const base = useLedgerPort();
   const port = useMemo(() => withAnswer(base, answer), [base, answer]);
-  const baja = useBaja(base, assetId);
   return (
     <div
       className={
@@ -124,7 +103,7 @@ function Stage({
           assetId={assetId}
           locale={locale}
           year={year}
-          baja={baja}
+          onOpenLink={() => undefined}
         />
       ) : (
         <AssetTimeline
@@ -193,53 +172,78 @@ const timeline = (extra: Partial<Story> = {}): Story => ({
 
 // ---- The plan --------------------------------------------------------------
 
-export const PlanSettledForDecades: Story = plan({
-  name: "Plan, decades old and settled",
+export const PlanPartlyClaimed: Story = plan({
+  name: "Plan, a partly claimed year, years to come and rates carried forward",
+  args: { assetId: "furgoneta", year: 2026 },
+  play: open(2026),
+});
+
+export const PlanLongListOfLegalBasis: Story = plan({
+  name: "Plan, eleven provisions behind the election, collapsed with their count",
+  args: { assetId: "furgoneta", year: 2026 },
+  play: async ({ canvasElement }: PlayContext) => {
+    const summary = await waitFor(() => {
+      const found = canvasElement.querySelector(
+        ".ledger-assets-citations summary",
+      );
+      if (!found) throw new Error("the legal basis is not drawn yet");
+      return found;
+    });
+    await userEvent.click(summary);
+  },
+});
+
+export const PlanPartialListOfLegalBasis: Story = plan({
+  name: "Plan, a legal basis that could not be resolved whole says it is partial",
+  args: { assetId: "herramienta", year: 2026 },
+});
+
+export const PlanBeforeTheFirstEdition: Story = plan({
+  name: "Plan, years before the first edition: no figure",
+  args: { assetId: "compresor" },
+});
+
+export const PlanCoveredByOpening: Story = plan({
+  name: "Plan, years the opening amount covers",
   args: { assetId: "plotter" },
 });
 
-export const PlanOfFortyYears: Story = plan({
-  name: "Plan, forty years with a year in view",
-  args: { assetId: "taller", year: 2026 },
-});
-
-export const PlanMethodChange: Story = plan({
-  name: "Plan, a method change and a replaced claim",
-  args: { assetId: "servidor" },
-  play: open(2014, 2015),
-});
-
-export const PlanMissingAndPartial: Story = plan({
-  name: "Plan, a missing year, a partial one and an overlap",
-  args: { assetId: "furgoneta" },
-  play: open(2023, 2024, 2026),
-});
-
 export const PlanProjectedRates: Story = plan({
-  name: "Plan, years on projected rates",
-  args: { assetId: "furgoneta", year: 2027 },
+  name: "Plan, a year on projected rates",
+  args: { assetId: "licencia", year: 2027 },
 });
 
-export const PlanRecordedZero: Story = plan({
-  name: "Plan, a recorded zero beside a missing year",
-  args: { assetId: "licencia" },
-  play: open(2022),
-});
-
-export const PlanFreeMethod: Story = plan({
-  name: "Plan, free depreciation",
-  args: { assetId: "prensa" },
-});
-
-export const PlanOpeningHistoryUnknown: Story = plan({
-  name: "Plan, opening history never stated",
-  args: { assetId: "escaner" },
-});
-
-export const PlanBaja: Story = plan({
-  name: "Plan, closed by a baja",
-  args: { assetId: "camara" },
+export const PlanMaximumPeriodElapsed: Story = plan({
+  name: "Plan, the maximum period has elapsed",
+  args: { assetId: "cristaleria" },
   play: open(2024),
+});
+
+export const PlanFreeMethodClaimed: Story = plan({
+  name: "Plan, free depreciation, claimed",
+  args: { assetId: "taladro" },
+});
+
+export const PlanFreeMethodOpen: Story = plan({
+  name: "Plan, free depreciation, still to claim",
+  args: { assetId: "impresora" },
+});
+
+export const PlanOpeningHistoryMissing: Story = plan({
+  name: "Plan, opening history never stated",
+  args: { assetId: "estanteria" },
+});
+
+export const PlanOutOfService: Story = plan({
+  name: "Plan, an element out of service",
+  args: { assetId: "camara" },
+  play: open(2025),
+});
+
+export const PlanStaleClaim: Story = plan({
+  name: "Plan, a claim recorded under an earlier revision",
+  args: { assetId: "servidor" },
+  play: open(2025),
 });
 
 export const PlanInThePanel: Story = plan({
@@ -270,13 +274,8 @@ export const PlanUnavailable: Story = plan({
 // ---- The timeline ----------------------------------------------------------
 
 export const TimelineCorrection: Story = timeline({
-  name: "Timeline, a method correction and replaced claims",
+  name: "Timeline, a correction and a claim that no longer matches",
   args: { assetId: "servidor" },
-});
-
-export const TimelineTimeNotKept: Story = timeline({
-  name: "Timeline, events from before time was kept",
-  args: { assetId: "plotter" },
 });
 
 export const TimelineDescription: Story = timeline({
@@ -284,14 +283,14 @@ export const TimelineDescription: Story = timeline({
   args: { assetId: "furgoneta" },
 });
 
-export const TimelineBaja: Story = timeline({
-  name: "Timeline, a baja and the claim it replaced",
-  args: { assetId: "camara" },
+export const TimelineWithoutName: Story = timeline({
+  name: "Timeline, an element never described",
+  args: { assetId: "herramienta" },
 });
 
-export const TimelineLong: Story = timeline({
-  name: "Timeline, forty years",
-  args: { assetId: "taller" },
+export const TimelineBaja: Story = timeline({
+  name: "Timeline, an element out of service",
+  args: { assetId: "camara" },
 });
 
 export const TimelineInThePanel: Story = timeline({

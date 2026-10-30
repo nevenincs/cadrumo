@@ -8,6 +8,8 @@ service and writes nothing, and it composes only the stores each area needs.
 
 The profile's own tax number is resolved here, in the worker, from the profile
 record. No frontend supplies it, and it never reaches the result.
+Filed declarations are read as
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord` values.
 """
 
 from __future__ import annotations

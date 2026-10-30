@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:da418a595e1e04302f02cc3ac3bb47258236bfa14ccfa32ee88c2ffc61e7130b'
+body_hash: 'sha256:fae695b6c47c953692af9c1a2bfbb3bff411ffbd09f5b78302ae4464a1ce9687'
 related:
   - "[[2026-10-30-assets-core-plan]]"
 ---
@@ -118,6 +118,52 @@ related:
 - `S07` `M` `src/cadrumo/locales/hu/common.yml`
 - `S07` `verify:` `dev.registry.conformance integrity` -> `pass`
 - `S07` `verify:` `pytest amortizable category and asset authority tests` -> `pass`
+- `S12` `A` `src/cadrumo/application/actividad_asset/schedule_walk.py`
+- `S12` `A` `src/cadrumo/application/actividad_asset/register_reads.py`
+- `S12` `A` `src/cadrumo/application/actividad_asset/activity_asset_read_models.py`
+- `S12` `M` `src/cadrumo/application/actividad_asset/history.py`
+- `S12` `M` `src/cadrumo/application/actividad_asset/operations.py`
+- `S12` `M` `src/cadrumo/application/actividad_asset/activity_asset_executors.py`
+- `S12` `M` `src/cadrumo/application/actividad_asset/registered_operations.py`
+- `S12` `A` `src/cadrumo/domain/renta/actividad_asset/register_records.py`
+- `S12` `M` `src/cadrumo/domain/renta/actividad_asset/schedule.py`
+- `S12` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S12` `verify:` `just check-types` -> `pass`
+- `S12` `verify:` `just check-import-boundaries` -> `pass`
+- `S12` `verify:` `pytest application/actividad_asset/tests` -> `pass`
+- `S12` `verify:` `pytest test_activity_asset_schedule_authority_resolution.py` -> `pass`
+- `S12` `by:` `vaultspec-high-executor`
+- `S13` `A` `src/cadrumo/application/aggregation/tests/test_activity_asset_official_oracles.py`
+- `S13` `verify:` `pytest test_activity_asset_official_oracles.py` -> `pass`
+- `S13` `verify:` `lint-imports` -> `pass`
+- `S13` `by:` `vaultspec-standard-executor`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/facts/0129-renta-ccaa-tax-residence-catalogue.toml`
+- `S16` `M` `src/cadrumo/domain/contribuyente/tax_residence.py`
+- `S16` `M` `src/cadrumo/application/aggregation/renta_ledger.py`
+- `S16` `M` `src/cadrumo/application/actividad_asset/operations.py`
+- `S16` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S16` `verify:` `pytest test_foral_residence.py test_register.py test_operations.py` -> `pass`
+- `S16` `verify:` `pytest test_actividad_asset_foral_cli.py` -> `pass`
+- `S16` `by:` `vaultspec-standard-executor`
+- `S15` `M` `dev/locales/tests/test_activity_asset_refusals_are_localized.py`
+- `S15` `M` `src/cadrumo/application/actividad_asset/activity_asset_contracts.py`
+- `S15` `verify:` `pytest dev/locales/tests/test_activity_asset_refusals_are_localized.py` -> `pass`
+- `S15` `by:` `vaultspec-standard-executor`
+- `S11` `A` `src/cadrumo/domain/renta/actividad_asset/disposal.py`
+- `S11` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S11` `M` `src/cadrumo/domain/renta/actividad_asset/lifecycle.py`
+- `S11` `M` `src/cadrumo/application/actividad_asset/history.py`
+- `S11` `M` `src/cadrumo/application/actividad_asset/operations.py`
+- `S11` `A` `src/cadrumo/application/actividad_asset/disposal_calculation.py`
+- `S11` `M` `src/cadrumo/application/actividad_asset/registered_operations.py`
+- `S11` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S11` `verify:` `pytest test_disposal_operations.py` -> `pass`
+- `S11` `verify:` `pytest test_modelo_source_mesh_ledger.py -k foral or residence` -> `pass`
+- `S11` `verify:` `pytest test_registered_executor_conformance.py` -> `pass`
+- `S11` `verify:` `lint-imports` -> `pass`
+- `S11` `verify:` `just check-import-boundaries` -> `fail`
+- `S11` `verify:` `just check-types` -> `fail`
+- `S11` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -128,3 +174,9 @@ related:
 - `S04` 2 failures in `test_activity_asset_schedule_authority_resolution` raise from the history.py basis recheck, outside this Step, reported to the owner
 - `S09` Commit 93b91e4bf2 swept S12 hunks in `modelo_bindings_actividad_assets.py` and `test_modelo_source_mesh_ledger.py.` Step stays open: five resolver-backed tests have not run, blocked on publishing the S07 authority.
 - `S09` Open for review: `stale_filed_revisions` checks the ledger only, not the register; `export_journey` Modelo 130 control totals may need updating; installed journeys not run.
+- `S12` Contract manifest and admitted.rs not updated; coordinated with the desktop session. Wide TUI directory last ran 718 pass, 8 fail before fixes and was not rerun. Table class display labels are absent from the registry.
+- `S13` Not proved: estimacion objetiva totals, leasing limit, RIS art. 4.3.b and c used-asset routes (no field), rebuilding opening history, registered-operation wrappers under a runtime. Manual's baja example of 486 exceeds the 482.01 day maximum; figures follow the ruling.
+- `S16` Commits cb2e94174b and bc9a05e9ac (residence-unresolved reason). The foral CLI test's unreadable case failed once and passed on rerun; cause not established.
+- `S15` Commits c96ed24d34, 7afacfdf69 and 21ed48d88b. MCP has a schema contract test only, no refusal run through the MCP server.
+- `S11` Commits b5977bc267 and bc9a05e9ac. check-import-boundaries: `tool_failure,` loadability unavailable, zero hard findings, while another session edits dev/quality import tooling; rerun at review. check-types: 6 diagnostics outside S11's files.
+- `S11` Modelo 100 gain, loss, baja and excess casillas have no bindings yet, so those rows are blocking `unrouted_observation` notes under the disposal ADR; clave 1626 and agrarian excess remain unestablished.

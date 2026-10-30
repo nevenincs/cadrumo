@@ -217,7 +217,8 @@ _ENVIRONMENT_NAME: re.Pattern[str] = re.compile(r"[A-Z][A-Z0-9_]+")
 def _location_variable_names() -> frozenset[str]:
     declaration = load(REPO_ROOT)
     return frozenset(
-        {
+        str(name)
+        for name in {
             STORAGE_ROOT.variable,
             *RETIRED_STORAGE_VARIABLES,
             *declaration.temporary,

@@ -153,13 +153,17 @@ class ActivityAssetRegisterAuthority:
     admits_filing_year: Callable[[int], bool]
     last_admitted_year: Callable[[], int]
     agrarian_activities: Callable[[date], frozenset[TipoActividad]]
-    residence_territory: Callable[[], ResidenceTerritory]
+    residence_territory: Callable[[date], ResidenceTerritory]
     claim_consumers: Callable[[Iterable[str]], Mapping[str, tuple[str, ...]]]
     today: Callable[[], date]
     schedule_authority: Callable[[ActivityAssetRevision, int], ScheduleAuthority]
     class_labels: Callable[[DirectEstimationRegime, int], Mapping[str, str]]
     disposal_bounds: Callable[[ActivityAssetRevision, int], ActivityAssetDisposalBounds]
     legal_reference: Callable[[str], LegalReference]
+
+
+def _year_end(tax_year: int) -> date:
+    return date(tax_year, 12, 31)
 
 
 class ActivityAssetOperations:
@@ -263,7 +267,9 @@ class ActivityAssetOperations:
         require_acquisition_in_ledger(revision, self._ledger)
         baja_claims: tuple[AmortizationClaim, ...] = ()
         if revision.disposal != current.disposal:
-            self._require_common_territory()
+            for disposal in (revision.disposal, current.disposal):
+                if disposal is not None:
+                    self._require_common_territory(_year_end(disposal.disposal_date.year))
             baja_claims = self._baja_supersessions(revision, history, origin=origin)
         replaced = {claim.supersedes_claim_id for claim in baja_claims}
         claims = (
@@ -298,7 +304,6 @@ class ActivityAssetOperations:
         """Forecast each replacement under the new revision, earliest first, on the state the earlier ones leave."""
         if not requests:
             return ()
-        self._require_common_territory()
         effective = {claim.claim_id: claim for claim in effective_claims(history.claims)}
         targets: list[tuple[AmortizationClaim, SupersedingClaimRequest]] = []
         for request in requests:
@@ -307,6 +312,7 @@ class ActivityAssetOperations:
                 raise ActividadAssetValidationError(
                     translated_message="ledger.actividad_asset.errors.superseded_claim_not_effective",
                 )
+            self._require_common_territory(_year_end(superseded.tax_year))
             targets.append((superseded, request))
         _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
         revisions = (*history.revisions, revision)
@@ -442,7 +448,7 @@ class ActivityAssetOperations:
         identical retry returns the recorded history; otherwise a recorded baja changes
         only through a correction.
         """
-        self._require_common_territory()
+        self._require_common_territory(_year_end(disposal.disposal_date.year))
         history = self._service.reopen()
         current = self.inspect(asset_id)[-1]
         if current.disposal == disposal:
@@ -473,15 +479,16 @@ class ActivityAssetOperations:
 
         A preview sees the history as that baja would leave it.
         """
-        self._require_common_territory()
         history = self._service.reopen()
         current = self.inspect(asset_id)[-1]
+        stated = current.disposal if disposal is None else disposal
+        if stated is None:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.disposal_not_recorded",
+            )
+        self._require_common_territory(_year_end(stated.disposal_date.year))
         if disposal is None:
-            if current.disposal is None:
-                raise ActividadAssetValidationError(
-                    translated_message="ledger.actividad_asset.errors.disposal_not_recorded",
-                )
-            return current.disposal, self._calculate(current, current.disposal, history)
+            return stated, self._calculate(current, stated, history)
         revision = current.with_disposal(disposal)
         if revision.opening_history.accumulated_amount is None:
             raise ActividadAssetIncompleteError(
@@ -512,7 +519,7 @@ class ActivityAssetOperations:
         A forecast for a superseding claim leaves out the effective claim it
         will replace, exactly as recording that claim does.
         """
-        self._require_common_territory()
+        self._require_common_territory(_year_end(covered_from.year))
         if supersedes_claim_id is not None and not any(
             claim.claim_id == supersedes_claim_id and claim.asset_id == asset_id
             for claim in effective_claims(self._service.reopen().claims)
@@ -606,7 +613,7 @@ class ActivityAssetOperations:
         history, authority and profile reproduces it exactly.  An exact replay
         of an already recorded claim returns that claim unchanged.
         """
-        self._require_common_territory()
+        self._require_common_territory(_year_end(forecast.tax_year))
         current_history = self._service.reopen()
         revision = max(
             (item for item in current_history.revisions if item.asset_id == forecast.asset_id),
@@ -651,9 +658,10 @@ class ActivityAssetOperations:
     def filing_handoff(self, *, tax_year: int, m130_period: Period) -> ActivityAssetFilingHandoff:
         """Project M100 from effective claims and M130 from the accrual route, recording nothing."""
         history = self._service.reopen()
-        if history.revisions:
-            self._require_common_territory()
         period_end = m130_period.end_date
+        if history.revisions:
+            self._require_common_territory(_year_end(tax_year))
+            self._require_common_territory(period_end)
         current = {revision.asset_id: revision for revision in history.revisions}
         rows = self._ledger.load_by_ids(
             {owned for revision in current.values() for owned in revision.acquisition_transaction_ids},
@@ -699,9 +707,14 @@ class ActivityAssetOperations:
             intangible_m130=m130(AssetKind.INTANGIBLE),
         )
 
-    def _require_common_territory(self) -> None:
-        """Refuse work that reaches Modelos 100 and 130 for a foral resident or an unreadable residence."""
-        territory = self._authority.residence_territory()
+    def _require_common_territory(self, period_end: date) -> None:
+        """Refuse a write for a period the residence places in a foral territory, or an unreadable residence.
+
+        It reads the residence in force at the end of the period written, as the
+        calculation of that period does, so a later move does not reach back and an
+        unrecorded period does not refuse.
+        """
+        territory = self._authority.residence_territory(period_end)
         if territory is ResidenceTerritory.FORAL:
             raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.foral_territory")
         if territory is ResidenceTerritory.UNRESOLVED:
@@ -718,6 +731,7 @@ class ActivityAssetOperations:
             last_admitted_year=self._authority.last_admitted_year(),
             today=self._authority.today(),
             minimum_bounds=self._authority.disposal_bounds,
+            class_labels=self._authority.class_labels,
         )
 
     def list_elements(self) -> tuple[ActivityAssetListRow, ...]:

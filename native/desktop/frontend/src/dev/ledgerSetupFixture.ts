@@ -12,7 +12,6 @@ import type {
   JsonValue,
   LedgerDefinitionId,
 } from "../shell/ledger";
-import type { ProvisionalOperationId } from "@/components/ledger/assets/assetsContract";
 import { isSpendingCategory } from "../shell/ledgerVocabulary";
 import { assetOperations } from "./assetsFixture";
 import { RATIO_ELIGIBLE_FIXTURE } from "./fixtures/ledgerRatios";
@@ -106,10 +105,8 @@ type Book = {
   opening_stock: string;
   movements: JsonObject[];
   closing: JsonObject | null;
-};
-type Asset = {
-  revisions: { revision: JsonObject; revision_id: string }[];
-  claims: JsonObject[];
+  label?: string;
+  retired?: boolean;
 };
 
 /** The scenario ledger's setup answers, held beside the movements. */
@@ -166,13 +163,13 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
   ];
   const books: Book[] = [
     {
-      actividad_id: "ACT-01",
+      actividad_id: "Papelería y reprografía",
       year: 2026,
       valuation_method: "fifo",
       opening_stock: "410",
       movements: [
         {
-          movement_id: "INV-001",
+          movement_id: "b1f7c6d2-5f0e-4a43-9d53-2c9a6c1e7a10",
           movement_date: "2026-01-02",
           kind: "opening",
           sku: "papel-a3",
@@ -186,8 +183,58 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       ],
       closing: null,
     },
+    {
+      actividad_id: "Venta en línea de material de dibujo",
+      year: 2026,
+      valuation_method: "pmp",
+      opening_stock: "0",
+      movements: [],
+      closing: null,
+    },
+    {
+      actividad_id: "Papelería y reprografía",
+      year: 2025,
+      valuation_method: "fifo",
+      opening_stock: "380",
+      movements: [
+        {
+          movement_id: "0c4a6b8e-93d1-4e0b-8a3f-6f1d2b7c5e21",
+          movement_date: "2025-01-03",
+          kind: "opening",
+          sku: "papel-a3",
+          quantity: decimal("100"),
+          unit_cost: decimal("3.8"),
+          taxable_base: decimal("380"),
+          iva_rate: decimal("0.21"),
+          iva_amount: decimal("79.8"),
+          deductible_iva_ratio: decimal("1"),
+        },
+        {
+          movement_id: "7d2e9f14-6a35-4c8b-b1e0-3a5c8d9f0b32",
+          movement_date: "2025-11-20",
+          kind: "cogs",
+          sku: "papel-a3",
+          quantity: decimal("60"),
+          unit_cost: null,
+          taxable_base: null,
+          iva_rate: decimal("0.21"),
+          iva_amount: null,
+          deductible_iva_ratio: decimal("1"),
+        },
+      ],
+      closing: null,
+    },
+    {
+      actividad_id: "Taller de enmarcado",
+      year: 2025,
+      valuation_method: "coste_medio",
+      opening_stock: "0",
+      movements: [],
+      closing: null,
+      label: "Enmarcado (cerrado en 2025)",
+      retired: true,
+    },
   ];
-  const assets = new Map<string, Asset>();
 
   // ---- Rules ---------------------------------------------------------------
 
@@ -972,9 +1019,18 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       Number((value as { decimal: string } | null)?.decimal ?? 0);
     for (const movement of book.movements) {
       const quantity = units(movement.quantity);
-      if (movement.kind === "opening" || movement.kind === "purchase")
-        lots.push({ quantity, cost: units(movement.unit_cost) });
-      else if (movement.kind === "cogs") {
+      if (movement.kind === "opening" || movement.kind === "purchase") {
+        const total = (
+          movement.acquisition_cost as { total_acquisition_cost?: JsonValue }
+        )?.total_acquisition_cost;
+        lots.push({
+          quantity,
+          cost:
+            movement.kind === "purchase" && quantity > 0
+              ? units(total) / quantity
+              : units(movement.unit_cost),
+        });
+      } else if (movement.kind === "cogs") {
         let left = quantity;
         while (left > 0 && lots.length) {
           const lot = lots[0]!;
@@ -994,6 +1050,55 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       value.toFixed(2).replace(/\.?0+$/, "") || "0";
     return { closing: text(closing), cogs: text(cogs) };
   }
+  /** A purchase's cost as the ledger shows it back: its totals and how much
+   * it rests on. Its shape is checked as the registered contract would. */
+  const acquisitionOf = (cost: JsonValue | undefined): JsonObject | null => {
+    if (cost === undefined || cost === null) return null;
+    if (typeof cost !== "object" || Array.isArray(cost)) return invalid();
+    fromKeys(cost, [
+      "consideration_excluding_iva",
+      "consideration_iva_amount",
+      "consideration_deductible_iva_ratio",
+      "attributable_cost_components",
+      "evidence",
+      "completeness",
+      "directly_attributable_cost_total",
+      "nonrecoverable_iva_included",
+      "recoverable_iva_excluded",
+      "total_acquisition_cost",
+    ]);
+    const components = cost.attributable_cost_components;
+    const evidence = cost.evidence;
+    if (!Array.isArray(components) || !Array.isArray(evidence))
+      return invalid();
+    if (evidence.length === 0) return invalid();
+    for (const proof of evidence) {
+      if (typeof proof !== "object" || proof === null || Array.isArray(proof))
+        return invalid();
+      fromKeys(proof, ["reference", "evidence_kind", "content_digest"]);
+      if (!/^[0-9a-f]{64}$/.test(String(proof.content_digest))) invalid();
+    }
+    decimalOf(cost.consideration_iva_amount);
+    decimalOf(cost.consideration_deductible_iva_ratio);
+    return {
+      consideration_excluding_iva: decimal(
+        decimalOf(cost.consideration_excluding_iva),
+      ),
+      directly_attributable_cost_total: decimal(
+        decimalOf(cost.directly_attributable_cost_total),
+      ),
+      nonrecoverable_iva_included: decimal(
+        decimalOf(cost.nonrecoverable_iva_included),
+      ),
+      recoverable_iva_excluded: decimal(
+        decimalOf(cost.recoverable_iva_excluded),
+      ),
+      total_acquisition_cost: decimal(decimalOf(cost.total_acquisition_cost)),
+      component_count: components.length,
+      evidence_count: evidence.length,
+      complete: true,
+    };
+  };
   const inventoryWrites: Record<string, Handler> = {
     "ledger.inventory.create": (request) => {
       fromKeys(request, [
@@ -1065,12 +1170,24 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         request.unit_cost == null ? null : decimalOf(request.unit_cost);
       const base =
         request.taxable_base == null ? null : decimalOf(request.taxable_base);
+      // A purchase states its cost and what proves it, and no unit cost or
+      // base beside it; any other kind states no cost evidence.
+      const acquisition = acquisitionOf(request.acquisition_cost);
+      if ((kind === "purchase") !== (acquisition !== null)) invalid();
+      if (kind === "purchase" && (unit !== null || base !== null)) invalid();
       const shape = {
         profile_id: profileId,
         ledger: null,
         bucket_event_ids: [],
       };
       if (!book) return notFound(actividad, year, shape);
+      if (book.retired)
+        return inventoryRefusal(
+          "REFUSED_PROFILE_INVENTORY_VALIDATION",
+          "inventory_validation",
+          { actividad_id: actividad, year },
+          shape,
+        );
       if (book.movements.some((found) => found.movement_id === id))
         return inventoryRefusal(
           "REFUSED_PROFILE_INVENTORY_VALIDATION",
@@ -1085,10 +1202,16 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         sku: "papel-a3",
         quantity: decimal(quantity),
         unit_cost: unit === null ? null : decimal(unit),
-        taxable_base: base === null ? null : decimal(base),
+        taxable_base:
+          acquisition !== null
+            ? (acquisition.consideration_excluding_iva ?? null)
+            : base === null
+              ? null
+              : decimal(base),
         iva_rate: decimal("0.21"),
         iva_amount: null,
         deductible_iva_ratio: decimal("1"),
+        ...(acquisition !== null ? { acquisition_cost: acquisition } : {}),
       });
       return {
         outcome: "added",
@@ -1147,266 +1270,6 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
           changed,
         },
         refusal: null,
-      };
-    },
-  };
-
-  // ---- Activity assets -----------------------------------------------------
-
-  const authority = {
-    logical_generation: hex64("authority:generation"),
-    reader_incarnation: hex64("authority:reader"),
-  };
-  const assetRefusal = (code: string, shape: JsonObject = {}): never => {
-    throw new SetupStopped(code, {
-      profile_id: profileId,
-      authority,
-      outcome: "refused",
-      refusal: { code, precondition_verdict: null, accelerated_da18: null },
-      ...shape,
-    });
-  };
-  const REVISION_REQUIRED = [
-    "asset_id",
-    "revision_number",
-    "acquisition",
-    "acquisition_shape",
-    "asset_kind",
-    "basis",
-    "in_service_date",
-    "opening_history",
-    "acquired_condition",
-    "amortization",
-  ];
-  /** Whether a revision states every fact it needs, at any depth. */
-  const complete = (value: JsonValue): boolean =>
-    value !== null &&
-    (typeof value !== "object" ||
-      (Array.isArray(value)
-        ? value.every(complete)
-        : Object.values(value).every(
-            (inner) => inner === undefined || complete(inner),
-          )));
-  const revisionOf = (request: JsonObject) => {
-    fromKeys(request, ["revision"]);
-    const revision = request.revision;
-    if (
-      typeof revision !== "object" ||
-      revision === null ||
-      Array.isArray(revision)
-    )
-      return invalid();
-    if (REVISION_REQUIRED.some((key) => !(key in revision))) invalid();
-    return revision;
-  };
-  const historyOf = (asset: Asset): JsonObject => ({
-    revisions: asset.revisions.map((found) => found.revision),
-    claims: asset.claims,
-  });
-  const writeRevision = (revision: JsonObject, correcting: boolean) => {
-    const id = required(revision.asset_id);
-    const required_ = { ...revision };
-    delete required_.supersedes_revision_id;
-    delete required_.out_of_service_date;
-    delete required_.building_construction_date;
-    delete required_.vehicle_affectation;
-    if (!complete(required_))
-      return assetRefusal("REFUSED_ACTIVIDAD_ASSET_INCOMPLETE", {
-        history: null,
-      });
-    const asset = assets.get(id);
-    const latest = asset?.revisions.at(-1);
-    if (correcting) {
-      if (
-        !asset ||
-        !latest ||
-        revision.supersedes_revision_id !== latest.revision_id
-      )
-        return assetRefusal("REFUSED_ACTIVIDAD_ASSET_VALIDATION", {
-          history: null,
-        });
-    } else if (asset)
-      return assetRefusal("REFUSED_ACTIVIDAD_ASSET_VALIDATION", {
-        history: null,
-      });
-    const held = asset ?? { revisions: [], claims: [] };
-    held.revisions.push({
-      revision,
-      revision_id: hex64(`revision:${JSON.stringify(revision)}`),
-    });
-    assets.set(id, held);
-    return {
-      profile_id: profileId,
-      authority,
-      outcome: "succeeded",
-      refusal: null,
-      history: historyOf(held),
-    };
-  };
-  const assetWrites: Record<string, Handler> = {
-    "ledger.actividad-asset.create": (request) =>
-      writeRevision(revisionOf(request), false),
-    "ledger.actividad-asset.correct": (request) =>
-      writeRevision(revisionOf(request), true),
-    "ledger.actividad-asset.claim": (request) => {
-      fromKeys(request, ["forecast", "creating_operation"]);
-      const forecast = request.forecast;
-      required(request.creating_operation);
-      if (
-        typeof forecast !== "object" ||
-        forecast === null ||
-        Array.isArray(forecast)
-      )
-        return invalid();
-      const asset = assets.get(required(forecast.asset_id));
-      if (!asset)
-        return assetRefusal("REFUSED_ACTIVIDAD_ASSET_VALIDATION", {
-          claim_result: null,
-          claim_id: null,
-        });
-      const claimId = hex64(`claim:${JSON.stringify(forecast)}`);
-      const existing = asset.claims.find((found) => found.claim_id === claimId);
-      const claim: JsonObject = existing ?? {
-        ...forecast,
-        claim_id: claimId,
-        creating_operation: required(request.creating_operation),
-      };
-      if (!existing) asset.claims.push(claim);
-      return {
-        profile_id: profileId,
-        authority,
-        outcome: "succeeded",
-        refusal: null,
-        claim_result: {
-          history: historyOf(asset),
-          claim,
-          reused_existing_claim: existing !== undefined,
-        },
-        claim_id: claimId,
-      };
-    },
-  };
-  const assetReads: Record<string, Handler> = {
-    "ledger.actividad-asset.inspect": (request) => {
-      fromKeys(request, ["asset_id"]);
-      const id = required(request.asset_id);
-      const asset = assets.get(id);
-      if (!asset)
-        return assetRefusal("REFUSED_ACTIVIDAD_ASSET_VALIDATION", {
-          asset_id: id,
-          revisions: null,
-        });
-      return {
-        profile_id: profileId,
-        authority,
-        outcome: "succeeded",
-        refusal: null,
-        asset_id: id,
-        revisions: asset.revisions,
-      };
-    },
-    "ledger.actividad-asset.forecast": (request) => {
-      fromKeys(request, [
-        "asset_id",
-        "covered_from",
-        "covered_until",
-        "requested_free_amount",
-        "supersedes_claim_id",
-      ]);
-      const id = required(request.asset_id);
-      const from = required(request.covered_from);
-      const until = required(request.covered_until);
-      if (!DATE.test(from) || !DATE.test(until) || until < from) invalid();
-      const asset = assets.get(id);
-      const latest = asset?.revisions.at(-1);
-      if (!asset || !latest)
-        return assetRefusal("REFUSED_ACTIVIDAD_ASSET_VALIDATION", {
-          forecast: null,
-        });
-      const revision = latest.revision;
-      const basis = Number(
-        (
-          (revision.basis as JsonObject | null)?.basis_amount as {
-            decimal?: string;
-          } | null
-        )?.decimal ?? 0,
-      );
-      const coefficient = Number(
-        (
-          (revision.amortization as JsonObject | null)?.linear_coefficient as {
-            decimal?: string;
-          } | null
-        )?.decimal ?? 0,
-      );
-      if (!coefficient)
-        return assetRefusal("REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED", {
-          forecast: null,
-        });
-      const day = 86_400_000;
-      const days = Math.round((Date.parse(until) - Date.parse(from)) / day) + 1;
-      const year = Number(from.slice(0, 4));
-      const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-      const calendar = leap ? 366 : 365;
-      const amount = ((basis * coefficient * days) / calendar).toFixed(2);
-      return {
-        profile_id: profileId,
-        authority,
-        outcome: "succeeded",
-        refusal: null,
-        forecast: {
-          asset_id: id,
-          asset_revision_id: latest.revision_id,
-          tax_year: year,
-          covered_from: from,
-          covered_until: until,
-          service_days: days,
-          calendar_days: calendar,
-          amount: decimal(amount),
-          schedule_fingerprint: hex64(`schedule:${id}:${from}:${until}`),
-          authority_generation: authority.logical_generation,
-          source_reference: "ley-35-2006:art-30",
-        },
-      };
-    },
-    "ledger.actividad-asset.filing-handoff": (request) => {
-      fromKeys(request, ["tax_year", "m130_period"]);
-      const year = whole(request.tax_year);
-      const period = required(request.m130_period);
-      if (!["1T", "2T", "3T", "4T"].includes(period)) invalid();
-      const claims = [...assets.values()].flatMap((asset) =>
-        asset.claims.filter((claim) => claim.tax_year === year),
-      );
-      const total = claims
-        .reduce(
-          (sum, claim) =>
-            sum + Number((claim.amount as { decimal: string }).decimal),
-          0,
-        )
-        .toFixed(2);
-      const ids = claims.map((claim) => claim.claim_id as string);
-      const projection = (
-        casilla: string,
-        amount: string,
-        named: string[],
-      ) => ({
-        target_casilla_id: casilla,
-        tax_year: year,
-        claim_ids: named,
-        amount: decimal(amount),
-      });
-      return {
-        profile_id: profileId,
-        authority,
-        outcome: "succeeded",
-        refusal: null,
-        tax_year: year,
-        m130_period: period,
-        filing_handoff: {
-          material_m100: projection("0156", total, ids),
-          intangible_m100: projection("0157", "0", []),
-          material_m130: projection("02", total, ids),
-          intangible_m130: projection("02", "0", []),
-        },
       };
     },
   };
@@ -1484,21 +1347,15 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     ];
   }
 
-  const provisional = assetOperations(
-    {
-      now,
-      hex64,
-      invalid,
-      stop: (reason, detail) => {
-        throw new SetupStopped(reason, detail);
-      },
+  const provisional = assetOperations({
+    now,
+    hex64,
+    invalid,
+    stop: (reason, detail) => {
+      throw new SetupStopped(reason, detail);
     },
-    () => assets,
-    { reads: assetReads, writes: assetWrites },
-  );
-  const reads: Partial<
-    Record<LedgerDefinitionId | ProvisionalOperationId, Handler>
-  > = {
+  });
+  const reads: Partial<Record<LedgerDefinitionId, Handler>> = {
     "ledger.rule.list": (request) => {
       fromKeys(request, []);
       return {
@@ -1618,6 +1475,10 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
           valuation_method: book.valuation_method,
           opening_stock: decimal(book.opening_stock),
           movement_count: book.movements.length,
+          label: book.label ?? null,
+          retired: book.retired === true,
+          retirement_reason: book.retired ? "activity_ceased" : null,
+          correction_count: 0,
         })),
       };
     },
@@ -1640,12 +1501,9 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         refusal: null,
       };
     },
-    ...assetReads,
     ...provisional.reads,
   };
-  const writes: Partial<
-    Record<LedgerDefinitionId | ProvisionalOperationId, Handler>
-  > = {
+  const writes: Partial<Record<LedgerDefinitionId, Handler>> = {
     "ledger.rule.add": addRule,
     "ledger.rule.apply": applyRules,
     "ledger.ratios.set": (request) => {
@@ -1685,7 +1543,6 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     ...prorrataWrites,
     "ledger.bienes_inversion.declare": declareCapital,
     ...inventoryWrites,
-    ...assetWrites,
     ...provisional.writes,
     "ledger.participation.rebuild": (request) => {
       fromKeys(request, []);

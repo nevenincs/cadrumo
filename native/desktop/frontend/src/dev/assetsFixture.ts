@@ -1,29 +1,35 @@
-// The scenario ledger's answers to the Assets tab's provisional operations:
-// a register that spans decades, with every state of a plan, a timeline and
-// a write the tab shows. Its elements are synthetic. Its figures are fixed
-// text; only a baja re-adds the claims it leaves. Elements made through the
-// admitted create and correct operations appear beside the seeded ones, with
-// the history those operations kept.
+// The scenario ledger's answers to the Assets tab's operations: a register of
+// synthetic elements (see `assetsSeed.ts`) read as the backend reads it, and
+// the writes the tab sends, answered with the reasons the backend gives. A
+// write changes what the next read says, but the figures of a plan stay the
+// seeded ones: only a claim, a description, a correction and a baja move
+// anything, and a plan is never recalculated. An element made through create
+// starts with a plan worked out for a linear election and the reason there is
+// none for any other; the request it is made from is judged as the backend
+// judges a revision.
 
 import type {
   AcquisitionCandidate,
-  Amount,
-  AssetBaja,
-  AssetCounts,
   AssetListRow,
-  Descriptor,
-  DescriptorField,
-  DraftedOperationId,
-  FormField,
-  FormKind,
-  FormOptions,
+  DescriptorFacts,
+  DisposalCalculation,
+  DisposalFacts,
   PlanClaim,
-  PlanElection,
   PlanRow,
-  ProvisionalOperationId,
+  ReasonFact,
   TimelineEvent,
-} from "@/components/ledger/assets/assetsContract";
-import type { JsonObject, JsonValue } from "../shell/ledger";
+} from "@/shell/ledgerSetup";
+import type {
+  JsonObject,
+  JsonValue,
+  LedgerDefinitionId,
+} from "../shell/ledger";
+import {
+  ADMITTED_METHODS,
+  SEED_ELEMENTS,
+  TABLE_GROUPS,
+  type SeedElement,
+} from "./assetsSeed";
 
 type Handler = (request: JsonObject) => JsonObject;
 
@@ -36,1721 +42,1757 @@ type Tools = {
   stop: (reason: string, detail: JsonObject) => never;
 };
 
-/** What the admitted create and correct operations hold of an element. */
-type AdmittedAsset = {
-  revisions: { revision: JsonObject; revision_id: string }[];
-};
+/** The scenario's date: the register reads as of it. */
+const TODAY = "2026-10-30";
+const REGIME = "normal";
+const VALIDATION = "REFUSED_ACTIVIDAD_ASSET_VALIDATION";
+const INCOMPLETE = "REFUSED_ACTIVIDAD_ASSET_INCOMPLETE";
+const UNSUPPORTED = "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED";
+const CLAIM_CONFLICT = "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT";
+const ERRORS = "ledger.actividad_asset.errors.";
+const STATE = "ledger.actividad_asset.non_deductible_iva_state.";
+const FINDING = "ledger.actividad_asset.disposal_finding.";
+const FAMILY = "ledger.actividad_asset.";
+const FIRST_SUPPORTED_YEAR = 2022;
+/** The last year the registry carries official tables for; later years are estimates. */
+const LAST_ADMITTED_YEAR = 2026;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-type Held = {
+const json = <T>(value: T): JsonObject => value as unknown as JsonObject;
+const dec = (value: string) => ({ decimal: value });
+
+// ---- Amounts, in whole cents --------------------------------------------------
+
+const toCents = (text: string): number => Math.round(Number(text) * 100);
+const fromCents = (cents: number): string => (cents / 100).toFixed(2);
+
+const leap = (year: number) =>
+  (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+const daysBetween = (from: string, until: string) =>
+  Math.round((Date.parse(until) - Date.parse(from)) / 86_400_000);
+const later = (a: string, b: string) => (a > b ? a : b);
+const earlier = (a: string, b: string) => (a < b ? a : b);
+
+/** The charge of a span on the tax year's cumulative curve: each end is
+ * rounded, so contiguous spans add up to the year's figure. */
+function chargeFor(
+  annual: string,
+  window: string,
+  from: string,
+  until: string,
+  year: number,
+): string {
+  const days = leap(year) ? 366 : 365;
+  const upTo = (point: string) =>
+    Math.round((toCents(annual) * daysBetween(window, point)) / days);
+  return fromCents(upTo(until) - upTo(from));
+}
+
+// ---- The register ----------------------------------------------------------------
+
+/** What the register holds of one element. */
+type Element = Omit<SeedElement, "id"> & {
   id: string;
-  name: string | null;
-  serial: string | null;
-  fields: DescriptorField[];
-  kind_key: string;
-  method_key: string;
-  in_service_date: string;
-  revision_number: number;
-  baja: AssetBaja | null;
-  plan: PlanRow[];
-  /** Gives a plan its pending figures, as the backend states them. */
-  pending: (rows: PlanRow[]) => PlanRow[];
-  events: TimelineEvent[];
-  /** How many admitted revisions are already in `events`. */
-  admitted: number;
-  /** What an element made through the add form was made from. */
-  made?: {
-    basis: string;
-    non_deductible_iva: string;
-    acquisition: string;
-  };
-  /** The facts a correction last stated. */
-  stated?: { basis?: string; non_deductible_iva?: string };
+  /** The facts of the latest description. */
+  descriptor: DescriptorFacts | null;
+  /** The day after the last day of service, if it has a baja. */
+  outOfService: string | null;
+  /** The baja the element carries, if any. */
+  baja: DisposalFacts | null;
 };
 
-type Draft = Omit<TimelineEvent, "sequence" | "replaces_sequence"> & {
-  key?: string;
-  replaces?: string;
-};
-
-/** An answer as the relay carries it: a copy, so a reader never holds the
- * register's own records. */
-const json = <T>(value: T): JsonObject =>
-  JSON.parse(JSON.stringify(value)) as JsonObject;
-const dec = (value: string): Amount => ({ decimal: value });
-const yearOf = (date: string) => Number(date.slice(0, 4));
-const span = (from: number, to: number) =>
-  Array.from({ length: to - from + 1 }, (_, at) => from + at);
-const daysIn = (year: number) =>
-  (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
-const cents = (amount: Amount) =>
-  amount === null ? 0 : Math.round(Number(amount.decimal) * 100);
-const total = (claims: readonly PlanClaim[]): Amount =>
-  claims.length === 0
-    ? null
-    : dec(
-        (
-          claims.reduce((sum, claim) => sum + cents(claim.amount), 0) / 100
-        ).toFixed(2),
-      );
-
-/**
- * Stands in for the backend's pending figures, which the views only draw: the
- * basis less what the schedule allows by each year's end, or for a free
- * method less what is claimed. A year with no figure to go on has none, and
- * every year after it is unknown too.
- */
-const pendingBy =
-  (basis: string, by: "schedule" | "claims") =>
-  (rows: PlanRow[]): PlanRow[] => {
-    let left: number | null = cents(dec(basis));
-    return rows.map((planned) => {
-      const step = by === "schedule" ? planned.planned : planned.claimed;
-      if (left === null || step === null) {
-        left = null;
-        return { ...planned, pending_end: null };
-      }
-      left -= cents(step);
-      return { ...planned, pending_end: dec((left / 100).toFixed(2)) };
-    });
-  };
-const unchanged = (rows: PlanRow[]) => rows;
-
-/** The tokens each choice offers and the label key that words each. */
-const REASONS = {
-  sale: "desktop.ledger.assets.option.reason.sale",
-  scrapping: "desktop.ledger.assets.option.reason.scrapping",
-  theft: "desktop.ledger.assets.option.reason.theft",
-  withdrawal: "desktop.ledger.assets.option.reason.withdrawal",
-};
-const KINDS = {
-  tangible: "desktop.ledger.assets.option.kind.tangible",
-  intangible: "desktop.ledger.assets.option.kind.intangible",
-  vehicle: "desktop.ledger.assets.option.kind.vehicle",
-};
-const METHODS = {
-  linear_table: "desktop.ledger.assets.option.method.linear_table",
-  constant_percentage:
-    "desktop.ledger.assets.option.method.constant_percentage",
-  free_300: "desktop.ledger.assets.option.method.free_300",
-};
-
-/** The purchases an element can be made from. One states every figure, one
- * does not know its non-deductible IVA, one states neither. */
-const CANDIDATES: AcquisitionCandidate[] = [
+const PURCHASES: AcquisitionCandidate[] = [
   {
-    candidate_id: "purchase-3d-printer",
-    description: "Suministros Técnicos SL · impresora 3D",
-    date: "2026-03-02",
-    amount: dec("1815.00"),
-    values: { basis_amount: "1500.00", non_deductible_iva: "0.00" },
+    transaction_id: "t-portatil",
+    booked_date: "2026-05-06",
+    description: "Portátil de trabajo",
+    amount: dec("1089.00"),
+    currency: "EUR",
+    paid_in_euro: dec("1089.00"),
+    taxable_base: dec("900.00"),
+    iva_amount: dec("189.00"),
+    non_deductible_iva_state: "known",
+    non_deductible_iva_state_key: `${STATE}known`,
+    non_deductible_iva: dec("0.00"),
+    invoice_evidence_id:
+      "9f2c0a1e4b7d3a58c61e0f93d7b2a4c8e5f1073a6d9b28c4e0a7f35b16d82c94",
+    evidence_fingerprint:
+      "9f2c0a1e4b7d3a58c61e0f93d7b2a4c8e5f1073a6d9b28c4e0a7f35b16d82c94",
   },
   {
-    candidate_id: "purchase-cutting-table",
-    description: "Carpintería Ruiz · mesa de despiece",
-    date: "2026-05-19",
-    amount: dec("2420.00"),
-    values: { basis_amount: "2000.00", non_deductible_iva: null },
+    transaction_id: "t-silla",
+    booked_date: "2026-02-11",
+    description: "Silla ergonómica",
+    amount: dec("242.00"),
+    currency: "EUR",
+    paid_in_euro: dec("242.00"),
+    taxable_base: dec("200.00"),
+    iva_amount: dec("42.00"),
+    non_deductible_iva_state: "unknown",
+    non_deductible_iva_state_key: `${STATE}unknown`,
+    non_deductible_iva: null,
+    invoice_evidence_id: null,
+    evidence_fingerprint: null,
   },
   {
-    candidate_id: "purchase-without-invoice",
-    description: "Pago sin factura enlazada",
-    date: "2026-06-11",
-    amount: dec("640.00"),
-    values: { basis_amount: null, non_deductible_iva: null },
+    transaction_id: "t-efectivo",
+    booked_date: "2025-11-30",
+    description: "Compra pagada en efectivo",
+    amount: dec("150.00"),
+    currency: "EUR",
+    paid_in_euro: dec("150.00"),
+    taxable_base: null,
+    iva_amount: null,
+    non_deductible_iva_state: "unknown",
+    non_deductible_iva_state_key: `${STATE}unknown`,
+    non_deductible_iva: null,
+    invoice_evidence_id: null,
+    evidence_fingerprint: null,
+  },
+  {
+    transaction_id: "t-monitor",
+    booked_date: "2025-09-03",
+    description: "Monitor de diseño",
+    amount: dec("400.00"),
+    currency: "USD",
+    paid_in_euro: null,
+    taxable_base: null,
+    iva_amount: null,
+    non_deductible_iva_state: "unknown",
+    non_deductible_iva_state_key: `${STATE}unknown`,
+    non_deductible_iva: null,
+    invoice_evidence_id: null,
+    evidence_fingerprint: null,
   },
 ];
 
-const choices = (labels: Record<string, string>) =>
-  Object.entries(labels).map(([token, label_key]) => ({ token, label_key }));
+const textOf = (found: unknown): string | null =>
+  typeof found === "string" && found !== "" ? found : null;
+const decimalOf = (found: unknown): string | null =>
+  found !== null &&
+  typeof found === "object" &&
+  typeof (found as { decimal?: unknown }).decimal === "string"
+    ? (found as { decimal: string }).decimal
+    : null;
 
-const field = (
-  key: string,
-  control: FormField["control"],
-  required: boolean,
-  extra: Partial<FormField> & { label_key: string },
-): FormField => ({
-  key,
-  control,
-  required,
-  choices: [],
-  bounds: null,
-  ...extra,
-});
-
-/** The scenario's operations for the Assets tab, over `admitted`, which the
- * admitted create and correct operations write to. */
-export function assetOperations(
-  tools: Tools,
-  admitted: () => ReadonlyMap<string, AdmittedAsset>,
-  /** The admitted operations' answers in their admitted shapes, where a
-   * request still comes in one. */
-  legacy?: { reads: Record<string, Handler>; writes: Record<string, Handler> },
-) {
+export function assetOperations(tools: Tools) {
   const { now, hex64, invalid, stop } = tools;
 
-  const election = (
-    id: string,
-    method: string,
-    revision: number,
-  ): PlanElection => ({
-    fingerprint: hex64(`election:${id}:${method}:${revision}`),
-    method_key: method,
-    revision_number: revision,
-  });
-  const claimOf = (
-    id: string,
-    tag: string,
-    amount: string,
-    from: string,
-    until: string,
-    extra: Partial<PlanClaim> = {},
-  ): PlanClaim => ({
-    claim_id: hex64(`claim:${id}:${tag}`),
-    amount: dec(amount),
-    from,
-    until,
-    effective: true,
-    superseded_by: null,
-    revision_number: 1,
-    matches_current_schedule: true,
-    used_by: [],
-    ...extra,
-  });
-  const wholeYear = (
-    id: string,
-    year: number,
-    amount: string,
-    extra: Partial<PlanClaim> = {},
-  ) =>
-    claimOf(id, String(year), amount, `${year}-01-01`, `${year}-12-31`, extra);
-
-  /** A year of a plan: claimed in full unless `over` says otherwise. */
-  const row = (
-    id: string,
-    year: number,
-    standing: PlanElection,
-    over: Partial<PlanRow> & { amount?: string; edition?: string } = {},
-  ): PlanRow => {
-    const { amount, edition = "2015", ...rest } = over;
-    const claims = rest.claims ?? (amount ? [wholeYear(id, year, amount)] : []);
-    const effective = claims.filter((claim) => claim.effective);
-    return {
-      tax_year: year,
-      state_key: "claimed",
-      finding_keys: [],
-      authority: { edition, projected: false },
-      election: standing,
-      service_days: daysIn(year),
-      calendar_days: daysIn(year),
-      planned: amount ? dec(amount) : null,
-      planned_absent_key: null,
-      claimed: total(effective),
-      pending_end: null,
-      claimable: null,
-      ...rest,
-      claims,
-    };
-  };
-
-  // ---- Timelines ---------------------------------------------------------
-
-  const numbered = (drafts: readonly Draft[]): TimelineEvent[] => {
-    const sequence = new Map<string, number>();
-    drafts.forEach((draft, at) => {
-      if (draft.key) sequence.set(draft.key, at + 1);
-    });
-    return drafts.map((draft, at) => ({
-      sequence: at + 1,
-      recorded_at: draft.recorded_at,
-      type_key: draft.type_key,
-      origin_key: draft.origin_key,
-      effect_date: draft.effect_date,
-      replaces_sequence: draft.replaces
-        ? (sequence.get(draft.replaces) ?? null)
-        : null,
-      changes: draft.changes,
-      affects_calculation: draft.affects_calculation,
-    }));
-  };
-  const claimDrafts = (
-    rows: readonly PlanRow[],
-    recorded: (year: number) => string | null,
-  ): Draft[] =>
-    rows.flatMap((planned) =>
-      planned.claims.map((claim): Draft => {
-        const replaced = rows
-          .flatMap((other) => other.claims)
-          .find((other) => other.superseded_by === claim.claim_id);
-        return {
-          key: claim.claim_id,
-          replaces: replaced?.claim_id,
-          recorded_at: recorded(planned.tax_year),
-          type_key: "claim_recorded",
-          origin_key: "person",
-          effect_date: claim.until,
-          changes: [
-            {
-              field_key: "amount",
-              before: null,
-              after: claim.amount?.decimal ?? null,
-            },
-          ],
-          affects_calculation: true,
-        };
-      }),
-    );
-  const added = (
-    date: string,
-    at: string | null,
-    origin = "person",
-  ): Draft => ({
-    recorded_at: at,
-    type_key: "element_added",
-    origin_key: origin,
-    effect_date: date,
-    changes: [],
-    affects_calculation: true,
-  });
-  const described = (
-    at: string | null,
-    name: string,
-    serial: string | null,
-  ): Draft => ({
-    recorded_at: at,
-    type_key: "description_added",
-    origin_key: "person",
-    effect_date: null,
-    changes: [
-      { field_key: "name", before: null, after: name },
-      ...(serial ? [{ field_key: "serial", before: null, after: serial }] : []),
-    ],
-    affects_calculation: false,
-  });
-
-  // ---- The seeded register ----------------------------------------------
-
-  const seeds = (): Held[] => {
-    const held: Held[] = [];
-
-    // Decades old and fully amortized; claims from before time was kept.
-    {
-      const id = "plotter";
-      const linear = election(id, "linear_table", 1);
-      const rows = [
-        row(id, 1999, linear, {
-          amount: "1170.41",
-          service_days: 292,
-          edition: "1998",
-        }),
-        ...span(2000, 2007).map((year) =>
-          row(id, year, linear, { amount: "1600.00", edition: "1998" }),
-        ),
-        row(id, 2008, linear, { amount: "430.00", edition: "1998" }),
-      ];
-      held.push({
-        id,
-        name: "Plotter de gran formato",
-        serial: "PLT-4410-A",
-        fields: [],
-        kind_key: "tangible",
-        method_key: "linear_table",
-        in_service_date: "1999-03-15",
-        revision_number: 1,
-        baja: null,
-        pending: pendingBy("14400.41", "schedule"),
-        plan: pendingBy("14400.41", "schedule")(rows),
-        events: numbered([
-          added("1999-03-15", null),
-          described(null, "Plotter de gran formato", "PLT-4410-A"),
-          ...claimDrafts(rows, (year) =>
-            year < 2005 ? null : `${year + 1}-02-08T10:15:00Z`,
-          ),
-        ]),
-        admitted: 0,
-      });
-    }
-
-    // A correction changed the method from 2014; one claim predates it and a
-    // later one no longer matches the schedule.
-    {
-      const id = "servidor";
-      const first = election(id, "linear_table", 1);
-      const second = election(id, "constant_percentage", 2);
-      const replacement = claimOf(
-        id,
-        "2014:replacement",
-        "1510.00",
-        "2014-01-01",
-        "2014-12-31",
-        { revision_number: 2 },
-      );
-      const original = wholeYear(id, 2014, "1480.00", {
-        effective: false,
-        superseded_by: replacement.claim_id,
-      });
-      const rows = [
-        ...span(2009, 2013).map((year) =>
-          row(id, year, first, {
-            amount: "1480.00",
-            ...(year === 2009 ? { service_days: 214 } : {}),
-          }),
-        ),
-        row(id, 2014, second, {
-          amount: "1510.00",
-          claims: [original, replacement],
-        }),
-        row(id, 2015, second, {
-          amount: "1360.00",
-          finding_keys: ["claim_stale"],
-          claims: [
-            wholeYear(id, 2015, "1480.00", { matches_current_schedule: false }),
-          ],
-        }),
-        ...span(2016, 2019).map((year) =>
-          row(id, year, second, {
-            amount: "1190.00",
-            claims: [wholeYear(id, year, "1190.00", { revision_number: 2 })],
-          }),
-        ),
-      ];
-      held.push({
-        id,
-        name: "Servidor de archivos",
-        serial: "SRV-2009-117",
-        fields: [{ key: "libro_registro", value: "R-0031" }],
-        kind_key: "tangible",
-        method_key: "constant_percentage",
-        in_service_date: "2009-06-01",
-        revision_number: 2,
-        baja: null,
-        pending: pendingBy("18000.00", "schedule"),
-        plan: pendingBy("18000.00", "schedule")(rows),
-        events: numbered([
-          added("2009-06-01", null),
-          described(null, "Servidor de archivos", "SRV-2009-117"),
-          ...claimDrafts(
-            rows.filter((r) => r.tax_year < 2014),
-            () => null,
-          ),
-          {
-            recorded_at: "2014-02-03T09:00:00Z",
-            type_key: "correction_added",
-            origin_key: "person",
-            effect_date: "2014-01-01",
-            changes: [
-              {
-                field_key: "method",
-                before: "linear_table",
-                after: "constant_percentage",
-              },
-            ],
-            affects_calculation: true,
-          },
-          ...claimDrafts(
-            rows.filter((r) => r.tax_year >= 2014),
-            (year) => `${year + 1}-01-20T08:30:00Z`,
-          ),
-        ]),
-        admitted: 0,
-      });
-    }
-
-    // A vehicle: a missing year, a year claimed in part, an overlap, and
-    // years on projected rates.
-    {
-      const id = "furgoneta";
-      const linear = election(id, "linear_table", 1);
-      const overlapA = wholeYear(id, 2023, "2100.00");
-      const overlapB = claimOf(
-        id,
-        "2023:b",
-        "1050.00",
-        "2023-07-01",
-        "2023-12-31",
-      );
-      const half = claimOf(
-        id,
-        "2026:h1",
-        "1050.00",
-        "2026-01-01",
-        "2026-06-30",
-      );
-      const rows = [
-        ...span(2021, 2022).map((year) =>
-          row(id, year, linear, {
-            amount: "2100.00",
-            ...(year === 2021 ? { service_days: 325 } : {}),
-          }),
-        ),
-        row(id, 2023, linear, {
-          amount: "2100.00",
-          finding_keys: ["claim_conflict"],
-          claims: [overlapA, overlapB],
-        }),
-        row(id, 2024, linear, {
-          amount: "2100.00",
-          service_days: 366,
-          claims: [
-            wholeYear(id, 2024, "2100.00", {
-              used_by: ["M130 2024 1T", "M130 2024 2T", "M100 2024"],
-            }),
-          ],
-        }),
-        row(id, 2025, linear, {
-          amount: "2100.00",
-          state_key: "missing",
-          claims: [],
-          claimed: null,
-          claimable: { from: "2025-01-01", until: "2025-12-31" },
-        }),
-        row(id, 2026, linear, {
-          amount: "2100.00",
-          state_key: "partial",
-          claims: [half],
-          claimable: { from: "2026-07-01", until: "2026-12-31" },
-        }),
-        ...span(2027, 2028).map((year) =>
-          row(id, year, linear, {
-            amount: "2100.00",
-            state_key: "forecast",
-            claims: [],
-            authority: { edition: "2026", projected: true },
-          }),
-        ),
-      ];
-      held.push({
-        id,
-        name: "Furgoneta de reparto",
-        serial: "VIN-ZZ99120",
-        fields: [],
-        kind_key: "vehicle",
-        method_key: "linear_table",
-        in_service_date: "2021-02-10",
-        revision_number: 1,
-        baja: null,
-        pending: pendingBy("21000.00", "schedule"),
-        plan: pendingBy("21000.00", "schedule")(rows),
-        events: numbered([
-          added("2021-02-10", "2021-02-12T11:00:00Z"),
-          described(
-            "2021-02-12T11:02:00Z",
-            "Furgoneta de reparto",
-            "VIN-ZZ99120",
-          ),
-          ...claimDrafts(rows, (year) => `${year + 1}-01-15T09:00:00Z`),
-        ]),
-        admitted: 0,
-      });
-    }
-
-    // An intangible without a serial: a recorded zero beside a missing year.
-    {
-      const id = "licencia";
-      const linear = election(id, "linear_table", 1);
-      const rows = [
-        row(id, 2020, linear, { amount: "300.00", service_days: 122 }),
-        row(id, 2021, linear, { amount: "900.00" }),
-        row(id, 2022, linear, {
-          amount: "900.00",
-          claims: [wholeYear(id, 2022, "0.00")],
-        }),
-        row(id, 2023, linear, {
-          amount: "900.00",
-          state_key: "missing",
-          claims: [],
-          claimed: null,
-          claimable: { from: "2023-01-01", until: "2023-12-31" },
-        }),
-        row(id, 2024, linear, { amount: "900.00" }),
-      ];
-      held.push({
-        id,
-        name: "Licencia de software de diseño",
-        serial: null,
-        fields: [],
-        kind_key: "intangible",
-        method_key: "linear_table",
-        in_service_date: "2020-09-01",
-        revision_number: 1,
-        baja: null,
-        pending: pendingBy("4500.00", "schedule"),
-        plan: pendingBy("4500.00", "schedule")(rows),
-        events: numbered([
-          added("2020-09-01", "2020-09-03T16:20:00Z", "import"),
-          described(
-            "2020-09-03T16:25:00Z",
-            "Licencia de software de diseño",
-            null,
-          ),
-          ...claimDrafts(rows, (year) => `${year + 1}-02-02T12:00:00Z`),
-        ]),
-        admitted: 0,
-      });
-    }
-
-    // Free depreciation: no planned figure, the elected amount once claimed.
-    {
-      const id = "prensa";
-      const free = election(id, "free_300", 1);
-      const rows = [
-        row(id, 2023, free, {
-          planned: null,
-          planned_absent_key: "free_method",
-          claims: [wholeYear(id, 2023, "280.00")],
-          service_days: 241,
-        }),
-        row(id, 2024, free, {
-          planned: null,
-          planned_absent_key: "free_method",
-          state_key: "missing",
-          claims: [],
-          claimed: null,
-          claimable: { from: "2024-01-01", until: "2024-12-31" },
-        }),
-      ];
-      held.push({
-        id,
-        name: "Prensa de taller",
-        serial: "PT-2023-009",
-        fields: [],
-        kind_key: "tangible",
-        method_key: "free_300",
-        in_service_date: "2023-05-04",
-        revision_number: 1,
-        baja: null,
-        pending: pendingBy("3000.00", "claims"),
-        plan: pendingBy("3000.00", "claims")(rows),
-        events: numbered([
-          added("2023-05-04", "2023-05-05T10:00:00Z"),
-          described("2023-05-05T10:03:00Z", "Prensa de taller", "PT-2023-009"),
-          ...claimDrafts(rows, (year) => `${year + 1}-01-10T10:00:00Z`),
-        ]),
-        admitted: 0,
-      });
-    }
-
-    // Opening history never stated: nothing can be worked out, and nothing
-    // is read as zero.
-    {
-      const id = "escaner";
-      const linear = election(id, "linear_table", 1);
-      const rows = span(2019, 2026).map((year) =>
-        row(id, year, linear, {
-          state_key: "incomplete",
-          finding_keys: ["opening_history_missing"],
-          planned: null,
-          planned_absent_key: "opening_history_unknown",
-          claimed: null,
-          service_days: year === 2019 ? 42 : daysIn(year),
-        }),
-      );
-      held.push({
-        id,
-        name: null,
-        serial: null,
-        fields: [],
-        kind_key: "tangible",
-        method_key: "linear_table",
-        in_service_date: "2019-11-20",
-        revision_number: 1,
-        baja: null,
-        pending: unchanged,
-        plan: rows,
-        events: numbered([added("2019-11-20", null, "import")]),
-        admitted: 0,
-      });
-    }
-
-    // Given a baja: the claim that crossed the last day of service was
-    // replaced in the same write, and no year follows.
-    {
-      const id = "camara";
-      const first = election(id, "linear_table", 1);
-      const second = election(id, "linear_table", 2);
-      const shortened = claimOf(
-        id,
-        "2024:end",
-        "750.00",
-        "2024-01-01",
-        "2024-06-30",
+  const elements = new Map<string, Element>(
+    SEED_ELEMENTS.map((seed) => {
+      const copy = structuredClone(seed);
+      return [
+        seed.id,
         {
-          revision_number: 3,
+          ...copy,
+          descriptor:
+            copy.list.name === null
+              ? null
+              : {
+                  name: copy.list.name,
+                  serial_number: copy.list.serial_number,
+                  description: null,
+                  document_kind: null,
+                  document_number: null,
+                  supplier_name: null,
+                  supplier_tax_id: null,
+                },
+          outOfService: null,
+          baja: null,
         },
-      );
-      const crossing = wholeYear(id, 2024, "1500.00", {
-        effective: false,
-        superseded_by: shortened.claim_id,
-        revision_number: 2,
-      });
-      const rows = [
-        ...span(2011, 2018).map((year) =>
-          row(id, year, first, {
-            amount: "1350.00",
-            ...(year === 2011 ? { service_days: 272 } : {}),
-          }),
-        ),
-        ...span(2019, 2023).map((year) =>
-          row(id, year, second, {
-            amount: "1500.00",
-            claims: [wholeYear(id, year, "1500.00", { revision_number: 2 })],
-          }),
-        ),
-        row(id, 2024, second, {
-          amount: "750.00",
-          service_days: 182,
-          claims: [crossing, shortened],
-        }),
       ];
-      const [crossingDraft, shortenedDraft] = claimDrafts(
-        [rows[rows.length - 1]!],
-        () => "2024-07-02T08:10:00Z",
-      ) as [Draft, Draft];
-      held.push({
-        id,
-        name: "Cámara de revelado",
-        serial: "CR-2011-44",
-        fields: [],
-        kind_key: "tangible",
-        method_key: "linear_table",
-        in_service_date: "2011-04-04",
-        revision_number: 3,
-        baja: { date: "2024-06-30", reason_key: "sale" },
-        pending: pendingBy("19500.00", "schedule"),
-        plan: pendingBy("19500.00", "schedule")(rows),
-        events: numbered([
-          added("2011-04-04", null),
-          described(null, "Cámara de revelado", "CR-2011-44"),
-          ...claimDrafts(
-            rows.filter((r) => r.tax_year < 2019),
-            () => null,
-          ),
-          {
-            recorded_at: "2019-01-14T09:40:00Z",
-            type_key: "correction_added",
-            origin_key: "person",
-            effect_date: "2019-01-01",
-            changes: [
-              { field_key: "basis", before: "13500.00", after: "19500.00" },
-            ],
-            affects_calculation: true,
-          },
-          ...claimDrafts(
-            rows.filter((r) => r.tax_year >= 2019 && r.tax_year < 2024),
-            (year) => `${year + 1}-01-18T09:00:00Z`,
-          ),
-          { ...crossingDraft, recorded_at: "2024-01-20T09:00:00Z" },
-          {
-            recorded_at: "2024-07-02T08:10:00Z",
-            type_key: "baja_recorded",
-            origin_key: "person",
-            effect_date: "2024-06-30",
-            changes: [
-              { field_key: "baja_date", before: null, after: "2024-06-30" },
-              { field_key: "baja_reason", before: null, after: "sale" },
-            ],
-            affects_calculation: true,
-          },
-          shortenedDraft,
-        ]),
-        admitted: 0,
-      });
-    }
+    }),
+  );
+  /** The purchases an element has taken as its acquisition. */
+  const taken = new Set<string>();
 
-    // An industrial building at 2.53%, inside the table's 3% and 68 years: decades of settled
-    // years, one missing year and a run of years on projected rates.
-    {
-      const id = "taller";
-      const linear = election(id, "linear_table", 1);
-      const rows = [
-        row(id, 1994, linear, {
-          amount: "1200.00",
-          service_days: 243,
-          edition: "1992",
-        }),
-        ...span(1995, 2025).map((year) =>
-          row(id, year, linear, {
-            amount: "2400.00",
-            edition: year < 2015 ? "1992" : "2015",
-          }),
-        ),
-        row(id, 2026, linear, {
-          amount: "2400.00",
-          state_key: "missing",
-          claims: [],
-          claimed: null,
-          claimable: { from: "2026-01-01", until: "2026-12-31" },
-        }),
-        ...span(2027, 2033).map((year) =>
-          row(id, year, linear, {
-            amount: "2400.00",
-            state_key: "forecast",
-            claims: [],
-            claimed: null,
-            authority: { edition: "2026", projected: true },
-          }),
-        ),
-      ];
-      held.push({
-        id,
-        name: "Nave industrial del taller",
-        serial: null,
-        fields: [],
-        kind_key: "tangible",
-        method_key: "linear_table",
-        in_service_date: "1994-05-02",
-        revision_number: 1,
-        baja: null,
-        pending: pendingBy("94800.00", "schedule"),
-        plan: pendingBy("94800.00", "schedule")(rows),
-        events: numbered([
-          added("1994-05-02", null),
-          described(null, "Nave industrial del taller", null),
-          ...claimDrafts(rows, (year) =>
-            year < 2005 ? null : `${year + 1}-01-12T09:00:00Z`,
-          ),
-        ]),
-        admitted: 0,
-      });
-    }
-
-    return held;
+  const authority = {
+    logical_generation: hex64("authority:generation"),
+    reader_incarnation: hex64("authority:reader"),
+  };
+  const ok = {
+    profile_id: "story-profile",
+    authority,
+    outcome: "succeeded",
+    refusal: null,
   };
 
-  const elements = new Map(seeds().map((held) => [held.id, held]));
-
-  /** Brings in the elements the admitted operations made, and the
-   * revisions they added to elements already held. */
-  const sync = () => {
-    for (const [id, source] of admitted()) {
-      const latest = source.revisions[source.revisions.length - 1]?.revision;
-      if (!latest) continue;
-      const text = (value: JsonValue | undefined, fallback: string) =>
-        typeof value === "string" && value !== "" ? value : fallback;
-      const method = text(
-        (latest.amortization as JsonObject | null)?.method,
-        "linear_table",
-      );
-      const kind = text(latest.asset_kind, "tangible");
-      const service = text(latest.in_service_date, "");
-      const held = elements.get(id) ?? {
-        id,
-        name: null,
-        serial: null,
-        fields: [],
-        kind_key: kind,
-        method_key: method,
-        in_service_date: service,
-        revision_number: 0,
-        baja: null,
-        plan: [],
-        pending: unchanged,
-        events: [],
-        admitted: 0,
-      };
-      for (const revision of source.revisions.slice(held.admitted)) {
-        held.events.push({
-          sequence: held.events.length + 1,
-          recorded_at: null,
-          type_key: held.admitted === 0 ? "element_added" : "correction_added",
-          origin_key: "person",
-          effect_date: service || null,
-          replaces_sequence: null,
-          changes: [],
-          affects_calculation: true,
-        });
-        held.admitted += 1;
-        held.revision_number =
-          Number(revision.revision.revision_number) || held.admitted;
-      }
-      held.kind_key = kind;
-      held.method_key = method;
-      held.in_service_date = service;
-      elements.set(id, held);
-    }
-  };
-
-  // ---- Refusals and reading a request ------------------------------------
-
+  /** A refusal as the backend states it: a code, a reason key and its facts. */
   const refuse = (
     code: string,
-    shape: JsonObject,
-    verdict: JsonObject | null = null,
-    reasonKey: string | null = null,
+    key: string | null,
+    facts: Record<string, string> = {},
+    shape: JsonObject = {},
+    missing: string[] = [],
   ): never =>
-    stop(code, {
-      outcome: "refused",
-      refusal: {
-        code,
-        precondition_verdict: verdict,
-        accelerated_da18: null,
-        reason_key: reasonKey,
-      },
-      ...shape,
-    });
-  const only = (request: JsonObject, allowed: readonly string[]) => {
-    if (Object.keys(request).some((key) => !allowed.includes(key))) invalid();
-  };
-  const textOf = (value: JsonValue | undefined) =>
-    typeof value === "string" && value.trim() !== "" ? value.trim() : null;
-  const need = (value: JsonValue | undefined) => textOf(value) ?? invalid();
-  const heldFor = (request: JsonObject, shape: JsonObject): Held => {
-    sync();
-    const id = need(request.asset_id);
-    return (
-      elements.get(id) ??
-      refuse(
-        "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
-        shape,
-        null,
-        "asset_not_found",
-      )
-    );
-  };
-
-  const countsOf = (plan: readonly PlanRow[]): AssetCounts => {
-    const count = (test: (planned: PlanRow) => boolean) =>
-      plan.filter(test).length;
-    return {
-      missing: count((planned) => planned.state_key === "missing"),
-      incomplete: count((planned) => planned.state_key === "incomplete"),
-      conflict: count((planned) =>
-        planned.finding_keys.includes("claim_conflict"),
-      ),
-      stale: count((planned) => planned.finding_keys.includes("claim_stale")),
-    };
-  };
-  const rowOf = (held: Held): AssetListRow => ({
-    asset_id: held.id,
-    name: held.name,
-    serial: held.serial,
-    kind_key: held.kind_key,
-    method_key: held.method_key,
-    in_service_date: held.in_service_date,
-    revision_number: held.revision_number,
-    ...(held.baja ? { baja: held.baja } : {}),
-    counts: countsOf(held.plan),
-  });
-
-  /** The tax years the stepper offers: each year an element has a plan
-   * row or entered service in. */
-  const yearsOffered = () =>
-    [
-      ...new Set(
-        [...elements.values()].flatMap((held) => [
-          ...held.plan.map((planned) => planned.tax_year),
-          ...(held.in_service_date ? [yearOf(held.in_service_date)] : []),
-        ]),
-      ),
-    ].sort((a, b) => a - b);
-
-  const LABELS = {
-    acquisition: "desktop.ledger.assets.field.acquisition",
-    baja_date: "desktop.ledger.assets.field.baja_date",
-    baja_reason: "desktop.ledger.assets.field.baja_reason",
-    basis: "desktop.ledger.assets.field.basis",
-    in_service_date: "desktop.ledger.assets.field.in_service_date",
-    kind: "desktop.ledger.assets.field.kind",
-    libro_registro: "desktop.ledger.assets.field.libro_registro",
-    method: "desktop.ledger.assets.field.method",
-    method_year: "desktop.ledger.assets.field.method_year",
-    name: "desktop.ledger.assets.field.name",
-    non_deductible_iva: "desktop.ledger.assets.field.non_deductible_iva",
-    serial: "desktop.ledger.assets.field.serial",
-  } as const;
-  const DATE_HINT = "desktop.ledger.form.date_hint";
-  const AMOUNT_HINT = "desktop.ledger.form.amount_hint";
-  const IVA_HINT = "desktop.ledger.assets.field.non_deductible_iva_hint";
-
-  /** The year of a plan an act is about, and the claim it replaces. */
-  const claimTerms = (
-    held: Held,
-    year: number | null,
-    replaces: string | null,
-  ) => {
-    const planned = held.plan.find((entry) => entry.tax_year === year);
-    const replaced =
-      planned?.claims.find((claim) => claim.claim_id === replaces) ?? null;
-    return { planned, replaced };
-  };
-
-  const optionsFor = (
-    kind: FormKind,
-    held: Held | null,
-    year: number | null = null,
-    replaces: string | null = null,
-  ): FormOptions => {
-    const descriptor = (key: string) =>
-      held?.fields.find((entry) => entry.key === key)?.value ?? null;
-    const terms = held ? claimTerms(held, year, replaces) : null;
-    const span = terms?.replaced ?? terms?.planned?.claimable ?? null;
-    const fields: Record<FormKind, FormField[]> = {
-      element: [
-        field("name", "text", true, { label_key: LABELS.name }),
-        field("serial", "text", false, { label_key: LABELS.serial }),
-        field("kind_key", "choice", true, {
-          label_key: LABELS.kind,
-          choices: choices(KINDS),
-        }),
-        field("method_key", "choice", true, {
-          label_key: LABELS.method,
-          choices: choices(METHODS),
-        }),
-        field("in_service_date", "date", true, {
-          label_key: LABELS.in_service_date,
-          hint_key: DATE_HINT,
-        }),
-        field("acquisition", "candidate", true, {
-          label_key: LABELS.acquisition,
-        }),
-        field("basis_amount", "amount", true, {
-          label_key: LABELS.basis,
-          hint_key: AMOUNT_HINT,
-        }),
-        field("non_deductible_iva", "amount", true, {
-          label_key: LABELS.non_deductible_iva,
-          hint_key: IVA_HINT,
-        }),
-      ],
-      descriptor: [
-        field("name", "text", true, {
-          label_key: LABELS.name,
-          current: held?.name ?? null,
-        }),
-        field("serial", "text", false, {
-          label_key: LABELS.serial,
-          current: held?.serial ?? null,
-        }),
-        field("libro_registro", "text", false, {
-          label_key: LABELS.libro_registro,
-          current: descriptor("libro_registro"),
-        }),
-      ],
-      correction: [
-        field("method_key", "choice", false, {
-          label_key: LABELS.method,
-          choices: choices(METHODS),
-          current: held?.method_key ?? null,
-        }),
-        field("method_year", "whole", false, {
-          label_key: LABELS.method_year,
-          hint_key: "desktop.ledger.form.year_hint",
-        }),
-        field("basis_amount", "amount", false, {
-          label_key: LABELS.basis,
-          hint_key: AMOUNT_HINT,
-          current: held?.stated?.basis ?? null,
-        }),
-        field("non_deductible_iva", "amount", false, {
-          label_key: LABELS.non_deductible_iva,
-          hint_key: IVA_HINT,
-          current: held?.stated?.non_deductible_iva ?? null,
-        }),
-      ],
-      claim: [
-        field("from", "date", true, {
-          label_key: "desktop.ledger.assets.from",
-          hint_key: DATE_HINT,
-          current: span?.from ?? null,
-        }),
-        field("until", "date", true, {
-          label_key: "desktop.ledger.assets.until",
-          hint_key: DATE_HINT,
-          current: span?.until ?? null,
-        }),
-        ...(terms?.planned?.planned_absent_key === "free_method"
-          ? [
-              field("free_amount", "amount", true, {
-                label_key: "desktop.ledger.assets.free",
-                hint_key: "desktop.ledger.assets.free_hint",
-              }),
-            ]
-          : []),
-      ],
-      baja: [
-        field("date", "date", true, {
-          label_key: LABELS.baja_date,
-          hint_key: DATE_HINT,
-          bounds: { min: held?.in_service_date ?? null, max: null },
-        }),
-        field("reason_key", "choice", true, {
-          label_key: LABELS.baja_reason,
-          choices: choices(REASONS),
-        }),
-      ],
-    };
-    return {
-      kind,
-      tax_year: kind === "claim" ? year : null,
-      fields: fields[kind],
-      next_sequence:
-        kind === "descriptor" && held
-          ? held.events.filter(
-              (event) => event.type_key === "description_added",
-            ).length + 1
-          : kind === "correction" && held
-            ? held.revision_number + 1
-            : null,
-    };
-  };
-
-  // ---- Reads -------------------------------------------------------------
-
-  const ok = { outcome: "succeeded", refusal: null };
-
-  const reads: Partial<Record<ProvisionalOperationId, Handler>> = {
-    "ledger.actividad-asset.list": (request) => {
-      only(request, []);
-      sync();
-      return json({
+    stop(
+      code,
+      json({
         ...ok,
-        rows: [...elements.values()].map(rowOf),
-        years: yearsOffered(),
-      });
+        outcome: "refused",
+        refusal: {
+          code,
+          precondition_verdict:
+            missing.length > 0 ? { missing_field_keys: missing } : null,
+          accelerated_da18: null,
+          reason_key: key === null ? null : `${ERRORS}${key}`,
+          reason_facts: Object.entries(facts)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([name, value]): ReasonFact => ({ key: name, value })),
+        },
+        ...shape,
+      }),
+    );
+
+  const required = (value: unknown): string => {
+    if (typeof value !== "string" || value === "") return invalid();
+    return value;
+  };
+  const exact = (request: JsonObject, keys: string[]) => {
+    if (Object.keys(request).some((key) => !keys.includes(key))) invalid();
+  };
+  const find = (id: string): Element | undefined => elements.get(id);
+
+  const editionOf = (year: number) =>
+    year < FIRST_SUPPORTED_YEAR
+      ? null
+      : {
+          revision_id: String(Math.min(year, 2025)),
+          authored_filing_year: Math.min(year, 2025),
+          projected: year > 2025,
+        };
+
+  const history = (element: Element): JsonObject =>
+    json({
+      revisions: element.revisions.map((found) => found.revision),
+      claims: element.rows.flatMap((row) => row.claims),
+      descriptors: [],
+      events: element.events,
+    });
+
+  const record = (
+    element: Element,
+    kind: string,
+    origin: string,
+    effect: string | null,
+    changes: { field: string; before: string | null; after: string | null }[],
+    extra: Partial<TimelineEvent> = {},
+  ) => {
+    const keyOf = (field: string, value: string | null) =>
+      value !== null && Object.hasOwn(TOKEN_FIELDS, field)
+        ? `${FAMILY}${TOKEN_FIELDS[field]}.${value}`
+        : null;
+    element.events.push({
+      sequence: element.events.length + 1,
+      recorded_at: now(),
+      kind,
+      asset_id: element.id,
+      record_id: hex64(`${kind}:${element.id}:${element.events.length + 1}`),
+      effect_date: effect,
+      origin,
+      changes: changes.map((change) => ({
+        ...change,
+        before_key: keyOf(change.field, change.before),
+        after_key: keyOf(change.field, change.after),
+      })),
+      affects_calculation: kind !== "descriptor",
+      claim: null,
+      ...extra,
+    });
+  };
+
+  // ---- Restating a year after a claim -------------------------------------------
+
+  /** The parts of [from, until) the effective claims leave uncovered. */
+  const uncovered = (row: PlanRow, from: string, until: string) => {
+    const covered = row.claims
+      .filter((claim) => claim.effective)
+      .map((claim) => [claim.covered_from, claim.covered_until] as const)
+      .sort(([a], [b]) => a.localeCompare(b));
+    const gaps: { covered_from: string; covered_until: string }[] = [];
+    let cursor = from;
+    for (const [start, end] of covered) {
+      if (start > cursor)
+        gaps.push({
+          covered_from: cursor,
+          covered_until: earlier(start, until),
+        });
+      cursor = later(cursor, end);
+    }
+    if (cursor < until)
+      gaps.push({ covered_from: cursor, covered_until: until });
+    return gaps.filter((gap) => gap.covered_from < gap.covered_until);
+  };
+
+  const serviceWindow = (element: Element, row: PlanRow) => {
+    const start = later(element.list.in_service_date, `${row.tax_year}-01-01`);
+    const end =
+      element.outOfService === null
+        ? `${row.tax_year + 1}-01-01`
+        : earlier(element.outOfService, `${row.tax_year + 1}-01-01`);
+    return { start, end };
+  };
+
+  const restate = (element: Element, row: PlanRow) => {
+    const { start, end } = serviceWindow(element, row);
+    const effective = row.claims.filter((claim) => claim.effective);
+    row.claimed = dec(
+      fromCents(
+        effective.reduce(
+          (sum, claim) => sum + toCents(claim.amount.decimal),
+          0,
+        ),
+      ),
+    );
+    const gaps = uncovered(row, start, end);
+    row.claimable_intervals = gaps;
+    row.claim_state =
+      effective.length === 0
+        ? row.claim_state
+        : gaps.length > 0
+          ? "partial"
+          : row.claims.some((claim) => claim.superseded_by !== null)
+            ? "superseded"
+            : "claimed";
+  };
+
+  const recount = (element: Element) => {
+    const stale = element.events.filter(
+      (event) =>
+        event.claim !== null &&
+        !event.claim.matches_current_schedule &&
+        element.rows.some((row) =>
+          row.claims.some(
+            (claim) => claim.effective && claim.claim_id === event.record_id,
+          ),
+        ),
+    ).length;
+    element.list.findings = {
+      missing: element.rows.filter(
+        (row) => row.claim_state === "missing" || row.claim_state === "partial",
+      ).length,
+      incomplete: element.rows.filter((row) => row.absence === "incomplete")
+        .length,
+      conflict: 0,
+      stale,
+    };
+  };
+
+  // ---- Reads ---------------------------------------------------------------------
+
+  const notFound = (shape: JsonObject): never =>
+    refuse(VALIDATION, "asset_not_found", {}, shape);
+
+  const reads: Partial<Record<LedgerDefinitionId, Handler>> = {
+    "ledger.actividad-asset.list": (request) => {
+      exact(request, []);
+      const rows = [...elements.values()]
+        .map((element) => element.list)
+        .sort((a, b) => a.asset_id.localeCompare(b.asset_id));
+      const years = [...new Set(rows.flatMap((row) => row.years))].sort(
+        (a, b) => a - b,
+      );
+      return json({ ...ok, rows, years });
     },
     "ledger.actividad-asset.plan": (request) => {
-      only(request, ["asset_id"]);
-      const held = heldFor(request, { asset_id: null, rows: [] });
-      return json({ ...ok, asset_id: held.id, rows: held.plan });
-    },
-    "ledger.actividad-asset.timeline": (request) => {
-      only(request, ["asset_id"]);
-      const held = heldFor(request, { asset_id: null, events: [] });
-      return json({ ...ok, asset_id: held.id, events: held.events });
-    },
-    "ledger.actividad-asset.form-options": (request) => {
-      only(request, ["kind", "asset_id", "tax_year", "supersedes_claim_id"]);
-      const kind = need(request.kind) as FormKind;
-      if (
-        !["element", "descriptor", "correction", "claim", "baja"].includes(kind)
-      )
-        invalid();
-      sync();
-      const id = textOf(request.asset_id);
-      const held = id === null ? null : (elements.get(id) ?? null);
-      if (kind !== "element" && held === null)
-        return refuse(
-          "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
-          { options: null },
-          null,
-          "asset_not_found",
-        );
-      const year =
-        typeof request.tax_year === "number" ? request.tax_year : null;
-      if (kind === "claim" && year === null) invalid();
+      exact(request, ["asset_id"]);
+      const id = required(request.asset_id);
+      const element = find(id);
+      if (!element)
+        return notFound({
+          asset_id: null,
+          rows: null,
+          limits: null,
+          advisories: [],
+        });
+      // The warning on a used element's election, which changes no figure.
+      const current = obj(latest(element).revision.amortization);
+      const used =
+        latest(element).revision.acquired_condition === "used" &&
+        current?.method === "linear" &&
+        element.rows.some((row) => row.edition !== null);
       return json({
         ...ok,
-        options: optionsFor(
-          kind,
-          held,
-          year,
-          textOf(request.supersedes_claim_id),
-        ),
+        asset_id: id,
+        rows: element.rows,
+        limits: element.limits,
+        advisories: used
+          ? [
+              {
+                kind: "used_element_group_limit",
+                label_key: `${FAMILY}plan_advisory.used_element_group_limit`,
+              },
+            ]
+          : [],
+      });
+    },
+    "ledger.actividad-asset.timeline": (request) => {
+      exact(request, ["asset_id"]);
+      const id = required(request.asset_id);
+      const element = find(id);
+      if (!element) return notFound({ asset_id: null, events: null });
+      return json({ ...ok, asset_id: id, events: element.events });
+    },
+    "ledger.actividad-asset.form-options": (request) => {
+      exact(request, ["asset_kind", "tax_year"]);
+      const kind = required(request.asset_kind);
+      const year = request.tax_year;
+      if (typeof year !== "number" || !Object.hasOwn(TABLE_GROUPS, kind))
+        return invalid();
+      const edition = editionOf(year);
+      if (edition === null)
+        return refuse(
+          VALIDATION,
+          "tax_year_without_edition",
+          { tax_year: String(year) },
+          { options: null },
+        );
+      return json({
+        ...ok,
+        options: {
+          tax_year: year,
+          asset_kind: kind,
+          regime: REGIME,
+          edition,
+          methods: ADMITTED_METHODS[kind],
+          table_groups: TABLE_GROUPS[kind],
+        },
       });
     },
     "ledger.actividad-asset.acquisition-candidates": (request) => {
-      only(request, []);
-      sync();
-      const taken = new Set(
-        [...elements.values()].map((held) => held.made?.acquisition),
-      );
+      exact(request, []);
       return json({
         ...ok,
-        candidates: CANDIDATES.filter(
-          (candidate) => !taken.has(candidate.candidate_id),
+        candidates: PURCHASES.filter(
+          (purchase) => !taken.has(purchase.transaction_id),
         ),
       });
     },
   };
 
-  // ---- Writes ------------------------------------------------------------
+  // ---- Writes --------------------------------------------------------------------
 
-  const incomplete = (missing: string[], shape: JsonObject): never =>
-    refuse("REFUSED_ACTIVIDAD_ASSET_INCOMPLETE", shape, {
-      missing_field_keys: missing,
-    });
+  // ---- Revisions -------------------------------------------------------------
 
-  const writes: Partial<Record<ProvisionalOperationId, Handler>> = {
-    "ledger.actividad-asset.describe": (request) => {
-      only(request, ["asset_id", "name", "serial", "fields"]);
-      const shape = { descriptor: null };
-      const held = heldFor(request, shape);
-      const name = textOf(request.name);
-      const serial = textOf(request.serial);
-      const extra = request.fields;
-      if (!Array.isArray(extra)) invalid();
-      if (name === null) return incomplete(["name"], shape);
-      const fields = (extra as JsonValue[]).map((entry): DescriptorField => {
-        const found = entry as JsonObject | null;
-        if (!found || typeof found.key !== "string") return invalid();
-        return { key: found.key, value: textOf(found.value) };
-      });
-      held.events.push({
-        sequence: held.events.length + 1,
-        recorded_at: now(),
-        type_key: "description_added",
-        origin_key: "person",
-        effect_date: null,
-        replaces_sequence: null,
-        changes: [
-          ...(held.name !== name
-            ? [{ field_key: "name", before: held.name, after: name }]
-            : []),
-          ...(held.serial !== serial
-            ? [{ field_key: "serial", before: held.serial, after: serial }]
-            : []),
-        ],
-        affects_calculation: false,
-      });
-      held.name = name;
-      held.serial = serial;
-      held.fields = fields;
-      const descriptor: Descriptor = {
-        asset_id: held.id,
-        sequence: held.events.filter(
-          (event) => event.type_key === "description_added",
-        ).length,
-        name,
-        serial,
-        fields,
-      };
-      return json({ ...ok, descriptor });
-    },
-    "ledger.actividad-asset.dispose": (request) => {
-      only(request, ["asset_id", "date", "reason_key"]);
-      const shape = { baja: null, superseded_claim_ids: [] };
-      const held = heldFor(request, shape);
-      const date = textOf(request.date);
-      const reason = textOf(request.reason_key);
-      const missing = [
-        ...(date === null ? ["date"] : []),
-        ...(reason === null ? ["reason_key"] : []),
-      ];
-      if (missing.length > 0) return incomplete(missing, shape);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date!)) invalid();
-      if (!Object.hasOwn(REASONS, reason!))
-        return refuse(
-          "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
-          shape,
-          null,
-          "reason_not_offered",
-        );
-      if (held.baja)
-        return refuse(
-          "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
-          shape,
-          null,
-          "already_disposed",
-        );
-      if (date! < held.in_service_date)
-        return refuse(
-          "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
-          shape,
-          null,
-          "baja_before_service",
-        );
-      const last = yearOf(date!);
-      const crossing: string[] = [];
-      held.plan = held.plan.filter((planned) => planned.tax_year <= last);
-      for (const planned of held.plan.filter(
-        (entry) => entry.tax_year === last,
-      )) {
-        for (const claim of planned.claims)
-          if (claim.effective && claim.until > date!) {
-            claim.effective = false;
-            crossing.push(claim.claim_id);
-          }
-        const effective = planned.claims.filter((claim) => claim.effective);
-        planned.claimed = total(effective);
-        if (effective.length === 0) planned.state_key = "missing";
-      }
-      held.plan = held.pending(held.plan);
-      held.revision_number += 1;
-      held.baja = { date: date!, reason_key: reason! };
-      held.events.push({
-        sequence: held.events.length + 1,
-        recorded_at: now(),
-        type_key: "baja_recorded",
-        origin_key: "person",
-        effect_date: date!,
-        replaces_sequence: null,
-        changes: [
-          { field_key: "baja_date", before: null, after: date! },
-          { field_key: "baja_reason", before: null, after: reason! },
-        ],
-        affects_calculation: true,
-      });
-      return json({ ...ok, baja: held.baja, superseded_claim_ids: crossing });
-    },
+  /** The fields of a revision that state a token, which the history words by
+   * the catalogue key of the token. */
+  const TOKEN_FIELDS: Record<string, string> = {
+    acquired_condition: "acquired_condition",
+    acquisition_shape: "acquisition_shape",
+    "basis.stage": "basis_stage",
+    "opening_history.status": "opening_history_status",
   };
+  const obj = (found: unknown): JsonObject | null =>
+    typeof found === "object" && found !== null && !Array.isArray(found)
+      ? (found as JsonObject)
+      : null;
 
-  // ---- The admitted operations, in their drafted shapes ---------------------
-
-  const DATE = /^\d{4}-\d{2}-\d{2}$/;
-  const DAY = 86_400_000;
-  const day = (date: string) => Date.parse(`${date}T00:00:00Z`);
-  const addDays = (date: string, by: number) =>
-    new Date(day(date) + by * DAY).toISOString().slice(0, 10);
-  const daysBetween = (from: string, until: string) =>
-    Math.round((day(until) - day(from)) / DAY) + 1;
-
-  const objectOf = (value: JsonValue | undefined): JsonObject =>
-    value !== null && typeof value === "object" && !Array.isArray(value)
-      ? value
-      : invalid();
-  /** What a form stated for one field, as text; null where it stated none. */
-  const stated = (value: JsonValue | undefined): string | null => {
-    if (typeof value === "string") return textOf(value);
-    if (typeof value === "number") return String(value);
-    if (value !== null && typeof value === "object" && !Array.isArray(value))
-      return typeof value.decimal === "string" ? value.decimal : null;
-    return null;
-  };
-  const record = (
-    held: Held,
-    event: Omit<TimelineEvent, "sequence" | "replaces_sequence"> & {
-      replaces_sequence?: number | null;
-    },
-  ) =>
-    held.events.push({
-      sequence: held.events.length + 1,
-      replaces_sequence: null,
-      ...event,
-    });
-  /** The event that recorded a claim, for the one that replaces it. */
-  const recording = (held: Held, claim: PlanClaim) =>
-    [...held.events]
-      .reverse()
-      .find(
-        (event) =>
-          event.type_key === "claim_recorded" &&
-          event.effect_date === claim.until &&
-          event.changes[0]?.after === (claim.amount?.decimal ?? null),
-      )?.sequence ?? null;
-
-  /** A year of a plan worked out again from the claims it now holds. */
-  const restate = (held: Held, planned: PlanRow) => {
-    const effective = planned.claims
-      .filter((claim) => claim.effective)
-      .sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
-    planned.claimed = total(effective);
-    const stale = effective.some((claim) => !claim.matches_current_schedule);
-    const overlapping = effective.some((claim, at) =>
-      effective.slice(at + 1).some((other) => other.from <= claim.until),
-    );
-    planned.finding_keys = [
-      ...planned.finding_keys.filter(
-        (key) => key !== "claim_stale" && key !== "claim_conflict",
+  /** A revision as the history compares it: each stated fact by its path. */
+  const flatten = (
+    value: unknown,
+    prefix = "",
+  ): Record<string, string | null> => {
+    if (value === null || value === undefined)
+      return prefix === "" ? {} : { [prefix]: null };
+    const stated = decimalOf(value);
+    if (stated !== null) return { [prefix]: stated };
+    if (typeof value !== "object" || Array.isArray(value))
+      return { [prefix]: String(value) };
+    return Object.assign(
+      {},
+      ...Object.entries(value).map(([name, item]) =>
+        flatten(item, prefix === "" ? name : `${prefix}.${name}`),
       ),
-      ...(stale ? ["claim_stale"] : []),
-      ...(overlapping ? ["claim_conflict"] : []),
-    ];
-    if (planned.state_key === "forecast" || planned.state_key === "incomplete")
-      return;
-    const first = `${planned.tax_year}-01-01`;
-    const start = held.in_service_date > first ? held.in_service_date : first;
-    const last = `${planned.tax_year}-12-31`;
-    const end = held.baja && held.baja.date < last ? held.baja.date : last;
-    let cursor = start;
-    let gap: { from: string; until: string } | null = null;
-    for (const claim of effective) {
-      if (claim.from > cursor && gap === null)
-        gap = { from: cursor, until: addDays(claim.from, -1) };
-      if (claim.until >= cursor) cursor = addDays(claim.until, 1);
-    }
-    if (gap === null && cursor <= end) gap = { from: cursor, until: end };
-    planned.claimable = gap;
-    planned.state_key =
-      effective.length === 0 ? "missing" : gap ? "partial" : "claimed";
+    );
   };
-
-  const unsupported = "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED";
-  const validation = "REFUSED_ACTIVIDAD_ASSET_VALIDATION";
-
-  const draftedReads: Partial<Record<DraftedOperationId, Handler>> = {
-    "ledger.actividad-asset.forecast": (request) => {
-      const forecast = legacy?.reads["ledger.actividad-asset.forecast"];
-      if (forecast && admitted().has(textOf(request.asset_id) ?? ""))
-        return forecast(request);
-      only(request, [
-        "asset_id",
-        "covered_from",
-        "covered_until",
-        "requested_free_amount",
-        "supersedes_claim_id",
-      ]);
-      const shape = { forecast: null };
-      const held = heldFor(request, shape);
-      const from = need(request.covered_from);
-      const until = need(request.covered_until);
-      if (!DATE.test(from) || !DATE.test(until) || until < from) invalid();
-      if (yearOf(from) !== yearOf(until))
-        return refuse(validation, shape, null, "span_crosses_years");
-      const year = yearOf(from);
-      const planned = held.plan.find((entry) => entry.tax_year === year);
-      if (!planned) return refuse(validation, shape, null, "year_not_in_plan");
-      if (planned.authority.projected)
-        return refuse(unsupported, shape, null, "projected_authority");
-      if (planned.state_key === "incomplete")
-        return refuse(validation, shape, null, "opening_history_unknown");
-      const days = daysBetween(from, until);
-      let amount: string;
-      if (planned.planned_absent_key === "free_method") {
-        const asked = stated(request.requested_free_amount);
-        if (asked === null) return incomplete(["free_amount"], shape);
-        amount = asked;
-      } else {
-        const basis = planned.service_days ?? daysIn(year);
-        amount = (
-          Math.round((cents(planned.planned) * Math.min(days, basis)) / basis) /
-          100
-        ).toFixed(2);
-      }
-      return json({
-        ...ok,
-        forecast: {
-          asset_id: held.id,
-          asset_revision_id: hex64(
-            `revision:${held.id}:${held.revision_number}`,
-          ),
-          tax_year: year,
-          covered_from: from,
-          covered_until: until,
-          service_days: days,
-          calendar_days: daysIn(year),
-          amount: dec(amount),
-          schedule_fingerprint: hex64(`schedule:${held.id}:${from}:${until}`),
-        },
-      });
-    },
-  };
-
-  const draftedWrites: Partial<Record<DraftedOperationId, Handler>> = {
-    "ledger.actividad-asset.create": (request) => {
-      const create = legacy?.writes["ledger.actividad-asset.create"];
-      if (create && "revision" in request) return create(request);
-      only(request, ["asset_id", "values"]);
-      const shape = { asset_id: null, reused_existing_element: false };
-      const id = need(request.asset_id);
-      const values = objectOf(request.values);
-      const missing = optionsFor("element", null)
-        .fields.filter((entry) => entry.required)
-        .map((entry) => entry.key)
-        .filter((key) => stated(values[key]) === null);
-      if (missing.length > 0) return incomplete(missing, shape);
-      const kind = stated(values.kind_key)!;
-      const method = stated(values.method_key)!;
-      const service = stated(values.in_service_date)!;
-      if (!Object.hasOwn(KINDS, kind) || !Object.hasOwn(METHODS, method))
-        return refuse(validation, shape, null, "option_not_offered");
-      if (!DATE.test(service)) invalid();
-      sync();
-      const name = stated(values.name)!;
-      const serial = stated(values.serial);
-      const made = {
-        basis: stated(values.basis_amount)!,
-        non_deductible_iva: stated(values.non_deductible_iva)!,
-        acquisition: stated(values.acquisition)!,
-      };
-      const held = elements.get(id);
-      if (held) {
-        const same =
-          held.made !== undefined &&
-          JSON.stringify(held.made) === JSON.stringify(made) &&
-          held.name === name &&
-          held.serial === serial &&
-          held.kind_key === kind &&
-          held.method_key === method &&
-          held.in_service_date === service;
-        if (!same) return refuse(validation, shape, null, "asset_exists");
-        return json({ ...ok, asset_id: id, reused_existing_element: true });
-      }
-      const purchase = CANDIDATES.find(
-        (candidate) => candidate.candidate_id === made.acquisition,
-      );
-      if (
-        !purchase ||
-        [...elements.values()].some(
-          (other) => other.made?.acquisition === made.acquisition,
-        )
+  const LINKS = ["revision_number", "supersedes_revision_id"];
+  const changesBetween = (before: JsonObject | null, after: JsonObject) => {
+    const old = before === null ? {} : flatten(before);
+    const next = flatten(after);
+    return Object.keys({ ...old, ...next })
+      .filter(
+        (path) =>
+          !LINKS.includes(path) &&
+          !path.startsWith("acquisition.") &&
+          (old[path] ?? null) !== (next[path] ?? null),
       )
-        return refuse(validation, shape, null, "acquisition_not_found");
-      elements.set(id, {
-        id,
-        name,
-        serial,
-        fields: [],
-        kind_key: kind,
-        method_key: method,
-        in_service_date: service,
-        revision_number: 1,
-        baja: null,
-        plan: [],
-        pending: unchanged,
-        events: numbered([
-          added(service, now()),
-          described(now(), name, serial),
-        ]),
-        admitted: 0,
-        made,
-      });
-      return json({ ...ok, asset_id: id, reused_existing_element: false });
-    },
-    "ledger.actividad-asset.correct": (request) => {
-      const correct = legacy?.writes["ledger.actividad-asset.correct"];
-      if (correct && "revision" in request) return correct(request);
-      only(request, [
-        "asset_id",
-        "revision_number",
-        "values",
-        "supersede_claim_ids",
+      .map((path) => ({
+        field: path,
+        before: old[path] ?? null,
+        after: next[path] ?? null,
+      }));
+  };
+
+  const latest = (element: Element) => element.revisions.at(-1)!;
+  const STAGES = ["taxpayer_owned", "business_allocated", "whole_property"];
+  const TABLE_METHODS = ["linear", "constant_percentage", "sum_of_digits"];
+
+  /** The backend's judgement of a revision: the refusal it gives, if any. */
+  const judgeRevision = (revision: JsonObject, shape: JsonObject): void => {
+    const acquisition = obj(revision.acquisition);
+    const basis = obj(revision.basis);
+    const opening = obj(revision.opening_history);
+    const election = obj(revision.amortization);
+    if (!acquisition || !basis || !opening || !election) return invalid();
+    for (const key of [
+      "observed_transaction_id",
+      "invoice_evidence_id",
+      "evidence_fingerprint",
+    ])
+      if (typeof acquisition[key] !== "string") return invalid();
+    const kind = textOf(revision.asset_kind);
+    if (kind === null || !Object.hasOwn(TABLE_GROUPS, kind)) return invalid();
+    if (revision.acquisition_shape !== "primary_purchase") return invalid();
+    const inService = textOf(revision.in_service_date);
+    if (inService === null || !DATE.test(inService)) return invalid();
+    if (!["new", "used"].includes(String(revision.acquired_condition)))
+      return invalid();
+    if (
+      decimalOf(basis.basis_amount) === null ||
+      decimalOf(basis.non_deductible_iva) === null ||
+      !STAGES.includes(String(basis.stage))
+    )
+      return invalid();
+    if (
+      basis.stage === "taxpayer_owned" &&
+      decimalOf(basis.business_use_share) === null
+    )
+      return refuse(INCOMPLETE, "business_use_share_missing", {}, shape, [
+        "basis.business_use_share",
       ]);
-      const shape = { revision_number: null, superseded_claim_ids: [] };
-      const held = heldFor(request, shape);
-      const values = objectOf(request.values);
-      const named = request.supersede_claim_ids;
-      if (!Array.isArray(named)) return invalid();
-      if (request.revision_number !== held.revision_number)
-        return refuse(validation, shape, null, "revision_stale");
-      const method = stated(values.method_key);
-      const basis = stated(values.basis_amount);
-      const iva = stated(values.non_deductible_iva);
-      if (method === null && basis === null && iva === null)
-        return refuse(validation, shape, null, "nothing_changed");
-      if (method !== null && !Object.hasOwn(METHODS, method))
-        return refuse(validation, shape, null, "option_not_offered");
-      const changesMethod = method !== null && method !== held.method_key;
-      const fromYear = stated(values.method_year);
-      if (changesMethod && fromYear === null)
-        return incomplete(["method_year"], shape);
-      const from = fromYear === null ? null : Number(fromYear);
-      if (from !== null && !Number.isInteger(from)) invalid();
-      const targets = named.map((claimId) => {
-        const found = held.plan
-          .flatMap((planned) =>
-            planned.claims.map((claim) => ({ planned, claim })),
-          )
-          .find((entry) => entry.claim.claim_id === claimId);
-        if (!found) return refuse(validation, shape, null, "claim_not_found");
-        if (!found.claim.effective)
-          return refuse(validation, shape, null, "claim_not_effective");
-        return found;
-      });
-      const before = held.stated ?? {};
-      held.revision_number += 1;
-      held.stated = {
-        ...(basis !== null
-          ? { basis }
-          : before.basis
-            ? { basis: before.basis }
-            : {}),
-        ...(iva !== null
-          ? { non_deductible_iva: iva }
-          : before.non_deductible_iva
-            ? { non_deductible_iva: before.non_deductible_iva }
-            : {}),
-      };
-      const prior = held.method_key;
-      if (changesMethod) held.method_key = method;
-      record(held, {
-        recorded_at: now(),
-        type_key: "correction_added",
-        origin_key: "person",
-        effect_date: from === null ? null : `${from}-01-01`,
-        changes: [
-          ...(changesMethod
-            ? [{ field_key: "method", before: prior, after: method }]
-            : []),
-          ...(basis !== null && basis !== (before.basis ?? null)
-            ? [
-                {
-                  field_key: "basis",
-                  before: before.basis ?? null,
-                  after: basis,
-                },
-              ]
-            : []),
-          ...(iva !== null && iva !== (before.non_deductible_iva ?? null)
-            ? [
-                {
-                  field_key: "non_deductible_iva",
-                  before: before.non_deductible_iva ?? null,
-                  after: iva,
-                },
-              ]
-            : []),
-        ],
-        affects_calculation: true,
-      });
-      const replaced = new Set(targets.map((entry) => entry.claim.claim_id));
-      for (const planned of held.plan) {
-        if (from !== null && planned.tax_year < from) continue;
-        if (changesMethod)
-          planned.election = election(
-            held.id,
-            held.method_key,
-            held.revision_number,
+    if (
+      basis.stage === "business_allocated" &&
+      textOf(basis.prior_allocation_provenance) === null
+    )
+      return refuse(INCOMPLETE, null, {}, shape, [
+        "basis.prior_allocation_provenance",
+      ]);
+    if (basis.stage === "whole_property")
+      return refuse(INCOMPLETE, "allocation_components_missing", {}, shape, [
+        "basis.construction_cost",
+      ]);
+    // The opening history.
+    const accumulated = decimalOf(opening.accumulated_amount);
+    const through = opening.covered_through_tax_year;
+    if (opening.status === "known") {
+      if (accumulated === null)
+        return refuse(INCOMPLETE, "opening_history_amount_missing", {}, shape, [
+          "opening_history.accumulated_amount",
+        ]);
+      if (toCents(accumulated) > 0) {
+        if (typeof through !== "number")
+          return refuse(INCOMPLETE, null, {}, shape, [
+            "opening_history.covered_through_tax_year",
+          ]);
+        if (through < Number(inService.slice(0, 4)))
+          return refuse(
+            VALIDATION,
+            "opening_year_before_in_service",
+            { opening_tax_year: String(through) },
+            shape,
           );
-        for (const claim of planned.claims)
-          if (claim.effective && !replaced.has(claim.claim_id))
-            claim.matches_current_schedule = false;
+      } else if (through !== undefined && through !== null) return invalid();
+    } else if (opening.status === "missing") {
+      if (
+        (opening.accumulated_amount ?? null) !== null ||
+        (opening.amortization_method ?? null) !== null ||
+        (through ?? null) !== null
+      )
+        return invalid();
+    } else return invalid();
+    // The election.
+    if (election.regime !== REGIME) return invalid();
+    const method = textOf(election.method);
+    if (method === null) return invalid();
+    if (!ADMITTED_METHODS[kind]!.includes(method))
+      return refuse(
+        UNSUPPORTED,
+        "method_not_enrolled_for_kind",
+        { asset_kind: kind, method, regime: REGIME },
+        shape,
+      );
+    const classKey = textOf(election.authority_class_key);
+    const group = TABLE_GROUPS[kind]!.find(
+      (found) => found.class_key === classKey,
+    );
+    if (TABLE_METHODS.includes(method) && classKey === null)
+      return refuse(INCOMPLETE, "table_class_required", { method }, shape, [
+        "amortization.authority_class_key",
+      ]);
+    if (classKey !== null && !group)
+      return refuse(
+        VALIDATION,
+        "table_class_wrong_kind",
+        { asset_kind: kind, class_key: classKey },
+        shape,
+      );
+    const coefficient = decimalOf(election.linear_coefficient);
+    if (coefficient !== null) {
+      if (method !== "linear") return invalid();
+      if (
+        group &&
+        (Number(coefficient) > Number(group.maximum_coefficient.decimal) ||
+          Number(coefficient) < Number(group.minimum_coefficient.decimal))
+      )
+        return refuse(
+          VALIDATION,
+          "elected_coefficient_out_of_range",
+          {
+            elected: coefficient,
+            minimum: group.minimum_coefficient.decimal,
+            maximum: group.maximum_coefficient.decimal,
+          },
+          shape,
+        );
+    }
+    const used = obj(election.used_original_price);
+    if (used !== null) {
+      if (method !== "linear" || revision.acquired_condition !== "used")
+        return refuse(
+          VALIDATION,
+          "used_original_price_requires_used_asset",
+          {},
+          shape,
+        );
+      if (
+        !["known", "expert_valuation"].includes(String(used.determination)) ||
+        decimalOf(used.original_price) === null ||
+        textOf(used.evidence_reference) === null
+      )
+        return invalid();
+    }
+    if (method === "sum_of_digits") {
+      if (typeof election.sum_of_digits_period_years !== "number")
+        return refuse(INCOMPLETE, "sum_of_digits_period_required", {}, shape, [
+          "amortization.sum_of_digits_period_years",
+        ]);
+      if (!["descending", "ascending"].includes(String(election.digit_order)))
+        return refuse(INCOMPLETE, null, {}, shape, [
+          "amortization.digit_order",
+        ]);
+    }
+    if (method === "low_value_free") {
+      const low = obj(election.low_value);
+      if (
+        !low ||
+        textOf(low.election_reference) === null ||
+        textOf(low.new_material_evidence_reference) === null
+      )
+        return refuse(INCOMPLETE, "low_value_election_required", {}, shape, [
+          "amortization.low_value",
+        ]);
+    }
+    if (
+      method === "research_development_free" &&
+      textOf(election.research_development_evidence_reference) === null
+    )
+      return refuse(INCOMPLETE, null, {}, shape, [
+        "amortization.research_development_evidence_reference",
+      ]);
+  };
+
+  const describe: Handler = (request) => {
+    exact(request, ["asset_id", "descriptor"]);
+    const id = required(request.asset_id);
+    const element = find(id);
+    if (!element) return notFound({ history: null });
+    const given = request.descriptor as unknown as DescriptorFacts;
+    if (typeof given !== "object" || given === null) return invalid();
+    if (given.name.trim() === "")
+      return refuse(INCOMPLETE, null, {}, { history: null }, ["name"]);
+    const before = element.descriptor;
+    const facts: (keyof DescriptorFacts)[] = [
+      "name",
+      "serial_number",
+      "description",
+      "document_kind",
+      "document_number",
+      "supplier_name",
+      "supplier_tax_id",
+    ];
+    const changes = facts
+      .filter((fact) => (before?.[fact] ?? null) !== (given[fact] ?? null))
+      .map((fact) => ({
+        field: fact,
+        before: before?.[fact] ?? null,
+        after: given[fact] ?? null,
+      }));
+    if (changes.length > 0) {
+      element.descriptor = { ...given, name: given.name.trim() };
+      element.list.name = element.descriptor.name;
+      element.list.serial_number = given.serial_number ?? null;
+      record(
+        element,
+        "descriptor",
+        "ledger.actividad-asset.describe",
+        null,
+        changes,
+      );
+    }
+    return json({ ...ok, history: history(element) });
+  };
+
+  /** The citations a new element's election carries: the provisions the
+   * register already cites for an election of its kind and method, else none
+   * and a list that says it is partial. */
+  const citationsFor = (kind: string, method: string) => {
+    const like = SEED_ELEMENTS.find(
+      (seed) =>
+        seed.list.asset_kind === kind &&
+        seed.list.method === method &&
+        seed.limits.legal_citations.length > 0,
+    );
+    return like
+      ? {
+          legal_citations: structuredClone(like.limits.legal_citations),
+          legal_citations_complete: like.limits.legal_citations_complete,
+        }
+      : { legal_citations: [], legal_citations_complete: false };
+  };
+
+  /** The plan a new element starts with. Only a linear election whose opening
+   * history is known is worked out; any other starts with the reason it is
+   * not. */
+  const startingRows = (revision: JsonObject, annual: string | null) => {
+    const kind = textOf(revision.asset_kind)!;
+    const inService = textOf(revision.in_service_date)!;
+    const election = obj(revision.amortization)!;
+    const method = textOf(election.method)!;
+    const basis = decimalOf(obj(revision.basis)!.basis_amount)!;
+    const opening = obj(revision.opening_history)!;
+    const group = TABLE_GROUPS[kind]!.find(
+      (found) => found.class_key === textOf(election.authority_class_key),
+    );
+    const first = Number(inService.slice(0, 4));
+    const through =
+      typeof opening.covered_through_tax_year === "number"
+        ? opening.covered_through_tax_year
+        : null;
+    let left =
+      opening.status === "known"
+        ? toCents(basis) - toCents(decimalOf(opening.accumulated_amount)!)
+        : null;
+    let minimum = 0;
+    let minimumComplete = true;
+    const rows: PlanRow[] = [];
+    const base = (year: number, days: number | null): PlanRow => {
+      const calendar = leap(year) ? 366 : 365;
+      const edition = editionOf(year);
+      const start = later(inService, `${year}-01-01`);
+      const end = `${year + 1}-01-01`;
+      const span = daysBetween(start, end);
+      if (edition === null || !group) minimumComplete = false;
+      else
+        minimum += Math.round(
+          (toCents(basis) * Number(group.minimum_coefficient.decimal) * span) /
+            calendar,
+        );
+      return {
+        tax_year: year,
+        method,
+        coefficient: null,
+        planned: null,
+        absence: null,
+        absence_reason_key: null,
+        absence_reason_facts: [],
+        claimed: dec("0.00"),
+        claim_state: year > Number(TODAY.slice(0, 4)) ? "not_due" : "missing",
+        claimable_intervals: [],
+        claimable_refusal_key: null,
+        edition,
+        service_days: days,
+        calendar_days: days === null ? null : calendar,
+        claims: [],
+        minimum_through: dec(fromCents(Math.min(toCents(basis), minimum))),
+        minimum_complete: minimumComplete,
+      };
+    };
+    if (left === null) {
+      for (
+        let year = first;
+        year <= Math.max(first, 2026) && rows.length < 6;
+        year++
+      ) {
+        const row = base(year, null);
+        row.absence = "incomplete";
+        row.absence_reason_key = `${ERRORS}opening_history_missing`;
+        row.claimable_refusal_key = `${ERRORS}opening_history_missing`;
+        row.claim_state = "missing";
+        rows.push(row);
       }
-      for (const { planned, claim } of targets) {
+      return rows;
+    }
+    if (method !== "linear" || annual === null) {
+      const row = base(first, null);
+      row.absence = [
+        "low_value_free",
+        "research_development_free",
+        "small_enterprise_employment_free",
+      ].includes(method)
+        ? "free_election"
+        : "unsupported";
+      rows.push(row);
+      return rows;
+    }
+    for (let year = first; rows.length < 15 && year <= 2032; year++) {
+      const start = later(inService, `${year}-01-01`);
+      const end = `${year + 1}-01-01`;
+      const days = daysBetween(start, end);
+      const row = base(year, days);
+      rows.push(row);
+      if (row.edition === null) {
+        row.absence = "edition_unavailable";
+        row.claim_state = "edition_unavailable";
+        row.service_days = null;
+        row.calendar_days = null;
+        continue;
+      }
+      if (through !== null && year <= through) {
+        row.absence = "covered_by_opening";
+        row.service_days = null;
+        row.calendar_days = null;
+        row.claim_state = "not_due";
+        continue;
+      }
+      if (left <= 0) {
+        row.absence = "basis_exhausted";
+        row.claim_state = "not_due";
+        break;
+      }
+      const charge = Math.min(
+        left,
+        toCents(chargeFor(annual, start, start, end, year)),
+      );
+      left -= charge;
+      row.planned = dec(fromCents(charge));
+      row.coefficient = dec(
+        decimalOf(election.linear_coefficient) ??
+          group!.maximum_coefficient.decimal,
+      );
+      row.claimable_intervals = [{ covered_from: start, covered_until: end }];
+    }
+    return rows;
+  };
+
+  const create: Handler = (request) => {
+    exact(request, ["revision", "descriptor"]);
+    const revision = obj(request.revision);
+    const descriptor = request.descriptor as unknown as DescriptorFacts;
+    if (!revision || typeof descriptor !== "object" || descriptor === null)
+      return invalid();
+    const shape = { history: null };
+    const id = required(revision.asset_id);
+    judgeRevision(revision, shape);
+    if (revision.revision_number !== 1)
+      return refuse(VALIDATION, "creation_requires_first_revision", {}, shape);
+    const name =
+      typeof descriptor.name === "string" ? descriptor.name.trim() : "";
+    if (name === "") return refuse(INCOMPLETE, null, {}, shape, ["name"]);
+    const existing = find(id);
+    if (existing) return json({ ...ok, history: history(existing) });
+    const acquisition = obj(revision.acquisition)!;
+    const purchase = PURCHASES.find(
+      (found) => found.transaction_id === acquisition.observed_transaction_id,
+    );
+    if (!purchase)
+      return refuse(
+        VALIDATION,
+        "acquisition_transaction_missing",
+        { transaction_id: String(acquisition.observed_transaction_id) },
+        shape,
+      );
+    if (
+      purchase.invoice_evidence_id !== acquisition.invoice_evidence_id ||
+      purchase.evidence_fingerprint !== acquisition.evidence_fingerprint
+    )
+      return invalid();
+    taken.add(purchase.transaction_id);
+
+    const basis = obj(revision.basis)!;
+    const election = obj(revision.amortization)!;
+    const opening = obj(revision.opening_history)!;
+    const kind = textOf(revision.asset_kind)!;
+    const method = textOf(election.method)!;
+    const inService = textOf(revision.in_service_date)!;
+    const group = TABLE_GROUPS[kind]!.find(
+      (found) => found.class_key === textOf(election.authority_class_key),
+    );
+    const amount = decimalOf(basis.basis_amount)!;
+    const coefficient =
+      decimalOf(election.linear_coefficient) ??
+      group?.maximum_coefficient.decimal ??
+      null;
+    const annual =
+      method === "linear" && coefficient !== null
+        ? fromCents(Math.round(toCents(amount) * Number(coefficient)))
+        : null;
+    const rows = startingRows(revision, annual);
+    const accumulated =
+      opening.status === "known" ? decimalOf(opening.accumulated_amount) : null;
+    const list: AssetListRow = {
+      asset_id: id,
+      name,
+      serial_number: descriptor.serial_number ?? null,
+      asset_kind: kind,
+      state: "in_service",
+      in_service_date: inService,
+      method,
+      revision_number: 1,
+      basis: dec(fromCents(toCents(amount))),
+      accumulated:
+        accumulated === null ? null : dec(fromCents(toCents(accumulated))),
+      pending:
+        accumulated === null
+          ? null
+          : dec(fromCents(Math.max(toCents(amount) - toCents(accumulated), 0))),
+      findings: { missing: 0, incomplete: 0, conflict: 0, stale: 0 },
+      years: rows
+        .map((row) => row.tax_year)
+        .filter(
+          (year) => year >= FIRST_SUPPORTED_YEAR && year <= LAST_ADMITTED_YEAR,
+        ),
+      projected_years: rows
+        .map((row) => row.tax_year)
+        .filter((year) => year > LAST_ADMITTED_YEAR),
+    };
+    const element: Element = {
+      id,
+      list,
+      annual: annual ?? "0.00",
+      forecasts: {},
+      descriptor: { ...descriptor, name },
+      outOfService: null,
+      baja: null,
+      disposal: null,
+      rows,
+      limits: {
+        class_key: group?.class_key ?? null,
+        class_label: group?.class_label ?? null,
+        maximum_coefficient: group?.maximum_coefficient ?? null,
+        minimum_coefficient: group?.minimum_coefficient ?? null,
+        maximum_period_years: group?.maximum_period_years ?? null,
+        maximum_period_ends_on:
+          group === undefined
+            ? null
+            : `${Number(inService.slice(0, 4)) + Number(group.maximum_period_years.decimal)}${inService.slice(4)}`,
+        ...citationsFor(kind, method),
+        not_table_bound: group
+          ? null
+          : accumulated === null
+            ? "authority_unavailable"
+            : "free_election",
+        unavailable_reason_key:
+          group || accumulated !== null
+            ? null
+            : `${ERRORS}opening_history_missing`,
+      },
+      events: [],
+      revisions: [
+        {
+          revision: structuredClone(revision),
+          revision_id: hex64(`revision:${JSON.stringify(revision)}`),
+        },
+      ],
+    };
+    elements.set(id, element);
+    recount(element);
+    record(
+      element,
+      "revision",
+      "ledger.actividad-asset.create",
+      inService,
+      changesBetween(null, revision),
+    );
+    record(element, "descriptor", "ledger.actividad-asset.describe", null, [
+      { field: "name", before: null, after: name },
+      ...(list.serial_number
+        ? [{ field: "serial_number", before: null, after: list.serial_number }]
+        : []),
+    ]);
+    return json({ ...ok, history: history(element) });
+  };
+
+  const correct: Handler = (request) => {
+    exact(request, ["revision", "superseding_claims"]);
+    const revision = obj(request.revision);
+    const superseding = request.superseding_claims;
+    if (!revision || !Array.isArray(superseding)) return invalid();
+    const shape = { history: null };
+    const id = required(revision.asset_id);
+    const element = find(id);
+    if (!element) return notFound(shape);
+    const current = latest(element);
+    if (
+      revision.revision_number !== element.list.revision_number + 1 ||
+      revision.supersedes_revision_id !== current.revision_id
+    )
+      return refuse(VALIDATION, "correction_must_supersede_current", {}, shape);
+    judgeRevision(revision, shape);
+    const changes = changesBetween(current.revision, revision);
+    if (changes.length === 0) return invalid();
+    const replaced = superseding.map((entry) => {
+      const stated = obj(entry);
+      if (!stated) return invalid();
+      return required(stated.supersedes_claim_id);
+    });
+    const effective = element.rows.flatMap((row) =>
+      row.claims.filter((claim) => claim.effective),
+    );
+    for (const claimId of replaced)
+      if (!effective.some((claim) => claim.claim_id === claimId))
+        return refuse(VALIDATION, "superseded_claim_not_effective", {}, shape);
+    const stays = effective
+      .filter((claim) => !replaced.includes(claim.claim_id))
+      .reduce((sum, claim) => sum + toCents(claim.amount.decimal), 0);
+    const newBasis = decimalOf(obj(revision.basis)!.basis_amount)!;
+    if (stays > toCents(newBasis))
+      return refuse(VALIDATION, "correction_below_effective_claims", {}, shape);
+    // Every effective claim not recorded again under this revision no longer matches.
+    for (const event of element.events)
+      if (event.claim !== null && !replaced.includes(event.record_id))
+        event.claim = {
+          ...event.claim,
+          matches_current_schedule: false,
+          stale_reason: event.claim.stale_reason ?? "revision_changed",
+        };
+    const number = element.list.revision_number + 1;
+    const revisionId = hex64(`revision:${JSON.stringify(revision)}`);
+    element.revisions.push({
+      revision: structuredClone(revision),
+      revision_id: revisionId,
+    });
+    record(
+      element,
+      "revision",
+      "ledger.actividad-asset.correct",
+      textOf(revision.in_service_date),
+      changes,
+    );
+    for (const row of element.rows)
+      for (const old of [...row.claims]) {
+        if (!old.effective || !replaced.includes(old.claim_id)) continue;
         const next: PlanClaim = {
-          ...claim,
-          claim_id: hex64(
-            `claim:${held.id}:${claim.from}:${claim.until}:${planned.claims.length}`,
-          ),
+          ...old,
+          claim_id: hex64(`claim:${id}:${old.claim_id}:${number}`),
           effective: true,
           superseded_by: null,
-          revision_number: held.revision_number,
-          matches_current_schedule: true,
-          used_by: [],
+          revision_id: revisionId,
         };
-        const replacing = recording(held, claim);
-        claim.effective = false;
-        claim.superseded_by = next.claim_id;
-        planned.claims.push(next);
-        record(held, {
-          recorded_at: now(),
-          type_key: "claim_recorded",
-          origin_key: "person",
-          effect_date: next.until,
-          replaces_sequence: replacing,
-          changes: [
+        old.effective = false;
+        old.superseded_by = next.claim_id;
+        row.claims.push(next);
+        record(
+          element,
+          "claim",
+          "ledger.actividad-asset.correct",
+          next.covered_from,
+          [
             {
-              field_key: "amount",
-              before: null,
-              after: next.amount?.decimal ?? null,
+              field: "amount",
+              before: old.amount.decimal,
+              after: next.amount.decimal,
             },
           ],
-          affects_calculation: true,
-        });
-      }
-      for (const planned of held.plan)
-        if (from === null || planned.tax_year >= from) restate(held, planned);
-      held.plan = held.pending(held.plan);
-      return json({
-        ...ok,
-        revision_number: held.revision_number,
-        superseded_claim_ids: targets.map((entry) => entry.claim.claim_id),
-      });
-    },
-    "ledger.actividad-asset.claim": (request) => {
-      const claim = legacy?.writes["ledger.actividad-asset.claim"];
-      if (claim && "creating_operation" in request) return claim(request);
-      only(request, ["forecast", "supersedes_claim_id"]);
-      const shape = {
-        claim_id: null,
-        reused_existing_claim: false,
-        superseded_claim_id: null,
-        conflicting_claim: null,
-      };
-      const forecast = objectOf(request.forecast);
-      const held = heldFor({ asset_id: need(forecast.asset_id) }, shape);
-      const from = need(forecast.covered_from);
-      const until = need(forecast.covered_until);
-      const amount = stated(forecast.amount) ?? invalid();
-      const planned = held.plan.find(
-        (entry) => entry.tax_year === yearOf(from),
-      );
-      if (!planned) return refuse(validation, shape, null, "year_not_in_plan");
-      const replacesId = textOf(request.supersedes_claim_id);
-      const replaced = replacesId
-        ? (planned.claims.find((entry) => entry.claim_id === replacesId) ??
-          null)
-        : null;
-      if (replacesId && !replaced)
-        return refuse(validation, shape, null, "claim_not_found");
-      if (replaced && !replaced.effective)
-        return refuse(validation, shape, null, "claim_not_effective");
-      const same = planned.claims.find(
-        (entry) =>
-          entry.effective &&
-          entry.from === from &&
-          entry.until === until &&
-          entry.amount?.decimal === amount,
-      );
-      if (same)
-        return json({
-          ...ok,
-          claim_id: same.claim_id,
-          reused_existing_claim: true,
-          superseded_claim_id: null,
-          conflicting_claim: null,
-        });
-      const clash = planned.claims.find(
-        (entry) =>
-          entry.effective &&
-          entry !== replaced &&
-          entry.from <= until &&
-          from <= entry.until,
-      );
-      if (clash)
-        return refuse(
-          "REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT",
           {
-            ...shape,
-            conflicting_claim: {
-              claim_id: clash.claim_id,
-              from: clash.from,
-              until: clash.until,
-              amount: clash.amount,
+            record_id: next.claim_id,
+            claim: {
+              used_by: [],
+              matches_current_schedule: true,
+              stale_reason: null,
             },
           },
-          null,
-          "overlapping_claim",
         );
-      const next = claimOf(
-        held.id,
-        `${from}:${until}:${planned.claims.length}`,
-        amount,
-        from,
-        until,
-        { revision_number: held.revision_number },
-      );
-      const replacing = replaced ? recording(held, replaced) : null;
-      if (replaced) {
-        replaced.effective = false;
-        replaced.superseded_by = next.claim_id;
+        restate(element, row);
       }
-      planned.claims.push(next);
-      record(held, {
-        recorded_at: now(),
-        type_key: "claim_recorded",
-        origin_key: "person",
-        effect_date: until,
-        replaces_sequence: replacing,
-        changes: [{ field_key: "amount", before: null, after: amount }],
-        affects_calculation: true,
-      });
-      restate(held, planned);
-      held.plan = held.pending(held.plan);
-      return json({
+    element.list.revision_number = number;
+    element.list.in_service_date = textOf(revision.in_service_date)!;
+    element.list.method = textOf(obj(revision.amortization)!.method)!;
+    element.list.basis = dec(fromCents(toCents(newBasis)));
+    recount(element);
+    return json({ ...ok, history: history(element) });
+  };
+
+  const inspect: Handler = (request) => {
+    exact(request, ["asset_id"]);
+    const id = required(request.asset_id);
+    const element = find(id);
+    if (!element) return notFound({ asset_id: id, revisions: null });
+    return json({ ...ok, asset_id: id, revisions: element.revisions });
+  };
+
+  const PERIOD_END: Record<string, string> = {
+    "1T": "03-31",
+    "2T": "06-30",
+    "3T": "09-30",
+    "4T": "12-31",
+  };
+  const M100_CASILLA: Record<string, string> = {
+    material: "0208",
+    intangible: "0227",
+  };
+
+  /** Where the claims of a year go: Modelo 100 from the effective claims, and
+   * Modelo 130 from the year's accrual through the quarter, each element by
+   * its recorded claims or else its schedule. An element with a span neither
+   * covers is named, never counted as zero. */
+  const filingHandoff: Handler = (request) => {
+    exact(request, ["tax_year", "m130_period"]);
+    const year = request.tax_year;
+    const period = required(request.m130_period);
+    if (typeof year !== "number" || !Object.hasOwn(PERIOD_END, period))
+      return invalid();
+    const through = `${year}-${PERIOD_END[period]}`;
+    const until = new Date(Date.parse(through) + 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    const sorted = [...elements.values()].sort((a, b) =>
+      a.id.localeCompare(b.id),
+    );
+    const m100 = (kind: string) => {
+      const claims = sorted
+        .filter((element) => element.list.asset_kind === kind)
+        .flatMap((element) =>
+          element.rows
+            .filter((row) => row.tax_year === year)
+            .flatMap((row) => row.claims.filter((claim) => claim.effective)),
+        );
+      return {
+        target_casilla_id: M100_CASILLA[kind]!,
+        tax_year: year,
+        claim_ids: claims.map((claim) => claim.claim_id),
+        amount: dec(
+          fromCents(
+            claims.reduce(
+              (sum, claim) => sum + toCents(claim.amount.decimal),
+              0,
+            ),
+          ),
+        ),
+      };
+    };
+    const m130 = (kind: string) => {
+      const contributions: {
+        asset_id: string;
+        amount: { decimal: string };
+        claim_id: string | null;
+        schedule_fingerprint: string | null;
+      }[] = [];
+      const unavailable: string[] = [];
+      for (const element of sorted) {
+        if (element.list.asset_kind !== kind) continue;
+        const row = element.rows.find((found) => found.tax_year === year);
+        if (!row) continue;
+        const { start, end } = serviceWindow(element, row);
+        const stop = earlier(end, until);
+        if (stop <= start) continue;
+        const covered = row.claims.filter(
+          (claim) => claim.effective && claim.covered_until <= stop,
+        );
+        for (const claim of covered)
+          contributions.push({
+            asset_id: element.id,
+            amount: claim.amount,
+            claim_id: claim.claim_id,
+            schedule_fingerprint: null,
+          });
+        for (const gap of uncovered({ ...row, claims: covered }, start, stop)) {
+          if (row.planned === null) {
+            // Only a span the schedule cannot be worked out for is named.
+            if (
+              [
+                "incomplete",
+                "edition_unavailable",
+                "unsupported",
+                "conflict",
+              ].includes(row.absence ?? "") &&
+              !unavailable.includes(element.id)
+            )
+              unavailable.push(element.id);
+            continue;
+          }
+          const window = later(element.list.in_service_date, `${year}-01-01`);
+          contributions.push({
+            asset_id: element.id,
+            amount: dec(
+              chargeFor(
+                element.annual,
+                window,
+                gap.covered_from,
+                gap.covered_until,
+                year,
+              ),
+            ),
+            claim_id: null,
+            schedule_fingerprint: hex64(
+              `schedule:${element.id}:${gap.covered_from}:${gap.covered_until}`,
+            ),
+          });
+        }
+      }
+      return {
+        target_casilla_id: "02",
+        tax_year: year,
+        amount: dec(
+          fromCents(
+            contributions.reduce(
+              (sum, item) => sum + toCents(item.amount.decimal),
+              0,
+            ),
+          ),
+        ),
+        contributions,
+        unavailable_asset_ids: unavailable,
+      };
+    };
+    return json({
+      ...ok,
+      tax_year: year,
+      m130_period: period,
+      filing_handoff: {
+        material_m100: m100("material"),
+        intangible_m100: m100("intangible"),
+        material_m130: m130("material"),
+        intangible_m130: m130("intangible"),
+      },
+    });
+  };
+
+  /** The backend's judgement of a stated baja: the refusal it gives, if any. */
+  const judge = (
+    element: Element,
+    facts: DisposalFacts,
+    shape: JsonObject,
+  ): void => {
+    const { reason, disposal_date: date } = facts;
+    const proceeds = facts.proceeds.decimal;
+    const costs = facts.transmission_costs.decimal;
+    if (toCents(proceeds) < 0 || toCents(costs) < 0)
+      refuse(VALIDATION, "disposal_amount_invalid", {}, shape);
+    if (date < element.list.in_service_date)
+      refuse(VALIDATION, "disposal_before_service", {}, shape);
+    if (
+      facts.later_affectation_on !== null &&
+      facts.later_affectation_on > element.list.in_service_date
+    )
+      refuse(
+        VALIDATION,
+        "later_affectation_out_of_order",
+        {
+          later_affectation_on: facts.later_affectation_on,
+          in_service_date: element.list.in_service_date,
+        },
+        shape,
+      );
+    if (reason === "donation")
+      refuse(UNSUPPORTED, "disposal_donation_refused", { reason }, shape);
+    if (reason === "scrapping" && toCents(proceeds) !== 0)
+      refuse(
+        VALIDATION,
+        "disposal_scrapping_with_proceeds",
+        { proceeds },
+        shape,
+      );
+    if (
+      reason === "withdrawal" &&
+      (toCents(proceeds) !== 0 ||
+        toCents(costs) !== 0 ||
+        facts.market_value !== null)
+    )
+      refuse(VALIDATION, "disposal_withdrawal_with_amounts", {}, shape);
+  };
+
+  const statedDisposal = (request: JsonObject): DisposalFacts => {
+    const given = request.disposal;
+    if (typeof given !== "object" || given === null || Array.isArray(given))
+      return invalid();
+    const facts = given as unknown as DisposalFacts;
+    if (
+      typeof facts.disposal_date !== "string" ||
+      !DATE.test(facts.disposal_date) ||
+      typeof facts.reason !== "string" ||
+      decimalOf(facts.proceeds) === null ||
+      decimalOf(facts.transmission_costs) === null
+    )
+      return invalid();
+    return facts;
+  };
+
+  const dispose: Handler = (request) => {
+    exact(request, ["asset_id", "disposal"]);
+    const element = find(required(request.asset_id));
+    if (!element) return notFound({ history: null });
+    const facts = statedDisposal(request);
+    // The same baja stated again is the record already there.
+    if (
+      element.baja !== null &&
+      JSON.stringify(element.baja) === JSON.stringify(facts)
+    )
+      return json({ ...ok, history: history(element) });
+    if (element.baja !== null)
+      return refuse(
+        VALIDATION,
+        "disposal_already_recorded",
+        { disposal_date: element.baja.disposal_date },
+        { history: null },
+      );
+    judge(element, facts, { history: null });
+    // Every claim stays as recorded, under a revision that is no longer current.
+    for (const event of element.events)
+      if (event.claim !== null)
+        event.claim = {
+          ...event.claim,
+          matches_current_schedule: false,
+          stale_reason: event.claim.stale_reason ?? "revision_changed",
+        };
+    const changes = [
+      { field: "disposal.disposal_date", after: facts.disposal_date },
+      { field: "disposal.reason", after: facts.reason },
+      { field: "disposal.proceeds", after: facts.proceeds.decimal },
+      {
+        field: "disposal.transmission_costs",
+        after: facts.transmission_costs.decimal,
+      },
+      { field: "disposal.market_value", after: decimalOf(facts.market_value) },
+      {
+        field: "disposal.prior_free_depreciation_regime",
+        after: facts.prior_free_depreciation_regime,
+      },
+      {
+        field: "disposal.later_affectation_on",
+        after: facts.later_affectation_on,
+      },
+    ]
+      .filter((change) => change.after !== null)
+      .map((change) => ({ ...change, before: null }));
+    record(
+      element,
+      "baja",
+      "ledger.actividad-asset.dispose",
+      facts.disposal_date,
+      changes,
+    );
+    // The baja is a revision of its own, which the history chains to the last.
+    const before = latest(element).revision;
+    const afterBaja: JsonObject = {
+      ...before,
+      revision_number: element.list.revision_number + 1,
+      supersedes_revision_id: latest(element).revision_id,
+      disposal: json({
+        disposal_date: facts.disposal_date,
+        reason: facts.reason,
+        proceeds: facts.proceeds,
+        transmission_costs: facts.transmission_costs,
+        market_value: facts.market_value,
+        prior_free_depreciation_regime: facts.prior_free_depreciation_regime,
+        later_affectation_on: facts.later_affectation_on,
+      }),
+      out_of_service_date: new Date(
+        Date.parse(facts.disposal_date) + 86_400_000,
+      )
+        .toISOString()
+        .slice(0, 10),
+    };
+    element.revisions.push({
+      revision: afterBaja,
+      revision_id: hex64(`revision:${JSON.stringify(afterBaja)}`),
+    });
+    element.list.revision_number += 1;
+    element.baja = facts;
+    element.outOfService = new Date(
+      Date.parse(facts.disposal_date) + 86_400_000,
+    )
+      .toISOString()
+      .slice(0, 10);
+    // The plan ends the year of the last day of service.
+    element.rows = element.rows.filter(
+      (row) => row.tax_year <= Number(facts.disposal_date.slice(0, 4)),
+    );
+    if (facts.disposal_date < TODAY) element.list.state = "out_of_service";
+    recount(element);
+    return json({ ...ok, history: history(element) });
+  };
+
+  /** The figures of a stated baja, or of the recorded one. The registry's own
+   * calculation worked out the seeded figures for a sale with nothing stated;
+   * what the person states moves only the transmission figures and the result. */
+  const calculate: Handler = (request) => {
+    exact(request, ["asset_id", "disposal"]);
+    const id = required(request.asset_id);
+    const element = find(id);
+    const none = { asset_id: null, calculation: null };
+    if (!element) return notFound(none);
+    const facts =
+      request.disposal === null ? element.baja : statedDisposal(request);
+    if (facts === null)
+      return refuse(VALIDATION, "disposal_not_recorded", {}, none);
+    if (request.disposal !== null) judge(element, facts, none);
+    const base = element.disposal;
+    if (!base) return refuse(INCOMPLETE, "opening_history_missing", {}, none);
+    const withdrawal = facts.reason === "withdrawal";
+    const net = toCents(base.net_value.decimal);
+    const stated = Math.max(
+      toCents(facts.proceeds.decimal),
+      toCents(decimalOf(facts.market_value) ?? "0"),
+    );
+    const costs = toCents(facts.transmission_costs.decimal);
+    const result = stated - costs - net;
+    const calculation: DisposalCalculation = {
+      ...base,
+      disposal_date: facts.disposal_date,
+      reason: facts.reason,
+      transmission_value: withdrawal ? null : dec(fromCents(stated)),
+      transmission_costs: withdrawal ? null : dec(fromCents(costs)),
+      result: withdrawal ? null : dec(fromCents(result)),
+      route_changed_by_later_affectation: false,
+      findings: [
+        ...base.findings.map((finding) => ({
+          ...finding,
+          label_key: `${FINDING}${finding.kind}`,
+        })),
+        ...(!withdrawal && result > 0
+          ? [
+              {
+                kind: "exemption_not_computed",
+                label_key: `${FINDING}exemption_not_computed`,
+                tax_year: null,
+                effect_on_cost: null,
+              },
+            ]
+          : []),
+      ],
+    };
+    return json({ ...ok, asset_id: id, calculation });
+  };
+
+  const forecast: Handler = (request) => {
+    exact(request, [
+      "asset_id",
+      "covered_from",
+      "covered_until",
+      "requested_free_amount",
+      "supersedes_claim_id",
+    ]);
+    const id = required(request.asset_id);
+    const element = find(id);
+    if (!element) return notFound({ forecast: null });
+    const from = required(request.covered_from);
+    const until = required(request.covered_until);
+    if (!DATE.test(from) || !DATE.test(until)) return invalid();
+    if (until <= from)
+      return refuse(
+        VALIDATION,
+        "covered_interval_empty",
+        {},
+        { forecast: null },
+      );
+    if (
+      from.slice(0, 4) !==
+      String(
+        Number(until.slice(0, 4)) -
+          (until.endsWith("-01-01") && until.slice(0, 4) !== from.slice(0, 4)
+            ? 1
+            : 0),
+      )
+    )
+      return refuse(
+        VALIDATION,
+        "covered_interval_outside_tax_year",
+        {},
+        { forecast: null },
+      );
+    const year = Number(from.slice(0, 4));
+    const row = element.rows.find((found) => found.tax_year === year);
+    if (!row)
+      return refuse(
+        VALIDATION,
+        "covered_interval_without_service_days",
+        {},
+        { forecast: null },
+      );
+    if (row.absence === "incomplete" || row.absence === "edition_unavailable")
+      return row.absence === "incomplete"
+        ? refuse(INCOMPLETE, "opening_history_missing", {}, { forecast: null })
+        : refuse(
+            VALIDATION,
+            "tax_year_without_edition",
+            { tax_year: String(year) },
+            { forecast: null },
+          );
+    if (row.absence === "period_elapsed")
+      return refuse(
+        UNSUPPORTED,
+        "amortization_period_elapsed",
+        { ended_on: element.limits.maximum_period_ends_on ?? "" },
+        { forecast: null },
+      );
+    if (
+      row.absence === "basis_exhausted" ||
+      row.absence === "covered_by_opening"
+    )
+      return refuse(
+        VALIDATION,
+        "claims_exceed_amortizable_basis",
+        {},
+        { forecast: null },
+      );
+    const { start, end } = serviceWindow(element, row);
+    const spanStart = later(from, start);
+    const spanEnd = earlier(until, end);
+    if (spanEnd <= spanStart)
+      return refuse(
+        VALIDATION,
+        "covered_interval_without_service_days",
+        {},
+        { forecast: null },
+      );
+    const supersedes = textOf(request.supersedes_claim_id);
+    const overlapping = row.claims.filter(
+      (claim) =>
+        claim.effective &&
+        claim.claim_id !== supersedes &&
+        claim.covered_from < until &&
+        from < claim.covered_until,
+    );
+    if (overlapping.length > 0)
+      return refuse(CLAIM_CONFLICT, "claims_overlap", {}, { forecast: null });
+    const target = row.claims.find((claim) => claim.claim_id === supersedes);
+    if (supersedes !== null && (!target || !target.effective))
+      return refuse(
+        VALIDATION,
+        "superseded_claim_not_effective",
+        {},
+        { forecast: null },
+      );
+    if (
+      target &&
+      (target.covered_from !== from || target.covered_until !== until)
+    )
+      return refuse(
+        VALIDATION,
+        "superseding_claim_changes_interval",
+        {},
+        { forecast: null },
+      );
+    let amount: string;
+    if (row.absence === "free_election") {
+      const asked = decimalOf(request.requested_free_amount);
+      if (asked === null)
+        return refuse(
+          VALIDATION,
+          "free_amount_required",
+          {},
+          { forecast: null },
+        );
+      if (toCents(asked) <= 0)
+        return refuse(
+          VALIDATION,
+          "free_amount_not_positive_cents",
+          {},
+          { forecast: null },
+        );
+      const left =
+        element.list.pending === null ? null : element.list.pending.decimal;
+      if (
+        left !== null &&
+        toCents(asked) >
+          toCents(left) + (target ? toCents(target.amount.decimal) : 0)
+      )
+        return refuse(
+          VALIDATION,
+          "free_amount_exceeds_remaining_basis",
+          {},
+          { forecast: null },
+        );
+      amount = asked;
+    } else {
+      const window = later(element.list.in_service_date, `${year}-01-01`);
+      amount = chargeFor(element.annual, window, spanStart, spanEnd, year);
+    }
+    return json({
+      ...ok,
+      forecast: {
+        asset_id: id,
+        asset_revision_id: latest(element).revision_id,
+        tax_year: year,
+        covered_from: from,
+        covered_until: until,
+        service_days: daysBetween(spanStart, spanEnd),
+        calendar_days: leap(year) ? 366 : 365,
+        amount: dec(amount),
+        schedule_fingerprint: hex64(
+          `schedule:${id}:${from}:${until}:${amount}`,
+        ),
+        authority_generation: authority.logical_generation,
+        source_reference: "ley-35-2006:art-28",
+        method: row.method,
+        annual_rate: row.coefficient,
+      },
+    });
+  };
+
+  const claim: Handler = (request) => {
+    exact(request, ["forecast", "supersedes_claim_id"]);
+    const given = request.forecast as unknown as {
+      asset_id: string;
+      tax_year: number;
+      covered_from: string;
+      covered_until: string;
+      amount: { decimal: string };
+    };
+    if (typeof given !== "object" || given === null) return invalid();
+    const element = find(given.asset_id);
+    if (!element) return notFound({ claim_result: null, claim_id: null });
+    const row = element.rows.find((found) => found.tax_year === given.tax_year);
+    if (!row)
+      return refuse(
+        VALIDATION,
+        "covered_interval_without_service_days",
+        {},
+        { claim_result: null, claim_id: null },
+      );
+    if (row.absence === "period_elapsed")
+      return refuse(
+        UNSUPPORTED,
+        "amortization_period_elapsed",
+        { ended_on: element.limits.maximum_period_ends_on ?? "" },
+        { claim_result: null, claim_id: null },
+      );
+    const supersedes = textOf(request.supersedes_claim_id);
+    const claimId = hex64(
+      `claim:${given.asset_id}:${given.covered_from}:${given.covered_until}:${given.amount.decimal}:${supersedes ?? ""}`,
+    );
+    const again = row.claims.find((found) => found.claim_id === claimId);
+    if (again && again.superseded_by !== null)
+      return refuse(
+        CLAIM_CONFLICT,
+        "claim_superseded_replay",
+        {},
+        { claim_result: null, claim_id: null },
+      );
+    if (!again && given.tax_year > LAST_ADMITTED_YEAR)
+      return refuse(
+        UNSUPPORTED,
+        "claim_year_beyond_registry",
+        {
+          tax_year: String(given.tax_year),
+          last_admitted_year: String(LAST_ADMITTED_YEAR),
+        },
+        { claim_result: null, claim_id: null },
+      );
+    const reply = (reused: boolean) =>
+      json({
         ...ok,
-        claim_id: next.claim_id,
-        reused_existing_claim: false,
-        superseded_claim_id: replaced?.claim_id ?? null,
-        conflicting_claim: null,
+        claim_result: {
+          history: history(element),
+          reused_existing_claim: reused,
+        },
+        claim_id: claimId,
       });
-    },
+    if (again) return reply(true);
+    const overlapping = row.claims.filter(
+      (found) =>
+        found.effective &&
+        found.claim_id !== supersedes &&
+        found.covered_from < given.covered_until &&
+        given.covered_from < found.covered_until,
+    );
+    if (overlapping.length > 0)
+      return refuse(
+        CLAIM_CONFLICT,
+        "claims_overlap",
+        {},
+        { claim_result: null, claim_id: null },
+      );
+    const target = row.claims.find((found) => found.claim_id === supersedes);
+    if (supersedes !== null && (!target || !target.effective))
+      return refuse(
+        VALIDATION,
+        "superseded_claim_not_effective",
+        {},
+        { claim_result: null, claim_id: null },
+      );
+    const next: PlanClaim = {
+      claim_id: claimId,
+      amount: dec(given.amount.decimal),
+      covered_from: given.covered_from,
+      covered_until: given.covered_until,
+      effective: true,
+      superseded_by: null,
+      revision_id: latest(element).revision_id,
+    };
+    if (target) {
+      target.effective = false;
+      target.superseded_by = claimId;
+    }
+    row.claims.push(next);
+    const delta =
+      toCents(next.amount.decimal) -
+      (target ? toCents(target.amount.decimal) : 0);
+    const { accumulated, pending } = element.list;
+    if (accumulated !== null)
+      element.list.accumulated = dec(
+        fromCents(toCents(accumulated.decimal) + delta),
+      );
+    if (pending !== null)
+      element.list.pending = dec(
+        fromCents(Math.max(toCents(pending.decimal) - delta, 0)),
+      );
+    record(
+      element,
+      "claim",
+      "ledger.actividad-asset.claim",
+      next.covered_from,
+      [
+        {
+          field: "amount",
+          before: target?.amount.decimal ?? null,
+          after: next.amount.decimal,
+        },
+      ],
+      {
+        record_id: claimId,
+        claim: {
+          used_by: [],
+          matches_current_schedule: true,
+          stale_reason: null,
+        },
+      },
+    );
+    restate(element, row);
+    if (
+      element.list.pending !== null &&
+      toCents(element.list.pending.decimal) <= 0
+    )
+      element.list.state = "fully_amortized";
+    recount(element);
+    return reply(false);
   };
 
   return {
-    reads: { ...reads, ...draftedReads },
-    writes: { ...writes, ...draftedWrites },
+    reads: {
+      ...reads,
+      "ledger.actividad-asset.forecast": forecast,
+      "ledger.actividad-asset.inspect": inspect,
+      "ledger.actividad-asset.filing-handoff": filingHandoff,
+      "ledger.actividad-asset.disposal-calculate": calculate,
+    } as Record<string, Handler>,
+    writes: {
+      "ledger.actividad-asset.describe": describe,
+      "ledger.actividad-asset.dispose": dispose,
+      "ledger.actividad-asset.create": create,
+      "ledger.actividad-asset.correct": correct,
+      "ledger.actividad-asset.claim": claim,
+    } as Record<string, Handler>,
   };
 }
 
-/** The years the seeded register offers, for stories that show the stepper
- * on a list that spans decades. */
+/** The tax years the seeded register offers: from the oldest element's first
+ * year to the year after the scenario's date, for stories that show the
+ * stepper on a register that spans decades. */
 export function assetFixtureYears(): number[] {
-  const never = (): never => {
-    throw new Error("The seeded register is read without a request.");
-  };
-  const { reads } = assetOperations(
-    { now: () => "", hex64: (text) => text, invalid: never, stop: never },
-    () => new Map(),
+  return [...new Set(SEED_ELEMENTS.flatMap((seed) => seed.list.years))].sort(
+    (a, b) => a - b,
   );
-  const answer = reads["ledger.actividad-asset.list"]!({});
-  return answer.years as number[];
 }
+
+export type { JsonValue };

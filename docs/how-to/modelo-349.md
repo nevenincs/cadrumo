@@ -3,9 +3,9 @@
 This page covers the Modelo 349 filing: recording the intra-community operations
 it lists, checking your counterparties' EU VAT numbers, and running the create,
 calculate, check and export chain. Modelo 349 is the informative recapitulative
-declaration of intra-community operations; its official title is "Modelo 349.
+declaration of intra-community operations; its official title is "<span lang="es">Modelo 349.
 Declaración Informativa. Declaración recapitulativa de operaciones
-intracomunitarias."
+intracomunitarias.</span>"
 
 Modelo 349 declares no cuota: it is a pure listing. The declaration carries one
 summary block (how many EU counterparties, the operadores intracomunitarios, you

@@ -22,7 +22,6 @@ from sqlalchemy.engine import make_url
 
 from ......core.config import Settings
 from ......tests.env_scope import scoped_env_var
-from ......tests.inventory import REPO_ROOT
 from ......tests.log_records import delivered_records
 from ...errors import StorageError
 from ..engine import _normalize_sqlite_url, create_engine_from_settings, dispose_engine
@@ -215,13 +214,14 @@ def test_engine_refuses_creating_a_database_with_former_product_filename(tmp_pat
 def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     tmp_path: Path,
 ) -> None:
-    """URL normalization uses the checkout anchor despite cwd and user-data overrides.
+    """URL normalization uses the declared storage root despite cwd and user-data overrides.
 
-    Inspect the normalized URL without opening a database under the real
-    checkout. The engine's connection and directory creation have separate
+    Inspect the normalized URL without opening a database. The engine's
+    connection and directory creation have separate
     absolute-path cases above.
     """
     isolated_app_data = tmp_path / "app-data"
+    storage_root = tmp_path / "storage"
     relative_db = Path("var") / "pytest-relative-sqlite" / "engine.db"
     cwd_marker = tmp_path / "cwd"
     cwd_marker.mkdir()
@@ -229,13 +229,14 @@ def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     os.chdir(cwd_marker)
     try:
         with (
+            scoped_env_var("CADRUMO_STORAGE_ROOT", str(storage_root)),
             scoped_env_var("LOCALAPPDATA", str(isolated_app_data)),
             scoped_env_var("XDG_DATA_HOME", str(isolated_app_data)),
             scoped_env_var("HOME", str(isolated_app_data)),
         ):
             normalized = make_url(_normalize_sqlite_url(f"sqlite:///{relative_db.as_posix()}"))
             anchored_db = Path(normalized.database or "")
-            assert anchored_db == REPO_ROOT / relative_db
+            assert anchored_db == storage_root / relative_db
             assert not anchored_db.is_relative_to(cwd_marker)
             assert not anchored_db.is_relative_to(isolated_app_data)
     finally:

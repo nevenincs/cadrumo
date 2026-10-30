@@ -6,17 +6,14 @@
 // the shipped manifest and the host's admitted list, definition by
 // definition. Every other admitted definition is a read.
 
-import {
-  isProvisionalOperation,
-  PROVISIONAL_OPERATIONS,
-  type ProvisionalOperationId,
-} from "@/components/ledger/assets/assetsContract";
 import type { LedgerDefinitionId } from "../shell/ledger";
 
 export const LEDGER_WRITES: readonly string[] = [
   "ledger.actividad-asset.claim",
   "ledger.actividad-asset.correct",
   "ledger.actividad-asset.create",
+  "ledger.actividad-asset.describe",
+  "ledger.actividad-asset.dispose",
   "ledger.add",
   "ledger.allocate",
   "ledger.archive",
@@ -78,13 +75,7 @@ export const LEDGER_REVIEWS: readonly string[] = [
 
 export type LedgerClass = "read" | "write" | "review";
 
-/** A provisional operation is classed by its own draft; it joins the lists
- * above when the host admits it. */
-export function ledgerClassOf(
-  definition: LedgerDefinitionId | ProvisionalOperationId,
-): LedgerClass {
-  if (isProvisionalOperation(definition))
-    return PROVISIONAL_OPERATIONS[definition].effect;
+export function ledgerClassOf(definition: LedgerDefinitionId): LedgerClass {
   if (LEDGER_REVIEWS.includes(definition)) return "review";
   return LEDGER_WRITES.includes(definition) ? "write" : "read";
 }

@@ -292,8 +292,7 @@ export function InvoiceEditor({
     });
   };
 
-  const refusedText = (reason: string | null) =>
-    t("desktop.ledger.invoices.refused", { code: reason ?? "refused" });
+  const refusedText = () => t("desktop.ledger.invoices.refused");
 
   const add = async (request: InvoiceAddRequest) => {
     setSending(true);
@@ -322,7 +321,7 @@ export function InvoiceEditor({
       const detail = answer.detail as Partial<InvoiceAddResult> | null;
       if (detail && detail.outcome === "validation_error")
         refuseAdd(detail as InvoiceAddResult);
-      else setOutcome({ kind: "refused", text: refusedText(answer.reason) });
+      else setOutcome({ kind: "refused", text: refusedText() });
       setStage("edit");
       return;
     }
@@ -357,7 +356,7 @@ export function InvoiceEditor({
       onWritten(answer.result.invoice);
       onClose();
     } else if (answer.kind === "refused") {
-      setOutcome({ kind: "refused", text: refusedText(answer.reason) });
+      setOutcome({ kind: "refused", text: refusedText() });
       setStage("edit");
     } else if (answer.kind === "unknown")
       undetermined({ what: "update", request }, answer.saved);
@@ -375,7 +374,7 @@ export function InvoiceEditor({
       onWritten(null, invoiceId);
       onClose();
     } else if (answer.kind === "refused") {
-      setOutcome({ kind: "refused", text: refusedText(answer.reason) });
+      setOutcome({ kind: "refused", text: refusedText() });
       setStage("edit");
     } else if (answer.kind === "unknown")
       undetermined({ what: "remove", invoiceId }, answer.saved);
@@ -687,7 +686,7 @@ function OutcomeAlert({
     >
       {outcome.kind === "refused"
         ? outcome.text
-        : t("desktop.ledger.invoices.failed", { code: outcome.code })}
+        : t("desktop.ledger.invoices.failed")}
     </Alert>
   );
 }

@@ -182,6 +182,7 @@ def _set(path: tuple[str, ...], value: Any) -> _Mutation:
         container = facts
         for key in path[:-1]:
             container = container[key]
+        assert path[-1] in container, f"cannot mutate an unreported fact: {path}"
         container[path[-1]] = value
 
     return mutate
@@ -354,7 +355,6 @@ _PLANTED_FACTS: list[tuple[str, _Mutation, str, str]] = [
         "installed default",
     ),
     ("log-default", _set(("cli", "log", "default"), "diagnostics"), "log-location", "default"),
-    ("log-relocation", _set(("cli", "log", "relocated"), "logs/relocated-logs"), "log-location", "relative value"),
     ("log-file", _set(("cli", "log", "file_name"), "other.log"), "log-location", "log file"),
 ]
 

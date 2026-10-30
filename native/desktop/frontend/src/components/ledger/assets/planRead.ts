@@ -4,44 +4,29 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { LedgerPort } from "../../../shell/ledger";
+import type {
+  ActivityAssetPlanResult,
+  ActivityAssetTimelineResult,
+} from "../../../shell/ledgerSetup";
 import { useWritePause } from "../WritePause";
-import { callFailure, callOutcome, type SetupCall } from "../setup/setupModel";
-import { submitProvisional, type ProvisionalResults } from "./assetsContract";
+import { setupCall, type SetupCall } from "../setup/setupModel";
 
-type PlanResult = ProvisionalResults["ledger.actividad-asset.plan"];
-type TimelineResult = ProvisionalResults["ledger.actividad-asset.timeline"];
-
-export const readPlan = async (
+export const readPlan = (
   port: LedgerPort,
   assetId: string,
-): Promise<SetupCall<PlanResult>> => {
-  try {
-    return callOutcome(
-      await submitProvisional(port, "ledger.actividad-asset.plan", {
-        asset_id: assetId,
-      }),
-      false,
-    );
-  } catch (error) {
-    return callFailure(error);
-  }
-};
+): Promise<SetupCall<ActivityAssetPlanResult>> =>
+  setupCall(port, "ledger.actividad-asset.plan", { asset_id: assetId }, false);
 
-export const readTimeline = async (
+export const readTimeline = (
   port: LedgerPort,
   assetId: string,
-): Promise<SetupCall<TimelineResult>> => {
-  try {
-    return callOutcome(
-      await submitProvisional(port, "ledger.actividad-asset.timeline", {
-        asset_id: assetId,
-      }),
-      false,
-    );
-  } catch (error) {
-    return callFailure(error);
-  }
-};
+): Promise<SetupCall<ActivityAssetTimelineResult>> =>
+  setupCall(
+    port,
+    "ledger.actividad-asset.timeline",
+    { asset_id: assetId },
+    false,
+  );
 
 /**
  * Reads one element's plan or timeline while the view shows, and again when

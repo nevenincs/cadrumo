@@ -14,7 +14,6 @@ import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { figureText } from "../invoices/invoiceWords";
 import { seriesAndNumber } from "../invoices/invoiceModel";
-import { failureCode } from "../ledgerWords";
 import { dayText } from "../transfer/transferWords";
 import {
   inconsistencies,
@@ -380,7 +379,6 @@ function FailedRead({
     <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
       <AlertTitle>{t("desktop.ledger.matching.read_failed")}</AlertTitle>
       <AlertDescription className="flex flex-wrap items-center gap-2">
-        <code className="font-mono text-xs">{failureCode(facts.failure)}</code>
         <Button size="xs" variant="outline" onClick={onRetry}>
           {t("desktop.ledger.retry")}
         </Button>

@@ -136,6 +136,7 @@ def _write_run_metadata(
     log_path: Path,
     scratch: Path,
     started: datetime,
+    completed: bool = True,
 ) -> None:
     """Atomically persist the canonical run contract."""
     payload = {
@@ -148,6 +149,7 @@ def _write_run_metadata(
         "run_id": run_dir.name,
         "scratch": str(scratch),
         "started_at": started.isoformat(),
+        "status": "completed" if completed else "running",
     }
     temporary = run_dir / "run.json.tmp"
     temporary.write_text(
@@ -231,6 +233,7 @@ def _run_in_scratch(
         log_path=log_path,
         scratch=scratch,
         started=started,
+        completed=False,
     )
     processor = _new_signal_processor(signal, expected_lanes)
     start_envelope_text: str | None = None
@@ -293,19 +296,8 @@ def _run_in_scratch(
         finished = datetime.now(tz=UTC)
         transcript.write(f"FINISH {finished.isoformat()} exit={exit_status}\n")
 
-    _write_run_metadata(
-        run_dir=run_dir,
-        artifacts=artifacts,
-        cache=cache,
-        command=command,
-        exit_status=exit_status,
-        finished=finished,
-        log_path=log_path,
-        scratch=scratch,
-        started=started,
-    )
     if processor is None:
-        print(f"{label} run log: {log_path} (exit={exit_status}, metadata={run_dir / 'run.json'})", flush=True)
+        finished_output = f"{label} run log: {log_path} (exit={exit_status}, metadata={run_dir / 'run.json'})"
     else:
         envelope_text = json.dumps(
             processor.envelope(
@@ -321,7 +313,19 @@ def _run_in_scratch(
         )
         with log_path.open("a", encoding=UTF_8, newline="\n") as transcript:
             transcript.write(envelope_text + "\n")
-        print(envelope_text, flush=True)
+        finished_output = envelope_text
+    _write_run_metadata(
+        run_dir=run_dir,
+        artifacts=artifacts,
+        cache=cache,
+        command=command,
+        exit_status=exit_status,
+        finished=finished,
+        log_path=log_path,
+        scratch=scratch,
+        started=started,
+    )
+    print(finished_output, flush=True)
     return exit_status
 
 

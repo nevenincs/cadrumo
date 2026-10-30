@@ -46,7 +46,6 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AgentService:
     )
     # This credential-only fact is deliberately insufficient to prove hosted readiness.
     credential_status = {
-        "development": False,
         "providers": [{"mode": "provider_sign_in", "cli_state": "installed_signed_in"}],
     }
     monkeypatch.setattr(
@@ -95,7 +94,6 @@ def test_status_projects_only_valid_certification_from_the_current_served_catalo
 
     assert catalog["api_version"] == "v1"
     assert result == {
-        "development": False,
         "providers": [{"mode": "provider_sign_in", "cli_state": "installed_signed_in"}],
         "sign_in_providers": [],
         "sign_in_methods": {},

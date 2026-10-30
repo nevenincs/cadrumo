@@ -29,7 +29,6 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { rowTone } from "../../setup/setupWords";
 import { kindChoice } from "../invoices/invoiceWords";
-import { failureCode } from "../ledgerWords";
 import { stampText } from "../movements/movementWords";
 import { applyDocuments, type DocumentsApplied } from "../transfer/importModel";
 import { sizeText } from "../transfer/transferWords";
@@ -55,10 +54,7 @@ function Failed({
       className="ledger-documents-failed"
       icon="alert"
       description={
-        <span role="alert">
-          {t("desktop.ledger.documents.read_failed")}{" "}
-          <code className="font-mono text-xs">{failureCode(read.failure)}</code>
-        </span>
+        <span role="alert">{t("desktop.ledger.documents.read_failed")}</span>
       }
     >
       <Button variant="outline" onClick={onRetry}>
@@ -262,7 +258,7 @@ export function AttachmentQueue({
               {state(item)}
               {failed?.id === item.attachment_id && (
                 <span role="alert" className="block text-destructive">
-                  <code className="font-mono text-xs">{failed.code}</code>
+                  {t("desktop.ledger.form.failed")}
                 </span>
               )}
               {failed?.id === item.attachment_id && (
@@ -327,9 +323,6 @@ function batchRows(t: Translate, applied: DocumentsApplied): BatchRow[] {
         <span className="inline-flex items-center gap-1">
           <Icon name={BATCH_ICONS[item.status] ?? "info"} size="xs" />
           {batchStatusLabel(t, item.status)}
-          {item.refusal_code && (
-            <code className="font-mono text-xs">{item.refusal_code}</code>
-          )}
         </span>
       ),
     })),
@@ -342,7 +335,6 @@ function batchRows(t: Translate, applied: DocumentsApplied): BatchRow[] {
         <span className="inline-flex items-center gap-1">
           <Icon name="refused" size="xs" />
           {batchStatusLabel(t, "refused")}
-          <code className="font-mono text-xs">{item.refusal_code}</code>
         </span>
       ),
     })),

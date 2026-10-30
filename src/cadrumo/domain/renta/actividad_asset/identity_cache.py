@@ -29,7 +29,7 @@ class CachedIdentityModel(BaseModel):
     def _without_cached_identity(cls, copied: Self) -> Self:
         for name in tuple(copied.__dict__):
             if name not in cls.model_fields:
-                del copied.__dict__[name]
+                del vars(copied)[name]
         return copied
 
 

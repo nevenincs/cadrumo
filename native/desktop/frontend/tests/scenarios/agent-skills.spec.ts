@@ -228,7 +228,8 @@ test("verify typed in full and sent shows the agent's findings", async ({
   await expect(dialog.getByRole("status")).toHaveText(
     label("desktop.agent.skill_verify_failed"),
   );
-  await expect(dialog).toContainText("applies_when_empty");
+  await expect(dialog).not.toContainText("applies_when_empty");
+  await expect(dialog).toContainText("applies_when names no condition.");
   await expect(dialog).toContainText(
     label("desktop.agent.skill_finding_error"),
   );

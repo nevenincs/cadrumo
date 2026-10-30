@@ -652,7 +652,10 @@ def _surface_findings(
 def scan_write_path_coverage(spec: ShippedTreeSpec, surface: PersistenceSurfaceSpec) -> WritePathResult:
     """Scan the tree ``spec`` describes for readable surfaces with no writer."""
     with shared_scan_memo():
-        return _scan_with_memo(spec, surface)
+        try:
+            return _scan_with_memo(spec, surface)
+        except OSError as exc:
+            return WritePathResult.error(f"scan input could not be read ({type(exc).__name__}: {exc})")
 
 
 def _scan_with_memo(spec: ShippedTreeSpec, surface: PersistenceSurfaceSpec) -> WritePathResult:

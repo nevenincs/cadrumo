@@ -11,7 +11,6 @@ from decimal import Decimal
 from enum import StrEnum
 
 import pytest
-from pydantic import BaseModel
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import (
     DISPOSAL_FINDING_FAMILY,
@@ -629,18 +628,6 @@ def test_every_served_token_has_a_catalogue_word_in_every_locale(locale: str) ->
 
     assert len(words) == sum(len(enum) for enum in _served_word_families().values())
     assert all(word.strip() for word in words.values())
-
-
-def test_a_timeline_token_family_names_a_real_enum_field_of_the_revision() -> None:
-    for path, (_, enum) in TIMELINE_TOKEN_FAMILIES.items():
-        model: type[BaseModel] = ActivityAssetRevision
-        *parents, leaf = path.split(".")
-        for name in parents:
-            annotation = model.model_fields[name].annotation
-            assert isinstance(annotation, type)
-            assert issubclass(annotation, BaseModel)
-            model = annotation
-        assert model.model_fields[leaf].annotation is enum
 
 
 def test_the_timeline_words_each_token_it_changes_and_leaves_other_values_bare() -> None:

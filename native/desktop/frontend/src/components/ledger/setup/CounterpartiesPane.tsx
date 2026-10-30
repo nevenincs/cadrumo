@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { facts } from "@/shell/compose";
 import type { LedgerCounterpartyResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
@@ -66,7 +67,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
    * stands on, viewed again. */
   const viewLanding = (
     id: string,
-    judge: (facts: LedgerCounterpartyResult["facts"]) => Landing,
+    judge: (known: LedgerCounterpartyResult["facts"]) => Landing,
   ) =>
     readLanding(
       port,
@@ -96,11 +97,11 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
           },
           true,
         ),
-      viewLanding(result.tax_identifier, (facts) =>
-        facts !== null &&
-        facts.territorial_scope === scope &&
-        facts.identification_state === (state ? state.toUpperCase() : null) &&
-        facts.note === note.trim()
+      viewLanding(result.tax_identifier, (known) =>
+        known !== null &&
+        known.territorial_scope === scope &&
+        known.identification_state === (state ? state.toUpperCase() : null) &&
+        known.note === note.trim()
           ? "saved"
           : "not_saved",
       ),
@@ -121,8 +122,8 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
           },
           true,
         ),
-      viewLanding(result.tax_identifier, (facts) =>
-        facts === null ? "saved" : "not_saved",
+      viewLanding(result.tax_identifier, (known) =>
+        known === null ? "saved" : "not_saved",
       ),
     );
     setWithdrawing(false);
@@ -134,7 +135,10 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
     source: string | null | undefined,
   ) =>
     value
-      ? `${tokenText(t, "counterparty.scope", value)} · ${tokenText(t, "counterparty.source", source ?? null)}`
+      ? facts(t, [
+          tokenText(t, "counterparty.scope", value),
+          tokenText(t, "counterparty.source", source ?? null),
+        ])
       : t("desktop.ledger.counterparty.undetermined");
 
   return (
@@ -183,7 +187,14 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
               </dt>
               <dd>
                 {answer?.identification_state
-                  ? `${answer.identification_state} · ${tokenText(t, "counterparty.source", answer.identification_source)}`
+                  ? facts(t, [
+                      answer.identification_state,
+                      tokenText(
+                        t,
+                        "counterparty.source",
+                        answer.identification_source,
+                      ),
+                    ])
                   : t("desktop.ledger.counterparty.undetermined")}
               </dd>
               <dt className="text-muted-foreground">

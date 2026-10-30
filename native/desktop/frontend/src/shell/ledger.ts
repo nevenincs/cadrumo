@@ -17,18 +17,39 @@ import type {
   ActivityAssetForecastResult,
   ActivityAssetInspectRequest,
   ActivityAssetInspectResult,
-  ActivityAssetRevisionRequest,
+  ActivityAssetAcquisitionCandidatesResult,
+  ActivityAssetCorrectRequest,
+  ActivityAssetCreateRequest,
+  ActivityAssetDescribeRequest,
+  ActivityAssetDisposalCalculateRequest,
+  ActivityAssetDisposalCalculateResult,
+  ActivityAssetDisposeRequest,
+  ActivityAssetFormOptionsRequest,
+  ActivityAssetFormOptionsResult,
+  ActivityAssetListResult,
+  ActivityAssetPlanRequest,
+  ActivityAssetPlanResult,
+  ActivityAssetTimelineRequest,
+  ActivityAssetTimelineResult,
   CapitalGoodDeclareRequest,
   CapitalGoodDeclareResult,
   CapitalGoodsListResult,
   InventoryBookRequest,
+  InventoryChangeResult,
   InventoryClosingAuthorityRequest,
   InventoryClosingAuthorityResult,
+  InventoryCorrectRequest,
   InventoryCreateRequest,
   InventoryCreateResult,
+  InventoryDescribeRequest,
+  InventoryInspectResult,
   InventoryListResult,
   InventoryMovementAddRequest,
   InventoryMovementAddResult,
+  InventoryMovementCorrectRequest,
+  InventoryMovementReverseRequest,
+  InventoryRestoreRequest,
+  InventoryRetireRequest,
   InventoryValuationResult,
   LedgerCounterpartyRequest,
   LedgerCounterpartyResult,
@@ -115,9 +136,16 @@ export const LEDGER_DEFINITIONS = [
   "ledger.history.typed",
   "ledger.import",
   "ledger.inventory.closing-authority.record",
+  "ledger.inventory.correct",
   "ledger.inventory.create",
+  "ledger.inventory.describe",
+  "ledger.inventory.inspect",
   "ledger.inventory.list",
   "ledger.inventory.movement.add",
+  "ledger.inventory.movement.correct",
+  "ledger.inventory.movement.reverse",
+  "ledger.inventory.restore",
+  "ledger.inventory.retire",
   "ledger.inventory.valuation.preview",
   "ledger.invoice.add",
   "ledger.invoice.import",
@@ -1874,9 +1902,24 @@ export interface LedgerRequests {
   "ledger.inventory.movement.add": InventoryMovementAddRequest;
   "ledger.inventory.valuation.preview": InventoryBookRequest;
   "ledger.inventory.closing-authority.record": InventoryClosingAuthorityRequest;
-  "ledger.actividad-asset.create": ActivityAssetRevisionRequest;
+  "ledger.inventory.inspect": InventoryBookRequest;
+  "ledger.inventory.describe": InventoryDescribeRequest;
+  "ledger.inventory.correct": InventoryCorrectRequest;
+  "ledger.inventory.movement.correct": InventoryMovementCorrectRequest;
+  "ledger.inventory.movement.reverse": InventoryMovementReverseRequest;
+  "ledger.inventory.retire": InventoryRetireRequest;
+  "ledger.inventory.restore": InventoryRestoreRequest;
+  "ledger.actividad-asset.create": ActivityAssetCreateRequest;
   "ledger.actividad-asset.inspect": ActivityAssetInspectRequest;
-  "ledger.actividad-asset.correct": ActivityAssetRevisionRequest;
+  "ledger.actividad-asset.correct": ActivityAssetCorrectRequest;
+  "ledger.actividad-asset.list": Record<string, never>;
+  "ledger.actividad-asset.plan": ActivityAssetPlanRequest;
+  "ledger.actividad-asset.timeline": ActivityAssetTimelineRequest;
+  "ledger.actividad-asset.form-options": ActivityAssetFormOptionsRequest;
+  "ledger.actividad-asset.acquisition-candidates": Record<string, never>;
+  "ledger.actividad-asset.describe": ActivityAssetDescribeRequest;
+  "ledger.actividad-asset.dispose": ActivityAssetDisposeRequest;
+  "ledger.actividad-asset.disposal-calculate": ActivityAssetDisposalCalculateRequest;
   "ledger.actividad-asset.forecast": ActivityAssetForecastRequest;
   "ledger.actividad-asset.claim": ActivityAssetClaimRequest;
   "ledger.actividad-asset.filing-handoff": ActivityAssetFilingRequest;
@@ -1955,9 +1998,24 @@ export interface LedgerResults {
   "ledger.inventory.movement.add": InventoryMovementAddResult;
   "ledger.inventory.valuation.preview": InventoryValuationResult;
   "ledger.inventory.closing-authority.record": InventoryClosingAuthorityResult;
+  "ledger.inventory.inspect": InventoryInspectResult;
+  "ledger.inventory.describe": InventoryChangeResult;
+  "ledger.inventory.correct": InventoryChangeResult;
+  "ledger.inventory.movement.correct": InventoryChangeResult;
+  "ledger.inventory.movement.reverse": InventoryChangeResult;
+  "ledger.inventory.retire": InventoryChangeResult;
+  "ledger.inventory.restore": InventoryChangeResult;
   "ledger.actividad-asset.create": ActivityAssetChangeResult;
   "ledger.actividad-asset.inspect": ActivityAssetInspectResult;
   "ledger.actividad-asset.correct": ActivityAssetChangeResult;
+  "ledger.actividad-asset.list": ActivityAssetListResult;
+  "ledger.actividad-asset.plan": ActivityAssetPlanResult;
+  "ledger.actividad-asset.timeline": ActivityAssetTimelineResult;
+  "ledger.actividad-asset.form-options": ActivityAssetFormOptionsResult;
+  "ledger.actividad-asset.acquisition-candidates": ActivityAssetAcquisitionCandidatesResult;
+  "ledger.actividad-asset.describe": ActivityAssetChangeResult;
+  "ledger.actividad-asset.dispose": ActivityAssetChangeResult;
+  "ledger.actividad-asset.disposal-calculate": ActivityAssetDisposalCalculateResult;
   "ledger.actividad-asset.forecast": ActivityAssetForecastResult;
   "ledger.actividad-asset.claim": ActivityAssetClaimResult;
   "ledger.actividad-asset.filing-handoff": ActivityAssetFilingResult;

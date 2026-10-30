@@ -228,7 +228,6 @@ adapters:
             register.
       inventory:
         errors:
-          inventory_ledger_absent: That inventory record book does not exist.
           inventory_ledger_already_exists: That inventory record book already exists.
           inventory_ledger_not_found: The requested inventory record book was not
             found.

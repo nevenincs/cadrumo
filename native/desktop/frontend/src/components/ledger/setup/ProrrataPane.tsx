@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { facts, listed } from "@/shell/compose";
 import {
   compareDecimal,
   parseDecimal,
@@ -104,7 +105,7 @@ export function ProrrataPane({
       ].some(Boolean),
   );
 
-  const listed = read?.kind === "done" ? read.result : null;
+  const register = read?.kind === "done" ? read.result : null;
   const choose = (next: Action) => {
     write.clear();
     setAction(action === next ? null : next);
@@ -123,9 +124,12 @@ export function ProrrataPane({
   const sinVolume = parseDecimal(sin, TAX_AMOUNT_RULE);
   const refusedText = (parsed: ReturnType<typeof parsePoints>) =>
     parsed.kind === "refused" ? grammarText(t, parsed.refusal) : null;
-  const sectorChoices = (listed?.sectors ?? []).map((found) => ({
+  const sectorChoices = (register?.sectors ?? []).map((found) => ({
     value: found.sector_id,
-    label: `${found.sector_id} · ${tokenText(t, "prorrata.letra", found.letra)}`,
+    label: facts(t, [
+      found.sector_id,
+      tokenText(t, "prorrata.letra", found.letra),
+    ]),
   }));
 
   const ready = (() => {
@@ -295,9 +299,12 @@ export function ProrrataPane({
     const said = t(`desktop.ledger.prorrata.refusal.${found.reason}`);
     return found.accepted_provenances.length
       ? `${said} ${t("desktop.ledger.prorrata.accepted", {
-          provenances: found.accepted_provenances
-            .map((value) => tokenText(t, "prorrata.provenance", value))
-            .join(", "),
+          provenances: listed(
+            t,
+            found.accepted_provenances.map((value) =>
+              tokenText(t, "prorrata.provenance", value),
+            ),
+          ),
         })}`
       : said;
   };
@@ -371,7 +378,16 @@ export function ProrrataPane({
       cell: (entry) =>
         entry.definitive_volume_con_derecho &&
         entry.definitive_volume_sin_derecho
-          ? `${amountText(locale, entry.definitive_volume_con_derecho.decimal)} / ${amountText(locale, entry.definitive_volume_sin_derecho.decimal)}`
+          ? t("desktop.ledger.prorrata.volumes_pair", {
+              with_right: amountText(
+                locale,
+                entry.definitive_volume_con_derecho.decimal,
+              ),
+              without_right: amountText(
+                locale,
+                entry.definitive_volume_sin_derecho.decimal,
+              ),
+            })
           : "—",
     },
   ];
@@ -438,26 +454,29 @@ export function ProrrataPane({
         <Reading label={t("desktop.ledger.form.reading")} />
       ) : read.kind !== "done" ? (
         <CallLine call={read} />
-      ) : listed!.entries.length === 0 ? (
+      ) : register!.entries.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           {t("desktop.ledger.prorrata.empty")}
         </p>
       ) : (
         <SetupTable
           label={t("desktop.ledger.prorrata.title")}
-          rows={listed!.entries}
+          rows={register!.entries}
           rowKey={(entry) => `${entry.ejercicio}:${entry.sector_id ?? ""}`}
           selected={`${ejercicio}:`}
           columns={columns}
           className="ledger-prorrata-table"
         />
       )}
-      {listed && listed.sectors.length > 0 && (
+      {register && register.sectors.length > 0 && (
         <p className="text-sm">
           <span className="text-muted-foreground">
             {t("desktop.ledger.prorrata.sectors")}{" "}
           </span>
-          {sectorChoices.map((choice) => choice.label).join(" · ")}
+          {listed(
+            t,
+            sectorChoices.map((choice) => choice.label),
+          )}
         </p>
       )}
       <div

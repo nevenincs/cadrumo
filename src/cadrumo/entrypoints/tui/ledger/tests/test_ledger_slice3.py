@@ -188,7 +188,7 @@ async def test_local_reconciliation_renders_distinct_source_and_submits_exact_vi
         await pilot.press("enter")
         assert len(door.calls) == 1
         affected = screen.query_one("#ledger-affected", DataTable)
-        assert tuple(str(value) for value in affected.get_row_at(0)) == ("303", "2026 2T", "2/1")
+        assert tuple(str(value) for value in affected.get_row_at(0)) == ("303", "2026 2T", "2/1/0")
 
 
 @pytest.mark.asyncio

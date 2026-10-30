@@ -102,6 +102,7 @@ export const DocumentsReaderMissing: Story = {
 };
 export const Rules: Story = { args: { view: { section: "rules" } } };
 export const Registers: Story = { args: { view: { section: "registers" } } };
+export const Assets: Story = { args: { view: { section: "assets" } } };
 export const Health: Story = {
   // The readiness check reads once the movements have been, so the page
   // starts on them and goes to Health from the Setup menu, as a person does.

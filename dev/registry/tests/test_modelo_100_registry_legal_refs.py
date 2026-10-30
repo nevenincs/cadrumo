@@ -30,6 +30,25 @@ from ._modelo_100_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@pytest.mark.parametrize("filing_year", [2022, 2023, 2024, 2025])
+def test_disposal_excess_cites_the_law_in_force_for_the_filing_year(filing_year: int) -> None:
+    """Legacy DA 30 survives; the vehicle incentive's DA 59 begins in 2024."""
+    revision = _modelo_100_revision(filing_year)
+    excess_bindings = {
+        binding.id: binding
+        for binding in revision.bindings
+        if binding.id
+        in {
+            "renta-activity-asset-disposal-excess-direct-0179",
+            "renta-activity-asset-disposal-excess-objective-1478",
+        }
+    }
+    assert len(excess_bindings) == 2
+    for binding in excess_bindings.values():
+        assert "ley-35-2006:da-30" in binding.legal_refs
+        assert ("ley-35-2006:da-59" in binding.legal_refs) == (filing_year >= 2024)
+
+
 def test_modelo_100_savings_base_includes_current_capital_mobiliario() -> None:
     for filing_year in range(2020, 2026):
         revision = _modelo_100_revision(filing_year)

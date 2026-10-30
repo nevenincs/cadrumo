@@ -600,14 +600,15 @@ desktop:
     description: Version and build details of this installation.
     desktop_host: Desktop
     interpreter: Interpreter
-    load_failed: The version details could not be read ({code}).
+    load_failed: The version details could not be read. Close this window and open
+      it again.
     loading: Reading version details…
     manager: Manager
     managers: Managers
     open: About Cadrumo
     packages: Bundled packages ({count})
     python: Python
-    runtime: Runtime
+    runtime: Background service
     settings_hint: Version and build details
     target: Platform
     title: About Cadrumo
@@ -762,7 +763,7 @@ desktop:
         other: Something went wrong
         refused: AEAT refused
         session_ended: Sign-in timed out
-        unavailable: AEAT didn't answer
+        unavailable: AEAT isn't available right now
       resume: Sign in again
       running: Updating…
       stop: Stop
@@ -852,7 +853,7 @@ desktop:
         other: Something went wrong.
         refused: AEAT refused.
         session_ended: Sign-in timed out.
-        unavailable: AEAT didn't answer.
+        unavailable: AEAT isn't available right now.
       retry: Try again
       retry_failed: Couldn't start. Try again.
       retry_named: 'Try again: {name}'
@@ -967,10 +968,10 @@ desktop:
     failure:
       conflict: The browser is still closing. Wait a moment and try again.
       file_unavailable: Cadrumo couldn't use that file.
-      invalid: Cadrumo couldn't use that request.
+      invalid: Cadrumo couldn't do that.
       not_admitted: The browser isn't open any more.
       not_signed_in: Sign in to use the browser.
-      refused: Cadrumo refused that request.
+      refused: Cadrumo can't do that here.
       unavailable: The browser isn't available right now.
       unknown: Cadrumo couldn't tell how that ended.
     forward: Forward
@@ -1149,7 +1150,7 @@ desktop:
       not_closed: Not closed
       not_known: Not known
       opened: Opened on
-      refused: 'Refused: the register doesn''t accept those details.'
+      refused: 'Not accepted: those details don''t fit this register.'
       refused_remove: 'Not removed: an account movements or a designation use can
         only be closed.'
       remove: Remove
@@ -1197,7 +1198,7 @@ desktop:
       blocker:
         action_and_edits: 'An action and edits together: {count}'
         actions_conflict: 'Actions that cannot go together: {count}'
-        cannot_clear: 'A value no operation clears: {count}'
+        cannot_clear: 'Values that can''t be cleared: {count}'
         draft_incomplete: 'New movements still missing facts: {count}'
         exclude_and_classification: 'Excluded and classified together: {count}'
         gone: 'Removed or moved since you read them: {count}'
@@ -1240,11 +1241,11 @@ desktop:
         set_share: Set the share
         show: Show in grid
       gone: Removed or moved out of the period since you read it.
-      gone_mine: Keep it staged
+      gone_mine: Keep it in my changes
       gone_movement: A movement no longer read
       gone_theirs: Drop the changes
       held: 'Held back: {count}'
-      held_note: 'Held back by the problems above, still staged: {count}'
+      held_note: 'Held back by the problems above, still in your changes: {count}'
       keep_editing: Keep editing
       link:
         amount_differs: Amount differs by {amount}
@@ -1266,37 +1267,36 @@ desktop:
       outcome:
         applied: Saved
         applied_new_id: Saved under a new reference
-        not_sent_after_part: 'Not sent: an earlier part was refused whole.'
+        not_sent_after_part: 'Not sent: an earlier part was not accepted whole.'
         not_sent_after_refusal: 'Not sent: an earlier change to this movement was
-          refused.'
+          not accepted.'
         not_sent_parts_unnamed: 'Not sent: the split saved without naming its parts,
           so their classifications have nowhere to go. Classify the parts in the grid.'
-        not_sent_paused: 'Not sent: writes paused after an unknown outcome. It stays
-          staged.'
-        not_sent_stopped: 'Not sent: the session went away. It stays staged.'
-        refused: 'Not saved: {reason} · stays staged'
-        saved_unread: Saved, but its answer was not read. Re-read to see it.
+        not_sent_paused: 'Not sent: saving is paused because we couldn''t confirm
+          an earlier save. It''s still in your changes.'
+        not_sent_stopped: 'Not sent: your session ended. It''s still in your changes.'
+        refused: 'Not saved: {reason} · still in your changes'
+        saved_unread: Saved, but we can't show it yet. Refresh to see it.
         settled: Saved or already so
         settled_value: 'Saved or already so: {field} is {value}'
         unchanged: The ledger already held it. Nothing changed.
-        unchanged_value: The ledger already held {field} {value} (read again). Nothing
+        unchanged_value: The ledger already held {field} {value} (refreshed). Nothing
           changed.
-        unknown: It may or may not have saved. Writes are paused; re-read to find
-          out.
-      outcomes: What the ledger answered
+        unknown: We couldn't confirm this saved. Saving is paused until you refresh.
+      outcomes: What happened
       part_refused: 'Not saved: the ledger changed while saving. Nothing in this part
         was saved.'
-      part_unknown: Outcome unknown for this part as a whole. Writes are paused.
+      part_unknown: We couldn't confirm this part as a whole. Saving is paused.
       permanent: Permanent
       permanent_note: A link cannot be removed later, here or anywhere else. Tick
         each one you are sure of.
       progress: Saving progress
       progress_count: '{done} of {total} saves'
-      read_failed: 'The ledger could not be read again: nothing was saved'
-      reading: Reading the ledger again…
+      read_failed: 'The ledger could not be refreshed: nothing was saved'
+      reading: Refreshing the ledger…
       refusal:
         changed_elsewhere: changed elsewhere
-        other: the ledger refused it
+        other: the ledger didn't accept it
       reject: 'rejected: {reason}'
       rows: Changes by movement
       save: Save {count}
@@ -1309,7 +1309,7 @@ desktop:
       step:
         add: New movement · {movement}
         bulk: 'Part {part} of {parts} · saved together: {count}'
-      stopped: 'The session went away: what was not sent stays staged'
+      stopped: 'Your session ended: what was not sent is still in your changes'
       summary: Summary
       summary_change: Change
       summary_field: Field
@@ -1317,8 +1317,8 @@ desktop:
       tally:
         applied: Saved
         not_sent: Not sent
-        refused: Refused
-        saved_unread: Saved, not read
+        refused: Not accepted
+        saved_unread: Saved, not shown yet
         settled: Saved or already so
         unchanged: Unchanged
         unknown: Outcome unknown
@@ -1327,10 +1327,10 @@ desktop:
       tick_links: Tick each permanent link to save.
       title: Review and save · {count}
       together: 'Saved together: {count}'
-      unknown_note: 'It may or may not have saved. Nothing is retried: writes pause
-        until you re-read.'
+      unknown_note: We couldn't confirm this saved, and we won't try again on our
+        own. Saving is paused until you refresh.
       when_read: When you read it
-      yours: Your staged change
+      yours: Your change
     assets:
       action:
         add: Add element
@@ -1342,14 +1342,12 @@ desktop:
         fixed: Fixed assets
         stock: Stock
       areas: Asset areas
-      asset_id: Asset id
       baja:
         acquisition_value: Acquisition value
         deducted: Depreciation deducted
         excess: Excess
         figures: Figures of the baja (nothing is saved)
         findings: Findings
-        minimum: Minimum amortization
         net_value: Net value
         preview: Calculate the figures
         reduction: Reduction of the acquisition value
@@ -1362,10 +1360,6 @@ desktop:
       column:
         amount: Amount
         casilla: Casilla
-        claims: Claims
-        in_service: In use from
-        number: Revision
-        revision: Id
         target: Declaration
         unavailable: Not worked out
       correct:
@@ -1386,14 +1380,23 @@ desktop:
         tabs: Element views
         timeline: Timeline
       field:
+        acquired_condition: Condition when acquired
         acquisition: Purchase
+        acquisition_no_evidence: This purchase has no invoice as evidence, so it cannot
+          be stated as the acquisition.
         acquisition_none: No purchases to pick from yet.
         acquisition_option: '{description} · {date} · {amount}'
+        acquisition_shape: Kind of acquisition
+        allocation_provenance: Source of the earlier allocation
         amount: Amount
         basis: Depreciable basis
+        basis_stage: Origin of the basis
+        business_use_share: Business use share
         class: Table class
         coefficient: Coefficient
         description: Description
+        digit_order: Order of the digits
+        digit_period: Sum-of-digits period (years)
         disposal_date: Last day of service
         disposal_reason: Reason
         document_kind: Document kind
@@ -1401,6 +1404,8 @@ desktop:
         in_service_date: In service from
         kind: Kind
         later_affectation: Later affectation to the activity on
+        low_value_election: Reference of the election
+        low_value_evidence: Evidence of the election
         market_value: Market value (if stated)
         method: Method
         name: Name
@@ -1408,14 +1413,22 @@ desktop:
         non_deductible_iva_hint: Write 0 if none of the IVA is non-deductible. Empty
           is not the same as 0.
         not_known: 'Not known for this purchase: state it yourself.'
+        opening_amount: Amortization already deducted
+        opening_method: Method used before
+        opening_status: Amortization before entry
+        opening_through: Covered through tax year
         out_of_service_date: Out of service from
         prior_regime: Attested prior free depreciation
         proceeds: Proceeds
+        research_evidence: Research and development evidence
         residual_value: Residual value
         serial: Serial number
         supplier_name: Supplier
         supplier_tax_id: Supplier tax ID
         transmission_costs: Transmission costs
+        used_determination: How the originating price is set
+        used_evidence: Evidence of the originating price
+        used_price: Originating price
       filing:
         choose: Choose a year and a Modelo 130 quarter to see where the claims go.
         unavailable: The filing handoff isn't available.
@@ -1426,7 +1439,6 @@ desktop:
       from: From
       handoff: Where the claims go
       handoff_unavailable: '{count} elements not worked out and left out'
-      inspect: Inspect
       list:
         column:
           accumulated: Amortized so far
@@ -1442,7 +1454,7 @@ desktop:
         label: Elements
         no_name: No name recorded
         summary: Years needing attention
-        unavailable: The register can't be read right now.
+        unavailable: The register isn't available right now.
       plan:
         claimable: Can still be claimed {from} – {until}
         claimable_none: Nothing left to claim
@@ -1453,7 +1465,7 @@ desktop:
           planned: Planned
           rate: Rate
           replaced_by: Replaced by
-          revision: Revision
+          revision: Version
           status: Status
           year: Year
         edition: Table edition {edition}
@@ -1462,56 +1474,35 @@ desktop:
         gap: 'Not claimed: {from} – {until}'
         in_effect: In effect
         limits:
+          citations: Legal basis ({count})
+          citations_partial: 'The list is partial: some provisions could not be resolved.'
           ends_on: Maximum period ends on
           maximum_coefficient: Maximum coefficient
           maximum_period: Maximum period
           minimum_coefficient: Minimum coefficient
           period_years: '{years} years'
-          references: Legal basis
           title: Limits for this election
         matches: Matches the current schedule
         no_claims: No claim is recorded for this year.
         no_match: No longer matches the schedule
         projected: Projected
-        projected_note: Projected tables serve the forecast and Modelo 130. Modelo
-          100 is not available for {year}.
+        projected_note: Projected tables are used for the forecast and Modelo 130.
+          Modelo 100 is not available for {year}.
         recorded_zero: Recorded as zero
         replaced: Replaced
       quarter: Modelo 130 quarter
-      refusal:
-        refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Refused:
-          accelerated depreciation isn''t calculated here.'
-        refused_actividad_asset_claim_conflict: 'Refused: it conflicts with a claim
-          already recorded.'
-        refused_actividad_asset_incomplete: 'Refused: some facts are still missing.'
-        refused_actividad_asset_unsupported: 'Refused: that method isn''t supported
-          yet.'
-        refused_actividad_asset_validation: 'Refused: the asset register doesn''t
-          accept that.'
       refused: The register did not accept that.
       replace_claim: Replace a claim (optional)
       replace_none: Record a new claim
-      revision:
-        correct: Correcting revision (JSON)
-        create: First revision (JSON)
-      revision_hint: Fill every empty fact; a revision is never edited once saved.
-      revisions: Revisions
       submit:
         correct: Save the correction
         create: Create the asset
-        filing: Show
         forecast: Forecast
       target:
         intangible_m100: Modelo 100 · intangible
         intangible_m130: Modelo 130 · intangible
         material_m100: Modelo 100 · tangible
         material_m130: Modelo 130 · tangible
-      task:
-        correct: Correct…
-        create: Create…
-        filing: For declarations
-        forecast: Forecast
-      tax_year: Tax year
       timeline:
         change_added: '{field}: {after}'
         change_cleared: '{field}: {before} removed'
@@ -1520,14 +1511,12 @@ desktop:
           changes: Changes
           effect: Effect
           event: Event
-          origin: Origin
           recorded: Recorded
           sequence: No.
         empty: Nothing has been added yet.
         not_in_calculation: Not part of the calculation
         time_not_recorded: Time not recorded
         used_by: 'Calculations using it: {count}'
-      title: Activity assets
       unrecognised: Not recognised
       until: Until
       write:
@@ -1536,6 +1525,9 @@ desktop:
         kept: Nothing was saved. What you entered is still here.
         reused: Already recorded; nothing was added.
       year: Year
+      year_estimated: '{year} (estimated)'
+      year_estimated_note: 'These figures are estimates: there are no official tables
+        for this year yet.'
     capital:
       art108: Eligible under art. 108
       column:
@@ -1562,13 +1554,14 @@ desktop:
         inmueble: Real estate
         mueble: Movable
       kind_label: Kind
-      movement: Purchase movement id
+      movement: Purchase
       movement_hint: The ledger movement that paid for it
       prorrata: Initial prorrata
       refusal:
-        disposal_incomplete: 'Refused: a disposal needs both its year and its regime.'
-        duplicate_identifier: 'Refused: that reference is already declared.'
-        validation: 'Refused: the register doesn''t accept those facts.'
+        disposal_incomplete: 'Not accepted: a disposal needs both its year and its
+          regime.'
+        duplicate_identifier: 'Not accepted: that reference is already declared.'
+        validation: 'Not accepted: those facts don''t fit the register.'
       title: Bienes de inversión
       year: Acquisition year
     category:
@@ -1707,7 +1700,7 @@ desktop:
       inactive_only: Only active movements change
       income_no_category: Income {count} · no category needed
       no_category_match: No category matches
-      not_saved: Staged, not saved
+      not_saved: Not saved yet
       nothing: Select movements first
       overwritten: '{count} changed from another classification'
       partial: loaded rows only
@@ -1722,10 +1715,10 @@ desktop:
       share_hint: Write 30 for 30%
       share_refused: '“{raw}” is not a share: write a percentage, such as 50 for 50%.'
       skipped: 'Left as is: {count}'
-      stage: Stage for {count}
-      staged: '{classification} · {count} staged'
-      staged_category: '{category} · {count} staged'
-      staged_detail: '{classification} · {detail} · {count} staged'
+      stage: Add to changes for {count}
+      staged: '{classification} · {count} not saved yet'
+      staged_category: '{category} · {count} not saved yet'
+      staged_detail: '{classification} · {detail} · {count} not saved yet'
       title_business: Classify {count} as Business
       title_business_split: Business · Expenses {expenses} · Income {income}
       title_category: Set the category of {count}
@@ -1776,12 +1769,12 @@ desktop:
       cancel: Cancel
       description: 'Each loads and saves the whole ledger: about {minutes} min when
         you save.'
-      stage: Stage anyway
+      stage: Add to changes anyway
       title: 'Saves one at a time: {count}'
     count:
       to_classify: '{count} to classify'
     counterparty:
-      answer: What the ledger answers now
+      answer: Current ledger values
       confirm: Confirm
       confirmed: Confirmed
       country: Country
@@ -1800,7 +1793,7 @@ desktop:
         operator_assertion: confirmed by you
         profile_authority: from your profile
       state: VAT-identification State
-      tax_id: Tax id
+      tax_id: Tax ID (NIF)
       title: Counterparties
       undetermined: Undetermined
       vat_state: VAT-identified in
@@ -1825,7 +1818,7 @@ desktop:
       since: From
       threshold: Low confidence below
       title: Model diagnostics
-      tokens: Tokens
+      tokens: Text processed
       unpriced: 'Calls without a price: {count}'
       until: Until
       usage: Use by provider
@@ -1846,11 +1839,11 @@ desktop:
       already_confirmed: Already confirmed as invoice {number}
       answer: Answer
       as_read: 'As read: {value}'
-      attach_staged: Attachment staged · not saved
+      attach_staged: Attachment not saved yet
       attach_to: Attach to {number}
       attached_to: Attached to {description} · {amount}
       attachment_linked: 'Invoices linked: {count}'
-      attachment_named: Attachment {id}
+      attachment_named: Attachment {n}
       attachment_waiting: Waiting for review
       attachments_none: No attachments waiting
       batch_results: Results by document
@@ -1859,7 +1852,7 @@ desktop:
         no_op: Already in the ledger
         paused: 'Paused: the reader is busy'
         pending_review: Waiting for your review
-        refused: Refused
+        refused: Not accepted
       cancel: Cancel
       check: Check
       checked_not_saved: It was not saved.
@@ -1999,7 +1992,6 @@ desktop:
         unavailable: Not available
         version: Version {version}
       reading_changed: The reading changed. Review it again.
-      reading_digest: Reading digest
       readings: Readings
       reads_as: 'The document reads as: {kind}'
       ready_to_confirm: Ready to confirm
@@ -2036,7 +2028,6 @@ desktop:
         inline: Embedded
         local_file: This computer
         url: Web address
-      source_digest: Source digest
       tab:
         attachments: Attachments
         folder: Folder intake
@@ -2045,7 +2036,6 @@ desktop:
         review: To review
         sent: Sent off this computer
       tabs: Documents
-      technical: Technical details
       the_value: The correct value
       these_are: These documents are
       this_is: This is
@@ -2115,7 +2105,7 @@ desktop:
       refusal:
         ambiguous_grouping: '“{raw}” could be read two ways: write it with no grouping,
           such as 1000 or 1.5.'
-        cannot_clear: 'No operation clears it: write another value instead'
+        cannot_clear: This can't be cleared. Enter another value instead.
         comma_decimal: '“{raw}” uses a decimal comma: write {suggestion}.'
         currency_symbol: '“{raw}” has a currency sign: write the number only.'
         date_not_in_calendar: “{raw}” is not a day of the calendar.
@@ -2241,9 +2231,8 @@ desktop:
       unknown: Outcome unknown
       unknown_note: 'The file may have been written. Nothing is sent again: check
         the file before exporting once more.'
-      unknown_title: 'Export outcome unknown: writes paused'
-      unknown_untold: '{file}: a re-read can''t tell whether it was written; check
-        the file'
+      unknown_title: 'We couldn''t confirm the export: saving is paused'
+      unknown_untold: '{file}: we couldn''t confirm it was written. Check the file.'
       without_staged: Export without them
     failed: Couldn't read the ledger.
     field:
@@ -2297,18 +2286,18 @@ desktop:
       choose: Choose…
       close: Close
       date_hint: Year-month-day, e.g. 2026-10-31
-      failed: Not answered · {code}
+      failed: That didn't work
       'no': 'No'
       none: None
       percent_hint: Write 70 for 70%
       points_hint: Percentage, 0 to 100
       reading: Reading…
-      refused: Refused · {code}
-      reread: Re-read
+      refused: Not saved.
+      reread: Refresh
       save: Save
       saving: Saving…
       two_letters: Two letters, e.g. ES
-      unknown: 'Outcome unknown: it may have been saved.'
+      unknown: We can't tell if this saved. Refresh to check.
       year_hint: Four digits, e.g. 2024
       'yes': 'Yes'
     grid: Movements, {period}
@@ -2362,7 +2351,7 @@ desktop:
         skipped: Skipped by rule
         split: Split
         stashed: Set aside
-      dry_run: Run the dry run
+      dry_run: Run the preview
       expense: Business out, EUR
       income: Business in, EUR
       links: Declaration links
@@ -2374,16 +2363,15 @@ desktop:
       of_active: Of the active
       one_sided: One-sided invoice links
       rebuild: Rebuild the links
-      rebuilt: 'Rebuilt · links: {links} · revisions: {revisions} · stale removed:
-        {removed}'
+      rebuilt: Rebuilt. {links} links updated.
       reset: Danger zone · reset the ledger
       reset_blocked: Reset is blocked
       reset_blocker: Modelo {modelo} · {year} {period} · {state} cites movements
       reset_confirm: 'Reset and remove · movements: {movements}'
       reset_reason: Reason
       reset_reason_hint: Kept in the audit trail · up to {limit} characters
-      reset_what: Removes every movement and the documents attached to them. A dry
-        run comes first.
+      reset_what: Removes every movement and the documents attached to them. A preview
+        comes first.
       reset_would: 'It would remove · movements: {movements} · documents: {documents}'
       run_check: Run the check
       stale: Declarations to recalculate
@@ -2416,13 +2404,14 @@ desktop:
       book_created: 'Invoices created: {count}'
       book_kind: Invoices in the book
       book_no_preview: Invoice books have no preview
-      book_no_preview_note: Rows are checked as they are created. Refused rows are
-        listed afterwards with their row number and reason; the rest are kept. {kind};
-        country {country}.
-      book_note: 'Rows: {rows} · already in the catalogue: {skipped} · refused: {refused}'
+      book_no_preview_note: Rows are checked as they are created. Rows not accepted
+        are listed afterwards with their row number and reason; the rest are kept.
+        {kind}; country {country}.
+      book_note: 'Rows: {rows} · already in the catalogue: {skipped} · not accepted:
+        {refused}'
       book_refused: The book was not imported
       bound_note: Importing uses exactly these files. A file changed after this preview
-        is refused.
+        is not accepted.
       cancel: Cancel
       choose_accounts: Choose the account for each file.
       choose_file: Choose a file…
@@ -2442,7 +2431,7 @@ desktop:
       count:
         duplicates: Possible duplicates
         new: New
-        refused: Refused files
+        refused: Files not accepted
         rows: Rows
         skipped: Already in the ledger
       country: Counterparty country
@@ -2527,7 +2516,7 @@ desktop:
       refusal:
         empty_directory: The folder holds no statement.
         file_limit: More than 128 files at once.
-        other: 'Not imported: {code}'
+        other: Not imported. Check the file and try again.
         own_account_mismatch: Its rows name a different account.
         reader_unavailable: 'Not read: Local AI, which reads this file, is not ready.'
         reader_unavailable_here: 'Not read: the model you picked is not available
@@ -2535,7 +2524,7 @@ desktop:
         result_limit: 'More than 4,096 rows: import it in parts.'
         source_changed: 'Changed after the preview: preview it again.'
         transaction_validation: Couldn't be read as a bank statement.
-      refused_rows: Refused rows
+      refused_rows: Rows not accepted
       remove: Remove {name}
       row: Row
       show_documents: Review in Documents
@@ -2578,8 +2567,8 @@ desktop:
       affects: affects {declaration}
       allocate:
         prorrata: Prorrata reference
-        stage: Stage allocation
-        staged: Allocation staged · not saved
+        stage: Add allocation to changes
+        staged: Allocation not saved yet
         title: Allocate a business share
       by:
         derived: Worked out by Cadrumo
@@ -2592,28 +2581,28 @@ desktop:
       classification: Classification
       clear: Clear the value
       close: Hide the inspector
-      copied_id: Movement ID copied
-      copy_id: Copy the full ID
+      copied_id: Movement reference copied
+      copy_id: Copy reference
       derive:
         choose: Choose an IVA category
         stage: Work out figures
         staged: Figures for {category} worked out by Cadrumo when saved
-        staged_toast: Figures staged · not saved
+        staged_toast: Figures not saved yet
         title: Work out IVA from a category
       documents:
         active_only: Only active movements take documents.
         add_file: Add from this computer
-        add_staged: '{file} · attach staged'
+        add_staged: '{file} · attachment not saved yet'
         adding: Add {file} · not saved
         advisory: 'No purchase invoice yet. Advice only: it never blocks saving or
           calculation.'
         attach_existing: Attach a document
-        attach_staged: Attach staged · not saved
+        attach_staged: Attachment not saved yet
         attaching: Attach {file} · not saved
         detach: Detach
         detach_named: Detach {file}
-        detach_pending: Detach staged
-        detach_staged: Detach staged · not saved
+        detach_pending: Detach not saved yet
+        detach_staged: Detach not saved yet
         detaching: Detach {file} · not saved
         hint: A PDF or an image, read from this computer and stored encrypted.
         no_free: No other document in the ledger
@@ -2622,7 +2611,7 @@ desktop:
         purchase_invoice: Purchase invoice · added {date}
       drop: Drop it
       earlier: Earlier decisions
-      earlier_ids: Earlier IDs
+      earlier_ids: Earlier references
       effective_date: Effective date
       empty: empty
       eur_same: 'Same: a euro movement'
@@ -2651,7 +2640,7 @@ desktop:
         stashed: Set aside
         updated: Updated
       file_row: '{file}, row {row}'
-      fingerprint: Import fingerprint
+      fingerprint: Import reference
       fix:
         derive: Derive figures
         go: Fix
@@ -2679,7 +2668,7 @@ desktop:
         issued: Issued
         issued_on: Issued on
         link: Link · permanent
-        link_staged: Link staged · permanent once saved
+        link_staged: Link not saved yet · permanent once saved
         linked: Movements
         linked_count: '{count} linked'
         none: No invoice in the catalogue settles this amount.
@@ -2693,9 +2682,9 @@ desktop:
         received: Received
         rival: '{movement} settles it equally well.'
         show_other: Show the other
-        staged: Link to {invoice} staged · permanent once saved
-        staged_for: Staged for {movement}
-        taken: '{invoice} is staged for {movement}'
+        staged: Link to {invoice} not saved yet · permanent once saved
+        staged_for: Already in your changes for {movement}
+        taken: '{invoice} is already in your changes for {movement}'
         transfer: Transfers between your own accounts have no invoice.
       issue_count: '{count} to fix'
       last_saved: Last saved
@@ -2711,8 +2700,8 @@ desktop:
         incoming_only: Only for income a non-resident earns in Spain.
         payer_id: Payer
         payer_mode: Payer type
-        stage: Stage Modelo 210 facts
-        staged: Modelo 210 facts staged · not saved
+        stage: Add Modelo 210 facts to changes
+        staged: Modelo 210 facts not saved yet
         tipo_renta_code: Income type
         title: Modelo 210
       merge:
@@ -2724,14 +2713,14 @@ desktop:
       mode_movement: Movement
       model:
         about: A proposal from the local model. Only you approve it.
-        approval_staged: Approval staged · not saved
+        approval_staged: Approval not saved yet
         approve: Approve
         ask: Ask the model
         ask_how: Ask the model for
         ask_with_share: Ask with this share
         asking: Asking the model
         busy: An earlier review of this movement is still open. Try again in a moment,
-          or answer it where it was asked.
+          or finish it where it was opened.
         confidence: '{value} confident'
         continue_reject: Ask with this reason
         derived: worked out by Cadrumo
@@ -2741,20 +2730,20 @@ desktop:
           split: Suggest a split
         no_review: The model gave no proposal to review.
         reason: Why it is wrong
-        refused: The ledger refused the request
+        refused: That couldn't be done
         reject: Reject
         rejected_before: You rejected an earlier suggestion for this movement.
         rejecting: Rejecting · {reason}
-        rejection_staged: Rejection staged · not saved
+        rejection_staged: Rejection not saved yet
         share_needed: Enter a share to approve
-        stage_rejection: Stage rejection
+        stage_rejection: Add rejection to changes
         title: Model suggestion
-        unavailable: The model could not answer
+        unavailable: The AI model isn't available right now
       more: More
       more_tax: More tax fields
-      movement_id: Movement ID
+      movement_id: Movement reference
       moves_to: Moves to {period}
-      new_identity: Saved under a new ID
+      new_identity: New reference
       no_counterparty: No counterparty
       no_match: No match
       no_rate: No exchange rate
@@ -2797,7 +2786,7 @@ desktop:
       selection:
         actions: Actions
         approve_all: Approve {count} read
-        approved_all: 'Approvals staged: {count}'
+        approved_all: 'Approvals not saved yet: {count}'
         ask_each: Ask the model for each
         asked: 'Suggestions to read: {count}'
         body: Selected movements
@@ -2820,8 +2809,8 @@ desktop:
         set_title: Set for all · applies as you choose
         skipped: 'Skipped: {count}'
         skipped_reason: 'Skipped, {reason}: {count}'
-        stage_anyway: Stage anyway
-        staged: 'Staged: {count} · not saved'
+        stage_anyway: Add to changes anyway
+        staged: 'Not saved yet: {count}'
         title: '{count} selected'
         totals: Totals
       share: Business share
@@ -2854,12 +2843,12 @@ desktop:
         remainder: What is left
         remove_part: Remove part {part}
         share_needed: Enter a business share for part {part}.
-        stage: Stage split
-        staged: Split into {count} parts staged · not saved
+        stage: Add split to changes
+        staged: Split into {count} parts, not saved yet
         title: Split into parts
         unclassified: Classify later
         under: The parts are {amount} short of the movement.
-      stage: Stage
+      stage: Add to changes
       technical: Technical details
       unread: Could not be read
       unsaved: 'Changes: {count} · not saved'
@@ -2876,22 +2865,7 @@ desktop:
         title: Used in
         verified: Verified (sealed)
     inventory:
-      acquisition: Purchase cost evidence (JSON)
-      acquisition_hint: 'Optional: the consideration and its IVA, the attributable
-        costs and their evidence'
-      actividad: Activity id
-      authority: Closing authority record (JSON)
-      authority_file: Read from a file…
-      authority_file_too_large: The file is larger than 1 MiB.
-      authority_file_unread: The file couldn't be read.
-      authority_hint: The decision, the physical count if any, and the link to the
-        prior closing
-      authority_unread: Not a JSON object.
-      base: Taxable base
-      book: Book
-      books: Inventory books {year}
       column:
-        actividad: Activity
         date: Date
         kind: Kind
         method: Valuation
@@ -2900,11 +2874,6 @@ desktop:
         quantity: Units
         unit_cost: Unit cost
       date: Date
-      empty: No inventory book for {year}.
-      form:
-        closing: Closing authority for {actividad} · {year}
-        create: New inventory book for {year}
-        movement: Add a movement to {actividad} · {year}
       kind:
         cogs: Cost of sales
         count: Count
@@ -2916,29 +2885,21 @@ desktop:
         fifo: FIFO
         pmp: Weighted average price
       method_label: Valuation method
-      movement_id: Movement id
-      movements: Movements added here
       opening: Opening stock value
-      preview: Preview valuation
       preview_note: 'A preview: nothing is recorded.'
       quantity: Units
       refusal:
         activity_conflict: 'Refused: that activity already has a book for the year.'
         activity_not_found: 'Refused: no book for that activity and year.'
-        closing_authority_conflict: 'Refused: a different closing authority is already
-          recorded.'
-        closing_authority_invalid: 'Refused: the record doesn''t fit this book.'
-        duplicate_movement_id: 'Refused: that movement id is already in the book.'
+        closing_authority_conflict: 'Refused: a different closing decision is already
+          saved.'
+        closing_authority_invalid: 'Refused: the closing decision doesn''t fit this
+          book.'
+        duplicate_movement_id: 'Refused: that movement is already in the book.'
         invalid_valuation_method: 'Refused: not a valuation method.'
         inventory_validation: 'Refused: the book doesn''t accept that.'
-      task:
-        closing: Record the closing authority
-        create: New book
-        movement: Add a movement
-      title: Inventory books
       unit_cost: Unit cost
-      valuation: Closing {closing} · cost of sales {cogs} · {method}
-      year: Inventory year
+      valuation: '{name} · closing stock {closing} · cost of sales {cogs} · {method}'
     invoice:
       linked: Linked
     invoices:
@@ -2989,7 +2950,7 @@ desktop:
       duplicate: Already in the catalogue.
       empty: No invoices yet. Add one or import an invoice book.
       empty_filtered: No invoices match.
-      failed: 'Not sent: {code}. Nothing was saved.'
+      failed: Nothing was saved. Try again.
       field:
         counterparty_country: Country
         counterparty_name: Counterparty
@@ -3004,7 +2965,7 @@ desktop:
         notes: Notes
         operation_date: Operation date
         operation_type: Modelo 349 key
-        payment_id: Payment ID
+        payment_id: Payment reference
         payment_status: Payment
         printed_total: Printed total
         recargo: Equivalence surcharge
@@ -3031,7 +2992,7 @@ desktop:
         tax_id_optional: Optional on an issued simplificada
       identity_fixed: Kind, number, issue date, tax ID, currency, totals and lines
         are fixed.
-      invalid: 'Not added: the ledger refused it as invalid.'
+      invalid: 'Not added: the ledger didn''t accept it as valid.'
       invariant:
         counterparty: Counterparty name
         country: Two-letter country
@@ -3135,7 +3096,8 @@ desktop:
         too_long: 'Too long: at most {limit} characters.'
         too_many_decimals: '"{raw}": at most {limit} decimals.'
         zero: Must be more than zero.
-      refused: 'Not saved: the ledger refused it ({code}).'
+      refused: 'Not saved: the ledger didn''t accept it. Check the details and try
+        again.'
       remove: Remove
       remove_confirm: Remove invoice
       remove_linked: A linked invoice stays
@@ -3254,12 +3216,12 @@ desktop:
         payments.
       read_failed: Could not read
       repair: Repair · permanent
-      repair_staged: Repair staged · not saved
+      repair_staged: Repair not saved yet
       settles: Settles {amount}
       settles_withheld: Settles {amount} ({total} − {withheld} withholding tax)
       show_other: Show {description}
-      staged: 'Links staged, not saved: {count}'
-      staged_toast: Link staged · permanent once saved
+      staged: 'Links not saved yet: {count}'
+      staged_toast: Link not saved yet · permanent once saved
       suggestions: Suggested pairs
       title: To match
     maximize: Maximize the ledger
@@ -3275,33 +3237,33 @@ desktop:
       blanks_note: A blank cell leaves the cell as it is; only Delete clears.
       cancel: Cancel
       changes: Cells that change
-      description: '{rows} to paste · nothing is staged until you paste'
+      description: '{rows} to paste · nothing changes until you paste'
       done: 'Cells pasted: {count} · not saved'
-      done_refused: 'Cells pasted: {count} · refused, marked in the grid: {refused}'
+      done_refused: 'Cells pasted: {count} · not accepted, marked in the grid: {refused}'
       dropped: Past the last row or column
       first_refusal: '{column}: {reason}'
       identity_note: Changing the description, amount, date or account gives a movement
         a new reference when saved.
       new_identity: New reference
-      refused: Refused
+      refused: Not accepted
       refused_empty: Nothing to paste
       refused_unclosed_quote: 'Not pasted: a quote is left open'
       single_writes: Saves one at a time
       title_into: Paste into {columns}?
     paused:
-      counted_not_saved: '{count} staged again'
+      counted_not_saved: '{count} back in your changes'
       counted_saved: '{count} saved'
-      counted_undetermined: '{count} can''t tell, still staged'
+      counted_undetermined: 'Can''t tell, still in your changes: {count}'
       dismiss: Dismiss
-      found_not_saved: Not saved, staged again · {movement}
+      found_not_saved: Not saved, back in your changes · {movement}
       found_saved: Saved · {movement}
-      found_undetermined: '{movement}: the read can''t tell; it stays staged, saving
-        it again is the same save'
+      found_undetermined: '{movement}: we can''t tell whether it saved. It''s still
+        in your changes, and saving it again won''t save it twice.'
       repeatable: '{movement}: may have run; running it again does the same'
-      reread: Re-read
-      saved_unread: 'Saved, answer not read: writes paused'
-      saved_unread_reason: 'Re-read first: a save''s answer was not read'
-      title: 'Outcome unknown: writes paused'
+      reread: Refresh
+      saved_unread: Saved, not shown yet. Saving is paused
+      saved_unread_reason: 'Refresh first: we can''t show your last save yet'
+      title: 'We couldn''t confirm a save: saving is paused'
       unsaved: Not saved · {movement}
       untold: '{movement}: can''t tell if it saved; still paused'
       what_movements: 'Movements: {count}'
@@ -3371,22 +3333,25 @@ desktop:
       reference: Reference
       reference_hint: The authorisation or proposal it stands on
       refusal:
-        provenance_not_electable: 'Refused: that source is calculated, not chosen.'
-        provenance_required: 'Refused: say where the percentage comes from.'
-        reference_not_permitted: 'Refused: that source has no document to reference.'
-        reference_required: 'Refused: that source needs its document''s reference.'
-        regulated_override_standing: 'Refused: an authorised percentage stands.'
-        sector_prior_definitive_absent: 'Refused: the sector has no prior definitive.'
-        sector_settlement_entry_absent: 'Refused: the sector has no entry to settle.'
-        seed_existing_blocked: 'Refused: this ejercicio already has an entry.'
-        seed_source_absent: 'Refused: no definitive percentage in the prior year.'
-        seed_source_blocked: 'Refused: the prior year''s source is blocked.'
-        validation: 'Refused: the register doesn''t accept that.'
+        provenance_not_electable: 'Not accepted: that source is calculated, not chosen.'
+        provenance_required: 'Not accepted: say where the percentage comes from.'
+        reference_not_permitted: 'Not accepted: that source has no document to reference.'
+        reference_required: 'Not accepted: that source needs its document''s reference.'
+        regulated_override_standing: 'Not accepted: an authorised percentage stands.'
+        sector_prior_definitive_absent: 'Not accepted: the sector has no definitive
+          percentage from the prior year.'
+        sector_settlement_entry_absent: 'Not accepted: the sector has no entry to
+          settle.'
+        seed_existing_blocked: 'Not accepted: this year already has an entry.'
+        seed_source_absent: 'Not accepted: there is no definitive percentage in the
+          prior year.'
+        seed_source_blocked: 'Not accepted: the prior year''s source is blocked.'
+        validation: 'Not accepted: that doesn''t fit the register.'
       regime:
         especial: Especial
         general: General
       sector: Sector
-      sector_id: Sector id
+      sector_id: Sector
       sectors: 'Differentiated sectors:'
       seed_what: Reads the definitive percentage stamped for {prior} and carries it
         to {ejercicio}.
@@ -3410,7 +3375,7 @@ desktop:
         usage_ratio_home_area: Home office area
         usage_ratio_personal: Business use
       not_set: Not set
-      refused: 'Refused: no ratio is set for that category.'
+      refused: 'Not accepted: no ratio is set for that category.'
       set: Set
       set_named: Set the ratio for {category}
       table: Ratios {year}
@@ -3437,7 +3402,7 @@ desktop:
       ready: Ready for calculation · checked {time}
       reason_action: Shows them and how to fix them
       reasons: Readiness reasons
-      staged: '{count} staged'
+      staged: '{count} not saved yet'
       title: Readiness
       unsaved: 'Unsaved changes not included: {count}'
     readiness_filter:
@@ -3489,9 +3454,7 @@ desktop:
     registers:
       area:
         accounts: Own accounts
-        assets: Activity assets
         capital: Bienes de inversión
-        inventory: Inventory
         prorrata: Prorrata
       areas: Registers areas
     retry: Retry
@@ -3520,7 +3483,7 @@ desktop:
       areas: Rules areas
       category: Category
       classification: Classifies as
-      classify_now: Also classify them now (staged)
+      classify_now: Also classify them now (not saved yet)
       column:
         added: Added
         category: Category
@@ -3554,14 +3517,15 @@ desktop:
       refusal:
         category: Not a spending category.
         empty_pattern: Write the words to match.
-        invalid_command: The ledger refused the rule.
+        invalid_command: The ledger didn't accept the rule.
         invalid_pattern: The ledger can't read that expression.
-      run_note: A preview writes nothing; running them is staged like any change.
-      run_staged: 'Rules run staged · Movements: {count} · not saved'
+      run_note: A preview changes nothing. Running them is added to your changes,
+        like any other change.
+      run_staged: 'Rules added to your changes · Movements: {count} · not saved yet'
       run_title: Run the rules
       save: Save rule
       saved_toast: Rule saved · order {place}
-      stage_run: Stage the run
+      stage_run: Add the run to your changes
       title: Classification rules
       what: Matches words in a movement's description and decides its classification.
       words: Description contains
@@ -3575,6 +3539,7 @@ desktop:
       placeholder: Search
       show: Show
     section:
+      assets: Assets
       documents: Documents
       health: Health
       invoices: Invoices
@@ -3638,6 +3603,91 @@ desktop:
       needs_fixing_count: Needs fixing · {count}
       pending: To classify
       skipped: Skipped by rule
+    stock:
+      action:
+        add_book: Add a stock book
+        add_movement: Add a movement
+        preview: Preview the valuation
+      books: Stock books for {year}
+      column:
+        cost: Cost
+        name: Activity
+      cost_kind:
+        customs_duty: Customs duty
+        freight: Freight
+        handling: Handling
+        insurance: Insurance
+        other_directly_attributable: Other cost of the purchase
+        professional_fee: Professional fee
+      count:
+        books: 'Stock books: {count}'
+        retired: 'Retired: {count}'
+      empty: No stock book for {year} yet. Add one to start counting what you hold.
+      extra:
+        add: Add an extra cost
+        iva: IVA on it
+        kind: Kind of cost
+        none: No extra costs added.
+        price: Amount without IVA
+        remove: Remove this extra cost
+        share: Share of its IVA you can deduct (%)
+      field:
+        cost_hint: Fill in the cost per unit or the total, whichever you have.
+        extra_total: Extra costs without IVA, all together
+        iva: IVA on the price
+        name: Activity
+        name_hint: The business activity this stock belongs to, as you call it.
+        price: Price without IVA
+        recoverable: IVA you can deduct, all together
+        share: Share of that IVA you can deduct (%)
+        total: Total cost of the purchase
+        total_cost: Total cost without IVA
+        unrecoverable: IVA you can't deduct (added to the cost)
+      form:
+        book: New stock book for {year}
+        movement: Add a movement to {name} · {year}
+      load_failed: Your stock couldn't be loaded.
+      load_refused: Your stock can't be shown right now.
+      loading: Loading your stock…
+      movements_none: No movements in this book yet. Add the first one.
+      movements_of: Movements of {name}
+      movements_unlisted: 'Movements in this book: {count}. The earlier ones can''t
+        be listed yet; new ones appear here as you add them.'
+      proof:
+        change_file: Choose another file
+        check_hint: Any file that shows the check, such as a note or a worksheet.
+        choose_file: Choose a file
+        cost_check: File that shows you checked for extra costs
+        extra: File that shows this cost
+        file_too_large: The file is larger than 50 MB.
+        file_unread: The file couldn't be opened.
+        iva_check: File that shows you checked how much IVA you can deduct
+        kind: Kind of file
+        price: File that shows the price
+      proof_kind:
+        contract: Contract
+        customs_declaration: Customs declaration
+        insurance_document: Insurance policy
+        other_acquisition_evidence: Other proof of the purchase
+        purchase_invoice: Purchase invoice
+        transport_document: Transport note
+      purchase:
+        extras: Extra costs of the purchase
+        price: Price of the purchase
+        proofs: Files that show it
+        proofs_hint: Attach the files. Cadrumo keeps a mark that identifies each file,
+          not the file itself.
+        totals: Totals
+        totals_hint: Write the totals the figures above come to. They have to agree
+          with those figures.
+      refused: The stock book didn't accept that. Nothing was saved.
+      retired: Retired
+      submit:
+        book: Add the book
+        movement: Add the movement
+      summary: Stock summary
+      title: Stock
+      unavailable: Your stock isn't available right now.
     sum:
       in: In {amount}
       out: Out {amount}
@@ -3651,8 +3701,8 @@ desktop:
       in_parts: saves in parts
       name: '{count} unsaved: {what}'
       new: 'New: {count}'
-      paused: writes paused
-      paused_reason: 'Re-read first: a save has an unknown outcome'
+      paused: saving paused
+      paused_reason: 'Refresh first: we couldn''t confirm your last save'
       region: Unsaved changes
       review: Review
       review_count: Review and save · {count}
@@ -3706,8 +3756,7 @@ desktop:
     source_host: Desktop
     source_python: Python
     state_available: cadrumo.log
-    state_missing_detail: No log file yet. Records appear once a Cadrumo process writes
-      one.
+    state_missing_detail: No log file yet. Records appear once Cadrumo writes one.
     state_unreadable: Can't read the log
     visible_count: '{visible} of {total} entries'
     warnings: 'Warnings: {count}'
@@ -3782,23 +3831,21 @@ desktop:
     pending: Answer the open question first.
     refused:
       credentials: This link carries a user name or password, so it isn't opened.
-      fragment: This link has a “#” part, which Cadrumo links never have.
+      fragment: This link isn't valid.
       link: This isn't a link Cadrumo can open.
-      malformed: This link isn't written the way Cadrumo links are.
-      not_a_view_link: This Cadrumo link doesn't point to a view.
+      malformed: This link isn't valid.
+      not_a_view_link: This link isn't valid.
       not_implemented: Nothing here can open {view}.
       param: This link asks for something its view can't show.
-      param_malformed: This link points to an item, but the item's id isn't in the
-        right form.
+      param_malformed: This link isn't valid.
       param_not_accepted: This link asks {view} for something it can't show.
-      percent_encoding: This link has encoded characters, which Cadrumo links never
-        have.
-      query: This link has options after “?” that Cadrumo doesn't understand.
-      too_long: This link is too long to be a Cadrumo link.
-      too_many_segments: This link's path is longer than any view's.
-      unknown_param: This link asks for an option no view has.
+      percent_encoding: This link isn't valid.
+      query: This link isn't valid.
+      too_long: This link isn't valid.
+      too_many_segments: This link isn't valid.
+      unknown_param: This link isn't valid.
       unknown_view: This link points to a view this version of Cadrumo doesn't have.
-      uppercase: Cadrumo links are all lowercase, and this one isn't.
+      uppercase: This link isn't valid.
     sign_in: Sign in to open {view}.
   palette:
     actions: Actions
@@ -3902,14 +3949,14 @@ desktop:
       identity: Add tax ID
       incoming: AEAT
       preserve: Keep your saved answer.
-      profile_mismatch: The census request does not match the signed-in profile. Refresh
-        your profile; if this persists, report the code shown.
+      profile_mismatch: This Censo data doesn't match the signed-in profile. Refresh
+        your profile.
       pull: Retrieve Censo data
       reading: Retrieving Censo data…
       ready: AEAT sign-in is set up. You can review the retrieved information before
         saving.
-      refused: The runtime refused the sync. Check the profile and AEAT access settings
-        before trying again.
+      refused: The sync couldn't start. Check your profile and AEAT access settings,
+        then try again.
       reject: Discard changes
       review_count: 'AEAT values to review: {count}'
       review_hint: Changes are shown in place below. Nothing is saved until you confirm.
@@ -3923,8 +3970,8 @@ desktop:
         finish; if it remains blocked, report the code shown.
       title: Sync from AEAT
       unavailable: Could not check synchronization. Try refreshing.
-      unknown: We could not confirm the sync’s status. Refresh to check it again.
-        Another sync remains blocked until this operation is resolved.
+      unknown: We couldn't confirm the sync finished. Refresh to check. Another sync
+        can't start until this one is settled.
       unknown_start: We could not confirm whether the sync started. Do not start another
         sync; contact support with code unknown.
       unsupported: This sign-in needs an interaction available in the terminal. Cancel
@@ -4045,7 +4092,7 @@ desktop:
       input: what you typed could not be passed on
       other: something unexpected happened
       output: its output could not be read
-      slow: it took too long to answer
+      slow: it took too long
       start: the program could not be started
       stopped: the program stopped with an error
   settings:
@@ -4157,12 +4204,12 @@ desktop:
     refused_model_selection_unusable: Cadrumo can't download that model. Check the
       local AI's model list in the agent settings, then try again.
     refused_not_cancellable: Setup can't be stopped right now. It will finish shortly.
-    refused_not_pending: That plan is no longer waiting for an answer.
+    refused_not_pending: That plan is no longer waiting for you.
     refused_not_signed_in: Sign in to your profile first.
     refused_other: Setup couldn't be reached. Try again in a moment.
     refused_plan_changed: What's needed changed. Check the new plan, then approve
       it.
-    refused_unavailable: Cadrumo's services aren't answering. Try again in a moment.
+    refused_unavailable: Cadrumo isn't available right now. Try again in a moment.
     reject: Don't download
     remove: Remove
     remove_confirm: Delete this browser from your computer? You can set it up again
@@ -4567,6 +4614,9 @@ ledger:
       not_due: Nothing to claim
       partial: Partly claimed
       superseded: Claimed, corrected
+    digit_order:
+      ascending: Ascending
+      descending: Descending
     disposal_finding:
       claim_gap: Year with depreciation not recorded
       exemption_not_computed: Gain exemption not computed
@@ -4586,6 +4636,12 @@ ledger:
       customs_document: Customs document
       invoice: Invoice
       reception: Reception
+    electric_propulsion:
+      bev: Battery electric vehicle (BEV)
+      fchv: Fuel-cell hybrid vehicle (FCHV)
+      fcv: Fuel-cell vehicle (FCV)
+      phev: Plug-in hybrid vehicle (PHEV)
+      reev: Extended-range electric vehicle (REEV)
     errors:
       accelerated_da18_depreciation: For tax year %{tax_year}, LIS DA 18 grants new
         electric vehicles and charging points accelerated depreciation at twice the
@@ -4602,6 +4658,8 @@ ledger:
         exceeds the %{iva_amount} IVA of the acquisition transaction.
       acquisition_price_exceeds_base: The stated price %{price} exceeds the %{taxable_base}
         base of the acquisition transaction.
+      acquisition_row_named_twice: This element names the same ledger entry twice
+        among its acquisition rows.
       acquisition_transaction_missing: An acquisition transaction you named is not
         in the ledger.
       acquisition_transaction_not_payment: An acquisition transaction you named is
@@ -4626,13 +4684,16 @@ ledger:
       business_use_share_missing: An ordinary asset lacks its business-use share.
       charging_infrastructure_new_only: Charging-infrastructure free depreciation
         applies only to new elements.
-      acquisition_row_named_twice: This element names the same ledger entry twice
-        among its acquisition rows.
       charging_infrastructure_period_not_enrolled: 'Cadrumo doesn''t support this
         yet: charging infrastructure entering service in this tax period (LIS DA 18a.2).'
       claim_not_under_current_revision: This changed since you opened it. Refresh
         and try again.
       claim_revision_absent: This changed since you opened it. Refresh and try again.
+      claim_superseded_replay: This claim was already replaced by a correction and
+        cannot be recorded again.
+      claim_year_beyond_registry: 'There is no Modelo 100 edition for %{tax_year}
+        yet: claims can be recorded through %{last_admitted_year}. The forecast for
+        that year is an estimate.'
       claim_year_not_after_opening_year: 'A claim for %{claim_tax_year} cannot be
         recorded: the opening amount already covers the years through %{opening_tax_year}.'
       claims_exceed_amortizable_basis: The opening amount and the effective claims
@@ -4657,11 +4718,6 @@ ledger:
         its acquisition date.
       disposal_already_recorded: This element already has a baja dated %{disposal_date}.
         Change it with a correction.
-      claim_superseded_replay: This claim was already replaced by a correction and
-        cannot be recorded again.
-      claim_year_beyond_registry: 'There is no Modelo 100 edition for %{tax_year}
-        yet: claims can be recorded through %{last_admitted_year}. The forecast for
-        that year is an estimate.'
       disposal_amount_invalid: The baja's amounts must be non-negative euro figures
         with at most two decimals.
       disposal_before_service: The baja date cannot be before the element entered
@@ -4738,6 +4794,8 @@ ledger:
       justified_amount_unvalidated: LIS art. 12.1.e admits an amount the taxpayer
         justifies, but that justification cannot be checked yet, so an unchecked amount
         cannot become a charge for filing.
+      later_affectation_out_of_order: The later affectation date cannot be after the
+        element entered service or after its baja.
       low_value_election_required: Low-value free depreciation requires explicit election
         evidence.
       low_value_new_only: Low-value free depreciation applies only to new elements.
@@ -4759,8 +4817,6 @@ ledger:
         method.'
       method_without_schedule_arithmetic: 'Cadrumo doesn''t support this yet: this
         amortization method.'
-      later_affectation_out_of_order: The later affectation date cannot be after the
-        element entered service or after its baja.
       modality_not_declared: The taxpayer profile declares no IRPF estimation regime.
       modality_not_direct_estimation: 'Cadrumo doesn''t support this yet: activity-asset
         amortization outside direct estimation.'
@@ -4892,7 +4948,10 @@ ledger:
       baja: Disposal recorded
       claim: Depreciation recorded
       descriptor: Description added
-      revision: Revision recorded
+      revision: Tax facts recorded
+    flag:
+      'false': 'No'
+      'true': 'Yes'
     method:
       approved_plan: Approved amortization plan
       charging_infrastructure_free: Free depreciation, charging infrastructure
@@ -4923,12 +4982,22 @@ ledger:
     opening_history_status:
       known: Accumulated amortization known
       missing: Accumulated amortization missing
+    original_price_determination:
+      expert_valuation: Expert valuation
+      known: Known price
+    ownership_mode:
+      fractional_direct: Fractional ownership (direct)
+      sole: Sole ownership
+      spousal_community: Community property of spouses
     plan_absence:
       basis_exhausted: Basis fully amortized
       conflict: Conflicts with the record
       covered_by_opening: Covered by the opening amount
       edition_unavailable: No Modelo 100 edition for this year
       free_election: 'Free depreciation: no planned figure'
+      incomplete: 'Missing facts: cannot be worked out'
+      period_elapsed: Maximum period elapsed
+      unsupported: Not supported yet
     plan_advisory:
       used_element_group_limit: RIS art. 4.3, last paragraph, limits used elements
         bought within a mercantile group to the original-price route, capped at the
@@ -4936,9 +5005,10 @@ ledger:
         Whether it reaches an individual is unsettled. A purchase from a related company
         must be valued at market value under LIRPF art. 41. This warning looks at
         no fact about the seller and changes no figure.
-      incomplete: 'Missing facts: cannot be worked out'
-      period_elapsed: Maximum period elapsed
-      unsupported: Not supported yet
+    plan_approval_kind:
+      amended_with_consent: Approved with the amendments accepted
+      express: Express approval
+      silence: Approved by silence
     prior_free_depreciation_regime:
       trlis_da_11: TRLIS additional provision 11
       trlis_dt_37: TRLIS transitional provision 37
@@ -4949,10 +5019,40 @@ ledger:
       fully_amortized: Fully amortized
       in_service: In service
       out_of_service: Out of service
+    renewable_documentation_kind:
+      energy_efficiency_certificate: Energy-efficiency certificate
+      low_voltage_certificate: Low-voltage installation certificate
+      operating_authorisation: Operating authorisation
+      renewable_gas_registration: Renewable gas installation registration
+      surplus_registration: Surplus registration (RAIPREE)
+      thermal_process_registration: Thermal process registration or report
+    renewable_installation_purpose:
+      electricity_self_consumption: Electricity for self-consumption
+      thermal_own_use: Thermal energy for own use
     stale_reason:
       authority_changed: The tax tables changed after this claim
       revision_changed: The element was corrected after this claim
       schedule_unavailable: The schedule cannot be worked out now
+    vehicle_category:
+      aircraft: Aircraft
+      all_terrain: All-terrain vehicle
+      leisure_boat: Leisure boat
+      mixed_vehicle: Mixed-use vehicle
+      moped: Moped
+      motorcycle: Motorcycle
+      other_vehicle: Other vehicle
+      passenger_car: Passenger car
+      trailer: Trailer
+    vehicle_listed_use:
+      commercial_representative_travel: Commercial representative travel
+      habitual_onerous_hire: Habitual hire for a fee
+      mixed_vehicle_goods_transport: Goods transport (mixed vehicle)
+      paid_driving_or_pilot_instruction: Paid driving or pilot instruction
+      paid_passenger_transport: Paid passenger transport
+    vehicle_private_use:
+      accessory_non_working_time: Accessory private use outside working time
+      none: No private use
+      shared: Shared with private use
   evidence:
     reader:
       operation_failed: Evidence reader operation failed
@@ -9047,9 +9147,9 @@ workspace:
         registers: Yours, replaces your register
         your_entries: Yours, replaces your entry
     outcome:
-      failed: It could not be done ({code}).
+      failed: It could not be done. Try again.
       not_done: It was not done; nothing changed.
-      refused: 'Not done: {code}. Nothing changed.'
+      refused: Not done. Nothing changed.
       unknown: Cadrumo could not see whether this finished; it may have. It is not
         done again. Read the declaration again before you go on.
     page:
@@ -9223,54 +9323,4 @@ workspace:
         expand: Show boxes
         go: Open box
         open: Open source
-      lead: Boxes are filled from these when you calculate. Correct a value where
-        it is kept, then calculate again.
-      no_source: This box is not filled from another area.
-      no_surface: “{source}” has no area of its own to open.
-      none: This declaration has no boxes to show.
-      none_found: '{source}: none found'
-      not_here: That area cannot be opened from here; open it from the main menu.
-      not_yet: '{source}: not read yet'
-      title: Where the values come from
-    stage_refused:
-      not_editable: This box cannot be changed that way.
-      nothing_to_clear: There is no value of yours to clear in this box.
-      nothing_to_confirm: This box holds no assumed value to confirm.
-      nothing_to_restore: This box already shows its source's value.
-    staged:
-      clear: (will be cleared)
-      restore: (back to source)
-    step:
-      calculate: Calculate
-      file: Record filing
-      fill: Fill in
-      review: Check
-    summary:
-      blocked: Could not be worked out
-      calculated: Worked out from other boxes
-      entered: Entered by you
-      imported: Brought in from your data
-      needs_you: Need you
-      not_calculated: 'Not calculated yet: the boxes fill in when it is.'
-      title: This declaration
-    surface:
-      correct:
-        declarations: Open that declaration and correct it there
-        ledger: Open your records and correct it there
-        profile: Open your profile and correct it there
-        withholding: Open withholdings and correct it there
-      open:
-        declarations: Open that declaration
-        ledger: Open your records
-        profile: Open your profile
-        withholding: Open withholdings
-    todo:
-      failed: 'Boxes that could not be worked out: {count}'
-      failed_lead: They wait on something the calculation lacked. Choose one to see
-        what.
-      none: Nothing needs you on this form.
-      title: To do
-    value:
-      not_applicable: n/a
-      not_known_yet: Not known yet
-    was: was {value}
+      lead: B

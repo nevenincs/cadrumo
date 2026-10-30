@@ -4810,10 +4810,10 @@ test("what is not known of the messages is said, never shown as none unread", as
     "data-pin",
     "unknown",
   );
-  // A read that failed says so, with its code.
+  // A read that failed says so, without its code.
   await open(target, "views-refused");
   await expect(messagesButton(target)).toHaveAccessibleName(
-    named("desktop.messages.failed", { code: "timed_out" }),
+    named("desktop.messages.failed"),
   );
   await expect(messagesButton(target).locator("[data-pin]")).toHaveAttribute(
     "data-pin",

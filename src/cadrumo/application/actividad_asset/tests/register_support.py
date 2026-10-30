@@ -131,7 +131,7 @@ def memory_register_authority(
         admits_filing_year=_published_support().admits_filing_year,
         last_admitted_year=lambda: last_admitted_year or max(today.year, _published_support().horizon),
         agrarian_activities=lambda _on: frozenset(),
-        residence_territory=lambda: territory,
+        residence_territory=lambda _on: territory,
         claim_consumers=claim_consumers,
         today=lambda: today,
         schedule_authority=_published_authority,

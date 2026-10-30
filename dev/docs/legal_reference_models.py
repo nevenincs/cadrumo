@@ -4,12 +4,26 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from typing import Literal
 
-from cadrumo.domain.calculations.registry.schema_references import LegalNoteLanguageSpan
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class LegalReferenceError(RuntimeError):
     """Raised when the legal reference surface cannot be rendered safely."""
+
+
+class LegalNoteLanguageSpan(BaseModel):
+    """Reviewed language of an exact substring of a catalogue note.
+
+    This annotates curator prose; it does not assert that the text is an
+    official quotation or change the provision's legal review status.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    text: str = Field(min_length=1)
+    language: Literal["en", "es", "ca", "hu"]
 
 
 @dataclass(frozen=True)

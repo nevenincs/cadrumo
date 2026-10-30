@@ -1386,10 +1386,10 @@ P03 re-review items with a UX surface, re-checked live:
   - The grid then shows Status, Date, Classification, Category and Amount, plus a sliver of Counterparty ("ty", "Trazo", "Ireland Ltd").
   - At 1440 in the default layout, Description stays pinned, but Counterparty (577–721) sits entirely under it, "Direction" is clipped to "rection", and nothing tells you a column is hidden on the left.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\07b-1280-light-toclassify.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\07c-1280-light-reason-chip.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\07c-1280-dark-reason-chip.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\36-1440-agent-pill.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\07b-1280-light-toclassify.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\07c-1280-light-reason-chip.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\07c-1280-dark-reason-chip.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\36-1440-agent-pill.png`
 - **Change.**
   - Keep the M6 promise structurally. When the inspector opens and the grid would drop below 40rem, collapse the agent pane to its rail, the way the shell already collapses panes, or open the inspector at `--inspector-min`.
   - Never unpin Description. Let it shrink to its 12rem minimum instead.
@@ -1405,8 +1405,8 @@ P03 re-review items with a UX surface, re-checked live:
   - The Movements tab badge also keeps saying 8 while Health is open.
   - The strip counts the page's old loaded rows against the new period's check, which R1 forbids ("every count shows stored state").
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\24c-health-3T-1440.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\25b-health-3T-checked.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\24c-health-3T-1440.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\25b-health-3T-checked.png`
 - **Change.** Health's strip, the tab badge and Export's strip must count from the rows of the period they are titled with. Until those rows are read, show only the muted `◌` pill, with the tooltip "3T not checked yet · Check". Health's Status table already reads its own period, so feed the strip from the same read.
 
 ### UX2 · countless-warning-zero-to-fix | high | The strip says "Not ready for calculation · 0 to fix" while 30 movements need fixing, and at scale its counts change with the sort order
@@ -1419,10 +1419,10 @@ P03 re-review items with a UX surface, re-checked live:
   - The cause is that `readinessSets` intersects the check's issues with the rows currently loaded (`movementsModel.ts:369-408`). The duplicates filter is read from the ledger, so only one row is loaded. `ReadinessStrip.tsx:85-99` then draws the deliberate count-less pill.
   - At 5000 rows, the same intersection makes `⚠ 95 ○ 143 ⊘ 16` become `⚠ 101 ○ 202 ⊘ 25` when only the sort changes. "loaded rows only" appears only in the tooltip.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\05a-all-duplicates.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\06-dup-all-hover.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\04-all_ledgerRows_5000-dark.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\04-all-desc_ledgerRows_5000-dark.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\05a-all-duplicates.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\06-dup-all-hover.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\04-all_ledgerRows_5000-dark.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\04-all-desc_ledgerRows_5000-dark.png`
 - **Change.**
   - The ⚠ count is the number of distinct movements in the check's own issue list for the period, never the part of it that is loaded.
   - ○ and ⊘ come from the period counts the status read already returns: `pending_review_count`, and `unconverted_currency_count` for EUR rates.
@@ -1440,8 +1440,8 @@ P03 re-review items with a UX surface, re-checked live:
   - With readiness readable, the same steps give no hidden note and "Set for 37".
   - A transient readiness failure therefore blocks the page's main bulk action, with a false reason.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\28d-preflight-failed-selection.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\29-selectall-3T-failed.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\28d-preflight-failed-selection.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\29-selectall-3T-failed.png`
 - **Change.**
   - Derive "visible" only from the grid's drawn rows (`MovementsSection.tsx:692`). It currently reaches the inspector through the context built at `MovementsSection.tsx:1213` and read at `SelectionInspector.tsx:167`.
   - Make sure no readiness state can empty that set.
@@ -1459,10 +1459,10 @@ P03 re-review items with a UX surface, re-checked live:
   - After Confirm the viewer disappears, so you can't check what you just confirmed.
   - The document list keeps 463 px for three file names.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\19b-ticket-1440.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20a-question-1440.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20b-choose-reading-1440.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20d-confirmed-1440.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\19b-ticket-1440.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20a-question-1440.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20b-choose-reading-1440.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20d-confirmed-1440.png`
 - **Change.**
   - With a document open, collapse the list to the shell's narrow rail, keeping the `⚠ 2` badges.
   - Split the panel into two ResizeHandle columns: a sticky viewer on the left, and "What was read" with the questions scrolling on the right.
@@ -1479,9 +1479,9 @@ P03 re-review items with a UX surface, re-checked live:
   - Linking took ten more steps: Movements → find the fuel row by eye → Alt+I → Invoice → "Link another invoice" → pick → Review → two ticks → Save.
   - The picker's popover is 220 px wide and wraps every entry onto two lines.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20d-confirmed-1440.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21b-picker.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21d-review.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20d-confirmed-1440.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21b-picker.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21d-review.png`
 - **Change.**
   - When no movement settles the invoice, the confirmed card says "No movement matches · Find its movement…".
   - That action opens the M1 picker turned around: movements within ±10 days and a similar amount, sorted "Settles this amount" first.
@@ -1494,9 +1494,9 @@ P03 re-review items with a UX surface, re-checked live:
 - **What happened.** The link picker, the permanent-link review ("T-1015-0042 · 58.39") and the Invoices tab ("… 48.26 10.13 EUR … 58.39") all carry 58.39, the value the person declined.
 - **Caveat.** This is seen against the scenario host. Its catalogue entry is built from base plus IVA, so check what the product's confirm stores.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20c-before-confirm-1440.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21d-review.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21f-invoices.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\20c-before-confirm-1440.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21d-review.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\21f-invoices.png`
 - **Change.** Do one of the following:
   - store the attested printed total;
   - or, if the catalogue always derives the total, replace the "It is right as read" segment for derived fields with one plain line: "Saved as 58.39 (base + IVA) · ticket prints 58.40".
@@ -1509,8 +1509,8 @@ P03 re-review items with a UX surface, re-checked live:
   - Names are ambiguous: the quarter has several "PAPELERIA TRAZO" movements.
   - Before the Re-read, the ten classified rows vanish from the "To classify" view, and the inspector says "Hidden: 10 of 10 selected". The rows are correct, but nothing says that is why.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\14a-bulk-unknown.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\14b-after-reread.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\14a-bulk-unknown.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\14b-after-reread.png`
 - **Change.**
   - The alert reads `✓ 10 saved · ↺ 0 staged again · Show them`, where "Show them" applies a filter chip naming the ids.
   - Per-row detail goes to each row's History, which R11 already asks for.
@@ -1525,7 +1525,7 @@ P03 re-review items with a UX surface, re-checked live:
   - "tele" highlights "Alternative mutual-insurance contribution".
   - The Spanish words a person reads on their statement ("telefono", "gasolina", "coche") find nothing in the English catalogue.
   - The cause: `optionScore` (`combobox.tsx:66-80`) returns 0.1 for a scatter match even when word matches exist. The family groups are also ordered by their best member, so a scatter item in an earlier group outranks a word match in a later one.
-- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\15a-office.png`
+- **Screenshot.** `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\15a-office.png`
 - **Change.**
   - Rank in this order: the name starts with the query, then a word starts with it, then the name contains it.
   - Drop scatter matches whenever any of those exist.
@@ -1541,8 +1541,8 @@ P03 re-review items with a UX surface, re-checked live:
   - In the last run, the first two Re-read presses left the counts unchanged, with no progress shown. The third cleared the hold to "Saved together: 1000".
   - "Sealed state" is jargon to a self-employed person.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\33b-scale-review.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\34-sealed-rounds.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\33b-scale-review.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\34-sealed-rounds.png`
 - **Change.**
   - The review reads the lock state of every staged movement with its own budget, as P03R asked, before it shows Save.
   - While it reads, it shows a progress line ("Checking which movements are locked · 412 of 1,000").
@@ -1553,7 +1553,7 @@ P03 re-review items with a UX surface, re-checked live:
 
 - **What I did.** I opened Export and pressed ‹ to move to 3T.
 - **What happened.** The pills are replaced by "Not ready for calculation · Readiness issues: 20. The file shows what the ledger holds now." The 20 counts issues; the strip for 3T counts `⚠ 10 ○ 10` movements.
-- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\26a-export-3T.png`
+- **Screenshot.** `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\26a-export-3T.png`
 - **Change.** Read that period's check and draw the same strip component. Until then, draw `◌` with "3T not checked · Check".
 
 ### UX2 · usage-ratio-copy | low | The Mixed step's ratio line is a bare count, and the review shows a raw id
@@ -1563,9 +1563,9 @@ P03 re-review items with a UX surface, re-checked live:
   - The review row reads "Usage ratio · empty → telefonia_movil".
   - The share hint reads "Percent of business use: 50 for 50%."
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\08b-mixed-filled.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\08d-mixed-review.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\09a-mixed-fuel.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\08b-mixed-filled.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\08d-mixed-review.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\09a-mixed-fuel.png`
 - **Change.**
   - Write the line as `✓ Usage ratio · Mobile phone` or `⚠ No usage ratio for Vehicle fuel · Business-use ratios ›`.
   - The review shows the ratio's display name; the id goes under Technical details.
@@ -1581,9 +1581,9 @@ P03 re-review items with a UX surface, re-checked live:
   - "Classification rules was saved", which is a grammar error
 - **The same action under two names.** The page banner says "Re-read" and the rule dialog says "Read again".
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\08a-mixed-dialog.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\11c-amount-comma.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\30b-rule-after-reread.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\08a-mixed-dialog.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\11c-amount-comma.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\30b-rule-after-reread.png`
 - **Change.**
   - Use ICU plural messages in the `dev.locales` catalogue: "Mixed · 1 movement", "10 staged", "Undone · counterparty", "Rules saved".
   - Use one verb, "Re-read", everywhere.
@@ -1591,7 +1591,7 @@ P03 re-review items with a UX surface, re-checked live:
 ### UX2 · rule-saved-silently | low | Save rule closes with no confirmation, and focus lands on an empty checkbox cell
 
 - **What happened.** After Save rule, the dialog closes. There is no toast and no change in the grid, because the rows were already Personal. Focus is on the first row's checkbox cell.
-- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\23b-saved-1440.png`
+- **Screenshot.** `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\23b-saved-1440.png`
 - **Change.** Show the toast "Rule saved · runs 4th · Rules ›", and return focus to the active cell, as the other grid dialogs do.
 
 ### UX2 · bulk-chord-overwrites-silently | low | Alt+P on a select-all reclassifies Business and Mixed rows and clears their categories, with a toast that says only "Personal · Staged: 19"
@@ -1603,19 +1603,19 @@ P03 re-review items with a UX surface, re-checked live:
 ### UX2 · partial-column-fragments | low | The column under the pinned Amount shows word fragments, and a staged category there is unreadable
 
 - **What happened.** At 1280 with the inspector open, the Category column is cut mid-word under the pinned Amount ("→ O", "Bank", "Home", "Vehic"). The `+1 ›` cue is there, but the staged "→ Office supplies" can't be read.
-- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\27c-dark-1280-inspector.png`
+- **Screenshot.** `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\27c-dark-1280-inspector.png`
 - **Change.** Snap horizontal scrolling to column boundaries, so a column is either whole or counted in the `+n` cue.
 
 ### UX2 · duplicate-glyph-mismatch | low | The import preview marks possible duplicates with ⚠, while the grid and the strip use the copy glyph
 
 - **What happened.** The preview's file card shows `⚠ 2`. The grid's Status cell and the strip's "Duplicates 2" chip use `copy`. M3 reserves ⚠ for readiness issues, and DS-12 holds that no glyph means two things.
-- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\16c-preview-1440.png`
+- **Screenshot.** `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\16c-preview-1440.png`
 - **Change.** Use the copy glyph on the preview chip, with the tooltip "Possible duplicates: 2 · imported and flagged".
 
 ### UX2 · export-saveas-clipped | low | The Export body clips the Save-as row behind the sticky footer, with spare height below the dialog
 
 - **What happened.** At 1440×900, the file name and "Change…" are cut at the footer edge. The dialog ends at y=658, leaving 240 px of viewport unused.
-- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\17c-chosen-1440.png`
+- **Screenshot.** `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\17c-chosen-1440.png`
 - **Change.** Let the Dialog body grow to the dialog's max-height before it scrolls.
 
 ### UX2 · reason-chip-names-repeat | low | Reason chips' accessible names say the label and count twice
@@ -1627,22 +1627,22 @@ P03 re-review items with a UX surface, re-checked live:
 
 - **What happened.** In Health on a new period, and in the strip when readiness fails, the `◌` pill is drawn as a short grey capsule with the glyph off-centre, and it reads as a broken control.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\24c-health-3T-1440.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\28d-preflight-failed-selection.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\24c-health-3T-1440.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\28d-preflight-failed-selection.png`
 - **Change.** Give it the same Badge size and padding as the counted pills, drawn as the glyph alone.
 
 ### UX2 · period-years-late | low | "Years with movements" arrives about a second after the dropdown opens, so the dropdown grows under the pointer
 
 - **What happened.** At 300 ms the list is empty. At 1.5 s it shows 2003 · 2011 · 2019 · 2024 · 2025 · 2026, because the list costs two sequential reads per year. On the first run of the session, choosing "Year" also left focus on `<body>`; later runs returned focus to the trigger.
 - **Screenshots.**
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\01a-period-open.png`
-  - `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\02a-period-open-wait.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\01a-period-open.png`
+  - `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\02a-period-open-wait.png`
 - **Change.** Read the years when the page opens, not when the dropdown opens. Reserve the row's height while it loads. Always return focus to the trigger after a choice.
 
 ### UX2 · unknown-export-reread | low | An unknown export's banner offers only "Re-read", which reads the ledger, not the file
 
 - **What happened.** The alert reads "Outcome unknown: writes paused · ledger-2026-4T.csv [Re-read]". The dialog itself says "check the file before exporting once more", but the banner's one action cannot tell whether the file was written.
-- **Screenshot.** `C:\Users\hello\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\18b-after-close.png`
+- **Screenshot.** `<local-home>\AppData\Local\Temp\claude\Y--code-cadrumo-worktrees-tui\19757641-734b-4c55-93a9-baed20b872a4\scratchpad\reviews\ux2\shots\18b-after-close.png`
 - **Change.** Keep the R11 hold. Word the banner for the file: "Export outcome unknown · ledger-2026-4T.csv · [Show in folder] [I've checked it]". The second action releases the hold.
 
 ### UX2R · viewer-reading-place | low | The document viewer cannot scroll to where a reading was found, because a reading carries no position

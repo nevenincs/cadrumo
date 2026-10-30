@@ -114,6 +114,18 @@ def _named(node: ast.AST) -> str | None:
     return None
 
 
+def _docstring_nodes(tree: ast.AST) -> set[ast.AST]:
+    """Return string expressions that are documentation, not executable strings."""
+    docstrings: set[ast.AST] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) or not node.body:
+            continue
+        first = node.body[0]
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+            docstrings.add(first.value)
+    return docstrings
+
+
 def receipt_ownership_findings(
     root: Path, mcp_root: Path | None = None, runtime_root: Path | None = None
 ) -> list[ReceiptOwnershipFinding]:
@@ -121,12 +133,13 @@ def receipt_ownership_findings(
     findings: list[ReceiptOwnershipFinding] = []
     for module, path in _production_modules(root, mcp_root, runtime_root):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        docstrings = _docstring_nodes(tree)
         for node in ast.walk(tree):
             name = _named(node)
             owners = _RECEIPT_WRITERS.get(name) if name is not None else None
             if name is not None and owners is not None and module not in owners:
                 findings.append(ReceiptOwnershipFinding(module, getattr(node, "lineno", 0), name))
-            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str) and node not in docstrings:
                 for literal, literal_owners in _RECEIPT_LITERALS.items():
                     if literal in node.value and module not in literal_owners:
                         findings.append(ReceiptOwnershipFinding(module, node.lineno, literal))
@@ -190,6 +203,24 @@ def test_the_gate_reports_a_planted_second_owner(tmp_path: Path, planted: str) -
     findings = receipt_ownership_findings(tmp_path)
 
     assert {(finding.module, finding.name) for finding in findings} == {("entrypoints/cli/resume_shortcut.py", name)}
+
+
+def test_docstrings_are_ignored_but_executable_receipt_strings_are_reported(tmp_path: Path) -> None:
+    intruder = tmp_path / "entrypoints" / "cli" / "resume_shortcut.py"
+    intruder.parent.mkdir(parents=True)
+    intruder.write_text(
+        '"""Historical note mentioning session.v2.json."""\n'
+        "def forget(root):\n"
+        "    path = 'session.v2.json'\n"
+        "    return path\n",
+        encoding="utf-8",
+    )
+
+    findings = receipt_ownership_findings(tmp_path)
+
+    assert [(finding.module, finding.name) for finding in findings] == [
+        ("entrypoints/cli/resume_shortcut.py", "session.v2.json")
+    ]
 
 
 @pytest.mark.parametrize("planted", sorted(_PLANTED))

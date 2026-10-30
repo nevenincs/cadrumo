@@ -162,6 +162,7 @@ flows:
     filter:
       option:
         binding_source:
+          activity_asset_disposal: Tevékenységi eszköz kivezetése
           afiliado_cotizacion: Tagi befizetések
           atribucion_member: Jövedelem-hozzárendelési tag
           bienes_inversion_regularizacion: Beruházási javak kiigazítása

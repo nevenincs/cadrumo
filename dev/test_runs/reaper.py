@@ -17,6 +17,7 @@ being treated as history.
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import time
@@ -79,9 +80,10 @@ def _owner_pid(directory: Path) -> int | None:
 def assess_run_directories(root: Path, *, now: float | None = None) -> tuple[RunVerdict, ...]:
     """Classify run directories without deleting: finished output goes, live work stays.
 
-    A ``run.json`` is the completion record its own invocation writes last, so its
-    presence answers the only question here. Its absence does not prove the
-    opposite -- the run may have been killed before writing one -- which is what
+    A completed ``run.json`` is written last. A command wrapper first seeds a
+    running record so even a hard interruption retains a failing status; that
+    record cannot authorize reclamation while its owner still writes. A missing
+    or unfinished record may mean the run was killed, which is what
     :data:`INTERRUPTED_GRACE_SECONDS` and the owning PID are for.
     """
     reference = time.time() if now is None else now
@@ -193,9 +195,18 @@ def _assess_run_date_directory(date_directory: Path, reference: float, verdicts:
     for run in runs:
         if is_link_like(run) or not run.is_dir():
             continue
-        if (run / "run.json").is_file():
+        if _has_completed_record(run):
             verdicts.append(RunVerdict(run, True, "completed run output, which nothing reads back"))
             continue
         verdict = _owned_verdict(run, reference)
         if verdict is not None:
             verdicts.append(verdict)
+
+
+def _has_completed_record(run: Path) -> bool:
+    """Recognize completion without mistaking a seeded or unreadable record for it."""
+    try:
+        payload = json.loads((run / "run.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    return isinstance(payload, dict) and bool(payload.get("status", "completed") == "completed")

@@ -25,11 +25,16 @@ import json, os, subprocess, sys
 from dataclasses import replace
 from pathlib import Path
 
+ambient = dict(os.environ)
 sys.path.insert(0, {root!r})
 from dev.packaging.native.application_environment import parse
 from dev.packaging.native.environment_declaration_primitives import DECLARATION
 from dev.packaging.native.environment_reference import LaunchRefusedError, reference_define, reference_select
 from dev.packaging.native.layout import load_layout
+
+# Developer imports seed checkout defaults; the simulated host must see only its caller's environment.
+os.environ.clear()
+os.environ.update(ambient)
 
 here = Path(__file__).resolve().parent
 faults = json.loads((here / "faults.json").read_text(encoding="utf-8"))

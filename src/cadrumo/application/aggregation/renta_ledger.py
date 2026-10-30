@@ -269,7 +269,7 @@ def resident_territory(
     operation: PinnedAuthorityOperation,
     as_of: date | None = None,
 ) -> ResidenceTerritory:
-    """Classify the bucket's recorded tax residence as common, foral or unresolved.
+    """Classify a :class:`UserProfileRecord` tax residence as common, foral or unresolved.
 
     Reads the same fact as :func:`resolve_residence_ccaa` and asks the same
     parser. An absent reading is common; a recorded one the catalogue cannot

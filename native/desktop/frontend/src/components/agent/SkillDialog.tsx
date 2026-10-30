@@ -157,7 +157,6 @@ function Verification({ result }: { result: AgentSkillVerification }) {
                     ? t("desktop.agent.skill_finding_error")
                     : t("desktop.agent.skill_finding_warning")}
                 </Badge>
-                <code className="text-sm">{finding.code}</code>
                 {finding.path && (
                   <span className="font-mono text-sm text-muted-foreground">
                     {finding.path}

@@ -74,6 +74,7 @@ _CANCELLATION = TypeAdapter[OperationCancellationResultV1](OperationCancellation
 _DETACH = TypeAdapter[OperationDetachResultV1](OperationDetachResultV1)
 _RESPONSE_CONTROL = TypeAdapter[OperationResponseControlResultV1](OperationResponseControlResultV1)
 _RESPONSE_MUTATION = TypeAdapter[OperationResponseMutationResultV1](OperationResponseMutationResultV1)
+_EXCHANGE_TIMEOUT_SECONDS = 30.0
 
 
 def _settled_result_expected[ResultT: BaseModel](
@@ -162,7 +163,7 @@ def _submission_session(client: FrontendClient, expected_session_id: UUID | None
 def _exchange_deadline(deadline: float | None) -> float:
     if deadline is not None:
         remaining_budget(deadline)
-    selected = time.monotonic() + 30
+    selected = time.monotonic() + _EXCHANGE_TIMEOUT_SECONDS
     if deadline is not None:
         selected = min(selected, deadline)
     remaining_budget(selected)
@@ -272,6 +273,13 @@ class OperationController:
 
     def _call_deadline(self) -> float:
         return _exchange_deadline(self.deadline)
+
+    def _result_deadline(self) -> float:
+        """Keep the owned total budget separate from each page exchange."""
+        if self.deadline is None:
+            return self._call_deadline()
+        remaining_budget(self.deadline)
+        return self.deadline
 
     @classmethod
     async def submit(
@@ -424,11 +432,14 @@ class OperationController:
             definition_contract_digest=contract.definition_contract_digest,
             result_schema=expected,
         )
+        deadline = self._result_deadline()
         document = await await_cancellation_complete(
             asyncio.to_thread(
                 self.client.read_result_document,
                 request,
-                deadline=self._call_deadline(),
+                deadline=deadline,
+                timeout=remaining_budget(deadline),
+                page_timeout=_EXCHANGE_TIMEOUT_SECONDS,
             ),
             task_name="tui-runtime-result",
         )

@@ -23,6 +23,7 @@ from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
+from .fact_leaves import Amount, ClassKey, Share
 from .identity_cache import CachedIdentityModel
 
 ElectionReference = Annotated[str, Field(min_length=1, max_length=256)]
@@ -149,7 +150,7 @@ class PlanAnnualAmount(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     tax_year: FilingYear
-    amount: Decimal
+    amount: Amount
 
     @field_validator("amount")
     @classmethod
@@ -205,7 +206,7 @@ class SmallEnterpriseEvidence(BaseModel):
 
     evidence_reference: EvidenceReference
     made_available_on: date
-    prior_period_net_turnover: Decimal
+    prior_period_net_turnover: Amount
 
     @field_validator("prior_period_net_turnover")
     @classmethod
@@ -229,7 +230,7 @@ class UsedAssetOriginalPrice(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     determination: OriginalPriceDetermination
-    original_price: Decimal
+    original_price: Amount
     evidence_reference: EvidenceReference | None = None
 
     @field_validator("original_price")
@@ -341,8 +342,8 @@ class ActivityAssetAmortizationElection(CachedIdentityModel):
 
     regime: DirectEstimationRegime
     method: AmortizationMethod
-    authority_class_key: str | None = Field(default=None, min_length=1, max_length=64)
-    linear_coefficient: Decimal | None = None
+    authority_class_key: ClassKey | None = Field(default=None, min_length=1, max_length=64)
+    linear_coefficient: Share | None = None
     shift_hours_per_day: Decimal | None = None
     sum_of_digits_period_years: int | None = Field(default=None, ge=1, le=100)
     digit_order: DigitOrder | None = None

@@ -249,7 +249,7 @@ export function AboutDialog({
           )}
           {state?.status === "failed" && (
             <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
-              {t("desktop.about.load_failed", { code: state.code })}
+              {t("desktop.about.load_failed")}
             </Alert>
           )}
         </div>

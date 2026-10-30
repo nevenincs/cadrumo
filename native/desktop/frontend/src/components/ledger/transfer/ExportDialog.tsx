@@ -687,9 +687,6 @@ export function ExportDialog({
             {sent.kind === "refused" && (
               <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
                 <AlertTitle>{t("desktop.ledger.export.refused")}</AlertTitle>
-                <AlertDescription>
-                  <code className="font-mono text-xs">{sent.reason}</code>
-                </AlertDescription>
               </Alert>
             )}
             {sent.kind === "unknown" && (

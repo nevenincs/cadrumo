@@ -1,4 +1,7 @@
-"""Compose worker-bound activity-asset history and retained authority reads."""
+"""Compose worker-bound activity-asset history and retained authority reads.
+
+The worker profile supplies the :class:`TransactionCatalogueRepository` used by register operations.
+"""
 
 from __future__ import annotations
 
