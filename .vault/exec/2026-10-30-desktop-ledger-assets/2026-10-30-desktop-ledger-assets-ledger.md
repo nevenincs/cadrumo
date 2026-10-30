@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:b3cd6e2c1fd3f2e9360ba39f0295fcee0b21319fb97e23675fcd894f7b7cee50'
+body_hash: 'sha256:29b45910f30f1c77c108ce96f2b9fc229e5993720159692f2c5137ce345bebdd'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -62,8 +62,17 @@ related:
 - `S01` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py test_no_key_shadows_a_namespace.py test_reserved_translation_tokens.py` -> `pass`
 - `S01` `verify:` `pytest dev/locales/tests (honesty, hungarian, spelling, english spelling, quoted keys, scaffold, navigation labels)` -> `pass`
 - `S01` `by:` `implementation-engineer`
+- `S02` `A` `native/desktop/frontend/src/components/ledger/assets/AssetsSection.tsx`
+- `S02` `A` `native/desktop/frontend/src/components/ledger/assets/FixedAssetsPane.tsx`
+- `S02` `A` `native/desktop/frontend/src/components/ledger/assets/AssetList.tsx`
+- `S02` `A` `native/desktop/frontend/src/components/ledger/assets/AssetDetail.tsx`
+- `S02` `A` `native/desktop/frontend/src/components/ledger/assets/FilingHandoffPanel.tsx`
+- `S02` `A` `native/desktop/frontend/src/components/ledger/assets/Assets.stories.tsx`
+- `S02` `verify:` `eslint+prettier on the six files` -> `pass`
+- `S02` `by:` `implementer`
 
 ## Notes
 
 - `S01` `test_parity.py::test_codebase_to_locale_parity` fails on six `ledger.actividad_asset.errors.*` keys other sessions hold uncommitted in the four common.yml catalogues; no desktop.ledger.assets key is named in it
 - `S01` The four common.yml catalogues carry other sessions' uncommitted keys beside the 107 desktop.ledger.assets keys of this Step; they are not in this Step's commit
+- `S02` tsc reports errors only in src/dev/assetsFixture.ts, written by another Step in progress; none in these files

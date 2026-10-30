@@ -12,7 +12,7 @@ related:
   - '[[2026-10-30-desktop-ledger-assets-reference]]'
 modified: '2026-10-30'
 body_schema: body-v2
-body_hash: 'sha256:e90849b923641de1abac6c81855892c6302e33435cb8b8b498a8e9c562b3ff49'
+body_hash: 'sha256:8271a45d0ef5fa1a6a6805f15a306ff34946d7411ad8cf7a44b230267ea722d9'
 ---
 
 <!-- LINK RULES:
@@ -126,7 +126,7 @@ Inventory edit and remove have no backend operation and no owner; this was raise
 ## Steps
 
 - [x] `S01` - Lay the foundation: provisional contract module, words, YearStepper, synthetic fixtures and the RightPanel width prop; `native/desktop/frontend/src/components/ledger/assets/, native/desktop/frontend/src/dev/assetsFixture.ts`.
-- [ ] `S02` - Build the Assets section shell, element list, detail panel and filing handoff, in stories only; `native/desktop/frontend/src/components/ledger/assets/AssetsSection.tsx, FixedAssetsPane.tsx, AssetList.tsx, AssetDetail.tsx`.
+- [x] `S02` - Build the Assets section shell, element list, detail panel and filing handoff, in stories only; `native/desktop/frontend/src/components/ledger/assets/AssetsSection.tsx, FixedAssetsPane.tsx, AssetList.tsx, AssetDetail.tsx`.
 - [ ] `S03` - Build the amortization plan and append-only timeline views, in stories only; `native/desktop/frontend/src/components/ledger/assets/AmortizationPlan.tsx, AssetTimeline.tsx`.
 - [ ] `S04` - Build the options-driven forms for element, descriptor, correction, claim and baja, covering every write state; `native/desktop/frontend/src/components/ledger/assets/AssetForm.tsx, DescribeForm.tsx, CorrectForm.tsx, ClaimFlow.tsx, BajaForm.tsx`.
 - [ ] `S05` - Conform to the landed S06, S11 and S12 contracts, amend the ledger editor ADR, admit the new ids and delete the provisional module; `native/desktop/frontend/src/components/ledger/assets/, native/desktop/src-tauri/src/shell/ledger/admitted.rs, .vault/adr/`.
