@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:3d0e4baa49dbcd93a40c115ee7350bc9ebc6f531396d569771fc94b8852848b4'
+body_hash: 'sha256:383361cd514e78e86a56c9b5ec94f0264eb2e3e4d6294b425611d24072692754'
 related:
   - "[[2026-09-21-assets-core-ownership-contracts-reference]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
@@ -205,4 +205,4 @@ Authorized by the operator on 2026-10-30, who directed reconciliation of the amo
 - Consumption: a claim does not carry the calculation or filing revision that consumes it, because claim identity hashes its content and cannot change afterwards. The calculation revision records the effective claim IDs and, for Modelo 130, the schedule fingerprints it consumed, and the existing drift gate treats a change to that set as staleness. The two unused fields leave the claim; there is no released compatibility floor.
 - Corrections: a superseding revision is refused while effective claims exceed its amortizable basis. The operator supersedes the affected claims in the same correction flow.
 - One projection: the selection of effective claims has one defining function, used by calculation and filing handoff.
-- Boundaries: the cost-basis rule is read with `2026-09-21-assets-core-cost-basis-stages-adr`. IVA amounts and shares come from their own owners and never scale the IRPF base directly. Residents of foral territories are refused with a typed reason, because Modelo 100 and Modelo 130 of the AEAT do not apply to them. Disposal gain or loss remains outside this decision and needs its own.
+- Boundaries: the cost-basis rule is read with `2026-09-21-assets-core-cost-basis-stages-adr`. IVA amounts and shares come from their own owners and never scale the IRPF base directly. Residents of foral territories are refused with a typed reason, because Modelo 100 and Modelo 130 of the AEAT do not apply to them. Disposal: `2026-10-30-assets-core-disposal-adr` governs the baja record, its boundary and gain or loss. `out_of_service_date` exists only as that record's derived boundary, and a superseding claim may shorten its interval only to that boundary.
