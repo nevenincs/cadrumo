@@ -7891,7 +7891,7 @@ tui:
       invalid_number: '%{field}: %{value} no es un número entero.'
       inventory:
         action:
-          closing_authority: Registrar una autoridad de cierre
+          closing_authority: Registrar un valor de cierre desde un archivo completo
           evidence_add: "Guardar un documento de compra"
           closing_value: Registrar un valor de cierre desde un archivo de datos
           create: Crear un inventario
@@ -7913,7 +7913,7 @@ tui:
           acquisition_cost: Archivo del coste de compra (solo compras)
           action: Petición
           actividad_id: Actividad
-          authority_record: Archivo de la autoridad de cierre
+          authority_record: Archivo completo del valor de cierre
           evidence_file: "Archivo del documento"
           evidence_folder: "Carpeta desde la que parte la ruta del documento"
           closing_value_facts: Archivo de datos del valor de cierre
@@ -7938,16 +7938,16 @@ tui:
           pmp: Precio medio ponderado
         prompt: Cada inventario de actividad por año. Elige una petición, rellena
           sus campos, revísala y confírmala. Las valoraciones y el coste de las ventas
-          son cifras del propio registro. Los costes de compra y las autoridades de
-          cierre se leen del archivo JSON que indiques.
+          son cifras del propio registro. Los costes de compra y los valores de
+          cierre se leen del archivo que indiques.
         refusal:
           activity_conflict: 'El registro ha rechazado la petición: ya existe un inventario
             para esa actividad y año.'
           activity_not_found: 'El registro ha rechazado la petición: no existe ningún
             inventario para esa actividad y año.'
-          closing_authority_conflict: 'El registro ha rechazado la autoridad de cierre:
-            ya hay otra registrada para ese año.'
-          closing_authority_invalid: 'El registro ha rechazado la autoridad de cierre:
+          closing_authority_conflict: 'El registro ha rechazado el valor de cierre:
+            ya hay otro registrado para ese año.'
+          closing_authority_invalid: 'El registro ha rechazado el valor de cierre:
             no coincide con el inventario que indica.'
           duplicate_movement_id: 'El registro ha rechazado el movimiento: ya está
             registrado.'
@@ -7956,7 +7956,7 @@ tui:
           inventory_validation: 'El registro ha rechazado la petición: no supera la
             validación del inventario.'
         result:
-          closing: 'Autoridad de cierre de %{actividad} %{year} registrada. Cambió:
+          closing: 'Valor de cierre de %{actividad} %{year} registrado. Cambió:
             %{changed}.'
           fingerprint: 'Huella del registro: %{fingerprint}'
           ledger: '%{actividad} · %{year} · %{method} · existencias iniciales %{opening}

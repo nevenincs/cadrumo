@@ -7845,7 +7845,7 @@ tui:
       invalid_number: '%{field}: a(z) %{value} nem egész szám.'
       inventory:
         action:
-          closing_authority: Záró jóváhagyás rögzítése
+          closing_authority: Záróérték rögzítése teljes fájlból
           evidence_add: "Beszerzési dokumentum mentése"
           closing_value: Záróérték rögzítése adatfájlból
           create: Készlet létrehozása
@@ -7867,7 +7867,7 @@ tui:
           acquisition_cost: Beszerzési költség fájlja (csak vásárlásnál)
           action: Kérés
           actividad_id: Tevékenység
-          authority_record: Záró jóváhagyás fájlja
+          authority_record: A záróérték teljes fájlja
           evidence_file: "Dokumentumfájl"
           evidence_folder: "A dokumentum útvonalának kiinduló mappája"
           closing_value_facts: Záróérték adatfájlja
@@ -7892,16 +7892,16 @@ tui:
           pmp: Súlyozott átlagár
         prompt: Minden tevékenységi készlet évenként. Válassz egy kérést, töltsd ki
           a mezőit, nézd át, majd erősítsd meg. Az értékelést és az eladott áruk beszerzési
-          értékét maga a nyilvántartás számolja. A beszerzési költséget és a záró
-          jóváhagyást az általad megadott típusos fájlból olvassuk be.
+          értékét maga a nyilvántartás számolja. A beszerzési költséget és a
+          záróértéket az általad megadott fájlból olvassuk be.
         refusal:
           activity_conflict: 'A nyilvántartás elutasította a kérést: arra a tevékenységre
             és évre már van készlet.'
           activity_not_found: 'A nyilvántartás elutasította a kérést: arra a tevékenységre
             és évre nincs készlet.'
-          closing_authority_conflict: 'A nyilvántartás elutasította a záró jóváhagyást:
+          closing_authority_conflict: 'A nyilvántartás elutasította a záróértéket:
             arra az évre már másik van rögzítve.'
-          closing_authority_invalid: 'A nyilvántartás elutasította a záró jóváhagyást:
+          closing_authority_invalid: 'A nyilvántartás elutasította a záróértéket:
             nem egyezik a megnevezett készlettel.'
           duplicate_movement_id: 'A nyilvántartás elutasította a mozgást: már rögzítve
             van.'
@@ -7910,7 +7910,7 @@ tui:
           inventory_validation: 'A nyilvántartás elutasította a kérést: nem felel
             meg a készlet ellenőrzésének.'
         result:
-          closing: '%{actividad} %{year} záró jóváhagyása rögzítve. Változott: %{changed}.'
+          closing: '%{actividad} %{year} záróértéke rögzítve. Változott: %{changed}.'
           fingerprint: 'Rekord ujjlenyomata: %{fingerprint}'
           ledger: '%{actividad} · %{year} · %{method} · nyitókészlet %{opening} ·
             %{movements} mozgás'

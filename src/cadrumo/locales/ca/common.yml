@@ -7870,7 +7870,7 @@ tui:
       invalid_number: '%{field}: %{value} no és un nombre enter.'
       inventory:
         action:
-          closing_authority: Registra una autoritat de tancament
+          closing_authority: Registra un valor de tancament des d'un fitxer complet
           evidence_add: "Desa un document de compra"
           closing_value: Registra un valor de tancament des d'un fitxer de dades
           create: Crea un inventari
@@ -7892,7 +7892,7 @@ tui:
           acquisition_cost: Fitxer del cost de compra (només compres)
           action: Petició
           actividad_id: Activitat
-          authority_record: Fitxer de l'autoritat de tancament
+          authority_record: Fitxer complet del valor de tancament
           evidence_file: "Fitxer del document"
           evidence_folder: "Carpeta des de la qual parteix el camí del document"
           closing_value_facts: Fitxer de dades del valor de tancament
@@ -7917,16 +7917,16 @@ tui:
           pmp: Preu mitjà ponderat
         prompt: Cada inventari d'activitat per any. Tria una petició, omple'n els
           camps, revisa-la i confirma-la. Les valoracions i el cost de les vendes
-          són xifres del registre mateix. Els costos de compra i les autoritats de
-          tancament es llegeixen del fitxer JSON que indiquis.
+          són xifres del registre mateix. Els costos de compra i els valors de
+          tancament es llegeixen del fitxer que indiquis.
         refusal:
           activity_conflict: 'El registre ha rebutjat la petició: ja existeix un inventari
             per a aquesta activitat i any.'
           activity_not_found: 'El registre ha rebutjat la petició: no existeix cap
             inventari per a aquesta activitat i any.'
-          closing_authority_conflict: 'El registre ha rebutjat l''autoritat de tancament:
-            ja n''hi ha una altra registrada per a aquest any.'
-          closing_authority_invalid: 'El registre ha rebutjat l''autoritat de tancament:
+          closing_authority_conflict: 'El registre ha rebutjat el valor de tancament:
+            ja n''hi ha un altre de registrat per a aquest any.'
+          closing_authority_invalid: 'El registre ha rebutjat el valor de tancament:
             no coincideix amb l''inventari que indica.'
           duplicate_movement_id: 'El registre ha rebutjat el moviment: ja està registrat.'
           invalid_valuation_method: 'El registre ha rebutjat la petició: no admet
@@ -7934,7 +7934,7 @@ tui:
           inventory_validation: 'El registre ha rebutjat la petició: no supera la
             validació de l''inventari.'
         result:
-          closing: 'Autoritat de tancament de %{actividad} %{year} registrada. Ha
+          closing: 'Valor de tancament de %{actividad} %{year} registrat. Ha
             canviat: %{changed}.'
           fingerprint: 'Empremta del registre: %{fingerprint}'
           ledger: '%{actividad} · %{year} · %{method} · existències inicials %{opening}
