@@ -66,12 +66,20 @@ import type {
 
 /** The definitions the host admits, mirroring its closed list. */
 export const LEDGER_DEFINITIONS = [
+  "ledger.actividad-asset.acquisition-candidates",
   "ledger.actividad-asset.claim",
   "ledger.actividad-asset.correct",
   "ledger.actividad-asset.create",
+  "ledger.actividad-asset.describe",
+  "ledger.actividad-asset.disposal-calculate",
+  "ledger.actividad-asset.dispose",
   "ledger.actividad-asset.filing-handoff",
   "ledger.actividad-asset.forecast",
+  "ledger.actividad-asset.form-options",
   "ledger.actividad-asset.inspect",
+  "ledger.actividad-asset.list",
+  "ledger.actividad-asset.plan",
+  "ledger.actividad-asset.timeline",
   "ledger.add",
   "ledger.allocate",
   "ledger.archive",

@@ -1,5 +1,13 @@
 {
   "operations": {
+    "ledger.actividad-asset.acquisition-candidates": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.actividad-asset.claim": {
       "may_write": true,
       "review": false,
@@ -24,6 +32,30 @@
         "path": []
       }
     },
+    "ledger.actividad-asset.describe": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.actividad-asset.disposal-calculate": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.actividad-asset.dispose": {
+      "may_write": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.actividad-asset.filing-handoff": {
       "may_write": false,
       "review": false,
@@ -40,7 +72,39 @@
         "path": []
       }
     },
+    "ledger.actividad-asset.form-options": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.actividad-asset.inspect": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.actividad-asset.list": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.actividad-asset.plan": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.actividad-asset.timeline": {
       "may_write": false,
       "review": false,
       "subject": {
