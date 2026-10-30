@@ -217,8 +217,9 @@ msgid ""
 "The content-addressed SQLite publication containing typed components, "
 "dependency rows, and the complete manifest."
 msgstr ""
-"La publicación SQLite direccionada por contenido que contiene los "
-"componentes tipados, las filas de dependencias y el manifiesto completo."
+"La publicación SQLite con direccionamiento basado en contenido que "
+"contiene los componentes tipados, las filas de dependencias y el "
+"manifiesto completo."
 
 #: ../../reference/registry-legal-api.md:52
 msgid ""
