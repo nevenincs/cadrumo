@@ -13,11 +13,14 @@ from pydantic import BaseModel
 
 from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_REFUSED_VALIDATION,
     ActivityAssetAuthorityProvenance,
     ActivityAssetInspectRequest,
     ActivityAssetOperationPortsFactory,
+    ActivityAssetRefusal,
 )
 from cadrumo.application.actividad_asset.activity_asset_projections import ActivityAssetInspectProjection
+from cadrumo.application.actividad_asset.activity_asset_read_models import project_reason_facts
 from cadrumo.application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
 from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
 from cadrumo.application.actividad_asset.registered_operations import (
@@ -35,6 +38,8 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
+from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -47,6 +52,7 @@ from cadrumo.domain.renta.actividad_asset.election import (
     AmortizationMethod,
     DirectEstimationRegime,
 )
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -158,7 +164,11 @@ def _inspect_contract():
     return registry.lookup_public_contract(ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID), registry.public_contract_set
 
 
-def _observation(*, effect: OperationEffect = OperationEffect.NONE) -> OperationObservationSuccessV1:
+def _observation(
+    *,
+    effect: OperationEffect = OperationEffect.NONE,
+    refusal_code: str | None = None,
+) -> OperationObservationSuccessV1:
     contract, contract_set = _inspect_contract()
     state = OperationPublicProjectionV1(
         operation_id=_OPERATION_ID,
@@ -169,7 +179,9 @@ def _observation(*, effect: OperationEffect = OperationEffect.NONE) -> Operation
         definition_contract=contract,
         contract_set_digest=contract_set.contract_set_digest,
         lifecycle=OperationLifecycle.TERMINAL,
-        terminal_condition=OperationTerminalCondition.SUCCEEDED,
+        terminal_condition=(
+            OperationTerminalCondition.SUCCEEDED if refusal_code is None else OperationTerminalCondition.REFUSED
+        ),
         effect=effect,
         phase_code=None,
         started_at=_NOW,
@@ -183,8 +195,8 @@ def _observation(*, effect: OperationEffect = OperationEffect.NONE) -> Operation
         execution_deadline_at=None,
         cleanup_deadline_at=None,
         pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref="f" * 64,
-        refusal_ref=None,
+        result_ref="f" * 64 if refusal_code is None else None,
+        refusal_ref=refusal_code,
         failure_error_code=None,
         diagnostic_ref=None,
     )
@@ -224,6 +236,7 @@ def _install_runtime(
     result: ActivityAssetInspectProjection,
     expire_after_result: bool = False,
     effect: OperationEffect = OperationEffect.NONE,
+    refusal_code: str | None = None,
 ) -> tuple[list[dict[str, object]], _Controller]:
     from ....frontend.tui.operations import runtime_profile_session as bridge
 
@@ -244,7 +257,7 @@ def _install_runtime(
 
     monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
     controller = _Controller(
-        observation=_observation(effect=effect),
+        observation=_observation(effect=effect, refusal_code=refusal_code),
         result=result,
         client=client,
         expire_after_result=expire_after_result,
@@ -323,3 +336,43 @@ def test_activity_asset_tui_door_fails_closed_when_its_retained_session_changes(
         actions.inspect(revision.asset_id)
 
     assert submissions == []
+
+
+@pytest.mark.parametrize("language", ["en", "es", "ca", "hu"])
+def test_activity_asset_tui_door_rebuilds_a_refusal_with_its_specific_key_and_facts(
+    monkeypatch: pytest.MonkeyPatch,
+    language: str,
+) -> None:
+    key = "ledger.actividad_asset.errors.profile_modality_mismatch"
+    refusal = ActivityAssetRefusal(
+        code=ACTIVITY_ASSET_REFUSED_VALIDATION,
+        reason_key=key,
+        reason_facts=project_reason_facts({"elected": "normal", "declared": "simplified"}),
+    )
+    refused = ActivityAssetInspectProjection(
+        profile_id=_PROFILE_ID,
+        authority=_AUTHORITY,
+        outcome="refused",
+        refusal=refusal,
+    )
+    client = _Client()
+    submissions, _controller = _install_runtime(
+        monkeypatch,
+        client=client,
+        result=refused,
+        refusal_code=ACTIVITY_ASSET_REFUSED_VALIDATION,
+    )
+    actions = RuntimeActivityAssetTuiActionsV1(cast(FrontendClient, client), profile_label="Fixture profile")
+
+    with pytest.raises(ActividadAssetValidationError) as raised:
+        actions.inspect("runtime-tui-asset")
+
+    assert submissions
+    assert raised.value.translated_message == key
+    assert raised.value.context is not None
+    assert raised.value.context["elected"] == "normal"
+    assert raised.value.context["declared"] == "simplified"
+    assert raised.value.context["refusal_code"] == ACTIVITY_ASSET_REFUSED_VALIDATION
+    shown = resolve_error_message(raised.value, locale=language)
+    assert shown == tr(key, locale=language, elected="normal", declared="simplified")
+    assert "{" not in shown

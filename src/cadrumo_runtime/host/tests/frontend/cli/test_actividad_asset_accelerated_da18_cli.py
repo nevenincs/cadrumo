@@ -66,7 +66,7 @@ _ACCELERATED_MESSAGE_KEY = "errors.refused.refused_actividad_asset_accelerated_d
 _LANGUAGES = ("en", "es", "ca", "hu")
 
 
-def _seed_direct_normal_profile(root: Path, profile_id: str) -> None:
+def _seed_direct_normal_profile(root: Path, profile_id: str, *, residence: str = "madrid") -> None:
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
@@ -76,7 +76,7 @@ def _seed_direct_normal_profile(root: Path, profile_id: str) -> None:
                 UserProfileFact(path="identity.name", value="Autonoma"),
                 UserProfileFact(path="identity.surnames", value="Sintetica"),
                 UserProfileFact(path="activities.description", value="reparto sintetico"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.ccaa", value=residence),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
                 UserProfileFact(path="iva.m303_regime_composition", value="general"),
