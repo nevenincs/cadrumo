@@ -467,8 +467,9 @@ class LocalHttpBoundary:
             return
         await route.fulfill(response=response)
 
-    async def wait_until_blocked(self) -> None:
-        started = await asyncio.to_thread(self.request_started.wait, 10)
+    async def wait_until_blocked(self, *, timeout_seconds: float = 10.0) -> None:
+        """Wait for the request, within the caller's navigation budget."""
+        started = await asyncio.to_thread(self.request_started.wait, timeout_seconds)
         if not started:
             raise AssertionError("real HTTP boundary did not observe the blocking navigation")
 
