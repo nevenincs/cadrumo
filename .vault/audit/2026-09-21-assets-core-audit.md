@@ -244,3 +244,13 @@ Named by amendment on 2026-10-30.
 
 ### law | low | The RIS art. 4.3 group paragraph is unresolved for an individual buyer
 Letter a could over-deduct if it applies; no fact records the seller relationship. Under research.
+
+## Tax literals outside the asset code, 2026-10-30
+
+Read-only sweep of `domain/` and `application/`, using the classifier in `dev/quality/tests/test_activity_asset_tax_literals.py` over 1,894 files. About 85 percent of 2,120 findings were technical. Letter claves were only grepped, and 65 `domain/calculations/registry` files were sampled.
+
+### registry-owned-facts | high | Tax facts remain in code outside the asset code
+Pre-existing, and against the operator's rule of 2026-10-30. Families: a threshold duplicating the registry at `application/modelo/dt12_advisory.py:28`; box lists at `application/modelo/projection.py:80`, `application/calculations/m303_regimen_simplificado_annual_summary.py:56`, `domain/calculations/registry/ledger_renta_income_bindings.py:146`; claves at `application/filing/export_producer.py:1022`, `domain/foreign_assets/register.py:94`, `domain/contribuyente/renta_codes.py:36`, `application/wizard/command_parameters.py:90`, `domain/calculations/registry/withholding_bindings.py:279`, `application/filing/producer_snapshot_m360.py:68`; modelo routing at `application/aggregation/withholding_filing_cadence.py:43`, `domain/calculations/registry/applicability.py:379`, `domain/deadlines/festivos.py:243`; layout offsets at `application/filing/m190_context_validation.py:17`, `application/filing/m280_context_validation.py:17`; period rules at `domain/period.py:66`, `domain/renta/maritime_exemption.py:67`.
+
+### registry-owned-facts | medium | The literal gate cannot see every form of a fact
+`Field(ge=, le=)` bounds hide claves, modelo ids look like box ids, and letter claves aren't detected.
