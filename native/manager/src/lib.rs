@@ -7,7 +7,6 @@ compile_error!("release builds refuse the fixture test mode");
 
 #[cfg(windows)]
 pub mod activation_probe;
-#[cfg(any(windows, test))]
 pub mod background;
 #[cfg(windows)]
 pub mod change_watch;

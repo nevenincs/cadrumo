@@ -35,7 +35,39 @@ fn version_reports_the_projected_manager_name_and_display_version() {
 }
 
 #[test]
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
+fn bare_start_outside_an_installed_package_refuses_before_claiming_the_session() {
+    let output = Command::new(MANAGER).output().expect("run the manager");
+    assert_eq!(output.status.code(), Some(69), "{output:?}");
+    assert!(output.stdout.is_empty(), "{output:?}");
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        "manager_startup_failed\n"
+    );
+}
+
+#[test]
+#[cfg(target_os = "macos")]
+fn a_cutover_designation_is_refused_without_a_versioned_installation() {
+    let designation = cadrumo_manager::cutover::Designation {
+        parent_pid: std::process::id(),
+        parent_version: "0.5.0".into(),
+        nonce: "0123456789abcdef0123456789abcdef".into(),
+    };
+    let output = Command::new(MANAGER)
+        .args(["--cutover", &designation.argument()])
+        .output()
+        .expect("run the manager");
+    assert_eq!(output.status.code(), Some(69), "{output:?}");
+    assert!(output.stdout.is_empty(), "{output:?}");
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        "manager_cutover_unavailable\n"
+    );
+}
+
+#[test]
+#[cfg(not(any(windows, target_os = "macos")))]
 fn bare_start_refuses_unsupported_platforms() {
     let output = Command::new(MANAGER).output().expect("run the manager");
     assert_eq!(output.status.code(), Some(69), "{output:?}");

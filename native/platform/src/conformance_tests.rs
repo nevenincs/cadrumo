@@ -303,6 +303,31 @@ fn native_bootstrap_does_not_ignore_an_invalid_selected_root_override() {
     }
 }
 
+fn installed_default_rule() -> &'static InstalledDefault {
+    INSTALLED_DEFAULTS
+        .iter()
+        .find(|rule| rule.platform == env::consts::OS)
+        .unwrap()
+}
+
+/// The environment answer that makes `base` the installed base. A platform whose host
+/// asks the shell for its base folder receives `base` as the injected known folder and
+/// reads no variable.
+fn installed_base_variable(base: &Path, name: &str) -> Option<OsString> {
+    (cfg!(unix) && name == installed_default_rule().candidates[0].variable)
+        .then(|| base.as_os_str().to_owned())
+}
+
+/// The installed default root the contract declares beneath the installed base `base`.
+fn installed_default_root(base: &Path) -> PathBuf {
+    let subpath: PathBuf = installed_default_rule().candidates[0]
+        .subpath
+        .iter()
+        .collect();
+    base.join(subpath)
+        .join(storage::channel_directory(BUILD_CHANNEL))
+}
+
 #[test]
 fn an_image_honours_no_storage_variable_but_the_root_variable() {
     let scratch = Scratch::new("ignored-variable");
@@ -314,7 +339,9 @@ fn an_image_honours_no_storage_variable_but_the_root_variable() {
     let development = storage::resolve_root(&foreign, Some(&baked), None, BUILD_CHANNEL).unwrap();
     assert_eq!(development.root, baked);
     assert_eq!(development.source, storage::RootSource::BuildDefault);
-    let installed = storage::resolve_root(&foreign, None, Some(&scratch.0), BUILD_CHANNEL).unwrap();
+    let based = |name: &str| foreign(name).or_else(|| installed_base_variable(&scratch.0, name));
+    let installed = storage::resolve_root(&based, None, Some(&scratch.0), BUILD_CHANNEL).unwrap();
+    assert_eq!(installed.root, installed_default_root(&scratch.0));
     assert_eq!(installed.source, storage::RootSource::InstalledDefault);
 }
 
@@ -416,7 +443,7 @@ fn a_debug_image_stores_at_its_baked_root_and_a_release_image_at_the_installed_d
     let baked = scratch.0.join("var").join("storage");
     let pinned = scratch.0.join("pinned");
     let base = scratch.0.join("local-app-data");
-    let none = |_: &str| None;
+    let none = |name: &str| installed_base_variable(&base, name);
     let pin = |name: &str| (name == ROOT_VARIABLE).then(|| pinned.as_os_str().to_owned());
     let relative = |name: &str| (name == ROOT_VARIABLE).then(|| OsString::from("relative"));
     for (configuration, build_root) in [("Debug", Some(baked.as_path())), ("Release", None)] {
@@ -446,10 +473,7 @@ fn a_debug_image_stores_at_its_baked_root_and_a_release_image_at_the_installed_d
             }
             None => {
                 assert_eq!(evidence.mode, storage::Mode::Installed);
-                assert_eq!(
-                    resolved.root,
-                    base.join(storage::channel_directory(BUILD_CHANNEL))
-                );
+                assert_eq!(resolved.root, installed_default_root(&base));
                 assert_eq!(resolved.source, storage::RootSource::InstalledDefault);
             }
         }

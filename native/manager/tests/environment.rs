@@ -232,7 +232,17 @@ fn normalized_default_root_is_shared_by_manager_arguments_and_child_pins() {
         let discarded = fixture.join("unused");
         let selected = fixture.join("selected");
         assert!(!discarded.exists() && !selected.exists());
-        let locations = ManagedLocations::resolve(&package.join(EXECUTABLE)).unwrap();
+        let resolved = ManagedLocations::resolve(&package.join(EXECUTABLE));
+        if option_env!("CADRUMO_BUILD_STORAGE_ROOT").is_some_and(|root| !root.is_empty()) {
+            // An image that carries its build's storage root never manages a root.
+            assert_eq!(
+                resolved.unwrap_err().kind(),
+                std::io::ErrorKind::InvalidInput
+            );
+            assert!(!discarded.exists() && !selected.exists());
+            return;
+        }
+        let locations = resolved.unwrap();
         assert_eq!(locations.package_root(), package);
         assert!(locations.storage_root().starts_with(&selected));
         assert!(!discarded.exists() && !selected.exists());

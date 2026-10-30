@@ -67,6 +67,26 @@ impl crate::supervision::supervisor::SessionActivity for Activity {
     }
 }
 
+/// A session whose activity cannot be bound is never active, so it starts nothing.
+#[cfg(target_os = "macos")]
+struct Unbound;
+
+#[cfg(target_os = "macos")]
+impl crate::supervision::supervisor::SessionActivity for Unbound {
+    fn is_active(&self) -> bool {
+        false
+    }
+}
+
+/// This manager's session activity, for the supervisor and ownership collaborators.
+#[cfg(target_os = "macos")]
+pub fn activity() -> Box<dyn crate::supervision::supervisor::SessionActivity> {
+    match Activity::current() {
+        Ok(activity) => Box::new(activity),
+        Err(_) => Box::new(Unbound),
+    }
+}
+
 #[cfg(target_os = "macos")]
 mod native {
     #![allow(unsafe_code)]
