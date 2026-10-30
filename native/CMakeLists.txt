@@ -153,8 +153,18 @@ endforeach()
 file(CONFIGURE OUTPUT "${CONTRACT_DIR}/rust-environment.json" CONTENT "@rust_environment@\n" @ONLY)
 if(BUILD_TESTING)
   # Every file the last build compiled into a component must be among its declared inputs.
+  # A component this graph compiles must have been built; the installer exists only on
+  # Windows and the desktop only where the platform stages a desktop image.
+  set(coverage_required --require interpreter --require manager)
+  if(WIN32)
+    list(APPEND coverage_required --require installer)
+  endif()
+  # A generator expression always yields an argument; where no desktop is configured it
+  # repeats an already required component.
   add_test(NAME native.identity-coverage
-    COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_fingerprint --build "${PROJECT_BINARY_DIR}")
+    COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_fingerprint --build "${PROJECT_BINARY_DIR}"
+      ${coverage_required}
+      "$<IF:$<TARGET_EXISTS:desktop-host-build>,--require=desktop,--require=interpreter>")
   set_tests_properties(native.identity-coverage PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 endif()
 set(CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}" PARENT_SCOPE)

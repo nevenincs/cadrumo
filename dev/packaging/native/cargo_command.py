@@ -125,8 +125,8 @@ def _cargo_quality_command(command: list[str]) -> bool:
     return (
         len(arguments) == 12
         and arguments[:3] == ["deny", "--locked", "--manifest-path"]
-        and arguments[4:6] == ["check", "--config"]
-        and arguments[7:] == ["--hide-inclusion-graph", "advisories", "bans", "licenses", "sources"]
+        and arguments[4] == "--config"
+        and arguments[6:] == ["check", "--hide-inclusion-graph", "advisories", "bans", "licenses", "sources"]
     )
 
 
@@ -172,9 +172,7 @@ def run_configured_command(
         _validate_cargo_build_command(command)
     if quality:
         directory, _ = _cargo_directory(build, command)
-        environment = dict(os.environ)
-        environment["CARGO_BUILD_TARGET_DIR"] = str(directory)
-        environment["CARGO_BUILD_BUILD_DIR"] = str(directory)
+        environment = _selected_toolchain_environment(command, directory)
         return _run_plain_command(configured, command, timings, environment=environment)
     files = configured.get("builder_files", {})
     if not isinstance(files, dict):
@@ -196,12 +194,21 @@ def run_configured_command(
     # reads them, so a change to them must not clean the Cargo directory.
     identity = _cargo_toolchain_identity(configured)
     marker = generated / f"rust-toolchain-{hashlib.sha256(str(directory).encode()).hexdigest()}.txt"
-    # Cargo subcommands and their drivers must use the selected toolchain too.
+    environment = _selected_toolchain_environment(command, directory)
+    return _run_locked_cargo(build, command, directory, marker, identity, environment, timings)
+
+
+def _selected_toolchain_environment(command: list[str], directory: Path) -> dict[str, str]:
+    """Pin Cargo's outputs to ``directory`` and its subcommands to the selected toolchain.
+
+    Cargo finds ``fmt``, ``clippy`` and their drivers on ``PATH``; a toolchain proxy found
+    first would run the account's default toolchain instead.
+    """
     environment = dict(os.environ)
     environment["CARGO_BUILD_TARGET_DIR"] = str(directory)
     environment["CARGO_BUILD_BUILD_DIR"] = str(directory)
     environment["PATH"] = os.pathsep.join((str(Path(command[0]).parent), environment.get("PATH", "")))
-    return _run_locked_cargo(build, command, directory, marker, identity, environment, timings)
+    return environment
 
 
 def _announce(timings: BuildTimings | None, command: list[str]) -> None:

@@ -64,18 +64,23 @@ if(BUILD_TESTING)
       --features platform,diagnostics-test-support
       ${application_test_arguments})
   set_tests_properties(application.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
-  cadrumo_cargo_command(application_package_cargo
-    --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
-    --env "CADRUMO_TEST_PACKAGE_ROOT=${CADRUMO_APPLICATION_TEST_PACKAGE_ROOT}"
-    --env "CADRUMO_TEST_PACKAGE_MANIFEST=${package_manifest}"
-    --env "CADRUMO_TEST_PACKAGE_PLATFORM=${CADRUMO_PLATFORM}"
-    --env "CADRUMO_TEST_PACKAGE_ABI=${application_layout_abi}")
-  add_test(NAME application.package
-    COMMAND ${application_package_cargo} test --locked --manifest-path "${application_manifest}"
-      --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}"
-      --features live-package-tests --test live_package -- --nocapture)
-  set_tests_properties(application.package PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    TIMEOUT 900 RESOURCE_LOCK package_inventory)
+  # The package test reads the complete application package: the staged one, which only a
+  # payload graph assembles, or a separately supplied artifact root.
+  if(CADRUMO_CONFIGURE_PAYLOAD
+      OR NOT CADRUMO_APPLICATION_TEST_PACKAGE_ROOT STREQUAL "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+    cadrumo_cargo_command(application_package_cargo
+      --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
+      --env "CADRUMO_TEST_PACKAGE_ROOT=${CADRUMO_APPLICATION_TEST_PACKAGE_ROOT}"
+      --env "CADRUMO_TEST_PACKAGE_MANIFEST=${package_manifest}"
+      --env "CADRUMO_TEST_PACKAGE_PLATFORM=${CADRUMO_PLATFORM}"
+      --env "CADRUMO_TEST_PACKAGE_ABI=${application_layout_abi}")
+    add_test(NAME application.package
+      COMMAND ${application_package_cargo} test --locked --manifest-path "${application_manifest}"
+        --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}"
+        --features live-package-tests --test live_package -- --nocapture)
+    set_tests_properties(application.package PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+      TIMEOUT 900 RESOURCE_LOCK package_inventory)
+  endif()
   # The second lint enables every feature, so the platform and live-test code is linted as well.
   cadrumo_rust_quality(application MANIFEST "${application_manifest}"
     CLIPPY_CARGO application_cargo CLIPPY_ARGS --profile "${application_profile}")

@@ -100,7 +100,13 @@ _RUST_PROFILES = ("debug", "release")
 
 
 def _cargo_records(directory: str, *names: str) -> tuple[str, ...]:
-    return tuple(f"{directory}/{profile}/{name}.d" for profile in _RUST_PROFILES for name in names)
+    # A library's dependency record carries the platform's library prefix, `lib` outside Windows.
+    return tuple(
+        f"{directory}/{profile}/{prefix}{name}.d"
+        for profile in _RUST_PROFILES
+        for name in names
+        for prefix in ("", "lib")
+    )
 
 
 _NATIVE_CARGO = "cargo/native/*"
@@ -613,16 +619,19 @@ def resolution_order(names: list[str] | tuple[str, ...]) -> list[str]:
     return ordered
 
 
-SHIPPED = ("interpreter", "installer", "manager", "desktop")
-"""Components every complete native build compiles; the test host is built on request."""
+def coverage_failures(build: Path, required: Iterable[str], *, root: Path = REPO_ROOT) -> dict[str, list[str]]:
+    """Return each built component's undeclared consumed files; refuse a required one never built.
 
-
-def coverage_failures(build: Path, *, root: Path = REPO_ROOT) -> dict[str, list[str]]:
-    """Return each built component's undeclared consumed files; refuse a shipped one never built."""
+    ``required`` names the components the configured graph compiles; the test host is built on
+    request and is never required.
+    """
+    required = frozenset(required)
+    if unknown := required - COMPONENTS.keys():
+        raise ValueError(f"Unknown native component {sorted(unknown)!r}; known: {', '.join(sorted(COMPONENTS))}")
     failures: dict[str, list[str]] = {}
     for name, component in COMPONENTS.items():
         if not any(path for pattern in component.records for path in build.glob(pattern)):
-            if name in SHIPPED:
+            if name in required:
                 raise FileNotFoundError(f"No dependency records for the {name} component under {build}; build it first")
             continue
         failures[name] = uncovered_inputs(name, build, root=root)
@@ -632,8 +641,9 @@ def coverage_failures(build: Path, *, root: Path = REPO_ROOT) -> dict[str, list[
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Check that every component declares the files its last build read.")
     parser.add_argument("--build", type=require_enrolled_build, required=True)
+    parser.add_argument("--require", action="append", default=[], help="A component the configured graph compiles.")
     args = parser.parse_args()
-    found = coverage_failures(args.build)
+    found = coverage_failures(args.build, args.require)
     for name, uncovered in found.items():
         for path in uncovered:
             print(f"{name}: {path} is compiled in but not declared in dev/packaging/native/build_fingerprint.py")

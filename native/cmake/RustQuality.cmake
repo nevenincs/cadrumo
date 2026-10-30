@@ -11,7 +11,8 @@ if(NOT COMMAND cadrumo_cargo_command)
   message(FATAL_ERROR "Include Rust.cmake before RustQuality.cmake")
 endif()
 
-set(CADRUMO_RUST_QUALITY_DENY_FLOOR "0.19.0")
+# 0.20 takes --config as a root option, before the check subcommand.
+set(CADRUMO_RUST_QUALITY_DENY_FLOOR "0.20.0")
 set(CADRUMO_RUST_QUALITY_POLICY "${PROJECT_SOURCE_DIR}/native/deny.toml")
 
 if(BUILD_TESTING)
@@ -83,8 +84,8 @@ function(cadrumo_rust_quality crate)
   add_test(NAME ${crate}.fmt
     COMMAND ${quality_cargo} fmt --check --manifest-path "${GATE_MANIFEST}")
   add_test(NAME ${crate}.deny
-    COMMAND ${quality_cargo} deny --locked --manifest-path "${GATE_MANIFEST}" check
-      --config "${CADRUMO_RUST_QUALITY_POLICY}" --hide-inclusion-graph advisories bans licenses sources)
+    COMMAND ${quality_cargo} deny --locked --manifest-path "${GATE_MANIFEST}"
+      --config "${CADRUMO_RUST_QUALITY_POLICY}" check --hide-inclusion-graph advisories bans licenses sources)
   # cargo finds cargo-deny as a subcommand on PATH; put the resolved one first so the gate
   # runs the version that was checked against the floor.
   set_tests_properties(${crate}.deny PROPERTIES TIMEOUT 900
