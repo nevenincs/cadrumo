@@ -5200,6 +5200,105 @@ ledger:
       claim: Dotación registrada
       descriptor: Descripción añadida
       revision: Datos fiscales registrados
+    field:
+      acquired_condition: Estado al adquirirlo
+      acquisition:
+        invoice_evidence_id: Referencia de la factura o del documento
+      acquisition_shape: Tipo de adquisición
+      amortization:
+        approved_plan:
+          annual_amounts:
+            amount: Importe del plan para el ejercicio
+            tax_year: Ejercicio del importe del plan
+          approval_kind: Forma de aprobación del plan
+          approval_reference: Referencia del plan aprobado
+          resolved_on: Plan resuelto el
+          submitted_on: Plan presentado el
+        authority_class_key: Grupo de la tabla oficial
+        charging_infrastructure:
+          installation_certificate_reference: Certificado de la instalación
+          technical_documentation_reference: Documentación técnica
+        digit_order: Orden de los dígitos
+        linear_coefficient: Coeficiente
+        low_value:
+          election_reference: Referencia de tu elección
+          new_material_evidence_reference: Justificante de la elección
+        method: Método
+        regime: Modalidad de estimación directa
+        renewable_self_consumption:
+          documentation_kind: Tipo de documentación
+          documentation_reference: Referencia de la documentación
+          made_available_on: Fecha de puesta a disposición
+          purpose: Finalidad de la instalación
+          replaces_fossil_installation: Sustituye una instalación de combustible fósil
+          required_by_building_code: Exigida por el código técnico de la edificación
+        research_development_evidence_reference: Justificante de investigación y desarrollo
+        shift_hours_per_day: Horas de uso al día
+        small_enterprise:
+          evidence_reference: Justificante de empresa de reducida dimensión
+          made_available_on: Fecha de puesta a disposición
+          prior_period_net_turnover: Importe neto de la cifra de negocios del periodo
+            anterior
+        sum_of_digits_period_years: Periodo de la suma de dígitos (años)
+        used_original_price:
+          determination: Cómo se fija el precio originario
+          evidence_reference: Justificante del precio originario
+          original_price: Precio originario
+        useful_life:
+          ends_on: Fin de la vida útil
+          evidence_reference: Justificante de la vida útil
+      amount: Importe
+      asset_kind: Tipo
+      basis:
+        basis_amount: Base amortizable
+        business_use_share: Porcentaje de uso empresarial
+        construction_cost: Coste de la construcción
+        is_property: Es un inmueble
+        land_cost: Coste del suelo
+        non_deductible_iva: IVA no deducible
+        office_area: Superficie usada para la actividad (m²)
+        ownership_mode: Cómo es la titularidad
+        ownership_share: Tu cuota del inmueble
+        prior_allocation_provenance: De dónde sale el reparto anterior
+        stage: Cómo llegó a ser tuyo
+        total_area: Superficie total (m²)
+      building_construction_date: Fecha de construcción del edificio
+      declared_acquisition_date: Fecha de compra
+      declared_activity: Actividad
+      description: Descripción
+      disposal:
+        disposal_date: Último día de servicio
+        later_affectation_on: Afectación posterior a la actividad el
+        market_value: Valor de mercado (si se indica)
+        prior_free_depreciation_regime: Libertad de amortización anterior
+        proceeds: Importe obtenido
+        reason: Motivo
+        transmission_costs: Gastos de transmisión
+      document_kind: Tipo de documento
+      document_number: Número de documento
+      further_acquisitions:
+        lineage:
+          invoice_evidence_id: Referencia de la factura o del documento
+        shape: Tipo de adquisición
+      in_service_date: En servicio desde
+      name: Nombre
+      opening_history:
+        accumulated_amount: Amortización ya deducida
+        amortization_method: Método aplicado antes
+        covered_through_tax_year: Cubierta hasta el ejercicio
+        status: Amortización anterior a la entrada
+      out_of_service_date: Baja a partir del
+      residual_value: Valor residual
+      serial_number: Número de serie
+      supplier_name: Proveedor
+      supplier_tax_id: NIF del proveedor
+      vehicle_affectation:
+        category: Tipo de vehículo
+        electric_propulsion: Propulsión eléctrica (si la tiene)
+        evidence_reference: Justificante del uso del vehículo
+        listed_use: Uso profesional de la lista (si lo hay)
+        private_use: Uso privado
+        recorded_in_activity_books: Anotado en los libros de la actividad
     flag:
       'false': 'No'
       'true': Sí

@@ -5174,6 +5174,104 @@ ledger:
       claim: Értékcsökkenés rögzítve
       descriptor: Leírás hozzáadva
       revision: Adóadatok rögzítve
+    field:
+      acquired_condition: Állapot a beszerzéskor
+      acquisition:
+        invoice_evidence_id: A számla vagy dokumentum hivatkozása
+      acquisition_shape: A beszerzés módja
+      amortization:
+        approved_plan:
+          annual_amounts:
+            amount: A terv szerinti éves összeg
+            tax_year: A tervezett összeg adóéve
+          approval_kind: A terv jóváhagyásának módja
+          approval_reference: A jóváhagyott terv hivatkozása
+          resolved_on: A terv elbírálásának napja
+          submitted_on: A terv benyújtásának napja
+        authority_class_key: Csoport a hivatalos táblázatban
+        charging_infrastructure:
+          installation_certificate_reference: A telepítés igazolása
+          technical_documentation_reference: Műszaki dokumentáció
+        digit_order: A számjegyek sorrendje
+        linear_coefficient: Együttható
+        low_value:
+          election_reference: A választásod hivatkozása
+          new_material_evidence_reference: A választás igazolása
+        method: Módszer
+        regime: A közvetlen becslés módja
+        renewable_self_consumption:
+          documentation_kind: A dokumentáció fajtája
+          documentation_reference: A dokumentáció hivatkozása
+          made_available_on: A rendelkezésre bocsátás napja
+          purpose: A berendezés célja
+          replaces_fossil_installation: Fosszilis tüzelésű berendezést vált ki
+          required_by_building_code: Az építési szabályzat előírja
+        research_development_evidence_reference: Kutatás-fejlesztési igazolás
+        shift_hours_per_day: Napi használati órák
+        small_enterprise:
+          evidence_reference: A kisvállalkozói státusz igazolása
+          made_available_on: A rendelkezésre bocsátás napja
+          prior_period_net_turnover: Az előző időszak nettó árbevétele
+        sum_of_digits_period_years: A számjegyek összegének időszaka (év)
+        used_original_price:
+          determination: Az eredeti ár megállapítása
+          evidence_reference: Az eredeti ár igazolása
+          original_price: Eredeti ár
+        useful_life:
+          ends_on: A hasznos élettartam vége
+          evidence_reference: A hasznos élettartam igazolása
+      amount: Összeg
+      asset_kind: Típus
+      basis:
+        basis_amount: Értékcsökkenési alap
+        business_use_share: Üzleti használat aránya
+        construction_cost: Az épület költsége
+        is_property: Ingatlan
+        land_cost: A telek költsége
+        non_deductible_iva: Le nem vonható IVA
+        office_area: A tevékenységre használt terület (m²)
+        ownership_mode: A tulajdon módja
+        ownership_share: A te tulajdoni hányadod
+        prior_allocation_provenance: Honnan származik a korábbi megosztás
+        stage: Hogyan lett a tiéd
+        total_area: Teljes terület (m²)
+      building_construction_date: Az épület építésének napja
+      declared_acquisition_date: A vásárlás napja
+      declared_activity: Tevékenység
+      description: Leírás
+      disposal:
+        disposal_date: Utolsó üzemnap
+        later_affectation_on: Későbbi hozzárendelés a tevékenységhez ekkor
+        market_value: Piaci érték (ha van)
+        prior_free_depreciation_regime: Korábbi amortizációs szabadság
+        proceeds: Bevétel
+        reason: Ok
+        transmission_costs: Értékesítési költségek
+      document_kind: Okmány fajtája
+      document_number: Okmány száma
+      further_acquisitions:
+        lineage:
+          invoice_evidence_id: A számla vagy dokumentum hivatkozása
+        shape: A beszerzés módja
+      in_service_date: Üzembe helyezés napja
+      name: Név
+      opening_history:
+        accumulated_amount: Már elszámolt értékcsökkenés
+        amortization_method: Korábban alkalmazott módszer
+        covered_through_tax_year: Fedezett adóév vége
+        status: Értékcsökkenés a használatbavétel előtt
+      out_of_service_date: Kivezetés dátuma
+      residual_value: Maradványérték
+      serial_number: Gyártási szám
+      supplier_name: Szállító
+      supplier_tax_id: Szállító adószáma
+      vehicle_affectation:
+        category: A jármű fajtája
+        electric_propulsion: Elektromos hajtás (ha van)
+        evidence_reference: A jármű használatának igazolása
+        listed_use: Listázott üzleti használat (ha van)
+        private_use: Magáncélú használat
+        recorded_in_activity_books: Szerepel a tevékenység könyveiben
     flag:
       'false': Nem
       'true': Igen

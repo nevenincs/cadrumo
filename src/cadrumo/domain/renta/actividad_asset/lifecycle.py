@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from functools import cached_property
-from typing import Final, Protocol, Self
+from typing import Annotated, Final, Protocol, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -22,7 +22,7 @@ from ....core.tipos_actividad import TipoActividad
 from .disposal import ActivityAssetDisposal
 from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
-from .fact_leaves import Share
+from .fact_leaves import Internal, Share
 from .identity_cache import CachedIdentityModel
 from .vehicle_affectation import VehicleAffectation
 
@@ -77,10 +77,10 @@ class AcquisitionLineageReference(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    observed_transaction_id: TransactionId | None = None
-    observed_lineage_event_id: Hex64Str | None = None
+    observed_transaction_id: Annotated[TransactionId | None, Internal] = None
+    observed_lineage_event_id: Annotated[Hex64Str | None, Internal] = None
     invoice_evidence_id: str = Field(max_length=256)
-    evidence_fingerprint: Hex64Str | None = None
+    evidence_fingerprint: Annotated[Hex64Str | None, Internal] = None
 
 
 class FurtherAcquisitionRow(BaseModel):
@@ -368,9 +368,9 @@ class ActivityAssetRevision(CachedIdentityModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    asset_id: str = Field(min_length=1, max_length=128)
-    revision_number: int = Field(ge=1)
-    supersedes_revision_id: Hex64Str | None = None
+    asset_id: Annotated[str, Internal] = Field(min_length=1, max_length=128)
+    revision_number: Annotated[int, Internal] = Field(ge=1)
+    supersedes_revision_id: Annotated[Hex64Str | None, Internal] = None
     acquisition: AcquisitionLineageReference
     acquisition_shape: AcquisitionShape
     further_acquisitions: tuple[FurtherAcquisitionRow, ...] = ()

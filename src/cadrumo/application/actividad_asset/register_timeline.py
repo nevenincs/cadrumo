@@ -16,13 +16,15 @@ from ...domain.renta.actividad_asset.fact_leaves import FactKind, indexed_to_ste
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptor, ActivityAssetEventKind
 from .activity_asset_read_models import (
+    TIMELINE_INTERNAL_FIELDS,
     TIMELINE_LABELLED_FIELDS,
     ActivityAssetTimelineChange,
     ActivityAssetTimelineClaimUse,
     ActivityAssetTimelineEvent,
+    timeline_field_key,
     timeline_token_key,
 )
-from .fact_wording import ActivityAssetFlag, share_label
+from .fact_wording import CLAIM_AMOUNT_PATH, ActivityAssetFlag, share_label
 from .history import ActivityAssetHistory
 from .register_reads import RegisterReadContext, matches_current_schedule
 
@@ -67,16 +69,16 @@ def _changes(
     before: BaseModel | None,
     after: BaseModel,
     *,
-    excluding: frozenset[str] = frozenset(),
     class_names: ClassNames,
 ) -> tuple[ActivityAssetTimelineChange, ...]:
-    old = {} if before is None else _flatten(before.model_dump(mode="json", exclude=set(excluding)))
-    new = _flatten(after.model_dump(mode="json", exclude=set(excluding)))
+    old = {} if before is None else _flatten(before.model_dump(mode="json"))
+    new = _flatten(after.model_dump(mode="json"))
     old_names: Mapping[str, str] = dict[str, str]() if before is None else class_names(before)
     new_names = class_names(after)
     return tuple(
         ActivityAssetTimelineChange(
             field=name,
+            field_key=timeline_field_key(name),
             before=old.get(name),
             after=new.get(name),
             before_key=timeline_token_key(name, old.get(name)),
@@ -85,7 +87,7 @@ def _changes(
             after_label=_changed_value_label(name, new.get(name), new_names),
         )
         for name in sorted({*old, *new})
-        if old.get(name) != new.get(name)
+        if old.get(name) != new.get(name) and indexed_to_step_path(name) not in TIMELINE_INTERNAL_FIELDS
     )
 
 
@@ -106,10 +108,6 @@ def _class_names_reader(context: RegisterReadContext) -> ClassNames:
         return cache[regime, tax_year]
 
     return names
-
-
-_REVISION_LINK_FIELDS = frozenset({"asset_id", "revision_number", "supersedes_revision_id"})
-"""A revision's place in its chain, which the timeline's order already states."""
 
 
 def element_timeline(
@@ -140,7 +138,7 @@ def element_timeline(
         if event.kind in {ActivityAssetEventKind.REVISION, ActivityAssetEventKind.BAJA}:
             revision = revisions[event.record_id]
             previous = revisions.get(revision.supersedes_revision_id or "")
-            changes = _changes(previous, revision, excluding=_REVISION_LINK_FIELDS, class_names=class_names)
+            changes = _changes(previous, revision, class_names=class_names)
             effect_date = _revision_effect_date(revision, event.kind)
         elif event.kind is ActivityAssetEventKind.CLAIM:
             claim = claims[event.record_id]
@@ -184,7 +182,8 @@ def _timeline_claim_changes(
 ) -> tuple[ActivityAssetTimelineChange, ...]:
     return (
         ActivityAssetTimelineChange(
-            field="amount",
+            field=CLAIM_AMOUNT_PATH,
+            field_key=timeline_field_key(CLAIM_AMOUNT_PATH),
             before=None if replaced is None else str(replaced.amount),
             after=str(claim.amount),
         ),

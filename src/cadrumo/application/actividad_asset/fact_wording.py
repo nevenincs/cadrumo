@@ -123,6 +123,29 @@ def timeline_labelled_fields() -> Mapping[str, FactKind]:
     return MappingProxyType(labelled)
 
 
+CLAIM_AMOUNT_PATH: Final = "amount"
+"""The one fact the timeline states of a recorded claim."""
+
+
+def timeline_internal_fields() -> frozenset[str]:
+    """Name the fields of a register record that no operator states, which the timeline leaves out.
+
+    Each is a field marked :data:`~cadrumo.domain.renta.actividad_asset.fact_leaves.Internal` on
+    its model, named like a leaf path with every repeated row as ``[]``.
+    """
+    return frozenset(leaf.dotted for model in _RECORD_MODELS for leaf in fact_leaves(model) if leaf.internal)
+
+
+def timeline_field_paths() -> tuple[str, ...]:
+    """List every fact the timeline can show a change of, each worded once, in model order.
+
+    These are the record fields not marked internal, with a repeated row as ``[]``, and the
+    claim's amount.
+    """
+    paths = dict.fromkeys(leaf.dotted for model in _RECORD_MODELS for leaf in fact_leaves(model) if not leaf.internal)
+    return (*paths, CLAIM_AMOUNT_PATH)
+
+
 def share_label(fraction: str) -> str:
     """Word a fraction as a percentage: ``0.5`` reads ``50%``."""
     percent = Decimal(fraction) * 100
@@ -130,8 +153,11 @@ def share_label(fraction: str) -> str:
 
 
 __all__ = [
+    "CLAIM_AMOUNT_PATH",
     "ActivityAssetFlag",
     "share_label",
+    "timeline_field_paths",
+    "timeline_internal_fields",
     "timeline_labelled_fields",
     "timeline_token_families",
     "token_family",

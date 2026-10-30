@@ -37,6 +37,19 @@ class FactKind(StrEnum):
     ROWS = "rows"
 
 
+class FactVisibility(StrEnum):
+    """Whether a fact is one the operator states or an identity the system keeps."""
+
+    INTERNAL = "internal"
+
+
+Internal = FactVisibility.INTERNAL
+"""Marks a field as internal: an identifier, hash, fingerprint, ledger or lineage reference, or chain link.
+
+The operator did not state it and cannot read it, so a reader that shows a record's facts leaves it out.
+Every field without the mark is a fact the operator states or reads, and needs a word.
+"""
+
 Amount = typing.Annotated[Decimal, FactKind.AMOUNT]
 """A money amount in euros."""
 
@@ -53,7 +66,8 @@ class FactLeaf:
 
     ``path`` names the field from the model's root; a step that passes through a
     repeated fact ends in ``SEQUENCE_STEP``.  ``optional`` says the leaf itself may be absent and
-    ``in_optional_group`` that a group above it may be.
+    ``in_optional_group`` that a group above it may be.  ``internal`` says the fact is marked
+    :data:`Internal`.
     """
 
     path: tuple[str, ...]
@@ -61,6 +75,7 @@ class FactLeaf:
     tokens: type[StrEnum] | None
     optional: bool
     in_optional_group: bool
+    internal: bool = False
 
     @property
     def dotted(self) -> str:
@@ -73,9 +88,10 @@ class _Unwrapped:
     base: object
     markers: tuple[FactKind, ...]
     optional: bool
+    internal: bool
 
 
-def _unwrap(annotation: object, markers: tuple[FactKind, ...] = ()) -> _Unwrapped:
+def _unwrap(annotation: object, markers: tuple[FactKind, ...] = (), *, internal: bool = False) -> _Unwrapped:
     optional = False
     collected_markers: list[FactKind] = list(markers)
     while True:
@@ -87,12 +103,13 @@ def _unwrap(annotation: object, markers: tuple[FactKind, ...] = ()) -> _Unwrappe
             args: tuple[object, ...] = typing.get_args(annotation)
             annotation, *metadata = args
             collected_markers.extend(item for item in metadata if isinstance(item, FactKind))
+            internal = internal or Internal in metadata
             continue
         if origin in {typing.Union, types.UnionType}:
             annotation, union_optional = _unwrap_union(annotation)
             optional = optional or union_optional
             continue
-        return _Unwrapped(annotation, tuple(collected_markers), optional)
+        return _Unwrapped(annotation, tuple(collected_markers), optional, internal)
 
 
 def _unwrap_union(annotation: object) -> tuple[object, bool]:
@@ -105,6 +122,10 @@ def _unwrap_union(annotation: object) -> tuple[object, bool]:
 
 def _field_markers(field: FieldInfo) -> tuple[FactKind, ...]:
     return tuple(item for item in field.metadata if isinstance(item, FactKind))
+
+
+def _field_is_internal(field: FieldInfo) -> bool:
+    return Internal in field.metadata
 
 
 def _kind_of(base: object, markers: tuple[FactKind, ...], path: str) -> tuple[FactKind, type[StrEnum] | None]:
@@ -151,7 +172,7 @@ def _field_leaves(
     in_optional_group: bool,
 ) -> tuple[FactLeaf, ...]:
     path = (*prefix, name)
-    unwrapped = _unwrap(field.annotation, _field_markers(field))
+    unwrapped = _unwrap(field.annotation, _field_markers(field), internal=_field_is_internal(field))
     base: object = unwrapped.base
     optional = unwrapped.optional or not field.is_required()
     if isinstance(base, type) and issubclass(base, BaseModel):
@@ -167,9 +188,9 @@ def _field_leaves(
                 _prefix=(*prefix, f"{name}{SEQUENCE_STEP}"),
                 _in_optional_group=in_optional_group or optional,
             )
-        return (FactLeaf(path, FactKind.ROWS, None, optional, in_optional_group),)
+        return (FactLeaf(path, FactKind.ROWS, None, optional, in_optional_group, unwrapped.internal),)
     kind, tokens = _kind_of(unwrapped.base, unwrapped.markers, ".".join(path))
-    return (FactLeaf(path, kind, tokens, optional, in_optional_group),)
+    return (FactLeaf(path, kind, tokens, optional, in_optional_group, unwrapped.internal),)
 
 
 def indexed_to_step_path(path: str) -> str:
@@ -187,6 +208,8 @@ __all__ = [
     "ClassKey",
     "FactKind",
     "FactLeaf",
+    "FactVisibility",
+    "Internal",
     "Share",
     "fact_leaves",
     "indexed_to_step_path",

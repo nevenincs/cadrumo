@@ -21,11 +21,16 @@ from ...core.tipos_actividad import TipoActividad
 from ...domain.renta.actividad_asset.claims import last_day_covered
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind, ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
-from ...domain.renta.actividad_asset.fact_leaves import FactKind, indexed_to_step_path
+from ...domain.renta.actividad_asset.fact_leaves import SEQUENCE_STEP, FactKind, indexed_to_step_path
 from ...domain.renta.actividad_asset.lifecycle import AcquisitionShape, AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
 from ..operations.public_scalar import PublicDecimal
-from .fact_wording import timeline_labelled_fields, timeline_token_families
+from .fact_wording import (
+    timeline_field_paths,
+    timeline_internal_fields,
+    timeline_labelled_fields,
+    timeline_token_families,
+)
 from .schedule_walk import PlanFigureAbsence
 
 ACTIVITY_ASSET_LABEL_NAMESPACE: Final = "ledger.actividad_asset."
@@ -46,10 +51,29 @@ Derived from the models a record is made of, with a repeated row's index replace
 TIMELINE_LABELLED_FIELDS: Final[Mapping[str, FactKind]] = timeline_labelled_fields()
 """The timeline fields whose values are worded by a label: a share, or a table class."""
 
+TIMELINE_INTERNAL_FIELDS: Final[frozenset[str]] = timeline_internal_fields()
+"""The record fields no operator states, which the timeline never shows a change of."""
+
+TIMELINE_FIELD_PATHS: Final[tuple[str, ...]] = timeline_field_paths()
+"""Every fact the timeline can show a change of; the catalogue words each as ``<namespace>field.<path>``."""
+
+TIMELINE_FIELD_FAMILY: Final = "field"
+
 
 def activity_asset_label_key(family: str, token: StrEnum) -> str:
     """Name the catalogue key that words one token of a family."""
     return f"{ACTIVITY_ASSET_LABEL_NAMESPACE}{family}.{token.value}"
+
+
+def timeline_field_word_key(path: str) -> str:
+    """Name the catalogue key that words one timeline fact, given its path with ``[]`` for a repeated row."""
+    return f"{ACTIVITY_ASSET_LABEL_NAMESPACE}{TIMELINE_FIELD_FAMILY}.{path.replace(SEQUENCE_STEP, '')}"
+
+
+def timeline_field_key(field: str) -> str | None:
+    """Name the catalogue key of a timeline field, or ``None`` when no fact of the timeline has that path."""
+    path = indexed_to_step_path(field)
+    return timeline_field_word_key(path) if path in TIMELINE_FIELD_PATHS else None
 
 
 def timeline_token_key(field: str, value: str | None) -> str | None:
@@ -291,6 +315,8 @@ class ActivityAssetTimelineChange(_ReadModel):
     """One field a record changed, as display text."""
 
     field: str = Field(min_length=1, max_length=256)
+    field_key: str | None = None
+    """The catalogue key that words ``field``; null for a path no fact of the timeline has."""
     before: str | None = None
     after: str | None = None
     before_key: str | None = None
@@ -471,6 +497,9 @@ __all__ = [
     "DISPOSAL_FINDING_FAMILY",
     "NON_DEDUCTIBLE_IVA_STATE_FAMILY",
     "PLAN_ADVISORY_FAMILY",
+    "TIMELINE_FIELD_FAMILY",
+    "TIMELINE_FIELD_PATHS",
+    "TIMELINE_INTERNAL_FIELDS",
     "TIMELINE_LABELLED_FIELDS",
     "TIMELINE_TOKEN_FAMILIES",
     "ActivityAssetAcquisitionCandidate",
@@ -506,5 +535,7 @@ __all__ = [
     "ActivityAssetTimelineEvent",
     "activity_asset_label_key",
     "project_reason_facts",
+    "timeline_field_key",
+    "timeline_field_word_key",
     "timeline_token_key",
 ]

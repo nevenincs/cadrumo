@@ -5092,6 +5092,104 @@ ledger:
       claim: Depreciation recorded
       descriptor: Description added
       revision: Tax facts recorded
+    field:
+      acquired_condition: Condition when acquired
+      acquisition:
+        invoice_evidence_id: Invoice or document reference
+      acquisition_shape: Kind of acquisition
+      amortization:
+        approved_plan:
+          annual_amounts:
+            amount: Planned amount for the year
+            tax_year: Tax year of the planned amount
+          approval_kind: How the plan was approved
+          approval_reference: Reference of the approved plan
+          resolved_on: Plan resolved on
+          submitted_on: Plan submitted on
+        authority_class_key: Group in the official table
+        charging_infrastructure:
+          installation_certificate_reference: Installation certificate
+          technical_documentation_reference: Technical documentation
+        digit_order: Order of the digits
+        linear_coefficient: Coefficient
+        low_value:
+          election_reference: Reference of your choice
+          new_material_evidence_reference: Evidence of the election
+        method: Method
+        regime: Direct estimation modality
+        renewable_self_consumption:
+          documentation_kind: Kind of documentation
+          documentation_reference: Documentation reference
+          made_available_on: Date made available
+          purpose: Purpose of the installation
+          replaces_fossil_installation: Replaces a fossil-fuel installation
+          required_by_building_code: Required by the building code
+        research_development_evidence_reference: Research and development evidence
+        shift_hours_per_day: Hours in use per day
+        small_enterprise:
+          evidence_reference: Evidence of small-company status
+          made_available_on: Date made available
+          prior_period_net_turnover: Net turnover of the previous period
+        sum_of_digits_period_years: Sum-of-digits period (years)
+        used_original_price:
+          determination: How the originating price is set
+          evidence_reference: Evidence of the originating price
+          original_price: Originating price
+        useful_life:
+          ends_on: Useful life ends on
+          evidence_reference: Evidence of the useful life
+      amount: Amount
+      asset_kind: Kind
+      basis:
+        basis_amount: Depreciable basis
+        business_use_share: Business use share
+        construction_cost: Cost of the building
+        is_property: Is a property
+        land_cost: Cost of the land
+        non_deductible_iva: Non-deductible IVA
+        office_area: Area used for the activity (m²)
+        ownership_mode: How you own it
+        ownership_share: Your share of the property
+        prior_allocation_provenance: Where the earlier split comes from
+        stage: How you came to own it
+        total_area: Total area (m²)
+      building_construction_date: Date the building was built
+      declared_acquisition_date: Purchase date
+      declared_activity: Activity
+      description: Description
+      disposal:
+        disposal_date: Last day of service
+        later_affectation_on: Later affectation to the activity on
+        market_value: Market value (if stated)
+        prior_free_depreciation_regime: Earlier libertad de amortización
+        proceeds: Proceeds
+        reason: Reason
+        transmission_costs: Transmission costs
+      document_kind: Document kind
+      document_number: Document number
+      further_acquisitions:
+        lineage:
+          invoice_evidence_id: Invoice or document reference
+        shape: Kind of acquisition
+      in_service_date: In service from
+      name: Name
+      opening_history:
+        accumulated_amount: Amortisation already deducted
+        amortization_method: Method used before
+        covered_through_tax_year: Covered through tax year
+        status: Amortisation before entry
+      out_of_service_date: Out of service from
+      residual_value: Residual value
+      serial_number: Serial number
+      supplier_name: Supplier
+      supplier_tax_id: Supplier tax ID
+      vehicle_affectation:
+        category: Kind of vehicle
+        electric_propulsion: Electric drive (if any)
+        evidence_reference: Evidence of how the vehicle is used
+        listed_use: Listed business use (if any)
+        private_use: Private use
+        recorded_in_activity_books: Recorded in the books of the activity
     flag:
       'false': 'No'
       'true': 'Yes'

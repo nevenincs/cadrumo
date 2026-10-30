@@ -5190,6 +5190,106 @@ ledger:
       claim: Dotació registrada
       descriptor: Descripció afegida
       revision: Dades fiscals registrades
+    field:
+      acquired_condition: Estat en adquirir-lo
+      acquisition:
+        invoice_evidence_id: Referència de la factura o del document
+      acquisition_shape: Tipus d'adquisició
+      amortization:
+        approved_plan:
+          annual_amounts:
+            amount: Import del pla per a l'exercici
+            tax_year: Exercici de l'import del pla
+          approval_kind: Forma d'aprovació del pla
+          approval_reference: Referència del pla aprovat
+          resolved_on: Pla resolt el
+          submitted_on: Pla presentat el
+        authority_class_key: Grup de la taula oficial
+        charging_infrastructure:
+          installation_certificate_reference: Certificat de la instal·lació
+          technical_documentation_reference: Documentació tècnica
+        digit_order: Ordre dels dígits
+        linear_coefficient: Coeficient
+        low_value:
+          election_reference: Referència de la teva elecció
+          new_material_evidence_reference: Justificant de l'elecció
+        method: Mètode
+        regime: Modalitat d'estimació directa
+        renewable_self_consumption:
+          documentation_kind: Tipus de documentació
+          documentation_reference: Referència de la documentació
+          made_available_on: Data de posada a disposició
+          purpose: Finalitat de la instal·lació
+          replaces_fossil_installation: Substitueix una instal·lació de combustible
+            fòssil
+          required_by_building_code: Exigida pel codi tècnic de l'edificació
+        research_development_evidence_reference: Justificant de recerca i desenvolupament
+        shift_hours_per_day: Hores d'ús al dia
+        small_enterprise:
+          evidence_reference: Justificant d'empresa de reduïda dimensió
+          made_available_on: Data de posada a disposició
+          prior_period_net_turnover: Import net de la xifra de negocis del període
+            anterior
+        sum_of_digits_period_years: Període de la suma de dígits (anys)
+        used_original_price:
+          determination: Com es fixa el preu originari
+          evidence_reference: Justificant del preu originari
+          original_price: Preu originari
+        useful_life:
+          ends_on: Final de la vida útil
+          evidence_reference: Justificant de la vida útil
+      amount: Import
+      asset_kind: Tipus
+      basis:
+        basis_amount: Base amortitzable
+        business_use_share: Percentatge d'ús empresarial
+        construction_cost: Cost de la construcció
+        is_property: És un immoble
+        land_cost: Cost del sòl
+        non_deductible_iva: IVA no deduïble
+        office_area: Superfície usada per a l'activitat (m²)
+        ownership_mode: Com és la titularitat
+        ownership_share: La teva quota de l'immoble
+        prior_allocation_provenance: D'on surt el repartiment anterior
+        stage: Com va arribar a ser teu
+        total_area: Superfície total (m²)
+      building_construction_date: Data de construcció de l'edifici
+      declared_acquisition_date: Data de compra
+      declared_activity: Activitat
+      description: Descripció
+      disposal:
+        disposal_date: Últim dia de servei
+        later_affectation_on: Afectació posterior a l'activitat el
+        market_value: Valor de mercat (si s'indica)
+        prior_free_depreciation_regime: Llibertat d'amortització anterior
+        proceeds: Import obtingut
+        reason: Motiu
+        transmission_costs: Despeses de transmissió
+      document_kind: Tipus de document
+      document_number: Número de document
+      further_acquisitions:
+        lineage:
+          invoice_evidence_id: Referència de la factura o del document
+        shape: Tipus d'adquisició
+      in_service_date: En servei des de
+      name: Nom
+      opening_history:
+        accumulated_amount: Amortització ja deduïda
+        amortization_method: Mètode aplicat abans
+        covered_through_tax_year: Coberta fins a l'exercici
+        status: Amortització anterior a l'entrada
+      out_of_service_date: Baixa a partir del
+      residual_value: Valor residual
+      serial_number: Número de sèrie
+      supplier_name: Proveïdor
+      supplier_tax_id: NIF del proveïdor
+      vehicle_affectation:
+        category: Tipus de vehicle
+        electric_propulsion: Propulsió elèctrica (si en té)
+        evidence_reference: Justificant de l'ús del vehicle
+        listed_use: Ús professional de la llista (si n'hi ha)
+        private_use: Ús privat
+        recorded_in_activity_books: Anotat als llibres de l'activitat
     flag:
       'false': 'No'
       'true': Sí
