@@ -204,12 +204,7 @@ async def operate(
             outcome = "raised"
             try:
                 await _dispatch_request(channel, operations, request, uploads)
-                # Reads already validate custody. A staged upload still needs
-                # the pass if that validation retired any of its sessions.
-                expiry_needed = not (
-                    (_is_read(request) or isinstance(request, ProfileWorkerContractRequest))
-                    and uploads.seconds_until_expiry() is None
-                )
+                expiry_needed = _needs_upload_expiry(request, uploads)
                 outcome = "completed"
             except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
                 outcome = "refused"
@@ -238,6 +233,18 @@ async def operate(
     except Exception:
         failed.set()
         raise
+
+
+def _needs_upload_expiry(request: object, uploads: WorkerSubmissionStaging) -> bool:
+    """Skip expiry only after custody-validated reads with no staged uploads left.
+
+    A staged upload still needs the pass if that validation retired any of
+    its sessions. Other requests always wake the expiry owner.
+    """
+    return not (
+        (_is_read(request) or isinstance(request, ProfileWorkerContractRequest))
+        and uploads.seconds_until_expiry() is None
+    )
 
 
 async def _dispatch_request(

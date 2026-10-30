@@ -191,22 +191,17 @@ class OperationFrontend:
         A refusal, changed document or total deadline discards partial output.
         When supplied, ``page_timeout`` also bounds each individual exchange.
         """
-        timeout_deadline = deadline_after(timeout)
-        if deadline is not None and not math.isfinite(deadline):
-            raise ValueError("result deadline must be finite")
-        deadline = timeout_deadline if deadline is None else min(timeout_deadline, deadline)
-        if page_timeout is not None:
-            # Validate before any page is requested, including for an empty budget.
-            deadline_after(page_timeout)
+        deadline = _result_deadline(timeout, deadline, page_timeout)
         collected = bytearray()
         digest: ContentDigest | None = None
         total: int | None = None
         try:
             while total is None or len(collected) < total:
                 remaining_budget(deadline)
-                page_deadline = deadline if page_timeout is None else min(deadline, deadline_after(page_timeout))
                 page = self.read_result_page(
-                    result, ProjectionPageRequest(offset=len(collected), expected_digest=digest), deadline=page_deadline
+                    result,
+                    ProjectionPageRequest(offset=len(collected), expected_digest=digest),
+                    deadline=_result_page_deadline(deadline, page_timeout),
                 )
                 if total is not None and page.total_bytes != total:
                     raise RefusalError(RefusalCode.INVALID_FRAME)
@@ -221,6 +216,22 @@ class OperationFrontend:
 
 
 _RESULT_DOCUMENT = TypeAdapter(dict[str, JsonValue])
+
+
+def _result_page_deadline(deadline: float, page_timeout: float | None) -> float:
+    """Bound the next exchange by its own timeout and the whole document's budget."""
+    return deadline if page_timeout is None else min(deadline, deadline_after(page_timeout))
+
+
+def _result_deadline(timeout: float, deadline: float | None, page_timeout: float | None) -> float:
+    timeout_deadline = deadline_after(timeout)
+    if deadline is not None and not math.isfinite(deadline):
+        raise ValueError("result deadline must be finite")
+    effective = timeout_deadline if deadline is None else min(timeout_deadline, deadline)
+    if page_timeout is not None:
+        # Validate before any page is requested, including for an empty budget.
+        deadline_after(page_timeout)
+    return effective
 
 
 def _validated_result_document(

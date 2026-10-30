@@ -574,6 +574,16 @@ class ViewStreamRelay:
 
     def _relay_image(self, worker: ViewWorkerLeg, announcement: ViewImage) -> None:
         """Pass one image through chunk by chunk, or read and drop it when the window has no credit."""
+        leg = self._take_image_credit(worker, announcement)
+        if leg is not None and not leg.write_lock.acquire(timeout=_FRAME_SECONDS):
+            leg = None
+        if leg is not None and leg.unbound:
+            # Unbound while this waited for the writer: the notice may already have gone, so no new image starts.
+            leg.write_lock.release()
+            leg = None
+        self._forward_image_chunks(worker, announcement, leg)
+
+    def _take_image_credit(self, worker: ViewWorkerLeg, announcement: ViewImage) -> ViewWindowLeg | None:
         with self._guard:
             if worker.credit == 0:
                 raise _violation("view_image_without_credit")
@@ -586,13 +596,7 @@ class ViewStreamRelay:
                 leg.credit -= 1
             else:
                 leg = None
-        if leg is not None and not leg.write_lock.acquire(timeout=_FRAME_SECONDS):
-            leg = None
-        if leg is not None and leg.unbound:
-            # Unbound while this waited for the writer: the notice may already have gone, so no new image starts.
-            leg.write_lock.release()
-            leg = None
-        self._forward_image_chunks(worker, announcement, leg)
+        return leg
 
     def _send_to_window(self, leg: ViewWindowLeg | None, frame: bytes) -> ViewWindowLeg | None:
         """Write one frame to a window whose writer lock is held; a failed window is let go.
