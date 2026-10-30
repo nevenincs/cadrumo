@@ -544,6 +544,30 @@ def test_dt12_reduccion_advisory_message_is_localised(
     }
 
 
+@pytest.mark.parametrize(
+    ("ingreso", "reduccion", "expect_finding"),
+    [
+        (Decimal("20000"), Decimal("0"), False),
+        (Decimal("20000.01"), Decimal("0"), True),
+        (Decimal("25000"), Decimal("100"), False),
+    ],
+)
+def test_dt12_reduccion_advisory_threshold_is_the_registry_declared_bound(
+    authority_operation: PinnedAuthorityOperation,
+    ingreso: Decimal,
+    reduccion: Decimal,
+    expect_finding: bool,
+) -> None:
+    """The advisory fires strictly above the mapping fact's threshold and only with a zero reducción."""
+    finding = dt12_reduccion_advisory_finding(
+        _dt12_revision(),
+        {_DT12_INGRESO_CASILLA: ingreso, _DT12_REDUCCION_CASILLA: reduccion},
+        operation=authority_operation,
+    )
+
+    assert (finding is not None) is expect_finding
+
+
 # ---------------------------------------------------------------------------
 # contract/contract — art. 20 LIRPF reducción advisory
 # ---------------------------------------------------------------------------
