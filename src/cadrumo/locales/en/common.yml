@@ -1074,6 +1074,8 @@ desktop:
     not_bundled: Documentation is not available in this installation.
     show: Show the docs
     unavailable: The documentation couldn't be opened. Try again later.
+  error:
+    internal: An internal error occurred. Open Logs for details.
   google:
     checking: Checking the Google sign-in…
     not_in_this_build: Google sign-in isn't available right now.

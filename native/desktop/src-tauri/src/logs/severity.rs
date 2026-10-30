@@ -25,6 +25,9 @@ fn is_project_python_logger(name: &str) -> bool {
 }
 
 pub fn level(event: &Event) -> Level {
+    if let Some(fact) = &event.desktop_diagnostic {
+        return fact.level;
+    }
     if matches!(event.kind, EventKind::Panic) {
         return Level::Critical;
     }

@@ -59,6 +59,7 @@ test("the Tauri session forwards archive and delete, including refusals", async 
       __TAURI_INTERNALS__: {
         async invoke(command: string, args: unknown) {
           calls.push({ command, args });
+          if (command === "desktop_frontend_diagnostic") return null;
           if (fail) throw { code: "agent_conversation_delete_incomplete" };
           return null;
         },
@@ -89,6 +90,19 @@ test("the Tauri session forwards archive and delete, including refusals", async 
     {
       command: "agent_conversation_delete",
       args: { conversationId: "r-partial", token: "a".repeat(64) },
+    },
+    {
+      command: "desktop_frontend_diagnostic",
+      args: {
+        report: {
+          event: "command_rejected",
+          level: "ERROR",
+          command: "agent_conversation_delete",
+          code: "agent_conversation_delete_incomplete",
+          dropped: 0,
+        },
+        token: "a".repeat(64),
+      },
     },
   ]);
   expect(result.refusal).toEqual({

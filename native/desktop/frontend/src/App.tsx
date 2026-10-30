@@ -1,3 +1,7 @@
+import {
+  notifyInternalFailure,
+  observeInternalFailures,
+} from "./shell/internalFailures";
 import { useLanguage } from "./shell/useLanguage";
 import { saveLogs } from "./shell/saveLogs";
 import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
@@ -351,8 +355,10 @@ export function App({ host }: { host: Host }) {
       .guardClose(() =>
         guardNavigation(
           { kind: "close" },
-          () => void windowPort.action("close_now"),
-          () => void windowPort.action("keep_open"),
+          () =>
+            void windowPort.action("close_now").catch(notifyInternalFailure),
+          () =>
+            void windowPort.action("keep_open").catch(notifyInternalFailure),
         ),
       )
       .then((stop) => {
@@ -835,6 +841,11 @@ export function App({ host }: { host: Host }) {
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
+
+  useEffect(
+    () => observeInternalFailures(() => say(t("desktop.error.internal"))),
+    [say, t],
+  );
 
   const previousManager = useRef(account.manager?.state);
   useEffect(() => {

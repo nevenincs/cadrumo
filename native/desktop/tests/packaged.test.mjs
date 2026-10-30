@@ -1763,7 +1763,9 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       watched: watched.map(({ commandLine: _, ...p }) => p),
     });
     const closeStarted = Date.now();
-    await input.post(hostPid, "close");
+    // Exercise the principal window's actual button and authenticated IPC;
+    // WM_CLOSE alone cannot catch a broken titlebar command.
+    await session.page.locator(".window-close").click();
     const closed = await exited(host.exit, 15000);
     await sleep(5000);
     const now = await input.processes(PROCESS_NAMES);
@@ -1774,7 +1776,7 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
     const trackedLeft = tracked.filter((p) => now.some((q) => q.pid === p.pid));
     await check(
       "close-settles",
-      "closing the window ends the host within 10 s and leaves no child process",
+      "the titlebar close button ends the host within 10 s and leaves no child process",
       async () =>
         closeVerdict({
           exitCode: closed ? closed.code : null,
@@ -1784,6 +1786,33 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
             ...trackedLeft.filter((p) => !left.some((q) => q.pid === p.pid)),
           ],
         }),
+    );
+    await check(
+      "close-flushes-diagnostics",
+      "the titlebar close persists its final host event before process exit",
+      async () => {
+        const records = readFileSync(
+          resolve(projected.logs, "cadrumo-native.jsonl"),
+          "utf8",
+        )
+          .trim()
+          .split(/\r?\n/)
+          .map((line) => JSON.parse(line));
+        const stops = records.filter(
+          (event) => event.hostPid === hostPid && event.kind === "host_stopped",
+        );
+        assert.equal(
+          stops.length,
+          1,
+          "one final event for the closing host must reach disk",
+        );
+        assert.equal(stops[0].hostExitCode, 0);
+        return {
+          verdict: PASS,
+          detail:
+            "the closing host's final successful event was drained to disk",
+        };
+      },
     );
     await experiment(
       "close-while-paused",

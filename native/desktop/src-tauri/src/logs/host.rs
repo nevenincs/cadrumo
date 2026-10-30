@@ -75,6 +75,7 @@ impl HostEvents {
                 notice.outcome = None;
                 notice.host_exit_code = None;
                 notice.panic = None;
+                notice.desktop_diagnostic = None;
                 fresh.push(entry(&notice));
             }
             self.write_failure = failure;
@@ -319,13 +320,44 @@ pub(super) fn entry(event: &Event) -> Entry {
             message.push_str(&format!(" [{chain}]"));
         }
     }
+    if let Some(fact) = &event.desktop_diagnostic {
+        message = format!("{}_{}", token(fact.origin), token(fact.event));
+        context.insert("diagnostic_event".into(), Value::from(token(fact.event)));
+        context.insert("diagnostic_origin".into(), Value::from(token(fact.origin)));
+        if let Some(logger) = &fact.logger {
+            context.insert("native_logger".into(), Value::from(logger.clone()));
+            message.push_str(&format!(": {logger}"));
+        }
+        if fact.dropped != 0 {
+            context.insert("dropped_reports".into(), Value::from(fact.dropped));
+        }
+        for (name, value) in [("line", fact.line), ("column", fact.column)] {
+            if let Some(value) = value {
+                context.insert(name.into(), Value::from(value));
+            }
+        }
+        if let Some(command) = &fact.command {
+            message.push_str(&format!(": {command}"));
+            context.insert("command".into(), Value::from(command.clone()));
+        }
+        if let Some(code) = fact.code {
+            message.push_str(&format!(": {}", token(code)));
+            context.insert("reason_code".into(), Value::from(token(code)));
+        }
+    }
     let level = super::severity::level(event);
     Entry {
         source,
         timestamp: utc(event.timestamp_ms),
         timestamp_ms: Some(event.timestamp_ms),
         level: Some(level),
-        logger: Some(logger.to_owned()),
+        logger: Some(
+            event
+                .desktop_diagnostic
+                .as_ref()
+                .map_or(logger, |fact| fact.logger.as_deref().unwrap_or("frontend"))
+                .to_owned(),
+        ),
         message,
         detail: None,
         process: Some(process),
@@ -428,6 +460,43 @@ fn utc(epoch_ms: u64) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn frontend_severities_and_command_context_reach_the_normal_log_view() {
+        use super::{HostEvents, Level};
+        use cadrumo_application::diagnostics::{
+            Diagnostics,
+            desktop::{DesktopDiagnostic, DesktopEvent},
+        };
+        let diagnostics = Diagnostics::default();
+        for level in [Level::Debug, Level::Info, Level::Warning, Level::Error] {
+            diagnostics.desktop_diagnostic(DesktopDiagnostic {
+                origin: cadrumo_application::diagnostics::desktop::DiagnosticOrigin::Frontend,
+                logger: None,
+                event: DesktopEvent::CommandRejected,
+                level,
+                command: Some("shell_window_action".into()),
+                code: Some(cadrumo_application::error::application::ErrorCode::WebviewFailed),
+                dropped: 2,
+                line: Some(12),
+                column: Some(7),
+            });
+        }
+        let records = HostEvents::default().poll(&diagnostics);
+        assert_eq!(
+            records
+                .iter()
+                .map(|record| record.level.unwrap())
+                .collect::<Vec<_>>(),
+            [Level::Debug, Level::Info, Level::Warning, Level::Error]
+        );
+        for record in records {
+            assert_eq!(record.context["command"], "shell_window_action");
+            assert_eq!(record.context["reason_code"], "webview_failed");
+            assert_eq!(record.context["dropped_reports"], 2);
+            assert_eq!(record.context["line"], 12);
+            assert!(record.message.contains("shell_window_action"));
+        }
+    }
     use super::*;
     use cadrumo_application::{
         diagnostics::EventKind,

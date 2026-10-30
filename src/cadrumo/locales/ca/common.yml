@@ -1106,6 +1106,8 @@ desktop:
     not_bundled: La documentació no està disponible en aquesta instal·lació.
     show: Mostra la documentació
     unavailable: No s'ha pogut obrir la documentació. Torna-ho a provar més tard.
+  error:
+    internal: S'ha produït un error intern. Obre els registres per veure'n els detalls.
   google:
     checking: Comprovant l'accés a Google…
     not_in_this_build: L'inici de sessió amb Google no està disponible ara.

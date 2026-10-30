@@ -216,6 +216,8 @@ fn main() {
         }
     };
     diagnostics.host_stopped(code);
+    // process::exit skips Drop, including the diagnostic writer's drain.
+    let _ = diagnostics.flush_logs(std::time::Duration::from_millis(250));
     std::process::exit(code);
 }
 

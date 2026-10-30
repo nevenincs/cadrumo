@@ -489,6 +489,8 @@ export type DiagnosticsEventKind =
   | "child_terminated"
   | "helper_timing"
   | "helper_result"
+  | "service_event"
+  | "desktop_diagnostic"
   | "failure"
   | "host_stopped"
   | "window_close_requested"
@@ -539,6 +541,25 @@ export type DiagnosticsEvent = {
   helperTiming?: HelperTiming;
   helperResult?: HelperResult;
   panic?: PanicFact;
+  desktopDiagnostic?: DesktopDiagnostic;
+};
+
+export type DesktopDiagnostic = {
+  origin: "frontend" | "rust" | "tauri";
+  logger: string | null;
+  event:
+    | "command_rejected"
+    | "uncaught_error"
+    | "unhandled_rejection"
+    | "react_error"
+    | "console"
+    | "native_log";
+  level: LogLevel;
+  command: string | null;
+  code: HostErrorCode | null;
+  dropped: number;
+  line: number | null;
+  column: number | null;
 };
 
 /** `PanicFact` in `native/application/src/diagnostics/panic.rs`: never the message. */
@@ -1694,6 +1715,25 @@ export interface HostCommands {
   };
   shell_window_action: {
     args: Authorized<{ action: WindowAction }>;
+    result: null;
+  };
+  desktop_frontend_diagnostic: {
+    args: Authorized<{
+      report: {
+        event:
+          | "command_rejected"
+          | "uncaught_error"
+          | "unhandled_rejection"
+          | "react_error"
+          | "console";
+        level: LogLevel;
+        command: string | null;
+        code: string | null;
+        dropped: number;
+        line?: number;
+        column?: number;
+      };
+    }>;
     result: null;
   };
   shell_window_subscribe: {

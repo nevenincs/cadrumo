@@ -117,6 +117,7 @@ pub fn run(
     parent: crate::environment::Parent,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<i32> {
+    logs::native::install(diagnostics.clone());
     if cfg!(target_os = "macos") {
         return Err(ApplicationError::new(
             ErrorCode::UnsupportedPlatform,
@@ -137,33 +138,36 @@ pub fn run(
     let token = ShellToken::mint()?;
     let origins = shell::origins(context.config(), window);
     let script = token.script(&origins)?;
-    let handler = dispatch(
-        vec![
-            terminal::commands(),
-            docs::commands(),
-            logs::commands(),
-            shell::commands(),
-            shell::channel::commands(),
-            shell::window_controls::commands(),
-            shell::about::commands(),
-            shell::sign_in::commands(),
-            shell::provider_settings::commands(),
-            shell::agent_access::commands(),
-            shell::language::commands(),
-            shell::setup::commands(),
-            shell::user_profile::commands(),
-            shell::user_profile::censo::commands(),
-            shell::aeat_sync::commands(),
-            shell::ledger::commands(),
-            shell::modelo::commands(),
-            shell::sede_view::commands(),
-            manager::commands(),
-            agent::commands(),
-            crate::startup::commands(),
-        ],
-        token,
-        diagnostics.clone(),
-    )?;
+    let modules = vec![
+        terminal::commands(),
+        docs::commands(),
+        logs::commands(),
+        shell::commands(),
+        shell::channel::commands(),
+        shell::window_controls::commands(),
+        shell::about::commands(),
+        shell::sign_in::commands(),
+        shell::provider_settings::commands(),
+        shell::agent_access::commands(),
+        shell::language::commands(),
+        shell::setup::commands(),
+        shell::user_profile::commands(),
+        shell::user_profile::censo::commands(),
+        shell::aeat_sync::commands(),
+        shell::ledger::commands(),
+        shell::modelo::commands(),
+        shell::sede_view::commands(),
+        manager::commands(),
+        agent::commands(),
+        crate::startup::commands(),
+    ];
+    let registered = logs::frontend::RegisteredCommands(
+        modules
+            .iter()
+            .flat_map(|module| module.names.iter().copied())
+            .collect(),
+    );
+    let handler = dispatch(modules, token, diagnostics.clone())?;
     let startup = Arc::new(crate::startup::Startup::new(
         root,
         parent,
@@ -174,6 +178,7 @@ pub fn run(
     let app = tauri::Builder::default()
         .plugin(crate::startup::plugin(diagnostics.clone()))
         .manage(startup.clone())
+        .manage(registered)
         .invoke_handler(handler)
         .channel_interceptor(shell::channel::interceptor(diagnostics.clone()))
         .setup(move |app| {

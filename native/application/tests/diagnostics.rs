@@ -141,6 +141,7 @@ fn rotation_bounds_files_and_capture_reports_discarded_bytes() {
             host_exit_code: None,
             lifecycle: None,
             webview_failure: None,
+            desktop_diagnostic: None,
             helper_timing: None,
             helper_result: None,
             service: None,
@@ -816,5 +817,49 @@ fn retrying_a_different_target_replays_all_events_and_preserves_the_active_sink_
     assert_eq!(
         fs::read_to_string(active.join("cadrumo-native.jsonl")).unwrap(),
         previous
+    );
+}
+
+#[test]
+fn frontend_diagnostics_are_persisted_with_their_original_severity() {
+    use cadrumo_application::diagnostics::{
+        desktop::{DesktopDiagnostic, DesktopEvent},
+        service::LogLevel,
+    };
+    let directory = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let diagnostics = Diagnostics::default();
+    diagnostics.configure(directory.path(), 1 << 20, 1).unwrap();
+    for level in [
+        LogLevel::Debug,
+        LogLevel::Info,
+        LogLevel::Warning,
+        LogLevel::Error,
+    ] {
+        diagnostics.desktop_diagnostic(DesktopDiagnostic {
+            origin: cadrumo_application::diagnostics::desktop::DiagnosticOrigin::Frontend,
+            logger: None,
+            event: DesktopEvent::Console,
+            level,
+            command: None,
+            code: None,
+            dropped: 0,
+            line: None,
+            column: None,
+        });
+    }
+    assert!(diagnostics.flush_logs(HANG));
+    let path = diagnostics.snapshot(u64::MAX).paths.unwrap().current;
+    let text = fs::read_to_string(path).unwrap();
+    let records: Vec<serde_json::Value> = text
+        .lines()
+        .map(|line| serde_json::from_str(line).unwrap())
+        .collect();
+    assert_eq!(records.len(), 4);
+    assert_eq!(
+        records
+            .iter()
+            .map(|record| record["desktopDiagnostic"]["level"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["DEBUG", "INFO", "WARNING", "ERROR"]
     );
 }

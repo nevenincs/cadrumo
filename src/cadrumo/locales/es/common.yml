@@ -1112,6 +1112,8 @@ desktop:
     not_bundled: La documentación no está disponible en esta instalación.
     show: Mostrar la documentación
     unavailable: No se ha podido abrir la documentación. Inténtalo más tarde.
+  error:
+    internal: Se ha producido un error interno. Abre los registros para ver los detalles.
   google:
     checking: Comprobando el acceso a Google…
     not_in_this_build: El inicio de sesión con Google no está disponible ahora.

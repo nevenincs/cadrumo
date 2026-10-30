@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { LogRecord, LogSourceStates } from "@/ipc/contract";
 import type { Host } from "./host";
+import { notifyInternalFailure } from "./internalFailures";
 
 const RECORD_CAP = 10000;
 
@@ -21,11 +22,23 @@ export function useHostLogs(host: Host) {
   }
   // Log batches: a bounded ring; a missing or unreadable source keeps its state.
   useEffect(() => {
+    const attachedAt = Date.now();
     let unsubscribe: (() => void) | null = null;
     let current = true;
     host
       .subscribeLogs((batch) => {
         if (!current) return;
+        if (
+          batch.records.some(
+            (record) =>
+              record.source === "host" &&
+              record.timestampMs !== null &&
+              record.timestampMs >= attachedAt &&
+              (record.level === "ERROR" || record.level === "CRITICAL") &&
+              record.context.diagnostic_origin !== "frontend",
+          )
+        )
+          notifyInternalFailure();
         setSourceStates(batch.states);
         setLog((held) => {
           const next = [...(held.records ?? []), ...batch.records];
@@ -42,7 +55,10 @@ export function useHostLogs(host: Host) {
         else stop();
       })
       .catch(() => {
-        if (current) setSourceStates("unavailable");
+        if (current) {
+          setSourceStates("unavailable");
+          notifyInternalFailure();
+        }
       });
     return () => {
       current = false;

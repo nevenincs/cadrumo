@@ -1,4 +1,4 @@
-import { Channel, invoke } from "@tauri-apps/api/core";
+import { Channel } from "@tauri-apps/api/core";
 import type {
   DesktopSetup,
   LogBatch,
@@ -24,7 +24,7 @@ import type { AgentViews } from "./agentViews";
 import type { AeatSignInStage } from "./aeatSyncPrepare";
 import type { Host } from "./host";
 import type { HostCall } from "./hostCall";
-import { hostCall } from "./hostCall";
+import { hostCall, observedInvoke } from "./hostCall";
 import type {
   ProviderSignInSnapshot,
   ProviderSettings,
@@ -84,7 +84,7 @@ export function tauriHost(): Host {
     profile?: string,
   ): Promise<Result> =>
     token
-      ? invoke<Result>(command, password, {
+      ? observedInvoke<Result>(token, command, password, {
           headers: {
             "x-cadrumo-token": token,
             ...(profile === undefined
@@ -433,7 +433,9 @@ function tauriProviderSettings(
     name: string,
     args: Record<string, string>,
   ): Promise<Result> =>
-    token ? invoke<Result>(name, { ...args, token }) : unavailable();
+    token
+      ? observedInvoke<Result>(token, name, { ...args, token })
+      : unavailable();
   return {
     status: () =>
       command<ProviderSettingsAnswer>("provider_settings_status", {}),
@@ -448,7 +450,8 @@ function tauriProviderSettings(
         throw refusal("base_url_rejected");
       const key = new TextEncoder().encode(secret);
       try {
-        return await invoke<ProviderSettingsRecord>(
+        return await observedInvoke<ProviderSettingsRecord>(
+          token,
           "provider_settings_set",
           key,
           {
@@ -502,7 +505,8 @@ function tauriProviderSettings(
         if (!token) return unavailable();
         const bytes = new TextEncoder().encode(code);
         try {
-          return await invoke<ProviderSignInSnapshot>(
+          return await observedInvoke<ProviderSignInSnapshot>(
+            token,
             "provider_sign_in_submit_code",
             bytes,
             {

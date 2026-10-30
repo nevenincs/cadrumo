@@ -99,7 +99,25 @@ fn presentation<R: Runtime>(window: &Window<R>) -> Result<Presentation> {
 }
 
 #[tauri::command]
-pub fn shell_window_action<R: Runtime>(window: Window<R>, action: Action) -> Result<()> {
+pub async fn shell_window_action<R: Runtime>(window: Window<R>, action: Action) -> Result<()> {
+    // Window operations can synchronously ask the event loop for state.
+    // Keep them outside WebView2's synchronous IPC callback.
+    let diagnostics = window
+        .try_state::<std::sync::Arc<crate::terminal::TerminalState>>()
+        .map(|state| state.launch.diagnostics.clone());
+    let result = tauri::async_runtime::spawn_blocking(move || perform_action(window, action))
+        .await
+        .map_err(|error| {
+            ApplicationError::new(ErrorCode::Panic, Operation::Webview).caused_by(error)
+        })
+        .and_then(|result| result);
+    if let (Err(error), Some(diagnostics)) = (&result, diagnostics) {
+        diagnostics.failure(error.clone());
+    }
+    result
+}
+
+fn perform_action<R: Runtime>(window: Window<R>, action: Action) -> Result<()> {
     main_window(&window)?;
     match action {
         Action::Minimize => window.minimize(),
@@ -109,7 +127,13 @@ pub fn shell_window_action<R: Runtime>(window: Window<R>, action: Action) -> Res
             if let Some(guard) = window.try_state::<CloseGuard>() {
                 guard.releasing.store(true, Ordering::Release);
             }
-            window.close()
+            let result = window.close();
+            if result.is_err()
+                && let Some(guard) = window.try_state::<CloseGuard>()
+            {
+                guard.releasing.store(false, Ordering::Release);
+            }
+            result
         }
         Action::KeepOpen => {
             if let Some(guard) = window.try_state::<CloseGuard>() {
@@ -223,6 +247,21 @@ mod tests {
     use super::*;
     use tauri::test::{mock_builder, mock_context, noop_assets};
 
+    #[tokio::test]
+    async fn the_principal_window_accepts_close_now_off_the_ipc_callback() {
+        let app = mock_builder()
+            .manage(CloseGuard::default())
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let main = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+        shell_window_action(main.as_ref().window().clone(), Action::CloseNow)
+            .await
+            .unwrap();
+        assert!(app.state::<CloseGuard>().releasing.load(Ordering::Acquire));
+    }
+
     #[test]
     fn old_cleanup_cannot_remove_a_replacement_subscription() {
         let app = mock_builder()
@@ -300,7 +339,7 @@ mod tests {
             .build()
             .unwrap();
         assert_eq!(
-            shell_window_action(other.as_ref().window().clone(), Action::Close)
+            perform_action(other.as_ref().window().clone(), Action::Close)
                 .unwrap_err()
                 .code,
             ErrorCode::InvalidArguments

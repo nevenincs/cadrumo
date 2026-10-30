@@ -1087,6 +1087,8 @@ desktop:
     not_bundled: A dokumentáció ebben a telepítésben nem érhető el.
     show: Dokumentáció megjelenítése
     unavailable: A dokumentációt nem sikerült megnyitni. Próbáld újra később.
+  error:
+    internal: Belső hiba történt. A részleteket a naplóban találod.
   google:
     checking: A Google-bejelentkezés ellenőrzése…
     not_in_this_build: A Google-bejelentkezés most nem érhető el.

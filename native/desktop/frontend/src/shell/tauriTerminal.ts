@@ -1,4 +1,4 @@
-import { Channel, invoke } from "@tauri-apps/api/core";
+import { Channel } from "@tauri-apps/api/core";
 import {
   TerminalFrameTag,
   type HostFailure,
@@ -8,7 +8,7 @@ import {
   type TerminalKind,
 } from "../ipc/contract";
 import type { TerminalEvent, TerminalSession } from "./host";
-import type { HostCall } from "./hostCall";
+import { observedInvoke, type HostCall } from "./hostCall";
 
 // One channel per session carries tagged frames in order: a tag byte, then
 // the payload. Data frames are the only bytes acknowledgements count.
@@ -166,7 +166,7 @@ export async function openTauriTerminal(
       delay = Math.min(RETRY_MAX_MS, delay * 2)
     ) {
       try {
-        await invoke("terminal_write", chunk, { headers });
+        await observedInvoke(token, "terminal_write", chunk, { headers });
         return;
       } catch (error) {
         if (!isQueueFull(error)) throw error;

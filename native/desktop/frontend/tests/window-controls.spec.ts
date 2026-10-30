@@ -14,6 +14,8 @@ test("window controls use authenticated commands and native presentation", async
       maximized: false,
       fullscreen: false,
       fail: false,
+      diagnostics: [] as Record<string, unknown>[],
+      crash: () => undefined as void,
       publish: (next: { maximized: boolean; fullscreen: boolean }) => {
         void next;
       },
@@ -29,6 +31,9 @@ test("window controls use authenticated commands and native presentation", async
           if (command.startsWith("shell_window_"))
             state.tokens.push(args.token);
           switch (command) {
+            case "desktop_frontend_diagnostic":
+              state.diagnostics.push(args.report as Record<string, unknown>);
+              return null;
             case "manager_status":
               return { state: "ready", failure: null };
             case "manager_subscribe":
@@ -48,6 +53,19 @@ test("window controls use authenticated commands and native presentation", async
                 id: number;
               };
               state.publish = (next) => channel.onmessage({ ...next });
+              state.crash = () =>
+                channel.onmessage(
+                  new Proxy(
+                    { maximized: false, fullscreen: false },
+                    {
+                      get(target, name) {
+                        if (name === "fullscreen")
+                          throw new Error("private-react-canary");
+                        return Reflect.get(target, name);
+                      },
+                    },
+                  ),
+                );
               state.publish(state);
               return channel.id;
             }
@@ -167,4 +185,84 @@ test("window controls use authenticated commands and native presentation", async
   await expect(
     page.getByText(label("desktop.titlebar.failed"), { exact: true }),
   ).toBeVisible();
+  const diagnostics = () =>
+    page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __windowTest: { diagnostics: Record<string, unknown>[] };
+          }
+        ).__windowTest.diagnostics,
+    );
+  await expect
+    .poll(async () =>
+      (await diagnostics()).some(
+        (record) =>
+          record.event === "command_rejected" &&
+          record.command === "shell_window_action" &&
+          record.code === "webview_failed",
+      ),
+    )
+    .toBe(true);
+  await page.evaluate(() => {
+    console.debug("private-diagnostic-canary");
+    console.info("private-diagnostic-canary");
+    console.warn("private-diagnostic-canary");
+    console.error("private-diagnostic-canary");
+    window.dispatchEvent(
+      new ErrorEvent("error", { message: "private-diagnostic-canary" }),
+    );
+    window.dispatchEvent(
+      new PromiseRejectionEvent("unhandledrejection", {
+        promise: Promise.resolve(),
+        reason: new Error("private-diagnostic-canary"),
+      }),
+    );
+  });
+  await expect(
+    page.getByText(label("desktop.error.internal"), { exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(async () =>
+      (await diagnostics())
+        .filter((record) => record.event === "console")
+        .map((record) => record.level),
+    )
+    .toEqual(["DEBUG", "INFO", "WARNING", "ERROR"]);
+  const reports = await diagnostics();
+  expect(reports.some((record) => record.event === "uncaught_error")).toBe(
+    true,
+  );
+  expect(reports.some((record) => record.event === "unhandled_rejection")).toBe(
+    true,
+  );
+  expect(JSON.stringify(reports)).not.toContain("private-diagnostic-canary");
+  await page.evaluate(() => {
+    (
+      window as unknown as { __windowTest: { crash: () => void } }
+    ).__windowTest.crash();
+  });
+  await expect(page.getByRole("alert")).toContainText(
+    label("desktop.error.internal"),
+  );
+  await expect
+    .poll(async () =>
+      (await diagnostics()).some((record) => record.event === "react_error"),
+    )
+    .toBe(true);
+  expect(JSON.stringify(await diagnostics())).not.toContain(
+    "private-react-canary",
+  );
+  // Even a fatal render error leaves the principal close control usable.
+  await page.evaluate(() => {
+    (
+      window as unknown as { __windowTest: { fail: boolean } }
+    ).__windowTest.fail = false;
+  });
+  await page
+    .getByRole("button", { name: label("desktop.titlebar.close"), exact: true })
+    .click();
+  await expect
+    .poll(async () => (await read()).actions.at(-1))
+    .toBe("close_now");
 });

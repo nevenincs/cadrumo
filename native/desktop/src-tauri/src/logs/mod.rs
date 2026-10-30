@@ -11,8 +11,10 @@
 //! commands and the page-load hook take a lock that is never held across
 //! file I/O or a delivery.
 mod format;
+pub(crate) mod frontend;
 mod host;
 mod manager;
+pub(crate) mod native;
 mod record;
 mod severity;
 mod tail;
@@ -485,8 +487,18 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
         .build()
 }
 
+#[tauri::command]
+fn desktop_frontend_diagnostic(
+    startup: State<'_, Arc<crate::startup::Startup>>,
+    commands: State<'_, frontend::RegisteredCommands>,
+    report: frontend::Report,
+) {
+    frontend::record(startup, commands, report);
+}
+
 pub fn commands<R: Runtime>() -> Commands<R> {
     crate::app::commands![
+        desktop_frontend_diagnostic,
         logs_subscribe,
         logs_unsubscribe,
         logs_export,

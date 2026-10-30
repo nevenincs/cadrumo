@@ -1,5 +1,6 @@
 #[cfg(any(test, feature = "diagnostics-test-support"))]
 pub mod delivery_wait;
+pub mod desktop;
 mod dispatch;
 pub mod helper;
 pub mod lifecycle;
@@ -44,6 +45,7 @@ pub enum EventKind {
     HelperTiming,
     HelperResult,
     ServiceEvent,
+    DesktopDiagnostic,
     Failure,
     HostStopped,
     WindowCloseRequested,
@@ -114,6 +116,8 @@ pub struct Event {
     pub service: Option<ServiceFact>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub panic: Option<PanicFact>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub desktop_diagnostic: Option<desktop::DesktopDiagnostic>,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -149,6 +153,7 @@ struct Context {
     helper_timing: Option<HelperTiming>,
     helper_result: Option<HelperResult>,
     service: Option<ServiceFact>,
+    desktop_diagnostic: Option<desktop::DesktopDiagnostic>,
 }
 type RecordedObserver = Arc<Mutex<Option<Arc<dyn Fn() + Send + Sync>>>>;
 
@@ -265,6 +270,7 @@ impl Diagnostics {
             helper_result: context.helper_result,
             service: context.service,
             panic: None,
+            desktop_diagnostic: context.desktop_diagnostic,
         };
         state.first_event_ms.get_or_insert(event.timestamp_ms);
         if let Some(writer) = self.writer.get()
@@ -302,6 +308,7 @@ impl Diagnostics {
             helper_result: None,
             service: None,
             panic: Some(fact),
+            desktop_diagnostic: None,
         };
         if let Some(mut state) = try_guard(&self.state) {
             state.next_event += 1;
@@ -441,6 +448,18 @@ impl Diagnostics {
             Context {
                 stage: Some(HostStage::Shutdown),
                 host_exit_code: Some(code),
+                ..Context::default()
+            },
+        );
+    }
+    pub fn desktop_diagnostic(&self, fact: desktop::DesktopDiagnostic) {
+        self.record(
+            EventKind::DesktopDiagnostic,
+            None,
+            None,
+            Context {
+                stage: Some(HostStage::Window),
+                desktop_diagnostic: Some(fact),
                 ..Context::default()
             },
         );

@@ -168,6 +168,7 @@ pub(super) fn parse(line: &[u8]) -> Option<Entry> {
         host_exit_code: wire.host_exit_code,
         lifecycle: wire.lifecycle,
         webview_failure: None,
+        desktop_diagnostic: None,
         helper_timing: None,
         helper_result: None,
         service: wire.service,

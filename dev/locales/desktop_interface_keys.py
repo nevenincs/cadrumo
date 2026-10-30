@@ -1083,6 +1083,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.split.swap",
         "desktop.table.resize_column",
         "desktop.titlebar.close",
+        "desktop.error.internal",
         "desktop.titlebar.failed",
         "desktop.titlebar.label",
         "desktop.titlebar.maximize",
