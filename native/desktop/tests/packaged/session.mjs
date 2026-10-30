@@ -334,9 +334,24 @@ export class Session {
               );
               this.cancelObservationWait = () => finish(resolve, null);
               this.page
-                .evaluate(drainTerminalObservation, OBSERVATION_LIMITS)
+                .evaluate(drainTerminalObservation, {
+                  ...OBSERVATION_LIMITS,
+                  transport: "json",
+                })
                 .then(
-                  (value) => finish(resolve, value),
+                  (value) => {
+                    try {
+                      finish(
+                        resolve,
+                        typeof value === "string" ? JSON.parse(value) : value,
+                      );
+                    } catch {
+                      finish(
+                        reject,
+                        new ObservationError("TerminalObservationBatchInvalid"),
+                      );
+                    }
+                  },
                   (error) => finish(reject, error),
                 );
             });

@@ -659,7 +659,9 @@ export function drainTerminalObservation(limits) {
     );
     if (!batch.records.length) break;
   }
-  return combined;
+  // Playwright otherwise recursively serializes every byte and record. Keep
+  // the same bounded batch in one scalar across the DevTools boundary.
+  return limits?.transport === "json" ? JSON.stringify(combined) : combined;
 }
 
 /** Renderer presence and pane visibility; this does not inspect GPU pixels. */

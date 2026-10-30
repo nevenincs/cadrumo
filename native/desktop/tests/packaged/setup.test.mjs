@@ -184,6 +184,93 @@ test("combined transport preserves the single oversized frame exception and glob
   }
 });
 
+test("the observation pump decodes bounded JSON batches with every byte and record intact", async () => {
+  const f = parserFixture();
+  const payloads = Array.from({ length: 1024 }, (_, index) =>
+    Uint8Array.from({ length: 127 }, (_, offset) => (index + offset) % 256),
+  );
+  const records = [
+    ...f.open,
+    ...payloads.flatMap((bytes, index) => [
+      f.record("frame", { index, bytes: [0, ...bytes] }),
+      f.record("ack", { session: 7, offset: (index + 1) * bytes.length }),
+    ]),
+  ];
+  const raw = rawDrainFixture(records);
+  const previous = globalThis.window;
+  globalThis.window = { __s10: raw.capture };
+  let drained;
+  const complete = new Promise((resolve) => {
+    drained = resolve;
+  });
+  const session = new Session({
+    browser: { on() {} },
+    page: {
+      on() {},
+      evaluate: async (read, limits) => {
+        assert.equal(limits.transport, "json");
+        const value = read(limits);
+        assert.equal(typeof value, "string");
+        return value;
+      },
+    },
+  });
+  session.observer.dispose();
+  session.observer = f.observer;
+  session.observationWake = new ObservationWake();
+  const accept = f.observer.accept.bind(f.observer);
+  f.observer.accept = async (batch) => {
+    assert(batch.records.length <= OBSERVATION_LIMITS.records);
+    assert(
+      batch.records.reduce(
+        (sum, record) => sum + (record.bytes?.length ?? 0),
+        0,
+      ) <= OBSERVATION_LIMITS.batchBytes,
+    );
+    await accept(batch);
+    if (!batch.more) drained();
+  };
+  try {
+    session.startObservation();
+    await Promise.race([complete, session.observationPump]);
+    assert.equal(session.observationFailure, null);
+    assert(Buffer.concat(f.writes).equals(Buffer.concat(payloads)));
+    assert.equal(f.observer.stats().dataFrames, payloads.length);
+    assert.equal(f.observer.current.get("python").next, payloads.length);
+    assert.equal(f.observer.current.get("python").acked, 127 * payloads.length);
+    assert.match(session.rows("python"), /parsed/);
+    assert(
+      raw.batches.every(
+        (batch) => batch.records <= OBSERVATION_LIMITS.batchRecords,
+      ),
+    );
+  } finally {
+    session.stopObservation();
+    await session.observationPump;
+    globalThis.window = previous;
+  }
+});
+
+test("JSON observation transport preserves malformed-batch refusal", async () => {
+  for (const value of ["{broken", '{"records":{}}', "true", "[]"]) {
+    const session = new Session({
+      browser: { on() {} },
+      page: { on() {}, evaluate: async () => value },
+    });
+    try {
+      session.startObservation();
+      await session.observationPump;
+      assert.equal(
+        session.observationFailure,
+        "TerminalObservationBatchInvalid",
+      );
+      assert.equal(session.observationStopped, true);
+    } finally {
+      session.stopObservation();
+    }
+  }
+});
+
 test("observation activity cannot be lost between a drain and its wait, and shutdown releases waits", async () => {
   const wake = new ObservationWake();
   const beforeDrain = wake.version;
