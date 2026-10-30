@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from decimal import Decimal
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Protocol, cast, get_args
 from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
@@ -13,10 +13,16 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ...domain.contribuyente.inventory.corrections import (
+    INVENTORY_CORRECTION_REFUSAL_REASONS,
+    inventory_refusal_key,
+    is_inventory_correction_refusal_reason,
+)
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
@@ -45,21 +51,36 @@ from .registered_execution_result import (
 )
 from .registered_requests import (
     INVENTORY_CONFLICT_REFUSAL_CODE,
+    INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
+    INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
     INVENTORY_NOT_FOUND_REFUSAL_CODE,
+    INVENTORY_RESTORE_OPERATION_DEFINITION_ID,
+    INVENTORY_RETIRE_OPERATION_DEFINITION_ID,
     INVENTORY_SERVICE_INPUT_REFUSAL_CODE,
     INVENTORY_VALIDATION_REFUSAL_CODE,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityRecordRequest,
+    InventoryCorrectRequest,
     InventoryCreateRequest,
+    InventoryDescribeRequest,
+    InventoryInspectRequest,
+    InventoryLedgerChangeOperationId,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementCorrectRequest,
+    InventoryMovementReverseRequest,
     InventoryMutationOperationId,
     InventoryOperationId,
     InventoryRefusalCode,
     InventoryRefusalReason,
+    InventoryRestoreRequest,
+    InventoryRetireRequest,
     InventoryValuationPreviewRequest,
 )
 from .registered_specs import INVENTORY_OPERATION_SHAPES
@@ -74,6 +95,20 @@ _SERVICE_INPUT_REASONS: dict[str, InventoryRefusalReason] = {
     "application.inventory.service.errors.duplicate_movement_id": "duplicate_movement_id",
     "application.inventory.service.errors.closing_authority_conflict": "closing_authority_conflict",
     "errors.refused.refused_profile_inventory_validation": "inventory_validation",
+    **{
+        inventory_refusal_key(reason): reason
+        for reason in INVENTORY_CORRECTION_REFUSAL_REASONS
+        if is_inventory_correction_refusal_reason(reason)
+    },
+}
+
+_LEDGER_CHANGE_OPERATION_IDS: dict[str, InventoryLedgerChangeOperationId] = {
+    INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID: "describe",
+    INVENTORY_CORRECT_OPERATION_DEFINITION_ID: "correct",
+    INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID: "movement.correct",
+    INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID: "movement.reverse",
+    INVENTORY_RETIRE_OPERATION_DEFINITION_ID: "retire",
+    INVENTORY_RESTORE_OPERATION_DEFINITION_ID: "restore",
 }
 
 
@@ -139,6 +174,17 @@ class InventoryOperationExecutor:
         profile_id: UUID,
         profile: str,
     ) -> str | OperationRefusalEvidence:
+        if self._definition_id == INVENTORY_INSPECT_OPERATION_DEFINITION_ID:
+            if not isinstance(payload, InventoryInspectRequest):
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            return await self._execute_inspect(request=payload, context=context, profile_id=profile_id, profile=profile)
+        if self._definition_id in _LEDGER_CHANGE_OPERATION_IDS:
+            return await self._execute_ledger_change(
+                request=payload,
+                context=context,
+                profile_id=profile_id,
+                profile=profile,
+            )
         if self._definition_id == INVENTORY_LIST_OPERATION_DEFINITION_ID:
             if not isinstance(payload, InventoryListRequest):
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -199,6 +245,85 @@ class InventoryOperationExecutor:
             return reference
 
         return await await_cancellation_complete(read(), task_name="inventory-list")
+
+    async def _execute_inspect(
+        self,
+        *,
+        request: InventoryInspectRequest,
+        context: OperationExecutorContext,
+        profile_id: UUID,
+        profile: str,
+    ) -> str | OperationRefusalEvidence:
+        async def read() -> str | OperationRefusalEvidence:
+            try:
+                ledger = await asyncio.to_thread(
+                    lambda: self._service(profile_id).show(
+                        bucket_id=profile,
+                        actividad_id=request.actividad_id,
+                        year=request.year,
+                    )
+                )
+            except InventoryActividadNotFoundError as error:
+                refusal = _refusal_for_error(request=request, error=error)
+                if refusal is None:
+                    raise
+                execution = InventoryOperationExecutionResult(
+                    operation_id="inspect",
+                    outcome="refused",
+                    profile_id=profile_id,
+                    refusal=refusal,
+                )
+                detail_ref = await context.operands.put(execution, written_at=now())
+                await context.events.effect(OperationEffect.NONE)
+                return OperationRefusalEvidence(refusal_code=refusal.code, detail_ref=detail_ref)
+            result = InventoryOperationExecutionResult(
+                operation_id="inspect",
+                outcome="success",
+                profile_id=profile_id,
+                ledger_result=InventoryLedgerResult(ledger=ledger, changed=False),
+            )
+            reference = await context.operands.put(result, written_at=now())
+            await context.events.effect(OperationEffect.NONE)
+            return reference
+
+        return await await_cancellation_complete(read(), task_name="inventory-inspect")
+
+    async def _execute_ledger_change(
+        self,
+        *,
+        request: BaseModel,
+        context: OperationExecutorContext,
+        profile_id: UUID,
+        profile: str,
+    ) -> str | OperationRefusalEvidence:
+        operation_id = _LEDGER_CHANGE_OPERATION_IDS[self._definition_id]
+        try:
+            work = _ledger_change_work(
+                request,
+                service=self._service(profile_id),
+                profile=profile,
+                actor=self._recorded_actor(context),
+            )
+        except (ValidationError, InventoryLedgerError):
+            return await _record_precommit_validation_refusal(
+                context,
+                operation_id=operation_id,
+                profile_id=profile_id,
+                request=request,
+            )
+
+        def apply_change() -> InventoryLedgerResult:
+            # An omitted movement IVA rate resolves through the pinned authority.
+            with validating_governed_facts(context.authority_operation):
+                return work()
+
+        return await self._mutate(
+            context,
+            operation_id=operation_id,
+            profile_id=profile_id,
+            request=request,
+            work=apply_change,
+        )
 
     async def _execute_create(
         self,
@@ -374,6 +499,86 @@ class InventoryOperationExecutor:
         return await await_cancellation_complete(commit(), task_name=f"inventory-{operation_id}")
 
 
+def _ledger_change_work(
+    request: BaseModel,
+    *,
+    service: InventoryService,
+    profile: str,
+    actor: str,
+) -> Callable[[], InventoryLedgerResult]:
+    """Bind one change request to its service verb; a malformed movement raises before any write."""
+    if isinstance(request, InventoryDescribeRequest):
+        return lambda: service.describe(
+            bucket_id=profile,
+            actividad_id=request.actividad_id,
+            year=request.year,
+            correction_id=request.correction_id,
+            label=request.label,
+            description=request.description,
+            actor=actor,
+        )
+    if isinstance(request, InventoryCorrectRequest):
+        opening_stock = Decimal(request.opening_stock.decimal) if request.opening_stock is not None else None
+        return lambda: service.correct_opening(
+            bucket_id=profile,
+            actividad_id=request.actividad_id,
+            year=request.year,
+            correction_id=request.correction_id,
+            reason=request.reason,
+            opening_stock=opening_stock,
+            valuation_method=request.valuation_method,
+            actor=actor,
+        )
+    if isinstance(request, InventoryMovementCorrectRequest):
+        replacement = InventoryMovementCommand(
+            movement_id=request.movement_id,
+            movement_date=request.movement_date,
+            kind=request.kind,
+            quantity=Decimal(request.quantity.decimal),
+            unit_cost=Decimal(request.unit_cost.decimal) if request.unit_cost is not None else None,
+            taxable_base=Decimal(request.taxable_base.decimal) if request.taxable_base is not None else None,
+            acquisition_cost=request.acquisition_cost.to_domain() if request.acquisition_cost is not None else None,
+        )
+        return lambda: service.movement_correct(
+            bucket_id=profile,
+            actividad_id=request.actividad_id,
+            year=request.year,
+            correction_id=request.correction_id,
+            target_movement_id=request.target_movement_id,
+            replacement=replacement,
+            reason=request.reason,
+            actor=actor,
+        )
+    if isinstance(request, InventoryMovementReverseRequest):
+        return lambda: service.movement_reverse(
+            bucket_id=profile,
+            actividad_id=request.actividad_id,
+            year=request.year,
+            correction_id=request.correction_id,
+            target_movement_id=request.target_movement_id,
+            reason=request.reason,
+            actor=actor,
+        )
+    if isinstance(request, InventoryRetireRequest):
+        return lambda: service.retire(
+            bucket_id=profile,
+            actividad_id=request.actividad_id,
+            year=request.year,
+            correction_id=request.correction_id,
+            reason=request.reason,
+            actor=actor,
+        )
+    if isinstance(request, InventoryRestoreRequest):
+        return lambda: service.restore(
+            bucket_id=profile,
+            actividad_id=request.actividad_id,
+            year=request.year,
+            correction_id=request.correction_id,
+            actor=actor,
+        )
+    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+
 def _refusal_for_error(
     *,
     request: BaseModel,
@@ -383,7 +588,15 @@ def _refusal_for_error(
     if identity is None:
         return None
     reason, code = identity
-    return _request_refusal_detail(request, reason=reason, code=code)
+    detail = _request_refusal_detail(request, reason=reason, code=code)
+    if not isinstance(error, CadrumoError):
+        return detail
+    return detail.model_copy(
+        update={
+            "reason_key": error.translated_message,
+            "reason_facts": {key: str(value) for key, value in (error.context or {}).items()},
+        }
+    )
 
 
 def _refusal_identity_for_error(error: Exception) -> tuple[InventoryRefusalReason, InventoryRefusalCode] | None:
@@ -475,7 +688,9 @@ def _success_execution(
     profile_id: UUID,
     result: object,
 ) -> InventoryOperationExecutionResult:
-    if operation_id in {"create", "movement.add"} and isinstance(result, InventoryLedgerResult):
+    if (operation_id in {"create", "movement.add"} or operation_id in get_args(InventoryLedgerChangeOperationId)) and (
+        isinstance(result, InventoryLedgerResult)
+    ):
         return InventoryOperationExecutionResult(
             operation_id=operation_id,
             outcome="success",
@@ -501,7 +716,7 @@ def _success_execution(
 
 
 def _effect_for_success(result: InventoryOperationExecutionResult) -> OperationEffect:
-    if result.operation_id == "list":
+    if result.operation_id in {"list", "inspect"}:
         return OperationEffect.NONE
     if result.operation_id == "closing-authority.record":
         return OperationEffect.UPDATED if (result.closing_changed is True) else OperationEffect.NONE

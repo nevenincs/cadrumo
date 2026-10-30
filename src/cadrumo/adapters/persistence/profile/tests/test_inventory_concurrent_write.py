@@ -160,49 +160,45 @@ def test_a_duplicate_pair_is_still_refused_and_not_retried() -> None:
     assert len(InventoryLedgerRepository().load().ledgers) == 1
 
 
-def test_a_concurrent_create_is_not_discarded_by_a_removal() -> None:
-    """Removal rewrites the whole document too, so the seam must survive it.
+def test_a_concurrent_create_is_not_discarded_by_a_ledger_change() -> None:
+    """A change rewrites the whole document too, and each attempt re-reads the latest ledger.
 
-    An operator deleting ``retail`` must not take ``wholesale`` with it because
-    that ledger was created while the removal was in flight.
-
-    Like its siblings above, this reaches the interleaving window through the
-    seam directly, because the public verb exposes none. It therefore measures
-    the GUARD and cannot see whether ``remove`` still routes through it --
-    reverting the verb to an inline load-and-save leaves this green. The
-    routing gate is the instrument for that half, and ``remove`` is enrolled in
-    it for exactly this reason.
+    The interloper lands during the first attempt's change, so the revision guard
+    forces a retry; the change must then apply to the newly current document.
     """
     InventoryLedgerRepository().create(_ledger("retail", opening="150.00"))
 
-    repo = InventoryLedgerRepository()
     interloper_written = False
+    attempts = 0
 
-    def _remove_retail_while_wholesale_lands(current: InventoryLedgerDocument) -> InventoryLedgerDocument:
-        nonlocal interloper_written
+    def _change(_document: InventoryLedgerDocument, ledger: InventoryLedger) -> InventoryLedger:
+        nonlocal interloper_written, attempts
+        attempts += 1
         if not interloper_written:
             interloper_written = True
             InventoryLedgerRepository().create(_ledger("wholesale", opening="250.00"))
-        return InventoryLedgerDocument(
-            ledgers=tuple(item for item in current.ledgers if item.actividad_id != "retail"),
-        )
+        return ledger.model_copy(update={"opening_stock": Decimal("175.00")})
 
-    repo._storage.mutate(_remove_retail_while_wholesale_lands)
+    write = InventoryLedgerRepository().apply_ledger_change("retail", year=_YEAR, change=_change)
 
-    pairs = [(item.actividad_id, item.year) for item in InventoryLedgerRepository().load().ledgers]
-    assert pairs == [("wholesale", _YEAR)]
+    assert write.changed is True
+    assert attempts == 2
+    stored = {item.actividad_id: item.opening_stock for item in InventoryLedgerRepository().load().ledgers}
+    assert stored == {"retail": Decimal("175.00"), "wholesale": Decimal("250.00")}
 
 
-def test_removing_a_ledger_that_is_already_gone_refuses_as_absent() -> None:
-    """A second removal of the same ledger refuses rather than reporting success.
-
-    Sequential rather than interleaved, deliberately: this pins the refusal
-    itself, which is what a caller re-judging the absence check on a retry
-    depends on. Without it a retry could find nothing to remove and report a
-    deletion the call never performed.
-    """
+def test_an_exact_replay_writes_nothing_and_reports_no_change() -> None:
     InventoryLedgerRepository().create(_ledger("retail", opening="150.00"))
-    InventoryLedgerRepository().remove("retail", year=_YEAR)
+    before = InventoryLedgerRepository().load()
 
+    write = InventoryLedgerRepository().apply_ledger_change(
+        "retail", year=_YEAR, change=lambda _document, ledger: ledger
+    )
+
+    assert write.changed is False
+    assert InventoryLedgerRepository().load() == before
+
+
+def test_a_change_to_an_absent_ledger_refuses() -> None:
     with pytest.raises(InventoryLedgerError):
-        InventoryLedgerRepository().remove("retail", year=_YEAR)
+        InventoryLedgerRepository().apply_ledger_change("retail", year=_YEAR, change=lambda _document, ledger: ledger)

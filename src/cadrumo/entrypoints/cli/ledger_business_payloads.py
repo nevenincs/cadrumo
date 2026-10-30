@@ -136,6 +136,29 @@ class InventoryClosingAuthorityFingerprintPayload(OutputSchema):
     prior_closing_link: str
 
 
+class InventoryDescriptorPayload(OutputSchema):
+    """The descriptive facts of one inventory."""
+
+    label: NonEmptyStr
+    description: str | None = None
+
+
+class InventoryHistoryEntryPayload(OutputSchema):
+    """One retained change with the fact it displaced, evidence payloads removed."""
+
+    correction_id: NonEmptyStr
+    kind: NonEmptyStr
+    recorded_at: NonEmptyStr
+    actor: NonEmptyStr
+    correction_reason: str | None = None
+    retirement_reason: str | None = None
+    superseded_movement: InventoryMovementPayload | None = None
+    replacement_movement_id: str | None = None
+    prior_opening_stock: str | None = None
+    prior_valuation_method: str | None = None
+    prior_descriptor: InventoryDescriptorPayload | None = None
+
+
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
@@ -153,6 +176,10 @@ class InventoryLedgerPayload(OutputSchema):
     period_movements: list[InventoryMovementPayload] = []
     schema_version: _InventorySchemaVersion
     bucket_event_ids: list[str] = []
+    descriptor: InventoryDescriptorPayload | None = None
+    retired: bool = False
+    retirement_reason: str | None = None
+    history: list[InventoryHistoryEntryPayload] = []
 
 
 class InventoryListRowPayload(InventoryLedgerPayload):
@@ -160,6 +187,8 @@ class InventoryListRowPayload(InventoryLedgerPayload):
 
     schema_version: _InventorySchemaVersion = INVENTORY_SCHEMA_VERSION
     movement_count: int = 0
+    label: str | None = None
+    correction_count: int = 0
 
 
 class InventoryListResult(OutputSchema):
@@ -176,6 +205,19 @@ class InventoryCreateResult(InventoryLedgerPayload):
 
 class InventoryMovementAddResult(InventoryLedgerPayload):
     """JSON envelope for ``aeat app ledger inventory movement add``."""
+
+
+class InventoryInspectResult(InventoryLedgerPayload):
+    """JSON envelope for ``aeat app ledger inventory inspect``."""
+
+
+class InventoryLedgerChangeResult(InventoryLedgerPayload):
+    """JSON envelope for every inventory edit, rectification, retirement and restoration.
+
+    ``outcome`` is ``applied``, or ``replayed`` when this exact request already applied.
+    """
+
+    outcome: NonEmptyStr
 
 
 class InventoryClosingAuthorityRecordResult(OutputSchema):

@@ -505,6 +505,7 @@ def build_ledger_membership_ports(
     from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
     from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
+    from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -523,6 +524,7 @@ def build_ledger_membership_ports(
             bucket_id=normalized_bucket_id, objects=objects
         ),
         usage_ratio_profile_loader=load_usage_ratios,
+        inventory_repository=InventoryLedgerRepository(objects=objects),
     )
 
 

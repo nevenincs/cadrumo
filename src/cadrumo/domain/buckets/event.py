@@ -270,6 +270,12 @@ class BucketEventType(StrEnum):
     LEDGER_INVENTORY_MOVEMENT_ADDED = "ledger.inventory.movement_added"
     LEDGER_INVENTORY_VALUATION_PREVIEWED = "ledger.inventory.valuation_previewed"
     LEDGER_INVENTORY_REMOVED = "ledger.inventory.removed"
+    LEDGER_INVENTORY_DESCRIBED = "ledger.inventory.described"
+    LEDGER_INVENTORY_CORRECTED = "ledger.inventory.corrected"
+    LEDGER_INVENTORY_MOVEMENT_CORRECTED = "ledger.inventory.movement_corrected"
+    LEDGER_INVENTORY_MOVEMENT_REVERSED = "ledger.inventory.movement_reversed"
+    LEDGER_INVENTORY_RETIRED = "ledger.inventory.retired"
+    LEDGER_INVENTORY_RESTORED = "ledger.inventory.restored"
     # audit verb-group (evidence bundle)
     MODELO_AUDIT_VERIFIED = "modelo.audit.verified"
     MODELO_AUDIT_EXPORTED = "modelo.audit.exported"

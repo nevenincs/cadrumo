@@ -19,25 +19,45 @@ from ....domain.contribuyente.inventory.closing_foundations import (
     PriorClosingContinuityEvidence,
     fingerprint_prior_authoritative_closing,
 )
-from ....domain.contribuyente.inventory.records import InventoryLedger, MovementKind
+from ....domain.contribuyente.inventory.records import (
+    InventoryCorrectionReason,
+    InventoryLedger,
+    InventoryRetirementReason,
+    MovementKind,
+)
 from ....domain.filing_evidence import FilingEvidenceReference
 from ..ports import InventoryServicePortsFactory
 from ..registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
+    INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
+    INVENTORY_RESTORE_OPERATION_DEFINITION_ID,
+    INVENTORY_RETIRE_OPERATION_DEFINITION_ID,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityDecisionRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
+    InventoryCorrectRequest,
     InventoryCreateRequest,
+    InventoryDescribeRequest,
+    InventoryInspectRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementCorrectRequest,
+    InventoryMovementReverseRequest,
     InventoryPriorClosingLinkRequest,
+    InventoryRestoreRequest,
+    InventoryRetireRequest,
     InventoryValuationPreviewRequest,
 )
-from ..service import InventoryService
+from ..registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
+from ..service import InventoryMovementCommand, InventoryService
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +85,11 @@ def prepare_inventory_operation_conformance_case(
     """
     bucket_id = str(profile_id)
     service = InventoryService(ports=ports_factory(bucket_id=bucket_id))
+
+    if definition_id == INVENTORY_INSPECT_OPERATION_DEFINITION_ID or definition_id in (
+        INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
+    ):
+        return _prepare_ledger_change_case(definition_id, profile_id, service=service, bucket_id=bucket_id)
 
     if definition_id == INVENTORY_LIST_OPERATION_DEFINITION_ID:
         actividad_id = "inventory-list-seed"
@@ -168,6 +193,91 @@ def prepare_inventory_operation_conformance_case(
         )
 
     raise ValueError(f"unsupported inventory conformance definition: {definition_id}")
+
+
+def _prepare_ledger_change_case(
+    definition_id: str,
+    profile_id: UUID,
+    *,
+    service: InventoryService,
+    bucket_id: str,
+) -> InventoryOperationConformanceCase:
+    """Seed one inventory holding a movement, retired when the case restores it."""
+    actividad_id = "inventory-change-seed"
+    service.create(
+        bucket_id=bucket_id,
+        actividad_id=actividad_id,
+        year=2026,
+        valuation_method="fifo",
+        opening_stock=Decimal("100.00"),
+        actor="conformance-seed",
+    )
+    if definition_id in {
+        INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
+        INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
+    }:
+        service.movement_add(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=2026,
+            movement=InventoryMovementCommand(
+                movement_id="seed-cogs",
+                movement_date=date(2026, 3, 15),
+                kind=MovementKind.COGS,
+                quantity=Decimal("1"),
+            ),
+            actor="conformance-seed",
+        )
+    if definition_id == INVENTORY_RESTORE_OPERATION_DEFINITION_ID:
+        service.retire(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=2026,
+            correction_id="seed-retire",
+            reason=InventoryRetirementReason.CREATED_IN_ERROR,
+            actor="conformance-seed",
+        )
+    change = {"profile_id": profile_id, "actividad_id": actividad_id, "year": 2026, "correction_id": "case-1"}
+    reason = InventoryCorrectionReason.KEYING_ERROR
+    requests: dict[str, BaseModel] = {
+        INVENTORY_INSPECT_OPERATION_DEFINITION_ID: InventoryInspectRequest(
+            profile_id=profile_id, actividad_id=actividad_id, year=2026
+        ),
+        INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID: InventoryDescribeRequest.model_validate(
+            {**change, "label": "Hardware"}
+        ),
+        INVENTORY_CORRECT_OPERATION_DEFINITION_ID: InventoryCorrectRequest.model_validate(
+            {**change, "reason": reason, "opening_stock": PublicDecimal(decimal="90.00")}
+        ),
+        INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID: InventoryMovementCorrectRequest.model_validate(
+            {
+                **change,
+                "target_movement_id": "seed-cogs",
+                "reason": reason,
+                "movement_id": "seed-cogs-b",
+                "movement_date": date(2026, 3, 16),
+                "kind": MovementKind.COGS,
+                "quantity": PublicDecimal(decimal="1"),
+            }
+        ),
+        INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID: InventoryMovementReverseRequest.model_validate(
+            {**change, "target_movement_id": "seed-cogs", "reason": reason}
+        ),
+        INVENTORY_RETIRE_OPERATION_DEFINITION_ID: InventoryRetireRequest.model_validate(
+            {**change, "reason": InventoryRetirementReason.CREATED_IN_ERROR}
+        ),
+        INVENTORY_RESTORE_OPERATION_DEFINITION_ID: InventoryRestoreRequest.model_validate(change),
+    }
+    return InventoryOperationConformanceCase(
+        request=requests[definition_id],
+        actividad_id=actividad_id,
+        year=2026,
+        expected_effect=(
+            OperationEffect.NONE
+            if definition_id == INVENTORY_INSPECT_OPERATION_DEFINITION_ID
+            else OperationEffect.UPDATED
+        ),
+    )
 
 
 def build_inventory_conformance_closing_authority_record(

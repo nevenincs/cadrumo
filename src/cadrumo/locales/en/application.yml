@@ -482,6 +482,23 @@ application:
       validator_id_unknown: No flow validator is registered under id {validator_id};
         {registered_count} validators are registered.
   inventory:
+    labels:
+      correction_reason:
+        duplicate_entry: Duplicate entry
+        keying_error: Keying error
+        operation_did_not_occur: Operation did not occur
+        source_document_corrected: Source document corrected
+      history_kind:
+        described: Described
+        movement_corrected: Movement corrected
+        movement_reversed: Movement reversed
+        opening_corrected: Opening corrected
+        restored: Restored
+        retired: Retired
+      retirement_reason:
+        activity_ceased: Activity ceased
+        created_in_error: Created in error
+        no_stock_held: No stock held
     service:
       errors:
         actividad_conflict: An inventory record book already exists for activity %{actividad_id}
@@ -492,11 +509,62 @@ application:
           ones.
         closing_authority_conflict: A different closing-authority record already exists
           for this activity and year.
+        closing_authority_recorded: The %{year} inventory of %{actividad_id} has a
+          recorded closing authority, so its stock facts can no longer change.
+        correction_changes_nothing: This correction names no opening value or valuation
+          method that differs from the current one.
+        correction_id_conflict: Correction %{correction_id} was already used for a
+          different change.
+        count_would_raise_stock: 'A physical count cannot raise stock: %{sku} would
+          end above the units on record.'
         duplicate_movement_id: The inventory record book already contains movement
           %{movement_id}. Run `aeat app ledger inventory list` to see the recorded
           movements.
         invalid_valuation_method: 'The inventory valuation method is not supported:
           %{valuation_method}.'
+        inventory_already_retired: The %{year} inventory of %{actividad_id} is already
+          retired.
+        inventory_not_retired: The %{year} inventory of %{actividad_id} is not retired.
+        inventory_retired: The %{year} inventory of %{actividad_id} is retired. Restore
+          it before changing its stock facts.
+        later_closing_authority_recorded: The %{later_year} closing authority of %{actividad_id}
+          rests on this closing, so the %{year} stock facts can no longer change.
+        movement_already_superseded: Movement %{movement_id} was already corrected
+          or reversed.
+        movement_not_found: The %{year} inventory of %{actividad_id} has no movement
+          %{movement_id}.
+        movement_outside_year: Movement %{movement_id} is dated outside the %{year}
+          inventory.
+        stock_would_go_negative: 'This would take stock below zero: %{sku} would need
+          more units than remain.'
+    workbench:
+      action:
+        correct: Correct opening or method
+        describe: Edit description
+        inspect: Show inventory and history
+        movement_correct: Correct a movement
+        movement_reverse: Reverse a movement
+        restore: Restore inventory
+        retire: Retire inventory
+      column:
+        state: State
+      done:
+        applied: Change recorded.
+        replayed: This change was already recorded; nothing changed.
+      field:
+        correction_id: Correction
+        description: Description
+        keep_method: Keep current method
+        label: Name
+        reason: Reason
+        target_movement_id: Movement to correct
+      result:
+        history: 'History %{correction_id}: %{kind}, %{reason}, %{recorded_at}'
+        movement: 'Movement %{movement_id}: %{date}, %{kind}, %{quantity}'
+        state: 'State: %{state} %{label}'
+      state:
+        active: Active
+        retired: Retired
   invoices:
     bulk_import:
       errors:
@@ -975,6 +1043,12 @@ application:
         what: Part of the VAT total in box {box} is not placed in any rate box.
         what_to_do: Check the VAT rate on your invoices and records, then calculate
           again. The declaration cannot be exported until this is fixed.
+      register_acquisition_exceeds_ledger:
+        what: "The ledger entries behind an asset in your register paid less than its stated cost."
+        what_to_do: "Correct the price in your asset register or the ledger entry, then calculate again."
+      register_acquisition_partly_accounted:
+        what: "An asset in your register accounts for only part of its ledger entry, so the rest deducts nothing."
+        what_to_do: "Register what else that entry paid for, or correct the asset's price, then calculate again."
       register_owned_capital_acquisition:
         what: A purchase of equipment is left out of your expenses, because it is
           deducted through its yearly depreciation.
@@ -1575,6 +1649,9 @@ application:
         of one of your foreign assets rose from %{prior_value_eur} EUR to %{current_value_eur}
         EUR. The increase of %{delta_value_eur} EUR is over the %{redeclaration_increase_threshold_eur}
         EUR above which you must declare it again.'
+      inventory_register_drift: The inventory behind this %{modelo} calculation changed
+        since it was calculated (%{rows_recorded} rows recorded, %{rows_current} now,
+        %{rows_changed} changed). Recalculate before relying on it.
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.

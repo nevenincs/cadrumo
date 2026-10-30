@@ -22,13 +22,17 @@ from ...domain.contribuyente.inventory.closing_foundations import (
     PhysicalClosingObservation,
     PriorClosingContinuityEvidence,
 )
+from ...domain.contribuyente.inventory.corrections import InventoryCorrectionRefusalReason
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAttributableCostComponent,
     InventoryAttributableCostKind,
+    InventoryCorrectionReason,
+    InventoryRetirementReason,
     MovementKind,
+    ValuationMethod,
 )
 from ...domain.filing_evidence import FilingEvidenceReference
 from ..operations.public_scalar import PublicDecimal
@@ -41,13 +45,21 @@ INVENTORY_CREATE_OPERATION_DEFINITION_ID = "ledger.inventory.create"
 INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID = "ledger.inventory.movement.add"
 INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID = "ledger.inventory.valuation.preview"
 INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID = "ledger.inventory.closing-authority.record"
+INVENTORY_INSPECT_OPERATION_DEFINITION_ID = "ledger.inventory.inspect"
+INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID = "ledger.inventory.describe"
+INVENTORY_CORRECT_OPERATION_DEFINITION_ID = "ledger.inventory.correct"
+INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID = "ledger.inventory.movement.correct"
+INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID = "ledger.inventory.movement.reverse"
+INVENTORY_RETIRE_OPERATION_DEFINITION_ID = "ledger.inventory.retire"
+INVENTORY_RESTORE_OPERATION_DEFINITION_ID = "ledger.inventory.restore"
 
 INVENTORY_VALIDATION_REFUSAL_CODE = "REFUSED_PROFILE_INVENTORY_VALIDATION"
 INVENTORY_SERVICE_INPUT_REFUSAL_CODE = "REFUSED_INVENTORY_SERVICE_INPUT"
 INVENTORY_NOT_FOUND_REFUSAL_CODE = "REFUSED_INVENTORY_ACTIVIDAD_NOT_FOUND"
 INVENTORY_CONFLICT_REFUSAL_CODE = "REFUSED_INVENTORY_ACTIVIDAD_CONFLICT"
 
-type InventoryRefusalReason = Literal[
+InventoryRefusalReason = Literal[
+    InventoryCorrectionRefusalReason,
     "activity_conflict",
     "activity_not_found",
     "invalid_valuation_method",
@@ -62,8 +74,22 @@ type InventoryRefusalCode = Literal[
     "REFUSED_INVENTORY_ACTIVIDAD_NOT_FOUND",
     "REFUSED_INVENTORY_ACTIVIDAD_CONFLICT",
 ]
-type InventoryOperationId = Literal["list", "create", "movement.add", "valuation.preview", "closing-authority.record"]
-type InventoryMutationOperationId = Literal["create", "movement.add", "valuation.preview", "closing-authority.record"]
+InventoryLedgerChangeOperationId = Literal[
+    "describe",
+    "correct",
+    "movement.correct",
+    "movement.reverse",
+    "retire",
+    "restore",
+]
+InventoryMutationOperationId = Literal[
+    InventoryLedgerChangeOperationId,
+    "create",
+    "movement.add",
+    "valuation.preview",
+    "closing-authority.record",
+]
+InventoryOperationId = Literal[InventoryMutationOperationId, "list", "inspect"]
 
 
 class _InventoryRequest(BaseModel):
@@ -197,6 +223,67 @@ class InventoryValuationPreviewRequest(_InventoryRequest):
 
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
+
+
+class InventoryInspectRequest(_InventoryRequest):
+    """Read one exact activity ledger with its movements and retained history."""
+
+    actividad_id: str = Field(min_length=1)
+    year: int = Field(ge=1900)
+
+
+class InventoryLedgerChangeRequest(_InventoryRequest):
+    """One change to an exact ledger; repeating ``correction_id`` with the same request is a replay."""
+
+    actividad_id: str = Field(min_length=1)
+    year: int = Field(ge=1900)
+    correction_id: str = Field(min_length=1, max_length=64)
+
+
+class InventoryDescribeRequest(InventoryLedgerChangeRequest):
+    """Replace the descriptive facts, which never enter valuation."""
+
+    label: str = Field(min_length=1, max_length=120)
+    description: str | None = Field(default=None, min_length=1, max_length=1024)
+
+
+class InventoryCorrectRequest(InventoryLedgerChangeRequest):
+    """Rectify the opening value or the valuation method of an unconsumed ledger."""
+
+    reason: InventoryCorrectionReason
+    opening_stock: PublicDecimal | None = None
+    valuation_method: ValuationMethod | None = None
+
+
+class InventoryMovementCorrectRequest(InventoryLedgerChangeRequest):
+    """Supersede one movement with a replacement under a new ``movement_id``."""
+
+    target_movement_id: str = Field(min_length=1, max_length=64)
+    reason: InventoryCorrectionReason
+    movement_id: str = Field(min_length=1, max_length=64)
+    movement_date: date
+    kind: MovementKind
+    quantity: PublicDecimal
+    unit_cost: PublicDecimal | None = None
+    taxable_base: PublicDecimal | None = None
+    acquisition_cost: InventoryAcquisitionCostRequest | None = None
+
+
+class InventoryMovementReverseRequest(InventoryLedgerChangeRequest):
+    """Take one movement out of the effective set, retaining it as evidence."""
+
+    target_movement_id: str = Field(min_length=1, max_length=64)
+    reason: InventoryCorrectionReason
+
+
+class InventoryRetireRequest(InventoryLedgerChangeRequest):
+    """Take the inventory out of the active register with every fact retained."""
+
+    reason: InventoryRetirementReason
+
+
+class InventoryRestoreRequest(InventoryLedgerChangeRequest):
+    """Bring a retired inventory back to the active register."""
 
 
 class InventoryClosingAuthorityDecisionRequest(BaseModel):
@@ -382,10 +469,17 @@ class InventoryClosingAuthorityRecordRequest(_InventoryRequest):
 __all__ = [
     "INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID",
     "INVENTORY_CONFLICT_REFUSAL_CODE",
+    "INVENTORY_CORRECT_OPERATION_DEFINITION_ID",
     "INVENTORY_CREATE_OPERATION_DEFINITION_ID",
+    "INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID",
+    "INVENTORY_INSPECT_OPERATION_DEFINITION_ID",
     "INVENTORY_LIST_OPERATION_DEFINITION_ID",
     "INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID",
+    "INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID",
+    "INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID",
     "INVENTORY_NOT_FOUND_REFUSAL_CODE",
+    "INVENTORY_RESTORE_OPERATION_DEFINITION_ID",
+    "INVENTORY_RETIRE_OPERATION_DEFINITION_ID",
     "INVENTORY_SERVICE_INPUT_REFUSAL_CODE",
     "INVENTORY_VALIDATION_REFUSAL_CODE",
     "INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID",
@@ -394,14 +488,23 @@ __all__ = [
     "InventoryClosingAuthorityDecisionRequest",
     "InventoryClosingAuthorityRecordInput",
     "InventoryClosingAuthorityRecordRequest",
+    "InventoryCorrectRequest",
     "InventoryCreateRequest",
+    "InventoryDescribeRequest",
+    "InventoryInspectRequest",
+    "InventoryLedgerChangeOperationId",
+    "InventoryLedgerChangeRequest",
     "InventoryListRequest",
     "InventoryMovementAddRequest",
+    "InventoryMovementCorrectRequest",
+    "InventoryMovementReverseRequest",
     "InventoryMutationOperationId",
     "InventoryOperationId",
     "InventoryPhysicalClosingObservationRequest",
     "InventoryPriorClosingLinkRequest",
     "InventoryRefusalCode",
     "InventoryRefusalReason",
+    "InventoryRestoreRequest",
+    "InventoryRetireRequest",
     "InventoryValuationPreviewRequest",
 ]

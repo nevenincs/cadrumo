@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeIs, get_args
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -26,20 +26,31 @@ from .registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryClosingAuthorityRecordProjection,
     InventoryCreateProjection,
+    InventoryInspectProjection,
+    InventoryLedgerChangeProjection,
     InventoryLedgerProjection,
     InventoryListProjection,
     InventoryListRowProjection,
     InventoryMovementAddProjection,
+    InventoryReasonFact,
     InventoryRefusalProjection,
     InventoryValuationOperationProjection,
     InventoryValuationPreviewProjection,
 )
 from .registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
+    INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
+    INVENTORY_RESTORE_OPERATION_DEFINITION_ID,
+    INVENTORY_RETIRE_OPERATION_DEFINITION_ID,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
+    InventoryLedgerChangeOperationId,
     InventoryOperationId,
 )
 from .registered_specs import INVENTORY_OPERATION_SHAPES
@@ -50,7 +61,25 @@ _OPERATION_IDS_BY_DEFINITION: dict[str, InventoryOperationId] = {
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID: "movement.add",
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID: "valuation.preview",
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID: "closing-authority.record",
+    INVENTORY_INSPECT_OPERATION_DEFINITION_ID: "inspect",
+    INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID: "describe",
+    INVENTORY_CORRECT_OPERATION_DEFINITION_ID: "correct",
+    INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID: "movement.correct",
+    INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID: "movement.reverse",
+    INVENTORY_RETIRE_OPERATION_DEFINITION_ID: "retire",
+    INVENTORY_RESTORE_OPERATION_DEFINITION_ID: "restore",
 }
+
+_LedgerResultOperationId = Literal[
+    InventoryLedgerChangeOperationId,
+    "create",
+    "movement.add",
+    "closing-authority.record",
+]
+
+
+def _is_ledger_change_operation(operation_id: InventoryOperationId) -> TypeIs[InventoryLedgerChangeOperationId]:
+    return operation_id in get_args(InventoryLedgerChangeOperationId)
 
 
 def _profile_from_receipt(receipt: OperationTerminalReceipt, *, definition_id: str) -> UUID:
@@ -87,6 +116,10 @@ def project_inventory_list_result(result: BaseModel, receipt: OperationTerminalR
                 valuation_method=row.valuation_method,
                 opening_stock=PublicDecimal(decimal=str(row.opening_stock)),
                 movement_count=row.movement_count,
+                label=row.label,
+                retired=row.retired,
+                retirement_reason=row.retirement_reason,
+                correction_count=row.correction_count,
             )
             for row in private.rows
         ),
@@ -142,6 +175,10 @@ def _validate_refusal_receipt(
         year=refusal.year,
         movement_id=refusal.movement_id,
         valuation_method=refusal.valuation_method,
+        reason_key=refusal.reason_key,
+        reason_facts=tuple(
+            InventoryReasonFact(key=key, value=value) for key, value in sorted(refusal.reason_facts.items())
+        ),
     )
 
 
@@ -198,7 +235,7 @@ def _validate_ledger_success(
     private: InventoryOperationExecutionResult,
     receipt: OperationTerminalReceipt,
     profile_id: UUID,
-    operation_id: Literal["create", "movement.add", "closing-authority.record"],
+    operation_id: _LedgerResultOperationId,
     definition_id: str,
 ) -> InventoryLedgerResult:
     result = private.ledger_result
@@ -227,7 +264,7 @@ def _require_inventory_ledger_execution(
     *,
     result: InventoryLedgerResult | None,
     profile_id: UUID,
-    operation_id: Literal["create", "movement.add", "closing-authority.record"],
+    operation_id: _LedgerResultOperationId,
 ) -> InventoryLedgerResult:
     if (
         private.operation_id != operation_id
@@ -259,11 +296,14 @@ def _require_inventory_ledger_receipt(
 def _require_inventory_ledger_event_scope(
     result: InventoryLedgerResult,
     *,
-    operation_id: Literal["create", "movement.add", "closing-authority.record"],
+    operation_id: _LedgerResultOperationId,
 ) -> None:
     if operation_id == "closing-authority.record" and result.bucket_event_ids:
         raise ValueError("inventory ledger result contradicts its terminal receipt")
     if operation_id in {"create", "movement.add"} and len(result.bucket_event_ids) != 1:
+        raise ValueError("inventory ledger result contradicts its terminal receipt")
+    is_change = operation_id in get_args(InventoryLedgerChangeOperationId)
+    if is_change and len(result.bucket_event_ids) != int(result.changed):
         raise ValueError("inventory ledger result contradicts its terminal receipt")
 
 
@@ -339,6 +379,77 @@ def project_inventory_movement_add_result(
         outcome="added",
         profile_id=profile_id,
         ledger=ledger,
+        bucket_event_ids=ledger_result.bucket_event_ids,
+    )
+
+
+def project_inventory_inspect_result(
+    result: BaseModel,
+    receipt: OperationTerminalReceipt,
+    /,
+) -> InventoryInspectProjection:
+    """Release one redacted ledger with its history, or the typed not-found refusal."""
+    private = _execution_result(result)
+    profile_id = _profile_from_receipt(receipt, definition_id=INVENTORY_INSPECT_OPERATION_DEFINITION_ID)
+    if private.outcome == "refused":
+        refusal = _validate_refusal_receipt(
+            private=private,
+            receipt=receipt,
+            profile_id=profile_id,
+            definition_id=INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
+            operation_id="inspect",
+        )
+        return InventoryInspectProjection(outcome="refused", profile_id=profile_id, refusal=refusal)
+    ledger_result = private.ledger_result
+    if private.operation_id != "inspect" or private.profile_id != profile_id or ledger_result is None:
+        raise ValueError("inventory inspect result contradicts its terminal receipt")
+    _require_inventory_ledger_receipt(
+        receipt,
+        expected_effect=OperationEffect.NONE,
+        definition_id=INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
+    )
+    return InventoryInspectProjection(
+        outcome="found",
+        profile_id=profile_id,
+        ledger=InventoryLedgerProjection.from_ledger(ledger_result.ledger),
+    )
+
+
+def project_inventory_ledger_change_result(
+    result: BaseModel,
+    receipt: OperationTerminalReceipt,
+    /,
+) -> InventoryLedgerChangeProjection:
+    """Release the ledger after one edit, rectification, retirement or restoration, or its refusal."""
+    private = _execution_result(result)
+    definition_id = receipt.identity.definition_id
+    operation_id = private.operation_id
+    if not _is_ledger_change_operation(operation_id) or _OPERATION_IDS_BY_DEFINITION.get(definition_id) != operation_id:
+        raise ValueError("inventory change result contradicts its terminal receipt")
+    profile_id = _profile_from_receipt(receipt, definition_id=definition_id)
+    if private.outcome == "refused":
+        refusal = _validate_refusal_receipt(
+            private=private,
+            receipt=receipt,
+            profile_id=profile_id,
+            definition_id=definition_id,
+            operation_id=operation_id,
+        )
+        return InventoryLedgerChangeProjection(outcome="refused", profile_id=profile_id, refusal=refusal)
+    ledger_result = _validate_ledger_success(
+        private=private,
+        receipt=receipt,
+        profile_id=profile_id,
+        operation_id=operation_id,
+        definition_id=definition_id,
+    )
+    return InventoryLedgerChangeProjection(
+        outcome="applied" if ledger_result.changed else "replayed",
+        profile_id=profile_id,
+        ledger=InventoryLedgerProjection.from_ledger(
+            ledger_result.ledger,
+            bucket_event_ids=ledger_result.bucket_event_ids,
+        ),
         bucket_event_ids=ledger_result.bucket_event_ids,
     )
 
@@ -466,6 +577,8 @@ def project_inventory_closing_authority_result(
 __all__ = [
     "project_inventory_closing_authority_result",
     "project_inventory_create_result",
+    "project_inventory_inspect_result",
+    "project_inventory_ledger_change_result",
     "project_inventory_list_result",
     "project_inventory_movement_add_result",
     "project_inventory_valuation_result",

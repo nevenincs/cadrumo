@@ -16,12 +16,13 @@ from .....application.inventory.registered_requests import (
     InventoryCreateRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryRetireRequest,
     InventoryValuationPreviewRequest,
 )
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.config import override_settings
 from .....core.i18n.render import tr
-from .....domain.contribuyente.inventory.records import MovementKind
+from .....domain.contribuyente.inventory.records import InventoryRetirementReason, MovementKind
 from ...tests.settling import settle
 from ..controller import LedgerWorkspaceController
 from ..registers_inventory import INVENTORY_TOOL_KEY, LedgerInventoryDoorV1, LedgerInventoryScreen, inventory_tool
@@ -160,6 +161,36 @@ async def test_create_add_a_movement_preview_and_record_a_closing_authority_each
             )
             result = _text(screen, "#register-result")
             assert tr("tui.ledger.registers.inventory.result.fingerprint", fingerprint="d" * 64) in result
+
+
+@pytest.mark.asyncio
+async def test_retire_shows_the_state_and_a_second_retirement_shows_its_keyed_refusal() -> None:
+    door = MemoryInventoryDoor((synthetic_inventory_row("act-01", 2026),))
+    screen = _screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _choose(pilot, screen, "inventory-action", "retire")
+            assert screen.query_one("#inventory-retirement-reason-field").display
+            assert not screen.query_one("#inventory-correction-reason-field").display
+            _fill(screen, actividad="act-01", year="2026")
+            await _review_and_confirm(pilot, screen)
+
+            request = door.requests[1]
+            assert isinstance(request, InventoryRetireRequest)
+            assert request.reason is InventoryRetirementReason.CREATED_IN_ERROR
+            result = _text(screen, "#register-result")
+            assert tr("application.inventory.workbench.done.applied") in result
+            assert tr("application.inventory.workbench.state.retired") in result
+
+            _fill(screen, actividad="act-01", year="2026")
+            await _review_and_confirm(pilot, screen)
+            assert door.requests[-2:][0] != request
+            assert tr(
+                "application.inventory.service.errors.inventory_already_retired",
+                actividad_id="act-01",
+                year="2026",
+            ) in _text(screen, "#ledger-refusal")
 
 
 @pytest.mark.asyncio

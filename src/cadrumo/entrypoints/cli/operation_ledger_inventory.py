@@ -19,6 +19,8 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from ...application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
+    InventoryInspectProjection,
+    InventoryLedgerChangeProjection,
     InventoryLedgerProjection,
     InventoryListProjection,
     InventoryMovementAddProjection,
@@ -27,22 +29,43 @@ from ...application.inventory.registered_projections import (
 )
 from ...application.inventory.registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
+    INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
+    INVENTORY_RESTORE_OPERATION_DEFINITION_ID,
+    INVENTORY_RETIRE_OPERATION_DEFINITION_ID,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityRecordRequest,
+    InventoryCorrectRequest,
     InventoryCreateRequest,
+    InventoryDescribeRequest,
+    InventoryInspectRequest,
+    InventoryLedgerChangeRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementCorrectRequest,
+    InventoryMovementReverseRequest,
+    InventoryRestoreRequest,
+    InventoryRetireRequest,
     InventoryValuationPreviewRequest,
 )
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...domain.contribuyente.inventory.corrections import (
+    INVENTORY_CORRECTION_REFUSAL_REASONS,
+    inventory_refusal_key,
+)
 from .ledger_business_payloads import (
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
+    InventoryInspectResult,
+    InventoryLedgerChangeResult,
     InventoryListResult,
     InventoryMovementAddResult,
     InventoryValuationPreviewPayload,
@@ -60,6 +83,16 @@ _REFUSAL_LOCALE_KEYS = {
     "inventory_validation": "errors.refused.refused_profile_inventory_validation",
     "closing_authority_conflict": "application.inventory.service.errors.closing_authority_conflict",
     "closing_authority_invalid": "errors.refused.refused_profile_inventory_validation",
+    **{reason: inventory_refusal_key(reason) for reason in INVENTORY_CORRECTION_REFUSAL_REASONS},
+}
+
+_LEDGER_CHANGE_DEFINITION_IDS: dict[type[InventoryLedgerChangeRequest], str] = {
+    InventoryDescribeRequest: INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
+    InventoryCorrectRequest: INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
+    InventoryMovementCorrectRequest: INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
+    InventoryMovementReverseRequest: INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
+    InventoryRetireRequest: INVENTORY_RETIRE_OPERATION_DEFINITION_ID,
+    InventoryRestoreRequest: INVENTORY_RESTORE_OPERATION_DEFINITION_ID,
 }
 
 
@@ -108,6 +141,7 @@ def _raise_registered_refusal[ResultT: BaseModel](
     ):
         raise invalid_completion_error(completed)
     context: dict[str, str] = {
+        **{fact.key: fact.value for fact in refusal.reason_facts},
         "operation_id": str(completed.operation_id),
         "terminal_condition": completed.terminal_condition.value,
         "effect": completed.effect.value,
@@ -139,7 +173,7 @@ def _collapse_public_decimal_objects(value: _JsonValue) -> _JsonValue:
     return value
 
 
-def _ledger_payload_json(ledger: InventoryLedgerProjection) -> str:
+def _ledger_payload_json(ledger: InventoryLedgerProjection, *, outcome: str | None = None) -> str:
     # Pydantic serialized this strict projection; the standard decoder exposes its
     # result as Any, so restore the closed JSON value type at this boundary.
     payload = cast(_JsonValue, json.loads(ledger.model_dump_json()))
@@ -148,6 +182,8 @@ def _ledger_payload_json(ledger: InventoryLedgerProjection) -> str:
     collapsed = _collapse_public_decimal_objects(payload)
     if not isinstance(collapsed, dict):
         raise ValueError("inventory ledger projection did not produce an object")
+    if outcome is not None:
+        collapsed["outcome"] = outcome
     return json.dumps(collapsed)
 
 
@@ -181,6 +217,10 @@ def read_inventory_catalogue(
                     "valuation_method": row.valuation_method.value,
                     "opening_stock": row.opening_stock.decimal,
                     "movement_count": row.movement_count,
+                    "label": row.label,
+                    "retired": row.retired,
+                    "retirement_reason": None if row.retirement_reason is None else row.retirement_reason.value,
+                    "correction_count": row.correction_count,
                 }
                 for row in projection.rows
             ],
@@ -253,6 +293,67 @@ def add_inventory_movement(
     ):
         raise invalid_completion_error(completed)
     return completed, InventoryMovementAddResult.model_validate_json(_ledger_payload_json(ledger))
+
+
+def inspect_inventory_ledger(
+    ctx: typer.Context,
+    *,
+    request: InventoryInspectRequest,
+) -> tuple[RegisteredOperationCompletion[InventoryInspectProjection], InventoryInspectResult]:
+    """Read one ledger with its movements and retained history through the exact profile worker."""
+    completed = _run(
+        ctx,
+        request,
+        definition_id=INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
+        result_type=InventoryInspectProjection,
+        allow_refusal_detail=True,
+    )
+    projection = completed.projection
+    if projection.outcome == "refused":
+        if projection.refusal is None:
+            raise invalid_completion_error(completed)
+        _raise_registered_refusal(completed, projection.refusal)
+    ledger = projection.ledger
+    if (
+        ledger is None
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code is not None
+    ):
+        raise invalid_completion_error(completed)
+    return completed, InventoryInspectResult.model_validate_json(_ledger_payload_json(ledger))
+
+
+def apply_inventory_ledger_change(
+    ctx: typer.Context,
+    *,
+    request: InventoryLedgerChangeRequest,
+) -> tuple[RegisteredOperationCompletion[InventoryLedgerChangeProjection], InventoryLedgerChangeResult]:
+    """Run one edit, rectification, retirement or restoration through the exact profile worker."""
+    completed = _run(
+        ctx,
+        request,
+        definition_id=_LEDGER_CHANGE_DEFINITION_IDS[type(request)],
+        result_type=InventoryLedgerChangeProjection,
+        allow_refusal_detail=True,
+    )
+    projection = completed.projection
+    if projection.outcome == "refused":
+        if projection.refusal is None:
+            raise invalid_completion_error(completed)
+        _raise_registered_refusal(completed, projection.refusal)
+    ledger = projection.ledger
+    expected_effect = OperationEffect.UPDATED if projection.outcome == "applied" else OperationEffect.NONE
+    if (
+        ledger is None
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not expected_effect
+        or completed.refusal_code is not None
+    ):
+        raise invalid_completion_error(completed)
+    return completed, InventoryLedgerChangeResult.model_validate_json(
+        _ledger_payload_json(ledger, outcome=projection.outcome)
+    )
 
 
 def preview_inventory_valuation(
@@ -336,7 +437,9 @@ def record_inventory_closing_authority(
 
 __all__ = [
     "add_inventory_movement",
+    "apply_inventory_ledger_change",
     "create_inventory_ledger",
+    "inspect_inventory_ledger",
     "preview_inventory_valuation",
     "read_inventory_catalogue",
     "record_inventory_closing_authority",

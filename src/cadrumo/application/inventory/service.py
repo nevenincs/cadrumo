@@ -8,6 +8,7 @@ Valuation math remains delegated to :func:`compute_inventory_valuation`.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -21,10 +22,24 @@ from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ...domain.contribuyente.inventory.corrections import (
+    INVENTORY_CORRECTION_REFUSAL_REASONS,
+    InventoryChangeStamp,
+    correct_movement,
+    correct_opening,
+    describe_ledger,
+    inventory_refusal_key,
+    restore_ledger,
+    retire_ledger,
+    reverse_movement,
+)
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
+    InventoryCorrectionReason,
     InventoryLedger,
+    InventoryLedgerDescriptor,
     InventoryLedgerDocument,
+    InventoryRetirementReason,
     InventoryValuationResult,
     MovementKind,
     MovementRecord,
@@ -56,6 +71,10 @@ class InventoryActividadSummary(BaseModel):
     valuation_method: ValuationMethod
     opening_stock: Decimal = Field(ge=Decimal("0"))
     movement_count: NonNegativeInt
+    label: str | None = None
+    retired: bool = False
+    retirement_reason: InventoryRetirementReason | None = None
+    correction_count: NonNegativeInt = 0
 
 
 class InventoryMovementCommand(BaseModel):
@@ -157,6 +176,53 @@ def _find_ledger(document: InventoryLedgerDocument, actividad_id: str, year: int
         if ledger.actividad_id == actividad_id and ledger.year == year:
             return ledger
     return None
+
+
+_CHANGE_REFUSAL_KEYS = frozenset(
+    {
+        *(inventory_refusal_key(reason) for reason in INVENTORY_CORRECTION_REFUSAL_REASONS),
+        inventory_refusal_key("duplicate_movement_id"),
+    }
+)
+
+
+def _refusal_from_change(
+    error: InventoryLedgerError | ValidationError,
+    *,
+    actividad_id: str,
+    year: int,
+) -> InventoryServiceInputError | InventoryActividadNotFoundError:
+    """Name the typed reason of a refused change in this layer's own error."""
+    coordinate = {"actividad_id": actividad_id, "year": str(year)}
+    if isinstance(error, InventoryLedgerError):
+        key = error.translated_message
+        if key == "adapters.persistence.profile.inventory.errors.inventory_ledger_not_found":
+            return InventoryActividadNotFoundError(
+                translated_message="application.inventory.service.errors.actividad_not_found",
+                context=coordinate,
+            )
+        if key in _CHANGE_REFUSAL_KEYS:
+            return InventoryServiceInputError(translated_message=key, context={**coordinate, **(error.context or {})})
+    return InventoryServiceInputError(translated_message=_INVENTORY_VALIDATION_TRANSLATION, context=coordinate)
+
+
+def _movement_record(movement: InventoryMovementCommand) -> MovementRecord:
+    """Project one command into its canonical movement row."""
+    if movement.acquisition_cost is not None:
+        return MovementRecord.from_purchase_acquisition(
+            movement_id=movement.movement_id,
+            movement_date=movement.movement_date,
+            quantity=movement.quantity,
+            acquisition_cost=movement.acquisition_cost,
+        )
+    return MovementRecord(
+        movement_id=movement.movement_id,
+        movement_date=movement.movement_date,
+        kind=movement.kind,
+        quantity=movement.quantity,
+        unit_cost=movement.unit_cost,
+        taxable_base=movement.taxable_base,
+    )
 
 
 class InventoryService:
@@ -266,6 +332,10 @@ class InventoryService:
                 valuation_method=ledger.valuation_method,
                 opening_stock=ledger.opening_stock,
                 movement_count=len(ledger.period_movements),
+                label=ledger.descriptor.label if ledger.descriptor is not None else None,
+                retired=ledger.is_retired,
+                retirement_reason=ledger.retirement_reason,
+                correction_count=sum(entry.correction_reason is not None for entry in ledger.history),
             )
             for ledger in document.ledgers
         )
@@ -302,22 +372,7 @@ class InventoryService:
         with the updated ledger after the movement is appended.
         """
         try:
-            if movement.acquisition_cost is not None:
-                record = MovementRecord.from_purchase_acquisition(
-                    movement_id=movement.movement_id,
-                    movement_date=movement.movement_date,
-                    quantity=movement.quantity,
-                    acquisition_cost=movement.acquisition_cost,
-                )
-            else:
-                record = MovementRecord(
-                    movement_id=movement.movement_id,
-                    movement_date=movement.movement_date,
-                    kind=movement.kind,
-                    quantity=movement.quantity,
-                    unit_cost=movement.unit_cost,
-                    taxable_base=movement.taxable_base,
-                )
+            record = _movement_record(movement)
         except (InventoryLedgerError, ValidationError) as exc:
             raise InventoryServiceInputError(
                 translated_message=_INVENTORY_VALIDATION_TRANSLATION,
@@ -332,6 +387,8 @@ class InventoryService:
                 # The revision-guarded repository invokes this validator on
                 # each latest candidate before publishing it. Only validation
                 # errors from this callback are known to precede persistence.
+                if isinstance(exc, InventoryLedgerError) and exc.translated_message in _CHANGE_REFUSAL_KEYS:
+                    raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
                 raise InventoryServiceInputError(
                     translated_message=_INVENTORY_VALIDATION_TRANSLATION,
                     context={"actividad_id": actividad_id, "year": str(year), "movement_id": movement.movement_id},
@@ -359,6 +416,8 @@ class InventoryService:
                     translated_message="application.inventory.service.errors.actividad_not_found",
                     context={"actividad_id": actividad_id, "year": str(year)},
                 ) from exc
+            if exc.translated_message in _CHANGE_REFUSAL_KEYS:
+                raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
             raise
         now = _now_utc()
         event_id = _emit_inventory_event(
@@ -450,6 +509,8 @@ class InventoryService:
                 context={"actividad_id": actividad_id, "year": str(year)},
             ) from exc
         except InventoryLedgerError as exc:
+            if exc.translated_message in _CHANGE_REFUSAL_KEYS:
+                raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
             if exc.translated_message != "adapters.persistence.profile.inventory.errors.inventory_ledger_not_found":
                 raise
             raise InventoryActividadNotFoundError(
@@ -461,50 +522,205 @@ class InventoryService:
         # atomic and replay-safe; claiming a cross-repository commit would not be.
         return InventoryLedgerResult(ledger=write.ledger, changed=write.changed)
 
-    def remove(
+    def _apply_change(
         self,
         *,
         bucket_id: str,
         actividad_id: str,
         year: int,
-        actor: str = "cli",
+        actor: str,
+        event_type: BucketEventType,
+        event_payload: dict[str, str],
+        change: Callable[[InventoryLedgerDocument, InventoryLedger], InventoryLedger],
     ) -> InventoryLedgerResult:
-        """Drop the entire ledger for actividad/year.
-
-        Raises :class:`InventoryActividadNotFoundError` on absence.
-        Otherwise saves the remaining :class:`InventoryLedgerDocument`,
-        emits ``LEDGER_INVENTORY_REMOVED``, and returns the removed
-        :class:`InventoryLedger` in an :class:`InventoryLedgerResult`.
-        """
-        repository = self._repository_for(bucket_id)
-        # Delegated to the guarded verb rather than repeating its read, absence
-        # check and write here. Removing ONE ledger rewrites the whole singleton
-        # document, so an unguarded removal discards a ledger created for a
-        # different activity in the interim -- losing that activity's entire
-        # inventory for an operator who was deleting something else.
-        #
-        # The absence check travels into the guard with it, so a retry re-judges
-        # it: a ledger a concurrent caller already removed must refuse as absent
-        # rather than report a second successful removal.
+        """Run one domain change in the revision guard; an exact replay emits no event."""
         try:
-            ledger = repository.remove(actividad_id, year=year)
-        except InventoryLedgerError as exc:
-            raise InventoryActividadNotFoundError(
-                translated_message="application.inventory.service.errors.actividad_not_found",
-                context={"actividad_id": actividad_id, "year": str(year)},
-            ) from exc
-        now = _now_utc()
+            write = self._repository_for(bucket_id).apply_ledger_change(actividad_id, year=year, change=change)
+        except (InventoryLedgerError, ValidationError) as exc:
+            raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
+        if not write.changed:
+            return InventoryLedgerResult(ledger=write.ledger, changed=False)
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,
             bucket_id=bucket_id,
-            event_type=BucketEventType.LEDGER_INVENTORY_REMOVED,
+            event_type=event_type,
             actividad_id=actividad_id,
             year=year,
             actor=actor,
-            occurred_at=now,
-            payload={"actividad_id": actividad_id, "year": str(year)},
+            occurred_at=_now_utc(),
+            payload=event_payload,
         )
-        return InventoryLedgerResult(ledger=ledger, bucket_event_ids=(event_id,))
+        return InventoryLedgerResult(ledger=write.ledger, bucket_event_ids=(event_id,), changed=True)
+
+    def describe(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        correction_id: str,
+        label: str,
+        description: str | None,
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
+        """Replace the inventory's descriptive facts; valuation and fingerprints do not move."""
+        try:
+            descriptor = InventoryLedgerDescriptor(label=label, description=description)
+        except (InventoryLedgerError, ValidationError) as exc:
+            raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        return self._apply_change(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            event_type=BucketEventType.LEDGER_INVENTORY_DESCRIBED,
+            event_payload={"correction_id": correction_id},
+            change=lambda _document, ledger: describe_ledger(ledger, stamp=stamp, descriptor=descriptor),
+        )
+
+    def correct_opening(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        correction_id: str,
+        reason: InventoryCorrectionReason,
+        opening_stock: Decimal | None,
+        valuation_method: ValuationMethod | None,
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
+        """Rectify the opening value or valuation method, retaining what they displace."""
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        return self._apply_change(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            event_type=BucketEventType.LEDGER_INVENTORY_CORRECTED,
+            event_payload={"correction_id": correction_id, "reason": reason.value},
+            change=lambda document, ledger: correct_opening(
+                document,
+                ledger,
+                stamp=stamp,
+                reason=reason,
+                opening_stock=opening_stock,
+                valuation_method=valuation_method,
+            ),
+        )
+
+    def movement_correct(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        correction_id: str,
+        target_movement_id: str,
+        replacement: InventoryMovementCommand,
+        reason: InventoryCorrectionReason,
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
+        """Supersede one movement with a replacement, retaining the movement it displaces."""
+        try:
+            record = _movement_record(replacement)
+        except (InventoryLedgerError, ValidationError) as exc:
+            raise _refusal_from_change(exc, actividad_id=actividad_id, year=year) from exc
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        return self._apply_change(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            event_type=BucketEventType.LEDGER_INVENTORY_MOVEMENT_CORRECTED,
+            event_payload={
+                "correction_id": correction_id,
+                "movement_id": target_movement_id,
+                "replacement_movement_id": record.movement_id,
+                "reason": reason.value,
+            },
+            change=lambda document, ledger: correct_movement(
+                document,
+                ledger,
+                stamp=stamp,
+                target_movement_id=target_movement_id,
+                replacement=record,
+                reason=reason,
+            ),
+        )
+
+    def movement_reverse(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        correction_id: str,
+        target_movement_id: str,
+        reason: InventoryCorrectionReason,
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
+        """Take one movement out of the effective set, retaining it as evidence."""
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        return self._apply_change(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            event_type=BucketEventType.LEDGER_INVENTORY_MOVEMENT_REVERSED,
+            event_payload={"correction_id": correction_id, "movement_id": target_movement_id, "reason": reason.value},
+            change=lambda document, ledger: reverse_movement(
+                document,
+                ledger,
+                stamp=stamp,
+                target_movement_id=target_movement_id,
+                reason=reason,
+            ),
+        )
+
+    def retire(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        correction_id: str,
+        reason: InventoryRetirementReason,
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
+        """Take the inventory out of the active register with every fact retained."""
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        return self._apply_change(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            event_type=BucketEventType.LEDGER_INVENTORY_RETIRED,
+            event_payload={"correction_id": correction_id, "reason": reason.value},
+            change=lambda document, ledger: retire_ledger(document, ledger, stamp=stamp, reason=reason),
+        )
+
+    def restore(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        correction_id: str,
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
+        """Bring a retired inventory back to the active register."""
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=_now_utc(), actor=actor)
+        return self._apply_change(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            event_type=BucketEventType.LEDGER_INVENTORY_RESTORED,
+            event_payload={"correction_id": correction_id},
+            change=lambda _document, ledger: restore_ledger(ledger, stamp=stamp),
+        )
 
 
 __all__ = [

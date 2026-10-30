@@ -240,12 +240,24 @@ def _load_inventory_ledgers(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )
-    ledgers = tuple(
-        sorted(
-            (item for item in document.ledgers if item.year == filing_year),
-            key=lambda item: item.actividad_id,
-        ),
-    )
+    # A retired ledger with no stock facts has nothing to declare. One still
+    # holding facts refuses rather than dropping them from the Anexo D rows,
+    # because retirement is not proof that the stock never existed.
+    selected = tuple(item for item in document.ledgers if item.year == filing_year)
+    if any(item.is_retired and item.has_economic_facts for item in selected):
+        return CalculationSourceResolution(
+            resolver_id=resolver_id,
+            owned_sources=owned_sources,
+            unresolved_binding_ids=binding_ids,
+            diagnostics=(
+                _diagnostic(
+                    reason="source_domain_not_ready",
+                    state="retired_ledger_holds_stock_facts",
+                    message=f"a retired {filing_year} inventory activity ledger still holds stock facts",
+                ),
+            ),
+        )
+    ledgers = tuple(sorted((item for item in selected if not item.is_retired), key=lambda item: item.actividad_id))
     if not ledgers:
         return CalculationSourceResolution(
             resolver_id=resolver_id,

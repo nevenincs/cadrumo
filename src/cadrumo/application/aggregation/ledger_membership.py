@@ -17,7 +17,7 @@ See Also:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
@@ -35,6 +35,7 @@ from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtoco
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..modelo.work_profile import ModeloWorkProfile
+from .inventory import InventoryLedgerRepositoryProtocol, InventorySourceResolver
 from .modelo_bindings import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
@@ -59,6 +60,7 @@ class LedgerMembershipPorts:
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol
     activity_asset_history_repository: ActivityAssetHistoryRepository
     usage_ratio_profile_loader: UsageRatioProfileLoader
+    inventory_repository: InventoryLedgerRepositoryProtocol
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,6 +71,7 @@ class LedgerSourceMembership:
     available: bool = True
     ledger_sources_declared: bool = False
     activity_asset_consumption: ActivityAssetConsumption = field(default_factory=ActivityAssetConsumption)
+    inventory_row_identities: frozenset[tuple[str, str]] = frozenset()
 
 
 def ledger_transaction_ref_identity(source_ref: str | None) -> str | None:
@@ -141,10 +144,33 @@ def _query_ledger_membership(
         m210_gross_income_source_mode=target.m210_gross_income_source_mode,
     )
     try:
-        return _collect_ledger_membership(context=context, work_unit=work_unit, ports=ports, selected=selected)
+        membership = _collect_ledger_membership(context=context, work_unit=work_unit, ports=ports, selected=selected)
+        if not consumed_inventory_rows(target):
+            return membership
+        return replace(membership, inventory_row_identities=_observe_inventory_rows(context, ports))
     except (CadrumoError, LookupError) as exc:
         _log.debug("ledger membership unavailable error_type=%s", type(exc).__name__)
         return LedgerSourceMembership(available=False, ledger_sources_declared=True)
+
+
+def consumed_inventory_rows(target: CalculationRevision) -> frozenset[tuple[str, str]]:
+    """Read the activity and projection fingerprint recorded by a :class:`CalculationRevision`."""
+    return frozenset(
+        (identity.source_row_identity, identity.fingerprint)
+        for identity in target.row_source_identities.values()
+        if identity.source_kind is BindingSourceKind.INVENTORY
+    )
+
+
+def _observe_inventory_rows(
+    context: CalculationSourceContext,
+    ports: LedgerMembershipPorts,
+) -> frozenset[tuple[str, str]]:
+    """Resolve the same rows through the inventory owner; an unresolved cohort observes none."""
+    resolution = InventorySourceResolver(inventory_repository=ports.inventory_repository).resolve(context)
+    return frozenset(
+        (identity.source_row_identity, identity.fingerprint) for identity in resolution.row_source_identities.values()
+    )
 
 
 def _collect_ledger_membership(
@@ -234,6 +260,7 @@ def _record_membership_diagnostic(diagnostic: CalculationSourceDiagnostic, obser
 __all__ = [
     "LedgerMembershipPorts",
     "LedgerSourceMembership",
+    "consumed_inventory_rows",
     "ledger_transaction_ref_identity",
     "query_ledger_membership",
 ]

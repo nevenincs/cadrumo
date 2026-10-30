@@ -45,8 +45,11 @@ from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAcquisitionEvidenceKind,
+    InventoryHistoryKind,
     InventoryLedger,
     InventoryLedgerDocument,
+    InventoryLedgerHistoryEntry,
+    InventoryRetirementReason,
     MovementRecord,
     ValuationMethod,
 )
@@ -343,6 +346,54 @@ def test_inventory_activity_order_is_insertion_invariant_and_semantic_change_cha
         forward.row_source_identities[("inventory-0181", 1)].fingerprint
         != mutated.row_source_identities[("inventory-0181", 1)].fingerprint
     )
+
+
+def _retired(ledger: InventoryLedger) -> InventoryLedger:
+    entry = InventoryLedgerHistoryEntry(
+        correction_id="out",
+        kind=InventoryHistoryKind.RETIRED,
+        recorded_at=datetime(2026, 1, 1, tzinfo=UTC),
+        actor="test",
+        request_fingerprint="a" * 64,
+        retirement_reason=InventoryRetirementReason.CREATED_IN_ERROR,
+    )
+    return ledger.model_copy(update={"history": (entry,)})
+
+
+def test_a_retired_inventory_holding_stock_facts_fails_the_cohort_closed() -> None:
+    alpha = inventory_ledger("alpha")
+    result = InventorySourceResolver(
+        inventory_repository=_InventoryLedgerRepositoryScenario(
+            InventoryLedgerDocument(ledgers=(alpha, _retired(inventory_ledger("zeta"))))
+        )
+    ).resolve(_context(_revision(inventory=True)))
+
+    assert result.row_binding_values == {}
+    assert result.row_source_identities == {}
+    assert [item.reason for item in result.diagnostics] == ["source_domain_not_ready"]
+
+
+def test_a_retired_inventory_without_stock_facts_leaves_the_cohort() -> None:
+    alpha = inventory_ledger("alpha")
+    empty = _retired(
+        InventoryLedger(
+            actividad_id="zeta",
+            year=2025,
+            valuation_method=ValuationMethod.FIFO,
+            opening_stock=Decimal("0.00"),
+            closing_authority_record=None,
+        )
+    )
+
+    with_empty = InventorySourceResolver(
+        inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(alpha, empty)))
+    ).resolve(_context(_revision(inventory=True)))
+    alone = InventorySourceResolver(
+        inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(alpha,)))
+    ).resolve(_context(_revision(inventory=True)))
+
+    assert with_empty.row_source_identities == alone.row_source_identities
+    assert with_empty.diagnostics == ()
 
 
 def test_inventory_conflict_is_safe_per_activity_advisory() -> None:

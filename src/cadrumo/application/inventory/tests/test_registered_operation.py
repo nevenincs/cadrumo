@@ -6,7 +6,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import cast
+from typing import cast, get_args
 from uuid import UUID
 
 import pytest
@@ -16,6 +16,10 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.contribuyente.inventory.corrections import (
+    INVENTORY_CORRECTION_REFUSAL_REASONS,
+    inventory_refusal_key,
+)
 from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
@@ -34,12 +38,16 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import InventoryServiceInputError
 from ..ports import InventoryServicePorts
 from ..registered_execution_result import InventoryOperationExecutionResult, InventoryOperationRefusalDetail
-from ..registered_executor import InventoryOperationExecutor
+from ..registered_executor import _SERVICE_INPUT_REASONS, InventoryOperationExecutor
 from ..registered_operation import (
     build_inventory_closing_authority_record_definition,
     build_inventory_closing_authority_record_registration,
     build_inventory_create_definition,
     build_inventory_create_registration,
+    build_inventory_inspect_definition,
+    build_inventory_inspect_registration,
+    build_inventory_ledger_change_definitions,
+    build_inventory_ledger_change_registration,
     build_inventory_list_definition,
     build_inventory_list_registration,
     build_inventory_movement_add_definition,
@@ -54,8 +62,10 @@ from ..registered_requests import (
     InventoryClosingAuthorityDecisionRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryCreateRequest,
+    InventoryRefusalReason,
 )
 from ..registered_result_projection import project_inventory_create_result
+from ..registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
 from ..service import InventoryLedgerResult
 from .registered_operation_conformance_support import build_inventory_conformance_closing_authority_record
 
@@ -282,6 +292,40 @@ def test_inventory_registry_binds_all_five_closed_secure_request_and_result_sche
     assert all(item.capabilities.request_storage.value == "secure_reference" for item in definitions)
     assert all(item.capabilities.sensitive_input.value == "secure_reference" for item in definitions)
     assert all(item.result_projector is not None for item in registrations)
+
+
+def test_inventory_registry_binds_the_inspect_and_every_ledger_change_operation() -> None:
+    def ports_factory(*, bucket_id: str):
+        raise AssertionError(f"ports should be bound only inside the profile worker: {bucket_id}")
+
+    changes = build_inventory_ledger_change_definitions(ports_factory)
+    inspect = build_inventory_inspect_definition(ports_factory)
+
+    assert {item.definition_id for item in changes} == set(INVENTORY_LEDGER_CHANGE_REQUEST_TYPES)
+    assert {item.definition_id for item in changes} == {
+        "ledger.inventory.describe",
+        "ledger.inventory.correct",
+        "ledger.inventory.movement.correct",
+        "ledger.inventory.movement.reverse",
+        "ledger.inventory.retire",
+        "ledger.inventory.restore",
+    }
+    assert inspect.definition_id == "ledger.inventory.inspect"
+    registrations = (
+        build_inventory_inspect_registration(inspect),
+        *(build_inventory_ledger_change_registration(item) for item in changes),
+    )
+    assert all(item.result_projector is not None for item in registrations)
+    assert all(item.capabilities.sensitive_input.value == "secure_reference" for item in (inspect, *changes))
+
+
+def test_every_correction_refusal_reason_is_a_public_reason_with_a_catalogue_key() -> None:
+    public = set(get_args(InventoryRefusalReason))
+    assert set(INVENTORY_CORRECTION_REFUSAL_REASONS) <= public
+    assert all(
+        _SERVICE_INPUT_REASONS[inventory_refusal_key(reason)] == reason
+        for reason in INVENTORY_CORRECTION_REFUSAL_REASONS
+    )
 
 
 class _Events:

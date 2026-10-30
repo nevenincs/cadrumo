@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from ...application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
+from ...application.inventory.registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
 from ...application.invoices.catalogue_read_operation import (
     INVOICE_LIST_OPERATION_DEFINITION_ID,
     INVOICE_VIEW_OPERATION_DEFINITION_ID,
@@ -781,7 +782,9 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             RegisteredExecutorConformanceCase(
                 definition_id,
                 OperationTerminalCondition.SUCCEEDED,
-                OperationEffect.NONE if definition_id == "ledger.inventory.list" else OperationEffect.UPDATED,
+                OperationEffect.NONE
+                if definition_id in {"ledger.inventory.list", "ledger.inventory.inspect"}
+                else OperationEffect.UPDATED,
                 (definition_id,),
             )
             for definition_id in (
@@ -790,6 +793,8 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
                 "ledger.inventory.movement.add",
                 "ledger.inventory.valuation.preview",
                 "ledger.inventory.closing-authority.record",
+                "ledger.inventory.inspect",
+                *INVENTORY_LEDGER_CHANGE_REQUEST_TYPES,
             )
         ),
         *(

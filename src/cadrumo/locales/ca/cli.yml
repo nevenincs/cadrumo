@@ -352,17 +352,38 @@ cli:
           registre d'existències.
         closing_authority_record_help: Registrar atòmicament l'autoritat acreditada
           del tancament d'existències
+        correct_help: Corregeix el valor inicial o el mètode de valoració, conservant
+          els valors que substitueixen.
+        corrected_opening_stock_help: Valor inicial corregit en euros.
+        corrected_valuation_method_help: Mètode de valoració corregit.
+        correction_id_help: Identitat que tries per a aquest canvi; repetir-la amb
+          la mateixa sol·licitud no canvia res.
+        correction_reason_help: Per què es corregeix la dada.
         create_help: Crea un registre d'existències per a una activitat i exercici
+        describe_help: Canvia el nom i la descripció de l'inventari; la valoració
+          no es mou.
+        description_help: Descripció de l'inventari.
         group_help: Registres d'existències per activitat, moviments i valoració
+        inspect_help: Mostra un inventari amb els seus moviments vigents i el seu
+          historial conservat.
+        label_help: Nom de l'inventari.
         list_help: Llista els registres d'existències del perfil actiu
         movement_add_help: Afegeix un moviment de compra, venda o ajust al registre
           d'existències
+        movement_correct_help: Substitueix un moviment per un altre de corregit; l'original
+          es queda a l'historial.
         movement_date_help: Data del moviment (AAAA-MM-DD)
         movement_group_help: Gestiona els moviments del registre d'existències
         movement_id_help: Identificador del moviment dins del registre d'existències
         movement_kind_help: Tipus de moviment (opening, purchase, cogs o count)
+        movement_reverse_help: Treu un moviment de l'inventari; es queda a l'historial.
         opening_stock_help: Valor inicial d'existències
         quantity_help: Quantitat del moviment, positiva o negativa
+        restore_help: Torna un inventari retirat al registre actiu.
+        retire_help: Treu l'inventari del registre actiu conservant totes les seves
+          dades.
+        retirement_reason_help: Per què l'inventari surt del registre actiu.
+        target_movement_id_help: Moviment que es corregeix o s'anul·la.
         taxable_base_help: Base imposable associada al moviment
         unit_cost_help: Cost unitari en moviments de compra
         valuation_group_help: Calcula i previsualitza la valoració d'existències
@@ -800,8 +821,8 @@ cli:
       audit:
         bundle_id_help: Identificador del paquet d'evidència (SHA-256 complet o prefix
           inequívoc).
-        check_help: Reverificar un paquet d'evidència recalculant els digests dels
-          registres.
+        check_help: Torna a verificar el paquet d'evidència recalculant els resums
+          criptogràfics dels registres.
         export_help: Generar un fitxer ZIP determinista del paquet d'evidència (manifest.json
           s'escriu l'últim).
         force_incomplete_help: Permetre l'exportació quan la verificació indiqui que
@@ -2250,7 +2271,7 @@ cli:
     list:
       help: Llistar tots els perfils registrats i marcar l'actiu
     login:
-      help: Autentica un perfil i inicia una sessió reprenible
+      help: Autentica un perfil i inicia una sessió reprenable
       name_help: UUID o etiqueta exacta del perfil; omet-lo per usar el perfil seleccionat
       notices:
         already_authenticated: Aquest perfil ja té la sessió iniciada; s'ha reprès

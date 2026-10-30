@@ -32,11 +32,14 @@ from .....application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryClosingAuthorityRecordProjection,
     InventoryCreateProjection,
+    InventoryInspectProjection,
+    InventoryLedgerChangeProjection,
     InventoryLedgerProjection,
     InventoryListProjection,
     InventoryListRowProjection,
     InventoryMovementAddProjection,
     InventoryMovementProjection,
+    InventoryReasonFact,
     InventoryRefusalProjection,
     InventoryValuationOperationProjection,
     InventoryValuationPreviewProjection,
@@ -46,8 +49,11 @@ from .....application.inventory.registered_requests import (
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
     InventoryCreateRequest,
+    InventoryInspectRequest,
+    InventoryLedgerChangeRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryRetireRequest,
     InventoryValuationPreviewRequest,
 )
 from .....application.operations.public_scalar import PublicDecimal
@@ -446,6 +452,7 @@ class MemoryInventoryDoor:
         """Hold the synthetic inventories and the valuation figures a preview reports."""
         self.rows: list[InventoryListRowProjection] = list(rows)
         self.movements: dict[tuple[str, int], list[InventoryMovementProjection]] = {}
+        self.corrections: set[str] = set()
         self.closing_value = closing_value
         self.cogs = cogs
         self.requests: list[object] = []
@@ -478,6 +485,8 @@ class MemoryInventoryDoor:
             period_movements=tuple(self.movements.get((row.actividad_id, row.year), ())),
             schema_version="1",
             bucket_event_ids=("event-1",),
+            retired=row.retired,
+            retirement_reason=row.retirement_reason,
         )
 
     @staticmethod
@@ -487,6 +496,57 @@ class MemoryInventoryDoor:
             reason="activity_not_found",
             actividad_id=actividad_id,
             year=year,
+        )
+
+    async def inspect(self, request: InventoryInspectRequest) -> InventoryInspectProjection:
+        """Answer one inventory with what it retains."""
+        self._check(request)
+        row = self._row(request.actividad_id, request.year)
+        if row is None:
+            return InventoryInspectProjection(
+                outcome="refused",
+                profile_id=request.profile_id,
+                refusal=self._not_found(request.actividad_id, request.year),
+            )
+        return InventoryInspectProjection(outcome="found", profile_id=request.profile_id, ledger=self._ledger(row))
+
+    async def apply_change(self, request: InventoryLedgerChangeRequest) -> InventoryLedgerChangeProjection:
+        """Retire an inventory, replay a seen correction, or refuse a second retirement by its catalogue key."""
+        self._check(request)
+        row = self._row(request.actividad_id, request.year)
+        if row is None:
+            return InventoryLedgerChangeProjection(
+                outcome="refused",
+                profile_id=request.profile_id,
+                refusal=self._not_found(request.actividad_id, request.year),
+            )
+        if request.correction_id in self.corrections:
+            return InventoryLedgerChangeProjection(
+                outcome="replayed", profile_id=request.profile_id, ledger=self._ledger(row)
+            )
+        if isinstance(request, InventoryRetireRequest):
+            if row.retired:
+                return InventoryLedgerChangeProjection(
+                    outcome="refused",
+                    profile_id=request.profile_id,
+                    refusal=InventoryRefusalProjection(
+                        code="REFUSED_INVENTORY_SERVICE_INPUT",
+                        reason="inventory_already_retired",
+                        actividad_id=request.actividad_id,
+                        year=request.year,
+                        reason_key="application.inventory.service.errors.inventory_already_retired",
+                        reason_facts=(
+                            InventoryReasonFact(key="actividad_id", value=request.actividad_id),
+                            InventoryReasonFact(key="year", value=str(request.year)),
+                        ),
+                    ),
+                )
+            position = self.rows.index(row)
+            row = row.model_copy(update={"retired": True, "retirement_reason": request.reason})
+            self.rows[position] = row
+        self.corrections.add(request.correction_id)
+        return InventoryLedgerChangeProjection(
+            outcome="applied", profile_id=request.profile_id, ledger=self._ledger(row), bucket_event_ids=("event-1",)
         )
 
     async def read_register(self, request: InventoryListRequest) -> InventoryListProjection:

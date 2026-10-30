@@ -246,6 +246,10 @@ def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -
         build_inventory_closing_authority_record_registration,
         build_inventory_create_definition,
         build_inventory_create_registration,
+        build_inventory_inspect_definition,
+        build_inventory_inspect_registration,
+        build_inventory_ledger_change_definitions,
+        build_inventory_ledger_change_registration,
         build_inventory_list_definition,
         build_inventory_list_registration,
         build_inventory_movement_add_definition,
@@ -265,14 +269,18 @@ def compose_inventory_registered_operation(inputs: OperationCompositionInputs) -
     closing = build_inventory_closing_authority_record_definition(
         build_inventory_service_ports, execution_caller_reader=caller
     )
+    inspect = build_inventory_inspect_definition(build_inventory_service_ports)
+    changes = build_inventory_ledger_change_definitions(build_inventory_service_ports, execution_caller_reader=caller)
     return built(
-        (listing, create, movement, valuation, closing),
+        (listing, create, movement, valuation, closing, inspect, *changes),
         (
             build_inventory_list_registration(listing),
             build_inventory_create_registration(create),
             build_inventory_movement_add_registration(movement),
             build_inventory_valuation_preview_registration(valuation),
             build_inventory_closing_authority_record_registration(closing),
+            build_inventory_inspect_registration(inspect),
+            *(build_inventory_ledger_change_registration(definition) for definition in changes),
         ),
     )
 

@@ -41,7 +41,11 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.ledger_filing_snapshot import evaluate_ledger_filing_staleness
-from ..aggregation.ledger_membership import LedgerSourceMembership, ledger_transaction_ref_identity
+from ..aggregation.ledger_membership import (
+    LedgerSourceMembership,
+    consumed_inventory_rows,
+    ledger_transaction_ref_identity,
+)
 
 if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision
@@ -64,6 +68,15 @@ LEDGER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
 ASSET_REGISTER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
     "ley-35-2006:art-30",
     "rd-439-2007:art-30",
+)
+
+#: Grounding for the inventory drift refusal: stock variation enters the
+#: activity's net income through the valuation of existencias (LIRPF art. 28,
+#: LIS art. 17), so a declaración built on rows the ledgers no longer yield
+#: states a variation those ledgers do not support.
+INVENTORY_REGISTER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
+    "ley-35-2006:art-28",
+    "ley-27-2014:art-17",
 )
 
 type _BlockingFindingObserver = Callable[
@@ -111,7 +124,7 @@ def ledger_drift_findings(
     blocking_finding_observer: _BlockingFindingObserver | None = None,
     asset_register_drift_observer: _AssetRegisterDriftObserver | None = None,
 ) -> list[ModeloVerificationFinding]:
-    """Refuse a draft whose contributing ledger rows or register state moved since it was calculated.
+    """Refuse a :class:`CalculationRevision` draft whose ledger rows or register state moved.
 
     Two views are compared. The ledger rows are compared through the anchor, and
     the activity-asset register through the claims and schedule fingerprints the
@@ -127,6 +140,9 @@ def ledger_drift_findings(
     )
     if target.state is not CalculationRevisionState.BORRADOR or not current_membership.available:
         return findings
+    inventory_finding = _inventory_drift_finding(target, work_unit, current_membership, source_refs=source_refs)
+    if inventory_finding is not None:
+        findings = [*findings, inventory_finding]
     recorded = target.activity_asset_consumption
     current = current_membership.activity_asset_consumption
     if recorded == current:
@@ -215,6 +231,39 @@ def _transaction_drift_findings(
         blocking_finding_observer, finding, True, tuple(verdict.changed), tuple(verdict.removed), added
     )
     return [finding]
+
+
+def _inventory_drift_finding(
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    current_membership: LedgerSourceMembership,
+    *,
+    source_refs: tuple[str, ...],
+) -> ModeloVerificationFinding | None:
+    """Refuse a draft whose inventory rows no longer match the ledgers that yield them.
+
+    A draft that consumed no inventory row has nothing to compare: an unresolved
+    inventory binding already blocks it through its own source issue.
+    """
+    recorded = consumed_inventory_rows(target)
+    current = current_membership.inventory_row_identities
+    if not recorded or recorded == current:
+        return None
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.inventory_register_drift",
+        message_facts={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "rows_recorded": len(recorded),
+            "rows_current": len(current),
+            "rows_changed": len(recorded ^ current),
+        },
+        legal_refs=INVENTORY_REGISTER_DRIFT_LEGAL_REFS,
+        source_refs=source_refs,
+    )
 
 
 def _asset_register_drift_finding(
@@ -331,6 +380,7 @@ def _drift_finding(
 
 __all__ = [
     "ASSET_REGISTER_DRIFT_LEGAL_REFS",
+    "INVENTORY_REGISTER_DRIFT_LEGAL_REFS",
     "LEDGER_DRIFT_LEGAL_REFS",
     "ledger_drift_findings",
 ]

@@ -29,7 +29,9 @@ from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ....core.money.rounding import round_to_cents as _quantize
 from ....core.percentage import Percentage
+from ....core.time.utc import UtcInstant
 from ....core.unit_proportion import UnitProportion
+from ...buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...filing_evidence import FilingEvidenceReference
 from .closing_authority_records import InventoryClosingAuthorityRecord
 from .closing_foundations import (
@@ -513,6 +515,110 @@ class StockLayer(BaseModel):
     source_movement_id: str = Field(min_length=1)
 
 
+class InventoryHistoryKind(StrEnum):
+    """What one retained inventory history entry did to its ledger."""
+
+    DESCRIBED = "described"
+    OPENING_CORRECTED = "opening_corrected"
+    MOVEMENT_CORRECTED = "movement_corrected"
+    MOVEMENT_REVERSED = "movement_reversed"
+    RETIRED = "retired"
+    RESTORED = "restored"
+
+
+class InventoryCorrectionReason(StrEnum):
+    """Why a stock or opening fact was rectified."""
+
+    KEYING_ERROR = "keying_error"
+    SOURCE_DOCUMENT_CORRECTED = "source_document_corrected"
+    DUPLICATE_ENTRY = "duplicate_entry"
+    OPERATION_DID_NOT_OCCUR = "operation_did_not_occur"
+
+
+class InventoryRetirementReason(StrEnum):
+    """Why an inventory left the active register."""
+
+    CREATED_IN_ERROR = "created_in_error"
+    ACTIVITY_CEASED = "activity_ceased"
+    NO_STOCK_HELD = "no_stock_held"
+
+
+class InventoryLedgerDescriptor(BaseModel):
+    """Descriptive facts of an inventory; they never enter its valuation or fingerprints."""
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    label: str = Field(min_length=1, max_length=120)
+    description: str | None = Field(default=None, min_length=1, max_length=1024)
+
+    @field_validator("label", "description")
+    @classmethod
+    @pydantic_validation_boundary
+    def _text_is_trimmed(cls, value: str | None) -> str | None:
+        if value is not None and value != value.strip():
+            raise InventoryValidationError("inventory descriptor text must be trimmed")
+        return value
+
+
+class InventoryLedgerHistoryEntry(BaseModel):
+    """One retained change to a ledger, carrying the prior fact it displaced.
+
+    Attributes:
+        correction_id: Caller-chosen identity; repeating it with the same request
+            is an exact replay.
+        kind: :class:`InventoryHistoryKind`.
+        recorded_at: When the change was recorded.
+        actor: Who recorded it.
+        request_fingerprint: Identity of the request, excluding actor and time.
+        correction_reason: Why a stock or opening fact was rectified.
+        retirement_reason: Why the inventory left the active register.
+        superseded_movement: The movement taken out of the effective set.
+        replacement_movement_id: The movement that replaced it, absent on a reversal.
+        prior_opening_stock: The opening value the correction displaced.
+        prior_valuation_method: The valuation method the correction displaced.
+        prior_descriptor: The descriptor the change displaced, absent on the first.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    correction_id: str = Field(min_length=1, max_length=64)
+    kind: InventoryHistoryKind
+    recorded_at: UtcInstant
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
+    request_fingerprint: ContentDigest
+    correction_reason: InventoryCorrectionReason | None = None
+    retirement_reason: InventoryRetirementReason | None = None
+    superseded_movement: MovementRecord | None = None
+    replacement_movement_id: str | None = Field(default=None, min_length=1)
+    prior_opening_stock: Decimal | None = Field(default=None, ge=Decimal("0"))
+    prior_valuation_method: ValuationMethod | None = None
+    prior_descriptor: InventoryLedgerDescriptor | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _facts_match_kind(self) -> InventoryLedgerHistoryEntry:
+        """Hold each kind to exactly the facts it displaces."""
+        kind = self.kind
+        rectifies = kind in {
+            InventoryHistoryKind.OPENING_CORRECTED,
+            InventoryHistoryKind.MOVEMENT_CORRECTED,
+            InventoryHistoryKind.MOVEMENT_REVERSED,
+        }
+        supersedes = kind in {InventoryHistoryKind.MOVEMENT_CORRECTED, InventoryHistoryKind.MOVEMENT_REVERSED}
+        is_opening = kind is InventoryHistoryKind.OPENING_CORRECTED
+        if (
+            rectifies != (self.correction_reason is not None)
+            or (kind is InventoryHistoryKind.RETIRED) != (self.retirement_reason is not None)
+            or supersedes != (self.superseded_movement is not None)
+            or (kind is InventoryHistoryKind.MOVEMENT_CORRECTED) != (self.replacement_movement_id is not None)
+            or is_opening != (self.prior_opening_stock is not None)
+            or is_opening != (self.prior_valuation_method is not None)
+            or (self.prior_descriptor is not None and kind is not InventoryHistoryKind.DESCRIBED)
+        ):
+            raise InventoryValidationError("inventory history entry facts do not match its kind")
+        return self
+
+
 InventoryYear = Annotated[int, Field(ge=1900)]
 """The calendar year an inventory ledger or movement covers.
 
@@ -537,6 +643,10 @@ class InventoryLedger(BaseModel):
         closing_authority_record: Required nullable persisted authority bundle;
             ``None`` states that no operator authority decision is recorded.
         schema_version: Forward-compatible schema version. ``"3"``.
+        descriptor: Current descriptive facts; absent until described.
+        history: Append-only record of every change, retaining what it displaced.
+            ``period_movements`` stays the effective set, so every valuation and
+            projection reads corrected facts without filtering.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -549,6 +659,42 @@ class InventoryLedger(BaseModel):
     period_movements: tuple[MovementRecord, ...] = ()
     closing_authority_record: InventoryClosingAuthorityRecord | None
     schema_version: str = INVENTORY_SCHEMA_VERSION
+    descriptor: InventoryLedgerDescriptor | None = None
+    history: tuple[InventoryLedgerHistoryEntry, ...] = ()
+
+    @property
+    def is_retired(self) -> bool:
+        """Whether the latest retirement or restoration left it out of the active register."""
+        return self.retirement_reason is not None
+
+    @property
+    def retirement_reason(self) -> InventoryRetirementReason | None:
+        """The reason of the standing retirement, absent while active."""
+        for entry in reversed(self.history):
+            if entry.kind is InventoryHistoryKind.RETIRED:
+                return entry.retirement_reason
+            if entry.kind is InventoryHistoryKind.RESTORED:
+                return None
+        return None
+
+    @property
+    def has_economic_facts(self) -> bool:
+        """Whether any effective movement or a nonzero opening value states a tax fact."""
+        return bool(self.period_movements) or self.opening_stock != MONEY_ZERO
+
+    @property
+    def known_movement_ids(self) -> frozenset[str]:
+        """Every movement identity ever used here; a superseded one is never reissued."""
+        return frozenset(
+            (
+                *(movement.movement_id for movement in self.period_movements),
+                *(
+                    entry.superseded_movement.movement_id
+                    for entry in self.history
+                    if entry.superseded_movement is not None
+                ),
+            )
+        )
 
     @field_validator("actividad_id")
     @classmethod
@@ -577,6 +723,14 @@ class InventoryLedger(BaseModel):
         movement_ids = tuple(movement.movement_id for movement in self.period_movements)
         if len(set(movement_ids)) != len(movement_ids):
             raise InventoryValidationError("inventory ledger movement_id values must be unique")
+        correction_ids = tuple(entry.correction_id for entry in self.history)
+        superseded_ids = tuple(
+            entry.superseded_movement.movement_id for entry in self.history if entry.superseded_movement is not None
+        )
+        if len(set(correction_ids)) != len(correction_ids) or len(set(superseded_ids)) != len(superseded_ids):
+            raise InventoryValidationError("inventory history identities must be unique")
+        if set(superseded_ids) & set(movement_ids):
+            raise InventoryValidationError("a superseded inventory movement cannot stay effective")
         if self.opening_layers and _quantize(layers_value(self.opening_layers)) != _quantize(self.opening_stock):
             raise InventoryValidationError("opening_stock must equal the value of opening_layers")
         if self.closing_authority_record is not None:

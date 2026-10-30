@@ -331,17 +331,39 @@ cli:
           record book.
         closing_authority_record_help: Atomically record evidenced inventory closing
           authority
+        correct_help: Correct the opening value or valuation method, keeping the values
+          they replace.
+        corrected_opening_stock_help: Corrected opening value in euros.
+        corrected_valuation_method_help: Corrected valuation method.
+        correction_id_help: Identity you choose for this change; repeating it with
+          the same request changes nothing.
+        correction_reason_help: Why the fact is being corrected.
         create_help: Create an inventory record book for one activity and tax year
+        describe_help: Change the inventory's name and description; valuation does
+          not move.
+        description_help: Description of the inventory.
         group_help: Inventory record books by activity, movements, and valuation
+        inspect_help: Show one inventory with its effective movements and retained
+          history.
+        label_help: Name of the inventory.
         list_help: List inventory record books in the active profile
         movement_add_help: Add a purchase, sale, or adjustment movement to the inventory
           record book
+        movement_correct_help: Replace one movement with a corrected one; the original
+          stays in the history.
         movement_date_help: Movement date (YYYY-MM-DD)
         movement_group_help: Manage inventory record book movements
         movement_id_help: Movement id within the inventory record book
         movement_kind_help: Movement kind (opening, purchase, cogs or count)
+        movement_reverse_help: Take one movement out of the inventory; it stays in
+          the history.
         opening_stock_help: Opening stock value
         quantity_help: Movement quantity, positive or negative
+        restore_help: Bring a retired inventory back to the active register.
+        retire_help: Take the inventory out of the active register with every fact
+          kept.
+        retirement_reason_help: Why the inventory leaves the active register.
+        target_movement_id_help: Movement to correct or reverse.
         taxable_base_help: Taxable base linked to the movement
         unit_cost_help: Unit cost for purchase movements
         valuation_group_help: Calculate and preview inventory valuation

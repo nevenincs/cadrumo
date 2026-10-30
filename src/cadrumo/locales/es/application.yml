@@ -526,6 +526,23 @@ application:
       validator_id_unknown: No hay ningún validador de flujo registrado con el identificador
         {validator_id}; hay {registered_count} validadores registrados.
   inventory:
+    labels:
+      correction_reason:
+        duplicate_entry: Entrada duplicada
+        keying_error: Error de introducción
+        operation_did_not_occur: La operación no se produjo
+        source_document_corrected: Documento de origen rectificado
+      history_kind:
+        described: Descrito
+        movement_corrected: Movimiento corregido
+        movement_reversed: Movimiento anulado
+        opening_corrected: Apertura corregida
+        restored: Restaurado
+        retired: Retirado
+      retirement_reason:
+        activity_ceased: Actividad cesada
+        created_in_error: Creado por error
+        no_stock_held: Sin existencias
     service:
       errors:
         actividad_conflict: Ya existe un registro de inventario para la actividad
@@ -536,11 +553,64 @@ application:
           list` para ver los existentes.
         closing_authority_conflict: Ya existe un registro distinto de autoridad de
           cierre para esta actividad y año.
+        closing_authority_recorded: El inventario %{year} de %{actividad_id} tiene
+          una autoridad de cierre registrada, así que sus datos de existencias ya
+          no pueden cambiar.
+        correction_changes_nothing: Esta corrección no indica ningún valor inicial
+          ni método de valoración distinto del actual.
+        correction_id_conflict: La corrección %{correction_id} ya se usó para otro
+          cambio.
+        count_would_raise_stock: 'Un recuento físico no puede aumentar las existencias:
+          %{sku} quedaría por encima de las unidades registradas.'
         duplicate_movement_id: El registro de inventario ya contiene el movimiento
           %{movement_id}. Ejecuta `aeat app ledger inventory list` para ver los movimientos
           registrados.
         invalid_valuation_method: 'El método de valoración de inventario no está admitido:
           %{valuation_method}.'
+        inventory_already_retired: El inventario %{year} de %{actividad_id} ya está
+          retirado.
+        inventory_not_retired: El inventario %{year} de %{actividad_id} no está retirado.
+        inventory_retired: El inventario %{year} de %{actividad_id} está retirado.
+          Restáuralo antes de cambiar sus datos de existencias.
+        later_closing_authority_recorded: La autoridad de cierre %{later_year} de
+          %{actividad_id} parte de este cierre, así que los datos de existencias de
+          %{year} ya no pueden cambiar.
+        movement_already_superseded: El movimiento %{movement_id} ya se corrigió o
+          se anuló.
+        movement_not_found: El inventario %{year} de %{actividad_id} no tiene el movimiento
+          %{movement_id}.
+        movement_outside_year: El movimiento %{movement_id} tiene una fecha fuera
+          del inventario %{year}.
+        stock_would_go_negative: 'Esto dejaría las existencias por debajo de cero:
+          %{sku} necesitaría más unidades de las que quedan.'
+    workbench:
+      action:
+        correct: Corregir apertura o método
+        describe: Editar descripción
+        inspect: Ver inventario e historial
+        movement_correct: Corregir un movimiento
+        movement_reverse: Anular un movimiento
+        restore: Restaurar inventario
+        retire: Retirar inventario
+      column:
+        state: Estado
+      done:
+        applied: Cambio registrado.
+        replayed: Este cambio ya estaba registrado; no ha cambiado nada.
+      field:
+        correction_id: Corrección
+        description: Descripción
+        keep_method: Mantener el método actual
+        label: Nombre
+        reason: Motivo
+        target_movement_id: Movimiento a corregir
+      result:
+        history: 'Historial %{correction_id}: %{kind}, %{reason}, %{recorded_at}'
+        movement: 'Movimiento %{movement_id}: %{date}, %{kind}, %{quantity}'
+        state: 'Estado: %{state} %{label}'
+      state:
+        active: Activo
+        retired: Retirado
   invoices:
     bulk_import:
       errors:
@@ -1049,6 +1119,12 @@ application:
           por tipo.
         what_to_do: Revisa el tipo de IVA de tus facturas y registros y vuelve a calcular.
           No se podrá exportar la declaración hasta corregirlo.
+      register_acquisition_exceeds_ledger:
+        what: "Los movimientos de un bien de tu registro pagaron menos que el coste que indicas."
+        what_to_do: "Corrige el precio en tu registro de bienes o el movimiento y vuelve a calcular."
+      register_acquisition_partly_accounted:
+        what: "Un bien de tu registro explica solo una parte de su movimiento, así que el resto no deduce nada."
+        what_to_do: "Da de alta lo demás que pagó ese movimiento, o corrige el precio del bien, y vuelve a calcular."
       register_owned_capital_acquisition:
         what: Una compra de equipamiento se deja fuera de tus gastos, porque se deduce
           mediante su amortización anual.
@@ -1687,6 +1763,9 @@ application:
         a %{current_value_eur} EUR. El aumento de %{delta_value_eur} EUR supera los
         %{redeclaration_increase_threshold_eur} EUR a partir de los cuales debes volver
         a declararlo.'
+      inventory_register_drift: El inventario de este cálculo del modelo %{modelo}
+        ha cambiado desde que se calculó (%{rows_recorded} filas registradas, %{rows_current}
+        ahora, %{rows_changed} cambiadas). Vuelve a calcular antes de usarlo.
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
         datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.

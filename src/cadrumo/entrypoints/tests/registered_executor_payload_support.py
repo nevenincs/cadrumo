@@ -1414,6 +1414,13 @@ def _payload(
             | "ledger.inventory.movement.add"
             | "ledger.inventory.valuation.preview"
             | "ledger.inventory.closing-authority.record"
+            | "ledger.inventory.inspect"
+            | "ledger.inventory.describe"
+            | "ledger.inventory.correct"
+            | "ledger.inventory.movement.correct"
+            | "ledger.inventory.movement.reverse"
+            | "ledger.inventory.retire"
+            | "ledger.inventory.restore"
         ):
             inventory_case = prepare_inventory_operation_conformance_case(
                 definition.definition_id, profile_id, ports_factory=build_inventory_service_ports

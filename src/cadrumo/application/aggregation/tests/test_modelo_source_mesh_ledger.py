@@ -32,6 +32,7 @@ from ....domain.bienes_inversion.register import BienesInversionIvaRegister, Bie
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -110,6 +111,9 @@ class _EmptyInvoiceCatalogueReader:
 
 class _EmptyTransactionCatalogueReader:
     def load(self) -> TransactionCatalogue:
+        return TransactionCatalogue()
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
         return TransactionCatalogue()
 
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
@@ -2212,6 +2216,11 @@ def test_a_register_owned_row_without_a_claim_yields_a_non_blocking_gap_and_no_d
     assert gaps[0].reason not in GATE_REFUSED_REASONS
 
 
+class _EmptyInventoryRepository:
+    def load(self) -> InventoryLedgerDocument:
+        return InventoryLedgerDocument()
+
+
 class _EmptyInvestmentRegisterRepository:
     def load(self) -> BienesInversionIvaRegister:
         return BienesInversionIvaRegister()
@@ -2240,6 +2249,7 @@ def activity_asset_ledger_membership(
         bienes_inversion_repository=_EmptyInvestmentRegisterRepository(),
         activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
         usage_ratio_profile_loader=no_stored_usage_ratios,
+        inventory_repository=_EmptyInventoryRepository(),
     )
     resolver = (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver

@@ -42,6 +42,9 @@ from .records import (
     ValuationMethod,
 )
 
+STOCK_WOULD_GO_NEGATIVE_KEY = "application.inventory.service.errors.stock_would_go_negative"
+COUNT_WOULD_RAISE_STOCK_KEY = "application.inventory.service.errors.count_would_raise_stock"
+
 
 @dataclass(frozen=True, slots=True)
 class InventoryAnexoDDerivation:
@@ -342,6 +345,7 @@ def _apply_weighted_average_movement(
         return purchase_delta, MONEY_ZERO
     if movement.kind is MovementKind.COGS:
         return _apply_weighted_average_cogs(ledger, movement, quantity, value, pools)
+    _require_count_within_stock(movement, quantity)
     average = MONEY_ZERO if quantity == MONEY_ZERO else value / quantity
     pools[movement.sku] = (movement.quantity, movement.quantity * average)
     return MONEY_ZERO, MONEY_ZERO
@@ -360,9 +364,11 @@ def _apply_weighted_average_cogs(
             context={
                 "actividad_id": ledger.actividad_id,
                 "movement_id": movement.movement_id,
+                "sku": movement.sku,
                 "available_quantity": str(quantity),
                 "requested_quantity": str(movement.quantity),
             },
+            translated_message=STOCK_WOULD_GO_NEGATIVE_KEY,
         )
     average = MONEY_ZERO if quantity == MONEY_ZERO else value / quantity
     consumed = movement.quantity * average
@@ -408,22 +414,28 @@ def _consume_fifo(layers: list[StockLayer], movement: MovementRecord) -> tuple[D
                 "sku": movement.sku,
                 "missing_quantity": str(remaining),
             },
+            translated_message=STOCK_WOULD_GO_NEGATIVE_KEY,
         )
     return consumed, updated
 
 
-def _apply_count(layers: list[StockLayer], movement: MovementRecord) -> list[StockLayer]:
-    current_quantity = sum((layer.quantity for layer in layers if layer.sku == movement.sku), MONEY_ZERO)
-    if movement.quantity > current_quantity:
+def _require_count_within_stock(movement: MovementRecord, available: Decimal) -> None:
+    if movement.quantity > available:
         raise InventoryLedgerError(
             "inventory count cannot increase stock without a purchase movement",
             context={
                 "movement_id": movement.movement_id,
                 "sku": movement.sku,
-                "available_quantity": str(current_quantity),
+                "available_quantity": str(available),
                 "counted_quantity": str(movement.quantity),
             },
+            translated_message=COUNT_WOULD_RAISE_STOCK_KEY,
         )
+
+
+def _apply_count(layers: list[StockLayer], movement: MovementRecord) -> list[StockLayer]:
+    current_quantity = sum((layer.quantity for layer in layers if layer.sku == movement.sku), MONEY_ZERO)
+    _require_count_within_stock(movement, current_quantity)
     to_remove = current_quantity - movement.quantity
     synthetic_cogs = movement.model_copy(update={"kind": MovementKind.COGS, "quantity": to_remove})
     _, updated = _consume_fifo(layers, synthetic_cogs)

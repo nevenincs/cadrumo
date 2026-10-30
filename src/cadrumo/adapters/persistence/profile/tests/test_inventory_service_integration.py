@@ -34,9 +34,14 @@ from .....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAcquisitionEvidenceKind,
+    InventoryCorrectionReason,
+    InventoryHistoryKind,
+    InventoryLedgerDescriptor,
+    InventoryRetirementReason,
     MovementKind,
     ValuationMethod,
 )
+from .....domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 
 if TYPE_CHECKING:
     from cadrumo.domain.contribuyente.inventory import closing_authority_records as _closing_types
@@ -47,7 +52,7 @@ from cadrumo.application.inventory.errors import (
     InventoryServiceInputError,
 )
 from cadrumo.application.inventory.ports import InventoryServicePorts
-from cadrumo.application.inventory.service import InventoryMovementCommand, InventoryService
+from cadrumo.application.inventory.service import InventoryLedgerResult, InventoryMovementCommand, InventoryService
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -386,12 +391,10 @@ class TestMovementAdd:
                     quantity=Decimal("2"),
                 ),
             )
-        assert exc_info.value.translated_message == "errors.refused.refused_profile_inventory_validation"
-        assert exc_info.value.context == {
-            "actividad_id": "A1",
-            "year": "2025",
-            "movement_id": "SELL-TOO-MANY",
-        }
+        assert exc_info.value.translated_message == "application.inventory.service.errors.stock_would_go_negative"
+        assert exc_info.value.context is not None
+        assert exc_info.value.context["actividad_id"] == "A1"
+        assert exc_info.value.context["sku"] == "default"
         assert [
             movement.movement_id
             for movement in svc.show(
@@ -429,24 +432,6 @@ class TestValuationPreview:
         assert preview.valuation_method is ValuationMethod.FIFO
         assert preview.derived_closing_value == Decimal("500.00")
         assert preview.cogs == Decimal("0.00")
-
-
-class TestRemove:
-    def test_remove_deletes_ledger(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
-        svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
-        result = svc.remove(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
-        assert result.ledger.actividad_id == "A1"
-        assert svc.list_all(bucket_id=secure_engine.bucket_id) == ()
-        with pytest.raises(InventoryActividadNotFoundError):
-            svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
-
-    def test_remove_refuses_on_missing_actividad(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
-        with pytest.raises(InventoryActividadNotFoundError) as exc_info:
-            svc.remove(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
-        assert exc_info.value.translated_message == "application.inventory.service.errors.actividad_not_found"
-        assert exc_info.value.context == {"actividad_id": "A1", "year": "2025"}
 
 
 class TestClosingAuthorityRecord:
@@ -591,14 +576,412 @@ class TestInventoryEventEmission:
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.LEDGER_INVENTORY_VALUATION_PREVIEWED
 
-    def test_remove_emits_ledger_inventory_removed(self, secure_engine: TestRuntimeProfile) -> None:
+
+def _purchase(movement_id: str, *, month: int, quantity: str, total: str) -> InventoryMovementCommand:
+    return InventoryMovementCommand(
+        movement_id=movement_id,
+        movement_date=date(2025, month, 1),
+        kind=MovementKind.PURCHASE,
+        quantity=Decimal(quantity),
+        acquisition_cost=_acquisition(total),
+    )
+
+
+def _sale(movement_id: str, *, month: int, quantity: str) -> InventoryMovementCommand:
+    return InventoryMovementCommand(
+        movement_id=movement_id,
+        movement_date=date(2025, month, 1),
+        kind=MovementKind.COGS,
+        quantity=Decimal(quantity),
+    )
+
+
+def _seed_two_purchases_and_a_sale(svc: InventoryService, bucket_id: str, *, method: str) -> None:
+    """10 units for 100.00, 10 units for 140.00, then 15 units sold."""
+    svc.create(bucket_id=bucket_id, actividad_id="A1", year=2025, valuation_method=method)
+    for movement in (
+        _purchase("BUY-1", month=3, quantity="10", total="100.00"),
+        _purchase("BUY-2", month=4, quantity="10", total="140.00"),
+        _sale("SELL-1", month=5, quantity="15"),
+    ):
+        svc.movement_add(bucket_id=bucket_id, actividad_id="A1", year=2025, movement=movement)
+
+
+class TestLedgerCorrections:
+    """Hand-worked valuations through the real repository and valuation engine."""
+
+    @pytest.mark.parametrize(
+        ("method", "before", "after"),
+        [
+            # FIFO: 10 at 10.00 + 5 at 14.00 = 170.00 sold, 5 at 14.00 = 70.00 left.
+            # At 160.00 the second layer is 16.00: 100.00 + 80.00 = 180.00 sold, 80.00 left.
+            ("fifo", ("70.00", "170.00"), ("80.00", "180.00")),
+            # Average: 240.00 / 20 = 12.00, 180.00 sold, 60.00 left.
+            # At 160.00: 260.00 / 20 = 13.00, 195.00 sold, 65.00 left.
+            ("pmp", ("60.00", "180.00"), ("65.00", "195.00")),
+        ],
+    )
+    def test_a_corrected_movement_moves_both_valuations_and_keeps_the_original(
+        self,
+        secure_engine: TestRuntimeProfile,
+        method: str,
+        before: tuple[str, str],
+        after: tuple[str, str],
+    ) -> None:
         svc = _make_svc(secure_engine)
-        svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
-        result = svc.remove(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
-        assert len(result.bucket_event_ids) == 1
-        catalogue = _event_repo(secure_engine).load()
-        event = catalogue.events[result.bucket_event_ids[0]]
-        assert event.event_type is BucketEventType.LEDGER_INVENTORY_REMOVED
+        bucket = secure_engine.bucket_id
+        _seed_two_purchases_and_a_sale(svc, bucket, method=method)
+        preview = svc.valuation_preview(bucket_id=bucket, actividad_id="A1", year=2025).preview
+        assert (preview.derived_closing_value, preview.cogs) == (Decimal(before[0]), Decimal(before[1]))
+
+        result = svc.movement_correct(
+            bucket_id=bucket,
+            actividad_id="A1",
+            year=2025,
+            correction_id="fix-1",
+            target_movement_id="BUY-2",
+            replacement=_purchase("BUY-2B", month=4, quantity="10", total="160.00"),
+            reason=InventoryCorrectionReason.SOURCE_DOCUMENT_CORRECTED,
+        )
+
+        assert result.changed is True
+        preview = svc.valuation_preview(bucket_id=bucket, actividad_id="A1", year=2025).preview
+        assert (preview.derived_closing_value, preview.cogs) == (Decimal(after[0]), Decimal(after[1]))
+        ledger = svc.show(bucket_id=bucket, actividad_id="A1", year=2025)
+        assert {item.movement_id for item in ledger.period_movements} == {"BUY-1", "BUY-2B", "SELL-1"}
+        (entry,) = ledger.history
+        assert entry.kind is InventoryHistoryKind.MOVEMENT_CORRECTED
+        assert entry.superseded_movement is not None
+        assert entry.superseded_movement.movement_id == "BUY-2"
+        assert entry.superseded_movement.capitalized_value == Decimal("140.00")
+        assert entry.replacement_movement_id == "BUY-2B"
+        event = _event_repo(secure_engine).load().events[result.bucket_event_ids[0]]
+        assert event.event_type is BucketEventType.LEDGER_INVENTORY_MOVEMENT_CORRECTED
+
+    def test_a_reversal_leaves_the_effective_set_and_keeps_history(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
+
+        svc.movement_reverse(
+            bucket_id=bucket,
+            actividad_id="A1",
+            year=2025,
+            correction_id="undo-sale",
+            target_movement_id="SELL-1",
+            reason=InventoryCorrectionReason.OPERATION_DID_NOT_OCCUR,
+        )
+
+        preview = svc.valuation_preview(bucket_id=bucket, actividad_id="A1", year=2025).preview
+        assert (preview.derived_closing_value, preview.cogs) == (Decimal("240.00"), Decimal("0.00"))
+        ledger = svc.show(bucket_id=bucket, actividad_id="A1", year=2025)
+        assert ledger.known_movement_ids == {"BUY-1", "BUY-2", "SELL-1"}
+        assert [item.movement_id for item in ledger.period_movements] == ["BUY-1", "BUY-2"]
+
+    def test_a_reversal_that_would_take_stock_negative_refuses_and_changes_nothing(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
+        before = svc.show(bucket_id=bucket, actividad_id="A1", year=2025)
+
+        with pytest.raises(InventoryServiceInputError) as refused:
+            svc.movement_reverse(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                correction_id="undo-buy",
+                target_movement_id="BUY-2",
+                reason=InventoryCorrectionReason.DUPLICATE_ENTRY,
+            )
+
+        assert refused.value.translated_message == "application.inventory.service.errors.stock_would_go_negative"
+        assert svc.show(bucket_id=bucket, actividad_id="A1", year=2025) == before
+
+    def test_an_exact_replay_changes_nothing_and_another_request_under_the_id_refuses(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
+
+        def reverse(target_movement_id: str) -> InventoryLedgerResult:
+            return svc.movement_reverse(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                correction_id="undo-sale",
+                target_movement_id=target_movement_id,
+                reason=InventoryCorrectionReason.OPERATION_DID_NOT_OCCUR,
+            )
+
+        first = reverse("SELL-1")
+        replay = reverse("SELL-1")
+
+        assert first.changed is True and len(first.bucket_event_ids) == 1
+        assert replay.changed is False and replay.bucket_event_ids == ()
+        assert replay.ledger == first.ledger
+
+        with pytest.raises(InventoryServiceInputError) as refused:
+            reverse("BUY-1")
+        assert refused.value.translated_message == "application.inventory.service.errors.correction_id_conflict"
+
+    def test_a_superseded_movement_can_be_neither_rectified_nor_reissued(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
+        svc.movement_reverse(
+            bucket_id=bucket,
+            actividad_id="A1",
+            year=2025,
+            correction_id="undo-sale",
+            target_movement_id="SELL-1",
+            reason=InventoryCorrectionReason.OPERATION_DID_NOT_OCCUR,
+        )
+
+        with pytest.raises(InventoryServiceInputError) as again:
+            svc.movement_reverse(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                correction_id="undo-sale-2",
+                target_movement_id="SELL-1",
+                reason=InventoryCorrectionReason.OPERATION_DID_NOT_OCCUR,
+            )
+        assert again.value.translated_message == "application.inventory.service.errors.movement_already_superseded"
+        with pytest.raises(InventoryServiceInputError) as reissued:
+            svc.movement_add(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                movement=_sale("SELL-1", month=6, quantity="1"),
+            )
+        assert reissued.value.translated_message == "application.inventory.service.errors.duplicate_movement_id"
+        with pytest.raises(InventoryServiceInputError) as absent:
+            svc.movement_reverse(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                correction_id="undo-ghost",
+                target_movement_id="GHOST",
+                reason=InventoryCorrectionReason.KEYING_ERROR,
+            )
+        assert absent.value.translated_message == "application.inventory.service.errors.movement_not_found"
+
+    def test_a_replacement_dated_outside_the_ledger_year_refuses(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
+        with pytest.raises(InventoryServiceInputError) as refused:
+            svc.movement_correct(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                correction_id="wrong-year",
+                target_movement_id="BUY-1",
+                replacement=InventoryMovementCommand(
+                    movement_id="BUY-1B",
+                    movement_date=date(2024, 12, 31),
+                    kind=MovementKind.PURCHASE,
+                    quantity=Decimal("10"),
+                    acquisition_cost=_acquisition("100.00"),
+                ),
+                reason=InventoryCorrectionReason.KEYING_ERROR,
+            )
+        assert refused.value.translated_message == "application.inventory.service.errors.movement_outside_year"
+
+    def test_opening_and_method_corrections_keep_what_they_displace(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        svc.create(
+            bucket_id=bucket, actividad_id="A1", year=2025, valuation_method="fifo", opening_stock=Decimal("100.00")
+        )
+
+        result = svc.correct_opening(
+            bucket_id=bucket,
+            actividad_id="A1",
+            year=2025,
+            correction_id="open-1",
+            reason=InventoryCorrectionReason.KEYING_ERROR,
+            opening_stock=Decimal("120.00"),
+            valuation_method=ValuationMethod.PMP,
+        )
+
+        assert result.ledger.opening_stock == Decimal("120.00")
+        assert result.ledger.valuation_method is ValuationMethod.PMP
+        (entry,) = result.ledger.history
+        assert entry.prior_opening_stock == Decimal("100.00")
+        assert entry.prior_valuation_method is ValuationMethod.FIFO
+        with pytest.raises(InventoryServiceInputError) as unchanged:
+            svc.correct_opening(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                correction_id="open-2",
+                reason=InventoryCorrectionReason.KEYING_ERROR,
+                opening_stock=Decimal("120.00"),
+                valuation_method=None,
+            )
+        assert unchanged.value.translated_message == "application.inventory.service.errors.correction_changes_nothing"
+
+    def test_describing_never_moves_valuation_and_stays_open_after_a_closing_authority(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        svc.create(
+            bucket_id=bucket, actividad_id="A1", year=2025, valuation_method="fifo", opening_stock=Decimal("100.00")
+        )
+        svc.closing_authority_record(
+            bucket_id=bucket, actividad_id="A1", year=2025, authority_record=_authority_record()
+        )
+
+        first = svc.describe(
+            bucket_id=bucket,
+            actividad_id="A1",
+            year=2025,
+            correction_id="name-1",
+            label="Hardware",
+            description=None,
+        )
+        second = svc.describe(
+            bucket_id=bucket,
+            actividad_id="A1",
+            year=2025,
+            correction_id="name-2",
+            label="Tools",
+            description="Hand tools",
+        )
+
+        assert first.ledger.descriptor is not None
+        assert second.ledger.descriptor == InventoryLedgerDescriptor(label="Tools", description="Hand tools")
+        assert second.ledger.history[-1].prior_descriptor == first.ledger.descriptor
+        preview = svc.valuation_preview(bucket_id=bucket, actividad_id="A1", year=2025).preview
+        assert preview.derived_closing_value == Decimal("100.00")
+        assert compute_inventory_anexo_d_projection(first.ledger).projection_fingerprint == (
+            compute_inventory_anexo_d_projection(second.ledger).projection_fingerprint
+        )
+
+    def test_a_recorded_closing_authority_refuses_every_stock_change(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        svc.create(
+            bucket_id=bucket, actividad_id="A1", year=2025, valuation_method="fifo", opening_stock=Decimal("100.00")
+        )
+        svc.closing_authority_record(
+            bucket_id=bucket, actividad_id="A1", year=2025, authority_record=_authority_record()
+        )
+        key = "application.inventory.service.errors.closing_authority_recorded"
+
+        with pytest.raises(InventoryServiceInputError) as opening:
+            svc.correct_opening(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                correction_id="open-1",
+                reason=InventoryCorrectionReason.KEYING_ERROR,
+                opening_stock=Decimal("1.00"),
+                valuation_method=None,
+            )
+        assert opening.value.translated_message == key
+        with pytest.raises(InventoryServiceInputError) as movement:
+            svc.movement_add(
+                bucket_id=bucket, actividad_id="A1", year=2025, movement=_sale("SELL-1", month=3, quantity="1")
+            )
+        assert movement.value.translated_message == key
+        with pytest.raises(InventoryServiceInputError) as retire:
+            svc.retire(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                correction_id="out",
+                reason=InventoryRetirementReason.CREATED_IN_ERROR,
+            )
+        assert retire.value.translated_message == key
+
+    def test_a_later_years_closing_authority_refuses_a_change_to_the_year_it_rests_on(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        svc.create(bucket_id=bucket, actividad_id="A1", year=2024, valuation_method="fifo")
+        svc.create(
+            bucket_id=bucket, actividad_id="A1", year=2025, valuation_method="fifo", opening_stock=Decimal("100.00")
+        )
+        svc.closing_authority_record(
+            bucket_id=bucket, actividad_id="A1", year=2025, authority_record=_authority_record()
+        )
+
+        with pytest.raises(InventoryServiceInputError) as refused:
+            svc.correct_opening(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2024,
+                correction_id="open-1",
+                reason=InventoryCorrectionReason.KEYING_ERROR,
+                opening_stock=Decimal("5.00"),
+                valuation_method=None,
+            )
+
+        assert refused.value.translated_message == (
+            "application.inventory.service.errors.later_closing_authority_recorded"
+        )
+        assert refused.value.context is not None
+        assert refused.value.context["later_year"] == "2025"
+
+    def test_retiring_keeps_every_fact_refuses_stock_changes_and_restoring_reopens(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
+
+        retired = svc.retire(
+            bucket_id=bucket,
+            actividad_id="A1",
+            year=2025,
+            correction_id="out",
+            reason=InventoryRetirementReason.ACTIVITY_CEASED,
+        )
+
+        assert retired.ledger.is_retired is True
+        assert len(retired.ledger.period_movements) == 3
+        (row,) = svc.list_all(bucket_id=bucket)
+        assert row.retired is True and row.retirement_reason is InventoryRetirementReason.ACTIVITY_CEASED
+        with pytest.raises(InventoryServiceInputError) as blocked:
+            svc.movement_add(
+                bucket_id=bucket, actividad_id="A1", year=2025, movement=_sale("SELL-2", month=6, quantity="1")
+            )
+        assert blocked.value.translated_message == "application.inventory.service.errors.inventory_retired"
+        with pytest.raises(InventoryServiceInputError) as twice:
+            svc.retire(
+                bucket_id=bucket,
+                actividad_id="A1",
+                year=2025,
+                correction_id="out-again",
+                reason=InventoryRetirementReason.ACTIVITY_CEASED,
+            )
+        assert twice.value.translated_message == "application.inventory.service.errors.inventory_already_retired"
+
+        restored = svc.restore(bucket_id=bucket, actividad_id="A1", year=2025, correction_id="back")
+        assert restored.ledger.is_retired is False
+        assert restored.ledger.retirement_reason is None
+        svc.movement_add(
+            bucket_id=bucket, actividad_id="A1", year=2025, movement=_sale("SELL-2", month=6, quantity="1")
+        )
+        with pytest.raises(InventoryServiceInputError) as not_retired:
+            svc.restore(bucket_id=bucket, actividad_id="A1", year=2025, correction_id="back-again")
+        assert not_retired.value.translated_message == "application.inventory.service.errors.inventory_not_retired"
+
+    def test_a_change_to_an_absent_inventory_refuses_as_not_found(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        with pytest.raises(InventoryActividadNotFoundError) as refused:
+            svc.restore(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, correction_id="back")
+        assert refused.value.translated_message == "application.inventory.service.errors.actividad_not_found"
+        assert refused.value.context == {"actividad_id": "A1", "year": "2025"}
 
 
 class TestBucketIsolation:

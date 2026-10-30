@@ -6,13 +6,14 @@ closing-authority record for review. Valuations, closing values and costs of
 goods sold are the operation's own figures; the screen never computes one.
 Purchase-cost evidence and closing-authority records are typed source files
 that the door reads and validates, as the command line reads them, so their
-amounts never pass through a screen field.
+amounts never pass through a screen field. A correction, reversal, retirement
+or restoration keeps the fact it displaces; the screen shows that history.
 """
 
 from __future__ import annotations
 
 from typing import Final, Protocol, override
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 from textual.app import ComposeResult
@@ -21,6 +22,9 @@ from textual.widgets import Static
 from ....application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
+    InventoryHistoryEntryProjection,
+    InventoryInspectProjection,
+    InventoryLedgerChangeProjection,
     InventoryLedgerProjection,
     InventoryListProjection,
     InventoryListRowProjection,
@@ -32,14 +36,27 @@ from ....application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
+    InventoryCorrectRequest,
     InventoryCreateRequest,
+    InventoryDescribeRequest,
+    InventoryInspectRequest,
+    InventoryLedgerChangeRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementCorrectRequest,
+    InventoryMovementReverseRequest,
+    InventoryRestoreRequest,
+    InventoryRetireRequest,
     InventoryValuationPreviewRequest,
 )
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.i18n.render import tr
-from ....domain.contribuyente.inventory.records import MovementKind, ValuationMethod
+from ....domain.contribuyente.inventory.records import (
+    InventoryCorrectionReason,
+    InventoryRetirementReason,
+    MovementKind,
+    ValuationMethod,
+)
 from .controller import LedgerWorkspaceController
 from .registers_input import (
     blank_to_none,
@@ -70,6 +87,8 @@ type InventoryRequestV1 = (
     | InventoryMovementAddRequest
     | InventoryValuationPreviewRequest
     | InventoryClosingAuthorityRecordRequest
+    | InventoryInspectRequest
+    | InventoryLedgerChangeRequest
 )
 """Every inventory change, each its own registered operation."""
 
@@ -85,7 +104,15 @@ _ACTION_LOCALE_KEYS: Final[dict[str, str]] = {
     "movement_add": "tui.ledger.registers.inventory.action.movement_add",
     "valuation_preview": "tui.ledger.registers.inventory.action.valuation_preview",
     "closing_authority": "tui.ledger.registers.inventory.action.closing_authority",
+    "inspect": "application.inventory.workbench.action.inspect",
+    "describe": "application.inventory.workbench.action.describe",
+    "correct": "application.inventory.workbench.action.correct",
+    "movement_correct": "application.inventory.workbench.action.movement_correct",
+    "movement_reverse": "application.inventory.workbench.action.movement_reverse",
+    "retire": "application.inventory.workbench.action.retire",
+    "restore": "application.inventory.workbench.action.restore",
 }
+_KEEP_METHOD: Final = "keep"
 _DONE_LOCALE_KEYS: Final[dict[str, str]] = {
     "create": "tui.ledger.registers.inventory.done.create",
     "movement_add": "tui.ledger.registers.inventory.done.movement_add",
@@ -124,6 +151,11 @@ _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "taxable_base": "tui.ledger.registers.inventory.field.taxable_base",
     "acquisition_cost": "tui.ledger.registers.inventory.field.acquisition_cost",
     "authority_record": "tui.ledger.registers.inventory.field.authority_record",
+    "correction_id": "application.inventory.workbench.field.correction_id",
+    "target_movement_id": "application.inventory.workbench.field.target_movement_id",
+    "reason": "application.inventory.workbench.field.reason",
+    "label": "application.inventory.workbench.field.label",
+    "description": "application.inventory.workbench.field.description",
 }
 _FIELDS: Final = (
     "inventory-actividad",
@@ -138,6 +170,12 @@ _FIELDS: Final = (
     "inventory-taxable-base",
     "inventory-acquisition-path",
     "inventory-authority-path",
+    "inventory-target-movement",
+    "inventory-correction-reason",
+    "inventory-retirement-reason",
+    "inventory-corrected-method",
+    "inventory-label",
+    "inventory-description",
 )
 _SCOPE: Final = frozenset({"inventory-actividad", "inventory-year"})
 _ACTION_FIELDS: Final[dict[str, frozenset[str]]] = {
@@ -154,6 +192,24 @@ _ACTION_FIELDS: Final[dict[str, frozenset[str]]] = {
     },
     "valuation_preview": _SCOPE,
     "closing_authority": _SCOPE | {"inventory-authority-path"},
+    "inspect": _SCOPE,
+    "describe": _SCOPE | {"inventory-label", "inventory-description"},
+    "correct": _SCOPE | {"inventory-correction-reason", "inventory-opening", "inventory-corrected-method"},
+    "movement_correct": _SCOPE
+    | {
+        "inventory-target-movement",
+        "inventory-correction-reason",
+        "inventory-movement-id",
+        "inventory-movement-date",
+        "inventory-movement-kind",
+        "inventory-quantity",
+        "inventory-unit-cost",
+        "inventory-taxable-base",
+        "inventory-acquisition-path",
+    },
+    "movement_reverse": _SCOPE | {"inventory-target-movement", "inventory-correction-reason"},
+    "retire": _SCOPE | {"inventory-retirement-reason"},
+    "restore": _SCOPE,
 }
 _COLUMN_LOCALE_KEYS: Final = (
     RegisterColumnV1("actividad", "tui.ledger.registers.inventory.column.actividad", 14),
@@ -161,6 +217,7 @@ _COLUMN_LOCALE_KEYS: Final = (
     RegisterColumnV1("method", "tui.ledger.registers.inventory.column.method", 10),
     RegisterColumnV1("opening", "tui.ledger.registers.inventory.column.opening", 10),
     RegisterColumnV1("movements", "tui.ledger.registers.inventory.column.movements", 8),
+    RegisterColumnV1("state", "application.inventory.workbench.column.state", 10),
 )
 
 
@@ -196,6 +253,14 @@ class LedgerInventoryDoorV1(Protocol):
         """Record one closing authority; a registered refusal is returned, not raised."""
         ...
 
+    async def inspect(self, request: InventoryInspectRequest) -> InventoryInspectProjection:
+        """Read one inventory with its retained history; a registered refusal is returned, not raised."""
+        ...
+
+    async def apply_change(self, request: InventoryLedgerChangeRequest) -> InventoryLedgerChangeProjection:
+        """Run one edit, rectification, retirement or restoration; a registered refusal is returned, not raised."""
+        ...
+
     async def read_acquisition_cost(self, path: str) -> InventoryAcquisitionCostRequest:
         """Read and validate one typed purchase-cost file the operator named."""
         ...
@@ -222,7 +287,11 @@ def inventory_refusal_text(refusal: InventoryRefusalProjection) -> str:
         )
         if value is not None
     ]
-    return "\n".join((tr(_REFUSAL_LOCALE_KEYS[refusal.reason]), *named))
+    own_key = _REFUSAL_LOCALE_KEYS.get(refusal.reason)
+    if own_key is not None:
+        return "\n".join((tr(own_key), *named))
+    facts = {fact.key: fact.value for fact in refusal.reason_facts}
+    return "\n".join((tr(refusal.reason_key or refusal.code, **facts), *named))
 
 
 def _ledger_line(ledger: InventoryLedgerProjection) -> str:
@@ -236,6 +305,45 @@ def _ledger_line(ledger: InventoryLedgerProjection) -> str:
     )
 
 
+def _state_word(*, retired: bool) -> str:
+    return tr(f"application.inventory.workbench.state.{'retired' if retired else 'active'}")
+
+
+def _history_line(entry: InventoryHistoryEntryProjection) -> str:
+    reason = entry.correction_reason or entry.retirement_reason
+    return tr(
+        "application.inventory.workbench.result.history",
+        correction_id=entry.correction_id,
+        kind=tr(f"application.inventory.labels.history_kind.{entry.kind.value}"),
+        reason="-" if reason is None else tr(f"application.inventory.labels.{_reason_family(entry)}.{reason.value}"),
+        recorded_at=entry.recorded_at.isoformat(),
+    )
+
+
+def _reason_family(entry: InventoryHistoryEntryProjection) -> str:
+    return "correction_reason" if entry.correction_reason is not None else "retirement_reason"
+
+
+def _ledger_detail_lines(ledger: InventoryLedgerProjection) -> tuple[str, ...]:
+    """The ledger's state, its effective movements and every retained change."""
+    label = "" if ledger.descriptor is None else ledger.descriptor.label
+    return (
+        _ledger_line(ledger),
+        tr("application.inventory.workbench.result.state", state=_state_word(retired=ledger.retired), label=label),
+        *(
+            tr(
+                "application.inventory.workbench.result.movement",
+                movement_id=item.movement_id,
+                date=item.movement_date.isoformat(),
+                kind=tr(_KIND_LOCALE_KEYS[item.kind.value]),
+                quantity=item.quantity.decimal,
+            )
+            for item in ledger.period_movements
+        ),
+        *(_history_line(entry) for entry in ledger.history),
+    )
+
+
 def _yes_no(value: bool) -> str:
     return tr("tui.ledger.registers.yes" if value else "tui.ledger.registers.no")
 
@@ -244,11 +352,20 @@ def inventory_outcome(
     result: InventoryCreateProjection
     | InventoryMovementAddProjection
     | InventoryValuationOperationProjection
-    | InventoryClosingAuthorityOperationProjection,
+    | InventoryClosingAuthorityOperationProjection
+    | InventoryInspectProjection
+    | InventoryLedgerChangeProjection,
 ) -> RegisterOutcomeV1:
     """Describe one settled inventory request exactly as the operation reported it."""
     if result.refusal is not None:
         return RegisterOutcomeV1(refusal=inventory_refusal_text(result.refusal))
+    if isinstance(result, InventoryInspectProjection):
+        return RegisterOutcomeV1(lines=() if result.ledger is None else _ledger_detail_lines(result.ledger))
+    if isinstance(result, InventoryLedgerChangeProjection):
+        if result.ledger is None:
+            return RegisterOutcomeV1()
+        done_line = tr(f"application.inventory.workbench.done.{result.outcome}")
+        return RegisterOutcomeV1(lines=(done_line, *_ledger_detail_lines(result.ledger)))
     if isinstance(result, InventoryValuationOperationProjection):
         preview = result.preview
         if preview is None:
@@ -317,6 +434,7 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
                     row.valuation_method.value,
                     row.opening_stock.decimal,
                     str(row.movement_count),
+                    _state_word(retired=row.retired),
                 ),
             )
             for row in self.inventories
@@ -330,6 +448,18 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
                 (tr(_METHOD_LOCALE_KEYS[method.value]), method.value) for method in ValuationMethod
             ),
             "inventory-movement-kind": tuple((tr(_KIND_LOCALE_KEYS[kind.value]), kind.value) for kind in MovementKind),
+            "inventory-correction-reason": tuple(
+                (tr(f"application.inventory.labels.correction_reason.{reason.value}"), reason.value)
+                for reason in InventoryCorrectionReason
+            ),
+            "inventory-retirement-reason": tuple(
+                (tr(f"application.inventory.labels.retirement_reason.{reason.value}"), reason.value)
+                for reason in InventoryRetirementReason
+            ),
+            "inventory-corrected-method": (
+                (tr("application.inventory.workbench.field.keep_method"), _KEEP_METHOD),
+                *((tr(_METHOD_LOCALE_KEYS[method.value]), method.value) for method in ValuationMethod),
+            ),
         }
 
     @override
@@ -356,6 +486,18 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
         yield from labelled_input(_FIELD_LOCALE_KEYS["taxable_base"], "inventory-taxable-base")
         yield from labelled_input(_FIELD_LOCALE_KEYS["acquisition_cost"], "inventory-acquisition-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["authority_record"], "inventory-authority-path")
+        yield from labelled_input(_FIELD_LOCALE_KEYS["target_movement_id"], "inventory-target-movement")
+        yield from labelled_select(
+            _FIELD_LOCALE_KEYS["reason"], "inventory-correction-reason", options["inventory-correction-reason"]
+        )
+        yield from labelled_select(
+            _FIELD_LOCALE_KEYS["reason"], "inventory-retirement-reason", options["inventory-retirement-reason"]
+        )
+        yield from labelled_select(
+            _FIELD_LOCALE_KEYS["valuation_method"], "inventory-corrected-method", options["inventory-corrected-method"]
+        )
+        yield from labelled_input(_FIELD_LOCALE_KEYS["label"], "inventory-label")
+        yield from labelled_input(_FIELD_LOCALE_KEYS["description"], "inventory-description")
 
     @override
     def form_mounted(self) -> None:
@@ -415,6 +557,10 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
             if opening is not None:
                 fields["opening_stock"] = opening
             return InventoryCreateRequest.model_validate(fields), None
+        if action == "inspect":
+            return InventoryInspectRequest(profile_id=profile_id, actividad_id=actividad, year=year), None
+        if action in {"describe", "correct", "movement_correct", "movement_reverse", "retire", "restore"}:
+            return await self._change_request(action, actividad=actividad, year=year)
         if action == "valuation_preview":
             return InventoryValuationPreviewRequest(profile_id=profile_id, actividad_id=actividad, year=year), None
         if action == "closing_authority":
@@ -452,6 +598,76 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
         )
         return request, path
 
+    async def _change_request(
+        self, action: str, *, actividad: str, year: int
+    ) -> tuple[InventoryLedgerChangeRequest, str | None]:
+        """Build one change; its identity is minted here so a resubmission of this review is an exact replay."""
+        scope: dict[str, object] = {
+            "profile_id": self.door.profile_id,
+            "actividad_id": actividad,
+            "year": year,
+            "correction_id": uuid4().hex,
+        }
+        if action == "describe":
+            label = require_text(self.input_value("#inventory-label"), field_key=_FIELD_LOCALE_KEYS["label"])
+            description = blank_to_none(self.input_value("#inventory-description"))
+            return InventoryDescribeRequest.model_validate({**scope, "label": label, "description": description}), None
+        if action == "retire":
+            reason = InventoryRetirementReason(self.select_value("#inventory-retirement-reason"))
+            return InventoryRetireRequest.model_validate({**scope, "reason": reason}), None
+        if action == "restore":
+            return InventoryRestoreRequest.model_validate(scope), None
+        correction_reason = InventoryCorrectionReason(self.select_value("#inventory-correction-reason"))
+        if action == "correct":
+            method = self.select_value("#inventory-corrected-method")
+            opening = parse_optional_public_decimal(
+                self.input_value("#inventory-opening"), field_key=_FIELD_LOCALE_KEYS["opening_stock"]
+            )
+            return (
+                InventoryCorrectRequest.model_validate(
+                    {
+                        **scope,
+                        "reason": correction_reason,
+                        "opening_stock": opening,
+                        "valuation_method": None if method == _KEEP_METHOD else ValuationMethod(method),
+                    }
+                ),
+                None,
+            )
+        target = require_text(
+            self.input_value("#inventory-target-movement"), field_key=_FIELD_LOCALE_KEYS["target_movement_id"]
+        )
+        rectifying = {**scope, "target_movement_id": target, "reason": correction_reason}
+        if action == "movement_reverse":
+            return InventoryMovementReverseRequest.model_validate(rectifying), None
+        path = blank_to_none(self.input_value("#inventory-acquisition-path"))
+        acquisition = None if path is None else await self.door.read_acquisition_cost(path)
+        return (
+            InventoryMovementCorrectRequest.model_validate(
+                {
+                    **rectifying,
+                    "movement_id": require_text(
+                        self.input_value("#inventory-movement-id"), field_key=_FIELD_LOCALE_KEYS["movement_id"]
+                    ),
+                    "movement_date": parse_date(
+                        self.input_value("#inventory-movement-date"), field_key=_FIELD_LOCALE_KEYS["movement_date"]
+                    ),
+                    "kind": MovementKind(self.select_value("#inventory-movement-kind")),
+                    "quantity": parse_public_decimal(
+                        self.input_value("#inventory-quantity"), field_key=_FIELD_LOCALE_KEYS["quantity"]
+                    ),
+                    "unit_cost": parse_optional_public_decimal(
+                        self.input_value("#inventory-unit-cost"), field_key=_FIELD_LOCALE_KEYS["unit_cost"]
+                    ),
+                    "taxable_base": parse_optional_public_decimal(
+                        self.input_value("#inventory-taxable-base"), field_key=_FIELD_LOCALE_KEYS["taxable_base"]
+                    ),
+                    "acquisition_cost": acquisition,
+                }
+            ),
+            path,
+        )
+
     @override
     async def stage(self) -> tuple[BaseModel, str]:
         action = self.select_value("#inventory-action")
@@ -465,6 +681,10 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
     async def send(self, request: BaseModel) -> RegisterOutcomeV1:
         if isinstance(request, InventoryCreateRequest):
             outcome = inventory_outcome(await self.door.create(request))
+        elif isinstance(request, InventoryInspectRequest):
+            outcome = inventory_outcome(await self.door.inspect(request))
+        elif isinstance(request, InventoryLedgerChangeRequest):
+            outcome = inventory_outcome(await self.door.apply_change(request))
         elif isinstance(request, InventoryMovementAddRequest):
             outcome = inventory_outcome(await self.door.add_movement(request))
         elif isinstance(request, InventoryValuationPreviewRequest):

@@ -485,7 +485,7 @@ application:
       copy_ref_unresolved: A(z) {kind} szövegforrás nem adott vissza szöveget a(z)
         {ref} hivatkozásra.
       copy_source_duplicate: A(z) {kind} típushoz már van regisztrált szövegforrás-feloldó.
-      copy_source_locale_builtin: A nyelvikulcs-alapú szövegforrás beépített, nem
+      copy_source_locale_builtin: A nyelvi kulcsra épülő szövegforrás beépített, nem
         regisztrálható újra.
       copy_source_unregistered: Nincs regisztrált szövegforrás-feloldó a(z) {kind}
         típushoz, amelyet a(z) {ref} hivatkozás igényel.
@@ -507,6 +507,23 @@ application:
       validator_id_unknown: Nincs {validator_id} azonosítójú folyamat-ellenőrző regisztrálva;
         összesen {registered_count} ellenőrző van regisztrálva.
   inventory:
+    labels:
+      correction_reason:
+        duplicate_entry: Kettős rögzítés
+        keying_error: Rögzítési hiba
+        operation_did_not_occur: A művelet nem történt meg
+        source_document_corrected: A forrásdokumentumot helyesbítették
+      history_kind:
+        described: Leírás módosítva
+        movement_corrected: Mozgás javítva
+        movement_reversed: Mozgás sztornózva
+        opening_corrected: Nyitás javítva
+        restored: Visszaállítva
+        retired: Kivonva
+      retirement_reason:
+        activity_ceased: A tevékenység megszűnt
+        created_in_error: Tévedésből létrehozva
+        no_stock_held: Nincs készlet
     service:
       errors:
         actividad_conflict: Már létezik készletnyilvántartás a(z) %{actividad_id}
@@ -517,10 +534,62 @@ application:
           a meglévők megtekintéséhez.
         closing_authority_conflict: Ehhez a tevékenységhez és évhez már más zárókészlet-hatósági
           rekord tartozik.
+        closing_authority_recorded: A(z) %{actividad_id} %{year}. évi készletéhez
+          zárási jogalap van rögzítve, ezért a készletadatai már nem módosíthatók.
+        correction_changes_nothing: Ez a javítás nem ad meg a jelenlegitől eltérő
+          nyitó értéket vagy értékelési módszert.
+        correction_id_conflict: A(z) %{correction_id} javítást már egy másik módosításhoz
+          használták.
+        count_would_raise_stock: 'A leltár nem növelheti a készletet: a(z) %{sku}
+          tétel a nyilvántartott egységek fölé kerülne.'
         duplicate_movement_id: A készletnyilvántartás már tartalmazza a(z) %{movement_id}
           mozgást. Futtasd a(z) `aeat app ledger inventory list` parancsot a rögzített
           mozgások megtekintéséhez.
         invalid_valuation_method: 'A készlet értékelési mód nem támogatott: %{valuation_method}.'
+        inventory_already_retired: A(z) %{actividad_id} %{year}. évi készlete már
+          ki van vonva.
+        inventory_not_retired: A(z) %{actividad_id} %{year}. évi készlete nincs kivonva.
+        inventory_retired: A(z) %{actividad_id} %{year}. évi készlete ki van vonva.
+          Állítsd vissza, mielőtt módosítod a készletadatait.
+        later_closing_authority_recorded: A(z) %{actividad_id} %{later_year}. évi
+          zárási jogalapja erre a zárásra épül, ezért a(z) %{year}. évi készletadatok
+          már nem módosíthatók.
+        movement_already_superseded: A(z) %{movement_id} mozgást már javították vagy
+          sztornózták.
+        movement_not_found: A(z) %{actividad_id} %{year}. évi készletében nincs %{movement_id}
+          mozgás.
+        movement_outside_year: A(z) %{movement_id} mozgás dátuma kívül esik a(z) %{year}.
+          évi készleten.
+        stock_would_go_negative: 'Ettől a készlet nulla alá csökkenne: a(z) %{sku}
+          tételből több egység kellene, mint amennyi maradt.'
+    workbench:
+      action:
+        correct: Nyitás vagy módszer javítása
+        describe: Leírás szerkesztése
+        inspect: Készlet és előzmények megtekintése
+        movement_correct: Mozgás javítása
+        movement_reverse: Mozgás sztornózása
+        restore: Készlet visszaállítása
+        retire: Készlet kivonása
+      column:
+        state: Állapot
+      done:
+        applied: A módosítás rögzítve.
+        replayed: Ez a módosítás már rögzítve volt; semmi sem változott.
+      field:
+        correction_id: Javítás
+        description: Leírás
+        keep_method: Jelenlegi módszer megtartása
+        label: Név
+        reason: Indok
+        target_movement_id: Javítandó mozgás
+      result:
+        history: '%{correction_id} előzmény: %{kind}, %{reason}, %{recorded_at}'
+        movement: '%{movement_id} mozgás: %{date}, %{kind}, %{quantity}'
+        state: 'Állapot: %{state} %{label}'
+      state:
+        active: Aktív
+        retired: Kivonva
   invoices:
     bulk_import:
       errors:
@@ -1003,6 +1072,12 @@ application:
           sem szerepel.
         what_to_do: Ellenőrizd a számláid és tételeid áfakulcsát, majd számolj újra.
           A nyilatkozat exportálására addig nem kerülhet sor, amíg ezt nem rendezik.
+      register_acquisition_exceeds_ledger:
+        what: "A nyilvántartásodban szereplő eszköz könyvelési tételei kevesebbet fizettek a megadott költségnél."
+        what_to_do: "Javítsd az árat az eszköznyilvántartásban vagy a tételt, majd számolj újra."
+      register_acquisition_partly_accounted:
+        what: "A nyilvántartásodban szereplő eszköz a könyvelési tételének csak egy részét magyarázza, így a többi nem vonható le."
+        what_to_do: "Vedd fel, mi mást fizetett az a tétel, vagy javítsd az eszköz árát, majd számolj újra."
       register_owned_capital_acquisition:
         what: Egy eszközvásárlás kimarad a költségei közül, mert az éves értékcsökkenési
           leírásán keresztül vonható le.
@@ -1643,6 +1718,9 @@ application:
         EUR összegre nőtt. A(z) %{delta_value_eur} EUR növekedés meghaladja azt a(z)
         %{redeclaration_increase_threshold_eur} EUR küszöböt, amely felett újra be
         kell vallani.'
+      inventory_register_drift: A(z) %{modelo} számítás alapjául szolgáló készlet
+        a számítás óta megváltozott (%{rows_recorded} rögzített sor, most %{rows_current},
+        %{rows_changed} módosult). Használat előtt számold újra.
       iva_compensation_annual_source_evidence_failure: A Modelo 390-hez szükség van
         az év Modelo 303 bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.

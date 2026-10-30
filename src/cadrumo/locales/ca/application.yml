@@ -525,6 +525,23 @@ application:
       validator_id_unknown: No hi ha cap validador de flux registrat amb l'identificador
         {validator_id}; hi ha {registered_count} validadors registrats.
   inventory:
+    labels:
+      correction_reason:
+        duplicate_entry: Entrada duplicada
+        keying_error: Error d'introducció
+        operation_did_not_occur: L'operació no es va produir
+        source_document_corrected: Document d'origen rectificat
+      history_kind:
+        described: Descrit
+        movement_corrected: Moviment corregit
+        movement_reversed: Moviment anul·lat
+        opening_corrected: Obertura corregida
+        restored: Restaurat
+        retired: Retirat
+      retirement_reason:
+        activity_ceased: Activitat cessada
+        created_in_error: Creat per error
+        no_stock_held: Sense existències
     service:
       errors:
         actividad_conflict: Ja existeix un registre d'inventari per a l'activitat
@@ -535,10 +552,63 @@ application:
           list` per veure els existents.
         closing_authority_conflict: Ja existeix un registre diferent d'autoritat de
           tancament per a aquesta activitat i any.
+        closing_authority_recorded: L'inventari %{year} de %{actividad_id} té una
+          autoritat de tancament registrada, així que les seves dades d'existències
+          ja no poden canviar.
+        correction_changes_nothing: Aquesta correcció no indica cap valor inicial
+          ni mètode de valoració diferent de l'actual.
+        correction_id_conflict: La correcció %{correction_id} ja es va fer servir
+          per a un altre canvi.
+        count_would_raise_stock: 'Un recompte físic no pot augmentar les existències:
+          %{sku} quedaria per sobre de les unitats registrades.'
         duplicate_movement_id: El registre d'inventari ja conté el moviment %{movement_id}.
           Executa `aeat app ledger inventory list` per veure els moviments registrats.
         invalid_valuation_method: 'El mètode de valoració d''inventari no està admès:
           %{valuation_method}.'
+        inventory_already_retired: L'inventari %{year} de %{actividad_id} ja està
+          retirat.
+        inventory_not_retired: L'inventari %{year} de %{actividad_id} no està retirat.
+        inventory_retired: L'inventari %{year} de %{actividad_id} està retirat. Restaura'l
+          abans de canviar les seves dades d'existències.
+        later_closing_authority_recorded: L'autoritat de tancament %{later_year} de
+          %{actividad_id} parteix d'aquest tancament, així que les dades d'existències
+          de %{year} ja no poden canviar.
+        movement_already_superseded: El moviment %{movement_id} ja es va corregir
+          o anul·lar.
+        movement_not_found: L'inventari %{year} de %{actividad_id} no té el moviment
+          %{movement_id}.
+        movement_outside_year: El moviment %{movement_id} té una data fora de l'inventari
+          %{year}.
+        stock_would_go_negative: 'Això deixaria les existències per sota de zero:
+          %{sku} necessitaria més unitats de les que queden.'
+    workbench:
+      action:
+        correct: Corregir obertura o mètode
+        describe: Editar descripció
+        inspect: Veure inventari i historial
+        movement_correct: Corregir un moviment
+        movement_reverse: Anul·lar un moviment
+        restore: Restaurar inventari
+        retire: Retirar inventari
+      column:
+        state: Estat
+      done:
+        applied: Canvi registrat.
+        replayed: Aquest canvi ja estava registrat; no ha canviat res.
+      field:
+        correction_id: Correcció
+        description: Descripció
+        keep_method: Mantenir el mètode actual
+        label: Nom
+        reason: Motiu
+        target_movement_id: Moviment a corregir
+      result:
+        history: 'Historial %{correction_id}: %{kind}, %{reason}, %{recorded_at}'
+        movement: 'Moviment %{movement_id}: %{date}, %{kind}, %{quantity}'
+        state: 'Estat: %{state} %{label}'
+      state:
+        active: Actiu
+        retired: Retirat
   invoices:
     bulk_import:
       errors:
@@ -1045,6 +1115,12 @@ application:
           tipus.
         what_to_do: Revisa el tipus d'IVA de les teves factures i registres i torna
           a calcular. No es podrà exportar la declaració fins que es corregeixi.
+      register_acquisition_exceeds_ledger:
+        what: "Els moviments d'un bé del teu registre van pagar menys que el cost que indiques."
+        what_to_do: "Corregeix el preu al teu registre de béns o el moviment i torna a calcular."
+      register_acquisition_partly_accounted:
+        what: "Un bé del teu registre explica només una part del seu moviment, així que la resta no dedueix res."
+        what_to_do: "Dona d'alta la resta del que va pagar aquell moviment, o corregeix el preu del bé, i torna a calcular."
       register_owned_capital_acquisition:
         what: Una compra d'equipament es deixa fora de les teves despeses, perquè
           es dedueix mitjançant la seva amortització anual.
@@ -1683,6 +1759,9 @@ application:
         %{current_value_eur} EUR. L''augment de %{delta_value_eur} EUR supera els
         %{redeclaration_increase_threshold_eur} EUR a partir dels quals l''has de
         tornar a declarar.'
+      inventory_register_drift: L'inventari d'aquest càlcul del model %{modelo} ha
+        canviat des que es va calcular (%{rows_recorded} files registrades, %{rows_current}
+        ara, %{rows_changed} canviades). Torna a calcular abans de fer-lo servir.
       iva_compensation_annual_source_evidence_failure: El model 390 necessita les
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
         incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració

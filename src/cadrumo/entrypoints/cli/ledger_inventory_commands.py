@@ -12,8 +12,16 @@ from ...application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
+    InventoryCorrectRequest,
     InventoryCreateRequest,
+    InventoryDescribeRequest,
+    InventoryInspectRequest,
+    InventoryLedgerChangeRequest,
     InventoryMovementAddRequest,
+    InventoryMovementCorrectRequest,
+    InventoryMovementReverseRequest,
+    InventoryRestoreRequest,
+    InventoryRetireRequest,
     InventoryValuationPreviewRequest,
 )
 from ...application.operations.public_scalar import PublicDecimal
@@ -23,7 +31,10 @@ from ...core.i18n.render import tr
 from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
+    InventoryCorrectionReason,
+    InventoryRetirementReason,
     MovementKind,
+    ValuationMethod,
 )
 from ._date_parsing import _parse_iso_date
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
@@ -32,7 +43,9 @@ from .common import emit_envelope
 from .ledger_business_payloads import InventoryClosingAuthorityRecordResult
 from .operation_ledger_inventory import (
     add_inventory_movement,
+    apply_inventory_ledger_change,
     create_inventory_ledger,
+    inspect_inventory_ledger,
     preview_inventory_valuation,
     read_inventory_catalogue,
     record_inventory_closing_authority,
@@ -63,7 +76,8 @@ def inventory_list(ctx: typer.Context) -> None:
     for row in completion.projection.rows:
         lines.append(
             f"{row.actividad_id}\t{row.year}\t{row.valuation_method.value}\t"
-            f"opening={row.opening_stock.decimal}\tmovements={row.movement_count}",
+            f"opening={row.opening_stock.decimal}\tmovements={row.movement_count}"
+            f"\tcorrections={row.correction_count}\tretired={row.retired}",
         )
     emit_envelope(ctx, command="ledger.inventory.list", result=payload, lines=lines)
 
@@ -146,6 +160,190 @@ def inventory_movement_add(
     )
 
 
+def _emit_ledger_change(ctx: typer.Context, *, command: str, request: InventoryLedgerChangeRequest) -> None:
+    """Submit one change and report the worker's own outcome and resulting state."""
+    _completion, payload = apply_inventory_ledger_change(ctx, request=request)
+    emit_envelope(
+        ctx,
+        command=command,
+        result=payload,
+        lines=(
+            f"outcome\t{payload.outcome}",
+            f"actividad_id\t{payload.actividad_id}",
+            f"year\t{payload.year}",
+            f"movements\t{len(payload.period_movements)}",
+            f"corrections\t{len(payload.history)}",
+            f"retired\t{payload.retired}",
+            f"bucket_event_ids\t{','.join(payload.bucket_event_ids)}",
+        ),
+    )
+
+
+def inventory_inspect(ctx: typer.Context, actividad_id: str, year: int) -> None:
+    """Show one ledger with its effective movements and retained history."""
+    request = InventoryInspectRequest(profile_id=UUID(_inventory_bucket_id()), actividad_id=actividad_id, year=year)
+    _completion, payload = inspect_inventory_ledger(ctx, request=request)
+    lines = [
+        f"actividad_id\t{payload.actividad_id}",
+        f"year\t{payload.year}",
+        f"valuation_method\t{payload.valuation_method}",
+        f"opening_stock\t{payload.opening_stock}",
+        f"retired\t{payload.retired}",
+    ]
+    lines.extend(
+        f"movement\t{item.movement_id}\t{item.movement_date}\t{item.kind}\t{item.quantity}"
+        for item in payload.period_movements
+    )
+    lines.extend(f"history\t{item.correction_id}\t{item.kind}\t{item.recorded_at}" for item in payload.history)
+    emit_envelope(ctx, command="ledger.inventory.inspect", result=payload, lines=lines)
+
+
+def inventory_describe(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    label: str,
+    description: str | None = None,
+) -> None:
+    """Replace the inventory's descriptive facts."""
+    _emit_ledger_change(
+        ctx,
+        command="ledger.inventory.describe",
+        request=InventoryDescribeRequest(
+            profile_id=UUID(_inventory_bucket_id()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            label=label,
+            description=description,
+        ),
+    )
+
+
+def inventory_correct(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    reason: InventoryCorrectionReason,
+    opening_stock: str | None = None,
+    valuation_method: ValuationMethod | None = None,
+) -> None:
+    """Rectify the opening value or valuation method, retaining what they displace."""
+    amount = parse_optional_decimal_amount(opening_stock, label="opening-stock")
+    _emit_ledger_change(
+        ctx,
+        command="ledger.inventory.correct",
+        request=InventoryCorrectRequest(
+            profile_id=UUID(_inventory_bucket_id()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            reason=reason,
+            opening_stock=PublicDecimal(decimal=str(amount)) if amount is not None else None,
+            valuation_method=valuation_method,
+        ),
+    )
+
+
+def inventory_movement_correct(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    target_movement_id: str,
+    reason: InventoryCorrectionReason,
+    movement_id: str,
+    movement_date: str,
+    kind: MovementKind,
+    quantity: str,
+    unit_cost: str | None = None,
+    taxable_base: str | None = None,
+    acquisition_cost_stdin: bool = False,
+) -> None:
+    """Supersede one movement with a replacement, retaining the movement it displaces."""
+    unit_cost_amount = parse_optional_decimal_amount(unit_cost, label="unit-cost")
+    taxable_base_amount = parse_optional_decimal_amount(taxable_base, label="taxable-base")
+    _emit_ledger_change(
+        ctx,
+        command="ledger.inventory.movement.correct",
+        request=InventoryMovementCorrectRequest(
+            profile_id=UUID(_inventory_bucket_id()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            target_movement_id=target_movement_id,
+            reason=reason,
+            movement_id=movement_id,
+            movement_date=_parse_iso_date(movement_date, label="--date"),
+            kind=kind,
+            quantity=PublicDecimal(decimal=str(parse_decimal_amount(quantity, label="quantity"))),
+            unit_cost=PublicDecimal(decimal=str(unit_cost_amount)) if unit_cost_amount is not None else None,
+            taxable_base=PublicDecimal(decimal=str(taxable_base_amount)) if taxable_base_amount is not None else None,
+            acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
+        ),
+    )
+
+
+def inventory_movement_reverse(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    target_movement_id: str,
+    reason: InventoryCorrectionReason,
+) -> None:
+    """Take one movement out of the effective set, retaining it as evidence."""
+    _emit_ledger_change(
+        ctx,
+        command="ledger.inventory.movement.reverse",
+        request=InventoryMovementReverseRequest(
+            profile_id=UUID(_inventory_bucket_id()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            target_movement_id=target_movement_id,
+            reason=reason,
+        ),
+    )
+
+
+def inventory_retire(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    correction_id: str,
+    reason: InventoryRetirementReason,
+) -> None:
+    """Take the inventory out of the active register with every fact retained."""
+    _emit_ledger_change(
+        ctx,
+        command="ledger.inventory.retire",
+        request=InventoryRetireRequest(
+            profile_id=UUID(_inventory_bucket_id()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+            reason=reason,
+        ),
+    )
+
+
+def inventory_restore(ctx: typer.Context, actividad_id: str, year: int, correction_id: str) -> None:
+    """Bring a retired inventory back to the active register."""
+    _emit_ledger_change(
+        ctx,
+        command="ledger.inventory.restore",
+        request=InventoryRestoreRequest(
+            profile_id=UUID(_inventory_bucket_id()),
+            actividad_id=actividad_id,
+            year=year,
+            correction_id=correction_id,
+        ),
+    )
+
+
 def inventory_valuation_preview(
     ctx: typer.Context,
     actividad_id: str,
@@ -213,8 +411,15 @@ def inventory_closing_authority_record(
 
 __all__ = [
     "inventory_closing_authority_record",
+    "inventory_correct",
     "inventory_create",
+    "inventory_describe",
+    "inventory_inspect",
     "inventory_list",
     "inventory_movement_add",
+    "inventory_movement_correct",
+    "inventory_movement_reverse",
+    "inventory_restore",
+    "inventory_retire",
     "inventory_valuation_preview",
 ]

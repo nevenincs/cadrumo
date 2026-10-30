@@ -354,17 +354,38 @@ cli:
           registro de existencias.
         closing_authority_record_help: Registrar atómicamente la autoridad acreditada
           del cierre de existencias
+        correct_help: Corrige el valor inicial o el método de valoración, conservando
+          los valores que sustituyen.
+        corrected_opening_stock_help: Valor inicial corregido en euros.
+        corrected_valuation_method_help: Método de valoración corregido.
+        correction_id_help: Identidad que eliges para este cambio; repetirla con la
+          misma solicitud no cambia nada.
+        correction_reason_help: Por qué se corrige el dato.
         create_help: Crea un registro de existencias para una actividad y ejercicio
+        describe_help: Cambia el nombre y la descripción del inventario; la valoración
+          no se mueve.
+        description_help: Descripción del inventario.
         group_help: Registros de existencias por actividad, movimientos y valoración
+        inspect_help: Muestra un inventario con sus movimientos vigentes y su historial
+          conservado.
+        label_help: Nombre del inventario.
         list_help: Lista los registros de existencias del perfil activo
         movement_add_help: Añade un movimiento de compra, venta o ajuste al registro
           de existencias
+        movement_correct_help: Sustituye un movimiento por otro corregido; el original
+          se queda en el historial.
         movement_date_help: Fecha del movimiento (AAAA-MM-DD)
         movement_group_help: Gestiona los movimientos del registro de existencias
         movement_id_help: Identificador del movimiento dentro del registro de existencias
         movement_kind_help: Tipo de movimiento (opening, purchase, cogs o count)
+        movement_reverse_help: Saca un movimiento del inventario; se queda en el historial.
         opening_stock_help: Valor inicial de existencias
         quantity_help: Cantidad del movimiento, positiva o negativa
+        restore_help: Devuelve un inventario retirado al registro activo.
+        retire_help: Saca el inventario del registro activo conservando todos sus
+          datos.
+        retirement_reason_help: Por qué el inventario sale del registro activo.
+        target_movement_id_help: Movimiento que se corrige o se anula.
         taxable_base_help: Base imponible asociada al movimiento
         unit_cost_help: Coste unitario en movimientos de compra
         valuation_group_help: Calcula y previsualiza la valoración de existencias

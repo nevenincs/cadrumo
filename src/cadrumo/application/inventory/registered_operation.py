@@ -11,7 +11,11 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
-from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.capabilities import (
+    RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
+    RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+    OperationCapabilities,
+)
 from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -33,6 +37,8 @@ from .registered_executor import InventoryOperationExecutor
 from .registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
+    InventoryInspectProjection,
+    InventoryLedgerChangeProjection,
     InventoryListProjection,
     InventoryMovementAddProjection,
     InventoryValuationOperationProjection,
@@ -40,11 +46,13 @@ from .registered_projections import (
 from .registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityRecordRequest,
     InventoryCreateRequest,
+    InventoryInspectRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
     InventoryValuationPreviewRequest,
@@ -52,11 +60,13 @@ from .registered_requests import (
 from .registered_result_projection import (
     project_inventory_closing_authority_result,
     project_inventory_create_result,
+    project_inventory_inspect_result,
+    project_inventory_ledger_change_result,
     project_inventory_list_result,
     project_inventory_movement_add_result,
     project_inventory_valuation_result,
 )
-from .registered_specs import INVENTORY_OPERATION_SHAPES
+from .registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES, INVENTORY_OPERATION_SHAPES
 
 
 class _InventoryProfileScopedRequest(Protocol):
@@ -69,6 +79,7 @@ _MUTATING_IDS = frozenset(
         INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
         INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
         INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+        *INVENTORY_LEDGER_CHANGE_REQUEST_TYPES,
     },
 )
 
@@ -97,6 +108,8 @@ def _definition(
     request_type: type[BaseModel],
     ports_factory: InventoryServicePortsFactory,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
+    *,
+    capabilities: OperationCapabilities = RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
 ) -> OperationDefinition:
     shape = INVENTORY_OPERATION_SHAPES[definition_id]
     if shape.request_type is not request_type:
@@ -110,7 +123,7 @@ def _definition(
         build=lambda: InventoryOperationExecutor(
             ports_factory, definition_id=definition_id, execution_caller_reader=execution_caller_reader
         ),
-        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+        capabilities=capabilities,
         refusal_detail_codes=shape.refusal_codes,
     )
 
@@ -194,6 +207,50 @@ def build_inventory_closing_authority_record_definition(
     )
 
 
+def build_inventory_inspect_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
+    """Build the exact-profile read of one ledger with its retained history."""
+    return _definition(
+        INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
+        InventoryInspectRequest,
+        ports_factory,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
+    )
+
+
+def build_inventory_ledger_change_definitions(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> tuple[OperationDefinition, ...]:
+    """Build the guarded edit, rectification, retirement and restoration definitions."""
+    return tuple(
+        _definition(definition_id, request_type, ports_factory, execution_caller_reader)
+        for definition_id, request_type in INVENTORY_LEDGER_CHANGE_REQUEST_TYPES.items()
+    )
+
+
+def build_inventory_inspect_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the redacted ledger read and its not-found refusal."""
+    return _registration(
+        definition,
+        request_type=InventoryInspectRequest,
+        projection_type=InventoryInspectProjection,
+        projector=project_inventory_inspect_result,
+    )
+
+
+def build_inventory_ledger_change_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind one change operation to the shared applied, replayed or refused projection."""
+    return _registration(
+        definition,
+        request_type=INVENTORY_LEDGER_CHANGE_REQUEST_TYPES[definition.definition_id],
+        projection_type=InventoryLedgerChangeProjection,
+        projector=project_inventory_ledger_change_result,
+    )
+
+
 def build_inventory_list_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the safe inventory-list projection and profile disclosure policy."""
     return _registration(
@@ -255,6 +312,10 @@ __all__ = [
     "build_inventory_closing_authority_record_registration",
     "build_inventory_create_definition",
     "build_inventory_create_registration",
+    "build_inventory_inspect_definition",
+    "build_inventory_inspect_registration",
+    "build_inventory_ledger_change_definitions",
+    "build_inventory_ledger_change_registration",
     "build_inventory_list_definition",
     "build_inventory_list_registration",
     "build_inventory_movement_add_definition",

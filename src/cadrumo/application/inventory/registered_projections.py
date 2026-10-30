@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
@@ -10,8 +10,14 @@ from pydantic import BaseModel, Field, NonNegativeInt, PositiveInt, model_valida
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.contribuyente.inventory.records import (
+    InventoryCorrectionReason,
+    InventoryHistoryKind,
     InventoryLedger,
+    InventoryLedgerDescriptor,
+    InventoryLedgerHistoryEntry,
+    InventoryRetirementReason,
     MovementKind,
+    MovementRecord,
     ValuationMethod,
 )
 from ..operations.public_scalar import PublicDecimal
@@ -32,6 +38,10 @@ class InventoryListRowProjection(BaseModel):
     valuation_method: ValuationMethod
     opening_stock: PublicDecimal
     movement_count: NonNegativeInt
+    label: str | None = None
+    retired: bool = False
+    retirement_reason: InventoryRetirementReason | None = None
+    correction_count: NonNegativeInt = 0
 
 
 class InventoryStockLayerProjection(BaseModel):
@@ -78,6 +88,101 @@ class InventoryMovementProjection(BaseModel):
     acquisition_cost: InventoryAcquisitionCostProjection | None
     schema_version: str
 
+    @classmethod
+    def from_movement(cls, movement: MovementRecord) -> InventoryMovementProjection:
+        """Project one movement while excluding its evidence payloads."""
+        acquisition = movement.acquisition_cost
+        return cls(
+            movement_id=movement.movement_id,
+            movement_date=movement.movement_date,
+            kind=movement.kind,
+            sku=movement.sku,
+            quantity=PublicDecimal(decimal=str(movement.quantity)),
+            unit_cost=PublicDecimal(decimal=str(movement.unit_cost)) if movement.unit_cost is not None else None,
+            taxable_base=(
+                PublicDecimal(decimal=str(movement.taxable_base)) if movement.taxable_base is not None else None
+            ),
+            iva_rate=PublicDecimal(decimal=str(movement.iva_rate)),
+            iva_amount=PublicDecimal(decimal=str(movement.iva_amount)) if movement.iva_amount is not None else None,
+            deductible_iva_ratio=PublicDecimal(decimal=str(movement.deductible_iva_ratio)),
+            acquisition_cost=(
+                InventoryAcquisitionCostProjection(
+                    consideration_excluding_iva=PublicDecimal(decimal=str(acquisition.consideration_excluding_iva)),
+                    directly_attributable_cost_total=PublicDecimal(
+                        decimal=str(acquisition.directly_attributable_cost_total),
+                    ),
+                    nonrecoverable_iva_included=PublicDecimal(decimal=str(acquisition.nonrecoverable_iva_included)),
+                    recoverable_iva_excluded=PublicDecimal(decimal=str(acquisition.recoverable_iva_excluded)),
+                    total_acquisition_cost=PublicDecimal(decimal=str(acquisition.total_acquisition_cost)),
+                    component_count=len(acquisition.attributable_cost_components),
+                    evidence_count=len(acquisition.evidence),
+                    complete=True,
+                )
+                if acquisition is not None
+                else None
+            ),
+            schema_version=movement.schema_version,
+        )
+
+
+class InventoryDescriptorProjection(BaseModel):
+    """The descriptive facts of an inventory."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    label: str
+    description: str | None
+
+    @classmethod
+    def from_descriptor(cls, descriptor: InventoryLedgerDescriptor) -> InventoryDescriptorProjection:
+        """Project one stored descriptor."""
+        return cls(label=descriptor.label, description=descriptor.description)
+
+
+class InventoryHistoryEntryProjection(BaseModel):
+    """One retained change with the fact it displaced, evidence payloads removed."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    correction_id: str
+    kind: InventoryHistoryKind
+    recorded_at: datetime
+    actor: str
+    correction_reason: InventoryCorrectionReason | None
+    retirement_reason: InventoryRetirementReason | None
+    superseded_movement: InventoryMovementProjection | None
+    replacement_movement_id: str | None
+    prior_opening_stock: PublicDecimal | None
+    prior_valuation_method: ValuationMethod | None
+    prior_descriptor: InventoryDescriptorProjection | None
+
+    @classmethod
+    def from_entry(cls, entry: InventoryLedgerHistoryEntry) -> InventoryHistoryEntryProjection:
+        """Project one stored history entry."""
+        return cls(
+            correction_id=entry.correction_id,
+            kind=entry.kind,
+            recorded_at=entry.recorded_at,
+            actor=entry.actor,
+            correction_reason=entry.correction_reason,
+            retirement_reason=entry.retirement_reason,
+            superseded_movement=(
+                InventoryMovementProjection.from_movement(entry.superseded_movement)
+                if entry.superseded_movement is not None
+                else None
+            ),
+            replacement_movement_id=entry.replacement_movement_id,
+            prior_opening_stock=(
+                PublicDecimal(decimal=str(entry.prior_opening_stock)) if entry.prior_opening_stock is not None else None
+            ),
+            prior_valuation_method=entry.prior_valuation_method,
+            prior_descriptor=(
+                InventoryDescriptorProjection.from_descriptor(entry.prior_descriptor)
+                if entry.prior_descriptor is not None
+                else None
+            ),
+        )
+
 
 class InventoryClosingAuthorityFingerprintsProjection(BaseModel):
     """Non-reversible source identities retained for closing authority."""
@@ -104,6 +209,10 @@ class InventoryLedgerProjection(BaseModel):
     period_movements: tuple[InventoryMovementProjection, ...]
     schema_version: str
     bucket_event_ids: tuple[str, ...] = ()
+    descriptor: InventoryDescriptorProjection | None = None
+    retired: bool = False
+    retirement_reason: InventoryRetirementReason | None = None
+    history: tuple[InventoryHistoryEntryProjection, ...] = ()
 
     @classmethod
     def from_ledger(
@@ -126,50 +235,6 @@ class InventoryLedgerProjection(BaseModel):
             if record is not None
             else None
         )
-        movements = tuple(
-            InventoryMovementProjection(
-                movement_id=movement.movement_id,
-                movement_date=movement.movement_date,
-                kind=movement.kind,
-                sku=movement.sku,
-                quantity=PublicDecimal(decimal=str(movement.quantity)),
-                unit_cost=(PublicDecimal(decimal=str(movement.unit_cost)) if movement.unit_cost is not None else None),
-                taxable_base=(
-                    PublicDecimal(decimal=str(movement.taxable_base)) if movement.taxable_base is not None else None
-                ),
-                iva_rate=PublicDecimal(decimal=str(movement.iva_rate)),
-                iva_amount=(
-                    PublicDecimal(decimal=str(movement.iva_amount)) if movement.iva_amount is not None else None
-                ),
-                deductible_iva_ratio=PublicDecimal(decimal=str(movement.deductible_iva_ratio)),
-                acquisition_cost=(
-                    InventoryAcquisitionCostProjection(
-                        consideration_excluding_iva=PublicDecimal(
-                            decimal=str(movement.acquisition_cost.consideration_excluding_iva),
-                        ),
-                        directly_attributable_cost_total=PublicDecimal(
-                            decimal=str(movement.acquisition_cost.directly_attributable_cost_total),
-                        ),
-                        nonrecoverable_iva_included=PublicDecimal(
-                            decimal=str(movement.acquisition_cost.nonrecoverable_iva_included),
-                        ),
-                        recoverable_iva_excluded=PublicDecimal(
-                            decimal=str(movement.acquisition_cost.recoverable_iva_excluded),
-                        ),
-                        total_acquisition_cost=PublicDecimal(
-                            decimal=str(movement.acquisition_cost.total_acquisition_cost),
-                        ),
-                        component_count=len(movement.acquisition_cost.attributable_cost_components),
-                        evidence_count=len(movement.acquisition_cost.evidence),
-                        complete=True,
-                    )
-                    if movement.acquisition_cost is not None
-                    else None
-                ),
-                schema_version=movement.schema_version,
-            )
-            for movement in ledger.period_movements
-        )
         return cls(
             actividad_id=ledger.actividad_id,
             year=ledger.year,
@@ -185,9 +250,17 @@ class InventoryLedgerProjection(BaseModel):
                 for layer in ledger.opening_layers
             ),
             closing_authority_fingerprints=fingerprints,
-            period_movements=movements,
+            period_movements=tuple(InventoryMovementProjection.from_movement(item) for item in ledger.period_movements),
             schema_version=ledger.schema_version,
             bucket_event_ids=bucket_event_ids,
+            descriptor=(
+                InventoryDescriptorProjection.from_descriptor(ledger.descriptor)
+                if ledger.descriptor is not None
+                else None
+            ),
+            retired=ledger.is_retired,
+            retirement_reason=ledger.retirement_reason,
+            history=tuple(InventoryHistoryEntryProjection.from_entry(entry) for entry in ledger.history),
         )
 
 
@@ -220,6 +293,15 @@ class InventoryClosingAuthorityRecordProjection(BaseModel):
     changed: bool
 
 
+class InventoryReasonFact(BaseModel):
+    """One immutable fact used to render an inventory refusal."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    key: str
+    value: str
+
+
 class InventoryRefusalProjection(BaseModel):
     """Bounded safe explanation for a deterministic domain refusal."""
 
@@ -231,6 +313,8 @@ class InventoryRefusalProjection(BaseModel):
     year: int | None = None
     movement_id: str | None = None
     valuation_method: str | None = None
+    reason_key: str | None = None
+    reason_facts: tuple[InventoryReasonFact, ...] = ()
 
 
 class InventoryListProjection(BaseModel):
@@ -284,6 +368,52 @@ class InventoryMovementAddProjection(BaseModel):
         return self
 
 
+class InventoryInspectProjection(BaseModel):
+    """One ledger with its movements and history, or a registered refusal."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    outcome: Literal["found", "refused"]
+    profile_id: UUID
+    ledger: InventoryLedgerProjection | None = None
+    refusal: InventoryRefusalProjection | None = None
+
+    @model_validator(mode="after")
+    def _outcome_is_complete(self) -> InventoryInspectProjection:
+        if (self.outcome == "found") != (self.ledger is not None) or (self.outcome == "refused") != (
+            self.refusal is not None
+        ):
+            raise ValueError("inventory inspect projection is incomplete")
+        return self
+
+
+class InventoryLedgerChangeProjection(BaseModel):
+    """A settled edit, rectification, retirement or restoration, or a registered refusal.
+
+    ``applied`` wrote one history entry and emitted one event; ``replayed`` found
+    the exact request already applied and changed nothing.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    outcome: Literal["applied", "replayed", "refused"]
+    profile_id: UUID
+    ledger: InventoryLedgerProjection | None = None
+    bucket_event_ids: tuple[str, ...] = ()
+    refusal: InventoryRefusalProjection | None = None
+
+    @model_validator(mode="after")
+    def _outcome_is_complete(self) -> InventoryLedgerChangeProjection:
+        expected_events = 1 if self.outcome == "applied" else 0
+        if (
+            (self.outcome == "refused") == (self.ledger is not None)
+            or (self.outcome == "refused") != (self.refusal is not None)
+            or len(self.bucket_event_ids) != expected_events
+        ):
+            raise ValueError("inventory change projection is incomplete")
+        return self
+
+
 class InventoryValuationOperationProjection(BaseModel):
     """Valuation result or a registered pre-event refusal."""
 
@@ -328,11 +458,16 @@ __all__ = [
     "InventoryClosingAuthorityOperationProjection",
     "InventoryClosingAuthorityRecordProjection",
     "InventoryCreateProjection",
+    "InventoryDescriptorProjection",
+    "InventoryHistoryEntryProjection",
+    "InventoryInspectProjection",
+    "InventoryLedgerChangeProjection",
     "InventoryLedgerProjection",
     "InventoryListProjection",
     "InventoryListRowProjection",
     "InventoryMovementAddProjection",
     "InventoryMovementProjection",
+    "InventoryReasonFact",
     "InventoryRefusalProjection",
     "InventoryStockLayerProjection",
     "InventoryValuationOperationProjection",

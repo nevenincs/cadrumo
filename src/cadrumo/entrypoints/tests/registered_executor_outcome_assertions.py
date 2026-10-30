@@ -60,11 +60,14 @@ from ...application.bucket_event_repository import bucket_event_history_reposito
 from ...application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
+    InventoryInspectProjection,
+    InventoryLedgerChangeProjection,
     InventoryLedgerProjection,
     InventoryListProjection,
     InventoryMovementAddProjection,
     InventoryValuationOperationProjection,
 )
+from ...application.inventory.registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
 from ...application.invoices.catalogue_add_contracts import InvoiceAddResult
 from ...application.invoices.catalogue_read_operation import (
     INVOICE_LIST_OPERATION_DEFINITION_ID,
@@ -644,6 +647,8 @@ def _assert_registered_executor_conformance_outcome(
             "ledger.inventory.movement.add": InventoryMovementAddProjection,
             "ledger.inventory.valuation.preview": InventoryValuationOperationProjection,
             "ledger.inventory.closing-authority.record": InventoryClosingAuthorityOperationProjection,
+            "ledger.inventory.inspect": InventoryInspectProjection,
+            **dict.fromkeys(INVENTORY_LEDGER_CHANGE_REQUEST_TYPES, InventoryLedgerChangeProjection),
         }[case.definition_id]
         inventory_result = _resolve_result_projection(
             driver,
@@ -661,6 +666,18 @@ def _assert_registered_executor_conformance_outcome(
             assert len(inventory_result.rows) == 1
             assert inventory_result.rows[0].actividad_id == ledger.actividad_id
             assert inventory_after == inventory_before
+        elif isinstance(inventory_result, InventoryInspectProjection):
+            assert inventory_result.profile_id == profile_id and inventory_result.outcome == "found"
+            assert inventory_result.ledger == InventoryLedgerProjection.from_ledger(ledger)
+            assert inventory_after == inventory_before
+        elif isinstance(inventory_result, InventoryLedgerChangeProjection):
+            assert inventory_result.profile_id == profile_id and inventory_result.outcome == "applied"
+            assert inventory_result.ledger == InventoryLedgerProjection.from_ledger(
+                ledger, bucket_event_ids=inventory_result.bucket_event_ids
+            )
+            assert len(ledger.history) > len(inventory_before.ledgers[0].history)
+            events = bucket_event_history_repository(bucket_id=str(profile_id)).load().events
+            assert all(event_id in events for event_id in inventory_result.bucket_event_ids)
         elif isinstance(inventory_result, InventoryCreateProjection | InventoryMovementAddProjection):
             assert inventory_result.profile_id == profile_id and inventory_result.ledger is not None
             assert inventory_result.ledger == InventoryLedgerProjection.from_ledger(

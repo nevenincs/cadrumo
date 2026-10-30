@@ -30,22 +30,39 @@ from cadrumo.application.bienes_inversion.registered_result_contracts import (
 from cadrumo.application.inventory.registered_projections import (
     InventoryClosingAuthorityOperationProjection,
     InventoryCreateProjection,
+    InventoryInspectProjection,
+    InventoryLedgerChangeProjection,
     InventoryListProjection,
     InventoryMovementAddProjection,
     InventoryValuationOperationProjection,
 )
 from cadrumo.application.inventory.registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
+    INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
+    INVENTORY_RESTORE_OPERATION_DEFINITION_ID,
+    INVENTORY_RETIRE_OPERATION_DEFINITION_ID,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
+    InventoryCorrectRequest,
     InventoryCreateRequest,
+    InventoryDescribeRequest,
+    InventoryInspectRequest,
+    InventoryLedgerChangeRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementCorrectRequest,
+    InventoryMovementReverseRequest,
+    InventoryRestoreRequest,
+    InventoryRetireRequest,
     InventoryValuationPreviewRequest,
 )
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
@@ -296,9 +313,23 @@ class RuntimeCapitalGoodsTuiDoorV1:
 def _ledger_scope_matches(
     ledger_actividad: str,
     ledger_year: int,
-    request: InventoryCreateRequest | InventoryMovementAddRequest | InventoryValuationPreviewRequest,
+    request: InventoryCreateRequest
+    | InventoryMovementAddRequest
+    | InventoryValuationPreviewRequest
+    | InventoryInspectRequest
+    | InventoryLedgerChangeRequest,
 ) -> bool:
     return ledger_actividad == request.actividad_id and ledger_year == request.year
+
+
+_LEDGER_CHANGE_DEFINITION_IDS: dict[type[InventoryLedgerChangeRequest], str] = {
+    InventoryDescribeRequest: INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
+    InventoryCorrectRequest: INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
+    InventoryMovementCorrectRequest: INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
+    InventoryMovementReverseRequest: INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
+    InventoryRetireRequest: INVENTORY_RETIRE_OPERATION_DEFINITION_ID,
+    InventoryRestoreRequest: INVENTORY_RESTORE_OPERATION_DEFINITION_ID,
+}
 
 
 class RuntimeInventoryTuiDoorV1:
@@ -323,6 +354,64 @@ class RuntimeInventoryTuiDoorV1:
                 result.profile_id == request.profile_id and _read_matches(condition, terminal)
             ),
             refusal_detail=False,
+        )
+
+    async def inspect(self, request: InventoryInspectRequest) -> InventoryInspectProjection:
+        """Read one inventory with its history and correlate the inventory it names."""
+
+        def matches(
+            result: InventoryInspectProjection,
+            condition: OperationTerminalCondition,
+            terminal: OperationPublicProjectionV1,
+        ) -> bool:
+            refusal = result.refusal
+            ledger = result.ledger
+            return (
+                result.profile_id == request.profile_id
+                and _outcome_matches(
+                    refusal_code=None if refusal is None else refusal.code,
+                    condition=condition,
+                    terminal=terminal,
+                    success_effect=OperationEffect.NONE,
+                )
+                and (ledger is None or _ledger_scope_matches(ledger.actividad_id, ledger.year, request))
+            )
+
+        return await self._session.run(
+            request,
+            definition_id=INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
+            result_type=InventoryInspectProjection,
+            matches=matches,
+            refusal_detail=True,
+        )
+
+    async def apply_change(self, request: InventoryLedgerChangeRequest) -> InventoryLedgerChangeProjection:
+        """Run one edit, rectification, retirement or restoration and correlate its inventory."""
+
+        def matches(
+            result: InventoryLedgerChangeProjection,
+            condition: OperationTerminalCondition,
+            terminal: OperationPublicProjectionV1,
+        ) -> bool:
+            refusal = result.refusal
+            ledger = result.ledger
+            return (
+                result.profile_id == request.profile_id
+                and _outcome_matches(
+                    refusal_code=None if refusal is None else refusal.code,
+                    condition=condition,
+                    terminal=terminal,
+                    success_effect=OperationEffect.UPDATED if result.outcome == "applied" else OperationEffect.NONE,
+                )
+                and (ledger is None or _ledger_scope_matches(ledger.actividad_id, ledger.year, request))
+            )
+
+        return await self._session.run(
+            request,
+            definition_id=_LEDGER_CHANGE_DEFINITION_IDS[type(request)],
+            result_type=InventoryLedgerChangeProjection,
+            matches=matches,
+            refusal_detail=True,
         )
 
     async def create(self, request: InventoryCreateRequest) -> InventoryCreateProjection:

@@ -21,6 +21,7 @@ from ..app_ledger_inventory_common_command_parameters import (
     INVENTORY_ACTIVIDAD_ID_OPTION,
     INVENTORY_YEAR_OPTION,
 )
+from ..command_operation_table import COMMAND_OPERATION_ROWS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -138,3 +139,23 @@ def test_shared_inventory_parameters_have_one_immutable_authority() -> None:
     assert type(INVENTORY_ACTIVIDAD_ID_ARGUMENT).__dataclass_params__.frozen
     assert type(INVENTORY_ACTIVIDAD_ID_OPTION).__dataclass_params__.frozen
     assert type(INVENTORY_YEAR_OPTION).__dataclass_params__.frozen
+
+
+def test_each_ledger_change_command_names_its_operation_and_a_shared_result() -> None:
+    specs = {spec.key: spec for spec in LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS}
+    rows = dict(COMMAND_OPERATION_ROWS)
+    for key, path, operation in (
+        ("app_ledger_inventory_describe", ("describe",), "ledger.inventory.describe"),
+        ("app_ledger_inventory_correct", ("correct",), "ledger.inventory.correct"),
+        ("app_ledger_inventory_retire", ("retire",), "ledger.inventory.retire"),
+        ("app_ledger_inventory_restore", ("restore",), "ledger.inventory.restore"),
+        ("app_ledger_inventory_movement_correct", ("movement", "correct"), "ledger.inventory.movement.correct"),
+        ("app_ledger_inventory_movement_reverse", ("movement", "reverse"), "ledger.inventory.movement.reverse"),
+    ):
+        assert rows[("app", "ledger", "inventory", *path)] == operation
+        assert specs[key].result_schema.identity == operation
+        target = specs[key].result_schema.target
+        assert target is not None
+        assert target.qualname == "InventoryLedgerChangeResult"
+        assert "correction_id" in {parameter.name for parameter in specs[key].parameters}
+    assert specs["app_ledger_inventory_inspect"].result_schema.identity == "ledger.inventory.inspect"

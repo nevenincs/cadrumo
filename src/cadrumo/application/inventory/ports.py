@@ -49,14 +49,28 @@ class InventoryLedgerServiceRepositoryProtocol(Protocol):
         """Validate and atomically record one latest-candidate closing authority."""
         ...
 
-    def remove(self, actividad_id: str, *, year: int) -> InventoryLedger:
-        """Atomically remove one activity/year ledger."""
+    def apply_ledger_change(
+        self,
+        actividad_id: str,
+        *,
+        year: int,
+        change: Callable[[InventoryLedgerDocument, InventoryLedger], InventoryLedger],
+    ) -> InventoryLedgerWrite:
+        """Apply one domain change to the latest ledger inside the revision guard."""
         ...
 
 
 @dataclass(frozen=True, slots=True)
 class InventoryClosingAuthorityWrite:
     """Actual closing-authority state returned by the revision-guarded repository."""
+
+    ledger: InventoryLedger
+    changed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class InventoryLedgerWrite:
+    """The ledger as stored and whether this call changed it; false is an exact replay."""
 
     ledger: InventoryLedger
     changed: bool
@@ -84,6 +98,7 @@ class InventoryServicePortsFactory(Protocol):
 __all__ = [
     "InventoryClosingAuthorityWrite",
     "InventoryLedgerServiceRepositoryProtocol",
+    "InventoryLedgerWrite",
     "InventoryRepositoryFactory",
     "InventoryServicePorts",
     "InventoryServicePortsFactory",

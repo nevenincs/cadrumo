@@ -26,11 +26,15 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ....application.inventory.errors import InventoryClosingAuthorityConflictError
-from ....application.inventory.ports import InventoryClosingAuthorityWrite
+from ....application.inventory.ports import InventoryClosingAuthorityWrite, InventoryLedgerWrite
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ....domain.contribuyente.inventory.corrections import (
+    require_ledger_active,
+    require_ledger_open_for_stock_change,
+)
 from ....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, MovementRecord
 from ..storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
@@ -191,57 +195,6 @@ class InventoryLedgerRepository:
 
         return self._storage.mutate(_insert)
 
-    def remove(self, actividad_id: str, *, year: int) -> InventoryLedger:
-        """Atomically drop the ledger for ``actividad_id`` and ``year``.
-
-        Args:
-            actividad_id: Activity whose ledger is removed.
-            year: Filing year of the ledger to remove.
-
-        Returns:
-            The :class:`InventoryLedger` that was removed.
-
-        The document is a singleton row, so removing one ledger rewrites the
-        whole document -- which means an unguarded removal discards a ledger
-        created for a DIFFERENT activity in the interim, losing an entire
-        activity's inventory for an operator who was deleting something else.
-
-        The absence check runs inside the guarded unit of work, so a retry
-        re-judges it against the newly-current document: a ledger removed by a
-        concurrent caller must refuse as absent rather than report a second
-        successful removal of something already gone.
-
-        Raises:
-            InventoryLedgerError: When no ledger exists for the pair.
-            SecureObjectRevisionConflictError: When contention persists across
-                every attempt.
-        """
-        removed: list[InventoryLedger] = []
-
-        def _drop(current: InventoryLedgerDocument) -> InventoryLedgerDocument:
-            target = next(
-                (
-                    existing
-                    for existing in current.ledgers
-                    if existing.actividad_id == actividad_id and existing.year == year
-                ),
-                None,
-            )
-            if target is None:
-                raise InventoryLedgerError(
-                    f"no inventory ledger for {actividad_id!r} in {year}",
-                    context={"actividad_id": actividad_id, "year": year},
-                    translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_absent",
-                )
-            removed.clear()
-            removed.append(target)
-            return InventoryLedgerDocument(
-                ledgers=tuple(existing for existing in current.ledgers if existing is not target),
-            )
-
-        self._storage.mutate(_drop)
-        return removed[0]
-
     def record_movement(
         self,
         actividad_id: str,
@@ -282,7 +235,10 @@ class InventoryLedgerRepository:
             ledgers = list(current.ledgers)
             for index, ledger in enumerate(ledgers):
                 if ledger.actividad_id == actividad_id and ledger.year == year:
-                    if any(existing.movement_id == movement.movement_id for existing in ledger.period_movements):
+                    # A movement moves the closing a recorded authority or the next
+                    # year's opening rests on, so it faces the same guard as a rectification.
+                    require_ledger_open_for_stock_change(current, ledger)
+                    if movement.movement_id in ledger.known_movement_ids:
                         raise InventoryLedgerError(
                             f"movement {movement.movement_id!r} already exists",
                             context={"movement_id": movement.movement_id},
@@ -330,6 +286,7 @@ class InventoryLedgerRepository:
                         raise InventoryClosingAuthorityConflictError(
                             "inventory closing authority already exists with different provenance",
                         )
+                    require_ledger_active(ledger)
                     updated = ledger.model_copy(update={"closing_authority_record": authority_record})
                     # Rehydrate instead of trusting ``model_copy`` so every nested
                     # fingerprint and canonical resolver invariant runs before write.
@@ -345,6 +302,43 @@ class InventoryLedgerRepository:
         document = self._storage.mutate(_replace)
         ledger = next(item for item in document.ledgers if item.actividad_id == actividad_id and item.year == year)
         return InventoryClosingAuthorityWrite(ledger=ledger, changed=changed)
+
+    def apply_ledger_change(
+        self,
+        actividad_id: str,
+        *,
+        year: int,
+        change: Callable[[InventoryLedgerDocument, InventoryLedger], InventoryLedger],
+    ) -> InventoryLedgerWrite:
+        """Apply one domain change to the latest ledger inside the revision guard.
+
+        ``change`` runs once per attempt against the newly current document, so its
+        refusals are re-judged. Returning the ledger unchanged is an exact replay:
+        nothing is written and ``changed`` is false.
+        """
+        changed = False
+
+        def _apply(current: InventoryLedgerDocument) -> InventoryLedgerDocument:
+            nonlocal changed
+            changed = False
+            ledgers = list(current.ledgers)
+            for index, ledger in enumerate(ledgers):
+                if ledger.actividad_id == actividad_id and ledger.year == year:
+                    updated = change(current, ledger)
+                    if updated is ledger:
+                        return current
+                    ledgers[index] = updated
+                    changed = True
+                    return InventoryLedgerDocument(ledgers=tuple(ledgers))
+            raise InventoryLedgerError(
+                f"inventory ledger not found for {actividad_id!r} in {year}",
+                context={"actividad_id": actividad_id, "year": year},
+                translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_not_found",
+            )
+
+        document = self._storage.mutate(_apply)
+        ledger = next(item for item in document.ledgers if item.actividad_id == actividad_id and item.year == year)
+        return InventoryLedgerWrite(ledger=ledger, changed=changed)
 
     def _save_unlocked(self, document: InventoryLedgerDocument) -> None:
         self._storage.save(document)

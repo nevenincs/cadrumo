@@ -349,17 +349,37 @@ cli:
           fájlból.
         authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletnyilvántartáshoz.
         closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
+        correct_help: Javítja a nyitó értéket vagy az értékelési módszert, megőrizve
+          a felváltott értékeket.
+        corrected_opening_stock_help: A javított nyitó érték euróban.
+        corrected_valuation_method_help: A javított értékelési módszer.
+        correction_id_help: A módosítás általad választott azonosítója; ugyanazzal
+          a kéréssel megismételve nem változtat semmit.
+        correction_reason_help: Miért javítod az adatot.
         create_help: Készletnyilvántartás létrehozása egy tevékenységhez és adóévhez.
+        describe_help: Módosítja a készlet nevét és leírását; az értékelés nem változik.
+        description_help: A készlet leírása.
         group_help: Készletnyilvántartások tevékenységek, mozgások és értékelés szerint.
+        inspect_help: Megmutat egy készletet az érvényes mozgásaival és a megőrzött
+          előzményeivel.
+        label_help: A készlet neve.
         list_help: Készletnyilvántartások listázása az aktív profilban.
         movement_add_help: Vásárlási, értékesítési vagy helyesbítési mozgás hozzáadása
           a készletnyilvántartáshoz.
+        movement_correct_help: Egy mozgást javítottra cserél; az eredeti az előzményekben
+          marad.
         movement_date_help: Mozgás dátuma (ÉÉÉÉ-HH-NN).
         movement_group_help: A készletnyilvántartás mozgásainak kezelése.
         movement_id_help: A mozgás azonosítója a készletnyilvántartáson belül.
         movement_kind_help: Mozgás típusa (opening, purchase, cogs vagy count)
+        movement_reverse_help: Kivesz egy mozgást a készletből; az előzményekben marad.
         opening_stock_help: Nyitókészlet értéke.
         quantity_help: Mozgás mennyisége, pozitív vagy negatív.
+        restore_help: Visszahelyez egy kivont készletet az aktív nyilvántartásba.
+        retire_help: Kivonja a készletet az aktív nyilvántartásból, minden adatát
+          megőrizve.
+        retirement_reason_help: Miért kerül ki a készlet az aktív nyilvántartásból.
+        target_movement_id_help: A javítandó vagy sztornózandó mozgás.
         taxable_base_help: A mozgáshoz kapcsolt adóköteles alap.
         unit_cost_help: Egységár vásárlási mozgásokhoz.
         valuation_group_help: Készletértékelés számítása és előnézete.
@@ -2969,8 +2989,8 @@ cli:
       attachment_help: Kiegészítő mellékletek azonosítója (ismételhető).
       business_pct_help: Üzleti célú arány 0 és 1 között; csak MIXED sorokhoz. Teljesen
         BUSINESS soroknál hagyd ki.
-      category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
-        bevételekhez nem szükséges).
+      category_help: Levonható költség kategóriaazonosítója (csak kiadásoknál; bevételekhez
+        nem szükséges).
       classification_help: Üzleti besorolás (BUSINESS / PERSONAL / MIXED / ...).
       counterparty_help: Szerződő fél leírása.
       currency_help: Háromjegyű ISO 4217 pénznemkód.
