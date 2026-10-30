@@ -22,10 +22,9 @@ use super::{
     documents::is_lower_hex,
 };
 use crate::runtime_client::{
-    Admitted, Cohort, Endpoint, Refusal, SessionExchange, document, handshake, is_uuid, read_frame,
-    request_id, text,
+    Admitted, Cohort, Endpoint, Refusal, RuntimeChannel, SessionExchange, document, handshake,
+    is_uuid, read_frame, request_id, text,
 };
-use cadrumo_platform::runtime_pipe::Pipe;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::{
@@ -237,7 +236,7 @@ pub fn connect_view(
     cohort: &Cohort,
     grant: ViewAttachGrant,
     deadline: Instant,
-) -> Result<(Pipe, ViewConnected), Refusal> {
+) -> Result<(RuntimeChannel, ViewConnected), Refusal> {
     if grant.expired() {
         return Err(Refusal::Timeout);
     }

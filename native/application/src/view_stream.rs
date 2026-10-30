@@ -31,9 +31,9 @@ pub mod decoder;
 pub mod documents;
 pub mod transfer;
 
-#[cfg(all(windows, feature = "platform"))]
+#[cfg(feature = "platform")]
 pub mod attach;
-#[cfg(all(windows, feature = "platform"))]
+#[cfg(feature = "platform")]
 pub mod lane;
 
 #[cfg(test)]
