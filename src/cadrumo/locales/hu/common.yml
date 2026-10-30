@@ -7792,6 +7792,7 @@ tui:
       invalid_number: '%{field}: a(z) %{value} nem egész szám.'
       inventory:
         action:
+          closing_value: "Záróérték rögzítése adatfájlból"
           closing_authority: Záró jóváhagyás rögzítése
           create: Készlet létrehozása
           movement_add: Mozgás hozzáadása
@@ -7812,6 +7813,7 @@ tui:
           acquisition_cost: Beszerzési költség fájlja (csak vásárlásnál)
           action: Kérés
           actividad_id: Tevékenység
+          closing_value_facts: "Záróérték adatfájlja"
           authority_record: Záró jóváhagyás fájlja
           kind: Mozgás fajtája
           movement_date: Mozgás dátuma

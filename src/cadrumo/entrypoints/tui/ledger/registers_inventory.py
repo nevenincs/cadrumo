@@ -36,6 +36,8 @@ from ....application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueFactsInput,
+    InventoryClosingValueRecordRequest,
     InventoryCorrectRequest,
     InventoryCreateRequest,
     InventoryDescribeRequest,
@@ -104,6 +106,7 @@ _ACTION_LOCALE_KEYS: Final[dict[str, str]] = {
     "movement_add": "tui.ledger.registers.inventory.action.movement_add",
     "valuation_preview": "tui.ledger.registers.inventory.action.valuation_preview",
     "closing_authority": "tui.ledger.registers.inventory.action.closing_authority",
+    "closing_value": "tui.ledger.registers.inventory.action.closing_value",
     "inspect": "application.inventory.workbench.action.inspect",
     "describe": "application.inventory.workbench.action.describe",
     "correct": "application.inventory.workbench.action.correct",
@@ -150,6 +153,7 @@ _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "unit_cost": "tui.ledger.registers.inventory.field.unit_cost",
     "taxable_base": "tui.ledger.registers.inventory.field.taxable_base",
     "acquisition_cost": "tui.ledger.registers.inventory.field.acquisition_cost",
+    "facts": "tui.ledger.registers.inventory.field.closing_value_facts",
     "authority_record": "tui.ledger.registers.inventory.field.authority_record",
     "correction_id": "application.inventory.workbench.field.correction_id",
     "target_movement_id": "application.inventory.workbench.field.target_movement_id",
@@ -170,6 +174,7 @@ _FIELDS: Final = (
     "inventory-taxable-base",
     "inventory-acquisition-path",
     "inventory-authority-path",
+    "inventory-closing-facts-path",
     "inventory-target-movement",
     "inventory-correction-reason",
     "inventory-retirement-reason",
@@ -192,6 +197,7 @@ _ACTION_FIELDS: Final[dict[str, frozenset[str]]] = {
     },
     "valuation_preview": _SCOPE,
     "closing_authority": _SCOPE | {"inventory-authority-path"},
+    "closing_value": _SCOPE | {"inventory-closing-facts-path"},
     "inspect": _SCOPE,
     "describe": _SCOPE | {"inventory-label", "inventory-description"},
     "correct": _SCOPE | {"inventory-correction-reason", "inventory-opening", "inventory-corrected-method"},
@@ -251,6 +257,16 @@ class LedgerInventoryDoorV1(Protocol):
         self, request: InventoryClosingAuthorityRecordRequest
     ) -> InventoryClosingAuthorityOperationProjection:
         """Record one closing authority; a registered refusal is returned, not raised."""
+        ...
+
+    async def record_closing_value(
+        self, request: InventoryClosingValueRecordRequest
+    ) -> InventoryClosingAuthorityOperationProjection:
+        """Record one closing value from plain facts; a registered refusal is returned, not raised."""
+        ...
+
+    async def read_closing_value_facts(self, path: str) -> InventoryClosingValueFactsInput:
+        """Read and validate one typed file of closing-value facts the operator named."""
         ...
 
     async def inspect(self, request: InventoryInspectRequest) -> InventoryInspectProjection:
@@ -486,6 +502,7 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
         yield from labelled_input(_FIELD_LOCALE_KEYS["taxable_base"], "inventory-taxable-base")
         yield from labelled_input(_FIELD_LOCALE_KEYS["acquisition_cost"], "inventory-acquisition-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["authority_record"], "inventory-authority-path")
+        yield from labelled_input(_FIELD_LOCALE_KEYS["facts"], "inventory-closing-facts-path")
         yield from labelled_input(_FIELD_LOCALE_KEYS["target_movement_id"], "inventory-target-movement")
         yield from labelled_select(
             _FIELD_LOCALE_KEYS["reason"], "inventory-correction-reason", options["inventory-correction-reason"]
@@ -570,6 +587,15 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
             record = await self.door.read_closing_authority(path)
             request = InventoryClosingAuthorityRecordRequest(
                 profile_id=profile_id, actividad_id=actividad, year=year, authority_record=record
+            )
+            return request, path
+        if action == "closing_value":
+            path = require_text(
+                self.input_value("#inventory-closing-facts-path"), field_key=_FIELD_LOCALE_KEYS["facts"]
+            )
+            facts = await self.door.read_closing_value_facts(path)
+            request = InventoryClosingValueRecordRequest(
+                profile_id=profile_id, actividad_id=actividad, year=year, facts=facts
             )
             return request, path
         path = blank_to_none(self.input_value("#inventory-acquisition-path"))
@@ -691,6 +717,8 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
             outcome = inventory_outcome(await self.door.preview_valuation(request))
         elif isinstance(request, InventoryClosingAuthorityRecordRequest):
             outcome = inventory_outcome(await self.door.record_closing_authority(request))
+        elif isinstance(request, InventoryClosingValueRecordRequest):
+            outcome = inventory_outcome(await self.door.record_closing_value(request))
         else:
             raise TypeError("the inventory screen submits only its own inventory requests")
         if outcome.refusal is None:

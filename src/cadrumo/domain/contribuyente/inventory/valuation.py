@@ -183,6 +183,12 @@ def _resolve_anexo_d_closing(
     return record, resolution
 
 
+def derive_inventory_authoritative_closing_value(ledger: InventoryLedger) -> Decimal:
+    """Resolve a closed book's own closing value, whichever year it belongs to."""
+    _record, resolution = _resolve_anexo_d_closing(ledger)
+    return resolution.authoritative_value
+
+
 def _complete_acquisition_summary(
     ledger: InventoryLedger,
 ) -> tuple[Decimal, tuple[ContentDigest, ...]]:

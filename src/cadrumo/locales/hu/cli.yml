@@ -351,6 +351,9 @@ cli:
         authority_file_help: A teljes zárókészlet-hatósági JSON-dokumentum beolvasása
           fájlból.
         authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletnyilvántartáshoz.
+        closing_value_file_help: "JSON-fájl a záróérték adataival."
+        closing_value_file_invalid: "A záróérték fájlja nem érvényes ehhez a készlethez."
+        closing_value_record_help: "Záróérték rögzítése egyszerű adatokból: az érték, a módszer és a dokumentumok."
         closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
         correct_help: Javítja a nyitó értéket vagy az értékelési módszert, megőrizve
           a felváltott értékeket.

@@ -355,6 +355,9 @@ cli:
           desde un fichero.
         authority_invalid: El objeto de autoridad de cierre no es válido para este
           registro de existencias.
+        closing_value_file_help: "Archivo JSON con los datos del valor de cierre."
+        closing_value_file_invalid: "El archivo del valor de cierre no es válido para este inventario."
+        closing_value_record_help: "Registra un valor de cierre a partir de datos sencillos: el valor, el método y los documentos."
         closing_authority_record_help: Registrar atómicamente la autoridad acreditada
           del cierre de existencias
         correct_help: Corrige el valor inicial o el método de valoración, conservando

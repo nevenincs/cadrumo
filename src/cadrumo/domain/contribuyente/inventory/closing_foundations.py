@@ -119,6 +119,26 @@ def fingerprint_prior_authoritative_closing(
     )
 
 
+def fingerprint_prior_closing_source(
+    *,
+    actividad_id: str,
+    filing_year: int,
+    evidence: tuple[PriorClosingContinuityEvidence, ...],
+) -> ContentDigest:
+    """Derive the source identity of a prior closing known only through its documents."""
+    return _content_hash_hex(
+        {
+            "fingerprint_schema_version": "1",
+            "actividad_id": actividad_id,
+            "filing_year": filing_year,
+            "evidence": [
+                {"reference": item.reference.reference, "content_digest": item.content_digest}
+                for item in sorted(evidence, key=lambda item: item.reference.reference)
+            ],
+        }
+    )
+
+
 class PhysicalClosingObservation(BaseModel):
     """Immutable evidenced physical closing valuation for one activity and year."""
 

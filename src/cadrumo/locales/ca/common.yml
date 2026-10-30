@@ -7818,6 +7818,7 @@ tui:
       invalid_number: '%{field}: %{value} no és un nombre enter.'
       inventory:
         action:
+          closing_value: "Registra un valor de tancament des d'un fitxer de dades"
           closing_authority: Registra una autoritat de tancament
           create: Crea un inventari
           movement_add: Afegeix un moviment
@@ -7838,6 +7839,7 @@ tui:
           acquisition_cost: Fitxer del cost de compra (només compres)
           action: Petició
           actividad_id: Activitat
+          closing_value_facts: "Fitxer de dades del valor de tancament"
           authority_record: Fitxer de l'autoritat de tancament
           kind: Tipus de moviment
           movement_date: Data del moviment

@@ -12,6 +12,7 @@ from textual.widgets import Button, DataTable, Input, Select, Static
 from .....application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
+    InventoryClosingValueRecordRequest,
     InventoryClosingAuthorityRecordRequest,
     InventoryCreateRequest,
     InventoryListRequest,
@@ -31,10 +32,12 @@ from ..workspace_injection import LedgerWorkspaceInjection
 from .registers_fixtures import (
     REGISTERS_PROFILE_ID,
     SYNTHETIC_AUTHORITY_PATH,
+    SYNTHETIC_CLOSING_FACTS_PATH,
     SYNTHETIC_PURCHASE_PATH,
     MemoryInventoryDoor,
     synthetic_acquisition_cost,
     synthetic_closing_authority,
+    synthetic_closing_value_facts,
     synthetic_inventory_row,
 )
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
@@ -294,3 +297,20 @@ def test_the_inventory_tool_attaches_to_the_overview() -> None:
     )
     assert tool.key == INVENTORY_TOOL_KEY
     assert isinstance(tool.build(controller), LedgerInventoryScreen)
+
+
+@pytest.mark.asyncio
+async def test_a_closing_value_is_recorded_from_a_facts_file_with_no_fingerprint_typed() -> None:
+    door = MemoryInventoryDoor(rows=(synthetic_inventory_row("act-01"),))
+    screen = _screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
+            await settle(pilot)
+            await _choose(pilot, screen, "inventory-action", "closing_value")
+            _fill(screen, actividad="act-01", year="2026")
+            screen.query_one("#inventory-closing-facts-path", Input).value = SYNTHETIC_CLOSING_FACTS_PATH
+            await _review_and_confirm(pilot, screen)
+            submitted = door.requests[-2]
+            assert isinstance(submitted, InventoryClosingValueRecordRequest)
+            assert submitted.facts == synthetic_closing_value_facts()
+            assert (submitted.actividad_id, submitted.year) == ("act-01", 2026)

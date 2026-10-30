@@ -7840,6 +7840,7 @@ tui:
       invalid_number: '%{field}: %{value} no es un número entero.'
       inventory:
         action:
+          closing_value: "Registrar un valor de cierre desde un archivo de datos"
           closing_authority: Registrar una autoridad de cierre
           create: Crear un inventario
           movement_add: Añadir un movimiento
@@ -7860,6 +7861,7 @@ tui:
           acquisition_cost: Archivo del coste de compra (solo compras)
           action: Petición
           actividad_id: Actividad
+          closing_value_facts: "Archivo de datos del valor de cierre"
           authority_record: Archivo de la autoridad de cierre
           kind: Tipo de movimiento
           movement_date: Fecha del movimiento

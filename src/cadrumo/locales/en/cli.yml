@@ -332,6 +332,9 @@ cli:
           a file.
         authority_invalid: The closing-authority object is invalid for this inventory
           record book.
+        closing_value_file_help: "JSON file with the facts of the closing value."
+        closing_value_file_invalid: "The closing value file is invalid for this inventory."
+        closing_value_record_help: "Record a closing value from plain facts: the value, the method and the documents."
         closing_authority_record_help: Atomically record evidenced inventory closing
           authority
         correct_help: Correct the opening value or valuation method, keeping the values

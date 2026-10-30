@@ -7667,6 +7667,7 @@ tui:
       invalid_number: '%{field}: %{value} is not a whole number.'
       inventory:
         action:
+          closing_value: "Record a closing value from a facts file"
           closing_authority: Record a closing authority
           create: Create an inventory
           movement_add: Add a movement
@@ -7687,6 +7688,7 @@ tui:
           acquisition_cost: Purchase cost file (purchases only)
           action: Request
           actividad_id: Activity
+          closing_value_facts: "Closing value facts file"
           authority_record: Closing authority file
           kind: Movement kind
           movement_date: Movement date

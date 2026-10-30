@@ -2392,6 +2392,7 @@
         "cadrumo.domain.contribuyente.inventory._anexo_d_records",
         "cadrumo.domain.contribuyente.inventory.closing_authority_records",
         "cadrumo.domain.contribuyente.inventory.closing_foundations",
+        "cadrumo.domain.contribuyente.inventory.closing_value_facts",
         "cadrumo.domain.contribuyente.inventory.corrections",
         "cadrumo.domain.contribuyente.inventory.records",
         "cadrumo.domain.contribuyente.inventory.valuation",

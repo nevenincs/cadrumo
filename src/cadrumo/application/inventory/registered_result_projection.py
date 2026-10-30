@@ -39,6 +39,7 @@ from .registered_projections import (
 )
 from .registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
     INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
@@ -61,6 +62,7 @@ _OPERATION_IDS_BY_DEFINITION: dict[str, InventoryOperationId] = {
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID: "movement.add",
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID: "valuation.preview",
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID: "closing-authority.record",
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID: "closing-value.record",
     INVENTORY_INSPECT_OPERATION_DEFINITION_ID: "inspect",
     INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID: "describe",
     INVENTORY_CORRECT_OPERATION_DEFINITION_ID: "correct",
@@ -75,6 +77,7 @@ _LedgerResultOperationId = Literal[
     "create",
     "movement.add",
     "closing-authority.record",
+    "closing-value.record",
 ]
 
 
@@ -242,7 +245,7 @@ def _validate_ledger_success(
     expected_effect = (
         OperationEffect.UPDATED if result is not None and result.bucket_event_ids else OperationEffect.NONE
     )
-    if operation_id == "closing-authority.record":
+    if operation_id in {"closing-authority.record", "closing-value.record"}:
         expected_effect = OperationEffect.UPDATED if (private.closing_changed is True) else OperationEffect.NONE
     result = _require_inventory_ledger_execution(
         private,
@@ -298,7 +301,7 @@ def _require_inventory_ledger_event_scope(
     *,
     operation_id: _LedgerResultOperationId,
 ) -> None:
-    if operation_id == "closing-authority.record" and result.bucket_event_ids:
+    if operation_id in {"closing-authority.record", "closing-value.record"} and result.bucket_event_ids:
         raise ValueError("inventory ledger result contradicts its terminal receipt")
     if operation_id in {"create", "movement.add"} and len(result.bucket_event_ids) != 1:
         raise ValueError("inventory ledger result contradicts its terminal receipt")
@@ -533,26 +536,52 @@ def project_inventory_closing_authority_result(
     /,
 ) -> InventoryClosingAuthorityOperationProjection:
     """Release only closing fingerprints and the repository's actual changed flag."""
-    private = _execution_result(result)
-    profile_id = _profile_from_receipt(
+    return _project_closing_record(
+        result,
         receipt,
         definition_id=INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+        operation_id="closing-authority.record",
     )
+
+
+def project_inventory_closing_value_result(
+    result: BaseModel,
+    receipt: OperationTerminalReceipt,
+    /,
+) -> InventoryClosingAuthorityOperationProjection:
+    """Release the same closing fingerprints for a record derived from plain facts."""
+    return _project_closing_record(
+        result,
+        receipt,
+        definition_id=INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
+        operation_id="closing-value.record",
+    )
+
+
+def _project_closing_record(
+    result: BaseModel,
+    receipt: OperationTerminalReceipt,
+    *,
+    definition_id: str,
+    operation_id: Literal["closing-authority.record", "closing-value.record"],
+) -> InventoryClosingAuthorityOperationProjection:
+    private = _execution_result(result)
+    profile_id = _profile_from_receipt(receipt, definition_id=definition_id)
     if private.outcome == "refused":
         refusal = _validate_refusal_receipt(
             private=private,
             receipt=receipt,
             profile_id=profile_id,
-            definition_id=INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
-            operation_id="closing-authority.record",
+            definition_id=definition_id,
+            operation_id=operation_id,
         )
         return InventoryClosingAuthorityOperationProjection(outcome="refused", refusal=refusal)
     result_value = _validate_ledger_success(
         private=private,
         receipt=receipt,
         profile_id=profile_id,
-        operation_id="closing-authority.record",
-        definition_id=INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+        operation_id=operation_id,
+        definition_id=definition_id,
     )
     record = result_value.ledger.closing_authority_record
     if record is None:
@@ -576,6 +605,7 @@ def project_inventory_closing_authority_result(
 
 __all__ = [
     "project_inventory_closing_authority_result",
+    "project_inventory_closing_value_result",
     "project_inventory_create_result",
     "project_inventory_inspect_result",
     "project_inventory_ledger_change_result",

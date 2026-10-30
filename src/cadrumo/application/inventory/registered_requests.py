@@ -22,6 +22,10 @@ from ...domain.contribuyente.inventory.closing_foundations import (
     PhysicalClosingObservation,
     PriorClosingContinuityEvidence,
 )
+from ...domain.contribuyente.inventory.closing_value_facts import (
+    InventoryClosingValueFacts,
+    InventoryPhysicalCountFacts,
+)
 from ...domain.contribuyente.inventory.corrections import InventoryCorrectionRefusalReason
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
@@ -45,6 +49,7 @@ INVENTORY_CREATE_OPERATION_DEFINITION_ID = "ledger.inventory.create"
 INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID = "ledger.inventory.movement.add"
 INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID = "ledger.inventory.valuation.preview"
 INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID = "ledger.inventory.closing-authority.record"
+INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID = "ledger.inventory.closing-value.record"
 INVENTORY_INSPECT_OPERATION_DEFINITION_ID = "ledger.inventory.inspect"
 INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID = "ledger.inventory.describe"
 INVENTORY_CORRECT_OPERATION_DEFINITION_ID = "ledger.inventory.correct"
@@ -88,6 +93,7 @@ InventoryMutationOperationId = Literal[
     "movement.add",
     "valuation.preview",
     "closing-authority.record",
+    "closing-value.record",
 ]
 InventoryOperationId = Literal[InventoryMutationOperationId, "list", "inspect"]
 
@@ -284,6 +290,71 @@ class InventoryRetireRequest(InventoryLedgerChangeRequest):
 
 class InventoryRestoreRequest(InventoryLedgerChangeRequest):
     """Bring a retired inventory back to the active register."""
+
+
+class InventoryPhysicalCountFactsInput(BaseModel):
+    """What a year-end count found, with the documents that show it."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    observed_on: date
+    closing_value: PublicDecimal
+    valuation_basis: InventoryClosingValuationBasis
+    evidence: tuple[PhysicalClosingEvidence, ...] = Field(min_length=2)
+
+
+class InventoryClosingValueFactsInput(BaseModel):
+    """The plain facts of one closing value; every fingerprint is derived behind this boundary.
+
+    ``prior_evidence`` may stay empty only when the prior year's book holds its own closing.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    decision_id: str = Field(min_length=1, max_length=64)
+    decided_at: datetime
+    authority: InventoryClosingAuthority
+    reason: str = Field(min_length=1, max_length=512)
+    decision_evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)
+    physical_count: InventoryPhysicalCountFactsInput | None = None
+    prior_evidence: tuple[PriorClosingContinuityEvidence, ...] = ()
+
+    @model_validator(mode="after")
+    def _decision_timestamp_is_utc(self) -> InventoryClosingValueFactsInput:
+        validate_utc_aware(self.decided_at)
+        return self
+
+    def to_domain(self, *, actividad_id: str, year: int) -> InventoryClosingValueFacts:
+        """Bind the facts to the book they close."""
+        count = self.physical_count
+        return InventoryClosingValueFacts(
+            decision_id=self.decision_id,
+            actividad_id=actividad_id,
+            year=year,
+            authority=self.authority,
+            reason=self.reason,
+            decided_at=validate_utc_aware(self.decided_at),
+            decision_evidence=self.decision_evidence,
+            physical_count=(
+                InventoryPhysicalCountFacts(
+                    observed_on=count.observed_on,
+                    closing_value=Decimal(count.closing_value.decimal),
+                    valuation_basis=count.valuation_basis,
+                    evidence=count.evidence,
+                )
+                if count is not None
+                else None
+            ),
+            prior_evidence=self.prior_evidence,
+        )
+
+
+class InventoryClosingValueRecordRequest(_InventoryRequest):
+    """Record one book's closing value from plain facts."""
+
+    actividad_id: str = Field(min_length=1)
+    year: int = Field(ge=1900)
+    facts: InventoryClosingValueFactsInput
 
 
 class InventoryClosingAuthorityDecisionRequest(BaseModel):

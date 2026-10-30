@@ -12,6 +12,8 @@ from ...application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueFactsInput,
+    InventoryClosingValueRecordRequest,
     InventoryCorrectRequest,
     InventoryCreateRequest,
     InventoryDescribeRequest,
@@ -49,6 +51,7 @@ from .operation_ledger_inventory import (
     preview_inventory_valuation,
     read_inventory_catalogue,
     record_inventory_closing_authority,
+    record_inventory_closing_value,
 )
 
 
@@ -409,8 +412,43 @@ def inventory_closing_authority_record(
     )
 
 
+def inventory_closing_value_record(
+    ctx: typer.Context,
+    actividad_id: str,
+    year: int,
+    file: Path,
+) -> None:
+    """Read the plain facts of one closing value, then record it in the profile worker."""
+    bucket_id = _inventory_bucket_id()
+    try:
+        facts = InventoryClosingValueFactsInput.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
+    except (OSError, ValidationError) as exc:
+        raise typer.BadParameter(
+            tr("cli.app.ledger.inventory.closing_value_file_invalid"),
+            param_hint="--file",
+        ) from exc
+    request = InventoryClosingValueRecordRequest(
+        profile_id=UUID(bucket_id),
+        actividad_id=actividad_id,
+        year=year,
+        facts=facts,
+    )
+    _completion, result = record_inventory_closing_value(ctx, request=request)
+    emit_envelope(
+        ctx,
+        command="ledger.inventory.closing-value.record",
+        result=result,
+        lines=(
+            f"actividad_id\t{result.actividad_id}",
+            f"year\t{result.year}",
+            f"authority_record_fingerprint\t{result.authority_record_fingerprint}",
+        ),
+    )
+
+
 __all__ = [
     "inventory_closing_authority_record",
+    "inventory_closing_value_record",
     "inventory_correct",
     "inventory_create",
     "inventory_describe",

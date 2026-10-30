@@ -50,6 +50,7 @@ from .registered_execution_result import (
     InventoryOperationRefusalDetail,
 )
 from .registered_requests import (
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CONFLICT_REFUSAL_CODE,
     INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
@@ -66,6 +67,7 @@ from .registered_requests import (
     INVENTORY_VALIDATION_REFUSAL_CODE,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueRecordRequest,
     InventoryCorrectRequest,
     InventoryCreateRequest,
     InventoryDescribeRequest,
@@ -95,6 +97,7 @@ _SERVICE_INPUT_REASONS: dict[str, InventoryRefusalReason] = {
     "application.inventory.service.errors.duplicate_movement_id": "duplicate_movement_id",
     "application.inventory.service.errors.closing_authority_conflict": "closing_authority_conflict",
     "errors.refused.refused_profile_inventory_validation": "inventory_validation",
+    inventory_refusal_key("closing_authority_invalid"): "closing_authority_invalid",
     **{
         inventory_refusal_key(reason): reason
         for reason in INVENTORY_CORRECTION_REFUSAL_REASONS
@@ -211,6 +214,15 @@ class InventoryOperationExecutor:
             if not isinstance(payload, InventoryValuationPreviewRequest):
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
             return await self._execute_valuation_preview(
+                request=payload,
+                context=context,
+                profile_id=profile_id,
+                profile=profile,
+            )
+        if self._definition_id == INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID:
+            if not isinstance(payload, InventoryClosingValueRecordRequest):
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            return await self._execute_closing_value_record(
                 request=payload,
                 context=context,
                 profile_id=profile_id,
@@ -462,6 +474,32 @@ class InventoryOperationExecutor:
             work=record_closing_authority,
         )
 
+    async def _execute_closing_value_record(
+        self,
+        *,
+        request: InventoryClosingValueRecordRequest,
+        context: OperationExecutorContext,
+        profile_id: UUID,
+        profile: str,
+    ) -> str | OperationRefusalEvidence:
+        actor = self._recorded_actor(context)
+
+        def record_closing_value() -> InventoryLedgerResult:
+            return self._service(profile_id).closing_value_record(
+                bucket_id=profile,
+                facts=request.facts.to_domain(actividad_id=request.actividad_id, year=request.year),
+                actor=actor,
+                source_command=INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
+            )
+
+        return await self._mutate(
+            context,
+            operation_id="closing-value.record",
+            profile_id=profile_id,
+            request=request,
+            work=record_closing_value,
+        )
+
     async def _mutate(
         self,
         context: OperationExecutorContext,
@@ -655,7 +693,9 @@ async def _record_precommit_validation_refusal(
 ) -> OperationRefusalEvidence:
     """Persist a typed NONE-effect refusal after validation known to precede writes."""
     reason: InventoryRefusalReason = (
-        "closing_authority_invalid" if operation_id == "closing-authority.record" else "inventory_validation"
+        "closing_authority_invalid"
+        if operation_id in {"closing-authority.record", "closing-value.record"}
+        else "inventory_validation"
     )
     refusal = InventoryOperationRefusalDetail(
         code=INVENTORY_VALIDATION_REFUSAL_CODE,
@@ -703,7 +743,9 @@ def _success_execution(
             profile_id=profile_id,
             valuation_result=result,
         )
-    if operation_id == "closing-authority.record" and isinstance(result, InventoryLedgerResult):
+    if operation_id in {"closing-authority.record", "closing-value.record"} and isinstance(
+        result, InventoryLedgerResult
+    ):
         return InventoryOperationExecutionResult(
             operation_id=operation_id,
             outcome="success",
@@ -717,7 +759,7 @@ def _success_execution(
 def _effect_for_success(result: InventoryOperationExecutionResult) -> OperationEffect:
     if result.operation_id in {"list", "inspect"}:
         return OperationEffect.NONE
-    if result.operation_id == "closing-authority.record":
+    if result.operation_id in {"closing-authority.record", "closing-value.record"}:
         return OperationEffect.UPDATED if (result.closing_changed is True) else OperationEffect.NONE
     if result.operation_id == "valuation.preview":
         if result.valuation_result is None:

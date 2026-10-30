@@ -28,6 +28,11 @@ from .....domain.contribuyente.inventory.closing_foundations import (
     PhysicalClosingObservation,
     PriorClosingContinuityEvidence,
     fingerprint_prior_authoritative_closing,
+    fingerprint_prior_closing_source,
+)
+from .....domain.contribuyente.inventory.closing_value_facts import (
+    InventoryClosingValueFacts,
+    InventoryPhysicalCountFacts,
 )
 from .....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
@@ -41,7 +46,10 @@ from .....domain.contribuyente.inventory.records import (
     MovementKind,
     ValuationMethod,
 )
-from .....domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
+from .....domain.contribuyente.inventory.valuation import (
+    compute_inventory_anexo_d_projection,
+    derive_inventory_anexo_d_values,
+)
 
 if TYPE_CHECKING:
     from cadrumo.domain.contribuyente.inventory import closing_authority_records as _closing_types
@@ -1037,3 +1045,215 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"SECURE-A1" in record.payload
+
+
+_CLOSING_SOURCE = "ledger.inventory.closing-value.record"
+
+
+def _evidence_reference(name: str) -> FilingEvidenceReference:
+    return FilingEvidenceReference(reference=name)
+
+
+def _closing_decision_evidence() -> tuple[InventoryClosingDecisionEvidence, ...]:
+    return (
+        InventoryClosingDecisionEvidence(
+            reference=_evidence_reference("reconciliation"),
+            role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
+            content_digest="e" * 64,
+        ),
+    )
+
+
+def _closing_prior_evidence() -> tuple[PriorClosingContinuityEvidence, ...]:
+    return (PriorClosingContinuityEvidence(reference=_evidence_reference("closing-2024"), content_digest="f" * 64),)
+
+
+def _closing_facts(
+    *,
+    decision_id: str = "decision-1",
+    year: int = 2025,
+    authority: InventoryClosingAuthority = InventoryClosingAuthority.MOVEMENT_DERIVED,
+    physical_count: InventoryPhysicalCountFacts | None = None,
+    prior_evidence: tuple[PriorClosingContinuityEvidence, ...] | None = None,
+) -> InventoryClosingValueFacts:
+    return InventoryClosingValueFacts(
+        decision_id=decision_id,
+        actividad_id="A1",
+        year=year,
+        authority=authority,
+        reason="Reviewed closing.",
+        decided_at=datetime(year + 1, 1, 2, tzinfo=UTC),
+        decision_evidence=_closing_decision_evidence(),
+        physical_count=physical_count,
+        prior_evidence=_closing_prior_evidence() if prior_evidence is None else prior_evidence,
+    )
+
+
+def _closing_count(value: str = "55.00") -> InventoryPhysicalCountFacts:
+    return InventoryPhysicalCountFacts(
+        observed_on=date(2026, 1, 2),
+        closing_value=Decimal(value),
+        valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
+        evidence=(
+            PhysicalClosingEvidence(
+                reference=_evidence_reference("count-sheet"),
+                role=PhysicalClosingEvidenceRole.PHYSICAL_COUNT,
+                content_digest="a" * 64,
+            ),
+            PhysicalClosingEvidence(
+                reference=_evidence_reference("price-sheet"),
+                role=PhysicalClosingEvidenceRole.ACQUISITION_PRICE_VALUATION,
+                content_digest="b" * 64,
+            ),
+        ),
+    )
+
+
+def _closing_book(svc: InventoryService, bucket: str, *, year: int = 2025, opening: str = "0.00") -> None:
+    svc.create(
+        bucket_id=bucket,
+        actividad_id="A1",
+        year=year,
+        valuation_method="fifo",
+        opening_stock=Decimal(opening),
+    )
+    for movement in (
+        InventoryMovementCommand(
+            movement_id=f"BUY-{year}",
+            movement_date=date(year, 3, 1),
+            kind=MovementKind.PURCHASE,
+            quantity=Decimal("10"),
+            acquisition_cost=_acquisition("100.00"),
+        ),
+        InventoryMovementCommand(
+            movement_id=f"SELL-{year}",
+            movement_date=date(year, 5, 1),
+            kind=MovementKind.COGS,
+            quantity=Decimal("4"),
+        ),
+    ):
+        svc.movement_add(bucket_id=bucket, actividad_id="A1", year=year, movement=movement)
+
+
+def _closing_value(
+    svc: InventoryService, bucket: str, facts: InventoryClosingValueFacts
+) -> _closing_types.InventoryClosingAuthorityRecord:
+    result = svc.closing_value_record(bucket_id=bucket, facts=facts, actor="runtime", source_command=_CLOSING_SOURCE)
+    record = result.ledger.closing_authority_record
+    assert record is not None
+    return record
+
+
+# A book opening at 0.00 buys 10 units for 100.00 and sells 4, so FIFO closes at 60.00.
+class TestClosingValueFromPlainFacts:
+    def test_a_movement_derived_closing_derives_every_fingerprint(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _closing_book(svc, bucket)
+
+        record = _closing_value(svc, bucket, _closing_facts())
+
+        source = fingerprint_prior_closing_source(
+            actividad_id="A1", filing_year=2024, evidence=_closing_prior_evidence()
+        )
+        link = record.prior_closing_link
+        assert link.prior_authoritative_source_fingerprint == source
+        assert link.prior_authoritative_closing_fingerprint == fingerprint_prior_authoritative_closing(
+            actividad_id="A1",
+            filing_year=2024,
+            authoritative_closing_value=Decimal("0.00"),
+            authoritative_source_fingerprint=source,
+            evidence=_closing_prior_evidence(),
+        )
+        assert record.decision.source_command == _CLOSING_SOURCE
+        assert record.decision.physical_observation_fingerprint is None
+        ledger = svc.show(bucket_id=bucket, actividad_id="A1", year=2025)
+        assert derive_inventory_anexo_d_values(ledger).authoritative_closing_value == Decimal("60.00")
+
+    def test_a_count_is_bound_by_its_own_fingerprint_and_its_difference_retained(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _closing_book(svc, bucket)
+
+        record = _closing_value(
+            svc,
+            bucket,
+            _closing_facts(authority=InventoryClosingAuthority.PHYSICAL_OBSERVATION, physical_count=_closing_count()),
+        )
+
+        observation = record.physical_observation
+        assert observation is not None
+        assert observation.as_of_date == date(2025, 12, 31)
+        assert record.decision.physical_observation_fingerprint == observation.fingerprint
+        derivation = derive_inventory_anexo_d_values(svc.show(bucket_id=bucket, actividad_id="A1", year=2025))
+        assert derivation.authoritative_closing_value == Decimal("55.00")
+        assert derivation.movement_derived_closing_value == Decimal("60.00")
+        assert derivation.issues == ("physical_closing_conflict",)
+
+    def test_the_same_facts_are_an_exact_replay_and_other_facts_refuse(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _closing_book(svc, bucket)
+
+        first = svc.closing_value_record(
+            bucket_id=bucket, facts=_closing_facts(), actor="runtime", source_command=_CLOSING_SOURCE
+        )
+        replay = svc.closing_value_record(
+            bucket_id=bucket, facts=_closing_facts(), actor="runtime", source_command=_CLOSING_SOURCE
+        )
+        assert first.changed is True
+        assert replay.changed is False
+
+        with pytest.raises(InventoryServiceInputError) as refused:
+            svc.closing_value_record(
+                bucket_id=bucket,
+                facts=_closing_facts(decision_id="other"),
+                actor="runtime",
+                source_command=_CLOSING_SOURCE,
+            )
+        assert refused.value.translated_message == "application.inventory.service.errors.closing_authority_conflict"
+
+    def test_a_closed_prior_book_needs_no_document_and_its_closing_must_be_the_opening(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _closing_book(svc, bucket, year=2024)
+        prior = _closing_value(svc, bucket, _closing_facts(year=2024))
+        _closing_book(svc, bucket, year=2025, opening="60.00")
+
+        record = _closing_value(svc, bucket, _closing_facts(prior_evidence=()))
+
+        assert record.prior_closing_link.prior_authoritative_source_fingerprint == prior.fingerprint
+        assert record.prior_closing_link.prior_authoritative_closing_value == Decimal("60.00")
+        assert {item.reference.reference for item in record.prior_closing_link.evidence} == {"reconciliation"}
+
+    def test_an_opening_that_differs_from_the_closed_prior_book_refuses(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _closing_book(svc, bucket, year=2024)
+        _closing_value(svc, bucket, _closing_facts(year=2024))
+        _closing_book(svc, bucket, year=2025, opening="61.00")
+
+        with pytest.raises(InventoryServiceInputError) as refused:
+            _closing_value(svc, bucket, _closing_facts(prior_evidence=()))
+        assert refused.value.translated_message == "application.inventory.service.errors.closing_authority_invalid"
+
+    def test_an_opening_with_no_closed_prior_book_needs_a_document(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _closing_book(svc, bucket)
+
+        with pytest.raises(InventoryServiceInputError) as refused:
+            _closing_value(svc, bucket, _closing_facts(prior_evidence=()))
+        assert refused.value.translated_message == "application.inventory.service.errors.closing_authority_invalid"
+
+    def test_a_missing_book_is_named(self, secure_engine: TestRuntimeProfile) -> None:
+        svc = _make_svc(secure_engine)
+
+        with pytest.raises(InventoryActividadNotFoundError):
+            _closing_value(svc, secure_engine.bucket_id, _closing_facts())

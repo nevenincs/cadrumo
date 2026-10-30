@@ -29,6 +29,7 @@ from ...application.inventory.registered_projections import (
 )
 from ...application.inventory.registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
     INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
@@ -41,6 +42,7 @@ from ...application.inventory.registered_requests import (
     INVENTORY_RETIRE_OPERATION_DEFINITION_ID,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueRecordRequest,
     InventoryCorrectRequest,
     InventoryCreateRequest,
     InventoryDescribeRequest,
@@ -404,10 +406,34 @@ def record_inventory_closing_authority(
     InventoryClosingAuthorityRecordResult,
 ]:
     """Persist one immutable authority record through the exact profile worker."""
+    return _record_closing(ctx, request, definition_id=INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID)
+
+
+def record_inventory_closing_value(
+    ctx: typer.Context,
+    *,
+    request: InventoryClosingValueRecordRequest,
+) -> tuple[
+    RegisteredOperationCompletion[InventoryClosingAuthorityOperationProjection],
+    InventoryClosingAuthorityRecordResult,
+]:
+    """Persist one closing value derived from plain facts through the exact profile worker."""
+    return _record_closing(ctx, request, definition_id=INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID)
+
+
+def _record_closing(
+    ctx: typer.Context,
+    request: InventoryClosingAuthorityRecordRequest | InventoryClosingValueRecordRequest,
+    *,
+    definition_id: str,
+) -> tuple[
+    RegisteredOperationCompletion[InventoryClosingAuthorityOperationProjection],
+    InventoryClosingAuthorityRecordResult,
+]:
     completed = _run(
         ctx,
         request,
-        definition_id=INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+        definition_id=definition_id,
         result_type=InventoryClosingAuthorityOperationProjection,
         allow_refusal_detail=True,
     )
@@ -443,6 +469,7 @@ __all__ = [
     "preview_inventory_valuation",
     "read_inventory_catalogue",
     "record_inventory_closing_authority",
+    "record_inventory_closing_value",
 ]
 
 

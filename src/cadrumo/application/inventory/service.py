@@ -22,6 +22,10 @@ from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ...domain.contribuyente.inventory.closing_value_facts import (
+    InventoryClosingValueFacts,
+    build_closing_authority_record,
+)
 from ...domain.contribuyente.inventory.corrections import (
     INVENTORY_CORRECTION_REFUSAL_REASONS,
     InventoryChangeStamp,
@@ -521,6 +525,46 @@ class InventoryService:
         # repositories with no shared transaction. The encrypted ledger write is
         # atomic and replay-safe; claiming a cross-repository commit would not be.
         return InventoryLedgerResult(ledger=write.ledger, changed=write.changed)
+
+    def closing_value_record(
+        self,
+        *,
+        bucket_id: str,
+        facts: InventoryClosingValueFacts,
+        actor: str,
+        source_command: str,
+    ) -> InventoryLedgerResult:
+        """Derive one book's complete closing record from plain facts, then record it."""
+        coordinate = {"actividad_id": facts.actividad_id, "year": str(facts.year)}
+        document = self._repository_for(bucket_id).load()
+        ledger = next(
+            (item for item in document.ledgers if item.actividad_id == facts.actividad_id and item.year == facts.year),
+            None,
+        )
+        if ledger is None:
+            raise InventoryActividadNotFoundError(
+                translated_message="application.inventory.service.errors.activity_not_found",
+                context=coordinate,
+            )
+        try:
+            record = build_closing_authority_record(
+                facts,
+                document=document,
+                ledger=ledger,
+                actor=actor,
+                source_command=source_command,
+            )
+        except (InventoryLedgerError, ValidationError) as exc:
+            raise InventoryServiceInputError(
+                translated_message=inventory_refusal_key("closing_authority_invalid"),
+                context=coordinate,
+            ) from exc
+        return self.closing_authority_record(
+            bucket_id=bucket_id,
+            actividad_id=facts.actividad_id,
+            year=facts.year,
+            authority_record=record,
+        )
 
     def _apply_change(
         self,

@@ -17,6 +17,7 @@ from .registered_projections import (
 )
 from .registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CONFLICT_REFUSAL_CODE,
     INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
@@ -33,6 +34,7 @@ from .registered_requests import (
     INVENTORY_VALIDATION_REFUSAL_CODE,
     INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueRecordRequest,
     InventoryCorrectRequest,
     InventoryCreateRequest,
     InventoryDescribeRequest,
@@ -79,6 +81,11 @@ INVENTORY_OPERATION_SHAPES: dict[str, InventoryOperationShape] = {
         )
         for definition_id, request_type in INVENTORY_LEDGER_CHANGE_REQUEST_TYPES.items()
     },
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID: InventoryOperationShape(
+        request_type=InventoryClosingValueRecordRequest,
+        projection_type=InventoryClosingAuthorityOperationProjection,
+        refusal_codes=_LEDGER_CHANGE_REFUSAL_CODES,
+    ),
     INVENTORY_INSPECT_OPERATION_DEFINITION_ID: InventoryOperationShape(
         request_type=InventoryInspectRequest,
         projection_type=InventoryInspectProjection,

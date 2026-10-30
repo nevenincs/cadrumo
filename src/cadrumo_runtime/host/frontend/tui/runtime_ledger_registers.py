@@ -38,6 +38,7 @@ from cadrumo.application.inventory.registered_projections import (
 )
 from cadrumo.application.inventory.registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
     INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_CREATE_OPERATION_DEFINITION_ID,
     INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
@@ -52,6 +53,8 @@ from cadrumo.application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueFactsInput,
+    InventoryClosingValueRecordRequest,
     InventoryCorrectRequest,
     InventoryCreateRequest,
     InventoryDescribeRequest,
@@ -516,7 +519,22 @@ class RuntimeInventoryTuiDoorV1:
         self, request: InventoryClosingAuthorityRecordRequest
     ) -> InventoryClosingAuthorityOperationProjection:
         """Record one closing authority and correlate the inventory it names."""
+        return await self._submit_closing(
+            request, definition_id=INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID
+        )
 
+    async def record_closing_value(
+        self, request: InventoryClosingValueRecordRequest
+    ) -> InventoryClosingAuthorityOperationProjection:
+        """Record one closing value from plain facts and correlate the inventory it names."""
+        return await self._submit_closing(request, definition_id=INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID)
+
+    async def _submit_closing(
+        self,
+        request: InventoryClosingAuthorityRecordRequest | InventoryClosingValueRecordRequest,
+        *,
+        definition_id: str,
+    ) -> InventoryClosingAuthorityOperationProjection:
         def matches(
             result: InventoryClosingAuthorityOperationProjection,
             condition: OperationTerminalCondition,
@@ -542,7 +560,7 @@ class RuntimeInventoryTuiDoorV1:
 
         return await self._session.run(
             request,
-            definition_id=INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+            definition_id=definition_id,
             result_type=InventoryClosingAuthorityOperationProjection,
             matches=matches,
             refusal_detail=True,
@@ -551,6 +569,10 @@ class RuntimeInventoryTuiDoorV1:
     async def read_acquisition_cost(self, path: str) -> InventoryAcquisitionCostRequest:
         """Read one typed purchase-cost file off the event loop and validate it as the command line does."""
         return await asyncio.to_thread(_read_acquisition_cost, path)
+
+    async def read_closing_value_facts(self, path: str) -> InventoryClosingValueFactsInput:
+        """Read one typed file of closing-value facts off the event loop and validate it as the command line does."""
+        return await asyncio.to_thread(_read_closing_value_facts, path)
 
     async def read_closing_authority(self, path: str) -> InventoryClosingAuthorityRecordInput:
         """Read one typed closing-authority file off the event loop and validate it as the command line does."""
@@ -567,6 +589,10 @@ def _read_typed_file[ModelT: BaseModel](path: str, model: type[ModelT]) -> Model
         raise ValueError(
             tr("tui.ledger.registers.inventory.source_invalid", path=path, count=error.error_count())
         ) from None
+
+
+def _read_closing_value_facts(path: str) -> InventoryClosingValueFactsInput:
+    return _read_typed_file(path, InventoryClosingValueFactsInput)
 
 
 def _read_acquisition_cost(path: str) -> InventoryAcquisitionCostRequest:

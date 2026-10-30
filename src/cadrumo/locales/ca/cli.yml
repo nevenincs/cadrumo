@@ -353,6 +353,9 @@ cli:
           des d'un fitxer.
         authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest
           registre d'existències.
+        closing_value_file_help: "Fitxer JSON amb les dades del valor de tancament."
+        closing_value_file_invalid: "El fitxer del valor de tancament no és vàlid per a aquest inventari."
+        closing_value_record_help: "Registra un valor de tancament a partir de dades senzilles: el valor, el mètode i els documents."
         closing_authority_record_help: Registrar atòmicament l'autoritat acreditada
           del tancament d'existències
         correct_help: Corregeix el valor inicial o el mètode de valoració, conservant

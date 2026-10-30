@@ -48,6 +48,8 @@ from .....application.inventory.registered_requests import (
     InventoryAcquisitionCostRequest,
     InventoryClosingAuthorityRecordInput,
     InventoryClosingAuthorityRecordRequest,
+    InventoryClosingValueFactsInput,
+    InventoryClosingValueRecordRequest,
     InventoryCreateRequest,
     InventoryInspectRequest,
     InventoryLedgerChangeRequest,
@@ -97,6 +99,7 @@ from ..registers_prorrata import ProrrataMutationRequestV1
 REGISTERS_PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000d5")
 SYNTHETIC_AUTHORITY_PATH = "synthetic-closing-authority.json"
 SYNTHETIC_PURCHASE_PATH = "synthetic-purchase-cost.json"
+SYNTHETIC_CLOSING_FACTS_PATH = "synthetic-closing-facts.json"
 
 _SYNTHETIC_ACQUISITION = json.dumps(
     {
@@ -137,6 +140,29 @@ _SYNTHETIC_ACQUISITION = json.dumps(
 def synthetic_acquisition_cost() -> InventoryAcquisitionCost:
     """A complete synthetic purchase cost the canonical model accepts."""
     return InventoryAcquisitionCost.model_validate_json(_SYNTHETIC_ACQUISITION)
+
+
+def synthetic_closing_value_facts() -> InventoryClosingValueFactsInput:
+    """Plain movement-derived closing facts carrying no fingerprint of their own."""
+    return InventoryClosingValueFactsInput(
+        decision_id="decision-1",
+        decided_at=datetime(2026, 1, 2, tzinfo=UTC),
+        authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
+        reason="Synthetic reviewed movement-derived closing.",
+        decision_evidence=(
+            InventoryClosingDecisionEvidence(
+                reference=FilingEvidenceReference(reference="decision-evidence"),
+                role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
+                content_digest="e" * 64,
+            ),
+        ),
+        prior_evidence=(
+            PriorClosingContinuityEvidence(
+                reference=FilingEvidenceReference(reference="prior-closing-evidence"),
+                content_digest="f" * 64,
+            ),
+        ),
+    )
 
 
 def synthetic_closing_authority(actividad_id: str, year: int) -> InventoryClosingAuthorityRecord:
@@ -663,6 +689,36 @@ class MemoryInventoryDoor:
         if path != SYNTHETIC_PURCHASE_PATH:
             raise ValueError(f"unreadable: {path}")
         return InventoryAcquisitionCostRequest.from_domain(synthetic_acquisition_cost())
+
+    async def record_closing_value(
+        self, request: InventoryClosingValueRecordRequest
+    ) -> InventoryClosingAuthorityOperationProjection:
+        """Answer a closing value recorded from plain facts as a closing authority is."""
+        self._check(request)
+        if self._row(request.actividad_id, request.year) is None:
+            return InventoryClosingAuthorityOperationProjection(
+                outcome="refused", refusal=self._not_found(request.actividad_id, request.year)
+            )
+        return InventoryClosingAuthorityOperationProjection(
+            outcome="recorded",
+            record=InventoryClosingAuthorityRecordProjection(
+                profile_id=request.profile_id,
+                actividad_id=request.actividad_id,
+                year=request.year,
+                authority_record_fingerprint="a" * 64,
+                decision_fingerprint="b" * 64,
+                physical_observation_fingerprint=None,
+                prior_closing_link_fingerprint="c" * 64,
+                changed=True,
+            ),
+        )
+
+    async def read_closing_value_facts(self, path: str) -> InventoryClosingValueFactsInput:
+        """Answer synthetic closing facts for their synthetic path; any other path is unreadable."""
+        self.requests.append(path)
+        if path != SYNTHETIC_CLOSING_FACTS_PATH:
+            raise ValueError(f"unreadable: {path}")
+        return synthetic_closing_value_facts()
 
     async def read_closing_authority(self, path: str) -> InventoryClosingAuthorityRecordInput:
         """Answer the synthetic closing authority for its synthetic path; any other path is unreadable."""

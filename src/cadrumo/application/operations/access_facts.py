@@ -206,6 +206,7 @@ _LOCAL_WRITES: Final = (
     "ledger.exclude",
     "ledger.export",
     "ledger.inventory.closing-authority.record",
+    "ledger.inventory.closing-value.record",
     "ledger.inventory.correct",
     "ledger.inventory.create",
     "ledger.inventory.describe",
