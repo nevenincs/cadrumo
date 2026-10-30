@@ -526,17 +526,32 @@ def _ingest_evidence_attachment(
     )
 
 
+def admit_evidence_file(source_path: str | Path, source_directory: Path | None) -> tuple[Path, MediaKind]:
+    """Refuse, before any effect, a file that is missing, unreadable or of a type not kept."""
+    resolved, media_kind = _resolve_evidence_source(source_path, source_directory)
+    try:
+        resolved.open("rb").close()
+    except OSError:
+        raise PurchaseInvoiceEvidenceInputError(
+            translated_message="errors.refused.refused_ledger_evidence_input",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
+                facts={"source_file_readable": False},
+            ),
+        ) from None
+    return resolved, media_kind
+
+
 def ingest_evidence_file(
     *,
     ports: LedgerEvidencePorts,
     bucket_id: str,
-    source_path: str | Path,
-    source_directory: Path | None,
+    admitted: tuple[Path, MediaKind],
     now: datetime,
     actor: str,
 ) -> ContentDigest:
-    """Admit one operator-chosen file and store its bytes in custody, with no invoice record."""
-    resolved, media_kind = _resolve_evidence_source(source_path, source_directory)
+    """Store one admitted file's bytes in custody, with no invoice record."""
+    resolved, media_kind = admitted
     return _ingest_evidence_attachment(
         ports=ports,
         bucket_id=bucket_id,

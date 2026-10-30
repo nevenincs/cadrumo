@@ -587,6 +587,7 @@ application:
         activity_conflict: "Ya existe un registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Ábrelo en lugar de crear otro."
         activity_not_found: "No existe ningún registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Créalo primero o revisa la actividad y el ejercicio."
         closing_authority_conflict: "Ya hay otro valor de cierre registrado para esta actividad y este año."
+        evidence_file_not_admitted: "Este archivo no se puede guardar. Elige un PDF, un archivo XML o una imagen (PNG, JPEG, TIFF, WebP o HEIC) que se abra e inténtalo de nuevo."
         closing_authority_invalid: "Este valor de cierre no se pudo registrar porque sus datos no concuerdan entre sí. Revísalos e inténtalo de nuevo."
         closing_authority_recorded: "El inventario %{year} de %{actividad_id} ya tiene registrado su valor de cierre, así que sus datos de existencias ya no pueden cambiar."
         correction_changes_nothing: Esta corrección no indica ningún valor inicial

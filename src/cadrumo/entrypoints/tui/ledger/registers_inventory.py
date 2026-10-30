@@ -742,6 +742,8 @@ class LedgerInventoryScreen(LedgerRegisterScreen):
     async def send(self, request: BaseModel) -> RegisterOutcomeV1:
         if isinstance(request, InventoryEvidenceAddRequest):
             held = await self.door.add_evidence(request)
+            if held.refusal is not None:
+                return RegisterOutcomeV1(refusal=inventory_refusal_text(held.refusal))
             return RegisterOutcomeV1(
                 lines=(
                     tr("tui.ledger.registers.inventory.evidence_done"),

@@ -586,6 +586,7 @@ application:
         activity_conflict: "Ja existeix un registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Obre'l en lloc de crear-ne un altre."
         activity_not_found: "No existeix cap registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Crea'l primer o revisa l'activitat i l'exercici."
         closing_authority_conflict: "Ja hi ha un altre valor de tancament registrat per a aquesta activitat i aquest any."
+        evidence_file_not_admitted: "Aquest fitxer no es pot desar. Tria un PDF, un fitxer XML o una imatge (PNG, JPEG, TIFF, WebP o HEIC) que s'obri i torna-ho a provar."
         closing_authority_invalid: "Aquest valor de tancament no s'ha pogut registrar perquè les seves dades no concorden entre si. Revisa-les i torna-ho a provar."
         closing_authority_recorded: "L'inventari %{year} de %{actividad_id} ja té registrat el seu valor de tancament, així que les seves dades d'existències ja no poden canviar."
         correction_changes_nothing: Aquesta correcció no indica cap valor inicial

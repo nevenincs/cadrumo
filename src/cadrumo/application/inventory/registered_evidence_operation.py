@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -22,12 +22,14 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
-from ..ledger.evidence import ingest_evidence_file
+from ...domain.contribuyente.inventory.corrections import inventory_refusal_key
+from ..ledger.evidence import MediaKind, admit_evidence_file, ingest_evidence_file
+from ..ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..ledger.evidence_port_identity import require_exact_evidence_ports
 from ..ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
 from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES
+from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationRequest,
@@ -36,9 +38,12 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .registered_projections import InventoryRefusalProjection
+from .registered_requests import INVENTORY_SERVICE_INPUT_REFUSAL_CODE
 
 INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID = "ledger.inventory.evidence.add"
 
@@ -59,17 +64,22 @@ class InventoryEvidenceAddRequest(BaseModel):
 
 
 class InventoryEvidenceAddProjection(BaseModel):
-    """What a purchase needs to name the document now held in custody."""
+    """What a purchase needs to name the document now held in custody, or why it was not kept."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
+    outcome: Literal["stored", "refused"]
     profile_id: UUID
-    reference: str
-    content_digest: ContentDigest
+    reference: str | None = None
+    content_digest: ContentDigest | None = None
+    refusal: InventoryRefusalProjection | None = None
 
     @model_validator(mode="after")
-    def _reference_names_the_digest(self) -> InventoryEvidenceAddProjection:
-        if self.reference != f"{_REFERENCE_PREFIX}{self.content_digest}":
+    def _outcome_is_closed(self) -> InventoryEvidenceAddProjection:
+        if self.outcome == "refused":
+            if self.refusal is None or self.reference is not None or self.content_digest is not None:
+                raise ValueError("a refused inventory document carries only its refusal")
+        elif self.refusal is not None or self.reference != f"{_REFERENCE_PREFIX}{self.content_digest}":
             raise ValueError("inventory evidence reference does not name its digest")
         return self
 
@@ -99,8 +109,8 @@ class InventoryEvidenceAddExecutor:
         self,
         request: OperationRequest[InventoryEvidenceAddRequest],
         context: OperationExecutorContext,
-    ) -> str:
-        """Store the bytes and return their content-addressed identity."""
+    ) -> str | OperationRefusalEvidence:
+        """Refuse a file that cannot be kept, or store the bytes and return their identity."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
         subject = profile_operation_subject(bucket_id)
@@ -115,13 +125,34 @@ class InventoryEvidenceAddExecutor:
         await context.events.phase(INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID)
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
 
-        def preflight() -> LedgerEvidencePorts:
+        def preflight() -> tuple[LedgerEvidencePorts, tuple[Path, MediaKind]]:
             ports = self._ports_factory(bucket_id=bucket_id)
             require_exact_evidence_ports(ports, bucket_id=bucket_id)
-            return ports
+            return ports, admit_evidence_file(payload.source_path, Path(payload.source_directory))
 
-        async def capture() -> str:
-            ports = await asyncio.to_thread(preflight)
+        async def capture() -> str | OperationRefusalEvidence:
+            try:
+                ports, admitted = await asyncio.to_thread(preflight)
+            except PurchaseInvoiceEvidenceInputError:
+                # The file's path stays out of the refusal; the operator chose it and knows it.
+                detail_ref = await context.operands.put(
+                    InventoryEvidenceAddExecutionResult(
+                        result=InventoryEvidenceAddProjection(
+                            outcome="refused",
+                            profile_id=payload.profile_id,
+                            refusal=InventoryRefusalProjection(
+                                code=INVENTORY_SERVICE_INPUT_REFUSAL_CODE,
+                                reason="evidence_file_not_admitted",
+                                reason_key=inventory_refusal_key("evidence_file_not_admitted"),
+                            ),
+                        )
+                    ),
+                    written_at=now(),
+                )
+                await context.events.effect(OperationEffect.NONE)
+                return OperationRefusalEvidence(
+                    refusal_code=INVENTORY_SERVICE_INPUT_REFUSAL_CODE, detail_ref=detail_ref
+                )
             async with context.cancellation.irreversible_section():
                 # The bytes and their manifest are durable once ingestion starts.
                 await context.events.effect(OperationEffect.UNKNOWN)
@@ -129,8 +160,7 @@ class InventoryEvidenceAddExecutor:
                     ingest_evidence_file,
                     ports=ports,
                     bucket_id=bucket_id,
-                    source_path=payload.source_path,
-                    source_directory=Path(payload.source_directory),
+                    admitted=admitted,
                     now=now(),
                     actor=actor,
                 )
@@ -138,6 +168,7 @@ class InventoryEvidenceAddExecutor:
                 return await context.operands.put(
                     InventoryEvidenceAddExecutionResult(
                         result=InventoryEvidenceAddProjection(
+                            outcome="stored",
                             profile_id=payload.profile_id,
                             reference=f"{_REFERENCE_PREFIX}{digest}",
                             content_digest=digest,
@@ -152,6 +183,14 @@ class InventoryEvidenceAddExecutor:
 def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
     if type(result) is not InventoryEvidenceAddExecutionResult:
         raise ValueError("invalid inventory evidence add result")
+    if result.result.refusal is not None:
+        if (
+            receipt.refusal_detail_ref is None
+            or receipt.result_ref is not None
+            or receipt.identity.definition_id != INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID
+        ):
+            raise ValueError("inventory evidence refusal contradicts its terminal receipt")
+        return result.result
     require_succeeded_terminal_receipt(
         receipt,
         definition_id=INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
@@ -175,7 +214,8 @@ def build_inventory_evidence_add_definition(
         result_type=InventoryEvidenceAddExecutionResult,
         executor_type=InventoryEvidenceAddExecutor,
         build=lambda: InventoryEvidenceAddExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
-        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+        refusal_detail_codes=frozenset({INVENTORY_SERVICE_INPUT_REFUSAL_CODE}),
     )
 
 

@@ -568,6 +568,7 @@ application:
         activity_conflict: "Már létezik készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Nyisd meg, ahelyett hogy újat hoznál létre."
         activity_not_found: "Nincs készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Először hozd létre, vagy ellenőrizd a tevékenységet és az évet."
         closing_authority_conflict: "Ehhez a tevékenységhez és évhez már másik záróérték van rögzítve."
+        evidence_file_not_admitted: "Ezt a fájlt nem lehet megőrizni. Válassz egy megnyitható PDF-et, XML-fájlt vagy képet (PNG, JPEG, TIFF, WebP vagy HEIC), és próbáld újra."
         closing_authority_invalid: "Ezt a záróértéket nem sikerült rögzíteni, mert az adatai nem egyeznek egymással. Ellenőrizd őket, és próbáld újra."
         closing_authority_recorded: "A(z) %{actividad_id} %{year}. évi készletének záróértéke már rögzítve van, ezért a készletadatai már nem módosíthatók."
         correction_changes_nothing: Ez a javítás nem ad meg a jelenlegitől eltérő

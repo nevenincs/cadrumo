@@ -15,7 +15,7 @@ from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
 )
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.evidence import ingest_evidence_file
+from cadrumo.application.ledger.evidence import admit_evidence_file, ingest_evidence_file
 from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 
@@ -47,8 +47,7 @@ def test_the_digest_is_the_files_own_and_no_invoice_record_appears(
     digest = ingest_evidence_file(
         ports=ports,
         bucket_id=BUCKET_ID,
-        source_path=source.name,
-        source_directory=tmp_path,
+        admitted=admit_evidence_file(source.name, tmp_path),
         now=_AT,
         actor="cli",
     )
@@ -64,8 +63,7 @@ def test_the_same_file_twice_is_the_same_document(secure_objects: SecureObjectRe
     arguments = {
         "ports": ports,
         "bucket_id": BUCKET_ID,
-        "source_path": str(source),
-        "source_directory": None,
+        "admitted": admit_evidence_file(str(source), None),
         "now": _AT,
         "actor": "cli",
     }
@@ -73,13 +71,8 @@ def test_the_same_file_twice_is_the_same_document(secure_objects: SecureObjectRe
     assert ingest_evidence_file(**arguments) == ingest_evidence_file(**arguments)
 
 
-def test_a_missing_file_is_refused(secure_objects: SecureObjectRepository, tmp_path: Path) -> None:
+@pytest.mark.parametrize("name", ["absent.pdf", "notes.txt"])
+def test_a_file_that_cannot_be_kept_is_refused_before_any_effect(name: str, tmp_path: Path) -> None:
+    (tmp_path / "notes.txt").write_text("synthetic")
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        ingest_evidence_file(
-            ports=_ports(secure_objects),
-            bucket_id=BUCKET_ID,
-            source_path="absent.pdf",
-            source_directory=tmp_path,
-            now=_AT,
-            actor="cli",
-        )
+        admit_evidence_file(name, tmp_path)

@@ -721,6 +721,7 @@ class MemoryInventoryDoor:
         """Answer the identity a purchase would name this document by."""
         self.requests.append(request)
         return InventoryEvidenceAddProjection(
+            outcome="stored",
             profile_id=request.profile_id,
             reference=f"attachment:{'d' * 64}",
             content_digest="d" * 64,

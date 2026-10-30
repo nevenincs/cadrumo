@@ -352,6 +352,20 @@ def test_native_inventory_create_list_movement_and_preview_use_profile_worker(
         assert len(preview_payload["bucket_event_ids"]) == 1
 
 
+def test_native_inventory_document_of_a_type_not_kept_is_refused_in_its_own_words(tmp_path: Path) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-inventory-document", facts=_PROFILE_FACTS)
+        notes = tmp_path / "private-notes.txt"
+        notes.write_text("synthetic", encoding="utf-8")
+
+        refused = _invoke(profile, "app", "ledger", "inventory", "evidence-add", str(notes))
+
+        assert refused.exit_code != 0, refused.output
+        assert "evidence_file_not_admitted" in refused.output, refused.output
+        assert "purchase-invoice" not in refused.output, refused.output
+        assert "private-notes" not in refused.output, refused.output
+
+
 def test_native_inventory_closing_authority_replay_and_divergence(tmp_path: Path) -> None:
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-inventory-closing", facts=_PROFILE_FACTS)

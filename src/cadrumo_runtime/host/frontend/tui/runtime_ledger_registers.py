@@ -584,7 +584,7 @@ class RuntimeInventoryTuiDoorV1:
             terminal: OperationPublicProjectionV1,
         ) -> bool:
             return result.profile_id == request.profile_id and _outcome_matches(
-                refusal_code=None,
+                refusal_code=None if result.refusal is None else result.refusal.code,
                 condition=condition,
                 terminal=terminal,
                 success_effect=OperationEffect.UPDATED,
@@ -595,7 +595,7 @@ class RuntimeInventoryTuiDoorV1:
             definition_id=INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
             result_type=InventoryEvidenceAddProjection,
             matches=matches,
-            refusal_detail=False,
+            refusal_detail=True,
         )
 
     async def read_closing_value_facts(self, path: str) -> InventoryClosingValueFactsInput:

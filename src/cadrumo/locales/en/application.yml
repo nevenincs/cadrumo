@@ -543,6 +543,7 @@ application:
         activity_conflict: "An inventory record book already exists for activity %{actividad_id} and year %{year}. Open it instead of creating another."
         activity_not_found: "No inventory record book exists for activity %{actividad_id} and year %{year}. Create it first, or check the activity and year."
         closing_authority_conflict: "A different closing value is already recorded for this activity and year."
+        evidence_file_not_admitted: "This file can't be kept. Choose a PDF, an XML file or an image (PNG, JPEG, TIFF, WebP or HEIC) that opens, and try again."
         closing_authority_invalid: "This closing value could not be recorded because its details do not agree with each other. Check them and try again."
         closing_authority_recorded: "The %{year} inventory of %{actividad_id} has its closing value recorded, so its stock facts can no longer change."
         correction_changes_nothing: This correction names no opening value or valuation

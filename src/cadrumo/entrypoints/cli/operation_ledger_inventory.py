@@ -97,6 +97,7 @@ _REFUSAL_LOCALE_KEYS = {
     "inventory_validation": "errors.refused.refused_profile_inventory_validation",
     "closing_authority_conflict": "application.inventory.service.errors.closing_authority_conflict",
     "closing_authority_invalid": "errors.refused.refused_profile_inventory_validation",
+    "evidence_file_not_admitted": inventory_refusal_key("evidence_file_not_admitted"),
     **{reason: inventory_refusal_key(reason) for reason in INVENTORY_CORRECTION_REFUSAL_REASONS},
 }
 
@@ -447,15 +448,19 @@ def add_inventory_evidence(ctx: typer.Context, *, request: InventoryEvidenceAddR
         request,
         definition_id=INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
         result_type=InventoryEvidenceAddProjection,
-        allow_refusal_detail=False,
+        allow_refusal_detail=True,
     )
+    projection = completed.projection
+    if projection.refusal is not None:
+        _raise_registered_refusal(completed, projection.refusal)
     if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        projection.reference is None
+        or projection.content_digest is None
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.effect is not OperationEffect.UPDATED
         or completed.refusal_code is not None
     ):
         raise invalid_completion_error(completed)
-    projection = completed.projection
     return InventoryEvidenceAddResult(reference=projection.reference, content_digest=str(projection.content_digest))
 
 
