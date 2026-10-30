@@ -1047,6 +1047,7 @@ desktop:
       submitted_observed: Presentació observada
     as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
     close: Tanca el calendari
+    day_event: '{date}: {kind}. {summary}'
     empty: No hi ha obligacions de presentació en aquest període.
     event:
       filing: Presentació
@@ -1082,11 +1083,17 @@ desktop:
     view: Vista
     view_list: Llista
     view_months: Calendari
+    window_label: '{modelo} {period}, {days}, {state}'
     window_unknown: Data d'obertura no indicada
   canvas:
     lead: Tria una àrea de treball a continuació o obre-la des de la barra lateral.
       També pots obrir la documentació des de qualsevol d’aquests llocs.
     title: No hi ha res obert
+  compose:
+    described: '{name}, {detail}'
+    facts: '{head} · {tail}'
+    labelled: '{label}: {value}'
+    noted: '{text} ({note})'
   declarations:
     close: Tanca les declaracions
     loading: S'estan llegint les teves declaracions…
@@ -1361,11 +1368,6 @@ desktop:
       when_read: Quan el vas llegir
       yours: El teu canvi preparat
     assets:
-      absent:
-        free_method: 'Llibertat d''amortització: sense xifra prevista'
-        not_computed: Sense calcular
-        opening_history_unknown: Falta l'historial d'obertura
-        other: Sense xifra indicada
       action:
         add: Afegeix un element
         claim: Registra la dotació
@@ -1375,8 +1377,8 @@ desktop:
       area:
         fixed: Immobilitzat
         stock: Existències
+      areas: Àrees d'actius
       asset_id: Identificador de l'element
-      claim: Reclama-la
       claim_reused: 'Ja reclamada: no s''ha registrat dues vegades.'
       claimed: Reclamació registrada.
       column:
@@ -1387,79 +1389,79 @@ desktop:
         number: Revisió
         revision: Id
         target: Declaració
+        unavailable: Sense calcular
+      correct:
+        claim_item: '{year} · {amount} · {from} – {until}'
+        supersede: 'Registra de nou aquestes dotacions amb les xifres corregides,
+          en el mateix pas:'
+      correct_claim_title: Corregeix la dotació
       count:
         conflict: 'Dotacions superposades: {count}'
         incomplete: 'Anys que no es poden calcular: {count}'
         missing: 'Anys sense registrar: {count}'
         stale: 'Dotacions que ja no coincideixen amb el quadre: {count}'
-      creating_hint: Amb què es registra, p. ex. la declaració a què va
-      creating_operation: Registrat com a
       detail:
+        close: Tanca
+        panel: Detalls de l'element
         plan: Quadre
         record: Fitxa
+        tabs: Vistes de l'element
         timeline: Cronologia
-      event:
-        baja_recorded: Baixa registrada
-        claim_recorded: Dotació registrada
-        correction_added: Correcció afegida
-        description_added: Descripció afegida
-        element_added: Element afegit
-        other: Esdeveniment registrat
       field:
+        acquisition: Compra
+        acquisition_none: Encara no hi ha compres per triar.
+        acquisition_option: '{description} · {date} · {amount}'
         amount: Import
-        baja_date: Darrer dia en servei
-        baja_reason: Motiu
         basis: Base amortitzable
+        class: Classe de la taula
+        coefficient: Coeficient
+        description: Descripció
+        disposal_date: Últim dia de servei
+        disposal_reason: Motiu
+        document_kind: Tipus de document
+        document_number: Número de document
         in_service_date: En servei des de
         kind: Tipus
         method: Mètode
         name: Nom
-        other: Una altra dada
+        non_deductible_iva: IVA no deduïble
+        non_deductible_iva_hint: Escriu 0 si cap part de l'IVA és no deduïble. Buit
+          no és el mateix que 0.
+        not_known: 'No es coneix per a aquesta compra: indica-ho tu.'
+        out_of_service_date: Baixa a partir del
+        proceeds: Import obtingut
         residual_value: Valor residual
         serial: Número de sèrie
-      finding:
-        claim_conflict: Dues dotacions se superposen
-        claim_stale: Una dotació ja no coincideix amb el quadre
-        opening_history_missing: 'Falta l''historial d''obertura: no es pot calcular
-          res'
-        other: Alguna cosa requereix la teva atenció
+        supplier_name: Proveïdor
+        supplier_tax_id: NIF del proveïdor
+        transmission_costs: Despeses de transmissió
+      filing:
+        choose: Tria un any i un trimestre del Model 130 per veure on van les dotacions.
+        unavailable: El traspàs a la declaració no està disponible.
       forecast: Amortització {amount} · {days} dies · {from} – {until}
       forecast_note: Una previsió no registra res fins que la reclames.
       free: Amortització lliure sol·licitada
       free_hint: Només per a un mètode d'amortització lliure
       from: Des de
       handoff: On van les reclamacions
+      handoff_unavailable: '{count} elements sense calcular, no inclosos'
       inspect: Consulta
       list:
         column:
+          accumulated: Amortitzat fins ara
+          basis: Base
           in_service: En servei des de
           kind: Tipus
           method: Mètode
           name: Nom
+          pending: Pendent d'amortitzar
           serial: Número de sèrie
-        disposed: Baixa el {date}
+          state: Estat
         empty: Encara no hi ha elements.
         label: Elements
         no_name: Sense nom registrat
-      option:
-        kind:
-          intangible: Immobilitzat immaterial
-          tangible: Immobilitzat material
-          vehicle: Vehicle
-        method:
-          constant_percentage: Percentatge constant
-          free_300: Llibertat d'amortització, element de poc valor
-          linear_table: Lineal, taula oficial
-        reason:
-          sale: Venda
-          scrapping: Desballestament
-          theft: Robatori
-          withdrawal: Desafectació de l'activitat
-      origin:
-        import: Importat
-        other: Un altre origen
-        person: Introduït per tu
-        system: Calculat per Cadrumo
+        summary: Anys que necessiten atenció
+        unavailable: No es pot llegir el registre ara.
       plan:
         claimable: Es pot registrar del {from} al {until}
         claimable_none: No queda res per registrar
@@ -1467,18 +1469,27 @@ desktop:
         column:
           claimed: Registrada
           days: Dies
-          matches: Coincideix amb el quadre
           planned: Prevista
+          rate: Percentatge
           replaced_by: Substituïda per
           revision: Revisió
           status: Estat
-          used_by: Usada a
           year: Any
         edition: Edició de la taula {edition}
         election_changed: Aquí canvia el mètode escollit
+        empty: Aquest pla encara no té exercicis.
         gap: 'Sense registrar: del {from} al {until}'
         in_effect: Vigent
+        limits:
+          ends_on: El període màxim acaba el
+          maximum_coefficient: Coeficient màxim
+          maximum_period: Període màxim
+          minimum_coefficient: Coeficient mínim
+          period_years: '{years} anys'
+          references: Base legal
+          title: Límits d'aquesta elecció
         matches: Coincideix amb el quadre actual
+        no_claims: No hi ha cap dotació registrada per a aquest exercici.
         no_match: Ja no coincideix amb el quadre
         projected: Projectada
         projected_note: Les taules projectades serveixen per a la previsió i el model
@@ -1496,18 +1507,14 @@ desktop:
           compatible.'
         refused_actividad_asset_validation: 'Rebutjat: el registre d''elements no
           ho accepta.'
+      refused: El registre no ho ha admès.
+      replace_claim: Substituir una dotació (opcional)
+      replace_none: Registrar una dotació nova
       revision:
         correct: Revisió que corregeix (JSON)
         create: Primera revisió (JSON)
       revision_hint: Omple cada dada buida; una revisió no s'edita un cop desada.
       revisions: Revisions
-      state:
-        claimed: Registrada
-        forecast: Previsió
-        incomplete: No es pot calcular
-        missing: Sense registrar
-        other: Estat no reconegut
-        partial: Registrada en part
       submit:
         correct: Desa la correcció
         create: Crea l'element
@@ -1525,27 +1532,27 @@ desktop:
         forecast: Previsió
       tax_year: Exercici
       timeline:
-        change: '{field}: {before} → {after}'
         change_added: '{field}: {after}'
         change_cleared: '{field}: es treu {before}'
+        change_to: a
         column:
           changes: Canvis
           effect: Efecte
           event: Esdeveniment
           origin: Origen
           recorded: Registrat
-          replaces: Substitueix
           sequence: Núm.
+        empty: Encara no s'ha afegit res.
         not_in_calculation: No forma part del càlcul
         time_not_recorded: Hora no registrada
+        used_by: 'Càlculs que la fan servir: {count}'
       title: Elements afectes a l'activitat
+      unrecognised: No reconegut
       until: Fins a
       write:
-        conflict: Ja hi ha una dotació que cobreix del {from} al {until}. Corregeix
-          aquesta dotació.
-        dispose_note: La data és el darrer dia en servei. Les dotacions que la creuen
-          se substitueixen en el mateix pas, i desfer la baixa no les recupera.
+        fill_in: Omple-ho
         incomplete: 'No s''ha desat. Falta omplir: {fields}'
+        kept: No s'ha desat res. El que has escrit continua aquí.
         reused: Ja estava registrada; no s'ha afegit res.
       year: Any
     capital:
@@ -3414,6 +3421,7 @@ desktop:
         a {ejercicio}.
       sin_derecho: Volum sense dret a deducció
       title: Registre de prorrata
+      volumes_pair: '{with_right} / {without_right}'
       whole: Tota l'activitat
     ratios:
       censo_mismatch: 'Retinguts: els percentatges no coincideixen amb el cens.'
@@ -3711,6 +3719,7 @@ desktop:
     export_failed: No s’han pogut exportar els registres.
     export_visible: Exporta els visibles
     exported: Exportat a {path}
+    file_type: Fitxers de registre
     filter: Filtra
     filters: Filtres de registres
     follow: Segueix
@@ -3834,6 +3843,23 @@ desktop:
     copy_link: Copia l'enllaç a aquesta vista
     documentation: Documentació
     hide_view: Amaga {view}
+    keywords:
+      about: versió compilació quant a informació
+      aeat_link: seu sede agencia tributaria hacienda aeat agència tributària navegador
+        web
+      census_sync: cens censo aeat importar baixar sincronitzar agència tributària
+      copy_link: cadrumo enllaç adreça compartir url
+      create_profile: registrar nou compte afegir un altre perfil crear
+      drive_link: google drive perfil carpeta navegador
+      focus: panell àrea canviar enfocament següent anterior
+      google_sign_in: google drive iniciar sessió accedir connectar autenticar
+      manage_profiles: esborrar eliminar perfils comptes gestionar
+      messages: notificacions notificaciones dehu bústia missatges sense llegir
+      setup_check: components comprovar verificar estat
+      setup_open: components instal·lar instal·lació descarregar baixar configurar
+      sign_in: inicia sessió entrar accedir contrasenya
+      sign_out: tanca sessió sortir desconnectar
+      switch_profile: canviar un altre usuari compte triar perfil
     kind_casilla: Casilla
     kind_cli: Ordre
     kind_term: Terme
@@ -4054,7 +4080,17 @@ desktop:
     exit_line: '[El procés ha acabat amb el codi {code}. Prem Retorn per tornar a
       començar.]'
     exited: ha acabat ({code})
-    failed: No s'ha pogut iniciar la sessió.
+    failed: 'La sessió ha fallat: {reason}'
+    reason:
+      close: no s'ha pogut tancar correctament
+      environment: no s'han pogut preparar els fitxers de l'aplicació
+      gone: ja no està disponible
+      input: no s'ha pogut enviar el que has escrit
+      other: ha passat alguna cosa inesperada
+      output: no s'ha pogut llegir la seva sortida
+      slow: ha trigat massa a respondre
+      start: no s'ha pogut iniciar el programa
+      stopped: el programa s'ha aturat amb un error
   settings:
     agent_search: Cerca als ajustos
     agent_search_empty: No hi ha ajustos coincidents. Prova una altra cerca.
@@ -4571,15 +4607,36 @@ ledger:
       primary_purchase: Compra
       produced: Producció pròpia
       split_payment: Compra pagada en diversos pagaments
+    asset_kind:
+      intangible: Immobilitzat intangible
+      material: Immobilitzat material
     basis_stage:
       business_allocated: Imputat a l'activitat
       taxpayer_owned: Propietat del contribuent, abans de l'ús en l'activitat
       whole_property: Immoble complet
+    claim_state:
+      claimed: Registrada
+      missing: Sense registrar
+      not_due: Res a registrar
+      partial: Registrada en part
+      superseded: Registrada, corregida
     disposal_finding:
       claim_gap: Any amb amortització sense registrar
       exemption_not_computed: Exempció del guany no calculada
       minimum_exceeded_deduction: Deducció superior a l'amortització mínima
       no_minimum_authority: Sense amortització mínima publicada per a aquest any
+    disposal_reason:
+      destruction: Destrucció
+      donation: Donació
+      part_exchange: Permuta
+      sale: Venda
+      scrapping: Desballestament
+      theft: Robatori
+      withdrawal: Retirada de l'activitat
+    document_kind:
+      customs_document: Document duaner
+      invoice: Factura
+      reception: Recepció
     errors:
       accelerated_da18_depreciation: Per a l'exercici %{tax_year}, la LIS DA 18 concedeix
         als vehicles elèctrics nous i als punts de recàrrega amortització accelerada
@@ -4843,6 +4900,8 @@ ledger:
         té cap classificació de grup inscrita.
       table_class_wrong_kind: La classe de taula %{class_key} no classifica immobilitzat
         %{asset_kind}.
+      tax_residence_unresolved: No s'ha pogut llegir la teva residència fiscal, així
+        que el registre no pot dir si s'apliquen els Models 100 i 130 de l'AEAT.
       tax_year_without_edition: Cap edició del Model 100 cobreix l'exercici {tax_year}.
       used_building_requires_construction_date: Un edifici usat requereix la seva
         data de construcció.
@@ -4872,12 +4931,61 @@ ledger:
         a l'inici de l'any d'entrada en funcionament no supera la dels 12 mesos anteriors
         (LIS art. 102.1).
       workforce_year_not_declared: La plantilla mitjana de %{year} no està declarada.
+    event_kind:
+      baja: Baixa registrada
+      claim: Dotació registrada
+      descriptor: Descripció afegida
+      revision: Revisió registrada
+    method:
+      approved_plan: Pla especial d'amortització
+      charging_infrastructure_free: Llibertat d'amortització, infraestructura de recàrrega
+      constant_percentage: Percentatge constant
+      electric_vehicle_free: Llibertat d'amortització, vehicle elèctric
+      entity_regime_free: Llibertat d'amortització, règim d'entitats
+      goodwill: Fons de comerç
+      intangible_indefinite_life: Intangible de vida útil indefinida
+      intangible_useful_life: Intangible de vida útil definida
+      justified_amount: Import justificat
+      linear: Lineal, taula oficial
+      low_value_free: Llibertat d'amortització, element de poc valor
+      renewable_self_consumption_free: Llibertat d'amortització, autoconsum amb renovables
+      research_development_building: Edifici afecte a R+D
+      research_development_free: Llibertat d'amortització, R+D
+      small_enterprise_employment_free: Llibertat d'amortització, creació d'ocupació
+      sum_of_digits: Nombres dígits
     non_deductible_iva_state:
       known: IVA no deduïble conegut
       unknown: IVA no deduïble desconegut
+    not_table_bound:
+      approved_plan: Segueix un pla especial d'amortització aprovat
+      authority_unavailable: Límits no disponibles per a aquest exercici
+      free_election: Tries l'import cada any
+      research_development_period: Segueix el període dels edificis afectes a R+D
+      twentieth_limit: Limitat a una vintena part l'any
+      useful_life_evidence: Segueix la vida útil que justifiques
     opening_history_status:
       known: Amortització acumulada coneguda
       missing: Amortització acumulada sense informar
+    plan_absence:
+      basis_exhausted: Base totalment amortitzada
+      conflict: Entra en conflicte amb el que hi ha registrat
+      covered_by_opening: Cobert per l'import d'obertura
+      edition_unavailable: Sense edició del model 100 per a aquest exercici
+      free_election: 'Llibertat d''amortització: sense xifra prevista'
+      incomplete: 'Falten dades: no es pot calcular'
+      period_elapsed: Període màxim transcorregut
+      unsupported: Encara no admès
+    regime:
+      normal: Estimació directa normal
+      simplified: Estimació directa simplificada
+    register_state:
+      fully_amortized: Totalment amortitzat
+      in_service: En funcionament
+      out_of_service: Donat de baixa
+    stale_reason:
+      authority_changed: Les taules van canviar després d'aquesta dotació
+      revision_changed: L'element es va corregir després d'aquesta dotació
+      schedule_unavailable: Ara no es pot calcular el quadre
   evidence:
     reader:
       operation_failed: Ha fallat l'operació del lector de justificants
@@ -4925,56 +5033,82 @@ llm:
 navigation:
   view:
     aeat_sync:
+      keywords: aeat sincronització sincronitzar baixar notificacions seu sede censo
+        notificaciones dehu
       label: Sincronització AEAT
     agent:
+      keywords: agent assistent xat conversa
       label: Agent
-      tax_residence_unresolved: No s'ha pogut llegir la teva residència fiscal, així
-        que el registre no pot dir si s'apliquen els Models 100 i 130 de l'AEAT.
     browser:
+      keywords: navegador web internet seu agència tributària sede aeat agencia tributaria
       label: Navegador
     calendar:
+      keywords: calendari terminis obligacions venciments dates plazos
       label: Calendari de presentacions
     declarations:
+      keywords: declaracions models autoliquidacions presentació modelo declaraciones
       label: Declaracions
     docs:
+      keywords: documentació ajuda guia manual
       label: Documentació
     home:
+      keywords: inici resum visió general
       label: Inici
     installation:
+      keywords: instal·lació versió components entorn
       label: Instal·lació
     ledger:
       documents:
+        keywords: documents justificants adjunts rebuts justificantes
         label: Documents
       health:
+        keywords: estat comprovacions avisos problemes
         label: Estat
       invoices:
+        keywords: factures emeses rebudes facturas
         label: Factures
+      keywords: llibre llibres registres banc moviments comptabilitat libro registros
       label: Llibre
       movements:
+        keywords: moviments transaccions banc extracte bancari càrrecs abonaments
+          movimientos extracto
         label: Moviments
       registers:
+        keywords: registres comptes béns inventari existències capital prorrata libros
+          registro
         label: Registres
       rules:
+        keywords: regles classificació categories automàtiques
         label: Regles
     operations:
+      keywords: operacions execucions tasques historial
       label: Operacions
     panel:
       console:
+        keywords: consola ordres shell
         label: Consola
+      keywords: panell inferior
       label: Panell inferior
       logs:
+        keywords: registres logs diagnòstic esdeveniments
         label: Registres
       python:
+        keywords: python consola repl intèrpret
         label: Shell de Python
     profile:
       aeat_access:
+        keywords: aeat accés identificar-se certificat electrònic clave certificado
         label: Accés a l’AEAT
+      keywords: perfil contribuent dades personals contribuyente
       label: Perfil
     reference:
+      keywords: referència normativa legislació fonts boe
       label: Referència
     terminal:
+      keywords: terminal espai de treball tui
       label: Espai de treball
     withholding:
+      keywords: retencions ingressos a compte retenciones irpf
       label: Retencions
 operation:
   modal:
@@ -5943,10 +6077,16 @@ tui:
       forecast: Calcular previsió
       form_options: Opcions del formulari
       free_amount: Import de llibertat d’amortització (opcional)
+      in_service_date: Data de posada en funcionament (AAAA-MM-DD), substitueix la
+        de la revisió
       inspect: Inspeccionar
       list: Llista els elements
+      method: 'Mètode d''amortització: linear, constant_percentage, sum_of_digits,
+        approved_plan o intangible_useful_life'
       name: Nom de l'element
+      non_deductible_iva: IVA no deduïble, substitueix l'import de la revisió
       plan: Pla d'amortització
+      price: Preu sense IVA, substitueix el de la revisió
       revision: Revisió de l’actiu (JSON)
       serial: Número de sèrie
       supersedes: Amortització registrada que se substitueix (opcional)
@@ -6102,16 +6242,10 @@ tui:
         prompt: Tria la categoria d'IVA de l'apunt seleccionat. El tipus, la base
           i la quota que implica es deriven i es registren en un sol pas.
         refused: 'L''IVA no s''ha derivat: %{messages}'
-      in_service_date: Data de posada en funcionament (AAAA-MM-DD), substitueix la
-        de la revisió
         review: Revisa la derivació
         stage: Deriva i registra l'IVA d'aquest apunt a partir de la categoria %{category}.
-      method: 'Mètode d''amortització: linear, constant_percentage, sum_of_digits,
-        approved_plan o intangible_useful_life'
         title: Deriva l'IVA
-      non_deductible_iva: IVA no deduïble, substitueix l'import de la revisió
       loading: Llegint…
-      price: Preu sense IVA, substitueix el de la revisió
       not_done: No s'ha canviat res.
       page:
         empty: No hi ha registres.
@@ -6522,6 +6656,10 @@ tui:
         review_counts: 'Revisió: pendents {pending}, revisats {reviewed}, omesos {skipped}'
         stale_filing: 'El Modelo {modelo} {year} {period} es va presentar amb apunts
           que han canviat: {changed} canviats, {removed} eliminats'
+        stale_filing_register: 'El Model {modelo} {year} {period} es va presentar
+          amb un registre d''actius que ha canviat: {changes} canvis'
+        stale_filing_register_unavailable: No s'ha pogut comparar el Model {modelo}
+          {year} {period} amb el registre d'actius
         status_heading: Estat de {period}
         title: Estat i comprovacions del llibre
         totals: Ingressos de l'activitat {income}, despeses {expense}, net {net}
@@ -6681,10 +6819,6 @@ tui:
       extract: Llegeix el document
       loading: S'estan llegint els documents…
       path_placeholder: Escriu el camí del fitxer
-        stale_filing_register: 'El Model {modelo} {year} {period} es va presentar
-          amb un registre d''actius que ha canviat: {changes} canvis'
-        stale_filing_register_unavailable: No s'ha pogut comparar el Model {modelo}
-          {year} {period} amb el registre d'actius
       pending: Pendent
       printed_total_disagrees: El total imprès al document no coincideix amb el registrat.
         Revisa la factura.

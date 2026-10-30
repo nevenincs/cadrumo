@@ -1015,6 +1015,7 @@ desktop:
       submitted_observed: Submission seen
     as_of: From local records as of {date}. Nothing here was asked of the tax agency.
     close: Close the calendar
+    day_event: '{date}: {kind}. {summary}'
     empty: No filing obligations in this period.
     event:
       filing: Filing
@@ -1050,11 +1051,17 @@ desktop:
     view: View
     view_list: List
     view_months: Calendar
+    window_label: '{modelo} {period}, {days}, {state}'
     window_unknown: Opening date not reported
   canvas:
     lead: Choose a work area below, or open one from the sidebar. You can open the
       documentation from either place.
     title: Nothing open
+  compose:
+    described: '{name}, {detail}'
+    facts: '{head} · {tail}'
+    labelled: '{label}: {value}'
+    noted: '{text} ({note})'
   declarations:
     close: Close declarations
     loading: Reading your declarations…
@@ -1325,11 +1332,6 @@ desktop:
       when_read: When you read it
       yours: Your staged change
     assets:
-      absent:
-        free_method: 'Free depreciation: no planned figure'
-        not_computed: Not worked out
-        opening_history_unknown: Opening history missing
-        other: No figure stated
       action:
         add: Add element
         claim: Record depreciation
@@ -1339,8 +1341,8 @@ desktop:
       area:
         fixed: Fixed assets
         stock: Stock
+      areas: Asset areas
       asset_id: Asset id
-      claim: Claim it
       claim_reused: 'Already claimed: nothing was recorded twice.'
       claimed: Claim recorded.
       column:
@@ -1351,79 +1353,79 @@ desktop:
         number: Revision
         revision: Id
         target: Declaration
+        unavailable: Not worked out
+      correct:
+        claim_item: '{year} · {amount} · {from} – {until}'
+        supersede: 'Record these claims again under the corrected figures, in the
+          same step:'
+      correct_claim_title: Correct depreciation
       count:
         conflict: 'Overlapping claims: {count}'
         incomplete: 'Years that cannot be worked out: {count}'
         missing: 'Years not claimed: {count}'
         stale: 'Claims that no longer match the schedule: {count}'
-      creating_hint: What the claim is recorded under, e.g. the declaration it is
-        for
-      creating_operation: Recorded as
       detail:
+        close: Close
+        panel: Element details
         plan: Plan
         record: Record
+        tabs: Element views
         timeline: Timeline
-      event:
-        baja_recorded: Disposal recorded
-        claim_recorded: Depreciation recorded
-        correction_added: Correction added
-        description_added: Description added
-        element_added: Element added
-        other: Event recorded
       field:
+        acquisition: Purchase
+        acquisition_none: No purchases to pick from yet.
+        acquisition_option: '{description} · {date} · {amount}'
         amount: Amount
-        baja_date: Last day of service
-        baja_reason: Reason
         basis: Depreciable basis
+        class: Table class
+        coefficient: Coefficient
+        description: Description
+        disposal_date: Last day of service
+        disposal_reason: Reason
+        document_kind: Document kind
+        document_number: Document number
         in_service_date: In service from
         kind: Kind
         method: Method
         name: Name
-        other: Other fact
+        non_deductible_iva: Non-deductible IVA
+        non_deductible_iva_hint: Write 0 if none of the IVA is non-deductible. Empty
+          is not the same as 0.
+        not_known: 'Not known for this purchase: state it yourself.'
+        out_of_service_date: Out of service from
+        proceeds: Proceeds
         residual_value: Residual value
         serial: Serial number
-      finding:
-        claim_conflict: Two claims overlap
-        claim_stale: A claim no longer matches the schedule
-        opening_history_missing: 'Opening history missing: nothing can be worked out'
-        other: Something needs your attention
+        supplier_name: Supplier
+        supplier_tax_id: Supplier tax ID
+        transmission_costs: Transmission costs
+      filing:
+        choose: Choose a year and a Modelo 130 quarter to see where the claims go.
+        unavailable: The filing handoff isn't available.
       forecast: Depreciation {amount} · {days} days · {from} – {until}
       forecast_note: A forecast records nothing until you claim it.
       free: Free depreciation requested
       free_hint: Only for a free-depreciation method
       from: From
       handoff: Where the claims go
+      handoff_unavailable: '{count} elements not worked out and left out'
       inspect: Inspect
       list:
         column:
+          accumulated: Amortized so far
+          basis: Basis
           in_service: In service from
           kind: Kind
           method: Method
           name: Name
+          pending: Still to amortize
           serial: Serial number
-        disposed: Disposed on {date}
+          state: State
         empty: No elements yet.
         label: Elements
         no_name: No name recorded
-      option:
-        kind:
-          intangible: Intangible asset
-          tangible: Tangible asset
-          vehicle: Vehicle
-        method:
-          constant_percentage: Constant percentage
-          free_300: Free depreciation, low-value element
-          linear_table: Linear, official table
-        reason:
-          sale: Sale
-          scrapping: Scrapping
-          theft: Theft
-          withdrawal: Withdrawal from the activity
-      origin:
-        import: Imported
-        other: Another source
-        person: Entered by you
-        system: Worked out by Cadrumo
+        summary: Years needing attention
+        unavailable: The register can't be read right now.
       plan:
         claimable: Can still be claimed {from} – {until}
         claimable_none: Nothing left to claim
@@ -1431,18 +1433,27 @@ desktop:
         column:
           claimed: Claimed
           days: Days
-          matches: Matches schedule
           planned: Planned
+          rate: Rate
           replaced_by: Replaced by
           revision: Revision
           status: Status
-          used_by: Used in
           year: Year
         edition: Table edition {edition}
         election_changed: Method election changes here
+        empty: No years in this plan yet.
         gap: 'Not claimed: {from} – {until}'
         in_effect: In effect
+        limits:
+          ends_on: Maximum period ends on
+          maximum_coefficient: Maximum coefficient
+          maximum_period: Maximum period
+          minimum_coefficient: Minimum coefficient
+          period_years: '{years} years'
+          references: Legal basis
+          title: Limits for this election
         matches: Matches the current schedule
+        no_claims: No dotación recorded for this year.
         no_match: No longer matches the schedule
         projected: Projected
         projected_note: Projected tables serve the forecast and Modelo 130. Modelo
@@ -1460,18 +1471,14 @@ desktop:
           yet.'
         refused_actividad_asset_validation: 'Refused: the asset register doesn''t
           accept that.'
+      refused: The register did not accept that.
+      replace_claim: Replace a claim (optional)
+      replace_none: Record a new claim
       revision:
         correct: Correcting revision (JSON)
         create: First revision (JSON)
       revision_hint: Fill every empty fact; a revision is never edited once saved.
       revisions: Revisions
-      state:
-        claimed: Claimed
-        forecast: Forecast
-        incomplete: Cannot be worked out
-        missing: Not claimed
-        other: State not recognised
-        partial: Partly claimed
       submit:
         correct: Save the correction
         create: Create the asset
@@ -1489,26 +1496,27 @@ desktop:
         forecast: Forecast
       tax_year: Tax year
       timeline:
-        change: '{field}: {before} → {after}'
         change_added: '{field}: {after}'
         change_cleared: '{field}: {before} removed'
+        change_to: to
         column:
           changes: Changes
           effect: Effect
           event: Event
           origin: Origin
           recorded: Recorded
-          replaces: Replaces
           sequence: No.
+        empty: Nothing has been added yet.
         not_in_calculation: Not part of the calculation
         time_not_recorded: Time not recorded
+        used_by: 'Calculations using it: {count}'
       title: Activity assets
+      unrecognised: Not recognised
       until: Until
       write:
-        conflict: A claim already covers {from} – {until}. Correct that claim instead.
-        dispose_note: The date is the last day of service. Claims that cross it are
-          replaced in the same step, and undoing the baja does not bring them back.
+        fill_in: Fill this in
         incomplete: 'Not saved. Still to fill in: {fields}'
+        kept: Nothing was saved. What you entered is still here.
         reused: Already recorded; nothing was added.
       year: Year
     capital:
@@ -3367,6 +3375,7 @@ desktop:
         to {ejercicio}.
       sin_derecho: Volume without right to deduct
       title: Prorrata register
+      volumes_pair: '{with_right} / {without_right}'
       whole: Whole activity
     ratios:
       censo_mismatch: 'Withheld: the ratios don''t match the censo.'
@@ -3659,6 +3668,7 @@ desktop:
     export_failed: The logs could not be exported.
     export_visible: Export visible
     exported: Exported to {path}
+    file_type: Log files
     filter: Filter
     filters: Log filters
     follow: Follow
@@ -3779,6 +3789,22 @@ desktop:
     copy_link: Copy the link to this view
     documentation: Documentation
     hide_view: Hide {view}
+    keywords:
+      about: version build about information
+      aeat_link: sede agencia tributaria hacienda aeat tax agency browser website
+      census_sync: census censo aeat pull import tax agency sync
+      copy_link: cadrumo url address share link
+      create_profile: register new account add another profile create
+      drive_link: google drive profile folder browser
+      focus: pane area switch focus next previous
+      google_sign_in: google drive sign in login connect authenticate
+      manage_profiles: delete remove profiles accounts manage
+      messages: notifications notificaciones dehu inbox unread messages
+      setup_check: components verify check status
+      setup_open: components install download setup
+      sign_in: login password sign in
+      sign_out: logout sign out
+      switch_profile: change another user account choose switch profile
     kind_casilla: Casilla
     kind_cli: Command
     kind_term: Term
@@ -3994,7 +4020,17 @@ desktop:
     enter_restarts: Enter restarts
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
     exited: exited {code}
-    failed: The session couldn't start.
+    failed: 'The session failed: {reason}'
+    reason:
+      close: it could not be closed cleanly
+      environment: the app's files could not be prepared
+      gone: it is no longer available
+      input: what you typed could not be passed on
+      other: something unexpected happened
+      output: its output could not be read
+      slow: it took too long to answer
+      start: the program could not be started
+      stopped: the program stopped with an error
   settings:
     agent_search: Search settings
     agent_search_empty: No matching settings. Try another search.
@@ -4499,15 +4535,36 @@ ledger:
       primary_purchase: Purchase
       produced: Own production
       split_payment: Purchase paid in parts
+    asset_kind:
+      intangible: Intangible asset
+      material: Tangible asset
     basis_stage:
       business_allocated: Allocated to the activity
       taxpayer_owned: Owned by the taxpayer, before business use
       whole_property: Whole property
+    claim_state:
+      claimed: Claimed
+      missing: Not claimed
+      not_due: Nothing to claim
+      partial: Partly claimed
+      superseded: Claimed, corrected
     disposal_finding:
       claim_gap: Year with depreciation not recorded
       exemption_not_computed: Gain exemption not computed
       minimum_exceeded_deduction: Deduction above the minimum amortization
       no_minimum_authority: No minimum amortization published for this year
+    disposal_reason:
+      destruction: Destruction
+      donation: Donation
+      part_exchange: Part exchange
+      sale: Sale
+      scrapping: Scrapping
+      theft: Theft
+      withdrawal: Withdrawal from the activity
+    document_kind:
+      customs_document: Customs document
+      invoice: Invoice
+      reception: Reception
     errors:
       accelerated_da18_depreciation: For tax year %{tax_year}, LIS DA 18 grants new
         electric vehicles and charging points accelerated depreciation at twice the
@@ -4759,6 +4816,8 @@ ledger:
         group classification.
       table_class_wrong_kind: Table class %{class_key} does not classify %{asset_kind}
         assets.
+      tax_residence_unresolved: Your tax residence could not be read, so the register
+        cannot say whether Modelos 100 and 130 of the AEAT apply.
       tax_year_without_edition: No Modelo 100 edition covers tax year {tax_year}.
       used_building_requires_construction_date: A used building requires its construction
         date.
@@ -4787,12 +4846,61 @@ ledger:
         the entry year's start does not exceed that of the 12 months before (LIS art.
         102.1).
       workforce_year_not_declared: The average workforce of %{year} is not declared.
+    event_kind:
+      baja: Disposal recorded
+      claim: Depreciation recorded
+      descriptor: Description added
+      revision: Revision recorded
+    method:
+      approved_plan: Approved amortization plan
+      charging_infrastructure_free: Free depreciation, charging infrastructure
+      constant_percentage: Constant percentage
+      electric_vehicle_free: Free depreciation, electric vehicle
+      entity_regime_free: Free depreciation, entity regime
+      goodwill: Goodwill
+      intangible_indefinite_life: Intangible, indefinite useful life
+      intangible_useful_life: Intangible, definite useful life
+      justified_amount: Justified amount
+      linear: Linear, official table
+      low_value_free: Free depreciation, low-value element
+      renewable_self_consumption_free: Free depreciation, renewable self-consumption
+      research_development_building: R&D building
+      research_development_free: Free depreciation, R&D
+      small_enterprise_employment_free: Free depreciation, job creation
+      sum_of_digits: Sum of digits
     non_deductible_iva_state:
       known: Non-deductible IVA known
       unknown: Non-deductible IVA unknown
+    not_table_bound:
+      approved_plan: Follows an approved amortization plan
+      authority_unavailable: Limits not available for this year
+      free_election: You choose the amount each year
+      research_development_period: Follows the R&D building period
+      twentieth_limit: Capped at one twentieth a year
+      useful_life_evidence: Follows the useful life you evidence
     opening_history_status:
       known: Accumulated amortization known
       missing: Accumulated amortization missing
+    plan_absence:
+      basis_exhausted: Basis fully amortized
+      conflict: Conflicts with the record
+      covered_by_opening: Covered by the opening amount
+      edition_unavailable: No Modelo 100 edition for this year
+      free_election: 'Free depreciation: no planned figure'
+      incomplete: 'Missing facts: cannot be worked out'
+      period_elapsed: Maximum period elapsed
+      unsupported: Not supported yet
+    regime:
+      normal: Direct estimation, normal
+      simplified: Direct estimation, simplified
+    register_state:
+      fully_amortized: Fully amortized
+      in_service: In service
+      out_of_service: Out of service
+    stale_reason:
+      authority_changed: The tax tables changed after this claim
+      revision_changed: The element was corrected after this claim
+      schedule_unavailable: The schedule cannot be worked out now
   evidence:
     reader:
       operation_failed: Evidence reader operation failed
@@ -4837,56 +4945,80 @@ llm:
 navigation:
   view:
     aeat_sync:
+      keywords: aeat sync capture download notifications sede censo notificaciones
+        dehu
       label: AEAT Sync
     agent:
+      keywords: agent assistant chat
       label: Agent
     browser:
+      keywords: browser web internet tax agency sede aeat agencia tributaria
       label: Browser
     calendar:
-      tax_residence_unresolved: Your tax residence could not be read, so the register
-        cannot say whether Modelos 100 and 130 of the AEAT apply.
+      keywords: calendar deadlines obligations due dates plazos
       label: Filing calendar
     declarations:
+      keywords: declarations returns filing forms modelo declaraciones
       label: Declarations
     docs:
+      keywords: docs documentation help guide manual
       label: Docs
     home:
+      keywords: overview start summary dashboard
       label: Home
     installation:
+      keywords: installation runtime version components
       label: Installation
     ledger:
       documents:
+        keywords: documents evidence attachments receipts justificantes
         label: Documents
       health:
+        keywords: health readiness checks findings problems
         label: Health
       invoices:
+        keywords: invoices bills issued received facturas
         label: Invoices
+      keywords: records books bank movements libro registros
       label: Ledger
       movements:
+        keywords: transactions bank statement movements movimientos extracto
         label: Movements
       registers:
+        keywords: registers accounts assets inventory capital prorrata libros registro
         label: Registers
       rules:
+        keywords: rules classification categories automatic
         label: Rules
     operations:
+      keywords: operations runs jobs history tasks
       label: Operations
     panel:
       console:
+        keywords: console shell command line
         label: Console
+      keywords: bottom panel dock
       label: Bottom panel
       logs:
+        keywords: logs log diagnostics events
         label: Logs
       python:
+        keywords: python shell repl interpreter
         label: Python shell
     profile:
       aeat_access:
+        keywords: aeat access sign in certificate clave certificado
         label: AEAT access
+      keywords: profile taxpayer details contribuyente
       label: Profile
     reference:
+      keywords: reference law legislation sources corpus normativa boe
       label: Reference
     terminal:
+      keywords: terminal workspace workbench tui
       label: Workspace
     withholding:
+      keywords: withholding tax withheld retenciones irpf
       label: Withholding
 operation:
   modal:
@@ -5833,10 +5965,15 @@ tui:
       forecast: Calculate forecast
       form_options: Form options
       free_amount: Optional accelerated depreciation amount
+      in_service_date: In-service date (YYYY-MM-DD), replaces the revision's date
       inspect: Inspect
       list: List elements
+      method: 'Amortization method: linear, constant_percentage, sum_of_digits, approved_plan
+        or intangible_useful_life'
       name: Element name
+      non_deductible_iva: Non-deductible IVA, replaces the revision's amount
       plan: Amortization plan
+      price: Price without IVA, replaces the revision's price
       revision: Asset revision (JSON)
       serial: Serial number
       supersedes: Recorded depreciation to replace (optional)
@@ -5990,15 +6127,10 @@ tui:
         prompt: Choose the IVA category of the selected entry. The rate, base and
           amount it implies are derived and recorded in one step.
         refused: 'The IVA was not derived: %{messages}'
-      in_service_date: In-service date (YYYY-MM-DD), replaces the revision's date
         review: Review derivation
         stage: Derive and record the IVA of this entry from category %{category}.
-      method: 'Amortization method: linear, constant_percentage, sum_of_digits, approved_plan
-        or intangible_useful_life'
         title: Derive IVA
-      non_deductible_iva: Non-deductible IVA, replaces the revision's amount
       loading: Reading…
-      price: Price without IVA, replaces the revision's price
       not_done: Nothing was changed.
       page:
         empty: No records.
@@ -6408,6 +6540,10 @@ tui:
         review_counts: 'Review: pending {pending}, reviewed {reviewed}, skipped {skipped}'
         stale_filing: 'Modelo {modelo} {year} {period} was filed on entries that changed
           since: {changed} changed, {removed} removed'
+        stale_filing_register: 'Modelo {modelo} {year} {period} was filed on an asset
+          register that changed since: {changes} changes'
+        stale_filing_register_unavailable: Modelo {modelo} {year} {period} could not
+          be compared with the asset register
         status_heading: Status for {period}
         title: Ledger status and checks
         totals: Business income {income}, expenses {expense}, net {net}
@@ -6565,10 +6701,6 @@ tui:
       pending: Pending
       printed_total_disagrees: The total printed on the document differs from the
         recorded total. Check the invoice.
-        stale_filing_register: 'Modelo {modelo} {year} {period} was filed on an asset
-          register that changed since: {changes} changes'
-        stale_filing_register_unavailable: Modelo {modelo} {year} {period} could not
-          be compared with the asset register
       queue_heading: Attachments awaiting review
       read_done: Read. Check the values, then confirm the invoice.
       read_failed: The document could not be read.

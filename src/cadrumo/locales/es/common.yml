@@ -1053,6 +1053,7 @@ desktop:
     as_of: Según los registros locales a {date}. Aquí no se ha consultado nada a la
       AEAT.
     close: Cerrar el calendario
+    day_event: '{date}: {kind}. {summary}'
     empty: No hay obligaciones de presentación en este periodo.
     event:
       filing: Presentación
@@ -1088,11 +1089,17 @@ desktop:
     view: Vista
     view_list: Lista
     view_months: Calendario
+    window_label: '{modelo} {period}, {days}, {state}'
     window_unknown: Fecha de apertura no indicada
   canvas:
     lead: Elige un área de trabajo a continuación o ábrela desde la barra lateral.
       También puedes abrir la documentación desde cualquiera de esos lugares.
     title: No hay nada abierto
+  compose:
+    described: '{name}, {detail}'
+    facts: '{head} · {tail}'
+    labelled: '{label}: {value}'
+    noted: '{text} ({note})'
   declarations:
     close: Cerrar declaraciones
     loading: Leyendo tus declaraciones…
@@ -1366,11 +1373,6 @@ desktop:
       when_read: Cuando lo leíste
       yours: Tu cambio preparado
     assets:
-      absent:
-        free_method: 'Libertad de amortización: sin cifra prevista'
-        not_computed: Sin calcular
-        opening_history_unknown: Falta el historial de apertura
-        other: Sin cifra indicada
       action:
         add: Añadir elemento
         claim: Registrar dotación
@@ -1380,8 +1382,8 @@ desktop:
       area:
         fixed: Inmovilizado
         stock: Existencias
+      areas: Áreas de activos
       asset_id: Identificador del elemento
-      claim: Reclamarla
       claim_reused: 'Ya reclamada: no se ha registrado dos veces.'
       claimed: Reclamación registrada.
       column:
@@ -1392,79 +1394,80 @@ desktop:
         number: Revisión
         revision: Id
         target: Declaración
+        unavailable: Sin calcular
+      correct:
+        claim_item: '{year} · {amount} · {from} – {until}'
+        supersede: 'Registra de nuevo estas dotaciones con las cifras corregidas,
+          en el mismo paso:'
+      correct_claim_title: Corregir la dotación
       count:
         conflict: 'Dotaciones solapadas: {count}'
         incomplete: 'Años que no se pueden calcular: {count}'
         missing: 'Años sin registrar: {count}'
         stale: 'Dotaciones que ya no coinciden con el cuadro: {count}'
-      creating_hint: Con qué se registra, p. ej. la declaración a la que va
-      creating_operation: Registrado como
       detail:
+        close: Cerrar
+        panel: Detalles del elemento
         plan: Cuadro
         record: Ficha
+        tabs: Vistas del elemento
         timeline: Cronología
-      event:
-        baja_recorded: Baja registrada
-        claim_recorded: Dotación registrada
-        correction_added: Corrección añadida
-        description_added: Descripción añadida
-        element_added: Elemento añadido
-        other: Evento registrado
       field:
+        acquisition: Compra
+        acquisition_none: Aún no hay compras entre las que elegir.
+        acquisition_option: '{description} · {date} · {amount}'
         amount: Importe
-        baja_date: Último día en servicio
-        baja_reason: Motivo
         basis: Base amortizable
+        class: Clase de la tabla
+        coefficient: Coeficiente
+        description: Descripción
+        disposal_date: Último día de servicio
+        disposal_reason: Motivo
+        document_kind: Tipo de documento
+        document_number: Número de documento
         in_service_date: En servicio desde
         kind: Tipo
         method: Método
         name: Nombre
-        other: Otro dato
+        non_deductible_iva: IVA no deducible
+        non_deductible_iva_hint: Escribe 0 si nada del IVA es no deducible. Vacío
+          no es lo mismo que 0.
+        not_known: 'No se conoce para esta compra: indícalo tú.'
+        out_of_service_date: Baja a partir del
+        proceeds: Importe obtenido
         residual_value: Valor residual
         serial: Número de serie
-      finding:
-        claim_conflict: Dos dotaciones se solapan
-        claim_stale: Una dotación ya no coincide con el cuadro
-        opening_history_missing: 'Falta el historial de apertura: no se puede calcular
-          nada'
-        other: Algo requiere tu atención
+        supplier_name: Proveedor
+        supplier_tax_id: NIF del proveedor
+        transmission_costs: Gastos de transmisión
+      filing:
+        choose: Elige un año y un trimestre del Modelo 130 para ver adónde van las
+          dotaciones.
+        unavailable: El traspaso a la declaración no está disponible.
       forecast: Amortización {amount} · {days} días · {from} – {until}
       forecast_note: Una previsión no registra nada hasta que la reclamas.
       free: Amortización libre solicitada
       free_hint: Solo para un método de amortización libre
       from: Desde
       handoff: Adónde van las reclamaciones
+      handoff_unavailable: '{count} elementos sin calcular, no incluidos'
       inspect: Consultar
       list:
         column:
+          accumulated: Amortizado hasta ahora
+          basis: Base
           in_service: En servicio desde
           kind: Tipo
           method: Método
           name: Nombre
+          pending: Pendiente de amortizar
           serial: Número de serie
-        disposed: Baja el {date}
+          state: Estado
         empty: Todavía no hay elementos.
         label: Elementos
         no_name: Sin nombre registrado
-      option:
-        kind:
-          intangible: Inmovilizado inmaterial
-          tangible: Inmovilizado material
-          vehicle: Vehículo
-        method:
-          constant_percentage: Porcentaje constante
-          free_300: Libertad de amortización, elemento de escaso valor
-          linear_table: Lineal, tabla oficial
-        reason:
-          sale: Venta
-          scrapping: Achatarramiento
-          theft: Robo
-          withdrawal: Desafectación de la actividad
-      origin:
-        import: Importado
-        other: Otro origen
-        person: Introducido por ti
-        system: Calculado por Cadrumo
+        summary: Años que necesitan atención
+        unavailable: No se puede leer el registro ahora.
       plan:
         claimable: Se puede registrar del {from} al {until}
         claimable_none: Nada pendiente de registrar
@@ -1472,18 +1475,27 @@ desktop:
         column:
           claimed: Registrada
           days: Días
-          matches: Coincide con el cuadro
           planned: Prevista
+          rate: Porcentaje
           replaced_by: Sustituida por
           revision: Revisión
           status: Estado
-          used_by: Usada en
           year: Año
         edition: Edición de la tabla {edition}
         election_changed: Aquí cambia el método elegido
+        empty: Este plan todavía no tiene ejercicios.
         gap: 'Sin registrar: del {from} al {until}'
         in_effect: Vigente
+        limits:
+          ends_on: El período máximo termina el
+          maximum_coefficient: Coeficiente máximo
+          maximum_period: Período máximo
+          minimum_coefficient: Coeficiente mínimo
+          period_years: '{years} años'
+          references: Base legal
+          title: Límites de esta elección
         matches: Coincide con el cuadro actual
+        no_claims: No hay dotación registrada para este ejercicio.
         no_match: Ya no coincide con el cuadro
         projected: Proyectada
         projected_note: Las tablas proyectadas sirven para la previsión y el modelo
@@ -1500,18 +1512,14 @@ desktop:
         refused_actividad_asset_unsupported: 'Rechazado: ese método aún no está soportado.'
         refused_actividad_asset_validation: 'Rechazado: el registro de elementos no
           lo acepta.'
+      refused: El registro no lo admitió.
+      replace_claim: Sustituir una dotación (opcional)
+      replace_none: Registrar una dotación nueva
       revision:
         correct: Revisión que corrige (JSON)
         create: Primera revisión (JSON)
       revision_hint: Rellena cada dato vacío; una revisión no se edita una vez guardada.
       revisions: Revisiones
-      state:
-        claimed: Registrada
-        forecast: Previsión
-        incomplete: No se puede calcular
-        missing: Sin registrar
-        other: Estado no reconocido
-        partial: Registrada en parte
       submit:
         correct: Guardar la corrección
         create: Crear el elemento
@@ -1529,27 +1537,27 @@ desktop:
         forecast: Previsión
       tax_year: Ejercicio
       timeline:
-        change: '{field}: {before} → {after}'
         change_added: '{field}: {after}'
         change_cleared: '{field}: se quita {before}'
+        change_to: a
         column:
           changes: Cambios
           effect: Efecto
           event: Evento
           origin: Origen
           recorded: Registrado
-          replaces: Sustituye a
           sequence: N.º
+        empty: Todavía no se ha añadido nada.
         not_in_calculation: No forma parte del cálculo
         time_not_recorded: Hora no registrada
+        used_by: 'Cálculos que la usan: {count}'
       title: Elementos afectos a la actividad
+      unrecognised: No reconocido
       until: Hasta
       write:
-        conflict: Ya hay una dotación que cubre del {from} al {until}. Corrige esa
-          dotación.
-        dispose_note: La fecha es el último día en servicio. Las dotaciones que la
-          cruzan se sustituyen en el mismo paso, y deshacer la baja no las recupera.
+        fill_in: Rellénalo
         incomplete: 'No se ha guardado. Falta rellenar: {fields}'
+        kept: No se ha guardado nada. Lo que escribiste sigue aquí.
         reused: Ya estaba registrada; no se ha añadido nada.
       year: Año
     capital:
@@ -3413,6 +3421,7 @@ desktop:
         a {ejercicio}.
       sin_derecho: Volumen sin derecho a deducción
       title: Registro de prorrata
+      volumes_pair: '{with_right} / {without_right}'
       whole: Toda la actividad
     ratios:
       censo_mismatch: 'Retenidos: los porcentajes no coinciden con el censo.'
@@ -3711,6 +3720,7 @@ desktop:
     export_failed: No se pudieron exportar los registros.
     export_visible: Exportar visibles
     exported: Exportado a {path}
+    file_type: Archivos de registro
     filter: Filtrar
     filters: Filtros de registros
     follow: Seguir
@@ -3832,6 +3842,23 @@ desktop:
     copy_link: Copiar el enlace a esta vista
     documentation: Documentación
     hide_view: Ocultar {view}
+    keywords:
+      about: versión version compilación compilacion acerca información informacion
+      aeat_link: sede agencia tributaria hacienda aeat navegador web
+      census_sync: censo aeat importar descargar sincronizar agencia tributaria
+      copy_link: cadrumo enlace dirección direccion compartir url
+      create_profile: registrar nuevo cuenta añadir otro perfil crear
+      drive_link: google drive perfil carpeta navegador
+      focus: panel área area cambiar foco siguiente anterior
+      google_sign_in: google drive iniciar sesión sesion acceder conectar autenticar
+      manage_profiles: borrar eliminar perfiles cuentas gestionar
+      messages: notificaciones dehu buzón buzon mensajes sin leer
+      setup_check: componentes comprobar verificar estado
+      setup_open: componentes instalar instalación instalacion descargar descarga
+        configurar
+      sign_in: iniciar sesión sesion entrar acceder contraseña
+      sign_out: cerrar sesión sesion salir desconectar
+      switch_profile: cambiar otro usuario cuenta elegir perfil
     kind_casilla: Casilla
     kind_cli: Comando
     kind_term: Término
@@ -4050,7 +4077,17 @@ desktop:
     exit_line: '[El proceso terminó con el código {code}. Pulsa Intro para volver
       a empezar.]'
     exited: terminó ({code})
-    failed: No se ha podido iniciar la sesión.
+    failed: 'La sesión ha fallado: {reason}'
+    reason:
+      close: no se ha podido cerrar correctamente
+      environment: no se han podido preparar los archivos de la aplicación
+      gone: ya no está disponible
+      input: no se ha podido enviar lo que has escrito
+      other: ha ocurrido algo inesperado
+      output: no se ha podido leer su salida
+      slow: ha tardado demasiado en responder
+      start: no se ha podido iniciar el programa
+      stopped: el programa se ha detenido con un error
   settings:
     agent_search: Buscar en ajustes
     agent_search_empty: No hay ajustes que coincidan. Prueba otra búsqueda.
@@ -4574,15 +4611,36 @@ ledger:
       primary_purchase: Compra
       produced: Producción propia
       split_payment: Compra pagada en varios pagos
+    asset_kind:
+      intangible: Inmovilizado intangible
+      material: Inmovilizado material
     basis_stage:
       business_allocated: Imputado a la actividad
       taxpayer_owned: Propiedad del contribuyente, antes del uso en la actividad
       whole_property: Inmueble completo
+    claim_state:
+      claimed: Registrada
+      missing: Sin registrar
+      not_due: Nada que registrar
+      partial: Registrada en parte
+      superseded: Registrada, corregida
     disposal_finding:
       claim_gap: Año con amortización sin registrar
       exemption_not_computed: Exención de la ganancia no calculada
       minimum_exceeded_deduction: Deducción superior a la amortización mínima
       no_minimum_authority: Sin amortización mínima publicada para este año
+    disposal_reason:
+      destruction: Destrucción
+      donation: Donación
+      part_exchange: Permuta
+      sale: Venta
+      scrapping: Desguace
+      theft: Robo
+      withdrawal: Retirada de la actividad
+    document_kind:
+      customs_document: Documento aduanero
+      invoice: Factura
+      reception: Recepción
     errors:
       accelerated_da18_depreciation: Para el ejercicio %{tax_year}, la LIS DA 18 concede
         a los vehículos eléctricos nuevos y a los puntos de recarga amortización acelerada
@@ -4848,6 +4906,8 @@ ledger:
         tiene una clasificación de grupo inscrita.
       table_class_wrong_kind: La clase de tabla %{class_key} no clasifica inmovilizado
         %{asset_kind}.
+      tax_residence_unresolved: No se pudo leer tu residencia fiscal, así que el registro
+        no puede decir si se aplican los Modelos 100 y 130 de la AEAT.
       tax_year_without_edition: Ninguna edición del Modelo 100 cubre el ejercicio
         {tax_year}.
       used_building_requires_construction_date: Un edificio usado requiere su fecha
@@ -4880,12 +4940,61 @@ ledger:
         al inicio del año de entrada en funcionamiento no supera la de los 12 meses
         anteriores (LIS art. 102.1).
       workforce_year_not_declared: La plantilla media de %{year} no está declarada.
+    event_kind:
+      baja: Baja registrada
+      claim: Dotación registrada
+      descriptor: Descripción añadida
+      revision: Revisión registrada
+    method:
+      approved_plan: Plan especial de amortización
+      charging_infrastructure_free: Libertad de amortización, infraestructura de recarga
+      constant_percentage: Porcentaje constante
+      electric_vehicle_free: Libertad de amortización, vehículo eléctrico
+      entity_regime_free: Libertad de amortización, régimen de entidades
+      goodwill: Fondo de comercio
+      intangible_indefinite_life: Intangible de vida útil indefinida
+      intangible_useful_life: Intangible de vida útil definida
+      justified_amount: Importe justificado
+      linear: Lineal, tabla oficial
+      low_value_free: Libertad de amortización, elemento de escaso valor
+      renewable_self_consumption_free: Libertad de amortización, autoconsumo con renovables
+      research_development_building: Edificio afecto a I+D
+      research_development_free: Libertad de amortización, I+D
+      small_enterprise_employment_free: Libertad de amortización, creación de empleo
+      sum_of_digits: Números dígitos
     non_deductible_iva_state:
       known: IVA no deducible conocido
       unknown: IVA no deducible desconocido
+    not_table_bound:
+      approved_plan: Sigue un plan especial de amortización aprobado
+      authority_unavailable: Límites no disponibles para este ejercicio
+      free_election: Eliges el importe cada año
+      research_development_period: Sigue el período de los edificios afectos a I+D
+      twentieth_limit: Limitado a una veinteava parte al año
+      useful_life_evidence: Sigue la vida útil que justificas
     opening_history_status:
       known: Amortización acumulada conocida
       missing: Amortización acumulada sin informar
+    plan_absence:
+      basis_exhausted: Base totalmente amortizada
+      conflict: Entra en conflicto con lo registrado
+      covered_by_opening: Cubierto por el importe de apertura
+      edition_unavailable: Sin edición del modelo 100 para este ejercicio
+      free_election: 'Libertad de amortización: sin cifra prevista'
+      incomplete: 'Faltan datos: no se puede calcular'
+      period_elapsed: Período máximo transcurrido
+      unsupported: Aún no admitido
+    regime:
+      normal: Estimación directa normal
+      simplified: Estimación directa simplificada
+    register_state:
+      fully_amortized: Totalmente amortizado
+      in_service: En funcionamiento
+      out_of_service: Dado de baja
+    stale_reason:
+      authority_changed: Las tablas cambiaron después de esta dotación
+      revision_changed: El elemento se corrigió después de esta dotación
+      schedule_unavailable: Ahora no se puede calcular el cuadro
   evidence:
     reader:
       operation_failed: Falló la operación del lector de justificantes
@@ -4933,56 +5042,81 @@ llm:
 navigation:
   view:
     aeat_sync:
+      keywords: aeat sincronización sincronizar descargar sede censo notificaciones
+        dehu
       label: Sincronización AEAT
-      tax_residence_unresolved: No se pudo leer tu residencia fiscal, así que el registro
-        no puede decir si se aplican los Modelos 100 y 130 de la AEAT.
     agent:
+      keywords: agente asistente chat conversación
       label: Agente
     browser:
+      keywords: navegador web internet sede electrónica aeat agencia tributaria
       label: Navegador
     calendar:
+      keywords: calendario plazos obligaciones vencimientos fechas
       label: Calendario de presentaciones
     declarations:
+      keywords: declaraciones modelo modelos autoliquidaciones presentación
       label: Declaraciones
     docs:
+      keywords: documentación ayuda guía manual
       label: Documentación
     home:
+      keywords: inicio resumen vista general
       label: Inicio
     installation:
+      keywords: instalación versión componentes entorno
       label: Instalación
     ledger:
       documents:
+        keywords: documentos justificantes adjuntos recibos
         label: Documentos
       health:
+        keywords: estado comprobaciones avisos problemas
         label: Estado
       invoices:
+        keywords: facturas emitidas recibidas
         label: Facturas
+      keywords: libro libros registros banco movimientos contabilidad
       label: Libro
       movements:
+        keywords: movimientos transacciones banco extracto bancario cargos abonos
         label: Movimientos
       registers:
+        keywords: registros cuentas bienes inventario existencias capital prorrata
+          libros registro
         label: Registros
       rules:
+        keywords: reglas clasificación categorías automáticas
         label: Reglas
     operations:
+      keywords: operaciones ejecuciones tareas historial
       label: Operaciones
     panel:
       console:
+        keywords: consola comandos shell
         label: Consola
+      keywords: panel inferior
       label: Panel inferior
       logs:
+        keywords: registros logs diagnóstico eventos
         label: Registros
       python:
+        keywords: python consola repl intérprete
         label: Shell de Python
     profile:
       aeat_access:
+        keywords: aeat acceso identificarse clave certificado electrónico
         label: Acceso a la AEAT
+      keywords: perfil contribuyente datos personales
       label: Perfil
     reference:
+      keywords: referencia normativa legislación fuentes boe
       label: Referencia
     terminal:
+      keywords: terminal espacio de trabajo tui
       label: Espacio de trabajo
     withholding:
+      keywords: retenciones irpf ingresos a cuenta
       label: Retenciones
 operation:
   modal:
@@ -5952,10 +6086,16 @@ tui:
       forecast: Calcular previsión
       form_options: Opciones del formulario
       free_amount: Importe de libertad de amortización (opcional)
+      in_service_date: Fecha de puesta en funcionamiento (AAAA-MM-DD), sustituye a
+        la de la revisión
       inspect: Inspeccionar
       list: Listar elementos
+      method: 'Método de amortización: linear, constant_percentage, sum_of_digits,
+        approved_plan o intangible_useful_life'
       name: Nombre del elemento
+      non_deductible_iva: IVA no deducible, sustituye al importe de la revisión
       plan: Plan de amortización
+      price: Precio sin IVA, sustituye al de la revisión
       revision: Revisión del activo (JSON)
       serial: Número de serie
       supersedes: Amortización registrada que se sustituye (opcional)
@@ -6112,16 +6252,10 @@ tui:
         prompt: Elige la categoría de IVA del apunte seleccionado. El tipo, la base
           y la cuota que implica se derivan y se registran en un solo paso.
         refused: 'El IVA no se ha derivado: %{messages}'
-      in_service_date: Fecha de puesta en funcionamiento (AAAA-MM-DD), sustituye a
-        la de la revisión
         review: Revisar la derivación
         stage: Derivar y registrar el IVA de este apunte a partir de la categoría
-      method: 'Método de amortización: linear, constant_percentage, sum_of_digits,
-        approved_plan o intangible_useful_life'
           %{category}.
-      non_deductible_iva: IVA no deducible, sustituye al importe de la revisión
         title: Derivar el IVA
-      price: Precio sin IVA, sustituye al de la revisión
       loading: Leyendo…
       not_done: No se ha cambiado nada.
       page:
@@ -6538,6 +6672,10 @@ tui:
           {skipped}'
         stale_filing: 'El Modelo {modelo} {year} {period} se presentó con apuntes
           que han cambiado: {changed} cambiados, {removed} eliminados'
+        stale_filing_register: 'El Modelo {modelo} {year} {period} se presentó con
+          un registro de activos que ha cambiado: {changes} cambios'
+        stale_filing_register_unavailable: No se ha podido comparar el Modelo {modelo}
+          {year} {period} con el registro de activos
         status_heading: Estado de {period}
         title: Estado y comprobaciones del libro
         totals: Ingresos de la actividad {income}, gastos {expense}, neto {net}
@@ -6698,10 +6836,6 @@ tui:
       loading: Leyendo los documentos…
       path_placeholder: Escribe la ruta del fichero
       pending: Pendiente
-        stale_filing_register: 'El Modelo {modelo} {year} {period} se presentó con
-          un registro de activos que ha cambiado: {changes} cambios'
-        stale_filing_register_unavailable: No se ha podido comparar el Modelo {modelo}
-          {year} {period} con el registro de activos
       printed_total_disagrees: El total impreso en el documento no coincide con el
         registrado. Revisa la factura.
       queue_heading: Adjuntos pendientes de revisión

@@ -127,7 +127,7 @@ aggregation:
       supplier_regime_duplicate_ledger_evidence: A szállítói rendszerű érkezési adatok
         ugyanazt a tételt ismétlik.
       supplier_regime_observations_outside_period: Az áfa-összesítés a kért bevallási
-        időszakon kívüli keltézésű megfigyeléseket tartalmaz.
+        időszakon kívüli keltezésű megfigyeléseket tartalmaz.
   modelo_bindings:
     errors:
       invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
@@ -1028,6 +1028,7 @@ desktop:
     as_of: A helyi adatok alapján, {date} állapot szerint. Itt semmit nem kérdeztünk
       le az AEAT-től.
     close: Naptár bezárása
+    day_event: '{date}: {kind}. {summary}'
     empty: Ebben az időszakban nincs bevallási kötelezettség.
     event:
       filing: Bevallás
@@ -1063,11 +1064,17 @@ desktop:
     view: Nézet
     view_list: Lista
     view_months: Naptár
+    window_label: '{modelo} {period}, {days}, {state}'
     window_unknown: A kezdő dátum nincs megadva
   canvas:
     lead: Válassz munkaterületet alább, vagy nyisd meg az oldalsávból. A dokumentációt
       mindkét helyről megnyithatod.
     title: Nincs semmi megnyitva
+  compose:
+    described: '{name}, {detail}'
+    facts: '{head} · {tail}'
+    labelled: '{label}: {value}'
+    noted: '{text} ({note})'
   declarations:
     close: Bevallások bezárása
     loading: A bevallásaid beolvasása…
@@ -1337,11 +1344,6 @@ desktop:
       when_read: Beolvasáskor
       yours: Az előkészített változásod
     assets:
-      absent:
-        free_method: 'Szabad értékcsökkenés: nincs tervezett összeg'
-        not_computed: Nincs kiszámítva
-        opening_history_unknown: Hiányzik a nyitó előzmény
-        other: Nincs megadott összeg
       action:
         add: Elem hozzáadása
         claim: Értékcsökkenés rögzítése
@@ -1351,8 +1353,8 @@ desktop:
       area:
         fixed: Tárgyi eszközök
         stock: Készlet
+      areas: Eszközterületek
       asset_id: Eszköz azonosítója
-      claim: Elszámolás
       claim_reused: 'Már elszámolva: semmi sem került kétszer rögzítésre.'
       claimed: Elszámolás rögzítve.
       column:
@@ -1363,79 +1365,80 @@ desktop:
         number: Változat
         revision: Azonosító
         target: Bevallás
+        unavailable: Nincs kiszámítva
+      correct:
+        claim_item: '{year}. · {amount} · {from} – {until}'
+        supersede: 'Rögzítsd újra ezeket az elszámolásokat a javított adatokkal, ugyanebben
+          a lépésben:'
+      correct_claim_title: Elszámolás javítása
       count:
         conflict: 'Átfedő elszámolások: {count}'
         incomplete: 'Nem kiszámítható évek: {count}'
         missing: 'Elszámolatlan évek: {count}'
         stale: 'Az ütemezéssel már nem egyező elszámolások: {count}'
-      creating_hint: Mi alatt kerül rögzítésre, pl. melyik bevalláshoz
-      creating_operation: Rögzítés megnevezése
       detail:
+        close: Bezárás
+        panel: Az elem adatai
         plan: Terv
         record: Adatlap
+        tabs: Az elem nézetei
         timeline: Idővonal
-      event:
-        baja_recorded: Kivezetés rögzítve
-        claim_recorded: Értékcsökkenés rögzítve
-        correction_added: Javítás hozzáadva
-        description_added: Leírás hozzáadva
-        element_added: Elem hozzáadva
-        other: Esemény rögzítve
       field:
+        acquisition: Beszerzés
+        acquisition_none: Még nincs kiválasztható beszerzés.
+        acquisition_option: '{description} · {date} · {amount}'
         amount: Összeg
-        baja_date: Utolsó üzemnap
-        baja_reason: Ok
         basis: Értékcsökkenési alap
+        class: Táblázati osztály
+        coefficient: Együttható
+        description: Leírás
+        disposal_date: Utolsó üzemnap
+        disposal_reason: Ok
+        document_kind: Okmány fajtája
+        document_number: Okmány száma
         in_service_date: Üzembe helyezés napja
         kind: Típus
         method: Módszer
         name: Név
-        other: Egyéb adat
+        non_deductible_iva: Le nem vonható IVA
+        non_deductible_iva_hint: Írj 0-t, ha az IVA-ból semmi nem zárható ki a levonásból.
+          Az üres mező nem ugyanaz, mint a 0.
+        not_known: 'Ennél a beszerzésnél nem ismert: add meg te.'
+        out_of_service_date: Kivezetés dátuma
+        proceeds: Bevétel
         residual_value: Maradványérték
         serial: Gyártási szám
-      finding:
-        claim_conflict: Két elszámolás átfedi egymást
-        claim_stale: Egy elszámolás már nem egyezik az ütemezéssel
-        opening_history_missing: 'Hiányzik a nyitó előzmény: semmi sem számítható
-          ki'
-        other: Valami a figyelmedet igényli
+        supplier_name: Szállító
+        supplier_tax_id: Szállító adószáma
+        transmission_costs: Értékesítési költségek
+      filing:
+        choose: Válassz évet és a 130-as modell negyedévét, hogy lásd, hová kerülnek
+          az értékcsökkenési leírások.
+        unavailable: A bevallási átadás nem érhető el.
       forecast: Értékcsökkenés {amount} · {days} nap · {from} – {until}
       forecast_note: Az előrejelzés semmit sem rögzít, amíg el nem számolod.
       free: Kért szabad értékcsökkenés
       free_hint: Csak szabad értékcsökkenési módszernél
       from: Ettől
       handoff: Hová kerülnek az elszámolások
+      handoff_unavailable: '{count} elem nincs kiszámítva, nem szerepel'
       inspect: Megtekintés
       list:
         column:
+          accumulated: Eddig leírva
+          basis: Alap
           in_service: Üzembe helyezés
           kind: Típus
           method: Módszer
           name: Név
+          pending: Még leírandó
           serial: Gyártási szám
-        disposed: 'Kivezetve: {date}'
+          state: Állapot
         empty: Még nincs elem.
         label: Elemek
         no_name: Nincs rögzített név
-      option:
-        kind:
-          intangible: Immateriális eszköz
-          tangible: Tárgyi eszköz
-          vehicle: Jármű
-        method:
-          constant_percentage: Állandó százalék
-          free_300: Szabad értékcsökkenés, alacsony értékű elem
-          linear_table: Lineáris, hivatalos táblázat
-        reason:
-          sale: Értékesítés
-          scrapping: Selejtezés
-          theft: Lopás
-          withdrawal: Kivonás a tevékenységből
-      origin:
-        import: Importálva
-        other: Egyéb forrás
-        person: Általad rögzítve
-        system: A Cadrumo számította ki
+        summary: Figyelmet igénylő évek
+        unavailable: A nyilvántartás most nem olvasható.
       plan:
         claimable: 'Elszámolható: {from} – {until}'
         claimable_none: Nincs több elszámolható
@@ -1443,18 +1446,27 @@ desktop:
         column:
           claimed: Elszámolt
           days: Napok
-          matches: Egyezik az ütemezéssel
           planned: Tervezett
+          rate: Mérték
           replaced_by: Helyettesítette
           revision: Változat
           status: Állapot
-          used_by: Felhasználva ebben
           year: Év
         edition: 'Táblázat kiadása: {edition}'
         election_changed: Itt változik a választott módszer
+        empty: Ebben a tervben még nincs adóév.
         gap: 'Nincs elszámolva: {from} – {until}'
         in_effect: Hatályos
+        limits:
+          ends_on: A maximális időszak vége
+          maximum_coefficient: Legnagyobb együttható
+          maximum_period: Legnagyobb időszak
+          minimum_coefficient: Legkisebb együttható
+          period_years: '{years} év'
+          references: Jogalap
+          title: Ennek a választásnak a korlátai
         matches: Egyezik a jelenlegi ütemezéssel
+        no_claims: Erre az évre nincs rögzített értékcsökkenési leírás.
         no_match: Már nem egyezik az ütemezéssel
         projected: Előrevetített
         projected_note: Az előrevetített táblázatok az előrejelzést és a 130-as nyomtatványt
@@ -1471,19 +1483,15 @@ desktop:
         refused_actividad_asset_unsupported: 'Elutasítva: ez a módszer még nem támogatott.'
         refused_actividad_asset_validation: 'Elutasítva: az eszköznyilvántartás ezt
           nem fogadja el.'
+      refused: A nyilvántartás nem fogadta el.
+      replace_claim: Elszámolás lecserélése (nem kötelező)
+      replace_none: Új elszámolás rögzítése
       revision:
         correct: Javító változat (JSON)
         create: Első változat (JSON)
       revision_hint: Töltsd ki az összes üres adatot; mentés után egy változat nem
         szerkeszthető.
       revisions: Változatok
-      state:
-        claimed: Elszámolva
-        forecast: Előrejelzés
-        incomplete: Nem számítható ki
-        missing: Nincs elszámolva
-        other: Ismeretlen állapot
-        partial: Részben elszámolva
       submit:
         correct: Javítás mentése
         create: Eszköz létrehozása
@@ -1501,28 +1509,27 @@ desktop:
         forecast: Előrejelzés
       tax_year: Adóév
       timeline:
-        change: '{field}: {before} → {after}'
         change_added: '{field}: {after}'
         change_cleared: '{field}: {before} törölve'
+        change_to: erre
         column:
           changes: Változások
           effect: Hatály
           event: Esemény
           origin: Forrás
           recorded: Rögzítve
-          replaces: Helyettesíti
           sequence: Sorszám
+        empty: Még nem került hozzá semmi.
         not_in_calculation: Nem része a számításnak
         time_not_recorded: Az időpont nincs rögzítve
+        used_by: 'Felhasználó számítások: {count}'
       title: Tevékenységi eszközök
+      unrecognised: Ismeretlen
       until: Eddig
       write:
-        conflict: 'Már van elszámolás erre az időszakra: {from} – {until}. Inkább
-          azt javítsd.'
-        dispose_note: A dátum az utolsó üzemnap. Az ezt átlépő elszámolások ugyanebben
-          a lépésben lecserélődnek, és a kivezetés visszavonása sem állítja vissza
-          őket.
+        fill_in: Töltsd ki
         incomplete: 'Nem lett mentve. Még ki kell töltened: {fields}'
+        kept: Semmi sem lett mentve. Amit beírtál, még itt van.
         reused: Már rögzítve volt; nem került hozzá semmi.
       year: Év
     capital:
@@ -3392,6 +3399,7 @@ desktop:
       seed_what: Beolvassa a(z) {prior}. évi végleges százalékot, és átviszi {ejercicio}-re.
       sin_derecho: Levonási jog nélküli forgalom
       title: Prorrata-nyilvántartás
+      volumes_pair: '{with_right} / {without_right}'
       whole: Teljes tevékenység
     ratios:
       censo_mismatch: 'Visszatartva: az arányok nem egyeznek a cenzussal.'
@@ -3684,6 +3692,7 @@ desktop:
     export_failed: A naplók exportálása sikertelen.
     export_visible: Láthatók exportálása
     exported: 'Exportálva ide: {path}'
+    file_type: Naplófájlok
     filter: Szűrés
     filters: Naplószűrők
     follow: Követés
@@ -3810,6 +3819,24 @@ desktop:
     copy_link: A nézet hivatkozásának másolása
     documentation: Dokumentáció
     hide_view: 'Elrejtés: {view}'
+    keywords:
+      about: verzió build névjegy információ
+      aeat_link: sede agencia tributaria hacienda aeat adóhivatal böngésző weboldal
+        honlap
+      census_sync: censo aeat adónyilvántartás importálás letöltés szinkronizálás
+        adóhatóság
+      copy_link: cadrumo hivatkozás cím megosztás url
+      create_profile: regisztráció új fiók hozzáadás másik profil létrehozás
+      drive_link: google drive profil mappa böngésző
+      focus: panel terület váltás fókusz következő előző
+      google_sign_in: google drive bejelentkezés belépés csatlakozás hitelesítés
+      manage_profiles: törlés eltávolítás profilok fiókok kezelés
+      messages: értesítések notificaciones dehu postaláda üzenetek olvasatlan
+      setup_check: összetevők ellenőrzés ellenőrzése állapot
+      setup_open: összetevők telepítés letöltés beállítás
+      sign_in: bejelentkezés belépés jelszó
+      sign_out: kijelentkezés kilépés
+      switch_profile: váltás másik felhasználó fiók választás profil
     kind_casilla: Casilla
     kind_cli: Parancs
     kind_term: Fogalom
@@ -4029,7 +4056,17 @@ desktop:
     enter_restarts: Enter újraindítja
     exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
     exited: kilépett ({code})
-    failed: A munkamenet nem tudott elindulni.
+    failed: 'A munkamenet hibába ütközött: {reason}'
+    reason:
+      close: nem sikerült rendesen lezárni
+      environment: nem sikerült előkészíteni az alkalmazás fájljait
+      gone: már nem érhető el
+      input: nem sikerült továbbítani, amit beírtál
+      other: váratlan dolog történt
+      output: nem sikerült beolvasni a kimenetét
+      slow: túl sokáig tartott a válasz
+      start: nem sikerült elindítani a programot
+      stopped: a program hibával leállt
   settings:
     agent_search: Keresés a beállításokban
     agent_search_empty: Nincs találat a beállításokban. Próbálj más keresést.
@@ -4549,16 +4586,37 @@ ledger:
       primary_purchase: Vásárlás
       produced: Saját előállítás
       split_payment: Részletekben fizetett vásárlás
+    asset_kind:
+      intangible: Immateriális eszköz
+      material: Tárgyi eszköz
     basis_stage:
       business_allocated: A tevékenységhez rendelve
       taxpayer_owned: Az adózó tulajdona, az üzleti használat előtt
       whole_property: Teljes ingatlan
+    claim_state:
+      claimed: Elszámolva
+      missing: Nincs elszámolva
+      not_due: Nincs mit elszámolni
+      partial: Részben elszámolva
+      superseded: Elszámolva, javítva
     disposal_finding:
       claim_gap: Elszámolatlan értékcsökkenési leírású év
       exemption_not_computed: A nyereség mentessége nincs kiszámítva
       minimum_exceeded_deduction: A minimális értékcsökkenési leírást meghaladó levonás
       no_minimum_authority: Ehhez az évhez nincs közzétett minimális értékcsökkenési
         leírás
+    disposal_reason:
+      destruction: Megsemmisülés
+      donation: Adományozás
+      part_exchange: Csere
+      sale: Értékesítés
+      scrapping: Selejtezés
+      theft: Lopás
+      withdrawal: Kivonás a tevékenységből
+    document_kind:
+      customs_document: Vámokmány
+      invoice: Számla
+      reception: Átvétel
     errors:
       accelerated_da18_depreciation: A(z) %{tax_year}. adóévre a LIS DA 18 az új elektromos
         járművekre és töltőpontokra a maximális lineáris együttható kétszeresével
@@ -4824,6 +4882,9 @@ ledger:
         nincs nyilvántartott csoportbesorolása.
       table_class_wrong_kind: A(z) %{class_key} táblázati osztály nem %{asset_kind}
         eszközöket sorol be.
+      tax_residence_unresolved: Nem sikerült beolvasni az adóügyi illetőségedet, ezért
+        a nyilvántartás nem tudja megmondani, hogy az AEAT 100-as és 130-as modellje
+        alkalmazandó-e.
       tax_year_without_edition: A(z) {tax_year}. adóévre nincs 100-as modell kiadás.
       used_building_requires_construction_date: Használt épülethez meg kell adni az
         építés dátumát.
@@ -4853,12 +4914,61 @@ ledger:
         hónap átlagos létszáma nem haladja meg az azt megelőző 12 hónapét (LIS 102.1
         cikk).
       workforce_year_not_declared: A(z) %{year}. évi átlagos létszám nincs megadva.
+    event_kind:
+      baja: Kivezetés rögzítve
+      claim: Értékcsökkenés rögzítve
+      descriptor: Leírás hozzáadva
+      revision: Verzió rögzítve
+    method:
+      approved_plan: Jóváhagyott értékcsökkenési terv
+      charging_infrastructure_free: Szabad értékcsökkenés, töltőinfrastruktúra
+      constant_percentage: Állandó százalék
+      electric_vehicle_free: Szabad értékcsökkenés, elektromos jármű
+      entity_regime_free: Szabad értékcsökkenés, jogi személyekre vonatkozó szabály
+      goodwill: Cégérték
+      intangible_indefinite_life: Immateriális, nem meghatározható hasznos élettartam
+      intangible_useful_life: Immateriális, meghatározott hasznos élettartam
+      justified_amount: Igazolt összeg
+      linear: Lineáris, hivatalos táblázat
+      low_value_free: Szabad értékcsökkenés, alacsony értékű elem
+      renewable_self_consumption_free: Szabad értékcsökkenés, megújuló önfogyasztás
+      research_development_building: K+F-hez rendelt épület
+      research_development_free: Szabad értékcsökkenés, K+F
+      small_enterprise_employment_free: Szabad értékcsökkenés, munkahelyteremtés
+      sum_of_digits: Számjegyes módszer
     non_deductible_iva_state:
       known: Ismert nem levonható áfa
       unknown: Ismeretlen nem levonható áfa
+    not_table_bound:
+      approved_plan: Jóváhagyott értékcsökkenési tervet követ
+      authority_unavailable: Ehhez az évhez nincsenek elérhető korlátok
+      free_election: Az összeget évente te választod meg
+      research_development_period: A K+F-hez rendelt épületek időszakát követi
+      twentieth_limit: Évente legfeljebb egy huszad
+      useful_life_evidence: Az általad igazolt hasznos élettartamot követi
     opening_history_status:
       known: Ismert halmozott értékcsökkenés
       missing: Hiányzó halmozott értékcsökkenés
+    plan_absence:
+      basis_exhausted: Az alap teljesen leírva
+      conflict: Ütközik a rögzítettekkel
+      covered_by_opening: A nyitó összeg fedezi
+      edition_unavailable: Ehhez az évhez nincs Modelo 100 kiadás
+      free_election: 'Szabad értékcsökkenés: nincs tervezett összeg'
+      incomplete: 'Hiányzó adatok: nem számítható ki'
+      period_elapsed: A maximális időszak lejárt
+      unsupported: Még nem támogatott
+    regime:
+      normal: Közvetlen becslés, normál
+      simplified: Közvetlen becslés, egyszerűsített
+    register_state:
+      fully_amortized: Teljesen leírva
+      in_service: Üzemben
+      out_of_service: Kivezetve
+    stale_reason:
+      authority_changed: A táblázatok e rögzítés után változtak
+      revision_changed: Az elemet e rögzítés után javították
+      schedule_unavailable: Az ütemezés most nem számítható ki
   evidence:
     reader:
       operation_failed: A bizonylatolvasó művelete sikertelen volt
@@ -4905,57 +5015,82 @@ llm:
 navigation:
   view:
     aeat_sync:
+      keywords: aeat szinkronizálás letöltés értesítések sede censo notificaciones
+        dehu
       label: AEAT-szinkron
     agent:
+      keywords: ügynök asszisztens csevegés
       label: Ügynök
     browser:
+      keywords: böngésző web internet adóhivatal sede aeat agencia tributaria
       label: Böngésző
-      tax_residence_unresolved: Nem sikerült beolvasni az adóügyi illetőségedet, ezért
-        a nyilvántartás nem tudja megmondani, hogy az AEAT 100-as és 130-as modellje
-        alkalmazandó-e.
     calendar:
+      keywords: naptár határidők kötelezettségek esedékesség plazos
       label: Bevallási naptár
     declarations:
+      keywords: bevallások nyomtatványok benyújtás modelo declaraciones
       label: Bevallások
     docs:
+      keywords: dokumentáció súgó útmutató kézikönyv
       label: Dokumentáció
     home:
+      keywords: kezdőlap áttekintés összefoglaló
       label: Kezdőlap
     installation:
+      keywords: telepítés verzió összetevők futtatókörnyezet
       label: Telepítés
     ledger:
       documents:
+        keywords: dokumentumok bizonylatok mellékletek nyugták justificantes
         label: Dokumentumok
       health:
+        keywords: állapot ellenőrzések figyelmeztetések problémák
         label: Állapot
       invoices:
+        keywords: számlák kiállított befogadott facturas
         label: Számlák
+      keywords: napló könyvek nyilvántartás bank tételek libro registros
       label: Napló
       movements:
+        keywords: tranzakciók bankszámlakivonat kivonat terhelések jóváírások movimientos
+          extracto
         label: Tételek
       registers:
+        keywords: nyilvántartások számlák eszközök leltár készlet tőke prorrata libros
+          registro
         label: Nyilvántartások
       rules:
+        keywords: szabályok besorolás kategóriák automatikus
         label: Szabályok
     operations:
+      keywords: műveletek futtatások feladatok előzmények
       label: Műveletek
     panel:
       console:
+        keywords: konzol parancssor shell
         label: Konzol
+      keywords: alsó panel
       label: Alsó panel
       logs:
+        keywords: naplók log diagnosztika események
         label: Naplók
       python:
+        keywords: python konzol repl értelmező
         label: Python-shell
     profile:
       aeat_access:
+        keywords: aeat hozzáférés bejelentkezés tanúsítvány clave certificado
         label: AEAT-hozzáférés
+      keywords: profil adózó személyes adatok contribuyente
       label: Profil
     reference:
+      keywords: kézikönyv jogszabályok jogforrások források normativa boe
       label: Kézikönyv
     terminal:
+      keywords: terminál munkaterület tui
       label: Munkaterület
     withholding:
+      keywords: levonások adóelőleg forrásadó retenciones irpf
       label: Levonások
 operation:
   modal:
@@ -5921,10 +6056,15 @@ tui:
       forecast: Előrejelzés kiszámítása
       form_options: Űrlapbeállítások
       free_amount: Szabad értékcsökkenés összege (nem kötelező)
+      in_service_date: Üzembe helyezés napja (ÉÉÉÉ-HH-NN), felülírja a revízióét
       inspect: Megtekintés
       list: Elemek listája
+      method: 'Értékcsökkenési leírás módja: linear, constant_percentage, sum_of_digits,
+        approved_plan vagy intangible_useful_life'
       name: Elem neve
+      non_deductible_iva: Le nem vonható IVA, felülírja a revízió összegét
       plan: Értékcsökkenési terv
+      price: IVA nélküli ár, felülírja a revízióét
       revision: Eszközverzió (JSON)
       serial: Sorozatszám
       supersedes: Felülírandó elszámolt értékcsökkenés (nem kötelező)
@@ -6082,15 +6222,10 @@ tui:
         review: Levezetés áttekintése
         stage: A tétel IVA-értékeinek levezetése és rögzítése a(z) %{category} kategóriából.
         title: IVA levezetése
-      in_service_date: Üzembe helyezés napja (ÉÉÉÉ-HH-NN), felülírja a revízióét
       loading: Beolvasás…
       not_done: Semmi sem változott.
-      method: 'Értékcsökkenési leírás módja: linear, constant_percentage, sum_of_digits,
-        approved_plan vagy intangible_useful_life'
       page:
-      non_deductible_iva: Le nem vonható IVA, felülírja a revízió összegét
         empty: Nincs tétel.
-      price: IVA nélküli ár, felülírja a revízióét
         next: Következő oldal
         none: Abban az irányban nincs több oldal.
         previous: Előző oldal
@@ -6496,6 +6631,10 @@ tui:
         review_counts: 'Átnézés: függő {pending}, átnézett {reviewed}, kihagyott {skipped}'
         stale_filing: 'A(z) {modelo} Modelo ({year} {period}) olyan tételekkel lett
           beadva, amelyek azóta változtak: {changed} módosult, {removed} törölve'
+        stale_filing_register: 'A(z) {modelo} {year} {period} modelót olyan eszköznyilvántartással
+          nyújtottad be, amely azóta megváltozott: {changes} változás'
+        stale_filing_register_unavailable: A(z) {modelo} {year} {period} modelót nem
+          sikerült összevetni az eszköznyilvántartással
         status_heading: 'Állapot: {period}'
         title: A napló állapota és ellenőrzései
         totals: Vállalkozási bevétel {income}, kiadás {expense}, nettó {net}
@@ -6657,10 +6796,6 @@ tui:
       printed_total_disagrees: A dokumentumon szereplő végösszeg eltér a rögzítettől.
         Ellenőrizd a számlát.
       queue_heading: Ellenőrzésre váró mellékletek
-        stale_filing_register: 'A(z) {modelo} {year} {period} modelót olyan eszköznyilvántartással
-          nyújtottad be, amely azóta megváltozott: {changes} változás'
-        stale_filing_register_unavailable: A(z) {modelo} {year} {period} modelót nem
-          sikerült összevetni az eszköznyilvántartással
       read_done: Beolvasva. Ellenőrizd az értékeket, majd erősítsd meg a számlát.
       read_failed: A dokumentumot nem sikerült beolvasni.
       reading: A dokumentum beolvasása ezen a gépen…
