@@ -5010,6 +5010,13 @@ ledger:
       incomplete: 'Falten dades: no es pot calcular'
       period_elapsed: Període màxim transcorregut
       unsupported: Encara no admès
+    plan_advisory:
+      used_element_group_limit: L'últim paràgraf de l'art. 4.3 RIS limita els elements
+        usats adquirits dins d'un grup mercantil a la via del preu original, amb el
+        topall del preu pel coeficient lineal màxim si el preu va superar l'original.
+        El seu abast per a una persona física no està resolt. Una compra a una societat
+        vinculada s'ha de valorar a valor de mercat segons l'art. 41 LIRPF. Aquest
+        avís no examina cap dada del venedor i no canvia cap xifra.
     prior_free_depreciation_regime:
       trlis_da_11: TRLIS, disposició addicional 11a
       trlis_dt_37: TRLIS, disposició transitòria 37a

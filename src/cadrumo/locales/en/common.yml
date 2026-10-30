@@ -4921,6 +4921,13 @@ ledger:
       covered_by_opening: Covered by the opening amount
       edition_unavailable: No Modelo 100 edition for this year
       free_election: 'Free depreciation: no planned figure'
+    plan_advisory:
+      used_element_group_limit: RIS art. 4.3, last paragraph, limits used elements
+        bought within a mercantile group to the original-price route, capped at the
+        price times the maximum linear coefficient when the price exceeded the original.
+        Whether it reaches an individual is unsettled. A purchase from a related company
+        must be valued at market value under LIRPF art. 41. This warning looks at
+        no fact about the seller and changes no figure.
       incomplete: 'Missing facts: cannot be worked out'
       period_elapsed: Maximum period elapsed
       unsupported: Not supported yet

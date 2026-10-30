@@ -5025,6 +5025,14 @@ ledger:
     regime:
       normal: Estimación directa normal
       simplified: Estimación directa simplificada
+    plan_advisory:
+      used_element_group_limit: El último párrafo del art. 4.3 RIS limita los elementos
+        usados adquiridos dentro de un grupo mercantil a la vía del precio original,
+        con el tope del precio por el coeficiente lineal máximo si el precio superó
+        al original. Su alcance para una persona física no está resuelto. Una compra
+        a una sociedad vinculada debe valorarse a valor de mercado según el art. 41
+        LIRPF. Este aviso no examina ningún dato del vendedor y no cambia ninguna
+        cifra.
     register_state:
       fully_amortized: Totalmente amortizado
       in_service: En funcionamiento

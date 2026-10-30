@@ -4995,6 +4995,14 @@ ledger:
       unsupported: Még nem támogatott
     prior_free_depreciation_regime:
       trlis_da_11: TRLIS 11. kiegészítő rendelkezés
+    plan_advisory:
+      used_element_group_limit: Az RIS 4.3. cikkének utolsó bekezdése a vállalatcsoporton
+        belül vásárolt használt eszközöket az eredeti ár szerinti módra korlátozza,
+        és ha az ár meghaladta az eredeti árat, a felső határ az ár és a legmagasabb
+        lineáris együttható szorzata. Nem tisztázott, hogy ez magánszemélyre is vonatkozik-e.
+        A kapcsolt társaságtól történő vásárlást az LIRPF 41. cikke szerint piaci
+        értéken kell értékelni. Ez a figyelmeztetés nem vizsgál semmilyen eladói adatot,
+        és egyetlen számot sem változtat meg.
       trlis_dt_37: TRLIS 37. átmeneti rendelkezés
     regime:
       normal: Közvetlen becslés, normál
