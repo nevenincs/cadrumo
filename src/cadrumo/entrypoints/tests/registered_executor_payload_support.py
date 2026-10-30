@@ -30,6 +30,7 @@ from ...adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SO
 from ...adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
 from ...application.actividad_asset.operation_dtos import (
+    ActivityAssetCorrectionRevisionSnapshot,
     ActivityAssetDisposalSnapshot,
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
@@ -1497,7 +1498,7 @@ def _payload(
             elif action in {"list", "acquisition-candidates"}:
                 pass
             elif action == "correct":
-                values["revision"] = ActivityAssetRevisionSnapshot.from_domain(
+                values["revision"] = ActivityAssetCorrectionRevisionSnapshot.from_domain(
                     activity_asset_revision(
                         asset_seed.revision.asset_id,
                         acquisition_transaction_id=asset_seed.acquisition_transaction_id,

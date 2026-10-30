@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import typer
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic_core import InitErrorDetails
 
 from ...application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
 from ...application.actividad_asset.activity_asset_read_models import ActivityAssetPlanRow
@@ -115,6 +116,15 @@ def actividad_asset_inspect(ctx: typer.Context, asset_id: str) -> None:
     )
 
 
+def _correction_revision(revision_json: str) -> ActivityAssetRevision:
+    """Parse a correction's revision, which states its baja or states null to remove it."""
+    revision = ActivityAssetRevision.model_validate_json(revision_json)
+    if "disposal" not in revision.model_fields_set:
+        missing = InitErrorDetails(type="missing", loc=("disposal",), input={})
+        raise ValidationError.from_exception_data(ActivityAssetRevision.__name__, [missing])
+    return revision
+
+
 def actividad_asset_correct(
     ctx: typer.Context,
     revision_json: str,
@@ -123,7 +133,7 @@ def actividad_asset_correct(
     """Append a typed JSON correction revision, with the claims it replaces in the same write."""
     result = correct_activity_asset(
         ctx,
-        revision=ActivityAssetRevision.model_validate_json(revision_json),
+        revision=_correction_revision(revision_json),
         superseding_claims=(
             () if superseding_claims_json is None else _SUPERSEDING_CLAIMS.validate_json(superseding_claims_json)
         ),

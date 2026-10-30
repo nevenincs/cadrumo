@@ -65,6 +65,7 @@ from ...application.actividad_asset.activity_asset_projections import (
     ActivityAssetTimelineProjection,
 )
 from ...application.actividad_asset.operation_dtos import (
+    ActivityAssetCorrectionRevisionSnapshot,
     ActivityAssetDisposalSnapshot,
     ActivityAssetRevisionSnapshot,
     ScheduledAmortizationChargeSnapshot,
@@ -242,7 +243,7 @@ def correct_activity_asset(
     client = _client(ctx)
     request = ActivityAssetCorrectRequest(
         profile_id=client.profile_id,
-        revision=ActivityAssetRevisionSnapshot.from_domain(revision),
+        revision=ActivityAssetCorrectionRevisionSnapshot.from_domain(revision),
         superseding_claims=superseding_claims,
     )
     completed = _submit(

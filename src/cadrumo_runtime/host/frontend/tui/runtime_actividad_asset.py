@@ -66,6 +66,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
 )
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operation_dtos import (
+    ActivityAssetCorrectionRevisionSnapshot,
     ActivityAssetDisposalSnapshot,
     ActivityAssetHistorySnapshot,
     ActivityAssetRevisionSnapshot,
@@ -285,7 +286,7 @@ class RuntimeActivityAssetTuiActionsV1:
         return self._call(
             ActivityAssetCorrectRequest(
                 profile_id=self._profile_id,
-                revision=ActivityAssetRevisionSnapshot.from_domain(request.revision),
+                revision=ActivityAssetCorrectionRevisionSnapshot.from_domain(request.revision),
                 superseding_claims=request.superseding_claims,
             ),
             definition_id=ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
