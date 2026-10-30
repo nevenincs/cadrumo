@@ -19,12 +19,23 @@ from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError
-from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
+    M390_SUMMARY_ACTIVOS_FIJOS_DEVENGADA,
+    M390_SUMMARY_AGRICULTURAL_RESULT,
+    M390_SUMMARY_AIC_DEVENGADA,
+    M390_SUMMARY_DEVENGADA_TOTAL,
+    M390_SUMMARY_ISP_DEVENGADA,
+    M390_SUMMARY_NON_AGRICULTURAL_RESULT,
+    M390_SUMMARY_REGULARIZACION,
+    M390_SUMMARY_RESULTADO,
+    M390_SUMMARY_SOPORTADO_ACTIVOS_FIJOS,
+    M390_SUMMARY_SOURCE_READ_ENDPOINTS,
+    M390_SUMMARY_SUMA_DEDUCCIONES,
+    M303RegimenSimplificadoAnnualSummaryRequirement,
     m303_regimen_simplificado_annual_summary_requirement,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -53,7 +64,6 @@ from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourc
 from .revision_carry_gate import revision_carry_outcome
 
 _SOURCE_KIND = BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
-_SOURCE_CASILLA_VALUES: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
 
 
 class M303RegimenSimplificadoAnnualSummaryHandoffError(CoreValidationError):
@@ -96,15 +106,15 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         self._regimen_simplificado_applies = regimen_simplificado_applies
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        """Assemble exact 74--83 inputs or refuse before target persistence."""
+        """Assemble the exact annual-summary inputs or refuse before target persistence."""
         requirement = m303_regimen_simplificado_annual_summary_requirement(context.revision)
         if requirement is None or not self._regimen_simplificado_applies:
-            # Boxes 74--83 exist on every Modelo 390 form, so the revision
+            # The summary boxes exist on every annual form, so the revision
             # declaring this family says what the FORM carries, never that the
             # regime reaches this taxpayer. LIVA art. 122 Uno applies regimen
             # simplificado only to sujetos pasivos meeting its three stated
-            # requirements; a regimen general filer meets none, and the 303/4T
-            # boxes 51--58 this family reads carry nothing for them. Demanding
+            # requirements; a regimen general filer meets none, and the source
+            # boxes this family reads carry nothing for them. Demanding
             # the source anyway would refuse an ordinary annual resumen. The
             # boxes stay without a value, and the resolution says they do not
             # apply, so no diagnostic reports them as a missing source.
@@ -116,13 +126,12 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             )
         target = self._target_work_unit(context)
         self._require_target_matches_snapshot(target, context)
-        source = self._source_work_unit(target)
+        source = self._source_work_unit(target, requirement)
         source_revision = self._filed_current_source_revision(source)
         result, evidence_references = self._validated_source_evidence(source, source_revision)
         source_values = self._source_values(source_revision.casilla_values, requirement.source_casilla_ids)
-        summary_casilla_ids = tuple(requirement.binding_ids_by_summary_casilla_id)
-        values = self._summary_values(result.activities, source_values, summary_casilla_ids)
-        self._require_arithmetic_coherence(values, summary_casilla_ids)
+        values = self._summary_values(result.activities, source_values, requirement.source_casilla_ids)
+        self._require_arithmetic_coherence(values)
         self._require_registry_target_map(requirement.binding_ids_by_summary_casilla_id, values)
         handoff = M303RegimenSimplificadoAnnualSummaryHandoff.assembled(
             source_bucket_id=source.bucket_id,
@@ -257,31 +266,35 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
     def _require_target_matches_snapshot(self, target: WorkUnit, context: CalculationSourceContext) -> None:
         if (
             target.bucket_id != context.bucket_id
-            or target.modelo != Modelo("390").value
+            or target.modelo != context.modelo
             or target.filing_year != context.filing_year
-            or target.period != Period.from_year_and_code(context.filing_year, "0A")
+            or target.period != context.period
             or target.revision_id != context.revision.id
             or self._registry_snapshot.revision.id != context.revision.id
         ):
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
-                "M303 annual-summary handoff target must be the selected Modelo 390 0A work unit and revision",
+                "M303 annual-summary handoff target must be the selected annual work unit and revision",
             )
 
-    def _source_work_unit(self, target: WorkUnit) -> WorkUnit:
-        expected_period = Period.from_year_and_code(target.filing_year, "4T")
+    def _source_work_unit(
+        self,
+        target: WorkUnit,
+        requirement: M303RegimenSimplificadoAnnualSummaryRequirement,
+    ) -> WorkUnit:
+        expected_period = Period.from_year_and_code(target.filing_year, requirement.source_period)
         candidates = tuple(
             item
             for item in self._work_unit_repository.load()
             if (
                 item.bucket_id == target.bucket_id
-                and item.modelo == Modelo("303").value
+                and item.modelo == requirement.source_modelo
                 and item.filing_year == target.filing_year
                 and item.period == expected_period
             )
         )
         if len(candidates) != 1:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
-                "M303 annual-summary handoff requires exactly one same-bucket filed Modelo 303 4T work unit; "
+                "M303 annual-summary handoff requires exactly one same-bucket filed source work unit; "
                 f"found {len(candidates)}",
             )
         return candidates[0]
@@ -352,7 +365,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         m303 = evidence.m303
         result = m303.regimen_simplificado.calculation_result
         source_revision_at_coordinate = self._operation.revision_for_context(
-            Modelo("303").value,
+            source.modelo,
             filing_year=source.filing_year,
             period=source.period.registry_token,
         )
@@ -408,54 +421,52 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         casilla_values: Mapping[CasillaId, Decimal],
         declared_source_ids: tuple[CasillaId, ...],
     ) -> Mapping[CasillaId, Decimal]:
-        if declared_source_ids != _SOURCE_CASILLA_VALUES:
-            raise M303RegimenSimplificadoAnnualSummaryHandoffError(
-                "M303 annual-summary registry requirement does not retain the exact eight source casillas",
-            )
-        missing = tuple(casilla_id for casilla_id in _SOURCE_CASILLA_VALUES if casilla_id not in casilla_values)
+        missing = tuple(casilla_id for casilla_id in declared_source_ids if casilla_id not in casilla_values)
         if missing:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 f"M303 annual-summary source calculation is missing casillas {missing!r}",
             )
-        return {casilla_id: casilla_values[casilla_id] for casilla_id in _SOURCE_CASILLA_VALUES}
+        return {casilla_id: casilla_values[casilla_id] for casilla_id in declared_source_ids}
 
     def _summary_values(
         self,
         activities: tuple[M303RegimenSimplificadoActivityCalculationResult, ...],
         source_values: Mapping[CasillaId, Decimal],
-        summary_casilla_ids: tuple[CasillaId, ...],
+        declared_source_ids: tuple[CasillaId, ...],
     ) -> Mapping[CasillaId, Decimal]:
         non_agricultural_result = sum((item.cuota_resultante for item in activities), start=ZERO)
         return {
-            summary_casilla_ids[0]: non_agricultural_result,
-            summary_casilla_ids[1]: ZERO,
-            summary_casilla_ids[2]: source_values["51"],
-            summary_casilla_ids[3]: source_values["53"],
-            summary_casilla_ids[4]: source_values["52"],
-            summary_casilla_ids[5]: source_values["54"],
-            summary_casilla_ids[6]: source_values["55"],
-            summary_casilla_ids[7]: source_values["56"],
-            summary_casilla_ids[8]: source_values["57"],
-            summary_casilla_ids[9]: source_values["58"],
+            M390_SUMMARY_NON_AGRICULTURAL_RESULT: non_agricultural_result,
+            M390_SUMMARY_AGRICULTURAL_RESULT: ZERO,
+            **{
+                endpoint: source_values[source_id]
+                for endpoint, source_id in zip(M390_SUMMARY_SOURCE_READ_ENDPOINTS, declared_source_ids, strict=True)
+            },
         }
 
-    def _require_arithmetic_coherence(
-        self, values: Mapping[CasillaId, Decimal], summary_casilla_ids: tuple[CasillaId, ...]
-    ) -> None:
-        if values[summary_casilla_ids[5]] != sum(
-            (values[casilla_id] for casilla_id in summary_casilla_ids[:5]),
-            start=ZERO,
+    def _require_arithmetic_coherence(self, values: Mapping[CasillaId, Decimal]) -> None:
+        devengada_parts = (
+            M390_SUMMARY_NON_AGRICULTURAL_RESULT,
+            M390_SUMMARY_AGRICULTURAL_RESULT,
+            M390_SUMMARY_AIC_DEVENGADA,
+            M390_SUMMARY_ISP_DEVENGADA,
+            M390_SUMMARY_ACTIVOS_FIJOS_DEVENGADA,
+        )
+        if values[M390_SUMMARY_DEVENGADA_TOTAL] != sum((values[part] for part in devengada_parts), start=ZERO):
+            raise M303RegimenSimplificadoAnnualSummaryHandoffError(
+                "M303 annual-summary source devengada total disagrees with its declared parts",
+            )
+        if values[M390_SUMMARY_SUMA_DEDUCCIONES] != (
+            values[M390_SUMMARY_SOPORTADO_ACTIVOS_FIJOS] + values[M390_SUMMARY_REGULARIZACION]
         ):
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
-                "M303 annual-summary source casilla 54 disagrees with the declared 74-78 total",
+                "M303 annual-summary source deduction total disagrees with its declared parts",
             )
-        if values[summary_casilla_ids[8]] != (values[summary_casilla_ids[6]] + values[summary_casilla_ids[7]]):
+        if values[M390_SUMMARY_RESULTADO] != (
+            values[M390_SUMMARY_DEVENGADA_TOTAL] - values[M390_SUMMARY_SUMA_DEDUCCIONES]
+        ):
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
-                "M303 annual-summary source casilla 57 disagrees with the declared 80-81 total",
-            )
-        if values[summary_casilla_ids[9]] != (values[summary_casilla_ids[5]] - values[summary_casilla_ids[8]]):
-            raise M303RegimenSimplificadoAnnualSummaryHandoffError(
-                "M303 annual-summary source casilla 58 disagrees with the declared 79-82 result",
+                "M303 annual-summary source result disagrees with its declared devengada and deductions",
             )
 
     def _require_registry_target_map(
@@ -465,7 +476,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
     ) -> None:
         if set(values) != set(binding_ids_by_summary_casilla_id):
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
-                "M303 annual-summary assembler did not produce the exact Modelo 390 74-83 value set",
+                "M303 annual-summary assembler did not produce the exact declared endpoint set",
             )
 
 

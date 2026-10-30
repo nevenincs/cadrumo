@@ -87,3 +87,43 @@ def test_build_gate_refuses_one_missing_or_miswired_handoff_endpoint() -> None:
     target_number = next(casilla.number for casilla in revision.casillas if casilla.id == target_casilla_id)
     assert failures
     assert repr(target_number) in "\n".join(failures)
+
+
+@pytest.mark.parametrize("filing_year", (2022, 2023, 2024, 2025, 2026))
+def test_each_edition_declares_the_boxes_the_official_form_prints(filing_year: int) -> None:
+    """Read from the AEAT Modelo 390 and Modelo 303 record designs, not from the declaration."""
+    revision = published_snapshot("390", filing_year=filing_year, period="0A").revision
+    requirement = m303_regimen_simplificado_annual_summary_requirement(revision)
+    source = published_snapshot("303", filing_year=filing_year, period="4T").revision
+
+    assert requirement is not None
+    assert requirement.source_period == "4T"
+    assert requirement.source_casilla_ids == ("51", "53", "52", "54", "55", "56", "57", "58")
+    assert {casilla.id for casilla in source.casillas} >= set(requirement.source_casilla_ids)
+    numbers = {casilla.id: casilla.number for casilla in revision.casillas}
+    assert sorted(int(numbers[casilla_id]) for casilla_id in requirement.binding_ids_by_summary_casilla_id) == list(
+        range(74, 84)
+    )
+    assert not validate_m303_regimen_simplificado_annual_summary_revision(revision)
+
+
+def test_build_gate_refuses_an_endpoint_outside_the_summary_section() -> None:
+    revision = _revision()
+    requirement = m303_regimen_simplificado_annual_summary_requirement(revision)
+    assert requirement is not None
+    target_casilla_id: CasillaId = tuple(requirement.binding_ids_by_summary_casilla_id)[0]
+    moved = revision.model_copy(
+        update={
+            "casillas": tuple(
+                casilla.model_copy(update={"section": ("iva", "anual", "resultado")})
+                if casilla.id == target_casilla_id
+                else casilla
+                for casilla in revision.casillas
+            )
+        }
+    )
+
+    assert any(
+        "more than one form section" in failure
+        for failure in validate_m303_regimen_simplificado_annual_summary_revision(moved)
+    )
