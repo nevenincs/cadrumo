@@ -7,7 +7,12 @@
 // fills. A result is the operation's public projection; a refused one comes
 // back as the refusal's detail, in the same shape.
 
-import type { JsonObject, OutputLanguage, PublicDecimal } from "./ledger";
+import type {
+  FileToken,
+  JsonObject,
+  OutputLanguage,
+  PublicDecimal,
+} from "./ledger";
 
 // ---- Rules ---------------------------------------------------------------
 
@@ -481,6 +486,14 @@ export type InventoryBookRow = {
   retired?: boolean;
   retirement_reason?: InventoryRetirementReason | null;
   correction_count?: number;
+  advisories?: InventoryAdvisory[];
+};
+/** Something the person should know about a book: the sentence's key in the
+ * backend's catalogue, filled in with the year. */
+export type InventoryAdvisory = {
+  code: string;
+  key: string;
+  year: number;
 };
 export type InventoryListResult = {
   profile_id: string;
@@ -538,6 +551,28 @@ export type InventoryMovement = {
   iva_amount: PublicDecimal | null;
   deductible_iva_ratio: PublicDecimal;
   acquisition_cost?: InventoryAcquisitionSummary | null;
+  /** What a purchase rests on, served by the inspect read alone. */
+  acquisition_detail?: InventoryAcquisitionDetail | null;
+};
+export type InventoryAcquisitionDetail = {
+  consideration_iva_amount: PublicDecimal;
+  consideration_deductible_iva_ratio: PublicDecimal;
+  components: {
+    component_id: string;
+    kind: InventoryCostKind;
+    taxable_base: PublicDecimal;
+    iva_amount: PublicDecimal;
+    deductible_iva_ratio: PublicDecimal;
+    evidence_references: string[];
+  }[];
+  documents: {
+    reference: string;
+    evidence_kind: InventoryProofKind;
+    content_digest: string;
+  }[];
+  consideration_evidence: string;
+  attributable_cost_review_evidence: string;
+  iva_recoverability_review_evidence: string;
 };
 export type InventoryCorrectionReason =
   | "keying_error"
@@ -583,6 +618,7 @@ export type InventoryBook = {
   retired?: boolean;
   retirement_reason?: InventoryRetirementReason | null;
   history?: InventoryHistoryEntry[];
+  advisories?: InventoryAdvisory[];
 };
 export type InventoryCreateRequest = {
   actividad_id: string;
@@ -602,7 +638,8 @@ export type InventoryMovementAddRequest = {
   year: number;
   movement_id: string;
   movement_date: string;
-  kind: InventoryMovementKind;
+  /** One of the movement kinds the options read serves. */
+  kind: string;
   quantity: PublicDecimal;
   unit_cost?: PublicDecimal | null;
   taxable_base?: PublicDecimal | null;
@@ -614,13 +651,13 @@ export type InventoryMovementAddRequest = {
  * under a reference minted for it. */
 export type InventoryProof = {
   reference: { reference: string };
-  evidence_kind: InventoryProofKind;
+  evidence_kind: string;
   content_digest: string;
 };
 /** A cost that goes into the purchase besides its price. */
 export type InventoryCostComponent = {
   component_id: string;
-  kind: InventoryCostKind;
+  kind: string;
   taxable_base: PublicDecimal;
   iva_amount: PublicDecimal;
   deductible_iva_ratio: PublicDecimal;
@@ -637,10 +674,11 @@ export type InventoryAcquisitionCostRequest = {
     attributable_cost_review_evidence: { reference: string };
     iva_recoverability_review_evidence: { reference: string };
   };
-  directly_attributable_cost_total: PublicDecimal;
-  nonrecoverable_iva_included: PublicDecimal;
-  recoverable_iva_excluded: PublicDecimal;
-  total_acquisition_cost: PublicDecimal;
+  /** Left out, the backend adds these up from the figures above. */
+  directly_attributable_cost_total?: PublicDecimal;
+  nonrecoverable_iva_included?: PublicDecimal;
+  recoverable_iva_excluded?: PublicDecimal;
+  total_acquisition_cost?: PublicDecimal;
 };
 export type InventoryMovementAddResult = {
   outcome: "added" | "refused";
@@ -685,6 +723,50 @@ export type InventoryClosingAuthorityResult = {
   refusal: InventoryRefusal | null;
 };
 
+/** The words the options read serves for each closed choice a form offers. */
+export type InventoryOptionsResult = {
+  profile_id: string;
+  families: {
+    family: string;
+    options: { value: string; label_key: string }[];
+  }[];
+};
+/** A document the person chose, now kept: what a purchase or a closing
+ * value names it by. */
+export type InventoryEvidenceAddRequest = { source_path: FileToken };
+export type InventoryEvidenceAddResult = {
+  profile_id: string;
+  reference: string;
+  content_digest: string;
+};
+/** A document a closing value rests on. */
+export type InventoryClosingDocument = {
+  reference: { reference: string };
+  role: string;
+  content_digest: string;
+};
+export type InventoryClosingValueRequest = {
+  actividad_id: string;
+  year: number;
+  facts: {
+    decision_id: string;
+    decided_at: string;
+    authority: string;
+    reason: string;
+    decision_evidence: InventoryClosingDocument[];
+    physical_count?: {
+      observed_on: string;
+      closing_value: PublicDecimal;
+      valuation_basis: string;
+      evidence: InventoryClosingDocument[];
+    } | null;
+    prior_evidence: {
+      reference: { reference: string };
+      content_digest: string;
+    }[];
+  };
+};
+
 /** One change to a book. Sent again under the same reference it changes
  * nothing: the reference is minted when the form opens. */
 export type InventoryChangeRequest = InventoryBookRequest & {
@@ -701,16 +783,16 @@ export type InventoryDescribeRequest = InventoryChangeRequest & {
   description: string | null;
 };
 export type InventoryCorrectRequest = InventoryChangeRequest & {
-  reason: InventoryCorrectionReason;
+  reason: string;
   opening_stock: PublicDecimal | null;
-  valuation_method: ValuationMethod | null;
+  valuation_method: string | null;
 };
 export type InventoryMovementCorrectRequest = InventoryChangeRequest & {
   target_movement_id: string;
-  reason: InventoryCorrectionReason;
+  reason: string;
   movement_id: string;
   movement_date: string;
-  kind: InventoryMovementKind;
+  kind: string;
   quantity: PublicDecimal;
   unit_cost?: PublicDecimal | null;
   taxable_base?: PublicDecimal | null;
@@ -718,10 +800,10 @@ export type InventoryMovementCorrectRequest = InventoryChangeRequest & {
 };
 export type InventoryMovementReverseRequest = InventoryChangeRequest & {
   target_movement_id: string;
-  reason: InventoryCorrectionReason;
+  reason: string;
 };
 export type InventoryRetireRequest = InventoryChangeRequest & {
-  reason: InventoryRetirementReason;
+  reason: string;
 };
 export type InventoryRestoreRequest = InventoryChangeRequest;
 /** A change applied, or found already applied under the same reference. */

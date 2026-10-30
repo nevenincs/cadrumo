@@ -38,6 +38,10 @@ import type {
   InventoryChangeResult,
   InventoryClosingAuthorityRequest,
   InventoryClosingAuthorityResult,
+  InventoryClosingValueRequest,
+  InventoryEvidenceAddRequest,
+  InventoryEvidenceAddResult,
+  InventoryOptionsResult,
   InventoryCorrectRequest,
   InventoryCreateRequest,
   InventoryCreateResult,
@@ -1905,6 +1909,9 @@ export interface LedgerRequests {
   "ledger.inventory.movement.add": InventoryMovementAddRequest;
   "ledger.inventory.valuation.preview": InventoryBookRequest;
   "ledger.inventory.closing-authority.record": InventoryClosingAuthorityRequest;
+  "ledger.inventory.closing-value.record": InventoryClosingValueRequest;
+  "ledger.inventory.evidence.add": InventoryEvidenceAddRequest;
+  "ledger.inventory.options": Record<string, never>;
   "ledger.inventory.inspect": InventoryBookRequest;
   "ledger.inventory.describe": InventoryDescribeRequest;
   "ledger.inventory.correct": InventoryCorrectRequest;
@@ -2001,6 +2008,9 @@ export interface LedgerResults {
   "ledger.inventory.movement.add": InventoryMovementAddResult;
   "ledger.inventory.valuation.preview": InventoryValuationResult;
   "ledger.inventory.closing-authority.record": InventoryClosingAuthorityResult;
+  "ledger.inventory.closing-value.record": InventoryClosingAuthorityResult;
+  "ledger.inventory.evidence.add": InventoryEvidenceAddResult;
+  "ledger.inventory.options": InventoryOptionsResult;
   "ledger.inventory.inspect": InventoryInspectResult;
   "ledger.inventory.describe": InventoryChangeResult;
   "ledger.inventory.correct": InventoryChangeResult;

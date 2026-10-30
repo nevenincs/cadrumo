@@ -5,13 +5,14 @@
 // purchase states are the person's own; nothing here adds, rounds or rates
 // anything, and a value nobody typed is never made up.
 
-import type { PublicDecimal } from "../../../shell/ledger";
+import type { FileToken, PublicDecimal } from "../../../shell/ledger";
 import {
   AMOUNT_RULE,
   parseDecimal,
   parseIsoDate,
   parseLine,
   parsePercent,
+  percentOf,
   QUANTITY_RULE,
   TAX_AMOUNT_RULE,
   UNIT_PRICE_RULE,
@@ -22,152 +23,107 @@ import type {
   InventoryAcquisitionCostRequest,
   InventoryBook,
   InventoryBookRow,
-  InventoryCorrectionReason,
+  InventoryClosingDocument,
+  InventoryClosingValueRequest,
   InventoryCorrectRequest,
-  InventoryCostKind,
   InventoryCreateRequest,
   InventoryDescribeRequest,
+  InventoryEvidenceAddRequest,
   InventoryHistoryKind,
   InventoryMovement,
   InventoryMovementAddRequest,
   InventoryMovementCorrectRequest,
-  InventoryMovementKind,
   InventoryMovementReverseRequest,
+  InventoryOptionsResult,
   InventoryProof,
-  InventoryProofKind,
   InventoryRestoreRequest,
   InventoryRetireRequest,
-  InventoryRetirementReason,
   ValuationMethod,
 } from "../../../shell/ledgerSetup";
 import type { Landing } from "../WritePause";
 
-// ---- What the backend's enums offer ----------------------------------------
+// ---- What the backend offers -------------------------------------------------
 //
-// The backend serves no list of these choices, so each list reflects the enum
-// it is named for. A test holds every one of them to its enum.
+// Every closed choice a form offers is read from the backend, which serves
+// each with the key of its word. Nothing here lists a method, a kind, a
+// reason or a basis.
 
-export const METHODS = [
-  "fifo",
-  "pmp",
-  "coste_medio",
-] as const satisfies readonly ValuationMethod[];
+/** One choice the backend serves, and the key of its word. */
+export type Served = { value: string; label_key: string };
+/** The choices served, by the family they belong to. */
+export type Offers = Readonly<Record<string, readonly Served[]>>;
+/** Only the values of each family: what a request may carry. */
+export type Vocabulary = Readonly<Record<string, readonly string[]>>;
 
-export const KINDS = [
-  "opening",
-  "purchase",
-  "cogs",
-  "count",
-] as const satisfies readonly InventoryMovementKind[];
+export const NO_OFFERS: Offers = {};
 
-export const COST_KINDS = [
-  "freight",
-  "insurance",
-  "customs_duty",
-  "handling",
-  "professional_fee",
-  "other_directly_attributable",
-] as const satisfies readonly InventoryCostKind[];
+export const offersOf = (result: InventoryOptionsResult): Offers =>
+  Object.fromEntries(
+    result.families.map((found) => [found.family, found.options]),
+  );
 
-/** What a purchase's price, or one of its extra costs, can rest on. */
-export const PROOF_KINDS = [
-  "purchase_invoice",
-  "transport_document",
-  "insurance_document",
-  "customs_declaration",
-  "contract",
-  "other_acquisition_evidence",
-] as const satisfies readonly InventoryProofKind[];
+export const vocabularyOf = (offers: Offers): Vocabulary =>
+  Object.fromEntries(
+    Object.entries(offers).map(([family, options]) => [
+      family,
+      options.map((option) => option.value),
+    ]),
+  );
 
-/** The proof that extra costs were checked, and the proof that the
- * recoverable IVA was: each has a kind of its own. */
+/** The two checks a purchase states it made each have a kind of proof of
+ * their own, apart from the kinds a price or an extra cost can rest on. */
 export const COST_CHECK_KIND = "attributable_cost_review" as const;
 export const IVA_CHECK_KIND = "iva_recoverability_review" as const;
+/** The closing authority whose value a count states. */
+export const PHYSICAL_AUTHORITY = "physical_observation" as const;
 
-/** Why a stock fact is corrected or a movement reversed. */
-export const CORRECTION_REASONS = [
-  "keying_error",
-  "source_document_corrected",
-  "duplicate_entry",
-  "operation_did_not_occur",
-] as const satisfies readonly InventoryCorrectionReason[];
+/** What a price, or one of its extra costs, can rest on: the served kinds of
+ * proof less the two checks. */
+export const priceKinds = (vocabulary: Vocabulary): readonly string[] =>
+  (vocabulary.acquisition_evidence_kind ?? []).filter(
+    (kind) => kind !== COST_CHECK_KIND && kind !== IVA_CHECK_KIND,
+  );
 
-/** Why a stock book is retired. */
-export const RETIREMENT_REASONS = [
-  "created_in_error",
-  "activity_ceased",
-  "no_stock_held",
-] as const satisfies readonly InventoryRetirementReason[];
+/** Where the words of each stored token are kept, by family. */
+export const LABEL_FAMILY = {
+  valuation_method: "application.inventory.labels.valuation_method.",
+  movement_kind: "application.inventory.labels.movement_kind.",
+  attributable_cost_kind:
+    "application.inventory.labels.attributable_cost_kind.",
+  acquisition_evidence_kind:
+    "application.inventory.labels.acquisition_evidence_kind.",
+  correction_reason: "application.inventory.labels.correction_reason.",
+  retirement_reason: "application.inventory.labels.retirement_reason.",
+  history_kind: "application.inventory.labels.history_kind.",
+  closing_authority: "application.inventory.labels.closing_authority.",
+  closing_valuation_basis:
+    "application.inventory.labels.closing_valuation_basis.",
+  decision_evidence_role:
+    "application.inventory.labels.decision_evidence_role.",
+  physical_evidence_role:
+    "application.inventory.labels.physical_evidence_role.",
+} as const;
+export type LabelFamily = keyof typeof LABEL_FAMILY;
 
-/** What a change can be in the history of a book. */
-export const HISTORY_KINDS = [
-  "described",
-  "opening_corrected",
-  "movement_corrected",
-  "movement_reversed",
-  "retired",
-  "restored",
-] as const satisfies readonly InventoryHistoryKind[];
+/** The word for a stored token; a token without one is not named, never
+ * shown as the token. */
+export function wordOf(
+  t: (key: string) => string,
+  family: LabelFamily,
+  token: string | null | undefined,
+): string {
+  if (token === null || token === undefined || token === "")
+    return t("desktop.ledger.stock.unnamed");
+  const key = `${LABEL_FAMILY[family]}${token}`;
+  const said = t(key);
+  return said === key ? t("desktop.ledger.stock.unnamed") : said;
+}
 
-export type CostKind = (typeof COST_KINDS)[number];
-export type ProofKind = (typeof PROOF_KINDS)[number];
-
-/** The words of each choice, by the key that says it. */
-export const COST_KIND_KEYS: Record<CostKind, string> = {
-  freight: "desktop.ledger.stock.cost_kind.freight",
-  insurance: "desktop.ledger.stock.cost_kind.insurance",
-  customs_duty: "desktop.ledger.stock.cost_kind.customs_duty",
-  handling: "desktop.ledger.stock.cost_kind.handling",
-  professional_fee: "desktop.ledger.stock.cost_kind.professional_fee",
-  other_directly_attributable:
-    "desktop.ledger.stock.cost_kind.other_directly_attributable",
-};
-export const PROOF_KIND_KEYS: Record<ProofKind, string> = {
-  purchase_invoice: "desktop.ledger.stock.proof_kind.purchase_invoice",
-  transport_document: "desktop.ledger.stock.proof_kind.transport_document",
-  insurance_document: "desktop.ledger.stock.proof_kind.insurance_document",
-  customs_declaration: "desktop.ledger.stock.proof_kind.customs_declaration",
-  contract: "desktop.ledger.stock.proof_kind.contract",
-  other_acquisition_evidence:
-    "desktop.ledger.stock.proof_kind.other_acquisition_evidence",
-};
-
-/** The words of these come from the backend's own catalogue, which words each
- * member of its enums. */
-export const CORRECTION_REASON_KEYS: Record<
-  (typeof CORRECTION_REASONS)[number],
-  string
-> = {
-  keying_error: "application.inventory.labels.correction_reason.keying_error",
-  source_document_corrected:
-    "application.inventory.labels.correction_reason.source_document_corrected",
-  duplicate_entry:
-    "application.inventory.labels.correction_reason.duplicate_entry",
-  operation_did_not_occur:
-    "application.inventory.labels.correction_reason.operation_did_not_occur",
-};
-export const RETIREMENT_REASON_KEYS: Record<
-  (typeof RETIREMENT_REASONS)[number],
-  string
-> = {
-  created_in_error:
-    "application.inventory.labels.retirement_reason.created_in_error",
-  activity_ceased:
-    "application.inventory.labels.retirement_reason.activity_ceased",
-  no_stock_held: "application.inventory.labels.retirement_reason.no_stock_held",
-};
-export const HISTORY_KIND_KEYS: Record<(typeof HISTORY_KINDS)[number], string> =
-  {
-    described: "application.inventory.labels.history_kind.described",
-    opening_corrected:
-      "application.inventory.labels.history_kind.opening_corrected",
-    movement_corrected:
-      "application.inventory.labels.history_kind.movement_corrected",
-    movement_reversed:
-      "application.inventory.labels.history_kind.movement_reversed",
-    retired: "application.inventory.labels.history_kind.retired",
-    restored: "application.inventory.labels.history_kind.restored",
-  };
+/** The word a served choice carries, by its own key. */
+export function servedWord(t: (key: string) => string, served: Served): string {
+  const said = t(served.label_key);
+  return said === served.label_key ? t("desktop.ledger.stock.unnamed") : said;
+}
 
 // ---- The fields a form draws -------------------------------------------------
 
@@ -184,6 +140,8 @@ export type StockField = {
   required: boolean;
   /** For text that is typed as a number: the keyboard it asks for. */
   numeric?: boolean;
+  /** The most characters it takes, where that is not the usual. */
+  max?: number;
 };
 
 export const BOOK_FIELDS: readonly StockField[] = [
@@ -313,41 +271,6 @@ export const EXTRA_FIELDS: readonly StockField[] = [
   },
 ];
 
-/** The totals of a purchase, which the person states as the figures come
- * out. The backend checks them against the figures above and refuses a
- * disagreement. */
-export const TOTAL_FIELDS: readonly StockField[] = [
-  {
-    key: "extra_total",
-    label: "desktop.ledger.stock.field.extra_total",
-    hint: "desktop.ledger.form.amount_hint",
-    control: "amount",
-    required: true,
-    numeric: true,
-  },
-  {
-    key: "recoverable",
-    label: "desktop.ledger.stock.field.recoverable",
-    control: "amount",
-    required: true,
-    numeric: true,
-  },
-  {
-    key: "unrecoverable",
-    label: "desktop.ledger.stock.field.unrecoverable",
-    control: "amount",
-    required: true,
-    numeric: true,
-  },
-  {
-    key: "total",
-    label: "desktop.ledger.stock.field.total",
-    control: "amount",
-    required: true,
-    numeric: true,
-  },
-];
-
 /** What a change to a book's details states. */
 export const DESCRIBE_FIELDS: readonly StockField[] = [
   {
@@ -394,43 +317,85 @@ export const CORRECT_FIELDS: readonly StockField[] = [
 
 export type ProofSlotKey = "price" | "cost_check" | "iva_check";
 
-/** A file the purchase rests on, and the kinds it can be: one kind is fixed
- * and not asked. */
+/** A file the purchase rests on. */
 export type ProofSlot = {
   key: ProofSlotKey;
   label: string;
   hint?: string;
-  kinds: readonly InventoryProofKind[];
 };
 
 export const PROOF_SLOTS: readonly ProofSlot[] = [
-  {
-    key: "price",
-    label: "desktop.ledger.stock.proof.price",
-    kinds: PROOF_KINDS,
-  },
+  { key: "price", label: "desktop.ledger.stock.proof.price" },
   {
     key: "cost_check",
     label: "desktop.ledger.stock.proof.cost_check",
     hint: "desktop.ledger.stock.proof.check_hint",
-    kinds: [COST_CHECK_KIND],
   },
   {
     key: "iva_check",
     label: "desktop.ledger.stock.proof.iva_check",
     hint: "desktop.ledger.stock.proof.check_hint",
-    kinds: [IVA_CHECK_KIND],
   },
 ];
 
-/** The largest file a proof is taken from. */
-export const PROOF_FILE_LIMIT = 50 * 1024 * 1024;
+/** The kinds a slot's file can be: a check has the one kind of its own. */
+export function slotKinds(
+  slot: ProofSlotKey,
+  vocabulary: Vocabulary,
+): readonly string[] {
+  if (slot === "cost_check") return [COST_CHECK_KIND];
+  if (slot === "iva_check") return [IVA_CHECK_KIND];
+  return priceKinds(vocabulary);
+}
+
+/** What a closing value states. */
+export const CLOSING_FIELDS: readonly StockField[] = [
+  {
+    key: "authority",
+    label: "desktop.ledger.stock.closing.authority",
+    control: "choice",
+    required: true,
+  },
+  {
+    key: "reason",
+    label: "desktop.ledger.stock.closing.reason",
+    hint: "desktop.ledger.stock.closing.reason_hint",
+    control: "text",
+    required: true,
+    max: 512,
+  },
+];
+
+/** What a count states, when the closing value is the count's. */
+export const COUNT_FIELDS: readonly StockField[] = [
+  {
+    key: "observed_on",
+    label: "desktop.ledger.stock.closing.counted_on",
+    hint: "desktop.ledger.form.date_hint",
+    control: "date",
+    required: true,
+  },
+  {
+    key: "closing_value",
+    label: "desktop.ledger.stock.closing.value",
+    hint: "desktop.ledger.form.amount_hint",
+    control: "amount",
+    required: true,
+    numeric: true,
+  },
+  {
+    key: "basis",
+    label: "desktop.ledger.stock.closing.basis",
+    control: "choice",
+    required: true,
+  },
+];
 
 // ---- What the person has typed -----------------------------------------------
 
-/** A file a purchase rests on: the reference minted for it when the form
- * opened, the kind of proof, and the mark taken from the file's bytes, empty
- * until a file is chosen. The reference is never drawn. */
+/** A file a purchase or a closing value rests on: what the backend named it
+ * by once it kept it, the kind of proof, and the mark it answered. Both are
+ * empty until a file is kept, and neither is drawn. */
 export type ProofDraft = { reference: string; kind: string; digest: string };
 
 /** One extra cost of a purchase. Its key is the reference minted for it. */
@@ -455,15 +420,30 @@ export type MovementDraft = {
 export type DescribeDraft = { label: string; description: string };
 export type CorrectDraft = { reason: string; opening: string; method: string };
 
+/** A closing value: what is typed, and the files kept, by the role each
+ * plays. A document that shows the prior year's closing is one more file. */
+export type ClosingDraft = {
+  values: Readonly<Record<string, string>>;
+  decision: Readonly<Record<string, ProofDraft>>;
+  count: Readonly<Record<string, ProofDraft>>;
+  prior: readonly { key: string; proof: ProofDraft }[];
+};
+
 export const EMPTY_BOOK: BookDraft = { name: "", method: "", opening: "" };
 export const EMPTY_CORRECTION: CorrectDraft = {
   reason: "",
   opening: "",
   method: "",
 };
+export const EMPTY_CLOSING: ClosingDraft = {
+  values: {},
+  decision: {},
+  count: {},
+  prior: [],
+};
 
-export const blankProof = (mint: () => string, kind = ""): ProofDraft => ({
-  reference: mint(),
+export const blankProof = (kind = ""): ProofDraft => ({
+  reference: "",
   kind,
   digest: "",
 });
@@ -474,33 +454,111 @@ export const blankExtra = (mint: () => string): ExtraDraft => ({
   price: "",
   iva: "",
   share: "",
-  proof: blankProof(mint),
+  proof: blankProof(),
 });
 
-/** A movement form's start: nothing typed, every reference minted. */
-export function blankMovement(mint: () => string): MovementDraft {
+/** A movement form's start: nothing typed, nothing kept. */
+export function blankMovement(): MovementDraft {
   return {
     values: {},
     extras: [],
     proofs: {
-      price: blankProof(mint),
-      cost_check: blankProof(mint, COST_CHECK_KIND),
-      iva_check: blankProof(mint, IVA_CHECK_KIND),
+      price: blankProof(),
+      cost_check: blankProof(COST_CHECK_KIND),
+      iva_check: blankProof(IVA_CHECK_KIND),
     },
   };
 }
+
+const proofKept = (proof: ProofDraft) => proof.digest !== "";
 
 /** Whether anything is typed or chosen that is not yet written. */
 export function movementTouched(draft: MovementDraft): boolean {
   return (
     Object.values(draft.values).some((text) => text.trim() !== "") ||
     draft.extras.length > 0 ||
-    Object.values(draft.proofs).some((proof) => proof.digest !== "")
+    Object.values(draft.proofs).some(proofKept)
+  );
+}
+
+export function closingTouched(draft: ClosingDraft): boolean {
+  return (
+    Object.values(draft.values).some((text) => text.trim() !== "") ||
+    Object.values(draft.decision).some(proofKept) ||
+    Object.values(draft.count).some(proofKept) ||
+    draft.prior.length > 0
   );
 }
 
 export const bookTouched = (draft: BookDraft): boolean =>
   Object.values(draft).some((text) => text.trim() !== "");
+
+/** The draft a correction starts from: what the book kept of the movement,
+ * so the person changes only what was wrong. */
+export function draftOfMovement(movement: InventoryMovement): MovementDraft {
+  const blank = blankMovement();
+  const text = (value: { decimal: string } | null | undefined) =>
+    value ? value.decimal : "";
+  const detail = movement.acquisition_detail ?? null;
+  const cost = movement.acquisition_cost ?? null;
+  const base: Record<string, string> = {
+    date: movement.movement_date,
+    kind: movement.kind,
+    quantity: movement.quantity.decimal,
+  };
+  if (movement.kind !== "purchase")
+    return {
+      ...blank,
+      values: {
+        ...base,
+        ...(movement.unit_cost ? { unit_cost: text(movement.unit_cost) } : {}),
+        ...(movement.taxable_base
+          ? { total_cost: text(movement.taxable_base) }
+          : {}),
+      },
+    };
+  if (cost === null || detail === null) return { ...blank, values: base };
+  const held = (reference: string, fallback = ""): ProofDraft => {
+    const found = detail.documents.find(
+      (document) => document.reference === reference,
+    );
+    return found
+      ? {
+          reference: found.reference,
+          kind: found.evidence_kind,
+          digest: found.content_digest,
+        }
+      : blankProof(fallback);
+  };
+  const share = (fraction: PublicDecimal) => percentOf(fraction.decimal) ?? "";
+  return {
+    values: {
+      ...base,
+      price: text(cost.consideration_excluding_iva),
+      iva: text(detail.consideration_iva_amount),
+      share: share(detail.consideration_deductible_iva_ratio),
+    },
+    extras: detail.components.map((component) => ({
+      key: component.component_id,
+      kind: component.kind,
+      price: text(component.taxable_base),
+      iva: text(component.iva_amount),
+      share: share(component.deductible_iva_ratio),
+      proof: held(component.evidence_references[0] ?? ""),
+    })),
+    proofs: {
+      price: held(detail.consideration_evidence),
+      cost_check: held(
+        detail.attributable_cost_review_evidence,
+        COST_CHECK_KIND,
+      ),
+      iva_check: held(
+        detail.iva_recoverability_review_evidence,
+        IVA_CHECK_KIND,
+      ),
+    },
+  };
+}
 
 // ---- Building a request ------------------------------------------------------
 
@@ -538,12 +596,13 @@ function collector() {
       if (parsed.kind === "refused") problems[key] = parsed.refusal;
       return null;
     },
-    choice<Option extends string>(
+    /** A choice among the values the backend serves. */
+    choice(
       key: string,
       raw: string | undefined,
-      options: readonly Option[],
-    ): Option | null {
-      const found = options.find((option) => option === raw);
+      options: readonly string[] | undefined,
+    ): string | null {
+      const found = (options ?? []).find((option) => option === raw);
       if (found === undefined) missing.add(key);
       return found ?? null;
     },
@@ -560,10 +619,11 @@ type Collector = ReturnType<typeof collector>;
 export function bookRequest(
   year: number,
   draft: BookDraft,
+  vocabulary: Vocabulary,
 ): Built<InventoryCreateRequest> {
   const c = collector();
   const name = c.need("name", parseLine(draft.name, 120));
-  const method = c.choice("method", draft.method, METHODS);
+  const method = c.choice("method", draft.method, vocabulary.valuation_method);
   const opening = c.need(
     "opening",
     parseDecimal(draft.opening, TAX_AMOUNT_RULE),
@@ -583,16 +643,21 @@ export function bookRequest(
   };
 }
 
-/** The proof a slot states: its kind, and the mark of the file attached. */
+/** The proof a file states: its kind, and what the backend named it by once
+ * it kept it. A slot with one kind asks for no choice of it. */
 function proofOf(
   c: Collector,
   key: string,
   draft: ProofDraft,
-  kinds: readonly InventoryProofKind[],
+  kinds: readonly string[],
 ): InventoryProof | null {
-  const kind = c.choice(`${key}:kind`, draft.kind, kinds);
-  if (draft.digest === "") c.lack(`${key}:file`);
-  return kind !== null && draft.digest !== ""
+  const kind = c.choice(
+    `${key}:kind`,
+    draft.kind === "" && kinds.length === 1 ? kinds[0] : draft.kind,
+    kinds,
+  );
+  if (!proofKept(draft)) c.lack(`${key}:file`);
+  return kind !== null && proofKept(draft)
     ? {
         reference: { reference: draft.reference },
         evidence_kind: kind,
@@ -601,36 +666,47 @@ function proofOf(
     : null;
 }
 
-/** What a purchase cost, and what it rests on, from the fields drawn for it. */
+/** What a purchase cost, and what it rests on, from the fields drawn for it.
+ * Its totals are left to the backend, which adds the figures up. */
 function acquisitionOf(
   c: Collector,
   draft: MovementDraft,
+  vocabulary: Vocabulary,
 ): InventoryAcquisitionCostRequest | null {
   const text = (key: string) => draft.values[key] ?? "";
   const price = c.need("price", parseDecimal(text("price"), TAX_AMOUNT_RULE));
   const iva = c.need("iva", parseDecimal(text("iva"), TAX_AMOUNT_RULE));
   const share = c.need("share", parsePercent(text("share")));
-  const totals = Object.fromEntries(
-    TOTAL_FIELDS.map((field) => [
-      field.key,
-      c.need(field.key, parseDecimal(text(field.key), TAX_AMOUNT_RULE)),
-    ]),
+  const consideration = proofOf(
+    c,
+    "price",
+    draft.proofs.price,
+    slotKinds("price", vocabulary),
   );
-  const consideration = proofOf(c, "price", draft.proofs.price, PROOF_KINDS);
-  const costCheck = proofOf(c, "cost_check", draft.proofs.cost_check, [
-    COST_CHECK_KIND,
-  ]);
-  const ivaCheck = proofOf(c, "iva_check", draft.proofs.iva_check, [
-    IVA_CHECK_KIND,
-  ]);
+  const costCheck = proofOf(
+    c,
+    "cost_check",
+    draft.proofs.cost_check,
+    slotKinds("cost_check", vocabulary),
+  );
+  const ivaCheck = proofOf(
+    c,
+    "iva_check",
+    draft.proofs.iva_check,
+    slotKinds("iva_check", vocabulary),
+  );
 
   const components = draft.extras.map((extra) => {
     const at = (field: string) => `extra:${extra.key}:${field}`;
-    const kind = c.choice(at("kind"), extra.kind, COST_KINDS);
+    const kind = c.choice(
+      at("kind"),
+      extra.kind,
+      vocabulary.attributable_cost_kind,
+    );
     const base = c.need(at("price"), parseDecimal(extra.price, AMOUNT_RULE));
     const tax = c.need(at("iva"), parseDecimal(extra.iva, TAX_AMOUNT_RULE));
     const ratio = c.need(at("share"), parsePercent(extra.share));
-    const proof = proofOf(c, at("proof"), extra.proof, PROOF_KINDS);
+    const proof = proofOf(c, at("proof"), extra.proof, priceKinds(vocabulary));
     return { extra, kind, base, tax, ratio, proof };
   });
 
@@ -642,18 +718,6 @@ function acquisitionOf(
     consideration === null ||
     costCheck === null ||
     ivaCheck === null
-  )
-    return null;
-  const stated = (key: string) => totals[key] ?? null;
-  const extraTotal = stated("extra_total");
-  const recoverable = stated("recoverable");
-  const unrecoverable = stated("unrecoverable");
-  const total = stated("total");
-  if (
-    extraTotal === null ||
-    recoverable === null ||
-    unrecoverable === null ||
-    total === null
   )
     return null;
   const built: InventoryAcquisitionCostRequest["attributable_cost_components"] =
@@ -694,10 +758,6 @@ function acquisitionOf(
         reference: ivaCheck.reference.reference,
       },
     },
-    directly_attributable_cost_total: decimal(extraTotal),
-    nonrecoverable_iva_included: decimal(unrecoverable),
-    recoverable_iva_excluded: decimal(recoverable),
-    total_acquisition_cost: decimal(total),
   };
 }
 
@@ -711,11 +771,12 @@ export function movementRequest(
   book: { actividad_id: string; year: number },
   movementId: string,
   draft: MovementDraft,
+  vocabulary: Vocabulary,
 ): Built<InventoryMovementAddRequest> {
   const c = collector();
   const text = (key: string) => draft.values[key] ?? "";
   const date = c.need("date", parseIsoDate(text("date")));
-  const kind = c.choice("kind", text("kind"), KINDS);
+  const kind = c.choice("kind", text("kind"), vocabulary.movement_kind);
   const quantity = c.need(
     "quantity",
     parseDecimal(text("quantity"), QUANTITY_RULE),
@@ -723,7 +784,7 @@ export function movementRequest(
   let unit: string | null = null;
   let total: string | null = null;
   let acquisition: InventoryAcquisitionCostRequest | null = null;
-  if (kind === "purchase") acquisition = acquisitionOf(c, draft);
+  if (kind === "purchase") acquisition = acquisitionOf(c, draft, vocabulary);
   else if (kind !== null) {
     unit = c.maybe(
       "unit_cost",
@@ -760,6 +821,132 @@ export function movementRequest(
     problems: c.problems,
     missing: c.missing,
   };
+}
+
+/** The request that has the backend keep a file the person chose: the token
+ * of the file, and nothing else; the host names the folder and the profile. */
+export const evidenceRequest = (
+  token: FileToken,
+): InventoryEvidenceAddRequest => ({ source_path: token });
+
+/** A document of a closing value, with the role it plays. */
+function documentOf(
+  c: Collector,
+  key: string,
+  draft: ProofDraft | undefined,
+  role: string,
+): InventoryClosingDocument | null {
+  if (draft === undefined || !proofKept(draft)) {
+    c.lack(`${key}:file`);
+    return null;
+  }
+  return {
+    reference: { reference: draft.reference },
+    role,
+    content_digest: draft.digest,
+  };
+}
+
+/**
+ * A closing value from plain facts: the method, the reason, the documents
+ * that show it, and a count when the count is the value. The fingerprints are
+ * the backend's to make. `ids` are minted when the form opens, so a closing
+ * sent twice is one closing.
+ */
+export function closingRequest(
+  book: { actividad_id: string; year: number },
+  ids: { decision: string; decidedAt: string },
+  draft: ClosingDraft,
+  vocabulary: Vocabulary,
+): Built<InventoryClosingValueRequest> {
+  const c = collector();
+  const text = (key: string) => draft.values[key] ?? "";
+  const authority = c.choice(
+    "authority",
+    text("authority"),
+    vocabulary.closing_authority,
+  );
+  const reason = c.need("reason", parseLine(text("reason"), 512));
+  const decision = (vocabulary.decision_evidence_role ?? []).map((role) =>
+    documentOf(c, `decision:${role}`, draft.decision[role], role),
+  );
+  if (decision.length === 0) c.lack("decision:file");
+  let count: NonNullable<
+    InventoryClosingValueRequest["facts"]["physical_count"]
+  > | null = null;
+  if (authority === PHYSICAL_AUTHORITY) {
+    const observedOn = c.need("observed_on", parseIsoDate(text("observed_on")));
+    const value = c.need(
+      "closing_value",
+      parseDecimal(text("closing_value"), TAX_AMOUNT_RULE),
+    );
+    const basis = c.choice(
+      "basis",
+      text("basis"),
+      vocabulary.closing_valuation_basis,
+    );
+    const evidence = (vocabulary.physical_evidence_role ?? []).map((role) =>
+      documentOf(c, `count:${role}`, draft.count[role], role),
+    );
+    if (evidence.length === 0) c.lack("count:file");
+    const documents = evidence.filter((found) => found !== null);
+    if (
+      observedOn !== null &&
+      value !== null &&
+      basis !== null &&
+      documents.length === evidence.length
+    )
+      count = {
+        observed_on: observedOn,
+        closing_value: decimal(value),
+        valuation_basis: basis,
+        evidence: documents,
+      };
+  }
+  const prior = draft.prior.map((entry) => {
+    if (proofKept(entry.proof))
+      return {
+        reference: { reference: entry.proof.reference },
+        content_digest: entry.proof.digest,
+      };
+    c.lack(`prior:${entry.key}:file`);
+    return null;
+  });
+  const documents = decision.filter((found) => found !== null);
+  const earlier = prior.filter((found) => found !== null);
+  const ready =
+    c.ready() &&
+    authority !== null &&
+    reason !== null &&
+    (authority !== PHYSICAL_AUTHORITY || count !== null);
+  return {
+    request: ready
+      ? {
+          actividad_id: book.actividad_id,
+          year: book.year,
+          facts: {
+            decision_id: ids.decision,
+            decided_at: ids.decidedAt,
+            authority,
+            reason,
+            decision_evidence: documents,
+            physical_count: count,
+            prior_evidence: earlier,
+          },
+        }
+      : null,
+    problems: c.problems,
+    missing: c.missing,
+  };
+}
+
+/** Whether a closing value is in the book as read again; untold where the
+ * book could not be read. */
+export function closingLanded(
+  ledger: Pick<InventoryBook, "closing_authority_fingerprints"> | null,
+): Landing {
+  if (ledger === null) return "untold";
+  return ledger.closing_authority_fingerprints !== null ? "saved" : "not_saved";
 }
 
 // ---- Changing a book ----------------------------------------------------------------
@@ -801,15 +988,18 @@ export function correctRequest(
   book: Book,
   correction: string,
   draft: CorrectDraft,
+  vocabulary: Vocabulary,
 ): Built<InventoryCorrectRequest> {
   const c = collector();
-  const reason = c.choice("reason", draft.reason, CORRECTION_REASONS);
+  const reason = c.choice("reason", draft.reason, vocabulary.correction_reason);
   const opening = c.maybe(
     "opening",
     parseDecimal(draft.opening, TAX_AMOUNT_RULE),
   );
   const method =
-    draft.method === "" ? null : c.choice("method", draft.method, METHODS);
+    draft.method === ""
+      ? null
+      : c.choice("method", draft.method, vocabulary.valuation_method);
   return {
     request:
       c.ready() && reason !== null
@@ -832,9 +1022,12 @@ export function movementCorrectionRequest(
   target: string,
   reason: string,
   draft: MovementDraft,
+  vocabulary: Vocabulary,
 ): Built<InventoryMovementCorrectRequest> {
-  const made = movementRequest(book, ids.movement, draft);
-  const why = CORRECTION_REASONS.find((found) => found === reason) ?? null;
+  const made = movementRequest(book, ids.movement, draft, vocabulary);
+  const why =
+    (vocabulary.correction_reason ?? []).find((found) => found === reason) ??
+    null;
   const missing = new Set(made.missing);
   if (why === null) missing.add("reason");
   if (made.request === null || why === null)
@@ -859,9 +1052,10 @@ export function reverseRequest(
   correction: string,
   target: string,
   reason: string,
+  vocabulary: Vocabulary,
 ): Built<InventoryMovementReverseRequest> {
   const c = collector();
-  const why = c.choice("reason", reason, CORRECTION_REASONS);
+  const why = c.choice("reason", reason, vocabulary.correction_reason);
   return {
     request:
       why === null
@@ -880,9 +1074,10 @@ export function retireRequest(
   book: Book,
   correction: string,
   reason: string,
+  vocabulary: Vocabulary,
 ): Built<InventoryRetireRequest> {
   const c = collector();
-  const why = c.choice("reason", reason, RETIREMENT_REASONS);
+  const why = c.choice("reason", reason, vocabulary.retirement_reason);
   return {
     request:
       why === null ? null : { ...changeOf(book, correction), reason: why },
@@ -929,8 +1124,8 @@ export type HistoryRow = {
   day: string;
   kind: InventoryHistoryKind;
   reason:
-    | { family: "correction"; token: InventoryCorrectionReason }
-    | { family: "retirement"; token: InventoryRetirementReason }
+    | { family: "correction"; token: string }
+    | { family: "retirement"; token: string }
     | null;
   before: HistoryFact[];
   after: HistoryFact[];
@@ -973,13 +1168,16 @@ export function historyRows(ledger: InventoryBook): HistoryRow[] {
         value: next?.prior_valuation_method ?? ledger.valuation_method,
       });
     }
-    if (entry.prior_descriptor !== null) {
-      before.push({ kind: "label", value: entry.prior_descriptor.label });
-      before.push({
-        kind: "description",
-        value: entry.prior_descriptor.description,
-      });
-      const next = later.find((found) => found.prior_descriptor !== null);
+    if (entry.kind === "described") {
+      // The first description displaced nothing, so it has no "before".
+      if (entry.prior_descriptor !== null) {
+        before.push({ kind: "label", value: entry.prior_descriptor.label });
+        before.push({
+          kind: "description",
+          value: entry.prior_descriptor.description,
+        });
+      }
+      const next = later.find((found) => found.kind === "described");
       const now = next?.prior_descriptor ?? ledger.descriptor ?? null;
       if (now !== null) {
         after.push({ kind: "label", value: now.label });
@@ -1047,15 +1245,4 @@ export function movementCounted(
   return now !== undefined && now.movement_count > before
     ? "saved"
     : "not_saved";
-}
-
-// ---- Files ---------------------------------------------------------------------
-
-/** The mark of a file's bytes: the lowercase hex of their SHA-256, which the
- * backend holds in place of the file. */
-export async function fingerprintOf(bytes: ArrayBuffer): Promise<string> {
-  const mark = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(mark), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
 }

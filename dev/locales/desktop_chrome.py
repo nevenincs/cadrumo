@@ -895,7 +895,7 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
-    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|application\.inventory\.advisories|auth\.sync\.requirement)\.[A-Za-z0-9_.]+)["'`]"""
+    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
 )
 _SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(
     r"`((?:desktop|workspace|ledger\.actividad_asset)\.[A-Za-z0-9_.]*)\$\{"

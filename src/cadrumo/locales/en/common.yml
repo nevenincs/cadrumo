@@ -2955,16 +2955,7 @@ desktop:
         quantity: Units
         unit_cost: Unit cost
       date: Date
-      kind:
-        cogs: Cost of sales
-        count: Count
-        opening: Opening stock
-        purchase: Purchase
       kind_label: Kind
-      method:
-        coste_medio: Average cost
-        fifo: FIFO
-        pmp: Weighted average price
       method_label: Valuation method
       opening: Opening stock value
       preview_note: 'A preview: nothing is recorded.'
@@ -3678,25 +3669,41 @@ desktop:
       action:
         add_book: Add a stock book
         add_movement: Add a movement
+        closing: Set the closing value
         correct: Correct the opening stock or the method
         describe: Edit the details
         movement_correct: Correct this movement
         movement_reverse: Reverse this movement
         preview: Preview the valuation
+        purchase_facts: See what this purchase cost
         restore: Restore the stock book
         retire: Retire the stock book
       books: Stock books for {year}
+      closing:
+        authority: How the value is decided
+        basis: Counted at
+        count: The count
+        count_documents: Files that show the count
+        counted_on: Date of the count
+        documents: Files that show the closing value
+        note: Say how the value your stock closes the year with was decided, why,
+          and attach the files that show it.
+        prior: Last year's closing
+        prior_add: Add a file
+        prior_document: File that shows last year's closing
+        prior_hint: 'Only if last year''s stock book has no closing value recorded:
+          add a file that shows it.'
+        prior_remove: Remove this file
+        reason: Why
+        reason_hint: In your own words.
+        recorded: The closing value of {year} is set. The stock of this book can't
+          change now.
+        value: Value counted, without IVA
       column:
         cost: Cost
         name: Activity
-      cost_kind:
-        customs_duty: Customs duty
-        freight: Freight
-        handling: Handling
-        insurance: Insurance
-        other_directly_attributable: Other cost of the purchase
-        professional_fee: Professional fee
       count:
+        advisories: 'Notices: {count}'
         books: 'Stock books: {count}'
         corrections: 'Corrections: {count}'
         retired: 'Retired: {count}'
@@ -3721,10 +3728,23 @@ desktop:
         no_description: No description
         opening: Opening stock {value}
         removed: Taken out of the count
+      facts:
+        amount: Amount
+        documents: Files it rests on
+        documents_unknown: The files of this purchase aren't available.
+        extra_total: Extra costs
+        iva: IVA on the price
+        price: Price without IVA
+        recoverable: IVA you deduct, not part of the cost
+        table: What this purchase cost
+        title: Purchase of {date}
+        total: Total cost
+        unknown: The cost of this purchase isn't available.
+        unrecoverable: IVA you can't deduct, part of the cost
+        what: Item
       field:
         cost_hint: Fill in the cost per unit or the total, whichever you have.
         description: Description (optional)
-        extra_total: Extra costs without IVA, all together
         iva: IVA on the price
         keep: Keep the current one
         keep_hint: Leave it empty to keep the current one.
@@ -3736,13 +3756,11 @@ desktop:
         opening_new: New opening stock value
         price: Price without IVA
         reason: Reason
-        recoverable: IVA you can deduct, all together
         share: Share of that IVA you can deduct (%)
-        total: Total cost of the purchase
         total_cost: Total cost without IVA
-        unrecoverable: IVA you can't deduct (added to the cost)
       form:
         book: New stock book for {year}
+        closing: Closing value of {name} · {year}
         correct: Correct {name} · {year}
         describe: Details of {name} · {year}
         movement: Add a movement to {name} · {year}
@@ -3765,33 +3783,29 @@ desktop:
         The old one stays in the history.
       movements_none: No movements in this book yet. Add the first one.
       movements_of: Movements of {name}
+      options_failed: The choices for this form couldn't be loaded. Close the form
+        and open it again.
+      options_loading: Getting the choices for this form…
       proof:
         change_file: Choose another file
         check_hint: Any file that shows the check, such as a note or a worksheet.
         choose_file: Choose a file
         cost_check: File that shows you checked for extra costs
         extra: File that shows this cost
-        file_too_large: The file is larger than 50 MB.
-        file_unread: The file couldn't be opened.
+        file_unread: That file couldn't be used. Choose a PDF, image or XML file and
+          try again.
         iva_check: File that shows you checked how much IVA you can deduct
+        keeping: Keeping the file…
+        kept: Kept with your books
         kind: Kind of file
         price: File that shows the price
-      proof_kind:
-        contract: Contract
-        customs_declaration: Customs declaration
-        insurance_document: Insurance policy
-        other_acquisition_evidence: Other proof of the purchase
-        purchase_invoice: Purchase invoice
-        transport_document: Transport note
       purchase:
         extras: Extra costs of the purchase
         price: Price of the purchase
         proofs: Files that show it
-        proofs_hint: Attach the files. Cadrumo keeps a mark that identifies each file,
-          not the file itself.
-        totals: Totals
-        totals_hint: Write the totals the figures above come to. They have to agree
-          with those figures.
+        proofs_hint: Choose the files. Cadrumo keeps a copy of each with your books.
+        totals_note: When you add the purchase, Cadrumo adds up the extra costs, the
+          IVA and the total cost for you.
       refused: The stock book didn't accept that. Nothing was saved.
       restore_note: The stock book goes back to your active list with everything it
         holds.
@@ -3803,6 +3817,7 @@ desktop:
       reverse_note: The movement stops counting. It stays in the history.
       submit:
         book: Add the book
+        closing: Set the closing value
         correct: Save the correction
         describe: Save the details
         movement: Add the movement
@@ -3813,6 +3828,7 @@ desktop:
       summary: Stock summary
       title: Stock
       unavailable: Your stock isn't available right now.
+      unnamed: Unknown
     sum:
       in: In {amount}
       out: Out {amount}
@@ -7820,9 +7836,9 @@ tui:
       inventory:
         action:
           closing_authority: Record a closing value from a full record file
-          evidence_add: "Store a purchase document"
           closing_value: Record a closing value from a facts file
           create: Create an inventory
+          evidence_add: Store a purchase document
           movement_add: Add a movement
           valuation_preview: Preview the valuation
         column:
@@ -7837,14 +7853,16 @@ tui:
           create: Inventory created.
           movement_add: Movement added.
         empty: No activity inventory exists yet.
+        evidence_done: Document stored.
+        evidence_held: 'Name it in the purchase as: %{reference}'
         field:
           acquisition_cost: Purchase cost file (purchases only)
           action: Request
           actividad_id: Activity
           authority_record: Closing value full record file
-          evidence_file: "Document file"
-          evidence_folder: "Folder the document path starts from"
           closing_value_facts: Closing value facts file
+          evidence_file: Document file
+          evidence_folder: Folder the document path starts from
           kind: Movement kind
           movement_date: Movement date
           movement_id: Movement identifier
@@ -7866,17 +7884,17 @@ tui:
           pmp: Weighted average price
         prompt: Every activity inventory by year. Choose a request, fill in its fields,
           review it, then confirm. Valuations and costs of goods sold are the register's
-          own figures. Purchase costs and closing values are read from the
-          file you name.
+          own figures. Purchase costs and closing values are read from the file you
+          name.
         refusal:
           activity_conflict: 'The register refused the request: an inventory already
             exists for that activity and year.'
           activity_not_found: 'The register refused the request: no inventory exists
             for that activity and year.'
-          closing_authority_conflict: 'The register refused the closing value:
-            a different one is already recorded for that year.'
-          closing_authority_invalid: 'The register refused the closing value:
-            it does not match the inventory it names.'
+          closing_authority_conflict: 'The register refused the closing value: a different
+            one is already recorded for that year.'
+          closing_authority_invalid: 'The register refused the closing value: it does
+            not match the inventory it names.'
           duplicate_movement_id: 'The register refused the movement: it is already
             recorded.'
           invalid_valuation_method: 'The register refused the request: the valuation
@@ -7884,15 +7902,12 @@ tui:
           inventory_validation: 'The register refused the request: it does not pass
             the inventory''s validation.'
         result:
-          closing: 'Closing value for %{actividad} %{year} recorded. Changed:
-            %{changed}.'
+          closing: 'Closing value for %{actividad} %{year} recorded. Changed: %{changed}.'
           fingerprint: 'Record fingerprint: %{fingerprint}'
           ledger: '%{actividad} · %{year} · %{method} · opening stock %{opening} ·
             %{movements} movements'
           valuation: 'Valuation for %{actividad} %{year} (%{method}): closing value
             %{closing}, cost of goods sold %{cogs}.'
-        evidence_done: "Document stored."
-        evidence_held: "Name it in the purchase as: %{reference}"
         source: 'Read from: %{path}'
         source_invalid: 'The file %{path} is not a valid record: %{count} problems
           found.'

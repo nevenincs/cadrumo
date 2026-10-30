@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
@@ -24,9 +24,12 @@ import type {
 import type {
   InventoryBook,
   InventoryBookRow,
+  InventoryAdvisory,
+  InventoryEvidenceAddResult,
   InventoryInspectResult,
   InventoryListResult,
   InventoryMovement,
+  InventoryOptionsResult,
   InventoryRefusal,
   InventoryValuationResult,
 } from "../../../shell/ledgerSetup";
@@ -48,7 +51,7 @@ import {
 } from "../setup/SetupParts";
 import type { SetupProps } from "../setup/setupProps";
 import { setupCall, type SetupCall } from "../setup/setupModel";
-import { grammarText, tokenText } from "../setup/setupWords";
+import { grammarText } from "../setup/setupWords";
 import { useWritePause, WriteHold } from "../WritePause";
 import {
   blankExtra,
@@ -59,49 +62,53 @@ import {
   bookRequest,
   bookTouched,
   changeLanded,
+  CLOSING_FIELDS,
+  closingLanded,
+  closingRequest,
+  closingTouched,
   CORRECT_FIELDS,
   correctRequest,
   COST_FIELDS,
-  COST_KIND_KEYS,
-  COST_KINDS,
-  CORRECTION_REASON_KEYS,
-  CORRECTION_REASONS,
+  COUNT_FIELDS,
   DESCRIBE_FIELDS,
   describeRequest,
+  draftOfMovement,
   EMPTY_BOOK,
+  EMPTY_CLOSING,
   EMPTY_CORRECTION,
+  evidenceRequest,
   EXTRA_FIELDS,
-  fingerprintOf,
-  HISTORY_KIND_KEYS,
   historyRows,
-  KINDS,
-  METHODS,
   MOVEMENT_FIELDS,
   movementCorrectionRequest,
   movementCounted,
   movementRequest,
   movementTouched,
+  NO_OFFERS,
+  offersOf,
+  PHYSICAL_AUTHORITY,
   PRICE_FIELDS,
-  PROOF_FILE_LIMIT,
-  PROOF_KIND_KEYS,
-  PROOF_KINDS,
   PROOF_SLOTS,
   REASON_FIELD,
   restoreRequest,
-  RETIREMENT_REASON_KEYS,
-  RETIREMENT_REASONS,
   retireRequest,
   reverseRequest,
-  TOTAL_FIELDS,
+  blankProof,
+  servedWord,
+  slotKinds,
+  vocabularyOf,
+  wordOf,
   type BookDraft,
   type Built,
+  type ClosingDraft,
   type CorrectDraft,
   type DescribeDraft,
   type HistoryFact,
   type MovementDraft,
+  type Offers,
   type Problems,
   type ProofDraft,
-  type ProofSlot,
+  type ProofSlotKey,
   type StockField,
 } from "./stockModel";
 import { YearStepper } from "./YearStepper";
@@ -197,29 +204,33 @@ function refusalOf(call: SetupCall<unknown> | null): InventoryRefusal | null {
   return null;
 }
 
-/** Words for a refused call: the stock book's own reason where the chrome has
- * one, else a plain refusal. Never the reason's token, a code or an
- * identifier. */
-function refusalWords(
-  t: Translate,
-  call: SetupCall<unknown> | null,
-  book: { name: string; year: number },
-) {
+/** The family every reason key the backend serves for a refused inventory
+ * change belongs to. */
+const INVENTORY_REASON_FAMILY = "application.inventory.service.errors.";
+
+/** Words for a refused call: the sentence the backend's catalogue has for the
+ * reason it gave, filled in with the facts it gave. A reason without a
+ * sentence, or one a fact is missing from, is said plainly and never as its
+ * key or a code. */
+function refusalWords(t: Translate, call: SetupCall<unknown> | null) {
   return (): string | null => {
     const found = refusalOf(call);
     if (call?.kind !== "refused" && found === null) return null;
-    if (found === null) return t("desktop.ledger.stock.refused");
-    const stated = Object.fromEntries(
-      (found.reason_facts ?? []).map((fact) => [fact.key, fact.value]),
+    const plain = t("desktop.ledger.stock.refused");
+    const key = found?.reason_key ?? null;
+    if (
+      found === null ||
+      key === null ||
+      !key.startsWith(INVENTORY_REASON_FAMILY)
+    )
+      return plain;
+    const said = t(
+      key,
+      Object.fromEntries(
+        (found.reason_facts ?? []).map((fact) => [fact.key, fact.value]),
+      ),
     );
-    const said = t(`desktop.ledger.inventory.refusal.${found.reason}`, {
-      ...stated,
-      name: book.name,
-      year: found.year ?? book.year,
-    });
-    return said.startsWith("desktop.") || /\{\w+\}/.test(said)
-      ? t("desktop.ledger.stock.refused")
-      : said;
+    return said === key || /\{\w+\}/.test(said) ? plain : said;
   };
 }
 
@@ -327,11 +338,12 @@ function StockFields({
                 required={field.required}
                 inputMode={field.numeric ? "decimal" : "text"}
                 maxLength={
-                  field.control === "text"
+                  field.max ??
+                  (field.control === "text"
                     ? field.key === "description"
                       ? 1024
                       : 120
-                    : 40
+                    : 40)
                 }
                 autoFocus={autoFocus && index === 0}
               />
@@ -343,25 +355,68 @@ function StockFields({
   );
 }
 
-/** The reasons a person can give for a correction or a retirement, in the
- * words the backend's catalogue has for each. */
-function reasonChoices(
-  t: Translate,
-  tokens: readonly string[],
-  keys: Readonly<Record<string, string>>,
-) {
-  return {
-    reason: tokens.map((value) => ({
-      value,
-      label: t(keys[value] ?? "desktop.ledger.stock.refused"),
-    })),
-  };
+/** The choices the backend serves for one family, in the words it has for
+ * each. */
+function choicesOf(t: Translate, offers: Offers, family: string) {
+  return (offers[family] ?? []).map((served) => ({
+    value: served.value,
+    label: servedWord(t, served),
+  }));
 }
 
-/** A file a purchase rests on. The window keeps a mark of the file's bytes
- * and not the file; a reference it minted names the proof, and neither is
- * drawn. */
+/** Reads the closed choices the forms offer. They are the backend's to
+ * serve, so a form offers none until they are read. */
+function useOffers(port: LedgerPort, reader: string | null, round: number) {
+  const [read, setRead] = useState<SetupCall<InventoryOptionsResult> | null>(
+    null,
+  );
+  useEffect(() => {
+    setRead(null);
+  }, [port, reader]);
+  useEffect(() => {
+    if (reader === null) return;
+    let active = true;
+    void (async () => {
+      const answer = await setupCall(
+        port,
+        "ledger.inventory.options",
+        {},
+        false,
+      );
+      if (active) setRead(answer);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [port, reader, round]);
+  const offers = useMemo(
+    () => (read?.kind === "done" ? offersOf(read.result) : NO_OFFERS),
+    [read],
+  );
+  const vocabulary = useMemo(() => vocabularyOf(offers), [offers]);
+  return { offers, vocabulary, state: read === null ? "loading" : read.kind };
+}
+
+type OfferState = ReturnType<typeof useOffers>;
+
+/** What a form says while the choices it offers are not there. */
+function OffersNote({ state }: { state: OfferState["state"] }) {
+  const t = useStrings();
+  if (state === "done") return null;
+  return state === "loading" ? (
+    <Reading label={t("desktop.ledger.stock.options_loading")} />
+  ) : (
+    <Alert tone="warning" role="alert" icon={<Icon name="alert" />}>
+      {t("desktop.ledger.stock.options_failed")}
+    </Alert>
+  );
+}
+
+/** A document the person chooses with the system's file dialog. The backend
+ * reads and keeps it, and answers what it keeps it as; the window holds
+ * neither the file nor a mark of its own making, and shows the file's name. */
 function ProofPicker({
+  port,
   label,
   hint,
   kinds,
@@ -369,46 +424,63 @@ function ProofPicker({
   fileName,
   onProof,
   fillIn,
+  disabled = false,
 }: {
+  port: LedgerPort;
   label: string;
   hint?: string;
-  kinds: readonly string[];
+  /** The kinds the document can be; one kind asks for no choice. */
+  kinds: readonly { value: string; label: string }[];
   proof: ProofDraft;
   fileName: string | undefined;
-  onProof(
-    reference: string,
-    change: (current: ProofDraft) => ProofDraft,
-    fileName?: string,
-  ): void;
+  onProof(change: (current: ProofDraft) => ProofDraft, fileName?: string): void;
   fillIn: boolean;
+  disabled?: boolean;
 }) {
   const t = useStrings();
-  const picker = useRef<HTMLInputElement>(null);
   const [failed, setFailed] = useState<string | null>(null);
-  const read = async (file: File | undefined) => {
-    if (!file) return;
-    if (file.size > PROOF_FILE_LIMIT) {
-      setFailed(t("desktop.ledger.stock.proof.file_too_large"));
-      return;
-    }
+  const [busy, setBusy] = useState(false);
+  const choose = async () => {
+    if (busy) return;
+    setBusy(true);
+    setFailed(null);
     try {
-      const mark = await fingerprintOf(await file.arrayBuffer());
-      onProof(
-        proof.reference,
-        (current) => ({ ...current, digest: mark }),
-        file.name,
+      const picks = await port.pickFiles(
+        "documents",
+        "file",
+        t("desktop.ledger.import.filter.documents"),
       );
-      setFailed(null);
+      const file = picks.files[0];
+      if (!file) return;
+      const kept = await setupCall(
+        port,
+        "ledger.inventory.evidence.add",
+        evidenceRequest(file.token),
+        true,
+      );
+      await port.forgetFiles([file.token]).catch(() => undefined);
+      if (kept.kind === "done") {
+        const result: InventoryEvidenceAddResult = kept.result;
+        onProof(
+          (current) => ({
+            ...current,
+            reference: result.reference,
+            digest: result.content_digest,
+          }),
+          file.name,
+        );
+      } else setFailed(t("desktop.ledger.stock.proof.file_unread"));
     } catch {
       setFailed(t("desktop.ledger.stock.proof.file_unread"));
+    } finally {
+      setBusy(false);
     }
   };
   const shown = failed ?? (fillIn ? t(FILL_IN) : null);
-  const choose = t(
+  const word =
     proof.digest === ""
-      ? "desktop.ledger.stock.proof.choose_file"
-      : "desktop.ledger.stock.proof.change_file",
-  );
+      ? t("desktop.ledger.stock.proof.choose_file")
+      : t("desktop.ledger.stock.proof.change_file");
   return (
     <Field data-invalid={shown ? true : undefined}>
       <FieldLabel>{label}</FieldLabel>
@@ -419,7 +491,7 @@ function ProofPicker({
             aria-label={t("desktop.ledger.stock.proof.kind")}
             value={proof.kind}
             onChange={(event) =>
-              onProof(proof.reference, (current) => ({
+              onProof((current) => ({
                 ...current,
                 kind: event.target.value,
               }))
@@ -429,8 +501,8 @@ function ProofPicker({
               {t("desktop.ledger.form.choose")}
             </option>
             {kinds.map((kind) => (
-              <option key={kind} value={kind}>
-                {t(PROOF_KIND_KEYS[kind as keyof typeof PROOF_KIND_KEYS])}
+              <option key={kind.value} value={kind.value}>
+                {kind.label}
               </option>
             ))}
           </NativeSelect>
@@ -439,31 +511,21 @@ function ProofPicker({
           type="button"
           size="sm"
           variant="outline"
-          aria-label={`${label}: ${choose}`}
-          onClick={() => picker.current?.click()}
+          aria-label={`${label}: ${word}`}
+          aria-disabled={busy || disabled || undefined}
+          onClick={() => {
+            if (!disabled) void choose();
+          }}
         >
           <Icon name="attach" size="sm" />
-          {choose}
+          {busy ? t("desktop.ledger.stock.proof.keeping") : word}
         </Button>
-        {proof.digest !== "" && fileName && (
+        {proof.digest !== "" && (
           <span className="flex items-center gap-1 text-sm text-muted-foreground">
             <Icon name="check" size="sm" />
-            {fileName}
+            {fileName ?? t("desktop.ledger.stock.proof.kept")}
           </span>
         )}
-        <input
-          ref={picker}
-          type="file"
-          hidden
-          tabIndex={-1}
-          aria-hidden="true"
-          onChange={(event) => {
-            const input = event.currentTarget;
-            void read(input.files?.[0]).finally(() => {
-              input.value = "";
-            });
-          }}
-        />
       </div>
       {hint && <FieldDescription>{hint}</FieldDescription>}
       <FieldError>{shown}</FieldError>
@@ -537,11 +599,13 @@ function Section({
 function BookForm({
   port,
   year,
+  catalogue,
   onClose,
   onWritten,
 }: {
   port: LedgerPort;
   year: number;
+  catalogue: OfferState;
   onClose(): void;
   onWritten(): void;
 }) {
@@ -550,12 +614,9 @@ function BookForm({
   const [draft, setDraft] = useState<BookDraft>(EMPTY_BOOK);
   const [tried, setTried] = useState(false);
   useSetupDraft(bookTouched(draft));
-  const built = bookRequest(year, draft);
+  const built = bookRequest(year, draft, catalogue.vocabulary);
   const choices = {
-    method: METHODS.map((value) => ({
-      value,
-      label: tokenText(t, "inventory.method", value),
-    })),
+    method: choicesOf(t, catalogue.offers, "valuation_method"),
   };
 
   const send = async () => {
@@ -587,6 +648,7 @@ function BookForm({
           void send();
         }}
       >
+        <OffersNote state={catalogue.state} />
         <StockFields
           fields={BOOK_FIELDS}
           valueOf={(field) => draft[field.key as keyof BookDraft]}
@@ -605,13 +667,7 @@ function BookForm({
           submit={t("desktop.ledger.stock.submit.book")}
           onClose={onClose}
         />
-        <CallLine
-          call={write.last}
-          refusal={refusalWords(t, write.last, {
-            name: t("desktop.ledger.stock.title"),
-            year,
-          })}
-        />
+        <CallLine call={write.last} refusal={refusalWords(t, write.last)} />
       </form>
     </Panel>
   );
@@ -637,7 +693,6 @@ function ChangeForm<D extends ChangeId>({
   port,
   definition,
   book,
-  name,
   correction,
   request,
   touched,
@@ -652,7 +707,6 @@ function ChangeForm<D extends ChangeId>({
   port: LedgerPort;
   definition: D;
   book: BookKey;
-  name: string;
   correction: string;
   request: LedgerRequest<D> | null;
   touched: boolean;
@@ -704,10 +758,7 @@ function ChangeForm<D extends ChangeId>({
           submit={submit}
           onClose={onClose}
         />
-        <CallLine
-          call={write.last}
-          refusal={refusalWords(t, write.last, { name, year: book.year })}
-        />
+        <CallLine call={write.last} refusal={refusalWords(t, write.last)} />
       </form>
     </Panel>
   );
@@ -740,7 +791,6 @@ function DescribeForm({
       port={port}
       definition="ledger.inventory.describe"
       book={book}
-      name={bookName(book)}
       correction={correction}
       request={built.request}
       touched={
@@ -775,11 +825,13 @@ function DescribeForm({
 function CorrectForm({
   port,
   book,
+  catalogue,
   onClose,
   onWritten,
 }: {
   port: LedgerPort;
   book: InventoryBookRow;
+  catalogue: OfferState;
   onClose(): void;
   onWritten(): void;
 }) {
@@ -787,15 +839,12 @@ function CorrectForm({
   const [draft, setDraft] = useState<CorrectDraft>(EMPTY_CORRECTION);
   const [correction] = useState(mint);
   const [tried, setTried] = useState(false);
-  const built = correctRequest(book, correction, draft);
+  const built = correctRequest(book, correction, draft, catalogue.vocabulary);
   const choices = {
-    ...reasonChoices(t, CORRECTION_REASONS, CORRECTION_REASON_KEYS),
+    reason: choicesOf(t, catalogue.offers, "correction_reason"),
     method: [
       { value: "", label: t("desktop.ledger.stock.field.keep") },
-      ...METHODS.map((value) => ({
-        value,
-        label: tokenText(t, "inventory.method", value),
-      })),
+      ...choicesOf(t, catalogue.offers, "valuation_method"),
     ],
   };
   return (
@@ -803,7 +852,6 @@ function CorrectForm({
       port={port}
       definition="ledger.inventory.correct"
       book={book}
-      name={bookName(book)}
       correction={correction}
       request={built.request}
       touched={Object.values(draft).some((text) => text.trim() !== "")}
@@ -817,6 +865,7 @@ function CorrectForm({
       onClose={onClose}
       onWritten={onWritten}
     >
+      <OffersNote state={catalogue.state} />
       <StockFields
         fields={CORRECT_FIELDS}
         valueOf={(field) => draft[field.key as keyof CorrectDraft]}
@@ -841,7 +890,7 @@ function movementLine(
 ) {
   return t("desktop.ledger.stock.fact.movement", {
     date: dateText(locale, movement.movement_date, true),
-    kind: tokenText(t, "inventory.kind", movement.kind),
+    kind: wordOf(t, "movement_kind", movement.kind),
     quantity: movement.quantity.decimal,
   });
 }
@@ -851,10 +900,12 @@ function ReverseForm({
   book,
   target,
   locale,
+  catalogue,
   onClose,
   onWritten,
 }: {
   port: LedgerPort;
+  catalogue: OfferState;
   book: InventoryBookRow;
   target: InventoryMovement;
   locale: string;
@@ -865,13 +916,18 @@ function ReverseForm({
   const [reason, setReason] = useState("");
   const [correction] = useState(mint);
   const [tried, setTried] = useState(false);
-  const built = reverseRequest(book, correction, target.movement_id, reason);
+  const built = reverseRequest(
+    book,
+    correction,
+    target.movement_id,
+    reason,
+    catalogue.vocabulary,
+  );
   return (
     <ChangeForm
       port={port}
       definition="ledger.inventory.movement.reverse"
       book={book}
-      name={bookName(book)}
       correction={correction}
       request={built.request}
       touched={reason !== ""}
@@ -889,11 +945,14 @@ function ReverseForm({
       <p className="text-sm text-muted-foreground">
         {t("desktop.ledger.stock.reverse_note")}
       </p>
+      <OffersNote state={catalogue.state} />
       <StockFields
         fields={[REASON_FIELD]}
         valueOf={() => reason}
         onValue={(_, value) => setReason(value)}
-        choices={reasonChoices(t, CORRECTION_REASONS, CORRECTION_REASON_KEYS)}
+        choices={{
+          reason: choicesOf(t, catalogue.offers, "correction_reason"),
+        }}
         problems={built.problems}
         missing={built.missing}
         tried={tried}
@@ -906,10 +965,12 @@ function ReverseForm({
 function RetireForm({
   port,
   book,
+  catalogue,
   onClose,
   onWritten,
 }: {
   port: LedgerPort;
+  catalogue: OfferState;
   book: InventoryBookRow;
   onClose(): void;
   onWritten(): void;
@@ -918,13 +979,12 @@ function RetireForm({
   const [reason, setReason] = useState("");
   const [correction] = useState(mint);
   const [tried, setTried] = useState(false);
-  const built = retireRequest(book, correction, reason);
+  const built = retireRequest(book, correction, reason, catalogue.vocabulary);
   return (
     <ChangeForm
       port={port}
       definition="ledger.inventory.retire"
       book={book}
-      name={bookName(book)}
       correction={correction}
       request={built.request}
       touched={reason !== ""}
@@ -941,11 +1001,14 @@ function RetireForm({
       <Alert icon={<Icon name="info" />}>
         {t("desktop.ledger.stock.retire_note")}
       </Alert>
+      <OffersNote state={catalogue.state} />
       <StockFields
         fields={[REASON_FIELD]}
         valueOf={() => reason}
         onValue={(_, value) => setReason(value)}
-        choices={reasonChoices(t, RETIREMENT_REASONS, RETIREMENT_REASON_KEYS)}
+        choices={{
+          reason: choicesOf(t, catalogue.offers, "retirement_reason"),
+        }}
         problems={built.problems}
         missing={built.missing}
         tried={tried}
@@ -973,7 +1036,6 @@ function RestoreForm({
       port={port}
       definition="ledger.inventory.restore"
       book={book}
-      name={bookName(book)}
       correction={correction}
       request={restoreRequest(book, correction)}
       touched={false}
@@ -996,13 +1058,16 @@ function RestoreForm({
 
 // ---- A movement ---------------------------------------------------------------------
 
-/** What a movement form holds: what is typed, the extra costs, the files, and
- * the names of the files attached. */
-function useMovementDraft(initial: Readonly<Record<string, string>>) {
-  const [draft, setDraft] = useState<MovementDraft>(() => ({
-    ...blankMovement(mint),
-    values: initial,
-  }));
+/** The document a change of a proof is for: a slot of the purchase, or the
+ * extra cost with the key it was minted. */
+type ProofTarget = { slot: ProofSlotKey } | { extra: string };
+const targetKey = (target: ProofTarget) =>
+  "slot" in target ? `slot:${target.slot}` : `extra:${target.extra}`;
+
+/** What a movement form holds: what is typed, the extra costs, the files
+ * kept, and the names of the files the person chose this time. */
+function useMovementDraft(initial: MovementDraft) {
+  const [draft, setDraft] = useState<MovementDraft>(initial);
   const [names, setNames] = useState<Readonly<Record<string, string>>>({});
   const setValue = (field: StockField, value: string) =>
     setDraft((current) => ({
@@ -1016,28 +1081,31 @@ function useMovementDraft(initial: Readonly<Record<string, string>>) {
         extra.key === key ? { ...extra, [field]: value } : extra,
       ),
     }));
-  /** Changes one proof, found by the reference minted for it. */
   const setProof = (
-    reference: string,
+    target: ProofTarget,
     change: (current: ProofDraft) => ProofDraft,
     fileName?: string,
   ) => {
-    const swap = (proof: ProofDraft) =>
-      proof.reference === reference ? change(proof) : proof;
-    setDraft((current) => ({
-      ...current,
-      proofs: {
-        price: swap(current.proofs.price),
-        cost_check: swap(current.proofs.cost_check),
-        iva_check: swap(current.proofs.iva_check),
-      },
-      extras: current.extras.map((extra) => ({
-        ...extra,
-        proof: swap(extra.proof),
-      })),
-    }));
+    setDraft((current) =>
+      "slot" in target
+        ? {
+            ...current,
+            proofs: {
+              ...current.proofs,
+              [target.slot]: change(current.proofs[target.slot]),
+            },
+          }
+        : {
+            ...current,
+            extras: current.extras.map((extra) =>
+              extra.key === target.extra
+                ? { ...extra, proof: change(extra.proof) }
+                : extra,
+            ),
+          },
+    );
     if (fileName !== undefined)
-      setNames((current) => ({ ...current, [reference]: fileName }));
+      setNames((current) => ({ ...current, [targetKey(target)]: fileName }));
   };
   return { draft, setDraft, names, setValue, setExtra, setProof };
 }
@@ -1045,13 +1113,17 @@ function useMovementDraft(initial: Readonly<Record<string, string>>) {
 type MovementDraftState = ReturnType<typeof useMovementDraft>;
 
 /** The fields of a movement: its date, kind and units, then what its kind
- * states about its cost. A purchase states its price, its extra costs, its
- * totals and the files that show them. */
+ * states about its cost. A purchase states its price, its extra costs and
+ * the files that show them; what it all comes to is the backend's to add up. */
 function MovementFields({
+  port,
+  catalogue,
   state,
   built,
   tried,
 }: {
+  port: LedgerPort;
+  catalogue: OfferState;
   state: MovementDraftState;
   built: Built<unknown>;
   tried: boolean;
@@ -1059,29 +1131,31 @@ function MovementFields({
   const t = useStrings();
   const { draft, names, setValue, setExtra, setProof, setDraft } = state;
   const kind = draft.values.kind ?? "";
-  const choices = {
-    kind: KINDS.map((value) => ({
-      value,
-      label: tokenText(t, "inventory.kind", value),
-    })),
-  };
+  const choices = { kind: choicesOf(t, catalogue.offers, "movement_kind") };
   const extraChoices = {
-    kind: COST_KINDS.map((value) => ({
-      value,
-      label: t(COST_KIND_KEYS[value]),
-    })),
+    kind: choicesOf(t, catalogue.offers, "attributable_cost_kind"),
   };
   const common = {
     problems: built.problems,
     missing: built.missing,
     tried,
   };
-  const slotFill = (slot: ProofSlot) =>
+  const slotFill = (slot: ProofSlotKey) =>
     tried &&
-    (built.missing.has(`${slot.key}:file`) ||
-      built.missing.has(`${slot.key}:kind`));
+    (built.missing.has(`${slot}:file`) || built.missing.has(`${slot}:kind`));
+  const kindsOf = (slot: ProofSlotKey) => {
+    const allowed = slotKinds(slot, catalogue.vocabulary);
+    return (catalogue.offers.acquisition_evidence_kind ?? [])
+      .filter((served) => allowed.includes(served.value))
+      .map((served) => ({
+        value: served.value,
+        label: servedWord(t, served),
+      }));
+  };
+  const ready = catalogue.state === "done";
   return (
     <>
+      <OffersNote state={catalogue.state} />
       <StockFields
         fields={MOVEMENT_FIELDS}
         valueOf={(field) => draft.values[field.key] ?? ""}
@@ -1165,11 +1239,24 @@ function MovementFields({
                     {...common}
                   />
                   <ProofPicker
+                    port={port}
                     label={t("desktop.ledger.stock.proof.extra")}
-                    kinds={PROOF_KINDS}
+                    kinds={(catalogue.offers.acquisition_evidence_kind ?? [])
+                      .filter((served) =>
+                        slotKinds("price", catalogue.vocabulary).includes(
+                          served.value,
+                        ),
+                      )
+                      .map((served) => ({
+                        value: served.value,
+                        label: servedWord(t, served),
+                      }))}
                     proof={extra.proof}
-                    fileName={names[extra.proof.reference]}
-                    onProof={setProof}
+                    fileName={names[targetKey({ extra: extra.key })]}
+                    onProof={(change, fileName) =>
+                      setProof({ extra: extra.key }, change, fileName)
+                    }
+                    disabled={!ready}
                     fillIn={
                       tried &&
                       (built.missing.has(field("proof:file")) ||
@@ -1180,18 +1267,6 @@ function MovementFields({
               );
             })}
           </Section>
-          <Section heading={t("desktop.ledger.stock.purchase.totals")}>
-            <p className="text-sm text-muted-foreground">
-              {t("desktop.ledger.stock.purchase.totals_hint")}
-            </p>
-            <StockFields
-              fields={TOTAL_FIELDS}
-              valueOf={(field) => draft.values[field.key] ?? ""}
-              onValue={setValue}
-              choices={{}}
-              {...common}
-            />
-          </Section>
           <Section heading={t("desktop.ledger.stock.purchase.proofs")}>
             <p className="text-sm text-muted-foreground">
               {t("desktop.ledger.stock.purchase.proofs_hint")}
@@ -1199,16 +1274,23 @@ function MovementFields({
             {PROOF_SLOTS.map((slot) => (
               <ProofPicker
                 key={slot.key}
+                port={port}
                 label={t(slot.label)}
                 hint={slot.hint ? t(slot.hint) : undefined}
-                kinds={slot.kinds}
+                kinds={kindsOf(slot.key)}
                 proof={draft.proofs[slot.key]}
-                fileName={names[draft.proofs[slot.key].reference]}
-                onProof={setProof}
-                fillIn={slotFill(slot)}
+                fileName={names[targetKey({ slot: slot.key })]}
+                onProof={(change, fileName) =>
+                  setProof({ slot: slot.key }, change, fileName)
+                }
+                disabled={!ready}
+                fillIn={slotFill(slot.key)}
               />
             ))}
           </Section>
+          <p className="text-sm text-muted-foreground">
+            {t("desktop.ledger.stock.purchase.totals_note")}
+          </p>
         </>
       )}
     </>
@@ -1218,11 +1300,13 @@ function MovementFields({
 function MovementForm({
   port,
   book,
+  catalogue,
   onClose,
   onWritten,
 }: {
   port: LedgerPort;
   book: InventoryBookRow;
+  catalogue: OfferState;
   onClose(): void;
   onWritten(): void;
 }) {
@@ -1231,10 +1315,15 @@ function MovementForm({
   // The movement's reference is minted once, when the form opens, and never
   // shown or typed. A movement sent again under it is refused.
   const [reference] = useState(mint);
-  const state = useMovementDraft({});
+  const state = useMovementDraft(blankMovement());
   const [tried, setTried] = useState(false);
   useSetupDraft(movementTouched(state.draft));
-  const built = movementRequest(book, reference, state.draft);
+  const built = movementRequest(
+    book,
+    reference,
+    state.draft,
+    catalogue.vocabulary,
+  );
 
   const send = async () => {
     if (write.busy) return;
@@ -1271,59 +1360,44 @@ function MovementForm({
           void send();
         }}
       >
-        <MovementFields state={state} built={built} tried={tried} />
+        <MovementFields
+          port={port}
+          catalogue={catalogue}
+          state={state}
+          built={built}
+          tried={tried}
+        />
         <FormButtons
           busy={write.busy}
           ready={built.request !== null}
           submit={t("desktop.ledger.stock.submit.movement")}
           onClose={onClose}
         />
-        <CallLine
-          call={write.last}
-          refusal={refusalWords(t, write.last, {
-            name: bookName(book),
-            year: book.year,
-          })}
-        />
+        <CallLine call={write.last} refusal={refusalWords(t, write.last)} />
       </form>
     </Panel>
   );
-}
-
-/** The values a correction of a movement starts from: what the movement
- * states, so the person changes only what was wrong. A purchase's cost and
- * files are not served back, so they are stated again. */
-function startOf(movement: InventoryMovement): Record<string, string> {
-  return {
-    date: movement.movement_date,
-    kind: movement.kind,
-    quantity: movement.quantity.decimal,
-    ...(movement.kind !== "purchase" && movement.unit_cost
-      ? { unit_cost: movement.unit_cost.decimal }
-      : {}),
-    ...(movement.kind !== "purchase" && movement.taxable_base
-      ? { total_cost: movement.taxable_base.decimal }
-      : {}),
-  };
 }
 
 function MovementCorrectForm({
   port,
   book,
   target,
+  catalogue,
   onClose,
   onWritten,
 }: {
   port: LedgerPort;
   book: InventoryBookRow;
   target: InventoryMovement;
+  catalogue: OfferState;
   onClose(): void;
   onWritten(): void;
 }) {
   const t = useStrings();
   // Both references are minted once, when the form opens, and never shown.
   const [ids] = useState(() => ({ correction: mint(), movement: mint() }));
-  const [initial] = useState(() => startOf(target));
+  const [initial] = useState(() => draftOfMovement(target));
   const state = useMovementDraft(initial);
   const [reason, setReason] = useState("");
   const [tried, setTried] = useState(false);
@@ -1333,23 +1407,15 @@ function MovementCorrectForm({
     target.movement_id,
     reason,
     state.draft,
+    catalogue.vocabulary,
   );
   const changed =
-    reason !== "" ||
-    movementTouched({
-      ...state.draft,
-      values: Object.fromEntries(
-        Object.entries(state.draft.values).filter(
-          ([key, text]) => initial[key] !== text,
-        ),
-      ),
-    });
+    reason !== "" || JSON.stringify(state.draft) !== JSON.stringify(initial);
   return (
     <ChangeForm
       port={port}
       definition="ledger.inventory.movement.correct"
       book={book}
-      name={bookName(book)}
       correction={ids.correction}
       request={built.request}
       touched={changed}
@@ -1370,14 +1436,266 @@ function MovementCorrectForm({
         fields={[REASON_FIELD]}
         valueOf={() => reason}
         onValue={(_, value) => setReason(value)}
-        choices={reasonChoices(t, CORRECTION_REASONS, CORRECTION_REASON_KEYS)}
+        choices={{
+          reason: choicesOf(t, catalogue.offers, "correction_reason"),
+        }}
         problems={built.problems}
         missing={built.missing}
         tried={tried}
         autoFocus
       />
-      <MovementFields state={state} built={built} tried={tried} />
+      <MovementFields
+        port={port}
+        catalogue={catalogue}
+        state={state}
+        built={built}
+        tried={tried}
+      />
     </ChangeForm>
+  );
+}
+
+// ---- A closing value -----------------------------------------------------------------
+
+/** The closing value of a book from the facts the person knows: how it is
+ * decided, why, the documents that show it, and the count when the count is
+ * the value. Nothing is hashed or fingerprinted here. */
+function ClosingForm({
+  port,
+  book,
+  catalogue,
+  onClose,
+  onWritten,
+}: {
+  port: LedgerPort;
+  book: InventoryBookRow;
+  catalogue: OfferState;
+  onClose(): void;
+  onWritten(): void;
+}) {
+  const t = useStrings();
+  const write = useSetupWrite(t("desktop.ledger.stock.title"));
+  // The decision's reference and its moment are fixed when the form opens, so
+  // a closing sent twice is one closing.
+  const [ids] = useState(() => ({
+    decision: mint(),
+    decidedAt: new Date().toISOString(),
+  }));
+  const [draft, setDraft] = useState<ClosingDraft>(EMPTY_CLOSING);
+  const [names, setNames] = useState<Readonly<Record<string, string>>>({});
+  const [tried, setTried] = useState(false);
+  useSetupDraft(closingTouched(draft));
+  const built = closingRequest(book, ids, draft, catalogue.vocabulary);
+  const physical = draft.values.authority === PHYSICAL_AUTHORITY;
+  const ready = catalogue.state === "done";
+
+  const setValue = (field: StockField, value: string) =>
+    setDraft((current) => ({
+      ...current,
+      values: { ...current.values, [field.key]: value },
+    }));
+  const named = (key: string, fileName: string | undefined) => {
+    if (fileName !== undefined)
+      setNames((current) => ({ ...current, [key]: fileName }));
+  };
+  const setRole = (
+    group: "decision" | "count",
+    role: string,
+    change: (current: ProofDraft) => ProofDraft,
+    fileName?: string,
+  ) => {
+    setDraft((current) => ({
+      ...current,
+      [group]: {
+        ...current[group],
+        [role]: change(current[group][role] ?? blankProof(role)),
+      },
+    }));
+    named(`${group}:${role}`, fileName);
+  };
+  const setPrior = (
+    key: string,
+    change: (current: ProofDraft) => ProofDraft,
+    fileName?: string,
+  ) => {
+    setDraft((current) => ({
+      ...current,
+      prior: current.prior.map((entry) =>
+        entry.key === key ? { ...entry, proof: change(entry.proof) } : entry,
+      ),
+    }));
+    named(`prior:${key}`, fileName);
+  };
+  const filled = (key: string) => tried && built.missing.has(`${key}:file`);
+  const roles = (family: string) => catalogue.offers[family] ?? [];
+
+  const send = async () => {
+    if (write.busy) return;
+    const request = built.request;
+    if (request === null) {
+      setTried(true);
+      return;
+    }
+    const done = await write.run(
+      () =>
+        setupCall(port, "ledger.inventory.closing-value.record", request, true),
+      readLanding(
+        port,
+        "ledger.inventory.inspect",
+        { actividad_id: book.actividad_id, year: book.year },
+        (read) => closingLanded(read.ledger),
+      ),
+    );
+    if (done.kind === "done" && refusalOf(done) === null) onWritten();
+  };
+
+  const documents = (
+    group: "decision" | "count",
+    family: string,
+    heading: string,
+  ) => (
+    <Section heading={heading}>
+      {roles(family).map((served) => (
+        <ProofPicker
+          key={served.value}
+          port={port}
+          label={servedWord(t, served)}
+          kinds={[]}
+          proof={draft[group][served.value] ?? blankProof(served.value)}
+          fileName={names[`${group}:${served.value}`]}
+          onProof={(change, fileName) =>
+            setRole(group, served.value, change, fileName)
+          }
+          disabled={!ready}
+          fillIn={filled(`${group}:${served.value}`)}
+        />
+      ))}
+    </Section>
+  );
+
+  return (
+    <Panel
+      title={t("desktop.ledger.stock.form.closing", {
+        name: bookName(book),
+        year: book.year,
+      })}
+      className="ledger-stock-form ledger-stock-form-closing"
+    >
+      <form
+        noValidate
+        className="flex flex-col gap-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void send();
+        }}
+      >
+        <p className="text-sm text-muted-foreground">
+          {t("desktop.ledger.stock.closing.note")}
+        </p>
+        <OffersNote state={catalogue.state} />
+        <StockFields
+          fields={CLOSING_FIELDS}
+          valueOf={(field) => draft.values[field.key] ?? ""}
+          onValue={setValue}
+          choices={{
+            authority: choicesOf(t, catalogue.offers, "closing_authority"),
+          }}
+          problems={built.problems}
+          missing={built.missing}
+          tried={tried}
+          autoFocus
+        />
+        {physical && (
+          <Section heading={t("desktop.ledger.stock.closing.count")}>
+            <StockFields
+              fields={COUNT_FIELDS}
+              valueOf={(field) => draft.values[field.key] ?? ""}
+              onValue={setValue}
+              choices={{
+                basis: choicesOf(
+                  t,
+                  catalogue.offers,
+                  "closing_valuation_basis",
+                ),
+              }}
+              problems={built.problems}
+              missing={built.missing}
+              tried={tried}
+            />
+          </Section>
+        )}
+        {physical &&
+          documents(
+            "count",
+            "physical_evidence_role",
+            t("desktop.ledger.stock.closing.count_documents"),
+          )}
+        {documents(
+          "decision",
+          "decision_evidence_role",
+          t("desktop.ledger.stock.closing.documents"),
+        )}
+        <Section
+          heading={t("desktop.ledger.stock.closing.prior")}
+          actions={
+            <IconButton
+              label={t("desktop.ledger.stock.closing.prior_add")}
+              onClick={() =>
+                setDraft((current) => ({
+                  ...current,
+                  prior: [
+                    ...current.prior,
+                    { key: mint(), proof: blankProof() },
+                  ],
+                }))
+              }
+            >
+              <Icon name="plus" />
+            </IconButton>
+          }
+        >
+          <p className="text-sm text-muted-foreground">
+            {t("desktop.ledger.stock.closing.prior_hint")}
+          </p>
+          {draft.prior.map((entry) => (
+            <div key={entry.key} className="flex items-end gap-2">
+              <ProofPicker
+                port={port}
+                label={t("desktop.ledger.stock.closing.prior_document")}
+                kinds={[]}
+                proof={entry.proof}
+                fileName={names[`prior:${entry.key}`]}
+                onProof={(change, fileName) =>
+                  setPrior(entry.key, change, fileName)
+                }
+                disabled={!ready}
+                fillIn={filled(`prior:${entry.key}`)}
+              />
+              <IconButton
+                label={t("desktop.ledger.stock.closing.prior_remove")}
+                onClick={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    prior: current.prior.filter(
+                      (found) => found.key !== entry.key,
+                    ),
+                  }))
+                }
+              >
+                <Icon name="trash" />
+              </IconButton>
+            </div>
+          ))}
+        </Section>
+        <FormButtons
+          busy={write.busy}
+          ready={built.request !== null}
+          submit={t("desktop.ledger.stock.submit.closing")}
+          onClose={onClose}
+        />
+        <CallLine call={write.last} refusal={refusalWords(t, write.last)} />
+      </form>
+    </Panel>
   );
 }
 
@@ -1392,7 +1710,7 @@ function factText(t: Translate, locale: string, fact: HistoryFact): string {
       });
     case "method":
       return t("desktop.ledger.stock.fact.method", {
-        value: tokenText(t, "inventory.method", fact.value),
+        value: wordOf(t, "valuation_method", fact.value),
       });
     case "label":
       return t("desktop.ledger.stock.fact.label", { value: fact.value });
@@ -1462,7 +1780,7 @@ function History({
         {
           key: "what",
           label: t("desktop.ledger.stock.history.what"),
-          cell: (row) => t(HISTORY_KIND_KEYS[row.kind]),
+          cell: (row) => wordOf(t, "history_kind", row.kind),
         },
         {
           key: "reason",
@@ -1471,8 +1789,8 @@ function History({
             row.reason === null
               ? "—"
               : row.reason.family === "correction"
-                ? t(CORRECTION_REASON_KEYS[row.reason.token])
-                : t(RETIREMENT_REASON_KEYS[row.reason.token]),
+                ? wordOf(t, "correction_reason", row.reason.token)
+                : wordOf(t, "retirement_reason", row.reason.token),
         },
         {
           key: "before",
@@ -1489,16 +1807,186 @@ function History({
   );
 }
 
+// ---- What a purchase came to -------------------------------------------------------
+
+/** The family every sentence the backend serves as an advisory belongs to. */
+const ADVISORY_FAMILY = "application.inventory.advisories.";
+
+type FactLine = { key: string; label: string; value: string };
+
+/** A purchase as the backend keeps it: the price, each extra cost, what the
+ * backend added up, and the kinds of document it rests on. Every figure is
+ * read from what the backend served; none is worked out here. */
+function PurchaseFacts({
+  movement,
+  locale,
+  onClose,
+}: {
+  movement: InventoryMovement;
+  locale: string;
+  onClose(): void;
+}) {
+  const t = useStrings();
+  const cost = movement.acquisition_cost ?? null;
+  const detail = movement.acquisition_detail ?? null;
+  const money = (value: { decimal: string }) =>
+    amountText(locale, value.decimal);
+  const lines: FactLine[] = [];
+  if (cost !== null) {
+    lines.push({
+      key: "price",
+      label: t("desktop.ledger.stock.facts.price"),
+      value: money(cost.consideration_excluding_iva),
+    });
+    if (detail !== null) {
+      lines.push({
+        key: "iva",
+        label: t("desktop.ledger.stock.facts.iva"),
+        value: money(detail.consideration_iva_amount),
+      });
+      for (const component of detail.components)
+        lines.push({
+          key: component.component_id,
+          label: wordOf(t, "attributable_cost_kind", component.kind),
+          value: money(component.taxable_base),
+        });
+    }
+    lines.push(
+      {
+        key: "extra_total",
+        label: t("desktop.ledger.stock.facts.extra_total"),
+        value: money(cost.directly_attributable_cost_total),
+      },
+      {
+        key: "recoverable",
+        label: t("desktop.ledger.stock.facts.recoverable"),
+        value: money(cost.recoverable_iva_excluded),
+      },
+      {
+        key: "unrecoverable",
+        label: t("desktop.ledger.stock.facts.unrecoverable"),
+        value: money(cost.nonrecoverable_iva_included),
+      },
+      {
+        key: "total",
+        label: t("desktop.ledger.stock.facts.total"),
+        value: money(cost.total_acquisition_cost),
+      },
+    );
+  }
+  return (
+    <Panel
+      title={t("desktop.ledger.stock.facts.title", {
+        date: dateText(locale, movement.movement_date, true),
+      })}
+      className="ledger-stock-form ledger-stock-purchase"
+    >
+      <div className="flex flex-col gap-3">
+        {cost === null ? (
+          <p className="text-sm text-muted-foreground">
+            {t("desktop.ledger.stock.facts.unknown")}
+          </p>
+        ) : (
+          <SetupTable
+            label={t("desktop.ledger.stock.facts.table")}
+            rows={lines}
+            rowKey={(line) => line.key}
+            className="ledger-stock-purchase-lines"
+            columns={[
+              {
+                key: "what",
+                label: t("desktop.ledger.stock.facts.what"),
+                cell: (line) => line.label,
+              },
+              {
+                key: "amount",
+                label: t("desktop.ledger.stock.facts.amount"),
+                numeric: true,
+                cell: (line) => line.value,
+              },
+            ]}
+          />
+        )}
+        <section className="flex flex-col gap-1">
+          <h4 className="font-medium">
+            {t("desktop.ledger.stock.facts.documents")}
+          </h4>
+          {detail === null || detail.documents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t("desktop.ledger.stock.facts.documents_unknown")}
+            </p>
+          ) : (
+            <ul className="ledger-stock-documents text-sm">
+              {detail.documents.map((document) => (
+                <li
+                  key={`${document.reference}|${document.evidence_kind}`}
+                  className="flex items-center gap-1"
+                >
+                  <Icon name="attach" size="sm" />
+                  {wordOf(
+                    t,
+                    "acquisition_evidence_kind",
+                    document.evidence_kind,
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <div className="flex">
+          <Button type="button" size="sm" variant="ghost" onClick={onClose}>
+            {t("desktop.ledger.form.close")}
+          </Button>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+/** What the backend says about a book that the person should know, said in
+ * its own sentence with the year filled in. A sentence it has no words for
+ * is left out rather than shown as a key. */
+function Advisories({
+  advisories,
+  className,
+}: {
+  advisories: readonly InventoryAdvisory[] | undefined;
+  className: string;
+}) {
+  const t = useStrings();
+  const said = (advisories ?? []).flatMap((advisory) => {
+    if (!advisory.key.startsWith(ADVISORY_FAMILY)) return [];
+    const sentence = t(advisory.key, { year: advisory.year });
+    return sentence === advisory.key ? [] : [{ advisory, sentence }];
+  });
+  if (said.length === 0) return null;
+  return (
+    <>
+      {said.map(({ advisory, sentence }) => (
+        <Alert
+          key={`${advisory.code}|${advisory.year}`}
+          tone="warning"
+          icon={<Icon name="alert" />}
+          className={className}
+        >
+          {sentence}
+        </Alert>
+      ))}
+    </>
+  );
+}
+
 // ---- The pane -------------------------------------------------------------------------
 
 type Task =
   | { kind: "book" }
   | {
-      kind: "movement" | "describe" | "correct" | "retire" | "restore";
+      kind:
+        "movement" | "describe" | "correct" | "retire" | "restore" | "closing";
       book: BookKey;
     }
   | {
-      kind: "movement_correct" | "movement_reverse";
+      kind: "movement_correct" | "movement_reverse" | "purchase_facts";
       book: BookKey;
       target: InventoryMovement;
     };
@@ -1544,6 +2032,7 @@ export function StockPane({
     ? { actividad_id: book.actividad_id, year: book.year }
     : null;
   const detail = useBookDetail(port, reader, bookKey, round);
+  const catalogue = useOffers(port, reader, round);
 
   const choose = (row: BookKey) => setChosen(row.actividad_id);
   const open = (next: Task) => {
@@ -1594,10 +2083,23 @@ export function StockPane({
               <Icon name="archive" size="xs" />
               {row.retirement_reason
                 ? t("desktop.ledger.stock.retired_because", {
-                    reason: t(RETIREMENT_REASON_KEYS[row.retirement_reason]),
+                    reason: wordOf(
+                      t,
+                      "retirement_reason",
+                      row.retirement_reason,
+                    ),
                   })
                 : t("desktop.ledger.stock.retired")}
             </span>
+          )}
+          {(row.advisories ?? []).length > 0 && (
+            <Pill
+              icon="alert"
+              count={(row.advisories ?? []).length}
+              label={t("desktop.ledger.stock.count.advisories", {
+                count: (row.advisories ?? []).length,
+              })}
+            />
           )}
           {(row.correction_count ?? 0) > 0 && (
             <Pill
@@ -1614,8 +2116,8 @@ export function StockPane({
     {
       key: "method",
       label: t("desktop.ledger.inventory.column.method"),
-      sort: (row) => tokenText(t, "inventory.method", row.valuation_method),
-      cell: (row) => tokenText(t, "inventory.method", row.valuation_method),
+      sort: (row) => wordOf(t, "valuation_method", row.valuation_method),
+      cell: (row) => wordOf(t, "valuation_method", row.valuation_method),
     },
     {
       key: "opening",
@@ -1665,6 +2167,17 @@ export function StockPane({
             >
               <Icon name="eye" />
             </IconButton>
+            <WriteHold>
+              <IconButton
+                label={t("desktop.ledger.stock.action.closing")}
+                hint={why}
+                aria-disabled={stopped || undefined}
+                className="ledger-stock-closing"
+                onClick={() => !stopped && open({ kind: "closing", book: key })}
+              >
+                <Icon name="lock" />
+              </IconButton>
+            </WriteHold>
             <WriteHold>
               <IconButton
                 label={t("desktop.ledger.stock.action.describe")}
@@ -1783,6 +2296,7 @@ export function StockPane({
           key={`book|${year}`}
           port={port}
           year={year}
+          catalogue={catalogue}
           onClose={close}
           onWritten={written}
         />
@@ -1793,7 +2307,13 @@ export function StockPane({
         found.year === task.book.year,
     );
     if (!row) return null;
-    const common = { port, book: row, onClose: close, onWritten: written };
+    const common = {
+      port,
+      book: row,
+      catalogue,
+      onClose: close,
+      onWritten: written,
+    };
     const key = `${task.kind}|${keyOf(row)}`;
     switch (task.kind) {
       case "movement":
@@ -1810,6 +2330,17 @@ export function StockPane({
         return <RetireForm key={key} {...common} />;
       case "restore":
         return <RestoreForm key={key} {...common} />;
+      case "closing":
+        return <ClosingForm key={key} {...common} />;
+      case "purchase_facts":
+        return (
+          <PurchaseFacts
+            key={`${key}|${task.target.movement_id}`}
+            movement={task.target}
+            locale={locale}
+            onClose={close}
+          />
+        );
       case "movement_correct":
         return (
           <MovementCorrectForm
@@ -1864,6 +2395,18 @@ export function StockPane({
     };
     return (
       <>
+        <Advisories
+          advisories={ledger.advisories ?? book.advisories}
+          className="ledger-stock-advisory"
+        />
+        {ledger.closing_authority_fingerprints !== null && (
+          <Alert
+            icon={<Icon name="lock" />}
+            className="ledger-stock-closing-recorded"
+          >
+            {t("desktop.ledger.stock.closing.recorded", { year: book.year })}
+          </Alert>
+        )}
         {ledger.period_movements.length === 0 ? (
           <p className="ledger-stock-movements-note text-sm text-muted-foreground">
             {t("desktop.ledger.stock.movements_none")}
@@ -1887,10 +2430,8 @@ export function StockPane({
               {
                 key: "kind",
                 label: t("desktop.ledger.inventory.column.kind"),
-                sort: (movement) =>
-                  tokenText(t, "inventory.kind", movement.kind),
-                cell: (movement) =>
-                  tokenText(t, "inventory.kind", movement.kind),
+                sort: (movement) => wordOf(t, "movement_kind", movement.kind),
+                cell: (movement) => wordOf(t, "movement_kind", movement.kind),
               },
               {
                 key: "quantity",
@@ -1929,6 +2470,21 @@ export function StockPane({
                 resizable: false,
                 cell: (movement) => (
                   <RowActions>
+                    {movement.kind === "purchase" && (
+                      <IconButton
+                        label={t("desktop.ledger.stock.action.purchase_facts")}
+                        className="ledger-stock-purchase-facts"
+                        onClick={() =>
+                          open({
+                            kind: "purchase_facts",
+                            book: bookKey,
+                            target: movement,
+                          })
+                        }
+                      >
+                        <Icon name="eye" />
+                      </IconButton>
+                    )}
                     <WriteHold>
                       <IconButton
                         label={t(
@@ -2041,7 +2597,7 @@ export function StockPane({
               name: bookName(book),
               closing: amountText(locale, valued.derived_closing_value.decimal),
               cogs: amountText(locale, valued.cogs.decimal),
-              method: tokenText(t, "inventory.method", valued.valuation_method),
+              method: wordOf(t, "valuation_method", valued.valuation_method),
             })}
           </span>
           <span className="text-sm">
@@ -2050,13 +2606,7 @@ export function StockPane({
         </Alert>
       )}
       {preview && preview.call.kind !== "done" && book && (
-        <CallLine
-          call={preview.call}
-          refusal={refusalWords(t, preview.call, {
-            name: bookName(book),
-            year: book.year,
-          })}
-        />
+        <CallLine call={preview.call} refusal={refusalWords(t, preview.call)} />
       )}
       {preview?.call.kind === "done" && refusalOf(preview.call) !== null && (
         <Alert
@@ -2065,10 +2615,7 @@ export function StockPane({
           icon={<Icon name="refused" />}
           className="ledger-stock-refused"
         >
-          {refusalWords(t, preview.call, {
-            name: book ? bookName(book) : "",
-            year,
-          })()}
+          {refusalWords(t, preview.call)()}
         </Alert>
       )}
       {list?.kind === "done" && movementsBody()}

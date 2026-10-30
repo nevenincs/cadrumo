@@ -2984,16 +2984,7 @@ desktop:
         quantity: Mennyiség
         unit_cost: Egységköltség
       date: Dátum
-      kind:
-        cogs: Eladott áruk költsége
-        count: Leltár
-        opening: Nyitókészlet
-        purchase: Beszerzés
       kind_label: Fajta
-      method:
-        coste_medio: Átlagköltség
-        fifo: FIFO
-        pmp: Súlyozott átlagár
       method_label: Értékelési módszer
       opening: Nyitókészlet értéke
       preview_note: 'Előnézet: semmi sem kerül rögzítésre.'
@@ -3709,25 +3700,41 @@ desktop:
       action:
         add_book: Készletnyilvántartás felvétele
         add_movement: Mozgás felvétele
+        closing: A záróérték rögzítése
         correct: A nyitókészlet vagy a módszer javítása
         describe: A részletek szerkesztése
         movement_correct: Ennek a mozgásnak a javítása
         movement_reverse: Ennek a mozgásnak a visszavonása
         preview: Az értékelés előnézete
+        purchase_facts: A vásárlás költségének megtekintése
         restore: A készletnyilvántartás visszaállítása
         retire: A készletnyilvántartás megszüntetése
       books: Készletnyilvántartások, {year}
+      closing:
+        authority: Hogyan döntesz az értékről
+        basis: Értékelés alapja
+        count: A leltár
+        count_documents: A leltárt igazoló fájlok
+        counted_on: A leltár napja
+        documents: A záróértéket igazoló fájlok
+        note: Add meg, hogyan döntöttél arról az értékről, amellyel a készleted lezárja
+          az évet, miért, és csatold az azt igazoló fájlokat.
+        prior: Az előző év záróértéke
+        prior_add: Fájl hozzáadása
+        prior_document: Az előző év záróértékét igazoló fájl
+        prior_hint: 'Csak akkor, ha az előző év készletkönyvében nincs rögzített záróérték:
+          add hozzá az azt igazoló fájlt.'
+        prior_remove: Fájl eltávolítása
+        reason: Miért
+        reason_hint: A saját szavaiddal.
+        recorded: '{year} záróértéke rögzítve van. Ennek a könyvnek a készlete már
+          nem módosítható.'
+        value: Leltározott érték, IVA nélkül
       column:
         cost: Költség
         name: Tevékenység
-      cost_kind:
-        customs_duty: Vám
-        freight: Fuvarozás
-        handling: Kezelés
-        insurance: Biztosítás
-        other_directly_attributable: A beszerzés egyéb költsége
-        professional_fee: Szakmai díj
       count:
+        advisories: 'Figyelmeztetések: {count}'
         books: 'Készletnyilvántartások: {count}'
         corrections: 'Javítások: {count}'
         retired: 'Megszüntetve: {count}'
@@ -3753,10 +3760,23 @@ desktop:
         no_description: Nincs leírás
         opening: Nyitókészlet {value}
         removed: Kikerült a számításból
+      facts:
+        amount: Összeg
+        documents: Az alapjául szolgáló fájlok
+        documents_unknown: Ennek a vásárlásnak a fájljai nem érhetők el.
+        extra_total: További költségek
+        iva: Az ár IVA-ja
+        price: Ár IVA nélkül
+        recoverable: Levont IVA, nem része a költségnek
+        table: Mennyibe került ez a vásárlás
+        title: 'Vásárlás: {date}'
+        total: Teljes költség
+        unknown: Ennek a vásárlásnak a költsége nem érhető el.
+        unrecoverable: Nem levonható IVA, a költség része
+        what: Tétel
       field:
         cost_hint: Add meg az egységköltséget vagy az összeset, amelyik megvan.
         description: Leírás (nem kötelező)
-        extra_total: További költségek IVA nélkül, összesen
         iva: Az ár IVA-ja
         keep: A mostani marad
         keep_hint: Hagyd üresen, ha a mostani marad.
@@ -3769,13 +3789,11 @@ desktop:
         opening_new: A nyitókészlet új értéke
         price: Ár IVA nélkül
         reason: Ok
-        recoverable: Levonható IVA, összesen
         share: Az IVA-nak az a része, amelyet levonhatsz (%)
-        total: A beszerzés teljes költsége
         total_cost: Teljes költség IVA nélkül
-        unrecoverable: Le nem vonható IVA (a költséghez adódik)
       form:
         book: Új készletnyilvántartás, {year}
+        closing: '{name} záróértéke · {year}'
         correct: '{name} javítása · {year}'
         describe: '{name} részletei · {year}'
         movement: 'Mozgás felvétele ide: {name} · {year}'
@@ -3798,6 +3816,9 @@ desktop:
         marad.
       movements_none: Ebben a nyilvántartásban még nincs mozgás. Vedd fel az elsőt.
       movements_of: '{name} mozgásai'
+      options_failed: Az űrlap lehetőségeit nem sikerült betölteni. Zárd be az űrlapot,
+        és nyisd meg újra.
+      options_loading: Az űrlap lehetőségeinek betöltése…
       proof:
         change_file: Másik fájl kiválasztása
         check_hint: Bármilyen fájl, amely mutatja az ellenőrzést, például egy jegyzet
@@ -3805,27 +3826,21 @@ desktop:
         choose_file: Fájl kiválasztása
         cost_check: Fájl, amely igazolja, hogy átnézted a további költségeket
         extra: Ezt a költséget igazoló fájl
-        file_too_large: A fájl nagyobb 50 MB-nál.
-        file_unread: A fájlt nem sikerült megnyitni.
+        file_unread: Ezt a fájlt nem lehetett felhasználni. Jelölj ki egy PDF-, kép-
+          vagy XML-fájlt, és próbáld újra.
         iva_check: Fájl, amely igazolja, hogy átnézted, mennyi IVA vonható le
+        keeping: A fájl mentése…
+        kept: A könyveidhez mentve
         kind: A fájl fajtája
         price: Az árat igazoló fájl
-      proof_kind:
-        contract: Szerződés
-        customs_declaration: Vámnyilatkozat
-        insurance_document: Biztosítási kötvény
-        other_acquisition_evidence: A beszerzés egyéb igazolása
-        purchase_invoice: Beszerzési számla
-        transport_document: Szállítólevél
       purchase:
         extras: A beszerzés további költségei
         price: A beszerzés ára
         proofs: Fájlok, amelyek igazolják
-        proofs_hint: Csatold a fájlokat. A Cadrumo minden fájlból egy jelet tart meg,
-          amellyel később felismerhető, magát a fájlt nem.
-        totals: Összesítések
-        totals_hint: Írd be az összegeket, amelyekre a fenti számok kijönnek. Egyezniük
-          kell a számokkal.
+        proofs_hint: Jelöld ki a fájlokat. A Cadrumo mindegyikről másolatot őriz a
+          könyveidnél.
+        totals_note: A vásárlás felvételekor a Cadrumo összeadja helyetted a további
+          költségeket, az IVA-t és a teljes költséget.
       refused: A készletnyilvántartás ezt nem fogadta el. Semmi sem lett mentve.
       restore_note: A készletnyilvántartás visszakerül az aktív listádra mindazzal,
         amit tartalmaz.
@@ -3838,6 +3853,7 @@ desktop:
       reverse_note: A mozgás nem számít többé. Az előzményekben marad.
       submit:
         book: Nyilvántartás felvétele
+        closing: Záróérték rögzítése
         correct: Javítás mentése
         describe: Részletek mentése
         movement: Mozgás felvétele
@@ -3848,6 +3864,7 @@ desktop:
       summary: Készletösszegzés
       title: Készlet
       unavailable: A készleted most nem érhető el.
+      unnamed: Ismeretlen
     sum:
       in: Bejövő {amount}
       out: Kimenő {amount}
@@ -7944,9 +7961,9 @@ tui:
       inventory:
         action:
           closing_authority: Záróérték rögzítése teljes fájlból
-          evidence_add: "Beszerzési dokumentum mentése"
           closing_value: Záróérték rögzítése adatfájlból
           create: Készlet létrehozása
+          evidence_add: Beszerzési dokumentum mentése
           movement_add: Mozgás hozzáadása
           valuation_preview: Értékelés előnézete
         column:
@@ -7961,14 +7978,16 @@ tui:
           create: A készlet létrejött.
           movement_add: A mozgás hozzáadva.
         empty: Még nincs tevékenységi készlet.
+        evidence_done: A dokumentum elmentve.
+        evidence_held: 'Így hivatkozz rá a beszerzésnél: %{reference}'
         field:
           acquisition_cost: Beszerzési költség fájlja (csak vásárlásnál)
           action: Kérés
           actividad_id: Tevékenység
           authority_record: A záróérték teljes fájlja
-          evidence_file: "Dokumentumfájl"
-          evidence_folder: "A dokumentum útvonalának kiinduló mappája"
           closing_value_facts: Záróérték adatfájlja
+          evidence_file: Dokumentumfájl
+          evidence_folder: A dokumentum útvonalának kiinduló mappája
           kind: Mozgás fajtája
           movement_date: Mozgás dátuma
           movement_id: Mozgás azonosítója
@@ -7990,8 +8009,8 @@ tui:
           pmp: Súlyozott átlagár
         prompt: Minden tevékenységi készlet évenként. Válassz egy kérést, töltsd ki
           a mezőit, nézd át, majd erősítsd meg. Az értékelést és az eladott áruk beszerzési
-          értékét maga a nyilvántartás számolja. A beszerzési költséget és a
-          záróértéket az általad megadott fájlból olvassuk be.
+          értékét maga a nyilvántartás számolja. A beszerzési költséget és a záróértéket
+          az általad megadott fájlból olvassuk be.
         refusal:
           activity_conflict: 'A nyilvántartás elutasította a kérést: arra a tevékenységre
             és évre már van készlet.'
@@ -8014,8 +8033,6 @@ tui:
             %{movements} mozgás'
           valuation: '%{actividad} %{year} értékelése (%{method}): záró érték %{closing},
             eladott áruk beszerzési értéke %{cogs}.'
-        evidence_done: "A dokumentum elmentve."
-        evidence_held: "Így hivatkozz rá a beszerzésnél: %{reference}"
         source: 'Beolvasva innen: %{path}'
         source_invalid: 'A(z) %{path} fájl nem érvényes rekord: %{count} hiba található.'
         source_unreadable: A(z) %{path} fájl nem olvasható.

@@ -1,78 +1,74 @@
-"""The choices the desktop Stock panel offers reflect the backend's enums, and each has its words.
+"""The desktop Stock panel holds no list of the choices its forms offer, and names only what it must.
 
-The backend serves no list of valuation methods, movement kinds, extra-cost kinds or kinds of
-proof, so the panel keeps a list of each beside its forms. A list that drifted from its enum would
-offer a choice the backend refuses or leave one out, so each is held to the enum it is named for,
-and every member to the words the chrome declares for it.
+The options operation serves every closed choice a form offers, so the panel keeps no list of
+methods, kinds, reasons or bases beside its forms. Three values are named because a form treats them
+apart from the rest, and each is held here to the enum member it names; and a panel source that
+quoted any other served value would be keeping a list of its own.
 """
 
 from __future__ import annotations
 
 import re
-from enum import StrEnum
 
 import pytest
 
-from cadrumo.domain.contribuyente.inventory.records import (
-    InventoryAcquisitionEvidenceKind,
-    InventoryAttributableCostKind,
-    MovementKind,
-    ValuationMethod,
-)
+from cadrumo.application.inventory.registered_options_operation import INVENTORY_OPTION_FAMILIES
+from cadrumo.domain.contribuyente.inventory.closing_foundations import InventoryClosingAuthority
+from cadrumo.domain.contribuyente.inventory.records import InventoryAcquisitionEvidenceKind, MovementKind
 from dev._paths import REPO_ROOT
 
 from ..desktop_chrome import DESKTOP_CHROME_KEYS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_MODEL = REPO_ROOT / "native" / "desktop" / "frontend" / "src" / "components" / "ledger" / "assets" / "stockModel.ts"
-
-
-def _list(name: str) -> list[str]:
-    """The members of one exported list in the panel's model, in order."""
-    found = re.search(rf"export const {name} = \[(.*?)\]", _MODEL.read_text(encoding="utf-8"), re.DOTALL)
-    assert found is not None, f"the panel's model names no list {name}"
-    return [str(value) for value in re.findall(r'"([^"]+)"', found.group(1))]
+_ASSETS = REPO_ROOT / "native" / "desktop" / "frontend" / "src" / "components" / "ledger" / "assets"
+_SOURCES = [_ASSETS / "stockModel.ts", _ASSETS / "StockPane.tsx"]
 
 
 def _constant(name: str) -> str:
-    found = re.search(rf'export const {name} = "([^"]+)"', _MODEL.read_text(encoding="utf-8"))
+    found = re.search(rf'export const {name} = "([^"]+)"', _SOURCES[0].read_text(encoding="utf-8"))
     assert found is not None, f"the panel's model names no constant {name}"
     return str(found.group(1))
 
 
-@pytest.mark.parametrize(
-    ("name", "enum"),
-    [
-        ("METHODS", ValuationMethod),
-        ("KINDS", MovementKind),
-        ("COST_KINDS", InventoryAttributableCostKind),
-    ],
-)
-def test_a_list_the_panel_offers_is_its_enum(name: str, enum: type[StrEnum]) -> None:
-    offered = _list(name)
+def test_the_two_checks_a_purchase_states_are_kinds_of_proof_the_backend_serves() -> None:
+    kinds = {member.value for member in InventoryAcquisitionEvidenceKind}
 
-    assert len(offered) == len(set(offered)), f"{name} offers a choice twice"
-    assert sorted(offered) == sorted(member.value for member in enum)
+    assert _constant("COST_CHECK_KIND") in kinds
+    assert _constant("IVA_CHECK_KIND") in kinds
+    assert _constant("COST_CHECK_KIND") != _constant("IVA_CHECK_KIND")
 
 
-def test_the_kinds_of_proof_are_the_enum_less_the_two_checks_a_purchase_states() -> None:
-    offered = [*_list("PROOF_KINDS"), _constant("COST_CHECK_KIND"), _constant("IVA_CHECK_KIND")]
-
-    assert len(offered) == len(set(offered))
-    assert sorted(offered) == sorted(member.value for member in InventoryAcquisitionEvidenceKind)
+def test_the_authority_a_count_settles_is_one_the_backend_serves() -> None:
+    assert _constant("PHYSICAL_AUTHORITY") in {member.value for member in InventoryClosingAuthority}
+    assert MovementKind.PURCHASE.value == "purchase"
 
 
-@pytest.mark.parametrize(
-    ("name", "family"),
-    [
-        ("METHODS", "desktop.ledger.inventory.method."),
-        ("KINDS", "desktop.ledger.inventory.kind."),
-        ("COST_KINDS", "desktop.ledger.stock.cost_kind."),
-        ("PROOF_KINDS", "desktop.ledger.stock.proof_kind."),
-    ],
-)
-def test_every_choice_the_panel_offers_has_its_words_declared(name: str, family: str) -> None:
-    declared = {key for key in DESKTOP_CHROME_KEYS if key.startswith(family)}
+def test_the_panel_quotes_no_served_value_it_does_not_name_on_purpose() -> None:
+    named = {
+        MovementKind.PURCHASE.value,
+        _constant("COST_CHECK_KIND"),
+        _constant("IVA_CHECK_KIND"),
+        _constant("PHYSICAL_AUTHORITY"),
+    }
+    quoted = set()
+    for source in _SOURCES:
+        quoted |= set(re.findall(r'"([a-z][a-z_]*)"', source.read_text(encoding="utf-8")))
 
-    assert declared == {f"{family}{token}" for token in _list(name)}
+    served = {
+        member.value
+        for _, enum in INVENTORY_OPTION_FAMILIES
+        for member in enum
+        # A bare word such as "opening" or "count" is also an ordinary name in the panel's own code.
+        if "_" in member.value or member.value in {"fifo", "pmp", "cogs", "freight"}
+    }
+    # ``physical_count`` is also the name of a field of the closing request.
+    assert sorted((served & quoted) - named - {"physical_count"}) == []
+
+
+@pytest.mark.parametrize("family", [family for family, _ in INVENTORY_OPTION_FAMILIES])
+def test_every_choice_served_has_its_words_declared_for_the_shell(family: str) -> None:
+    prefix = f"application.inventory.labels.{family}."
+    members = {member.value for name, enum in INVENTORY_OPTION_FAMILIES if name == family for member in enum}
+
+    assert {key.removeprefix(prefix) for key in DESKTOP_CHROME_KEYS if key.startswith(prefix)} == members

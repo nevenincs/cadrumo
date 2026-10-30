@@ -1855,6 +1855,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     now,
     events,
     hex64,
+    fileOf: (token) => fileOf(token, "documents"),
   });
   const movementWork = movementActionOperations(ledger, {
     profileId: LEDGER_FIXTURE_PROFILE_ID,
@@ -2021,8 +2022,7 @@ export function ledgerFixture(options: Options): LedgerPort {
         pendingTracks--;
       }
     }
-    if (!isLedgerDefinition(definition))
-      return reject("not_admitted");
+    if (!isLedgerDefinition(definition)) return reject("not_admitted");
     if (
       typeof payload !== "object" ||
       payload === null ||

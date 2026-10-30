@@ -3000,16 +3000,7 @@ desktop:
         quantity: Unidades
         unit_cost: Coste unitario
       date: Fecha
-      kind:
-        cogs: Coste de ventas
-        count: Recuento
-        opening: Existencias iniciales
-        purchase: Compra
       kind_label: Tipo
-      method:
-        coste_medio: Coste medio
-        fifo: FIFO
-        pmp: Precio medio ponderado
       method_label: Método de valoración
       opening: Valor de las existencias iniciales
       preview_note: 'Una vista previa: no se registra nada.'
@@ -3735,25 +3726,41 @@ desktop:
       action:
         add_book: Añadir un libro de existencias
         add_movement: Añadir un movimiento
+        closing: Fijar el valor de cierre
         correct: Corregir las existencias iniciales o el método
         describe: Editar los detalles
         movement_correct: Corregir este movimiento
         movement_reverse: Anular este movimiento
         preview: Ver una vista previa de la valoración
+        purchase_facts: Ver lo que costó esta compra
         restore: Restaurar el libro de existencias
         retire: Dar de baja el libro de existencias
       books: Libros de existencias de {year}
+      closing:
+        authority: Cómo se decide el valor
+        basis: Contado a
+        count: El recuento
+        count_documents: Archivos que demuestran el recuento
+        counted_on: Fecha del recuento
+        documents: Archivos que demuestran el valor de cierre
+        note: Indica cómo se decidió el valor con el que cierran tus existencias el
+          año, por qué, y adjunta los archivos que lo demuestran.
+        prior: El cierre del año anterior
+        prior_add: Añadir un archivo
+        prior_document: Archivo que demuestra el cierre del año anterior
+        prior_hint: 'Solo si el libro de existencias del año anterior no tiene valor
+          de cierre registrado: añade un archivo que lo demuestre.'
+        prior_remove: Quitar este archivo
+        reason: Por qué
+        reason_hint: Con tus palabras.
+        recorded: El valor de cierre de {year} está fijado. Las existencias de este
+          libro ya no pueden cambiar.
+        value: Valor contado, sin IVA
       column:
         cost: Coste
         name: Actividad
-      cost_kind:
-        customs_duty: Aranceles
-        freight: Transporte
-        handling: Manipulación
-        insurance: Seguro
-        other_directly_attributable: Otro coste de la compra
-        professional_fee: Honorarios profesionales
       count:
+        advisories: 'Avisos: {count}'
         books: 'Libros de existencias: {count}'
         corrections: 'Correcciones: {count}'
         retired: 'Dados de baja: {count}'
@@ -3779,10 +3786,23 @@ desktop:
         no_description: Sin descripción
         opening: Existencias iniciales {value}
         removed: Fuera del recuento
+      facts:
+        amount: Importe
+        documents: Archivos en que se apoya
+        documents_unknown: Los archivos de esta compra no están disponibles.
+        extra_total: Costes adicionales
+        iva: IVA del precio
+        price: Precio sin IVA
+        recoverable: IVA que deduces, fuera del coste
+        table: Lo que costó esta compra
+        title: Compra del {date}
+        total: Coste total
+        unknown: El coste de esta compra no está disponible.
+        unrecoverable: IVA que no puedes deducir, dentro del coste
+        what: Concepto
       field:
         cost_hint: Rellena el coste por unidad o el total, el que tengas.
         description: Descripción (opcional)
-        extra_total: Costes adicionales sin IVA, en total
         iva: IVA del precio
         keep: Mantener el actual
         keep_hint: Déjalo vacío para mantener el actual.
@@ -3795,13 +3815,11 @@ desktop:
         opening_new: Nuevo valor de las existencias iniciales
         price: Precio sin IVA
         reason: Motivo
-        recoverable: IVA que puedes deducir, en total
         share: Parte de ese IVA que puedes deducir (%)
-        total: Coste total de la compra
         total_cost: Coste total sin IVA
-        unrecoverable: IVA que no puedes deducir (se suma al coste)
       form:
         book: Nuevo libro de existencias de {year}
+        closing: Valor de cierre de {name} · {year}
         correct: Corregir {name} · {year}
         describe: Detalles de {name} · {year}
         movement: Añadir un movimiento a {name} · {year}
@@ -3824,6 +3842,9 @@ desktop:
         El anterior queda en el historial.
       movements_none: Este libro aún no tiene movimientos. Añade el primero.
       movements_of: Movimientos de {name}
+      options_failed: No se pudieron cargar las opciones de este formulario. Cierra
+        el formulario y ábrelo de nuevo.
+      options_loading: Cargando las opciones de este formulario…
       proof:
         change_file: Elegir otro archivo
         check_hint: Cualquier archivo que muestre la revisión, como una nota o una
@@ -3831,27 +3852,21 @@ desktop:
         choose_file: Elegir un archivo
         cost_check: Archivo que demuestra que revisaste los costes adicionales
         extra: Archivo que demuestra este coste
-        file_too_large: El archivo pesa más de 50 MB.
-        file_unread: No se pudo abrir el archivo.
+        file_unread: No se pudo usar ese archivo. Elige un archivo PDF, una imagen
+          o un XML e inténtalo de nuevo.
         iva_check: Archivo que demuestra que revisaste cuánto IVA puedes deducir
+        keeping: Guardando el archivo…
+        kept: Guardado con tus libros
         kind: Tipo de archivo
         price: Archivo que demuestra el precio
-      proof_kind:
-        contract: Contrato
-        customs_declaration: Declaración de aduanas
-        insurance_document: Póliza de seguro
-        other_acquisition_evidence: Otra prueba de la compra
-        purchase_invoice: Factura de compra
-        transport_document: Albarán de transporte
       purchase:
         extras: Costes adicionales de la compra
         price: Precio de la compra
         proofs: Archivos que lo demuestran
-        proofs_hint: Adjunta los archivos. Cadrumo guarda una marca que identifica
-          cada archivo, no el archivo en sí.
-        totals: Totales
-        totals_hint: Escribe los totales a los que llegan las cifras de arriba. Tienen
-          que coincidir con esas cifras.
+        proofs_hint: Elige los archivos. Cadrumo guarda una copia de cada uno con
+          tus libros.
+        totals_note: Al añadir la compra, Cadrumo suma por ti los costes adicionales,
+          el IVA y el coste total.
       refused: El libro de existencias no lo aceptó. No se guardó nada.
       restore_note: El libro de existencias vuelve a tu lista activa con todo lo que
         contiene.
@@ -3864,6 +3879,7 @@ desktop:
       reverse_note: El movimiento deja de contar. Queda en el historial.
       submit:
         book: Añadir el libro
+        closing: Fijar el valor de cierre
         correct: Guardar la corrección
         describe: Guardar los detalles
         movement: Añadir el movimiento
@@ -3874,6 +3890,7 @@ desktop:
       summary: Resumen de existencias
       title: Existencias
       unavailable: Tus existencias no están disponibles ahora mismo.
+      unnamed: Desconocido
     sum:
       in: Entradas {amount}
       out: Salidas {amount}
@@ -7991,9 +8008,9 @@ tui:
       inventory:
         action:
           closing_authority: Registrar un valor de cierre desde un archivo completo
-          evidence_add: "Guardar un documento de compra"
           closing_value: Registrar un valor de cierre desde un archivo de datos
           create: Crear un inventario
+          evidence_add: Guardar un documento de compra
           movement_add: Añadir un movimiento
           valuation_preview: Previsualizar la valoración
         column:
@@ -8008,14 +8025,16 @@ tui:
           create: Inventario creado.
           movement_add: Movimiento añadido.
         empty: Aún no hay ningún inventario de actividad.
+        evidence_done: Documento guardado.
+        evidence_held: 'Nómbralo en la compra como: %{reference}'
         field:
           acquisition_cost: Archivo del coste de compra (solo compras)
           action: Petición
           actividad_id: Actividad
           authority_record: Archivo completo del valor de cierre
-          evidence_file: "Archivo del documento"
-          evidence_folder: "Carpeta desde la que parte la ruta del documento"
           closing_value_facts: Archivo de datos del valor de cierre
+          evidence_file: Archivo del documento
+          evidence_folder: Carpeta desde la que parte la ruta del documento
           kind: Tipo de movimiento
           movement_date: Fecha del movimiento
           movement_id: Identificador del movimiento
@@ -8037,8 +8056,8 @@ tui:
           pmp: Precio medio ponderado
         prompt: Cada inventario de actividad por año. Elige una petición, rellena
           sus campos, revísala y confírmala. Las valoraciones y el coste de las ventas
-          son cifras del propio registro. Los costes de compra y los valores de
-          cierre se leen del archivo que indiques.
+          son cifras del propio registro. Los costes de compra y los valores de cierre
+          se leen del archivo que indiques.
         refusal:
           activity_conflict: 'El registro ha rechazado la petición: ya existe un inventario
             para esa actividad y año.'
@@ -8055,15 +8074,12 @@ tui:
           inventory_validation: 'El registro ha rechazado la petición: no supera la
             validación del inventario.'
         result:
-          closing: 'Valor de cierre de %{actividad} %{year} registrado. Cambió:
-            %{changed}.'
+          closing: 'Valor de cierre de %{actividad} %{year} registrado. Cambió: %{changed}.'
           fingerprint: 'Huella del registro: %{fingerprint}'
           ledger: '%{actividad} · %{year} · %{method} · existencias iniciales %{opening}
             · %{movements} movimientos'
           valuation: 'Valoración de %{actividad} %{year} (%{method}): valor de cierre
             %{closing}, coste de las ventas %{cogs}.'
-        evidence_done: "Documento guardado."
-        evidence_held: "Nómbralo en la compra como: %{reference}"
         source: 'Leído de: %{path}'
         source_invalid: 'El archivo %{path} no es un registro válido: se han encontrado
           %{count} problemas.'

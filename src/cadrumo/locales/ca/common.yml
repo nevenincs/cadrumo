@@ -2997,16 +2997,7 @@ desktop:
         quantity: Unitats
         unit_cost: Cost unitari
       date: Data
-      kind:
-        cogs: Cost de vendes
-        count: Recompte
-        opening: Existències inicials
-        purchase: Compra
       kind_label: Tipus
-      method:
-        coste_medio: Cost mitjà
-        fifo: FIFO
-        pmp: Preu mitjà ponderat
       method_label: Mètode de valoració
       opening: Valor de les existències inicials
       preview_note: 'Una previsualització: no es registra res.'
@@ -3731,25 +3722,41 @@ desktop:
       action:
         add_book: Afegir un llibre d'existències
         add_movement: Afegir un moviment
+        closing: Fixar el valor de tancament
         correct: Corregir les existències inicials o el mètode
         describe: Editar els detalls
         movement_correct: Corregir aquest moviment
         movement_reverse: Anul·lar aquest moviment
         preview: Veure una previsualització de la valoració
+        purchase_facts: Veure el que va costar aquesta compra
         restore: Restaurar el llibre d'existències
         retire: Donar de baixa el llibre d'existències
       books: Llibres d'existències de {year}
+      closing:
+        authority: Com es decideix el valor
+        basis: Comptat a
+        count: El recompte
+        count_documents: Fitxers que demostren el recompte
+        counted_on: Data del recompte
+        documents: Fitxers que demostren el valor de tancament
+        note: Indica com es va decidir el valor amb què tanquen les teves existències
+          l'any, per què, i adjunta els fitxers que ho demostren.
+        prior: El tancament de l'any anterior
+        prior_add: Afegir un fitxer
+        prior_document: Fitxer que demostra el tancament de l'any anterior
+        prior_hint: 'Només si el llibre d''existències de l''any anterior no té valor
+          de tancament registrat: afegeix un fitxer que ho demostri.'
+        prior_remove: Treure aquest fitxer
+        reason: Per què
+        reason_hint: Amb les teves paraules.
+        recorded: El valor de tancament de {year} està fixat. Les existències d'aquest
+          llibre ja no poden canviar.
+        value: Valor comptat, sense IVA
       column:
         cost: Cost
         name: Activitat
-      cost_kind:
-        customs_duty: Aranzels
-        freight: Transport
-        handling: Manipulació
-        insurance: Assegurança
-        other_directly_attributable: Un altre cost de la compra
-        professional_fee: Honoraris professionals
       count:
+        advisories: 'Avisos: {count}'
         books: 'Llibres d''existències: {count}'
         corrections: 'Correccions: {count}'
         retired: 'Donats de baixa: {count}'
@@ -3774,10 +3781,23 @@ desktop:
         no_description: Sense descripció
         opening: Existències inicials {value}
         removed: Fora del recompte
+      facts:
+        amount: Import
+        documents: Fitxers en què es recolza
+        documents_unknown: Els fitxers d'aquesta compra no estan disponibles.
+        extra_total: Costos addicionals
+        iva: IVA del preu
+        price: Preu sense IVA
+        recoverable: IVA que dedueixes, fora del cost
+        table: El que va costar aquesta compra
+        title: Compra del {date}
+        total: Cost total
+        unknown: El cost d'aquesta compra no està disponible.
+        unrecoverable: IVA que no pots deduir, dins del cost
+        what: Concepte
       field:
         cost_hint: Omple el cost per unitat o el total, el que tinguis.
         description: Descripció (opcional)
-        extra_total: Costos addicionals sense IVA, en total
         iva: IVA del preu
         keep: Mantenir l'actual
         keep_hint: Deixa-ho buit per mantenir l'actual.
@@ -3790,13 +3810,11 @@ desktop:
         opening_new: Nou valor de les existències inicials
         price: Preu sense IVA
         reason: Motiu
-        recoverable: IVA que pots deduir, en total
         share: Part d'aquest IVA que pots deduir (%)
-        total: Cost total de la compra
         total_cost: Cost total sense IVA
-        unrecoverable: IVA que no pots deduir (se suma al cost)
       form:
         book: Nou llibre d'existències de {year}
+        closing: Valor de tancament de {name} · {year}
         correct: Corregir {name} · {year}
         describe: Detalls de {name} · {year}
         movement: Afegir un moviment a {name} · {year}
@@ -3819,6 +3837,9 @@ desktop:
         queda a l'historial.
       movements_none: Aquest llibre encara no té moviments. Afegeix-ne el primer.
       movements_of: Moviments de {name}
+      options_failed: No s'han pogut carregar les opcions d'aquest formulari. Tanca'l
+        i torna'l a obrir.
+      options_loading: Carregant les opcions d'aquest formulari…
       proof:
         change_file: Triar un altre fitxer
         check_hint: Qualsevol fitxer que mostri la revisió, com una nota o un full
@@ -3826,27 +3847,20 @@ desktop:
         choose_file: Triar un fitxer
         cost_check: Fitxer que demostra que has revisat els costos addicionals
         extra: Fitxer que demostra aquest cost
-        file_too_large: El fitxer pesa més de 50 MB.
-        file_unread: No s'ha pogut obrir el fitxer.
+        file_unread: No s'ha pogut fer servir aquest fitxer. Tria un fitxer PDF, una
+          imatge o un XML i torna-ho a provar.
         iva_check: Fitxer que demostra que has revisat quant d'IVA pots deduir
+        keeping: Desant el fitxer…
+        kept: Desat amb els teus llibres
         kind: Tipus de fitxer
         price: Fitxer que demostra el preu
-      proof_kind:
-        contract: Contracte
-        customs_declaration: Declaració de duanes
-        insurance_document: Pòlissa d'assegurança
-        other_acquisition_evidence: Una altra prova de la compra
-        purchase_invoice: Factura de compra
-        transport_document: Albarà de transport
       purchase:
         extras: Costos addicionals de la compra
         price: Preu de la compra
         proofs: Fitxers que ho demostren
-        proofs_hint: Adjunta els fitxers. Cadrumo desa una marca que identifica cada
-          fitxer, no el fitxer en si.
-        totals: Totals
-        totals_hint: Escriu els totals als quals arriben les xifres de dalt. Han de
-          coincidir amb aquestes xifres.
+        proofs_hint: Tria els fitxers. Cadrumo en desa una còpia amb els teus llibres.
+        totals_note: En afegir la compra, Cadrumo suma per tu els costos addicionals,
+          l'IVA i el cost total.
       refused: El llibre d'existències no ho ha acceptat. No s'ha desat res.
       restore_note: El llibre d'existències torna a la teva llista activa amb tot
         el que conté.
@@ -3859,6 +3873,7 @@ desktop:
       reverse_note: El moviment deixa de comptar. Queda a l'historial.
       submit:
         book: Afegir el llibre
+        closing: Fixar el valor de tancament
         correct: Desar la correcció
         describe: Desar els detalls
         movement: Afegir el moviment
@@ -3869,6 +3884,7 @@ desktop:
       summary: Resum d'existències
       title: Existències
       unavailable: Les teves existències no estan disponibles ara mateix.
+      unnamed: Desconegut
     sum:
       in: Entrades {amount}
       out: Sortides {amount}
@@ -7971,9 +7987,9 @@ tui:
       inventory:
         action:
           closing_authority: Registra un valor de tancament des d'un fitxer complet
-          evidence_add: "Desa un document de compra"
           closing_value: Registra un valor de tancament des d'un fitxer de dades
           create: Crea un inventari
+          evidence_add: Desa un document de compra
           movement_add: Afegeix un moviment
           valuation_preview: Previsualitza la valoració
         column:
@@ -7988,14 +8004,16 @@ tui:
           create: Inventari creat.
           movement_add: Moviment afegit.
         empty: Encara no hi ha cap inventari d'activitat.
+        evidence_done: Document desat.
+        evidence_held: 'Anomena''l a la compra com a: %{reference}'
         field:
           acquisition_cost: Fitxer del cost de compra (només compres)
           action: Petició
           actividad_id: Activitat
           authority_record: Fitxer complet del valor de tancament
-          evidence_file: "Fitxer del document"
-          evidence_folder: "Carpeta des de la qual parteix el camí del document"
           closing_value_facts: Fitxer de dades del valor de tancament
+          evidence_file: Fitxer del document
+          evidence_folder: Carpeta des de la qual parteix el camí del document
           kind: Tipus de moviment
           movement_date: Data del moviment
           movement_id: Identificador del moviment
@@ -8017,8 +8035,8 @@ tui:
           pmp: Preu mitjà ponderat
         prompt: Cada inventari d'activitat per any. Tria una petició, omple'n els
           camps, revisa-la i confirma-la. Les valoracions i el cost de les vendes
-          són xifres del registre mateix. Els costos de compra i els valors de
-          tancament es llegeixen del fitxer que indiquis.
+          són xifres del registre mateix. Els costos de compra i els valors de tancament
+          es llegeixen del fitxer que indiquis.
         refusal:
           activity_conflict: 'El registre ha rebutjat la petició: ja existeix un inventari
             per a aquesta activitat i any.'
@@ -8034,15 +8052,13 @@ tui:
           inventory_validation: 'El registre ha rebutjat la petició: no supera la
             validació de l''inventari.'
         result:
-          closing: 'Valor de tancament de %{actividad} %{year} registrat. Ha
-            canviat: %{changed}.'
+          closing: 'Valor de tancament de %{actividad} %{year} registrat. Ha canviat:
+            %{changed}.'
           fingerprint: 'Empremta del registre: %{fingerprint}'
           ledger: '%{actividad} · %{year} · %{method} · existències inicials %{opening}
             · %{movements} moviments'
           valuation: 'Valoració de %{actividad} %{year} (%{method}): valor de tancament
             %{closing}, cost de les vendes %{cogs}.'
-        evidence_done: "Document desat."
-        evidence_held: "Anomena'l a la compra com a: %{reference}"
         source: 'Llegit de: %{path}'
         source_invalid: 'El fitxer %{path} no és un registre vàlid: s''han trobat
           %{count} problemes.'

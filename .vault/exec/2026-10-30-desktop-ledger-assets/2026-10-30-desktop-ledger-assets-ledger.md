@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:27f7549a566f7f1fba30f516d2c0398bd816265ea9d3e65f74850434b2dca3b8'
+body_hash: 'sha256:e3bab155bb9c3931c78ba803e13153f9aafb20050ad84d68c0216ad1534139a9'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -283,6 +283,21 @@ related:
 - `S07` `verify:` `cmake --build build/windows-x64 --target desktop-frontend-chrome` -> `pass`
 - `S07` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py test_desktop_asset_vocabulary.py` -> `pass`
 - `S07` `by:` `implementer`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/assets/StockPane.tsx`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/assets/stockModel.ts`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/assets/Stock.stories.tsx`
+- `S06` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S06` `M` `native/desktop/frontend/tests/ledger-stock.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/support/stockRequests.ts`
+- `S06` `M` `dev/registry/tests/test_desktop_stock_requests_decode.py`
+- `S06` `M` `dev/locales/tests/test_desktop_stock_vocabulary.py`
+- `S06` `M` `dev/locales/tests/test_desktop_stock_options.py`
+- `S06` `verify:` `npx tsc --noEmit` -> `pass`
+- `S06` `verify:` `pytest decode test` -> `pass`
+- `S06` `verify:` `pytest locale stock tests` -> `pass`
+- `S06` `verify:` `playwright stock contract spec` -> `pass`
+- `S06` `verify:` `playwright ledger-setup scenarios` -> `pass`
+- `S06` `by:` `implementer`
 
 ## Notes
 

@@ -64,10 +64,6 @@ const TOKEN_WORDS = {
     t(`desktop.ledger.counterparty.scope.${token}`),
   "counterparty.source": (t: Translate, token: string) =>
     t(`desktop.ledger.counterparty.source.${token}`),
-  "inventory.kind": (t: Translate, token: string) =>
-    t(`desktop.ledger.inventory.kind.${token}`),
-  "inventory.method": (t: Translate, token: string) =>
-    t(`desktop.ledger.inventory.method.${token}`),
   "prorrata.letra": (t: Translate, token: string) =>
     t(`desktop.ledger.prorrata.letra.${token}`),
   "prorrata.provenance": (t: Translate, token: string) =>
