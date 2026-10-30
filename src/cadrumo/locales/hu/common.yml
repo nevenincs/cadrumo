@@ -4642,8 +4642,8 @@ ledger:
       accelerated_da18_depreciation: A(z) %{tax_year}. adóévre a LIS DA 18 az új elektromos
         járművekre és töltőpontokra a maximális lineáris együttható kétszeresével
         számolt gyorsított értékcsökkenést biztosít, nem szabad értékcsökkenést. Ezt
-        a szabályozást a program nem számítja ki, ezért a(z) %{method} választás nem
-        eredményez terhelést.
+        a szabályozást még nem számítják ki, ezért a választott szabad értékcsökkenésnek
+        nincs terhelése.
       acquisition_cost_exceeds_payment: 'A megadott költség (%{cost}: ár %{price}
         plusz le nem vonható áfa %{non_deductible_iva}) meghaladja a beszerzési tranzakció
         által kifizetett %{paid} EUR-t.'
@@ -4653,9 +4653,9 @@ ledger:
         meghaladja a beszerzési tranzakció %{iva_amount} összegű áfáját.
       acquisition_price_exceeds_base: A megadott ár (%{price}) meghaladja a beszerzési
         tranzakció %{taxable_base} összegű alapját.
-      acquisition_transaction_missing: A(z) %{transaction_id} beszerzési tranzakció
+      acquisition_transaction_missing: Az általad megjelölt beszerzési tranzakció
         nincs a főkönyvben.
-      acquisition_transaction_not_payment: A(z) %{transaction_id} beszerzési tranzakció
+      acquisition_transaction_not_payment: Az általad megjelölt beszerzési tranzakció
         nem kifizetés.
       allocation_components_missing: Az egész ingatlanra vonatkozó alapból hiányoznak
         a megosztási összetevők.
@@ -4673,43 +4673,44 @@ ledger:
       asset_made_available_after_in_service: Egy eszköz nem állhat üzembe, mielőtt
         rendelkezésre bocsátották volna.
       asset_not_found: A tevékenységi eszköz nem létezik.
-      authority_incomplete: A módszerhez közzétett hatósági adat hiányos.
+      authority_incomplete: A módszerhez közzétett adótáblák hiányosak, ezért még
+        nem lehet kiszámítani.
       business_use_share_missing: Egy rendes eszközhöz hiányzik az üzleti felhasználási
         arány.
       acquisition_row_named_twice: Ez az eszköz kétszer nevezi meg ugyanazt a naplótételt
         a beszerzési sorai között.
       charging_infrastructure_new_only: A töltőinfrastruktúra szabad értékcsökkenése
         csak új elemekre alkalmazható.
-      charging_infrastructure_period_not_enrolled: A töltőinfrastruktúrának olyan
+      charging_infrastructure_period_not_enrolled: 'A Cadrumo ezt még nem támogatja:
+        ebben az adóidőszakban üzembe álló töltőinfrastruktúra (LIS DA 18a.2).'
       claim_superseded_replay: Ezt az elszámolást egy javítás már felváltotta, ezért
         nem rögzíthető újra.
-      claim_year_beyond_registry: 'A nyilvántartásban még nincs %{tax_year}. évi kiadás:
+      claim_year_beyond_registry: 'Még nincs Modelo 100 kiadás a(z) %{tax_year}. évre:
         elszámolást %{last_admitted_year}. évig rögzíthetsz. Az arra az évre szóló
         előrejelzés csak becslés.'
-        adóidőszakban kell üzembe állnia, amelyet a LIS DA 18a.2 nyilvántart.
-      claim_not_under_current_revision: Új elszámolást az elem aktuális változatához
-        kell rögzíteni.
-      claim_revision_absent: Egy rögzített elszámolás olyan változatra hivatkozik,
-        amely nincs az előzményekben.
+      claim_not_under_current_revision: Ez megváltozott, mióta megnyitottad. Frissíts,
+        és próbáld újra.
+      claim_revision_absent: Ez megváltozott, mióta megnyitottad. Frissíts, és próbáld
+        újra.
       claim_year_not_after_opening_year: 'A(z) %{claim_tax_year}. évi elszámolás nem
         rögzíthető: a nyitó összeg már lefedi a(z) %{opening_tax_year}. évig tartó
         éveket.'
       claims_exceed_amortizable_basis: A nyitó összeg és az érvényes elszámolások
         meghaladják a törvényes leírható alapot.
       claims_overlap: Egy elem elszámolásai nem fedhetnek át egymással átfedő időszakokat.
-      constant_percentage_weighting_not_enrolled: Az állandó százalék %{band} súlyozása
-        nincs nyilvántartva.
+      constant_percentage_weighting_not_enrolled: 'A Cadrumo ezt még nem támogatja:
+        az állandó százalék súlyozása erre az értékcsökkenési időtartamra.'
       correction_below_effective_claims: A javítás után az érvényes elszámolások meghaladják
         az új leírható alapot; ugyanabban a javításban cseréld le őket.
-      correction_must_supersede_current: Az eszköz javításának az aktuális változatot
-        kell felváltania.
+      correction_must_supersede_current: Ez megváltozott, mióta megnyitottad. Frissíts,
+        és próbáld újra.
       covered_interval_empty: A fedezett időszaknak a kezdete után kell végződnie.
       covered_interval_outside_tax_year: A fedezett időszaknak egy adóéven belül kell
         maradnia.
       covered_interval_without_service_days: A fedezett időszakban nincs használatban
         töltött nap abban az adóévben.
-      creation_requires_first_revision: Az eszköz létrehozásához az egyes számú változat
-        szükséges.
+      creation_requires_first_revision: Ez megváltozott, mióta megnyitottad. Frissíts,
+        és próbáld újra.
       disposal_already_recorded: Ennek az eszköznek már van kivezetése %{disposal_date}
         dátummal. Helyesbítéssel módosítsd.
       disposal_amount_invalid: A kivezetés összegei nem negatív, legfeljebb két tizedesjegyű
@@ -4741,8 +4742,8 @@ ledger:
         járműnyilatkozat szükséges.
       electric_vehicle_new_only: Az elektromos járművek szabad értékcsökkenése csak
         új járművekre alkalmazható.
-      electric_vehicle_period_not_enrolled: A járműnek olyan adóidőszakban kell üzembe
-        állnia, amelyet a LIS DA 18a.1 nyilvántart.
+      electric_vehicle_period_not_enrolled: 'A Cadrumo ezt még nem támogatja: ebben
+        az adóidőszakban üzembe álló elektromos jármű (LIS DA 18a.1).'
       electric_vehicle_propulsion_required: Az elektromos járművek szabad értékcsökkenéséhez
         meg kell adni a jármű II. melléklet szerinti hajtástípusát.
       entity_regime_not_individual: A LIS 12.3.a és 12.3.d cikk a sociedades laborales-re
@@ -4753,10 +4754,10 @@ ledger:
         vonatkozik.
       foral_territory: Foral területen élsz, ahol az AEAT 100-as és 130-as modellje
         nem alkalmazandó.
-      forecast_no_longer_matches: Az előrejelzés már nem egyezik az aktuális előzmények
-        és jogforrás szerinti ütemtervvel; készíts új előrejelzést.
-      forecast_not_current_revision: Az előrejelzés nem az eszköz aktuális változatára
-        hivatkozik.
+      forecast_no_longer_matches: Ez megváltozott, mióta megnyitottad. Frissíts, és
+        próbáld újra.
+      forecast_not_current_revision: Ez megváltozott, mióta megnyitottad. Frissíts,
+        és próbáld újra.
       free_amount_exceeds_annual_cap: A választott szabad értékcsökkenés meghaladja
         az éves korlátot.
       free_amount_exceeds_remaining_basis: A választott szabad értékcsökkenés meghaladja
@@ -4778,21 +4779,21 @@ ledger:
         rájuk.
       history_changed_after_forecast: Az elem előzményei megváltoztak az összeg kiszámítása
         után; számold ki újra.
-      interval_has_different_claim: Erre az időszakra már van másik elszámolás; cseréld
-        le.
-      investment_cap_exceeded: A {entry_year} évben {method} módszerrel használatba
-        vett beruházás elérné a(z) {investment} összeget, ami meghaladja a(z) {investment_cap}
-        korlátot; egy elem nem osztható meg szabad és rendes leírás között.
+      interval_has_different_claim: Erre az időszakra már van másik elszámolás; azt
+        javítsd ahelyett, hogy újat rögzítenél.
+      investment_cap_exceeded: A {entry_year} évben a választott szabad értékcsökkenéssel
+        használatba vett beruházás elérné a(z) {investment} összeget, ami meghaladja
+        a(z) {investment_cap} korlátot; egy elem nem osztható meg szabad és rendes
+        leírás között.
       job_creation_new_only: A munkahelyteremtéshez kapcsolódó szabad értékcsökkenés
         csak új elemekre alkalmazható (LIS 102.1 cikk).
       job_creation_reduced_size_evidence_required: A munkahelyteremtéshez kapcsolódó
+        szabad értékcsökkenéshez a kisméretű vállalkozás igazolása szükséges.
       later_affectation_out_of_order: A későbbi tevékenységbe vonás dátuma nem lehet
         későbbi az eszköz üzembe helyezésénél vagy a kivezetésénél.
-        szabad értékcsökkenéshez a kisméretű vállalkozás igazolása szükséges.
-      justified_amount_unvalidated: A LIS 12.1.e cikk elfogadja a adózó által igazolt
-        összeget, de egyetlen nyilvántartási jogforrás sem tudja ezt az igazolást
-        érvényesíteni, ezért a hívó által megadott, nem érvényesített összeg nem válhat
-        benyújtásra alkalmas terheléssé.
+      justified_amount_unvalidated: A LIS 12.1.e cikk elfogadja az adózó által igazolt
+        összeget, de ezt az igazolást még nem lehet ellenőrizni, ezért az ellenőrizetlen
+        összeg nem válhat benyújtásra alkalmas terheléssé.
       low_value_election_required: Az alacsony értékű szabad értékcsökkenéshez kifejezett
         választási igazolás szükséges.
       low_value_new_only: Az alacsony értékű szabad értékcsökkenés csak új elemekre
@@ -4803,23 +4804,23 @@ ledger:
         a kis értékű határt.
       low_value_unit_value_not_cents: Az elem egységnyi beszerzési értékének egész
         centnek kell lennie.
-      method_admission_invalid: A(z) %{admission_key} módszer-engedélyezés sem engedélyezett,
-        sem kizárt.
-      method_excluded_by_law: A(z) %{method} módszert jogszabály kizárja %{asset_kind}
-        eszközökre a(z) %{regime} módozatban (%{legal}).
+      method_admission_invalid: Az adótáblák nem mondják ki egyértelműen, hogy ez
+        a módszer engedélyezett-e ilyen típusú eszközre, ezért még nem fogadható el.
+      method_excluded_by_law: Ez a módszer jogszabály szerint ki van zárva ilyen típusú
+        eszközre ebben a becslési módozatban (%{legal}).
       method_excludes_buildings_and_furniture: Épületek, mobiliario és enseres nem
         alkalmazhatják ezt a módszert (%{provision}).
-      method_not_enrolled_for_kind: A(z) %{method} módszer nincs nyilvántartva %{asset_kind}
-        eszközökre a(z) %{regime} módozatban.
-      method_without_resolver: A(z) %{method} módszerhez nincs nyilvántartott hatósági
-        feloldó.
-      method_without_schedule_arithmetic: A(z) {method} módszerhez nincs nyilvántartott
-        ütemezési számítás.
+      method_not_enrolled_for_kind: 'A Cadrumo ezt még nem támogatja: ezt a módszert
+        ilyen típusú eszközre ebben a becslési módozatban.'
+      method_without_resolver: 'A Cadrumo ezt még nem támogatja: ez az értékcsökkenési
+        módszer.'
+      method_without_schedule_arithmetic: 'A Cadrumo ezt még nem támogatja: ez az
+        értékcsökkenési módszer.'
       modality_not_declared: Az adózói profil nem jelöl meg IRPF-becslési rendszert.
-      modality_not_direct_estimation: 'A tevékenységi eszközök értékcsökkenése csak
-        a közvetlen becslésre van nyilvántartva, nem erre: %{regime}.'
-      multi_shift_not_enrolled: A RIS 4.2 cikk szerinti többműszakos együttható nincs
-        nyilvántartva a(z) %{regime} módozatra.
+      modality_not_direct_estimation: 'A Cadrumo ezt még nem támogatja: a tevékenységi
+        eszközök értékcsökkenése a közvetlen becslésen kívül.'
+      multi_shift_not_enrolled: 'A Cadrumo ezt még nem támogatja: a RIS 4.2 cikk szerinti
+        többműszakos együttható ebben a becslési módozatban.'
       multi_shift_requires_extra_shift: A többműszakos együtthatóhoz naponta egynél
         több normál műszak szükséges.
       multi_shift_with_used_asset_unsupported: A RIS 4. cikk nem mondja meg, hogyan
@@ -4837,24 +4838,25 @@ ledger:
         származhat. Rögzítsd a kivezetést.
       ownership_treatment_unknown: Az egész ingatlanra vonatkozó alap tulajdonosi
         kezelése ismeretlen.
-      parameter_absent: A(z) %{parameter_id} tevékenységi eszközre vonatkozó hatósági paraméter
-        hiányzik a Modelo 100 %{revision_id} változatából.
-      parameter_not_declared: A(z) %{parameter_id} tevékenységi eszközre vonatkozó paraméter nem
-        szerepel a feloldó deklarált olvasási készletében.
-      parameter_not_resolvable_for_date: 'A(z) %{parameter_id} tevékenységi eszközre vonatkozó hatósági
-        paraméter nem oldható fel erre: %{axis} %{on_date}.'
-      parameter_not_resolvable_for_year: A(z) %{parameter_id} tevékenységi eszközre vonatkozó hatósági
-        paraméter nem oldható fel a(z) %{tax_year}. évre.
-      profile_modality_mismatch: Az eszköz a(z) %{elected} módozatot választja, de
-        az adózói profil %{declared} módozatot jelöl meg.
+      parameter_absent: A Modelo 100 erre az adóévre szóló táblái nem tartalmaznak
+        egy, az értékcsökkenéshez szükséges értéket, ezért még nem lehet kiszámítani.
+      parameter_not_declared: A Cadrumo ezt még nem támogatja.
+      parameter_not_resolvable_for_date: A Modelo 100 táblái nem tartalmaznak %{on_date}
+        napján érvényes olyan értéket, amelyre ennek az értékcsökkenésnek szüksége
+        van, ezért nem lehet kiszámítani.
+      parameter_not_resolvable_for_year: A Modelo 100 táblái nem tartalmaznak a(z)
+        %{tax_year}. adóévre olyan értéket, amelyre ennek az értékcsökkenésnek szüksége
+        van, ezért nem lehet kiszámítani.
+      profile_modality_mismatch: Az eszköz becslési módozatának (normál vagy egyszerűsített)
+        egyeznie kell a profilodban megadottal (RIRPF 28.3 cikk).
       reduced_size_acceleration_new_only: A kisméretű vállalkozásokra vonatkozó gyorsítás
         csak új elemekre alkalmazható (LIS 103.1 cikk).
       reduced_size_evidence_required: A kisméretű vállalkozásokra vonatkozó gyorsításhoz
         igazolás szükséges.
       reduced_size_turnover_reached: Az előző időszak nettó árbevétele eléri a kisméretű
         vállalkozás küszöbét (LIS 101.1 cikk).
-      renewable_entry_year_not_enrolled: A létesítménynek olyan évben kell üzembe
-        állnia, amelyet a LIS DA 17a.1 nyilvántart.
+      renewable_entry_year_not_enrolled: 'A Cadrumo ezt még nem támogatja: ebben az
+        évben üzembe álló megújuló energiás létesítmény (LIS DA 17a.1).'
       renewable_evidence_required: A megújuló energiás szabad értékcsökkenéshez táblázati
         osztály és igazolás szükséges.
       renewable_excludes_buildings: Az épületek nem alkalmazhatják a megújuló energiás
@@ -4879,47 +4881,50 @@ ledger:
         terjed ki épületekre (LIS 12.3.b cikk).
       research_development_free_table_class_required: Az anyagi K+F szabad értékcsökkenéshez
         táblázati osztály szükséges.
-      revision_begins_after_tax_year: A Modelo 100 %{revision_id} változata a(z) %{tax_year}.
-        adóév után kezdődik.
-      schedule_authority_election_mismatch: A hatósági adatot más értékcsökkenési
-        választáshoz határozták meg.
-      schedule_authority_kind_mismatch: A hatósági adat eszköztípusa nem egyezik az
-        elemmel.
-      simplified_intangible_table_method: 'A(z) %{method} módszer az egyszerűsített
-        módozatban nem engedélyezett immateriális eszközökre: a RIRPF 30.1a cikk lineáris
-        értékcsökkenést ír elő az egyszerűsített táblázat szerint (Orden, 1998. március
-        27.), amely az információs rendszereket és programokat 10 évre 26 %-on tartalmazza,
-        a DGT V0190-19 és V0741-19 állásfoglalás pedig ezt a táblázatot alkalmazza
-        az immateriális eszközökre; a RIS 5.1 és 6.1 cikk a LIS 12.1.a cikk táblázatát
+      revision_begins_after_tax_year: A rendelkezésre álló Modelo 100 kiadás a(z)
+        %{tax_year}. adóév után kezdődik.
+      schedule_authority_election_mismatch: Ez megváltozott, mióta megnyitottad. Frissíts,
+        és próbáld újra.
+      schedule_authority_kind_mismatch: Ez megváltozott, mióta megnyitottad. Frissíts,
+        és próbáld újra.
+      simplified_intangible_table_method: 'Ez a módszer az egyszerűsített módozatban
+        nem engedélyezett immateriális eszközökre: a RIRPF 30.1a cikk lineáris értékcsökkenést
+        ír elő az egyszerűsített táblázat szerint (Orden, 1998. március 27.), amely
+        az információs rendszereket és programokat 10 évre 26 %-on tartalmazza, a
+        DGT V0190-19 és V0741-19 állásfoglalás pedig ezt a táblázatot alkalmazza az
+        immateriális eszközökre; a RIS 5.1 és 6.1 cikk a LIS 12.1.a cikk táblázatát
         súlyozza, amelyet ez a módozat nem használ.'
-      spousal_community_ownership_unsupported: A házassági közös tulajdon nincs nyilvántartva
-        a tevékenységi eszközök megosztására.
+      spousal_community_ownership_unsupported: 'A Cadrumo ezt még nem támogatja: a
+        házassági közös tulajdon a tevékenységi eszközök megosztásában.'
       sum_of_digits_period_out_of_range: A számjegyösszeg-módszer %{period} éves időszaka
         kívül esik a megengedett egész éves [%{shortest}, %{longest}] tartományon.
       sum_of_digits_period_required: A számjegyösszeg-módszerhez meg kell adni az
         időszakot.
-      superseded_claim_absent: A lecserélendő elszámolás nincs az előzményekben.
-      superseded_claim_not_effective: A felváltott elszámolás nem érvényes elszámolása
-        ennek az eszköznek.
-      superseding_claim_changes_interval: A helyettesítő elszámolásnak meg kell tartania
-        az elemet és a fedezett időszakot.
-      table_class_group_not_a_flag: A(z) %{class_key} táblázati osztály csoportbesorolása
-        nem igen-nem jelző.
-      table_class_not_enrolled: A(z) %{class_key} táblázati osztály nincs nyilvántartva
-        a(z) %{regime} módozatra.
-      table_class_required: A(z) %{method} módszerhez törvényi táblázati osztály szükséges.
-      table_class_without_group_classification: A(z) %{class_key} táblázati osztálynak
-        nincs nyilvántartott csoportbesorolása.
-      table_class_wrong_kind: A(z) %{class_key} táblázati osztály nem %{asset_kind}
-        eszközöket sorol be.
+      superseded_claim_absent: Ez megváltozott, mióta megnyitottad. Frissíts, és próbáld
+        újra.
+      superseded_claim_not_effective: Ez megváltozott, mióta megnyitottad. Frissíts,
+        és próbáld újra.
+      superseding_claim_changes_interval: A másik elszámolást felváltó elszámolásnak
+        ugyanazt az elemet és ugyanazt a fedezett időszakot kell megtartania.
+      table_class_group_not_a_flag: Az adótáblák ehhez a táblázati osztályhoz olyan
+        csoportbesorolást adnak, amelyet nem lehet beolvasni, ezért az értékcsökkenést
+        nem lehet kiszámítani.
+      table_class_not_enrolled: 'A Cadrumo ezt még nem támogatja: ez a táblázati osztály
+        ebben a becslési módozatban.'
+      table_class_required: Ehhez a módszerhez a hivatalos értékcsökkenési táblázat
+        egy osztálya szükséges.
+      table_class_without_group_classification: 'A Cadrumo ezt még nem támogatja:
+        ennek a táblázati osztálynak nincs csoportbesorolása az adótáblákban.'
+      table_class_wrong_kind: Ez a táblázati osztály nem alkalmazható ilyen típusú
+        eszközre (tárgyi vagy immateriális).
       tax_residence_unresolved: Nem sikerült beolvasni az adóügyi illetőségedet, ezért
         a nyilvántartás nem tudja megmondani, hogy az AEAT 100-as és 130-as modellje
         alkalmazandó-e.
       tax_year_without_edition: A(z) {tax_year}. adóévre nincs 100-as modell kiadás.
       used_building_requires_construction_date: Használt épülethez meg kell adni az
         építés dátumát.
-      used_original_price_not_enrolled: A RIS 4.3 cikk szerinti eredeti ár alap nincs
-        bevezetve a(z) %{regime} módozatra.
+      used_original_price_not_enrolled: 'A Cadrumo ezt még nem támogatja: a RIS 4.3
+        cikk szerinti eredeti ár alap ebben a becslési módozatban.'
       used_original_price_requires_used_asset: A RIS 4.3.b és 4.3.c cikke az eredeti
         árat csak használtan szerzett elemnél veszi alapul. Az új elem, illetve a
         tíz évnél fiatalabb épület nem ilyen.
@@ -4929,15 +4934,14 @@ ledger:
         eszköz üzembe állítása után kell véget érnie.
       useful_life_not_positive: A hasznos élettartamnak pozitív, véges számú évnek
         kell lennie.
-      vehicle_affectation_required_for_class: A(z) %{asset_id} tevékenységi eszköz
-        a(z) %{class_key} táblázati osztályba tartozik, amely a RIRPF 22.4 cikk által
-        korlátozott járművet is tartalmazhat, ezért járműhasználati nyilatkozat szükséges.
+      vehicle_affectation_required_for_class: Ez az eszköz olyan táblázati osztályba
+        tartozik, amely a RIRPF 22.4 cikk által korlátozott járművet is tartalmazhat,
+        ezért járműhasználati nyilatkozat szükséges.
       vehicle_missing_from_books: A tevékenység könyveiből hiányzó jármű nem tartozik
         a tevékenységhez kötött eszközök közé (RIRPF 22.2.2º cikk).
-      vehicle_private_use_category_restricted: A(z) %{category} kategóriájú jármű
-        magánhasználat esetén csak a RIRPF 22.4 cikk (a)-(e) pontjában felsorolt felhasználások
-        egyike alapján tartozik a tevékenységhez; egyébként kizárólag a tevékenységhez
-        használható.
+      vehicle_private_use_category_restricted: A magánhasználattal is érintett jármű
+        csak a RIRPF 22.4 cikk (a)-(e) pontjában felsorolt felhasználások egyike alapján
+        tartozik a tevékenységhez; egyébként kizárólag a tevékenységhez használható.
       vehicle_shared_use: A tevékenység és magáncélok között megosztott jármű nem
         tartozik a tevékenységhez kötött eszközök közé, és egy jármű nem köthető részlegesen
         a tevékenységhez (RIRPF 22.2.1º és 22.3 cikk; LIRPF 29.2 cikk).

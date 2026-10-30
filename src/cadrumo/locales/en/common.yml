@@ -4587,22 +4587,22 @@ ledger:
       accelerated_da18_depreciation: For tax year %{tax_year}, LIS DA 18 grants new
         electric vehicles and charging points accelerated depreciation at twice the
         maximum linear coefficient rather than free depreciation. That regime is not
-        computed, so the %{method} election has no charge.
+        worked out yet, so the free depreciation you chose has no charge.
       acquisition_cost_exceeds_payment: The stated cost %{cost} (price %{price} plus
-      minimum_unresolved: 'Minimum amortization not available for this year: no edition
-        covers it, so the reduction of cost may be understated'
         non-deductible IVA %{non_deductible_iva}) exceeds the %{paid} EUR the acquisition
         transaction paid.
+      minimum_unresolved: 'Minimum amortization not available for this year: no edition
+        covers it, so the reduction of cost may be understated'
       acquisition_currency_unconverted: The acquisition transaction is in %{currency}
         and has no EUR conversion.
       acquisition_iva_exceeds_transaction_iva: The stated non-deductible IVA %{non_deductible_iva}
         exceeds the %{iva_amount} IVA of the acquisition transaction.
       acquisition_price_exceeds_base: The stated price %{price} exceeds the %{taxable_base}
         base of the acquisition transaction.
-      acquisition_transaction_missing: The acquisition transaction %{transaction_id}
-        is not in the ledger.
-      acquisition_transaction_not_payment: The acquisition transaction %{transaction_id}
-        is not a payment.
+      acquisition_transaction_missing: An acquisition transaction you named is not
+        in the ledger.
+      acquisition_transaction_not_payment: An acquisition transaction you named is
+        not a payment.
       allocation_components_missing: The whole-property basis lacks its allocation
         components.
       amortization_period_elapsed: The element's maximum amortization period ended
@@ -4618,42 +4618,43 @@ ledger:
       asset_made_available_after_in_service: An asset cannot enter service before
         it is made available.
       asset_not_found: The activity asset does not exist.
-      authority_incomplete: The published authority for this method is incomplete.
+      authority_incomplete: The published tax tables for this method are incomplete,
+        so it can't be worked out yet.
       business_use_share_missing: An ordinary asset lacks its business-use share.
       charging_infrastructure_new_only: Charging-infrastructure free depreciation
+        applies only to new elements.
       acquisition_row_named_twice: This element names the same ledger entry twice
         among its acquisition rows.
-        applies only to new elements.
-      charging_infrastructure_period_not_enrolled: Charging infrastructure must enter
-        service in a tax period LIS DA 18a.2 enrols.
-      claim_not_under_current_revision: A new claim must be recorded under the element's
-        current revision.
-      claim_revision_absent: A recorded claim names a revision that is not in the
-        history.
+      charging_infrastructure_period_not_enrolled: 'Cadrumo doesn''t support this
+        yet: charging infrastructure entering service in this tax period (LIS DA 18a.2).'
+      claim_not_under_current_revision: This changed since you opened it. Refresh
+        and try again.
+      claim_revision_absent: This changed since you opened it. Refresh and try again.
       claim_year_not_after_opening_year: 'A claim for %{claim_tax_year} cannot be
         recorded: the opening amount already covers the years through %{opening_tax_year}.'
       claims_exceed_amortizable_basis: The opening amount and the effective claims
         exceed the lawful amortizable basis.
       claims_overlap: Claims of one element cannot cover overlapping intervals.
-      constant_percentage_weighting_not_enrolled: The constant-percentage weighting
-        %{band} is not enrolled.
+      constant_percentage_weighting_not_enrolled: 'Cadrumo doesn''t support this yet:
+        the constant-percentage weighting for this amortization period.'
       correction_below_effective_claims: The correction leaves effective claims above
         the new amortizable basis; replace them in the same correction.
-      correction_must_supersede_current: An asset correction must supersede the current
-        revision.
+      correction_must_supersede_current: This changed since you opened it. Refresh
+        and try again.
       covered_interval_empty: The covered interval must end after it starts.
       covered_interval_outside_tax_year: The covered interval must stay inside one
         tax year.
       covered_interval_without_service_days: The covered interval has no days in service
         in that tax year.
-      creation_requires_first_revision: Asset creation requires revision number one.
+      creation_requires_first_revision: This changed since you opened it. Refresh
+        and try again.
       disposal_already_recorded: This element already has a baja dated %{disposal_date}.
         Change it with a correction.
       claim_superseded_replay: This claim was already replaced by a correction and
         cannot be recorded again.
-      claim_year_beyond_registry: 'The registry has no edition for %{tax_year} yet:
-        claims can be recorded through %{last_admitted_year}. The forecast for that
-        year is a projection.'
+      claim_year_beyond_registry: 'There is no Modelo 100 edition for %{tax_year}
+        yet: claims can be recorded through %{last_admitted_year}. The forecast for
+        that year is an estimate.'
       disposal_amount_invalid: The baja's amounts must be non-negative euro figures
         with at most two decimals.
       disposal_before_service: The baja date cannot be before the element entered
@@ -4682,8 +4683,8 @@ ledger:
         a vehicle declaration.
       electric_vehicle_new_only: Electric-vehicle free depreciation applies only to
         new vehicles.
-      electric_vehicle_period_not_enrolled: The vehicle must enter service in a tax
-        period LIS DA 18a.1 enrols.
+      electric_vehicle_period_not_enrolled: 'Cadrumo doesn''t support this yet: an
+        electric vehicle entering service in this tax period (LIS DA 18a.1).'
       electric_vehicle_propulsion_required: Electric-vehicle free depreciation requires
         the vehicle's annex II propulsion type.
       entity_regime_not_individual: LIS art. 12.3.a and 12.3.d apply to sociedades
@@ -4694,10 +4695,10 @@ ledger:
         106.
       foral_territory: You reside in a foral territory, where Modelos 100 and 130
         of the AEAT do not apply.
-      forecast_no_longer_matches: The forecast no longer matches the schedule under
-        current history and authority; forecast again.
-      forecast_not_current_revision: The forecast does not reference the current asset
-        revision.
+      forecast_no_longer_matches: This changed since you opened it. Refresh and try
+        again.
+      forecast_not_current_revision: This changed since you opened it. Refresh and
+        try again.
       free_amount_exceeds_annual_cap: The elected free-depreciation amount exceeds
         the annual cap.
       free_amount_exceeds_remaining_basis: The elected free-depreciation amount exceeds
@@ -4718,19 +4719,18 @@ ledger:
         election cannot adopt them.
       history_changed_after_forecast: The element's history changed after this figure
         was worked out; work it out again.
-      interval_has_different_claim: That interval already has a different claim; supersede
-        it instead.
+      interval_has_different_claim: That period already has a different claim; correct
+        that claim instead of recording a new one.
       investment_cap_exceeded: The investment entering service in {entry_year} under
-        {method} would reach {investment}, above the cap of {investment_cap}; an element
-        is not split between free and ordinary amortization.
+        the free depreciation you chose would reach {investment}, above the cap of
+        {investment_cap}; an element is not split between free and ordinary amortization.
       job_creation_new_only: Job-creating free depreciation applies only to new elements
         (LIS art. 102.1).
       job_creation_reduced_size_evidence_required: Job-creating free depreciation
         requires its reduced-size evidence.
       justified_amount_unvalidated: LIS art. 12.1.e admits an amount the taxpayer
-        justifies, but no registry authority can validate that justification, and
-        an unvalidated amount supplied by the caller cannot become a filing-grade
-        charge.
+        justifies, but that justification cannot be checked yet, so an unchecked amount
+        cannot become a charge for filing.
       low_value_election_required: Low-value free depreciation requires explicit election
         evidence.
       low_value_new_only: Low-value free depreciation applies only to new elements.
@@ -4740,24 +4740,25 @@ ledger:
         low-value threshold.
       low_value_unit_value_not_cents: The element's unit acquisition value must be
         in whole cents.
-      method_admission_invalid: The method admission %{admission_key} is neither admitted
-        nor excluded.
-      method_excluded_by_law: The %{method} method is excluded by law for %{asset_kind}
-        assets in the %{regime} modality (%{legal}).
+      method_admission_invalid: The tax tables don't say clearly whether this method
+        is allowed for this kind of asset, so it can't be accepted yet.
+      method_excluded_by_law: This method is excluded by law for this kind of asset
+        in this estimation modality (%{legal}).
       method_excludes_buildings_and_furniture: Buildings, mobiliario and enseres cannot
         use this method (%{provision}).
-      method_not_enrolled_for_kind: The %{method} method is not enrolled for %{asset_kind}
-        assets in the %{regime} modality.
-      method_without_resolver: The %{method} method has no enrolled authority resolver.
-      method_without_schedule_arithmetic: The method {method} has no enrolled schedule
+      method_not_enrolled_for_kind: 'Cadrumo doesn''t support this yet: this method
+        for this kind of asset in this estimation modality.'
+      method_without_resolver: 'Cadrumo doesn''t support this yet: this amortization
+        method.'
+      method_without_schedule_arithmetic: 'Cadrumo doesn''t support this yet: this
+        amortization method.'
       later_affectation_out_of_order: The later affectation date cannot be after the
         element entered service or after its baja.
-        arithmetic.
       modality_not_declared: The taxpayer profile declares no IRPF estimation regime.
-      modality_not_direct_estimation: Activity-asset amortization is enrolled only
-        for direct estimation, not %{regime}.
-      multi_shift_not_enrolled: The RIS art. 4.2 multi-shift coefficient is not enrolled
-        for the %{regime} modality.
+      modality_not_direct_estimation: 'Cadrumo doesn''t support this yet: activity-asset
+        amortization outside direct estimation.'
+      multi_shift_not_enrolled: 'Cadrumo doesn''t support this yet: the multi-shift
+        coefficient of RIS art. 4.2 in this estimation modality.'
       multi_shift_requires_extra_shift: A multi-shift coefficient requires more than
         one normal shift a day.
       multi_shift_with_used_asset_unsupported: RIS art. 4 does not state how the multi-shift
@@ -4775,23 +4776,22 @@ ledger:
         a baja. Record the baja instead.
       ownership_treatment_unknown: The whole-property basis has an unknown ownership
         treatment.
-      parameter_absent: The activity-asset authority parameter %{parameter_id} is
-        absent from Modelo 100 revision %{revision_id}.
-      parameter_not_declared: The activity-asset parameter %{parameter_id} is not
-        in the resolver's declared read set.
-      parameter_not_resolvable_for_date: The activity-asset authority parameter %{parameter_id}
-        is not resolvable for %{axis} %{on_date}.
-      parameter_not_resolvable_for_year: The activity-asset authority parameter %{parameter_id}
-        is not resolvable for %{tax_year}.
-      profile_modality_mismatch: The asset elects the %{elected} modality but the
-        taxpayer profile declares %{declared}.
+      parameter_absent: The Modelo 100 tables for this tax year lack a figure this
+        amortization needs, so it can't be worked out yet.
+      parameter_not_declared: Cadrumo doesn't support this yet.
+      parameter_not_resolvable_for_date: The Modelo 100 tables have no figure in force
+        on %{on_date} that this amortization needs, so it can't be worked out.
+      parameter_not_resolvable_for_year: The Modelo 100 tables have no figure for
+        tax year %{tax_year} that this amortization needs, so it can't be worked out.
+      profile_modality_mismatch: The estimation modality of this asset (normal or
+        simplified) must match the one declared in your profile (RIRPF art. 28.3).
       reduced_size_acceleration_new_only: Reduced-size acceleration applies only to
         new elements (LIS art. 103.1).
       reduced_size_evidence_required: Reduced-size acceleration requires its evidence.
       reduced_size_turnover_reached: The prior-period net turnover reaches the reduced-size
         threshold (LIS art. 101.1).
-      renewable_entry_year_not_enrolled: The installation must enter service in a
-        year LIS DA 17a.1 enrols.
+      renewable_entry_year_not_enrolled: 'Cadrumo doesn''t support this yet: a renewable
+        installation entering service in this year (LIS DA 17a.1).'
       renewable_evidence_required: Renewable free depreciation requires its table
         class and evidence.
       renewable_excludes_buildings: Buildings cannot use renewable free depreciation
@@ -4814,44 +4814,45 @@ ledger:
         buildings (LIS art. 12.3.b).
       research_development_free_table_class_required: Material R&D free depreciation
         requires a table class.
-      revision_begins_after_tax_year: Modelo 100 revision %{revision_id} begins after
+      revision_begins_after_tax_year: The available Modelo 100 edition begins after
         tax year %{tax_year}.
-      schedule_authority_election_mismatch: The authority was resolved for a different
-        amortization election.
-      schedule_authority_kind_mismatch: The authority's asset kind does not match
-        the element.
-      simplified_intangible_table_method: 'The %{method} method is not admitted for
-        intangible assets in the simplified modality: RIRPF art. 30.1a prescribes
-        linear amortization on the simplified table (Orden of 27 March 1998), which
-        lists information systems and programs at 26% over 10 years, and DGT V0190-19
-        and V0741-19 apply that table to intangible assets; RIS arts. 5.1 and 6.1
-        weight the LIS art. 12.1.a table, which this modality does not use.'
-      spousal_community_ownership_unsupported: Spousal community ownership is not
-        enrolled for activity-asset allocation.
+      schedule_authority_election_mismatch: This changed since you opened it. Refresh
+        and try again.
+      schedule_authority_kind_mismatch: This changed since you opened it. Refresh
+        and try again.
+      simplified_intangible_table_method: 'This method is not admitted for intangible
+        assets in the simplified modality: RIRPF art. 30.1a prescribes linear amortization
+        on the simplified table (Orden of 27 March 1998), which lists information
+        systems and programs at 26% over 10 years, and DGT V0190-19 and V0741-19 apply
+        that table to intangible assets; RIS arts. 5.1 and 6.1 weight the LIS art.
+        12.1.a table, which this modality does not use.'
+      spousal_community_ownership_unsupported: 'Cadrumo doesn''t support this yet:
+        spousal community ownership in the allocation of activity assets.'
       sum_of_digits_period_out_of_range: The sum-of-digits period %{period} is outside
         the admissible whole-year range [%{shortest}, %{longest}].
       sum_of_digits_period_required: The sum-of-digits method requires its period.
-      superseded_claim_absent: The claim to supersede is not in the history.
-      superseded_claim_not_effective: The superseded claim is not an effective claim
-        of this asset.
-      superseding_claim_changes_interval: A superseding claim must keep the element
-        and the covered interval.
-      table_class_group_not_a_flag: The group classification of table class %{class_key}
-        is not a yes-or-no flag.
-      table_class_not_enrolled: Table class %{class_key} is not enrolled for the %{regime}
-        modality.
-      table_class_required: The %{method} method requires a statutory table class.
-      table_class_without_group_classification: Table class %{class_key} has no enrolled
-        group classification.
-      table_class_wrong_kind: Table class %{class_key} does not classify %{asset_kind}
-        assets.
+      superseded_claim_absent: This changed since you opened it. Refresh and try again.
+      superseded_claim_not_effective: This changed since you opened it. Refresh and
+        try again.
+      superseding_claim_changes_interval: A claim that replaces another must keep
+        the same element and covered period.
+      table_class_group_not_a_flag: The tax tables give this table class a group classification
+        that can't be read, so the amortization can't be worked out.
+      table_class_not_enrolled: 'Cadrumo doesn''t support this yet: this table class
+        in this estimation modality.'
+      table_class_required: This method requires a class from the official amortization
+        table.
+      table_class_without_group_classification: 'Cadrumo doesn''t support this yet:
+        this table class has no group classification in the tax tables.'
+      table_class_wrong_kind: This table class does not apply to this kind of asset
+        (material or intangible).
       tax_residence_unresolved: Your tax residence could not be read, so the register
         cannot say whether Modelos 100 and 130 of the AEAT apply.
       tax_year_without_edition: No Modelo 100 edition covers tax year {tax_year}.
       used_building_requires_construction_date: A used building requires its construction
         date.
-      used_original_price_not_enrolled: The RIS art. 4.3 originating-price base is
-        not enrolled for the %{regime} modality.
+      used_original_price_not_enrolled: 'Cadrumo doesn''t support this yet: the originating-price
+        base of RIS art. 4.3 in this estimation modality.'
       used_original_price_requires_used_asset: RIS art. 4.3.b and 4.3.c take the originating
         price as the base only for an element acquired used. A new element, or a building
         under ten years old, is not one.
@@ -4861,14 +4862,14 @@ ledger:
         asset enters service.
       useful_life_not_positive: A useful life must be a positive finite number of
         years.
-      vehicle_affectation_required_for_class: Activity asset %{asset_id} is in table
-        class %{class_key}, which can hold a vehicle RIRPF art. 22.4 restricts, so
-        it requires a vehicle affectation declaration.
+      vehicle_affectation_required_for_class: This asset is in a table class that
+        can include a vehicle RIRPF art. 22.4 restricts, so it needs a vehicle affectation
+        declaration.
       vehicle_missing_from_books: A vehicle missing from the activity's books is not
         an affected asset (RIRPF art. 22.2.2º).
-      vehicle_private_use_category_restricted: A %{category} with any private use
-        is affected only under one of the uses RIRPF art. 22.4 (a)-(e) lists; otherwise
-        it must be used exclusively for the activity.
+      vehicle_private_use_category_restricted: A vehicle with any private use is affected
+        only under one of the uses RIRPF art. 22.4 (a)-(e) lists; otherwise it must
+        be used exclusively for the activity.
       vehicle_shared_use: A vehicle shared between the activity and private needs
         is not an affected asset, and a vehicle cannot be partially affected (RIRPF
         art. 22.2.1º and 22.3; LIRPF art. 29.2).
