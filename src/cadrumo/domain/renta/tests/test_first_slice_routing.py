@@ -23,6 +23,7 @@ from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
+    activity_asset_amortization_casillas,
     renta_first_slice_binding_target_casillas,
 )
 from ...calculations.registry.tests.registry_tree import full_published_modelo
@@ -34,7 +35,7 @@ from ...categories.spending_category_catalogue import (
 from .._first_slice_routing import (
     resolve_first_slice_expense_routing,
 )
-from ..actividad_asset.claims import M100_AMORTIZATION_CASILLA_IDS
+from ..actividad_asset.lifecycle import AssetKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -209,7 +210,9 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
             continue
         in_envelope += 1
         declared = frozenset(casilla.id for casilla in revision.casillas)
-        assert targets == (routing | M100_AMORTIZATION_CASILLA_IDS) & declared, revision.id
+        boxes = activity_asset_amortization_casillas(revision)
+        assert boxes == {AssetKind.MATERIAL: "0208", AssetKind.INTANGIBLE: "0227"}, revision.id
+        assert targets == (routing | frozenset(boxes.values())) & declared, revision.id
 
     assert in_envelope, "no Modelo 100 edition lies inside the support envelope"
 

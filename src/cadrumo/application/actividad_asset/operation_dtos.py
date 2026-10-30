@@ -14,6 +14,7 @@ from typing import Final, Self
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from ...application.operations.public_scalar import PublicDecimal, project_scalar
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
@@ -706,7 +707,7 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
 class ClaimProjectionSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    target_casilla_id: str = Field(pattern=r"^0\d{3}$")
+    target_casilla_id: CasillaId
     tax_year: FilingYear
     claim_ids: tuple[str, ...]
     amount: PublicDecimal
@@ -737,6 +738,7 @@ class ClaimProjectionSnapshot(BaseModel):
 
 def _m130_snapshot(value: M130AccrualProjection) -> ActivityAssetM130ProjectionSnapshot:
     return ActivityAssetM130ProjectionSnapshot(
+        target_casilla_id=value.target_casilla_id,
         tax_year=value.tax_year,
         amount=project_scalar(value.amount),
         contributions=tuple(
@@ -754,6 +756,7 @@ def _m130_snapshot(value: M130AccrualProjection) -> ActivityAssetM130ProjectionS
 
 def _m130_domain(value: ActivityAssetM130ProjectionSnapshot) -> M130AccrualProjection:
     return M130AccrualProjection(
+        target_casilla_id=value.target_casilla_id,
         tax_year=value.tax_year,
         amount=Decimal(value.amount.decimal),
         contributions=tuple(

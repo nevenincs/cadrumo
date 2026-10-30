@@ -4841,6 +4841,9 @@ ledger:
         no es un pago.
       allocation_components_missing: La base del inmueble completo carece de sus componentes
         de imputación.
+      amortization_box_not_bound: Esta edición de la declaración no asigna ninguna
+        casilla a la amortización de este tipo de elemento, así que no se puede preparar
+        la entrega para la declaración.
       amortization_period_elapsed: El periodo máximo de amortización del elemento
         terminó el {ended_on}, así que cuenta como totalmente amortizado.
       approved_plan_exceeds_basis: El plan aprobado reparte más que la base amortizable.

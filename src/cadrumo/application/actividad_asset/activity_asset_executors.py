@@ -27,6 +27,12 @@ from ...domain.calculations.registry.actividad_asset_bindings import (
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryError
+from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
+    activity_asset_amortization_casillas,
+)
+from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
+    renta_gastos_pago_fraccionado_target_casilla,
+)
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_references import TemporalProjectionDirection
 from ...domain.calculations.registry.temporal import revision_temporal_resolution
@@ -220,6 +226,13 @@ def _activity_asset_operations(
         taxpayer_modality=taxpayer_modality,
         register_authority=ActivityAssetRegisterAuthority(
             edition=edition,
+            m100_amortization_casillas=lambda tax_year: activity_asset_amortization_casillas(
+                operation.revision_for_context("100", filing_year=tax_year, period="0A"),
+            ),
+            m130_amortization_casilla=lambda period: renta_gastos_pago_fraccionado_target_casilla(
+                operation.revision_for_context("130", filing_year=period.filing_year, period=period.registry_token),
+                modelo="130",
+            ),
             admits_filing_year=operation.supported_filing_years().admits_filing_year,
             last_admitted_year=lambda: operation.supported_filing_years().horizon,
             agrarian_activities=agrarian_activities,

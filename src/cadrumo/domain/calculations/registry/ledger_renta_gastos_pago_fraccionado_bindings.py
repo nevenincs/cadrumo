@@ -19,7 +19,7 @@ from ._ledger_binding_resolution import (
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
-from .errors import RegistryValidationError
+from .errors import RegistryError, RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import casilla_id_set
 from .ledger_binding_validation import (
@@ -257,3 +257,23 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding(binding: B
 
 
 LedgerRentaGastosPagoFraccionadoProvider = LedgerRentaGastosPagoFraccionadoProvider
+
+
+def renta_gastos_pago_fraccionado_target_casilla(revision: ModeloRevision, *, modelo: str) -> CasillaId:
+    """Return the one box a :class:`ModeloRevision` gives a modelo's instalment expenses.
+
+    Raises:
+        RegistryError: When the revision does not declare exactly one target.
+    """
+    targets = {
+        binding.provider.target_casilla_id
+        for binding in revision.bindings
+        if isinstance(binding.provider, LedgerRentaGastosPagoFraccionadoProvider)
+        and str(binding.provider.modelo) == modelo
+    }
+    if len(targets) != 1:
+        raise RegistryError(
+            "selected revision must declare exactly one renta-gasto aggregation target",
+            context={"modelo": modelo, "target_count": len(targets)},
+        )
+    return next(iter(targets))

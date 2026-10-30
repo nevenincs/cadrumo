@@ -10,12 +10,20 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import Activ
 from cadrumo.application.actividad_asset.disposal_calculation import pinned_disposal_bounds
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import ActivityAssetRegisterAuthority
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
     ActivityAssetDisposalBounds,
     resolve_activity_asset_class_labels,
     resolve_activity_asset_schedule_authority,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
+    activity_asset_amortization_casillas,
+)
+from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
+    renta_gastos_pago_fraccionado_target_casilla,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
@@ -70,6 +78,14 @@ class MemoryRepository:
 def _published_modelo_100() -> ModeloRevision:
     with bundled_indexed_authority().operation() as operation:
         return operation.revision_for_context("100", filing_year=2025, period="0A")
+
+
+def _published_m130_box(period: Period) -> CasillaId:
+    with bundled_indexed_authority().operation() as operation:
+        return renta_gastos_pago_fraccionado_target_casilla(
+            operation.revision_for_context("130", filing_year=period.filing_year, period=period.registry_token),
+            modelo="130",
+        )
 
 
 @cache
@@ -129,6 +145,8 @@ def memory_register_authority(
             _published_modelo_100(),
         ),
         admits_filing_year=_published_support().admits_filing_year,
+        m130_amortization_casilla=_published_m130_box,
+        m100_amortization_casillas=lambda _year: activity_asset_amortization_casillas(_published_modelo_100()),
         last_admitted_year=lambda: last_admitted_year or max(today.year, _published_support().horizon),
         agrarian_activities=lambda _on: frozenset(),
         residence_territory=lambda _on: territory,

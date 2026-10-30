@@ -267,6 +267,10 @@ class ActivityAssetActionStub:
             intangible_m100=ClaimProjection(
                 target_casilla_id="0114", tax_year=request.tax_year, claim_ids=(), amount=Decimal("0.00")
             ),
-            material_m130=M130AccrualProjection(tax_year=request.tax_year, amount=Decimal("0.00")),
-            intangible_m130=M130AccrualProjection(tax_year=request.tax_year, amount=Decimal("0.00")),
+            material_m130=M130AccrualProjection(
+                target_casilla_id="02", tax_year=request.tax_year, amount=Decimal("0.00")
+            ),
+            intangible_m130=M130AccrualProjection(
+                target_casilla_id="02", tax_year=request.tax_year, amount=Decimal("0.00")
+            ),
         )

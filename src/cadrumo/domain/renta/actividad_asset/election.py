@@ -294,6 +294,8 @@ class RenewableDocumentationKind(StrEnum):
     """Letter d): the after-works energy-efficiency certificate of climate or hot-water systems."""
 
 
+_HOURS_PER_DAY = Decimal("24")
+
 _ELECTRICITY_DOCUMENTS = frozenset(
     {
         RenewableDocumentationKind.OPERATING_AUTHORISATION,
@@ -417,7 +419,7 @@ class ActivityAssetAmortizationElection(CachedIdentityModel):
     @field_validator("shift_hours_per_day")
     @classmethod
     def _require_multi_shift_hours(cls, value: Decimal | None) -> Decimal | None:
-        if value is not None and (not value.is_finite() or not Decimal("0") < value <= Decimal("24")):
+        if value is not None and (not value.is_finite() or not Decimal("0") < value <= _HOURS_PER_DAY):
             raise ValueError("shift_hours_per_day must be a finite Decimal in (0, 24]")
         return value
 

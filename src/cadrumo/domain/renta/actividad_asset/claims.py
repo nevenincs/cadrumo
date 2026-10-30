@@ -6,10 +6,10 @@ from collections.abc import Mapping
 from datetime import date, timedelta
 from decimal import Decimal
 from functools import cached_property
-from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
@@ -28,32 +28,10 @@ from .identity_cache import CachedIdentityModel
 from .lifecycle import ActivityAssetRevision, AssetKind
 from .schedule import AssetScheduleHistory, ScheduledAmortizationCharge
 
-MATERIAL_M100_CASILLA_ID: Final[str] = "0208"
-"""Modelo 100 destination the activity-asset source exclusively owns for material assets."""
-
-INTANGIBLE_M100_CASILLA_ID: Final[str] = "0227"
-"""Modelo 100 destination the activity-asset source exclusively owns for intangible assets."""
-
-M100_AMORTIZATION_CASILLA_IDS: Final[frozenset[str]] = frozenset(
-    {MATERIAL_M100_CASILLA_ID, INTANGIBLE_M100_CASILLA_ID},
-)
-"""The two Modelo 100 destinations that carry an activity amortization dotación.
-
-A Renta expense observation reaching one of these casillas declares an
-amortization-labelled deductible amount, whichever path produced it. Consumers
-that must recognise such a declaration read this set rather than restating the
-casilla numbers.
-"""
-
 
 def last_day_covered(covered_until: date) -> date:
     """Return the last day a half-open claim interval covers, for display beside its exclusive boundary."""
     return covered_until - timedelta(days=1)
-
-
-def m100_casilla_id(asset_kind: AssetKind) -> str:
-    """Return the Modelo 100 amortization destination for one asset kind."""
-    return MATERIAL_M100_CASILLA_ID if asset_kind is AssetKind.MATERIAL else INTANGIBLE_M100_CASILLA_ID
 
 
 class AmortizationClaim(CachedIdentityModel):
@@ -180,7 +158,7 @@ class ClaimProjection(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    target_casilla_id: str = Field(pattern=r"^0\d{3}$")
+    target_casilla_id: CasillaId
     tax_year: FilingYear
     claim_ids: tuple[str, ...]
     amount: Decimal
@@ -550,12 +528,18 @@ def _same_incentive_investment_of_other_assets(
     )
 
 
-def project_m100(claims: tuple[AmortizationClaim, ...], *, asset_kind: AssetKind, tax_year: int) -> ClaimProjection:
-    """Project one effective claim set to its exclusive Modelo 100 destination."""
+def project_m100(
+    claims: tuple[AmortizationClaim, ...],
+    *,
+    asset_kind: AssetKind,
+    tax_year: int,
+    target_casilla_id: CasillaId,
+) -> ClaimProjection:
+    """Project one effective claim set to the box the edition binds for its asset kind."""
     selected = tuple(
         claim for claim in select_effective_claims(claims, tax_year=tax_year) if claim.asset_kind is asset_kind
     )
-    return _project(selected, tax_year=tax_year, target_casilla_id=m100_casilla_id(asset_kind))
+    return _project(selected, tax_year=tax_year, target_casilla_id=target_casilla_id)
 
 
 def _project(claims: tuple[AmortizationClaim, ...], *, tax_year: int, target_casilla_id: str) -> ClaimProjection:
@@ -572,9 +556,6 @@ def _intervals_overlap(left_start: date, left_end: date, right_start: date, righ
 
 
 __all__ = [
-    "INTANGIBLE_M100_CASILLA_ID",
-    "M100_AMORTIZATION_CASILLA_IDS",
-    "MATERIAL_M100_CASILLA_ID",
     "AmortizationClaim",
     "ClaimCoverageGap",
     "ClaimProjection",
@@ -586,7 +567,6 @@ __all__ = [
     "effective_claims",
     "effective_free_depreciation_claims",
     "last_day_covered",
-    "m100_casilla_id",
     "project_m100",
     "record_claim",
     "select_effective_claims",

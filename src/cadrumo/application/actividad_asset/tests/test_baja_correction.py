@@ -91,7 +91,9 @@ def test_removing_a_baja_restores_the_year_it_zeroed_in_one_write(monkeypatch: p
         2026: Decimal("257.86"),
         2027: Decimal("520.00"),
     }
-    assert project_m100(after.claims, asset_kind=AssetKind.MATERIAL, tax_year=2027).amount == Decimal("520.00")
+    assert project_m100(
+        after.claims, asset_kind=AssetKind.MATERIAL, tax_year=2027, target_casilla_id="0208"
+    ).amount == Decimal("520.00")
     restored = next(claim for claim in effective_claims(after.claims) if claim.tax_year == 2027)
     assert restored.disposal_revision_id is None
     assert restored.asset_revision_id == after.revisions[-1].revision_id

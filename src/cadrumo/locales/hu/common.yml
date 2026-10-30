@@ -4815,6 +4815,9 @@ ledger:
         nem kifizetés.
       allocation_components_missing: Az egész ingatlanra vonatkozó alapból hiányoznak
         a megosztási összetevők.
+      amortization_box_not_bound: A bevallás ezen kiadása nem rendel mezőt az ilyen
+        típusú eszköz értékcsökkenéséhez, ezért a bevallási átadás nem készíthető
+        el.
       amortization_period_elapsed: Az elem maximális értékcsökkenési időszaka {ended_on}
         napon lejárt, ezért teljesen leírtnak számít.
       approved_plan_exceeds_basis: A jóváhagyott terv többet oszt fel, mint a leírható

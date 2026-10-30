@@ -27,6 +27,7 @@ from ._ledger_binding_resolution import (
     unsupported_ledger_family_observations,
 )
 from .binding_selector_utils import provider_member
+from .errors import RegistryError
 from .ids import BindingId
 from .ledger_binding_selector_support import (
     LEDGER_INCOME_FACTS,
@@ -682,3 +683,22 @@ def validate_ledger_renta_income_aggregation_binding(binding: BindingDefinition)
 
 
 LedgerRentaIncomeProvider = LedgerRentaIncomeProvider
+
+
+def renta_income_target_casilla(revision: ModeloRevision, *, modelo: str) -> CasillaId:
+    """Return the one box a :class:`ModeloRevision` gives a modelo's renta income.
+
+    Raises:
+        RegistryError: When the revision does not declare exactly one target.
+    """
+    targets = {
+        binding.provider.target_casilla_id
+        for binding in revision.bindings
+        if isinstance(binding.provider, LedgerRentaIncomeProvider) and str(binding.provider.modelo) == modelo
+    }
+    if len(targets) != 1:
+        raise RegistryError(
+            "selected revision must declare exactly one renta-income aggregation target",
+            context={"modelo": modelo, "target_count": len(targets)},
+        )
+    return next(iter(targets))

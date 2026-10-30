@@ -113,8 +113,8 @@ def test_m100_projects_each_kind_from_its_own_effective_claims(year: int) -> Non
     )
     claims = (material, intangible)
 
-    material_m100 = project_m100(claims, asset_kind=AssetKind.MATERIAL, tax_year=year)
-    intangible_m100 = project_m100(claims, asset_kind=AssetKind.INTANGIBLE, tax_year=year)
+    material_m100 = project_m100(claims, asset_kind=AssetKind.MATERIAL, tax_year=year, target_casilla_id="0208")
+    intangible_m100 = project_m100(claims, asset_kind=AssetKind.INTANGIBLE, tax_year=year, target_casilla_id="0227")
 
     assert material_m100.target_casilla_id == "0208"
     assert intangible_m100.target_casilla_id == "0227"

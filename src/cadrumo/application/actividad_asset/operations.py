@@ -9,10 +9,11 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal, Self
+from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
@@ -120,7 +121,7 @@ class M130AccrualProjection(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    target_casilla_id: Literal["02"] = "02"
+    target_casilla_id: CasillaId
     tax_year: int
     amount: Decimal
     contributions: tuple[M130Contribution, ...] = ()
@@ -162,6 +163,8 @@ class ActivityAssetRegisterAuthority:
     class_labels: Callable[[DirectEstimationRegime, int], Mapping[str, str]]
     disposal_bounds: Callable[[ActivityAssetRevision, int], ActivityAssetDisposalBounds]
     legal_reference: Callable[[str], LegalReference]
+    m130_amortization_casilla: Callable[[Period], CasillaId]
+    m100_amortization_casillas: Callable[[int], Mapping[AssetKind, CasillaId]]
 
 
 def _year_end(tax_year: int) -> date:
@@ -676,6 +679,18 @@ class ActivityAssetOperations:
             agrarian=self._authority.agrarian_activities(period_end) if current else frozenset(),
         )
 
+        m130_box = self._authority.m130_amortization_casilla(m130_period)
+        m100_boxes = self._authority.m100_amortization_casillas(tax_year)
+
+        def m100(asset_kind: AssetKind) -> ClaimProjection:
+            box = m100_boxes.get(asset_kind)
+            if box is None:
+                raise ActividadAssetUnsupportedError(
+                    context={"asset_kind": asset_kind.value, "tax_year": tax_year},
+                    translated_message="ledger.actividad_asset.errors.amortization_box_not_bound",
+                )
+            return project_m100(history.claims, asset_kind=asset_kind, tax_year=tax_year, target_casilla_id=box)
+
         def m130(asset_kind: AssetKind) -> M130AccrualProjection:
             selected = tuple(accrual for accrual in accruals if accrual.revision.asset_kind is asset_kind)
             contributions = tuple(
@@ -689,6 +704,7 @@ class ActivityAssetOperations:
                 for item in accrual.contributions
             )
             return M130AccrualProjection(
+                target_casilla_id=m130_box,
                 tax_year=tax_year,
                 amount=round_to_cents(sum((item.amount for item in contributions), Decimal("0"))),
                 contributions=contributions,
@@ -700,8 +716,8 @@ class ActivityAssetOperations:
             )
 
         return ActivityAssetFilingHandoff(
-            material_m100=project_m100(history.claims, asset_kind=AssetKind.MATERIAL, tax_year=tax_year),
-            intangible_m100=project_m100(history.claims, asset_kind=AssetKind.INTANGIBLE, tax_year=tax_year),
+            material_m100=m100(AssetKind.MATERIAL),
+            intangible_m100=m100(AssetKind.INTANGIBLE),
             material_m130=m130(AssetKind.MATERIAL),
             intangible_m130=m130(AssetKind.INTANGIBLE),
         )

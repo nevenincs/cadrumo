@@ -153,6 +153,7 @@ def test_filing_handoff_snapshots_preserve_decimal_claim_projections() -> None:
         material_m100=projection,
         intangible_m100=projection.model_copy(update={"target_casilla_id": "0227", "amount": Decimal("0.00")}),
         material_m130=M130AccrualProjection(
+            target_casilla_id="02",
             tax_year=2025,
             amount=Decimal("78.00"),
             contributions=(
@@ -161,7 +162,7 @@ def test_filing_handoff_snapshots_preserve_decimal_claim_projections() -> None:
             ),
             unavailable_asset_ids=("asset-3",),
         ),
-        intangible_m130=M130AccrualProjection(tax_year=2025, amount=Decimal("0.00")),
+        intangible_m130=M130AccrualProjection(target_casilla_id="02", tax_year=2025, amount=Decimal("0.00")),
     )
 
     snapshot = ActivityAssetFilingHandoffSnapshot.from_domain(handoff)

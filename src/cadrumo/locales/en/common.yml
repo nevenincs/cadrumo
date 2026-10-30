@@ -4751,6 +4751,8 @@ ledger:
         not a payment.
       allocation_components_missing: The whole-property basis lacks its allocation
         components.
+      amortization_box_not_bound: This edition of the return binds no box for the
+        amortisation of this kind of asset, so a filing handoff cannot be prepared.
       amortization_period_elapsed: The element's maximum amortization period ended
         on {ended_on}, so it counts as fully amortized.
       approved_plan_exceeds_basis: The approved plan distributes more than the amortizable

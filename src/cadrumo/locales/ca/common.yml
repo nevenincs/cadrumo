@@ -4831,6 +4831,9 @@ ledger:
         no és un pagament.
       allocation_components_missing: La base de l'immoble complet no té els seus components
         d'imputació.
+      amortization_box_not_bound: Aquesta edició de la declaració no assigna cap casella
+        a l'amortització d'aquest tipus d'element, així que no es pot preparar el
+        lliurament per a la declaració.
       amortization_period_elapsed: El període màxim d'amortització de l'element va
         acabar el {ended_on}, així que compta com a totalment amortitzat.
       approved_plan_exceeds_basis: El pla aprovat reparteix més que la base amortitzable.

@@ -9,10 +9,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Final, Literal, Self
+from typing import Final, Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.casilla_id import CasillaId
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -434,9 +435,9 @@ class ActivityAssetM130Contribution(_ReadModel):
 
 
 class ActivityAssetM130ProjectionSnapshot(_ReadModel):
-    """The accrual of one asset kind for Modelo 130 casilla 02."""
+    """The accrual of one asset kind for the Modelo 130 box its edition binds."""
 
-    target_casilla_id: Literal["02"] = "02"
+    target_casilla_id: CasillaId
     tax_year: int
     amount: PublicDecimal
     contributions: tuple[ActivityAssetM130Contribution, ...] = ()

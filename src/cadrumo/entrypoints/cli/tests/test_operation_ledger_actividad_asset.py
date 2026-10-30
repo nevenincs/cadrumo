@@ -402,11 +402,12 @@ def test_filing_handoff_bridge_correlates_requested_frame_without_effect(monkeyp
         material_m100=projection_row,
         intangible_m100=empty_row,
         material_m130=M130AccrualProjection(
+            target_casilla_id="02",
             tax_year=2025,
             amount=Decimal("78.00"),
             contributions=(M130Contribution(asset_id="asset-1", amount=Decimal("78.00"), claim_id="c" * 64),),
         ),
-        intangible_m130=M130AccrualProjection(tax_year=2025, amount=Decimal("0.00")),
+        intangible_m130=M130AccrualProjection(target_casilla_id="02", tax_year=2025, amount=Decimal("0.00")),
     )
     projection = ActivityAssetFilingHandoffProjection(
         profile_id=_PROFILE,

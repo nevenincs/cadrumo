@@ -347,6 +347,7 @@ def assert_activity_asset_conformance_result(
             after.claims,
             asset_kind=AssetKind.MATERIAL,
             tax_year=payload.tax_year,
+            target_casilla_id="0208",
         )
         # EUR 300.00 at the published 25% for the full year 2025.
         assert handoff.material_m130.amount == Decimal("75.00")

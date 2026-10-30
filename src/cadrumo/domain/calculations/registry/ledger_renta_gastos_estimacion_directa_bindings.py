@@ -2,23 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, BeforeValidator, field_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
+from ...renta.actividad_asset.lifecycle import AssetKind
 from ._ledger_binding_resolution import (
     deductible_amount_aggregate,
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
 from .binding_selector_utils import provider_member
+from .errors import RegistryError
 from .ids import BindingId
 from .ledger_binding_selector_support import casilla_id_set
 from .ledger_binding_validation import (
@@ -28,6 +30,7 @@ from .ledger_binding_validation import (
     require_ledger_fact,
     require_ledger_target_casilla,
 )
+from .schema_base import coerce_enum_member
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
@@ -102,6 +105,8 @@ class LedgerRentaGastosEstimacionDirectaProvider(BaseModel):
     modelo: Modelo = Modelo("100")
     period: Literal["0A"] = "0A"
     target_casilla_id: CasillaId
+    activity_asset_kind: Annotated[AssetKind, BeforeValidator(coerce_enum_member(AssetKind))] | None = None
+    """The asset kind whose register amortization this box receives; ``None`` for a box of ledger categories."""
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
 
     @field_validator("modelo")
@@ -232,6 +237,29 @@ def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> froze
         for binding in revision.bindings
         if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
+
+
+def activity_asset_amortization_casillas(revision: ModeloRevision) -> Mapping[AssetKind, CasillaId]:
+    """Return the box a :class:`ModeloRevision` gives each asset kind's amortization; an unbound kind is absent.
+
+    Raises:
+        RegistryError: When two bindings of the revision claim one asset kind.
+    """
+    boxes: dict[AssetKind, CasillaId] = {}
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION:
+            continue
+        provider = provider_member(binding, LedgerRentaGastosEstimacionDirectaProvider)
+        kind = provider.activity_asset_kind
+        if kind is None:
+            continue
+        if kind in boxes:
+            raise RegistryError(
+                "selected revision binds one asset kind's amortization twice",
+                context={"revision_id": revision.id, "asset_kind": kind.value},
+            )
+        boxes[kind] = provider.target_casilla_id
+    return boxes
 
 
 def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding(binding: BindingDefinition) -> list[str]:
