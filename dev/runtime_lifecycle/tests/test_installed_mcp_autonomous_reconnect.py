@@ -154,7 +154,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                 args=["--profile-id", str(profile.profile_id), "--credential-reference", str(reference)],
                 cwd=tmp_path,
                 env={
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
+                    "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
                     "CADRUMO_AUTHORITY_ROOT": str(bundled_authority_descriptor_path().parent),
                     "PYDANTIC_DISABLE_PLUGINS": "__all__",
                 },
@@ -569,7 +569,7 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
                 args=["--profile-id", str(profile.profile_id), "--credential-reference", str(reference)],
                 cwd=tmp_path,
                 env={
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
+                    "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
                     "CADRUMO_AUTHORITY_ROOT": str(bundled_authority_descriptor_path().parent),
                     "PYDANTIC_DISABLE_PLUGINS": "__all__",
                 },

@@ -378,7 +378,6 @@ def _driver_profile_evidence(
     held_session: Mapping[str, Any],
     *,
     storage_root: Path,
-    secret_store: Path,
     relay: Path,
     scenario: Mapping[str, Any],
     owner_pid: int,
@@ -405,7 +404,6 @@ def _driver_profile_evidence(
         "owner_start_identity": owner_start_identity,
         "owner_token": owner_binding(owner_pid, owner_start_identity, storage_root),
         "storage_root": str(storage_root),
-        "secret_store_dir": str(secret_store),
         "profile_id": profile_id,
         "profile_inventory": [
             {"name": name, "bucket_id": identity, "active": active} for name, identity, active in profile.inventory
@@ -485,11 +483,10 @@ async def run(package: Path, scratch: Path) -> Receipt:
     )
     receipt = Receipt()
     receipt.record("artifact", **package_identity(package))
-    root, secret_store, directory = scratch / "storage", scratch / "secrets", scratch / "exchange"
-    secret_store.mkdir(parents=True)
+    root, directory = scratch / "storage", scratch / "exchange"
     directory.mkdir()
     exchange = Exchange(directory)
-    environment = consumer_environment(root, secret_store)
+    environment = consumer_environment(root)
     root.mkdir()
     mark_development_root(root)
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
@@ -522,7 +519,6 @@ async def run(package: Path, scratch: Path) -> Receipt:
                 profile,
                 holder.identity,
                 storage_root=root,
-                secret_store=secret_store,
                 relay=programs.mcp,
                 scenario=_SCENARIO,
                 owner_pid=os.getpid(),

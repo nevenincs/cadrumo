@@ -49,7 +49,7 @@ def person_environment(root: Path, package: Path) -> dict[str, str]:
     the account's own credential store, as the installed desktop does.
     """
     environment = {name: value for name, value in os.environ.items() if not name.upper().startswith(_AMBIENT_EXCLUDED)}
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+    environment["CADRUMO_STORAGE_ROOT"] = str(root)
     environment["CADRUMO_DESKTOP_PACKAGE_ROOT"] = str(package)
     return environment
 

@@ -272,7 +272,7 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
 
         with (
             override_settings(
-                cadrumo_local_storage_root=storage_root,
+                cadrumo_storage_root=storage_root,
                 cadrumo_output_language="en",
                 cadrumo_cli_reveal_identifiers=True,
             ),
@@ -430,7 +430,7 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
 
         def invoke_create() -> Result:
             with override_settings(
-                cadrumo_local_storage_root=storage_root,
+                cadrumo_storage_root=storage_root,
                 cadrumo_output_language="en",
                 cadrumo_cli_reveal_identifiers=True,
             ):
@@ -478,7 +478,7 @@ def test_cli_created_requests_are_listed_reviewed_and_settled_by_tui(
 
         with (
             override_settings(
-                cadrumo_local_storage_root=storage_root,
+                cadrumo_storage_root=storage_root,
                 cadrumo_output_language="en",
                 cadrumo_cli_reveal_identifiers=True,
             ),

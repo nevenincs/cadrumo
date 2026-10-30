@@ -321,7 +321,7 @@ _BUILD_STAND_IN = textwrap.dedent(
     for language in languages:
         out = html_root / language
         out.mkdir(parents=True, exist_ok=True)
-        (out / "storage.txt").write_text(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"], encoding="utf-8")
+        (out / "storage.txt").write_text(os.environ["CADRUMO_STORAGE_ROOT"], encoding="utf-8")
         if outcome == "indexes":
             (out / "pagefind").mkdir()
     print(f"built {' '.join(languages)}")

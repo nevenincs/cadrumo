@@ -113,7 +113,7 @@ async def test_installed_linux_native_reference_refusal_preserves_public_stdio(t
             args=["--profile-id", str(profile_id), "--credential-reference", str(reference)],
             cwd=storage_root,
             env={
-                "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+                "CADRUMO_STORAGE_ROOT": str(storage_root),
                 "CADRUMO_MCP_REQUIRED_VERSION": version("cadrumo"),
                 "PYDANTIC_DISABLE_PLUGINS": "__all__",
             },

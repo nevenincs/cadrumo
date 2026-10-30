@@ -15,7 +15,6 @@ from typing import Final
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo_agent_service.adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from cadrumo_agent_service.adapters.agent_provider_catalog import AgentProviderCatalogSource
 from cadrumo_agent_service.providers.application.contracts import (
@@ -71,7 +70,6 @@ def test_the_service_runs_the_declared_agent_catalog_and_projects_its_status(tmp
         settings = ProviderSettingsService(
             store=store,
             catalog_source=source,
-            storage_mode=StorageMode.INSTALLED,
         )
         status = settings.status()
         assert isinstance(status, ProviderSettingsStatus), status
@@ -115,7 +113,6 @@ def test_a_service_without_a_declared_agent_returns_typed_catalog_unavailability
         status = ProviderSettingsService(
             store=SecureProviderSettingsStore(client=client),
             catalog_source=source,
-            storage_mode=StorageMode.INSTALLED,
         ).status()
         assert isinstance(status, ProviderSettingsRefusal), status
         assert status.code is ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE

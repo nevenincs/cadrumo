@@ -67,7 +67,7 @@ Path(sys.argv[1]).write_text(json.dumps(report), encoding='utf-8')
 
 def measure(package: Path, scratch: Path) -> dict[str, Any]:
     """Run discovery commands and real Textual navigation in independent processes."""
-    environment = consumer_environment(scratch / "storage", scratch / "secrets")
+    environment = consumer_environment(scratch / "storage")
     executable = package / "bin" / "aeat.exe"
     results: dict[str, Any] = {}
     for name, arguments in (

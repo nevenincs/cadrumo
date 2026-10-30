@@ -365,13 +365,11 @@ def _run_parent(args: argparse.Namespace) -> dict[str, Any]:
         storage_root=storage,
         authority_root=args.authority_root,
         passphrase=secrets.token_urlsafe(32),
-        runtime_socket_dir=storage / "r",
     )
     with installed_foreground_runtime(
         cli_executable=args.cli,
         storage_root=storage,
         authority_root=args.authority_root,
-        runtime_socket_dir=storage / "r",
     ) as runtime_evidence:
         try:
             targets = seed_withholding_work(cli, year=args.year)
@@ -435,7 +433,6 @@ def _run_withholding_children(
             ),
             storage_root=storage,
             authority_root=args.authority_root,
-            runtime_socket_dir=cli.runtime_socket_dir,
             receipt_path=child_receipt,
             passphrase=cli.passphrase,
             timeout_seconds=args.timeout_seconds,

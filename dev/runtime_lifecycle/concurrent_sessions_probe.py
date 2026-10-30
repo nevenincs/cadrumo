@@ -536,10 +536,9 @@ def main(arguments: list[str] | None = None) -> int:
     options = parser.parse_args(arguments)
     with tempfile.TemporaryDirectory(prefix="cadrumo-concurrent-", dir=prepare_temp_root()) as temporary:
         scratch = Path(temporary)
-        root, secrets = scratch / "storage", scratch / "secrets"
+        root = scratch / "storage"
         root.mkdir()
-        secrets.mkdir()
-        environment = consumer_environment(root, secrets)
+        environment = consumer_environment(root)
         if options.source:
             programs = source_programs()
             python = [sys.executable]

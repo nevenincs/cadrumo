@@ -58,22 +58,17 @@ class CommandEvidence:
     error_code: str | None = None
 
 
-def build_installed_cli_environment(
-    *, storage_root: Path, authority_root: Path, runtime_socket_dir: Path | None = None
-) -> dict[str, str]:
+def build_installed_cli_environment(*, storage_root: Path, authority_root: Path) -> dict[str, str]:
     """Build the allowlisted product environment for one isolated child process."""
     environment = clean_product_env()
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             "CADRUMO_AUTHORITY_ROOT": str(authority_root),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "PYTHONIOENCODING": "utf-8",
         }
     )
-    if runtime_socket_dir is not None:
-        environment["CADRUMO_STORAGE_ROOT"] = str(storage_root)
-        environment["CADRUMO_RUNTIME_SOCKET_DIR"] = str(runtime_socket_dir)
     return environment
 
 
@@ -87,7 +82,6 @@ class InstalledCli:
         storage_root: Path,
         authority_root: Path,
         passphrase: str,
-        runtime_socket_dir: Path | None = None,
         cli_argument_prefix: tuple[str, ...] = (),
     ) -> None:
         """Bind the executable to one isolated store and authority tree."""
@@ -95,7 +89,6 @@ class InstalledCli:
         self.storage_root = storage_root.resolve()
         self.authority_root = authority_root.resolve(strict=True)
         self.passphrase = passphrase
-        self.runtime_socket_dir = runtime_socket_dir
         self._cli_argument_prefix = tuple(cli_argument_prefix)
         self.commands: list[CommandEvidence] = []
 
@@ -214,11 +207,7 @@ class InstalledCli:
             check=False,
             capture_output=True,
             cwd=self.storage_root,
-            env=build_installed_cli_environment(
-                storage_root=self.storage_root,
-                authority_root=self.authority_root,
-                runtime_socket_dir=self.runtime_socket_dir,
-            ),
+            env=build_installed_cli_environment(storage_root=self.storage_root, authority_root=self.authority_root),
             input=input_text if input_text is not None else "",
             text=True,
             timeout=180,

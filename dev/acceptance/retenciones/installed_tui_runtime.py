@@ -47,7 +47,6 @@ def installed_foreground_runtime(
     cli_executable: Path,
     storage_root: Path,
     authority_root: Path,
-    runtime_socket_dir: Path,
     startup_timeout_seconds: float = 60,
 ) -> Generator[dict[str, Any]]:
     """Verify installed cohort/root readiness, then join shutdown on every outcome."""
@@ -57,7 +56,7 @@ def installed_foreground_runtime(
     if not executable.is_file():
         raise RetencionesInstalledCliError(stage="runtime_fixture", diagnostic_code="installed_runtime_missing")
     try:
-        endpoint = PosixEndpoint(storage_root=storage_root, namespace=runtime_socket_dir)
+        endpoint = PosixEndpoint(storage_root=storage_root)
     except RefusalError as error:
         raise RetencionesInstalledCliError(stage="runtime_endpoint", diagnostic_code=error.reason.value) from error
     with asyncio.Runner() as runner:
@@ -65,9 +64,7 @@ def installed_foreground_runtime(
         evidence = None
         try:
             cohort = version("cadrumo")
-            environment = build_installed_cli_environment(
-                storage_root=storage_root, authority_root=authority_root, runtime_socket_dir=runtime_socket_dir
-            )
+            environment = build_installed_cli_environment(storage_root=storage_root, authority_root=authority_root)
             environment["CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE"] = "1"
             process = runner.run(
                 asyncio.create_subprocess_exec(

@@ -301,7 +301,7 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                 )
 
         with override_settings(
-            cadrumo_local_storage_root=storage_root,
+            cadrumo_storage_root=storage_root,
             cadrumo_output_language="en",
             cadrumo_cli_reveal_identifiers=True,
         ):
@@ -732,7 +732,7 @@ def test_tui_profile_lock_resumes_only_selected_grant_seen_by_cli(tmp_path: Path
         server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
-        with override_settings(cadrumo_local_storage_root=storage_root):
+        with override_settings(cadrumo_storage_root=storage_root):
             owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=20)
             pool = ThreadPoolExecutor(max_workers=2)
             owner.executor = pool
@@ -994,7 +994,7 @@ def test_api_reference_tui_refuses_programmatic_administration_but_can_lock_own_
                     primary_error=client_primary,
                 )
 
-        with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_output_language="en"):
+        with override_settings(cadrumo_storage_root=storage_root, cadrumo_output_language="en"):
             owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=20)
             owner.executor = ThreadPoolExecutor(max_workers=1)
             primary: BaseException | None = None

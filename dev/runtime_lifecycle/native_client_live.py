@@ -67,7 +67,7 @@ def _environment(root: Path) -> dict[str, str]:
         for name, value in os.environ.items()
         if not name.upper().startswith("CADRUMO_") or name.upper() == "CADRUMO_AUTHORITY_ROOT"
     }
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
+    environment["CADRUMO_STORAGE_ROOT"] = str(root)
     # Native IPC acceptance is independent of the test runner's desktop session.
     environment["CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE"] = "1"
     return environment

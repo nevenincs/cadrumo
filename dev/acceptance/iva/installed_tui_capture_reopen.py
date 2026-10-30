@@ -157,7 +157,7 @@ def run_installed_tui_capture_reopen(
     environment = clean_product_env()
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             "CADRUMO_AUTHORITY_ROOT": str(authority_root.resolve(strict=True)),
         }
     )

@@ -141,10 +141,9 @@ def source_programs() -> Programs:
 
 def signed_in_phase(probe: Probe, programs: Programs, scratch: Path, *, source: bool) -> None:
     """Sign in on a fresh root and make the desktop's post-sign-in calls."""
-    root, secrets = scratch / "storage", scratch / "secrets"
+    root = scratch / "storage"
     root.mkdir(parents=True)
-    secrets.mkdir(parents=True)
-    environment = consumer_environment(root, secrets)
+    environment = consumer_environment(root)
     if source:
         # A package carries its own published authority; a checkout uses the one the justfile pins.
         environment.update(_DEVELOPMENT_SESSION, CADRUMO_AUTHORITY_ROOT=str(REPO_ROOT / ".authority"))

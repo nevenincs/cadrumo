@@ -138,10 +138,9 @@ def agent_service_session(
     """
     package = package.resolve(strict=True)
     scratch.mkdir(parents=True, exist_ok=True)
-    root, secret_store = scratch / "storage", scratch / "secrets"
+    root = scratch / "storage"
     root.mkdir(parents=True, exist_ok=True)
-    secret_store.mkdir(parents=True, exist_ok=True)
-    environment = consumer_environment(root, secret_store)
+    environment = consumer_environment(root)
     environment["CADRUMO_LOG_STDERR_LEVEL"] = "WARNING"
     if external_bin_dirs:
         normalized = tuple(str(path.resolve(strict=True)) for path in external_bin_dirs)

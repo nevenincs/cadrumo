@@ -392,6 +392,14 @@ async def _settle_admission_workers[T](pilot: Pilot[T]) -> None:
         await pilot.app.workers.wait_for_complete(login_workers)
 
 
+async def _pause_admission[T](pilot: Pilot[T], deadline: float | None) -> None:
+    if deadline is None:
+        await pilot.pause()
+    else:
+        # A screen-idle wait can outlive the caller's absolute deadline.
+        await asyncio.sleep(min(0.2, max(0.0, deadline - asyncio.get_running_loop().time())))
+
+
 async def admit_installed_session(
     *, pilot: Any, passphrase: str, polls: int = 180, deadline: float | None = None
 ) -> bool:
@@ -414,7 +422,7 @@ async def admit_installed_session(
             if deadline is not None and loop.time() >= deadline:
                 break
             remaining -= 1
-            await pilot.pause(0.2 if deadline is not None else None)
+            await _pause_admission(pilot, deadline)
         raise InstalledTuiChildError(
             "installed runtime admission did not settle",
             diagnostic=public_surface_diagnostic(pilot),
@@ -756,7 +764,6 @@ def run_installed_tui_child_process(
     receipt_path: Path,
     passphrase: str,
     authority_root: Path | None = None,
-    runtime_socket_dir: Path | None = None,
     timeout_seconds: int = 240,
 ) -> InstalledTuiChildProcessEvidence:
     """Run a development child against an installed product interpreter.
@@ -781,16 +788,13 @@ def run_installed_tui_child_process(
     environment = clean_product_env()
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(store),
+            "CADRUMO_STORAGE_ROOT": str(store),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "PYTHONIOENCODING": "utf-8",
         }
     )
     if authority_root is not None:
         environment["CADRUMO_AUTHORITY_ROOT"] = str(authority_root.resolve(strict=True))
-    if runtime_socket_dir is not None:
-        environment["CADRUMO_STORAGE_ROOT"] = str(store)
-        environment["CADRUMO_RUNTIME_SOCKET_DIR"] = str(runtime_socket_dir.resolve(strict=True))
     completed = subprocess.run(  # noqa: S603 - executable is an explicit acceptance input
         [str(executable), "-m", child_module, *child_args],
         check=False,

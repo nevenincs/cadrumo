@@ -125,7 +125,7 @@ async def test_installed_sdk_offers_no_enrollment_and_no_key_presentation_to_an_
             args=["--profile-id", str(profile.profile_id)],
             cwd=tmp_path,
             env={
-                "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
+                "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
                 "CADRUMO_AUTHORITY_ROOT": str(bundled_authority_descriptor_path().parent),
                 "PYDANTIC_DISABLE_PLUGINS": "__all__",
             },

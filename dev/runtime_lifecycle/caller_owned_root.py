@@ -2,7 +2,7 @@
 
 This drives the package the way an external consumer does: only its programs
 (``bin/aeat``, ``bin/cadrumo-runtime``, ``bin/cadrumo-mcp``) and its documented
-environment, ``CADRUMO_LOCAL_STORAGE_ROOT`` and ``CADRUMO_SECRET_STORE_DIR``.
+environment, ``CADRUMO_STORAGE_ROOT``.
 Nothing here imports the product to reach the runtime. The run:
 
 1. creates a synthetic profile on a fresh root and shows that sign-in is
@@ -105,15 +105,14 @@ def require(condition: bool, message: str) -> None:
         raise AcceptanceError(message)
 
 
-def consumer_environment(root: Path, secret_store: Path) -> dict[str, str]:
-    """Return the ambient environment without product or interpreter settings, plus the two pins."""
+def consumer_environment(root: Path) -> dict[str, str]:
+    """Return the ambient environment without product or interpreter settings, plus the storage root."""
     environment = {
         name: value
         for name, value in os.environ.items()
         if not name.upper().startswith(("CADRUMO_", "PYTHON", "VIRTUAL_ENV", "UV_"))
     }
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
-    environment["CADRUMO_SECRET_STORE_DIR"] = str(secret_store)
+    environment["CADRUMO_STORAGE_ROOT"] = str(root)
     return environment
 
 
@@ -335,9 +334,8 @@ def run(package: Path, scratch: Path) -> Receipt:
         build_number=build.get("build_number"),
         manifest_sha256=hashlib.sha256(manifest).hexdigest(),
     )
-    root, secret_store = scratch / "storage", scratch / "secrets"
-    secret_store.mkdir(parents=True)
-    environment = consumer_environment(root, secret_store)
+    root = scratch / "storage"
+    environment = consumer_environment(root)
     default_root = host_installed_default_root(os.environ)
     before = file_facts(default_root)
     receipt.record("default_root_observed", exists=default_root.exists(), entries=len(before))

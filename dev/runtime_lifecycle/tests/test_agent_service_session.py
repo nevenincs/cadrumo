@@ -199,7 +199,7 @@ def _install_lifecycle(
     monkeypatch.setattr(
         session_module,
         "consumer_environment",
-        lambda root, secrets: {"CADRUMO_LOCAL_STORAGE_ROOT": str(root), "CADRUMO_SECRET_STORE_DIR": str(secrets)},
+        lambda root: {"CADRUMO_STORAGE_ROOT": str(root)},
     )
     monkeypatch.setattr(session_module, "create_profile", lambda *_args: steps.append("profile.create") or profile)
     monkeypatch.setattr(
@@ -534,7 +534,7 @@ def test_cli_read_uses_exactly_one_authority_for_person_owned_read(
 ) -> None:
     session = object.__new__(session_module.AgentServiceSession)
     session.programs = Programs(Path("aeat"), Path("runtime"), Path("mcp"))
-    session.environment = {"CADRUMO_LOCAL_STORAGE_ROOT": "synthetic-root"}
+    session.environment = {"CADRUMO_STORAGE_ROOT": "synthetic-root"}
     session.profile = Profile("session-profile", "test-profile-password", _PROFILE_ID)
     session.login_session_persisted = persisted
     calls: list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]] = []

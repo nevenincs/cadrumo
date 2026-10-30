@@ -375,7 +375,7 @@ async def test_installed_mcp_releases_only_safe_m036_query_rows(
                 args=["--profile-id", str(profile.profile_id), "--credential-reference", str(reference)],
                 cwd=tmp_path,
                 env={
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
+                    "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
                     "CADRUMO_AUTHORITY_ROOT": str(bundled_authority_descriptor_path().parent),
                     "PYDANTIC_DISABLE_PLUGINS": "__all__",
                 },

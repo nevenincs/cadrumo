@@ -104,7 +104,7 @@ def _measurement_command(
 def _measure(
     package: Path, root: Path, artifact: Path, verb: str, spy: str, spy_program: Path | None
 ) -> dict[str, Any]:
-    environment = consumer_environment(root, root / "secrets")
+    environment = consumer_environment(root)
     environment[HOSTED_ROOT_VARIABLE] = str(root / "agent")
     program, arguments, trace = _measurement_command(package, artifact, verb, spy, spy_program)
     observations: list[dict[str, Any]] = []

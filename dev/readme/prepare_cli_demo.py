@@ -66,10 +66,9 @@ def demo_environment() -> dict[str, str]:
         environment[AUTHORITY_ROOT_ENV] = authority_root
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(DEMO_ROOT),
+            "CADRUMO_STORAGE_ROOT": str(DEMO_ROOT),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_SECRET_PASSPHRASE": DEMO_VALUE,
-            "CADRUMO_SECRET_STORE_DIR": str(DEMO_ROOT / "secrets"),
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
         },

@@ -193,7 +193,7 @@ def _runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[_Pari
     )
     with (
         override_settings(
-            cadrumo_local_storage_root=root,
+            cadrumo_storage_root=root,
             cadrumo_output_language="en",
             cadrumo_cli_reveal_identifiers=True,
             cadrumo_profile_kdf_measure_calibration=False,

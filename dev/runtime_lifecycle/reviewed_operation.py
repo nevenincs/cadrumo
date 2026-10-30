@@ -327,9 +327,8 @@ async def run(programs: Programs, package: Path | None, scratch: Path) -> Receip
     """Execute the reviewed operation on a fresh root below ``scratch``."""
     receipt = Receipt()
     receipt.record("artifact", **package_identity(package))
-    root, secret_store = scratch / "storage", scratch / "secrets"
-    secret_store.mkdir(parents=True)
-    environment = consumer_environment(root, secret_store)
+    root = scratch / "storage"
+    environment = consumer_environment(root)
     profile = create_profile(programs, environment, _PROFILE)
 
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:

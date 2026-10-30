@@ -178,7 +178,7 @@ def _run_site_builds(
             return run_command(
                 build.command,
                 cwd=repo_root,
-                environment={**build.environment, "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root)},
+                environment={**build.environment, "CADRUMO_STORAGE_ROOT": str(storage_root)},
             )
 
         with ThreadPoolExecutor(max_workers=len(builds)) as pool:

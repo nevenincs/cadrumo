@@ -155,7 +155,6 @@ def test_driver_profile_evidence_binds_only_the_observed_inventory_and_held_sess
         profile,
         session,
         storage_root=tmp_path / "storage",
-        secret_store=tmp_path / "secrets",
         relay=Path("/package/bin/cadrumo-mcp"),
         scenario={"taxpayer": "Synthetic taxpayer"},
         owner_pid=123,
@@ -191,7 +190,6 @@ def test_driver_profile_evidence_refuses_more_than_the_exact_synthetic_profile(t
                 "connection_id": "6f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e5f",
             },
             storage_root=tmp_path / "storage",
-            secret_store=tmp_path / "secrets",
             relay=Path("/package/bin/cadrumo-mcp"),
             scenario={"taxpayer": "Synthetic taxpayer"},
             owner_pid=123,
@@ -224,7 +222,6 @@ def test_the_written_driver_profile_holds_no_credential_custody_or_bearer(tmp_pa
             profile,
             session,
             storage_root=storage_root,
-            secret_store=tmp_path / "secrets",
             relay=Path("/package/bin/cadrumo-mcp"),
             scenario={"taxpayer": "Synthetic taxpayer"},
             owner_pid=123,
@@ -244,14 +241,12 @@ def test_the_written_driver_profile_holds_no_credential_custody_or_bearer(tmp_pa
         "owner_start_identity",
         "owner_token",
         "storage_root",
-        "secret_store_dir",
         "profile_id",
         "profile_inventory",
         "held_session",
         "relay",
         "scenario",
     }
-    assert written["secret_store_dir"] == str(tmp_path / "secrets")
     token = written["owner_token"]
     assert len(token) == 48 and all(character in "0123456789abcdef" for character in token)
     # Anyone holding the file can recompute the token from its public fields, so it is no bearer.

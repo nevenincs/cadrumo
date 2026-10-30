@@ -67,7 +67,7 @@ def test_installed_cli_rebuilds_the_child_environment_and_delivers_secrets_only_
     assert json.loads(str(second["input"])) == {"profile_passphrase": passphrase}
     environment = first["env"]
     assert isinstance(environment, dict)
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(storage_root.resolve())
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(storage_root.resolve())
     assert environment["CADRUMO_AUTHORITY_ROOT"] == str(authority_root.resolve())
     assert "CADRUMO_UNRELATED" not in environment
     assert "PYTHONPATH" not in environment

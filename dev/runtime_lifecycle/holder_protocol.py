@@ -51,7 +51,7 @@ def holder_launch(
         from cadrumo_runtime.application.development_root import mark_development_root
 
         require(0 < len(password) <= _PASSWORD_FRAME_LIMIT, "holder password frame is out of bounds")
-        configured_root = environment.get("CADRUMO_LOCAL_STORAGE_ROOT")
+        configured_root = environment.get("CADRUMO_STORAGE_ROOT")
         require(bool(configured_root), "development holder requires an explicit disposable storage root")
         if configured_root is None:
             raise AcceptanceError("development storage root unavailable")

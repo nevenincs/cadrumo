@@ -130,14 +130,14 @@ def test_only_a_test_desktop_whose_lane_is_gone_may_be_stopped(tmp_path: Path) -
 def test_the_desktop_runs_on_the_persons_root_with_the_accounts_credential_store(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("CADRUMO_SECRET_STORE_DIR", str(tmp_path / "elsewhere"))
+    monkeypatch.setenv("CADRUMO_OUTPUT_LANGUAGE", "ca")
     monkeypatch.setenv("CADRUMO_LLM_ANTHROPIC_API_KEY", "not-for-the-desktop")
     monkeypatch.setenv("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--remote-debugging-port=1")
     environment = person_environment(tmp_path / "root", tmp_path / "package")
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(tmp_path / "root")
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "root")
     assert environment["CADRUMO_DESKTOP_PACKAGE_ROOT"] == str(tmp_path / "package")
     assert not {
-        "CADRUMO_SECRET_STORE_DIR",
+        "CADRUMO_OUTPUT_LANGUAGE",
         "CADRUMO_LLM_ANTHROPIC_API_KEY",
         "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
     } & set(environment)

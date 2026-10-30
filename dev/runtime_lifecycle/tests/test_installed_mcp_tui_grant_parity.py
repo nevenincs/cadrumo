@@ -462,7 +462,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                 args=["--profile-id", str(profile.profile_id), "--credential-reference", str(selected)],
                 cwd=tmp_path,
                 env={
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
+                    "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
                     "CADRUMO_AUTHORITY_ROOT": str(bundled_authority_descriptor_path().parent),
                     "PYDANTIC_DISABLE_PLUGINS": "__all__",
                 },

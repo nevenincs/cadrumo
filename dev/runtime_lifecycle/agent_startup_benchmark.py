@@ -129,10 +129,9 @@ def _startup_phases(records: list[tuple[float, str]]) -> list[str]:
 
 def measure(package: Path, scratch: Path) -> dict[str, Any]:
     """Measure fresh and repeat service starts; always close the trees we own."""
-    root, secret_store = scratch / "storage", scratch / "secrets"
+    root = scratch / "storage"
     root.mkdir(parents=True)
-    secret_store.mkdir()
-    environment = consumer_environment(root, secret_store)
+    environment = consumer_environment(root)
     environment["CADRUMO_LOG_STDERR_LEVEL"] = "WARNING"
     # Startup requires no model credentials. Do not admit ambient credentials
     # even when the caller's development environment contains them.

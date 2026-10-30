@@ -223,7 +223,7 @@ async def test_installed_mcp_reads_all_diagnostics_reports_with_exact_filters(
                 args=["--profile-id", str(profile.profile_id), "--credential-reference", str(reference)],
                 cwd=tmp_path,
                 env={
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
+                    "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
                     "CADRUMO_AUTHORITY_ROOT": str(bundled_authority_descriptor_path().parent),
                     "PYDANTIC_DISABLE_PLUGINS": "__all__",
                 },
