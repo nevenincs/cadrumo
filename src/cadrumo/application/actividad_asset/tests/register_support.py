@@ -12,6 +12,7 @@ from cadrumo.application.actividad_asset.operations import ActivityAssetRegister
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
@@ -79,7 +80,7 @@ def memory_register_authority(
     *,
     today: date = date(2025, 12, 31),
     consumers: Mapping[str, tuple[str, ...]] | None = None,
-    foral: bool = False,
+    territory: ResidenceTerritory = ResidenceTerritory.COMMON,
 ) -> ActivityAssetRegisterAuthority:
     """Answer the register's profile and edition questions with fixed facts."""
 
@@ -98,7 +99,7 @@ def memory_register_authority(
             _published_modelo_100(),
         ),
         agrarian_activities=lambda _on: frozenset(),
-        foral_territory=lambda: foral,
+        residence_territory=lambda: territory,
         claim_consumers=claim_consumers,
         today=lambda: today,
         schedule_authority=_published_authority,

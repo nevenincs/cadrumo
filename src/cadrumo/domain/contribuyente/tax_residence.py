@@ -8,6 +8,7 @@ They live in a module of their own now.
 from __future__ import annotations
 
 from datetime import date
+from enum import StrEnum
 from typing import cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -102,6 +103,32 @@ def parse_tax_region(raw: str) -> CCAA:
             f"unknown tax-region {raw!r}; valid CCAA values: {valid}",
             context={"tax_region": raw},
         ) from exc
+
+
+class ResidenceTerritory(StrEnum):
+    """What a recorded tax-residence reading establishes about the taxpayer's territory."""
+
+    COMMON = "common"
+    FORAL = "foral"
+    UNRESOLVED = "unresolved"
+
+
+def classify_tax_region(raw: str | None) -> ResidenceTerritory:
+    """Classify a recorded tax-region token as common, foral or unresolved.
+
+    An absent reading is common: nothing was recorded that could place the
+    taxpayer elsewhere. A reading the catalogue cannot parse is unresolved,
+    never common, because it was recorded and still established nothing.
+    """
+    if raw is None:
+        return ResidenceTerritory.COMMON
+    try:
+        parse_tax_region(raw)
+    except ForalRegimeError:
+        return ResidenceTerritory.FORAL
+    except TaxResidenceProfileError:
+        return ResidenceTerritory.UNRESOLVED
+    return ResidenceTerritory.COMMON
 
 
 def _normalize_region_token(raw: str) -> str:

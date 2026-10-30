@@ -40,7 +40,7 @@ from ...domain.renta.actividad_asset.schedule import (
 )
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ...domain.user_profile.plantilla_media import plantilla_media_years
-from ..aggregation.renta_ledger import resident_in_foral_territory
+from ..aggregation.renta_ledger import resident_territory
 from ..calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
@@ -206,7 +206,7 @@ def _activity_asset_operations(
         register_authority=ActivityAssetRegisterAuthority(
             edition=edition,
             agrarian_activities=agrarian_activities,
-            foral_territory=lambda: resident_in_foral_territory(bucket_id=bucket_id, operation=operation),
+            residence_territory=lambda: resident_territory(bucket_id=bucket_id, operation=operation),
             claim_consumers=ports.claim_consumers,
             today=lambda: now().date(),
             schedule_authority=schedule_authority,

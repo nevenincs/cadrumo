@@ -4862,6 +4862,9 @@ navigation:
       label: Ügynök
     browser:
       label: Böngésző
+      tax_residence_unresolved: Nem sikerült beolvasni az adóügyi illetőségedet, ezért
+        a nyilvántartás nem tudja megmondani, hogy az AEAT 100-as és 130-as modellje
+        alkalmazandó-e.
     calendar:
       label: Bevallási naptár
     declarations:

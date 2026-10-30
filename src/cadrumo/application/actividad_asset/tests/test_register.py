@@ -20,6 +20,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations, SupersedingClaimRequest
 from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence
 from cadrumo.core.period import Period
+from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -445,7 +446,7 @@ def test_the_handoff_refuses_a_foral_profile() -> None:
         ledger=MemoryLedger(_ACQUISITION),
         forecast_operation=_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(foral=True),
+        register_authority=memory_register_authority(territory=ResidenceTerritory.FORAL),
     )
     operations.create(_revision(), _NAME)
 

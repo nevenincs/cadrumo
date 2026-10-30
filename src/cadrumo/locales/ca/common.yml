@@ -4881,6 +4881,8 @@ navigation:
       label: Sincronització AEAT
     agent:
       label: Agent
+      tax_residence_unresolved: No s'ha pogut llegir la teva residència fiscal, així
+        que el registre no pot dir si s'apliquen els Models 100 i 130 de l'AEAT.
     browser:
       label: Navegador
     calendar:

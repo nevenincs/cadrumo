@@ -4886,6 +4886,8 @@ navigation:
   view:
     aeat_sync:
       label: Sincronización AEAT
+      tax_residence_unresolved: No se pudo leer tu residencia fiscal, así que el registro
+        no puede decir si se aplican los Modelos 100 y 130 de la AEAT.
     agent:
       label: Agente
     browser:

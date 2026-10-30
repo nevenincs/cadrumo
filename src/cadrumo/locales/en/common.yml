@@ -4797,6 +4797,8 @@ navigation:
     browser:
       label: Browser
     calendar:
+      tax_residence_unresolved: Your tax residence could not be read, so the register
+        cannot say whether Modelos 100 and 130 of the AEAT apply.
       label: Filing calendar
     declarations:
       label: Declarations

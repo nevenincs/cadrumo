@@ -30,6 +30,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.categories.spending_category_catalogue import amortizable_spending_categories
+from ...domain.contribuyente.tax_residence import ResidenceTerritory
 from ...domain.modelos.calculation_revision_sources import (
     ACTIVITY_ASSET_CLAIM_REF_PREFIX,
     ACTIVITY_ASSET_SCHEDULE_REF_PREFIX,
@@ -58,7 +59,7 @@ from ..actividad_asset.schedule_walk import (
 from ..calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from ..user_profile.plantilla_media_rows import plantilla_media_years_of
 from . import _shared_issue_reasons
-from .renta_ledger import resident_in_foral_territory
+from .renta_ledger import resident_territory
 from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceProvenance
 from .source_resolution_operations import source_diagnostics_for
 
@@ -381,11 +382,14 @@ def activity_asset_provenance(
 
 def _foral(context: CalculationSourceContext, operation: PinnedAuthorityOperation) -> bool:
     profile = context.profile
-    return resident_in_foral_territory(
-        bucket_id=context.bucket_id,
-        profile_record=None if profile is None else profile.record,
-        profile_decode_context=None if profile is None else profile.profile_decode_context,
-        operation=operation,
+    return (
+        resident_territory(
+            bucket_id=context.bucket_id,
+            profile_record=None if profile is None else profile.record,
+            profile_decode_context=None if profile is None else profile.profile_decode_context,
+            operation=operation,
+        )
+        is ResidenceTerritory.FORAL
     )
 
 

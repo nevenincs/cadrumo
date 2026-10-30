@@ -18,6 +18,7 @@ from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_bindings import activity_asset_form_options
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.contribuyente.tax_residence import ResidenceTerritory
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimProjection,
@@ -127,7 +128,7 @@ class ActivityAssetRegisterAuthority:
 
     edition: Callable[[int], tuple[ActivityAssetEdition, ModeloRevision]]
     agrarian_activities: Callable[[date], frozenset[TipoActividad]]
-    foral_territory: Callable[[], bool]
+    residence_territory: Callable[[], ResidenceTerritory]
     claim_consumers: Callable[[Iterable[str]], Mapping[str, tuple[str, ...]]]
     today: Callable[[], date]
     schedule_authority: Callable[[ActivityAssetRevision, int], ScheduleAuthority]
@@ -245,6 +246,7 @@ class ActivityAssetOperations:
         """Forecast each replacement under the new revision, earliest first, on the state the earlier ones leave."""
         if not requests:
             return ()
+        self._require_common_territory()
         effective = {claim.claim_id: claim for claim in effective_claims(history.claims)}
         targets: list[tuple[AmortizationClaim, SupersedingClaimRequest]] = []
         for request in requests:
@@ -296,6 +298,7 @@ class ActivityAssetOperations:
         A forecast for a superseding claim leaves out the effective claim it
         will replace, exactly as recording that claim does.
         """
+        self._require_common_territory()
         if supersedes_claim_id is not None and not any(
             claim.claim_id == supersedes_claim_id and claim.asset_id == asset_id
             for claim in effective_claims(self._service.reopen().claims)
@@ -352,6 +355,7 @@ class ActivityAssetOperations:
         history, authority and profile reproduces it exactly.  An exact replay
         of an already recorded claim returns that claim unchanged.
         """
+        self._require_common_territory()
         current_history = self._service.reopen()
         revision = max(
             (item for item in current_history.revisions if item.asset_id == forecast.asset_id),
@@ -395,8 +399,8 @@ class ActivityAssetOperations:
     def filing_handoff(self, *, tax_year: int, m130_period: Period) -> ActivityAssetFilingHandoff:
         """Project M100 from effective claims and M130 from the accrual route, recording nothing."""
         history = self._service.reopen()
-        if history.revisions and self._authority.foral_territory():
-            raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.foral_territory")
+        if history.revisions:
+            self._require_common_territory()
         period_end = m130_period.end_date
         current = {revision.asset_id: revision for revision in history.revisions}
         rows = self._ledger.load_by_ids(
@@ -444,6 +448,16 @@ class ActivityAssetOperations:
             material_m130=m130(AssetKind.MATERIAL),
             intangible_m130=m130(AssetKind.INTANGIBLE),
         )
+
+    def _require_common_territory(self) -> None:
+        """Refuse work that reaches Modelos 100 and 130 for a foral resident or an unreadable residence."""
+        territory = self._authority.residence_territory()
+        if territory is ResidenceTerritory.FORAL:
+            raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.foral_territory")
+        if territory is ResidenceTerritory.UNRESOLVED:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.tax_residence_unresolved",
+            )
 
     def _read_context(self, history: ActivityAssetHistory) -> RegisterReadContext:
         return RegisterReadContext(

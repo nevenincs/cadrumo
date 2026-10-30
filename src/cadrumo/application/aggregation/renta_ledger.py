@@ -50,7 +50,7 @@ from ...domain.contribuyente.errors import ForalRegimeError, TaxResidenceProfile
 from ...domain.contribuyente.seguro_enfermedad_insured import (
     seguro_enfermedad_insured_counts_from_facts,
 )
-from ...domain.contribuyente.tax_residence import parse_tax_region
+from ...domain.contribuyente.tax_residence import ResidenceTerritory, classify_tax_region, parse_tax_region
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import (
@@ -260,33 +260,27 @@ def resolve_residence_ccaa(
         return None
 
 
-def resident_in_foral_territory(
+def resident_territory(
     *,
     bucket_id: str,
     profile_record: UserProfileRecord | None = None,
     profile_decode_context: ProfileDecodeContext | None = None,
     operation: PinnedAuthorityOperation,
-) -> bool:
-    """Whether the bucket's recorded tax residence is a foral territory.
+) -> ResidenceTerritory:
+    """Classify the bucket's recorded tax residence as common, foral or unresolved.
 
     Reads the same fact as :func:`resolve_residence_ccaa` and asks the same
-    parser. An absent or unparseable residence is not foral: nothing established it.
+    parser. An absent reading is common; a recorded one the catalogue cannot
+    parse is unresolved, because it established nothing.
     """
-    raw = _recorded_tax_region(
-        bucket_id=bucket_id,
-        profile_record=profile_record,
-        profile_decode_context=profile_decode_context,
-        operation=operation,
+    return classify_tax_region(
+        _recorded_tax_region(
+            bucket_id=bucket_id,
+            profile_record=profile_record,
+            profile_decode_context=profile_decode_context,
+            operation=operation,
+        ),
     )
-    if raw is None:
-        return False
-    try:
-        parse_tax_region(raw)
-    except ForalRegimeError:
-        return True
-    except TaxResidenceProfileError:
-        return False
-    return False
 
 
 def _recorded_tax_region(
