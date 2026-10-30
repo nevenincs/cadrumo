@@ -258,7 +258,8 @@ def actividad_asset_plan(ctx: typer.Context, asset_id: str) -> None:
         "ledger.actividad_asset.plan",
         result,
         *(
-            f"{row.tax_year}\t{row.planned.decimal if row.planned else ''}\t{row.claimed.decimal}\t{row.claim_state.value}"
+            f"{row.tax_year}\t{row.planned.decimal if row.planned else row.absence or ''}"
+            f"\t{row.claimed.decimal}\t{row.claim_state.value}"
             for row in result.rows or ()
         ),
     )

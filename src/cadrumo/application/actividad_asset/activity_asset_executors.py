@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import date
 from decimal import Decimal
-from typing import ClassVar
+from typing import ClassVar, override
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -18,10 +18,12 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
 from ...core.tipos_actividad import TipoActividad
+from ...domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import TemporalProjectionDirection, revision_temporal_resolution
+from ...domain.renta.actividad_asset.election import WORKFORCE_CONDITIONED_METHODS
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetClaimConflictError,
@@ -31,7 +33,11 @@ from ...domain.renta.actividad_asset.errors import (
     ActividadAssetValidationError,
 )
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
-from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
+from ...domain.renta.actividad_asset.schedule import (
+    AssetScheduleHistory,
+    ScheduleAuthority,
+    ScheduledAmortizationCharge,
+)
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ...domain.user_profile.plantilla_media import plantilla_media_years
 from ..aggregation.renta_ledger import resident_in_foral_territory
@@ -172,6 +178,16 @@ def _activity_asset_operations(
             revision,
         )
 
+    def schedule_authority(revision: ActivityAssetRevision, tax_year: int) -> ScheduleAuthority:
+        return resolve_activity_asset_schedule_authority(
+            operation.revision_for_context("100", filing_year=tax_year, period="0A"),
+            tax_year=tax_year,
+            asset_revision=revision,
+            authority_generation=operation.pin().logical_generation,
+            workforce=taxpayer_workforce() if revision.amortization.method in WORKFORCE_CONDITIONED_METHODS else (),
+            legal_reference=operation.legal_reference,
+        )
+
     def agrarian_activities(on: date) -> frozenset[TipoActividad]:
         return frozenset(
             TipoActividad(code)
@@ -193,6 +209,7 @@ def _activity_asset_operations(
             foral_territory=lambda: resident_in_foral_territory(bucket_id=bucket_id, operation=operation),
             claim_consumers=ports.claim_consumers,
             today=lambda: now().date(),
+            schedule_authority=schedule_authority,
         ),
     )
 
@@ -220,29 +237,41 @@ def _worker_bucket[T: BaseModel](
 def _refusal(error: Exception) -> ActivityAssetRefusalResult | None:
     if not isinstance(error, ActividadAssetError):
         return None
-    detail: dict[str, object] = {
-        "reason_key": error.translated_message,
-        "reason_facts": {name: str(value) for name, value in (error.context or {}).items()},
-    }
+    reason_key = error.translated_message
+    reason_facts = {name: str(value) for name, value in (error.context or {}).items()}
     if isinstance(error, ActividadAssetIncompleteError):
         verdict = error.terminal_precondition_verdict
         return ActivityAssetRefusalResult(
             code=ACTIVITY_ASSET_REFUSED_INCOMPLETE,
             precondition_verdict=verdict if isinstance(verdict, PreconditionVerdict) else None,
-            **detail,
+            reason_key=reason_key,
+            reason_facts=reason_facts,
         )
     if isinstance(error, ActividadAssetAcceleratedDa18DepreciationError):
         return ActivityAssetRefusalResult(
             code=ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18,
             accelerated_da18=ActivityAssetAcceleratedDa18Facts.from_error(error),
-            **detail,
+            reason_key=reason_key,
+            reason_facts=reason_facts,
         )
     if isinstance(error, ActividadAssetUnsupportedError):
-        return ActivityAssetRefusalResult(code=ACTIVITY_ASSET_REFUSED_UNSUPPORTED, **detail)
+        return ActivityAssetRefusalResult(
+            code=ACTIVITY_ASSET_REFUSED_UNSUPPORTED,
+            reason_key=reason_key,
+            reason_facts=reason_facts,
+        )
     if isinstance(error, ActividadAssetClaimConflictError):
-        return ActivityAssetRefusalResult(code=ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT, **detail)
+        return ActivityAssetRefusalResult(
+            code=ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT,
+            reason_key=reason_key,
+            reason_facts=reason_facts,
+        )
     if isinstance(error, ActividadAssetValidationError):
-        return ActivityAssetRefusalResult(code=ACTIVITY_ASSET_REFUSED_VALIDATION, **detail)
+        return ActivityAssetRefusalResult(
+            code=ACTIVITY_ASSET_REFUSED_VALIDATION,
+            reason_key=reason_key,
+            reason_facts=reason_facts,
+        )
     return None
 
 
@@ -756,7 +785,16 @@ class ActivityAssetDescribeExecutor:
         return await await_cancellation_complete(commit(), task_name="activity-asset-describe")
 
 
-class _ActivityAssetReadExecutor[RequestT: BaseModel]:
+type _ReadRequest = (
+    ActivityAssetListRequest
+    | ActivityAssetPlanRequest
+    | ActivityAssetTimelineRequest
+    | ActivityAssetFormOptionsRequest
+    | ActivityAssetAcquisitionCandidatesRequest
+)
+
+
+class _ActivityAssetReadExecutor[RequestT: _ReadRequest]:
     """One read of the register: bind the profile, run, keep the result or the typed refusal."""
 
     definition_id: ClassVar[str]
@@ -777,7 +815,7 @@ class _ActivityAssetReadExecutor[RequestT: BaseModel]:
     ) -> str | OperationRefusalEvidence:
         """Run the typed operation and return its terminal reference or refusal."""
         payload = request.payload
-        profile_id: UUID = getattr(payload, "profile_id")
+        profile_id: UUID = payload.profile_id
         bucket_id = _worker_bucket(request, context, definition_id=self.definition_id, profile_id=profile_id)
         authority = _authority_provenance(context.authority_operation)
         await context.events.phase(self.definition_id)
@@ -799,7 +837,9 @@ class _ActivityAssetReadExecutor[RequestT: BaseModel]:
                     error=error,
                     asset_id=getattr(payload, "asset_id", None),
                 )
-            result = self.result_type(profile_id=profile_id, authority=authority, outcome="succeeded", **fields)
+            result = self.result_type.model_validate(
+                {"profile_id": profile_id, "authority": authority, "outcome": "succeeded", **fields},
+            )
             reference = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)
             return reference
@@ -813,6 +853,7 @@ class ActivityAssetListExecutor(_ActivityAssetReadExecutor[ActivityAssetListRequ
     definition_id = ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID
     result_type = ActivityAssetListResult
 
+    @override
     def _read(self, operations: ActivityAssetOperations, payload: ActivityAssetListRequest) -> dict[str, object]:
         del payload
         return {"rows": operations.list_elements()}
@@ -824,8 +865,13 @@ class ActivityAssetPlanExecutor(_ActivityAssetReadExecutor[ActivityAssetPlanRequ
     definition_id = ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID
     result_type = ActivityAssetPlanResult
 
+    @override
     def _read(self, operations: ActivityAssetOperations, payload: ActivityAssetPlanRequest) -> dict[str, object]:
-        return {"asset_id": payload.asset_id, "rows": operations.plan(payload.asset_id)}
+        return {
+            "asset_id": payload.asset_id,
+            "rows": operations.plan(payload.asset_id),
+            "limits": operations.plan_limits(payload.asset_id),
+        }
 
 
 class ActivityAssetTimelineExecutor(_ActivityAssetReadExecutor[ActivityAssetTimelineRequest]):
@@ -834,6 +880,7 @@ class ActivityAssetTimelineExecutor(_ActivityAssetReadExecutor[ActivityAssetTime
     definition_id = ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID
     result_type = ActivityAssetTimelineResult
 
+    @override
     def _read(self, operations: ActivityAssetOperations, payload: ActivityAssetTimelineRequest) -> dict[str, object]:
         return {"asset_id": payload.asset_id, "events": operations.timeline(payload.asset_id)}
 
@@ -844,6 +891,7 @@ class ActivityAssetFormOptionsExecutor(_ActivityAssetReadExecutor[ActivityAssetF
     definition_id = ACTIVITY_ASSET_FORM_OPTIONS_OPERATION_DEFINITION_ID
     result_type = ActivityAssetFormOptionsResult
 
+    @override
     def _read(self, operations: ActivityAssetOperations, payload: ActivityAssetFormOptionsRequest) -> dict[str, object]:
         try:
             options = operations.form_options(asset_kind=payload.asset_kind, tax_year=payload.tax_year)
@@ -861,6 +909,7 @@ class ActivityAssetAcquisitionCandidatesExecutor(_ActivityAssetReadExecutor[Acti
     definition_id = ACTIVITY_ASSET_ACQUISITION_CANDIDATES_OPERATION_DEFINITION_ID
     result_type = ActivityAssetAcquisitionCandidatesResult
 
+    @override
     def _read(
         self,
         operations: ActivityAssetOperations,

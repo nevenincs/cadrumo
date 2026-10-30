@@ -111,6 +111,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from cadrumo.domain.renta.actividad_asset.schedule import (
     AssetScheduleHistory,
     ScheduleAuthority,
@@ -844,6 +845,7 @@ def _asset_forecast(revision: ActivityAssetRevision) -> ScheduledAmortizationCha
             method=revision.amortization.method,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
+            maximum_period_ends_on=date(2035, 1, 1),
             authority_generation="outcome-fixture-v1",
             source_reference="outcome fixture only",
         ),
@@ -862,7 +864,11 @@ def _another_assets_history() -> ActivityAssetHistorySnapshot:
 
 
 def _asset_create(door: RuntimeActivityAssetTuiActionsV1) -> object:
-    return door.create(ActivityAssetCreationRequestV1(revision=_asset_revision()))
+    return door.create(
+        ActivityAssetCreationRequestV1(
+            revision=_asset_revision(), descriptor=ActivityAssetDescriptorFacts(name="Fixture")
+        )
+    )
 
 
 def _asset_correct(door: RuntimeActivityAssetTuiActionsV1) -> object:
@@ -870,9 +876,7 @@ def _asset_correct(door: RuntimeActivityAssetTuiActionsV1) -> object:
 
 
 def _asset_claim(door: RuntimeActivityAssetTuiActionsV1) -> object:
-    return door.record_claim(
-        ActivityAssetClaimRequestV1(forecast=_asset_forecast(_asset_revision()), creating_operation="asset.tui.claim")
-    )
+    return door.record_claim(ActivityAssetClaimRequestV1(forecast=_asset_forecast(_asset_revision())))
 
 
 def _another_claim() -> ActivityAssetClaimProjection:

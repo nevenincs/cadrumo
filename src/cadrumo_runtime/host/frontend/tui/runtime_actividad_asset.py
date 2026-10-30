@@ -55,7 +55,6 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
-    ActivityAssetPlanRow,
     ActivityAssetTimelineEvent,
 )
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
@@ -417,13 +416,13 @@ class RuntimeActivityAssetTuiActionsV1:
             correlate=correlate,
         )
 
-    def plan(self, asset_id: str) -> tuple[ActivityAssetPlanRow, ...]:
-        """Read one element's amortization plan."""
+    def plan(self, asset_id: str) -> ActivityAssetPlanProjection:
+        """Read one element's amortization plan and what the registry allows its election."""
 
-        def correlate(projection: ActivityAssetPlanProjection) -> tuple[ActivityAssetPlanRow, ...]:
-            if projection.rows is None or projection.asset_id != asset_id:
+        def correlate(projection: ActivityAssetPlanProjection) -> ActivityAssetPlanProjection:
+            if projection.rows is None or projection.limits is None or projection.asset_id != asset_id:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
-            return projection.rows
+            return projection
 
         return self._call(
             ActivityAssetPlanRequest(profile_id=self._profile_id, asset_id=asset_id),

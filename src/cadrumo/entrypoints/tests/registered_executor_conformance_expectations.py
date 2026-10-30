@@ -243,13 +243,14 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(
-            # The isolated profile has no provider; the desktop view must settle
-            # through the same supervisor before acquiring a browser or stream.
+            # The isolated supervisor has no desktop view stream. The view owns
+            # its browser resource scope, then refuses stream admission before
+            # launching a browser or attempting authentication.
             "live.sede.view",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,
-            (),
-            expected_refusal_ref="REFUSED_AUTH_LOGIN_PRECONDITION",
+            ("sede-view.acquire",),
+            expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
         RegisteredExecutorConformanceCase(
             # The composed provider preflight refuses before discovery: the
@@ -795,10 +796,25 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             RegisteredExecutorConformanceCase(
                 f"ledger.actividad-asset.{action}",
                 OperationTerminalCondition.SUCCEEDED,
-                OperationEffect.UPDATED if action in {"create", "correct", "claim"} else OperationEffect.NONE,
+                OperationEffect.UPDATED
+                if action in {"create", "correct", "claim", "describe"}
+                else OperationEffect.NONE,
                 (f"ledger.actividad-asset.{action}",),
             )
-            for action in ("create", "inspect", "correct", "forecast", "claim", "filing-handoff")
+            for action in (
+                "create",
+                "inspect",
+                "correct",
+                "forecast",
+                "claim",
+                "filing-handoff",
+                "describe",
+                "list",
+                "plan",
+                "timeline",
+                "form-options",
+                "acquisition-candidates",
+            )
         ),
         RegisteredExecutorConformanceCase(
             "user-profile.recovery.status",

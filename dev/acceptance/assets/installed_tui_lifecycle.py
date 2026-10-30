@@ -58,6 +58,12 @@ async def _exercise_method_asset_lifecycle(
         value=method_revision_json(acquisition_transaction_id=acquisition_transaction_id),
         stage="asset_creation",
     )
+    await _set_public_input(
+        pilot=pilot,
+        selector="#asset-name",
+        value="Method element",
+        stage="asset_creation",
+    )
     creation_action = await _activate_public_button(pilot=pilot, selector="#asset-create", stage="asset_creation")
     created = await _wait_for_asset_result(
         pilot=pilot,

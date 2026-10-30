@@ -10,9 +10,23 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from threading import Event
+from uuid import UUID
 
-from .....application.actividad_asset.history import ActivityAssetHistoryClaimResult
+from .....application.actividad_asset.activity_asset_contracts import ActivityAssetAuthorityProvenance
+from .....application.actividad_asset.activity_asset_projections import ActivityAssetPlanProjection
+from .....application.actividad_asset.activity_asset_read_models import (
+    ActivityAssetAcquisitionCandidate,
+    ActivityAssetClaimState,
+    ActivityAssetElectionLimits,
+    ActivityAssetFormOptionsView,
+    ActivityAssetListRow,
+    ActivityAssetPlanRow,
+    ActivityAssetTimelineEvent,
+)
+from .....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .....application.actividad_asset.operations import ActivityAssetFilingHandoff, M130AccrualProjection
+from .....application.actividad_asset.schedule_walk import PlanFigureAbsence
+from .....application.operations.public_scalar import PublicDecimal
 from .....domain.renta.actividad_asset.claims import ClaimProjection
 from .....domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -30,6 +44,7 @@ from .....domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from .....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from .....domain.renta.actividad_asset.schedule import (
     AssetScheduleHistory,
     ScheduleAuthority,
@@ -92,6 +107,7 @@ def activity_asset_forecast(
             method=revision.amortization.method,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
+            maximum_period_ends_on=date(2035, 1, 1),
             authority_generation="tui-screen-fixture-v1",
             source_reference="TUI screen fixture only",
         ),
@@ -159,6 +175,57 @@ class ActivityAssetActionStub:
     def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
         self.requests.append(("record_claim", request))
         raise AssertionError("this screen test does not exercise claim execution")
+
+    def describe(self, asset_id: str, descriptor: ActivityAssetDescriptorFacts) -> ActivityAssetHistory:
+        self.requests.append(("describe", (asset_id, descriptor)))
+        return ActivityAssetHistory(revisions=(self.revision,)).describe(asset_id, descriptor)
+
+    def plan(self, asset_id: str) -> ActivityAssetPlanProjection:
+        self.requests.append(("plan", asset_id))
+        return ActivityAssetPlanProjection(
+            profile_id=UUID(int=1),
+            authority=ActivityAssetAuthorityProvenance(
+                logical_generation="a" * 64,
+                reader_incarnation="b" * 64,
+            ),
+            outcome="succeeded",
+            asset_id=asset_id,
+            rows=(
+                ActivityAssetPlanRow(
+                    tax_year=2025,
+                    method=AmortizationMethod.LINEAR,
+                    planned=PublicDecimal(decimal="520.00"),
+                    claimed=PublicDecimal(decimal="0.00"),
+                    claim_state=ActivityAssetClaimState.NOT_DUE,
+                ),
+                ActivityAssetPlanRow(
+                    tax_year=2036,
+                    method=AmortizationMethod.LINEAR,
+                    absence=PlanFigureAbsence.PERIOD_ELAPSED,
+                    claimed=PublicDecimal(decimal="0.00"),
+                    claim_state=ActivityAssetClaimState.NOT_DUE,
+                ),
+            ),
+            limits=ActivityAssetElectionLimits(
+                class_key="equipo-informacion-software",
+                maximum_period_ends_on=date(2035, 1, 1),
+            ),
+        )
+
+    def acquisition_candidates(self) -> tuple[ActivityAssetAcquisitionCandidate, ...]:
+        self.requests.append(("acquisition_candidates", None))
+        return ()
+
+    def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
+        raise AssertionError("this screen test does not exercise list execution")
+
+    def timeline(self, asset_id: str) -> tuple[ActivityAssetTimelineEvent, ...]:
+        del asset_id
+        raise AssertionError("this screen test does not exercise timeline execution")
+
+    def form_options(self, asset_kind: AssetKind, tax_year: int) -> ActivityAssetFormOptionsView:
+        del asset_kind, tax_year
+        raise AssertionError("this screen test does not exercise form options")
 
     def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
         self.requests.append(("filing_handoff", request))

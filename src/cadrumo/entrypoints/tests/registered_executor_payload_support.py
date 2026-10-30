@@ -54,8 +54,6 @@ from ...application.inventory.tests.registered_operation_conformance_support imp
     prepare_inventory_operation_conformance_case,
 )
 from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
-from ...domain.renta.actividad_asset.lifecycle import AssetKind
-from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...application.invoices.catalogue_read_operation import INVOICE_LIST_OPERATION_DEFINITION_ID
 from ...application.invoices.catalogue_remove_operation import INVOICE_REMOVE_OPERATION_DEFINITION_ID
 from ...application.invoices.catalogue_update_operation import (
@@ -117,6 +115,8 @@ from ...domain.iva.schema import InvoiceKind
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...domain.modelos.filing_record import ExternalEvidenceKind
+from ...domain.renta.actividad_asset.lifecycle import AssetKind
+from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.own_accounts import OwnAccountHolding
 from ...domain.usage_ratios.model import UsageRatioProfile

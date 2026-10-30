@@ -104,6 +104,8 @@ def _authority(revision: ActivityAssetRevision, **overrides: object) -> Schedule
         "source_reference": "tabla-material-2025",
     }
     payload.update(overrides)
+    if overrides.get("method", AmortizationMethod.LINEAR) is AmortizationMethod.LINEAR:
+        payload.setdefault("maximum_period_ends_on", date(2045, 1, 1))
     return ScheduleAuthority.model_validate(payload)
 
 
@@ -320,6 +322,8 @@ def test_non_deductible_iva_joins_the_cost_once_before_each_stage_allocation() -
     assert ordinary.acquisition_cost() == Decimal("1210")
     assert building.acquisition_cost() == Decimal("108000")
     # The price keeps its own field and the land stays outside the amortizable base.
+    assert building.construction_cost is not None
+    assert building.land_cost is not None
     assert building.basis_amount == building.construction_cost + building.land_cost
 
 

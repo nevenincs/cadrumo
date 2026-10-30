@@ -24,6 +24,7 @@ from .activity_asset_contracts import (
 )
 from .activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
+    ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
     ActivityAssetPlanRow,
@@ -247,6 +248,7 @@ class ActivityAssetPlanResult(ActivityAssetOperationResult):
 
     asset_id: ActivityAssetId | None = None
     rows: tuple[ActivityAssetPlanRow, ...] | None = None
+    limits: ActivityAssetElectionLimits | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

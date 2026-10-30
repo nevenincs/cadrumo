@@ -469,18 +469,23 @@ def _read_projector[R: ActivityAssetOperationResult, P: BaseModel](
     def project(result: BaseModel, receipt: OperationTerminalReceipt, /) -> P:
         private = _private_result(result, result_type)
         _verify_private_receipt(private, receipt, definition_id=definition_id, success_effect=OperationEffect.NONE)
-        return projection_type(
-            profile_id=private.profile_id,
-            authority=private.authority,
-            outcome=private.outcome,
-            refusal=_project_refusal(private.refusal),
-            **{name: getattr(private, name) for name in fields},
+        return projection_type.model_validate(
+            {
+                "profile_id": private.profile_id,
+                "authority": private.authority,
+                "outcome": private.outcome,
+                "refusal": _project_refusal(private.refusal),
+                **{name: getattr(private, name) for name in fields},
+            },
         )
 
     return project
 
 
-_READS: dict[str, tuple[type, type[ActivityAssetOperationResult], type[BaseModel], type, tuple[str, ...], bool]] = {
+_READS: dict[
+    str,
+    tuple[type[BaseModel], type[ActivityAssetOperationResult], type[BaseModel], type, tuple[str, ...], bool],
+] = {
     ACTIVITY_ASSET_LIST_OPERATION_DEFINITION_ID: (
         ActivityAssetListRequest,
         ActivityAssetListResult,
@@ -494,7 +499,7 @@ _READS: dict[str, tuple[type, type[ActivityAssetOperationResult], type[BaseModel
         ActivityAssetPlanResult,
         ActivityAssetPlanProjection,
         ActivityAssetPlanExecutor,
-        ("asset_id", "rows"),
+        ("asset_id", "rows", "limits"),
         True,
     ),
     ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID: (

@@ -18,25 +18,32 @@ from ....application.actividad_asset.activity_asset_contracts import (
     ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
     ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+    ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
     ActivityAssetAuthorityProvenance,
     ActivityAssetClaimRequest,
     ActivityAssetCorrectRequest,
     ActivityAssetCreateRequest,
+    ActivityAssetDescribeRequest,
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
     ActivityAssetInspectRequest,
+    ActivityAssetPlanRequest,
 )
 from ....application.actividad_asset.activity_asset_projections import (
     ActivityAssetClaimProjection,
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
+    ActivityAssetDescribeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
     ActivityAssetInspectProjection,
+    ActivityAssetPlanProjection,
 )
+from ....application.actividad_asset.activity_asset_read_models import ActivityAssetElectionLimits
 from ....application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operation_dtos import (
@@ -122,6 +129,7 @@ def _schedule(revision: ActivityAssetRevision) -> ScheduledAmortizationCharge:
             method=AmortizationMethod.LINEAR,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
+            maximum_period_ends_on=date(2035, 1, 1),
             authority_generation=_AUTHORITY.logical_generation,
             source_reference="bridge-pinned-source",
         ),
@@ -400,3 +408,53 @@ def test_filing_handoff_bridge_correlates_requested_frame_without_effect(monkeyp
     if filing_handoff is None:
         raise AssertionError("filing projection omitted its handoff")
     assert filing_handoff.to_domain() == handoff
+
+
+def test_describe_bridge_carries_the_facts_and_reports_an_update(monkeypatch: pytest.MonkeyPatch) -> None:
+    revision = _revision()
+    descriptor = ActivityAssetDescriptorFacts(name="Office laptop", serial_number="SN-1")
+    history = ActivityAssetHistory(revisions=(revision,)).describe(revision.asset_id, descriptor)
+    projection = ActivityAssetDescribeProjection(
+        profile_id=_PROFILE,
+        authority=_AUTHORITY,
+        outcome="succeeded",
+        history=ActivityAssetHistorySnapshot.from_domain(history),
+    )
+    requests = _bind(
+        monkeypatch,
+        completion=RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID,
+            projection=projection,
+            effect=OperationEffect.UPDATED,
+        ),
+        definition_id=ACTIVITY_ASSET_DESCRIBE_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetDescribeRequest,
+    )
+
+    assert bridge.describe_activity_asset(_context(), asset_id=revision.asset_id, descriptor=descriptor) is projection
+    request = cast(ActivityAssetDescribeRequest, requests[0])
+    assert (request.asset_id, request.descriptor) == (revision.asset_id, descriptor)
+
+
+def test_plan_bridge_returns_rows_and_limits_with_no_effect(monkeypatch: pytest.MonkeyPatch) -> None:
+    projection = ActivityAssetPlanProjection(
+        profile_id=_PROFILE,
+        authority=_AUTHORITY,
+        outcome="succeeded",
+        asset_id="bridge-asset",
+        rows=(),
+        limits=ActivityAssetElectionLimits(class_key="mobiliario"),
+    )
+    requests = _bind(
+        monkeypatch,
+        completion=RegisteredOperationCompletion(
+            operation_id=_OPERATION_ID,
+            projection=projection,
+            effect=OperationEffect.NONE,
+        ),
+        definition_id=ACTIVITY_ASSET_PLAN_OPERATION_DEFINITION_ID,
+        request_type=ActivityAssetPlanRequest,
+    )
+
+    assert bridge.plan_activity_asset(_context(), asset_id="bridge-asset") is projection
+    assert cast(ActivityAssetPlanRequest, requests[0]).asset_id == "bridge-asset"

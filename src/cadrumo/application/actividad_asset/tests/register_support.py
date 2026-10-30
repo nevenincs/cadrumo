@@ -9,12 +9,14 @@ from functools import cache
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetEdition
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import ActivityAssetRegisterAuthority
+from cadrumo.domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from cadrumo.domain.renta.actividad_asset.schedule import ScheduleAuthority
 
 
 class MemoryRepository:
@@ -61,6 +63,18 @@ def _published_modelo_100() -> ModeloRevision:
         return operation.revision_for_context("100", filing_year=2025, period="0A")
 
 
+def _published_authority(revision: ActivityAssetRevision, tax_year: int) -> ScheduleAuthority:
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_activity_asset_schedule_authority(
+            operation.revision_for_context("100", filing_year=tax_year, period="0A"),
+            tax_year=tax_year,
+            asset_revision=revision,
+            authority_generation="register-support",
+            workforce=(),
+            legal_reference=operation.legal_reference,
+        )
+
+
 def memory_register_authority(
     *,
     today: date = date(2025, 12, 31),
@@ -70,12 +84,14 @@ def memory_register_authority(
     """Answer the register's profile and edition questions with fixed facts."""
 
     def claim_consumers(claim_ids: Iterable[str]) -> Mapping[str, tuple[str, ...]]:
-        return {claim_id: (consumers or {}).get(claim_id, ()) for claim_id in claim_ids}
+        if consumers is None:
+            return {claim_id: () for claim_id in claim_ids}
+        return {claim_id: consumers.get(claim_id, ()) for claim_id in claim_ids}
 
     return ActivityAssetRegisterAuthority(
         edition=lambda tax_year: (
             ActivityAssetEdition(
-                revision_id=_published_modelo_100().revision_id,
+                revision_id=_published_modelo_100().id,
                 authored_filing_year=2025,
                 projected=tax_year != 2025,
             ),
@@ -85,6 +101,7 @@ def memory_register_authority(
         foral_territory=lambda: foral,
         claim_consumers=claim_consumers,
         today=lambda: today,
+        schedule_authority=_published_authority,
     )
 
 

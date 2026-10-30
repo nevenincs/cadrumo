@@ -148,6 +148,8 @@ class ScheduleAuthority(BaseModel):
             "annual_rate": method in _RATE_METHODS,
             "useful_life_ends_on": method
             in {AmortizationMethod.CONSTANT_PERCENTAGE, AmortizationMethod.INTANGIBLE_USEFUL_LIFE},
+            "maximum_period_ends_on": method
+            in {AmortizationMethod.LINEAR, AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING},
             "sum_of_digits_period_years": method is AmortizationMethod.SUM_OF_DIGITS,
             "digit_order": method is AmortizationMethod.SUM_OF_DIGITS,
             "plan_annual_amount": method is AmortizationMethod.APPROVED_PLAN,

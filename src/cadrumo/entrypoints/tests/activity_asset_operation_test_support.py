@@ -343,9 +343,9 @@ def assert_activity_asset_conformance_result(
             asset_kind=AssetKind.MATERIAL,
             tax_year=payload.tax_year,
         )
-        # EUR 300.00 at the published 26% for the full year 2025.
-        assert handoff.material_m130.amount == Decimal("78.00")
-        assert [item.amount for item in handoff.material_m130.contributions] == [Decimal("78.00")]
+        # EUR 300.00 at the published 25% for the full year 2025.
+        assert handoff.material_m130.amount == Decimal("75.00")
+        assert [item.amount for item in handoff.material_m130.contributions] == [Decimal("75.00")]
         assert handoff.intangible_m130.contributions == ()
         return
 
@@ -373,7 +373,9 @@ def assert_activity_asset_conformance_result(
         assert projection.rows is not None
         assert projection.rows[0].tax_year == 2025
         assert projection.rows[0].planned is not None
-        assert projection.rows[0].planned.decimal == "78.00"
+        assert projection.rows[0].planned.decimal == "75.00"
+        assert projection.limits is not None
+        assert projection.limits.class_key == "equipo-proceso-informacion"
         return
 
     if definition_id == ACTIVITY_ASSET_TIMELINE_OPERATION_DEFINITION_ID:

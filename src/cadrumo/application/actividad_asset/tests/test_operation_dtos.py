@@ -86,6 +86,7 @@ def test_public_asset_snapshots_roundtrip_every_decimal_bearing_history_fact() -
             method=AmortizationMethod.LINEAR,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
+            maximum_period_ends_on=date(2035, 1, 1),
             authority_generation="test-pinned-generation",
             source_reference="test-pinned-m100-2025",
         ),

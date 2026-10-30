@@ -16,6 +16,7 @@ from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_bindings import activity_asset_form_options
+from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
@@ -26,17 +27,23 @@ from ...domain.renta.actividad_asset.claims import (
     record_claim,
 )
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, DirectEstimationRegime
-from ...domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError, ActividadAssetValidationError
+from ...domain.renta.actividad_asset.errors import (
+    ActividadAssetClaimConflictError,
+    ActividadAssetError,
+    ActividadAssetValidationError,
+)
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
-from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ...domain.renta.actividad_asset.schedule import ScheduleAuthority, ScheduledAmortizationCharge
 from ..operations.public_scalar import project_scalar
 from .acquisition_ledger import require_acquisition_in_ledger
 from .activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
     ActivityAssetEdition,
+    ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
+    ActivityAssetNotTableBoundReason,
     ActivityAssetPlanRow,
     ActivityAssetTableGroup,
     ActivityAssetTimelineEvent,
@@ -51,6 +58,7 @@ from .ports import (
 from .register_reads import (
     RegisterReadContext,
     acquisition_candidates,
+    election_limits,
     element_list,
     element_plan,
     element_timeline,
@@ -122,6 +130,7 @@ class ActivityAssetRegisterAuthority:
     foral_territory: Callable[[], bool]
     claim_consumers: Callable[[Iterable[str]], Mapping[str, tuple[str, ...]]]
     today: Callable[[], date]
+    schedule_authority: Callable[[ActivityAssetRevision, int], ScheduleAuthority]
 
 
 class ActivityAssetOperations:
@@ -452,6 +461,32 @@ class ActivityAssetOperations:
         """Work out one element's plan, year by year."""
         revision = self.inspect(asset_id)[-1]
         return element_plan(revision, self._read_context(self._service.reopen()))
+
+    def plan_limits(self, asset_id: str) -> ActivityAssetElectionLimits:
+        """Read what the registry allows the element's current election, under this year's edition."""
+        revision = self.inspect(asset_id)[-1]
+        tax_year = max(self._authority.today().year, revision.in_service_date.year)
+        try:
+            _, modelo = self._authority.edition(tax_year)
+            return election_limits(
+                revision,
+                self._authority.schedule_authority(revision, tax_year),
+                activity_asset_form_options(
+                    modelo,
+                    tax_year=tax_year,
+                    asset_kind=revision.asset_kind,
+                    regime=revision.amortization.regime,
+                ),
+            )
+        except RegistryError:
+            reason_key = "ledger.actividad_asset.errors.tax_year_without_edition"
+        except ActividadAssetError as error:
+            reason_key = error.translated_message
+        return ActivityAssetElectionLimits(
+            class_key=revision.amortization.authority_class_key,
+            not_table_bound=ActivityAssetNotTableBoundReason.AUTHORITY_UNAVAILABLE,
+            unavailable_reason_key=reason_key,
+        )
 
     def timeline(self, asset_id: str) -> tuple[ActivityAssetTimelineEvent, ...]:
         """List one element's history in order, with what each record changed and what used each claim."""

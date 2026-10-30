@@ -42,6 +42,7 @@ class PlanFigureAbsence(StrEnum):
     """Why a year has no planned figure."""
 
     FREE_ELECTION = "free_election"
+    COVERED_BY_OPENING = "covered_by_opening"
     EDITION_UNAVAILABLE = "edition_unavailable"
     PERIOD_ELAPSED = "period_elapsed"
     BASIS_EXHAUSTED = "basis_exhausted"
@@ -60,7 +61,7 @@ class WalkedYear:
     charge: ScheduledAmortizationCharge | None
     absence: PlanFigureAbsence | None
     reason_key: str | None
-    reason_facts: Mapping[str, str] = field(default_factory=dict)
+    reason_facts: Mapping[str, str] = field(default_factory=dict[str, str])
     consumed_before: Decimal = Decimal("0")
     consumed_through: Decimal = Decimal("0")
 
@@ -76,6 +77,7 @@ def walk_element(
     *,
     forecast: ActivityAssetForecastOperation,
     through_year: int,
+    opening_speaks_before: int,
     settled_after: int | None = None,
 ) -> tuple[WalkedYear, ...]:
     """Work out each service year from entry to ``through_year`` under the current revision.
@@ -86,6 +88,11 @@ def walk_element(
     ``settled_after``, the walk ends at the first such reason from that year on,
     which is where a plan stops having anything further to say.
 
+    A non-zero opening amount states what was amortized before the register began
+    and carries no date.  So the unclaimed years before the element's first claim,
+    and before ``opening_speaks_before``, are the opening's: they neither charge nor
+    consume, which keeps the same years from counting twice.
+
     Returns:
         One row per year in order, stopping at the year of the element's baja.
     """
@@ -95,6 +102,9 @@ def walk_element(
     last_year = through_year if last_service_day is None else min(through_year, last_service_day.year)
     rows: list[WalkedYear] = []
     consumed = Decimal("0")
+    claim_years = [claim.tax_year for claim in history.claims if claim.asset_id == revision.asset_id]
+    register_begins = min([opening_speaks_before, *claim_years])
+    has_opening = bool(revision.opening_history.accumulated_amount)
     for tax_year in range(revision.in_service_date.year, last_year + 1):
         claims = tuple(
             claim
@@ -107,6 +117,18 @@ def walk_element(
             start=date(tax_year, 1, 1),
             end=date(tax_year + 1, 1, 1),
         )
+        if has_opening and tax_year < register_begins:
+            rows.append(
+                WalkedYear(
+                    tax_year=tax_year,
+                    claims=claims,
+                    gaps=(),
+                    charge=None,
+                    absence=PlanFigureAbsence.COVERED_BY_OPENING,
+                    reason_key=None,
+                ),
+            )
+            continue
         row = _walk_year(
             revision,
             history,
@@ -134,14 +156,16 @@ def _walk_year(
     consumed_before: Decimal,
 ) -> WalkedYear:
     claimed = sum((claim.amount for claim in claims), Decimal("0"))
-    common = {"tax_year": tax_year, "claims": claims, "gaps": gaps, "consumed_before": consumed_before}
     if revision.amortization.method in FREE_AMOUNT_METHODS:
         return WalkedYear(
+            tax_year=tax_year,
+            claims=claims,
+            gaps=gaps,
+            consumed_before=consumed_before,
             charge=None,
             absence=PlanFigureAbsence.FREE_ELECTION,
             reason_key=None,
             consumed_through=consumed_before + claimed,
-            **common,
         )
     try:
         charge = _span_charge(
@@ -154,20 +178,26 @@ def _walk_year(
         )
     except (ActividadAssetError, RegistryError) as error:
         return WalkedYear(
+            tax_year=tax_year,
+            claims=claims,
+            gaps=gaps,
+            consumed_before=consumed_before,
             charge=None,
             absence=_absence_of(error),
             reason_key=_reason_key(error),
             reason_facts=_reason_facts(error),
             consumed_through=consumed_before + claimed,
-            **common,
         )
     consumed_in_year = max(claimed, charge.amount) if gaps else claimed
     return WalkedYear(
+        tax_year=tax_year,
+        claims=claims,
+        gaps=gaps,
+        consumed_before=consumed_before,
         charge=charge,
         absence=PlanFigureAbsence.BASIS_EXHAUSTED if charge.amount <= Decimal("0") else None,
         reason_key=None,
         consumed_through=consumed_before + consumed_in_year,
-        **common,
     )
 
 
@@ -308,7 +338,13 @@ def _m130_element_accrual(
         return M130ElementAccrual(revision=revision, outcome=M130ElementOutcome.NOTHING)
     if revision.amortization.method in FREE_AMOUNT_METHODS:
         return _m130_free_accrual(revision, history, period_end=period_end)
-    earlier = walk_element(revision, history, forecast=forecast, through_year=tax_year - 1)
+    earlier = walk_element(
+        revision,
+        history,
+        forecast=forecast,
+        through_year=tax_year - 1,
+        opening_speaks_before=tax_year,
+    )
     try:
         charge = _span_charge(
             revision,

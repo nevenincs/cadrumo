@@ -6,7 +6,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from pydantic import ValidationError
 
 from ..claims import AmortizationClaim, effective_free_depreciation_claims, record_claim
 from ..election import (
@@ -238,6 +237,7 @@ def test_a_linear_election_is_a_separate_revision_not_an_implicit_cap_allocation
         method=AmortizationMethod.LINEAR,
         election_fingerprint=linear_revision.amortization.fingerprint,
         annual_rate=Decimal("0.10"),
+        maximum_period_ends_on=date(2035, 1, 1),
         authority_generation="irpf-2025-published-test",
         source_reference="modelo-100:2025:linear",
     )

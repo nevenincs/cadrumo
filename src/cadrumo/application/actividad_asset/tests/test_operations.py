@@ -121,6 +121,7 @@ def _linear_forecast(
             method=AmortizationMethod.LINEAR,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
+            maximum_period_ends_on=date(2035, 1, 1),
             authority_generation="irpf-2025-assets-test-v1",
             source_reference="AEAT simplified direct-estimation table 2025",
         ),
@@ -164,7 +165,9 @@ def test_frontend_operations_share_one_create_forecast_claim_and_projection_path
     assert handoff.material_m100.amount == Decimal("520.00")
     assert handoff.material_m130.amount == Decimal("520.00")
     assert handoff.material_m100.claim_ids == (first.claim.claim_id,)
-    assert [item.schedule_fingerprint for item in handoff.material_m130.contributions] == [forecast.schedule_fingerprint]
+    assert [item.schedule_fingerprint for item in handoff.material_m130.contributions] == [
+        forecast.schedule_fingerprint
+    ]
     assert handoff.intangible_m100.amount == Decimal("0.00")
 
 

@@ -9,7 +9,7 @@ days over 365 for 2025).
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date, timedelta
 from decimal import Decimal
@@ -18,9 +18,12 @@ from itertools import pairwise
 
 import pytest
 
-from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
+from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetClaimState
+from cadrumo.application.actividad_asset.history import ActivityAssetHistory
+from cadrumo.application.actividad_asset.operations import ActivityAssetOperations, SupersedingClaimRequest
+from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence
 from cadrumo.application.actividad_asset.tests.ledger_support import MemoryLedger, acquisition_transaction
+from cadrumo.application.actividad_asset.tests.register_support import MemoryRepository, memory_register_authority
 from cadrumo.application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.core.errors.error_codes import resolve_error_message
@@ -29,6 +32,7 @@ from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
     ACTIVITY_ASSET_PARAMETER_IDS,
     resolve_activity_asset_schedule_authority,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims
@@ -52,6 +56,7 @@ from cadrumo.domain.renta.actividad_asset.election import (
 from cadrumo.domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
     ActividadAssetIncompleteError,
+    ActividadAssetPeriodElapsedError,
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
 )
@@ -65,7 +70,12 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from cadrumo.domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
+from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from cadrumo.domain.renta.actividad_asset.schedule import (
+    AssetScheduleHistory,
+    ScheduleAuthority,
+    ScheduledAmortizationCharge,
+)
 from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
     ElectricPropulsion,
     VehicleAffectation,
@@ -90,7 +100,7 @@ def _refused(
     *,
     rendered: str | None = None,
     **context: object,
-) -> Iterator[None]:
+) -> Generator[None]:
     """Expect a refusal that carries catalogue ``key`` and the named context facts.
 
     ``rendered`` additionally matches the English text the catalogue produces for
@@ -115,6 +125,7 @@ def _acquisition() -> Transaction:
 
 _YEAR_START = date(2025, 1, 1)
 _YEAR_END = date(2026, 1, 1)
+_DESCRIPTOR = ActivityAssetDescriptorFacts(name="Published-authority element")
 _NORMAL = DirectEstimationRegime.NORMAL
 _SIMPLIFIED = DirectEstimationRegime.SIMPLIFIED
 
@@ -442,7 +453,7 @@ def test_constant_percentage_amortizes_everything_pending_in_the_final_year() ->
     assert whole_year.covered_until == date(2025, 7, 1)
     assert whole_year.amount == Decimal("2000.00")  # the whole pending value
     assert first_quarter.amount == Decimal("994.48")  # 2,000 x 90/181 = 994.4751
-    with pytest.raises(ActividadAssetUnsupportedError, match="no amortizable"):
+    with pytest.raises(ActividadAssetPeriodElapsedError, match="amortization_period_elapsed"):
         _charge(asset, covered_from=date(2025, 8, 1))
 
 
@@ -474,7 +485,7 @@ def test_a_from_start_method_refuses_an_unattested_opening_amount() -> None:
     )
 
     for asset in (unattested, other_method):
-        with pytest.raises(ActividadAssetUnsupportedError, match="attest the same from-start method"):
+        with pytest.raises(ActividadAssetUnsupportedError, match="opening_amount_must_attest_from_start_method"):
             _charge(asset)
 
 
@@ -603,7 +614,7 @@ def test_approved_plan_refusals() -> None:
         ActividadAssetUnsupportedError, "approved_plan_not_yet_effective", rendered=re.escape("RIS art. 7.8")
     ):
         _charge(_asset(_plan(submitted=date(2026, 1, 10)), basis="12000"))
-    with pytest.raises(ActividadAssetValidationError, match="more than the amortizable basis"):
+    with pytest.raises(ActividadAssetValidationError, match="approved_plan_exceeds_basis"):
         _charge(_asset(_plan(amounts=((2025, "5000"), (2026, "8000"))), basis="12000"))
     with _refused(ActividadAssetUnsupportedError, "approved_plan_without_distribution"):
         _charge(_asset(_plan(amounts=((2026, "5000"),)), basis="12000"))
@@ -701,7 +712,6 @@ def test_low_value_free_resolves_published_threshold_and_cap() -> None:
                 low_value=LowValueElection(
                     election_reference="operator-low-value-election",
                     new_material_evidence_reference="canonical-invoice-new-item-attestation",
-                    unit_acquisition_value=Decimal("300.00"),
                 ),
             ),
             basis="300",
@@ -736,7 +746,7 @@ def test_research_development_free_and_building_methods() -> None:
 
     assert _charge(machine, free_amount="7000").amount == Decimal("7000.00")
     assert _charge(building).amount == Decimal("10000.00")  # 100,000 / 10 years
-    with pytest.raises(ActividadAssetValidationError, match="remaining lawful basis"):
+    with pytest.raises(ActividadAssetValidationError, match="free_amount_exceeds_remaining_basis"):
         _charge(machine, free_amount="10000.01")
     with _refused(ActividadAssetUnsupportedError, "research_development_free_excludes_buildings"):
         _charge(
@@ -967,7 +977,7 @@ def test_job_creating_free_depreciation_caps_the_investment_by_the_workforce_inc
         free_amount="300000",
         workforce=_GROWING,
     ).amount == Decimal("300000.00")
-    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("investment cap of 300000.00")):
+    with pytest.raises(ActividadAssetUnsupportedError, match="investment_cap_exceeded"):
         _charge(
             _asset(_employment(), basis="300000.01", in_service=date(2025, 3, 1)),
             free_amount="1",
@@ -1039,18 +1049,26 @@ def test_assets_entering_service_together_share_one_investment_cap() -> None:
             requested_free_amount=Decimal("1000"),
         )
 
-    operations.create(_asset(_employment(), basis="200000", in_service=date(2025, 3, 1), asset_id="first-machine"))
+    operations.create(
+        _asset(_employment(), basis="200000", in_service=date(2025, 3, 1), asset_id="first-machine"), _DESCRIPTOR
+    )
     # A linear asset of the same year and a 2024 asset under the incentive draw on no 2025 cap.
-    operations.create(_asset(_linear("maquinaria"), basis="500000", in_service=date(2025, 3, 1), asset_id="plain"))
-    operations.create(_asset(_employment(), basis="250000", in_service=date(2024, 3, 1), asset_id="earlier-year"))
+    operations.create(
+        _asset(_linear("maquinaria"), basis="500000", in_service=date(2025, 3, 1), asset_id="plain"), _DESCRIPTOR
+    )
+    operations.create(
+        _asset(_employment(), basis="250000", in_service=date(2024, 3, 1), asset_id="earlier-year"), _DESCRIPTOR
+    )
 
     assert forecast("first-machine").amount == Decimal("1000.00")
 
     # 200,000 + 150,000 = 350,000 of 2025 investment exceeds the 300,000.00 cap, so neither asset
     # is charged freely: the product does not choose which part of which asset benefits.
-    operations.create(_asset(_employment(), basis="150000", in_service=date(2025, 6, 1), asset_id="second-machine"))
+    operations.create(
+        _asset(_employment(), basis="150000", in_service=date(2025, 6, 1), asset_id="second-machine"), _DESCRIPTOR
+    )
     for asset_id in ("first-machine", "second-machine"):
-        with pytest.raises(ActividadAssetUnsupportedError, match="would reach 350000"):
+        with pytest.raises(ActividadAssetUnsupportedError, match="investment_cap_exceeded"):
             forecast(asset_id)
 
 
@@ -1117,7 +1135,7 @@ def test_renewable_free_depreciation_charges_a_2025_installation_up_to_the_inves
     assert _charge(
         _asset(first_day, basis="1000", in_service=date(2025, 2, 1)), free_amount="1000", workforce=_KEPT
     ).amount == (Decimal("1000.00"))
-    with pytest.raises(ActividadAssetUnsupportedError, match="investment cap of 500000"):
+    with pytest.raises(ActividadAssetUnsupportedError, match="investment_cap_exceeded"):
         _charge(_asset(_renewable(), basis="500000.01", in_service=date(2025, 2, 1)), free_amount="1", workforce=_KEPT)
 
 
@@ -1269,40 +1287,16 @@ def test_an_absent_admission_parameter_fails_closed() -> None:
 # --- Change of method and shared operations -------------------------------------------------
 
 
-class _MemoryHistoryRepository:
-    def __init__(self) -> None:
-        self.history = ActivityAssetHistory()
-
-    def load(self) -> ActivityAssetHistory:
-        return self.history
-
-    def append_revision(self, revision: ActivityAssetRevision) -> ActivityAssetHistory:
-        self.history = self.history.append_revision(revision)
-        return self.history
-
-    def record_claim(
-        self,
-        claim: AmortizationClaim,
-        *,
-        expected_history: ActivityAssetHistory | None = None,
-    ) -> ActivityAssetHistoryClaimResult:
-        if expected_history is not None and expected_history != self.history:
-            raise ActividadAssetClaimConflictError("activity asset history changed before claim recording")
-        recorded = self.history.record_claim(claim)
-        self.history = recorded.history
-        return recorded
-
-
 def _operations(
     workforce: tuple[PlantillaMediaYear, ...] = (),
-) -> tuple[ActivityAssetOperations, _MemoryHistoryRepository]:
+) -> tuple[ActivityAssetOperations, MemoryRepository]:
     def forecast(
         revision: ActivityAssetRevision,
         *,
         covered_from: date,
         covered_until: date,
         history: AssetScheduleHistory,
-        requested_free_amount: Decimal | None,
+        requested_free_amount: Decimal | None = None,
     ) -> ScheduledAmortizationCharge:
         return forecast_activity_asset_charge(
             revision,
@@ -1316,13 +1310,14 @@ def _operations(
             requested_free_amount=requested_free_amount,
         )
 
-    repository = _MemoryHistoryRepository()
+    repository = MemoryRepository()
     return (
         ActivityAssetOperations(
             repository=repository,
             ledger=MemoryLedger(_acquisition()),
             forecast_operation=forecast,
             taxpayer_modality=lambda: DirectEstimationRegime.NORMAL,
+            register_authority=memory_register_authority(),
         ),
         repository,
     )
@@ -1331,7 +1326,7 @@ def _operations(
 def test_a_change_of_method_inside_a_claimed_tax_year_refuses() -> None:
     operations, _ = _operations()
     linear = _asset(_linear("maquinaria"), basis="10000", asset_id="switching-machine")
-    operations.create(linear)
+    operations.create(linear, _DESCRIPTOR)
     first_quarter = operations.forecast(
         asset_id=linear.asset_id,
         covered_from=_YEAR_START,
@@ -1348,7 +1343,7 @@ def test_a_change_of_method_inside_a_claimed_tax_year_refuses() -> None:
     operations.correct(switched)
 
     assert first_quarter.amount == Decimal("295.89")  # 10,000 x 12% x 90/365 = 295.8904
-    with pytest.raises(ActividadAssetValidationError, match="tax-year boundary"):
+    with pytest.raises(ActividadAssetValidationError, match="election_changes_only_at_year_boundary"):
         operations.forecast(asset_id=linear.asset_id, covered_from=date(2025, 4, 1), covered_until=date(2025, 7, 1))
 
 
@@ -1363,7 +1358,7 @@ def test_constant_percentage_and_sum_of_digits_cannot_be_adopted_after_another_m
     earlier_linear = AssetScheduleHistory(election_fingerprints_before_tax_year=(_linear("maquinaria").fingerprint,))
     earlier_same = AssetScheduleHistory(election_fingerprints_before_tax_year=(constant.amortization.fingerprint,))
 
-    with pytest.raises(ActividadAssetUnsupportedError, match="start of amortization"):
+    with pytest.raises(ActividadAssetUnsupportedError, match="from_start_method_after_other_election"):
         _charge(constant, history=earlier_linear)
     assert _charge(constant, history=earlier_same).amount == Decimal("2640.00")  # (10,000 - 1,200) x 30%
     # A move to linear from a tax-year boundary is admitted and runs on the remaining basis.
@@ -1375,7 +1370,7 @@ def test_constant_percentage_and_sum_of_digits_cannot_be_adopted_after_another_m
 def test_an_undeclared_vehicle_refuses_with_its_correction_action_until_corrected() -> None:
     operations, _ = _operations()
     car = _asset(_linear("transporte-externo"), basis="20000", asset_id="undeclared-car")
-    operations.create(car)
+    operations.create(car, _DESCRIPTOR)
 
     with pytest.raises(ActividadAssetIncompleteError) as refused:
         operations.forecast(asset_id=car.asset_id, covered_from=_YEAR_START, covered_until=_YEAR_END)
@@ -1408,7 +1403,7 @@ def test_a_superseding_claim_is_forecast_without_the_claim_it_replaces() -> None
         opening="950",
         asset_id="nearly-amortized-machine",
     )
-    operations.create(machine)
+    operations.create(machine, _DESCRIPTOR)
     first = operations.forecast(asset_id=machine.asset_id, covered_from=_YEAR_START, covered_until=date(2025, 4, 1))
     operations.record_claim(first, creating_operation="test.q1")
     second = operations.forecast(
@@ -1420,22 +1415,19 @@ def test_a_superseding_claim_is_forecast_without_the_claim_it_replaces() -> None
     corrected = machine.model_copy(
         update={"revision_number": 2, "supersedes_revision_id": machine.revision_id, "residual_value": Decimal("10")},
     )
-    operations.correct(corrected)
+    before = repository.history
 
-    # Counting the claim it would replace, 950 + 29.59 + 20.41 already exceeds the corrected 990 basis.
-    with pytest.raises(ActividadAssetValidationError, match="exceed the lawful amortizable basis"):
-        operations.forecast(asset_id=machine.asset_id, covered_from=date(2025, 4, 1), covered_until=date(2025, 7, 1))
-    replacement = operations.forecast(
-        asset_id=machine.asset_id,
-        covered_from=date(2025, 4, 1),
-        covered_until=date(2025, 7, 1),
-        supersedes_claim_id=second_claim.claim_id,
+    # Counting the claim it would replace, 950 + 29.59 + 20.41 exceeds the corrected 990 basis.
+    with pytest.raises(ActividadAssetClaimConflictError, match="correction_below_effective_claims"):
+        operations.correct(corrected)
+    assert repository.history == before
+
+    history = operations.correct(
+        corrected,
+        (SupersedingClaimRequest(supersedes_claim_id=second_claim.claim_id),),
+        origin="test.q2-corrected",
     )
-    operations.record_claim(
-        replacement,
-        creating_operation="test.q2-corrected",
-        supersedes_claim_id=second_claim.claim_id,
-    )
+    replacement = history.claims[-1]
 
     # 1,000 x 12% x 90/365 = 29.59; the second quarter is capped at the 20.41 left of the 50.00 pending.
     assert (first.amount, second.amount) == (Decimal("29.59"), Decimal("20.41"))
@@ -1449,7 +1441,7 @@ def test_a_superseding_claim_is_forecast_without_the_claim_it_replaces() -> None
 def test_a_forecast_cannot_supersede_a_claim_the_asset_does_not_have() -> None:
     operations, _ = _operations()
     machine = _asset(_linear("maquinaria"), basis="1000", asset_id="no-claims-machine")
-    operations.create(machine)
+    operations.create(machine, _DESCRIPTOR)
 
     with pytest.raises(ActividadAssetValidationError, match="superseded_claim_not_effective"):
         operations.forecast(
@@ -1472,7 +1464,7 @@ def test_the_history_write_refuses_a_claim_under_a_superseded_revision() -> None
         creating_operation="test.stale-revision",
     )
 
-    with pytest.raises(ActividadAssetClaimConflictError, match="current revision"):
+    with pytest.raises(ActividadAssetClaimConflictError, match="claim_not_under_current_revision"):
         history.record_claim(stale)
 
 
@@ -1487,7 +1479,7 @@ def test_two_forecasts_taken_before_recording_cannot_both_consume_the_basis() ->
         basis="10000",
         asset_id="rnd-machine",
     )
-    operations.create(machine)
+    operations.create(machine, _DESCRIPTOR)
     first_half = operations.forecast(
         asset_id=machine.asset_id,
         covered_from=_YEAR_START,
@@ -1502,7 +1494,7 @@ def test_two_forecasts_taken_before_recording_cannot_both_consume_the_basis() ->
     )
 
     operations.record_claim(first_half, creating_operation="test.rnd-first-half")
-    with pytest.raises(ActividadAssetValidationError, match="remaining lawful basis"):
+    with pytest.raises(ActividadAssetValidationError, match="free_amount_exceeds_remaining_basis"):
         operations.record_claim(second_half, creating_operation="test.rnd-second-half")
     assert sum((claim.amount for claim in repository.history.claims), Decimal("0")) == Decimal("10000")
 
@@ -1510,7 +1502,7 @@ def test_two_forecasts_taken_before_recording_cannot_both_consume_the_basis() ->
 def test_a_hand_edited_forecast_is_refused_at_record_time() -> None:
     operations, _ = _operations()
     machine = _asset(_linear("maquinaria"), basis="10000", asset_id="edited-machine")
-    operations.create(machine)
+    operations.create(machine, _DESCRIPTOR)
     forecast = operations.forecast(asset_id=machine.asset_id, covered_from=_YEAR_START, covered_until=_YEAR_END)
     inflated = forecast.model_copy(update={"amount": Decimal("5000.00")})
 
@@ -1534,7 +1526,7 @@ def test_the_history_write_refuses_a_claim_beyond_the_basis_even_without_operati
 
     # First half: 1,000 x 12% x 181/365 = 59.51; adding 950.00 would reach 1,009.51 of a 1,000 basis.
     assert first_half.amount == Decimal("59.51")
-    with pytest.raises(ActividadAssetClaimConflictError, match="lawful amortizable basis"):
+    with pytest.raises(ActividadAssetClaimConflictError, match="claims_exceed_amortizable_basis"):
         after_first.record_claim(beyond)
 
 
@@ -1547,13 +1539,12 @@ def test_low_value_free_real_authority_forecast_records_one_idempotent_claim() -
             low_value=LowValueElection(
                 election_reference="operator-elected-full-amount",
                 new_material_evidence_reference="canonical-new-material-invoice",
-                unit_acquisition_value=Decimal("300.00"),
             ),
         ),
         basis="300.00",
         asset_id="published-free-depreciation-tool",
     )
-    operations.create(asset)
+    operations.create(asset, _DESCRIPTOR)
     forecast = operations.forecast(
         asset_id=asset.asset_id,
         covered_from=_YEAR_START,
@@ -1566,5 +1557,136 @@ def test_low_value_free_real_authority_forecast_records_one_idempotent_claim() -
     assert forecast.amount == Decimal("300.00")
     assert first.claim.method is AmortizationMethod.LOW_VALUE_FREE
     assert retry.reused_existing_claim is True
-    with pytest.raises(ActividadAssetIncompleteError, match="elected amount"):
+    with pytest.raises(ActividadAssetIncompleteError, match="free_amount_required"):
         operations.forecast(asset_id=asset.asset_id, covered_from=_YEAR_START, covered_until=_YEAR_END)
+
+
+# --- Maximum period and the registry floor --------------------------------------------------
+
+
+def _published_year_operations(*, today: date) -> ActivityAssetOperations:
+    """Resolve each year through the published authority's own edition selection, floor included."""
+
+    def forecast(
+        revision: ActivityAssetRevision,
+        *,
+        covered_from: date,
+        covered_until: date,
+        history: AssetScheduleHistory,
+        requested_free_amount: Decimal | None = None,
+    ) -> ScheduledAmortizationCharge:
+        with bundled_indexed_authority().operation() as operation:
+            return forecast_activity_asset_charge(
+                revision,
+                modelo_100_revision=operation.revision_for_context("100", filing_year=covered_from.year, period="0A"),
+                authority_generation=operation.pin().logical_generation,
+                covered_from=covered_from,
+                covered_until=covered_until,
+                history=history,
+                taxpayer_workforce=lambda: (),
+                legal_reference=operation.legal_reference,
+                requested_free_amount=requested_free_amount,
+            )
+
+    return ActivityAssetOperations(
+        repository=MemoryRepository(),
+        ledger=MemoryLedger(_acquisition()),
+        forecast_operation=forecast,
+        taxpayer_modality=lambda: DirectEstimationRegime.NORMAL,
+        register_authority=memory_register_authority(today=today),
+    )
+
+
+def _ten_percent_furniture() -> ActivityAssetRevision:
+    return _asset(
+        _linear("mobiliario"),
+        basis="10000",
+        in_service=date(2005, 3, 15),
+        opening="9000",
+        asset_id="twenty-year-furniture",
+    )
+
+
+def test_ten_percent_with_twenty_years_stops_on_the_boundary_day_in_forecast_claim_and_plan() -> None:
+    operations, _ = _operations()
+    furniture = _ten_percent_furniture()
+    operations.create(furniture, _DESCRIPTOR)
+
+    # In service 15 March 2005 plus 20 years ends the period on 15 March 2025, its first day out.
+    # 1 January to 14 March is 73 days: 10,000 x 10% x 73/365 = 200.00.
+    last = operations.forecast(asset_id=furniture.asset_id, covered_from=_YEAR_START, covered_until=date(2025, 3, 15))
+    assert (last.covered_until, last.service_days, last.amount) == (date(2025, 3, 15), 73, Decimal("200.00"))
+    clipped = operations.forecast(asset_id=furniture.asset_id, covered_from=_YEAR_START, covered_until=_YEAR_END)
+    assert (clipped.covered_until, clipped.amount) == (date(2025, 3, 15), Decimal("200.00"))
+    final_day = operations.forecast(
+        asset_id=furniture.asset_id,
+        covered_from=date(2025, 3, 14),
+        covered_until=date(2025, 3, 15),
+    )
+    assert (final_day.service_days, final_day.amount) == (1, Decimal("2.74"))
+
+    with pytest.raises(ActividadAssetPeriodElapsedError, match="amortization_period_elapsed") as refused:
+        operations.forecast(asset_id=furniture.asset_id, covered_from=date(2025, 3, 15), covered_until=_YEAR_END)
+    assert refused.value.context == {"ended_on": "2025-03-15"}
+
+    past = last.model_copy(update={"covered_from": date(2025, 3, 15), "covered_until": date(2025, 3, 16)})
+    with pytest.raises(ActividadAssetPeriodElapsedError, match="amortization_period_elapsed"):
+        operations.record_claim(past, creating_operation="test.past-the-period")
+
+
+def test_the_plan_shows_the_elapsed_year_as_elapsed_and_never_as_a_zero_amount() -> None:
+    furniture = _ten_percent_furniture()
+    operations = _published_year_operations(today=date(2025, 6, 30))
+    operations.create(furniture, _DESCRIPTOR)
+
+    rows = {row.tax_year: row for row in operations.plan(furniture.asset_id)}
+
+    assert rows[2025].planned is not None
+    assert rows[2025].planned.decimal == "200.00"
+    assert rows[2025].service_days == 73
+    assert rows[2026].absence is PlanFigureAbsence.PERIOD_ELAPSED
+    assert rows[2026].planned is None
+    assert rows[2026].absence_reason_key == "ledger.actividad_asset.errors.amortization_period_elapsed"
+    assert rows[2026].claim_state is ActivityAssetClaimState.NOT_DUE
+    assert rows[2024].absence is PlanFigureAbsence.COVERED_BY_OPENING
+
+    limits = operations.plan_limits(furniture.asset_id)
+    assert limits.class_key == "mobiliario"
+    assert limits.not_table_bound is None
+    assert limits.maximum_coefficient is not None
+    assert Decimal(limits.maximum_coefficient.decimal) == Decimal("0.10")
+    assert limits.minimum_coefficient is not None
+    assert Decimal(limits.minimum_coefficient.decimal) == Decimal("0.05")
+    assert limits.maximum_period_years is not None
+    assert Decimal(limits.maximum_period_years.decimal) == Decimal("20")
+    assert limits.maximum_period_ends_on == date(2025, 3, 15)
+    assert any("coeficiente-lineal-maximo:key:mobiliario" in item for item in limits.legal_references)
+
+
+def test_a_year_before_the_registry_floor_is_typed_and_never_a_guessed_figure() -> None:
+    operations = _published_year_operations(today=date(2025, 12, 31))
+    old = _asset(_linear("mobiliario"), basis="10000", in_service=date(2019, 7, 1), asset_id="pre-floor-chair")
+    operations.create(old, _DESCRIPTOR)
+
+    rows = {row.tax_year: row for row in operations.plan(old.asset_id)}
+
+    for year in (2019, 2020, 2021):
+        assert rows[year].absence is PlanFigureAbsence.EDITION_UNAVAILABLE
+        assert rows[year].planned is None
+        assert rows[year].claimable_intervals == ()
+    # From the floor the table reads again, on the 1,000.00 a full year.
+    assert rows[2022].planned is not None
+    assert rows[2022].planned.decimal == "1000.00"
+
+
+def test_an_authority_for_a_table_method_cannot_omit_the_end_of_its_period() -> None:
+    with pytest.raises(ValueError, match="linear schedule authority requires maximum_period_ends_on"):
+        ScheduleAuthority(
+            tax_year=2025,
+            asset_kind=AssetKind.MATERIAL,
+            method=AmortizationMethod.LINEAR,
+            election_fingerprint="a" * 64,
+            authority_generation="floor-test",
+            source_reference="floor-test",
+            annual_rate=Decimal("0.10"),
+        )

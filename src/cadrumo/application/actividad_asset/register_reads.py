@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 from pydantic import BaseModel
 
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money.rounding import round_to_cents
+from ...domain.calculations.registry.actividad_asset_bindings import ActivityAssetFormOptions
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.prorrata_vocabulary import resolve_input_classification_definition
 from ...domain.renta.actividad_asset.claims import (
@@ -19,11 +21,16 @@ from ...domain.renta.actividad_asset.claims import (
     current_revisions,
     effective_claims,
 )
-from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS
+from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, AmortizationMethod
 from ...domain.renta.actividad_asset.errors import ActividadAssetError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
-from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, require_method_continuity
+from ...domain.renta.actividad_asset.schedule import (
+    AssetScheduleHistory,
+    ScheduleAuthority,
+    add_years,
+    require_method_continuity,
+)
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.public_scalar import PublicDecimal, project_scalar
@@ -33,9 +40,11 @@ from .activity_asset_read_models import (
     ActivityAssetClaimStaleReason,
     ActivityAssetClaimState,
     ActivityAssetEdition,
+    ActivityAssetElectionLimits,
     ActivityAssetFindingCounts,
     ActivityAssetListRow,
     ActivityAssetNonDeductibleIvaState,
+    ActivityAssetNotTableBoundReason,
     ActivityAssetPlanClaim,
     ActivityAssetPlanRow,
     ActivityAssetRegisterState,
@@ -80,6 +89,7 @@ def _walk_to_settlement(revision: ActivityAssetRevision, context: RegisterReadCo
         context.history,
         forecast=context.forecast,
         through_year=revision.in_service_date.year + _WALK_YEARS_LIMIT,
+        opening_speaks_before=context.today.year,
         settled_after=max([context.today.year, *claim_years]),
     )
 
@@ -90,7 +100,7 @@ def _claimable(
     history: ActivityAssetHistory,
 ) -> tuple[tuple[ActivityAssetClaimableInterval, ...], str | None]:
     """Clip the year's gaps to what its charge covers, or say why nothing there can be claimed."""
-    if row.absence in _NOT_ACCRUING:
+    if row.absence in _NOT_ACCRUING or row.absence is PlanFigureAbsence.COVERED_BY_OPENING:
         return (), None
     if row.absence is not None and row.absence is not PlanFigureAbsence.FREE_ELECTION:
         return (), row.reason_key
@@ -128,7 +138,9 @@ def _claim_state(
     today: date,
 ) -> ActivityAssetClaimState:
     if not row.claims:
-        if row.absence in _NOT_ACCRUING or row.tax_year > today.year:
+        if row.absence in _NOT_ACCRUING or row.absence is PlanFigureAbsence.COVERED_BY_OPENING:
+            return ActivityAssetClaimState.NOT_DUE
+        if row.tax_year > today.year:
             return ActivityAssetClaimState.NOT_DUE
         return ActivityAssetClaimState.MISSING
     if intervals or (row.gaps and row.charge is None and row.absence is not PlanFigureAbsence.PERIOD_ELAPSED):
@@ -168,13 +180,12 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
     rows: list[ActivityAssetPlanRow] = []
     for row in _walk_to_settlement(revision, context):
         intervals, refusal_key = _claimable(revision, row, context.history)
-        accruing = row.charge is not None and row.absence is None
         rows.append(
             ActivityAssetPlanRow(
                 tax_year=row.tax_year,
                 method=revision.amortization.method,
                 coefficient=_optional_amount(None if row.charge is None else row.charge.annual_rate),
-                planned=_amount(row.charge.amount) if accruing and row.charge is not None else None,
+                planned=_amount(row.charge.amount) if row.charge is not None and row.absence is None else None,
                 absence=row.absence,
                 absence_reason_key=row.reason_key,
                 absence_reason_facts=project_reason_facts(row.reason_facts),
@@ -189,6 +200,56 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
             ),
         )
     return tuple(rows)
+
+
+_NOT_TABLE_BOUND = {
+    AmortizationMethod.GOODWILL: ActivityAssetNotTableBoundReason.TWENTIETH_LIMIT,
+    AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE: ActivityAssetNotTableBoundReason.TWENTIETH_LIMIT,
+    AmortizationMethod.INTANGIBLE_USEFUL_LIFE: ActivityAssetNotTableBoundReason.USEFUL_LIFE_EVIDENCE,
+    AmortizationMethod.APPROVED_PLAN: ActivityAssetNotTableBoundReason.APPROVED_PLAN,
+    AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING: ActivityAssetNotTableBoundReason.RESEARCH_DEVELOPMENT_PERIOD,
+}
+"""The methods whose limit is not the amortization table; every other non-table method elects its amount."""
+
+_TABLE_METHODS = frozenset(
+    {AmortizationMethod.LINEAR, AmortizationMethod.CONSTANT_PERCENTAGE, AmortizationMethod.SUM_OF_DIGITS},
+)
+
+
+def election_limits(
+    revision: ActivityAssetRevision,
+    authority: ScheduleAuthority,
+    options: ActivityAssetFormOptions,
+) -> ActivityAssetElectionLimits:
+    """State what the registry allows this election, from the authority its charges rest on.
+
+    Returns:
+        The class and corridor of a table method, else the limit that replaces them
+        and the typed reason.
+    """
+    election = revision.amortization
+    ends_on = authority.maximum_period_ends_on or authority.useful_life_ends_on
+    if authority.sum_of_digits_period_years is not None:
+        ends_on = add_years(revision.in_service_date, authority.sum_of_digits_period_years)
+    references = tuple(authority.source_reference.split(";"))
+    if election.method not in _TABLE_METHODS:
+        twentieth = _NOT_TABLE_BOUND.get(election.method) is ActivityAssetNotTableBoundReason.TWENTIETH_LIMIT
+        return ActivityAssetElectionLimits(
+            class_key=election.authority_class_key,
+            maximum_coefficient=_optional_amount(authority.annual_rate if twentieth else None),
+            maximum_period_ends_on=ends_on,
+            legal_references=references,
+            not_table_bound=_NOT_TABLE_BOUND.get(election.method, ActivityAssetNotTableBoundReason.FREE_ELECTION),
+        )
+    group = next(item for item in options.table_groups if item.class_key == election.authority_class_key)
+    return ActivityAssetElectionLimits(
+        class_key=group.class_key,
+        maximum_coefficient=_amount(group.maximum_coefficient),
+        minimum_coefficient=_amount(group.minimum_coefficient),
+        maximum_period_years=_amount(group.maximum_period_years),
+        maximum_period_ends_on=ends_on,
+        legal_references=references,
+    )
 
 
 def _edition_or_none(context: RegisterReadContext, tax_year: int) -> ActivityAssetEdition | None:
@@ -280,11 +341,12 @@ def _register_state(
 def _flatten(value: object, prefix: str = "") -> dict[str, str | None]:
     if isinstance(value, Mapping):
         flat: dict[str, str | None] = {}
-        for name, item in value.items():
+        for name, item in cast("Mapping[str, object]", value).items():
             flat.update(_flatten(item, f"{prefix}.{name}" if prefix else str(name)))
         return flat
     if isinstance(value, list | tuple):
-        return {prefix: None if not value else ", ".join(str(item) for item in value)}
+        items = cast("Iterable[object]", value)
+        return {prefix: ", ".join(str(item) for item in items) or None}
     return {prefix: None if value is None else str(value)}
 
 
@@ -450,6 +512,7 @@ def _is_digest(value: str | None) -> bool:
 __all__ = [
     "RegisterReadContext",
     "acquisition_candidates",
+    "election_limits",
     "element_list",
     "element_plan",
     "element_timeline",

@@ -18,6 +18,7 @@ from .....domain.renta.actividad_asset.errors import (
     ActividadAssetValidationError,
     VehicleAffectationRecovery,
 )
+from .....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from .....domain.renta.actividad_asset.schedule import AssetScheduleHistory
 from ...account import AccountSessionExpiredError
 from ...components.host import ScreenHostApp
@@ -79,6 +80,9 @@ async def _wait_for_current_revision_id(*, pilot, screen: ActivityAssetScreen) -
 
 
 async def _activate(*, pilot, screen: ActivityAssetScreen, selector: str) -> None:
+    name = screen.query_one("#asset-name", Input)
+    if selector == "#asset-create" and not name.value:
+        name.value = "Office laptop"
     button = screen.query_one(selector, Button)
     button.focus()
     await pilot.press("enter")
@@ -125,7 +129,7 @@ async def test_activity_asset_screen_clears_private_facts_when_the_session_is_lo
             "#asset-covered-from",
             "#asset-covered-until",
             "#asset-supersedes-claim-id",
-            "#asset-creating-operation",
+            "#asset-name",
             "#asset-filing-tax-year",
             "#asset-filing-m130-period",
         ):
@@ -152,7 +156,7 @@ async def test_activity_asset_screen_clears_private_facts_when_the_session_is_lo
                 "#asset-covered-from",
                 "#asset-covered-until",
                 "#asset-supersedes-claim-id",
-                "#asset-creating-operation",
+                "#asset-name",
                 "#asset-filing-tax-year",
                 "#asset-filing-m130-period",
             )
@@ -219,6 +223,7 @@ async def test_activity_asset_screen_clears_old_result_while_action_runs() -> No
 
     async with app.run_test(size=(100, 35)) as pilot:
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        screen.query_one("#asset-name", Input).value = "Office laptop"
         screen.query_one("#asset-result", Static).update("claim\tfixture\treused=false")
         button = screen.query_one("#asset-create", Button)
         button.press()
@@ -272,7 +277,7 @@ async def test_activity_asset_forecast_refuses_the_shapes_the_command_line_refus
     assert actions.requests == []
 
 
-_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim")
+_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe")
 
 
 def _writes_disabled(screen: ActivityAssetScreen) -> list[bool]:
@@ -294,13 +299,13 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_offered_again
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown\t")
 
         # The asset may already be created: no write is offered over the asset as last read.
-        assert _writes_disabled(screen) == [True, True, True]
+        assert _writes_disabled(screen) == [True, True, True, True]
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
         assert [name for name, _request in actions.requests] == ["create"]
 
         await _activate(pilot=pilot, screen=screen, selector="#asset-inspect")
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset\tunknown-then-reread")
-        assert _writes_disabled(screen) == [False, False, False]
+        assert _writes_disabled(screen) == [False, False, False, False]
 
         actions.create_error = None
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
@@ -321,19 +326,19 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_is_released_only
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="unknown	")
-        assert _writes_disabled(screen) == [True, True, True]
+        assert _writes_disabled(screen) == [True, True, True, True]
 
         # Reading another asset says nothing about whether the held creation landed.
         screen.query_one("#asset-id", Input).value = "another-asset"
         # Pressed directly: a key press on a button still showing its last press is ignored.
         screen.query_one("#asset-inspect", Button).press()
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset	another-asset")
-        assert _writes_disabled(screen) == [True, True, True]
+        assert _writes_disabled(screen) == [True, True, True, True]
 
         screen.query_one("#asset-id", Input).value = revision.asset_id
         screen.query_one("#asset-inspect", Button).press()
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset	held-asset")
-        assert _writes_disabled(screen) == [False, False, False]
+        assert _writes_disabled(screen) == [False, False, False, False]
 
     assert actions.requests[1:] == [("inspect", "another-asset"), ("inspect", "held-asset")]
 
@@ -358,7 +363,7 @@ async def test_an_activity_asset_write_whose_outcome_is_unknown_stays_withheld_w
         await _activate(pilot=pilot, screen=screen, selector="#asset-inspect")
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
 
-        assert _writes_disabled(screen) == [True, True, True]
+        assert _writes_disabled(screen) == [True, True, True, True]
 
 
 @pytest.mark.asyncio
@@ -385,4 +390,31 @@ async def test_an_activity_asset_write_whose_session_is_lost_with_its_outcome_un
             # The private facts still go with the lost session.
             assert not screen.query_one("#asset-id", Input).value
             assert not screen.query_one("#asset-revision-json", Input).value
-            assert _writes_disabled(screen) == [True, True, True]
+            assert _writes_disabled(screen) == [True, True, True, True]
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_screen_reaches_describe_and_every_register_read() -> None:
+    revision = activity_asset_revision("tui-register-reads")
+    actions = ActivityAssetActionStub(revision)
+    screen = _screen(actions)
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 60)) as pilot:
+        screen.query_one("#asset-id", Input).value = revision.asset_id
+        screen.query_one("#asset-name", Input).value = "Renamed laptop"
+        screen.query_one("#asset-serial", Input).value = "SN-2"
+        await _activate(pilot=pilot, screen=screen, selector="#asset-describe")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="described\ttui-register-reads")
+
+        await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
+        plan = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="equipo-informacion-software")
+        assert "2035-01-01" in plan
+        assert "2025\t520.00\t0.00\tnot_due" in plan
+        assert "2036\tperiod_elapsed\t0.00\tnot_due" in plan
+
+    assert actions.requests[0] == (
+        "describe",
+        (revision.asset_id, ActivityAssetDescriptorFacts(name="Renamed laptop", serial_number="SN-2")),
+    )
+    assert actions.requests[1] == ("plan", revision.asset_id)

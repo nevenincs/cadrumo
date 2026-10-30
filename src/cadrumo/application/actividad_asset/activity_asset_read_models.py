@@ -70,6 +70,17 @@ class ActivityAssetNonDeductibleIvaState(StrEnum):
     UNKNOWN = "unknown"
 
 
+class ActivityAssetNotTableBoundReason(StrEnum):
+    """Why an election's limits do not come from the amortization table."""
+
+    TWENTIETH_LIMIT = "twentieth_limit"
+    USEFUL_LIFE_EVIDENCE = "useful_life_evidence"
+    APPROVED_PLAN = "approved_plan"
+    RESEARCH_DEVELOPMENT_PERIOD = "research_development_period"
+    FREE_ELECTION = "free_election"
+    AUTHORITY_UNAVAILABLE = "authority_unavailable"
+
+
 class _ReadModel(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -149,6 +160,23 @@ class ActivityAssetPlanRow(_ReadModel):
     service_days: int | None = None
     calendar_days: int | None = None
     claims: tuple[ActivityAssetPlanClaim, ...] = ()
+
+
+class ActivityAssetElectionLimits(_ReadModel):
+    """What the registry allows one element's election.
+
+    A table method carries its class and corridor.  Any other names the limit it
+    has instead, and says why through ``not_table_bound``.
+    """
+
+    class_key: str | None = None
+    maximum_coefficient: PublicDecimal | None = None
+    minimum_coefficient: PublicDecimal | None = None
+    maximum_period_years: PublicDecimal | None = None
+    maximum_period_ends_on: date | None = None
+    legal_references: tuple[str, ...] = ()
+    not_table_bound: ActivityAssetNotTableBoundReason | None = None
+    unavailable_reason_key: str | None = None
 
 
 class ActivityAssetTimelineChange(_ReadModel):
@@ -244,12 +272,14 @@ __all__ = [
     "ActivityAssetClaimState",
     "ActivityAssetClaimableInterval",
     "ActivityAssetEdition",
+    "ActivityAssetElectionLimits",
     "ActivityAssetFindingCounts",
     "ActivityAssetFormOptionsView",
     "ActivityAssetListRow",
     "ActivityAssetM130Contribution",
     "ActivityAssetM130ProjectionSnapshot",
     "ActivityAssetNonDeductibleIvaState",
+    "ActivityAssetNotTableBoundReason",
     "ActivityAssetPlanClaim",
     "ActivityAssetPlanRow",
     "ActivityAssetReasonFact",

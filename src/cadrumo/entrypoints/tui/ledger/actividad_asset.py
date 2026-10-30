@@ -11,11 +11,11 @@ from textual.app import ComposeResult
 from textual.widgets import Button, Input, Static
 
 from ....application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
+from ....application.actividad_asset.activity_asset_projections import ActivityAssetPlanProjection
 from ....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
-    ActivityAssetPlanRow,
     ActivityAssetTimelineEvent,
 )
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
@@ -48,6 +48,14 @@ from .workspace_screen import LedgerWorkspaceScreen
 _WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe")
 
 _SUPERSEDING_CLAIMS = TypeAdapter(tuple[ActivityAssetSupersedingClaim, ...])
+
+#: Closed read controls with literal keys, shared by rendering and locale discovery.
+_READ_BUTTON_LOCALE_KEYS = {
+    "asset-list": "tui.ledger.activity_asset.list",
+    "asset-plan": "tui.ledger.activity_asset.plan",
+    "asset-timeline": "tui.ledger.activity_asset.timeline",
+    "asset-acquisition-candidates": "tui.ledger.activity_asset.acquisition_candidates",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,7 +99,7 @@ class ActivityAssetTuiActionsV1(Protocol):
         """Summarise the register."""
         ...
 
-    def plan(self, asset_id: str) -> tuple[ActivityAssetPlanRow, ...]:
+    def plan(self, asset_id: str) -> ActivityAssetPlanProjection:
         """Read one element's amortization plan."""
         ...
 
@@ -177,9 +185,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield localized(
             Button(tr("tui.ledger.activity_asset.correct"), id="asset-correct"), "tui.ledger.activity_asset.correct"
         )
-        for action in ("list", "plan", "timeline", "acquisition_candidates"):
-            key = f"tui.ledger.activity_asset.{action}"
-            yield localized(Button(tr(key), id=f"asset-{action.replace('_', '-')}"), key)
+        for button_id, key in _READ_BUTTON_LOCALE_KEYS.items():
+            yield localized(Button(tr(key), id=button_id), key)
         yield Static("", id="asset-current-revision-id", markup=False)
         yield localized(
             Input(placeholder=tr("tui.ledger.activity_asset.free_amount"), id="asset-free-amount"),
@@ -417,11 +424,23 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             )
         if button_id == "asset-plan":
             self._named_asset_id = asset_id
+            plan = self._actions.plan(asset_id)
+            limits = plan.limits
             return _ActivityAssetScreenResult(
                 message="\n".join(
-                    f"{row.tax_year}\t{row.planned.decimal if row.planned else ''}"
-                    f"\t{row.claimed.decimal}\t{row.claim_state.value}"
-                    for row in self._actions.plan(asset_id)
+                    (
+                        *(
+                            f"{limits.class_key or ''}\t{limits.maximum_period_ends_on or ''}"
+                            f"\t{limits.not_table_bound or ''}"
+                            for _ in ((),)
+                            if limits is not None
+                        ),
+                        *(
+                            f"{row.tax_year}\t{row.planned.decimal if row.planned else row.absence or ''}"
+                            f"\t{row.claimed.decimal}\t{row.claim_state.value}"
+                            for row in plan.rows or ()
+                        ),
+                    ),
                 ),
             )
         if button_id == "asset-timeline":
