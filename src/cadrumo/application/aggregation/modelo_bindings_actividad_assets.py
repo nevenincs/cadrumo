@@ -325,7 +325,7 @@ def m130_activity_asset_projection(
 ) -> ActivityAssetProjection:
     """Project each element's amortization accrued from 1 January to the quarter's end.
 
-    An element belongs to the activity its acquisition row declares. An agrarian
+    An element belongs to the activity it or its acquisition row declares. An agrarian
     activity pays a share of income whatever its expenses, so its elements stay
     out; the filter is by activity, and another element of the same taxpayer still
     counts. An element whose row declares no activity counts, because silence does
@@ -351,10 +351,7 @@ def m130_activity_asset_projection(
     rows = transactions.load_by_ids(
         transaction_id for revision in current.values() for transaction_id in revision.acquisition_transaction_ids
     ).transactions
-    activities = {
-        asset_id: (row.tipo_actividad if (row := revision.acquisition_row_in(rows)) else None)
-        for asset_id, revision in current.items()
-    }
+    activities = {asset_id: revision.activity_in(rows) for asset_id, revision in current.items()}
     observations: list[ActivityAssetExpenseObservation] = []
     diagnostics = list(_residence_period_findings(territory, period=period, resolver_id=resolver_id))
     for accrual in m130_register_accruals(
@@ -467,8 +464,7 @@ def _m130_excess_rows(
 ) -> tuple[ActivityAssetDisposalExcess, ...]:
     found: list[ActivityAssetDisposalExcess] = []
     for revision in disposed:
-        row = revision.acquisition_row_in(rows)
-        is_agrarian = row is not None and row.tipo_actividad in agrarian
+        is_agrarian = revision.activity_in(rows) in agrarian
         disposal = revision.disposal
         if disposal is None or not disposal_excess_applies(revision, disposal):
             continue
@@ -729,7 +725,7 @@ class _BajaReader:
         )
         if token != str(irpf_estimation_regime_objetiva_token(authority=self._operation)):
             return ActivityAssetDisposalRoute.EXCESS_DIRECT_ESTIMATION
-        row = revision.acquisition_row_in(self._transactions.load().transactions)
+        activity = revision.activity_in(self._transactions.load().transactions)
         agrarian = frozenset(
             TipoActividad(code)
             for code in tipo_actividad_code_set(
@@ -738,7 +734,7 @@ class _BajaReader:
                 authority=self._operation,
             )
         )
-        if row is not None and row.tipo_actividad in agrarian:
+        if activity in agrarian:
             return None
         return ActivityAssetDisposalRoute.EXCESS_OBJECTIVE_ESTIMATION
 

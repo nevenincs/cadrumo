@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.tipos_actividad import TipoActividad
 from ...domain.renta.actividad_asset.claims import last_day_covered
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind, ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
@@ -361,6 +362,7 @@ class ActivityAssetFormOptionsView(_ReadModel):
     regime: DirectEstimationRegime
     edition: ActivityAssetEdition
     acquisition_shapes: tuple[AcquisitionShape, ...]
+    declared_activities: tuple[TipoActividad, ...]
     methods: tuple[AmortizationMethod, ...]
     table_groups: tuple[ActivityAssetTableGroup, ...]
 

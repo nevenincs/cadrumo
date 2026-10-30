@@ -4736,6 +4736,17 @@ ledger:
       primary_purchase: Vásárlás
       produced: Saját előállítás
       split_payment: Részletekben fizetett vásárlás
+    declared_activity:
+      A01: Ingatlan bérbeadása
+      A02: Önálló állattenyésztés
+      A03: Egyéb vállalkozási tevékenység
+      A04: Művészeti és sporttevékenység
+      A05: Szakmai tevékenység
+      B01: Mezőgazdaság
+      B02: Állattenyésztés
+      B03: Erdőgazdálkodás
+      B04: Kagylótermelés
+      B05: Halászat
     asset_kind:
       intangible: Immateriális eszköz
       material: Tárgyi eszköz
@@ -4858,6 +4869,8 @@ ledger:
         eszköz üzembe helyezésénél.
       declared_acquisition_date_required: A naplón kívül beszerzett eszközhöz meg
         kell adni a beszerzés dátumát.
+      declared_activity_required: A naplón kívül beszerzett eszközhöz meg kell adni
+        a tevékenységet, amelyhez tartozik.
       disposal_already_recorded: Ennek az eszköznek már van kivezetése %{disposal_date}
         dátummal. Helyesbítéssel módosítsd.
       disposal_amount_invalid: A kivezetés összegei nem negatív, legfeljebb két tizedesjegyű

@@ -4752,6 +4752,17 @@ ledger:
       primary_purchase: Compra
       produced: Producció pròpia
       split_payment: Compra pagada en diversos pagaments
+    declared_activity:
+      A01: Arrendament de béns immobles
+      A02: Ramaderia independent
+      A03: Resta d'activitats empresarials
+      A04: Activitats artístiques i esportives
+      A05: Activitats professionals
+      B01: Agrícola
+      B02: Ramadera
+      B03: Forestal
+      B04: Producció de musclo
+      B05: Pesquera
     asset_kind:
       intangible: Immobilitzat intangible
       material: Immobilitzat material
@@ -4872,6 +4883,8 @@ ledger:
         a l'entrada en funcionament de l'element.
       declared_acquisition_date_required: Un element adquirit fora del llibre necessita
         la seva data d'adquisició.
+      declared_activity_required: Un element adquirit fora del llibre necessita
+        l'activitat a la qual pertany.
       disposal_already_recorded: Aquest element ja té una baixa amb data %{disposal_date}.
         Canvia-la amb una correcció.
       disposal_amount_invalid: Els imports de la baixa han de ser xifres en euros

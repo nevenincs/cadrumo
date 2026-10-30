@@ -4674,6 +4674,17 @@ ledger:
       primary_purchase: Purchase
       produced: Own production
       split_payment: Purchase paid in parts
+    declared_activity:
+      A01: Rental of real estate
+      A02: Independent livestock farming
+      A03: Other business activities
+      A04: Artistic and sporting activities
+      A05: Professional activities
+      B01: Agriculture
+      B02: Livestock farming
+      B03: Forestry
+      B04: Mussel farming
+      B05: Fishing
     asset_kind:
       intangible: Intangible asset
       material: Tangible asset
@@ -4790,6 +4801,8 @@ ledger:
         the date the element entered service.
       declared_acquisition_date_required: An element acquired outside the ledger needs
         its acquisition date.
+      declared_activity_required: An element acquired outside the ledger needs the
+        activity it belongs to.
       disposal_already_recorded: This element already has a baja dated %{disposal_date}.
         Change it with a correction.
       disposal_amount_invalid: The baja's amounts must be non-negative euro figures

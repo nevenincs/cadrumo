@@ -4762,6 +4762,17 @@ ledger:
       primary_purchase: Compra
       produced: Producción propia
       split_payment: Compra pagada en varios pagos
+    declared_activity:
+      A01: Arrendadores de bienes inmuebles
+      A02: Ganadería independiente
+      A03: Resto de actividades empresariales
+      A04: Actividades artísticas y deportivas
+      A05: Actividades profesionales
+      B01: Agrícola
+      B02: Ganadera
+      B03: Forestal
+      B04: Producción de mejillón
+      B05: Pesquera
     asset_kind:
       intangible: Inmovilizado intangible
       material: Inmovilizado material
@@ -4883,6 +4894,8 @@ ledger:
         a la entrada en funcionamiento del elemento.
       declared_acquisition_date_required: Un elemento adquirido fuera del libro necesita
         su fecha de adquisición.
+      declared_activity_required: Un elemento adquirido fuera del libro necesita la
+        actividad a la que pertenece.
       disposal_already_recorded: Este elemento ya tiene una baja con fecha %{disposal_date}.
         Cámbiala con una corrección.
       disposal_amount_invalid: Los importes de la baja deben ser cifras en euros no

@@ -670,10 +670,7 @@ class ActivityAssetOperations:
             history,
             forecast=self._forecast_operation,
             period_end=period_end,
-            activities={
-                asset_id: row.tipo_actividad if (row := revision.acquisition_row_in(rows)) else None
-                for asset_id, revision in current.items()
-            },
+            activities={asset_id: revision.activity_in(rows) for asset_id, revision in current.items()},
             agrarian=self._authority.agrarian_activities(period_end) if current else frozenset(),
         )
 
@@ -821,6 +818,7 @@ class ActivityAssetOperations:
             regime=regime,
             edition=edition,
             acquisition_shapes=REGISTERABLE_ACQUISITION_SHAPES,
+            declared_activities=tuple(TipoActividad),
             methods=options.methods,
             table_groups=tuple(
                 ActivityAssetTableGroup(

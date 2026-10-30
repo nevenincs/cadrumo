@@ -17,6 +17,7 @@ from typing import Final
 
 from pydantic import BaseModel
 
+from ...core.tipos_actividad import TipoActividad
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason, PriorFreeDepreciationRegime
 from ...domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -65,6 +66,7 @@ _TOKEN_FAMILY_BY_ENUM: Final[Mapping[type[StrEnum], str]] = MappingProxyType(
         AssetKind: "asset_kind",
         DigitOrder: "digit_order",
         DirectEstimationRegime: "regime",
+        TipoActividad: "declared_activity",
         ElectricPropulsion: "electric_propulsion",
         OpeningHistoryStatus: "opening_history_status",
         OriginalPriceDetermination: "original_price_determination",

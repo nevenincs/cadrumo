@@ -19,6 +19,7 @@ from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.tipos_actividad import TipoActividad
 from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection
 from ...domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
@@ -496,6 +497,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
     acquisition_shape: AcquisitionShape
     further_acquisitions: tuple[FurtherAcquisitionSnapshot, ...] = ()
     declared_acquisition_date: date | None = None
+    declared_activity: TipoActividad | None = None
     asset_kind: AssetKind
     basis: ActivityAssetBasisSnapshot
     residual_value: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
@@ -521,6 +523,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
                 FurtherAcquisitionSnapshot.from_domain(row) for row in value.further_acquisitions
             ),
             declared_acquisition_date=value.declared_acquisition_date,
+            declared_activity=value.declared_activity,
             asset_kind=value.asset_kind,
             basis=ActivityAssetBasisSnapshot.from_domain(value.basis),
             residual_value=project_scalar(value.residual_value),
@@ -544,6 +547,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             acquisition_shape=self.acquisition_shape,
             further_acquisitions=tuple(row.to_domain() for row in self.further_acquisitions),
             declared_acquisition_date=self.declared_acquisition_date,
+            declared_activity=self.declared_activity,
             asset_kind=self.asset_kind,
             basis=self.basis.to_domain(),
             residual_value=Decimal(self.residual_value.decimal),

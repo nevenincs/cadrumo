@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from functools import cached_property
-from typing import Final, Self
+from typing import Final, Protocol, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -18,6 +18,7 @@ from ....core.hex import Hex64Str
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
+from ....core.tipos_actividad import TipoActividad
 from .disposal import ActivityAssetDisposal
 from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
@@ -353,6 +354,15 @@ _BAJA_AND_CHAIN_FIELDS: set[str] = {"revision_number", "supersedes_revision_id",
 """A revision's place in its chain and its baja, which leave every earlier charge's facts unchanged."""
 
 
+class _ActivityDeclaringRow(Protocol):
+    """What the activity of an element is read from on its acquisition row."""
+
+    @property
+    def tipo_actividad(self) -> TipoActividad | None:
+        """The activity the row declares, if any."""
+        ...
+
+
 class ActivityAssetRevision(CachedIdentityModel):
     """One immutable revision of an independently identified activity asset."""
 
@@ -366,6 +376,8 @@ class ActivityAssetRevision(CachedIdentityModel):
     further_acquisitions: tuple[FurtherAcquisitionRow, ...] = ()
     declared_acquisition_date: date | None = None
     """When an element acquired outside the ledger was acquired; a ledger row states its own date."""
+    declared_activity: TipoActividad | None = None
+    """The activity of an element acquired outside the ledger; a ledger row states its own."""
     asset_kind: AssetKind
     basis: ActivityAssetBasis
     residual_value: Decimal = Decimal("0")
@@ -432,12 +444,19 @@ class ActivityAssetRevision(CachedIdentityModel):
         transaction_id = self.acquisition.observed_transaction_id
         return None if transaction_id is None else rows.get(transaction_id)
 
+    def activity_in(self, rows: Mapping[str, _ActivityDeclaringRow]) -> TipoActividad | None:
+        """Return the activity this element belongs to, stated on it or on its acquisition row in ``rows``."""
+        if self.declared_activity is not None:
+            return self.declared_activity
+        row = self.acquisition_row_in(rows)
+        return None if row is None else row.tipo_actividad
+
     @cached_property
     def revision_id(self) -> str:
         """Return the deterministic identity of this immutable revision.
 
-        A revision with no baja, further acquisition row or declared acquisition date omits
-        that field, so its identity is unchanged by it.
+        A revision with no baja, further acquisition row, declared acquisition date or declared
+        activity omits that field, so its identity is unchanged by it.
         """
         excluded = {"supersedes_revision_id"}
         if self.disposal is None:
@@ -446,6 +465,8 @@ class ActivityAssetRevision(CachedIdentityModel):
             excluded.add("further_acquisitions")
         if self.declared_acquisition_date is None:
             excluded.add("declared_acquisition_date")
+        if self.declared_activity is None:
+            excluded.add("declared_activity")
         payload = self.model_dump(mode="json", exclude=excluded)
         payload["supersedes_revision_id"] = self.supersedes_revision_id
         return content_hash_hex(payload)
@@ -502,8 +523,11 @@ def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
         revision.acquisition.observed_transaction_id is None
         or revision.acquisition.evidence_fingerprint is None
         or revision.declared_acquisition_date is not None
+        or revision.declared_activity is not None
     ):
-        raise ValueError("a primary purchase names its ledger row and evidence fingerprint and declares no date")
+        raise ValueError(
+            "a primary purchase names its ledger row and evidence fingerprint and declares no date or activity"
+        )
 
 
 def _validate_acquired_outside_ledger(revision: ActivityAssetRevision) -> None:
@@ -519,6 +543,10 @@ def _validate_acquired_outside_ledger(revision: ActivityAssetRevision) -> None:
     if declared is None:
         raise ActividadAssetValidationError(
             translated_message="ledger.actividad_asset.errors.declared_acquisition_date_required",
+        )
+    if revision.declared_activity is None:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.declared_activity_required",
         )
     if declared > revision.in_service_date:
         raise ActividadAssetValidationError(

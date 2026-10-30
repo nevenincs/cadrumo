@@ -31,6 +31,7 @@ from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from cadrumo.core.period import Period
+from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
 from cadrumo.domain.renta.actividad_asset.disposal import (
@@ -436,6 +437,7 @@ def test_form_options_come_from_the_published_registry() -> None:
         AcquisitionShape.PRIMARY_PURCHASE,
         AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER,
     }
+    assert options.declared_activities == tuple(TipoActividad)
 
 
 def test_the_handoff_reads_the_accrual_route_with_or_without_claims() -> None:

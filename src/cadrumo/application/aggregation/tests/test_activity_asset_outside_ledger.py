@@ -12,6 +12,7 @@ from typing import Any
 import pytest
 
 from cadrumo.core.hashing import content_hash_hex
+from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -37,6 +38,7 @@ def _facts(**changes: Any) -> dict[str, Any]:
         acquisition=AcquisitionLineageReference(invoice_evidence_id="Factura 2014/118, Prensas SA"),
         acquisition_shape=AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER,
         declared_acquisition_date=date(2014, 3, 1),
+        declared_activity=TipoActividad.A03_RESTO_EMPRESARIALES,
     )
     facts.update(changes)
     return facts
@@ -95,6 +97,39 @@ def test_it_is_refused_without_an_acquisition_date() -> None:
         _element(declared_acquisition_date=None)
 
 
+def test_it_is_refused_without_a_declared_activity() -> None:
+    with pytest.raises(ValueError, match="declared_activity_required"):
+        _element(declared_activity=None)
+
+
+def test_another_shape_cannot_declare_an_activity() -> None:
+    purchase = register_asset("press", transaction_id="c" * 64)
+    facts = {name: getattr(purchase, name) for name in type(purchase).model_fields}
+
+    with pytest.raises(ValueError, match="declares no date or activity"):
+        ActivityAssetRevision(**{**facts, "declared_activity": TipoActividad.B01_AGRICOLA})
+
+
+def test_an_agrarian_element_stays_out_of_the_instalment_and_in_the_annual_return() -> None:
+    agrarian = _element(declared_activity=TipoActividad.B01_AGRICOLA)
+    other = _element()
+    claims = (_register_claim(agrarian, amount=Decimal("1200.00")),)
+    agrarian_history = ActivityAssetHistory(revisions=(agrarian,), claims=claims)
+    other_history = ActivityAssetHistory(
+        revisions=(other,), claims=(_register_claim(other, amount=Decimal("1200.00")),)
+    )
+
+    excluded = resolve_m130(agrarian_history, "4T")
+    counted = resolve_m130(other_history, "4T")
+
+    assert "activity_asset_agrarian_excluded" in _reasons(excluded)
+    assert sum(excluded.binding_values.values(), Decimal("0")) == Decimal("0")
+    assert "activity_asset_agrarian_excluded" not in _reasons(counted)
+    # 12,000 x 10% for the year, the same element counted once its activity is not agrarian.
+    assert sum(counted.binding_values.values(), Decimal("0")) == Decimal("1200.00")
+    assert Decimal("1200.00") in resolve_m100(agrarian_history).binding_values.values()
+
+
 def test_it_is_refused_with_a_date_after_service() -> None:
     with pytest.raises(ValueError, match="declared_acquisition_after_service"):
         _element(declared_acquisition_date=date(2025, 1, 2))
@@ -123,6 +158,7 @@ def test_an_existing_purchase_keeps_its_identity() -> None:
     purchase = register_asset("press", transaction_id="c" * 64)
     payload = purchase.model_dump(mode="json", exclude={"supersedes_revision_id", "disposal", "further_acquisitions"})
     del payload["declared_acquisition_date"]
+    del payload["declared_activity"]
     payload["supersedes_revision_id"] = None
 
     assert purchase.revision_id == content_hash_hex(payload)
