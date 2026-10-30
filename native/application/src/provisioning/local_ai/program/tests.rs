@@ -484,13 +484,114 @@ fn a_group_that_cannot_be_opened_starts_no_server() {
     let (mut program, _) = installed(&locations, "9.8.7");
     stand_in(&mut program, "9.8.7");
     let address = free_address();
+    let refused = failure(
+        program
+            .start(address, &GroupOpening(None), &ambient, None)
+            .map(|_| ()),
+        "no group, no server",
+    );
     assert!(matches!(
-        program.start(address, &GroupOpening(None), &ambient, None),
-        Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning))
+        refused,
+        LocalAiError::ServerStart(ServerStartFailure::Launch {
+            step: LaunchStep::OpenGroup,
+            kind: io::ErrorKind::Unsupported,
+        })
     ));
+    assert_eq!(refused.category(), FailureCategory::ProgramNotRunning);
     assert!(program.server().is_none());
     assert!(ServerRecord::read(&locations.programs).is_none());
     assert!(!answers(address));
+}
+
+/// The failure of a start that must not succeed.
+fn failure(result: Result<(), LocalAiError>, expected: &str) -> LocalAiError {
+    match result {
+        Ok(()) => panic!("{expected}"),
+        Err(error) => error,
+    }
+}
+
+/// Starts `executable` as a server of the installed program through `containment`.
+fn spawn_through(
+    program: &Program,
+    directory: &Path,
+    executable: PathBuf,
+    containment: &dyn Containment,
+) -> LocalAiError {
+    let lease = program
+        .leases()
+        .try_serve()
+        .unwrap()
+        .expect("no other server");
+    let command = ServeCommand {
+        executable,
+        arguments: ["--exact", "no::such::test"].map(OsString::from).to_vec(),
+        environment: BTreeMap::new(),
+        working_directory: directory.to_path_buf(),
+        address: free_address(),
+    };
+    failure(
+        Server::spawn(
+            command,
+            "9.8.7",
+            directory.join(SERVER_RECORD),
+            containment,
+            lease,
+            None,
+        )
+        .map(|_| ()),
+        "the server must not start",
+    )
+}
+
+#[test]
+fn a_server_the_system_cannot_create_says_which_step_failed_and_why() {
+    let directory = tempfile::tempdir().unwrap();
+    let locations = Locations::under(directory.path());
+    let (program, _) = installed(&locations, "9.8.7");
+    let error = spawn_through(
+        &program,
+        directory.path(),
+        directory.path().join("absent-program"),
+        &Uncontained,
+    );
+    assert!(matches!(
+        error,
+        LocalAiError::ServerStart(ServerStartFailure::Launch {
+            step: LaunchStep::Create,
+            kind: io::ErrorKind::NotFound,
+        })
+    ));
+    assert_eq!(error.category(), FailureCategory::ProgramNotRunning);
+}
+
+struct Refusing;
+
+impl Containment for Refusing {
+    fn contain(&self, _: &Child) -> io::Result<Box<dyn Send>> {
+        Err(io::ErrorKind::PermissionDenied.into())
+    }
+}
+
+#[test]
+fn a_server_that_cannot_be_contained_says_so_and_does_not_run() {
+    let directory = tempfile::tempdir().unwrap();
+    let locations = Locations::under(directory.path());
+    let (program, _) = installed(&locations, "9.8.7");
+    let error = spawn_through(
+        &program,
+        directory.path(),
+        std::env::current_exe().unwrap(),
+        &Refusing,
+    );
+    assert!(matches!(
+        error,
+        LocalAiError::ServerStart(ServerStartFailure::Launch {
+            step: LaunchStep::Contain,
+            kind: io::ErrorKind::PermissionDenied,
+        })
+    ));
+    assert_eq!(error.category(), FailureCategory::ProgramNotRunning);
 }
 
 #[test]
@@ -530,16 +631,41 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
         arguments: ["--exact", "no::such::test"].map(OsString::from).to_vec(),
         environment: Vec::new(),
     });
-    assert!(matches!(
-        program.start(free_address(), &Uncontained, &ambient, None),
-        Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning))
-    ));
+    let exited = failure(
+        program
+            .start(free_address(), &Uncontained, &ambient, None)
+            .map(|_| ()),
+        "a program that exits is not running",
+    );
+    assert!(
+        matches!(
+            exited,
+            LocalAiError::ServerStart(ServerStartFailure::Closed { .. })
+        ),
+        "{exited}"
+    );
+    assert_eq!(exited.category(), FailureCategory::ProgramNotRunning);
     // A program that listens but reports another version is ended.
     stand_in(&mut program, "0.0.1");
-    assert!(matches!(
-        program.start(free_address(), &Uncontained, &ambient, None),
-        Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning))
-    ));
+    let other = failure(
+        program
+            .start(free_address(), &Uncontained, &ambient, None)
+            .map(|_| ()),
+        "another version is not the pinned one",
+    );
+    assert!(
+        matches!(
+            &other,
+            LocalAiError::ServerStart(ServerStartFailure::Version(VersionFailure::Different { found }))
+                if found == "0.0.1"
+        ),
+        "{other}"
+    );
+    assert_eq!(other.category(), FailureCategory::ProgramNotRunning);
+    assert_eq!(
+        other.to_string(),
+        "local AI failed: program_not_running: its version could not be confirmed: it reports version 0.0.1"
+    );
     assert!(program.server().is_none());
     assert!(ServerRecord::read(&locations.programs).is_none());
     assert_eq!(

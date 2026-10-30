@@ -38,7 +38,7 @@
 //! measured ratio, and hold 1024 members, over twelve times the most measured.
 
 use super::{
-    LocalAiError,
+    LaunchStep, LocalAiError, ServerStartFailure, VersionFailure,
     lease::{Leases, PROGRAM_CHANGE_BUDGET, ProgramChange, ServerLease},
     loopback::Loopback,
 };
@@ -64,11 +64,11 @@ use std::{
     collections::BTreeMap,
     ffi::{OsStr, OsString},
     fs,
-    io::{BufRead, BufReader, Read},
+    io::{self, BufRead, BufReader, Read},
     net::SocketAddr,
     path::{Path, PathBuf},
     process::{Child, ChildStdin, Command, Stdio},
-    sync::mpsc,
+    sync::mpsc::{self, RecvTimeoutError},
     time::{Duration, SystemTime},
 };
 
@@ -327,7 +327,8 @@ impl Server {
 
     /// Starts `command` contained and waits for the program to announce that it listens,
     /// then for it to answer with `version`. A program that exits, stays silent past
-    /// [`START_BUDGET`] or answers otherwise is ended and reads `program_not_running`.
+    /// [`START_BUDGET`] or answers otherwise is ended and reads `program_not_running`,
+    /// with the [`ServerStartFailure`] that decided it.
     fn spawn(
         command: ServeCommand,
         version: &str,
@@ -354,7 +355,7 @@ impl Server {
         let group = {
             let group = containment
                 .open_group()
-                .map_err(|_| LocalAiError::Failed(FailureCategory::ProgramNotRunning))?;
+                .map_err(|error| launch_failure(LaunchStep::OpenGroup, &error))?;
             if let Some(group) = &group {
                 use std::os::unix::process::CommandExt;
                 process.process_group(group.id);
@@ -363,13 +364,13 @@ impl Server {
         };
         let loopback = Loopback::new(command.address)?;
         let mut child = crate::process::creation::run(|| process.spawn())
-            .map_err(|_| LocalAiError::Failed(FailureCategory::ProgramNotRunning))?;
+            .map_err(|error| launch_failure(LaunchStep::Create, &error))?;
         let guard = match containment.contain(&child) {
             Ok(guard) => guard,
-            Err(_) => {
+            Err(error) => {
                 let _ = child.kill();
                 let _ = child.wait();
-                return Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning));
+                return Err(launch_failure(LaunchStep::Contain, &error));
             }
         };
         // The group's guard is dropped after the job's, once the server has ended.
@@ -387,14 +388,14 @@ impl Server {
             lease: Some(lease),
             proxy,
         };
-        let announced = server.announced();
-        let answered = announced
-            && server
-                .answers_version()
-                .is_some_and(|found| found == version);
-        if !answered {
+        let answered = server.announced().and_then(|()| {
+            server
+                .confirm_version(version)
+                .map_err(ServerStartFailure::Version)
+        });
+        if let Err(cause) = answered {
             server.halt();
-            return Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning));
+            return Err(LocalAiError::ServerStart(cause));
         }
         Ok(server)
     }
@@ -402,9 +403,9 @@ impl Server {
     /// Reads the program's standard error on a thread of its own until it announces that
     /// it listens, it exits, or the start budget ends; the thread then keeps reading and
     /// discarding, so the program never blocks on a full pipe.
-    fn announced(&mut self) -> bool {
+    fn announced(&mut self) -> Result<(), ServerStartFailure> {
         let Some(stderr) = self.child.as_mut().and_then(|child| child.stderr.take()) else {
-            return false;
+            return Err(ServerStartFailure::LogUnreadable);
         };
         let (sender, receiver) = mpsc::channel::<bool>();
         let reader = std::thread::Builder::new()
@@ -432,19 +433,51 @@ impl Server {
                 }
             });
         if reader.is_err() {
-            return false;
+            return Err(ServerStartFailure::LogUnreadable);
         }
-        receiver.recv_timeout(START_BUDGET).unwrap_or(false)
+        match receiver.recv_timeout(START_BUDGET) {
+            Ok(_) => Ok(()),
+            Err(RecvTimeoutError::Timeout) => Err(ServerStartFailure::Silent {
+                budget: START_BUDGET,
+            }),
+            // The reader ended without the announcement: the program closed its standard error.
+            Err(RecvTimeoutError::Disconnected) => Err(ServerStartFailure::Closed {
+                exit: self
+                    .child
+                    .as_mut()
+                    .and_then(|child| child.try_wait().ok().flatten()),
+            }),
+        }
     }
 
     /// The version the server reports, when it answers.
     fn answers_version(&self) -> Option<String> {
-        let (status, body) = self.loopback.get("/api/version").ok()?;
+        self.reported_version().ok()
+    }
+
+    /// The version the server reports, or how it failed to.
+    fn reported_version(&self) -> Result<String, VersionFailure> {
+        let (status, body) = self
+            .loopback
+            .get("/api/version")
+            .map_err(|error| VersionFailure::Unreachable(error.to_string()))?;
         if status != 200 {
-            return None;
+            return Err(VersionFailure::Status(status));
         }
-        let value: serde_json::Value = serde_json::from_slice(&body).ok()?;
-        value["version"].as_str().map(str::to_owned)
+        let value: serde_json::Value =
+            serde_json::from_slice(&body).map_err(|_| VersionFailure::Unreadable)?;
+        value["version"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or(VersionFailure::Unreadable)
+    }
+
+    /// Whether the server reports exactly `expected`.
+    fn confirm_version(&self, expected: &str) -> Result<(), VersionFailure> {
+        match self.reported_version()? {
+            found if found == expected => Ok(()),
+            found => Err(VersionFailure::Different { found }),
+        }
     }
 
     /// Asks the server to unload every model it holds, which ends its runners, then ends
@@ -474,6 +507,14 @@ impl Drop for Server {
     fn drop(&mut self) {
         self.halt();
     }
+}
+
+/// The failure of one step of launching the server, which the operating system refused.
+fn launch_failure(step: LaunchStep, error: &io::Error) -> LocalAiError {
+    LocalAiError::ServerStart(ServerStartFailure::Launch {
+        step,
+        kind: error.kind(),
+    })
 }
 
 /// Unloads every model a server reports loaded; a server that does not answer is left

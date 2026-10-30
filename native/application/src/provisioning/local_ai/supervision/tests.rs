@@ -62,6 +62,17 @@ fn version_at(address: SocketAddr) -> Option<String> {
     (status == 200).then(|| value["version"].as_str().map(str::to_owned))?
 }
 
+/// Polls once and expects the server to run, naming the start's cause when it does not.
+fn assert_running(supervisor: &mut ServerSupervisor, now: Instant) {
+    let state = supervisor.poll(now);
+    assert_eq!(
+        state,
+        ServerState::Running,
+        "the start failed with: {:?}",
+        supervisor.last_start_failure().map(ToString::to_string)
+    );
+}
+
 /// Ends the running server as a crash would, and waits until its process has ended.
 fn crash(supervisor: &mut ServerSupervisor) {
     let address = supervisor.address();
@@ -112,7 +123,7 @@ fn a_program_that_is_not_set_up_runs_no_server() {
 }
 
 #[test]
-fn a_set_up_program_runs_contained_on_the_fixed_address_and_restarts_after_a_crash() {
+fn a_set_up_program_runs_contained_on_its_address_and_restarts_after_a_crash() {
     let root = tempfile::tempdir().unwrap();
     let locations = Locations::under(root.path());
     let (program, _) = installed(&locations, "9.8.7");
@@ -121,12 +132,12 @@ fn a_set_up_program_runs_contained_on_the_fixed_address_and_restarts_after_a_cra
     let mut supervisor = supervisor(program, address, contained.clone());
     let start = Instant::now();
 
-    assert_eq!(supervisor.poll(start), ServerState::Running);
+    assert_running(&mut supervisor, start);
     assert_eq!(version_at(address).as_deref(), Some("9.8.7"));
     assert_eq!(contained.0.load(Ordering::SeqCst), 1);
     let record = ServerRecord::read(&locations.programs).unwrap();
     assert_eq!(record.address, address.to_string());
-    assert_eq!(supervisor.poll(start), ServerState::Running);
+    assert_running(&mut supervisor, start);
     assert_eq!(contained.0.load(Ordering::SeqCst), 1, "one server, kept");
 
     // A crash is restarted after the first backoff, on the same address.
@@ -140,7 +151,7 @@ fn a_set_up_program_runs_contained_on_the_fixed_address_and_restarts_after_a_cra
         ServerState::Restarting { at: due }
     );
     assert!(!answers(address), "nothing restarts before its backoff");
-    assert_eq!(supervisor.poll(due), ServerState::Running);
+    assert_running(&mut supervisor, due);
     assert_eq!(version_at(address).as_deref(), Some("9.8.7"));
     assert_eq!(contained.0.load(Ordering::SeqCst), 2);
 
@@ -148,7 +159,7 @@ fn a_set_up_program_runs_contained_on_the_fixed_address_and_restarts_after_a_cra
     crash(&mut supervisor);
     let later = due + Duration::from_secs(2);
     assert_eq!(supervisor.poll(due), ServerState::Restarting { at: later });
-    assert_eq!(supervisor.poll(later), ServerState::Running);
+    assert_running(&mut supervisor, later);
     crash(&mut supervisor);
     assert_eq!(supervisor.poll(later), ServerState::Failed);
     assert_eq!(
@@ -159,7 +170,7 @@ fn a_set_up_program_runs_contained_on_the_fixed_address_and_restarts_after_a_cra
 
     // A retry forgets the crashes and starts again.
     supervisor.retry();
-    assert_eq!(supervisor.poll(later), ServerState::Running);
+    assert_running(&mut supervisor, later);
     assert_eq!(version_at(address).as_deref(), Some("9.8.7"));
 }
 
@@ -171,7 +182,7 @@ fn a_program_change_stops_the_server_and_holds_every_start_until_it_is_over() {
     let address = free_address();
     let mut supervisor = supervisor(program, address, Counting::default());
     let now = Instant::now();
-    assert_eq!(supervisor.poll(now), ServerState::Running);
+    assert_running(&mut supervisor, now);
 
     // An engine asks to remove the program while the server runs. It waits until the
     // supervisor, at its next look, has stopped the server.
@@ -204,7 +215,7 @@ fn a_program_change_stops_the_server_and_holds_every_start_until_it_is_over() {
     assert_eq!(supervisor.poll(now), ServerState::Held);
     assert!(!answers(address));
     drop(change);
-    assert_eq!(supervisor.poll(now), ServerState::Running);
+    assert_running(&mut supervisor, now);
     assert_eq!(version_at(address).as_deref(), Some("9.8.7"));
 }
 
@@ -216,7 +227,7 @@ fn the_owner_stops_the_server_at_exit_and_session_end_and_nothing_restarts_it() 
     let address = free_address();
     let mut supervisor = supervisor(program, address, Counting::default());
     let now = Instant::now();
-    assert_eq!(supervisor.poll(now), ServerState::Running);
+    assert_running(&mut supervisor, now);
 
     supervisor.stop();
     assert_eq!(supervisor.state(), ServerState::Stopped);
@@ -230,7 +241,7 @@ fn the_owner_stops_the_server_at_exit_and_session_end_and_nothing_restarts_it() 
 
     // A cancelled session end resumes supervision.
     supervisor.resume();
-    assert_eq!(supervisor.poll(now), ServerState::Running);
+    assert_running(&mut supervisor, now);
     assert!(answers(address));
 
     // However the owner ends, the server it runs ends with it.
@@ -290,7 +301,7 @@ fn the_setting_the_owner_started_with_runs_the_server_and_one_it_cannot_use_runs
         Box::new(with_proxy("http://user:secret@proxy.example:3128")),
     )
     .unwrap();
-    assert_eq!(supervisor.poll(now), ServerState::Running);
+    assert_running(&mut supervisor, now);
     let record = ServerRecord::read(&locations.programs).unwrap();
     let corrected = ProxySettings::from_settings(|name| {
         (name == PROXY_URL).then(|| String::from("http://user:secret@proxy.example:3128"))

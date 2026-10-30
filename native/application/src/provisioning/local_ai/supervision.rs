@@ -105,6 +105,8 @@ pub struct ServerSupervisor {
     not_set_up: Option<PointerStamp>,
     proxy: Option<ProxySettings>,
     proxy_refused: bool,
+    /// Why the latest start failed, until a start succeeds; for logs and tests.
+    last_start_failure: Option<LocalAiError>,
 }
 
 impl ServerSupervisor {
@@ -146,6 +148,7 @@ impl ServerSupervisor {
             not_set_up: None,
             proxy,
             proxy_refused,
+            last_start_failure: None,
         })
     }
 
@@ -161,6 +164,12 @@ impl ServerSupervisor {
 
     pub fn address(&self) -> SocketAddr {
         self.address
+    }
+
+    /// Why the latest attempt to start the server failed, until one succeeds. The cause
+    /// is for the owner's logs; a surface shows only its category.
+    pub fn last_start_failure(&self) -> Option<&LocalAiError> {
+        self.last_start_failure.as_ref()
     }
 
     pub fn program(&self) -> &Program {
@@ -219,9 +228,15 @@ impl ServerSupervisor {
             self.proxy.as_ref(),
         );
         match started {
-            Ok(_) => self.state = ServerState::Running,
+            Ok(_) => {
+                self.last_start_failure = None;
+                self.state = ServerState::Running;
+            }
             Err(LocalAiError::Engine(Error::Busy)) => self.state = ServerState::Held,
-            Err(_) => return self.failed_start(now),
+            Err(error) => {
+                self.last_start_failure = Some(error);
+                return self.failed_start(now);
+            }
         }
         self.state
     }
