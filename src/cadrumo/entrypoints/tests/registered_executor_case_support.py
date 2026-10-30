@@ -46,7 +46,7 @@ from ...application.operations.composition import (
     OperationSubmission,
     compose_operation_services,
 )
-from ...application.operations.execution_actor import OperationExecutionCallerReader
+from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.frontend_projection import (
     OperationReviewAvailableInteractionV1,
     OperationReviewProjectionReferenceV1,
@@ -65,7 +65,7 @@ from ...application.operations.frontend_requests import (
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
 )
-from ...application.operations.models import OperationRequest
+from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import OperationSubjectReferenceV1, expected_operation_subject
@@ -436,6 +436,16 @@ class _ComposedRegistryCache:
 
     registry: OperationRegistry | None = None
     cleanup: OperationRuntimeCloseWitness | None = None
+    caller_registry: OperationRegistry | None = None
+    caller_reader: OperationExecutionCallerReader | None = None
+
+
+def _read_the_active_case_caller(identity: OperationIdentity) -> OperationExecutionCaller:
+    """Answer for the case now running; a registry composed once per worker holds only this indirection."""
+    reader = _ComposedRegistryCache.caller_reader
+    if reader is None:
+        raise InternalInvariantError("an execution caller was read outside a conformance runtime")
+    return reader(identity)
 
 
 async def _acquire_censo_for_the_active_case() -> CensalOperationAcquisition:
@@ -491,6 +501,15 @@ def _conformance_registry(
     amendment_action_ports_factory: AmendmentActionPortsFactory | None,
     execution_caller_reader: OperationExecutionCallerReader | None,
 ) -> OperationRegistry:
+    if execution_caller_reader and not (before_irreversible_section or amendment_action_ports_factory):
+        if _ComposedRegistryCache.caller_registry is None:
+            _ComposedRegistryCache.caller_registry = _compose_conformance_registry(
+                before_irreversible_section=None,
+                amendment_action_ports_factory=None,
+                execution_caller_reader=_read_the_active_case_caller,
+            )
+        _ComposedRegistryCache.caller_reader = execution_caller_reader
+        return _ComposedRegistryCache.caller_registry
     if before_irreversible_section or amendment_action_ports_factory or execution_caller_reader:
         return _compose_conformance_registry(
             before_irreversible_section=before_irreversible_section,
