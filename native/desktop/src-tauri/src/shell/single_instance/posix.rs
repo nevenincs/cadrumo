@@ -1,17 +1,16 @@
-//! The Linux desktop instance lock: an advisory file lock and per-session
-//! Unix sockets in the user's private runtime directory.
+//! The POSIX desktop instance lock: an advisory file lock and per-session
+//! Unix sockets in a per-user directory closed to every other account.
 //!
-//! `XDG_RUNTIME_DIR` belongs to one user, is shared by that user's sessions
-//! and is closed to every other account, so the lock is per user and no
-//! other account can reach a socket. The kernel releases the file lock when
-//! its holder exits.
+//! The directory belongs to one user, is shared by that user's sessions and
+//! is refused when other accounts can reach it, so the lock is per user and
+//! no other account can reach a socket. The kernel releases the file lock
+//! when its holder exits.
 //!
-//! The holder listens on a socket named for its login session
-//! (`XDG_SESSION_ID`). A second instance connects to its own session's
-//! socket and waits for one acknowledgement byte. It writes nothing: the
-//! connection is the request, and the holder never reads from it. When the
-//! lock is held but its own session has no socket, the holder is in another
-//! session.
+//! The holder listens on a socket named for its login session. A second
+//! instance connects to its own session's socket and waits for one
+//! acknowledgement byte. It writes nothing: the connection is the request,
+//! and the holder never reads from it. When the lock is held but its own
+//! session has no socket, the holder is in another session.
 
 use std::{
     fs::{self, File, OpenOptions, TryLockError},
@@ -39,6 +38,7 @@ const RETRY: Duration = Duration::from_millis(50);
 /// moment between a holder taking the lock and binding its socket.
 const HOLDER_GRACE: Duration = Duration::from_millis(500);
 /// The session name used when the login manager sets no `XDG_SESSION_ID`.
+#[cfg(target_os = "linux")]
 const UNNAMED_SESSION: &str = "unnamed";
 
 /// How a desktop instance claim ended.
@@ -95,6 +95,7 @@ fn validate(family: &str, session: &str) -> io::Result<()> {
 
 /// The user's runtime directory, refused unless it is closed to other
 /// accounts.
+#[cfg(target_os = "linux")]
 fn runtime_directory() -> io::Result<PathBuf> {
     let directory = std::env::var_os("XDG_RUNTIME_DIR")
         .map(PathBuf::from)
@@ -110,6 +111,7 @@ fn runtime_directory() -> io::Result<PathBuf> {
 }
 
 /// This process's login session, or [`UNNAMED_SESSION`] when none is set.
+#[cfg(target_os = "linux")]
 fn current_session() -> io::Result<String> {
     match std::env::var("XDG_SESSION_ID") {
         Ok(session) if !session.is_empty() => Ok(session),
@@ -126,15 +128,53 @@ fn private(directory: &Path) -> io::Result<()> {
     if !metadata.is_dir() || metadata.permissions().mode() & 0o077 != 0 {
         return Err(io::Error::new(
             io::ErrorKind::PermissionDenied,
-            "the runtime directory is open to other accounts",
+            "the instance directory is open to other accounts",
         ));
     }
     Ok(())
 }
 
-/// The socket prefix and suffix of `family`'s session sockets.
-fn socket_affixes(family: &str) -> (String, &'static str) {
-    (format!("{family}.desktop.session."), ".activate")
+/// The names of one family's lock file and session sockets.
+struct Names {
+    lock: String,
+    prefix: String,
+    suffix: &'static str,
+}
+
+impl Names {
+    fn socket(&self, session: &str) -> String {
+        format!("{}{session}{}", self.prefix, self.suffix)
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn names(family: &str) -> Names {
+    Names {
+        lock: format!("{family}.desktop.lock"),
+        prefix: format!("{family}.desktop.session."),
+        suffix: ".activate",
+    }
+}
+
+/// `sun_path` holds 104 bytes and the shared transport directory lies deep
+/// under the cache base, so the family enters the names as a short digest.
+/// Collisions only matter between this user's own channel families.
+#[cfg(target_os = "macos")]
+fn names(family: &str) -> Names {
+    use sha2::{Digest, Sha256};
+    let digest = Sha256::new()
+        .chain_update(b"cadrumo-desktop-instance-v1\0")
+        .chain_update(family.as_bytes())
+        .finalize();
+    let stem: String = digest[..6]
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect();
+    Names {
+        lock: format!("desktop-{stem}.lock"),
+        prefix: format!("desktop-{stem}-"),
+        suffix: ".sock",
+    }
 }
 
 /// Claims the desktop instance for `family`, or hands activation to the
@@ -142,38 +182,75 @@ fn socket_affixes(family: &str) -> (String, &'static str) {
 /// not answer within a round leaves the claim checking the lock again,
 /// until `patience` runs out with [`io::ErrorKind::TimedOut`]. A holder in
 /// another session gets no request.
+///
+/// The directory is the user's `XDG_RUNTIME_DIR` and the session the login
+/// session the login manager names in `XDG_SESSION_ID`.
+#[cfg(target_os = "linux")]
 pub fn claim_instance(family: &str, patience: Duration) -> io::Result<InstanceClaim> {
-    claim_in(&runtime_directory()?, family, &current_session()?, patience)
+    claim_in(
+        &runtime_directory()?,
+        family,
+        &current_session()?,
+        patience,
+        &|| Ok(()),
+    )
 }
 
+/// Claims the desktop instance for `family`, or hands activation to the
+/// instance that holds it. A holder in this session that refuses or does
+/// not answer within a round leaves the claim checking the lock again,
+/// until `patience` runs out with [`io::ErrorKind::TimedOut`]. A holder in
+/// another session gets no request.
+///
+/// The directory is the private transient transport directory the runtime's
+/// sockets use, retained and rechecked against replacement, and the session
+/// is the kernel audit session of the graphical login this process runs in.
+#[cfg(target_os = "macos")]
+pub fn claim_instance(family: &str, patience: Duration) -> io::Result<InstanceClaim> {
+    let session = format!("{:x}", crate::launch::graphical_session()?);
+    validate(family, &session)?;
+    let transport = cadrumo_platform::transport::DarwinTransport::installed(true)?;
+    // Refuses a socket path at or above the platform bound before anything binds it.
+    transport.socket_path(&names(family).socket(&session))?;
+    claim_in(transport.directory(), family, &session, patience, &|| {
+        transport.verify()
+    })
+}
+
+/// Claims in `directory`, calling `verify` before the lock file opens and
+/// again once the lock is held, so a namespace that was replaced meanwhile
+/// refuses the claim.
 fn claim_in(
     directory: &Path,
     family: &str,
     session: &str,
     patience: Duration,
+    verify: &dyn Fn() -> io::Result<()>,
 ) -> io::Result<InstanceClaim> {
     validate(family, session)?;
+    verify()?;
     private(directory)?;
-    let (prefix, suffix) = socket_affixes(family);
-    let socket = directory.join(format!("{prefix}{session}{suffix}"));
+    let names = names(family);
+    let socket = directory.join(names.socket(session));
     let file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
         .truncate(false)
         .mode(0o600)
-        .open(directory.join(format!("{family}.desktop.lock")))?;
+        .open(directory.join(&names.lock))?;
     let deadline = Instant::now() + patience;
     let mut absent_since = None;
     loop {
         match file.try_lock() {
             Ok(()) => {
+                verify()?;
                 // Only the holder binds session sockets, so any left behind
                 // by a holder that died are stale, whatever their session.
                 for entry in fs::read_dir(directory)? {
                     let name = entry?.file_name();
                     let name = name.to_string_lossy();
-                    if name.starts_with(&prefix) && name.ends_with(suffix) {
+                    if name.starts_with(&names.prefix) && name.ends_with(names.suffix) {
                         match fs::remove_file(directory.join(&*name)) {
                             Ok(()) => {}
                             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
@@ -310,6 +387,20 @@ mod tests {
     use std::sync::atomic::AtomicUsize;
     use std::time::{SystemTime, UNIX_EPOCH};
 
+    /// The per-user temporary directory is too deep for `sun_path` here.
+    #[cfg(target_os = "macos")]
+    fn scratch_base() -> PathBuf {
+        PathBuf::from("/private/tmp")
+    }
+    #[cfg(not(target_os = "macos"))]
+    fn scratch_base() -> PathBuf {
+        std::env::temp_dir()
+    }
+
+    fn unverified() -> io::Result<()> {
+        Ok(())
+    }
+
     struct Scratch(PathBuf);
     impl Scratch {
         fn new(label: &str) -> Self {
@@ -318,7 +409,7 @@ mod tests {
                 .unwrap()
                 .as_nanos();
             // Short, because a socket path must fit in `sun_path`.
-            let path = std::env::temp_dir().join(format!(
+            let path = scratch_base().join(format!(
                 "ci-{label}-{}-{}",
                 std::process::id(),
                 nanos % 1_000_000_000
@@ -329,8 +420,7 @@ mod tests {
         }
 
         fn socket(&self, session: &str) -> PathBuf {
-            self.0
-                .join(format!("{FAMILY}.desktop.session.{session}.activate"))
+            self.0.join(names(FAMILY).socket(session))
         }
     }
     impl Drop for Scratch {
@@ -351,11 +441,25 @@ mod tests {
     }
 
     fn claim(directory: &Path, family: &str, session: &str) -> io::Result<&'static str> {
-        outcome(claim_in(directory, family, session, Duration::from_secs(5)))
+        outcome(claim_in(
+            directory,
+            family,
+            session,
+            Duration::from_secs(5),
+            &unverified,
+        ))
     }
 
     fn primary(directory: &Path, family: &str, session: &str) -> InstanceLock {
-        match claim_in(directory, family, session, Duration::from_secs(5)).unwrap() {
+        match claim_in(
+            directory,
+            family,
+            session,
+            Duration::from_secs(5),
+            &unverified,
+        )
+        .unwrap()
+        {
             InstanceClaim::Primary(lock) => lock,
             _ => panic!("expected the lock"),
         }
@@ -413,7 +517,7 @@ mod tests {
             .write(true)
             .create(true)
             .truncate(false)
-            .open(directory.join(format!("{FAMILY}.desktop.lock")))
+            .open(directory.join(names(FAMILY).lock))
             .unwrap();
         file.try_lock().unwrap();
         let holder = thread::spawn(move || {
@@ -463,9 +567,15 @@ mod tests {
         let scratch = Scratch::new("closing");
         let mut lock = primary(&scratch.0, FAMILY, SESSION);
         let count = counting(&mut lock, false);
-        let error = claim_in(&scratch.0, FAMILY, SESSION, Duration::from_millis(800))
-            .err()
-            .unwrap();
+        let error = claim_in(
+            &scratch.0,
+            FAMILY,
+            SESSION,
+            Duration::from_millis(800),
+            &unverified,
+        )
+        .err()
+        .unwrap();
         assert_eq!(error.kind(), io::ErrorKind::TimedOut);
         assert!(count.load(Ordering::SeqCst) >= 1);
     }
@@ -488,17 +598,29 @@ mod tests {
         })
         .unwrap();
         // The first claim gives up while the holder still deliberates.
-        let error = claim_in(&scratch.0, FAMILY, SESSION, Duration::from_millis(300))
-            .err()
-            .unwrap();
+        let error = claim_in(
+            &scratch.0,
+            FAMILY,
+            SESSION,
+            Duration::from_millis(300),
+            &unverified,
+        )
+        .err()
+        .unwrap();
         assert_eq!(error.kind(), io::ErrorKind::TimedOut);
         requests.recv().unwrap();
         // The holder starts closing, then acknowledges that request late.
         closing.store(true, Ordering::SeqCst);
         decide.send(true).unwrap();
-        let error = claim_in(&scratch.0, FAMILY, SESSION, Duration::from_millis(1500))
-            .err()
-            .unwrap();
+        let error = claim_in(
+            &scratch.0,
+            FAMILY,
+            SESSION,
+            Duration::from_millis(1500),
+            &unverified,
+        )
+        .err()
+        .unwrap();
         assert_eq!(error.kind(), io::ErrorKind::TimedOut);
         assert!(requests.try_iter().count() >= 1);
     }
@@ -526,5 +648,63 @@ mod tests {
                 "{invalid}"
             );
         }
+    }
+
+    /// A namespace check that fails before the lock file opens, or once the
+    /// lock is held, refuses the claim and binds no socket.
+    #[test]
+    fn a_namespace_that_fails_its_check_refuses_the_claim() {
+        let scratch = Scratch::new("verify");
+        let replaced = || Err(io::Error::from(io::ErrorKind::PermissionDenied));
+        let refused = claim_in(
+            &scratch.0,
+            FAMILY,
+            SESSION,
+            Duration::from_secs(1),
+            &replaced,
+        );
+        assert_eq!(
+            refused.err().unwrap().kind(),
+            io::ErrorKind::PermissionDenied
+        );
+        assert!(!scratch.0.join(names(FAMILY).lock).exists());
+        let checks = AtomicUsize::new(0);
+        let replaced_later = || {
+            if checks.fetch_add(1, Ordering::SeqCst) == 0 {
+                Ok(())
+            } else {
+                Err(io::Error::from(io::ErrorKind::PermissionDenied))
+            }
+        };
+        let refused = claim_in(
+            &scratch.0,
+            FAMILY,
+            SESSION,
+            Duration::from_secs(1),
+            &replaced_later,
+        );
+        assert_eq!(
+            refused.err().unwrap().kind(),
+            io::ErrorKind::PermissionDenied
+        );
+        assert_eq!(checks.load(Ordering::SeqCst), 2);
+        assert!(!scratch.socket(SESSION).exists());
+        // The refused claim released the lock, so a sound namespace takes it.
+        assert_eq!(claim(&scratch.0, FAMILY, SESSION).unwrap(), "primary");
+    }
+
+    /// The names stay within the socket bound whatever the family's length,
+    /// and distinct families keep distinct names.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn compact_names_fit_the_bound_and_keep_families_apart() {
+        let long = format!("md.{}", "a".repeat(125));
+        let stable = names("md.neve.cadrumo");
+        let preview = names("md.neve.cadrumo.preview");
+        assert_ne!(stable.prefix, preview.prefix);
+        assert_ne!(stable.lock, preview.lock);
+        let widest = names(&long).socket(&format!("{:x}", u32::MAX));
+        assert_eq!(widest.len(), 34, "{widest}");
+        assert!(file_name_part(&widest, 64));
     }
 }

@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-30'
 body_schema: body-v2
-body_hash: 'sha256:c47d67ec3c2d93edeee819765aaaeb703c048561cb49223c4a30b82064d99477'
+body_hash: 'sha256:7f33590c81d9b6f8561561958be81a1ec31ddebd85e37d4e308cf8998f3c4c85'
 ---
 
 <!-- LINK RULES:
@@ -130,6 +130,7 @@ Bring Cadrumo to a working build, package and run on macOS arm64: configure and 
 - [ ] `S05` - Assemble the full macOS payload: PBS CPython SDK, wheelhouse, agent runtime, Mach-O relocation and ad-hoc signing into the flat bundle; `native/cmake/Packaging.cmake, native/cmake/PythonDistribution.cmake, dev/packaging/native/platforms/macos.py, native/platforms/macos-arm64.json`.
 - [ ] `S06` - Author the macOS application wrapper: .app bundle with Info.plist, icon and nested signed payload, packaged into the CPack DragNDrop DMG; `native/cmake/distribution/CMakeLists.txt, native/desktop/src-tauri, native/package-layout.json`.
 - [ ] `S07` - Verify the assembled bundle and DMG on macOS: CTest verify and verify-package, launch the desktop app, runtime and CLI from the extracted bundle; `native/cmake/ReleaseVerification.cmake, native/tests`.
+- [ ] `S08` - Add the POSIX runtime client for the desktop: a Unix-socket runtime transport beside the Windows pipe in the application and platform crates, then lift the macOS refusals in desktop app start, supervision, sign-in, agent launcher, terminal and process containment; `native/application/src/lib.rs, native/application/src/view_stream.rs, native/platform/src, native/desktop/src-tauri/src/app.rs, native/desktop/src-tauri/src/manager.rs, native/desktop/src-tauri/src/shell, native/desktop/src-tauri/src/agent`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:
