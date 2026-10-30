@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ..signal_spelling_segments import locale_spelling_words, spanish_word_context, translation_spelling_segments
+from ..signal_tokens import filtered_translation_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -37,6 +38,55 @@ def test_explicit_language_inside_link_controls_only_annotated_words() -> None:
 
 def test_english_legal_title_stays_english() -> None:
     assert words_by_language("Royal Decree 1/2026 guidance") == {"en": {"Royal", "Decree", "guidance"}}
+
+
+def test_html_source_filename_with_anchor_is_structural_but_standalone_html_is_checked() -> None:
+    words, excluded = filtered_translation_text("Grounded in ley-37-1992.html#a105; html prose remains visible")
+
+    assert "ley-37-1992.html#a105" not in words
+    assert "html" in words
+    assert "prose" in words
+    assert excluded == 1
+
+
+@pytest.mark.parametrize(
+    "identifier",
+    [
+        "AeatAuthenticator",
+        "BindingId",
+        "CasillaId",
+        "CasillaObservation",
+        "CounterpartObservation",
+        "DiagnosticCheck",
+        "ForeignAssetObservation",
+        "InputClassification",
+        "InvoiceWithholdingEvidenceRequest",
+        "LedgerPaymentWithholdingEvidenceRequest",
+        "LongPathsEnabled",
+        "RelationId",
+        "SetupAnswers",
+    ],
+)
+def test_pascal_case_code_identifiers_are_structural_without_hiding_ordinary_prose(identifier: str) -> None:
+    words, excluded = filtered_translation_text(f"Set {identifier}; a misconfigured setting may still fail")
+
+    assert identifier not in words
+    assert "misconfigured" in words
+    assert excluded == 1
+
+
+def test_pascal_case_domain_names_remain_dictionary_input() -> None:
+    words, excluded = filtered_translation_text("GitHub and PowerShell")
+
+    assert words == "GitHub and PowerShell"
+    assert excluded == 0
+
+
+def test_misspelled_pascal_case_identifier_remains_dictionary_input() -> None:
+    words, excluded = filtered_translation_text("AccesRequest")
+
+    assert words == "AccesRequest"
+    assert excluded == 0
 
 
 @pytest.mark.parametrize("notation", ["ÉÉÉÉ-HH-NN", "ÉÉÉÉ-HH-NNTÓÓ:PP:MMZ"])

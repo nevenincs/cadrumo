@@ -22,6 +22,7 @@ from .signal_syntax import (
     TRANSLATION_OPTION_RE,
     TRANSLATION_PATH_RE,
     TRANSLATION_PLACEHOLDER_RE,
+    TRANSLATION_PASCAL_IDENTIFIER_RE,
     TRANSLATION_ROLE_MARKER_RE,
     TRANSLATION_RST_LINK_RE,
     TRANSLATION_RST_ROLE_RE,
@@ -107,6 +108,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (TRANSLATION_FORMULA_RE, " "),
         (TRANSLATION_NUMERIC_RE, " "),
         (TRANSLATION_IDENTIFIER_RE, " "),
+        (TRANSLATION_PASCAL_IDENTIFIER_RE, " "),
         (TRANSLATION_CODE_RE, " "),
         (TRANSLATION_ROLE_MARKER_RE, " "),
     ):

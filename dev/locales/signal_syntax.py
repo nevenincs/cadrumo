@@ -54,7 +54,7 @@ TRANSLATION_URL_RE: Final[re.Pattern[str]] = re.compile(
 TRANSLATION_PATH_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w])(?:[A-Za-z]:[\\/]|\\\\|\.{1,2}[\\/])[^\s<>()\[\]{}]+|"
     r"(?<![\w])(?:[\w.-]+[\\/])+[\w./-]+|"
-    r"(?<![\w])[\w-]+(?:\.[\w-]+)+(?=[\s,;:!?)]|$)"
+    r"(?<![\w])[\w-]+(?:\.[\w-]+)+(?:#[A-Za-z0-9_.-]+)?(?=[\s,;:!?)]|$)"
 )
 
 
@@ -96,6 +96,36 @@ TRANSLATION_ROLE_MARKER_RE: Final[re.Pattern[str]] = re.compile(r":[A-Za-z][A-Za
 
 
 TRANSLATION_HTML_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s+[^<>]*?)?/?>")
+
+
+# Exact PascalCase identifiers from the spelling audit that are independently
+# attested in runtime type/module names or the Windows registry-value contract.
+# Keep this finite: a malformed identifier such as ``AccesRequest`` must remain
+# dictionary input even though it has the same general shape.
+TRANSLATION_PASCAL_IDENTIFIER_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        "AeatAuthenticator",
+        "BindingId",
+        "CasillaId",
+        "CasillaObservation",
+        "CounterpartObservation",
+        "DiagnosticCheck",
+        "ForeignAssetObservation",
+        "InputClassification",
+        "InvoiceWithholdingEvidenceRequest",
+        "LedgerPaymentWithholdingEvidenceRequest",
+        "LongPathsEnabled",
+        "RelationId",
+        "SetupAnswers",
+    }
+)
+
+
+TRANSLATION_PASCAL_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![A-Za-z0-9])(?:"
+    + "|".join(re.escape(name) for name in sorted(TRANSLATION_PASCAL_IDENTIFIER_NAMES, key=len, reverse=True))
+    + r")(?![A-Za-z0-9])"
+)
 
 
 TRANSLATION_HTML_LANGUAGE_RE: Final[re.Pattern[str]] = re.compile(
