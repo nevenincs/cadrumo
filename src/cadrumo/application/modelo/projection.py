@@ -31,7 +31,6 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
@@ -77,42 +76,6 @@ if TYPE_CHECKING:
 _LOG = get_logger(__name__)
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
-_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
-_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
-_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
-_M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: CasillaId = validated_casilla_id(
-    "0171",
-    surface="_M100_RENDIMIENTO_NETO_PROJECTED_CASILLA",
-)
-_M100_BASE_LIQUIDABLE_GENERAL_CASILLA: CasillaId = validated_casilla_id(
-    "0505",
-    surface="_M100_BASE_LIQUIDABLE_GENERAL_CASILLA",
-)
-_M100_CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
-    "0545",
-    surface="_M100_CUOTA_INTEGRA_ESTATAL_CASILLA",
-)
-_M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
-    "0546",
-    surface="_M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA",
-)
-_M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
-    "0595",
-    surface="_M100_CUOTA_LIQUIDA_ESTATAL_CASILLA",
-)
-_M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
-    "0596",
-    surface="_M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA",
-)
-_M100_CUOTA_RESULTANTE_CASILLA: CasillaId = validated_casilla_id(
-    "0597",
-    surface="_M100_CUOTA_RESULTANTE_CASILLA",
-)
-_M100_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
-    "0604",
-    surface="_M100_PAGOS_FRACCIONADOS_CASILLA",
-)
 
 
 class ModeloProjectionError(CadrumoError):
@@ -352,7 +315,28 @@ def _relation_id(value: object, *, surface: str) -> RelationId:
         raise RegistryValidationError(f"{surface} must be a canonical relation id: {value!r}") from exc
 
 
-def _registry_projection_declaration(year: int, *, operation: PinnedAuthorityOperation) -> ResolvedMappingFact:
+@dataclass(frozen=True, slots=True)
+class _ProjectionDeclaration:
+    """The modelos, period and boxes the dated cross-model projection fact declares."""
+
+    source_modelo: str
+    target_modelo: str
+    target_period: str
+    ingresos: CasillaId
+    gastos: CasillaId
+    rendimiento_neto: CasillaId
+    resultado_final: CasillaId
+    rendimiento_neto_projected: CasillaId
+    base_liquidable_general: CasillaId
+    cuota_integra_estatal: CasillaId
+    cuota_integra_autonomica: CasillaId
+    cuota_liquida_estatal: CasillaId
+    cuota_liquida_autonomica: CasillaId
+    cuota_resultante: CasillaId
+    pagos_fraccionados: CasillaId
+
+
+def _registry_projection_declaration(year: int, *, operation: PinnedAuthorityOperation) -> _ProjectionDeclaration:
     """Resolve the dated cross-model projection declaration from the registry."""
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
@@ -363,22 +347,73 @@ def _registry_projection_declaration(year: int, *, operation: PinnedAuthorityOpe
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise TypeError("selected projection declaration must resolve as a mapping fact")
-    return resolved
+    return _projection_declaration_from(resolved)
+
+
+def _projection_declaration_from(resolved: ResolvedMappingFact) -> _ProjectionDeclaration:
+    """Read the declared entries, refusing a mapping that omits one."""
+    entries = {entry.key: str(entry.value) for entry in resolved.payload.entries}
+
+    def declared(key: str) -> str:
+        try:
+            return entries[key]
+        except KeyError as exc:
+            raise RegistryValidationError(f"projection mapping is missing {key!r}") from exc
+
+    def box(key: str) -> CasillaId:
+        return validated_casilla_id(declared(key), surface=f"projection mapping {key}")
+
+    return _ProjectionDeclaration(
+        source_modelo=declared("source.modelo"),
+        target_modelo=declared("target.modelo"),
+        target_period=declared("period.default"),
+        ingresos=box("source.casilla.ingresos"),
+        gastos=box("source.casilla.gastos"),
+        rendimiento_neto=box("source.casilla.rendimiento_neto"),
+        resultado_final=box("source.casilla.resultado_final"),
+        rendimiento_neto_projected=box("target.casilla.rendimiento_neto_projected"),
+        base_liquidable_general=box("target.casilla.base_liquidable_general"),
+        cuota_integra_estatal=box("target.casilla.cuota_integra_estatal"),
+        cuota_integra_autonomica=box("target.casilla.cuota_integra_autonomica"),
+        cuota_liquida_estatal=box("target.casilla.cuota_liquida_estatal"),
+        cuota_liquida_autonomica=box("target.casilla.cuota_liquida_autonomica"),
+        cuota_resultante=box("target.casilla.cuota_resultante"),
+        pagos_fraccionados=box("target.casilla.pagos_fraccionados"),
+    )
+
+
+def _source_quarter_count(
+    declaration: _ProjectionDeclaration,
+    *,
+    year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> int:
+    """Return how many periods the selected source revision serves in ``year``."""
+    revision = operation.revision_for_context(
+        declaration.source_modelo,
+        filing_year=year,
+        period=period.registry_token,
+    )
+    if revision.period_selector is None:
+        raise RegistryValidationError("projection source revision declares no period selector")
+    return len(revision.period_selector.periods_for_year(year))
 
 
 def _m130_quarter_revisions(
     year: int,
     *,
+    declaration: _ProjectionDeclaration,
     ports: CalculationActionPorts,
-    operation: PinnedAuthorityOperation,
 ) -> dict[Period, CalculationRevision]:
     """Read the latest persisted draft revision for each filed M130 quarter."""
-    _registry_projection_declaration(year, operation=operation)
     all_units = list_work_units(ports=ports.work_lifecycle_ports)
     m130_units = [
         unit
         for unit in all_units
-        if str(unit.modelo) == str(Modelo("130")) and unit.filing_year == year and unit.state is WorkUnitState.BORRADOR
+        if str(unit.modelo) == declaration.source_modelo
+        and unit.filing_year == year
+        and unit.state is WorkUnitState.BORRADOR
     ]
     if not m130_units:
         raise ModeloProjectNoM130UnitsError(
@@ -417,53 +452,64 @@ class _M130AnnualProjection:
 def _m130_annual_projection(
     year: int,
     *,
+    declaration: _ProjectionDeclaration,
     ports: CalculationActionPorts,
     operation: PinnedAuthorityOperation,
 ) -> _M130AnnualProjection:
     """Read the stored M130 quarters and annualise the cumulative basis."""
-    m130_quarters = _m130_quarter_revisions(year, ports=ports, operation=operation)
+    m130_quarters = _m130_quarter_revisions(year, declaration=declaration, ports=ports)
     quarters_filed = len(m130_quarters)
-    # Modelo 130 casillas 01/02/03 are year-to-date cumulative: each quarter's
-    # value already aggregates Jan 1 through quarter end. The annual basis is
-    # therefore the latest available quarter, not a sum of snapshots.
+    # The ingresos, gastos and rendimiento neto boxes are year-to-date cumulative:
+    # each quarter's value already aggregates Jan 1 through quarter end. The annual
+    # basis is therefore the latest available quarter, not a sum of snapshots.
     latest_period = max(m130_quarters, key=lambda period: period.quarter_ordinal or 0)
     latest_ordinal = latest_period.quarter_ordinal
     if latest_ordinal is None:
         raise ModeloProjectionError(
             translated_message="errors.error.modelo_projection",
-            context={"modelo": str(Modelo("130")), "period_is_quarter": False},
+            context={"modelo": declaration.source_modelo, "period_is_quarter": False},
         )
     latest_revision = m130_quarters[latest_period]
+    latest_source = (
+        f"modelo {declaration.source_modelo} {latest_period.registry_token} "
+        f"revision {latest_revision.calculation_revision_id}"
+    )
     total_rendimiento_neto = _required_casilla_value(
         latest_revision.casilla_values,
-        _M130_RENDIMIENTO_NETO_CASILLA,
-        source=f"modelo 130 {latest_period.registry_token} revision {latest_revision.calculation_revision_id}",
+        declaration.rendimiento_neto,
+        source=latest_source,
     )
     total_ingresos = _required_casilla_value(
         latest_revision.casilla_values,
-        _M130_INGRESOS_CASILLA,
-        source=f"modelo 130 {latest_period.registry_token} revision {latest_revision.calculation_revision_id}",
+        declaration.ingresos,
+        source=latest_source,
     )
     total_gastos = _required_casilla_value(
         latest_revision.casilla_values,
-        _M130_GASTOS_CASILLA,
-        source=f"modelo 130 {latest_period.registry_token} revision {latest_revision.calculation_revision_id}",
+        declaration.gastos,
+        source=latest_source,
     )
-    # Casilla 19 is the incremental payment in each quarter; the annual credit
-    # is the sum of the available quarter results.
+    # The final-result box is the incremental payment of each quarter; the annual
+    # credit is the sum of the available quarter results.
     total_pagos_fraccionados = sum(
         (
             _required_casilla_value(
                 revision.casilla_values,
-                _M130_RESULTADO_FINAL_CASILLA,
-                source=f"modelo 130 {period.registry_token} revision {revision.calculation_revision_id}",
+                declaration.resultado_final,
+                source=(
+                    f"modelo {declaration.source_modelo} {period.registry_token} "
+                    f"revision {revision.calculation_revision_id}"
+                ),
             )
             for period, revision in m130_quarters.items()
         ),
         Decimal("0"),
     )
-    if latest_ordinal < 4:
-        projected_rendimiento_neto = round_to_cents(total_rendimiento_neto * Decimal(4) / Decimal(latest_ordinal))
+    quarter_count = _source_quarter_count(declaration, year=year, period=latest_period, operation=operation)
+    if latest_ordinal < quarter_count:
+        projected_rendimiento_neto = round_to_cents(
+            total_rendimiento_neto * Decimal(quarter_count) / Decimal(latest_ordinal)
+        )
         is_extrapolated = True
     else:
         projected_rendimiento_neto = total_rendimiento_neto
@@ -607,43 +653,26 @@ def _apply_zero_maritime_projection_default(
         merged_boolean_bindings[maritime_path] = False
 
 
-def _m100_projection_result(values: Mapping[CasillaId, Decimal]) -> ModeloProjectM100Projection:
+def _m100_projection_result(
+    values: Mapping[CasillaId, Decimal],
+    *,
+    declaration: _ProjectionDeclaration,
+) -> ModeloProjectM100Projection:
+    source = f"modelo {declaration.target_modelo} projection engine result"
     return ModeloProjectM100Projection(
         base_liquidable_general_0505=_required_casilla_value(
-            values,
-            _M100_BASE_LIQUIDABLE_GENERAL_CASILLA,
-            source="modelo 100 projection engine result",
+            values, declaration.base_liquidable_general, source=source
         ),
-        pagos_fraccionados_0604=_required_casilla_value(
-            values,
-            _M100_PAGOS_FRACCIONADOS_CASILLA,
-            source="modelo 100 projection engine result",
-        ),
-        cuota_integra_estatal_0545=_required_casilla_value(
-            values,
-            _M100_CUOTA_INTEGRA_ESTATAL_CASILLA,
-            source="modelo 100 projection engine result",
-        ),
+        pagos_fraccionados_0604=_required_casilla_value(values, declaration.pagos_fraccionados, source=source),
+        cuota_integra_estatal_0545=_required_casilla_value(values, declaration.cuota_integra_estatal, source=source),
         cuota_integra_autonomica_0546=_required_casilla_value(
-            values,
-            _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA,
-            source="modelo 100 projection engine result",
+            values, declaration.cuota_integra_autonomica, source=source
         ),
-        cuota_liquida_estatal_0595=_required_casilla_value(
-            values,
-            _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA,
-            source="modelo 100 projection engine result",
-        ),
+        cuota_liquida_estatal_0595=_required_casilla_value(values, declaration.cuota_liquida_estatal, source=source),
         cuota_liquida_autonomica_0596=_required_casilla_value(
-            values,
-            _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA,
-            source="modelo 100 projection engine result",
+            values, declaration.cuota_liquida_autonomica, source=source
         ),
-        cuota_resultante_0597=_required_casilla_value(
-            values,
-            _M100_CUOTA_RESULTANTE_CASILLA,
-            source="modelo 100 projection engine result",
-        ),
+        cuota_resultante_0597=_required_casilla_value(values, declaration.cuota_resultante, source=source),
     )
 
 
@@ -660,14 +689,15 @@ def project_modelo_100_from_m130(
     """Project annual Modelo 100 values from quarterly M130 revisions.
 
     The service reads stored :class:`CalculationRevision` rows, uses the latest
-    cumulative Modelo 130 figures for annual income, sums casilla 19 as the
-    paid-instalment relation, resolves the annual registry snapshot, and returns
+    cumulative Modelo 130 figures for annual income, sums the declared final-result
+    box as the paid-instalment relation, resolves the annual registry snapshot, and returns
     a result without persisting a synthetic revision. All registry reads use the
     caller-owned operation supplied for this workflow.
     """
-    annual = _m130_annual_projection(year, ports=ports, operation=operation)
+    declaration = _registry_projection_declaration(year, operation=operation)
+    annual = _m130_annual_projection(year, declaration=declaration, ports=ports, operation=operation)
 
-    m100_snapshot = operation.snapshot(str(Modelo("100")), filing_year=year, period="0A")
+    m100_snapshot = operation.snapshot(declaration.target_modelo, filing_year=year, period=declaration.target_period)
     extra_inputs = validate_casilla_input_ids(
         m100_snapshot.revision,
         _decimal_overrides(
@@ -682,7 +712,7 @@ def project_modelo_100_from_m130(
     )
 
     m100_inputs: dict[CasillaId, Decimal] = {
-        _M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: annual.projected_rendimiento_neto,
+        declaration.rendimiento_neto_projected: annual.projected_rendimiento_neto,
         **extra_inputs,
     }
     m100_relations: dict[RelationId, Decimal] = {
@@ -766,7 +796,7 @@ def project_modelo_100_from_m130(
             )
             for entry in engine_result.entries
         ),
-        m100_projection=_m100_projection_result(engine_result.values),
+        m100_projection=_m100_projection_result(engine_result.values, declaration=declaration),
     )
 
 
