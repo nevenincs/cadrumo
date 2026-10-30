@@ -75,16 +75,27 @@ Read in the DGT database, binding consultas.
 - Baja: theft of an afecto vehicle is a ganancia or pérdida patrimonial, indemnity less net book value with fiscally deductible amortizations (V2285-14). Handing a fully amortized tractor in part exchange gives value zero (V2639-13). No consulta on scrapping was found.
 - Disposal rules: only LIRPF DA 30.2 and DA 59.2 carve out the excess. LIS arts. 102 and 103 contain none; art. 102.4 is a workforce clawback.
 
-### Not verified
+### Rulings for implementation
 
-- Day count for estimación directa, and how the months and days sources reconcile.
-- Whether the 300 EUR value includes non-deductible IVA, and how sets are counted. NRV 12.ª points to inclusion, but no ruling on art. 12.3.e was read.
-- Whether a skipped year in estimación directa can be recovered, and any TEAC criterion on it.
-- Foral tables and libertades.
-- 130 treatment of the 2,000 EUR cap by quarter.
-- Leasing entries in the libro registro before the option is exercised.
-- Scrapping without proceeds, and DA 59 excess placement for módulos.
-- RDL 7/2026 convalidation is reported by INAP (resolution of 26 March 2026); the BOE resolution itself was not read.
+Each rule below is what the product implements. Precedence is statute and regulation, then binding DGT consulta (LGT art. 89.1) and TEAC unification, then AEAT guidance. A manual example does not displace a higher source.
+
+- Day count: days of operation over days of the year, for every method. RIS art. 4.1 makes the coefficient a corridor, so the days figure is the maximum and any lower amount down to the minimum is lawful. The manual's 720 lies inside the 733.81 maximum, so months and days do not conflict: 720 is an admissible claim, not the ceiling.
+- Modelo 130: casilla 02 carries the amortization accrued from 1 January to quarter end, computed from the element (RIRPF art. 110.1.a), excluding agrarian activities. A missing claim does not block; a later annual deduction remains available (V1031-14).
+- 2,000 EUR cap: 5% of cumulative net return, capped at 2,000 EUR cumulatively. RIRPF art. 30.2.ª sets an annual cap and art. 110.1.a computes cumulatively, so the cap is not divided by quarter.
+- Skipped year: each year's deduction stays limited to that year's maximum, and the minimum still reduces cost. An ordinary amortization may be corrected for its own year within prescription (LGT arts. 120.3, 221.4), recorded locally and never submitted by the product. A libertad not taken in a return cannot be taken later for that year by rectification, though it stays available in later years (TEAC 01524/2017, 14/02/2019, as reported by SuperContable, based on LGT art. 119.3). The manual says an excess over the permitted figure "pueda serlo en períodos posteriores", which stays within those maximums.
+- 300 EUR: the valor unitario is the precio de adquisición under NRV 12.ª, so it includes non-deductible IVA and excludes deductible IVA.
+- Scrapping: baja with zero proceeds, a pérdida patrimonial of the net value under LIRPF art. 33.1, computed as in V2285-14 and V1161-19 (fire, baja at destruction).
+- Later afectación: RIRPF art. 23.1 sets the value without deemed amortization for private years; amortization starts at afectación.
+- Leasing: not entered in the libro until the option is exercised, because RIRPF art. 22.2 and Orden HAC/773/2019 art. 4.1 address elementos of the taxpayer's patrimony. Cuotas follow LIS art. 106.
+- DA 59 excess under módulos: DA 59.2 makes it rendimiento íntegro whatever the method, and that method's addition line is 1478 Otras percepciones empresariales (manual, part 1, line 22058). This placement is derived, as no source names the casilla.
+- Foral residents: refused, because Modelo 100 and 130 of the AEAT do not apply to them (Concierto art. 6, Convenio art. 9).
+- Accumulated limit: amortization never exceeds the amortizable value (V2498-24; TEAC RG 653/2025, 18/12/2025, for rented property, reported by secondary sources and not read in the original).
+
+### Not read in the original
+
+- TEAC 01524/2017 and RG 653/2025, read through secondary reports.
+- BOE resolution convalidating RDL 7/2026, reported by INAP as dated 26 March 2026.
+- Foral tables, because foral residents are refused.
 - No official worked example of a used asset was found. Twelve official worked examples for other cases exist and serve as independent oracles, including an accelerated part-year charge of 720, a leasing limit of 3,840, a módulos bar of 6,050 and an agrarian case of 11,185.
 
 ## Sources
