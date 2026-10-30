@@ -57,6 +57,11 @@ cadrumo-platform = { path = "../../platform", features = ["webview2"] }
 cadrumo-installer = { path = "../../installer" }
 cadrumo-interpreter-host = { path = "../../interpreter_host" }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+# The graphical login session the window and its instance lock belong to,
+# admitted as the manager admits its own process.
+cadrumo-manager = { path = "../../manager" }
+
 [lints.rust]
 unsafe_code = "forbid"
 

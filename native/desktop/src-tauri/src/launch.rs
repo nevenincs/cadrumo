@@ -8,6 +8,7 @@ pub enum Mode {
     Cli(Vec<OsString>),
 }
 
+/// Whether this process runs in a session that can show a window.
 pub fn desktop_available() -> bool {
     #[cfg(windows)]
     {
@@ -19,10 +20,22 @@ pub fn desktop_available() -> bool {
             .iter()
             .any(|name| std::env::var_os(name).is_some_and(|v| !v.is_empty()))
     }
-    #[cfg(not(any(windows, target_os = "linux")))]
+    #[cfg(target_os = "macos")]
     {
-        false
+        graphical_session().is_ok()
     }
+}
+
+/// The kernel audit session of this process, when the Security framework
+/// reports it as a local graphical login. A remote or background session,
+/// such as an SSH login, has no window server access and is refused, as is
+/// any failure to establish the session, so the launch falls back to the
+/// CLI. The admission is the one the manager applies to its own process.
+#[cfg(target_os = "macos")]
+pub fn graphical_session() -> std::io::Result<u32> {
+    use cadrumo_manager::macos::{login::Login, process::Process};
+    let process = Process::open(std::process::id())?;
+    Ok(Login::open()?.current(&process)?.id())
 }
 
 pub fn select(mut arguments: Vec<OsString>, desktop: bool) -> Result<Mode> {

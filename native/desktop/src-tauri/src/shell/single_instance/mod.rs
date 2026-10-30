@@ -28,17 +28,13 @@ use tauri::{Config, Manager, Runtime, Window};
 
 #[cfg(windows)]
 use cadrumo_platform::desktop::{InstanceClaim, InstanceLock, claim_instance};
-#[cfg(target_os = "linux")]
-mod linux;
-#[cfg(target_os = "linux")]
-use linux::{InstanceClaim, InstanceLock, claim_instance};
-/// No other platform runs the GUI, so no lock exists there.
-#[cfg(not(any(windows, target_os = "linux")))]
-type InstanceLock = std::convert::Infallible;
+#[cfg(unix)]
+mod posix;
+#[cfg(unix)]
+use posix::{InstanceClaim, InstanceLock, claim_instance};
 
 /// How long a second launch waits for the open window to acknowledge it, or
 /// for a closing one to release the lock.
-#[cfg(any(windows, target_os = "linux"))]
 const PATIENCE: std::time::Duration = std::time::Duration::from_secs(10);
 
 /// The generated configuration the Tauri context is compiled from, read here
@@ -59,7 +55,6 @@ pub enum Admission {
 
 /// The standard error line of a launch whose window is open in another
 /// session. A protocol token, not operator text.
-#[cfg(any(windows, target_os = "linux", test))]
 const OTHER_SESSION_REPORT: &str = "{\"outcome\":\"open_in_other_session\"}";
 
 /// The held instance lock. Dropping it releases the lock.
@@ -92,7 +87,6 @@ impl Default for State {
 
 impl Activation {
     /// Answers one request, returning whether it was accepted.
-    #[cfg(any(windows, target_os = "linux", test))]
     fn request(&self) -> bool {
         let Ok(mut state) = self.state.lock() else {
             return false;
@@ -178,7 +172,6 @@ fn admit_with(mode: &Mode, family: impl FnOnce() -> Result<String>) -> Result<Ad
     Ok(admission)
 }
 
-#[cfg(any(windows, target_os = "linux"))]
 fn claim(family: &str) -> Result<Admission> {
     admitted(
         claim_instance(family, PATIENCE),
@@ -188,7 +181,6 @@ fn claim(family: &str) -> Result<Admission> {
 
 /// The admission a lock claim grants, reporting a window open in another
 /// session on `report`.
-#[cfg(any(windows, target_os = "linux"))]
 fn admitted(
     claim: std::io::Result<InstanceClaim>,
     report: &mut dyn std::io::Write,
@@ -227,19 +219,10 @@ fn admitted(
 /// one of the lock's names first. On Windows the names are predictable, and
 /// the platform refuses an object this user does not own, cannot open with
 /// full access, or that has another type under the lock name, as permission
-/// denied. On Linux that kind means the runtime directory is open to other
-/// accounts, which is a different refusal.
-#[cfg(any(windows, target_os = "linux"))]
+/// denied. On POSIX that kind means the instance directory is open to other
+/// accounts or was replaced, which is a different refusal.
 fn foreign(error: &std::io::Error) -> bool {
     cfg!(windows) && error.kind() == std::io::ErrorKind::PermissionDenied
-}
-
-#[cfg(not(any(windows, target_os = "linux")))]
-fn claim(_family: &str) -> Result<Admission> {
-    Err(ApplicationError::new(
-        ErrorCode::UnsupportedPlatform,
-        Operation::Launch,
-    ))
 }
 
 /// Refuses a running configuration whose identity differs from the one the
