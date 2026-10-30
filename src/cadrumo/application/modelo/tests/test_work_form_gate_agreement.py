@@ -170,11 +170,11 @@ def _agrees(operation: PinnedAuthorityOperation, note: _Note | None) -> None:
         assert blocking_lines, note
         return
     attention = None if note is None else note_attention(note.reason, box=None if note.casilla_id is None else "x")
-    if attention in {None, ModeloFormAttention.CHECK, ModeloFormAttention.INFO}:
-        # Nothing the gate admits that only asks to be checked holds the file back.
+    if attention in {None, ModeloFormAttention.MISSING, ModeloFormAttention.CHECK, ModeloFormAttention.INFO}:
+        # A verified declaration can still name information left out without withholding the file.
         assert hold is None and offered, (note, hold, step)
     else:
-        # A note the check or the export decides on its own, or a value still missing, keeps the file back here too.
+        # A note the check or the export decides on its own keeps the file back here too.
         assert not offered, (note, step)
 
 
@@ -187,6 +187,25 @@ def test_every_note_kind_holds_the_file_exactly_where_the_export_and_filing_gate
     operation: PinnedAuthorityOperation, note: _Note
 ) -> None:
     _agrees(operation, note)
+
+
+@pytest.mark.parametrize(
+    "reason",
+    ["activity_asset_foral_territory", "activity_asset_residence_unresolved", "ledger_amortization_row_unregistered"],
+)
+def test_omitted_amortization_is_shown_without_holding_a_checked_return(
+    operation: PinnedAuthorityOperation, reason: str
+) -> None:
+    unit = _work_unit(operation)
+    revision = _revision(unit, _Note(reason).issue())
+    form = _checked_form(operation, revision)
+
+    assert _gate_admits(unit, revision, operation)
+    (note,) = form.calculation_notes
+    assert note.reason == reason and note.attention is ModeloFormAttention.MISSING and not note.withholds_filing
+    assert any(line.level is ModeloFormAttention.MISSING for line in form_issue_lines(form, OutputLanguage.EN))
+    assert export_hold(form, OutputLanguage.EN, verified=True, recorded=False) is None
+    assert form_next_step(form, verified=True, filed=False).action is ModeloFormNextAction.EXPORT
 
 
 def test_an_unresolved_working_figure_is_worth_checking_yet_held_as_the_gates_hold_it(
