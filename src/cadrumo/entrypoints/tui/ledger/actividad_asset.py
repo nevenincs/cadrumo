@@ -18,6 +18,7 @@ from ....application.actividad_asset.activity_asset_read_models import (
     ActivityAssetDisposalCalculationView,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
+    ActivityAssetPlanRow,
     ActivityAssetTimelineEvent,
 )
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
@@ -83,6 +84,19 @@ _READ_BUTTON_LOCALE_KEYS = {
     "asset-disposal-calculate": "tui.ledger.activity_asset.disposal_calculate",
     "asset-acquisition-candidates": "tui.ledger.activity_asset.acquisition_candidates",
 }
+
+
+def _minimum_amortization_fields(row: ActivityAssetPlanRow) -> str:
+    """Label the served minimum amortization, naming a year without authority rather than hiding it.
+
+    A figure from an incomplete walk leaves a year out, so it carries the word
+    for incomplete instead of reading as the whole minimum.
+    """
+    figure = row.minimum_through.decimal if row.minimum_through is not None else ""
+    fields = [tr("tui.ledger.activity_asset.plan_minimum"), figure]
+    if not row.minimum_complete:
+        fields.append(tr("tui.ledger.activity_asset.plan_minimum_incomplete"))
+    return "	".join(fields)
 
 
 @dataclass(frozen=True, slots=True)
@@ -502,7 +516,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                         ),
                         *(
                             f"{row.tax_year}\t{row.planned.decimal if row.planned else row.absence or ''}"
-                            f"\t{row.claimed.decimal}\t{row.claim_state.value}"
+                            f"\t{row.claimed.decimal}\t{row.claim_state.value}\t{_minimum_amortization_fields(row)}"
                             for row in plan.rows or ()
                         ),
                     ),

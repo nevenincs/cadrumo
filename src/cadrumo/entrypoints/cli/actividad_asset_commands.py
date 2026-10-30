@@ -6,9 +6,11 @@ import typer
 from pydantic import BaseModel, TypeAdapter
 
 from ...application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
+from ...application.actividad_asset.activity_asset_read_models import ActivityAssetPlanRow
 from ...application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
 from ...application.operations.public_scalar import PublicDecimal
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.i18n.render import tr
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason, PriorFreeDepreciationRegime
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...domain.renta.actividad_asset.register_records import AcquisitionDocumentKind, ActivityAssetDescriptorFacts
@@ -367,10 +369,23 @@ def actividad_asset_plan(ctx: typer.Context, asset_id: str) -> None:
         result,
         *(
             f"{row.tax_year}\t{row.planned.decimal if row.planned else row.absence or ''}"
-            f"\t{row.claimed.decimal}\t{row.claim_state.value}"
+            f"\t{row.claimed.decimal}\t{row.claim_state.value}\t{_minimum_amortization_fields(row)}"
             for row in result.rows or ()
         ),
     )
+
+
+def _minimum_amortization_fields(row: ActivityAssetPlanRow) -> str:
+    """Label the served minimum amortization, naming a year without authority rather than hiding it.
+
+    A figure from an incomplete walk leaves a year out, so it carries the word
+    for incomplete instead of reading as the whole minimum.
+    """
+    figure = row.minimum_through.decimal if row.minimum_through is not None else ""
+    fields = [tr("cli.ledger.actividad_asset.plan_minimum"), figure]
+    if not row.minimum_complete:
+        fields.append(tr("cli.ledger.actividad_asset.plan_minimum_incomplete"))
+    return "\t".join(fields)
 
 
 def actividad_asset_timeline(ctx: typer.Context, asset_id: str) -> None:

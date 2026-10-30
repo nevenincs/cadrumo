@@ -38,10 +38,12 @@ from ...domain.renta.actividad_asset.election import (
     ElectionReference,
     EvidenceReference,
     LowValueElection,
+    OriginalPriceDetermination,
     PlanAnnualAmount,
     PlanApprovalKind,
     RenewableSelfConsumptionEvidence,
     SmallEnterpriseEvidence,
+    UsedAssetOriginalPrice,
 )
 from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import (
@@ -276,6 +278,29 @@ class SmallEnterpriseEvidenceSnapshot(BaseModel):
         )
 
 
+class UsedAssetOriginalPriceSnapshot(BaseModel):
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    determination: OriginalPriceDetermination
+    original_price: PublicDecimal
+    evidence_reference: EvidenceReference | None = None
+
+    @classmethod
+    def from_domain(cls, value: UsedAssetOriginalPrice) -> Self:
+        return cls(
+            determination=value.determination,
+            original_price=project_scalar(value.original_price),
+            evidence_reference=value.evidence_reference,
+        )
+
+    def to_domain(self) -> UsedAssetOriginalPrice:
+        return UsedAssetOriginalPrice(
+            determination=self.determination,
+            original_price=Decimal(self.original_price.decimal),
+            evidence_reference=self.evidence_reference,
+        )
+
+
 class LowValueElectionSnapshot(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -315,6 +340,7 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
     research_development_evidence_reference: EvidenceReference | None = None
     charging_infrastructure: ChargingInfrastructureEvidence | None = None
     renewable_self_consumption: RenewableSelfConsumptionEvidence | None = None
+    used_original_price: UsedAssetOriginalPriceSnapshot | None = None
 
     @classmethod
     def from_domain(cls, value: ActivityAssetAmortizationElection) -> Self:
@@ -346,6 +372,11 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
             research_development_evidence_reference=value.research_development_evidence_reference,
             charging_infrastructure=value.charging_infrastructure,
             renewable_self_consumption=value.renewable_self_consumption,
+            used_original_price=(
+                UsedAssetOriginalPriceSnapshot.from_domain(value.used_original_price)
+                if value.used_original_price is not None
+                else None
+            ),
         )
 
     def to_domain(self) -> ActivityAssetAmortizationElection:
@@ -365,6 +396,7 @@ class ActivityAssetAmortizationElectionSnapshot(BaseModel):
             research_development_evidence_reference=self.research_development_evidence_reference,
             charging_infrastructure=self.charging_infrastructure,
             renewable_self_consumption=self.renewable_self_consumption,
+            used_original_price=self.used_original_price.to_domain() if self.used_original_price is not None else None,
         )
 
     @model_validator(mode="after")

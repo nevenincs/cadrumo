@@ -2773,6 +2773,9 @@ cli:
         iban: 'IBAN: '
         swift_bic: 'SWIFT-BIC: '
       unchanged: 'No change: the register already held these values.'
+    actividad_asset:
+      plan_minimum: Minimum amortization
+      plan_minimum_incomplete: incomplete
     add:
       account_help: Own bank account the movement belongs to, by its id (e.g. acc-01).
       actor_help: Your name, recorded on the bucket event

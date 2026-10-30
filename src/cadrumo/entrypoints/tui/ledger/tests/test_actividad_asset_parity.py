@@ -425,6 +425,26 @@ async def test_activity_asset_screen_reaches_describe_and_every_register_read() 
 
 
 @pytest.mark.asyncio
+async def test_activity_asset_plan_labels_the_minimum_amortization_and_flags_an_incomplete_one() -> None:
+    revision = activity_asset_revision("tui-plan-minimum")
+    screen = _screen(ActivityAssetActionStub(revision))
+    app = ScreenHostApp[None](screen)
+
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(100, 60)) as pilot:
+            screen.query_one("#asset-id", Input).value = revision.asset_id
+            await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
+            plan = await _wait_for_screen_result(
+                pilot=pilot, screen=screen, expected_prefix="equipo-informacion-software"
+            )
+
+    lines = plan.splitlines()
+    # The served figure is shown as served, and only the year that omitted a year's minimum says so.
+    assert "2025	520.00	0.00	not_due	Minimum amortization	130.00" in lines
+    assert "2036	period_elapsed	0.00	not_due	Minimum amortization	130.00	incomplete" in lines
+
+
+@pytest.mark.asyncio
 async def test_activity_asset_screen_records_a_baja_and_reads_its_figures() -> None:
     revision = activity_asset_revision("tui-baja")
     actions = ActivityAssetActionStub(revision)

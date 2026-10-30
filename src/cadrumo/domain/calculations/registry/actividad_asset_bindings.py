@@ -532,13 +532,17 @@ def _resolve_linear(parameters: _Parameters, asset_revision: ActivityAssetRevisi
     references = list(bounds.references)
     used_key = f"{election.regime.value}:{asset_revision.asset_kind.value}"
     used_multiplier = parameters.keyed(_USED_MULTIPLIER_ID, used_key)
+    original_price = election.used_original_price
+    if original_price is not None:
+        _require_original_price_route(parameters, asset_revision, bounds.class_key, used_multiplier)
     if used_multiplier is not None and _is_used_for_amortization(parameters, asset_revision, bounds.class_key):
         if election.shift_hours_per_day is not None:
             raise ActividadAssetUnsupportedError(
                 translated_message="ledger.actividad_asset.errors.multi_shift_with_used_asset_unsupported",
             )
-        maximum *= used_multiplier
-        references.append(parameters.reference(_USED_MULTIPLIER_ID, used_key))
+        if original_price is None:
+            maximum *= used_multiplier
+            references.append(parameters.reference(_USED_MULTIPLIER_ID, used_key))
     if election.small_enterprise is not None:
         maximum *= _small_enterprise_multiplier(parameters, asset_revision, references)
     if election.shift_hours_per_day is not None:
@@ -555,13 +559,45 @@ def _resolve_linear(parameters: _Parameters, asset_revision: ActivityAssetRevisi
         maximum = bounds.minimum + (bounds.maximum - bounds.minimum) * election.shift_hours_per_day / shift_hours
         references.append(parameters.reference(_SHIFT_HOURS_ID, election.regime.value))
     coefficient = _elected_coefficient(election, minimum=bounds.minimum, maximum=maximum)
-    return _Resolution(
-        method_facts={
-            "annual_rate": min(coefficient, Decimal("1")),
-            "maximum_period_ends_on": add_fractional_years(asset_revision.in_service_date, bounds.period_years),
-        },
-        references=tuple(references),
-    )
+    method_facts: dict[str, object] = {
+        "annual_rate": min(coefficient, Decimal("1")),
+        "maximum_period_ends_on": add_fractional_years(asset_revision.in_service_date, bounds.period_years),
+    }
+    if original_price is not None:
+        method_facts["original_price_basis"] = original_price.original_price * asset_revision.basis.allocation_share()
+    return _Resolution(method_facts=method_facts, references=tuple(references))
+
+
+def _require_original_price_route(
+    parameters: _Parameters,
+    asset_revision: ActivityAssetRevision,
+    class_key: str,
+    used_multiplier: Decimal | None,
+) -> None:
+    """Refuse an originating-price election unless RIS art. 4.3 treats the element as used.
+
+    The article's letters b and c apply to an element "adquirido usado" and
+    exempt a building under ten years old from being one.  Where the edition
+    enrols no used-asset rule for the modality there is no authority to judge
+    that by, so the election refuses rather than assuming the article applies.
+    """
+    election = asset_revision.amortization
+    context = {"asset_id": asset_revision.asset_id, "regime": election.regime.value}
+    if asset_revision.acquired_condition is not AcquiredCondition.USED:
+        raise ActividadAssetUnsupportedError(
+            context=context,
+            translated_message="ledger.actividad_asset.errors.used_original_price_requires_used_asset",
+        )
+    if used_multiplier is None:
+        raise ActividadAssetUnsupportedError(
+            context=context,
+            translated_message="ledger.actividad_asset.errors.used_original_price_not_enrolled",
+        )
+    if not _is_used_for_amortization(parameters, asset_revision, class_key):
+        raise ActividadAssetUnsupportedError(
+            context=context,
+            translated_message="ledger.actividad_asset.errors.used_original_price_requires_used_asset",
+        )
 
 
 def _small_enterprise_multiplier(

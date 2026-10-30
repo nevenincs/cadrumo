@@ -4929,6 +4929,11 @@ ledger:
         el RIRPF art. 22.4 (a)-(e); en caso contrario debe usarse exclusivamente para
         la actividad.
       vehicle_shared_use: Un vehículo compartido entre la actividad y las necesidades
+      used_original_price_not_enrolled: La base del precio originario del RIS art.
+        4.3 no está habilitada para la modalidad %{regime}.
+      used_original_price_requires_used_asset: El RIS art. 4.3.b y 4.3.c toman el
+        precio originario como base solo para un elemento adquirido usado. Un elemento
+        nuevo, o un edificio de menos de diez años, no lo es.
         privadas no es un elemento afecto, y un vehículo no puede estar afecto parcialmente
         (RIRPF art. 22.2.1º y 22.3; LIRPF art. 29.2).
       workforce_fell_below: La plantilla media de los 24 meses posteriores al inicio
@@ -6115,6 +6120,8 @@ tui:
       choose_entry: Elige un apunte
       locked: Bloqueado
       never_captured: Aún sin leer
+      plan_minimum: Amortización mínima
+      plan_minimum_incomplete: incompleta
       stale: Desactualizado
       unavailable: No disponible
     categorisation:

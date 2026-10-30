@@ -2955,6 +2955,9 @@ cli:
         iban: 'IBAN: '
         swift_bic: 'SWIFT-BIC: '
       unchanged: 'Nincs változás: a nyilvántartás már ezeket az értékeket tartalmazta.'
+    actividad_asset:
+      plan_minimum: Minimális értékcsökkenés
+      plan_minimum_incomplete: hiányos
     add:
       account_help: A saját bankszámla, amelyhez a mozgás tartozik, azonosítója szerint
         (pl. acc-01).

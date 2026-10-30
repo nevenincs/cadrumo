@@ -2983,6 +2983,9 @@ cli:
         iban: 'IBAN: '
         swift_bic: 'SWIFT-BIC: '
       unchanged: 'Sense canvis: el registre ja tenia aquests valors.'
+    actividad_asset:
+      plan_minimum: Amortització mínima
+      plan_minimum_incomplete: incompleta
     add:
       account_help: Compte bancari propi al qual pertany el moviment, pel seu id (p.
         ex. acc-01).

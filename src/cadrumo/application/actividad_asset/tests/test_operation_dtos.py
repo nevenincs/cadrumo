@@ -29,6 +29,8 @@ from cadrumo.domain.renta.actividad_asset.election import (
     ActivityAssetAmortizationElection,
     AmortizationMethod,
     DirectEstimationRegime,
+    OriginalPriceDetermination,
+    UsedAssetOriginalPrice,
 )
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -115,6 +117,29 @@ def test_public_asset_snapshots_roundtrip_every_decimal_bearing_history_fact() -
     assert ActivityAssetHistorySnapshot.model_validate_json(history_snapshot.model_dump_json()).to_domain() == history
     assert '"basis_amount":{"decimal":"300.00"}' in revision_snapshot.model_dump_json()
     assert '"amount":{"decimal":"78.00"}' in schedule_snapshot.model_dump_json()
+
+
+def test_a_used_assets_original_price_election_roundtrips_as_a_public_decimal() -> None:
+    revision = _revision().model_copy(
+        update={
+            "acquired_condition": AcquiredCondition.USED,
+            "amortization": ActivityAssetAmortizationElection(
+                regime=DirectEstimationRegime.NORMAL,
+                method=AmortizationMethod.LINEAR,
+                authority_class_key="maquinaria",
+                used_original_price=UsedAssetOriginalPrice(
+                    determination=OriginalPriceDetermination.EXPERT_VALUATION,
+                    original_price=Decimal("25000.00"),
+                    evidence_reference="valuation-report-2025-001",
+                ),
+            ),
+        },
+    )
+
+    snapshot = ActivityAssetRevisionSnapshot.from_domain(revision)
+
+    assert '"original_price":{"decimal":"25000.00"}' in snapshot.model_dump_json()
+    assert ActivityAssetRevisionSnapshot.model_validate_json(snapshot.model_dump_json()).to_domain() == revision
 
 
 def test_filing_handoff_snapshots_preserve_decimal_claim_projections() -> None:

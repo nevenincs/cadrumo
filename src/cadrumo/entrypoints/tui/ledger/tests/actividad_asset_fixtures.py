@@ -200,6 +200,7 @@ class ActivityAssetActionStub:
                     planned=PublicDecimal(decimal="520.00"),
                     claimed=PublicDecimal(decimal="0.00"),
                     claim_state=ActivityAssetClaimState.NOT_DUE,
+                    minimum_through=PublicDecimal(decimal="130.00"),
                 ),
                 ActivityAssetPlanRow(
                     tax_year=2036,
@@ -207,6 +208,8 @@ class ActivityAssetActionStub:
                     absence=PlanFigureAbsence.PERIOD_ELAPSED,
                     claimed=PublicDecimal(decimal="0.00"),
                     claim_state=ActivityAssetClaimState.NOT_DUE,
+                    minimum_through=PublicDecimal(decimal="130.00"),
+                    minimum_complete=False,
                 ),
             ),
             limits=ActivityAssetElectionLimits(

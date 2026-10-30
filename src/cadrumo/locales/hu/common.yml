@@ -4905,6 +4905,11 @@ ledger:
         használható.
       vehicle_shared_use: A tevékenység és magáncélok között megosztott jármű nem
         tartozik a tevékenységhez kötött eszközök közé, és egy jármű nem köthető részlegesen
+      used_original_price_not_enrolled: A RIS 4.3 cikk szerinti eredeti ár alap nincs
+        bevezetve a(z) %{regime} módozatra.
+      used_original_price_requires_used_asset: A RIS 4.3.b és 4.3.c cikke az eredeti
+        árat csak használtan szerzett elemnél veszi alapul. Az új elem, illetve a
+        tíz évnél fiatalabb épület nem ilyen.
         a tevékenységhez (RIRPF 22.2.1º és 22.3 cikk; LIRPF 29.2 cikk).
       workforce_fell_below: Az üzembe állítás évének kezdetét követő 24 hónap átlagos
         létszáma elmarad az azt megelőző 12 hónapétól (LIS DA 17a.1).
@@ -6084,6 +6089,8 @@ tui:
       choose_entry: Válassz tételt
       locked: Zárolva
       never_captured: Még nincs beolvasva
+      plan_minimum: Minimális értékcsökkenés
+      plan_minimum_incomplete: hiányos
       stale: Elavult
       unavailable: Nem érhető el
     categorisation:

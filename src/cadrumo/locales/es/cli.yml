@@ -3002,6 +3002,9 @@ cli:
         iban: 'IBAN: '
         swift_bic: 'SWIFT-BIC: '
       unchanged: 'Sin cambios: el registro ya tenía estos valores.'
+    actividad_asset:
+      plan_minimum: Amortización mínima
+      plan_minimum_incomplete: incompleta
     add:
       account_help: Cuenta bancaria propia a la que pertenece el movimiento, por su
         id (p. ej. acc-01).

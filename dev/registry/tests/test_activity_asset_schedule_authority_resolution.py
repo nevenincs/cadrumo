@@ -46,12 +46,14 @@ from cadrumo.domain.renta.actividad_asset.election import (
     DigitOrder,
     DirectEstimationRegime,
     LowValueElection,
+    OriginalPriceDetermination,
     PlanAnnualAmount,
     PlanApprovalKind,
     RenewableDocumentationKind,
     RenewableInstallationPurpose,
     RenewableSelfConsumptionEvidence,
     SmallEnterpriseEvidence,
+    UsedAssetOriginalPrice,
 )
 from cadrumo.domain.renta.actividad_asset.errors import (
     ActividadAssetClaimConflictError,
@@ -309,6 +311,153 @@ def test_a_building_under_ten_years_old_is_not_a_used_asset() -> None:
     assert old.amount == Decimal("6000.00")  # exactly ten years old: 100,000 x (2 x 3%)
     with _refused(ActividadAssetIncompleteError, "used_building_requires_construction_date"):
         _charge(_asset(_linear("edificio-industrial"), basis="100000", condition=AcquiredCondition.USED))
+
+
+# --- Used elements on their originating price (RIS art. 4.3.b and 4.3.c) --------------------
+#
+# RIS art. 4.3: "Tratandose de elementos patrimoniales del inmovilizado material e inversiones
+# inmobiliarias que se adquieran usados, es decir, que no sean puestos en condiciones de
+# funcionamiento por primera vez, el calculo de la amortizacion se efectuara de acuerdo con los
+# siguientes criterios:
+#   a) Sobre el precio de adquisicion, hasta el limite resultante de multiplicar por 2 la cantidad
+#      derivada de aplicar el coeficiente de amortizacion lineal maximo.
+#   b) Si se conoce el precio de adquisicion o coste de produccion originario, este podra ser
+#      tomado como base para la aplicacion del coeficiente de amortizacion lineal maximo.
+#   c) Si no se conoce el precio de adquisicion o coste de produccion originario, el contribuyente
+#      podra determinar aquel pericialmente. Establecido dicho precio [...] se procedera de
+#      acuerdo con lo previsto en la letra anterior."
+# [...] "A los efectos de este apartado no se consideraran como elementos patrimoniales usados los
+# edificios cuya antiguedad sea inferior a diez anos."
+#
+# Letter a doubles the coefficient on the acquisition price.  Letters b and c apply the single
+# maximum coefficient (machinery: 12%) to the originating price, so 30,000 x 12% = 3,600.
+
+
+def _original(
+    price: str,
+    determination: OriginalPriceDetermination = OriginalPriceDetermination.KNOWN,
+    evidence: str | None = None,
+) -> UsedAssetOriginalPrice:
+    return UsedAssetOriginalPrice(
+        determination=determination,
+        original_price=Decimal(price),
+        evidence_reference=evidence,
+    )
+
+
+def _used_machine(*, price: str = "30000.00", basis: str = "10000", **facts: object) -> ActivityAssetRevision:
+    return _asset(
+        _linear("maquinaria", used_original_price=_original(price), **facts),
+        basis=basis,
+        condition=AcquiredCondition.USED,
+    )
+
+
+def test_a_known_original_price_is_the_base_of_the_single_maximum_coefficient() -> None:
+    asset = _used_machine()
+    authority = resolve_activity_asset_schedule_authority(
+        _modelo_100(),
+        tax_year=2025,
+        asset_revision=asset,
+        authority_generation="candidate-source",
+        workforce=(),
+        legal_reference=_legal_reference,
+    )
+
+    assert authority.annual_rate == Decimal("0.12")  # the table maximum, not twice it
+    assert authority.original_price_basis == Decimal("30000.00")
+    assert _charge(asset).amount == Decimal("3600.00")  # 30,000 x 12%, against 2,400 on the doubled acquisition price
+    assert _charge(_used_machine(linear_coefficient=Decimal("0.10"))).amount == Decimal("3000.00")  # 30,000 x 10%
+
+
+def test_the_original_price_route_is_limited_to_the_undoubled_maximum() -> None:
+    at_maximum = _charge(_used_machine(linear_coefficient=Decimal("0.12")))
+
+    assert at_maximum.amount == Decimal("3600.00")
+    for above in ("0.1201", "0.24"):
+        with _refused(ActividadAssetValidationError, "elected_coefficient_out_of_range", maximum=Decimal("0.12")):
+            _charge(_used_machine(linear_coefficient=Decimal(above)))
+
+
+def test_the_original_price_route_never_charges_beyond_the_elements_own_basis() -> None:
+    # 100,000 x 12% = 12,000 would exceed the 10,000 the element cost, so only the cost remains.
+    assert _charge(_used_machine(price="100000.00")).amount == Decimal("10000.00")
+
+
+def test_an_expert_valuation_of_the_original_price_proceeds_as_a_known_price() -> None:
+    valuation = _original("25000.00", OriginalPriceDetermination.EXPERT_VALUATION, "valuation-report-2025-001")
+    asset = _asset(
+        _linear("maquinaria", used_original_price=valuation),
+        basis="10000",
+        condition=AcquiredCondition.USED,
+    )
+
+    assert _charge(asset).amount == Decimal("3000.00")  # 25,000 x 12%
+    with pytest.raises(ValueError, match="requires its evidence_reference"):
+        _original("25000.00", OriginalPriceDetermination.EXPERT_VALUATION)
+
+
+def test_a_change_of_original_price_is_a_change_of_election() -> None:
+    plain = _asset(_linear("maquinaria"), basis="10000", condition=AcquiredCondition.USED)
+
+    assert _used_machine(price="30000.00").amortization.fingerprint != (
+        _used_machine(price="31000.00").amortization.fingerprint
+    )
+    assert _used_machine().amortization.fingerprint != plain.amortization.fingerprint
+
+
+def test_an_original_price_is_a_fact_of_the_linear_method_only() -> None:
+    with pytest.raises(ValueError, match="not a fact of the constant_percentage method"):
+        _election(
+            AmortizationMethod.CONSTANT_PERCENTAGE,
+            authority_class_key="maquinaria",
+            used_original_price=_original("30000.00"),
+        )
+
+
+def test_the_original_price_route_refuses_an_element_that_is_not_used() -> None:
+    new_machine = _asset(
+        _linear("maquinaria", used_original_price=_original("30000.00")),
+        basis="10000",
+        condition=AcquiredCondition.NEW,
+    )
+
+    with _refused(ActividadAssetUnsupportedError, "used_original_price_requires_used_asset", asset_id="asset"):
+        _charge(new_machine)
+
+
+def test_the_original_price_route_refuses_a_modality_without_a_used_asset_rule() -> None:
+    simplified = _asset(
+        _linear("maquinaria", _SIMPLIFIED, used_original_price=_original("30000.00")),
+        basis="10000",
+        condition=AcquiredCondition.USED,
+    )
+
+    with _refused(ActividadAssetUnsupportedError, "used_original_price_not_enrolled", regime="simplified"):
+        _charge(simplified)
+
+
+def test_the_original_price_route_follows_the_ten_year_building_rule() -> None:
+    def building(built: date | None) -> ActivityAssetRevision:
+        return _asset(
+            _linear("edificio-industrial", used_original_price=_original("150000.00")),
+            basis="100000",
+            condition=AcquiredCondition.USED,
+            built=built,
+        )
+
+    # Exactly ten years old on the in-service date: used, so 150,000 x 3%.
+    assert _charge(building(date(2015, 1, 1))).amount == Decimal("4500.00")
+    # One day short of ten years: not a used element, so the route does not apply.
+    with _refused(ActividadAssetUnsupportedError, "used_original_price_requires_used_asset"):
+        _charge(building(date(2015, 1, 2)))
+    with _refused(ActividadAssetIncompleteError, "used_building_requires_construction_date"):
+        _charge(building(None))
+
+
+def test_the_original_price_route_does_not_combine_with_multi_shift_use() -> None:
+    with _refused(ActividadAssetUnsupportedError, "multi_shift_with_used_asset_unsupported"):
+        _charge(_used_machine(shift_hours_per_day=Decimal("16")))
 
 
 def test_multi_shift_coefficient_follows_the_hours_formula() -> None:

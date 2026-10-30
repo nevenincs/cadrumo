@@ -7,9 +7,15 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.actividad_asset.activity_asset_read_models import (
+    ActivityAssetClaimState,
+    ActivityAssetPlanRow,
+)
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
 from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
+from cadrumo.application.operations.public_scalar import PublicDecimal
+from cadrumo.core.config import override_settings
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -28,6 +34,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from cadrumo.entrypoints.cli.actividad_asset_commands import _minimum_amortization_fields
 from cadrumo.entrypoints.cli.actividad_asset_receipts import claim_receipt, inspection_receipt
 from cadrumo.entrypoints.cli.command_operation_table import COMMAND_OPERATION_ROWS
 from cadrumo.entrypoints.cli.command_schema import command_schema_type
@@ -251,3 +258,31 @@ def test_activity_asset_forecast_exposes_only_the_optional_free_depreciation_amo
     assert result.exit_code == 0
     assert "--free-depreciation-amount" in result.output
     assert "--selection-json" not in result.output
+
+
+@pytest.mark.parametrize(
+    ("language", "served", "complete", "expected"),
+    [
+        ("en", "130.00", True, "Minimum amortization\t130.00"),
+        ("en", "130.00", False, "Minimum amortization\t130.00\tincomplete"),
+        ("en", None, False, "Minimum amortization\t\tincomplete"),
+        ("es", "130.00", False, "Amortización mínima\t130.00\tincompleta"),
+    ],
+)
+def test_activity_asset_plan_lines_label_the_served_minimum_and_flag_an_incomplete_one(
+    language: str,
+    served: str | None,
+    complete: bool,
+    expected: str,
+) -> None:
+    row = ActivityAssetPlanRow(
+        tax_year=2025,
+        method=AmortizationMethod.LINEAR,
+        claimed=PublicDecimal(decimal="0.00"),
+        claim_state=ActivityAssetClaimState.NOT_DUE,
+        minimum_through=None if served is None else PublicDecimal(decimal=served),
+        minimum_complete=complete,
+    )
+
+    with override_settings(cadrumo_output_language=language):
+        assert _minimum_amortization_fields(row) == expected

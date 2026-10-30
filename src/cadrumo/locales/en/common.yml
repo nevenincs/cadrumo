@@ -4838,6 +4838,11 @@ ledger:
       vehicle_shared_use: A vehicle shared between the activity and private needs
         is not an affected asset, and a vehicle cannot be partially affected (RIRPF
         art. 22.2.1º and 22.3; LIRPF art. 29.2).
+      used_original_price_not_enrolled: The RIS art. 4.3 originating-price base is
+        not enrolled for the %{regime} modality.
+      used_original_price_requires_used_asset: RIS art. 4.3.b and 4.3.c take the originating
+        price as the base only for an element acquired used. A new element, or a building
+        under ten years old, is not one.
       workforce_fell_below: The average workforce of the 24 months after the entry
         year's start falls below that of the 12 months before (LIS DA 17a.1).
       workforce_increase_not_kept: The workforce increase is not kept for the further
@@ -5993,6 +5998,8 @@ tui:
       choose_entry: Choose an entry
       locked: Locked
       never_captured: Not read yet
+      plan_minimum: Minimum amortization
+      plan_minimum_incomplete: incomplete
       stale: Out of date
       unavailable: Unavailable
     categorisation:

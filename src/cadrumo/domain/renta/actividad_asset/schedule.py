@@ -120,6 +120,15 @@ class ScheduleAuthority(BaseModel):
     free_depreciation_annual_cap: Decimal | None = None
     free_depreciation_investment_cap: Decimal | None = None
     low_value: LowValueElection | None = None
+    original_price_basis: Decimal | None = None
+    """The allocated originating price a used element's rate applies to instead of its own basis."""
+
+    @field_validator("original_price_basis")
+    @classmethod
+    def _require_positive_original_price_basis(cls, value: Decimal | None) -> Decimal | None:
+        if value is not None and (not value.is_finite() or value <= Decimal("0")):
+            raise ValueError("original_price_basis must be a finite positive Decimal")
+        return value
 
     @field_validator("annual_rate")
     @classmethod
@@ -164,6 +173,8 @@ class ScheduleAuthority(BaseModel):
             if present != required:
                 state = "requires" if required else "cannot carry"
                 raise ValueError(f"{method.value} schedule authority {state} {field_name}")
+        if self.original_price_basis is not None and method is not AmortizationMethod.LINEAR:
+            raise ValueError(f"{method.value} schedule authority cannot carry original_price_basis")
         if method is AmortizationMethod.LOW_VALUE_FREE and self.asset_kind is not AssetKind.MATERIAL:
             raise ValueError("low-value free depreciation is limited to material assets")
         return self
@@ -171,7 +182,8 @@ class ScheduleAuthority(BaseModel):
     @property
     def fingerprint(self) -> str:
         """Return a stable digest of the governing authority selection."""
-        return content_hash_hex(self.model_dump(mode="json"))
+        absent_facts = {"original_price_basis"} if self.original_price_basis is None else set()
+        return content_hash_hex(self.model_dump(mode="json", exclude=absent_facts))
 
 
 class ScheduledAmortizationCharge(BaseModel):
@@ -542,8 +554,16 @@ def _annual_rate(context: _ChargeContext) -> Decimal:
 
 
 def _linear_amount(context: _ChargeContext) -> Decimal:
-    """Apply the lifecycle rule: basis x rate x service days / tax-year days."""
-    return _tax_year_cumulative_difference(context, context.amortizable_basis * _annual_rate(context))
+    """Apply the lifecycle rule: basis x rate x service days / tax-year days.
+
+    A used element whose originating price is the base (RIS art. 4.3.b-c)
+    applies the rate to that price; the charge still stops at what remains of
+    the element's own basis.
+    """
+    base = context.authority.original_price_basis
+    if base is None:
+        base = context.amortizable_basis
+    return _tax_year_cumulative_difference(context, base * _annual_rate(context))
 
 
 def _tax_year_cumulative_difference(context: _ChargeContext, annual_charge: Decimal) -> Decimal:

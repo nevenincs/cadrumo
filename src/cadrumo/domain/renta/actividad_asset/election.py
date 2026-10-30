@@ -98,6 +98,13 @@ class DigitOrder(StrEnum):
     ASCENDING = "ascending"
 
 
+class OriginalPriceDetermination(StrEnum):
+    """How the originating price of a used element is established (RIS art. 4.3.b-c)."""
+
+    KNOWN = "known"
+    EXPERT_VALUATION = "expert_valuation"
+
+
 class PlanApprovalKind(StrEnum):
     """How the administration accepted an amortization plan (RIS art. 7.6-7.7)."""
 
@@ -202,6 +209,37 @@ class SmallEnterpriseEvidence(BaseModel):
     @classmethod
     def _require_cents_turnover(cls, value: Decimal) -> Decimal:
         return require_euro_cents(value, allow_zero=True)
+
+
+class UsedAssetOriginalPrice(BaseModel):
+    """The originating price an element acquired used takes as the base of the maximum coefficient.
+
+    RIS art. 4.3.b lets a taxpayer who knows the original acquisition price or
+    production cost apply the maximum linear coefficient to it.  Art. 4.3.c
+    lets one who does not know it determine it by expert valuation and then
+    proceed as in letter b, so a valuation must name the report it rests on.
+    The price is the depreciable price of the whole element, land excluded.
+    The resolver applies the allocation share the asset's basis states, which
+    is one where that basis is already allocated, so the price of an
+    already-allocated basis is entered already allocated.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    determination: OriginalPriceDetermination
+    original_price: Decimal
+    evidence_reference: EvidenceReference | None = None
+
+    @field_validator("original_price")
+    @classmethod
+    def _require_positive_cents(cls, value: Decimal) -> Decimal:
+        return require_euro_cents(value, allow_zero=False, label="original_price")
+
+    @model_validator(mode="after")
+    def _validate_valuation_evidence(self) -> Self:
+        if self.determination is OriginalPriceDetermination.EXPERT_VALUATION and self.evidence_reference is None:
+            raise ValueError("an expert valuation of the original price requires its evidence_reference")
+        return self
 
 
 class LowValueElection(BaseModel):
@@ -313,6 +351,7 @@ class ActivityAssetAmortizationElection(BaseModel):
     research_development_evidence_reference: EvidenceReference | None = None
     charging_infrastructure: ChargingInfrastructureEvidence | None = None
     renewable_self_consumption: RenewableSelfConsumptionEvidence | None = None
+    used_original_price: UsedAssetOriginalPrice | None = None
 
     @field_validator("linear_coefficient")
     @classmethod
@@ -337,6 +376,7 @@ class ActivityAssetAmortizationElection(BaseModel):
             {AmortizationMethod.LINEAR, AmortizationMethod.CONSTANT_PERCENTAGE},
         )
         self._admit("shift_hours_per_day", self.shift_hours_per_day, {AmortizationMethod.LINEAR})
+        self._admit("used_original_price", self.used_original_price, {AmortizationMethod.LINEAR})
         self._admit(
             "small_enterprise",
             self.small_enterprise,
@@ -416,7 +456,8 @@ class ActivityAssetAmortizationElection(BaseModel):
     @property
     def fingerprint(self) -> str:
         """Return the stable identity used to judge a change of method."""
-        return content_hash_hex(self.model_dump(mode="json"))
+        absent_facts = {"used_original_price"} if self.used_original_price is None else set()
+        return content_hash_hex(self.model_dump(mode="json", exclude=absent_facts))
 
 
 __all__ = [
@@ -433,10 +474,12 @@ __all__ = [
     "ElectionReference",
     "EvidenceReference",
     "LowValueElection",
+    "OriginalPriceDetermination",
     "PlanAnnualAmount",
     "PlanApprovalKind",
     "RenewableDocumentationKind",
     "RenewableInstallationPurpose",
     "RenewableSelfConsumptionEvidence",
     "SmallEnterpriseEvidence",
+    "UsedAssetOriginalPrice",
 ]

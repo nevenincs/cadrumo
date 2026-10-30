@@ -4922,6 +4922,11 @@ ledger:
       vehicle_shared_use: Un vehicle compartit entre l'activitat i les necessitats
         privades no és un element afecte, i un vehicle no pot estar afecte parcialment
         (RIRPF art. 22.2.1º i 22.3; LIRPF art. 29.2).
+      used_original_price_not_enrolled: La base del preu originari del RIS art. 4.3
+        no està habilitada per a la modalitat %{regime}.
+      used_original_price_requires_used_asset: El RIS art. 4.3.b i 4.3.c prenen el
+        preu originari com a base només per a un element adquirit usat. Un element
+        nou, o un edifici de menys de deu anys, no ho és.
       workforce_fell_below: La plantilla mitjana dels 24 mesos posteriors a l'inici
         de l'any d'entrada en funcionament queda per sota de la dels 12 mesos anteriors
         (LIS DA 17a.1).
@@ -6106,6 +6111,8 @@ tui:
       choose_entry: Tria un apunt
       locked: Bloquejat
       never_captured: Encara sense llegir
+      plan_minimum: Amortització mínima
+      plan_minimum_incomplete: incompleta
       stale: Desactualitzat
       unavailable: No disponible
     categorisation:
