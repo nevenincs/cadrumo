@@ -29,6 +29,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from cadrumo.entrypoints.cli.actividad_asset_receipts import claim_receipt, inspection_receipt
+from cadrumo.entrypoints.cli.command_operation_table import COMMAND_OPERATION_ROWS
 from cadrumo.entrypoints.cli.command_schema import command_schema_type
 from cadrumo.entrypoints.cli.common import resolve_cli_precondition_action
 
@@ -43,6 +44,71 @@ def test_activity_asset_group_exposes_the_shared_operation_set() -> None:
     assert result.exit_code == 0
     for token in ("create", "inspect", "correct", "forecast", "claim", "filing-handoff"):
         assert token in result.output
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["describe", "list", "plan", "timeline", "form-options", "acquisition-candidates"],
+)
+def test_activity_asset_read_and_describe_commands_are_registered_to_their_operations(command: str) -> None:
+    group = invoke_cached_cli(["app", "ledger", "actividad-asset", "--help"])
+    assert group.exit_code == 0
+    assert command in group.output
+
+    result = invoke_cached_cli(["app", "ledger", "actividad-asset", command, "--help"])
+    assert result.exit_code == 0
+
+    assert dict(COMMAND_OPERATION_ROWS)[("app", "ledger", "actividad-asset", command)] == (
+        f"ledger.actividad-asset.{command}"
+    )
+
+
+def test_activity_asset_read_and_describe_commands_resolve_registered_output_schemas() -> None:
+    expected = {
+        "describe": "ActivityAssetHistoryPayload",
+        "list": "ActivityAssetReadPayload",
+        "plan": "ActivityAssetReadPayload",
+        "timeline": "ActivityAssetReadPayload",
+        "form_options": "ActivityAssetReadPayload",
+        "acquisition_candidates": "ActivityAssetReadPayload",
+    }
+
+    for command, schema_name in expected.items():
+        assert command_schema_type(f"ledger.actividad_asset.{command}").__name__ == schema_name
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["describe", "asset-1", "--name", "Portatil"],
+        ["list"],
+        ["plan", "asset-1"],
+        ["timeline", "asset-1"],
+        ["form-options", "--asset-kind", "material", "--tax-year", "2025"],
+        ["acquisition-candidates"],
+    ],
+)
+def test_activity_asset_read_and_describe_commands_refuse_without_an_active_profile(argv: list[str]) -> None:
+    result = invoke_cached_cli(["app", "ledger", "actividad-asset", *argv])
+
+    assert result.exit_code != 0
+    assert "No hay un perfil activo" in result.output
+
+
+@pytest.mark.parametrize("command", ["plan", "timeline", "describe"])
+def test_activity_asset_asset_commands_require_the_positional_asset_id(command: str) -> None:
+    result = invoke_cached_cli(["app", "ledger", "actividad-asset", command])
+
+    assert result.exit_code != 0
+    assert "No hay un perfil activo" not in result.output
+
+
+def test_activity_asset_form_options_refuses_an_unknown_asset_kind() -> None:
+    result = invoke_cached_cli(
+        ["app", "ledger", "actividad-asset", "form-options", "--asset-kind", "vehicle-fleet", "--tax-year", "2025"]
+    )
+
+    assert result.exit_code != 0
 
 
 def test_activity_asset_commands_resolve_strict_registered_output_schemas() -> None:
