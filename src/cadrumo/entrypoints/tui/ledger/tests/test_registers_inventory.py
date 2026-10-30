@@ -314,7 +314,7 @@ async def test_a_purchase_document_is_stored_with_no_inventory_chosen_and_no_dig
                 isinstance(item, InventoryEvidenceAddRequest) and item.source_path == "invoice.pdf"
                 for item in door.requests
             )
-            assert f"attachment:{'d' * 64}" in _text(screen, "#register-result")
+            assert f"document-{'d' * 64}" in _text(screen, "#register-result")
 
 
 @pytest.mark.asyncio

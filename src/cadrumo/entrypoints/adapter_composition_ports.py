@@ -492,6 +492,7 @@ def build_inventory_service_ports(*, bucket_id: str) -> InventoryServicePorts:
     """Compose the encrypted inventory repository and bucket-event sink."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
+    from ..adapters.persistence.profile.inventory_documents import attachment_source_file_name
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.inventory.ports import InventoryServicePorts
 
@@ -507,6 +508,7 @@ def build_inventory_service_ports(*, bucket_id: str) -> InventoryServicePorts:
     return InventoryServicePorts(
         inventory_repository_factory=inventory_repository_factory,
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+        document_file_name=lambda content_digest: attachment_source_file_name(objects, content_digest),
     )
 
 

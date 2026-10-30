@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
@@ -120,6 +121,7 @@ class InventoryAcquisitionDocumentProjection(BaseModel):
     reference: str
     evidence_kind: InventoryAcquisitionEvidenceKind
     content_digest: str
+    file_name: str | None = None
 
 
 class InventoryAcquisitionDetailProjection(BaseModel):
@@ -136,7 +138,9 @@ class InventoryAcquisitionDetailProjection(BaseModel):
     iva_recoverability_review_evidence: str
 
     @classmethod
-    def from_acquisition(cls, acquisition: InventoryAcquisitionCost) -> InventoryAcquisitionDetailProjection:
+    def from_acquisition(
+        cls, acquisition: InventoryAcquisitionCost, *, document_file_names: Mapping[str, str]
+    ) -> InventoryAcquisitionDetailProjection:
         """Project what correcting this purchase would otherwise ask for again."""
         return cls(
             consideration_iva_amount=PublicDecimal(decimal=str(acquisition.consideration_iva_amount)),
@@ -159,6 +163,7 @@ class InventoryAcquisitionDetailProjection(BaseModel):
                     reference=item.reference.reference,
                     evidence_kind=item.evidence_kind,
                     content_digest=item.content_digest,
+                    file_name=document_file_names.get(str(item.content_digest)),
                 )
                 for item in acquisition.evidence
             ),
@@ -189,7 +194,11 @@ class InventoryMovementProjection(BaseModel):
 
     @classmethod
     def from_movement(
-        cls, movement: MovementRecord, *, with_acquisition_detail: bool = False
+        cls,
+        movement: MovementRecord,
+        *,
+        with_acquisition_detail: bool = False,
+        document_file_names: Mapping[str, str] | None = None,
     ) -> InventoryMovementProjection:
         """Project one movement; its evidence payloads are excluded unless asked for by name."""
         acquisition = movement.acquisition_cost
@@ -224,7 +233,9 @@ class InventoryMovementProjection(BaseModel):
             ),
             schema_version=movement.schema_version,
             acquisition_detail=(
-                InventoryAcquisitionDetailProjection.from_acquisition(acquisition)
+                InventoryAcquisitionDetailProjection.from_acquisition(
+                    acquisition, document_file_names=document_file_names or {}
+                )
                 if with_acquisition_detail and acquisition is not None
                 else None
             ),
@@ -328,6 +339,7 @@ class InventoryLedgerProjection(BaseModel):
         *,
         bucket_event_ids: tuple[str, ...] = (),
         with_acquisition_detail: bool = False,
+        document_file_names: Mapping[str, str] | None = None,
     ) -> InventoryLedgerProjection:
         """Project every public ledger field while excluding evidence payloads."""
         record = ledger.closing_authority_record
@@ -359,7 +371,11 @@ class InventoryLedgerProjection(BaseModel):
             ),
             closing_authority_fingerprints=fingerprints,
             period_movements=tuple(
-                InventoryMovementProjection.from_movement(item, with_acquisition_detail=with_acquisition_detail)
+                InventoryMovementProjection.from_movement(
+                    item,
+                    with_acquisition_detail=with_acquisition_detail,
+                    document_file_names=document_file_names,
+                )
                 for item in ledger.period_movements
             ),
             schema_version=ledger.schema_version,

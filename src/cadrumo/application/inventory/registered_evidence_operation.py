@@ -49,7 +49,8 @@ INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID = "ledger.inventory.evidence.add"
 
 _PERSON_FRONTEND_ACTOR = "cli"
 """The audit label of a document a person's frontend adds; an automation's is derived from its session."""
-_REFERENCE_PREFIX = "attachment:"
+_REFERENCE_PREFIX = "document-"
+"""Not ``attachment:``: command output masks that form as an object key, and a purchase must quote this."""
 _EvidencePath = Annotated[str, Field(min_length=1, max_length=4_096)]
 
 

@@ -352,6 +352,78 @@ def test_native_inventory_create_list_movement_and_preview_use_profile_worker(
         assert len(preview_payload["bucket_event_ids"]) == 1
 
 
+def test_native_inventory_inspect_names_held_documents_and_the_list_does_not(tmp_path: Path) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-inventory-names", facts=_PROFILE_FACTS)
+        assert _create_ledger(profile, "act-names").exit_code == 0
+        held: dict[str, tuple[str, str]] = {}
+        for kind, name in (
+            ("purchase_invoice", "private-invoice.pdf"),
+            ("attributable_cost_review", "private-cost-check.pdf"),
+            ("iva_recoverability_review", "private-iva-check.pdf"),
+        ):
+            source = tmp_path / name
+            source.write_bytes(f"%PDF-1.7 synthetic {name}".encode())
+            stored = _invoke(profile, "app", "ledger", "inventory", "evidence-add", str(source))
+            assert stored.exit_code == 0, stored.output
+            answer = unwrap_cli_result(stored)
+            assert str(tmp_path) not in stored.output
+            held[kind] = (answer["reference"], answer["content_digest"])
+        cost = {
+            "consideration_excluding_iva": "55.00",
+            "consideration_iva_amount": "11.55",
+            "consideration_deductible_iva_ratio": "1.00",
+            "attributable_cost_components": [],
+            "evidence": [
+                {"reference": {"reference": reference}, "evidence_kind": kind, "content_digest": digest}
+                for kind, (reference, digest) in held.items()
+            ],
+            "completeness": {
+                "consideration_evidence": {"reference": held["purchase_invoice"][0]},
+                "attributable_cost_review_evidence": {"reference": held["attributable_cost_review"][0]},
+                "iva_recoverability_review_evidence": {"reference": held["iva_recoverability_review"][0]},
+            },
+        }
+        purchase = _invoke(
+            profile,
+            "app",
+            "ledger",
+            "inventory",
+            "movement",
+            "add",
+            "--actividad-id",
+            "act-names",
+            "--year",
+            "2026",
+            "--movement-id",
+            "named-purchase",
+            "--date",
+            "2026-03-15",
+            "--kind",
+            "purchase",
+            "--quantity",
+            "10",
+            "--acquisition-cost-stdin",
+            input_text=json.dumps(cost),
+        )
+        assert purchase.exit_code == 0, purchase.output
+        assert "private-invoice" not in purchase.output
+
+        inspected = _invoke(profile, "app", "ledger", "inventory", "inspect", "act-names", "--year", "2026")
+        assert inspected.exit_code == 0, inspected.output
+        detail = unwrap_cli_result(inspected)["period_movements"][0]["acquisition_detail"]
+        assert {item["evidence_kind"]: item["file_name"] for item in detail["documents"]} == {
+            "purchase_invoice": "private-invoice.pdf",
+            "attributable_cost_review": "private-cost-check.pdf",
+            "iva_recoverability_review": "private-iva-check.pdf",
+        }
+        assert str(tmp_path) not in inspected.output
+
+        listed = _invoke(profile, "app", "ledger", "inventory", "list")
+        assert listed.exit_code == 0, listed.output
+        assert "private-invoice" not in listed.output
+
+
 def test_native_inventory_document_of_a_type_not_kept_is_refused_in_its_own_words(tmp_path: Path) -> None:
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-inventory-document", facts=_PROFILE_FACTS)

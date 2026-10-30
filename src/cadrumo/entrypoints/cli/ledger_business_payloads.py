@@ -127,6 +127,7 @@ class InventoryAcquisitionDocumentPayload(OutputSchema):
     reference: NonEmptyStr
     evidence_kind: NonEmptyStr
     content_digest: NonEmptyStr
+    file_name: str | None = None
 
 
 class InventoryAcquisitionDetailPayload(OutputSchema):

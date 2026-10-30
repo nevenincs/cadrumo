@@ -85,6 +85,8 @@ class InventoryServicePorts:
 
     inventory_repository_factory: InventoryRepositoryFactory
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
+    document_file_name: Callable[[str], str | None]
+    """The name a held document arrived under, by digest; ``None`` when none is held."""
 
 
 class InventoryServicePortsFactory(Protocol):

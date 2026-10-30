@@ -127,6 +127,7 @@ def test_inventory_events_persist_version_one(tmp_path: Path) -> None:
                 inventory_repository_factory=lambda bucket_id: InventoryLedgerRepository(
                     objects=secure_object_repository_for_bucket(bucket_id, profile.settings),
                 ),
+                document_file_name=lambda _digest: None,
                 bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
             ),
         ).create(

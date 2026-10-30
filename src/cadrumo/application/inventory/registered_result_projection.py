@@ -177,7 +177,11 @@ def project_inventory_inspect_result(
     return InventoryInspectProjection(
         outcome="found",
         profile_id=profile_id,
-        ledger=InventoryLedgerProjection.from_ledger(ledger_result.ledger, with_acquisition_detail=True),
+        ledger=InventoryLedgerProjection.from_ledger(
+            ledger_result.ledger,
+            with_acquisition_detail=True,
+            document_file_names=dict(ledger_result.document_file_names),
+        ),
     )
 
 

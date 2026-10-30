@@ -135,6 +135,7 @@ class InventoryLedgerResult(BaseModel):
 
     ledger: InventoryLedger
     bucket_event_ids: tuple[str, ...] = ()
+    document_file_names: tuple[tuple[str, str], ...] = ()
     changed: bool = True
 
 
@@ -246,6 +247,7 @@ class InventoryService:
         """Bind the required application-owned inventory capabilities."""
         self._event_repository = ports.bucket_event_repository
         self._repository_factory = ports.inventory_repository_factory
+        self._document_file_name = ports.document_file_name
 
     def _repository_for(self, bucket_id: str) -> InventoryLedgerServiceRepositoryProtocol:
         return self._repository_factory(bucket_id)
@@ -345,6 +347,17 @@ class InventoryService:
             )
             for ledger in document.ledgers
         )
+
+    def document_file_names(self, ledger: InventoryLedger) -> tuple[tuple[str, str], ...]:
+        """Pair each held purchase document's digest with its name; one without a name is left out."""
+        digests = {
+            str(item.content_digest)
+            for movement in ledger.period_movements
+            if movement.acquisition_cost is not None
+            for item in movement.acquisition_cost.evidence
+        }
+        named = ((digest, self._document_file_name(digest)) for digest in sorted(digests))
+        return tuple((digest, name) for digest, name in named if name is not None)
 
     def show(self, *, bucket_id: str, actividad_id: str, year: int) -> InventoryLedger:
         """Return the exact :class:`InventoryLedger` for ``actividad_id`` and ``year``.

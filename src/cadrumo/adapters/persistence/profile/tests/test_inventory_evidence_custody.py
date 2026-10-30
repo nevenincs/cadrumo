@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.inventory_documents import attachment_source_file_name
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
     LedgerEvidenceRepositoryAdapter,
@@ -54,6 +55,26 @@ def test_the_digest_is_the_files_own_and_no_invoice_record_appears(
 
     assert str(digest) == hashlib.sha256(source.read_bytes()).hexdigest()
     assert ports.evidence_repository.load(bucket_id=BUCKET_ID) == ()
+
+
+def test_a_held_document_answers_its_name_without_its_folder(
+    secure_objects: SecureObjectRepository, tmp_path: Path
+) -> None:
+    source = tmp_path / "cost-check.pdf"
+    source.write_bytes(b"%PDF-1.7 synthetic named cost check")
+    digest = ingest_evidence_file(
+        ports=_ports(secure_objects),
+        bucket_id=BUCKET_ID,
+        admitted=admit_evidence_file(str(source), None),
+        now=_AT,
+        actor="cli",
+    )
+
+    assert attachment_source_file_name(secure_objects, str(digest)) == "cost-check.pdf"
+
+
+def test_a_document_never_held_has_no_name(secure_objects: SecureObjectRepository) -> None:
+    assert attachment_source_file_name(secure_objects, "a" * 64) is None
 
 
 def test_the_same_file_twice_is_the_same_document(secure_objects: SecureObjectRepository, tmp_path: Path) -> None:

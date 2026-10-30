@@ -263,8 +263,9 @@ class InventoryOperationExecutor:
     ) -> str | OperationRefusalEvidence:
         async def read() -> str | OperationRefusalEvidence:
             try:
+                service = self._service(profile_id)
                 ledger = await asyncio.to_thread(
-                    lambda: self._service(profile_id).show(
+                    lambda: service.show(
                         bucket_id=profile,
                         actividad_id=request.actividad_id,
                         year=request.year,
@@ -283,11 +284,12 @@ class InventoryOperationExecutor:
                 detail_ref = await context.operands.put(execution, written_at=now())
                 await context.events.effect(OperationEffect.NONE)
                 return OperationRefusalEvidence(refusal_code=refusal.code, detail_ref=detail_ref)
+            file_names = await asyncio.to_thread(service.document_file_names, ledger)
             result = InventoryOperationExecutionResult(
                 operation_id="inspect",
                 outcome="success",
                 profile_id=profile_id,
-                ledger_result=InventoryLedgerResult(ledger=ledger, changed=False),
+                ledger_result=InventoryLedgerResult(ledger=ledger, changed=False, document_file_names=file_names),
             )
             reference = await context.operands.put(result, written_at=now())
             await context.events.effect(OperationEffect.NONE)

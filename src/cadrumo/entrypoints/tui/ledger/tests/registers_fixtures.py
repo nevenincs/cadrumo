@@ -723,7 +723,7 @@ class MemoryInventoryDoor:
         return InventoryEvidenceAddProjection(
             outcome="stored",
             profile_id=request.profile_id,
-            reference=f"attachment:{'d' * 64}",
+            reference=f"document-{'d' * 64}",
             content_digest="d" * 64,
         )
 
