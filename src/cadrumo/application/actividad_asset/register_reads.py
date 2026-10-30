@@ -56,6 +56,7 @@ from .activity_asset_read_models import (
     project_reason_facts,
     timeline_token_key,
 )
+from .disposal_calculation import DisposalBoundsReader, year_minimum
 from .history import ActivityAssetHistory
 from .ports import ActivityAssetForecastOperation
 from .schedule_walk import PlanFigureAbsence, WalkedYear, walk_element
@@ -84,6 +85,7 @@ class RegisterReadContext:
     edition: Callable[[int], ActivityAssetEdition]
     admits_filing_year: Callable[[int], bool]
     today: date
+    minimum_bounds: DisposalBoundsReader
 
 
 def _walk_to_settlement(revision: ActivityAssetRevision, context: RegisterReadContext) -> tuple[WalkedYear, ...]:
@@ -181,8 +183,15 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
         The rows in year order.  A year with no figure carries its typed reason.
     """
     rows: list[ActivityAssetPlanRow] = []
+    boundary = date.max if revision.disposal is None else revision.disposal.boundary
+    basis = round_to_cents(revision.amortizable_basis())
+    minimum = Decimal("0")
+    minimum_complete = True
     for row in _walk_to_settlement(revision, context):
         intervals, refusal_key = _claimable(revision, row, context.history)
+        year = _minimum_or_none(revision, row.tax_year, boundary, context)
+        minimum_complete = minimum_complete and year is not None
+        minimum += year or Decimal("0")
         rows.append(
             ActivityAssetPlanRow(
                 tax_year=row.tax_year,
@@ -200,6 +209,8 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
                 service_days=None if row.charge is None else row.charge.service_days,
                 calendar_days=None if row.charge is None else row.charge.calendar_days,
                 claims=_plan_claims(revision.asset_id, row.tax_year, context.history.claims),
+                minimum_through=_amount(min(basis, round_to_cents(minimum))),
+                minimum_complete=minimum_complete,
             ),
         )
     return tuple(rows)
@@ -257,6 +268,19 @@ def election_limits(
         maximum_period_ends_on=ends_on,
         legal_references=references,
     )
+
+
+def _minimum_or_none(
+    revision: ActivityAssetRevision,
+    tax_year: int,
+    boundary: date,
+    context: RegisterReadContext,
+) -> Decimal | None:
+    try:
+        bounds = context.minimum_bounds(revision, tax_year)
+    except RegistryError:
+        return None
+    return year_minimum(revision, tax_year=tax_year, boundary=boundary, bounds=bounds)
 
 
 def _edition_or_none(context: RegisterReadContext, tax_year: int) -> ActivityAssetEdition | None:

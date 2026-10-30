@@ -98,14 +98,13 @@ def _year_facts(
     start, end = date(tax_year, 1, 1), date(tax_year + 1, 1, 1)
     calendar_days = (end - start).days
     service_days = _overlap_days(revision.in_service_date, disposal.boundary, start, end)
-    base = revision.amortizable_basis()
     share_of_year = Decimal(service_days) / calendar_days
-    minimum = None if bounds.minimum_coefficient is None else base * bounds.minimum_coefficient * share_of_year
-    if bounds.useful_life_ends_on is not None:
-        life_days = (bounds.useful_life_ends_on - revision.in_service_date).days
-        lived = _overlap_days(revision.in_service_date, min(disposal.boundary, bounds.useful_life_ends_on), start, end)
-        minimum = base * lived / life_days
-    maximum = None if bounds.maximum_coefficient is None else base * bounds.maximum_coefficient * share_of_year
+    minimum = year_minimum(revision, tax_year=tax_year, boundary=disposal.boundary, bounds=bounds)
+    maximum = (
+        None
+        if bounds.maximum_coefficient is None
+        else revision.amortizable_basis() * bounds.maximum_coefficient * share_of_year
+    )
     claims = tuple(
         claim
         for claim in effective_claims(history.claims)
@@ -118,6 +117,30 @@ def _year_facts(
         maximum_charge=maximum,
         claim_gap=bool(uncovered_claim_intervals(revision, history.claims, start=start, end=end)),
     )
+
+
+def year_minimum(
+    revision: ActivityAssetRevision,
+    *,
+    tax_year: int,
+    boundary: date,
+    bounds: ActivityAssetDisposalBounds,
+) -> Decimal | None:
+    """Work out one service year's minimum amortization, unrounded; ``None`` when no authority supplies it.
+
+    This is what reduces cost at a baja under RIRPF art. 40.  It is never taken from
+    the value still deductible.
+    """
+    start, end = date(tax_year, 1, 1), date(tax_year + 1, 1, 1)
+    base = revision.amortizable_basis()
+    if bounds.useful_life_ends_on is not None:
+        life_days = (bounds.useful_life_ends_on - revision.in_service_date).days
+        lived = _overlap_days(revision.in_service_date, min(boundary, bounds.useful_life_ends_on), start, end)
+        return base * lived / life_days
+    if bounds.minimum_coefficient is None:
+        return None
+    share_of_year = Decimal(_overlap_days(revision.in_service_date, boundary, start, end)) / (end - start).days
+    return base * bounds.minimum_coefficient * share_of_year
 
 
 def _overlap_days(first: date, last: date, start: date, end: date) -> int:
@@ -173,4 +196,5 @@ __all__ = [
     "calculate_element_disposal",
     "pinned_disposal_bounds",
     "project_disposal_calculation",
+    "year_minimum",
 ]

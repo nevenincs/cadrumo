@@ -7,18 +7,21 @@ no claim until 2025.  Each full year charges 1,000.00.  The value pending on 1 J
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetClaimState
+from cadrumo.application.actividad_asset.disposal_calculation import DisposalBoundsReader
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.application.actividad_asset.schedule_walk import (
     M130ElementOutcome,
     PlanFigureAbsence,
     m130_register_accruals,
 )
+from cadrumo.domain.calculations.registry.actividad_asset_bindings import ActivityAssetDisposalBounds
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -116,13 +119,22 @@ def _forecast(
     )
 
 
-def _operations(*, revision: ActivityAssetRevision, today: date = date(2025, 6, 30)) -> ActivityAssetOperations:
+def _one_eighteenth(_revision: ActivityAssetRevision, _tax_year: int) -> ActivityAssetDisposalBounds:
+    return ActivityAssetDisposalBounds(minimum_coefficient=Decimal(1) / Decimal(18))
+
+
+def _operations(
+    *,
+    revision: ActivityAssetRevision,
+    today: date = date(2025, 6, 30),
+    bounds: DisposalBoundsReader = _one_eighteenth,
+) -> ActivityAssetOperations:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
         ledger=MemoryLedger(_ACQUISITION),
         forecast_operation=_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=today),
+        register_authority=replace(memory_register_authority(today=today), disposal_bounds=bounds),
     )
     operations.create(revision, ActivityAssetDescriptorFacts(name="Machine"))
     return operations
@@ -149,6 +161,40 @@ def test_plan_and_forecast_agree_on_the_charge_and_pending_value_after_unclaimed
     assert planned.decimal == "1000.00"
     assert listed.pending is not None
     assert listed.pending.decimal == "10000.00"
+
+
+def test_the_minimum_to_date_is_shown_apart_and_never_lowers_the_value_pending() -> None:
+    operations = _operations(revision=_revision())
+
+    rows = {row.tax_year: row for row in operations.plan(_ASSET)}
+    (listed,) = operations.list_elements()
+
+    # 10,000 / 18 = 555.5555 a full year; five years sum to 2,777.78, rounded once.
+    assert rows[2024].minimum_through is not None
+    assert rows[2024].minimum_through.decimal == "2777.78"
+    assert rows[2024].minimum_complete is True
+    assert listed.pending is not None
+    assert listed.pending.decimal == "10000.00"
+    assert _year(operations, 2025).amount == Decimal("1000.00")
+
+
+def test_a_year_without_minimum_authority_says_the_figure_leaves_it_out() -> None:
+    def from_2022(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
+        return _one_eighteenth(revision, tax_year) if tax_year >= 2022 else ActivityAssetDisposalBounds()
+
+    rows = {row.tax_year: row for row in _operations(revision=_revision(), bounds=from_2022).plan(_ASSET)}
+
+    assert rows[2024].minimum_through is not None
+    assert rows[2024].minimum_through.decimal == "1666.67"
+    assert rows[2024].minimum_complete is False
+
+
+def test_the_minimum_to_date_stops_at_the_basis() -> None:
+    rows = _operations(revision=_revision(), today=date(2039, 1, 1)).plan(_ASSET)
+
+    figures = {row.tax_year: row.minimum_through for row in rows}
+    assert figures[2038] is not None
+    assert figures[2038].decimal == "10000.00"
 
 
 def test_an_unclaimed_past_year_shows_as_missing_with_its_figure_and_takes_nothing() -> None:

@@ -199,6 +199,10 @@ class ActivityAssetPlanRow(_ReadModel):
     service_days: int | None = None
     calendar_days: int | None = None
     claims: tuple[ActivityAssetPlanClaim, ...] = ()
+    minimum_through: PublicDecimal | None = None
+    """Minimum amortization from entry to this year's end, which reduces cost at a baja and not the value pending."""
+    minimum_complete: bool = True
+    """False when a year up to this one has no minimum authority, so ``minimum_through`` leaves it out."""
 
 
 class ActivityAssetElectionLimits(_ReadModel):

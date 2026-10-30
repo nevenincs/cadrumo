@@ -610,6 +610,7 @@ class ActivityAssetOperations:
             edition=lambda tax_year: self._authority.edition(tax_year)[0],
             admits_filing_year=self._authority.admits_filing_year,
             today=self._authority.today(),
+            minimum_bounds=self._authority.disposal_bounds,
         )
 
     def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
