@@ -128,6 +128,11 @@ class ViewDownstreamReader:
         self._assembler = ViewImageAssembler()
         self._transfers = transfers
 
+    @property
+    def assembling(self) -> bool:
+        """Whether an announced image still awaits chunks."""
+        return self._assembler.assembling
+
     def read(
         self, *, deadline: float
     ) -> ViewState | ViewNotice | ViewClosed | AssembledViewImage | ViewTransferDownstreamDocument | ViewTransferChunk:

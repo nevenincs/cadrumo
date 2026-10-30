@@ -435,10 +435,11 @@ def test_view_images_without_window_credit_are_dropped_not_buffered(lane: _Lane)
     assert delivered.announcement.sequence == 3
 
 
-def test_view_worker_image_without_credit_is_a_violation_not_buffered(tmp_path: Path) -> None:
-    identity = _synthetic_identity()
-    operation_id, session_id = _operation_id(), uuid4()
-    endpoint = worker_endpoint(storage_root=tmp_path, worker_namespace=worker_view_namespace(identity.worker_id))
+def _open_scripted_worker(
+    storage_root: Path, identity: ProfileWorkerIdentity, bind: ViewWorkerBind
+) -> tuple[WorkerEndpoint, WorkerChannel, WorkerChannel]:
+    """A worker the test writes frame by frame: its endpoint, its end of the leg, and the host's end."""
+    endpoint = worker_endpoint(storage_root=storage_root, worker_namespace=worker_view_namespace(identity.worker_id))
     endpoint.listen()
     accepted: list[WorkerChannel] = []
 
@@ -453,25 +454,32 @@ def test_view_worker_image_without_credit_is_a_violation_not_buffered(tmp_path: 
             deadline=time.monotonic() + 5,
         )
         write_document(channel, identity, deadline=time.monotonic() + 5)
-        write_document(
-            channel, ViewWorkerBind(operation_id=operation_id, session_id=session_id), deadline=time.monotonic() + 5
-        )
+        write_document(channel, bind, deadline=time.monotonic() + 5)
 
-    worker = Thread(target=serve)
-    worker.start()
-    relay = ViewStreamRelay(runtime_boot_id=identity.runtime_boot_id, holds_session=lambda _c, _s: True)
-    bind, channel = open_worker_view_leg(
-        storage_root=tmp_path, identity=identity, verify=_same_process_worker, product_version=_VERSION
+    serving = Thread(target=serve)
+    serving.start()
+    opened, host_end = open_worker_view_leg(
+        storage_root=storage_root, identity=identity, verify=_same_process_worker, product_version=_VERSION
     )
-    worker.join()
+    serving.join()
+    assert opened == bind
+    return endpoint, accepted[0], host_end
+
+
+def test_view_worker_image_without_credit_is_a_violation_not_buffered(tmp_path: Path) -> None:
+    identity = _synthetic_identity()
+    operation_id, session_id = _operation_id(), uuid4()
+    bind = ViewWorkerBind(operation_id=operation_id, session_id=session_id)
+    endpoint, worker, channel = _open_scripted_worker(tmp_path, identity, bind)
+    relay = ViewStreamRelay(runtime_boot_id=identity.runtime_boot_id, holds_session=lambda _c, _s: True)
     try:
         relay.bind_worker(profile_id=identity.binding.profile_id, bind=bind, channel=channel)
         announcement, data = _image(1)
 
         def push_uncredited_image() -> None:
             for frame in view_image_frames(announcement, data):
-                accepted[0].write_all(frame, deadline=time.monotonic() + 5)
-            read_document(accepted[0], ViewCredit, deadline=time.monotonic() + 5)
+                worker.write_all(frame, deadline=time.monotonic() + 5)
+            read_document(worker, ViewCredit, deadline=time.monotonic() + 5)
 
         # The host refuses at the announcement and closes the leg, so the image never finds a reader.
         with pytest.raises(RefusalError):
@@ -479,7 +487,7 @@ def test_view_worker_image_without_credit_is_a_violation_not_buffered(tmp_path: 
         _wait_until(lambda: relay.worker_bind(operation_id) is None)
     finally:
         relay.close()
-        accepted[0].close()
+        worker.close()
         endpoint.close()
 
 
@@ -532,6 +540,145 @@ def test_view_session_retirement_unbinds_both_legs_at_once(lane: _Lane, retire: 
     _wait_until(lambda: lane.sink.ended)
     with pytest.raises(ProfileAccessRefusedError):
         lane.relay.issue(lane.grant(peer=window.server.peer))
+
+
+_IMAGE_IN_CHUNKS = 3 * 65_520 - 100
+"""An image of three chunks, so a worker can stall with one written and two to come."""
+
+_STALL_SECONDS = 1.5
+"""Longer than the bound on writing the notice itself, so a notice that gives up early would have by now."""
+
+
+@dataclass(kw_only=True)
+class _ScriptedLane(_Views):
+    """The relay's view served by a worker the test writes frame by frame."""
+
+    worker: WorkerChannel
+
+
+@pytest.fixture
+def scripted_lane(tmp_path: Path) -> Iterator[_ScriptedLane]:
+    identity = _synthetic_identity()
+    operation_id, session_id, person_id = _operation_id(), uuid4(), uuid4()
+    held = {(person_id, session_id)}
+    clock = _Clock()
+    relay = ViewStreamRelay(
+        runtime_boot_id=identity.runtime_boot_id,
+        holds_session=lambda connection, session: (connection, session) in held,
+        clock=clock,
+    )
+    bind = ViewWorkerBind(operation_id=operation_id, session_id=session_id)
+    endpoint, worker, channel = _open_scripted_worker(tmp_path, identity, bind)
+    relay.bind_worker(profile_id=identity.binding.profile_id, bind=bind, channel=channel)
+    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=_RUNTIME_NAMESPACE)
+    runtime.listen()
+    built = _ScriptedLane(
+        root=tmp_path,
+        relay=relay,
+        clock=clock,
+        identity=identity,
+        operation_id=operation_id,
+        session_id=session_id,
+        person_id=person_id,
+        runtime=runtime,
+        held=held,
+        worker=worker,
+    )
+    try:
+        yield built
+    finally:
+        relay.close()
+        worker.close()
+        endpoint.close()
+        for window in built.windows:
+            window.client.close()
+            window.server.close()
+        runtime.close()
+
+
+def _read_until_end(window: _Window) -> tuple[list[object], Thread]:
+    """Everything the window reads, on its own thread, until it is told the view closed or the connection ends.
+
+    A refusal ends the list with its reason.
+    """
+    received: list[object] = []
+
+    def read_all() -> None:
+        while True:
+            try:
+                item = window.read()
+            except RefusalError as ended:
+                received.append(ended.reason)
+                return
+            received.append(item)
+            if isinstance(item, ViewClosed):
+                return
+
+    reading = Thread(target=read_all, daemon=True)
+    reading.start()
+    return received, reading
+
+
+def _start_image_and_stall(lane: _ScriptedLane, window: _Window) -> tuple[bytes, list[bytes]]:
+    """Credit one image and write its announcement and first chunk, which the host passes on to the window.
+
+    The host's forwarder then holds the window's writer in the middle of the image's chunk run, waiting for the
+    worker's next chunk. Returns the image and the frames the worker still owes.
+    """
+    window.send(ViewCredit(images=1))
+    read_document(lane.worker, ViewCredit, deadline=time.monotonic() + 5)
+    announcement, data = _image(1, size=_IMAGE_IN_CHUNKS)
+    frames = list(view_image_frames(announcement, data))
+    assert len(frames) == 4
+    for frame in frames[:2]:
+        lane.worker.write_all(frame, deadline=time.monotonic() + 5)
+    return data, frames[2:]
+
+
+def test_view_session_retirement_tells_the_window_after_an_image_the_worker_has_stalled_in(
+    scripted_lane: _ScriptedLane,
+) -> None:
+    window = scripted_lane.attach()
+    received, reading = _read_until_end(window)
+    data, owed = _start_image_and_stall(scripted_lane, window)
+    # The window has the announcement, so the forwarder holds its writer inside the image's chunk run.
+    _wait_until(lambda: window.reader.assembling)
+
+    retired = Thread(target=scripted_lane.relay.unbind_sessions, args=((scripted_lane.session_id,),), daemon=True)
+    retired.start()
+    # The stalled worker keeps the forwarder inside the image, and sign-out waits for it rather than
+    # writing between chunks or giving the notice up.
+    retired.join(timeout=_STALL_SECONDS)
+    assert retired.is_alive(), "the notice was written or abandoned while the image was still being forwarded"
+
+    for frame in owed:
+        scripted_lane.worker.write_all(frame, deadline=time.monotonic() + 5)
+    reading.join(timeout=5)
+    retired.join(timeout=5)
+    assert not reading.is_alive()
+    assert not retired.is_alive()
+    # The whole image first, then the reason: the window is never told in the middle of a picture.
+    assert len(received) == 2
+    image, notice = received
+    assert isinstance(image, AssembledViewImage)
+    assert image.data == data
+    assert notice == ViewClosed(reason=ViewClosedReason.SESSION_RETIRED)
+    assert scripted_lane.relay.worker_bind(scripted_lane.operation_id) is None
+
+
+def test_view_window_is_not_told_inside_an_image_the_worker_never_finishes(scripted_lane: _ScriptedLane) -> None:
+    window = scripted_lane.attach()
+    received, reading = _read_until_end(window)
+    _start_image_and_stall(scripted_lane, window)
+    _wait_until(lambda: window.reader.assembling)
+
+    scripted_lane.worker.close()
+    reading.join(timeout=5)
+    assert not reading.is_alive()
+    # No document fits between an image's chunks: the window sees the partial image end with the connection,
+    # never a notice that would be a violation of the stream.
+    assert received == [RefusalCode.CONNECTION_CLOSED]
+    _wait_until(lambda: scripted_lane.relay.worker_bind(scripted_lane.operation_id) is None)
 
 
 def test_view_person_connection_close_unbinds_only_the_window(lane: _Lane) -> None:

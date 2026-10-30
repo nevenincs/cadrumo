@@ -49,6 +49,10 @@ class ViewWindowLeg:
     ready: bool = False
     unbound: bool = False
     close_sent: bool = False
+    frames: int = 0
+    """Frames written to the window; a writer holding the lock that stops adding to it has stalled."""
+    mid_image: bool = False
+    """Whether the window has an announced image whose chunks have not all been written."""
 
 
 @dataclass(slots=True)

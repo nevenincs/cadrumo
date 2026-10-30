@@ -36,8 +36,12 @@ operation ends (the worker's ``view.closed``, whose acknowledgement is the
 host closing the worker leg), when the submitting session is retired or
 locked, when the person connection that asked for the token closes, on a
 violation, and when the runtime stops. Unbinding closes the window leg after
-a best-effort ``view.closed``. Frames, documents and tokens are private and
-never logged; diagnostics carry only closed reason codes.
+``view.closed``, which tells the window why. A window cannot be told inside an
+image's chunk run, so the notice waits for the image being forwarded to
+finish; it is dropped, and the window sees only the close, when that image can
+no longer be completed or its forwarder stops making progress. Frames,
+documents and tokens are private and never logged; diagnostics carry only
+closed reason codes.
 """
 
 from __future__ import annotations
@@ -107,7 +111,14 @@ write, and a worker that went away fails it.
 """
 
 _CLOSING_SECONDS = 1.0
-"""The best-effort ``view.closed`` to a window being unbound; its close follows regardless."""
+"""The write of ``view.closed`` to a window being unbound; its close follows regardless."""
+
+_WRITER_PROGRESS_SECONDS = 2 * _FRAME_SECONDS
+"""How long a window's frame writer may hold it without finishing a frame before it is given up on.
+
+A forwarded image's chunk takes at most one read from the worker and one write
+to the window, each bounded by ``_FRAME_SECONDS``.
+"""
 
 _WORKER_KINDS = frozenset({DOCUMENT_FRAME_KIND, VIEW_CHUNK_FRAME_KIND})
 
@@ -355,7 +366,7 @@ class ViewStreamRelay:
         diagnostic_event(_LOGGER, "view_unbound", fields={"reason": reason.value}, level=10)
 
     def _unbind_window(self, leg: ViewWindowLeg, reason: ViewClosedReason | None) -> None:
-        """Detach the window at once, tell it why when its writer is free, and close it."""
+        """Detach the window at once, tell it why between frames, and close it."""
         with self._guard:
             if leg.unbound:
                 return
@@ -365,16 +376,40 @@ class ViewStreamRelay:
             if worker is not None and worker.window is leg:
                 worker.window = None
         leg.stopping.set()
-        # A writer mid-image holds the lock; closing the channel then cancels its write.
-        if reason is not None and leg.write_lock.acquire(timeout=_CLOSING_SECONDS):
-            try:
-                closing = ViewClosed(reason=reason)
-                # The close follows whether or not the window still reads.
-                with contextlib.suppress(RefusalError):
-                    write_view_document(leg.channel, closing, deadline=time.monotonic() + _CLOSING_SECONDS)
-            finally:
-                leg.write_lock.release()
+        if reason is not None:
+            self._tell_window(leg, reason)
         _close_quietly(leg.channel)
+
+    def _tell_window(self, leg: ViewWindowLeg, reason: ViewClosedReason) -> None:
+        """Write ``view.closed`` once the window's writer is between frames, never inside an image's chunk run.
+
+        A forward in progress finishes its image first: the window refuses a
+        document between an image's chunks, so cutting the writer short would
+        make the notice a violation. The wait lasts while the writer keeps
+        finishing frames.
+        """
+        if not self._await_writer(leg):
+            return
+        try:
+            if leg.mid_image:
+                return
+            # The close follows whether or not the window still reads.
+            with contextlib.suppress(RefusalError):
+                write_view_document(
+                    leg.channel, ViewClosed(reason=reason), deadline=time.monotonic() + _CLOSING_SECONDS
+                )
+        finally:
+            leg.write_lock.release()
+
+    @staticmethod
+    def _await_writer(leg: ViewWindowLeg) -> bool:
+        """Take the window's writer lock, waiting while its holder finishes frames; false once it stalls."""
+        seen = leg.frames
+        while not leg.write_lock.acquire(timeout=_WRITER_PROGRESS_SECONDS):
+            if leg.frames == seen:
+                return False
+            seen = leg.frames
+        return True
 
     def _end_window(self, leg: ViewWindowLeg) -> None:
         self._unbind_window(leg, None)
@@ -504,12 +539,15 @@ class ViewStreamRelay:
                 failed = True
             else:
                 failed = False
+                leg.frames += 1
         if failed:
             self._end_window(leg)
 
     def _forward_image_chunks(self, worker: ViewWorkerLeg, announcement: ViewImage, leg: ViewWindowLeg | None) -> None:
         try:
             leg = self._send_to_window(leg, document_frame(announcement))
+            if leg is not None:
+                leg.mid_image = True
             expected = 0
             while True:
                 kind, payload = read_frame_of_kinds(
@@ -526,6 +564,8 @@ class ViewStreamRelay:
                     raise _violation("view_chunk_order")
                 leg = self._send_to_window(leg, encode_frame(VIEW_CHUNK_FRAME_KIND, payload))
                 if header.last:
+                    if leg is not None:
+                        leg.mid_image = False
                     return
                 expected += 1
         finally:
@@ -548,16 +588,25 @@ class ViewStreamRelay:
                 leg = None
         if leg is not None and not leg.write_lock.acquire(timeout=_FRAME_SECONDS):
             leg = None
+        if leg is not None and leg.unbound:
+            # Unbound while this waited for the writer: the notice may already have gone, so no new image starts.
+            leg.write_lock.release()
+            leg = None
         self._forward_image_chunks(worker, announcement, leg)
 
     def _send_to_window(self, leg: ViewWindowLeg | None, frame: bytes) -> ViewWindowLeg | None:
-        """Write one frame to a window whose writer lock is held; a failed or unbound window is let go."""
+        """Write one frame to a window whose writer lock is held; a failed window is let go.
+
+        An unbound window still receives the rest of its image: its notice
+        follows the image, and a closed channel is what fails the write.
+        """
         if leg is None:
             return None
-        if not leg.unbound:
-            with contextlib.suppress(RefusalError):
-                leg.channel.write_all(frame, deadline=time.monotonic() + _FRAME_SECONDS)
-                return leg
-        leg.write_lock.release()
-        self._end_window(leg)
-        return None
+        try:
+            leg.channel.write_all(frame, deadline=time.monotonic() + _FRAME_SECONDS)
+        except RefusalError:
+            leg.write_lock.release()
+            self._end_window(leg)
+            return None
+        leg.frames += 1
+        return leg
