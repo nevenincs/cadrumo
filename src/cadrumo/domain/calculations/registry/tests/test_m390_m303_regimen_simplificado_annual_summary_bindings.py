@@ -113,7 +113,7 @@ def test_build_gate_refuses_an_endpoint_outside_the_summary_section() -> None:
     revision = _revision()
     requirement = m303_regimen_simplificado_annual_summary_requirement(revision)
     assert requirement is not None
-    target_casilla_id: CasillaId = tuple(requirement.binding_ids_by_summary_casilla_id)[0]
+    target_casilla_id: CasillaId = next(iter(requirement.binding_ids_by_summary_casilla_id))
     moved = revision.model_copy(
         update={
             "casillas": tuple(

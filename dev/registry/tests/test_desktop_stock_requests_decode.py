@@ -291,8 +291,22 @@ _SCENARIOS: list[dict[str, Any]] = [
         "book": _BOOK,
         "values": {},
     },
-    {"id": "closing_derived", "kind": "closing", "book": _BOOK, "decision": "decision-1", "decidedAt": _DECIDED_AT, "draft": _CLOSING_DERIVED},
-    {"id": "closing_counted", "kind": "closing", "book": _BOOK, "decision": "decision-2", "decidedAt": _DECIDED_AT, "draft": _CLOSING_COUNTED},
+    {
+        "id": "closing_derived",
+        "kind": "closing",
+        "book": _BOOK,
+        "decision": "decision-1",
+        "decidedAt": _DECIDED_AT,
+        "draft": _CLOSING_DERIVED,
+    },
+    {
+        "id": "closing_counted",
+        "kind": "closing",
+        "book": _BOOK,
+        "decision": "decision-2",
+        "decidedAt": _DECIDED_AT,
+        "draft": _CLOSING_COUNTED,
+    },
     {
         "id": "closing_with_prior_file",
         "kind": "closing",
@@ -471,7 +485,10 @@ def test_the_facts_the_form_states_reach_the_purchase_where_the_backend_reads_th
     # One file per proof, each under the reference the backend named it by.
     references = [item.reference.reference for item in two.evidence]
     assert len(references) == len(set(references)) == 5
-    assert all(reference == f"attachment:{item.content_digest}" for reference, item in zip(references, two.evidence, strict=True))
+    assert all(
+        reference == f"attachment:{item.content_digest}"
+        for reference, item in zip(references, two.evidence, strict=True)
+    )
     assert {item.evidence_kind.value for item in two.evidence} == {
         "purchase_invoice",
         "transport_document",

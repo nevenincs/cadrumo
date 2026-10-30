@@ -163,6 +163,7 @@ def test_frontend_operations_share_one_create_forecast_claim_and_projection_path
         m130_period=Period.from_year_and_code(2025, "4T"),
     )
     assert handoff.material_m100.amount == Decimal("520.00")
+    assert handoff.material_m130 is not None
     assert handoff.material_m130.amount == Decimal("520.00")
     assert handoff.material_m100.claim_ids == (first.claim.claim_id,)
     assert [item.schedule_fingerprint for item in handoff.material_m130.contributions] == [

@@ -275,6 +275,7 @@ def test_a_zero_baja_claim_accrues_nothing_in_modelo_130() -> None:
 
     handoff = operations.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
 
+    assert handoff.material_m130 is not None
     assert handoff.material_m130.amount == Decimal("0.00")
     assert handoff.material_m130.contributions == ()
     assert handoff.material_m130.unavailable_asset_ids == ()

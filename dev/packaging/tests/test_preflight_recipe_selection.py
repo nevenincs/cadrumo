@@ -274,7 +274,7 @@ def _shared_collection_directory(tmp_path_factory: pytest.TempPathFactory) -> It
     """
     global _SHARED_COLLECTIONS
     base = tmp_path_factory.getbasetemp()
-    root = base.parent if os.environ.get("PYTEST_XDIST_WORKER") else base
+    root = base.parent if bool(os.environ.get("PYTEST_XDIST_WORKER")) else base
     shared = root / "preflight-collections"
     shared.mkdir(parents=True, exist_ok=True)
     _SHARED_COLLECTIONS = shared
@@ -294,7 +294,13 @@ def _once_per_run(arguments: tuple[str, ...], compute: Callable[[], frozenset[st
     deadline = time.monotonic() + _SHARED_WAIT_SECONDS
     while time.monotonic() < deadline:
         if result.is_file():
-            return frozenset(json.loads(result.read_text(encoding="utf-8")))
+            node_ids = json.loads(result.read_text(encoding="utf-8"))
+            assert isinstance(node_ids, list)
+            validated: set[str] = set()
+            for item in node_ids:
+                assert isinstance(item, str)
+                validated.add(item)
+            return frozenset(validated)
         try:
             descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError:

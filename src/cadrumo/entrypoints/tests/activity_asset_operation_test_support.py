@@ -292,7 +292,7 @@ def assert_activity_asset_conformance_result(
             ),
             authority_generation=pin.logical_generation,
             covered_from=payload.covered_from,
-            covered_until=payload.covered_until,
+            covered_until=payload.exclusive_end(),
             history=asset_schedule_history(
                 before.claims,
                 before.revisions,

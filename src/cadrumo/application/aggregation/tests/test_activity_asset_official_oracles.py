@@ -715,6 +715,8 @@ def test_modelo_130_accrues_the_hand_worked_total_each_quarter_and_the_fourth_eq
     handoff = register.operations.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
     assert handoff.material_m100.amount == box_0208
     assert handoff.intangible_m100.amount == box_0227
+    assert handoff.material_m130 is not None
+    assert handoff.intangible_m130 is not None
     assert handoff.material_m130.amount + handoff.intangible_m130.amount == cumulative[3]
 
 

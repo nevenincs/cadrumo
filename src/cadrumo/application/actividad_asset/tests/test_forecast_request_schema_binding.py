@@ -53,6 +53,10 @@ def test_request_binds_to_its_closed_public_schema() -> None:
         model_type=ActivityAssetForecastRequest,
     )
 
-    assert {"covered_until", "covered_through"} <= set(schema["properties"])
-    assert not {"covered_until", "covered_through"} & set(schema["required"])
+    properties = schema["properties"]
+    required = schema["required"]
+    assert isinstance(properties, dict)
+    assert isinstance(required, list)
+    assert {"covered_until", "covered_through"} <= set(properties)
+    assert not {"covered_until", "covered_through"} & set(required)
     assert binding.identity.schema_fingerprint == content_hash_hex(schema)

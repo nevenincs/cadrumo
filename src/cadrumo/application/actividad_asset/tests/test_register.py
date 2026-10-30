@@ -447,6 +447,7 @@ def test_the_handoff_reads_the_accrual_route_with_or_without_claims() -> None:
 
     # 2,000.00 x 26% x 181/365 = 257.86 through 30 June, with nothing recorded.
     unclaimed = operations.filing_handoff(tax_year=2025, m130_period=period)
+    assert unclaimed.material_m130 is not None
     assert unclaimed.material_m130.amount == Decimal("257.86")
     assert unclaimed.material_m100.amount == Decimal("0.00")
     assert unclaimed.material_m100.claim_ids == ()
@@ -457,6 +458,7 @@ def test_the_handoff_reads_the_accrual_route_with_or_without_claims() -> None:
     ).claim
     claimed = operations.filing_handoff(tax_year=2025, m130_period=period)
 
+    assert claimed.material_m130 is not None
     assert claimed.material_m130.amount == Decimal("257.86")
     assert claimed.material_m100.claim_ids == (claim.claim_id,)
     assert claimed.material_m100.amount == Decimal("257.86")
@@ -517,7 +519,9 @@ def test_an_elapsed_period_counts_as_amortized_in_the_plan_and_m130() -> None:
 
     within = operations.filing_handoff(tax_year=2026, m130_period=Period.from_year_and_code(2026, "4T"))
     beyond = operations.filing_handoff(tax_year=2027, m130_period=Period.from_year_and_code(2027, "4T"))
+    assert within.material_m130 is not None
     assert within.material_m130.amount == Decimal("520.00")
+    assert beyond.material_m130 is not None
     assert beyond.material_m130.amount == Decimal("0.00")
     assert beyond.material_m130.unavailable_asset_ids == ()
 
