@@ -592,10 +592,7 @@ def _refusal_for_error(
     if not isinstance(error, CadrumoError):
         return detail
     return detail.model_copy(
-        update={
-            "reason_key": error.translated_message,
-            "reason_facts": {key: str(value) for key, value in (error.context or {}).items()},
-        }
+        update={"reason_facts": {key: str(value) for key, value in (error.context or {}).items()}},
     )
 
 
@@ -645,6 +642,7 @@ def _request_refusal_detail(
         year=year if isinstance(year, int) else None,
         movement_id=movement_id if isinstance(movement_id, str) else None,
         valuation_method=valuation_method if isinstance(valuation_method, str) else None,
+        reason_key=inventory_refusal_key(reason),
     )
 
 
@@ -665,6 +663,7 @@ async def _record_precommit_validation_refusal(
         actividad_id=getattr(request, "actividad_id", None),
         year=getattr(request, "year", None),
         movement_id=getattr(request, "movement_id", None),
+        reason_key=inventory_refusal_key(reason),
     )
 
     async def persist_refusal() -> OperationRefusalEvidence:

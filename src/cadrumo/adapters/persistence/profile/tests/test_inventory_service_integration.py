@@ -230,7 +230,7 @@ class TestCreate:
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
         with pytest.raises(InventoryActividadConflictError) as exc_info:
             svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="pmp")
-        assert exc_info.value.translated_message == "application.inventory.service.errors.actividad_conflict"
+        assert exc_info.value.translated_message == "application.inventory.service.errors.activity_conflict"
         assert exc_info.value.context == {"actividad_id": "A1", "year": "2025"}
 
     def test_create_refuses_invalid_valuation_method(self, secure_engine: TestRuntimeProfile) -> None:
@@ -293,7 +293,7 @@ class TestShow:
         svc = _make_svc(secure_engine)
         with pytest.raises(InventoryActividadNotFoundError) as exc_info:
             svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
-        assert exc_info.value.translated_message == "application.inventory.service.errors.actividad_not_found"
+        assert exc_info.value.translated_message == "application.inventory.service.errors.activity_not_found"
         assert exc_info.value.context == {"actividad_id": "A1", "year": "2025"}
 
 
@@ -980,7 +980,7 @@ class TestLedgerCorrections:
         svc = _make_svc(secure_engine)
         with pytest.raises(InventoryActividadNotFoundError) as refused:
             svc.restore(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, correction_id="back")
-        assert refused.value.translated_message == "application.inventory.service.errors.actividad_not_found"
+        assert refused.value.translated_message == "application.inventory.service.errors.activity_not_found"
         assert refused.value.context == {"actividad_id": "A1", "year": "2025"}
 
 

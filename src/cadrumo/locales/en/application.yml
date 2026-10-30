@@ -501,9 +501,10 @@ application:
         no_stock_held: No stock held
     service:
       errors:
-        actividad_conflict: "An inventory record book already exists for activity %{actividad_id} and year %{year}. Open it instead of creating another."
-        actividad_not_found: "No inventory record book exists for activity %{actividad_id} and year %{year}. Create it first, or check the activity and year."
+        activity_conflict: "An inventory record book already exists for activity %{actividad_id} and year %{year}. Open it instead of creating another."
+        activity_not_found: "No inventory record book exists for activity %{actividad_id} and year %{year}. Create it first, or check the activity and year."
         closing_authority_conflict: "A different closing value is already recorded for this activity and year."
+        closing_authority_invalid: "This closing value could not be recorded because its details do not agree with each other. Check them and try again."
         closing_authority_recorded: "The %{year} inventory of %{actividad_id} has its closing value recorded, so its stock facts can no longer change."
         correction_changes_nothing: This correction names no opening value or valuation
           method that differs from the current one.
@@ -518,6 +519,7 @@ application:
         inventory_not_retired: The %{year} inventory of %{actividad_id} is not retired.
         inventory_retired: The %{year} inventory of %{actividad_id} is retired. Restore
           it before changing its stock facts.
+        inventory_validation: "These inventory details could not be accepted. Check them and try again."
         later_closing_authority_recorded: "The %{later_year} closing value of %{actividad_id} starts from this closing, so the %{year} stock facts can no longer change."
         movement_already_superseded: "This movement was already corrected or reversed."
         movement_not_found: "The %{year} inventory of %{actividad_id} does not have this movement."

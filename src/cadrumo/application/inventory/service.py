@@ -198,7 +198,7 @@ def _refusal_from_change(
         key = error.translated_message
         if key == "adapters.persistence.profile.inventory.errors.inventory_ledger_not_found":
             return InventoryActividadNotFoundError(
-                translated_message="application.inventory.service.errors.actividad_not_found",
+                translated_message="application.inventory.service.errors.activity_not_found",
                 context=coordinate,
             )
         if key in _CHANGE_REFUSAL_KEYS:
@@ -301,7 +301,7 @@ class InventoryService:
                 == "adapters.persistence.profile.inventory.errors.inventory_ledger_already_exists"
             ):
                 raise InventoryActividadConflictError(
-                    translated_message="application.inventory.service.errors.actividad_conflict",
+                    translated_message="application.inventory.service.errors.activity_conflict",
                     context={"actividad_id": actividad_id, "year": str(year)},
                 ) from exc
             raise
@@ -350,7 +350,7 @@ class InventoryService:
         ledger = _find_ledger(document, actividad_id, year)
         if ledger is None:
             raise InventoryActividadNotFoundError(
-                translated_message="application.inventory.service.errors.actividad_not_found",
+                translated_message="application.inventory.service.errors.activity_not_found",
                 context={"actividad_id": actividad_id, "year": str(year)},
             )
         return ledger
@@ -413,7 +413,7 @@ class InventoryService:
                 ) from exc
             if exc.translated_message == "adapters.persistence.profile.inventory.errors.inventory_ledger_not_found":
                 raise InventoryActividadNotFoundError(
-                    translated_message="application.inventory.service.errors.actividad_not_found",
+                    translated_message="application.inventory.service.errors.activity_not_found",
                     context={"actividad_id": actividad_id, "year": str(year)},
                 ) from exc
             if exc.translated_message in _CHANGE_REFUSAL_KEYS:
@@ -514,7 +514,7 @@ class InventoryService:
             if exc.translated_message != "adapters.persistence.profile.inventory.errors.inventory_ledger_not_found":
                 raise
             raise InventoryActividadNotFoundError(
-                translated_message="application.inventory.service.errors.actividad_not_found",
+                translated_message="application.inventory.service.errors.activity_not_found",
                 context={"actividad_id": actividad_id, "year": str(year)},
             ) from exc
         # No event is emitted here: inventory and bucket events have distinct

@@ -545,9 +545,10 @@ application:
         no_stock_held: Sin existencias
     service:
       errors:
-        actividad_conflict: "Ya existe un registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Ábrelo en lugar de crear otro."
-        actividad_not_found: "No existe ningún registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Créalo primero o revisa la actividad y el ejercicio."
+        activity_conflict: "Ya existe un registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Ábrelo en lugar de crear otro."
+        activity_not_found: "No existe ningún registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Créalo primero o revisa la actividad y el ejercicio."
         closing_authority_conflict: "Ya hay otro valor de cierre registrado para esta actividad y este año."
+        closing_authority_invalid: "Este valor de cierre no se pudo registrar porque sus datos no concuerdan entre sí. Revísalos e inténtalo de nuevo."
         closing_authority_recorded: "El inventario %{year} de %{actividad_id} ya tiene registrado su valor de cierre, así que sus datos de existencias ya no pueden cambiar."
         correction_changes_nothing: Esta corrección no indica ningún valor inicial
           ni método de valoración distinto del actual.
@@ -562,6 +563,7 @@ application:
         inventory_not_retired: El inventario %{year} de %{actividad_id} no está retirado.
         inventory_retired: El inventario %{year} de %{actividad_id} está retirado.
           Restáuralo antes de cambiar sus datos de existencias.
+        inventory_validation: "Estos datos de inventario no se pudieron aceptar. Revísalos e inténtalo de nuevo."
         later_closing_authority_recorded: "El valor de cierre %{later_year} de %{actividad_id} parte de este cierre, así que los datos de existencias de %{year} ya no pueden cambiar."
         movement_already_superseded: "Este movimiento ya se corrigió o se anuló."
         movement_not_found: "El inventario %{year} de %{actividad_id} no tiene este movimiento."
