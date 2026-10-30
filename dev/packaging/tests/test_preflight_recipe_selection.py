@@ -68,9 +68,13 @@ See Also:
 from __future__ import annotations
 
 import functools
+import hashlib
+import json
+import os
 import re
 import sys
-from collections.abc import Sequence
+import time
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
 from typing import Final
 
@@ -255,8 +259,66 @@ def _collection_transcript(stdout: str) -> str:
     return Path(match.group("path")).read_text(encoding="utf-8", errors="replace")
 
 
+#: Directory every xdist worker of this run shares, set by the fixture below.
+_SHARED_COLLECTIONS: Path | None = None
+_SHARED_WAIT_SECONDS: Final = 1800.0
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _shared_collection_directory(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    """Let the workers of one run share each collection instead of repeating it.
+
+    A collection is a pure function of the tree and takes seconds to boot, while
+    xdist hands the cases that read it to different processes, each of which
+    would otherwise boot the identical subprocess for itself.
+    """
+    global _SHARED_COLLECTIONS
+    base = tmp_path_factory.getbasetemp()
+    root = base.parent if os.environ.get("PYTEST_XDIST_WORKER") else base
+    shared = root / "preflight-collections"
+    shared.mkdir(parents=True, exist_ok=True)
+    _SHARED_COLLECTIONS = shared
+    try:
+        yield
+    finally:
+        _SHARED_COLLECTIONS = None
+
+
+def _once_per_run(arguments: tuple[str, ...], compute: Callable[[], frozenset[str]]) -> frozenset[str]:
+    """Return the collection for ``arguments``, computed by exactly one worker of the run."""
+    shared = _SHARED_COLLECTIONS
+    if shared is None:
+        return compute()
+    result = shared / (hashlib.sha256(json.dumps(arguments).encode()).hexdigest() + ".json")
+    lock = result.with_suffix(".lock")
+    deadline = time.monotonic() + _SHARED_WAIT_SECONDS
+    while time.monotonic() < deadline:
+        if result.is_file():
+            return frozenset(json.loads(result.read_text(encoding="utf-8")))
+        try:
+            descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            time.sleep(0.5)
+            continue
+        os.close(descriptor)
+        try:
+            if not result.is_file():
+                node_ids = compute()
+                partial = result.with_suffix(".partial")
+                partial.write_text(json.dumps(sorted(node_ids)), encoding="utf-8")
+                os.replace(partial, result)
+        finally:
+            lock.unlink(missing_ok=True)
+    raise AssertionError(f"no worker finished collecting {list(arguments)} within {_SHARED_WAIT_SECONDS:.0f} s")
+
+
 @functools.cache
 def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
+    """Return one invocation's collection, booted once per run across all workers."""
+    return _once_per_run(arguments, lambda: _boot_collection(label, arguments))
+
+
+def _boot_collection(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     """Boot a real pytest collection and return the node ids it selected.
 
     Memoized per ``(label, arguments)``. A collection is a pure function of the
