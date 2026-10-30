@@ -14,6 +14,7 @@ from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (
     CategoryCitation,
@@ -25,6 +26,7 @@ from ...categories.proportionality import (
 from ...categories.proportionality_catalogue import require_proportionality_kind, require_statutory_cap_period
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory, SpendingCategoryFamily
+from ...categories.spending_category_catalogue import resolve_spending_category_catalogue
 from ..errors import RentaValidationError
 from ..ledger_expenses import (
     RentaDeductibilityContext,
@@ -37,9 +39,16 @@ from ..ledger_expenses import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
     normalize_spending_category,
+    renta_first_slice_expense_routing,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _supported_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no support envelope"
+    return support.years
 
 
 @pytest.fixture(scope="module")
@@ -540,29 +549,49 @@ def test_exclusive_use_profiles_require_exclusive_business_use(operation: Pinned
     assert confirmed.non_deductible_amount == Decimal("21.00")
 
 
-def test_first_slice_routes_every_eligible_category_to_a_real_casilla(
-    category_profiles: Mapping[SpendingCategory, CategoryProfile],
+@pytest.mark.parametrize("year", _supported_years())
+def test_every_category_is_routed_or_left_to_the_activity_asset_register(
+    operation: PinnedAuthorityOperation,
+    year: int,
 ) -> None:
-    """Every :class:`SpendingCategory` builds a real observation.
+    """The first slice routes every category except the amortizable ones, which route nothing."""
+    effective_date = date(year, 12, 31)
+    catalogue = resolve_spending_category_catalogue(effective_date=effective_date, authority=operation)
 
-    The first-slice routing projection is a total mapping: no eligible
-    deductibility result is rejected for lacking a first-slice
-    casilla. This is the closed-gap counterpart of the routing table's
-    own ``test_every_spending_category_routes_to_a_first_slice_casilla``:
-    it proves the observation-construction boundary (not just the
-    routing table) reflects the closed set for a representative
-    previously-unrouted amortizable category.
-    """
-    fact = _fact(category=SpendingCategory.from_registry("hardware_amortizable"), amount=Decimal("55.00"))
-    result = evaluate_renta_deductibility(
-        fact,
-        category_profiles[SpendingCategory.from_registry("hardware_amortizable")],
-        _context(),
+    routing = renta_first_slice_expense_routing(effective_date=effective_date)
+
+    assert catalogue.amortizable
+    assert set(routing) == set(catalogue.categories) - set(catalogue.amortizable)
+    assert not {category for category in routing if category in catalogue.amortizable}
+    assert not {casilla for casilla in routing.values() if casilla in {"0208", "0227"}}
+
+
+@pytest.mark.parametrize("category", ["hardware_amortizable", "mobiliario_amortizable", "amortizacion_vivienda_afecto"])
+@pytest.mark.parametrize("year", _supported_years())
+def test_an_amortizable_category_deducts_nothing_and_builds_no_observation(
+    operation: PinnedAuthorityOperation,
+    category: str,
+    year: int,
+) -> None:
+    """A purchase, however small, is acquisition evidence: only the register deducts its amortization."""
+    token = SpendingCategory.from_registry(category)
+    profile = resolve_category_profiles(year, operation=operation)[token]
+    fact = _fact(category=token, amount=Decimal("55.00")).model_copy(
+        update={
+            "operation_date": date(year, 3, 8),
+            "invoice_issue_date": date(year, 3, 7),
+            "posting_date": date(year, 3, 9),
+            "payment_date": date(year, 3, 10),
+        },
     )
 
-    observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
+    result = evaluate_renta_deductibility(fact, profile, _context(profile_year=year))
 
-    assert observation.target_casilla_id == "0208"
+    assert profile.proportionality.kind.is_non_deductible
+    assert result.status is RentaDeductibilityStatus.INELIGIBLE
+    assert result.deductible_amount == Decimal("0")
+    with pytest.raises(RentaValidationError, match="ineligible deductibility result"):
+        build_renta_deductible_expense_observation(fact, result, tax_year=year)
 
 
 def test_tax_year_mismatch_is_rejected_before_observation_creation(

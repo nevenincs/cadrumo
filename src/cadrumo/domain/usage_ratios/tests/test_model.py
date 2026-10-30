@@ -131,7 +131,7 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows(operation: PinnedA
     re-derives it from the registry using the same predicate
     and asserts equality, so a kind-table edit in the registry (adding or
     removing a ``USAGE_RATIO_*`` category) cannot silently drift from what the
-    usage-ratio feature accepts. The count pin (nine) is a secondary
+    usage-ratio feature accepts. The count pin (eight) is a secondary
     guardrail that makes accidental additions visible in diffs.
     """
     derived_from_registry = frozenset(
@@ -160,7 +160,7 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows(operation: PinnedA
         }
     )
     assert derived_from_registry == ELIGIBLE_USAGE_RATIO_CATEGORIES
-    assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 9
+    assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 8
 
 
 @pytest.mark.usefixtures("operation")

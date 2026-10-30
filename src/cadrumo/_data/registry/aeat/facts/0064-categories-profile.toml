@@ -1187,6 +1187,7 @@ entries = [
   { key = "spending_category.family.financial", value = "gastos_bancarios,gastos_financieros" },
   { key = "spending_category.family.direct_costs", value = "suministros_cliente_directos,subcontratacion" },
   { key = "spending_category.family.taxes", value = "tributos_fiscalmente_deducibles" },
+  { key = "spending_category.amortizable", value = "amortizacion_vivienda_afecto,hardware_amortizable,mobiliario_amortizable" },
 ]
 
 # The RIRPF grounds these spending categories as recognised deductible concepts:
@@ -4612,10 +4613,7 @@ required_text = ["Los elementos del inmovilizado material nuevos, cuyo valor uni
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.hardware_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.hardware_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -4679,10 +4677,7 @@ required_text = ["Los elementos del inmovilizado material nuevos, cuyo valor uni
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.hardware_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.hardware_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -4746,10 +4741,7 @@ required_text = ["Los elementos del inmovilizado material nuevos, cuyo valor uni
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.hardware_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.hardware_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -4813,10 +4805,7 @@ required_text = ["Son deducibles las amortizaciones del inmovilizado material, i
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.hardware_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.hardware_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "manual_renta" },
@@ -4885,10 +4874,7 @@ required_text = ["El rendimiento neto de las actividades económicas se determin
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.hardware_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.hardware_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -4943,10 +4929,7 @@ required_text = ["Los elementos del inmovilizado material nuevos, cuyo valor uni
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.mobiliario_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.mobiliario_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -5010,10 +4993,7 @@ required_text = ["Los elementos del inmovilizado material nuevos, cuyo valor uni
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.mobiliario_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.mobiliario_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -5077,10 +5057,7 @@ required_text = ["Los elementos del inmovilizado material nuevos, cuyo valor uni
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.mobiliario_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.mobiliario_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -5144,10 +5121,7 @@ required_text = ["Son deducibles las amortizaciones del inmovilizado material, i
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.mobiliario_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.mobiliario_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "manual_renta" },
@@ -5216,10 +5190,7 @@ required_text = ["El rendimiento neto de las actividades económicas se determin
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.mobiliario_amortizable.label" },
-  { key = "proportionality_kind", value = "low_value_asset" },
-  { key = "unit_value_limit_eur", value_type = "decimal", value = "300" },
-  { key = "statutory_cap_eur", value_type = "decimal", value = "25000" },
-  { key = "statutory_cap_period", value = "year" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.mobiliario_amortizable.notes" },
   { key = "iva_hint", value = "general" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -11594,7 +11565,7 @@ required_text = ["Cuando se trate de elementos patrimoniales que sirvan sólo pa
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.amortizacion_vivienda_afecto.label" },
-  { key = "proportionality_kind", value = "usage_ratio_home_area" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.amortizacion_vivienda_afecto.notes" },
   { key = "iva_hint", value = "exempt_or_non_subject" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -11606,7 +11577,6 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad económica, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-29" },
-  { key = "requires_ownership_share", value = "true" },
   { key = "iva_mixed_use_share", value = "not_deductible" },
   { key = "iva_citation.0.source", value = "ley_iva" },
   { key = "iva_citation.0.reference", value = "Ley 37/1992" },
@@ -11647,7 +11617,7 @@ required_text = ["Cuando se trate de elementos patrimoniales que sirvan sólo pa
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.amortizacion_vivienda_afecto.label" },
-  { key = "proportionality_kind", value = "usage_ratio_home_area" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.amortizacion_vivienda_afecto.notes" },
   { key = "iva_hint", value = "exempt_or_non_subject" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -11659,7 +11629,6 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad económica, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-29" },
-  { key = "requires_ownership_share", value = "true" },
   { key = "iva_mixed_use_share", value = "not_deductible" },
   { key = "iva_citation.0.source", value = "ley_iva" },
   { key = "iva_citation.0.reference", value = "Ley 37/1992" },
@@ -11700,7 +11669,7 @@ required_text = ["Cuando se trate de elementos patrimoniales que sirvan sólo pa
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.amortizacion_vivienda_afecto.label" },
-  { key = "proportionality_kind", value = "usage_ratio_home_area" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.amortizacion_vivienda_afecto.notes" },
   { key = "iva_hint", value = "exempt_or_non_subject" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -11712,7 +11681,6 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad económica, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-29" },
-  { key = "requires_ownership_share", value = "true" },
   { key = "iva_mixed_use_share", value = "not_deductible" },
   { key = "iva_citation.0.source", value = "ley_iva" },
   { key = "iva_citation.0.reference", value = "Ley 37/1992" },
@@ -11756,7 +11724,7 @@ required_text = ["Tratándose de los gastos derivados de la titularidad de la vi
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.amortizacion_vivienda_afecto.label" },
-  { key = "proportionality_kind", value = "usage_ratio_home_area" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.amortizacion_vivienda_afecto.notes" },
   { key = "iva_hint", value = "exempt_or_non_subject" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -11777,7 +11745,6 @@ entries = [
   { key = "citation.1.valid_to", value = 2025-12-31 },
   { key = "citation.1.quote", value = "Tratándose de los gastos derivados de la titularidad de la vivienda, tales como amortizaciones, IBI, comunidad de propietarios, etc, sí resultan deducibles en proporción a la parte de la vivienda afectada al desarrollo de la actividad y a su porcentaje de titularidad en el inmueble referido." },
   { key = "citation.1.source_ref", value = "aeat-renta-2025-manual-parte1" },
-  { key = "requires_ownership_share", value = "true" },
   { key = "iva_mixed_use_share", value = "not_deductible" },
   { key = "iva_citation.0.source", value = "ley_iva" },
   { key = "iva_citation.0.reference", value = "Ley 37/1992" },
@@ -11817,7 +11784,7 @@ required_text = ["Cuando se trate de elementos patrimoniales que sirvan sólo pa
 kind = "mapping"
 entries = [
   { key = "display_label", value = "categories.registry.amortizacion_vivienda_afecto.label" },
-  { key = "proportionality_kind", value = "usage_ratio_home_area" },
+  { key = "proportionality_kind", value = "non_deductible" },
   { key = "notes", value = "categories.registry.amortizacion_vivienda_afecto.notes" },
   { key = "iva_hint", value = "exempt_or_non_subject" },
   { key = "citation.0.source", value = "ley_irpf" },
@@ -11829,7 +11796,6 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad económica, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-29" },
-  { key = "requires_ownership_share", value = "true" },
   { key = "iva_mixed_use_share", value = "not_deductible" },
   { key = "iva_citation.0.source", value = "ley_iva" },
   { key = "iva_citation.0.reference", value = "Ley 37/1992" },
@@ -12194,7 +12160,7 @@ ownership = "authored"
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "proportionality_kind.order", value = "full_deductible,fixed_percentage,usage_ratio_personal,usage_ratio_home_area,statutory_cap,non_deductible,requires_exclusive_use,low_value_asset" },
+  { key = "proportionality_kind.order", value = "full_deductible,fixed_percentage,usage_ratio_personal,usage_ratio_home_area,statutory_cap,non_deductible,requires_exclusive_use" },
   { key = "proportionality_kind.full_deductible.value", value = "full_deductible" },
   { key = "proportionality_kind.full_deductible.is_full_deductible", value = "true" },
   { key = "proportionality_kind.full_deductible.is_usage_ratio", value = "false" },
@@ -12202,7 +12168,6 @@ entries = [
   { key = "proportionality_kind.full_deductible.requires_fixed_pct", value = "false" },
   { key = "proportionality_kind.full_deductible.is_non_deductible", value = "false" },
   { key = "proportionality_kind.full_deductible.requires_exclusive_use", value = "false" },
-  { key = "proportionality_kind.full_deductible.is_low_value_asset", value = "false" },
   { key = "proportionality_kind.fixed_percentage.value", value = "fixed_percentage" },
   { key = "proportionality_kind.fixed_percentage.is_full_deductible", value = "false" },
   { key = "proportionality_kind.fixed_percentage.is_usage_ratio", value = "false" },
@@ -12210,7 +12175,6 @@ entries = [
   { key = "proportionality_kind.fixed_percentage.requires_fixed_pct", value = "true" },
   { key = "proportionality_kind.fixed_percentage.is_non_deductible", value = "false" },
   { key = "proportionality_kind.fixed_percentage.requires_exclusive_use", value = "false" },
-  { key = "proportionality_kind.fixed_percentage.is_low_value_asset", value = "false" },
   { key = "proportionality_kind.usage_ratio_personal.value", value = "usage_ratio_personal" },
   { key = "proportionality_kind.usage_ratio_personal.is_full_deductible", value = "false" },
   { key = "proportionality_kind.usage_ratio_personal.is_usage_ratio", value = "true" },
@@ -12218,7 +12182,6 @@ entries = [
   { key = "proportionality_kind.usage_ratio_personal.requires_fixed_pct", value = "false" },
   { key = "proportionality_kind.usage_ratio_personal.is_non_deductible", value = "false" },
   { key = "proportionality_kind.usage_ratio_personal.requires_exclusive_use", value = "false" },
-  { key = "proportionality_kind.usage_ratio_personal.is_low_value_asset", value = "false" },
   { key = "proportionality_kind.usage_ratio_home_area.value", value = "usage_ratio_home_area" },
   { key = "proportionality_kind.usage_ratio_home_area.is_full_deductible", value = "false" },
   { key = "proportionality_kind.usage_ratio_home_area.is_usage_ratio", value = "true" },
@@ -12226,7 +12189,6 @@ entries = [
   { key = "proportionality_kind.usage_ratio_home_area.requires_fixed_pct", value = "false" },
   { key = "proportionality_kind.usage_ratio_home_area.is_non_deductible", value = "false" },
   { key = "proportionality_kind.usage_ratio_home_area.requires_exclusive_use", value = "false" },
-  { key = "proportionality_kind.usage_ratio_home_area.is_low_value_asset", value = "false" },
   { key = "proportionality_kind.statutory_cap.value", value = "statutory_cap" },
   { key = "proportionality_kind.statutory_cap.is_full_deductible", value = "false" },
   { key = "proportionality_kind.statutory_cap.is_usage_ratio", value = "false" },
@@ -12234,7 +12196,6 @@ entries = [
   { key = "proportionality_kind.statutory_cap.requires_fixed_pct", value = "false" },
   { key = "proportionality_kind.statutory_cap.is_non_deductible", value = "false" },
   { key = "proportionality_kind.statutory_cap.requires_exclusive_use", value = "false" },
-  { key = "proportionality_kind.statutory_cap.is_low_value_asset", value = "false" },
   { key = "proportionality_kind.non_deductible.value", value = "non_deductible" },
   { key = "proportionality_kind.non_deductible.is_full_deductible", value = "false" },
   { key = "proportionality_kind.non_deductible.is_usage_ratio", value = "false" },
@@ -12242,7 +12203,6 @@ entries = [
   { key = "proportionality_kind.non_deductible.requires_fixed_pct", value = "false" },
   { key = "proportionality_kind.non_deductible.is_non_deductible", value = "true" },
   { key = "proportionality_kind.non_deductible.requires_exclusive_use", value = "false" },
-  { key = "proportionality_kind.non_deductible.is_low_value_asset", value = "false" },
   { key = "proportionality_kind.requires_exclusive_use.value", value = "requires_exclusive_use" },
   { key = "proportionality_kind.requires_exclusive_use.is_full_deductible", value = "false" },
   { key = "proportionality_kind.requires_exclusive_use.is_usage_ratio", value = "false" },
@@ -12250,15 +12210,6 @@ entries = [
   { key = "proportionality_kind.requires_exclusive_use.requires_fixed_pct", value = "false" },
   { key = "proportionality_kind.requires_exclusive_use.is_non_deductible", value = "false" },
   { key = "proportionality_kind.requires_exclusive_use.requires_exclusive_use", value = "true" },
-  { key = "proportionality_kind.requires_exclusive_use.is_low_value_asset", value = "false" },
-  { key = "proportionality_kind.low_value_asset.value", value = "low_value_asset" },
-  { key = "proportionality_kind.low_value_asset.is_full_deductible", value = "false" },
-  { key = "proportionality_kind.low_value_asset.is_usage_ratio", value = "false" },
-  { key = "proportionality_kind.low_value_asset.is_statutory_cap", value = "false" },
-  { key = "proportionality_kind.low_value_asset.requires_fixed_pct", value = "false" },
-  { key = "proportionality_kind.low_value_asset.is_non_deductible", value = "false" },
-  { key = "proportionality_kind.low_value_asset.requires_exclusive_use", value = "false" },
-  { key = "proportionality_kind.low_value_asset.is_low_value_asset", value = "true" },
   { key = "statutory_cap_period.order", value = "day,year_per_person,year" },
   { key = "statutory_cap_period.day.value", value = "day" },
   { key = "statutory_cap_period.day.is_per_person", value = "false" },

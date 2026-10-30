@@ -10,6 +10,7 @@ from typing import override
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
@@ -2321,7 +2322,7 @@ def test_the_consumers_of_a_claim_are_this_buckets_revisions_that_recorded_it() 
 def _filing_years() -> tuple[int, ...]:
     support = published_supported_filing_years()
     assert support is not None, "the published authority declares no support envelope"
-    return support.years
+    return tuple(range(support.years[0], newest_authored_edition("100") + 1))
 
 
 _AMORTIZABLE_CATEGORIES = ("hardware_amortizable", "mobiliario_amortizable", "amortizacion_vivienda_afecto")

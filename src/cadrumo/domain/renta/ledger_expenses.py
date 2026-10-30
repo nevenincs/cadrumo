@@ -31,6 +31,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ..calculations.registry.authority_artifact import AuthorityComponentCodecError
+from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from ..calculations.registry.renta_expense_policy import renta_expense_policy_declarations
 from ..categories.profile import CategoryProfile
 from ..categories.proportionality import (
@@ -40,7 +41,7 @@ from ..categories.proportionality import (
     StatutoryCapVariant,
 )
 from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, family_for
-from ..categories.spending_category_catalogue import require_spending_category, spending_category_tokens
+from ..categories.spending_category_catalogue import require_spending_category, resolve_spending_category_catalogue
 from ..contribuyente.ccaa import CCAA
 from ._first_slice_routing import resolve_first_slice_expense_routing
 from .errors import RentaValidationError
@@ -71,14 +72,10 @@ class RentaDeductibilityRefusal(StrEnum):
             exclusively for the activity, and the row states shared use.
         MISSING_OWNERSHIP_SHARE: The category deducts the owned part of the
             dwelling, and no source states the ownership share.
-        ASSET_REGISTER_REQUIRED: The purchase exceeds the low-value limit, so
-            only its amortization quota is deductible, through the activity
-            asset register.
     """
 
     EXCLUSIVE_USE_REQUIRED = "exclusive_use_required"
     MISSING_OWNERSHIP_SHARE = "missing_ownership_share"
-    ASSET_REGISTER_REQUIRED = "asset_register_required"
 
 
 class RentaInvoiceEvidenceStatus(StrEnum):
@@ -130,9 +127,8 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     """Ledger rows the activity-asset register declares as an asset's acquisition.
 
     The register deducts such a purchase through its amortization schedule and
-    withholds the row from the expense total, so a low-value-asset rule passes
-    the row through to that withholding rather than refuse it for want of a
-    register entry, and the row never counts against the low-value limit.
+    withholds the row from the expense total, so the row never counts against a
+    statutory cap that several rows share.
     """
     iva_deduction_ratio: UnitProportion | None = None
     """Fraction of the fact's input IVA the activity affords a right to deduct (LIVA arts. 94/104).
@@ -314,6 +310,16 @@ def _validated_first_slice_casilla(value: object) -> CasillaId:
     return validated_casilla_id(value, surface="first-slice expense routing target")
 
 
+def _routable_category_tokens(
+    selected_authority: GovernedFactSource,
+    coordinate: date,
+) -> tuple[SpendingCategory, ...]:
+    """Return the categories the first slice routes, which excludes the amortizable ones."""
+    catalogue = resolve_spending_category_catalogue(effective_date=coordinate, authority=selected_authority)
+    amortizable = frozenset(catalogue.amortizable)
+    return tuple(category for category in catalogue.categories if category not in amortizable)
+
+
 def renta_first_slice_expense_routing(
     *,
     effective_date: date,
@@ -327,10 +333,7 @@ def renta_first_slice_expense_routing(
     try:
         routing = resolve_first_slice_expense_routing(
             category_type=SpendingCategory,
-            category_tokens=lambda selected_authority, coordinate: spending_category_tokens(
-                effective_date=coordinate,
-                authority=selected_authority,
-            ),
+            category_tokens=_routable_category_tokens,
             casilla_factory=_validated_first_slice_casilla,
             model_code=Modelo("100").value,
             fact_id="modelo-100-first-slice-expense-routing-mapping",
@@ -613,40 +616,6 @@ def _evaluate_exclusive_use_rule(
     )
 
 
-def _evaluate_low_value_asset_rule(
-    fact: RentaDeductibleExpenseFact,
-    rule: ProportionalityRule,
-    context: RentaDeductibilityContext,
-    deductible_basis: Decimal,
-) -> _RentaDeductibilityDecision:
-    limit = rule.unit_value_limit_eur
-    annual = rule.cap_amount_for_year(context.profile_year)
-    if limit is None or annual is None:
-        raise RentaValidationError("low-value-asset rule declares no unit or annual limit")
-    if fact.transaction_id in context.register_owned_transaction_ids:
-        # The register withholds this purchase and deducts its amortization instead.
-        return _RentaDeductibilityDecision(
-            status=RentaDeductibilityStatus.ELIGIBLE,
-            reason="activity-asset register acquisition",
-            deductible_amount=deductible_basis,
-            applied_ratio=Decimal("1"),
-            statutory_cap_applied=None,
-        )
-    if deductible_basis > limit:
-        return _refused(
-            f"purchase of {deductible_basis} exceeds the low-value limit of {limit}; "
-            "only its amortization quota is deductible, through the activity asset register",
-            RentaDeductibilityRefusal.ASSET_REGISTER_REQUIRED,
-        )
-    return _RentaDeductibilityDecision(
-        status=RentaDeductibilityStatus.ELIGIBLE,
-        reason="deductible",
-        deductible_amount=deductible_basis,
-        applied_ratio=Decimal("1"),
-        statutory_cap_applied=annual,
-    )
-
-
 _RentaDeductibilityEvaluator = Callable[
     [RentaDeductibleExpenseFact, ProportionalityRule, RentaDeductibilityContext, Decimal],
     _RentaDeductibilityDecision,
@@ -669,8 +638,6 @@ def _evaluator_for_proportionality_kind(
         return _evaluate_non_deductible_rule
     if kind.requires_exclusive_use:
         return _evaluate_exclusive_use_rule
-    if kind.is_low_value_asset:
-        return _evaluate_low_value_asset_rule
     return None
 
 
@@ -952,9 +919,8 @@ def statutory_cap_trims(
     """Hold rows that share one statutory cap to that cap together.
 
     :func:`evaluate_renta_deductibility` caps each row on its own, but the law
-    caps a total: the seguro de enfermedad and mutualidad limits per year, the
-    dieta limits per day, and the low-value asset write-off per period (LIS art.
-    12.3.e, across every element). Several rows each below the cap can exceed
+    caps a total: the seguro de enfermedad and mutualidad limits per year and the
+    dieta limits per day. Several rows each below the cap can exceed
     it together, so the rows of each cap are summed in date order and the
     excess is removed from the latest rows first.
 
@@ -1002,10 +968,6 @@ def _statutory_cap_group(
     context: RentaDeductibilityContext,
 ) -> tuple[tuple[str, int | date], Decimal] | None:
     """Return the cap a row's claim counts against, and that cap's limit."""
-    if rule.kind.is_low_value_asset:
-        # One limit for every low-value element of the period, whatever its category.
-        limit = rule.cap_amount_for_year(claim.claim_date.year)
-        return None if limit is None else ((rule.kind.value, claim.claim_date.year), limit)
     if not rule.kind.is_statutory_cap:
         return None
     one_day = context.model_copy(update={"statutory_cap_days": None})

@@ -43,11 +43,9 @@ INVALID_LEDGER_FACT: Final[str] = "invalid_ledger_fact"
 INELIGIBLE_DEDUCTIBILITY: Final[str] = "ineligible_deductibility"
 EXCLUSIVE_USE_REQUIRED: Final[str] = RentaDeductibilityRefusal.EXCLUSIVE_USE_REQUIRED.value
 MISSING_OWNERSHIP_SHARE: Final[str] = RentaDeductibilityRefusal.MISSING_OWNERSHIP_SHARE.value
-ASSET_REGISTER_REQUIRED: Final[str] = RentaDeductibilityRefusal.ASSET_REGISTER_REQUIRED.value
 
 
 __all__ = [
-    "ASSET_REGISTER_REQUIRED",
     "EXCLUSIVE_USE_REQUIRED",
     "INELIGIBLE_DEDUCTIBILITY",
     "INVALID_LEDGER_FACT",

@@ -301,23 +301,37 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
     assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("100.00")}
 
 
-def test_an_equipment_purchase_above_the_low_value_limit_is_not_deducted_whole() -> None:
-    """DISCRIMINATING. A 2,000 EUR computer is amortized (LIS art. 12.1), not written off in its purchase year.
+@pytest.mark.parametrize(
+    ("category_id", "base", "iva"),
+    [
+        ("hardware_amortizable", Decimal("2000.00"), Decimal("420.00")),
+        ("hardware_amortizable", Decimal("250.00"), Decimal("52.50")),
+        ("mobiliario_amortizable", Decimal("250.00"), Decimal("52.50")),
+        ("amortizacion_vivienda_afecto", Decimal("1000.00"), Decimal("0.00")),
+    ],
+)
+def test_a_purchase_in_an_amortizable_category_deducts_nothing_whatever_its_value(
+    category_id: str,
+    base: Decimal,
+    iva: Decimal,
+) -> None:
+    """DISCRIMINATING. The purchase is acquisition evidence: only the activity-asset register deducts.
 
-    Only a new item of up to 300 EUR may be written off at once (LIS art. 12.3.e).
-    Without an asset-register entry the purchase deducts nothing and says why.
+    A 2,000 EUR computer is amortized (LIS art. 12.1), and a 250 EUR chair is
+    written off through the register's low-value free method, so neither
+    reaches an expense casilla from the ledger row.
     """
-    equipment = _transaction(
-        "unscheduled-equipment-acquisition",
-        amount=Decimal("2420.00"),
-        category=SpendingCategory.from_registry("hardware_amortizable"),
-        taxable_base=Decimal("2000.00"),
-        iva_rate=Decimal("0.21"),
-        iva_amount=Decimal("420.00"),
+    purchase = _transaction(
+        "amortizable-acquisition",
+        amount=base + iva,
+        category=SpendingCategory.from_registry(category_id),
+        taxable_base=base,
+        iva_rate=Decimal("0.21") if iva else Decimal("0"),
+        iva_amount=iva,
     )
 
     result = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions((equipment,)),
+        TransactionCatalogue.from_transactions((purchase,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
@@ -326,66 +340,8 @@ def test_an_equipment_purchase_above_the_low_value_limit_is_not_deducted_whole()
 
     assert result.observations == ()
     assert result.casilla_values == {}
-    assert [issue.reason for issue in result.issues] == [RentaLedgerAggregationIssueReason.ASSET_REGISTER_REQUIRED]
-
-
-def test_a_low_value_equipment_purchase_is_written_off_in_its_year() -> None:
-    chair = _transaction(
-        "low-value-chair",
-        amount=Decimal("302.50"),
-        category=SpendingCategory.from_registry("mobiliario_amortizable"),
-        taxable_base=Decimal("250.00"),
-        iva_rate=Decimal("0.21"),
-        iva_amount=Decimal("52.50"),
-    )
-
-    result = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions((chair,)),
-        InvoiceCatalogue(),
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
-    )
-
-    assert result.issues == ()
-    assert result.casilla_values == {validated_casilla_id("0208", surface="test"): Decimal("250.00")}
-
-
-def test_low_value_write_offs_of_every_equipment_category_share_one_annual_limit() -> None:
-    """DISCRIMINATING. LIS art. 12.3.e allows 25,000 EUR per period across all such items, not per row.
-
-    Eighty-four items of 300 EUR, split over hardware and furniture, total 25,200 EUR:
-    the latest write-off loses the 200 EUR above the limit.
-    """
-    rows = tuple(
-        _transaction(
-            f"low-value-{index:03d}",
-            amount=Decimal("363.00"),
-            category=SpendingCategory.from_registry(
-                "hardware_amortizable" if index % 2 else "mobiliario_amortizable",
-            ),
-            booked_date=date(2025, 1 + index % 12, 1 + index // 12),
-            value_date=date(2025, 1 + index % 12, 1 + index // 12),
-            taxable_base=Decimal("300.00"),
-            iva_rate=Decimal("0.21"),
-            iva_amount=Decimal("63.00"),
-        )
-        for index in range(84)
-    )
-
-    result = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions(rows),
-        InvoiceCatalogue(),
-        bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
-    )
-
-    assert result.issues == ()
-    deducted = sum((observation.deductible_amount for observation in result.observations), Decimal("0"))
-    assert deducted == Decimal("25000.00")
-    latest = max(result.observations, key=lambda observation: (observation.filing_date, observation.transaction_id))
-    assert latest.deductible_amount == Decimal("100.00")
+    assert [issue.reason for issue in result.issues] == [RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY]
+    assert [issue.category_id for issue in result.issues] == [category_id]
 
 
 @pytest.mark.parametrize("category_id", ["telefonia_movil", "vehiculo_combustible"])

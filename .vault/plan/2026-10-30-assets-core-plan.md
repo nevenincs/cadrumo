@@ -14,7 +14,7 @@ related:
   - '[[2026-10-30-assets-core-implementation-state-against-law-reference]]'
 modified: '2026-10-30'
 body_schema: body-v2
-body_hash: 'sha256:89b4f72935f8457a2330d10c54833e891b53bffffc3aeaa331283cafb56d1360'
+body_hash: 'sha256:69716d05a59e008c351f9cd9fc99718866bab862a92bb21528f8af117f5ffcbe'
 ---
 
 <!-- RETIRED: S02, S03 -->
@@ -35,15 +35,16 @@ Owners: CADRUMO-AMORTIZATION2 has S01, S05, S06, S08, S09, S12. CADRUMO-AMPORTIZ
 - [x] `S04` - Verify the amortization tables and facts against the law for every supported year, normal LIS art. 12.1.a and simplified Orden 27-03-1998, correcting any out-of-date parameter or fact, with an independent table test; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/, src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`.
 - [x] `S05` - Remove the unused claim revision fields, define one effective-claim selection and a pure gap finder, and refuse a correction whose basis is below effective claims; `src/cadrumo/domain/renta/actividad_asset/claims.py, src/cadrumo/application/actividad_asset/history.py`.
 - [x] `S06` - Add the non-deductible IVA acquisition component to the basis, the EUR 300 valor unitario test, the later afectacion base and the acquisition transaction check; `src/cadrumo/domain/renta/actividad_asset/lifecycle.py, election.py, src/cadrumo/application/actividad_asset/operations.py`.
-- [ ] `S07` - Author the 0227 binding from 2022, remove the amortizable ledger categories from 0208 routing and retire their low-value and home-ratio deductions; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/, src/cadrumo/_data/registry/aeat/facts/, src/cadrumo/domain/renta/ledger_expenses.py`.
+- [x] `S07` - Author the 0227 binding from 2022, remove the amortizable ledger categories from 0208 routing and retire their low-value and home-ratio deductions; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/, src/cadrumo/_data/registry/aeat/facts/, src/cadrumo/domain/renta/ledger_expenses.py`.
 - [x] `S08` - Route Modelo 100 from effective claims with non-blocking gap findings, compute Modelo 130 casilla 02 accrual from the schedule excluding agrarian activities, make the collision unconditional, refuse foral residents and type the history load failure; `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py, modelo_bindings_renta_expenses.py, src/cadrumo/application/modelo/calculation_notes.py`.
-- [ ] `S09` - Record consumed claim IDs and schedule fingerprints on the calculation revision and mark a change as staleness in the drift gate; `src/cadrumo/domain/modelos/calculation_revision.py, src/cadrumo/application/modelo/_ledger_drift_gate.py`.
+- [x] `S09` - Record consumed claim IDs and schedule fingerprints on the calculation revision and mark a change as staleness in the drift gate; `src/cadrumo/domain/modelos/calculation_revision.py, src/cadrumo/application/modelo/_ledger_drift_gate.py`.
 - [x] `S10` - Record and accept the disposal decision covering transmission, baja with zero proceeds, minimum amortization, DA 30 and DA 59 excess, and casillas 0179, 0387, 1846 and 1478; `.vault/adr/`.
 - [ ] `S11` - Implement baja of an element with date and reason and its disposal calculation through registered operations, so an element leaves the register without erasing history; `src/cadrumo/domain/renta/actividad_asset/, src/cadrumo/application/actividad_asset/`.
 - [ ] `S12` - Add the read model and operations: element list, per-year amortization plan with typed claim state, claimable intervals and authored or projected edition, ordered event timeline with sequence and nullable recorded time, claim used_by and schedule match, form options, acquisition candidates, refusal sub-reason keys, atomic correction with superseding claims, earlier-year claiming for rate methods, and a non-tax descriptor record for name, serial number and libro registro fields outside revision identity via ledger.actividad-asset.describe; `src/cadrumo/application/actividad_asset/, src/cadrumo/domain/renta/actividad_asset/claims.py and operation registration`.
 - [ ] `S13` - Prove the calculations end to end with the official worked-example oracles, a used-asset case from RIS art. 4.3, and the invariants that quarterly accrual sums to the annual charge and Modelo 130 Q4 equals 0208 plus 0227 when claims are complete; `owning tests directories`.
 - [ ] `S14` - Run the integrated review across the amended decisions and the backend, and append findings to the rolling audit; `.vault/audit/`.
 - [ ] `S15` - Localize every activity-asset refusal through registered catalogue keys in en, es, ca and hu, with a gate rejecting literal messages in the package, authorized by the operator's 2026-10-30 instruction that surfaced refusals must be translated; `src/cadrumo/domain/renta/actividad_asset/, src/cadrumo/application/actividad_asset/, src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py, src/cadrumo/locales/`.
+- [ ] `S16` - Close the foral gap the lifecycle decision requires: refuse forecast and claim for a foral resident, recognize Araba, Bizkaia and Gipuzkoa in the tax-residence catalogue, and stop an unparseable residence reading as common territory, with real-profile tests; `src/cadrumo/application/actividad_asset/operations.py, src/cadrumo/application/aggregation/renta_ledger.py, src/cadrumo/_data/registry/aeat/facts/`.
 
 ## Parallelization
 

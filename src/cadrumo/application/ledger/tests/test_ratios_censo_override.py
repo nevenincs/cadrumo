@@ -83,7 +83,7 @@ def test_no_warning_when_ownership_override_matches_raw_afectacion(operation: Pi
     raw = Decimal("0.20")
 
     result = censo_override_warning(
-        category=_category("amortizacion_vivienda_afecto", operation),
+        category=_category("ibi_vivienda_afecto", operation),
         override_ratio=raw,
         raw_afectacion_ratio=raw,
         year=2025,

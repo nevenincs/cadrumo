@@ -175,7 +175,7 @@ def test_refuses_on_mismatch_between_persisted_and_censo_derived(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.from_registry("amortizacion_vivienda_afecto"): Decimal("0.50")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("ibi_vivienda_afecto"): Decimal("0.50")}),
         bucket_id=_BUCKET_ID,
     )
 
@@ -187,7 +187,7 @@ def test_refuses_on_mismatch_between_persisted_and_censo_derived(
             operation=authority_operation,
         )
 
-    assert "amortizacion_vivienda_afecto" in str(exc.value)
+    assert "ibi_vivienda_afecto" in str(exc.value)
     assert "0.50" in str(exc.value)
     assert "0.20" in str(exc.value)
 

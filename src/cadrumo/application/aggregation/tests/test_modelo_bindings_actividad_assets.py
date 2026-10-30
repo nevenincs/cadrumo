@@ -9,8 +9,8 @@ from functools import cache
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.categories.registry import resolve_category_profiles
 from ....domain.renta.actividad_asset.claims import M100_AMORTIZATION_CASILLA_IDS
 from ....domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -30,7 +30,6 @@ from ....domain.renta.actividad_asset.lifecycle import (
 )
 from ....domain.renta.ledger_expenses import renta_first_slice_expense_routing
 from ..modelo_bindings_actividad_assets import (
-    _AMORTIZATION_CATEGORY_TOKENS,
     LedgerRentaExpenseTreatment,
     amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
@@ -339,30 +338,31 @@ def test_withheld_acquisition_advisory_names_the_asset_and_the_amount(year: int)
     assert diagnostics[0].remedy is not None
 
 
-# The two newest Modelo 100 editions the registry authors; the first-slice
-# expense routing is declared for each of them.
-_ROUTING_EDITIONS = newest_authored_editions("100", 2)
-
-
-@pytest.mark.parametrize("year", _ROUTING_EDITIONS)
-def test_amortization_labelled_categories_come_from_the_governed_routing(year: int) -> None:
-    """The label is a registry fact: the routed casilla decides, not a category name list."""
+@pytest.mark.parametrize("year", _supported_years())
+def test_amortization_labelled_categories_come_from_the_governed_catalogue(year: int) -> None:
+    """The label is a registry fact: the catalogue names the categories, not a list in code."""
     with bundled_indexed_authority().operation():
         labelled = amortization_labelled_expense_categories(effective_date=date(year, 6, 30))
 
     assert "hardware_amortizable" in labelled
     assert "mobiliario_amortizable" in labelled
+    assert "amortizacion_vivienda_afecto" in labelled
     assert "asesoria_fiscal" not in labelled
     assert "material_oficina" not in labelled
 
 
-@pytest.mark.parametrize("year", _ROUTING_EDITIONS)
-def test_every_routed_amortization_category_stays_labelled_without_its_route(year: int) -> None:
-    """The labelled set outlives the routing, so a route the set does not hold must fail here."""
-    with bundled_indexed_authority().operation():
-        routing = renta_first_slice_expense_routing(effective_date=date(year, 6, 30))
-        labelled = amortization_labelled_expense_categories(effective_date=date(year, 6, 30))
+@pytest.mark.parametrize("year", _supported_years())
+def test_no_labelled_category_reaches_an_amortization_casilla(year: int) -> None:
+    """The register is the only route to 0208 and 0227: no ledger category routes there, and each deducts nothing."""
+    effective_date = date(year, 6, 30)
+    with bundled_indexed_authority().operation() as operation:
+        labelled = amortization_labelled_expense_categories(effective_date=effective_date)
+        routing = renta_first_slice_expense_routing(effective_date=effective_date)
+        profiles = resolve_category_profiles(year, operation=operation)
 
-    routed = {category.value for category, casilla in routing.items() if casilla in M100_AMORTIZATION_CASILLA_IDS}
-    assert routed <= labelled
-    assert labelled == _AMORTIZATION_CATEGORY_TOKENS
+    assert labelled
+    assert not {category.value for category in routing} & labelled
+    assert not {casilla for casilla in routing.values() if casilla in M100_AMORTIZATION_CASILLA_IDS}
+    assert {
+        category.value for category, profile in profiles.items() if profile.proportionality.kind.is_non_deductible
+    } >= labelled

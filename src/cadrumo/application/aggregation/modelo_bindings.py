@@ -106,6 +106,7 @@ from .modelo_bindings_actividad_assets import (
     dwelling_ownership_share,
     m130_activity_asset_projection,
     refused_amortization_rows,
+    refused_register_owned_rows,
     register_acquisition_transaction_ids,
     register_owned_acquisition_diagnostics,
     unregistered_amortization_row_diagnostics,
@@ -1092,7 +1093,15 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        register_owned = classification.withheld
+        refused_owned = refused_register_owned_rows(
+            aggregation.issues,
+            assets=asset_history.revisions,
+            tax_year=aggregation_period.filing_year,
+            effective_date=date(aggregation_period.filing_year, 12, 31),
+        )
+        register_owned = (*classification.withheld, *refused_owned)
+        owned_refused_ids = {row.transaction_id for row in refused_owned}
+        issues = tuple(issue for issue in aggregation.issues if issue.transaction_id not in owned_refused_ids)
         excluded_transaction_ids = classification.excluded_transaction_ids
         ledger_observations = tuple(
             observation
@@ -1121,7 +1130,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 resolver_id=self.resolver_id,
             )
             + source_issue_diagnostics(
-                aggregation.issues,
+                issues,
                 source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                 resolver_id=self.resolver_id,
                 held_back_reasons=frozenset(

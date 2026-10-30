@@ -8955,6 +8955,12 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 sequence_order = {source_citations = [1, 0], source_refs = [1, 0]}
 [[revisions."2024".family_overrides]]
 family = "bindings"
+selector = {revision = "2023", id = "renta-ledger-expense-0227-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+sequence_order = {source_citations = [1, 0], source_refs = [1, 0]}
+[[revisions."2024".family_overrides]]
+family = "bindings"
 selector = {revision = "2023", id = "renta-ledger-expense-0217-deductible"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
 sequence_removals = {source_citations = [0], source_refs = [0]}

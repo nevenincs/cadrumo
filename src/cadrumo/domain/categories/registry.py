@@ -192,7 +192,6 @@ def _profile_from_authority_fact(
         ),
         "statutory_cap_variants": variants,
         "statutory_cap_schedule": schedule,
-        "unit_value_limit_eur": values.get("unit_value_limit_eur"),
         "requires_ownership_share": _declared_flag(values, "requires_ownership_share", category=category),
     }
     try:

@@ -107,7 +107,7 @@ def test_the_ownership_costs_take_the_raw_proportion(_runtime_profile: object) -
             operation=_authority_operation_for_test,
         )
 
-        assert ratios[SpendingCategory.from_registry("amortizacion_vivienda_afecto")] == Decimal("0.20")
+        assert ratios[SpendingCategory.from_registry("ibi_vivienda_afecto")] == Decimal("0.20")
 
 
 def test_no_declared_area_resolves_to_nothing_rather_than_a_guess(_runtime_profile: object) -> None:

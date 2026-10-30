@@ -114,7 +114,7 @@ class RegisterOwnedAcquisition(BaseModel):
     transaction_id: TransactionId
     category: str | None = Field(default=None, min_length=1, max_length=128)
     tax_year: int
-    purchase_amount: Decimal
+    purchase_amount: Decimal | None = None
 
 
 class ActivityAssetClaimSource(BaseModel):
@@ -697,6 +697,43 @@ def refused_amortization_rows(
     )
 
 
+def refused_register_owned_rows(
+    issues: Iterable[RefusedExpenseRow],
+    *,
+    assets: tuple[ActivityAssetRevision, ...],
+    tax_year: int,
+    effective_date: date,
+) -> tuple[RegisterOwnedAcquisition, ...]:
+    """Find acquisitions the register owns that the expense rules refused outright.
+
+    A row in an amortizable category deducts nothing, so it never becomes an
+    observation to withhold. The register still owns it, and the operator is told
+    so, without a purchase amount that no observation carries.
+
+    Returns:
+        One withheld acquisition per refused, owned, amortization-labelled expense of this period.
+    """
+    declared = tuple(
+        issue
+        for issue in issues
+        if issue.category_id is not None and str(issue.reason) not in _NOT_A_DECLARED_EXPENSE_ISSUE_REASONS
+    )
+    if not declared:
+        return ()
+    labelled = amortization_labelled_expense_categories(effective_date=effective_date)
+    owners = {transaction_id: asset_id for asset_id, transaction_id in _current_acquisition_owners(assets)}
+    return tuple(
+        RegisterOwnedAcquisition(
+            asset_id=owners[issue.transaction_id],
+            transaction_id=issue.transaction_id,
+            category=issue.category_id,
+            tax_year=tax_year,
+        )
+        for issue in declared
+        if issue.category_id in labelled and issue.transaction_id in owners
+    )
+
+
 def unregistered_amortization_row_diagnostics(
     rows: Iterable[UnregisteredAmortizationRow],
     *,
@@ -745,8 +782,14 @@ def register_owned_acquisition_diagnostics(
         message=lambda acquisition: (
             f"ledger transaction {acquisition.transaction_id!r} is the activity-asset register's declared "
             f"acquisition of asset {acquisition.asset_id!r} (category={acquisition.category!r}, "
-            f"tax_year={acquisition.tax_year}); its {acquisition.purchase_amount} EUR purchase amount is the "
-            "amortizable base, not a deductible expense of the period, so it is not declared in this expense total"
+            f"tax_year={acquisition.tax_year}); its "
+            + (
+                "purchase amount"
+                if acquisition.purchase_amount is None
+                else f"{acquisition.purchase_amount} EUR purchase amount"
+            )
+            + " is the amortizable base, not a deductible expense of the period, so it is not declared in this "
+            "expense total"
         ),
         remedy=lambda _acquisition: (
             "the register owns this asset's Renta deduction: record the year's amortization charge so the "
@@ -816,6 +859,7 @@ __all__ = [
     "m100_activity_asset_projection",
     "m130_activity_asset_projection",
     "refused_amortization_rows",
+    "refused_register_owned_rows",
     "register_acquisition_transaction_ids",
     "register_owned_acquisition_diagnostics",
     "unregistered_amortization_row_diagnostics",

@@ -19,6 +19,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
 
+from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategoryFamily, categories_for_family
 from ..errors import UsageRatioValidationError
 from ..service import derive_home_office_ratios_from_censo
@@ -41,11 +42,22 @@ def _family_categories(
     family: SpendingCategoryFamily,
     operation: PinnedAuthorityOperation,
 ) -> tuple[SpendingCategory, ...]:
-    return categories_for_family(
-        family,
-        effective_date=date(2025, 12, 31),
-        authority=operation,
+    profiles = resolve_category_profiles(2025, operation=operation)
+    return tuple(
+        category
+        for category in categories_for_family(
+            family,
+            effective_date=date(2025, 12, 31),
+            authority=operation,
+        )
+        if profiles[category].proportionality.kind.is_usage_ratio
     )
+
+
+def test_the_amortizable_home_category_has_no_derived_ratio(operation: PinnedAuthorityOperation) -> None:
+    profile = derive_home_office_ratios_from_censo(Decimal("0.20"), year=2025, operation=operation)
+
+    assert SpendingCategory.from_registry("amortizacion_vivienda_afecto") not in profile.ratios
 
 
 def test_derivation_covers_every_home_office_category(operation: PinnedAuthorityOperation) -> None:
@@ -97,7 +109,7 @@ def test_arrendamiento_vivienda_afecto_concrete_value_at_20_percent_afectacion(
     """Anti-tautology pin: 20% afectación, arrendamiento must be exactly 0.20, not 0.06.
 
     arrendamiento_vivienda_afecto is the renter's parallel to
-    ibi_vivienda_afecto / amortizacion_vivienda_afecto / comunidad_vivienda_afecto:
+    ibi_vivienda_afecto / comunidad_vivienda_afecto:
     a titularidad-shaped cost of the partially affected home, deducted at the
     raw affectación ratio under LIRPF art. 29.2 partial affectation. It must
     never apply the suministros-only art. 30.2.5.b 30% carve-out (which would

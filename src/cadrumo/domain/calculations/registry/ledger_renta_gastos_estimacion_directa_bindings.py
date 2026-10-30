@@ -32,7 +32,8 @@ from .ledger_binding_validation import (
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
 
-# SpendingCategory routing table.
+# The casillas a ledger category routes to, plus 0208 and 0227, which only the
+# activity-asset register reaches and no category routes to.
 _RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
     "_RENTA_100_FIRST_SLICE_CASILLAS",
     "0183",
@@ -49,6 +50,7 @@ _RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
     "0206",
     "0208",
     "0217",
+    "0227",
 )
 
 

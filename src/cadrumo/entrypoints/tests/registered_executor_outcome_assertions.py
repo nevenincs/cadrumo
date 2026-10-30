@@ -27,12 +27,18 @@ from ...adapters.persistence.profile.own_accounts import OwnAccountRepository
 from ...adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.actividad_asset.activity_asset_projections import (
+    ActivityAssetAcquisitionCandidatesProjection,
     ActivityAssetClaimProjection,
     ActivityAssetCorrectProjection,
     ActivityAssetCreateProjection,
+    ActivityAssetDescribeProjection,
     ActivityAssetFilingHandoffProjection,
     ActivityAssetForecastProjection,
+    ActivityAssetFormOptionsProjection,
     ActivityAssetInspectProjection,
+    ActivityAssetListProjection,
+    ActivityAssetPlanProjection,
+    ActivityAssetTimelineProjection,
 )
 from ...application.aggregation.service import aggregate_per_modelo
 from ...application.auth.auth_read_contracts import (
@@ -546,6 +552,12 @@ def _assert_registered_executor_conformance_outcome(
             "ledger.actividad-asset.forecast": ActivityAssetForecastProjection,
             "ledger.actividad-asset.claim": ActivityAssetClaimProjection,
             "ledger.actividad-asset.filing-handoff": ActivityAssetFilingHandoffProjection,
+            "ledger.actividad-asset.describe": ActivityAssetDescribeProjection,
+            "ledger.actividad-asset.list": ActivityAssetListProjection,
+            "ledger.actividad-asset.plan": ActivityAssetPlanProjection,
+            "ledger.actividad-asset.timeline": ActivityAssetTimelineProjection,
+            "ledger.actividad-asset.form-options": ActivityAssetFormOptionsProjection,
+            "ledger.actividad-asset.acquisition-candidates": ActivityAssetAcquisitionCandidatesProjection,
         }[case.definition_id]
         asset_projection = _resolve_result_projection(
             driver,
@@ -757,13 +769,14 @@ def _assert_registered_executor_conformance_outcome(
             if case.definition_id == "ledger.ratios.eligible":
                 served = {row["category"]: row for row in document["rows"]}
                 assert document["count"] == len(served) > 0
-                assert served["amortizacion_vivienda_afecto"]["label"] == "Depreciation of home used for business"
-                assert served["amortizacion_vivienda_afecto"]["notes"] == (
+                assert served["ibi_vivienda_afecto"]["label"] == "Property tax (IBI) on home used for business"
+                assert served["ibi_vivienda_afecto"]["notes"] == (
                     "Deductible in proportion to the home's floor area used for the business and to your "
                     "ownership share in it; the 30% supplies factor does not apply (Ley 35/2006 art. 29.2, "
-                    "Reglamento IRPF art. 22.3, depreciation of the home used for business)."
+                    "Reglamento IRPF art. 22.3, property tax on the home used for business)."
                 )
-                assert served["amortizacion_vivienda_afecto"]["proportionality_kind"] == "usage_ratio_home_area"
+                assert served["ibi_vivienda_afecto"]["proportionality_kind"] == "usage_ratio_home_area"
+                assert "amortizacion_vivienda_afecto" not in served
                 assert "vehiculo_combustible" not in served
                 assert served["suministros_home_office_luz"]["label"] == "Home-office electricity"
                 assert served["suministros_home_office_luz"]["proportionality_kind"] == "usage_ratio_home_area"

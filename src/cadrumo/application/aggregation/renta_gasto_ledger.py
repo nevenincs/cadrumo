@@ -145,7 +145,6 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
     INELIGIBLE_DEDUCTIBILITY = _shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
     EXCLUSIVE_USE_REQUIRED = _shared_issue_reasons.EXCLUSIVE_USE_REQUIRED
     MISSING_OWNERSHIP_SHARE = _shared_issue_reasons.MISSING_OWNERSHIP_SHARE
-    ASSET_REGISTER_REQUIRED = _shared_issue_reasons.ASSET_REGISTER_REQUIRED
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.

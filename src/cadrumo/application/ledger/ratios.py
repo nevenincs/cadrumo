@@ -485,6 +485,8 @@ def censo_override_warning(
     if family_for(category, authority=operation) not in HOME_OFFICE_FAMILIES:
         return None
     rule = resolve_category_profiles(year, operation=operation)[category].proportionality
+    if not rule.kind.is_usage_ratio:
+        return None
     derived = effective_usage_ratio(rule, raw_afectacion_ratio)
     if derived == override_ratio:
         return None

@@ -921,7 +921,7 @@ fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0227" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:286 y aeat-dr-100-2022-dictionary:285: E1G23, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G23, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2021-dictionary:286 y aeat-dr-100-2022-dictionary:285: E1G23, ruta /DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1G23, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-ledger-expense-0227-deductible" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0228" }

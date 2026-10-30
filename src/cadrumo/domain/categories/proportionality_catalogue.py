@@ -40,7 +40,6 @@ _KIND_ROLES = (
     "requires_fixed_pct",
     "is_non_deductible",
     "requires_exclusive_use",
-    "is_low_value_asset",
 )
 
 
