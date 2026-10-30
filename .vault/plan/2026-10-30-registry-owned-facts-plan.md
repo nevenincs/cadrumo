@@ -6,7 +6,7 @@ date: '2026-10-30'
 tier: L1
 modified: '2026-10-30'
 body_schema: body-v2
-body_hash: 'sha256:b0756e9028e7e07c18fd6502c36c505b59defb53e9bd1a382654be9c41f1ff1e'
+body_hash: 'sha256:77e7516a94b1ef03c62bcc6afac22b1f240b5b28aa5de5ff723e39adde2658f2'
 ---
 
 <!-- LINK RULES:
@@ -117,7 +117,7 @@ Move every remaining tax number, limit, period rule and form code from productio
 
 ## Steps
 
-- [ ] `S01` - Replace code copies of values the registry already holds: the DT12 threshold, Modelo 190 and 280 offsets, Modelo 720 subclaves; `src/cadrumo/application/modelo/dt12_advisory.py, src/cadrumo/application/filing/, src/cadrumo/domain/foreign_assets/register.py`.
+- [x] `S01` - Replace code copies of values the registry already holds: the DT12 threshold, Modelo 190 and 280 offsets, Modelo 720 subclaves; `src/cadrumo/application/modelo/dt12_advisory.py, src/cadrumo/application/filing/, src/cadrumo/domain/foreign_assets/register.py`.
 - [ ] `S02` - Derive box lists from registry declarations per revision; `src/cadrumo/application/modelo/projection.py, src/cadrumo/application/calculations/, src/cadrumo/domain/calculations/registry/`.
 - [ ] `S03` - Move form claves and code tables into registry vocabularies; `src/cadrumo/application/filing/, src/cadrumo/domain/contribuyente/renta_codes.py, src/cadrumo/application/wizard/, src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
 - [ ] `S04` - Move modelo routing rules and sets into registry declarations; `src/cadrumo/application/aggregation/, src/cadrumo/domain/calculations/registry/applicability.py, src/cadrumo/domain/deadlines/`.
