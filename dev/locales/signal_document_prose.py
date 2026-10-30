@@ -49,6 +49,35 @@ def embedded_document_language_prose(path: Path) -> tuple[tuple[int, str, str], 
     return tuple(blocks)
 
 
+def legal_citation_language_prose(path: Path, prose: tuple[tuple[int, str], ...]) -> tuple[tuple[int, str, str], ...]:
+    """Route only exact generator-marked citation headings to Spanish spelling."""
+    source = path.read_text(encoding=UTF_8)
+    lines = source.splitlines()
+    prefix = ".. cadrumo-legal-citation:"
+    markers = [(i, line) for i, line in enumerate(lines) if line.startswith(prefix)]
+    if not markers:
+        return ()
+    if path.suffix != ".rst" or path.parts[-3:-1] != ("_generated", "legal"):
+        raise ValueError("legal citation markers are only valid on generated legal pages")
+    result: list[tuple[int, str, str]] = []
+    for index, marker in markers:
+        try:
+            value = json.loads(marker[len(prefix) :].strip())
+        except json.JSONDecodeError as exc:
+            raise ValueError("malformed legal citation marker") from exc
+        if not isinstance(value, str) or not value or index + 3 >= len(lines) or lines[index + 1] != "":
+            raise ValueError("invalid legal citation marker")
+        heading = re.sub(r"\\(.)", r"\1", lines[index + 2]).strip()
+        underline = lines[index + 3]
+        if heading != value or not underline or set(underline) not in ({"="}, {"-"}):
+            raise ValueError("legal citation marker does not match its heading")
+        candidates = [(line, text) for line, text in prose if line in (index + 3, index + 4) and text == value]
+        if len(candidates) != 1:
+            raise ValueError("legal citation marker does not match parsed heading")
+        result.append((candidates[0][0], "es", value))
+    return tuple(result)
+
+
 def node_has_ancestor(node: object, node_types: tuple[type[object], ...]) -> bool:
     """Return whether a docutils node is nested below excluded syntax."""
     parent = getattr(node, "parent", None)

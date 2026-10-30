@@ -190,7 +190,8 @@ def test_generated_inventory_checks_wording_in_spanish_and_commentary_in_english
         notes="English curator commentary remains checked.",
         required_text=("no serán deducibles las cuotas soportadas",),
     )
-    page = tmp_path / "legal.rst"
+    page = tmp_path / "docs/_generated/legal/example.rst"
+    page.parent.mkdir(parents=True)
     page.write_text(render_legal_reference(_REPO_ROOT, records=(record,)).pages[0].rst, encoding="utf-8")
     values: dict[str, dict[str, str]] = {}
     findings: list[dict[str, object]] = []
@@ -219,7 +220,8 @@ def test_mixed_catalogue_note_tags_only_source_verified_quote_and_keeps_english_
         required_text=(quote,),
     )
 
-    page = tmp_path / "legal.rst"
+    page = tmp_path / "docs/_generated/legal/example.rst"
+    page.parent.mkdir(parents=True)
     page.write_text(render_legal_reference(tmp_path, records=(record,)).pages[0].rst, encoding="utf-8")
     values: dict[str, dict[str, str]] = {}
     findings: list[dict[str, object]] = []

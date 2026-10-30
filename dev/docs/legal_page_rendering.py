@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from html import escape
 from pathlib import Path
 from typing import Final
@@ -50,6 +51,12 @@ def _rst_literal(text: str) -> str:
 
 def _rst_heading(text: str, underline: str) -> str:
     return f"{text}\n{underline * max(len(text), 3)}\n"
+
+
+def _legal_heading(text: str, underline: str) -> str:
+    """Mark the exact Spanish citation for generated-document spelling."""
+    marker = json.dumps(text, ensure_ascii=False)
+    return f".. cadrumo-legal-citation: {marker}\n\n{_rst_heading(_rst_escape(text), underline)}"
 
 
 def _in_force_sentence(record: LegalProvisionRecord, language: OutputLanguage) -> str | None:
@@ -388,7 +395,7 @@ def _render_entry(
         lines.extend([".. raw:: html", "", f'   <span id="{anchor}"></span>', ""])
     designation = legal_provision_designation(record)
     read_label = docs_chrome("docs.legal.provision.read_on_boe", language, citation=designation)
-    lines.extend([_rst_heading(_rst_escape(heading), "-").rstrip("\n"), ""])
+    lines.extend([_legal_heading(heading, "-").rstrip("\n"), ""])
 
     in_force = _in_force_sentence(record, language)
     if in_force is not None:
@@ -428,7 +435,7 @@ def _render_document_page(
     intro = _rst_escape(
         docs_chrome("docs.legal.page.intro", language, document=document_id, count=len(records)),
     )
-    blocks: list[str] = [header + _rst_heading(_rst_escape(instrument), "="), intro + "\n"]
+    blocks: list[str] = [header + _legal_heading(instrument, "="), intro + "\n"]
     anchors: list[str] = []
     targets: dict[str, str] = {}
     anchor_by_id: dict[str, str | None] = {}

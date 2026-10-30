@@ -1132,6 +1132,54 @@ def test_generated_legal_prose_uses_explicit_language_dictionary(tmp_path, monke
     assert spelling == {("es", "parallel:docs/_generated/legal/example.rst:line[5]:lang[es]"): ("desconocido",)}
 
 
+def test_generated_legal_citation_uses_spanish_and_keeps_other_prose_checked(tmp_path, monkeypatch) -> None:
+    from collections import Counter
+
+    from .. import signal_spelling as spelling_module
+
+    class Dictionary:
+        def __init__(self, known: set[str]) -> None:
+            self.known = known
+
+        def lookup(self, word: str) -> bool:
+            return word in self.known
+
+    page = tmp_path / "docs" / "_generated" / "legal" / "example.rst"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        '.. cadrumo-legal-citation: "Ley especial errata"\n\nLey especial errata\n===================\n\n'
+        "English misspeling.\n",
+        encoding="utf-8",
+    )
+    values: dict[str, dict[str, str]] = {}
+    findings: list[dict[str, object]] = []
+    inventory_generated_document_file(page, tmp_path, Counter(), findings, values)
+    monkeypatch.setattr(
+        spelling_module,
+        "load_dictionaries",
+        lambda _repository: {"en": Dictionary({"English"}), "es": Dictionary({"Ley", "especial"})},
+    )
+    spelling, _inventory, _findings = spellcheck_catalogues(set(), {}, tmp_path, additional_values=values)
+
+    assert not findings
+    assert spelling == {
+        ("es", "parallel:docs/_generated/legal/example.rst:line[4]:lang[es]"): ("errata",),
+        ("en", "parallel:docs/_generated/legal/example.rst:line[6]"): ("misspeling",),
+    }
+
+
+def test_generated_legal_citation_marker_must_match_heading(tmp_path) -> None:
+    from collections import Counter
+
+    page = tmp_path / "docs" / "_generated" / "legal" / "example.rst"
+    page.parent.mkdir(parents=True)
+    page.write_text('.. cadrumo-legal-citation: "Ley correcta"\n\nLey typo\n========\n', encoding="utf-8")
+    findings: list[dict[str, object]] = []
+    inventory_generated_document_file(page, tmp_path, Counter(), findings, {})
+
+    assert [finding["kind"] for finding in findings] == ["docs_generated_source_unreadable"]
+
+
 def test_intentionally_open_reason_copy_is_optional_but_unknown_family_blocks(tmp_path, monkeypatch) -> None:
     from .. import signal_discovery as discovery
 

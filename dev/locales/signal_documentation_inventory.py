@@ -9,7 +9,11 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from .signal_contracts import DocumentationEchoDictionaries
-from .signal_document_prose import embedded_document_language_prose, visible_document_prose
+from .signal_document_prose import (
+    embedded_document_language_prose,
+    legal_citation_language_prose,
+    visible_document_prose,
+)
 from .signal_documentation_counts import docs_extraction_finding, documentation_counts
 from .signal_documentation_templates import inventory_documentation_manifest
 from .signal_echo_classification import load_platform_identity_terms
@@ -219,6 +223,7 @@ def inventory_generated_document_file(
     """Inventory generated document file."""
     try:
         prose = visible_document_prose(path)
+        citations = legal_citation_language_prose(path, prose)
     except Exception as exc:  # Parsing is part of the measured docs surface.
         counts["docs_generated_source_failures"] += 1
         findings.append(
@@ -234,7 +239,9 @@ def inventory_generated_document_file(
         )
         return
     counts["docs_generated_spellchecked_pages"] += 1
-    embedded = embedded_document_language_prose(path) + _legal_note_untagged_prose(path)
+    citation_lines = {line for line, _language, _text in citations}
+    prose = tuple((line, text) for line, text in prose if line not in citation_lines)
+    embedded = embedded_document_language_prose(path) + _legal_note_untagged_prose(path) + citations
     counts["docs_generated_prose_cells"] += len(prose) + len(embedded)
     if spelling_values is not None:
         relative = path.relative_to(repository).as_posix()
