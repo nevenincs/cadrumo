@@ -445,7 +445,7 @@ def _register_change_count(recorded: ActivityAssetConsumption, current: Activity
     return (
         len(set(recorded.claim_ids) ^ set(current.claim_ids))
         + len(set(recorded.schedule_fingerprints) ^ set(current.schedule_fingerprints))
-        + len(set(recorded.disposal_revision_ids) ^ set(current.disposal_revision_ids))
+        + current.disposals_changed_from(recorded)
     )
 
 

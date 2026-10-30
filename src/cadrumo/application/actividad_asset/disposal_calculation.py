@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
@@ -22,7 +23,7 @@ from ...domain.renta.actividad_asset.disposal import (
     calculate_disposal,
 )
 from ...domain.renta.actividad_asset.election import AmortizationMethod
-from ...domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
+from ...domain.renta.actividad_asset.errors import ActividadAssetError, ActividadAssetIncompleteError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ..operations.public_scalar import project_scalar
 from .activity_asset_read_models import (
@@ -73,24 +74,57 @@ def calculate_element_disposal(
         ActividadAssetIncompleteError: When the opening history is missing.
         ActividadAssetUnsupportedError: When an excess needs a year with no table class.
     """
+    return calculate_disposal(_disposal_facts(revision, disposal, history, bounds=bounds))
+
+
+def disposal_calculation_digest(
+    revision: ActivityAssetRevision,
+    disposal: ActivityAssetDisposal,
+    history: ActivityAssetHistory,
+    *,
+    bounds: DisposalBoundsReader,
+) -> str:
+    """Digest what one baja's figures rest on and what they come to.
+
+    A claim of an earlier year moves the result of a baja without touching its
+    revision or the claims of the year calculated, so a calculation records this to
+    see that move. A baja that cannot be worked out digests why, so completing its
+    history reads as a change too.
+
+    Returns:
+        The hex digest of the facts and result, or of the refusal, under the revision's identity.
+    """
+    try:
+        facts = _disposal_facts(revision, disposal, history, bounds=bounds)
+        outcome = f"{facts.model_dump_json()}\n{calculate_disposal(facts).model_dump_json()}"
+    except (ActividadAssetError, RegistryError) as error:
+        outcome = f"unresolved\n{type(error).__name__}"
+    return hashlib.sha256(f"{revision.revision_id}\n{outcome}".encode()).hexdigest()
+
+
+def _disposal_facts(
+    revision: ActivityAssetRevision,
+    disposal: ActivityAssetDisposal,
+    history: ActivityAssetHistory,
+    *,
+    bounds: DisposalBoundsReader,
+) -> ActivityAssetDisposalFacts:
     opening = revision.opening_history.accumulated_amount
     if opening is None:
         raise ActividadAssetIncompleteError(translated_message="ledger.actividad_asset.errors.opening_history_missing")
-    return calculate_disposal(
-        ActivityAssetDisposalFacts(
-            disposal=disposal,
-            acquisition_value=revision.basis.allocated_acquisition_value(),
-            allocation_share=revision.basis.allocation_share(),
-            amortizable_value=revision.amortizable_basis(),
-            opening_amount=opening,
-            opening_covered_through=revision.opening_history.covered_through_tax_year,
-            years=tuple(
-                _year_facts(revision, disposal, history, tax_year=tax_year, bounds=bounds(revision, tax_year))
-                for tax_year in range(revision.in_service_date.year, disposal.disposal_date.year + 1)
-            ),
-            excess_applies=disposal_excess_applies(revision, disposal),
-            later_affectation_period_years=bounds(revision, disposal.disposal_date.year).later_affectation_period_years,
+    return ActivityAssetDisposalFacts(
+        disposal=disposal,
+        acquisition_value=revision.basis.allocated_acquisition_value(),
+        allocation_share=revision.basis.allocation_share(),
+        amortizable_value=revision.amortizable_basis(),
+        opening_amount=opening,
+        opening_covered_through=revision.opening_history.covered_through_tax_year,
+        years=tuple(
+            _year_facts(revision, disposal, history, tax_year=tax_year, bounds=bounds(revision, tax_year))
+            for tax_year in range(revision.in_service_date.year, disposal.disposal_date.year + 1)
         ),
+        excess_applies=disposal_excess_applies(revision, disposal),
+        later_affectation_period_years=bounds(revision, disposal.disposal_date.year).later_affectation_period_years,
     )
 
 
@@ -204,6 +238,7 @@ def project_disposal_calculation(
 __all__ = [
     "DisposalBoundsReader",
     "calculate_element_disposal",
+    "disposal_calculation_digest",
     "disposal_excess_applies",
     "pinned_disposal_bounds",
     "project_disposal_calculation",

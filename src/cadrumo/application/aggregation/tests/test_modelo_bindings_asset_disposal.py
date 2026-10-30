@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.actividad_asset_disposal_bindings impo
     activity_asset_disposal_route_casillas,
 )
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
+from cadrumo.domain.modelos.calculation_revision_sources import ActivityAssetConsumption
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
     ActivityAssetDisposalReason,
@@ -289,3 +290,54 @@ def test_modelo_131_says_an_excess_it_could_not_work_out_as_modelos_100_and_130_
     assert "could not be worked out" in finding.message
     assert "0.00" not in finding.message
     assert finding.reason not in GATE_REFUSED_REASONS
+
+
+def _consumption(resolution: CalculationSourceResolution) -> ActivityAssetConsumption:
+    return ActivityAssetConsumption.from_source_refs(row.source_ref for row in resolution.provenance)
+
+
+def test_a_claim_of_an_earlier_year_moves_the_baja_and_the_calculation_records_that() -> None:
+    """12,000.00 from 2024 at 10 %, minimum 5 %, sold on 30 June 2025 for 12,000.00.
+
+    With no claim the minimum runs 12,000.00 x 5 % x (1 + 181 / 365) = 897.53, so the gain is
+    12,000.00 - (12,000.00 - 897.53) = 897.53. With a 2024 claim of 1,200.00 the deduction exceeds
+    the minimum and the gain is 1,200.00. The revision and the 2025 claims are the same in both.
+    """
+    unclaimed = _disposed(in_service=date(2024, 1, 1))
+    claimed = _disposed(in_service=date(2024, 1, 1), prior_claim="1200.00")
+
+    before, after = resolve_m100(unclaimed), resolve_m100(claimed)
+
+    assert _boxes(before)["1654"] == Decimal("897.53")
+    assert _boxes(after)["1654"] == Decimal("1200.00")
+    recorded, current = _consumption(before), _consumption(after)
+    assert recorded.claim_ids == current.claim_ids == ()
+    assert recorded.disposal_revision_ids == current.disposal_revision_ids
+    assert recorded.disposal_digests != current.disposal_digests
+    assert current.disposals_changed_from(recorded) == 1
+    assert current.disposals_changed_from(current) == 0
+
+
+def test_the_digest_stands_while_nothing_behind_the_baja_moved() -> None:
+    history = _disposed(in_service=date(2024, 1, 1))
+
+    assert _consumption(resolve_m100(history)) == _consumption(resolve_m100(history))
+
+
+def test_a_modelo_130_excess_records_the_figures_it_rests_on() -> None:
+    """A 2024 claim of 4,000.00 gives 4,000.00 - 1,795.07 = 2,204.93 of excess; 5,000.00 gives 3,204.93."""
+
+    def history(prior_claim: str) -> ActivityAssetHistory:
+        return _disposed(
+            regime=PriorFreeDepreciationRegime.TRLIS_DT_37,
+            in_service=date(2024, 1, 1),
+            prior_claim=prior_claim,
+        )
+
+    recorded = _consumption(resolve_m130(history("4000.00"), "4T"))
+    current = _consumption(resolve_m130(history("5000.00"), "4T"))
+
+    assert recorded.disposal_revision_ids == current.disposal_revision_ids
+    assert current.disposals_changed_from(recorded) == 1
+    assert _income_box(_income(history("4000.00"), "4T")) == Decimal("2204.93")
+    assert _income_box(_income(history("5000.00"), "4T")) == Decimal("3204.93")

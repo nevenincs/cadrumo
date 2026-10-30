@@ -289,7 +289,7 @@ def _asset_register_drift_finding(
             "claims_added": len(claims_added),
             "claims_removed": len(claims_removed),
             "schedules_changed": max(len(schedules_added), len(schedules_removed)),
-            "disposals_changed": len(set(current.disposal_revision_ids) ^ set(recorded.disposal_revision_ids)),
+            "disposals_changed": current.disposals_changed_from(recorded),
         },
         legal_refs=ASSET_REGISTER_DRIFT_LEGAL_REFS,
         source_refs=source_refs,
