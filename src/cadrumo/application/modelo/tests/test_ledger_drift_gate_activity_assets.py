@@ -128,6 +128,17 @@ def test_a_late_baja_is_drift_even_when_it_changes_no_claim() -> None:
     assert _gate(_draft(f"activity-asset-claim:{_C1}", disposal), f"activity-asset-claim:{_C1}", disposal) == []
 
 
+def test_a_baja_whose_figures_moved_is_drift_though_its_revision_and_claims_stand() -> None:
+    disposal = "activity-asset-disposal:" + "d" * 64
+    draft = _draft(disposal, "activity-asset-disposal-figures:" + "a" * 64)
+
+    (finding,) = _gate(draft, disposal, "activity-asset-disposal-figures:" + "b" * 64)
+
+    assert finding.message_facts["disposals_changed"] == 1
+    assert _facts([finding]) == (0, 0, 0)
+    assert _gate(draft, disposal, "activity-asset-disposal-figures:" + "a" * 64) == []
+
+
 def test_the_revision_records_the_claims_and_schedules_it_consumed() -> None:
     _, revision = _draft(
         f"activity-asset-claim:{_C2}",

@@ -199,6 +199,9 @@ ACTIVITY_ASSET_SCHEDULE_REF_PREFIX: Final = "activity-asset-schedule:"
 ACTIVITY_ASSET_DISPOSAL_REF_PREFIX: Final = "activity-asset-disposal:"
 """Prefix of the source reference naming one baja by the revision that records it."""
 
+ACTIVITY_ASSET_DISPOSAL_FIGURES_REF_PREFIX: Final = "activity-asset-disposal-figures:"
+"""Prefix of the source reference naming what one baja's figures rested on and came to, by digest."""
+
 
 class ActivityAssetConsumption(BaseModel):
     """The activity-asset register state one calculation rested on.
@@ -215,6 +218,9 @@ class ActivityAssetConsumption(BaseModel):
         disposal_revision_ids: Sorted identities of the revisions recording a baja
             the calculation's period reaches, so a late baja reads as drift even
             where it changed no claim.
+        disposal_digests: Sorted digests of those bajas' inputs and results, so a
+            claim of an earlier year that moves a baja's figures reads as drift even
+            where the revision and the year's claims stand as they were.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -222,6 +228,7 @@ class ActivityAssetConsumption(BaseModel):
     claim_ids: tuple[str, ...] = ()
     schedule_fingerprints: tuple[str, ...] = ()
     disposal_revision_ids: tuple[str, ...] = ()
+    disposal_digests: tuple[str, ...] = ()
 
     @classmethod
     def from_source_refs(cls, source_refs: Iterable[str]) -> ActivityAssetConsumption:
@@ -229,6 +236,7 @@ class ActivityAssetConsumption(BaseModel):
         claims: set[str] = set()
         schedules: set[str] = set()
         disposals: set[str] = set()
+        digests: set[str] = set()
         for source_ref in source_refs:
             if source_ref.startswith(ACTIVITY_ASSET_CLAIM_REF_PREFIX):
                 claims.add(source_ref.removeprefix(ACTIVITY_ASSET_CLAIM_REF_PREFIX))
@@ -236,16 +244,33 @@ class ActivityAssetConsumption(BaseModel):
                 schedules.add(source_ref.removeprefix(ACTIVITY_ASSET_SCHEDULE_REF_PREFIX))
             elif source_ref.startswith(ACTIVITY_ASSET_DISPOSAL_REF_PREFIX):
                 disposals.add(source_ref.removeprefix(ACTIVITY_ASSET_DISPOSAL_REF_PREFIX))
+            elif source_ref.startswith(ACTIVITY_ASSET_DISPOSAL_FIGURES_REF_PREFIX):
+                digests.add(source_ref.removeprefix(ACTIVITY_ASSET_DISPOSAL_FIGURES_REF_PREFIX))
         return cls(
             claim_ids=tuple(sorted(claims)),
             schedule_fingerprints=tuple(sorted(schedules)),
             disposal_revision_ids=tuple(sorted(disposals)),
+            disposal_digests=tuple(sorted(digests)),
         )
 
     @property
     def is_empty(self) -> bool:
         """Whether the calculation rested on no register state."""
-        return not self.claim_ids and not self.schedule_fingerprints and not self.disposal_revision_ids
+        return (
+            not self.claim_ids
+            and not self.schedule_fingerprints
+            and not self.disposal_revision_ids
+            and not self.disposal_digests
+        )
+
+    def disposals_changed_from(self, other: ActivityAssetConsumption) -> int:
+        """How many bajas differ from ``other``: recorded or dropped, or standing with other figures."""
+        ours, theirs = set(self.disposal_digests), set(other.disposal_digests)
+        return max(
+            len(set(self.disposal_revision_ids) ^ set(other.disposal_revision_ids)),
+            len(ours - theirs),
+            len(theirs - ours),
+        )
 
 
 def validate_revision_source_provenance(rows: Sequence[CalculationSourceRef]) -> None:
