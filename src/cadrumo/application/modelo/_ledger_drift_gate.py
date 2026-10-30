@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.calculation_revision_sources import ActivityAssetConsumption
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -56,9 +57,22 @@ LEDGER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
     "rd-1619-2012:art-2",
 )
 
+#: Grounding for the register drift refusal: the amortization deducted in direct
+#: estimation is the one the register's recorded claims and schedules yield
+#: (LIRPF art. 30, RIRPF art. 30), so a declaración built on a register that has
+#: since changed deducts a figure the register no longer supports.
+ASSET_REGISTER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
+    "ley-35-2006:art-30",
+    "rd-439-2007:art-30",
+)
 
 type _BlockingFindingObserver = Callable[
     [ModeloVerificationFinding, bool, tuple[str, ...], tuple[str, ...], tuple[str, ...]], None
+]
+
+
+type _AssetRegisterDriftObserver = Callable[
+    [ModeloVerificationFinding, ActivityAssetConsumption, ActivityAssetConsumption], None
 ]
 
 
@@ -95,6 +109,42 @@ def ledger_drift_findings(
     current_membership: LedgerSourceMembership,
     source_refs: tuple[str, ...] = (),
     blocking_finding_observer: _BlockingFindingObserver | None = None,
+    asset_register_drift_observer: _AssetRegisterDriftObserver | None = None,
+) -> list[ModeloVerificationFinding]:
+    """Refuse a draft whose contributing ledger rows or register state moved since it was calculated.
+
+    Two views are compared. The ledger rows are compared through the anchor, and
+    the activity-asset register through the claims and schedule fingerprints the
+    draft recorded. Both resolve to the same operator move, calculating again.
+    """
+    findings = _transaction_drift_findings(
+        target=target,
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+        current_membership=current_membership,
+        source_refs=source_refs,
+        blocking_finding_observer=blocking_finding_observer,
+    )
+    if target.state is not CalculationRevisionState.BORRADOR or not current_membership.available:
+        return findings
+    recorded = target.activity_asset_consumption
+    current = current_membership.activity_asset_consumption
+    if recorded == current:
+        return findings
+    finding = _asset_register_drift_finding(work_unit, recorded, current, source_refs=source_refs)
+    if asset_register_drift_observer is not None:
+        asset_register_drift_observer(finding, recorded, current)
+    return [*findings, finding]
+
+
+def _transaction_drift_findings(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    current_membership: LedgerSourceMembership,
+    source_refs: tuple[str, ...],
+    blocking_finding_observer: _BlockingFindingObserver | None,
 ) -> list[ModeloVerificationFinding]:
     """Refuse a draft whose contributing ledger rows moved since it was calculated.
 
@@ -165,6 +215,35 @@ def ledger_drift_findings(
         blocking_finding_observer, finding, True, tuple(verdict.changed), tuple(verdict.removed), added
     )
     return [finding]
+
+
+def _asset_register_drift_finding(
+    work_unit: WorkUnit,
+    recorded: ActivityAssetConsumption,
+    current: ActivityAssetConsumption,
+    *,
+    source_refs: tuple[str, ...],
+) -> ModeloVerificationFinding:
+    """Build the blocking finding for a register that no longer yields the recorded claims."""
+    claims_added = set(current.claim_ids) - set(recorded.claim_ids)
+    claims_removed = set(recorded.claim_ids) - set(current.claim_ids)
+    schedules_added = set(current.schedule_fingerprints) - set(recorded.schedule_fingerprints)
+    schedules_removed = set(recorded.schedule_fingerprints) - set(current.schedule_fingerprints)
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.activity_asset_register_drift",
+        message_facts={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "claims_added": len(claims_added),
+            "claims_removed": len(claims_removed),
+            "schedules_changed": max(len(schedules_added), len(schedules_removed)),
+        },
+        legal_refs=ASSET_REGISTER_DRIFT_LEGAL_REFS,
+        source_refs=source_refs,
+    )
 
 
 def _drift_finding(
@@ -250,6 +329,7 @@ def _drift_finding(
 
 
 __all__ = [
+    "ASSET_REGISTER_DRIFT_LEGAL_REFS",
     "LEDGER_DRIFT_LEGAL_REFS",
     "ledger_drift_findings",
 ]

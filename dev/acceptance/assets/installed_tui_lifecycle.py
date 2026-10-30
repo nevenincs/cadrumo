@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Any
 from .installed_method_fixture import (
     METHOD_ASSET_ID,
     METHOD_CORRECTED_FORECAST_AMOUNT,
-    METHOD_REVISION_JSON,
     method_correction_json,
+    method_revision_json,
 )
 from .installed_tui_contracts import InstalledAssetTuiError
 from .installed_tui_controls import (
@@ -42,7 +42,9 @@ def _assert_method_forecast_result(forecast: str) -> None:
         )
 
 
-async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
+async def _exercise_method_asset_lifecycle(
+    *, pilot: Any, progress: Callable[[str], None], acquisition_transaction_id: str
+) -> dict[str, object]:
     """Create, correct, forecast, claim, and hand off one public asset lifecycle."""
     await _set_public_input(
         pilot=pilot,
@@ -53,7 +55,7 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
     await _set_public_input(
         pilot=pilot,
         selector="#asset-revision-json",
-        value=METHOD_REVISION_JSON,
+        value=method_revision_json(acquisition_transaction_id=acquisition_transaction_id),
         stage="asset_creation",
     )
     creation_action = await _activate_public_button(pilot=pilot, selector="#asset-create", stage="asset_creation")
@@ -93,7 +95,9 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
     await _set_public_input(
         pilot=pilot,
         selector="#asset-revision-json",
-        value=method_correction_json(supersedes_revision_id=first_revision_id),
+        value=method_correction_json(
+            supersedes_revision_id=first_revision_id, acquisition_transaction_id=acquisition_transaction_id
+        ),
         stage="asset_correction",
     )
     correction_action = await _activate_public_button(pilot=pilot, selector="#asset-correct", stage="asset_correction")

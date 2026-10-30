@@ -17,7 +17,7 @@ See Also:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
@@ -26,6 +26,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_sources import ActivityAssetConsumption
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -67,6 +68,7 @@ class LedgerSourceMembership:
     observed_transaction_ids: tuple[str, ...] = ()
     available: bool = True
     ledger_sources_declared: bool = False
+    activity_asset_consumption: ActivityAssetConsumption = field(default_factory=ActivityAssetConsumption)
 
 
 def ledger_transaction_ref_identity(source_ref: str | None) -> str | None:
@@ -183,6 +185,7 @@ def _collect_ledger_membership(
         OssIossLedgerSourceResolver(ports=ports.invoice_catalogue_read_ports),
     )
     observed: set[str] = set()
+    asset_refs: set[str] = set()
     handled: set[BindingSourceKind] = set()
     for resolver in resolvers:
         owned = frozenset(resolver.owned_sources) & selected
@@ -191,6 +194,7 @@ def _collect_ledger_membership(
         resolution = resolver.resolve(context)
         handled.update(owned)
         observed.update(resolution.source_transaction_ids)
+        asset_refs.update(row.source_ref for row in resolution.provenance)
         for diagnostic in resolution.diagnostics:
             if not _record_membership_diagnostic(diagnostic, observed):
                 return LedgerSourceMembership(available=False, ledger_sources_declared=True)
@@ -198,6 +202,7 @@ def _collect_ledger_membership(
         observed_transaction_ids=tuple(sorted(observed)),
         available=frozenset(handled) == selected,
         ledger_sources_declared=True,
+        activity_asset_consumption=ActivityAssetConsumption.from_source_refs(asset_refs),
     )
 
 

@@ -17,6 +17,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
+from dev.acceptance.assets.acquisition_seed import seed_machine_acquisition
 from dev.acceptance.assets.oracles import first_year_machinery_constant_percentage
 from dev.acceptance.income_tax.cli_journey import (
     JourneyError,
@@ -82,8 +83,8 @@ class AssetExportEvidence:
         return cast("dict[str, object]", asdict(self))
 
 
-def _asset_revision_json() -> str:
-    """Return a new machine under the normal-modality constant-percentage method.
+def _asset_revision_json(*, acquisition_transaction_id: str) -> str:
+    """Return a new machine, bought by the named ledger payment, under the constant-percentage method.
 
     Machinery's 12% maximum implies 8.33 years, weighted 2.5 (RIS art. 5.1.c) to
     a 30% constant percentage, so the full 2025 year charges 1,000 x 30% = 300.00.
@@ -93,7 +94,7 @@ def _asset_revision_json() -> str:
             "asset_id": "acceptance-constant-percentage-machine-2025",
             "revision_number": 1,
             "acquisition": {
-                "observed_transaction_id": "a" * 64,
+                "observed_transaction_id": acquisition_transaction_id,
                 "invoice_evidence_id": "synthetic-new-machine-invoice",
                 "evidence_fingerprint": "b" * 64,
             },
@@ -327,8 +328,22 @@ def run_asset_export_journey(
     oracle = _asset_overlay_oracle()
     report_stage("ledger.ingest_control")
     ingest_income_fixture(cli, year=_YEAR)
+    report_stage("asset.acquisition")
+    acquisition_id = seed_machine_acquisition(cli, basis="1000.00", booked="2025-01-01", label="export-machine")
     report_stage("asset.create")
-    created = command_result(cli.run(("app", "ledger", "actividad-asset", "create", _asset_revision_json())))
+    created = command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "create",
+                _asset_revision_json(acquisition_transaction_id=acquisition_id),
+                "--name",
+                "Acceptance element",
+            )
+        )
+    )
     asset_id = str(created["revisions"][0]["asset_id"])
     report_stage("asset.forecast")
     forecast = command_result(
@@ -357,8 +372,6 @@ def run_asset_export_journey(
                 "actividad-asset",
                 "claim",
                 json.dumps(forecast, separators=(",", ":")),
-                "--creating-operation",
-                "assets-acceptance.record-claim",
             )
         )
     )

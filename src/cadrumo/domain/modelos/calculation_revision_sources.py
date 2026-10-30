@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Literal
+from collections.abc import Iterable, Sequence
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -182,6 +182,50 @@ class CalculationSourceIssue(BaseModel):
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
     casilla_id: CasillaId | None = None
+
+
+ACTIVITY_ASSET_CLAIM_REF_PREFIX: Final = "activity-asset-claim:"
+"""Prefix of the source reference naming one effective amortization claim."""
+
+ACTIVITY_ASSET_SCHEDULE_REF_PREFIX: Final = "activity-asset-schedule:"
+"""Prefix of the source reference naming one element schedule by its fingerprint."""
+
+
+class ActivityAssetConsumption(BaseModel):
+    """The activity-asset register state one calculation rested on.
+
+    Claim identity hashes the claim's content, so a claim cannot name the
+    calculation that consumed it. The calculation records the claims and
+    schedules instead, and any difference between that record and what the
+    register yields now means the calculation no longer reflects the register.
+
+    Attributes:
+        claim_ids: Sorted identities of the effective claims consumed.
+        schedule_fingerprints: Sorted fingerprints of the element schedules
+            consumed where no claim stood behind the amount (Modelo 130 accrual).
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    claim_ids: tuple[str, ...] = ()
+    schedule_fingerprints: tuple[str, ...] = ()
+
+    @classmethod
+    def from_source_refs(cls, source_refs: Iterable[str]) -> ActivityAssetConsumption:
+        """Read the consumption out of source references, ignoring every other kind."""
+        claims: set[str] = set()
+        schedules: set[str] = set()
+        for source_ref in source_refs:
+            if source_ref.startswith(ACTIVITY_ASSET_CLAIM_REF_PREFIX):
+                claims.add(source_ref.removeprefix(ACTIVITY_ASSET_CLAIM_REF_PREFIX))
+            elif source_ref.startswith(ACTIVITY_ASSET_SCHEDULE_REF_PREFIX):
+                schedules.add(source_ref.removeprefix(ACTIVITY_ASSET_SCHEDULE_REF_PREFIX))
+        return cls(claim_ids=tuple(sorted(claims)), schedule_fingerprints=tuple(sorted(schedules)))
+
+    @property
+    def is_empty(self) -> bool:
+        """Whether the calculation rested on no register state."""
+        return not self.claim_ids and not self.schedule_fingerprints
 
 
 def validate_revision_source_provenance(rows: Sequence[CalculationSourceRef]) -> None:

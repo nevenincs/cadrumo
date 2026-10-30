@@ -1611,6 +1611,10 @@ application:
         quarter_4: 4.º trimestre
       value_absent: un valor vacío
     findings:
+      activity_asset_register_drift: 'Tu registro de activos ha cambiado desde que
+        se calculó el modelo %{modelo} de %{filing_year}, periodo %{period} (amortizaciones
+        añadidas: %{claims_added}, sustituidas o retiradas: %{claims_removed}, cuadros
+        de amortización modificados: %{schedules_changed}). Vuelve a calcularlo.'
       art20_reduccion_possible: La casilla [%{rnt_id}] recoge %{rnt_value} EUR de
         rendimiento neto del trabajo, dentro del límite del art. 20 LIRPF, así que
         la casilla [%{reduccion_id}] puede darte una reducción que aún no aplicas.

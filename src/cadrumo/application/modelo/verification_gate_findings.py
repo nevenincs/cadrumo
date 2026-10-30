@@ -544,6 +544,25 @@ def collect_verification_gate_findings(
                 ),
             )
         ),
+        asset_register_drift_observer=lambda finding, recorded, current: failures_by_finding_id.__setitem__(
+            id(finding),
+            build_verification_precondition_failure(
+                calculation_revision_id=target.calculation_revision_id,
+                work_unit_id=target.work_unit_id,
+                condition_id="modelo.work.verify.ledger_snapshot.current",
+                scenario_id="modelo.work.verify.ledger_snapshot.drift_detected",
+                evidence_id="modelo.work.verify.ledger_snapshot",
+                evidence_values={
+                    "snapshot_anchored": target.ledger_filing_snapshot is not None,
+                    "recorded_claim_ids": "|".join(recorded.claim_ids),
+                    "current_claim_ids": "|".join(current.claim_ids),
+                    "recorded_schedule_fingerprints": "|".join(recorded.schedule_fingerprints),
+                    "current_schedule_fingerprints": "|".join(current.schedule_fingerprints),
+                    "membership_available": True,
+                },
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+            ),
+        ),
     )
     findings.extend(drift_findings)
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id

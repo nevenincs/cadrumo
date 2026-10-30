@@ -13,7 +13,11 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
-from cadrumo.domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    published_revision,
+    published_snapshot,
+    published_supported_filing_years,
+)
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
@@ -23,7 +27,7 @@ from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.secure_object_write import SecureObjectWrite
 from ....core.tipos_actividad import TipoActividad
-from ....domain.bienes_inversion.register import BienesInversionIvaRegister
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories.spending_category import SpendingCategory
@@ -35,6 +39,14 @@ from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....domain.iva.schema import InvoiceKind as CatalogueInvoiceKind
 from ....domain.iva.schema import InvoiceKind as IvaInvoiceKind
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.verification_report import ModeloVerificationFinding
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
 from ....domain.renta.actividad_asset.election import (
@@ -65,6 +77,9 @@ from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ...actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from ...modelo._ledger_drift_gate import ledger_drift_findings
+from ...modelo.activity_asset_claim_consumers import calculation_revisions_consuming_claim
+from ...modelo.calculation_bucket_actions import _source_provenance_refs
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS, UNWORKED_BOX_REASONS, note_attention
 from ...modelo.work_form_findings import ModeloFormAttention
 from ...modelo.work_profile import ModeloWorkProfile
@@ -76,6 +91,7 @@ from ..errors import (
 from ..iva_ledger import (
     IvaLedgerAggregationIssueReason,
 )
+from ..ledger_membership import LedgerMembershipPorts, LedgerSourceMembership, _collect_ledger_membership
 from ..modelo_bindings import LedgerRentaGastosPagoFraccionadoAggregationSourceResolver
 from ..modelo_bindings_iva import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
 from ..modelo_bindings_renta_expenses import (
@@ -280,6 +296,11 @@ def _ledger_iva_resolver(
 @cache
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
     return published_revision(modelo, revision_id)
+
+
+@cache
+def _m100_revision(year: int) -> ModeloRevision:
+    return published_snapshot("100", filing_year=year, period="0A").revision
 
 
 @cache
@@ -1262,13 +1283,14 @@ def _machine_acquisition_transaction(
     amount: Decimal = Decimal("1210.00"),
     taxable_base: Decimal = Decimal("1000.00"),
     iva_amount: Decimal = Decimal("210.00"),
+    year: int = 2025,
 ) -> Transaction:
     """The purchase itself: 1.000,00 base plus 210,00 IVA soportado, paid from the bank."""
     return Transaction.model_validate(
         {
             "raw": ledger_raw_transaction(
                 provider_id,
-                booked_date=date(2025, 4, 5),
+                booked_date=date(year, 4, 5),
                 amount=amount,
             ),
             "direction": TransactionDirection.OUTGOING,
@@ -1280,7 +1302,7 @@ def _machine_acquisition_transaction(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(year, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -1564,6 +1586,7 @@ def _resolve_m100(
     *,
     rows: tuple[Transaction, ...] = (),
     profile: ModeloWorkProfile | None = None,
+    year: int = 2025,
 ) -> CalculationSourceResolution:
     tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions(rows))
@@ -1579,9 +1602,9 @@ def _resolve_m100(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="100",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision=_revision("100", "2025"),
+            filing_year=year,
+            period=Period.from_year_and_code(year, "0A"),
+            revision=_m100_revision(year),
             profile=profile,
         ),
     )
@@ -2086,3 +2109,278 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> 
     )
 
     assert resolution.resolver_id == "ledger_iva_aggregation"
+
+
+_DRIFT_AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
+_ASSET_DRIFT_KEY = "application.modelo.findings.activity_asset_register_drift"
+
+
+class _EmptyInvestmentRegisterRepository:
+    def load(self) -> BienesInversionIvaRegister:
+        return BienesInversionIvaRegister()
+
+    def add(self, record: BienInversionIvaRecord) -> BienesInversionIvaRegister:
+        del record
+        raise AssertionError("membership reads never write the investment register")
+
+
+def _drift_work_unit(modelo: str, period_code: str, revision_id: str) -> WorkUnit:
+    period = Period.from_year_and_code(2025, period_code)
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo=modelo,
+            filing_year=2025,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode(modelo),
+        filing_year=2025,
+        period=period,
+        revision_id=revision_id,
+        name=f"{modelo}-2025-{period_code}",
+        created_at=_DRIFT_AT,
+        updated_at=_DRIFT_AT,
+    )
+
+
+def _calculated_draft(
+    history: ActivityAssetHistory,
+    *,
+    modelo: str,
+    period_code: str,
+) -> tuple[WorkUnit, CalculationRevision]:
+    """Calculate through the real resolver and persist what its provenance says."""
+    resolution = _resolve_m100(history) if modelo == "100" else _resolve_m130(history, period_code)
+    snapshot = published_snapshot(modelo, filing_year=2025, period=period_code)
+    work_unit = _drift_work_unit(modelo, period_code, snapshot.revision.id)
+    provenance = _source_provenance_refs(resolution)
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=provenance,
+    )
+    return work_unit, CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=snapshot.snapshot_ref,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        observations=(),
+        created_at=_DRIFT_AT,
+        updated_at=_DRIFT_AT,
+        filing_instance_evidence=None,
+        source_provenance=provenance,
+    )
+
+
+def _asset_drift(
+    draft: tuple[WorkUnit, CalculationRevision],
+    history: ActivityAssetHistory,
+    *,
+    modelo: str,
+    period_code: str,
+) -> list[ModeloVerificationFinding]:
+    """Run the verify-time gate against the register as it stands in ``history``."""
+    work_unit, revision = draft
+    tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    ports = LedgerMembershipPorts(
+        transaction_repository=tx_repo,
+        invoice_catalogue_read_ports=_catalogue_read_ports(
+            invoice_repository=_empty_invoice_repository(),
+            transaction_repository=tx_repo,
+        ),
+        prorrata_register_repository=_empty_prorrata_repository(),
+        bienes_inversion_repository=_EmptyInvestmentRegisterRepository(),
+        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+        usage_ratio_profile_loader=no_stored_usage_ratios,
+    )
+    resolver = (
+        LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
+        if modelo == "100"
+        else LedgerRentaGastosPagoFraccionadoAggregationSourceResolver
+    )
+    membership: LedgerSourceMembership = _collect_ledger_membership(
+        context=CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            work_unit_id=work_unit.work_unit_id,
+            modelo=modelo,
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, period_code),
+            revision=_revision(modelo, "2025" if modelo == "100" else "2019-y-siguientes"),
+        ),
+        work_unit=work_unit,
+        ports=ports,
+        selected=frozenset(resolver.owned_sources),
+    )
+    assert membership.available
+    return ledger_drift_findings(
+        target=revision,
+        work_unit=work_unit,
+        transaction_repository=tx_repo,
+        current_membership=membership,
+    )
+
+
+def _asset_facts(findings: list[ModeloVerificationFinding]) -> dict[str, object]:
+    (finding,) = findings
+    assert finding.message_locale_key == _ASSET_DRIFT_KEY
+    return dict(finding.message_facts)
+
+
+def test_a_claim_recorded_after_the_year_was_calculated_makes_it_stale() -> None:
+    """The draft rested on no claim; the register now yields one, so the figure is out of date."""
+    asset = _machine_asset("a" * 64)
+    before = ActivityAssetHistory(revisions=(asset,))
+    after = ActivityAssetHistory(revisions=(asset,), claims=(_machine_claim(asset),))
+    draft = _calculated_draft(before, modelo="100", period_code="0A")
+    assert draft[1].activity_asset_consumption.claim_ids == ()
+
+    facts = _asset_facts(_asset_drift(draft, after, modelo="100", period_code="0A"))
+
+    assert (facts["claims_added"], facts["claims_removed"], facts["schedules_changed"]) == (1, 0, 0)
+
+
+def test_an_identical_register_read_leaves_the_calculated_year_current() -> None:
+    asset = _machine_asset("a" * 64)
+    history = ActivityAssetHistory(revisions=(asset,), claims=(_machine_claim(asset),))
+    draft = _calculated_draft(history, modelo="100", period_code="0A")
+    assert draft[1].activity_asset_consumption.claim_ids == (_machine_claim(asset).claim_id,)
+
+    assert _asset_drift(draft, history, modelo="100", period_code="0A") == []
+
+
+def test_superseding_a_consumed_claim_makes_the_year_stale() -> None:
+    asset = _machine_asset("a" * 64)
+    original = _machine_claim(asset)
+    replacement = original.model_copy(update={"amount": Decimal("100.00"), "supersedes_claim_id": original.claim_id})
+    draft = _calculated_draft(
+        ActivityAssetHistory(revisions=(asset,), claims=(original,)), modelo="100", period_code="0A"
+    )
+
+    facts = _asset_facts(
+        _asset_drift(
+            draft,
+            ActivityAssetHistory(revisions=(asset,), claims=(original, replacement)),
+            modelo="100",
+            period_code="0A",
+        ),
+    )
+
+    assert (facts["claims_added"], facts["claims_removed"]) == (1, 1)
+
+
+def test_modelo_130_goes_stale_when_the_schedule_fingerprint_it_consumed_changes() -> None:
+    original = _register_asset("furniture", transaction_id="c" * 64)
+    moved = _register_asset("furniture", transaction_id="c" * 64, in_service=date(2025, 1, 15))
+    draft = _calculated_draft(ActivityAssetHistory(revisions=(original,)), modelo="130", period_code="1T")
+    (recorded,) = draft[1].activity_asset_consumption.schedule_fingerprints
+
+    assert _asset_drift(draft, ActivityAssetHistory(revisions=(original,)), modelo="130", period_code="1T") == []
+    facts = _asset_facts(_asset_drift(draft, ActivityAssetHistory(revisions=(moved,)), modelo="130", period_code="1T"))
+
+    assert facts["schedules_changed"] == 1
+    reread = _calculated_draft(ActivityAssetHistory(revisions=(moved,)), modelo="130", period_code="1T")
+    assert recorded not in reread[1].activity_asset_consumption.schedule_fingerprints
+
+
+def test_the_consumers_of_a_claim_are_this_buckets_revisions_that_recorded_it() -> None:
+    asset = _machine_asset("a" * 64)
+    claim = _machine_claim(asset)
+    consuming_unit, consuming = _calculated_draft(
+        ActivityAssetHistory(revisions=(asset,), claims=(claim,)), modelo="100", period_code="0A"
+    )
+    _, unrelated = _calculated_draft(ActivityAssetHistory(revisions=(asset,)), modelo="100", period_code="0A")
+    catalogue = WorkUnitCatalogue(work_units={consuming_unit.work_unit_id: consuming_unit})
+
+    found = calculation_revisions_consuming_claim(
+        claim.claim_id, bucket_id=_BUCKET_ID, revisions=(unrelated, consuming), work_units=catalogue
+    )
+    other_bucket = calculation_revisions_consuming_claim(
+        claim.claim_id, bucket_id="39393939-3939-4939-8939-393939393939", revisions=(consuming,), work_units=catalogue
+    )
+
+    assert [revision.calculation_revision_id for revision in found] == [consuming.calculation_revision_id]
+    assert other_bucket == ()
+
+
+def _filing_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no support envelope"
+    return support.years
+
+
+_AMORTIZABLE_CATEGORIES = ("hardware_amortizable", "mobiliario_amortizable", "amortizacion_vivienda_afecto")
+
+
+@pytest.mark.parametrize("year", _filing_years())
+def test_an_intangible_claim_reaches_0227_and_a_material_claim_reaches_0208_in_every_year(year: int) -> None:
+    revision = _m100_revision(year)
+    material = _register_asset("furniture", transaction_id="c" * 64, in_service=date(year, 1, 1))
+    intangible = _register_asset(
+        "licence",
+        transaction_id="d" * 64,
+        in_service=date(year, 1, 1),
+        kind=AssetKind.INTANGIBLE,
+    )
+    history = ActivityAssetHistory(
+        revisions=(material, intangible),
+        claims=(
+            _register_claim(material, amount=Decimal("1200.00"), tax_year=year),
+            _register_claim(intangible, amount=Decimal("700.00"), tax_year=year),
+        ),
+    )
+
+    resolution = _resolve_m100(history, year=year)
+
+    assert resolution.binding_values[_renta_expense_binding_id(revision, "0208")] == Decimal("1200.00")
+    assert resolution.binding_values[_renta_expense_binding_id(revision, "0227")] == Decimal("700.00")
+    assert "unrouted_observation" not in _reasons(resolution)
+    assert "activity_asset_claim_gap" not in _reasons(resolution)
+
+
+@pytest.mark.parametrize("category", _AMORTIZABLE_CATEGORIES)
+@pytest.mark.parametrize("year", _filing_years())
+def test_no_ledger_category_reaches_0208_or_0227_and_the_unowned_row_is_reported(year: int, category: str) -> None:
+    revision = _m100_revision(year)
+    row = _machine_acquisition_transaction(category, provider_id=f"unregistered-{category}", year=year)
+
+    resolution = _resolve_m100(ActivityAssetHistory(), rows=(row,), year=year)
+
+    for casilla in ("0208", "0227"):
+        assert resolution.binding_values.get(_renta_expense_binding_id(revision, casilla), Decimal("0")) == 0
+    assert resolution.source_transaction_ids == ()
+    notes = [item for item in resolution.diagnostics if item.reason == "ledger_amortization_row_unregistered"]
+    assert [note.source_ref for note in notes] == [f"transaction:{row.transaction_id}"]
+    assert "unrouted_observation" not in _reasons(resolution)
+
+
+@pytest.mark.parametrize("category", _AMORTIZABLE_CATEGORIES)
+@pytest.mark.parametrize("year", _filing_years())
+def test_a_register_owned_row_without_a_claim_yields_a_non_blocking_gap_and_no_deduction(
+    year: int,
+    category: str,
+) -> None:
+    revision = _m100_revision(year)
+    row = _machine_acquisition_transaction(category, provider_id=f"owned-{category}", year=year)
+    asset = _register_asset(
+        "furniture",
+        transaction_id=row.transaction_id,
+        basis=Decimal("1000.00"),
+        in_service=date(year, 1, 1),
+    )
+
+    resolution = _resolve_m100(ActivityAssetHistory(revisions=(asset,)), rows=(row,), year=year)
+
+    for casilla in ("0208", "0227"):
+        assert resolution.binding_values.get(_renta_expense_binding_id(revision, casilla), Decimal("0")) == 0
+    assert "ledger_amortization_row_unregistered" not in _reasons(resolution)
+    gaps = [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
+    assert len(gaps) == 1
+    assert gaps[0].reason not in GATE_REFUSED_REASONS

@@ -1499,6 +1499,10 @@ application:
         quarter_4: 4th quarter
       value_absent: an empty value
     findings:
+      activity_asset_register_drift: 'Your asset register changed after modelo %{modelo}
+        %{filing_year}, period %{period}, was calculated (amortization charges added:
+        %{claims_added}, replaced or removed: %{claims_removed}, schedules changed:
+        %{schedules_changed}). Calculate it again.'
       art20_reduccion_possible: Box [%{rnt_id}] shows %{rnt_value} EUR of net income
         from work (rendimiento neto del trabajo), within the Art. 20 LIRPF limit,
         so box [%{reduccion_id}] may give you a reduction you are not using yet. Check

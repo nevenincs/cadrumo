@@ -17,6 +17,7 @@ from dev.acceptance.income_tax.installed_tui_child import (
     installed_product_evidence,
 )
 
+from .installed_method_fixture import read_acquisition_sidecar
 from .installed_tui_contracts import InstalledAssetTuiError, InstalledAssetTuiJourney, InstalledAssetTuiReceipt
 from .installed_tui_controls import (
     _open_activity_asset_screen,
@@ -211,6 +212,7 @@ async def _drive_asset_path(
     observed: list[dict[str, object]],
     publish: Callable[..., None],
     assertions: dict[str, object],
+    receipt_path: Path,
 ) -> None:
     if journey in {"ledger", "asset_screen", "asset_method_lifecycle", "asset_readback", "asset_cli_readback"}:
         await _open_ledger_destination(pilot=pilot)
@@ -228,7 +230,13 @@ async def _drive_asset_path(
         publish(stage, diagnostic=_public_surface_diagnostic(pilot), receipt_assertions=assertions or None)
 
     if journey == "asset_method_lifecycle":
-        assertions.update(await _exercise_method_asset_lifecycle(pilot=pilot, progress=record_asset_stage))
+        assertions.update(
+            await _exercise_method_asset_lifecycle(
+                pilot=pilot,
+                progress=record_asset_stage,
+                acquisition_transaction_id=read_acquisition_sidecar(receipt_path.parent),
+            )
+        )
         publish("asset_claim_replay", diagnostic=_public_surface_diagnostic(pilot), receipt_assertions=assertions)
     if journey == "asset_readback":
         assertions.update(await _exercise_method_asset_readback(pilot=pilot, progress=record_asset_stage))
@@ -315,7 +323,7 @@ def _run_probe(
         completed.append("launcher_autopilot")
         publish("launcher_autopilot", diagnostic=observed[-1])
         await _drive_profile_path(pilot, journey, completed, observed, publish)
-        await _drive_asset_path(pilot, journey, completed, observed, publish, assertions)
+        await _drive_asset_path(pilot, journey, completed, observed, publish, assertions, receipt_path)
         pilot.app.exit()
 
     publish("production_launcher")

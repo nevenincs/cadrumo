@@ -25,13 +25,16 @@ from cadrumo.domain.calculations.registry.authority_store import (
     AuthorityDescriptor,
     AuthorityStoreError,
 )
+from dev.acceptance.assets.acquisition_seed import seed_machine_acquisition
 from dev.acceptance.assets.export_journey import run_asset_export_journey
 from dev.acceptance.assets.installed_journey import run_installed_tui_probe
 from dev.acceptance.assets.installed_method_fixture import (
+    METHOD_ACQUISITION_BASIS,
     METHOD_ASSET_ID,
     METHOD_CORRECTED_FORECAST_AMOUNT,
-    METHOD_REVISION_JSON,
     method_correction_json,
+    method_revision_json,
+    write_acquisition_sidecar,
 )
 from dev.acceptance.assets.installed_profile_setup import run_installed_cli_profile_setup
 from dev.acceptance.assets.oracles import first_year_machinery_constant_percentage
@@ -119,6 +122,11 @@ def _require(condition: bool, message: str) -> None:
         raise InstalledMethodProofError(message)
 
 
+def _seed_acquisition(cli: InstalledCli, *, label: str) -> str:
+    """Record the payment the method machine is registered against and return its identity."""
+    return seed_machine_acquisition(cli, basis=METHOD_ACQUISITION_BASIS, booked="2025-01-01", label=label)
+
+
 def _tui_first(
     *,
     aeat: Path,
@@ -139,6 +147,9 @@ def _tui_first(
         profile_label=label,
         passphrase=passphrase,
     )
+    cli = InstalledCli(aeat, storage_root=storage_root, authority_root=authority_root, passphrase=passphrase)
+    acquisition_id = _seed_acquisition(cli, label="tui-first-machine")
+    write_acquisition_sidecar(run_root / "tui-first-lifecycle", acquisition_id)
     lifecycle = run_installed_tui_probe(
         python_executable=python,
         workspace_root=workspace_root,
@@ -161,7 +172,6 @@ def _tui_first(
         profile_bootstrap="existing",
         timeout_seconds=_TUI_TIMEOUT_SECONDS,
     )
-    cli = InstalledCli(aeat, storage_root=storage_root, authority_root=authority_root, passphrase=passphrase)
     inspected = command_result(cli.run(("app", "ledger", "actividad-asset", "inspect", METHOD_ASSET_ID)))
     revisions = inspected.get("revisions")
     _require(
@@ -209,7 +219,20 @@ def _cli_first(
         passphrase=passphrase,
     )
     cli = InstalledCli(aeat, storage_root=storage_root, authority_root=authority_root, passphrase=passphrase)
-    command_result(cli.run(("app", "ledger", "actividad-asset", "create", METHOD_REVISION_JSON)))
+    acquisition_id = _seed_acquisition(cli, label="cli-first-machine")
+    command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "create",
+                method_revision_json(acquisition_transaction_id=acquisition_id),
+                "--name",
+                "Acceptance element",
+            )
+        )
+    )
     forecast = command_result(
         cli.run(
             (
@@ -242,8 +265,6 @@ def _cli_first(
                 "actividad-asset",
                 "claim",
                 json.dumps(forecast, separators=(",", ":")),
-                "--creating-operation",
-                "assets-acceptance.cli-first-claim",
             )
         )
     )
@@ -259,7 +280,9 @@ def _cli_first(
         timeout_seconds=_TUI_TIMEOUT_SECONDS,
     )
     superseding = _supersede_after_correction(
-        cli, first_claim_id=str(cast("dict[str, object]", claim["claim"])["claim_id"])
+        cli,
+        first_claim_id=str(cast("dict[str, object]", claim["claim"])["claim_id"]),
+        acquisition_id=acquisition_id,
     )
     return {
         "cli_forecast": _money(forecast["amount"]),
@@ -271,7 +294,7 @@ def _cli_first(
     }
 
 
-def _supersede_after_correction(cli: InstalledCli, *, first_claim_id: str) -> dict[str, object]:
+def _supersede_after_correction(cli: InstalledCli, *, first_claim_id: str, acquisition_id: str) -> dict[str, object]:
     """Correct the claimed asset's basis and replace its claim through the public CLI."""
     inspected = command_result(cli.run(("app", "ledger", "actividad-asset", "inspect", METHOD_ASSET_ID)))
     revisions = cast("list[dict[str, object]]", inspected["revisions"])
@@ -282,7 +305,10 @@ def _supersede_after_correction(cli: InstalledCli, *, first_claim_id: str) -> di
                 "ledger",
                 "actividad-asset",
                 "correct",
-                method_correction_json(supersedes_revision_id=str(revisions[-1]["revision_id"])),
+                method_correction_json(
+                    supersedes_revision_id=str(revisions[-1]["revision_id"]),
+                    acquisition_transaction_id=acquisition_id,
+                ),
             )
         )
     )
@@ -316,8 +342,6 @@ def _supersede_after_correction(cli: InstalledCli, *, first_claim_id: str) -> di
                 "actividad-asset",
                 "claim",
                 json.dumps(forecast, separators=(",", ":")),
-                "--creating-operation",
-                "assets-acceptance.cli-first-superseding-claim",
                 "--supersedes-claim-id",
                 first_claim_id,
             )

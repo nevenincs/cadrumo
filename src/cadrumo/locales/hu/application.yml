@@ -1563,6 +1563,11 @@ application:
         quarter_4: IV. negyedévi
       value_absent: üres érték
     findings:
+      activity_asset_register_drift: 'Az eszköznyilvántartásod megváltozott a Modelo
+        %{modelo} nyomtatvány (%{filing_year}, %{period} időszak) kiszámítása óta
+        (hozzáadott értékcsökkenési leírások: %{claims_added}, felváltott vagy törölt:
+        %{claims_removed}, módosult leírási ütemtervek: %{schedules_changed}). Számítsd
+        ki újra.'
       art20_reduccion_possible: A(z) [%{rnt_id}] rovat %{rnt_value} EUR nettó munkajövedelmet
         (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF szerinti határon
         belül, ezért a(z) [%{reduccion_id}] rovatban olyan csökkentést kaphatsz, amelyet

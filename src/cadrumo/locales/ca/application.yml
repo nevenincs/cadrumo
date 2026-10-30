@@ -1608,6 +1608,10 @@ application:
         quarter_4: 4t trimestre
       value_absent: un valor buit
     findings:
+      activity_asset_register_drift: 'El teu registre d''actius ha canviat des que
+        es va calcular el model %{modelo} de %{filing_year}, període %{period} (amortitzacions
+        afegides: %{claims_added}, substituïdes o retirades: %{claims_removed}, quadres
+        d''amortització modificats: %{schedules_changed}). Torna a calcular-lo.'
       art20_reduccion_possible: La casella [%{rnt_id}] recull %{rnt_value} EUR de
         rendiment net del treball, dins del límit de l'art. 20 LIRPF, així que la
         casella [%{reduccion_id}] et pot donar una reducció que encara no apliques.

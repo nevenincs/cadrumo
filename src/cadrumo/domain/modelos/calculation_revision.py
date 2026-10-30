@@ -90,6 +90,7 @@ from .calculation_revision_m303_handoff import (
 from .calculation_revision_operator_layer import CalculationOperatorLayer
 from .calculation_revision_rendering import CalculationRenderingSnapshot
 from .calculation_revision_sources import (
+    ActivityAssetConsumption,
     CalculationSourceIssue,
     CalculationSourceRef,
     validate_revision_source_provenance,
@@ -861,6 +862,15 @@ class CalculationRevision(BaseModel):
         _validate_amendment_metadata(self)
         _validate_rectificativa_aggregate_context(self, validation_context)
         return self
+
+    @property
+    def activity_asset_consumption(self) -> ActivityAssetConsumption:
+        """The effective claims and schedule fingerprints this calculation consumed.
+
+        Read from the recorded source provenance, which joins the revision identity,
+        so the record cannot differ from what the figures rested on.
+        """
+        return ActivityAssetConsumption.from_source_refs(row.source_ref for row in self.source_provenance)
 
     @field_validator("source_transaction_ids", mode="before")
     @classmethod
