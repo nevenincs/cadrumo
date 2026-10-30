@@ -41,8 +41,8 @@ from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, Mode
 from ..work_form_findings import ModeloFormAttention
 from ..work_form_header import ModeloFormExportHoldReason, export_hold
 from ..work_form_issue_lines import form_issue_lines
-from ..work_form_models import ModeloFormCasillaAddressV1, ModeloWorkForm
-from ..work_form_next_step import ModeloFormNextAction, form_next_step, result_fields
+from ..work_form_models import ModeloFormCalculationNote, ModeloFormCasillaAddressV1, ModeloWorkForm
+from ..work_form_next_step import ModeloFormNextAction, check_count, form_next_step, missing_count, result_fields
 from ..work_form_service import ModeloWorkFormLoadV1
 from ..workbench_projection import project_modelo_workbench_form
 from ..workbench_read import ModeloWorkbenchFormReadV1
@@ -202,10 +202,44 @@ def test_omitted_amortization_is_shown_without_holding_a_checked_return(
 
     assert _gate_admits(unit, revision, operation)
     (note,) = form.calculation_notes
-    assert note.reason == reason and note.attention is ModeloFormAttention.MISSING and not note.withholds_filing
-    assert any(line.level is ModeloFormAttention.MISSING for line in form_issue_lines(form, OutputLanguage.EN))
+    assert note.reason == reason and note.attention is ModeloFormAttention.CHECK and not note.withholds_filing
+    assert any(line.level is ModeloFormAttention.CHECK for line in form_issue_lines(form, OutputLanguage.EN))
     assert export_hold(form, OutputLanguage.EN, verified=True, recorded=False) is None
     assert form_next_step(form, verified=True, filed=False).action is ModeloFormNextAction.EXPORT
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        "activity_asset_foral_territory",
+        "activity_asset_residence_unresolved",
+        "ledger_amortization_row_unregistered",
+        "activity_asset_claim_gap",
+        "activity_asset_accrual_unavailable",
+        "activity_asset_activity_undeclared",
+        "activity_asset_residence_period_unknown",
+        "activity_asset_disposal_finding",
+    ],
+)
+def test_an_amortization_note_leaves_the_check_as_the_next_step_of_an_unchecked_return(
+    operation: PinnedAuthorityOperation, reason: str
+) -> None:
+    """Nothing can clear such a note, so counting it as missing would offer a fill with nothing to fill."""
+    unit = _work_unit(operation)
+    form = _checked_form(operation, _revision(unit)).model_copy(
+        update={
+            "verification": None,
+            "calculation_notes": (
+                ModeloFormCalculationNote(reason=reason, attention=note_attention(reason, box=None)),
+            ),
+        }
+    )
+
+    step = form_next_step(form, verified=False, filed=False)
+
+    assert (step.action, step.count) == (ModeloFormNextAction.VERIFY, 0)
+    assert missing_count(form) == 0
+    assert check_count(form) == 1
 
 
 def test_an_unresolved_working_figure_is_worth_checking_yet_held_as_the_gates_hold_it(

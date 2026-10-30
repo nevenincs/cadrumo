@@ -250,6 +250,24 @@ def refused_register_owned_rows(
     )
 
 
+def issues_the_register_does_not_answer[IssueT: RefusedExpenseRow](
+    issues: Iterable[IssueT],
+    *,
+    answered: Iterable[UnregisteredAmortizationRow | RegisterOwnedAcquisition],
+) -> tuple[IssueT, ...]:
+    """Leave out the ledger issues of rows the register's own findings already report.
+
+    An amortization row deducts nothing whatever its refusal, so its own finding
+    says all there is to say. Kept, the same row would be reported twice, and a
+    missing base or currency would refuse the return over a figure no box carries.
+
+    Returns:
+        The issues of every other row, in their order.
+    """
+    reported = frozenset(row.transaction_id for row in answered)
+    return tuple(issue for issue in issues if issue.transaction_id not in reported)
+
+
 def unregistered_amortization_row_diagnostics(
     rows: Iterable[UnregisteredAmortizationRow],
     *,

@@ -89,18 +89,19 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "unclassified_declarant_role_fact": _M,
         "unconverted_foreign_currency": _M,
         "aggregation_activity_undeclared": _M,
-        "activity_asset_claim_gap": _M,
-        "activity_asset_accrual_unavailable": _M,
-        "activity_asset_activity_undeclared": _M,
-        "activity_asset_residence_period_unknown": _M,
-        # Amortization left out, never a refusal: the rest of the declaration stands.
-        "ledger_amortization_row_unregistered": _M,
-        "activity_asset_foral_territory": _M,
-        "activity_asset_residence_unresolved": _M,
         # Worth checking. A value Cadrumo inferred or kept is among them: no box
         # lists it as assumed, so nothing in the editor can confirm it, and the
         # filer checks it against their records instead.
         "operator_override_diverges_from_computed": _C,
+        # Amortization left out or left to the filer: never a refusal and never a value the
+        # form waits for. Nothing can clear these, so they are shown without counting as missing.
+        "activity_asset_claim_gap": _C,
+        "activity_asset_accrual_unavailable": _C,
+        "activity_asset_activity_undeclared": _C,
+        "activity_asset_residence_period_unknown": _C,
+        "ledger_amortization_row_unregistered": _C,
+        "activity_asset_foral_territory": _C,
+        "activity_asset_residence_unresolved": _C,
         "activity_asset_disposal_finding": _C,
         "orphaned_override": _C,
         "devengo_date_proxy_attribution": _C,

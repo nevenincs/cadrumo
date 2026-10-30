@@ -1440,8 +1440,8 @@ def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_ac
     ] == ["register_owned_capital_acquisition"]
 
 
-def test_renta_gasto_source_mesh_blocks_a_separate_depreciation_row() -> None:
-    """A depreciation row outside the register's own acquisition blocks and adds nothing to casilla 02."""
+def test_renta_gasto_source_mesh_reports_a_separate_depreciation_row_without_refusing() -> None:
+    """A depreciation row outside the register's own acquisition is a finding and adds nothing to casilla 02."""
     revision = _revision("130", "2019-y-siguientes")
     acquisition = machine_acquisition_transaction("hardware_amortizable")
     separate_depreciation = machine_acquisition_transaction(
@@ -1771,7 +1771,7 @@ def test_m100_with_no_claims_invents_nothing_and_reports_the_gap_without_refusin
     assert gaps[0].casilla_id == "0208"
     assert "activity_asset_claim_gap" not in GATE_REFUSED_REASONS
     assert "activity_asset_claim_gap" in UNWORKED_BOX_REASONS
-    assert note_attention("activity_asset_claim_gap", box="0208") is ModeloFormAttention.MISSING
+    assert note_attention("activity_asset_claim_gap", box="0208") is ModeloFormAttention.CHECK
 
 
 def test_m100_reports_only_the_uncovered_part_of_the_year_at_its_cumulative_amount() -> None:
@@ -1862,7 +1862,7 @@ def test_with_complete_claims_m130_fourth_quarter_equals_0208_plus_0227() -> Non
         (Decimal("1210.00"), Decimal("1000.00"), Decimal("210.00")),
     ],
 )
-def test_an_unowned_amortization_row_blocks_both_returns_with_no_register_at_all(
+def test_an_unowned_amortization_row_is_a_finding_on_both_returns_with_no_register_at_all(
     amount: Decimal,
     taxable_base: Decimal,
     iva_amount: Decimal,
@@ -1882,7 +1882,7 @@ def test_an_unowned_amortization_row_blocks_both_returns_with_no_register_at_all
         notes = [item for item in resolution.diagnostics if item.reason == "ledger_amortization_row_unregistered"]
         assert [note.source_ref for note in notes] == [f"transaction:{row.transaction_id}"]
         assert notes[0].reason not in GATE_REFUSED_REASONS
-        assert note_attention(notes[0].reason, box=None) is ModeloFormAttention.MISSING
+        assert note_attention(notes[0].reason, box=None) is ModeloFormAttention.CHECK
         assert resolution.source_transaction_ids == ()
     assert annual.binding_values.get(_renta_expense_binding_id(_revision("100", "2025"), "0208"), Decimal("0")) == 0
     assert m130_box(quarterly) == Decimal("0")
