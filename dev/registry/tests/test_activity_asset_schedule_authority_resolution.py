@@ -1812,7 +1812,23 @@ def test_the_plan_shows_the_elapsed_year_as_elapsed_and_never_as_a_zero_amount()
     assert limits.maximum_period_years is not None
     assert Decimal(limits.maximum_period_years.decimal) == Decimal("20")
     assert limits.maximum_period_ends_on == date(2025, 3, 15)
-    assert any("coeficiente-lineal-maximo:key:mobiliario" in item for item in limits.legal_references)
+    assert limits.legal_citations_complete
+    # The parameters the furniture election cites, in the order the authority cites them, each provision once.
+    assert [citation.text for citation in limits.legal_citations] == [
+        "Ley 35/2006, art.\u00a028",
+        "Ley 27/2014, art.\u00a012",
+        "Real Decreto 634/2015, art.\u00a05",
+        "Real Decreto 634/2015, art.\u00a06",
+        "Real Decreto 634/2015, art.\u00a07",
+        "Ley 27/2014, DA\u00a018",
+        "Ley 27/2014, art.\u00a0102",
+        "Ley 27/2014, DA\u00a017",
+        "Real Decreto 439/2007, art.\u00a022",
+        "Ley 35/2006, art.\u00a029",
+        "Real Decreto 439/2007, art.\u00a030",
+    ]
+    assert limits.legal_citations[0].permalink == "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28"
+    assert limits.legal_citations[5].permalink == "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoctava"
 
 
 def test_a_year_before_the_registry_floor_is_typed_and_never_a_guessed_figure() -> None:

@@ -21,6 +21,7 @@ from ...domain.calculations.registry.actividad_asset_bindings import (
 )
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_references import LegalReference
 from ...domain.contribuyente.tax_residence import ResidenceTerritory
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
@@ -56,6 +57,7 @@ from .activity_asset_read_models import (
 )
 from .disposal_calculation import calculate_element_disposal
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
+from .legal_citations import resolve_legal_citations
 from .ports import (
     AcquisitionLedgerReader,
     ActivityAssetForecastOperation,
@@ -141,6 +143,7 @@ class ActivityAssetRegisterAuthority:
     schedule_authority: Callable[[ActivityAssetRevision, int], ScheduleAuthority]
     class_labels: Callable[[DirectEstimationRegime, int], Mapping[str, str]]
     disposal_bounds: Callable[[ActivityAssetRevision, int], ActivityAssetDisposalBounds]
+    legal_reference: Callable[[str], LegalReference]
 
 
 class ActivityAssetOperations:
@@ -628,15 +631,21 @@ class ActivityAssetOperations:
         tax_year = max(self._authority.today().year, revision.in_service_date.year)
         try:
             _, modelo = self._authority.edition(tax_year)
+            schedule = self._authority.schedule_authority(revision, tax_year)
             return election_limits(
                 revision,
-                self._authority.schedule_authority(revision, tax_year),
+                schedule,
                 activity_asset_form_options(
                     modelo,
                     tax_year=tax_year,
                     asset_kind=revision.asset_kind,
                     regime=revision.amortization.regime,
                     class_labels=self._authority.class_labels(revision.amortization.regime, tax_year),
+                ),
+                resolve_legal_citations(
+                    schedule.source_reference.split(";"),
+                    modelo=modelo,
+                    legal_reference=self._authority.legal_reference,
                 ),
             )
         except RegistryError:

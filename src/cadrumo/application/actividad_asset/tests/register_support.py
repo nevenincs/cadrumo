@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
@@ -94,6 +95,11 @@ def _published_class_labels(regime: DirectEstimationRegime, tax_year: int) -> Ma
         return resolve_activity_asset_class_labels(operation, regime=regime, tax_year=tax_year)
 
 
+def _published_legal_reference(reference_id: str) -> LegalReference:
+    with bundled_indexed_authority().operation() as operation:
+        return operation.legal_reference(reference_id)
+
+
 def _published_disposal_bounds(revision: ActivityAssetRevision, tax_year: int) -> ActivityAssetDisposalBounds:
     with bundled_indexed_authority().operation() as operation:
         return resolve_activity_asset_disposal_bounds(
@@ -133,6 +139,7 @@ def memory_register_authority(
         schedule_authority=_published_authority,
         disposal_bounds=_published_disposal_bounds,
         class_labels=_published_class_labels,
+        legal_reference=_published_legal_reference,
     )
 
 

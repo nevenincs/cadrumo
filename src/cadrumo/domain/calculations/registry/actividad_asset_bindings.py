@@ -210,8 +210,28 @@ class _Parameters:
         return resolved.value
 
     def reference(self, parameter_id: str, key: str | None = None) -> str:
-        suffix = f":key:{key}" if key is not None else ""
-        return f"modelo-100:{self.revision_id}:parameter:{parameter_id}{suffix}"
+        suffix = f"{_PARAMETER_KEY_SEPARATOR}{key}" if key is not None else ""
+        return f"{_parameter_reference_prefix(self.revision_id)}{parameter_id}{suffix}"
+
+
+_PARAMETER_KEY_SEPARATOR = ":key:"
+
+
+def _parameter_reference_prefix(revision_id: str) -> str:
+    return f"modelo-100:{revision_id}:parameter:"
+
+
+def activity_asset_parameter_of_reference(reference: str, *, revision_id: str) -> str | None:
+    """Name the registry parameter one ``source_reference`` entry of a schedule authority cites.
+
+    Returns:
+        The parameter id, or ``None`` for an entry that is not a parameter of that
+        revision, such as the approved-plan or useful-life evidence an operator supplied.
+    """
+    prefix = _parameter_reference_prefix(revision_id)
+    if not reference.startswith(prefix):
+        return None
+    return reference[len(prefix) :].partition(_PARAMETER_KEY_SEPARATOR)[0]
 
 
 @dataclass(frozen=True, slots=True)
@@ -1196,6 +1216,7 @@ __all__ = [
     "ActivityAssetFormOptions",
     "ActivityAssetTableGroup",
     "activity_asset_form_options",
+    "activity_asset_parameter_of_reference",
     "resolve_activity_asset_class_labels",
     "resolve_activity_asset_schedule_authority",
 ]

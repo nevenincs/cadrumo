@@ -228,6 +228,7 @@ def _activity_asset_operations(
                 tax_year=tax_year,
             ),
             disposal_bounds=pinned_disposal_bounds(operation),
+            legal_reference=operation.legal_reference,
         ),
     )
 

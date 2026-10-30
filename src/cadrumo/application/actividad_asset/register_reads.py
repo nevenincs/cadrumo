@@ -58,6 +58,7 @@ from .activity_asset_read_models import (
 )
 from .disposal_calculation import DisposalBoundsReader, year_minimum
 from .history import ActivityAssetHistory
+from .legal_citations import ResolvedLegalCitations
 from .ports import ActivityAssetForecastOperation
 from .schedule_walk import PlanFigureAbsence, WalkedYear, walk_element
 
@@ -234,18 +235,18 @@ def election_limits(
     revision: ActivityAssetRevision,
     authority: ScheduleAuthority,
     options: ActivityAssetFormOptions,
+    citations: ResolvedLegalCitations,
 ) -> ActivityAssetElectionLimits:
     """State what the registry allows this election, from the authority its charges rest on.
 
     Returns:
         The class and corridor of a table method, else the limit that replaces them
-        and the typed reason.
+        and the typed reason, with the citations resolved for the authority.
     """
     election = revision.amortization
     ends_on = authority.maximum_period_ends_on or authority.useful_life_ends_on
     if authority.sum_of_digits_period_years is not None:
         ends_on = add_years(revision.in_service_date, authority.sum_of_digits_period_years)
-    references = tuple(authority.source_reference.split(";"))
     if election.method not in _TABLE_METHODS:
         twentieth = _NOT_TABLE_BOUND.get(election.method) is ActivityAssetNotTableBoundReason.TWENTIETH_LIMIT
         return ActivityAssetElectionLimits(
@@ -255,7 +256,8 @@ def election_limits(
             ),
             maximum_coefficient=_optional_amount(authority.annual_rate if twentieth else None),
             maximum_period_ends_on=ends_on,
-            legal_references=references,
+            legal_citations=citations.citations,
+            legal_citations_complete=citations.complete,
             not_table_bound=_NOT_TABLE_BOUND.get(election.method, ActivityAssetNotTableBoundReason.FREE_ELECTION),
         )
     group = next(item for item in options.table_groups if item.class_key == election.authority_class_key)
@@ -266,7 +268,8 @@ def election_limits(
         minimum_coefficient=_amount(group.minimum_coefficient),
         maximum_period_years=_amount(group.maximum_period_years),
         maximum_period_ends_on=ends_on,
-        legal_references=references,
+        legal_citations=citations.citations,
+        legal_citations_complete=citations.complete,
     )
 
 

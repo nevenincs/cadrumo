@@ -205,11 +205,19 @@ class ActivityAssetPlanRow(_ReadModel):
     """False when a year up to this one has no minimum authority, so ``minimum_through`` leaves it out."""
 
 
+class ActivityAssetLegalCitation(_ReadModel):
+    """One legal provision, cited from its own identifier, with its official link."""
+
+    text: str
+    permalink: str
+
+
 class ActivityAssetElectionLimits(_ReadModel):
     """What the registry allows one element's election.
 
     A table method carries its class and corridor.  Any other names the limit it
-    has instead, and says why through ``not_table_bound``.
+    has instead, and says why through ``not_table_bound``.  ``legal_citations``
+    are the provisions behind the registry parameters the figures rest on.
     """
 
     class_key: str | None = None
@@ -218,7 +226,9 @@ class ActivityAssetElectionLimits(_ReadModel):
     minimum_coefficient: PublicDecimal | None = None
     maximum_period_years: PublicDecimal | None = None
     maximum_period_ends_on: date | None = None
-    legal_references: tuple[str, ...] = ()
+    legal_citations: tuple[ActivityAssetLegalCitation, ...] = ()
+    legal_citations_complete: bool = True
+    """False when a cited parameter or provision did not resolve, so ``legal_citations`` leaves it out."""
     not_table_bound: ActivityAssetNotTableBoundReason | None = None
     unavailable_reason_key: str | None = None
 
