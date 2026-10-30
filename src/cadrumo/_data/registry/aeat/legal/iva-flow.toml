@@ -90,7 +90,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversion del sujeto pasivo (apartado uno 2o), donde el destinatario de la operacion asume la condicion de sujeto pasivo y debe autorepercutirse el IVA."
+notes = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversión del sujeto pasivo (apartado uno 2o), donde el destinatario de la operación asume la condición de sujeto pasivo y debe autorepercutirse el IVA."
 required_text = [
     "Sujetos pasivos",
     "Los empresarios o profesionales para quienes se realicen las operaciones",
@@ -470,7 +470,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIVA art 117 bis: solicitudes de devolucion de empresarios o profesionales establecidos en el territorio de aplicacion del Impuesto, Islas Canarias, Ceuta y Melilla, correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepcion de las realizadas en el territorio de aplicacion del Impuesto. Base sustantiva del Modelo 360 (devolucion 8a Directiva)."
+notes = "LIVA art 117 bis: solicitudes de devolución de empresarios o profesionales establecidos en el territorio de aplicación del Impuesto, Islas Canarias, Ceuta y Melilla, correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepción de las realizadas en el territorio de aplicación del Impuesto. Base sustantiva del Modelo 360 (devolución 8a Directiva)."
 required_text = [
     "Solicitudes de devolución",
     "empresarios o profesionales que estén establecidos en el territorio de aplicación del Impuesto",

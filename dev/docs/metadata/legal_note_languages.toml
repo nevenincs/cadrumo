@@ -135,59 +135,59 @@ text = "LIVA art. 1: naturaleza del IVA (impuesto indirecto sobre el consumo)."
 
 [[legal."ley-37-1992:art-102"]]
 language = "es"
-text = "Articulo 102 LIVA: regla de prorrata. Define cuando sera de aplicacion la regla de prorrata - cuando el sujeto pasivo realice conjuntamente entregas de bienes o prestaciones de servicios que originen el derecho a la deduccion y otras operaciones de analoga naturaleza que no habiliten para el ejercicio del citado derecho."
+text = "Artículo 102 LIVA: regla de prorrata. Define cuándo será de aplicación la regla de prorrata - cuando el sujeto pasivo realice conjuntamente entregas de bienes o prestaciones de servicios que originen el derecho a la deducción y otras operaciones de análoga naturaleza que no habiliten para el ejercicio del citado derecho."
 
 [[legal."ley-37-1992:art-104"]]
 language = "es"
-text = "Articulo 104 LIVA: la prorrata general. Define el calculo del porcentaje de deduccion como cociente entre el importe total de las operaciones que originan el derecho a la deduccion (numerador) y el importe total de todas las operaciones realizadas en el ejercicio (denominador), redondeado por exceso a la unidad superior. El apartado Tres enumera las seis operaciones excluidas de ambos terminos de la relacion (art 104.Tres reglas 1a a 6a): (1) operaciones desde establecimientos permanentes fuera del TAI; (2) las cuotas de IVA que gravaron directamente esas operaciones; (3) entregas y exportaciones de bienes de inversion utilizados en la actividad; (4) operaciones inmobiliarias o financieras que no constituyan actividad habitual (arrendamiento siempre habitual; operaciones financieras del art 20.Uno.18); (5) operaciones no sujetas del art 7; (6) operaciones del art 9, numero 1.o, letra d) (autoconsumo del promotor). Las subvenciones no vinculadas al precio NO son una exclusion del art 104.Tres: fueron suprimidas del denominador de la prorrata por la Ley 3/2006 (BOE-A-2006-5691), por lo que no se computan en absoluto en lugar de excluirse de un volumen computado."
+text = "Artículo 104 LIVA: la prorrata general. Define el cálculo del porcentaje de deducción como cociente entre el importe total de las operaciones que originan el derecho a la deducción (numerador) y el importe total de todas las operaciones realizadas en el ejercicio (denominador), redondeado por exceso a la unidad superior. El apartado Tres enumera las seis operaciones excluidas de ambos términos de la relación (art 104.Tres reglas 1a a 6a): (1) operaciones desde establecimientos permanentes fuera del TAI; (2) las cuotas de IVA que gravaron directamente esas operaciones; (3) entregas y exportaciones de bienes de inversión utilizados en la actividad; (4) operaciones inmobiliarias o financieras que no constituyan actividad habitual (arrendamiento siempre habitual; operaciones financieras del art 20.Uno.18); (5) operaciones no sujetas del art 7; (6) operaciones del art 9, número 1.o, letra d) (autoconsumo del promotor). Las subvenciones no vinculadas al precio NO son una exclusión del art 104.Tres: fueron suprimidas del denominador de la prorrata por la Ley 3/2006 (BOE-A-2006-5691), por lo que no se computan en absoluto en lugar de excluirse de un volumen computado."
 
 [[legal."ley-37-1992:art-105"]]
 language = "es"
-text = "Articulo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deduccion provisionalmente aplicable cada ano natural sera el fijado como definitivo para el ano precedente. Apartado Cuatro: en la ultima declaracion-liquidacion de cada ano natural el sujeto pasivo calcula la prorrata definitiva en funcion de las operaciones del ano y practica la consiguiente regularizacion de las deducciones provisionales - la cuota de esa regularizacion se consigna en la casilla 44 del Modelo 303 y en el campo de regularizacion anual del Modelo 390. Base legal de la regularizacion prorrata por porcentaje definitivo. Apartado Cinco: en los supuestos de interrupcion durante uno o mas anos naturales de la actividad (o de un sector diferenciado), el porcentaje definitivamente aplicable durante cada uno de esos anos es el que globalmente corresponda al conjunto de los tres ULTIMOS anos naturales en que se hubiesen realizado operaciones (porcentaje global sobre los volumenes agregados de los tres anos activos, saltando la interrupcion; no la media de los tres porcentajes ni los tres anos de calendario). Base legal de la siembra del ejercicio que reanuda tras una interrupcion."
+text = "Artículo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deducción provisionalmente aplicable cada año natural será el fijado como definitivo para el año precedente. Apartado Cuatro: en la última declaración-liquidación de cada año natural el sujeto pasivo calcula la prorrata definitiva en función de las operaciones del año y practica la consiguiente regularización de las deducciones provisionales - la cuota de esa regularización se consigna en la casilla 44 del Modelo 303 y en el campo de regularización anual del Modelo 390. Base legal de la regularización prorrata por porcentaje definitivo. Apartado Cinco: en los supuestos de interrupción durante uno o más años naturales de la actividad (o de un sector diferenciado), el porcentaje definitivamente aplicable durante cada uno de esos años es el que globalmente corresponda al conjunto de los tres ÚLTIMOS años naturales en que se hubiesen realizado operaciones (porcentaje global sobre los volúmenes agregados de los tres años activos, saltando la interrupción; no la media de los tres porcentajes ni los tres años de calendario). Base legal de la siembra del ejercicio que reanuda tras una interrupción."
 
 [[legal."ley-37-1992:art-107"]]
 language = "es"
-text = "Articulo 107 LIVA: regularizacion de deducciones por bienes de inversion. Las cuotas deducibles por la adquisicion o importacion de bienes de inversion se regularizan durante los cuatro anos naturales siguientes a aquel en que los sujetos pasivos inicien su utilizacion (o nueve anos si son terrenos o edificaciones)."
+text = "Artículo 107 LIVA: regularización de deducciones por bienes de inversión. Las cuotas deducibles por la adquisición o importación de bienes de inversión se regularizan durante los cuatro años naturales siguientes a aquel en que los sujetos pasivos inicien su utilización (o nueve años si son terrenos o edificaciones)."
 
 [[legal."ley-37-1992:art-108"]]
 language = "es"
-text = "Articulo 108 LIVA: concepto de bienes de inversion. Son bienes de inversion los bienes corporales, muebles, semovientes o inmuebles que, por su naturaleza y funcion, esten normalmente destinados a ser utilizados por un periodo de tiempo superior a un ano como instrumentos de trabajo o medios de explotacion, con umbrales de exclusion para bienes de escaso valor."
+text = "Artículo 108 LIVA: concepto de bienes de inversión. Son bienes de inversión los bienes corporales, muebles, semovientes o inmuebles que, por su naturaleza y función, estén normalmente destinados a ser utilizados por un período de tiempo superior a un año como instrumentos de trabajo o medios de explotación, con umbrales de exclusión para bienes de escaso valor."
 
 [[legal."ley-37-1992:art-109"]]
 language = "es"
-text = "Articulo 109 LIVA: procedimiento para practicar la regularizacion de deducciones por bienes de inversion. Establece la formula de regularizacion comparando el porcentaje de deduccion del ano de adquisicion con el del ano de la regularizacion, dividiendo la diferencia entre cinco (o diez para terrenos y edificaciones)."
+text = "Artículo 109 LIVA: procedimiento para practicar la regularización de deducciones por bienes de inversión. Establece la fórmula de regularización comparando el porcentaje de deducción del año de adquisición con el del año de la regularización, dividiendo la diferencia entre cinco (o diez para terrenos y edificaciones)."
 
 [[legal."ley-37-1992:art-110"]]
 language = "es"
-text = "Articulo 110 LIVA: entregas de bienes de inversion durante el periodo de regularizacion. Si los bienes de inversion se entregan antes de la finalizacion del periodo de regularizacion, se efectuara una regularizacion unica por el tiempo que reste, considerando si la entrega esta sujeta y no exenta o exenta/no sujeta."
+text = "Artículo 110 LIVA: entregas de bienes de inversión durante el período de regularización. Si los bienes de inversión se entregan antes de la finalización del período de regularización, se efectuará una regularización única por el tiempo que reste, considerando si la entrega está sujeta y no exenta o exenta/no sujeta."
 
 [[legal."ley-37-1992:art-115"]]
 language = "es"
-text = "Articulo 115 LIVA: supuestos generales de devolucion. Conecta el saldo a favor no hecho efectivo por compensacion del articulo 99 con la solicitud de devolucion al cierre del último periodo de liquidacion del ano natural."
+text = "Artículo 115 LIVA: supuestos generales de devolución. Conecta el saldo a favor no hecho efectivo por compensación del artículo 99 con la solicitud de devolución al cierre del último período de liquidación del año natural."
 
 [[legal."ley-37-1992:art-116"]]
 language = "es"
-text = "Articulo 116 LIVA: solicitud de devoluciones al fin de cada periodo de liquidacion. Base legal de la devolucion periódica para sujetos pasivos que optan por el procedimiento reglamentario."
+text = "Artículo 116 LIVA: solicitud de devoluciones al fin de cada período de liquidación. Base legal de la devolución periódica para sujetos pasivos que optan por el procedimiento reglamentario."
 
 [[legal."ley-37-1992:art-117-bis"]]
 language = "es"
-text = "LIVA art 117 bis: solicitudes de devolucion de empresarios o profesionales establecidos en el territorio de aplicacion del Impuesto, Islas Canarias, Ceuta y Melilla, correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepcion de las realizadas en el territorio de aplicacion del Impuesto. Base sustantiva del Modelo 360 (devolucion 8a Directiva)."
+text = "LIVA art 117 bis: solicitudes de devolución de empresarios o profesionales establecidos en el territorio de aplicación del Impuesto, Islas Canarias, Ceuta y Melilla, correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepción de las realizadas en el territorio de aplicación del Impuesto. Base sustantiva del Modelo 360 (devolución 8a Directiva)."
 
 [[legal."ley-37-1992:art-124"]]
 language = "es"
-text = "Articulo 124 LIVA: obligaciones formales del regimen simplificado. Los sujetos pasivos acogidos al regimen simplificado estaran obligados a llevar un libro registro de facturas recibidas y un libro registro especifico del regimen simplificado."
+text = "Artículo 124 LIVA: obligaciones formales del régimen simplificado. Los sujetos pasivos acogidos al régimen simplificado estarán obligados a llevar un libro registro de facturas recibidas y un libro registro específico del régimen simplificado."
 
 [[legal."ley-37-1992:art-130"]]
 language = "es"
-text = "Articulo 130 LIVA: regimen de deducciones y compensaciones del regimen especial de la agricultura, ganaderia y pesca. Reconoce el derecho a percibir una compensacion a tanto alzado por el IVA soportado o satisfecho en las actividades acogidas al regimen."
+text = "Artículo 130 LIVA: régimen de deducciones y compensaciones del régimen especial de la agricultura, ganadería y pesca. Reconoce el derecho a percibir una compensación a tanto alzado por el IVA soportado o satisfecho en las actividades acogidas al régimen."
 
 [[legal."ley-37-1992:art-131"]]
 language = "es"
-text = "Articulo 131 LIVA: obligados al reintegro de las compensaciones. Reparte quien paga la compensacion entre la Hacienda Publica (exportaciones y entregas a otro Estado miembro) y el adquirente o destinatario establecido en el territorio de aplicacion del impuesto."
+text = "Artículo 131 LIVA: obligados al reintegro de las compensaciones. Reparte quien paga la compensación entre la Hacienda Pública (exportaciones y entregas a otro Estado miembro) y el adquirente o destinatario establecido en el territorio de aplicación del impuesto."
 
 [[legal."ley-37-1992:art-134"]]
 language = "es"
-text = "Articulo 134 LIVA: deduccion de las compensaciones del regimen especial de la agricultura, ganaderia y pesca. Quien satisface la compensacion deduce su importe como cuota soportada deducible, salvo los sujetos en recargo de equivalencia respecto de los productos destinados a su comercializacion, y debe poseer el documento que el mismo expide."
+text = "Artículo 134 LIVA: deducción de las compensaciones del régimen especial de la agricultura, ganadería y pesca. Quien satisface la compensación deduce su importe como cuota soportada deducible, salvo los sujetos en recargo de equivalencia respecto de los productos destinados a su comercialización, y debe poseer el documento que el mismo expide."
 
 [[legal."ley-37-1992:art-148"]]
 language = "es"
@@ -195,39 +195,39 @@ text = "LIVA art. 148: régimen especial del recargo de equivalencia."
 
 [[legal."ley-37-1992:art-163-decies"]]
 language = "es"
-text = "Articulo 163 decies LIVA: requisitos subjetivos para aplicar el regimen especial del criterio de caja."
+text = "Artículo 163 decies LIVA: requisitos subjetivos para aplicar el régimen especial del criterio de caja."
 
 [[legal."ley-37-1992:art-163-duodecies"]]
 language = "es"
-text = "Articulo 163 duodecies LIVA: ambito objetivo y operaciones excluidas del regimen especial del criterio de caja, incluidas exportaciones, entregas intracomunitarias, adquisiciones intracomunitarias, inversion del sujeto pasivo e importaciones."
+text = "Artículo 163 duodecies LIVA: ámbito objetivo y operaciones excluidas del régimen especial del criterio de caja, incluidas exportaciones, entregas intracomunitarias, adquisiciones intracomunitarias, inversión del sujeto pasivo e importaciones."
 
 [[legal."ley-37-1992:art-163-noniesdecies"]]
 language = "es"
-text = "Ley 37/1992, articulo 163 noniesdecies: obligaciones formales del regimen exterior OSS cuando Espana es Estado miembro de identificacion."
+text = "Ley 37/1992, artículo 163 noniesdecies: obligaciones formales del régimen exterior OSS cuando España es Estado miembro de identificación."
 
 [[legal."ley-37-1992:art-163-octovicies"]]
 language = "es"
-text = "Articulo 163 octovicies LIVA: obligaciones formales del regimen especial IOSS - declaracion de inicio, modificacion y cese, presentacion de declaraciones por trimestre natural, pagos, llevanza de un registro, conservacion de la documentacion durante diez anos."
+text = "Artículo 163 octovicies LIVA: obligaciones formales del régimen especial IOSS - declaración de inicio, modificación y cese, presentación de declaraciones por trimestre natural, pagos, llevanza de un registro, conservación de la documentación durante diez años."
 
 [[legal."ley-37-1992:art-163-quatervicies"]]
 language = "es"
-text = "Ley 37/1992, articulo 163 quatervicies: exclusion del regimen de la Union para prestaciones realizadas en el territorio de aplicacion del impuesto por establecidos en el mismo."
+text = "Ley 37/1992, artículo 163 quatervicies: exclusión del régimen de la Unión para prestaciones realizadas en el territorio de aplicación del impuesto por establecidos en el mismo."
 
 [[legal."ley-37-1992:art-163-quinquiesdecies"]]
 language = "es"
-text = "Articulo 163 quinquiesdecies LIVA: nacimiento del derecho a la deduccion por pago total o parcial para destinatarios no acogidos que reciben operaciones afectadas por el regimen especial del criterio de caja."
+text = "Artículo 163 quinquiesdecies LIVA: nacimiento del derecho a la deducción por pago total o parcial para destinatarios no acogidos que reciben operaciones afectadas por el régimen especial del criterio de caja."
 
 [[legal."ley-37-1992:art-163-septiesdecies"]]
 language = "es"
-text = "Articulo 163 septiesdecies LIVA: ambito objetivo del regimen especial aplicable a los servicios prestados por via electronica, de telecomunicaciones, de radiodifusion y de television (MOSS exterior). Define las prestaciones acogibles y los servicios excluidos del regimen."
+text = "Artículo 163 septiesdecies LIVA: ámbito objetivo del régimen especial aplicable a los servicios prestados por vía electrónica, de telecomunicaciones, de radiodifusión y de televisión (MOSS exterior). Define las prestaciones acogibles y los servicios excluidos del régimen."
 
 [[legal."ley-37-1992:art-163-septvicies"]]
 language = "es"
-text = "Articulo 163 septvicies LIVA: definiciones aplicables al regimen especial IOSS - empresario o profesional no establecido, Estado miembro de identificacion, Estado miembro de consumo, intermediario."
+text = "Artículo 163 septvicies LIVA: definiciones aplicables al régimen especial IOSS - empresario o profesional no establecido, Estado miembro de identificación, Estado miembro de consumo, intermediario."
 
 [[legal."ley-37-1992:art-163-unvicies"]]
 language = "es"
-text = "Ley 37/1992, articulo 163 unvicies: ambito del regimen de la Union para servicios, ventas intracomunitarias a distancia y determinadas entregas interiores."
+text = "Ley 37/1992, artículo 163 unvicies: ámbito del régimen de la Unión para servicios, ventas intracomunitarias a distancia y determinadas entregas interiores."
 
 [[legal."ley-37-1992:art-164"]]
 language = "es"
@@ -235,19 +235,19 @@ text = "LIVA art. 164: obligaciones de los sujetos pasivos (autoliquidación, M3
 
 [[legal."ley-37-1992:art-75"]]
 language = "es"
-text = "Articulo 75 LIVA: regla general de devengo del impuesto para entregas de bienes y prestaciones de servicios. Es la proyeccion informativa que Modelo 303 casillas 62/63 declaran para operaciones afectadas por el criterio de caja."
+text = "Artículo 75 LIVA: regla general de devengo del impuesto para entregas de bienes y prestaciones de servicios. Es la proyección informativa que Modelo 303 casillas 62/63 declaran para operaciones afectadas por el criterio de caja."
 
 [[legal."ley-37-1992:art-84"]]
 language = "es"
-text = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversion del sujeto pasivo (apartado uno 2o), donde el destinatario de la operacion asume la condicion de sujeto pasivo y debe autorepercutirse el IVA."
+text = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversión del sujeto pasivo (apartado uno 2o), donde el destinatario de la operación asume la condición de sujeto pasivo y debe autorepercutirse el IVA."
 
 [[legal."ley-37-1992:art-95"]]
 language = "es"
-text = "Articulo 95 LIVA: limitaciones del derecho a deducir. Los empresarios o profesionales no podran deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten a su actividad empresarial o profesional."
+text = "Artículo 95 LIVA: limitaciones del derecho a deducir. Los empresarios o profesionales no podrán deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten a su actividad empresarial o profesional."
 
 [[legal."ley-37-1992:art-99"]]
 language = "es"
-text = "Articulo 99 LIVA: ejercicio del derecho a la deduccion. Regula la deduccion de cuotas soportadas, el periodo en que se ejerce el derecho, la compensacion del exceso de cuotas a deducir cuando sobrepasa el de las devengadas en periodos sucesivos hasta cuatro anos, y la caducidad del derecho."
+text = "Artículo 99 LIVA: ejercicio del derecho a la deducción. Regula la deducción de cuotas soportadas, el período en que se ejerce el derecho, la compensación del exceso de cuotas a deducir cuando sobrepasa el de las devengadas en periodos sucesivos hasta cuatro años, y la caducidad del derecho."
 
 [[legal."ley-49-2002:art-20"]]
 language = "es"
@@ -1280,10 +1280,6 @@ text = "LIS disposicion adicional decimoseptima"
 language = "es"
 text = "libertad de amortizacion en instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion maxima 500.000 euros."
 
-[[legal."ley-35-2006:art-11"]]
-language = "es"
-text = "LIRPF art 11: individualización de rentas — la renta se entiende obtenida por los contribuyentes en función del origen o fuente (rendimientos del trabajo por quien genera el derecho, del capital por los titulares de los elementos, de actividades por quien las realiza, ganancias por los titulares). Base legal de las casillas 'Contribuyente que obtiene los rendimientos / a quien corresponde la imputación / titular' del Modelo 100 (toma de datos ampliada)."
-
 [[legal."ley-35-2006:art-38"]]
 language = "es"
 text = "LIRPF art 38: ganancias excluidas de gravamen en supuestos de reinversión — exención de la ganancia por transmisión de la vivienda habitual reinvertida en otra vivienda habitual, y de acciones/participaciones de entidades de nueva o reciente creación. Base legal de las casillas de exención por reinversión en Modelo 100."
@@ -1307,14 +1303,6 @@ text = "LIRPF art 54: reducciones de la base imponible general por aportaciones 
 [[legal."ley-35-2006:art-55"]]
 language = "es"
 text = "LIRPF art 55: reducciones de la base imponible por pensiones compensatorias satisfechas al cónyuge y anualidades por alimentos (salvo las fijadas a favor de los hijos) por decisión judicial. Base legal de las casillas de reducción por pensiones compensatorias y anualidades por alimentos en Modelo 100."
-
-[[legal."ley-35-2006:art-60"]]
-language = "es"
-text = "LIRPF art 60: minimo por discapacidad. Del contribuyente: 3.000 euros (discapacidad grado >=33%<65%), 9.000 euros (grado >=65%); +3.000 euros en concepto de gastos de asistencia (ayuda de terceras personas, movilidad reducida, o grado >=65%). De ascendientes o descendientes con discapacidad: 3.000 euros por cada uno (>=33%), 9.000 euros (>=65%); +3.000 euros gastos de asistencia."
-
-[[legal."ley-35-2006:art-61"]]
-language = "es"
-text = "LIRPF art 61: normas comunes para la aplicacion del minimo del contribuyente y por descendientes, ascendientes y discapacidad. Norma 1a: cuando dos o mas contribuyentes tengan derecho al minimo por descendientes, ascendientes o discapacidad respecto de los mismos ascendientes o descendientes, su importe se prorrateara entre ellos por partes iguales"
 
 [[legal."ley-35-2006:art-7"]]
 language = "es"

@@ -1600,7 +1600,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "operator"
-notes = "Ley 37/1992, articulo 163 noniesdecies: obligaciones formales del regimen exterior OSS cuando Espana es Estado miembro de identificacion."
+notes = "Ley 37/1992, artículo 163 noniesdecies: obligaciones formales del régimen exterior OSS cuando España es Estado miembro de identificación."
 required_text = [
     "Artículo 163 noniesdecies. Obligaciones formales.",
     "En caso de que el Reino de España sea el Estado miembro de identificación elegido",
@@ -1622,7 +1622,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Ley 37/1992, articulo 163 unvicies: ambito del regimen de la Union para servicios, ventas intracomunitarias a distancia y determinadas entregas interiores."
+notes = "Ley 37/1992, artículo 163 unvicies: ámbito del régimen de la Unión para servicios, ventas intracomunitarias a distancia y determinadas entregas interiores."
 required_text = [
     "Artículo 163 unvicies",
     "ventas a distancia intracomunitarias de bienes",
@@ -1701,7 +1701,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 99 LIVA: ejercicio del derecho a la deduccion. Regula la deduccion de cuotas soportadas, el periodo en que se ejerce el derecho, la compensacion del exceso de cuotas a deducir cuando sobrepasa el de las devengadas en periodos sucesivos hasta cuatro anos, y la caducidad del derecho."
+notes = "Artículo 99 LIVA: ejercicio del derecho a la deducción. Regula la deducción de cuotas soportadas, el período en que se ejerce el derecho, la compensación del exceso de cuotas a deducir cuando sobrepasa el de las devengadas en periodos sucesivos hasta cuatro años, y la caducidad del derecho."
 required_text = [
     "Uno. En las declaraciones-liquidaciones correspondientes a cada uno de los períodos de liquidación, los sujetos pasivos ",
     "Dos. Las deducciones deberán efectuarse en función del destino previsible de los bienes y servicios adquiridos, sin perj",
@@ -1945,7 +1945,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-05-19
 reviewed_by = "agent-review"
-notes = "Articulo 115 LIVA: supuestos generales de devolucion. Conecta el saldo a favor no hecho efectivo por compensacion del articulo 99 con la solicitud de devolucion al cierre del último periodo de liquidacion del ano natural."
+notes = "Artículo 115 LIVA: supuestos generales de devolución. Conecta el saldo a favor no hecho efectivo por compensación del artículo 99 con la solicitud de devolución al cierre del último período de liquidación del año natural."
 required_text = [
     "Supuestos generales de devolución",
     "Los sujetos pasivos que no hayan podido hacer efectivas las deducciones originadas en un período de liquidación por el procedimiento previsto en el artículo 99",
@@ -1965,7 +1965,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-05-19
 reviewed_by = "agent-review"
-notes = "Articulo 116 LIVA: solicitud de devoluciones al fin de cada periodo de liquidacion. Base legal de la devolucion periódica para sujetos pasivos que optan por el procedimiento reglamentario."
+notes = "Artículo 116 LIVA: solicitud de devoluciones al fin de cada período de liquidación. Base legal de la devolución periódica para sujetos pasivos que optan por el procedimiento reglamentario."
 required_text = [
     "Solicitud de devoluciones al fin de cada período de liquidación",
     "podrán optar por solicitar la devolución del saldo a su favor existente al término de cada período de liquidación",
@@ -1985,7 +1985,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 102 LIVA: regla de prorrata. Define cuando sera de aplicacion la regla de prorrata - cuando el sujeto pasivo realice conjuntamente entregas de bienes o prestaciones de servicios que originen el derecho a la deduccion y otras operaciones de analoga naturaleza que no habiliten para el ejercicio del citado derecho."
+notes = "Artículo 102 LIVA: regla de prorrata. Define cuándo será de aplicación la regla de prorrata - cuando el sujeto pasivo realice conjuntamente entregas de bienes o prestaciones de servicios que originen el derecho a la deducción y otras operaciones de análoga naturaleza que no habiliten para el ejercicio del citado derecho."
 required_text = [
     "Uno. La regla de prorrata será de aplicación cuando el sujeto pasivo, en el ejercicio de su actividad empresarial o prof",
     "Dos. No obstante lo dispuesto en el apartado anterior, los sujetos pasivos podrán deducir íntegramente las cuotas soport",
@@ -2005,17 +2005,17 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-07
 reviewed_by = "agent-authored verbatim from the bundled corpus text; operator to re-stamp"
 notes = """\
-Articulo 104 LIVA: la prorrata general. Define el calculo del porcentaje de deduccion como cociente \
-entre el importe total de las operaciones que originan el derecho a la deduccion (numerador) y el \
+Artículo 104 LIVA: la prorrata general. Define el cálculo del porcentaje de deducción como cociente \
+entre el importe total de las operaciones que originan el derecho a la deducción (numerador) y el \
 importe total de todas las operaciones realizadas en el ejercicio (denominador), redondeado por \
 exceso a la unidad superior. El apartado Tres enumera las seis operaciones excluidas de ambos \
-terminos de la relacion (art 104.Tres reglas 1a a 6a): (1) operaciones desde establecimientos \
+términos de la relación (art 104.Tres reglas 1a a 6a): (1) operaciones desde establecimientos \
 permanentes fuera del TAI; (2) las cuotas de IVA que gravaron directamente esas operaciones; (3) \
-entregas y exportaciones de bienes de inversion utilizados en la actividad; (4) operaciones \
+entregas y exportaciones de bienes de inversión utilizados en la actividad; (4) operaciones \
 inmobiliarias o financieras que no constituyan actividad habitual (arrendamiento siempre habitual; \
 operaciones financieras del art 20.Uno.18); (5) operaciones no sujetas del art 7; (6) operaciones \
-del art 9, numero 1.o, letra d) (autoconsumo del promotor). Las subvenciones no vinculadas al precio \
-NO son una exclusion del art 104.Tres: fueron suprimidas del denominador de la prorrata por la Ley \
+del art 9, número 1.o, letra d) (autoconsumo del promotor). Las subvenciones no vinculadas al precio \
+NO son una exclusión del art 104.Tres: fueron suprimidas del denominador de la prorrata por la Ley \
 3/2006 (BOE-A-2006-5691), por lo que no se computan en absoluto en lugar de excluirse de un volumen \
 computado."""
 required_text = [
@@ -2045,19 +2045,19 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-07
 reviewed_by = "agent-authored from bundled ley-37-1992.html#a105 arts. 105.Uno/.Cuatro/.Cinco procedimiento de la prorrata general; operator to re-stamp"
 notes = """\
-Articulo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deduccion \
-provisionalmente aplicable cada ano natural sera el fijado como definitivo para el ano precedente. \
-Apartado Cuatro: en la ultima declaracion-liquidacion de cada ano natural el sujeto pasivo calcula \
-la prorrata definitiva en funcion de las operaciones del ano y practica la consiguiente \
-regularizacion de las deducciones provisionales - la cuota de esa regularizacion se consigna en la \
-casilla 44 del Modelo 303 y en el campo de regularizacion anual del Modelo 390. Base legal de la \
-regularizacion prorrata por porcentaje definitivo. Apartado Cinco: en los supuestos de interrupcion \
-durante uno o mas anos naturales de la actividad (o de un sector diferenciado), el porcentaje \
-definitivamente aplicable durante cada uno de esos anos es el que globalmente corresponda al \
-conjunto de los tres ULTIMOS anos naturales en que se hubiesen realizado operaciones (porcentaje \
-global sobre los volumenes agregados de los tres anos activos, saltando la interrupcion; no la media \
-de los tres porcentajes ni los tres anos de calendario). Base legal de la siembra del ejercicio que \
-reanuda tras una interrupcion."""
+Artículo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deducción \
+provisionalmente aplicable cada año natural será el fijado como definitivo para el año precedente. \
+Apartado Cuatro: en la última declaración-liquidación de cada año natural el sujeto pasivo calcula \
+la prorrata definitiva en función de las operaciones del año y practica la consiguiente \
+regularización de las deducciones provisionales - la cuota de esa regularización se consigna en la \
+casilla 44 del Modelo 303 y en el campo de regularización anual del Modelo 390. Base legal de la \
+regularización prorrata por porcentaje definitivo. Apartado Cinco: en los supuestos de interrupción \
+durante uno o más años naturales de la actividad (o de un sector diferenciado), el porcentaje \
+definitivamente aplicable durante cada uno de esos años es el que globalmente corresponda al \
+conjunto de los tres ÚLTIMOS años naturales en que se hubiesen realizado operaciones (porcentaje \
+global sobre los volúmenes agregados de los tres años activos, saltando la interrupción; no la media \
+de los tres porcentajes ni los tres años de calendario). Base legal de la siembra del ejercicio que \
+reanuda tras una interrupción."""
 required_text = [
     "el porcentaje de deducción provisionalmente aplicable cada año natural será el fijado como definitivo para el año precedente",
     "En la última declaración-liquidación del impuesto correspondiente a cada año natural el sujeto pasivo calculará la prorrata de deducción definitiva",
@@ -2210,7 +2210,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 107 LIVA: regularizacion de deducciones por bienes de inversion. Las cuotas deducibles por la adquisicion o importacion de bienes de inversion se regularizan durante los cuatro anos naturales siguientes a aquel en que los sujetos pasivos inicien su utilizacion (o nueve anos si son terrenos o edificaciones)."
+notes = "Artículo 107 LIVA: regularización de deducciones por bienes de inversión. Las cuotas deducibles por la adquisición o importación de bienes de inversión se regularizan durante los cuatro años naturales siguientes a aquel en que los sujetos pasivos inicien su utilización (o nueve años si son terrenos o edificaciones)."
 required_text = [
     "Uno. Las cuotas deducibles por la adquisición o importación de bienes de inversión deberán regularizarse durante los cua",
     "No obstante, cuando la utilización efectiva o entrada en funcionamiento de los bienes se inicien con posterioridad a su ",
@@ -2233,7 +2233,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 108 LIVA: concepto de bienes de inversion. Son bienes de inversion los bienes corporales, muebles, semovientes o inmuebles que, por su naturaleza y funcion, esten normalmente destinados a ser utilizados por un periodo de tiempo superior a un ano como instrumentos de trabajo o medios de explotacion, con umbrales de exclusion para bienes de escaso valor."
+notes = "Artículo 108 LIVA: concepto de bienes de inversión. Son bienes de inversión los bienes corporales, muebles, semovientes o inmuebles que, por su naturaleza y función, estén normalmente destinados a ser utilizados por un período de tiempo superior a un año como instrumentos de trabajo o medios de explotación, con umbrales de exclusión para bienes de escaso valor."
 required_text = [
     "Dos. No tendrán la consideración de bienes de inversión:",
     "2.º Las ejecuciones de obra para la reparación de otros bienes de inversión.",
@@ -2253,7 +2253,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 109 LIVA: procedimiento para practicar la regularizacion de deducciones por bienes de inversion. Establece la formula de regularizacion comparando el porcentaje de deduccion del ano de adquisicion con el del ano de la regularizacion, dividiendo la diferencia entre cinco (o diez para terrenos y edificaciones)."
+notes = "Artículo 109 LIVA: procedimiento para practicar la regularización de deducciones por bienes de inversión. Establece la fórmula de regularización comparando el porcentaje de deducción del año de adquisición con el del año de la regularización, dividiendo la diferencia entre cinco (o diez para terrenos y edificaciones)."
 required_text = [
     "La regularización de las deducciones a que se refiere el artículo 107 de esta Ley se realizará del siguiente modo:",
     "2.º Dicho importe se restará del de la deducción efectuada en el año en que tuvo lugar la repercusión.",
@@ -2273,7 +2273,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 110 LIVA: entregas de bienes de inversion durante el periodo de regularizacion. Si los bienes de inversion se entregan antes de la finalizacion del periodo de regularizacion, se efectuara una regularizacion unica por el tiempo que reste, considerando si la entrega esta sujeta y no exenta o exenta/no sujeta."
+notes = "Artículo 110 LIVA: entregas de bienes de inversión durante el período de regularización. Si los bienes de inversión se entregan antes de la finalización del período de regularización, se efectuará una regularización única por el tiempo que reste, considerando si la entrega está sujeta y no exenta o exenta/no sujeta."
 required_text = [
     "A tal efecto, se aplicarán las siguientes reglas:",
     "Uno. En los casos de entregas de bienes de inversión durante el período de regularización se efectuará una regularizació",
@@ -2329,7 +2329,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 septvicies LIVA: definiciones aplicables al regimen especial IOSS - empresario o profesional no establecido, Estado miembro de identificacion, Estado miembro de consumo, intermediario."
+notes = "Artículo 163 septvicies LIVA: definiciones aplicables al régimen especial IOSS - empresario o profesional no establecido, Estado miembro de identificación, Estado miembro de consumo, intermediario."
 required_text = [
     "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno. 2.º de esta Ley.",
     "f) Expedir y entregar factura, ajustada a lo que se determine reglamentariamente.",
@@ -2348,7 +2348,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 octovicies LIVA: obligaciones formales del regimen especial IOSS - declaracion de inicio, modificacion y cese, presentacion de declaraciones por trimestre natural, pagos, llevanza de un registro, conservacion de la documentacion durante diez anos."
+notes = "Artículo 163 octovicies LIVA: obligaciones formales del régimen especial IOSS - declaración de inicio, modificación y cese, presentación de declaraciones por trimestre natural, pagos, llevanza de un registro, conservación de la documentación durante diez años."
 required_text = [
     "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
     "No obstante lo anterior, los empresarios o profesionales acogidos a este régimen especial tendrán derecho a la devolución de las c",
@@ -2388,7 +2388,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "operator"
-notes = "Ley 37/1992, articulo 163 quatervicies: exclusion del regimen de la Union para prestaciones realizadas en el territorio de aplicacion del impuesto por establecidos en el mismo."
+notes = "Ley 37/1992, artículo 163 quatervicies: exclusión del régimen de la Unión para prestaciones realizadas en el territorio de aplicación del impuesto por establecidos en el mismo."
 required_text = [
     "Artículo 163 quatervicies. Prestaciones de servicios realizadas en el territorio de aplicación del impuesto por empresarios o profesionales establecidos en el mismo.",
     "El régimen especial previsto en esta sección no resultará aplicable",
@@ -2409,7 +2409,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 septiesdecies LIVA: ambito objetivo del regimen especial aplicable a los servicios prestados por via electronica, de telecomunicaciones, de radiodifusion y de television (MOSS exterior). Define las prestaciones acogibles y los servicios excluidos del regimen."
+notes = "Artículo 163 septiesdecies LIVA: ámbito objetivo del régimen especial aplicable a los servicios prestados por vía electrónica, de telecomunicaciones, de radiodifusión y de televisión (MOSS exterior). Define las prestaciones acogibles y los servicios excluidos del régimen."
 required_text = [
     "Uno. A efectos del presente capítulo, serán de aplicación las siguientes definiciones:",
     "b) “Estado miembro de consumo”: el definido como tal para cada uno de los regímenes especiales.",
@@ -2492,7 +2492,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
-notes = "Articulo 95 LIVA: limitaciones del derecho a deducir. Los empresarios o profesionales no podran deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten a su actividad empresarial o profesional."
+notes = "Artículo 95 LIVA: limitaciones del derecho a deducir. Los empresarios o profesionales no podrán deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten a su actividad empresarial o profesional."
 required_text = [
     "limitaciones del derecho a deducir",
 ]
@@ -2614,7 +2614,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
-notes = "Articulo 124 LIVA: obligaciones formales del regimen simplificado. Los sujetos pasivos acogidos al regimen simplificado estaran obligados a llevar un libro registro de facturas recibidas y un libro registro especifico del regimen simplificado."
+notes = "Artículo 124 LIVA: obligaciones formales del régimen simplificado. Los sujetos pasivos acogidos al régimen simplificado estarán obligados a llevar un libro registro de facturas recibidas y un libro registro específico del régimen simplificado."
 required_text = [
     "régimen simplificado",
     "libro registro",
@@ -2633,7 +2633,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-11
 reviewed_by = "agent-review"
-notes = "Articulo 130 LIVA: regimen de deducciones y compensaciones del regimen especial de la agricultura, ganaderia y pesca. Reconoce el derecho a percibir una compensacion a tanto alzado por el IVA soportado o satisfecho en las actividades acogidas al regimen."
+notes = "Artículo 130 LIVA: régimen de deducciones y compensaciones del régimen especial de la agricultura, ganadería y pesca. Reconoce el derecho a percibir una compensación a tanto alzado por el IVA soportado o satisfecho en las actividades acogidas al régimen."
 required_text = [
     "Régimen de deducciones y compensaciones",
     "tendrán derecho a percibir una compensación a tanto alzado",
@@ -2652,7 +2652,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-review"
-notes = "Articulo 131 LIVA: obligados al reintegro de las compensaciones. Reparte quien paga la compensacion entre la Hacienda Publica (exportaciones y entregas a otro Estado miembro) y el adquirente o destinatario establecido en el territorio de aplicacion del impuesto."
+notes = "Artículo 131 LIVA: obligados al reintegro de las compensaciones. Reparte quien paga la compensación entre la Hacienda Pública (exportaciones y entregas a otro Estado miembro) y el adquirente o destinatario establecido en el territorio de aplicación del impuesto."
 required_text = [
     "Obligados al reintegro de las compensaciones",
     "El adquirente de los bienes",
@@ -2671,7 +2671,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-13
 reviewed_by = "agent-review"
-notes = "Articulo 134 LIVA: deduccion de las compensaciones del regimen especial de la agricultura, ganaderia y pesca. Quien satisface la compensacion deduce su importe como cuota soportada deducible, salvo los sujetos en recargo de equivalencia respecto de los productos destinados a su comercializacion, y debe poseer el documento que el mismo expide."
+notes = "Artículo 134 LIVA: deducción de las compensaciones del régimen especial de la agricultura, ganadería y pesca. Quien satisface la compensación deduce su importe como cuota soportada deducible, salvo los sujetos en recargo de equivalencia respecto de los productos destinados a su comercialización, y debe poseer el documento que el mismo expide."
 required_text = [
     "podrán deducir su importe de las cuotas devengadas",
     "en posesión del documento emitido por ellos mismos",
@@ -2824,7 +2824,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-06
 reviewed_by = "agent-review"
-notes = "Articulo 75 LIVA: regla general de devengo del impuesto para entregas de bienes y prestaciones de servicios. Es la proyeccion informativa que Modelo 303 casillas 62/63 declaran para operaciones afectadas por el criterio de caja."
+notes = "Artículo 75 LIVA: regla general de devengo del impuesto para entregas de bienes y prestaciones de servicios. Es la proyección informativa que Modelo 303 casillas 62/63 declaran para operaciones afectadas por el criterio de caja."
 required_text = [
     "Artículo 75. Devengo del impuesto.",
     "Se devengará el Impuesto",    # Operative phrase from apartado Uno.8 closing rule, at 71%. The prior grounding sat
@@ -2846,7 +2846,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-06
 reviewed_by = "agent-review"
-notes = "Articulo 163 decies LIVA: requisitos subjetivos para aplicar el regimen especial del criterio de caja."
+notes = "Artículo 163 decies LIVA: requisitos subjetivos para aplicar el régimen especial del criterio de caja."
 required_text = [
     "Artículo 163 decies. Requisitos subjetivos de aplicación.",
     "régimen especial del criterio de caja",
@@ -2884,7 +2884,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-06
 reviewed_by = "agent-review"
-notes = "Articulo 163 duodecies LIVA: ambito objetivo y operaciones excluidas del regimen especial del criterio de caja, incluidas exportaciones, entregas intracomunitarias, adquisiciones intracomunitarias, inversion del sujeto pasivo e importaciones."
+notes = "Artículo 163 duodecies LIVA: ámbito objetivo y operaciones excluidas del régimen especial del criterio de caja, incluidas exportaciones, entregas intracomunitarias, adquisiciones intracomunitarias, inversión del sujeto pasivo e importaciones."
 required_text = [
     "Artículo 163 duodecies. Requisitos objetivos de aplicación.",
     "Quedan excluidas del régimen especial del criterio de caja",
@@ -2942,7 +2942,7 @@ effective_from = 2014-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-06
 reviewed_by = "agent-review"
-notes = "Articulo 163 quinquiesdecies LIVA: nacimiento del derecho a la deduccion por pago total o parcial para destinatarios no acogidos que reciben operaciones afectadas por el regimen especial del criterio de caja."
+notes = "Artículo 163 quinquiesdecies LIVA: nacimiento del derecho a la deducción por pago total o parcial para destinatarios no acogidos que reciben operaciones afectadas por el régimen especial del criterio de caja."
 required_text = [
     "Artículo 163 quinquiesdecies. Operaciones afectadas por el régimen especial del criterio de caja.",
     "momento del pago total o parcial",
