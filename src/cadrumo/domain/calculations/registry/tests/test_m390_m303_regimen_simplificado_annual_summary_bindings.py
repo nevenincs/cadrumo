@@ -9,6 +9,7 @@ import pytest
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.filing_projection_ref import FilingProjectionRef
+from ..authority import bundled_indexed_authority
 from ..m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
     validate_m303_regimen_simplificado_annual_summary_revision,
@@ -92,9 +93,10 @@ def test_build_gate_refuses_one_missing_or_miswired_handoff_endpoint() -> None:
 @pytest.mark.parametrize("filing_year", (2022, 2023, 2024, 2025, 2026))
 def test_each_edition_declares_the_boxes_the_official_form_prints(filing_year: int) -> None:
     """Read from the AEAT Modelo 390 and Modelo 303 record designs, not from the declaration."""
-    revision = published_snapshot("390", filing_year=filing_year, period="0A").revision
+    with bundled_indexed_authority().operation() as operation:
+        revision = operation.revision_for_context("390", filing_year=filing_year, period="0A")
+        source = operation.revision_for_context("303", filing_year=filing_year, period="4T")
     requirement = m303_regimen_simplificado_annual_summary_requirement(revision)
-    source = published_snapshot("303", filing_year=filing_year, period="4T").revision
 
     assert requirement is not None
     assert requirement.source_period == "4T"
