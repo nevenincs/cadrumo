@@ -53,6 +53,7 @@ from ...domain.renta.actividad_asset.disposal import (
     BAJA_WITHOUT_TRANSMISSION_REASONS,
     TRANSMISSION_REASONS,
     ActivityAssetDisposalCalculation,
+    ActivityAssetDisposalReason,
 )
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS
 from ...domain.renta.actividad_asset.errors import (
@@ -65,7 +66,11 @@ from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, Sched
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
-from ..actividad_asset.disposal_calculation import calculate_element_disposal, pinned_disposal_bounds
+from ..actividad_asset.disposal_calculation import (
+    calculate_element_disposal,
+    disposal_excess_applies,
+    pinned_disposal_bounds,
+)
 from ..actividad_asset.history import ActivityAssetHistory
 from ..actividad_asset.schedule_walk import (
     M130ElementAccrual,
@@ -84,6 +89,11 @@ _AGRARIAN_INSTALMENT_SELECTOR: Final[str] = (
     "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras"
 )
 """The activities whose instalment is a share of income under RIRPF art. 110.1.c."""
+
+_NOT_THIS_RETURN: Final[frozenset[ResidenceTerritory]] = frozenset(
+    {ResidenceTerritory.FORAL, ResidenceTerritory.UNRESOLVED},
+)
+"""The readings under which the register contributes nothing to a calculation."""
 
 _NOT_A_DECLARED_EXPENSE_ISSUE_REASONS: Final[frozenset[str]] = frozenset(
     {
@@ -247,7 +257,8 @@ def m100_activity_asset_projection(
     current = current_revisions(history.revisions)
     if not current:
         return ActivityAssetProjection()
-    if (refused := _territory_refusal(context, operation, resolver_id)) is not None:
+    territory = _territory(context, operation, as_of=period.end_date)
+    if (refused := _territory_refusal(territory, resolver_id)) is not None:
         return refused
     observations = _m100_claim_observations(history.claims, period=period)
     reached = {observation.target_casilla_id for observation in observations}
@@ -272,6 +283,7 @@ def m100_activity_asset_projection(
     return ActivityAssetProjection(
         observations=observations,
         diagnostics=(
+            *_residence_period_findings(territory, period=period, resolver_id=resolver_id),
             *diagnostics,
             *(
                 note
@@ -307,7 +319,8 @@ def m130_activity_asset_projection(
     current = current_revisions(history.revisions)
     if not current:
         return ActivityAssetProjection()
-    if (refused := _territory_refusal(context, operation, resolver_id)) is not None:
+    territory = _territory(context, operation, as_of=period.end_date)
+    if (refused := _territory_refusal(territory, resolver_id)) is not None:
         return refused
     agrarian = frozenset(
         TipoActividad(code)
@@ -325,7 +338,7 @@ def m130_activity_asset_projection(
         for asset_id, revision in current.items()
     }
     observations: list[ActivityAssetExpenseObservation] = []
-    diagnostics: list[CalculationSourceDiagnostic] = []
+    diagnostics = list(_residence_period_findings(territory, period=period, resolver_id=resolver_id))
     for accrual in m130_register_accruals(
         history,
         forecast=_Forecast(context, operation),
@@ -371,7 +384,7 @@ class ActivityAssetDisposalExcess:
     revision: ActivityAssetRevision
     amount: Decimal = Decimal("0.00")
     agrarian: bool = False
-    error: ActividadAssetError | None = None
+    error: ActividadAssetError | RegistryError | None = None
 
     @property
     def source_ref(self) -> str:
@@ -438,9 +451,12 @@ def _m130_excess_rows(
     for revision in disposed:
         row = rows.get(revision.acquisition.observed_transaction_id)
         is_agrarian = row is not None and row.tipo_actividad in agrarian
+        disposal = revision.disposal
+        if disposal is None or not disposal_excess_applies(revision, disposal):
+            continue
         try:
             amount = _calculate(revision, history, operation=operation).excess
-        except ActividadAssetError as error:
+        except (ActividadAssetError, RegistryError) as error:
             found.append(ActivityAssetDisposalExcess(revision=revision, agrarian=is_agrarian, error=error))
             continue
         if amount > Decimal("0"):
@@ -466,7 +482,7 @@ def activity_asset_disposal_excess(
         resident has none, because no such return applies.
     """
     disposed = _bajas_reached(history, period=period)
-    if not disposed or _territory(context, operation) is not ResidenceTerritory.COMMON:
+    if not disposed or _territory(context, operation, as_of=period.end_date) in _NOT_THIS_RETURN:
         return ()
     agrarian = frozenset(
         TipoActividad(code)
@@ -503,6 +519,37 @@ def _unrouted_note(revision: ActivityAssetRevision, message: str, *, resolver_id
     )
 
 
+def _disposal_finding(
+    revision: ActivityAssetRevision, message: str, *, resolver_id: str
+) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="activity_asset_disposal_finding",
+        source_kind=resolver_id,
+        resolver_id=resolver_id,
+        source_ref=f"activity-asset:{revision.asset_id}",
+        message=f"baja of element {revision.asset_id!r}: {message}",
+    )
+
+
+def _m100_unresolved_disposal(
+    revision: ActivityAssetRevision,
+    error: ActividadAssetError | RegistryError,
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Leave a baja's figures unresolved; only a possible excess, which is activity income, still stops the return.
+
+    A withdrawal computes no gain, so it has nothing to say.
+    """
+    disposal = revision.disposal
+    if disposal is None or disposal.reason is ActivityAssetDisposalReason.WITHDRAWAL:
+        return ()
+    message = f"its result could not be worked out ({error})"
+    if disposal_excess_applies(revision, disposal):
+        return (_unrouted_note(revision, f"{message}, so activity income may be understated", resolver_id=resolver_id),)
+    return (_disposal_finding(revision, f"{message}; no box carries it", resolver_id=resolver_id),)
+
+
 def _m130_excess_notes(
     row: ActivityAssetDisposalExcess,
     *,
@@ -510,9 +557,9 @@ def _m130_excess_notes(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     if row.error is not None:
         return (
-            _unrouted_note(
+            _disposal_finding(
                 row.revision,
-                f"its excess could not be worked out ({row.error}), so income may be understated",
+                f"its excess could not be worked out ({row.error}), so this instalment carries none",
                 resolver_id=resolver_id,
             ),
         )
@@ -568,8 +615,8 @@ def _m100_disposal_notes(
     """
     try:
         calculation = _calculate(revision, history, operation=operation)
-    except ActividadAssetError as error:
-        return (_unrouted_note(revision, f"its result could not be worked out ({error})", resolver_id=resolver_id),)
+    except (ActividadAssetError, RegistryError) as error:
+        return _m100_unresolved_disposal(revision, error, resolver_id=resolver_id)
     notes: list[CalculationSourceDiagnostic] = []
     route = _m100_result_route(revision, calculation)
     if route is not None:
@@ -728,22 +775,49 @@ def activity_asset_provenance(
     )
 
 
-def _territory(context: CalculationSourceContext, operation: PinnedAuthorityOperation) -> ResidenceTerritory:
+def _territory(
+    context: CalculationSourceContext,
+    operation: PinnedAuthorityOperation,
+    *,
+    as_of: date,
+) -> ResidenceTerritory:
     profile = context.profile
     return resident_territory(
         bucket_id=context.bucket_id,
         profile_record=None if profile is None else profile.record,
         profile_decode_context=None if profile is None else profile.profile_decode_context,
         operation=operation,
+        as_of=as_of,
+    )
+
+
+def _residence_period_findings(
+    territory: ResidenceTerritory,
+    *,
+    period: Period,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Say that no recorded residence covers this period; the register counts, as nothing places it elsewhere."""
+    if territory is not ResidenceTerritory.PERIOD_UNKNOWN:
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="activity_asset_residence_period_unknown",
+            source_kind=resolver_id,
+            resolver_id=resolver_id,
+            message=(
+                f"no recorded tax residence is in force on {period.end_date.isoformat()}; the activity-asset register "
+                "is counted as if Modelos 100 and 130 of the AEAT apply to this period"
+            ),
+            remedy="state the tax residence that applied in this period in the profile",
+        ),
     )
 
 
 def _territory_refusal(
-    context: CalculationSourceContext,
-    operation: PinnedAuthorityOperation,
+    territory: ResidenceTerritory,
     resolver_id: str,
 ) -> ActivityAssetProjection | None:
-    territory = _territory(context, operation)
     if territory is ResidenceTerritory.FORAL:
         return _foral_projection(resolver_id)
     if territory is ResidenceTerritory.UNRESOLVED:

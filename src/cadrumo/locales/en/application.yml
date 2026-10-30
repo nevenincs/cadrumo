@@ -800,6 +800,11 @@ application:
         what: You live in the Basque Country or Navarre, where this form does not
           apply, so your registered assets are not included.
         what_to_do: Declare these assets with the tax authority of your territory.
+      activity_asset_residence_period_unknown:
+        what: Your profile records a tax residence, but none for this period, so your
+          assets are counted as if this form applies.
+        what_to_do: State where you lived in this period in your profile, then calculate
+          again.
       activity_asset_residence_unresolved:
         what: Your recorded tax residence could not be read, so your registered assets
           are not included.

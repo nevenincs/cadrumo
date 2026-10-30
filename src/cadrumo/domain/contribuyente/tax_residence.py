@@ -111,6 +111,8 @@ class ResidenceTerritory(StrEnum):
     COMMON = "common"
     FORAL = "foral"
     UNRESOLVED = "unresolved"
+    PERIOD_UNKNOWN = "period_unknown"
+    """A residence is recorded, but no recorded fact is in force on the date asked about."""
 
 
 def classify_tax_region(raw: str | None) -> ResidenceTerritory:

@@ -830,6 +830,11 @@ application:
         what: Olyan önálló adóhatóságú területen élsz, ahol ez a nyomtatvány nem alkalmazható,
           ezért a nyilvántartott eszközeid nem szerepelnek benne.
         what_to_do: Ezeket az eszközöket a területed adóhatóságánál jelentsd be.
+      activity_asset_residence_period_unknown:
+        what: A profilod tartalmaz adóügyi illetőséget, de erre az időszakra nem,
+          ezért az eszközeidet úgy számoljuk, mintha ez a nyomtatvány vonatkozna rád.
+        what_to_do: Add meg a profilodban, hol volt a lakóhelyed ebben az időszakban,
+          majd számolj újra.
       activity_asset_residence_unresolved:
         what: A rögzített adóügyi illetőséged nem olvasható, ezért a nyilvántartott
           eszközeid nem szerepelnek benne.

@@ -95,6 +95,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "activity_asset_claim_gap": _M,
         "activity_asset_accrual_unavailable": _M,
         "activity_asset_activity_undeclared": _M,
+        "activity_asset_residence_period_unknown": _M,
         # Worth checking. A value Cadrumo inferred or kept is among them: no box
         # lists it as assumed, so nothing in the editor can confirm it, and the
         # filer checks it against their records instead.

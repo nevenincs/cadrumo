@@ -75,7 +75,7 @@ from ...domain.user_profile.values import UserProfileRecord
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..user_profile.profile_record_repository import ProfileRecordRepository
-from ..user_profile.projections import fact_value, profile_fact_index
+from ..user_profile.projections import fact_value, profile_fact_index, record_to_path_values
 from . import _shared_issue_reasons
 from ._models import CasillaAggregation, CasillaProvenance
 from ._renta_business_eligibility import (
@@ -102,6 +102,7 @@ from .renta_ledger_models import (
 )
 
 _LEDGER_CATALOGUE_ID = "ledger"
+_TAX_REGION_PATH = "tax_residence.ccaa"
 
 
 # Registry authority: selected renta-ledger insurance variants, category-profile
@@ -266,21 +267,28 @@ def resident_territory(
     profile_record: UserProfileRecord | None = None,
     profile_decode_context: ProfileDecodeContext | None = None,
     operation: PinnedAuthorityOperation,
+    as_of: date | None = None,
 ) -> ResidenceTerritory:
     """Classify the bucket's recorded tax residence as common, foral or unresolved.
 
     Reads the same fact as :func:`resolve_residence_ccaa` and asks the same
     parser. An absent reading is common; a recorded one the catalogue cannot
     parse is unresolved, because it established nothing.
+
+    ``as_of`` reads the residence in force on that date, so a later move does not
+    reach back over an earlier filing period. When residence is recorded only for
+    other dates the answer is :attr:`ResidenceTerritory.PERIOD_UNKNOWN`.
     """
-    return classify_tax_region(
-        _recorded_tax_region(
-            bucket_id=bucket_id,
-            profile_record=profile_record,
-            profile_decode_context=profile_decode_context,
-            operation=operation,
-        ),
+    record = _tax_region_record(
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
     )
+    reading = record_to_path_values(record, as_of=as_of).get(_TAX_REGION_PATH)
+    if reading is None and as_of is not None and fact_value(record, _TAX_REGION_PATH) is not None:
+        return ResidenceTerritory.PERIOD_UNKNOWN
+    return classify_tax_region(reading)
 
 
 def _recorded_tax_region(
@@ -291,18 +299,35 @@ def _recorded_tax_region(
     operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Return the raw ``tax_residence.ccaa`` fact, or ``None`` with no profile or fact."""
+    return fact_value(
+        _tax_region_record(
+            bucket_id=bucket_id,
+            profile_record=profile_record,
+            profile_decode_context=profile_decode_context,
+            operation=operation,
+        ),
+        _TAX_REGION_PATH,
+    )
+
+
+def _tax_region_record(
+    *,
+    bucket_id: str,
+    profile_record: UserProfileRecord | None,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+) -> UserProfileRecord | None:
+    if profile_record is not None:
+        return profile_record
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
-    record = profile_record
-    if record is None:
-        try:
-            record = ProfileRecordRepository.for_current_session(
-                bucket_id,
-                profile_decode_context=profile_decode_context,
-            ).load(bucket_id)
-        except ProfileNotFoundError:
-            return None
-    return fact_value(record, "tax_residence.ccaa")
+    try:
+        return ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=profile_decode_context,
+        ).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
 
 
 def resolve_iva_deduction_ratio(

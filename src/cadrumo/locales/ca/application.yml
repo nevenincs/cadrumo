@@ -867,6 +867,10 @@ application:
         what: Resideixes en un territori foral, on aquest model no s'aplica, de manera
           que els teus béns registrats no s'hi inclouen.
         what_to_do: Declara aquests béns davant la hisenda foral del teu territori.
+      activity_asset_residence_period_unknown:
+        what: El teu perfil recull una residència fiscal, però cap per a aquest període,
+          així que els teus elements es compten com si aquest model fos aplicable.
+        what_to_do: Indica al teu perfil on residies en aquest període i torna a calcular.
       activity_asset_residence_unresolved:
         what: No s'ha pogut llegir la residència fiscal registrada, de manera que
           els teus béns registrats no s'hi inclouen.

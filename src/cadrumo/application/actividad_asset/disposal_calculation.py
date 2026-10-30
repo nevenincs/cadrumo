@@ -17,6 +17,7 @@ from ...domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
     ActivityAssetDisposalCalculation,
     ActivityAssetDisposalFacts,
+    ActivityAssetDisposalReason,
     ActivityAssetDisposalYearFacts,
     calculate_disposal,
 )
@@ -52,6 +53,13 @@ def pinned_disposal_bounds(operation: PinnedAuthorityOperation) -> DisposalBound
     return read
 
 
+def disposal_excess_applies(revision: ActivityAssetRevision, disposal: ActivityAssetDisposal) -> bool:
+    """Say whether this baja can carry an excess: not a withdrawal, on a free-depreciation element."""
+    return disposal.reason is not ActivityAssetDisposalReason.WITHDRAWAL and (
+        revision.amortization.method in _EXCESS_METHODS or disposal.prior_free_depreciation_regime is not None
+    )
+
+
 def calculate_element_disposal(
     revision: ActivityAssetRevision,
     disposal: ActivityAssetDisposal,
@@ -68,9 +76,6 @@ def calculate_element_disposal(
     opening = revision.opening_history.accumulated_amount
     if opening is None:
         raise ActividadAssetIncompleteError(translated_message="ledger.actividad_asset.errors.opening_history_missing")
-    excess_applies = (
-        revision.amortization.method in _EXCESS_METHODS or disposal.prior_free_depreciation_regime is not None
-    )
     return calculate_disposal(
         ActivityAssetDisposalFacts(
             disposal=disposal,
@@ -82,7 +87,7 @@ def calculate_element_disposal(
                 _year_facts(revision, disposal, history, tax_year=tax_year, bounds=bounds(revision, tax_year))
                 for tax_year in range(revision.in_service_date.year, disposal.disposal_date.year + 1)
             ),
-            excess_applies=excess_applies,
+            excess_applies=disposal_excess_applies(revision, disposal),
         ),
     )
 
@@ -194,6 +199,7 @@ def project_disposal_calculation(
 __all__ = [
     "DisposalBoundsReader",
     "calculate_element_disposal",
+    "disposal_excess_applies",
     "pinned_disposal_bounds",
     "project_disposal_calculation",
     "year_minimum",

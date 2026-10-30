@@ -258,6 +258,10 @@ CalculationSourceDiagnosticReason = Literal[
     # elements. It establishes neither territory, so no figure from the register
     # reaches the form until the profile states the residence. Blocking.
     "activity_asset_residence_unresolved",
+    # A residence is recorded, but none is in force in this period. The register
+    # still counts, because nothing places the period in a foral territory; only
+    # the filer can state where they lived then.
+    "activity_asset_residence_period_unknown",
     # An element in service with lawful base remaining and no effective claim for
     # part of the year. The deduction is not invented and the return is not
     # refused, because a gap reduces a deduction without invalidating the return.
