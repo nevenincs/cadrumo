@@ -81,6 +81,6 @@ def test_a_forecast_for_a_foral_or_unreadable_residence_refuses_in_every_languag
     for language, refused in refusals.items():
         assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
         error = json.loads(refused.output)["error"]
-        assert error["message"] == tr(key, locale=language)
+        assert error["message"] == tr(key, locale=language), refused.output
         messages.add(error["message"])
     assert len(messages) == len(_LANGUAGES)
