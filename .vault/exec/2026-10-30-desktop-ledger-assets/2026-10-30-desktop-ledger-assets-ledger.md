@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:29b45910f30f1c77c108ce96f2b9fc229e5993720159692f2c5137ce345bebdd'
+body_hash: 'sha256:ed73cc7caddd8d55a8d64249c46032711771436c42a42cc171a7e936c374092b'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -70,9 +70,20 @@ related:
 - `S02` `A` `native/desktop/frontend/src/components/ledger/assets/Assets.stories.tsx`
 - `S02` `verify:` `eslint+prettier on the six files` -> `pass`
 - `S02` `by:` `implementer`
+- `S03` `A` `native/desktop/frontend/src/components/ledger/assets/AmortizationPlan.tsx`
+- `S03` `A` `native/desktop/frontend/src/components/ledger/assets/AssetTimeline.tsx`
+- `S03` `A` `native/desktop/frontend/src/components/ledger/assets/planWords.ts`
+- `S03` `A` `native/desktop/frontend/src/components/ledger/assets/planRead.ts`
+- `S03` `A` `native/desktop/frontend/src/components/ledger/assets/Amortization.stories.tsx`
+- `S03` `M` `native/desktop/frontend/src/dev/assetsFixture.ts`
+- `S03` `verify:` `npx tsc --noEmit` -> `pass`
+- `S03` `verify:` `npx eslint owned paths` -> `pass`
+- `S03` `verify:` `npx prettier --check owned paths` -> `pass`
+- `S03` `by:` `implementer`
 
 ## Notes
 
 - `S01` `test_parity.py::test_codebase_to_locale_parity` fails on six `ledger.actividad_asset.errors.*` keys other sessions hold uncommitted in the four common.yml catalogues; no desktop.ledger.assets key is named in it
 - `S01` The four common.yml catalogues carry other sessions' uncommitted keys beside the 107 desktop.ledger.assets keys of this Step; they are not in this Step's commit
 - `S02` tsc reports errors only in src/dev/assetsFixture.ts, written by another Step in progress; none in these files
+- `S03` assetsFixture.ts holds another session's uncommitted hunks; only the S03 hunks were staged
