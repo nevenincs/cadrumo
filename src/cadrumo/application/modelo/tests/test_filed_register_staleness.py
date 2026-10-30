@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import cast
 
@@ -22,6 +22,7 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_wor
 from ....domain.transactions.models import TransactionCatalogue
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.ledger_filing_snapshot import stale_filed_revisions
+from ...aggregation.tests.test_modelo_bindings_asset_disposal import _disposed
 from ...aggregation.ledger_membership import LedgerMembershipPorts
 from ...aggregation.tests.test_modelo_source_mesh_ledger import (
     InMemoryTransactionCatalogueRepository,
@@ -210,3 +211,17 @@ def test_the_reader_answers_what_was_recorded_outside_this_profile_and_none_for_
 
     assert read(work_unit, bucket_id=_OTHER_BUCKET_ID) == filed.activity_asset_consumption
     assert read(unknown, bucket_id=_BUCKET_ID) is None
+
+
+def test_a_claim_of_an_earlier_year_that_moves_a_filed_baja_makes_it_stale() -> None:
+    """The 2025 gain goes from 897.53 to 1,200.00 with no 2025 claim and no new baja revision."""
+    unclaimed = _disposed(in_service=date(2024, 1, 1))
+    claimed = _disposed(in_service=date(2024, 1, 1), prior_claim="1200.00")
+    work_unit, filed = _filed(unclaimed, state=CalculationRevisionState.PRESENTADO)
+
+    ((found, verdict),) = _stale(work_unit, filed, claimed)
+
+    assert found is filed
+    assert verdict.register_state is FiledRegisterState.CHANGED
+    assert verdict.register_change_count == 1
+    assert _stale(work_unit, filed, unclaimed) == ()

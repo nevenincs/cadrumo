@@ -697,16 +697,24 @@ export function AssetForm({
   const [typed, setTyped] = useState({ asset_kind: "", in_service_date: "" });
   const optionsKind =
     kind === "element" ? typed.asset_kind : (asset.row?.asset_kind ?? "");
+  // A baja is read for the year the page stands on: the reasons it offers do
+  // not depend on the year the element came into service.
   const optionsYear =
     kind === "element"
       ? yearOfDate(typed.in_service_date)
-      : (yearOfDate(
-          typed.in_service_date || asset.row?.in_service_date || "",
-        ) ?? taxYear);
+      : kind === "baja" || kind === "baja_change"
+        ? (taxYear ?? yearOfDate(asset.row?.in_service_date ?? ""))
+        : (yearOfDate(
+            typed.in_service_date || asset.row?.in_service_date || "",
+          ) ?? taxYear);
   const wantsOptions =
-    (kind === "element" || kind === "correction") &&
+    (kind === "element" ||
+      kind === "correction" ||
+      kind === "baja" ||
+      kind === "baja_change") &&
     optionsKind !== "" &&
-    optionsYear !== null;
+    optionsYear !== null &&
+    optionsYear !== undefined;
   const options = useLedgerRead(
     port,
     reader,

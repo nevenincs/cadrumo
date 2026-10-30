@@ -46,6 +46,7 @@ from ...domain.calculations.registry.ledger_renta_income_bindings import renta_i
 from ...domain.contribuyente.tax_residence import ResidenceTerritory
 from ...domain.modelos.calculation_revision_sources import (
     ACTIVITY_ASSET_CLAIM_REF_PREFIX,
+    ACTIVITY_ASSET_DISPOSAL_FIGURES_REF_PREFIX,
     ACTIVITY_ASSET_DISPOSAL_REF_PREFIX,
     ACTIVITY_ASSET_SCHEDULE_REF_PREFIX,
 )
@@ -76,6 +77,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ..actividad_asset.disposal_calculation import (
     calculate_element_disposal,
+    disposal_calculation_digest,
     disposal_excess_applies,
     pinned_disposal_bounds,
 )
@@ -172,6 +174,7 @@ class ActivityAssetProjection:
     observations: tuple[ActivityAssetExpenseObservation, ...] = ()
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     disposal_revision_ids: tuple[str, ...] = ()
+    disposal_digests: tuple[str, ...] = ()
     disposal_observations: tuple[ActivityAssetDisposalObservation, ...] = ()
 
 
@@ -257,6 +260,7 @@ def m100_activity_asset_projection(
             *(note for baja in bajas for note in baja.notes),
         ),
         disposal_revision_ids=tuple(revision.revision_id for revision in disposed),
+        disposal_digests=_disposal_digests(disposed, history, operation=operation),
         disposal_observations=tuple(item for baja in bajas for item in baja.observations),
     )
 
@@ -361,6 +365,7 @@ def m130_activity_asset_projection(
         observations=tuple(observations),
         diagnostics=tuple(diagnostics),
         disposal_revision_ids=tuple(revision.revision_id for revision in disposed),
+        disposal_digests=_disposal_digests(disposed, history, operation=operation),
     )
 
 
@@ -531,6 +536,20 @@ def activity_asset_disposal_excess(
         agrarian=agrarian,
         rows=rows,
         target_casilla_id=renta_income_target_casilla(context.revision, modelo=context.modelo),
+    )
+
+
+def _disposal_digests(
+    disposed: tuple[ActivityAssetRevision, ...],
+    history: ActivityAssetHistory,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
+    bounds = pinned_disposal_bounds(operation)
+    return tuple(
+        disposal_calculation_digest(revision, revision.disposal, history, bounds=bounds)
+        for revision in disposed
+        if revision.disposal is not None
     )
 
 
@@ -802,16 +821,20 @@ def _result_route(
 
 
 def activity_asset_disposal_provenance(
-    disposal_revision_ids: Iterable[str],
+    projection: ActivityAssetProjection,
     *,
     resolver_id: str,
     resolved_binding_source: BindingSourceKind,
 ) -> tuple[CalculationSourceProvenance, ...]:
-    """Name each baja a calculation's period reaches, which the drift gate compares.
+    """Name each baja a calculation's period reaches and what its figures came to, which the drift gate compares.
 
     Returns:
-        One primary provenance row per baja.
+        Two primary provenance rows per baja.
     """
+    source_refs = (
+        *(f"{ACTIVITY_ASSET_DISPOSAL_REF_PREFIX}{revision_id}" for revision_id in projection.disposal_revision_ids),
+        *(f"{ACTIVITY_ASSET_DISPOSAL_FIGURES_REF_PREFIX}{digest}" for digest in projection.disposal_digests),
+    )
     return tuple(
         CalculationSourceProvenance(
             resolver_id=resolver_id,
@@ -819,11 +842,11 @@ def activity_asset_disposal_provenance(
             contributor_source_kind=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL.value,
             contributor_binding_source=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
             lineage_role=CalculationSourceLineageRole.PRIMARY,
-            source_ref=f"{ACTIVITY_ASSET_DISPOSAL_REF_PREFIX}{revision_id}",
+            source_ref=source_ref,
             parent_source_ref=None,
             terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
         )
-        for revision_id in disposal_revision_ids
+        for source_ref in source_refs
     )
 
 

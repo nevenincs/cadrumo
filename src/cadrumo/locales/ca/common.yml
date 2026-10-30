@@ -3781,6 +3781,7 @@ desktop:
         removed: Fora del recompte
       facts:
         amount: Import
+        document: '{kind}: {name}'
         documents: Fitxers en què es recolza
         documents_unknown: Els fitxers d'aquesta compra no estan disponibles.
         extra_total: Costos addicionals
@@ -3845,8 +3846,6 @@ desktop:
         choose_file: Triar un fitxer
         cost_check: Fitxer que demostra que has revisat els costos addicionals
         extra: Fitxer que demostra aquest cost
-        file_unread: No s'ha pogut fer servir aquest fitxer. Tria un fitxer PDF, una
-          imatge o un XML i torna-ho a provar.
         iva_check: Fitxer que demostra que has revisat quant d'IVA pots deduir
         keeping: Desant el fitxer…
         kept: Desat amb els teus llibres

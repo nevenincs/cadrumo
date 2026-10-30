@@ -26,8 +26,10 @@ import type {
 } from "../shell/ledger";
 import {
   ADMITTED_METHODS,
+  DISPOSAL_REASONS,
   SEED_ELEMENTS,
   TABLE_GROUPS,
+  TIMELINE_FACT_PATHS,
   type SeedElement,
 } from "./assetsSeed";
 
@@ -779,6 +781,12 @@ export function assetOperations(tools: Tools) {
       events: element.events,
     });
 
+  /** The catalogue key of a fact the timeline words, as the backend names it:
+   * null for a path no fact of the timeline has. */
+  const fieldKeyOf = (field: string): string | null =>
+    TIMELINE_FACT_PATHS.includes(field.replace(/\[\d+\]/g, "[]"))
+      ? `${FAMILY}field.${field.replace(/\[\d*\]/g, "")}`
+      : null;
   const record = (
     element: Element,
     kind: string,
@@ -813,6 +821,7 @@ export function assetOperations(tools: Tools) {
       origin,
       changes: changes.map((change) => ({
         ...change,
+        field_key: fieldKeyOf(change.field),
         before_key: keyOf(change.field, change.before),
         after_key: keyOf(change.field, change.after),
         before_label: labelOf(change.field, change.before),
@@ -936,10 +945,29 @@ export function assetOperations(tools: Tools) {
         latest(element).revision.acquired_condition === "used" &&
         current?.method === "linear" &&
         element.rows.some((row) => row.edition !== null);
+      // A claim states the verdict the timeline states of it: one judgement.
+      const verdicts = new Map(
+        element.events.flatMap((event) =>
+          event.claim === null ? [] : [[event.record_id, event.claim] as const],
+        ),
+      );
+      const rows = element.rows.map((row) => ({
+        ...row,
+        claims: row.claims.map((claim) => {
+          const found = verdicts.get(claim.claim_id);
+          return found === undefined
+            ? claim
+            : {
+                ...claim,
+                matches_current_schedule: found.matches_current_schedule,
+                stale_reason: found.stale_reason as PlanClaim["stale_reason"],
+              };
+        }),
+      }));
       return json({
         ...ok,
         asset_id: id,
-        rows: element.rows,
+        rows,
         limits: element.limits,
         advisories: used
           ? [
@@ -986,6 +1014,7 @@ export function assetOperations(tools: Tools) {
             SERVED_METHOD_FACTS.find((found) => found.method === method)!,
           ),
           table_groups: TABLE_GROUPS[kind],
+          disposal_reasons: DISPOSAL_REASONS,
         },
       });
     },
@@ -1035,15 +1064,13 @@ export function assetOperations(tools: Tools) {
       ),
     );
   };
-  const LINKS = ["revision_number", "supersedes_revision_id"];
   const changesBetween = (before: JsonObject | null, after: JsonObject) => {
     const old = before === null ? {} : flatten(before);
     const next = flatten(after);
     return Object.keys({ ...old, ...next })
       .filter(
         (path) =>
-          !LINKS.includes(path) &&
-          !path.startsWith("acquisition.") &&
+          fieldKeyOf(path) !== null &&
           (old[path] ?? null) !== (next[path] ?? null),
       )
       .map((path) => ({
@@ -1732,6 +1759,8 @@ export function assetOperations(tools: Tools) {
           effective: true,
           superseded_by: null,
           revision_id: revisionId,
+          matches_current_schedule: true,
+          stale_reason: null,
         };
         old.effective = false;
         old.superseded_by = next.claim_id;
@@ -1800,13 +1829,18 @@ export function assetOperations(tools: Tools) {
   const filingHandoff: Handler = (request) => {
     exact(request, ["tax_year", "m130_period"]);
     const year = request.tax_year;
-    const period = required(request.m130_period);
-    if (typeof year !== "number" || !Object.hasOwn(PERIOD_END, period))
+    // Without a quarter the Modelo 100 boxes alone are stated.
+    const period =
+      request.m130_period === undefined || request.m130_period === null
+        ? null
+        : required(request.m130_period);
+    if (
+      typeof year !== "number" ||
+      (period !== null && !Object.hasOwn(PERIOD_END, period))
+    )
       return invalid();
-    const through = `${year}-${PERIOD_END[period]}`;
-    const until = new Date(Date.parse(through) + 86_400_000)
-      .toISOString()
-      .slice(0, 10);
+    const through = `${year}-${PERIOD_END[period ?? "4T"]}`;
+    const until = dayAfter(through);
     const sorted = [...elements.values()].sort((a, b) =>
       a.id.localeCompare(b.id),
     );
@@ -1913,8 +1947,8 @@ export function assetOperations(tools: Tools) {
       filing_handoff: {
         material_m100: m100("material"),
         intangible_m100: m100("intangible"),
-        material_m130: m130("material"),
-        intangible_m130: m130("intangible"),
+        material_m130: period === null ? null : m130("material"),
+        intangible_m130: period === null ? null : m130("intangible"),
       },
     });
   };
@@ -2134,6 +2168,7 @@ export function assetOperations(tools: Tools) {
       "asset_id",
       "covered_from",
       "covered_until",
+      "covered_through",
       "requested_free_amount",
       "supersedes_claim_id",
     ]);
@@ -2141,8 +2176,22 @@ export function assetOperations(tools: Tools) {
     const element = find(id);
     if (!element) return notFound({ forecast: null });
     const from = required(request.covered_from);
-    const until = required(request.covered_until);
-    if (!DATE.test(from) || !DATE.test(until)) return invalid();
+    // The end is stated as the exclusive boundary or as the last day covered;
+    // stating both is accepted only when they name the same day.
+    const stated = (value: unknown) =>
+      value === undefined || value === null ? null : required(value);
+    const statedUntil = stated(request.covered_until);
+    const statedThrough = stated(request.covered_through);
+    if (statedUntil === null && statedThrough === null) return invalid();
+    if (
+      !DATE.test(from) ||
+      (statedUntil !== null && !DATE.test(statedUntil)) ||
+      (statedThrough !== null && !DATE.test(statedThrough))
+    )
+      return invalid();
+    const until = statedUntil ?? dayAfter(statedThrough!);
+    if (statedThrough !== null && statedThrough !== dayBefore(until))
+      return invalid();
     if (until <= from)
       return refuse(
         VALIDATION,
@@ -2386,6 +2435,8 @@ export function assetOperations(tools: Tools) {
       effective: true,
       superseded_by: null,
       revision_id: latest(element).revision_id,
+      matches_current_schedule: true,
+      stale_reason: null,
     };
     if (target) {
       target.effective = false;

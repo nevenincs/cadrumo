@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 13:29+0100\n"
+"POT-Creation-Date: 2026-10-31 00:35+0100\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -58,8 +58,8 @@ msgstr ""
 "to/modelo-100.md)."
 
 #: ../../explanation/how-renta-is-assembled.md:18
-msgid "One declaration, five source routes"
-msgstr "Egy bevallás, öt forrásútvonal"
+msgid "One declaration, six source routes"
+msgstr "Egy bevallás, hat forrásútvonal"
 
 #: ../../explanation/how-renta-is-assembled.md:20
 msgid ""
@@ -67,14 +67,14 @@ msgid ""
 "defines over two thousand boxes (casillas) and two hundred formulas. "
 "Every value on it arrives through a declared data source. The listing "
 "calls each of these contracts a `binding`. The current Renta flow uses "
-"five broad routes. They are not the complete list of source kinds for "
+"six broad routes. They are not the complete list of source kinds for "
 "every modelo. List them for your filing year:"
 msgstr ""
 "A Modelo 100 a legnagyobb nyomtatvány, amelyet az eszköz előkészít: a "
 "2025-ös változat több mint kétezer rovatot és kétszáz képletet határoz "
 "meg. Minden érték deklarált adatforrásból származik. A lista ezeket az "
 "adatforrás-szerződéseket `binding` néven jelöli. A jelenlegi Renta-"
-"folyamat öt fő útvonalat használ. Ezek nem fedik le az összes modelo "
+"folyamat hat fő útvonalat használ. Ezek nem fedik le az összes modelo "
 "összes forrástípusát. Listázd ki őket a bevallási évedhez:"
 
 #: ../../explanation/how-renta-is-assembled.md:31
@@ -105,11 +105,10 @@ msgstr ""
 "kiadásai: az év besorolt bevételi és levonható kiadási tételei, "
 "rovatonként összegezve és `renta-ledger-*` sorokként felsorolva. Ezek "
 "ugyanazok a nyilvántartások, amelyeket a negyedéves bevallásaid olvasnak "
-"- a Renta egyszerre dolgozza fel az egész évet. A 2025-ös lista a "
-"0227-es rovatot is tartalmazza az immateriális javak amortizációjához; "
-"ezek az összegek a tevékenység eszköznyilvántartásából származnak, "
-"mert egyetlen könyvelési kiadási kategória sem rendeli ezeket ehhez a "
-"rovathoz."
+"- a Renta egyszerre dolgozza fel az egész évet. A 2025-ös lista a 0227-es"
+" rovatot is tartalmazza az immateriális javak amortizációjához; ezek az "
+"összegek a tevékenység eszköznyilvántartásából származnak, mert egyetlen "
+"könyvelési kiadási kategória sem rendeli ezeket ehhez a rovathoz."
 
 #: ../../explanation/how-renta-is-assembled.md:33
 msgid ""
@@ -150,7 +149,20 @@ msgstr ""
 "készletnyilvántartásodból származnak, és az `inventory` forrás alatt "
 "szerepelnek."
 
-#: ../../explanation/how-renta-is-assembled.md:39
+#: ../../explanation/how-renta-is-assembled.md:38
+msgid ""
+"**Activity asset disposals.** Gains, losses, and excess amortisation from"
+" disposals recorded in your activity asset register, plus the asset type "
+"for a transferred activity asset. The listing labels these rows "
+"`activity_asset_disposal`."
+msgstr ""
+"**Tevékenységi eszközök kivezetése.** A tevékenységi "
+"eszköznyilvántartásodban rögzített kivezetésekből származó nyereségek, "
+"veszteségek és többletértékcsökkenés, valamint az átruházott tevékenységi"
+" eszköz típusa. A lista ezeket a sorokat `activity_asset_disposal` néven "
+"jelöli."
+
+#: ../../explanation/how-renta-is-assembled.md:43
 msgid ""
 "Everything else - employment income details, capital income, deductions "
 "your records cannot know about - is a box you fill in yourself when it "
@@ -161,7 +173,7 @@ msgstr ""
 "rovat, amelyet akkor töltesz ki, ha rád vonatkozik. Az adóévedre "
 "vonatkozó teljes leltár:"
 
-#: ../../explanation/how-renta-is-assembled.md:45
+#: ../../explanation/how-renta-is-assembled.md:49
 msgid ""
 "For the 2025 version, the stock boxes 0177 (stock variation, increase), "
 "0181 (purchase of inventory), and 0182 (stock variation, decrease) are "
@@ -178,11 +190,11 @@ msgstr ""
 "Ha az adóévhez nincs készletnyilvántartás, a számítás figyelmeztet, a "
 "három rovat pedig 0 marad."
 
-#: ../../explanation/how-renta-is-assembled.md:52
+#: ../../explanation/how-renta-is-assembled.md:56
 msgid "How the quarterly filings fold in"
 msgstr "Hogyan olvadnak bele a negyedéves benyújtások"
 
-#: ../../explanation/how-renta-is-assembled.md:54
+#: ../../explanation/how-renta-is-assembled.md:58
 msgid ""
 "Across the year you paid income tax in pieces: instalments on Modelo 130 "
 "(or 131 under módulos), and withholdings that clients or payers reported "
@@ -199,7 +211,7 @@ msgstr ""
 "jövedelmeddel veti össze őket, majd elszámolja a különbözetet: azt, ami "
 "még fizetendő, vagy ami visszajár."
 
-#: ../../explanation/how-renta-is-assembled.md:61
+#: ../../explanation/how-renta-is-assembled.md:65
 msgid ""
 "The fold-in has a condition. Before the annual check passes, every "
 "earlier filing the declaration depends on must be recorded as filed. A "
@@ -215,7 +227,7 @@ msgstr ""
 "rögzítve, az ellenőrzés figyelmeztetéssel megy át, hogy ez nem hivatalos."
 " Nézd meg, mit vár el a bevallás, és mi akadályozza jelenleg:"
 
-#: ../../explanation/how-renta-is-assembled.md:71
+#: ../../explanation/how-renta-is-assembled.md:75
 msgid ""
 "Each dependency row names the source modelo and period and whether the "
 "proof of its filing is in place. A dependency that does not apply to you "
@@ -230,7 +242,7 @@ msgstr ""
 "amely alá nem tartozol -, és nem alkalmazhatóként jelenik meg; soha nem "
 "marad ki észrevétlenül."
 
-#: ../../explanation/how-renta-is-assembled.md:77
+#: ../../explanation/how-renta-is-assembled.md:81
 msgid ""
 "The tool never fabricates a missing prior period: a gap stays visible for"
 " you to resolve. [How filings build on earlier ones](building-on-earlier-"
@@ -241,11 +253,11 @@ msgstr ""
 " benyújtások a korábbiakra](building-on-earlier-filings.md) oldal "
 "magyarázza."
 
-#: ../../explanation/how-renta-is-assembled.md:81
+#: ../../explanation/how-renta-is-assembled.md:85
 msgid "What carries between years"
 msgstr "Mi vivődik át az évek között"
 
-#: ../../explanation/how-renta-is-assembled.md:83
+#: ../../explanation/how-renta-is-assembled.md:87
 msgid ""
 "A Renta with a negative base liquidable does not just end: the negative "
 "carries forward, and a later year's declaration offsets it. The carry "
@@ -263,11 +275,11 @@ msgstr ""
 "szabályverziója már nem egyezik, az áthozatal meghiúsul; az eszköz nem "
 "importál észrevétlenül más jogszabályok alapján kiszámított adatokat."
 
-#: ../../explanation/how-renta-is-assembled.md:85
+#: ../../explanation/how-renta-is-assembled.md:89
 msgid "Tracing any figure to its source and its law"
 msgstr "Bármely adat visszavezetése a forrásához és a törvényhez"
 
-#: ../../explanation/how-renta-is-assembled.md:87
+#: ../../explanation/how-renta-is-assembled.md:91
 msgid ""
 "After a calculation, every resolved value carries a typed record of where"
 " it came from: the rule or formula that produced it, its operands, and "
@@ -282,7 +294,7 @@ msgstr ""
 "parancsok ezt a piszkozatot vizsgálják, az utolsó parancs pedig egy rovat"
 " definícióját keresi ki:"
 
-#: ../../explanation/how-renta-is-assembled.md:97
+#: ../../explanation/how-renta-is-assembled.md:101
 msgid ""
 "The JSON output of any of these commands carries `legal_refs` and "
 "`source_refs` on every row. This is the property Cadrumo preserves end to"
@@ -297,11 +309,11 @@ msgstr ""
 "nyilvántartások, az azokat ide irányító szabály és a szabály mögötti "
 "jogszabályi cikk."
 
-#: ../../explanation/how-renta-is-assembled.md:103
+#: ../../explanation/how-renta-is-assembled.md:107
 msgid "Where this sits in the journey"
 msgstr "Hol helyezkedik el ez az útban"
 
-#: ../../explanation/how-renta-is-assembled.md:105
+#: ../../explanation/how-renta-is-assembled.md:109
 msgid ""
 "This page is part of the [how-it-works overview](index.md) cluster and "
 "goes one level deeper than [How filings build on earlier ones](building-"

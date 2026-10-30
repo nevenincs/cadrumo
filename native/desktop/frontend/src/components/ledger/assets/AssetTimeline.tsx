@@ -6,7 +6,12 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { dateText, stampText } from "../movements/movementWords";
 import { CallLine, Reading } from "../setup/SetupParts";
 import type { TimelineChange, TimelineEvent } from "../../../shell/ledgerSetup";
-import { ASSET_KEYS, fieldWord, refusalText, tokenWord } from "./assetsWords";
+import {
+  ASSET_KEYS,
+  changeFieldWord,
+  refusalText,
+  tokenWord,
+} from "./assetsWords";
 import { NotKnown } from "./AssetList";
 import { changeValueText, PLAN_KEYS } from "./planWords";
 import { readTimeline, useAssetRead } from "./planRead";
@@ -27,11 +32,12 @@ function Change({
   change: TimelineChange;
 }) {
   const t = useStrings();
-  const { field, before, after } = change;
+  const { before, after } = change;
   // The backend's label, else the word of its key, else what the field is.
   const value = (side: "before" | "after") =>
     changeValueText(t, locale, change, side);
-  const name = fieldWord(t, field);
+  // The word of the fact is the one the backend served the key of.
+  const name = changeFieldWord(t, change.field_key);
   // A value that is added or cleared is one sentence of the catalogue's; one
   // that changes reads before, arrow, after.
   if (before === null && after !== null)

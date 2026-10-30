@@ -15,6 +15,7 @@ from ...domain.calculations.registry.export_value_policy import (
 )
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportValidationError
+from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
 
 _M190_SIGNED_PAIRS = (
     (
@@ -36,14 +37,14 @@ _M190_SIGNED_PAIRS = (
         "modelo-190-perc-incapacidad-dineraria-percepcion",
         "modelo-190-perceptor-row-incapacidad-dineraria-percepcion",
         "modelo-190-perc-incapacidad-dineraria-retenciones",
-        "a-or-b01",
+        "perc.incapacidad-dineraria-percepcion",
     ),
     (
         "modelo-190-perc-signo-incapacidad-especie",
         "modelo-190-perc-incapacidad-especie-valoracion",
         "modelo-190-perceptor-row-incapacidad-especie-valoracion",
         "modelo-190-perc-incapacidad-especie-ingresos-a-cuenta",
-        "a-only",
+        "perc.incapacidad-especie-valoracion",
     ),
 )
 _M190_CLAVE_ID = "modelo-190-perc-clave"
@@ -158,11 +159,16 @@ def _require_m190_component_wire(
     return marker, magnitude
 
 
-def _require_m190_incapacity_context(*, occupied: bool, restricted: str | None, key: str, subkey: str) -> None:
-    if occupied and restricted == "a-or-b01" and not (key == "A" or (key == "B" and subkey == "01")):
-        raise FilingExportValidationError("modelo 190 incapacity monetary amount requires key A or B.01")
-    if occupied and restricted == "a-only" and key != "A":
-        raise FilingExportValidationError("modelo 190 incapacity in-kind amount requires key A")
+def _require_m190_incapacity_context(
+    *,
+    occupied: bool,
+    scoped_casilla: str | None,
+    key: str,
+    subkey: str,
+    clave_scope: PerceptorClaveScope,
+) -> None:
+    if occupied and scoped_casilla is not None and not clave_scope.admits(scoped_casilla, key, subkey):
+        raise FilingExportValidationError(f"modelo 190 {scoped_casilla} amount is outside the keys it applies to")
 
 
 def _m190_prior_year_is_valid(filing_year: str, devengo_year: str) -> bool:
@@ -194,7 +200,11 @@ def _require_m190_reintegro_context(
 
 
 def require_m190_signed_reintegro_context(
-    record: ExportRecordDefinition, wire: str, *, source_digests: Mapping[str, str] | None = None
+    record: ExportRecordDefinition,
+    wire: str,
+    *,
+    clave_scope: PerceptorClaveScope | None,
+    source_digests: Mapping[str, str] | None = None,
 ) -> None:
     """Enforce the source's prior-year, zero-withholding and incapacity conditions."""
     if record.id != "modelo-190-perceptor":
@@ -205,6 +215,8 @@ def require_m190_signed_reintegro_context(
         return  # Superseded manually authored layouts do not claim this contract.
     if len(wire) != max(_span(field)[1] - 1 for field in record.fields):
         raise FilingExportValidationError("modelo 190 signed perceptor record is incomplete")
+    if clave_scope is None:
+        raise FilingExportValidationError("modelo 190 signed perceptor record needs its clave scope")
     refs = tuple(map(str, signed.source_refs))
     source_ref = _m190_reviewed_source_ref(signed, source_digests)
     _require_m190_reviewed_context(by_id, refs)
@@ -213,11 +225,17 @@ def require_m190_signed_reintegro_context(
     filing_year = _field_wire(wire, by_id[_M190_FILING_YEAR_ID])
     devengo_year = _field_wire(wire, by_id[_M190_DEVENGO_YEAR_ID])
     for pair in _M190_SIGNED_PAIRS:
-        restricted = pair[4]
+        scoped_casilla = pair[4]
         sign, amount, retention = _require_m190_component_declaration(by_id, pair, source_ref)
         marker, magnitude = _require_m190_component_wire(wire, sign, amount)
         occupied = marker == _M190_NEGATIVE_SIGN or any(char != "0" for char in magnitude)
-        _require_m190_incapacity_context(occupied=occupied, restricted=restricted, key=key, subkey=subkey)
+        _require_m190_incapacity_context(
+            occupied=occupied,
+            scoped_casilla=scoped_casilla,
+            key=key,
+            subkey=subkey,
+            clave_scope=clave_scope,
+        )
         _require_m190_reintegro_context(
             marker=marker,
             magnitude=magnitude,

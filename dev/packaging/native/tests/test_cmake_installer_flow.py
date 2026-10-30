@@ -278,20 +278,26 @@ def test_native_installer_preserves_configuration_and_clears_stale_desktop(tmp_p
 
     def build(directory: Path) -> None:
         result = run_command(
-            [cmake, "--build", str(directory), "--config", "Release", "--target", "native-installer"], cwd=source
+            [cmake, "--build", str(directory), "--config", "Release", "--target", "native-installer"],
+            cwd=source,
+            # This covers the complete owned process tree, including waiting
+            # for the other package's lock, configure, and nested build. A
+            # future-only timeout left those processes running until executor
+            # shutdown and could expire while the serialized build progressed.
+            timeout_seconds=120,
         )
         assert result.returncode == 0, result.stdout + result.stderr
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         first = executor.submit(build, binary)
-        deadline = time.monotonic() + 30
         while not (nested / "entered").exists():
             if first.done():
                 first.result()
                 pytest.fail("native package did not start")
-            assert time.monotonic() < deadline, "native package did not start within its fixture bound"
             time.sleep(0.01)
         second = executor.submit(build, other_binary)
-        first.result(timeout=30)
-        second.result(timeout=30)
+        # run_command owns the deadline and terminates the complete build tree
+        # on expiry; readiness and joins observe that same bounded outcome.
+        first.result()
+        second.result()
     assert (nested / "consumed.txt").read_text().splitlines()[0] == (other_binary / "stage/Release/app").as_posix()

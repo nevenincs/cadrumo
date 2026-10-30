@@ -25,7 +25,6 @@ import type {
   InventoryBook,
   InventoryBookRow,
   InventoryAdvisory,
-  InventoryEvidenceAddResult,
   InventoryInspectResult,
   InventoryListResult,
   InventoryMovement,
@@ -86,7 +85,8 @@ import {
   movementTouched,
   NO_OFFERS,
   offersOf,
-  PHYSICAL_AUTHORITY,
+  plays,
+  proofFromKept,
   PRICE_FIELDS,
   PROOF_SLOTS,
   REASON_FIELD,
@@ -97,6 +97,7 @@ import {
   servedWord,
   slotKinds,
   vocabularyOf,
+  wordFrom,
   wordOf,
   type BookDraft,
   type Built,
@@ -421,7 +422,6 @@ function ProofPicker({
   hint,
   kinds,
   proof,
-  fileName,
   onProof,
   fillIn,
   disabled = false,
@@ -432,8 +432,7 @@ function ProofPicker({
   /** The kinds the document can be; one kind asks for no choice. */
   kinds: readonly { value: string; label: string }[];
   proof: ProofDraft;
-  fileName: string | undefined;
-  onProof(change: (current: ProofDraft) => ProofDraft, fileName?: string): void;
+  onProof(change: (current: ProofDraft) => ProofDraft): void;
   fillIn: boolean;
   disabled?: boolean;
 }) {
@@ -459,19 +458,21 @@ function ProofPicker({
         true,
       );
       await port.forgetFiles([file.token]).catch(() => undefined);
-      if (kept.kind === "done") {
-        const result: InventoryEvidenceAddResult = kept.result;
-        onProof(
-          (current) => ({
-            ...current,
-            reference: result.reference,
-            digest: result.content_digest,
-          }),
-          file.name,
-        );
-      } else setFailed(t("desktop.ledger.stock.proof.file_unread"));
+      const proofKept =
+        kept.kind === "done" ? proofFromKept(kept.result, file.name) : null;
+      if (proofKept !== null)
+        onProof((current) => ({
+          ...current,
+          reference: proofKept.reference,
+          digest: proofKept.digest,
+          fileName: proofKept.fileName,
+        }));
+      // A file the book did not keep says why in the book's own sentence,
+      // and what is held already stays.
+      else
+        setFailed(refusalWords(t, kept)() ?? t("desktop.ledger.stock.refused"));
     } catch {
-      setFailed(t("desktop.ledger.stock.proof.file_unread"));
+      setFailed(t("desktop.ledger.stock.refused"));
     } finally {
       setBusy(false);
     }
@@ -523,7 +524,7 @@ function ProofPicker({
         {proof.digest !== "" && (
           <span className="flex items-center gap-1 text-sm text-muted-foreground">
             <Icon name="check" size="sm" />
-            {fileName ?? t("desktop.ledger.stock.proof.kept")}
+            {proof.fileName ?? t("desktop.ledger.stock.proof.kept")}
           </span>
         )}
       </div>
@@ -1061,14 +1062,11 @@ function RestoreForm({
 /** The document a change of a proof is for: a slot of the purchase, or the
  * extra cost with the key it was minted. */
 type ProofTarget = { slot: ProofSlotKey } | { extra: string };
-const targetKey = (target: ProofTarget) =>
-  "slot" in target ? `slot:${target.slot}` : `extra:${target.extra}`;
 
-/** What a movement form holds: what is typed, the extra costs, the files
- * kept, and the names of the files the person chose this time. */
+/** What a movement form holds: what is typed, the extra costs and the files
+ * kept. */
 function useMovementDraft(initial: MovementDraft) {
   const [draft, setDraft] = useState<MovementDraft>(initial);
-  const [names, setNames] = useState<Readonly<Record<string, string>>>({});
   const setValue = (field: StockField, value: string) =>
     setDraft((current) => ({
       ...current,
@@ -1084,7 +1082,6 @@ function useMovementDraft(initial: MovementDraft) {
   const setProof = (
     target: ProofTarget,
     change: (current: ProofDraft) => ProofDraft,
-    fileName?: string,
   ) => {
     setDraft((current) =>
       "slot" in target
@@ -1104,10 +1101,8 @@ function useMovementDraft(initial: MovementDraft) {
             ),
           },
     );
-    if (fileName !== undefined)
-      setNames((current) => ({ ...current, [targetKey(target)]: fileName }));
   };
-  return { draft, setDraft, names, setValue, setExtra, setProof };
+  return { draft, setDraft, setValue, setExtra, setProof };
 }
 
 type MovementDraftState = ReturnType<typeof useMovementDraft>;
@@ -1129,8 +1124,9 @@ function MovementFields({
   tried: boolean;
 }) {
   const t = useStrings();
-  const { draft, names, setValue, setExtra, setProof, setDraft } = state;
+  const { draft, setValue, setExtra, setProof, setDraft } = state;
   const kind = draft.values.kind ?? "";
+  const purchase = plays(catalogue.vocabulary, "purchase", kind);
   const choices = { kind: choicesOf(t, catalogue.offers, "movement_kind") };
   const extraChoices = {
     kind: choicesOf(t, catalogue.offers, "attributable_cost_kind"),
@@ -1163,7 +1159,7 @@ function MovementFields({
         choices={choices}
         {...common}
       />
-      {kind !== "" && kind !== "purchase" && (
+      {kind !== "" && !purchase && (
         <StockFields
           fields={COST_FIELDS}
           valueOf={(field) => draft.values[field.key] ?? ""}
@@ -1172,7 +1168,7 @@ function MovementFields({
           {...common}
         />
       )}
-      {kind === "purchase" && (
+      {purchase && (
         <>
           <Section heading={t("desktop.ledger.stock.purchase.price")}>
             <StockFields
@@ -1252,10 +1248,7 @@ function MovementFields({
                         label: servedWord(t, served),
                       }))}
                     proof={extra.proof}
-                    fileName={names[targetKey({ extra: extra.key })]}
-                    onProof={(change, fileName) =>
-                      setProof({ extra: extra.key }, change, fileName)
-                    }
+                    onProof={(change) => setProof({ extra: extra.key }, change)}
                     disabled={!ready}
                     fillIn={
                       tried &&
@@ -1279,10 +1272,7 @@ function MovementFields({
                 hint={slot.hint ? t(slot.hint) : undefined}
                 kinds={kindsOf(slot.key)}
                 proof={draft.proofs[slot.key]}
-                fileName={names[targetKey({ slot: slot.key })]}
-                onProof={(change, fileName) =>
-                  setProof({ slot: slot.key }, change, fileName)
-                }
+                onProof={(change) => setProof({ slot: slot.key }, change)}
                 disabled={!ready}
                 fillIn={slotFill(slot.key)}
               />
@@ -1397,7 +1387,9 @@ function MovementCorrectForm({
   const t = useStrings();
   // Both references are minted once, when the form opens, and never shown.
   const [ids] = useState(() => ({ correction: mint(), movement: mint() }));
-  const [initial] = useState(() => draftOfMovement(target));
+  const [initial] = useState(() =>
+    draftOfMovement(target, catalogue.vocabulary),
+  );
   const state = useMovementDraft(initial);
   const [reason, setReason] = useState("");
   const [tried, setTried] = useState(false);
@@ -1482,11 +1474,14 @@ function ClosingForm({
     decidedAt: new Date().toISOString(),
   }));
   const [draft, setDraft] = useState<ClosingDraft>(EMPTY_CLOSING);
-  const [names, setNames] = useState<Readonly<Record<string, string>>>({});
   const [tried, setTried] = useState(false);
   useSetupDraft(closingTouched(draft));
   const built = closingRequest(book, ids, draft, catalogue.vocabulary);
-  const physical = draft.values.authority === PHYSICAL_AUTHORITY;
+  const physical = plays(
+    catalogue.vocabulary,
+    "count_authority",
+    draft.values.authority,
+  );
   const ready = catalogue.state === "done";
 
   const setValue = (field: StockField, value: string) =>
@@ -1494,15 +1489,10 @@ function ClosingForm({
       ...current,
       values: { ...current.values, [field.key]: value },
     }));
-  const named = (key: string, fileName: string | undefined) => {
-    if (fileName !== undefined)
-      setNames((current) => ({ ...current, [key]: fileName }));
-  };
   const setRole = (
     group: "decision" | "count",
     role: string,
     change: (current: ProofDraft) => ProofDraft,
-    fileName?: string,
   ) => {
     setDraft((current) => ({
       ...current,
@@ -1511,12 +1501,10 @@ function ClosingForm({
         [role]: change(current[group][role] ?? blankProof(role)),
       },
     }));
-    named(`${group}:${role}`, fileName);
   };
   const setPrior = (
     key: string,
     change: (current: ProofDraft) => ProofDraft,
-    fileName?: string,
   ) => {
     setDraft((current) => ({
       ...current,
@@ -1524,7 +1512,6 @@ function ClosingForm({
         entry.key === key ? { ...entry, proof: change(entry.proof) } : entry,
       ),
     }));
-    named(`prior:${key}`, fileName);
   };
   const filled = (key: string) => tried && built.missing.has(`${key}:file`);
   const roles = (family: string) => catalogue.offers[family] ?? [];
@@ -1562,10 +1549,7 @@ function ClosingForm({
           label={servedWord(t, served)}
           kinds={[]}
           proof={draft[group][served.value] ?? blankProof(served.value)}
-          fileName={names[`${group}:${served.value}`]}
-          onProof={(change, fileName) =>
-            setRole(group, served.value, change, fileName)
-          }
+          onProof={(change) => setRole(group, served.value, change)}
           disabled={!ready}
           fillIn={filled(`${group}:${served.value}`)}
         />
@@ -1664,10 +1648,7 @@ function ClosingForm({
                 label={t("desktop.ledger.stock.closing.prior_document")}
                 kinds={[]}
                 proof={entry.proof}
-                fileName={names[`prior:${entry.key}`]}
-                onProof={(change, fileName) =>
-                  setPrior(entry.key, change, fileName)
-                }
+                onProof={(change) => setPrior(entry.key, change)}
                 disabled={!ready}
                 fillIn={filled(`prior:${entry.key}`)}
               />
@@ -1751,7 +1732,9 @@ function History({
   ledger,
   locale,
   name,
+  offers,
 }: {
+  offers: Offers;
   ledger: InventoryBook;
   locale: string;
   name: string;
@@ -1780,7 +1763,7 @@ function History({
         {
           key: "what",
           label: t("desktop.ledger.stock.history.what"),
-          cell: (row) => wordOf(t, "history_kind", row.kind),
+          cell: (row) => wordFrom(t, offers, "history_kind", row.kind),
         },
         {
           key: "reason",
@@ -1789,8 +1772,8 @@ function History({
             row.reason === null
               ? "—"
               : row.reason.family === "correction"
-                ? wordOf(t, "correction_reason", row.reason.token)
-                : wordOf(t, "retirement_reason", row.reason.token),
+                ? wordFrom(t, offers, "correction_reason", row.reason.token)
+                : wordFrom(t, offers, "retirement_reason", row.reason.token),
         },
         {
           key: "before",
@@ -1923,11 +1906,16 @@ function PurchaseFacts({
                   className="flex items-center gap-1"
                 >
                   <Icon name="attach" size="sm" />
-                  {wordOf(
-                    t,
-                    "acquisition_evidence_kind",
-                    document.evidence_kind,
-                  )}
+                  {t("desktop.ledger.stock.facts.document", {
+                    kind: wordOf(
+                      t,
+                      "acquisition_evidence_kind",
+                      document.evidence_kind,
+                    ),
+                    name:
+                      document.file_name ??
+                      t("desktop.ledger.stock.proof.kept"),
+                  })}
                 </li>
               ))}
             </ul>
@@ -2470,7 +2458,7 @@ export function StockPane({
                 resizable: false,
                 cell: (movement) => (
                   <RowActions>
-                    {movement.kind === "purchase" && (
+                    {plays(catalogue.vocabulary, "purchase", movement.kind) && (
                       <IconButton
                         label={t("desktop.ledger.stock.action.purchase_facts")}
                         className="ledger-stock-purchase-facts"
@@ -2534,7 +2522,12 @@ export function StockPane({
         <h4 className="font-medium">
           {t("desktop.ledger.stock.history_of", { name: bookName(book) })}
         </h4>
-        <History ledger={ledger} locale={locale} name={bookName(book)} />
+        <History
+          ledger={ledger}
+          locale={locale}
+          name={bookName(book)}
+          offers={catalogue.offers}
+        />
       </>
     );
   };

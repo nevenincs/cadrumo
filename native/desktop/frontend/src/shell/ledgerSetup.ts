@@ -520,7 +520,8 @@ export type InventoryRefusal = {
     | "stock_would_go_negative"
     | "count_would_raise_stock"
     | "correction_id_conflict"
-    | "correction_changes_nothing";
+    | "correction_changes_nothing"
+    | "evidence_file_not_admitted";
   actividad_id: string | null;
   year: number | null;
   movement_id: string | null;
@@ -569,6 +570,8 @@ export type InventoryAcquisitionDetail = {
     reference: string;
     evidence_kind: InventoryProofKind;
     content_digest: string;
+    /** The file's bare name, where the book knows it. */
+    file_name?: string | null;
   }[];
   consideration_evidence: string;
   attributable_cost_review_evidence: string;
@@ -728,16 +731,19 @@ export type InventoryOptionsResult = {
   profile_id: string;
   families: {
     family: string;
-    options: { value: string; label_key: string }[];
+    options: { value: string; label_key: string; role?: string | null }[];
   }[];
 };
 /** A document the person chose, now kept: what a purchase or a closing
  * value names it by. */
 export type InventoryEvidenceAddRequest = { source_path: FileToken };
 export type InventoryEvidenceAddResult = {
+  outcome: "stored" | "refused";
   profile_id: string;
-  reference: string;
-  content_digest: string;
+  reference?: string | null;
+  content_digest?: string | null;
+  /** Why the file was not kept, in the backend's own sentence. */
+  refusal?: InventoryRefusal | null;
 };
 /** A document a closing value rests on. */
 export type InventoryClosingDocument = {
@@ -876,7 +882,8 @@ export type ActivityAssetInspectResult = ActivityAssetResultBase & {
 export type ActivityAssetForecastRequest = {
   asset_id: string;
   covered_from: string;
-  covered_until: string;
+  /** The last day the span covers, inclusive. */
+  covered_through: string;
   requested_free_amount?: PublicDecimal | null;
   supersedes_claim_id?: string | null;
 };
@@ -887,6 +894,8 @@ export type ActivityAssetForecast = JsonObject & {
   tax_year: number;
   covered_from: string;
   covered_until: string;
+  /** The last day the span covers, for display. */
+  covered_through?: string;
   service_days: number;
   calendar_days: number;
   amount: PublicDecimal;
@@ -909,7 +918,9 @@ export type ActivityAssetClaimResult = ActivityAssetResultBase & {
 };
 export type ActivityAssetFilingRequest = {
   tax_year: number;
-  m130_period: string;
+  /** The Modelo 130 quarter to project; left out, the Modelo 100 boxes alone
+   * are stated. */
+  m130_period?: string;
 };
 /** What the effective claims of a year add up to in a Modelo 100 casilla. */
 export type ClaimProjection = {
@@ -941,8 +952,9 @@ export type ActivityAssetFilingResult = ActivityAssetResultBase & {
   filing_handoff: {
     material_m100: ClaimProjection;
     intangible_m100: ClaimProjection;
-    material_m130: M130Projection;
-    intangible_m130: M130Projection;
+    /** Both null when no quarter was asked. */
+    material_m130: M130Projection | null;
+    intangible_m130: M130Projection | null;
   } | null;
 };
 
@@ -1014,7 +1026,15 @@ export type PlanClaim = {
   effective: boolean;
   superseded_by: string | null;
   revision_id: string;
+  /** Whether the claim still matches the element's current schedule. */
+  matches_current_schedule: boolean;
+  /** Why it no longer does; null exactly when it still does. */
+  stale_reason: StaleReason | null;
 };
+
+/** Why a claim no longer matches the schedule. */
+export type StaleReason =
+  "revision_changed" | "authority_changed" | "schedule_unavailable";
 
 export type ClaimableInterval = {
   covered_from: string;
@@ -1083,6 +1103,9 @@ export type PlanResult = {
 export type TimelineChange = {
   /** The record's field as the backend names it, a dotted path. */
   field: string;
+  /** The catalogue key that words `field`; null for a path no fact of the
+   * timeline has. */
+  field_key: string | null;
   before: string | null;
   /** The catalogue keys that word `before` and `after` where the field
    * carries a token. */
@@ -1132,7 +1155,13 @@ export type TableGroup = {
   maximum_coefficient: PublicDecimal;
   minimum_coefficient: PublicDecimal;
   maximum_period_years: PublicDecimal;
+  /** Whether a material element of this class can be a restricted vehicle,
+   * so a vehicle declaration applies to it. */
+  can_hold_vehicle: boolean;
 };
+
+/** One reason a baja is accepted with, and the catalogue key that words it. */
+export type DisposalReasonOption = { reason: string; label_key: string };
 
 /** What the registry admits for one asset kind and tax year. */
 /** One fact an election of a method states, as the options serve it. */
@@ -1157,6 +1186,9 @@ export type FormOptions = {
   acquisition_shapes: string[];
   declared_activities: string[];
   method_facts: { method: string; facts: MethodFact[] }[];
+  /** The reasons a baja is accepted with, in the order the backend admits
+   * them. */
+  disposal_reasons: DisposalReasonOption[];
 };
 
 /** A ledger payment an element could name as its acquisition. What the

@@ -8,6 +8,7 @@ from datetime import date
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...domain.calculations.registry.form_codes import FormCodes, resolve_form_codes
 from ...domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_export_code,
     m303_tax_territory_exclusively_foral_mark,
@@ -1017,23 +1018,25 @@ def _apply_foral_m303_overrides(
     if not m303_profile.is_foral:
         return
     foral = m303_foral_lexicals(m303_filing)
+    codes = _m303_form_codes()
+    not_answered = codes.code("answer.no")
     values.update(
         {
-            FilingProducerKey.M303_REDEME_ENROLLED: "2",
+            FilingProducerKey.M303_REDEME_ENROLLED: not_answered,
             FilingProducerKey.M303_EXCLUSIVELY_FORAL: m303_profile.exclusively_foral,
-            FilingProducerKey.M303_REGIME_COMPOSITION_CODE: "3",
-            FilingProducerKey.M303_JOINT_RETURN_ELECTED: "2",
-            FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: "2",
-            FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: "2",
+            FilingProducerKey.M303_REGIME_COMPOSITION_CODE: codes.code("regime_composition.general_only"),
+            FilingProducerKey.M303_JOINT_RETURN_ELECTED: not_answered,
+            FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: not_answered,
+            FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: not_answered,
             FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: foral.prorrata_special_option,
             FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: foral.prorrata_special_revocation,
             FilingProducerKey.M303_INSOLVENCY_DECLARED: None,
             FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: None,
             FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
-            FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: "2",
-            FilingProducerKey.M303_EXONERADO_390_APPLICABLE: "2",
-            FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: "2",
-            FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
+            FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: not_answered,
+            FilingProducerKey.M303_EXONERADO_390_APPLICABLE: not_answered,
+            FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: not_answered,
+            FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: not_answered,
         },
     )
 
@@ -1120,7 +1123,7 @@ def m303_profile_lexicals(
     a30 = (
         yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
         if period is not None and m303_a30_entitlement_applicable(period)
-        else "0"
+        else _m303_outside_period()
         if period is not None
         else None
     )
@@ -1168,7 +1171,9 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
         insolvency_declared=insolvency_declared,
         insolvency_judicial_order_date=insolvency_date,
         insolvency_filing_subtype=insolvency_subtype,
-        exonerado_390_applicable="0" if final_exonerado is None else yes_no(final_exonerado.applicable),
+        exonerado_390_applicable=_m303_outside_period()
+        if final_exonerado is None
+        else yes_no(final_exonerado.applicable),
         prorrata_transition_applicable=transition_applicable,
     )
 
@@ -1178,7 +1183,7 @@ def _m303_annual_volume_lexical(
     final_exonerado: M303Exonerado390FilingEvidence | None,
 ) -> str:
     if final_exonerado is None or not final_exonerado.applicable or m303_facts.annual_volume_nonzero is None:
-        return "0"
+        return _m303_outside_period()
     return yes_no(m303_facts.annual_volume_nonzero)
 
 
@@ -1198,26 +1203,39 @@ def _m303_insolvency_lexicals(
     insolvency: M303InsolvencyFilingFact | None,
 ) -> tuple[str, str | None, str | None]:
     if insolvency is None:
-        return "2", None, None
-    subtype = {
-        M303InsolvencyFilingSubtype.PRE_ORDER: "1",
-        M303InsolvencyFilingSubtype.POST_ORDER: "2",
-    }[insolvency.subtype]
-    return "1", insolvency.judicial_order_date.strftime("%d%m%Y"), subtype
+        return yes_no(False), None, None
+    subtype = _m303_form_codes().code(f"insolvency_subtype.{_M303_INSOLVENCY_SUBTYPE_KEYS[insolvency.subtype]}")
+    return yes_no(True), insolvency.judicial_order_date.strftime("%d%m%Y"), subtype
 
 
 def m303_foral_lexicals(m303_filing: M303FilingLexicals) -> M303ForalLexicals:
     """Project the Modelo 303 filing lexicals into the foral prorrata election lexicals."""
-    value = "2" if m303_filing.prorrata_transition_applicable else None
+    value = yes_no(False) if m303_filing.prorrata_transition_applicable else None
     return M303ForalLexicals(prorrata_special_option=value, prorrata_special_revocation=value)
 
 
+_M303_FORM_CODES_FACT = "modelo-303-identification-form-codes"
+_M303_INSOLVENCY_SUBTYPE_KEYS = {
+    M303InsolvencyFilingSubtype.PRE_ORDER: "pre_order",
+    M303InsolvencyFilingSubtype.POST_ORDER: "post_order",
+}
+
+
+def _m303_form_codes() -> FormCodes:
+    return resolve_form_codes(_M303_FORM_CODES_FACT)
+
+
+def _m303_outside_period() -> str:
+    """Return the code a question not asked in this period prints."""
+    return _m303_form_codes().code("answer.outside_period")
+
+
 def yes_no(value: bool) -> str:
-    return "1" if value else "2"
+    return _m303_form_codes().code("answer.yes" if value else "answer.no")
 
 
 def m303_a30_entitlement_applicable(period: Period) -> bool:
-    return period.registry_token.isdigit() and int(period.registry_token) >= 2
+    return period.registry_token in _m303_form_codes().codes("hydrocarbon_entitlement.applicable_periods")
 
 
 __all__ = [

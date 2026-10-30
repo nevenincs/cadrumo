@@ -213,6 +213,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "claude",
             "antigravity",
             "codex",
+            # AuthProviderKind.CERTIFICATE is an untranslated provider ID in
+            # certificate-path diagnostics and authentication provider help.
+            "certificate",
             "snapshot",
             "snapshots",
             "bucket",
@@ -369,6 +372,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "claude",
             "antigravity",
             "codex",
+            # AuthProviderKind.CERTIFICATE is an untranslated provider ID in
+            # certificate-path diagnostics and authentication provider help.
+            "certificate",
             "snapshot",
             "snapshots",
             "bucket",
@@ -465,6 +471,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "claude",
             "antigravity",
             "codex",
+            # AuthProviderKind.CERTIFICATE is an untranslated provider ID in
+            # certificate-path diagnostics and authentication provider help.
+            "certificate",
             "OAuth",
             "DEHú",
             # These exact Hungarian forms are attested in common.yml/errors.yml

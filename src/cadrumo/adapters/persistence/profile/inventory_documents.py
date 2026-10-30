@@ -9,7 +9,12 @@ from ..storage.sql.secure_objects import SecureObjectRepository
 
 
 def attachment_source_file_name(objects: SecureObjectRepository, content_digest: str) -> str | None:
-    """Answer the name alone, never the path around it; a document not held from a local file has none."""
+    """Answer the name alone, never the path around it; a document not held from a local file has none.
+
+    Args:
+        objects: :class:`SecureObjectRepository` holding the attachment manifest.
+        content_digest: Digest identifying the attachment.
+    """
     try:
         manifest = AttachmentStore(objects=objects).load_manifest(content_digest)
     except AttachmentNotFoundError:

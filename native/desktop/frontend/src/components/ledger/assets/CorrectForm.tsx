@@ -13,7 +13,7 @@ import { figureText } from "./planWords";
  * unchanged. The effective claims that no longer match the schedule
  * are offered to be recorded again under the corrected figures, in the same
  * write, so a failed correction leaves them as they were. The plan says which
- * claims are in effect and the timeline which of them no longer match.
+ * claims are in effect and which of them no longer match.
  */
 export function CorrectForm(props: ActProps & { assetId: string }) {
   const { port, reader, locale, assetId } = props;
@@ -25,18 +25,8 @@ export function CorrectForm(props: ActProps & { assetId: string }) {
     { asset_id: assetId },
     assetId,
   );
-  const history = useLedgerRead(
-    port,
-    reader,
-    "ledger.actividad-asset.timeline",
-    { asset_id: assetId },
-    assetId,
-  );
   const rows = plan.read?.kind === "done" ? plan.read.result.rows : null;
-  const events =
-    history.read?.kind === "done" ? history.read.result.events : null;
-  const stale =
-    rows !== null && events !== null ? staleClaims(rows, events) : [];
+  const stale = rows !== null ? staleClaims(rows) : [];
   // Each is chosen until the person unchooses it.
   const [declined, setDeclined] = useState<ReadonlySet<string>>(new Set());
   const chosen = stale

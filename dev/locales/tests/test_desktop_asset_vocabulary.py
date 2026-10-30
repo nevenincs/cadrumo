@@ -14,12 +14,14 @@ import re
 import pytest
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import (
+    TIMELINE_FIELD_PATHS,
     ActivityAssetClaimStaleReason,
     ActivityAssetClaimState,
     ActivityAssetNonDeductibleIvaState,
     ActivityAssetNotTableBoundReason,
     ActivityAssetPlanAdvisoryKind,
     ActivityAssetRegisterState,
+    timeline_field_word_key,
 )
 from cadrumo.application.actividad_asset.fact_wording import ActivityAssetFlag
 from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence
@@ -60,6 +62,7 @@ from .._paths import LOCALES_DIR, SRC_DIR
 from ..desktop_assets_keys import (
     ASSET_ENUM_FAMILIES,
     ASSET_FAMILIES,
+    ASSET_FIELD_FAMILY,
     ASSET_KEYS,
     ASSET_REASON_FAMILY,
     ASSET_SHARED_KEYS,
@@ -122,7 +125,7 @@ def test_the_declared_families_are_exactly_the_enums_the_backend_serves() -> Non
     declared = {
         prefix.removeprefix("ledger.actividad_asset.").rstrip("."): members
         for prefix, members in ASSET_FAMILIES.items()
-        if prefix != ASSET_REASON_FAMILY
+        if prefix not in {ASSET_REASON_FAMILY, ASSET_FIELD_FAMILY}
     }
 
     assert declared == {family: tuple(sorted(member.value for member in enum)) for family, enum in _SERVED.items()}
@@ -151,10 +154,32 @@ def test_no_word_outlives_the_token_it_words(locale: str) -> None:
     stale = sorted(
         key
         for key in words
-        if not key.startswith(ASSET_REASON_FAMILY) and key not in served and key not in ASSET_SHARED_KEYS
+        if not key.startswith((ASSET_REASON_FAMILY, ASSET_FIELD_FAMILY))
+        and key not in served
+        and key not in ASSET_SHARED_KEYS
     )
 
     assert stale == []
+
+
+@pytest.mark.parametrize("locale", DESKTOP_LOCALES)
+def test_every_fact_the_timeline_shows_has_a_word_in_every_locale_and_no_other_word_is_carried(locale: str) -> None:
+    words = desktop_chrome_strings(LOCALES_DIR, keys=ASSET_KEYS, locales=(locale,))[locale]
+    facts = {timeline_field_word_key(path) for path in TIMELINE_FIELD_PATHS}
+
+    carried = {key for key in words if key.startswith(ASSET_FIELD_FAMILY)}
+
+    assert facts, "the backend names no fact the timeline shows, so nothing was compared"
+    assert carried == facts
+    assert [key for key in sorted(facts) if not words[key].strip()] == []
+
+
+def test_the_reference_of_a_purchase_outside_the_ledger_is_worded_plainly() -> None:
+    key = timeline_field_word_key("acquisition.invoice_evidence_id")
+    words = desktop_chrome_strings(LOCALES_DIR, keys=frozenset({key}), locales=DESKTOP_LOCALES)
+
+    assert words["en"][key] == "Invoice or document reference"
+    assert all(words[locale][key].strip() for locale in DESKTOP_LOCALES)
 
 
 def test_every_reason_the_backend_names_is_carried_to_the_shell() -> None:

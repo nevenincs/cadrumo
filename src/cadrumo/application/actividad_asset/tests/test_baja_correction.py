@@ -114,6 +114,21 @@ def test_the_shortened_year_reads_as_a_gap_after_the_baja_is_removed() -> None:
     assert _effective_by_year(repository)[2025] == Decimal("520.00")
 
 
+def test_claiming_the_remainder_after_the_baja_is_removed_completes_the_year_at_the_full_charge() -> None:
+    operations, repository, baja = _disposed()
+    operations.correct(_without_baja(baja))
+    rest = operations.forecast(asset_id=_ASSET, covered_from=date(2026, 7, 1), covered_until=date(2027, 1, 1))
+
+    operations.record_claim(rest, creating_operation="test.rest")
+
+    year = [claim for claim in effective_claims(repository.history.claims) if claim.tax_year == 2026]
+    assert sorted(claim.amount for claim in year) == [Decimal("257.86"), Decimal("262.14")]
+    assert sum((claim.amount for claim in year), Decimal("0")) == Decimal("520.00")
+    row = {item.tax_year: item for item in operations.plan(_ASSET)}[2026]
+    assert row.claim_state is ActivityAssetClaimState.SUPERSEDED
+    assert row.claimable_intervals == ()
+
+
 def test_redating_a_baja_later_restores_a_zeroed_year_now_inside_service() -> None:
     operations, repository, baja = _disposed()
 

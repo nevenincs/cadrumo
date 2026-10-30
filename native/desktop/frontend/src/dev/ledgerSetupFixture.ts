@@ -98,6 +98,13 @@ const CLOSING_BASES = [
   "pmp_acquisition_price",
   "coste_medio_acquisition_price",
 ];
+/** The part a member plays in a form, where it plays one. */
+const OPTION_ROLES: Record<string, string> = {
+  attributable_cost_review: "cost_check",
+  iva_recoverability_review: "iva_check",
+  physical_observation: "count_authority",
+  purchase: "purchase",
+};
 /** The closed choices the options read serves, each with its members. */
 const OPTION_FAMILIES: Record<string, readonly string[]> = {
   acquisition_evidence_kind: [
@@ -127,6 +134,14 @@ const OPTION_FAMILIES: Record<string, readonly string[]> = {
     "operation_did_not_occur",
   ],
   decision_evidence_role: DECISION_ROLES,
+  history_kind: [
+    "described",
+    "opening_corrected",
+    "movement_corrected",
+    "movement_reversed",
+    "retired",
+    "restored",
+  ],
   movement_kind: MOVEMENT_KINDS,
   physical_evidence_role: PHYSICAL_ROLES,
   retirement_reason: ["created_in_error", "activity_ceased", "no_stock_held"],
@@ -286,9 +301,10 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
             ],
             documents: [
               {
-                reference: "attachment:" + hex64("seed-document:invoice"),
+                reference: "document-" + hex64("seed-document:invoice"),
                 evidence_kind: "purchase_invoice",
                 content_digest: hex64("seed-document:invoice"),
+                file_name: "factura-papeleria-trazo.pdf",
               },
               {
                 reference: "attachment:" + hex64("seed-document:transport"),
@@ -307,7 +323,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
               },
             ],
             consideration_evidence:
-              "attachment:" + hex64("seed-document:invoice"),
+              "document-" + hex64("seed-document:invoice"),
             attributable_cost_review_evidence:
               "attachment:" + hex64("seed-document:cost-check"),
             iva_recoverability_review_evidence:
@@ -1167,6 +1183,9 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
 
   // ---- Inventory -----------------------------------------------------------
 
+  /** The bare name of each file the book kept, by its mark: what the worker
+   * records beside the bytes. */
+  const keptNames = new Map<string, string>();
   const bookOf = (request: JsonObject) => {
     const actividad = required(request.actividad_id);
     const year = whole(request.year);
@@ -1413,7 +1432,10 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
           deductible_iva_ratio: decimal(part.deductible_iva_ratio),
           evidence_references: part.evidence_references,
         })),
-        documents,
+        documents: documents.map((document) => ({
+          ...document,
+          file_name: keptNames.get(document.content_digest) ?? null,
+        })),
         consideration_evidence: required(
           object(completeness.consideration_evidence).reference,
         ),
@@ -1821,14 +1843,27 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     "ledger.inventory.evidence.add": (request) => {
       fromKeys(request, ["source_path"]);
       const file = tools.fileOf(request.source_path);
-      // The worker keeps a PDF, an image or an XML file, and refuses any other.
-      if (!/\.(pdf|jpe?g|png|xml)$/i.test(file.name))
-        throw new SetupStopped("REFUSED_LEDGER_EVIDENCE_INPUT");
+      // The worker keeps a PDF, an XML file or an image, and refuses any other
+      // before anything is written.
+      if (!/\.(pdf|xml|png|jpe?g|tiff?|webp|heic)$/i.test(file.name))
+        return inventoryRefusal(
+          "REFUSED_INVENTORY_SERVICE_INPUT",
+          "evidence_file_not_admitted",
+          {},
+          {
+            profile_id: profileId,
+            reference: null,
+            content_digest: null,
+          },
+        );
       const digest = hex64(`inventory-document:${file.name}`);
+      keptNames.set(digest, file.name);
       return {
+        outcome: "stored",
         profile_id: profileId,
-        reference: `attachment:${digest}`,
+        reference: `document-${digest}`,
         content_digest: digest,
+        refusal: null,
       };
     },
     "ledger.inventory.closing-value.record": (request) => {
@@ -2211,6 +2246,12 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
           options: values.map((value) => ({
             value,
             label_key: `application.inventory.labels.${family}.${value}`,
+            role:
+              family === "acquisition_evidence_kind" ||
+              family === "closing_authority" ||
+              family === "movement_kind"
+                ? (OPTION_ROLES[value] ?? null)
+                : null,
           })),
         })),
       };

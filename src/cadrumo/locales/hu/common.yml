@@ -3759,6 +3759,7 @@ desktop:
         removed: Kikerült a számításból
       facts:
         amount: Összeg
+        document: '{kind}: {name}'
         documents: Az alapjául szolgáló fájlok
         documents_unknown: Ennek a vásárlásnak a fájljai nem érhetők el.
         extra_total: További költségek
@@ -3823,8 +3824,6 @@ desktop:
         choose_file: Fájl kiválasztása
         cost_check: Fájl, amely igazolja, hogy átnézted a további költségeket
         extra: Ezt a költséget igazoló fájl
-        file_unread: Ezt a fájlt nem lehetett felhasználni. Jelölj ki egy PDF-, kép-
-          vagy XML-fájlt, és próbáld újra.
         iva_check: Fájl, amely igazolja, hogy átnézted, mennyi IVA vonható le
         keeping: A fájl mentése…
         kept: A könyveidhez mentve

@@ -29,6 +29,9 @@ def _casilla_with_role(revision: ModeloRevision, role: str) -> CasillaId | None:
 def m303_resultado_final_casilla(revision: ModeloRevision) -> CasillaId:
     """Return the box carrying the final result of the liquidation.
 
+    Args:
+        revision: :class:`ModeloRevision` declaring the final-result role.
+
     Raises:
         RegistryValidationError: When the revision does not declare the role.
     """
@@ -39,5 +42,9 @@ def m303_resultado_final_casilla(revision: ModeloRevision) -> CasillaId:
 
 
 def m303_importe_rectificacion_casilla(revision: ModeloRevision) -> CasillaId | None:
-    """Return the box stating the rectified amount, or ``None`` on an edition without one."""
+    """Return the box stating the rectified amount, or ``None`` on an edition without one.
+
+    Args:
+        revision: :class:`ModeloRevision` declaring the rectified-amount role, if present.
+    """
     return _casilla_with_role(revision, _IMPORTE_RECTIFICACION_ROLE)

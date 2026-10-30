@@ -26,6 +26,11 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
+from ...domain.modelos.perceptor_clave_scope import (
+    PERCEPTOR_CLAVE_SCOPE_MODELO,
+    PerceptorClaveScope,
+    resolve_perceptor_clave_scope,
+)
 from .export_parity import did_page_suppressed
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingRecordRenderContext
@@ -54,6 +59,9 @@ def render_layout_records(
     """
     occurrences: list[RenderedRecordOccurrence] = []
     source_digests = {ref: source.sha256 for ref, source in registry_snapshot.sources.items()}
+    clave_scope = (
+        resolve_perceptor_clave_scope(period=draft.period) if draft.modelo == PERCEPTOR_CLAVE_SCOPE_MODELO else None
+    )
     for record in sorted(layout.records, key=lambda item: item.order):
         if did_page_suppressed(
             record,
@@ -90,6 +98,7 @@ def render_layout_records(
                         render_context=context,
                         projection_values=projection_values,
                         source_digests=source_digests,
+                        clave_scope=clave_scope,
                     ),
                 )
             )
@@ -183,6 +192,7 @@ def _render_record_bytes(
     render_context: FilingRecordRenderContext,
     projection_values: dict[ProjectionAddress, object],
     source_digests: Mapping[str, str],
+    clave_scope: PerceptorClaveScope | None,
 ) -> bytes:
     text = render_record(
         record,
@@ -195,6 +205,7 @@ def _render_record_bytes(
         render_context=render_context,
         projection_values=projection_values,
         source_digests=source_digests,
+        clave_scope=clave_scope,
     )
     line_ending = {"crlf": "\r\n", "lf": "\n"}.get(record.line_ending, "")
     return f"{text}{line_ending}".encode(record.encoding)

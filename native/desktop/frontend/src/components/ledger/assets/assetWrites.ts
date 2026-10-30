@@ -10,6 +10,7 @@ import { sameDecimal } from "../../../shell/ledgerGrammar";
 import type {
   AcquisitionCandidate,
   ActivityAssetDescribeRequest,
+  ActivityAssetFilingRequest,
   ActivityAssetForecastRequest,
   ActivityAssetListResult,
   DescriptorFacts,
@@ -102,36 +103,50 @@ export function disposalOf(values: FormValues): DisposalFacts | null {
   };
 }
 
-/** The forecast of a span; null while the span does not start on a date. The
- * span ends where the backend served it, never on a day worked out here. */
+/** The forecast of a span; null while the span lacks its first or its last
+ * day. The last day is the one typed, sent as it stands: no day is worked
+ * out here. */
 export function forecastRequest(
   assetId: string,
   values: FormValues,
   supersedes: string | null,
-  until: string | null,
 ): ActivityAssetForecastRequest | null {
   const from = textOf(values.covered_from);
-  if (from === null || until === null) return null;
+  const through = textOf(values.covered_through);
+  if (from === null || through === null) return null;
   return {
     asset_id: assetId,
     covered_from: from,
-    covered_until: until,
+    covered_through: through,
     requested_free_amount: amountOf(values.free_amount),
     supersedes_claim_id: supersedes,
   };
 }
 
-/** The recorded claims a span would meet, which the backend refuses it for. */
+/** The read of where a year's claims go: the year alone states the
+ * Modelo 100 boxes, and a quarter, where one is chosen, adds Modelo 130. No
+ * quarter is invented for a year without one. */
+export const handoffRequest = (
+  year: number,
+  period: string,
+): ActivityAssetFilingRequest => ({
+  tax_year: year,
+  ...(period === "" ? {} : { m130_period: period }),
+});
+
+/** The recorded claims a span would meet, which the backend refuses it for.
+ * Both ends are last days covered, so two spans meet when each starts on or
+ * before the other's last day. */
 export const claimsInTheWay = (
   claims: readonly PlanClaim[],
   from: string,
-  until: string,
+  through: string,
 ): PlanClaim[] =>
   claims.filter(
     (claim) =>
       claim.effective &&
-      claim.covered_from < until &&
-      from < claim.covered_until,
+      claim.covered_from <= through &&
+      from <= claim.covered_through,
   );
 
 // ---- What the register says of a write held in doubt ---------------------------
@@ -247,23 +262,14 @@ export function claimLanded(
 }
 
 /** The effective claims that no longer match the schedule, with their year:
- * the ones a correction can record again in the same write. The plan says
- * which claims are in effect and the timeline which of them no longer match. */
+ * the ones a correction can record again in the same write. The plan states
+ * on each claim whether it is in effect and whether it still matches. */
 export function staleClaims(
   rows: readonly PlanRow[],
-  events: readonly TimelineEvent[],
 ): { year: number; claim: PlanClaim }[] {
-  const stale = new Set(
-    events
-      .filter(
-        (event) =>
-          event.claim !== null && !event.claim.matches_current_schedule,
-      )
-      .map((event) => event.record_id),
-  );
   return rows.flatMap((row) =>
     row.claims
-      .filter((claim) => claim.effective && stale.has(claim.claim_id))
+      .filter((claim) => claim.effective && !claim.matches_current_schedule)
       .map((claim) => ({ year: row.tax_year, claim })),
   );
 }

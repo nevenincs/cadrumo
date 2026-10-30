@@ -7,7 +7,6 @@ import type { LedgerPort } from "../../../shell/ledger";
 import type {
   ActivityAssetPlanResult,
   ActivityAssetTimelineResult,
-  TimelineClaimUse,
 } from "../../../shell/ledgerSetup";
 import { useWritePause } from "../WritePause";
 import { setupCall, type SetupCall } from "../setup/setupModel";
@@ -56,17 +55,4 @@ export function useAssetRead<Result>(
   }, [load, port, reader, assetId, round, reread]);
   const reload = useCallback(() => setRound((value) => value + 1), []);
   return { read, reload };
-}
-
-/** What the history says of each claim: whether it still matches the schedule,
- * why not, and what uses it. Empty while the history is not read, or where it
- * was refused, so no claim is marked from a history that was not read. */
-export function claimUses(
-  read: SetupCall<ActivityAssetTimelineResult> | null,
-): ReadonlyMap<string, TimelineClaimUse> {
-  const uses = new Map<string, TimelineClaimUse>();
-  if (read?.kind !== "done" || read.result.events === null) return uses;
-  for (const event of read.result.events)
-    if (event.claim !== null) uses.set(event.record_id, event.claim);
-  return uses;
 }

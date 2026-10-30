@@ -35,6 +35,10 @@ from .signal_syntax import (
 _OUTPUT_LANGUAGE_CHOICES_RE = re.compile(
     r"\(" + r"\s*,\s*".join(re.escape(language.value) for language in OutputLanguage) + r"\)"
 )
+# Area labels in the asset basis forms carry the SI unit, not a prose word.
+# Match only the complete, case-sensitive symbol; adjacent letters or another
+# exponent remain visible to spelling checks.
+_AREA_UNIT_RE = re.compile(r"(?<!\w)m²(?!\w)")
 _CENSO_GLOSSED_CHOICES_RE = re.compile(
     rf"(?<!\w)(?P<alta>{re.escape(CensoModeloEventKind.ALTA.value)})(?P<alta_gloss>\s*\([^()\r\n]+\))"
     rf",\s*(?P<modificacion>{re.escape(CensoModeloEventKind.MODIFICACION.value)})"
@@ -106,6 +110,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (command_path_pattern(), " "),
         (TRANSLATION_OPTION_RE, " "),
         (TRANSLATION_FORMULA_RE, " "),
+        (_AREA_UNIT_RE, " "),
         (TRANSLATION_NUMERIC_RE, " "),
         (TRANSLATION_IDENTIFIER_RE, " "),
         (TRANSLATION_PASCAL_IDENTIFIER_RE, " "),

@@ -331,7 +331,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
             )
             + activity_asset_disposal_provenance(
-                asset_projection.disposal_revision_ids,
+                asset_projection,
                 resolver_id=self.resolver_id,
                 resolved_binding_source=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
             ),
@@ -604,7 +604,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
             )
             + activity_asset_disposal_provenance(
-                asset_projection.disposal_revision_ids,
+                asset_projection,
                 resolver_id=self.resolver_id,
                 resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
             ),

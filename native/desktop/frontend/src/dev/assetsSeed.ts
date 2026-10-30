@@ -12,6 +12,7 @@ import type {
   AssetListRow,
   DisposalCalculation,
   DisposalFinding,
+  DisposalReasonOption,
   ElectionLimits,
   PlanRow,
   TableGroup,
@@ -88,6 +89,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "560cd54b111d30e2ced2bbefb05643bf173c17734e430c33efa12beb75d8db32",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -133,6 +136,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "560cd54b111d30e2ced2bbefb05643bf173c17734e430c33efa12beb75d8db32",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -178,6 +183,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "560cd54b111d30e2ced2bbefb05643bf173c17734e430c33efa12beb75d8db32",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -229,6 +236,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "560cd54b111d30e2ced2bbefb05643bf173c17734e430c33efa12beb75d8db32",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -570,6 +579,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -579,6 +589,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2023-04-01",
             before_key: null,
@@ -588,6 +599,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "24000.00",
             before_key: null,
@@ -597,6 +609,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -606,6 +619,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -615,6 +629,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "linear",
             before_key: null,
@@ -624,6 +639,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.authority_class_key",
+            field_key:
+              "ledger.actividad_asset.field.amortization.authority_class_key",
             before: null,
             after: "transporte-externo",
             before_key: null,
@@ -633,6 +650,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.linear_coefficient",
+            field_key:
+              "ledger.actividad_asset.field.amortization.linear_coefficient",
             before: null,
             after: "0.12",
             before_key: null,
@@ -642,6 +661,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -651,6 +671,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -661,6 +682,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -670,6 +692,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -692,6 +715,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Furgoneta de reparto",
             before_key: null,
@@ -701,6 +725,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "serial_number",
+            field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
             after: "FR-2023-0114",
             before_key: null,
@@ -723,6 +748,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "2169.86",
             before_key: null,
@@ -749,6 +775,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "2880.00",
             before_key: null,
@@ -775,6 +802,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "2880.00",
             before_key: null,
@@ -801,6 +829,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "1428.16",
             before_key: null,
@@ -1100,6 +1129,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "a8cd7f9d5df28f6131c5ab45818b40dce38e64e727349deab86ed0d4adb9dc76",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -1145,6 +1176,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "a8cd7f9d5df28f6131c5ab45818b40dce38e64e727349deab86ed0d4adb9dc76",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -1352,6 +1385,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -1361,6 +1395,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2019-03-01",
             before_key: null,
@@ -1370,6 +1405,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "3200.00",
             before_key: null,
@@ -1379,6 +1415,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -1388,6 +1425,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -1397,6 +1435,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "linear",
             before_key: null,
@@ -1406,6 +1445,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.authority_class_key",
+            field_key:
+              "ledger.actividad_asset.field.amortization.authority_class_key",
             before: null,
             after: "equipo-proceso-informacion",
             before_key: null,
@@ -1415,6 +1456,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.linear_coefficient",
+            field_key:
+              "ledger.actividad_asset.field.amortization.linear_coefficient",
             before: null,
             after: "0.25",
             before_key: null,
@@ -1424,6 +1467,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -1433,6 +1477,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -1443,6 +1488,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -1452,6 +1498,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -1474,6 +1521,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Plotter HP DesignJet",
             before_key: null,
@@ -1483,6 +1531,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "serial_number",
+            field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
             after: "HP-DJ-77310",
             before_key: null,
@@ -1505,6 +1554,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "800.00",
             before_key: null,
@@ -1531,6 +1581,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "400.00",
             before_key: null,
@@ -1875,6 +1926,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "7127fc69e0644ada65bed7cc0b0d6a7a3b75ca98b43993765254dfa0fff56d18",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -1920,6 +1973,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "7127fc69e0644ada65bed7cc0b0d6a7a3b75ca98b43993765254dfa0fff56d18",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -1965,6 +2020,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "7127fc69e0644ada65bed7cc0b0d6a7a3b75ca98b43993765254dfa0fff56d18",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -2010,6 +2067,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "7127fc69e0644ada65bed7cc0b0d6a7a3b75ca98b43993765254dfa0fff56d18",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -2055,6 +2114,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "7127fc69e0644ada65bed7cc0b0d6a7a3b75ca98b43993765254dfa0fff56d18",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -2357,6 +2418,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -2366,6 +2428,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2019-06-01",
             before_key: null,
@@ -2375,6 +2438,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "3000.00",
             before_key: null,
@@ -2384,6 +2448,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -2393,6 +2458,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -2402,6 +2468,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "linear",
             before_key: null,
@@ -2411,6 +2478,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.authority_class_key",
+            field_key:
+              "ledger.actividad_asset.field.amortization.authority_class_key",
             before: null,
             after: "maquinaria",
             before_key: null,
@@ -2420,6 +2489,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.linear_coefficient",
+            field_key:
+              "ledger.actividad_asset.field.amortization.linear_coefficient",
             before: null,
             after: "0.12",
             before_key: null,
@@ -2429,6 +2500,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -2438,6 +2510,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -2448,6 +2521,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -2457,6 +2531,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -2479,6 +2554,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Compresor de taller",
             before_key: null,
@@ -2488,6 +2564,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "serial_number",
+            field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
             after: "CT-1187",
             before_key: null,
@@ -2510,6 +2587,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "360.00",
             before_key: null,
@@ -2536,6 +2614,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "360.00",
             before_key: null,
@@ -2562,6 +2641,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "360.00",
             before_key: null,
@@ -2588,6 +2668,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "360.00",
             before_key: null,
@@ -2614,6 +2695,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "360.00",
             before_key: null,
@@ -2904,6 +2986,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "88db509d3004cfed2c0949be881afc41a18c287e85d6dbd20f3f08bb81f0e7e4",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -2949,6 +3033,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "88db509d3004cfed2c0949be881afc41a18c287e85d6dbd20f3f08bb81f0e7e4",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -3179,6 +3265,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -3188,6 +3275,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2022-01-01",
             before_key: null,
@@ -3197,6 +3285,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "800.00",
             before_key: null,
@@ -3206,6 +3295,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -3215,6 +3305,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -3224,6 +3315,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "linear",
             before_key: null,
@@ -3233,6 +3325,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.authority_class_key",
+            field_key:
+              "ledger.actividad_asset.field.amortization.authority_class_key",
             before: null,
             after: "cristaleria",
             before_key: null,
@@ -3242,6 +3336,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.linear_coefficient",
+            field_key:
+              "ledger.actividad_asset.field.amortization.linear_coefficient",
             before: null,
             after: "0.25",
             before_key: null,
@@ -3251,6 +3347,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -3260,6 +3357,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -3270,6 +3368,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -3279,6 +3378,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -3301,6 +3401,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Cristalería de la sala de catas",
             before_key: null,
@@ -3323,6 +3424,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "200.00",
             before_key: null,
@@ -3349,6 +3451,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "200.00",
             before_key: null,
@@ -3634,6 +3737,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "1fdac19279e0acbe427bafdd6e9953d7d5e48de48848a183910eab414fda725e",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -3679,6 +3784,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "1fdac19279e0acbe427bafdd6e9953d7d5e48de48848a183910eab414fda725e",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -3724,6 +3831,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "1fdac19279e0acbe427bafdd6e9953d7d5e48de48848a183910eab414fda725e",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -3769,6 +3878,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "1fdac19279e0acbe427bafdd6e9953d7d5e48de48848a183910eab414fda725e",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -3893,6 +4004,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -3902,6 +4014,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2021-01-01",
             before_key: null,
@@ -3911,6 +4024,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "6000.00",
             before_key: null,
@@ -3920,6 +4034,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -3929,6 +4044,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -3938,6 +4054,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "linear",
             before_key: null,
@@ -3947,6 +4064,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.authority_class_key",
+            field_key:
+              "ledger.actividad_asset.field.amortization.authority_class_key",
             before: null,
             after: "maquinaria",
             before_key: null,
@@ -3956,6 +4075,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.linear_coefficient",
+            field_key:
+              "ledger.actividad_asset.field.amortization.linear_coefficient",
             before: null,
             after: "0.12",
             before_key: null,
@@ -3965,6 +4086,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "out_of_service_date",
+            field_key: "ledger.actividad_asset.field.out_of_service_date",
             before: null,
             after: "2025-07-01",
             before_key: null,
@@ -3974,6 +4096,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -3983,6 +4106,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -3993,6 +4117,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -4002,6 +4127,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -4024,6 +4150,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Cámara de revelado",
             before_key: null,
@@ -4033,6 +4160,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "serial_number",
+            field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
             after: "CR-3312",
             before_key: null,
@@ -4055,6 +4183,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "720.00",
             before_key: null,
@@ -4081,6 +4210,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "720.00",
             before_key: null,
@@ -4107,6 +4237,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "720.00",
             before_key: null,
@@ -4133,6 +4264,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "357.04",
             before_key: null,
@@ -4376,6 +4508,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "15f70714e8eb30f1db70722c0c66f88b5427f6d7c9aef3ff75fcf32ef6f8166e",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -4421,6 +4555,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "15f70714e8eb30f1db70722c0c66f88b5427f6d7c9aef3ff75fcf32ef6f8166e",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -4714,6 +4850,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "intangible",
             before_key: null,
@@ -4723,6 +4860,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2024-02-01",
             before_key: null,
@@ -4732,6 +4870,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "1800.00",
             before_key: null,
@@ -4741,6 +4880,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -4750,6 +4890,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -4759,6 +4900,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "linear",
             before_key: null,
@@ -4768,6 +4910,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.authority_class_key",
+            field_key:
+              "ledger.actividad_asset.field.amortization.authority_class_key",
             before: null,
             after: "intangible-software",
             before_key: null,
@@ -4777,6 +4921,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.linear_coefficient",
+            field_key:
+              "ledger.actividad_asset.field.amortization.linear_coefficient",
             before: null,
             after: "0.20",
             before_key: null,
@@ -4786,6 +4932,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -4795,6 +4942,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -4805,6 +4953,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -4814,6 +4963,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -4836,6 +4986,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Licencia de facturación",
             before_key: null,
@@ -4858,6 +5009,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "329.51",
             before_key: null,
@@ -4884,6 +5036,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "360.00",
             before_key: null,
@@ -5099,6 +5252,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "0a17aacb8134c450951172aecfa93f86d70c297854cc6d583b3b124e3379944e",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -5144,6 +5299,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "0a17aacb8134c450951172aecfa93f86d70c297854cc6d583b3b124e3379944e",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -5189,6 +5346,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "0a17aacb8134c450951172aecfa93f86d70c297854cc6d583b3b124e3379944e",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -5410,6 +5569,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -5419,6 +5579,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2024-06-01",
             before_key: null,
@@ -5428,6 +5589,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "1000.00",
             before_key: null,
@@ -5437,6 +5599,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -5446,6 +5609,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -5455,6 +5619,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "linear",
             before_key: null,
@@ -5464,6 +5629,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.authority_class_key",
+            field_key:
+              "ledger.actividad_asset.field.amortization.authority_class_key",
             before: null,
             after: "util-herramienta",
             before_key: null,
@@ -5473,6 +5640,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.linear_coefficient",
+            field_key:
+              "ledger.actividad_asset.field.amortization.linear_coefficient",
             before: null,
             after: "0.25",
             before_key: null,
@@ -5482,6 +5651,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -5491,6 +5661,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -5501,6 +5672,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -5510,6 +5682,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -5532,6 +5705,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "146.17",
             before_key: null,
@@ -5558,6 +5732,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "250.00",
             before_key: null,
@@ -5584,6 +5759,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "250.00",
             before_key: null,
@@ -5786,6 +5962,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "78d8df9f5e59d09c169c49c0e16a9734b4b053ac1dddb6681b6ac448c8a2bea3",
+            matches_current_schedule: false,
+            stale_reason: "revision_changed",
           },
         ],
         minimum_through: {
@@ -6050,6 +6228,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -6059,6 +6238,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2025-01-01",
             before_key: null,
@@ -6068,6 +6248,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "4000.00",
             before_key: null,
@@ -6077,6 +6258,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -6086,6 +6268,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -6095,6 +6278,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "linear",
             before_key: null,
@@ -6104,6 +6288,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.authority_class_key",
+            field_key:
+              "ledger.actividad_asset.field.amortization.authority_class_key",
             before: null,
             after: "equipo-proceso-informacion",
             before_key: null,
@@ -6113,6 +6299,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.linear_coefficient",
+            field_key:
+              "ledger.actividad_asset.field.amortization.linear_coefficient",
             before: null,
             after: "0.25",
             before_key: null,
@@ -6122,6 +6310,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -6131,6 +6320,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -6141,6 +6331,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -6150,6 +6341,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -6172,6 +6364,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Servidor de archivos",
             before_key: null,
@@ -6181,6 +6374,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "serial_number",
+            field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
             after: "SRV-0042",
             before_key: null,
@@ -6203,6 +6397,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "1000.00",
             before_key: null,
@@ -6230,6 +6425,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: "4000.00",
             after: "3800.00",
             before_key: null,
@@ -6625,6 +6821,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -6634,6 +6831,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2023-01-01",
             before_key: null,
@@ -6643,6 +6841,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "9000.00",
             before_key: null,
@@ -6652,6 +6851,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -6661,6 +6861,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -6670,6 +6871,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "linear",
             before_key: null,
@@ -6679,6 +6881,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.authority_class_key",
+            field_key:
+              "ledger.actividad_asset.field.amortization.authority_class_key",
             before: null,
             after: "instalacion-resto",
             before_key: null,
@@ -6688,6 +6892,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.linear_coefficient",
+            field_key:
+              "ledger.actividad_asset.field.amortization.linear_coefficient",
             before: null,
             after: "0.10",
             before_key: null,
@@ -6697,6 +6903,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -6706,6 +6913,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -6716,6 +6924,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -6725,6 +6934,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "missing",
             before_key: null,
@@ -6747,6 +6957,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Estanterías de almacén",
             before_key: null,
@@ -6870,6 +7081,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             superseded_by: null,
             revision_id:
               "af334604210b0c356bbd26d6ad7608a666a8de6b661261030333d021fc8e7021",
+            matches_current_schedule: true,
+            stale_reason: null,
           },
         ],
         minimum_through: {
@@ -6976,6 +7189,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -6985,6 +7199,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2026-03-10",
             before_key: null,
@@ -6994,6 +7209,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "280.00",
             before_key: null,
@@ -7003,6 +7219,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -7012,6 +7229,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -7021,6 +7239,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "low_value_free",
             before_key: null,
@@ -7030,6 +7249,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -7039,6 +7259,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -7049,6 +7270,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -7058,6 +7280,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -7080,6 +7303,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Taladro percutor",
             before_key: null,
@@ -7089,6 +7313,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "serial_number",
+            field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
             after: "TP-5521",
             before_key: null,
@@ -7111,6 +7336,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "amount",
+            field_key: "ledger.actividad_asset.field.amount",
             before: null,
             after: "280.00",
             before_key: null,
@@ -7384,6 +7610,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "asset_kind",
+            field_key: "ledger.actividad_asset.field.asset_kind",
             before: null,
             after: "material",
             before_key: null,
@@ -7393,6 +7620,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "in_service_date",
+            field_key: "ledger.actividad_asset.field.in_service_date",
             before: null,
             after: "2026-09-01",
             before_key: null,
@@ -7402,6 +7630,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.basis_amount",
+            field_key: "ledger.actividad_asset.field.basis.basis_amount",
             before: null,
             after: "250.00",
             before_key: null,
@@ -7411,6 +7640,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.non_deductible_iva",
+            field_key: "ledger.actividad_asset.field.basis.non_deductible_iva",
             before: null,
             after: "0.00",
             before_key: null,
@@ -7420,6 +7650,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "residual_value",
+            field_key: "ledger.actividad_asset.field.residual_value",
             before: null,
             after: "0.00",
             before_key: null,
@@ -7429,6 +7660,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "amortization.method",
+            field_key: "ledger.actividad_asset.field.amortization.method",
             before: null,
             after: "low_value_free",
             before_key: null,
@@ -7438,6 +7670,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquired_condition",
+            field_key: "ledger.actividad_asset.field.acquired_condition",
             before: null,
             after: "new",
             before_key: null,
@@ -7447,6 +7680,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "acquisition_shape",
+            field_key: "ledger.actividad_asset.field.acquisition_shape",
             before: null,
             after: "primary_purchase",
             before_key: null,
@@ -7457,6 +7691,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "basis.stage",
+            field_key: "ledger.actividad_asset.field.basis.stage",
             before: null,
             after: "business_allocated",
             before_key: null,
@@ -7466,6 +7701,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "opening_history.status",
+            field_key: "ledger.actividad_asset.field.opening_history.status",
             before: null,
             after: "known",
             before_key: null,
@@ -7488,6 +7724,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         changes: [
           {
             field: "name",
+            field_key: "ledger.actividad_asset.field.name",
             before: null,
             after: "Impresora 3D",
             before_key: null,
@@ -7497,6 +7734,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
           {
             field: "serial_number",
+            field_key: "ledger.actividad_asset.field.serial_number",
             before: null,
             after: "I3D-0907",
             before_key: null,
@@ -7654,6 +7892,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "30",
       },
       class_label: "Almacenes y depósitos (gaseosos, líquidos y sólidos)",
+      can_hold_vehicle: false,
     },
     {
       class_key: "central-carbon",
@@ -7667,6 +7906,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "50",
       },
       class_label: "Centrales de carbón",
+      can_hold_vehicle: false,
     },
     {
       class_key: "central-hidraulica",
@@ -7680,6 +7920,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "100",
       },
       class_label: "Centrales hidráulicas",
+      can_hold_vehicle: false,
     },
     {
       class_key: "central-nuclear",
@@ -7693,6 +7934,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "60",
       },
       class_label: "Centrales nucleares",
+      can_hold_vehicle: false,
     },
     {
       class_key: "central-otra",
@@ -7706,6 +7948,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "40",
       },
       class_label: "Otras centrales",
+      can_hold_vehicle: false,
     },
     {
       class_key: "central-renovable",
@@ -7719,6 +7962,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "30",
       },
       class_label: "Centrales renovables",
+      can_hold_vehicle: false,
     },
     {
       class_key: "cristaleria",
@@ -7732,6 +7976,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "4",
       },
       class_label: "Cristalería",
+      can_hold_vehicle: false,
     },
     {
       class_key: "edificio-comercial-administrativo-servicios-vivienda",
@@ -7746,6 +7991,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
       },
       class_label:
         "Edificios comerciales, administrativos, de servicios y viviendas",
+      can_hold_vehicle: false,
     },
     {
       class_key: "edificio-industrial",
@@ -7759,6 +8005,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "68",
       },
       class_label: "Edificios industriales",
+      can_hold_vehicle: false,
     },
     {
       class_key: "enseres-otros",
@@ -7772,6 +8019,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "14",
       },
       class_label: "Otros enseres",
+      can_hold_vehicle: false,
     },
     {
       class_key: "equipo-electronico",
@@ -7785,6 +8033,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "10",
       },
       class_label: "Equipos electrónicos",
+      can_hold_vehicle: false,
     },
     {
       class_key: "equipo-medico",
@@ -7798,6 +8047,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "14",
       },
       class_label: "Equipos médicos y asimilados",
+      can_hold_vehicle: false,
     },
     {
       class_key: "equipo-proceso-informacion",
@@ -7811,6 +8061,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "8",
       },
       class_label: "Equipos para procesos de información",
+      can_hold_vehicle: false,
     },
     {
       class_key: "instalacion-cables",
@@ -7824,6 +8075,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "30",
       },
       class_label: "Cables",
+      can_hold_vehicle: false,
     },
     {
       class_key: "instalacion-resto",
@@ -7837,6 +8089,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Resto instalaciones",
+      can_hold_vehicle: false,
     },
     {
       class_key: "instalacion-subestacion-red",
@@ -7851,6 +8104,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
       },
       class_label:
         "Subestaciones. Redes de transporte y distribución de energía",
+      can_hold_vehicle: false,
     },
     {
       class_key: "lenceria",
@@ -7864,6 +8118,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "8",
       },
       class_label: "Lencería",
+      can_hold_vehicle: false,
     },
     {
       class_key: "maquinaria",
@@ -7877,6 +8132,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "18",
       },
       class_label: "Maquinaria",
+      can_hold_vehicle: false,
     },
     {
       class_key: "mobiliario",
@@ -7890,6 +8146,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Mobiliario",
+      can_hold_vehicle: false,
     },
     {
       class_key: "molde-matriz-modelo",
@@ -7903,6 +8160,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "6",
       },
       class_label: "Moldes, matrices y modelos",
+      can_hold_vehicle: false,
     },
     {
       class_key: "obra-civil-general",
@@ -7916,6 +8174,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "100",
       },
       class_label: "Obra civil general",
+      can_hold_vehicle: false,
     },
     {
       class_key: "obra-civil-infraestructuras-mineras",
@@ -7929,6 +8188,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "30",
       },
       class_label: "Infraestructuras y obras mineras",
+      can_hold_vehicle: false,
     },
     {
       class_key: "obra-civil-pavimentos",
@@ -7942,6 +8202,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "34",
       },
       class_label: "Pavimentos",
+      can_hold_vehicle: false,
     },
     {
       class_key: "otro-elemento",
@@ -7955,6 +8216,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Otros elementos",
+      can_hold_vehicle: false,
     },
     {
       class_key: "terreno-escombrera",
@@ -7968,6 +8230,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "50",
       },
       class_label: "Terrenos dedicados exclusivamente a escombreras",
+      can_hold_vehicle: false,
     },
     {
       class_key: "transporte-autocamion",
@@ -7981,6 +8244,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "10",
       },
       class_label: "Autocamiones",
+      can_hold_vehicle: false,
     },
     {
       class_key: "transporte-buque-aeronave",
@@ -7994,6 +8258,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Buques, aeronaves",
+      can_hold_vehicle: true,
     },
     {
       class_key: "transporte-externo",
@@ -8007,6 +8272,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "14",
       },
       class_label: "Elementos de transporte externo",
+      can_hold_vehicle: true,
     },
     {
       class_key: "transporte-interno",
@@ -8020,6 +8286,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Elementos de transporte interno",
+      can_hold_vehicle: false,
     },
     {
       class_key: "transporte-locomotora-vagon-traccion",
@@ -8033,6 +8300,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "25",
       },
       class_label: "Locomotoras, vagones y equipos de tracción",
+      can_hold_vehicle: false,
     },
     {
       class_key: "util-herramienta",
@@ -8046,6 +8314,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "8",
       },
       class_label: "Útiles y herramientas",
+      can_hold_vehicle: false,
     },
   ],
   intangible: [
@@ -8062,6 +8331,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
       },
       class_label:
         "Producciones cinematográficas, fonográficas, videos y series audiovisuales",
+      can_hold_vehicle: false,
     },
     {
       class_key: "intangible-software",
@@ -8075,6 +8345,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "6",
       },
       class_label: "Sistemas y programas informáticos",
+      can_hold_vehicle: false,
     },
   ],
 };
@@ -8102,3 +8373,117 @@ export const ADMITTED_METHODS: Record<string, readonly string[]> = {
     "sum_of_digits",
   ],
 };
+
+/** The reasons a baja is accepted with, each with the catalogue key that words it. */
+export const DISPOSAL_REASONS: readonly DisposalReasonOption[] = [
+  {
+    reason: "sale",
+    label_key: "ledger.actividad_asset.disposal_reason.sale",
+  },
+  {
+    reason: "part_exchange",
+    label_key: "ledger.actividad_asset.disposal_reason.part_exchange",
+  },
+  {
+    reason: "theft",
+    label_key: "ledger.actividad_asset.disposal_reason.theft",
+  },
+  {
+    reason: "destruction",
+    label_key: "ledger.actividad_asset.disposal_reason.destruction",
+  },
+  {
+    reason: "scrapping",
+    label_key: "ledger.actividad_asset.disposal_reason.scrapping",
+  },
+  {
+    reason: "withdrawal",
+    label_key: "ledger.actividad_asset.disposal_reason.withdrawal",
+  },
+];
+
+/** Every fact the timeline can show a change of, a repeated row as `[]`: a path outside this
+ * list is the system's own and is never shown. */
+export const TIMELINE_FACT_PATHS: readonly string[] = [
+  "acquisition.invoice_evidence_id",
+  "acquisition_shape",
+  "further_acquisitions[].shape",
+  "further_acquisitions[].lineage.invoice_evidence_id",
+  "declared_acquisition_date",
+  "declared_activity",
+  "asset_kind",
+  "basis.stage",
+  "basis.basis_amount",
+  "basis.non_deductible_iva",
+  "basis.is_property",
+  "basis.construction_cost",
+  "basis.land_cost",
+  "basis.ownership_mode",
+  "basis.ownership_share",
+  "basis.office_area",
+  "basis.total_area",
+  "basis.business_use_share",
+  "basis.prior_allocation_provenance",
+  "residual_value",
+  "in_service_date",
+  "out_of_service_date",
+  "disposal.disposal_date",
+  "disposal.reason",
+  "disposal.proceeds",
+  "disposal.transmission_costs",
+  "disposal.market_value",
+  "disposal.prior_free_depreciation_regime",
+  "disposal.later_affectation_on",
+  "opening_history.status",
+  "opening_history.accumulated_amount",
+  "opening_history.amortization_method",
+  "opening_history.covered_through_tax_year",
+  "acquired_condition",
+  "building_construction_date",
+  "amortization.regime",
+  "amortization.method",
+  "amortization.authority_class_key",
+  "amortization.linear_coefficient",
+  "amortization.shift_hours_per_day",
+  "amortization.sum_of_digits_period_years",
+  "amortization.digit_order",
+  "amortization.approved_plan.approval_reference",
+  "amortization.approved_plan.approval_kind",
+  "amortization.approved_plan.submitted_on",
+  "amortization.approved_plan.resolved_on",
+  "amortization.approved_plan.annual_amounts[].tax_year",
+  "amortization.approved_plan.annual_amounts[].amount",
+  "amortization.useful_life.ends_on",
+  "amortization.useful_life.evidence_reference",
+  "amortization.small_enterprise.evidence_reference",
+  "amortization.small_enterprise.made_available_on",
+  "amortization.small_enterprise.prior_period_net_turnover",
+  "amortization.low_value.election_reference",
+  "amortization.low_value.new_material_evidence_reference",
+  "amortization.research_development_evidence_reference",
+  "amortization.charging_infrastructure.technical_documentation_reference",
+  "amortization.charging_infrastructure.installation_certificate_reference",
+  "amortization.renewable_self_consumption.purpose",
+  "amortization.renewable_self_consumption.documentation_kind",
+  "amortization.renewable_self_consumption.documentation_reference",
+  "amortization.renewable_self_consumption.made_available_on",
+  "amortization.renewable_self_consumption.replaces_fossil_installation",
+  "amortization.renewable_self_consumption.required_by_building_code",
+  "amortization.used_original_price.determination",
+  "amortization.used_original_price.original_price",
+  "amortization.used_original_price.evidence_reference",
+  "vehicle_affectation.category",
+  "vehicle_affectation.private_use",
+  "vehicle_affectation.listed_use",
+  "vehicle_affectation.recorded_in_activity_books",
+  "vehicle_affectation.evidence_reference",
+  "vehicle_affectation.electric_propulsion",
+  "name",
+  "serial_number",
+  "description",
+  "document_kind",
+  "document_number",
+  "supplier_name",
+  "supplier_tax_id",
+  "amount",
+];

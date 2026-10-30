@@ -1,9 +1,9 @@
 """The desktop Stock panel holds no list of the choices its forms offer, and names only what it must.
 
-The options operation serves every closed choice a form offers, so the panel keeps no list of
-methods, kinds, reasons or bases beside its forms. Three values are named because a form treats them
-apart from the rest, and each is held here to the enum member it names; and a panel source that
-quoted any other served value would be keeping a list of its own.
+The options operation serves every closed choice a form offers, and marks with a role the members a
+form treats apart from the rest, so the panel keeps no list of methods, kinds, reasons or bases beside
+its forms and names none of their values. A panel source that quoted a served value would be keeping
+a list of its own.
 """
 
 from __future__ import annotations
@@ -13,8 +13,6 @@ import re
 import pytest
 
 from cadrumo.application.inventory.registered_options_operation import INVENTORY_OPTION_FAMILIES
-from cadrumo.domain.contribuyente.inventory.closing_foundations import InventoryClosingAuthority
-from cadrumo.domain.contribuyente.inventory.records import InventoryAcquisitionEvidenceKind, MovementKind
 from dev._paths import REPO_ROOT
 
 from ..desktop_chrome import DESKTOP_CHROME_KEYS
@@ -25,32 +23,7 @@ _ASSETS = REPO_ROOT / "native" / "desktop" / "frontend" / "src" / "components" /
 _SOURCES = [_ASSETS / "stockModel.ts", _ASSETS / "StockPane.tsx"]
 
 
-def _constant(name: str) -> str:
-    found = re.search(rf'export const {name} = "([^"]+)"', _SOURCES[0].read_text(encoding="utf-8"))
-    assert found is not None, f"the panel's model names no constant {name}"
-    return str(found.group(1))
-
-
-def test_the_two_checks_a_purchase_states_are_kinds_of_proof_the_backend_serves() -> None:
-    kinds = {member.value for member in InventoryAcquisitionEvidenceKind}
-
-    assert _constant("COST_CHECK_KIND") in kinds
-    assert _constant("IVA_CHECK_KIND") in kinds
-    assert _constant("COST_CHECK_KIND") != _constant("IVA_CHECK_KIND")
-
-
-def test_the_authority_a_count_settles_is_one_the_backend_serves() -> None:
-    assert _constant("PHYSICAL_AUTHORITY") in {member.value for member in InventoryClosingAuthority}
-    assert MovementKind.PURCHASE.value == "purchase"
-
-
-def test_the_panel_quotes_no_served_value_it_does_not_name_on_purpose() -> None:
-    named = {
-        MovementKind.PURCHASE.value,
-        _constant("COST_CHECK_KIND"),
-        _constant("IVA_CHECK_KIND"),
-        _constant("PHYSICAL_AUTHORITY"),
-    }
+def test_the_panel_quotes_no_served_value_it_could_read_from_the_options() -> None:
     quoted = set()
     for source in _SOURCES:
         quoted |= set(re.findall(r'"([a-z][a-z_]*)"', source.read_text(encoding="utf-8")))
@@ -63,7 +36,27 @@ def test_the_panel_quotes_no_served_value_it_does_not_name_on_purpose() -> None:
         if "_" in member.value or member.value in {"fifo", "pmp", "cogs", "freight"}
     }
     # ``physical_count`` is also the name of a field of the closing request.
-    assert sorted((served & quoted) - named - {"physical_count"}) == []
+    assert sorted((served & quoted) - {"physical_count"}) == []
+
+
+def test_the_roles_a_form_reads_belong_to_the_families_that_serve_them() -> None:
+    from uuid import uuid4
+
+    from cadrumo.application.inventory.registered_options_operation import inventory_options
+
+    roles = {
+        (family.family, option.role)
+        for family in inventory_options(uuid4()).families
+        for option in family.options
+        if option.role is not None
+    }
+
+    assert roles == {
+        ("acquisition_evidence_kind", "cost_check"),
+        ("acquisition_evidence_kind", "iva_check"),
+        ("closing_authority", "count_authority"),
+        ("movement_kind", "purchase"),
+    }
 
 
 @pytest.mark.parametrize("family", [family for family, _ in INVENTORY_OPTION_FAMILIES])

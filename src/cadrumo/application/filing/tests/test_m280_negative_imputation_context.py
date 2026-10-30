@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing.schema import ModeloDraft
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 _SOURCE_DIGESTS = {"aeat-dr-280-2022": "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701"}
 
 

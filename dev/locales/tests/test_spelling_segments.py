@@ -433,3 +433,38 @@ def test_quoted_spanish_term_does_not_admit_a_partial_word_or_english_possessive
         assert set(words) == {"en"}
         assert any("colegio" in word for word in words["en"])
         assert any("concertado" in word for word in words["en"])
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "the dotaciones it moves",
+        "these dotaciones again",
+        "Overlapping dotaciones, all years",
+        "Dotaciones after that day",
+        "Dotaciones for this year",
+        "Dotaciones in your tax returns",
+        "Dotaciones that no longer match the schedule",
+    ],
+)
+def test_plural_asset_register_term_is_checked_as_spanish_in_its_attested_context(text: str) -> None:
+    words = words_by_language(f"Read {text} misspeling")
+    assert {"Read", "misspeling"} <= words["en"]
+    assert {word.casefold() for word in words["es"]} == {"dotaciones"}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "the dotacioness",
+        "these dotaciónes again",
+        "Overlapping dotacines",
+        "Dotacioness after that day",
+        "Dotacines for this year",
+        "Generic dotaciones prose",
+    ],
+)
+def test_plural_register_term_typos_and_unrecognized_context_stay_checked_as_english(text: str) -> None:
+    words = words_by_language(f"Read {text} misspeling")
+    assert set(words) == {"en"}
+    assert any("dotaci" in word.casefold() for word in words["en"])

@@ -159,6 +159,9 @@ def ledger_renta_income_target_failures(revision: ModeloRevision) -> list[str]:
     The retención binding of a revision shares its observation key with the income
     binding, so the target must belong to the family without naming the binding.
     A modulos-computed box has no ledger owner and is refused by the same rule.
+
+    Args:
+        revision: :class:`ModeloRevision` whose income binding targets are checked.
     """
     return ledger_target_casilla_failures(
         revision,
