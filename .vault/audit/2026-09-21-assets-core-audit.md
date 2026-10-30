@@ -254,3 +254,49 @@ Pre-existing, and against the operator's rule of 2026-10-30. Families: a thresho
 
 ### registry-owned-facts | medium | The literal gate cannot see every form of a fact
 `Field(ge=, le=)` bounds hide claves, modelo ids look like box ids, and letter claves aren't detected.
+
+## Integrated re-review, 2026-10-30
+
+Verdict: revision required, no critical findings. Findings from the first review are resolved except where repeated here. Installed journeys and real CLI and TUI launches did not run. The MCP refusal entry reported as open is closed by `dev/mcp_eval/tests/test_asset_refusal_through_mcp.py`, which the review did not look in.
+
+### head-integrity | high | HEAD could not import the asset subsystem
+`disposal.py:453` had a syntax error, with consumers importing names from a split module left uncommitted. Repaired in `04ae81174d`.
+
+### never-blocks | high | An unowned amortizable row with no base or in foreign currency blocks Modelo 130
+`modelo_bindings_renta_expenses.py:570`. Executed.
+
+### staleness | high | A late claim for an earlier year changes the baja result with no drift
+Executed: box 1654 moves from 897.53 to 1,200.00 with equal consumption. `disposal_calculation.py:115`.
+
+### visibility | high | Non-durable findings disappear at reopen, and the form never shows their specifics
+`calculation_bucket_actions.py:742`, `work_form_issue_lines.py:389`. Decision: persist them with the calculation revision.
+
+### never-blocks | high | Any amortization note replaces Verify with Fill
+Executed. `work_form_next_step.py:269`.
+
+### tests | high | Three work-form gate parametrizations fail
+`test_work_form_gate_agreement.py:174`, the same inconsistency.
+
+### baja-correction | medium | Omitting disposal silently removes a baja
+`operation_dtos.py:392`. Executed.
+
+### refusal-rendering | medium | Plan refusal keys travel without their facts
+`operations.py:806`.
+
+### identical-flagged | medium | A correction to evidence alone marks every claim stale
+`lifecycle.py:469`. Executed.
+
+### tests | medium | Register test support departs from production
+`register_support.py`.
+
+### claim-replay | low | A fresh forecast under a new generation reads as a conflict
+`claims.py:97`. No dead end.
+
+### boxes | low | Several sales in one year collapse into one row
+`actividad_asset_disposal_bindings.py:139`.
+
+### outside-ledger | low | The remedy for a later row on an outside-ledger element cannot be carried out
+`revision_validation.py:58`.
+
+### m131 | low | An uncalculable excess says nothing on Modelo 131
+`modelo_bindings_actividad_assets.py:630`.
