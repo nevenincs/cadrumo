@@ -458,7 +458,7 @@ class ActivityAssetAmortizationElection(CachedIdentityModel):
     @cached_property
     def fingerprint(self) -> str:
         """Return the stable identity used to judge a change of method."""
-        absent_facts = {"used_original_price"} if self.used_original_price is None else set()
+        absent_facts: set[str] = {"used_original_price"} if self.used_original_price is None else set()
         return content_hash_hex(self.model_dump(mode="json", exclude=absent_facts))
 
 

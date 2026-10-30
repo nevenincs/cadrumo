@@ -347,7 +347,13 @@ def _original(
 
 def _used_machine(*, price: str = "30000.00", basis: str = "10000", **facts: object) -> ActivityAssetRevision:
     return _asset(
-        _linear("maquinaria", used_original_price=_original(price), **facts),
+        _election(
+            AmortizationMethod.LINEAR,
+            _NORMAL,
+            authority_class_key="maquinaria",
+            used_original_price=_original(price),
+            **facts,
+        ),
         basis=basis,
         condition=AcquiredCondition.USED,
     )
