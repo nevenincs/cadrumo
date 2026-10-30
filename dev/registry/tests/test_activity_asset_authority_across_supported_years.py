@@ -4,13 +4,17 @@ The amortization tables and method admissions are authored once, at the first
 supported edition the law admits them, and keyed forward only where the law
 changes. Each year's expectation is read from that year's bundled AEAT Renta
 manual rather than restated here: a table row or an incentive is expected in
-exactly the exercises whose manual prints it. A projected year beyond the
-newest manual carries the tables forward but admits no incentive whose own
-enactment is annual.
+exactly the exercises whose manual prints it. A year beyond the newest manual
+carries the tables forward and admits an annual incentive only where the
+consolidated LIS text itself reaches that year: the renewable regime of
+disposición adicional decimoséptima for installations entering operation in
+it, the electric-vehicle and charging-point regime of disposición adicional
+decimoctava for periods beginning in it.
 """
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
@@ -61,6 +65,30 @@ _VEHICLE_HEADING = "Libertad de amortización en determinados vehículos"
 # The heading a manual gives LIS DA 18 where it grants twice the maximum linear coefficient instead.
 _ACCELERATED_VEHICLE_HEADING = "Amortización acelerada de determinados vehículos"
 _ACCELERATED_DA18_CODE = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
+_LIS_DA17_HEADING = "# Disposición adicional decimoséptima."
+_LIS_DA18_HEADING = "# Disposición adicional decimoctava."
+_LIS_YEARS_LISTED = re.compile(r"períodos impositivos que se inicien en los años ([\d, y]+) podrán ser amortizadas")
+
+
+@cache
+def _lis_provision(heading: str) -> str:
+    """The consolidated LIS text of one additional provision, up to the next provision heading."""
+    text = bundled_path("corpus", "normatives", "html", "ley-27-2014.html.extracted.md").read_text(encoding="utf-8")
+    lines = text.splitlines()
+    start = next(index for index, line in enumerate(lines) if line.startswith(heading))
+    end = next((index for index in range(start + 1, len(lines)) if lines[index].startswith("# ")), len(lines))
+    return " ".join(lines[start:end])
+
+
+def _lis_admits_renewables(year: int) -> bool:
+    """LIS DA 17 grants installations that enter operation in the year."""
+    return f"se produzca en {year}" in _lis_provision(_LIS_DA17_HEADING)
+
+
+def _lis_admits_electric_mobility(year: int) -> bool:
+    """LIS DA 18 lists the year for new vehicles and for charging points alike."""
+    listed = _LIS_YEARS_LISTED.findall(_lis_provision(_LIS_DA18_HEADING))
+    return bool(listed) and all(str(year) in re.findall(r"\d{4}", years) for years in listed)
 
 
 @cache
@@ -121,8 +149,8 @@ def test_a_full_year_of_linear_machinery_charges_the_table_maximum(year: int) ->
 
 
 @pytest.mark.parametrize("year", _supported_years())
-def test_renewable_free_depreciation_is_admitted_exactly_where_the_manual_prints_it(year: int) -> None:
-    admitted = year in manual_editions_printing("renta", _RENEWABLE_HEADING)
+def test_renewable_free_depreciation_is_admitted_exactly_where_the_manual_or_the_lis_grants_it(year: int) -> None:
+    admitted = year in manual_editions_printing("renta", _RENEWABLE_HEADING) or _lis_admits_renewables(year)
     evidence = _renewable_evidence(made_available=date(year, 1, 10))
     panels = _asset(_renewable(evidence), basis="40000", in_service=date(year, 2, 1))
 
@@ -136,7 +164,11 @@ def test_renewable_free_depreciation_is_admitted_exactly_where_the_manual_prints
 def _accelerated_only_years() -> tuple[int, ...]:
     """Exercises whose manual prints the accelerated LIS DA 18 regime and not its free depreciation."""
     free = set(manual_editions_printing("renta", _VEHICLE_HEADING))
-    return tuple(year for year in manual_editions_printing("renta", _ACCELERATED_VEHICLE_HEADING) if year not in free)
+    return tuple(
+        year
+        for year in manual_editions_printing("renta", _ACCELERATED_VEHICLE_HEADING)
+        if year not in free and not _lis_admits_electric_mobility(year)
+    )
 
 
 def _expect_electric_mobility_outcome(
@@ -145,12 +177,12 @@ def _expect_electric_mobility_outcome(
     *,
     amount: Decimal,
 ) -> None:
-    """Charge where the manual prints free depreciation; refuse the accelerated regime by its own token.
+    """Charge where the manual or the LIS grants free depreciation; refuse the accelerated regime by its own token.
 
     A year whose manual prints neither regime, or no manual at all, keeps the
     generic refusal: no DA 18 regime reaches it, or none is enrolled for it.
     """
-    if year in manual_editions_printing("renta", _VEHICLE_HEADING):
+    if year in manual_editions_printing("renta", _VEHICLE_HEADING) or _lis_admits_electric_mobility(year):
         assert charge().amount == amount
     elif year in _accelerated_only_years():
         with pytest.raises(ActividadAssetAcceleratedDa18DepreciationError) as accelerated:
@@ -181,7 +213,7 @@ def _charger(year: int, kind: AssetKind = AssetKind.MATERIAL) -> ActivityAssetRe
 
 
 @pytest.mark.parametrize("year", _supported_years())
-def test_charging_point_free_depreciation_is_admitted_exactly_where_the_manual_prints_it(year: int) -> None:
+def test_charging_point_free_depreciation_is_admitted_where_the_manual_or_the_lis_grants_it(year: int) -> None:
     _expect_electric_mobility_outcome(
         year,
         lambda: _charge(_charger(year), year, free_amount="2500"),
@@ -190,7 +222,7 @@ def test_charging_point_free_depreciation_is_admitted_exactly_where_the_manual_p
 
 
 @pytest.mark.parametrize("year", _supported_years())
-def test_electric_vehicle_free_depreciation_is_admitted_exactly_where_the_manual_prints_it(year: int) -> None:
+def test_electric_vehicle_free_depreciation_is_admitted_where_the_manual_or_the_lis_grants_it(year: int) -> None:
     vehicle = _asset(
         _election(AmortizationMethod.ELECTRIC_VEHICLE_FREE, authority_class_key="transporte-externo"),
         basis="30000",
@@ -216,12 +248,18 @@ def test_elections_outside_the_da18_regime_keep_the_generic_refusal(year: int) -
     material_goodwill = _asset(_election(AmortizationMethod.GOODWILL), basis="1000", in_service=date(year, 3, 1))
     intangible_charger = _charger(year, AssetKind.INTANGIBLE)
 
-    for asset, match in (
-        (material_goodwill, "goodwill is not enrolled for material assets"),
-        (intangible_charger, "charging_infrastructure_free is not enrolled for intangible assets"),
+    for asset, method, kind in (
+        (material_goodwill, "goodwill", "material"),
+        (intangible_charger, "charging_infrastructure_free", "intangible"),
     ):
-        with pytest.raises(ActividadAssetUnsupportedError, match=match) as refused:
+        with pytest.raises(ActividadAssetUnsupportedError) as refused:
             _charge(asset, year)
+        assert refused.value.translated_message == "ledger.actividad_asset.errors.method_not_enrolled_for_kind"
+        assert refused.value.context is not None
+        assert {name: refused.value.context[name] for name in ("method", "asset_kind")} == {
+            "method": method,
+            "asset_kind": kind,
+        }
         assert type(refused.value) is ActividadAssetUnsupportedError
         assert get_registered_error_code(refused.value).code == "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED"
 
@@ -233,7 +271,7 @@ def test_an_edition_that_begins_after_the_tax_year_is_refused() -> None:
     earlier_year = edition.valid_from.year - 1
     asset = _asset(_linear("maquinaria"), basis="10000", in_service=date(earlier_year, 1, 1))
 
-    with pytest.raises(ActividadAssetUnsupportedError, match="begins after tax year"):
+    with pytest.raises(ActividadAssetUnsupportedError) as refused:
         resolve_activity_asset_schedule_authority(
             edition,
             tax_year=earlier_year,
@@ -242,3 +280,5 @@ def test_an_edition_that_begins_after_the_tax_year_is_refused() -> None:
             workforce=(),
             legal_reference=_legal_reference,
         )
+    assert refused.value.translated_message == "ledger.actividad_asset.errors.revision_begins_after_tax_year"
+    assert refused.value.context == {"revision_id": edition.id, "tax_year": earlier_year}

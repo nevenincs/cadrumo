@@ -10222,6 +10222,12 @@ sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
 
 [[revisions."2025".family_overrides]]
 family = "bindings"
+selector = {revision = "2024", id = "renta-ledger-expense-0227-deductible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
 selector = {revision = "2024", id = "renta-ledger-expense-0217-deductible"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
 sequence_removals = {source_citations = [0, 1], source_refs = [0, 1]}
@@ -10558,8 +10564,8 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-infraestructura-recarga-ultimo-ejercicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en los años 2024 y 2025."]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en los años 2024 y 2025."]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "2025", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2025-12-31}, {value = "2026", date_axis = "filing_period", valid_from = 2026-01-01}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-vehiculo-electrico-primer-ejercicio"}
@@ -10568,8 +10574,8 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-vehiculo-electrico-ultimo-ejercicio"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en 2024 y 2025."]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
-sequence_removals = {source_citations = [0], source_refs = [0]}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en 2024 y 2025."]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "2025", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2025-12-31}, {value = "2026", date_axis = "filing_period", valid_from = 2026-01-01}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-inversion-por-unidad-plantilla"}
@@ -10583,12 +10589,12 @@ sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"}
-sequence_additions = {legal_refs = ["rdl-16-2025:art-17"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]}, {source_ref = "aeat-nota-efectos-rdl-16-2025-rdl-2-2026", required_text = ["En la fecha de devengo del IRPF para 2025, las modificaciones introducidas por el Real Decreto-ley 16/2025, de 23 de diciembre, estaban en vigor y desplegando sus plenos efectos jurídicos"]}], source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"], values = [{value = "2025", date_axis = "filing_period", valid_from = 2025-01-01}]}
+sequence_additions = {legal_refs = ["rdl-16-2025:art-17"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]}, {source_ref = "aeat-nota-efectos-rdl-16-2025-rdl-2-2026", required_text = ["En la fecha de devengo del IRPF para 2025, las modificaciones introducidas por el Real Decreto-ley 16/2025, de 23 de diciembre, estaban en vigor y desplegando sus plenos efectos jurídicos"]}], source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"], values = [{value = "2025", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}, {value = "2026", date_axis = "filing_period", valid_from = 2026-01-01}]}
 sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0], values = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"
 selector = {revision = "2024", id = "renta-actividad-inmovilizado-amortizacion-renovables-ultimo-ejercicio"}
-sequence_additions = {legal_refs = ["rdl-16-2025:art-17"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]}, {source_ref = "aeat-nota-efectos-rdl-16-2025-rdl-2-2026", required_text = ["En la fecha de devengo del IRPF para 2025, las modificaciones introducidas por el Real Decreto-ley 16/2025, de 23 de diciembre, estaban en vigor y desplegando sus plenos efectos jurídicos"]}], source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"], values = [{value = "2025", date_axis = "filing_period", valid_from = 2025-01-01}]}
+sequence_additions = {legal_refs = ["rdl-16-2025:art-17"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]}, {source_ref = "aeat-nota-efectos-rdl-16-2025-rdl-2-2026", required_text = ["En la fecha de devengo del IRPF para 2025, las modificaciones introducidas por el Real Decreto-ley 16/2025, de 23 de diciembre, estaban en vigor y desplegando sus plenos efectos jurídicos"]}], source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"], values = [{value = "2025", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}, {value = "2026", date_axis = "filing_period", valid_from = 2026-01-01}]}
 sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0], values = [0]}
 [[revisions."2025".family_overrides]]
 family = "parameters"

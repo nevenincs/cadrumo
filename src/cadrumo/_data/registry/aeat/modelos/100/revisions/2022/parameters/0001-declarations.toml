@@ -601,7 +601,7 @@ required_text = ["fondo de comercio", "veinteava parte de su importe", "la amort
 id = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-umbral-unitario"
 data_type = "money"
 unit = "EUR"
-legal_refs = ["ley-35-2006:art-28"]
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12-3-e"]
 
 [[revisions."2022".parameters.values]]
 value = "300"
@@ -615,7 +615,7 @@ required_text = ["valor unitario no exceda de", "25.000 euros referido al perío
 id = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-limite-anual"
 data_type = "money"
 unit = "EUR"
-legal_refs = ["ley-35-2006:art-28"]
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12-3-e"]
 
 [[revisions."2022".parameters.values]]
 value = "25000"

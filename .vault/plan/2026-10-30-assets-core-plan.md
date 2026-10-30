@@ -14,7 +14,7 @@ related:
   - '[[2026-10-30-assets-core-implementation-state-against-law-reference]]'
 modified: '2026-10-30'
 body_schema: body-v2
-body_hash: 'sha256:12308d307775a7ac1570b9334a715a0cf40ef7699207d1b11af989b6b77730c1'
+body_hash: 'sha256:89b4f72935f8457a2330d10c54833e891b53bffffc3aeaa331283cafb56d1360'
 ---
 
 <!-- RETIRED: S02, S03 -->
@@ -32,11 +32,11 @@ Owners: CADRUMO-AMORTIZATION2 has S01, S05, S06, S08, S09, S12. CADRUMO-AMPORTIZ
 ## Steps
 
 - [x] `S01` - Compute charges as the difference of the rounded cumulative charge of the tax year, so contiguous intervals sum to the annual figure; `src/cadrumo/domain/renta/actividad_asset/schedule.py`.
-- [ ] `S04` - Verify the amortization tables and facts against the law for every supported year, normal LIS art. 12.1.a and simplified Orden 27-03-1998, correcting any out-of-date parameter or fact, with an independent table test; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/, src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`.
+- [x] `S04` - Verify the amortization tables and facts against the law for every supported year, normal LIS art. 12.1.a and simplified Orden 27-03-1998, correcting any out-of-date parameter or fact, with an independent table test; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/, src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`.
 - [x] `S05` - Remove the unused claim revision fields, define one effective-claim selection and a pure gap finder, and refuse a correction whose basis is below effective claims; `src/cadrumo/domain/renta/actividad_asset/claims.py, src/cadrumo/application/actividad_asset/history.py`.
-- [ ] `S06` - Add the non-deductible IVA acquisition component to the basis, the EUR 300 valor unitario test, the later afectacion base and the acquisition transaction check; `src/cadrumo/domain/renta/actividad_asset/lifecycle.py, election.py, src/cadrumo/application/actividad_asset/operations.py`.
+- [x] `S06` - Add the non-deductible IVA acquisition component to the basis, the EUR 300 valor unitario test, the later afectacion base and the acquisition transaction check; `src/cadrumo/domain/renta/actividad_asset/lifecycle.py, election.py, src/cadrumo/application/actividad_asset/operations.py`.
 - [ ] `S07` - Author the 0227 binding from 2022, remove the amortizable ledger categories from 0208 routing and retire their low-value and home-ratio deductions; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/, src/cadrumo/_data/registry/aeat/facts/, src/cadrumo/domain/renta/ledger_expenses.py`.
-- [ ] `S08` - Route Modelo 100 from effective claims with non-blocking gap findings, compute Modelo 130 casilla 02 accrual from the schedule excluding agrarian activities, make the collision unconditional, refuse foral residents and type the history load failure; `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py, modelo_bindings_renta_expenses.py, src/cadrumo/application/modelo/calculation_notes.py`.
+- [x] `S08` - Route Modelo 100 from effective claims with non-blocking gap findings, compute Modelo 130 casilla 02 accrual from the schedule excluding agrarian activities, make the collision unconditional, refuse foral residents and type the history load failure; `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py, modelo_bindings_renta_expenses.py, src/cadrumo/application/modelo/calculation_notes.py`.
 - [ ] `S09` - Record consumed claim IDs and schedule fingerprints on the calculation revision and mark a change as staleness in the drift gate; `src/cadrumo/domain/modelos/calculation_revision.py, src/cadrumo/application/modelo/_ledger_drift_gate.py`.
 - [x] `S10` - Record and accept the disposal decision covering transmission, baja with zero proceeds, minimum amortization, DA 30 and DA 59 excess, and casillas 0179, 0387, 1846 and 1478; `.vault/adr/`.
 - [ ] `S11` - Implement baja of an element with date and reason and its disposal calculation through registered operations, so an element leaves the register without erasing history; `src/cadrumo/domain/renta/actividad_asset/, src/cadrumo/application/actividad_asset/`.
