@@ -4872,7 +4872,8 @@ ledger:
       declared_activity_required: A naplón kívül beszerzett eszközhöz meg kell adni
         a tevékenységet, amelyhez tartozik.
       disposal_already_recorded: Ennek az eszköznek már van kivezetése %{disposal_date}
-        dátummal. Helyesbítéssel módosítsd.
+        dátummal. A módosításához vagy törléséhez javítsd az eszközt, és szerkeszd
+        vagy töröld a kivezetését.
       disposal_amount_invalid: A kivezetés összegei nem negatív, legfeljebb két tizedesjegyű
         euróösszegek lehetnek.
       disposal_before_service: A kivezetés dátuma nem lehet korábbi az eszköz üzembe

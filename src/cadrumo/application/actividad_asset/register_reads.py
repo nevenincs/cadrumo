@@ -6,12 +6,12 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import cast
 
 from pydantic import BaseModel
 
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money.rounding import round_to_cents
+from ...core.type_guards import is_object_list_or_tuple, is_object_mapping
 from ...domain.calculations.registry.actividad_asset_bindings import ActivityAssetFormOptions
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.prorrata_vocabulary import resolve_input_classification_definition
@@ -23,6 +23,7 @@ from ...domain.renta.actividad_asset.claims import (
     effective_claims,
     last_day_covered,
 )
+from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, AmortizationMethod, DirectEstimationRegime
 from ...domain.renta.actividad_asset.election_facts import method_facts
 from ...domain.renta.actividad_asset.errors import ActividadAssetError
@@ -48,6 +49,7 @@ from .activity_asset_read_models import (
     ActivityAssetEdition,
     ActivityAssetElectionLimits,
     ActivityAssetFindingCounts,
+    ActivityAssetListDisposal,
     ActivityAssetListRow,
     ActivityAssetMethodFact,
     ActivityAssetMethodFacts,
@@ -421,6 +423,17 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
         ),
         years=tuple(year for year in readable if year <= context.last_admitted_year),
         projected_years=tuple(year for year in readable if year > context.last_admitted_year),
+        disposal=(
+            None
+            if revision.disposal is None
+            else ActivityAssetListDisposal(
+                disposal_date=revision.disposal.disposal_date,
+                reason=revision.disposal.reason,
+                reason_key=activity_asset_label_key(
+                    token_family(ActivityAssetDisposalReason), revision.disposal.reason
+                ),
+            )
+        ),
     )
 
 
@@ -453,13 +466,13 @@ def _left_service(revision: ActivityAssetRevision, today: date) -> bool:
 
 def _flatten(value: object, prefix: str = "") -> dict[str, str | None]:
     """Flatten a dumped record into dotted fields; a repeated row is named by its position."""
-    if isinstance(value, Mapping):
+    if is_object_mapping(value):
         flat: dict[str, str | None] = {}
-        for name, item in cast("Mapping[str, object]", value).items():
+        for name, item in value.items():
             flat.update(_flatten(item, f"{prefix}.{name}" if prefix else str(name)))
         return flat
-    if isinstance(value, list | tuple):
-        items = tuple(cast("Iterable[object]", value))
+    if is_object_list_or_tuple(value):
+        items = tuple(value)
         if not items:
             return {prefix: None}
         flat = {}

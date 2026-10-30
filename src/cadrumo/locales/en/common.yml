@@ -4804,7 +4804,7 @@ ledger:
       declared_activity_required: An element acquired outside the ledger needs the
         activity it belongs to.
       disposal_already_recorded: This element already has a baja dated %{disposal_date}.
-        Change it with a correction.
+        To change or remove it, correct the element and edit or clear its baja.
       disposal_amount_invalid: The baja's amounts must be non-negative euro figures
         with at most two decimals.
       disposal_before_service: The baja date cannot be before the element entered

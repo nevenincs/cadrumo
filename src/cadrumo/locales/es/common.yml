@@ -4897,7 +4897,7 @@ ledger:
       declared_activity_required: Un elemento adquirido fuera del libro necesita la
         actividad a la que pertenece.
       disposal_already_recorded: Este elemento ya tiene una baja con fecha %{disposal_date}.
-        Cámbiala con una corrección.
+        Para cambiarla o quitarla, corrige el elemento y edita o borra su baja.
       disposal_amount_invalid: Los importes de la baja deben ser cifras en euros no
         negativas, con dos decimales como máximo.
       disposal_before_service: La fecha de baja no puede ser anterior a la puesta

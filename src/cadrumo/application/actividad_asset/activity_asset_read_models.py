@@ -141,6 +141,15 @@ class ActivityAssetFindingCounts(_ReadModel):
     stale: int = Field(ge=0)
 
 
+class ActivityAssetListDisposal(_ReadModel):
+    """The baja an element's current revision records."""
+
+    disposal_date: date
+    reason: ActivityAssetDisposalReason
+    reason_key: str
+    """The catalogue key that words ``reason``."""
+
+
 class ActivityAssetListRow(_ReadModel):
     """One element of the register."""
 
@@ -160,6 +169,8 @@ class ActivityAssetListRow(_ReadModel):
     """The tax years the element can be read in with an edition: its service window through the registry's last."""
     projected_years: tuple[int, ...] = ()
     """The later service years, whose figures are a projection until the registry publishes their edition."""
+    disposal: ActivityAssetListDisposal | None = None
+    """The recorded baja, or null while the element has none."""
 
 
 class ActivityAssetCoveredInterval(_ReadModel):
@@ -451,6 +462,7 @@ __all__ = [
     "ActivityAssetElectionLimits",
     "ActivityAssetFindingCounts",
     "ActivityAssetFormOptionsView",
+    "ActivityAssetListDisposal",
     "ActivityAssetListRow",
     "ActivityAssetM130Contribution",
     "ActivityAssetM130ProjectionSnapshot",

@@ -503,7 +503,9 @@ class ActivityAssetRevisionSnapshot(BaseModel):
     residual_value: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
     in_service_date: date
     out_of_service_date: date | None = None
+    """Derived from ``disposal``: the baja's boundary, or null without one.  A stated value is not read."""
     disposal: ActivityAssetDisposalSnapshot | None = None
+    """The recorded baja.  A correction changes it by stating another and removes it by stating null."""
     opening_history: OpeningHistorySnapshot
     acquired_condition: AcquiredCondition
     building_construction_date: date | None = None
@@ -539,6 +541,7 @@ class ActivityAssetRevisionSnapshot(BaseModel):
 
     def to_domain(self) -> ActivityAssetRevision:
         """Restore and revalidate the canonical immutable revision."""
+        disposal = None if self.disposal is None else self.disposal.to_domain()
         return ActivityAssetRevision(
             asset_id=self.asset_id,
             revision_number=self.revision_number,
@@ -552,8 +555,8 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             basis=self.basis.to_domain(),
             residual_value=Decimal(self.residual_value.decimal),
             in_service_date=self.in_service_date,
-            out_of_service_date=self.out_of_service_date,
-            disposal=None if self.disposal is None else self.disposal.to_domain(),
+            out_of_service_date=None if disposal is None else disposal.boundary,
+            disposal=disposal,
             opening_history=self.opening_history.to_domain(),
             acquired_condition=self.acquired_condition,
             building_construction_date=self.building_construction_date,
