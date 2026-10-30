@@ -10,13 +10,14 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import Final, Literal, Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.renta.actividad_asset.claims import last_day_covered
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind, ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.election import AcquiredCondition, AmortizationMethod, DirectEstimationRegime
 from ...domain.renta.actividad_asset.lifecycle import (
@@ -165,23 +166,36 @@ class ActivityAssetListRow(_ReadModel):
     """The later service years, whose figures are a projection until the registry publishes their edition."""
 
 
-class ActivityAssetPlanClaim(_ReadModel):
+class ActivityAssetCoveredInterval(_ReadModel):
+    """A half-open interval of days, stated with the last day it covers for display.
+
+    ``covered_until`` is the exclusive boundary the operations compute with, and
+    ``covered_through`` is the day before it: the inclusive end a reader sees.
+    """
+
+    covered_from: date
+    covered_until: date
+    covered_through: date
+
+    @model_validator(mode="after")
+    def _through_is_the_day_before_the_boundary(self) -> Self:
+        if self.covered_through != last_day_covered(self.covered_until):
+            raise ValueError("covered_through is the day before covered_until")
+        return self
+
+
+class ActivityAssetPlanClaim(ActivityAssetCoveredInterval):
     """One claim of a year, effective or replaced."""
 
     claim_id: Hex64Str
     amount: PublicDecimal
-    covered_from: date
-    covered_until: date
     effective: bool
     superseded_by: Hex64Str | None = None
     revision_id: Hex64Str
 
 
-class ActivityAssetClaimableInterval(_ReadModel):
+class ActivityAssetClaimableInterval(ActivityAssetCoveredInterval):
     """A half-open interval a claim can still cover."""
-
-    covered_from: date
-    covered_until: date
 
 
 class ActivityAssetEdition(_ReadModel):
@@ -396,6 +410,7 @@ __all__ = [
     "ActivityAssetClaimStaleReason",
     "ActivityAssetClaimState",
     "ActivityAssetClaimableInterval",
+    "ActivityAssetCoveredInterval",
     "ActivityAssetDisposalCalculationView",
     "ActivityAssetDisposalFindingView",
     "ActivityAssetDisposalYearView",

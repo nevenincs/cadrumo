@@ -46,6 +46,11 @@ casilla numbers.
 """
 
 
+def last_day_covered(covered_until: date) -> date:
+    """Return the last day a half-open claim interval covers, for display beside its exclusive boundary."""
+    return covered_until - timedelta(days=1)
+
+
 def m100_casilla_id(asset_kind: AssetKind) -> str:
     """Return the Modelo 100 amortization destination for one asset kind."""
     return MATERIAL_M100_CASILLA_ID if asset_kind is AssetKind.MATERIAL else INTANGIBLE_M100_CASILLA_ID
@@ -580,6 +585,7 @@ __all__ = [
     "current_revisions",
     "effective_claims",
     "effective_free_depreciation_claims",
+    "last_day_covered",
     "m100_casilla_id",
     "project_m100",
     "record_claim",

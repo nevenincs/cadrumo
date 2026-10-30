@@ -21,6 +21,7 @@ from ...domain.renta.actividad_asset.claims import (
     asset_schedule_history,
     current_revisions,
     effective_claims,
+    last_day_covered,
 )
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, AmortizationMethod
 from ...domain.renta.actividad_asset.errors import ActividadAssetError
@@ -129,14 +130,19 @@ def _claimable(
     start = row.charge.covered_from if row.charge is not None else date.min
     end = row.charge.covered_until if row.charge is not None else date.max
     intervals = tuple(
-        ActivityAssetClaimableInterval(
-            covered_from=max(gap.covered_from, start),
-            covered_until=min(gap.covered_until, end),
-        )
+        _claimable_interval(max(gap.covered_from, start), min(gap.covered_until, end))
         for gap in row.gaps
         if max(gap.covered_from, start) < min(gap.covered_until, end) and not _gap_lies_on_a_claim(gap, row)
     )
     return intervals, None
+
+
+def _claimable_interval(covered_from: date, covered_until: date) -> ActivityAssetClaimableInterval:
+    return ActivityAssetClaimableInterval(
+        covered_from=covered_from,
+        covered_until=covered_until,
+        covered_through=last_day_covered(covered_until),
+    )
 
 
 def _gap_lies_on_a_claim(gap: ClaimCoverageGap, row: WalkedYear) -> bool:
@@ -183,6 +189,7 @@ def _plan_claims(
             amount=_amount(claim.amount),
             covered_from=claim.covered_from,
             covered_until=claim.covered_until,
+            covered_through=last_day_covered(claim.covered_until),
             effective=claim.claim_id not in superseded_by,
             superseded_by=superseded_by.get(claim.claim_id),
             revision_id=claim.asset_revision_id,
