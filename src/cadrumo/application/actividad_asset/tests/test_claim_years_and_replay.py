@@ -26,7 +26,14 @@ from cadrumo.domain.renta.actividad_asset.errors import (
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
 )
+from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from cadrumo.domain.renta.actividad_asset.schedule import (
+    AssetScheduleHistory,
+    ScheduleAuthority,
+    ScheduledAmortizationCharge,
+    schedule_charge,
+)
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
@@ -97,8 +104,41 @@ def test_a_claim_behind_later_ones_that_consumed_the_basis_is_refused_at_the_wri
     assert repository.history == before
 
 
+def _constant_forecast(
+    revision: ActivityAssetRevision,
+    *,
+    covered_from: date,
+    covered_until: date,
+    history: AssetScheduleHistory,
+    requested_free_amount: Decimal | None = None,
+) -> ScheduledAmortizationCharge:
+    return schedule_charge(
+        revision,
+        ScheduleAuthority(
+            tax_year=covered_from.year,
+            asset_kind=revision.asset_kind,
+            method=revision.amortization.method,
+            election_fingerprint=revision.amortization.fingerprint,
+            annual_rate=Decimal("0.26"),
+            authority_generation="replay-test",
+            source_reference="replay test table",
+            useful_life_ends_on=date(2035, 1, 1),
+        ),
+        covered_from=covered_from,
+        covered_until=covered_until,
+        history=history,
+        requested_free_amount=requested_free_amount,
+    )
+
+
 def test_a_later_claim_still_refuses_a_method_that_follows_the_pending_value() -> None:
-    operations, _ = _operations(today=date(2031, 12, 31))
+    operations = ActivityAssetOperations(
+        repository=MemoryRepository(),
+        ledger=MemoryLedger(_ACQUISITION),
+        forecast_operation=_constant_forecast,
+        taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
+        register_authority=memory_register_authority(today=date(2031, 12, 31)),
+    )
     operations.create(_revision(method=AmortizationMethod.CONSTANT_PERCENTAGE), _NAME)
     operations.record_claim(_full_year(operations, 2027), creating_operation="test.2027")
 

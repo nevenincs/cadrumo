@@ -221,6 +221,7 @@ def _activity_asset_operations(
             residence_territory=lambda: resident_territory(bucket_id=bucket_id, operation=operation),
             claim_consumers=ports.claim_consumers,
             today=lambda: now().date(),
+            last_admitted_year=lambda: operation.supported_filing_years().horizon,
             schedule_authority=schedule_authority,
             class_labels=lambda regime, tax_year: resolve_activity_asset_class_labels(
                 operation,

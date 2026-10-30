@@ -83,13 +83,23 @@ def test_a_baja_shortens_the_crossing_claim_and_zeroes_a_later_one_in_one_write(
     assert after.events[-3].kind is ActivityAssetEventKind.BAJA
 
 
-def test_a_second_baja_is_refused_even_when_it_is_identical() -> None:
+def test_an_identical_baja_retry_returns_the_recorded_history() -> None:
     operations, repository = _claimed_through(2026)
     operations.dispose(_ASSET, _sale())
     before = repository.history
 
     with pytest.raises(ActividadAssetClaimConflictError, match="disposal_already_recorded"):
-        operations.dispose(_ASSET, _sale())
+    assert operations.dispose(_ASSET, _sale()) == before
+    assert repository.history == before
+
+
+def test_a_differing_second_baja_is_refused() -> None:
+    operations, repository = _claimed_through(2026)
+    recorded = _sale()
+    operations.dispose(_ASSET, recorded)
+    before = repository.history
+
+        operations.dispose(_ASSET, recorded.model_copy(update={"proceeds": recorded.proceeds + Decimal("1.00")}))
 
     assert repository.history == before
 
