@@ -280,13 +280,7 @@ def calculate_disposal(facts: ActivityAssetDisposalFacts) -> ActivityAssetDispos
     excess = max(Decimal("0"), deducted - maximum) if with_excess else Decimal("0.00")
     acquisition_value = round_to_cents(facts.acquisition_value)
     net_value = acquisition_value - reduction
-    if withdrawal:
-        transmission_value = costs = result = None
-    else:
-        stated = max(disposal.proceeds, disposal.market_value or Decimal("0"))
-        transmission_value = round_to_cents(stated * facts.allocation_share)
-        costs = round_to_cents(disposal.transmission_costs * facts.allocation_share)
-        result = transmission_value - costs - net_value
+    transmission_value, costs, result = _transmission_result(facts, net_value)
     if result is not None and result > Decimal("0"):
         findings = (
             *findings,
@@ -309,6 +303,18 @@ def calculate_disposal(facts: ActivityAssetDisposalFacts) -> ActivityAssetDispos
         years=rows,
         findings=findings,
     )
+
+
+def _transmission_result(
+    facts: ActivityAssetDisposalFacts, net_value: Decimal
+) -> tuple[Decimal | None, Decimal | None, Decimal | None]:
+    disposal = facts.disposal
+    if disposal.reason is ActivityAssetDisposalReason.WITHDRAWAL:
+        return None, None, None
+    stated = max(disposal.proceeds, disposal.market_value or Decimal("0"))
+    transmission_value = round_to_cents(stated * facts.allocation_share)
+    costs = round_to_cents(disposal.transmission_costs * facts.allocation_share)
+    return transmission_value, costs, transmission_value - costs - net_value
 
 
 def _within_later_affectation_period(disposal: ActivityAssetDisposal, *, period_years: int | None) -> bool:
@@ -341,13 +347,7 @@ def _ordinary_rows(
         minimum_through = round_to_cents(minimum)
         unresolved = unresolved or year.minimum_unresolved
         deducted += year.claims
-        in_opening_span = first_claim is None or year.tax_year < first_claim
-        if in_opening_span:
-            before_minimum = opening
-            span_ends = position + 1 == len(facts.years) or facts.years[position + 1].tax_year == first_claim
-        else:
-            before_minimum = reduction + year.claims
-            span_ends = True
+        before_minimum, span_ends = _ordinary_before_minimum(facts.years, position, first_claim, opening, reduction)
         reduction = min(cap, max(before_minimum, minimum_through))
         rows.append(
             ActivityAssetDisposalYear(
@@ -368,6 +368,19 @@ def _ordinary_rows(
                 ),
             )
     return tuple(rows), tuple(findings)
+
+
+def _ordinary_before_minimum(
+    years: tuple[ActivityAssetDisposalYearFacts, ...],
+    position: int,
+    first_claim: int | None,
+    opening: Decimal,
+    reduction: Decimal,
+) -> tuple[Decimal, bool]:
+    year = years[position]
+    if first_claim is None or year.tax_year < first_claim:
+        return opening, position + 1 == len(years) or years[position + 1].tax_year == first_claim
+    return reduction + year.claims, True
 
 
 def _excess_rows(
@@ -435,7 +448,9 @@ def _year_findings(
 
 
 __all__ = [
+    "ADMITTED_DISPOSAL_REASONS",
     "BAJA_WITHOUT_TRANSMISSION_REASONS",
+    "REFUSED_DISPOSAL_REASONS",
     "TRANSMISSION_REASONS",
     "ActivityAssetDisposal",
     "ActivityAssetDisposalCalculation",
@@ -448,6 +463,4 @@ __all__ = [
     "PriorFreeDepreciationRegime",
     "calculate_disposal",
     "require_admissible_disposal",
-    "ADMITTED_DISPOSAL_REASONS",
 ]
-    "REFUSED_DISPOSAL_REASONS",

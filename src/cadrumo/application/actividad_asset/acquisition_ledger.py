@@ -38,6 +38,44 @@ def require_acquisition_in_ledger(
     owned = revision.acquisition_transaction_ids
     if not owned:
         return None
+    transactions = _acquisition_payments(revision, ledger)
+    basis = revision.basis
+    paid = sum((_paid_in_euro(transaction) for transaction in transactions), Decimal("0"))
+    if basis.acquisition_cost() > paid:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_cost_exceeds_payment",
+            context=_context(
+                cost=basis.acquisition_cost(),
+                price=basis.basis_amount,
+                non_deductible_iva=basis.non_deductible_iva,
+                paid=paid,
+            ),
+        )
+    primary = transactions[0]
+    _require_declared_bounds(revision, transactions)
+    return primary
+
+
+def _require_declared_bounds(revision: ActivityAssetRevision, transactions: list[Transaction]) -> None:
+    if any(transaction.raw.currency != DEFAULT_CURRENCY for transaction in transactions):
+        return
+    basis = revision.basis
+    taxable_base = _declared_total(transaction.taxable_base for transaction in transactions)
+    if taxable_base is not None and basis.basis_amount > taxable_base:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_price_exceeds_base",
+            context=_context(price=basis.basis_amount, taxable_base=taxable_base),
+        )
+    iva_amount = _declared_total(transaction.iva_amount for transaction in transactions)
+    if iva_amount is not None and basis.non_deductible_iva > iva_amount:
+        raise ActividadAssetValidationError(
+            translated_message="ledger.actividad_asset.errors.acquisition_iva_exceeds_transaction_iva",
+            context=_context(non_deductible_iva=basis.non_deductible_iva, iva_amount=iva_amount),
+        )
+
+
+def _acquisition_payments(revision: ActivityAssetRevision, ledger: AcquisitionLedgerReader) -> list[Transaction]:
+    owned = revision.acquisition_transaction_ids
     found = ledger.load_by_ids(owned).transactions
     transactions: list[Transaction] = []
     for transaction_id in owned:
@@ -53,34 +91,7 @@ def require_acquisition_in_ledger(
                 context=_context(transaction_id=transaction_id),
             )
         transactions.append(transaction)
-    basis = revision.basis
-    paid = sum((_paid_in_euro(transaction) for transaction in transactions), Decimal("0"))
-    if basis.acquisition_cost() > paid:
-        raise ActividadAssetValidationError(
-            translated_message="ledger.actividad_asset.errors.acquisition_cost_exceeds_payment",
-            context=_context(
-                cost=basis.acquisition_cost(),
-                price=basis.basis_amount,
-                non_deductible_iva=basis.non_deductible_iva,
-                paid=paid,
-            ),
-        )
-    primary = transactions[0]
-    if any(transaction.raw.currency != DEFAULT_CURRENCY for transaction in transactions):
-        return primary
-    taxable_base = _declared_total(transaction.taxable_base for transaction in transactions)
-    if taxable_base is not None and basis.basis_amount > taxable_base:
-        raise ActividadAssetValidationError(
-            translated_message="ledger.actividad_asset.errors.acquisition_price_exceeds_base",
-            context=_context(price=basis.basis_amount, taxable_base=taxable_base),
-        )
-    iva_amount = _declared_total(transaction.iva_amount for transaction in transactions)
-    if iva_amount is not None and basis.non_deductible_iva > iva_amount:
-        raise ActividadAssetValidationError(
-            translated_message="ledger.actividad_asset.errors.acquisition_iva_exceeds_transaction_iva",
-            context=_context(non_deductible_iva=basis.non_deductible_iva, iva_amount=iva_amount),
-        )
-    return primary
+    return transactions
 
 
 def _declared_total(amounts: Iterable[Decimal | None]) -> Decimal | None:

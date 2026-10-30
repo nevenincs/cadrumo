@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
-from ...domain.calculations.registry.actividad_asset_bindings import activity_asset_parameter_of_reference
+from ...domain.calculations.registry.actividad_asset_parameters import activity_asset_parameter_of_reference
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_references import LegalReference

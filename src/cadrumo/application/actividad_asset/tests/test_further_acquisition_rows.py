@@ -17,8 +17,8 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
 
 from ...aggregation.tests.test_modelo_source_mesh_ledger import (
-    _machine_acquisition_transaction,
-    _reasons,
+    machine_acquisition_transaction,
+    reasons,
     register_asset,
     resolve_m100,
     resolve_m130,
@@ -149,23 +149,23 @@ def test_further_rows_cross_the_operation_boundary_unchanged() -> None:
 
 
 def test_a_second_instalment_in_an_amortizable_category_is_withheld_and_blocks_neither_return() -> None:
-    first = _machine_acquisition_transaction("hardware_amortizable", provider_id="first-instalment")
-    second = _machine_acquisition_transaction("hardware_amortizable", provider_id="second-instalment")
+    first = machine_acquisition_transaction("hardware_amortizable", provider_id="first-instalment")
+    second = machine_acquisition_transaction("hardware_amortizable", provider_id="second-instalment")
     asset = register_asset("press", transaction_id=first.transaction_id, basis=Decimal("1000.00"))
     history = ActivityAssetHistory(
         revisions=(asset.model_copy(update={"further_acquisitions": (_further(second),)}),),
     )
 
     for resolution in (resolve_m100(history, rows=(first, second)), resolve_m130(history, "2T", rows=(first, second))):
-        assert _UNREGISTERED not in _reasons(resolution)
-        assert _reasons(resolution).count(_WITHHELD) == 2
+        assert _UNREGISTERED not in reasons(resolution)
+        assert reasons(resolution).count(_WITHHELD) == 2
 
 
 def test_the_same_instalment_with_no_owner_is_still_named() -> None:
-    first = _machine_acquisition_transaction("hardware_amortizable", provider_id="first-instalment")
-    second = _machine_acquisition_transaction("hardware_amortizable", provider_id="second-instalment")
+    first = machine_acquisition_transaction("hardware_amortizable", provider_id="first-instalment")
+    second = machine_acquisition_transaction("hardware_amortizable", provider_id="second-instalment")
     asset = register_asset("press", transaction_id=first.transaction_id, basis=Decimal("1000.00"))
 
     resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,)), rows=(first, second))
 
-    assert _reasons(resolution).count(_UNREGISTERED) == 1
+    assert reasons(resolution).count(_UNREGISTERED) == 1

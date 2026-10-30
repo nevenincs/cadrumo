@@ -313,6 +313,12 @@ def uncovered_claim_intervals(
         (claim for claim in own if claim.amount > Decimal("0") or base_exhausted),
         key=lambda claim: claim.covered_from,
     )
+    return _coverage_gaps(covering, window_start, window_end)
+
+
+def _coverage_gaps(
+    covering: list[AmortizationClaim], window_start: date, window_end: date
+) -> tuple[ClaimCoverageGap, ...]:
     gaps: list[ClaimCoverageGap] = []
     cursor = window_start
     for claim in covering:
@@ -568,13 +574,13 @@ __all__ = [
     "amount_before_baja_zeroed",
     "asset_schedule_history",
     "claims_through_year",
+    "covered_until_after",
     "current_revisions",
     "effective_claims",
     "effective_free_depreciation_claims",
     "last_day_covered",
     "project_m100",
     "record_claim",
-    "covered_until_after",
     "select_effective_claims",
     "uncovered_claim_intervals",
 ]

@@ -27,7 +27,6 @@ from cadrumo.application.actividad_asset.fact_wording import (
     timeline_token_families,
     token_family,
 )
-from cadrumo.application.actividad_asset.register_reads import _flatten
 from cadrumo.domain.renta.actividad_asset.election import (
     AmortizationMethod,
     DigitOrder,
@@ -46,6 +45,7 @@ from cadrumo.domain.renta.actividad_asset.register_records import (
     ActivityAssetEventKind,
 )
 
+from ..register_timeline import _flatten
 from .register_support import _published_class_labels
 from .test_register import _NAME, _operations, _revision
 
@@ -93,7 +93,9 @@ def test_a_dumped_row_is_flattened_by_position_and_a_flag_reads_as_a_token() -> 
         "none": None,
         "flag": "true",
     }
-    assert timeline_token_key("basis.is_property", flat["flag"]) == "ledger.actividad_asset.flag.true"
+    flag = flat["flag"]
+    assert flag is not None
+    assert timeline_token_key("basis.is_property", flag) == "ledger.actividad_asset.flag.true"
 
 
 def test_a_model_with_an_enum_no_family_words_is_refused_instead_of_shown_raw() -> None:

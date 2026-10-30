@@ -104,11 +104,7 @@ def walk_element(
     projected = Decimal("0")
     opening_covers_through = revision.opening_history.covered_through_tax_year
     for tax_year in range(revision.in_service_date.year, last_year + 1):
-        claims = tuple(
-            claim
-            for claim in select_effective_claims(history.claims, tax_year=tax_year)
-            if claim.asset_id == revision.asset_id
-        )
+        claims = _claims_in_year(history, revision.asset_id, tax_year)
         gaps = uncovered_claim_intervals(
             revision,
             history.claims,
@@ -139,11 +135,22 @@ def walk_element(
         )
         rows.append(row)
         consumed = row.consumed_through
-        if settled_after is not None and tax_year >= settled_after and row.charge is not None and gaps:
+        settled = _is_settled_year(tax_year, settled_after)
+        if settled and row.charge is not None and gaps:
             projected += max(row.charge.amount - row.claimed, Decimal("0"))
-        if settled_after is not None and tax_year >= settled_after and row.absence is not None:
+        if settled and row.absence is not None:
             break
     return tuple(rows)
+
+
+def _is_settled_year(tax_year: int, settled_after: int | None) -> bool:
+    return settled_after is not None and tax_year >= settled_after
+
+
+def _claims_in_year(history: ActivityAssetHistory, asset_id: str, tax_year: int) -> tuple[AmortizationClaim, ...]:
+    return tuple(
+        claim for claim in select_effective_claims(history.claims, tax_year=tax_year) if claim.asset_id == asset_id
+    )
 
 
 def _walk_year(

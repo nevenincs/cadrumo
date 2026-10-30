@@ -11,12 +11,12 @@ charge at the remaining lawful basis.
 from __future__ import annotations
 
 import calendar
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
-from typing import Self, cast
+from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -26,6 +26,7 @@ from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
+from ....core.type_guards import is_object_mapping
 from .election import (
     FREE_AMOUNT_METHODS,
     WORKFORCE_CONDITIONED_METHODS,
@@ -252,8 +253,8 @@ def _canonical_amount(value: Decimal) -> str:
 
 
 def _canonical_facts(value: object) -> object:
-    if isinstance(value, Mapping):
-        return {str(name): _canonical_facts(item) for name, item in cast("Mapping[object, object]", value).items()}
+    if is_object_mapping(value):
+        return {str(name): _canonical_facts(item) for name, item in value.items()}
     if isinstance(value, Decimal):
         return _canonical_amount(value)
     if isinstance(value, Enum):

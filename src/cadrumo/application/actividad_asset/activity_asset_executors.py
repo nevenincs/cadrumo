@@ -22,9 +22,9 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_bindings import (
-    resolve_activity_asset_class_labels,
     resolve_activity_asset_schedule_authority,
 )
+from ...domain.calculations.registry.actividad_asset_form_options import resolve_activity_asset_class_labels
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
