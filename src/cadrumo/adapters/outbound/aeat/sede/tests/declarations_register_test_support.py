@@ -7,7 +7,7 @@ from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from typing import Protocol, TypeVar
+from typing import Protocol
 
 from playwright.async_api import Route, async_playwright
 
@@ -46,10 +46,7 @@ class _BulkFailure(Protocol):
     def message(self) -> str: ...
 
 
-_FailureT = TypeVar("_FailureT", bound=_BulkFailure)
-
-
-def truncation_failures_naming_their_cause(failures: Sequence[_FailureT]) -> list[_FailureT]:
+def truncation_failures_naming_their_cause[FailureT: _BulkFailure](failures: Sequence[FailureT]) -> list[FailureT]:
     """Return the absorbed truncation refusals after checking each names rendered versus declared rows.
 
     Both numbers are read straight out of the fixture's own markup rather than
