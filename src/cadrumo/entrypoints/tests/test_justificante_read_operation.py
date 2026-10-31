@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -14,9 +14,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.live.justificante import (
     JustificanteCaptureSnapshot,
@@ -46,7 +43,6 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
@@ -61,6 +57,8 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
+from .supervised_operation_rig import build_supervised_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -358,23 +356,9 @@ def test_registered_justificante_reads_project_only_existing_cli_fields(tmp_path
                 resolve_operation_access(registry=registry, request=foreign_request, context=access_context)
             assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
         async def run(
             request: OperationRequest[BaseModel], operation_id: str, result_type: type[BaseModel]

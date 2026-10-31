@@ -51,7 +51,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
@@ -68,6 +67,8 @@ from cadrumo.core.operations import (
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
+from .supervised_operation_rig import build_supervised_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -274,23 +275,9 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
         for definition in (list_definition, show_definition, latest_definition):
             assert definition.capabilities.owned_resources == frozenset()
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
         async def run(
             request: OperationRequest[BaseModel], operation_id: str, result_type: type[BaseModel]

@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import cast
@@ -15,9 +15,6 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload
 from cadrumo.application.live.filed_data_ports import (
@@ -53,7 +50,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
@@ -68,6 +64,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+
+from .supervised_operation_rig import build_supervised_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -408,23 +406,9 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
             )
         assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="3" * 64)
