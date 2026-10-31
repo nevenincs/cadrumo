@@ -320,7 +320,10 @@ test("an invoice book has no preview and lists the rows it refused", async ({
     name: label("desktop.ledger.import.refused_rows"),
   });
   await expect(refused.getByRole("row")).toHaveCount(2);
-  await expect(refused).toContainText("counterparty_nif");
+  await expect(refused.getByRole("row").nth(1)).toContainText("5");
+  await expect(refused).toContainText(
+    "B0000004 is not a valid tax identification number.",
+  );
   await expect(dialog).toContainText(
     label("desktop.ledger.import.unmapped", { columns: "Observaciones" }),
   );

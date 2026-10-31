@@ -3,7 +3,11 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build, preview, resolveConfig } from "vite";
 import { buildPath } from "../../scripts/build-paths.mjs";
-import { testRunProductBuild } from "../scripts/test-run-directory.mjs";
+import {
+  releaseTestRunPorts,
+  reserveTestRunPorts,
+  testRunProductBuild,
+} from "../scripts/test-run-directory.mjs";
 
 test("a product preview keeps its own build when another output is rebuilt", async ({
   request,
@@ -13,6 +17,7 @@ test("a product preview keeps its own build when another output is rebuilt", asy
   const stamp = new Date().toISOString().replace(/[-:]|\.\d+/g, "");
   process.env[runVariable] = `${stamp}-${process.pid}`;
   const results = buildPath("desktop_results");
+  await reserveTestRunPorts(results);
   const product = testRunProductBuild(results);
   if (!product) throw new Error("The test run has no product output");
   const run = resolve(product, "..");
@@ -50,6 +55,12 @@ test("a product preview keeps its own build when another output is rebuilt", asy
     );
     expect(await (await request.get(url)).text()).toContain("first build");
   } finally {
+    await releaseTestRunPorts(results, [
+      "previewPort",
+      "scenariosPort",
+      "scenariosDocsPort",
+      "hotPort",
+    ]);
     if (server)
       await new Promise<void>((done) => server!.httpServer.close(() => done()));
     await rm(run, { recursive: true, force: true });

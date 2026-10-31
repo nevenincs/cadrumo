@@ -23,6 +23,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPath } from "../../../scripts/build-paths.mjs";
 import { server as serverConfiguration } from "../../../scripts/configuration.mjs";
+import { testRunPorts } from "../../scripts/test-run-directory.mjs";
 import type { Plugin } from "vite";
 
 export const DOCS_FIXTURE_LANGUAGES = ["en", "es", "ca", "hu"] as const;
@@ -157,11 +158,16 @@ function answer(path: string): { type: string; body: string } | null {
 function listen(
   host: string | undefined,
   fixedPort: number,
+  owner?: string,
 ): {
   server: Server;
   port: Promise<number>;
 } {
   const server = createServer((request, response) => {
+    if (owner && request.url === "/__cadrumo_test_owner") {
+      response.writeHead(200, { "Cache-Control": "no-store" }).end(owner);
+      return;
+    }
     const found =
       request.method === "GET" || request.method === "HEAD"
         ? answer(new URL(request.url ?? "/", "http://fixture").pathname)
@@ -213,9 +219,11 @@ export function docsFixture(): Plugin {
     async configurePreviewServer(preview) {
       if (preview.config.mode !== "scenarios") return;
       const configured = preview.config.preview.host;
+      const testPorts = testRunPorts(buildPath("desktop_results"));
       const fixture = listen(
         typeof configured === "string" ? configured : undefined,
-        serverConfiguration().scenariosDocsPort,
+        (testPorts ?? serverConfiguration()).scenariosDocsPort,
+        testPorts?.token,
       );
       preview.httpServer.once("close", () => fixture.server.close());
       const fixturePort = await fixture.port;

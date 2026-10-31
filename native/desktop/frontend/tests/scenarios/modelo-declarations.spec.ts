@@ -132,16 +132,20 @@ test("a period that already has a declaration opens it", async ({
   await expect(target.locator(".declarations-workspace")).toBeVisible();
 });
 
-test("a refused creation is said with its code", async ({ page: target }) => {
+test("a refused creation is said without exposing its code", async ({
+  page: target,
+}) => {
   await openDeclarations(target, "&modelo=refused");
   await chooseModelo(target, "130", 2026);
   await dialog(target)
     .getByRole("radio", { name: /2nd quarter 2026/ })
     .click();
   await dialog(target).locator(".new-declaration-submit").click();
-  await expect(dialog(target).getByRole("alert")).toContainText(
-    "operation_denied",
+  const alert = dialog(target).getByRole("alert");
+  await expect(alert).toContainText(
+    label("workspace.declarations.list.new.refused"),
   );
+  await expect(alert).not.toContainText("operation_denied");
 });
 
 test("a creation whose settlement was not seen is unknown and holds", async ({
