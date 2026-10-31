@@ -12,11 +12,11 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ..compiler.keyed_family_inheritance import inherit_keyed_family
 from ..compiler.keyed_family_storage_delta import patch_family_sequences
 from ..compiler.loader import load_modelo_directory
+from .synthetic_delta_edition_support import SUCCESSOR_EDITION
 from .test_restated_family_merge import (
     _BASE_FORMULA,
     _CUOTA_FORMULA,
     _RECARGO_FORMULA,
-    _SUCCESSOR,
     _build_modelo,
 )
 
@@ -31,7 +31,7 @@ _CLEARED_CONSTRUCTS = (
 
 
 def _successor(root: Path, declaration: str) -> ModeloRevision:
-    return load_modelo_directory(_build_modelo(root, successor_extra=declaration)).revisions[_SUCCESSOR]
+    return load_modelo_directory(_build_modelo(root, successor_extra=declaration)).revisions[SUCCESSOR_EDITION]
 
 
 def test_changed_member_authors_only_its_changed_nested_field(tmp_path: Path) -> None:
@@ -69,10 +69,10 @@ def test_explicit_clear_differs_from_omitted_family(tmp_path: Path) -> None:
         tmp_path / "cleared",
         successor_extra=_CLEARED_CONSTRUCTS,
     )
-    successor_construct = next((modelo / "revisions" / _SUCCESSOR / "constructs").glob("*.toml"))
+    successor_construct = next((modelo / "revisions" / SUCCESSOR_EDITION / "constructs").glob("*.toml"))
     successor_construct.unlink()
     successor_construct.parent.rmdir()
-    cleared = load_modelo_directory(modelo).revisions[_SUCCESSOR]
+    cleared = load_modelo_directory(modelo).revisions[SUCCESSOR_EDITION]
 
     assert len(inherited.constructs) == 2
     assert cleared.constructs == ()
