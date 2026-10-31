@@ -18,7 +18,6 @@ import type {
 import { useStrings, type Translate } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import {
-  editableHere,
   editKey,
   editsAdmitted,
   restoreIntent,
@@ -464,7 +463,7 @@ export function Details({
       </div>
       <ValueCard
         field={field}
-        editable={editableHere(envelope, field)}
+        editable={session.editable(field)}
         staged={staged}
         onUndo={() => session.unstage(key)}
         onRestore={restore ? () => session.stage(field, restore) : null}

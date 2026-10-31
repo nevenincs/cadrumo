@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import { formatTime } from "../../../shared/dateFormats";
 import type {
   ModeloAmendmentCorrectionContextV1,
@@ -86,12 +86,7 @@ function RenameDialog({
           </DialogHeader>
           <Labelled label={t("desktop.modelo.rename.name")}>
             {(id) => (
-              <Input
-                id={id}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-              />
+              <TextEditor id={id} value={name} onChange={setName} />
             )}
           </Labelled>
           <DialogFooter>
@@ -148,11 +143,7 @@ function DiscardDialog({
         </DialogHeader>
         <Labelled label={t("desktop.modelo.discard.reason")}>
           {(id) => (
-            <Input
-              id={id}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
+            <TextEditor id={id} value={reason} onChange={setReason} />
           )}
         </Labelled>
         <DialogFooter>

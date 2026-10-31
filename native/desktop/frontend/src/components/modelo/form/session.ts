@@ -7,6 +7,7 @@ import type {
   ModeloEditOperatorInputV2,
   ModeloEditTypedEntryV1,
   ModeloEditValueAddressV1,
+  ModeloEditValueGrammarV1,
   ModeloEditWireScalar,
   ModeloFormAddressV1,
   ModeloEditHeldAddressV1,
@@ -360,13 +361,19 @@ export function rebasedEdits(
   return { next, found };
 }
 
-/** Whether a box can be typed into here: the form admits edits and the
- * application says the box takes a typed value. */
-export function editableHere(
-  envelope: ModeloWorkbenchFormProjectionV1,
-  field: PublicModeloFormField,
-): boolean {
-  return editsAdmitted(envelope) && field.takes_typed_value;
+/** What each writable address takes as the baseline admits it, by
+ * `addressKey`. An address the baseline does not make writable has none. */
+export function entryGrammars(
+  baseline: ModeloEditApplyBaselineV1 | null,
+): ReadonlyMap<string, ModeloEditValueGrammarV1> {
+  const grammars = new Map<string, ModeloEditValueGrammarV1>();
+  for (const entry of baseline?.permitted_surface ?? []) {
+    if (entry.kind === "writable_scalar")
+      grammars.set(`c:${entry.casilla_id}`, entry.grammar);
+    else if (entry.kind === "writable_binding_override")
+      grammars.set(`b:${entry.binding_id}`, entry.grammar);
+  }
+  return grammars;
 }
 
 /** Whether the declaration takes edits at all. */
@@ -407,6 +414,11 @@ export type FormSession = {
    * stages the value it reads. An empty entry takes back a value typed here,
    * or else takes the filer's value out of the box. */
   enter(field: PublicModeloFormField, text: string): Promise<EntryOutcome>;
+  /** What a box's edit address takes, or null where it takes nothing. */
+  grammarOf(field: PublicModeloFormField): ModeloEditValueGrammarV1 | null;
+  /** Whether a box can be typed into here: the form admits edits, the
+   * application says the box takes a typed value, and a channel carries it. */
+  editable(field: PublicModeloFormField): boolean;
   selectedKey: string | null;
   selected: PublicModeloFormField | null;
   select(key: string | null): void;
@@ -537,6 +549,24 @@ export function useFormSession({
   }, []);
 
   const baseline = envelope.admitted_baseline;
+  const grammars = useMemo(() => entryGrammars(baseline), [baseline]);
+  const grammarOf = useCallback(
+    (field: PublicModeloFormField) => grammars.get(editKey(field)) ?? null,
+    [grammars],
+  );
+  const admitted = editsAdmitted(envelope);
+  const editable = useCallback(
+    (field: PublicModeloFormField) => {
+      const grammar = grammarOf(field);
+      return (
+        admitted &&
+        field.takes_typed_value &&
+        grammar !== null &&
+        grammar.channel !== "unavailable"
+      );
+    },
+    [admitted, grammarOf],
+  );
   const enter = useCallback(
     async (field: PublicModeloFormField, text: string) => {
       const lexeme = text.trim();
@@ -665,6 +695,8 @@ export function useFormSession({
     rebasePending: pendingRebase !== null,
     acknowledge,
     enter,
+    grammarOf,
+    editable,
     selectedKey,
     selected: selectedKey ? (byKey.get(selectedKey)?.field ?? null) : null,
     select: setSelectedKey,

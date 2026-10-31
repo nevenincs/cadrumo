@@ -283,7 +283,7 @@ function Ready({
       if (entry.address.kind !== "correction") continue;
       if (entry.refusal || entry.value === null)
         refused[entry.address.casilla_id] =
-          entry.refusal_words ?? entry.refusal?.reason ?? "";
+          entry.refusal_words ?? t("workspace.modelo.editor.unreadable");
       else
         overrides.push({
           casilla_id: entry.address.casilla_id,

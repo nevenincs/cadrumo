@@ -1,4 +1,5 @@
 import { useId, useState, type ReactNode } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -218,11 +219,7 @@ export function CorrectionDialog({
             )}
             <Labelled label={context.reason_prompt}>
               {(id) => (
-                <Input
-                  id={id}
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                />
+                <TextEditor id={id} value={reason} onChange={setReason} />
               )}
             </Labelled>
             <div className="flex flex-col gap-1.5">

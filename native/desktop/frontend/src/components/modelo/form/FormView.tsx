@@ -37,7 +37,6 @@ import { FormContext, type FormContextValue } from "./formContext";
 import { SectionView, type DrawnSection, type Shown } from "./SectionView";
 import {
   clearIntent,
-  editableHere,
   editKey,
   editsAdmitted,
   fieldKey,
@@ -326,7 +325,7 @@ export function FormView({
       return;
     const key = session.selectedKey;
     const field = chosen?.field ?? null;
-    const editable = field ? editableHere(envelope, field) : false;
+    const editable = field ? session.editable(field) : false;
     const plain = exactly(event);
     const handled = (() => {
       if (plain && (event.key === "ArrowDown" || event.key === "ArrowUp")) {

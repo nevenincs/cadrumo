@@ -14,7 +14,7 @@ import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "./BoxNumber";
 import { calm, Label, useChosenFocus } from "./FieldRow";
 import { useForm } from "./formContext";
-import { editableHere, editKey, fieldKey } from "./session";
+import { editKey, fieldKey } from "./session";
 import { ValueCell } from "./ValueCell";
 
 // An official grid with its own rows and columns. A cell is a box, a figure
@@ -48,8 +48,7 @@ function GridCell({ cell }: { cell: PublicModeloFormGridCell }) {
 
 function GridBox({ field }: { field: PublicModeloFormField }) {
   const t = useStrings();
-  const { envelope, session, editing, setEditing, onDone, onOpenSurface } =
-    useForm();
+  const { session, editing, setEditing, onDone, onOpenSurface } = useForm();
   const key = fieldKey(field);
   const selected = session.selectedKey === key;
   const open = editing?.key === key ? editing.request : null;
@@ -74,7 +73,8 @@ function GridBox({ field }: { field: PublicModeloFormField }) {
         <ValueCell
           field={field}
           staged={session.staged.get(editKey(field))}
-          editable={editableHere(envelope, field)}
+          grammar={session.grammarOf(field)}
+          editable={session.editable(field)}
           editing={open}
           onEditingChange={(request) =>
             setEditing(request ? key : null, request ?? undefined)

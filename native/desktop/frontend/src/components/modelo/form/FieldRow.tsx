@@ -12,7 +12,6 @@ import { useForm } from "./formContext";
 import { ORIGIN_LOOK, TONE_TEXT } from "./originLook";
 import {
   confirmIntent,
-  editableHere,
   editKey,
   fieldKey,
   type StagedEdit,
@@ -97,13 +96,12 @@ export function useChosenFocus<E extends HTMLElement>(
 export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const t = useStrings();
   const form = useForm();
-  const { envelope, session, editing, setEditing, onDone, onOpenSurface } =
-    form;
+  const { session, editing, setEditing, onDone, onOpenSurface } = form;
   const key = fieldKey(field);
   const staged = session.staged.get(editKey(field));
   const selected = session.selectedKey === key;
   const open = editing?.key === key ? editing.request : null;
-  const editable = editableHere(envelope, field);
+  const editable = session.editable(field);
   const confirm = !staged && editable ? confirmIntent(field) : null;
   const ref = useChosenFocus<HTMLDivElement>(selected, open !== null);
   return (
@@ -133,6 +131,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
         <ValueCell
           field={field}
           staged={staged}
+          grammar={session.grammarOf(field)}
           editable={editable}
           editing={open}
           onEditingChange={(request) =>

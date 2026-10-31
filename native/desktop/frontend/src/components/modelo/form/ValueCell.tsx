@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import type {
+  ModeloEditValueGrammarV1,
   ModeloEditWritableScalarSurfaceEntryV1,
   PublicModeloFormField,
   SourceSurface,
@@ -296,6 +297,8 @@ function ReplaceSource({
 export type ValueCellProps = {
   field: PublicModeloFormField;
   staged: StagedEdit | undefined;
+  /** What this box's edit address takes; null where it takes nothing. */
+  grammar: ModeloEditValueGrammarV1 | null;
   /** Whether this box's value can be typed in here. */
   editable: boolean;
   editing: EditRequest | null;
