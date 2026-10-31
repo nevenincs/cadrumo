@@ -2,16 +2,21 @@
 
 import re
 from enum import Enum
-from importlib import import_module
-from typing import Any
 
 import pytest
 
+from cadrumo.application.live.snapshot_base import SnapshotStateFilter
+from cadrumo.application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelector
+from cadrumo.application.modelo.verify_selector import ModeloVerifySelector
+from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
 from cadrumo.core.i18n.render import extract_placeholders, tr
 from cadrumo.core.identity_check_verdict import IdentityCheckVerdict
+from cadrumo.core.ledger_sort import LedgerSortOrder
+from cadrumo.core.output_rendering import OutputFormat
 from cadrumo.core.toml import parse_toml
-from cadrumo.domain.contribuyente.inventory.records import ValuationMethod
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.contribuyente.inventory.records import MovementKind, ValuationMethod
 from dev._paths import REPO_ROOT
 
 from ..signal_command_paths import _command_graphs
@@ -42,9 +47,22 @@ _HELP_KEYS = [
 ]
 
 
+_DECLARED_AXES: tuple[type[Enum], ...] = (
+    MovementKind,
+    SnapshotStateFilter,
+    InputKind,
+    LedgerSortOrder,
+    OutputFormat,
+    ModeloReconciliationEvidenceKind,
+    CalculationReportDocumentFormat,
+    ModeloVerifySelector,
+)
+
+
 @pytest.fixture(scope="module")
 def accepted_choice_values() -> dict[str, set[str]]:
     result: dict[str, set[str]] = {}
+    declared_axes = {f"{axis.__module__}:{axis.__qualname__}": axis for axis in _DECLARED_AXES}
     fallback_axes = {
         "cli.app.live.verify.expected_help": IdentityCheckVerdict,
         "cli.app.live.verify.expected_values_error": IdentityCheckVerdict,
@@ -75,9 +93,8 @@ def accepted_choice_values() -> dict[str, set[str]]:
                 if contract.choices:
                     result[key] = {str(choice) for choice in contract.choices}
                 else:
-                    axis: Any = getattr(import_module(contract.annotation.module), contract.annotation.qualname)
-                    assert isinstance(axis, type) and issubclass(axis, Enum), key
-                    result[key] = {str(member.value) for member in axis}
+                    declared_axis = declared_axes[contract.annotation.identity]
+                    result[key] = {str(member.value) for member in declared_axis}
     assert set(result) == set(_HELP_KEYS)
     return result
 
