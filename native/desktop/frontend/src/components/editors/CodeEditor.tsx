@@ -42,7 +42,13 @@ export function CodeEditor({
       {...(secret
         ? {}
         : {
-            suggestions,
+            // A code typed out in full is answered: the names that merely
+            // mention it are not offered over what follows the field.
+            suggestions: suggestions?.some(
+              (option) => option.value === editor.value.trim().toUpperCase(),
+            )
+              ? []
+              : suggestions,
             onPick,
             onSuggestionsWanted,
             opensEmpty,

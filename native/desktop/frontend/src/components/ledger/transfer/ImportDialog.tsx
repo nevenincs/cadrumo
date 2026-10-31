@@ -58,6 +58,7 @@ import { listOf } from "../../../shared/lists";
 import { SetupOffer } from "../../setup/SetupOffer";
 import { PeriodSelector } from "../PeriodSelector";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
+import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import {
   ACCOUNT_PROBE_LIMIT,
   IMPORT_KINDS,
@@ -1040,6 +1041,7 @@ function WhatStep({
   onDirection(direction: InvoiceKind): void;
 }) {
   const ids = useId();
+  const countries = useFieldSuggestions("country");
   const directionChoice = (
     value: InvoiceKind | null,
     onChange: (next: InvoiceKind) => void,
@@ -1234,6 +1236,7 @@ function WhatStep({
               describedBy={`${ids}-country-hint`}
               className="w-control-lg"
               onChange={onCountry}
+              {...countries}
             />
             {countryValid ? (
               <FieldDescription id={`${ids}-country-hint`}>

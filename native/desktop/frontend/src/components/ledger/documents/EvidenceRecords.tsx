@@ -23,6 +23,7 @@ import { localDay } from "../../../shared/dates";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import { write } from "../invoices/invoiceWrites";
+import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import {
   landingSettle,
   useWritePause,
@@ -97,6 +98,19 @@ function RecordDetail({
   const shown = (field: EvidenceUpdateField) =>
     typed[field] ??
     seeded(EVIDENCE_SHAPES[field], recordValue(record, field) ?? "");
+  // A record is of an invoice received: the catalogue's suppliers, and this
+  // supplier's numbers first. A pick fills nothing else.
+  const suppliers = useFieldSuggestions("supplier");
+  const numbers = useFieldSuggestions("invoice_number", {
+    invoiceKind: "received",
+    party: shown("supplier"),
+  });
+  const offers = (field: EvidenceUpdateField) =>
+    field === "supplier"
+      ? suppliers
+      : field === "invoice_number"
+        ? numbers
+        : {};
 
   async function save() {
     if (planned.kind !== "update") return;
@@ -289,6 +303,7 @@ function RecordDetail({
                   onChange={(value) =>
                     setTyped((held) => ({ ...held, [field]: value }))
                   }
+                  {...offers(field)}
                 />
               </div>
               {refused.has(field) && (

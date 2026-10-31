@@ -72,6 +72,7 @@ import {
 import { fieldName, valueText } from "./editingWords";
 import type { LockProgress, useLedgerApply } from "./useLedgerApply";
 import { useWritePause } from "../WritePause";
+import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import { WindowedList } from "./WindowedList";
 import { formatCount, formatPercent } from "../../../shared/numbers";
 
@@ -297,6 +298,7 @@ function BlockerFixes({
   const [share, setShare] = useState("");
   const [shareError, setShareError] = useState<string | null>(null);
   const [currency, setCurrency] = useState("");
+  const currencies = useFieldSuggestions("currency");
   const ids = held.filter((entry) => !entry.draft).map((entry) => entry.id);
   const categories = useMemo<ComboboxOption[]>(
     () =>
@@ -574,6 +576,7 @@ function BlockerFixes({
                 aria-label={t("desktop.ledger.field.currency")}
                 value={currency}
                 onChange={setCurrency}
+                {...currencies}
               />
               <Button type="submit" variant="outline" size="xs">
                 {t("desktop.ledger.apply.fix.set_currency")}

@@ -297,7 +297,7 @@ test("an invoice book has no preview and lists the rows it refused", async ({
   await dialog
     .getByRole("radio", { name: label("desktop.ledger.import.kind_received") })
     .click();
-  const country = dialog.getByRole("textbox", {
+  const country = dialog.getByRole("combobox", {
     name: label("desktop.ledger.import.country"),
   });
   await expect(country).toHaveValue("");
