@@ -45,6 +45,18 @@ _LEGISLATIVE_DECREE_REFERENCE_RE = re.compile(r"(?<!\w)RDLeg[ \t]+\d{1,4}/\d{4}(
 # Dotted suffixes in workbook/statement prompts are file-format notation.
 # Keep the list closed to these attested formats; bare words remain prose.
 _SPREADSHEET_SUFFIX_RE = re.compile(r"(?<![\w.])\.(?:xlsx|csv)(?!\w)")
+# These exact Latin suffixes identify statutory articles, rather than prose in
+# the surrounding locale. They are attested by Ley 37/1992's article headings:
+# https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740
+# Keep both the numeric context and the closed spelling list: a bare suffix,
+# misspelling or arbitrary Latin-looking word must still reach its dictionary.
+_ARTICLE_ORDINAL = (
+    r"(?:quater|nonies|noniesdecies|octiesdecies|quatervicies|quinquies|quinvicies|sexies|unvicies|terdecies|"
+    r"quaterdecies|undecies|decies|duodecies|quinquiesdecies|duovicies|sexvicies|tervicies|vicies|octovicies)(?![\w-])"
+)
+_NUMBERED_ARTICLE_REFERENCE_RE = re.compile(
+    rf"(?<![\w.])\d+[ \t]+{_ARTICLE_ORDINAL}(?:[ \t]+(?:a|to)[ \t]+{_ARTICLE_ORDINAL})?"
+)
 _CENSO_GLOSSED_CHOICES_RE = re.compile(
     rf"(?<!\w)(?P<alta>{re.escape(CensoModeloEventKind.ALTA.value)})(?P<alta_gloss>\s*\([^()\r\n]+\))"
     rf",\s*(?P<modificacion>{re.escape(CensoModeloEventKind.MODIFICACION.value)})"
@@ -119,6 +131,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (TRANSLATION_OPTION_RE, " "),
         (TRANSLATION_FORMULA_RE, " "),
         (_AREA_UNIT_RE, " "),
+        (_NUMBERED_ARTICLE_REFERENCE_RE, " "),
         (TRANSLATION_NUMERIC_RE, " "),
         (TRANSLATION_IDENTIFIER_RE, " "),
         (TRANSLATION_PASCAL_IDENTIFIER_RE, " "),
