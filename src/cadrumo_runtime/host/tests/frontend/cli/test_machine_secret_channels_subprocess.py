@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 import threading
@@ -19,6 +18,7 @@ from cadrumo.adapters.persistence.profile.tests.password_only_profile import (
     FIXTURE_PROFILE_INPUT,
     register_password_only_profile,
 )
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copy_sealed_tree
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.recovery_key import (
@@ -959,12 +959,9 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
     root = tmp_path / "storage"
     template = _cold_profile_templates[state]
 
-    def omit_template_runtime(source: str, names: list[str]) -> set[str]:
-        # Installation identity pins the template's physical root; the copied
-        # capsule gets a fresh installed owner for this isolated subprocess.
-        return {".runtime"} if Path(source).resolve() == template.resolve() and ".runtime" in names else set()
-
-    shutil.copytree(template, root, ignore=omit_template_runtime)
+    # Installation identity pins the template's physical root; the copied
+    # capsule gets a fresh installed owner for this isolated subprocess.
+    copy_sealed_tree(template, root)
     host_profile_runtime(root)
     logout_before = None
     if leaf == "logout":

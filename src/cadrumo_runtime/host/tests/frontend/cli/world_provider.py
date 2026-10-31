@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import SealedProfileWorld
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import (
@@ -95,7 +96,7 @@ class RuntimeCliWorldProvider:
         invoke_cli: CliInvocation,
         name: str,
         origin_name: str,
-    ) -> Generator[Path]:
+    ) -> Generator[SealedProfileWorld]:
         with seeded_runtime_profile_origin(
             seed=seed,
             tmp_path_factory=tmp_path_factory,
@@ -115,7 +116,7 @@ class RuntimeCliWorldProvider:
         origin_name: str,
     ) -> Generator[None]:
         origin = request.getfixturevalue(origin_name)
-        assert isinstance(origin, Path)
+        assert isinstance(origin, SealedProfileWorld)
         with copied_runtime_profile_backend(origin, tmp_path, settings_overrides={"cadrumo_output_language": "en"}):
             yield
 

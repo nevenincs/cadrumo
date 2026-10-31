@@ -40,6 +40,7 @@ from ...storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from ...storage.tests.secure_sql import isolated_profile_storage_root
+from .sealed_profile_world import copy_world_into_storage_root, sealed_profile_world, storage_root_is_unused
 
 
 @contextmanager
@@ -115,18 +116,23 @@ def register_cli_profile(
     complete: bool = True,
     log_in: bool = True,
 ) -> str:
-    """Register and log in a profile for a real CLI-surface test.
+    """Give a real CLI-surface test its registered profile, its session live in this process.
 
-    Registration already publishes the new profile's session for this process,
-    exactly as a login does, except that it mints no acceleration receipt; the
-    receipt is what lets a LATER process resume the session. ``log_in=False``
-    skips the second authentication -- one supervised Argon2id derivation --
-    for a test that only drives the CLI in this process and so never needs the
-    receipt.
+    The profile is registered through the production door once per worker for
+    each label, fact set and setup state, and an unused storage root receives
+    its own copy of that sealed world. A root that already holds a profile, or
+    a process with a live session, registers for real beside it. A copy holds
+    the real wrapped key, so password sign-in and every custody operation work
+    on it; a test whose subject is registration calls the door itself.
+
+    ``log_in=True`` adds a password authentication to a registration that really
+    runs. On a copy the published session is already what that login binds: an
+    invocation login mints no receipt, so neither state carries to a later process.
     """
     from .....application.user_profile.login_session import authenticate_profile_for_invocation
     from .....application.user_profile.registration import register_profile_with_credentials
     from .....core.config import load_settings, override_settings
+    from .....core.paths import effective_storage_root
 
     with _profile_authority_scope() as operation:
         merged: dict[str, str] = dict(REQUIRED_PROFILE_PLACEHOLDERS)
@@ -136,30 +142,40 @@ def register_cli_profile(
         passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
         create_context = operation.profile_create_context()
         decode_context = operation.profile_decode_context()
-        with override_settings(cadrumo_profile_kdf_measure_calibration=False):
-            outcome = register_profile_with_credentials(
-                label=label,
-                passphrase=passphrase,
-                facts=tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value),
-                profile_create_context=create_context,
-                profile_decode_context=decode_context,
-            )
+
+        def register() -> str:
+            with override_settings(cadrumo_profile_kdf_measure_calibration=False):
+                profile_id = register_profile_with_credentials(
+                    label=label,
+                    passphrase=passphrase,
+                    facts=tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value),
+                    profile_create_context=create_context,
+                    profile_decode_context=decode_context,
+                ).profile_id
+            if complete:
+                identity = UUID(profile_id)
+                with bound_test_profile_record(identity) as repository:
+                    current = repository.load(identity)
+                    repository.complete_setup(
+                        identity,
+                        expected_revision=current.record_revision,
+                        expected_content_digest=current.content_digest,
+                    )
+            return profile_id
+
+        storage_root = effective_storage_root()
+        if storage_root_is_unused(storage_root):
+            world = sealed_profile_world(("cli profile", label, tuple(sorted(merged.items())), complete), register)
+            copy_world_into_storage_root(world, storage_root, profile_decode_context=decode_context)
+            return world.profile_id
+        profile_id = register()
         if log_in:
             authenticate_profile_for_invocation(
                 name=label,
                 passphrase_callback=lambda: passphrase,
                 profile_decode_context=decode_context,
             )
-        if complete:
-            identity = UUID(outcome.profile_id)
-            with bound_test_profile_record(identity) as repository:
-                current = repository.load(identity)
-                repository.complete_setup(
-                    identity,
-                    expected_revision=current.record_revision,
-                    expected_content_digest=current.content_digest,
-                )
-    return outcome.profile_id
+    return profile_id
 
 
 _LIVE_PROFILE_LABEL = "live-tests"

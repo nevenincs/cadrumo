@@ -27,7 +27,6 @@ actually faces -- session keys reaped, engine disposed.
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import Callable, Generator, Iterator, Mapping
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
@@ -35,6 +34,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copy_sealed_tree
 
 from .....core.config import override_settings
 from ..sql.engine import dispose_engine
@@ -116,9 +116,7 @@ def seeded_isolated_backend_fixture(
     def _copied_backend(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[None]:
         origin = request.getfixturevalue(origin_name)
         assert isinstance(origin, Path)
-        clone = tmp_path / "seeded-world"
-        shutil.copytree(origin, clone)
-        with _open_world(clone):
+        with _open_world(copy_sealed_tree(origin, tmp_path / "seeded-world")):
             yield
 
     return _seeded_origin, _copied_backend

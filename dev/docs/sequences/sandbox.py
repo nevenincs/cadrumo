@@ -10,7 +10,6 @@ from contextlib import chdir, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from uuid import UUID
 
 import keyring
@@ -18,6 +17,7 @@ import keyring.backends.null
 import keyring.core
 
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copy_sealed_tree, sealed_tree
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
 )
@@ -289,13 +289,6 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
         yield
 
 
-#: The provisioned-at-rest sandbox state each later sandbox in this process is
-#: cloned from, keyed by authority, synthetic password and temporary-root lifetime.
-#: Neither the password nor its digest is exposed in transcripts or diagnostics.
-_SANDBOX_TEMPLATES: dict[tuple[str, str, Path], Path] = {}
-_SANDBOX_TEMPLATE_HOLDER: list[TemporaryDirectory[str]] = []
-
-
 def _sandbox_template() -> Path:
     """Return a sandbox state directory with the profile already published.
 
@@ -316,36 +309,30 @@ def _sandbox_template() -> Path:
     with _neutralized_ambient_env():
         password_digest = sha256_hex(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
     temporary_root = prepare_temp_root().resolve()
-    identity = (generation, password_digest, temporary_root)
-    template = _SANDBOX_TEMPLATES.get(identity)
-    if template is not None and template.is_dir():
-        return template
-    # A caller may end its temporary-root scope before this process ends.
-    # Rebuild an absent owned template through the same capsule publication;
-    # failures copying a present template still propagate normally.
-    _SANDBOX_TEMPLATES.pop(identity, None)
-    holder = TemporaryDirectory(prefix="cadrumo-docs-sandbox-template-", dir=temporary_root)
-    _SANDBOX_TEMPLATE_HOLDER.append(holder)
-    template = Path(holder.name)
-    dispose_engine()
-    close_active_bucket_session()
-    with (
-        _neutralized_ambient_env(),
-        _isolated_external_tool_env(template),
-        _absent_credential_vault(),
-        override_settings(
-            cadrumo_output_language="en",
-        ),
-        isolated_profile_storage_root(tmp_path=template),
-        composed_profile_persistence_ports(),
-        _isolated_diagnostic_log(),
-        frozen_clock(SANDBOX_INSTANT),
-        _provisioned_sandbox_profile(),
-    ):
-        pass
-    close_active_bucket_session()
-    dispose_engine()
-    _SANDBOX_TEMPLATES[identity] = template
+
+    def provision(template: Path) -> None:
+        dispose_engine()
+        close_active_bucket_session()
+        with (
+            _neutralized_ambient_env(),
+            _isolated_external_tool_env(template),
+            _absent_credential_vault(),
+            override_settings(
+                cadrumo_output_language="en",
+            ),
+            isolated_profile_storage_root(tmp_path=template),
+            composed_profile_persistence_ports(),
+            _isolated_diagnostic_log(),
+            frozen_clock(SANDBOX_INSTANT),
+            _provisioned_sandbox_profile(),
+        ):
+            pass
+        close_active_bucket_session()
+        dispose_engine()
+
+    # A caller may end its temporary-root scope before this process ends; an
+    # absent template is then rebuilt through the same capsule publication.
+    template, _ = sealed_tree((generation, password_digest, temporary_root), provision, parent=temporary_root)
     return template
 
 
@@ -565,7 +552,7 @@ def sequence_sandbox(
     if fixtures.is_dir():
         shutil.copytree(fixtures, workdir / "fixtures", dirs_exist_ok=True)
     _seed_m303_filing_evidence(workdir / "fixtures")
-    shutil.copytree(_sandbox_template(), sandbox_root, dirs_exist_ok=True)
+    copy_sealed_tree(_sandbox_template(), sandbox_root)
 
     dispose_engine()
     # A login frame binds its BucketSession UNSCOPED (``bind_active_bucket_session``)
