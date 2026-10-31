@@ -51,7 +51,10 @@ from .signal_spelling_segments import spanish_word_context, translation_spelling
 # WebP names an admitted evidence image format in every application.yml.
 # Gmail names the evidence source in desktop/TUI common.yml; Catalan's
 # dictionary already recognises it, so only the other locales enroll it below.
-_SHARED_SPELLINGS = frozenset({"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs", "WebP"})
+# The mixed-case tax abbreviations in cli.app.modelo.work are attested by
+# BOE-A-2024-3329 (ITPyAJD) and Hacienda's TEAC 24/01192/2021 (LISyD).
+# Preserve exactly those abbreviations, not arbitrary mixed-case tokens.
+_SHARED_SPELLINGS = frozenset({"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs", "WebP", "ITPyAJD", "LISyD"})
 _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     # These ordinary English technical/domain terms are absent from the pinned
     # dictionary-en-gb data, but are attested in the canonical English catalogue:

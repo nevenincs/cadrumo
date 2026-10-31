@@ -55,6 +55,25 @@ def test_evidence_format_and_source_names_preserve_nearby_typo_checks(
     }
 
 
+def test_attested_tax_abbreviations_do_not_exempt_mixed_case_typos(monkeypatch: pytest.MonkeyPatch) -> None:
+    dictionaries = load_dictionaries(REPO_ROOT)
+    monkeypatch.setattr("dev.locales.signal_spelling.load_dictionaries", lambda repository: dictionaries)
+    for locale, dictionary in dictionaries.items():
+        for abbreviation in ("ITPyAJD", "LISyD"):
+            assert not dictionary.lookup(abbreviation)
+            assert is_project_spelling(locale, abbreviation)
+        for near_miss in ("ITPyAJDD", "ITPyADJ", "LISyDD", "LISyyD", "itpyajd", "lisyd"):
+            assert not is_project_spelling(locale, near_miss)
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        {"tax"},
+        {locale: {"tax": "ITPyAJD LISyD ITPyAJDD LISyyD misspeling"} for locale in dictionaries},
+        REPO_ROOT,
+    )
+    assert {cell: set(words) for cell, words in spelling.items()} == {
+        (locale, "tax"): {"ITPyAJDD", "LISyyD", "misspeling"} for locale in dictionaries
+    }
+
+
 def test_only_english_possessives_of_exact_project_stems_are_accepted() -> None:
     assert is_project_spelling("en", "Cadrumo's")
     assert is_project_spelling("en", "modelo's")
