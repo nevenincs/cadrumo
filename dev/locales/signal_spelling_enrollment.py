@@ -92,6 +92,19 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "modelo",
             "Modelo",
             "Gmail",
+            # Exact names in the English source: DEHú notification help and
+            # Bizum payment entries; macOS/Homebrew/PyPI download/setup docs;
+            # OpenSSL/PowerShell report-verification guidance and Pagefind
+            # search terminology definitions.
+            # These names are absent from the pinned English dictionary too.
+            "DEHú",
+            "Bizum",
+            "macOS",
+            "Homebrew",
+            "PyPI",
+            "OpenSSL",
+            "PowerShell",
+            "Pagefind",
             "counterparty",
             "Counterparty",
             "withholdings",
