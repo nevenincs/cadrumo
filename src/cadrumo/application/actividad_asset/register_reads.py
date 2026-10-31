@@ -438,7 +438,7 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
         basis=_amount(basis),
         accumulated=_optional_amount(accumulated),
         pending=_optional_amount(pending),
-        pending_applies=revision.disposal is None,
+        pending_applies=not _left_service(revision, context.today),
         findings=_finding_counts(plan, claims, revision, context),
         default_claim_year=default_claim_year(plan, today=context.today),
         years=tuple(year for year in readable if year <= context.last_admitted_year),
