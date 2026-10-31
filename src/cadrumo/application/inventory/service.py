@@ -549,7 +549,38 @@ class InventoryService:
         actor: str,
         source_command: str,
     ) -> InventoryLedgerResult:
-        """Derive one book's complete closing record from plain facts, then record it."""
+        """Derive one book's complete closing record from plain facts, then record it.
+
+        The decision is stamped here. A resubmission reuses the stamp on the book, and a
+        conflict is judged again from a fresh read, because a concurrent copy of the same
+        decision may have committed its own stamp after this one read the book.
+        """
+
+        def record() -> InventoryLedgerResult:
+            return self.closing_authority_record(
+                bucket_id=bucket_id,
+                actividad_id=facts.actividad_id,
+                year=facts.year,
+                authority_record=self._closing_value_candidate(
+                    bucket_id=bucket_id, facts=facts, actor=actor, source_command=source_command
+                ),
+            )
+
+        try:
+            return record()
+        except InventoryServiceInputError as exc:
+            if exc.translated_message != inventory_refusal_key("closing_authority_conflict"):
+                raise
+        return record()
+
+    def _closing_value_candidate(
+        self,
+        *,
+        bucket_id: str,
+        facts: InventoryClosingValueFacts,
+        actor: str,
+        source_command: str,
+    ) -> InventoryClosingAuthorityRecord:
         coordinate = {"actividad_id": facts.actividad_id, "year": str(facts.year)}
         document = self._repository_for(bucket_id).load()
         ledger = next(
@@ -562,24 +593,19 @@ class InventoryService:
                 context=coordinate,
             )
         try:
-            record = build_closing_authority_record(
+            return build_closing_authority_record(
                 facts,
                 document=document,
                 ledger=ledger,
                 actor=actor,
                 source_command=source_command,
+                now=_now_utc(),
             )
         except (InventoryLedgerError, ValidationError) as exc:
             raise InventoryServiceInputError(
                 translated_message=inventory_refusal_key("closing_authority_invalid"),
                 context=coordinate,
             ) from exc
-        return self.closing_authority_record(
-            bucket_id=bucket_id,
-            actividad_id=facts.actividad_id,
-            year=facts.year,
-            authority_record=record,
-        )
 
     def _apply_change(
         self,

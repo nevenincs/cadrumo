@@ -50,7 +50,6 @@ class InventoryClosingValueFacts:
     year: int
     authority: InventoryClosingAuthority
     reason: str
-    decided_at: datetime
     decision_evidence: tuple[InventoryClosingDecisionEvidence, ...]
     physical_count: InventoryPhysicalCountFacts | None = None
     prior_evidence: tuple[PriorClosingContinuityEvidence, ...] = ()
@@ -123,6 +122,14 @@ def _prior_closing_link(
     )
 
 
+def _decision_instant(facts: InventoryClosingValueFacts, *, ledger: InventoryLedger, now: datetime) -> datetime:
+    """Keep the instant of a decision already on the book, so resubmitting it is an exact replay."""
+    record = ledger.closing_authority_record
+    if record is not None and record.decision.decision_id == facts.decision_id:
+        return record.decision.decided_at
+    return now
+
+
 def build_closing_authority_record(
     facts: InventoryClosingValueFacts,
     *,
@@ -130,6 +137,7 @@ def build_closing_authority_record(
     ledger: InventoryLedger,
     actor: str,
     source_command: str,
+    now: datetime,
 ) -> InventoryClosingAuthorityRecord:
     """Derive the complete record of one closing value; the record's validators stay the only judges."""
     observation = _physical_observation(facts)
@@ -144,7 +152,7 @@ def build_closing_authority_record(
             reason=facts.reason,
             actor=actor,
             source_command=source_command,
-            decided_at=facts.decided_at,
+            decided_at=_decision_instant(facts, ledger=ledger, now=now),
             evidence=facts.decision_evidence,
         ),
         physical_observation=observation,

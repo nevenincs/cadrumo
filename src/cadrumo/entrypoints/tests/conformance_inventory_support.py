@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from decimal import Decimal
 
 from ...adapters.persistence.storage.attachment import AttachmentStore
@@ -116,7 +115,6 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     closing_events_before = events.load()
     facts = InventoryClosingValueFactsInput(
         decision_id="conformance-closing-2026",
-        decided_at=datetime(2026, 10, 30, tzinfo=UTC),
         authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
         reason="Use the evidenced movement book for the closing value.",
         decision_evidence=(

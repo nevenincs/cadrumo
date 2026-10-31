@@ -336,17 +336,11 @@ class InventoryClosingValueFactsInput(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     decision_id: str = Field(min_length=1, max_length=64)
-    decided_at: datetime
     authority: InventoryClosingAuthority
     reason: str = Field(min_length=1, max_length=512)
     decision_evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)
     physical_count: InventoryPhysicalCountFactsInput | None = None
     prior_evidence: tuple[PriorClosingContinuityEvidence, ...] = ()
-
-    @model_validator(mode="after")
-    def _decision_timestamp_is_utc(self) -> InventoryClosingValueFactsInput:
-        validate_utc_aware(self.decided_at)
-        return self
 
     def to_domain(self, *, actividad_id: str, year: int) -> InventoryClosingValueFacts:
         """Bind the facts to the book they close."""
@@ -357,7 +351,6 @@ class InventoryClosingValueFactsInput(BaseModel):
             year=year,
             authority=self.authority,
             reason=self.reason,
-            decided_at=validate_utc_aware(self.decided_at),
             decision_evidence=self.decision_evidence,
             physical_count=(
                 InventoryPhysicalCountFacts(
