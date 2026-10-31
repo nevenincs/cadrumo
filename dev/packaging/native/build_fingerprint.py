@@ -177,6 +177,7 @@ COMPONENTS: Mapping[str, Component] = {
             "native/interpreter/launch_guard.h",
             "native/interpreter/launch_profile.h",
             "native/interpreter/windows/host.c",
+            "native/interpreter/posix/host.c",
             "native/interpreter/windows/host.manifest",
         ),
         # The linked host compiles the shared layout header under the desktop's own identity.
