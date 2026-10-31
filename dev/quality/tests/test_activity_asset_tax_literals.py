@@ -182,6 +182,7 @@ def _governed_files() -> tuple[Path, ...]:
     [
         ("_PERIOD = 3\n", "3"),
         ("x = affected.year + 3\n", "3"),
+        ("cap = amount * 2\n", "2"),
         ("cap = Decimal('300')\n", "'300'"),
         ("cap = Decimal('1000')\n", "'1000'"),
         ("cap = amount * Decimal('0.25')\n", "'0.25'"),
@@ -207,6 +208,7 @@ def test_the_gate_rejects_a_box_shape_pattern() -> None:
         "days = 366 if calendar.isleap(year) else 365\n",
         "rate = value / Decimal('100')\n",
         "digits = period * (period + 1) // 2\n",
+        "correction_number = original_revision_number + 1\n",
         "name: str = Field(max_length=128)\n",
         "ok = len(value) == 64\n",
         "_WALK_LIMIT = 100\n",

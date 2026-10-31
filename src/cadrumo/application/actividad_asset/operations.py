@@ -18,7 +18,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
-from ...core.period import Period
+from ...core.period import Period, StandardPeriodCode
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_bindings import (
     ActivityAssetDisposalBounds,
@@ -772,7 +772,11 @@ class ActivityAssetOperations:
 
         def m100_name(projection: ClaimProjection) -> str:
             return self._authority.box_name(
-                form_for_role("renta.annual"), tax_year, "0A", projection.target_casilla_id, language
+                form_for_role("renta.annual"),
+                tax_year,
+                StandardPeriodCode.ANNUAL.value,
+                projection.target_casilla_id,
+                language,
             )
 
         if m130_period is None:
