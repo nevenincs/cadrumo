@@ -18,19 +18,17 @@ precisely why the omission was invisible.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from ....core.prorrata_exclusions import Art104TresExclusion
 from ....domain.iva.prorrata import InputClassification
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import Transaction
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..manual_update import command_from_patch
 from ..models import ManualLedgerTransactionPatch
+from .transaction_row_support import outgoing_manual_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -39,34 +37,13 @@ _SECTOR = "sector-a"
 
 
 def _declared_row() -> Transaction:
-    raw = RawTransaction(
-        provider_transaction_id="p",
-        booked_date=date(2026, 3, 1),
-        value_date=None,
+    transaction = outgoing_manual_row(
+        "p",
         amount=Decimal("100.00"),
         currency="EUR",
         counterparty="Proveedor SL",
         description="compra",
-        provenance=RawProvenance(
-            source_path=Path("x"),
-            source_sha256="a" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 3, 1, tzinfo=UTC),
-            provider_name="t",
-        ),
-        raw_fields={},
-    )
-    transaction = Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.BUSINESS,
-            "source_jurisdiction": "ES",
-            "group_label": None,
-            "created_at": datetime(2026, 3, 1, tzinfo=UTC),
-            "modified_at": datetime(2026, 3, 1, tzinfo=UTC),
-        },
+        classification=BusinessClassification.BUSINESS,
     )
     return transaction.model_copy(
         update={

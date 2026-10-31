@@ -16,16 +16,14 @@ here.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..actions_split_merge import _build_merged_transaction
+from .transaction_row_support import outgoing_manual_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -37,34 +35,8 @@ _GROUP = "9" * 64
 
 
 def _parent(*, currency: str, value_in_eur: Decimal | None) -> Transaction:
-    raw = RawTransaction(
-        provider_transaction_id="parent",
-        booked_date=date(2026, 3, 1),
-        value_date=None,
-        amount=Decimal("1000.00"),
-        currency=currency,
-        counterparty="Vendor Inc",
-        description="software",
-        provenance=RawProvenance(
-            source_path=Path("x"),
-            source_sha256="a" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 3, 1, tzinfo=UTC),
-            provider_name="t",
-        ),
-        raw_fields={},
-    )
-    transaction = Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.NOT_YET_PROCESSED,
-            "source_jurisdiction": "ES",
-            "group_label": None,
-            "created_at": datetime(2026, 3, 1, tzinfo=UTC),
-            "modified_at": datetime(2026, 3, 1, tzinfo=UTC),
-        },
+    transaction = outgoing_manual_row(
+        "parent", amount=Decimal("1000.00"), currency=currency, counterparty="Vendor Inc", description="software"
     )
     if value_in_eur is None:
         return transaction
