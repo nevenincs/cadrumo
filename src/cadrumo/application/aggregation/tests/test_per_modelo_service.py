@@ -394,6 +394,33 @@ def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics(
         assert declarable_asset_classes_720(result.aggregation) == frozenset({ForeignAssetClass.ACCOUNT})
 
 
+def _m720_service_and_resolution(observations, operation):
+    """Aggregate the same 2025 foreign-asset observations through the service and the registry resolver."""
+    expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+    service_result = aggregate_per_modelo(
+        PerModeloAggregationCommand(
+            modelo="720",
+            period=_P_2025_ANNUAL,
+            foreign_asset_observations=observations,
+        ),
+        operation=operation,
+    )
+    _modelos, _catalogues = bundled_registry_tree()
+    _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
+    snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
+    context = CalculationSourceContext(
+        bucket_id="operator",
+        modelo="720",
+        filing_year=2025,
+        period=_P_2025_ANNUAL,
+        revision=snapshot.revision,
+    )
+    resolution = ForeignAssetsAggregationSourceResolver(
+        observations=observations, register_loader=lambda: _register_for(observations)
+    ).resolve(context)
+    return expected_aggregation, service_result, resolution
+
+
 def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         observations = (
@@ -423,28 +450,9 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
                 acquisition_date="2022-03-25",
             ),
         )
-        expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
-        service_result = aggregate_per_modelo(
-            PerModeloAggregationCommand(
-                modelo="720",
-                period=_P_2025_ANNUAL,
-                foreign_asset_observations=observations,
-            ),
-            operation=_authority_operation_for_test,
+        expected_aggregation, service_result, resolution = _m720_service_and_resolution(
+            observations, _authority_operation_for_test
         )
-        _modelos, _catalogues = bundled_registry_tree()
-        _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
-        snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
-        context = CalculationSourceContext(
-            bucket_id="operator",
-            modelo="720",
-            filing_year=2025,
-            period=_P_2025_ANNUAL,
-            revision=snapshot.revision,
-        )
-        resolution = ForeignAssetsAggregationSourceResolver(
-            observations=observations, register_loader=lambda: _register_for(observations)
-        ).resolve(context)
 
         assert service_result.aggregation == expected_aggregation
         assert dict(resolution.row_binding_values) == {
@@ -485,28 +493,9 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
                 acquisition_date="2021-02-20",
             ),
         )
-        expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
-        service_result = aggregate_per_modelo(
-            PerModeloAggregationCommand(
-                modelo="720",
-                period=_P_2025_ANNUAL,
-                foreign_asset_observations=observations,
-            ),
-            operation=_authority_operation_for_test,
+        expected_aggregation, service_result, resolution = _m720_service_and_resolution(
+            observations, _authority_operation_for_test
         )
-        _modelos, _catalogues = bundled_registry_tree()
-        _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
-        snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
-        context = CalculationSourceContext(
-            bucket_id="operator",
-            modelo="720",
-            filing_year=2025,
-            period=_P_2025_ANNUAL,
-            revision=snapshot.revision,
-        )
-        resolution = ForeignAssetsAggregationSourceResolver(
-            observations=observations, register_loader=lambda: _register_for(observations)
-        ).resolve(context)
 
         assert service_result.aggregation == expected_aggregation
         assert declarable_asset_classes_720(expected_aggregation) == frozenset(
