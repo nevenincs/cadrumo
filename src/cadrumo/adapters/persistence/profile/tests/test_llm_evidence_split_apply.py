@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
-from typing import NoReturn
 
 import pytest
 
 from .....application.ledger.actions_split_merge import split_transaction_with_classified_children
-from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitApplyResult
+from .....application.ledger.llm_classification_ports import LLMSplitApplyResult
 from .....application.ledger.llm_evidence_split import apply_evidence_split, suggest_evidence_split
 from .....application.ledger.models import ManualLedgerTransactionPatch, SplitChildCommand
 from .....core.config import load_settings
-from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
@@ -36,33 +32,10 @@ from .llm_evidence_split_support import (
 from .llm_evidence_split_support import (
     two_line_proposal as _two_line_proposal,
 )
+from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["repositories"]
-
-
-def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
-    """Fail loudly if a no-evidence split test reaches an unused reader port."""
-    raise AssertionError("the no-evidence split path must not use this reader port")
-
-
-def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
-    return run()
-
-
-def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
-    return run()
-
-
-_LLM_PORTS = LLMClassificationPorts(
-    resolve_evidence_input=_unused_llm_port,
-    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
-    rasterise_pdf=_unused_llm_port,
-    make_text_classifier=_unused_llm_port,
-    make_vision_classifier=_unused_llm_port,
-    run_reader=_run_reader,
-    record_classifier_run=_record_classifier_run,
-)
 
 
 def test_apply_splits_parent_and_classifies_children(
@@ -83,7 +56,7 @@ def test_apply_splits_parent_and_classifies_children(
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
     with ledger_ports_for_test(
         bucket_id=_BUCKET,
@@ -141,7 +114,7 @@ def test_apply_links_parent_invoice_evidence_to_each_child(
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
     with ledger_ports_for_test(
         bucket_id=_BUCKET,
@@ -181,7 +154,7 @@ def test_apply_child_numbers_are_registry_derived_not_model(
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
     with ledger_ports_for_test(
         bucket_id=_BUCKET,
@@ -229,7 +202,7 @@ def test_split_children_retain_lineage_and_evidence_provenance(
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
     with ledger_ports_for_test(
         bucket_id=_BUCKET,
@@ -286,7 +259,7 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
 
     with (

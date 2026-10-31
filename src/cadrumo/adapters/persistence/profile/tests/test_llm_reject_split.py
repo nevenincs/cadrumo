@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
-from typing import NoReturn
 
 import pytest
 
-from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import reject_llm_suggestion
-from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMClassificationSuggestion
+from .....application.ledger.llm_classification_ports import LLMClassificationSuggestion
 from .....application.ledger.llm_evidence_split import apply_evidence_split, suggest_evidence_split
 from .....core.config import load_settings
-from .....core.model_roles import ModelRole
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -40,33 +36,10 @@ from .llm_evidence_split_support import (
 from .llm_evidence_split_support import (
     two_line_proposal as _two_line_proposal,
 )
+from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["repositories"]
-
-
-def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
-    """Fail loudly if a no-evidence split test reaches an unused reader port."""
-    raise AssertionError("the no-evidence split path must not use this reader port")
-
-
-def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
-    return run()
-
-
-def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
-    return run()
-
-
-_LLM_PORTS = LLMClassificationPorts(
-    resolve_evidence_input=_unused_llm_port,
-    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
-    rasterise_pdf=_unused_llm_port,
-    make_text_classifier=_unused_llm_port,
-    make_vision_classifier=_unused_llm_port,
-    run_reader=_run_reader,
-    record_classifier_run=_record_classifier_run,
-)
 
 
 def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
@@ -96,7 +69,7 @@ def test_reject_split_suggestion_records_kind_split(
             read_evidence=False,
             operation=_authority_operation_for_test,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
 
         result = reject_llm_suggestion(
@@ -138,7 +111,7 @@ def test_reject_non_active_transaction_raises(
             read_evidence=False,
             operation=_authority_operation_for_test,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
         with ledger_ports_for_test(
             bucket_id=_BUCKET,

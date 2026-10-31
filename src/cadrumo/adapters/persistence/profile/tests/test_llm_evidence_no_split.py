@@ -2,18 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
-from typing import NoReturn
 
 import pytest
 
-from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import apply_evidence_classification
-from .....application.ledger.llm_classification_ports import LLMClassificationPorts
 from .....application.ledger.llm_evidence_split import apply_evidence_split, suggest_evidence_split
 from .....core.config import load_settings
-from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.iva.schema import IvaCategory
@@ -41,34 +36,11 @@ from .llm_evidence_split_support import (
 from .llm_evidence_split_support import (
     two_line_proposal as _two_line_proposal,
 )
+from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 __all__ = ["repositories"]
-
-
-def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
-    """Fail loudly if a no-evidence split test reaches an unused reader port."""
-    raise AssertionError("the no-evidence split path must not use this reader port")
-
-
-def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
-    return run()
-
-
-def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
-    return run()
-
-
-_LLM_PORTS = LLMClassificationPorts(
-    resolve_evidence_input=_unused_llm_port,
-    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
-    rasterise_pdf=_unused_llm_port,
-    make_text_classifier=_unused_llm_port,
-    make_vision_classifier=_unused_llm_port,
-    run_reader=_run_reader,
-    record_classifier_run=_record_classifier_run,
-)
 
 
 def test_single_child_suggestion_does_not_recommend_split(
@@ -88,7 +60,7 @@ def test_single_child_suggestion_does_not_recommend_split(
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
 
     assert suggestion.recommends_split is False
@@ -113,7 +85,7 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
     with (
         ledger_ports_for_test(
@@ -149,7 +121,7 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
 
     with ledger_ports_for_test(
@@ -195,7 +167,7 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
         )
     with (
         ledger_ports_for_test(
@@ -232,7 +204,7 @@ def test_no_split_reviewed_classification_refuses_stale_parent_and_preserves_enc
         transaction_repository=repository,
         read_evidence=False,
         settings=load_settings(),
-        ports=_LLM_PORTS,
+        ports=NO_EVIDENCE_LLM_PORTS,
     )
     newer = reviewed.model_copy(update={"notes": "newer evidence-review row"})
     repository.save(TransactionCatalogue.from_transactions([newer]))

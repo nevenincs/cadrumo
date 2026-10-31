@@ -17,17 +17,13 @@ local child process. Covers the llm-ledger-classification contract:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
-from typing import NoReturn
 
 import pytest
 
-from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import saturate_llm_classification
-from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSaturatedSuggestion
+from .....application.ledger.llm_classification_ports import LLMSaturatedSuggestion
 from .....core.config import load_settings
-from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
 )
@@ -37,6 +33,7 @@ from .....domain.calculations.registry.authority import (
 from .....domain.iva.schema import IvaCategory
 from ..buckets import BucketEventHistoryRepository
 from ..transactions import TransactionCatalogueRepository
+from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 from .llm_saturation_support import (
     _BUCKET,
     _seed_unclassified,
@@ -51,30 +48,6 @@ from .llm_saturation_support import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 __all__ = ["repositories"]
-
-
-def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
-    """Fail loudly if a no-evidence saturation test reaches a reader port."""
-    raise AssertionError("the no-evidence saturation path must not use this reader port")
-
-
-def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
-    return run()
-
-
-def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
-    return run()
-
-
-_LLM_PORTS = LLMClassificationPorts(
-    resolve_evidence_input=_unused_llm_port,
-    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
-    rasterise_pdf=_unused_llm_port,
-    make_text_classifier=_unused_llm_port,
-    make_vision_classifier=_unused_llm_port,
-    run_reader=_run_reader,
-    record_classifier_run=_record_classifier_run,
-)
 
 
 # ---------------------------------------------------------------------------
@@ -103,7 +76,7 @@ def test_suggest_derives_substrate_from_selected_category(
             ),
             transaction_repository=repository,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -136,7 +109,7 @@ def test_suggest_zero_rated_category_derives_zero_iva(
             ),
             transaction_repository=repository,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -163,7 +136,7 @@ def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
             ),
             transaction_repository=repository,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
