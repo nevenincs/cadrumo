@@ -8,8 +8,10 @@ import json
 import logging
 import math
 import os
+import queue
 import re
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -17,6 +19,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from cadrumo.core.async_cleanup import close_async_resources
+from cadrumo.tests.hang_guard import PROCESS_HANG_GUARD_SECONDS
 from cadrumo.tests.log_records import delivered_records
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, launch_fixture, native_python
 from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
@@ -36,13 +39,49 @@ _FIXTURE = "cadrumo_client.transport.tests.job_fixture"
 _LOGGER_NAME = "cadrumo_client.transport.windows_process"
 
 
+def test_churn_watchdog_resets_on_progress_and_expires_when_progress_stops() -> None:
+    from .job_fixture import _ProgressWatchdog
+
+    observed: queue.Queue[float] = queue.Queue()
+    expired = threading.Event()
+    now = 0.0
+
+    def clock() -> float:
+        if threading.current_thread().name == "churn-progress-watchdog":
+            observed.put(now)
+        return now
+
+    watchdog = _ProgressWatchdog(timeout=60, clock=clock, expired=expired.set)
+    with watchdog:
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 0
+        with watchdog._condition:
+            now = 59.0
+            watchdog._condition.notify()
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 59
+        assert not expired.is_set()
+        watchdog.progress()
+        # The progress notification may wake the watcher before or after the
+        # next clock advance; wait for it before testing the new deadline.
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 59
+        with watchdog._condition:
+            now = 118.0
+            watchdog._condition.notify()
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 118
+        assert not expired.is_set()
+        with watchdog._condition:
+            now = 119.0
+            watchdog._condition.notify()
+        assert observed.get(timeout=PROCESS_HANG_GUARD_SECONDS) == 119
+        assert expired.wait(PROCESS_HANG_GUARD_SECONDS)
+
+
 @pytest.mark.asyncio
 async def test_pid_enumeration_and_cleanup_survive_real_process_churn(tmp_path: Path) -> None:
     record = tmp_path / "pid-churn.json"
     process = await launch_fixture(_FIXTURE, "pid-churn", str(record))
     try:
-        output, errors = await asyncio.wait_for(process.communicate(), timeout=25)
-        assert process.returncode == 0, (output, errors)
+        output, errors = await asyncio.wait_for(process.communicate(), timeout=PROCESS_HANG_GUARD_SECONDS)
+        assert process.returncode == 0, (process.returncode, output, errors)
         facts = json.loads(record.read_text())
         assert facts["launched"] == 48
         assert facts["queries"] > 0

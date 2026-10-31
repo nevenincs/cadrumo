@@ -8,9 +8,11 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
-from threading import Timer
+from threading import Condition, Thread, Timer
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 
 
@@ -155,14 +157,16 @@ def _launch_owner_loss(record: Path) -> None:
 
 def main() -> None:
     """Keep every synthetic process finite even if the outer test fails."""
-    lifetime = Timer(20, os._exit, args=(124,))
-    lifetime.daemon = True
-    lifetime.start()
     mode, filename = sys.argv[1:]
     record = Path(filename)
     if mode == "pid-churn":
-        _pid_churn(record)
-    elif mode == "launch-owner-loss":
+        with _ProgressWatchdog() as watchdog:
+            _pid_churn(record, progress=watchdog.progress)
+        return
+    lifetime = Timer(20, os._exit, args=(124,))
+    lifetime.daemon = True
+    lifetime.start()
+    if mode == "launch-owner-loss":
         _launch_owner_loss(record)
     elif mode in {"owner", "browser-owner"}:
         from ..windows_process import WindowsProcessScope
@@ -192,7 +196,51 @@ def main() -> None:
     lifetime.cancel()
 
 
-def _pid_churn(record: Path) -> None:
+class _ProgressWatchdog:
+    """Exit a stuck churn fixture, resetting only after a real child milestone."""
+
+    def __init__(
+        self,
+        *,
+        timeout: float = HANG_GUARD_SECONDS,
+        clock: Callable[[], float] = time.monotonic,
+        expired: Callable[[], None] = lambda: os._exit(124),
+    ) -> None:
+        self._timeout = timeout
+        self._clock = clock
+        self._expired = expired
+        self._condition = Condition()
+        self._last_progress = clock()
+        self._stopped = False
+        self._thread = Thread(target=self._watch, name="churn-progress-watchdog", daemon=True)
+
+    def __enter__(self) -> _ProgressWatchdog:
+        self._thread.start()
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        with self._condition:
+            self._stopped = True
+            self._condition.notify()
+        self._thread.join(timeout=HANG_GUARD_SECONDS)
+        assert not self._thread.is_alive()
+
+    def progress(self) -> None:
+        with self._condition:
+            self._last_progress = self._clock()
+            self._condition.notify()
+
+    def _watch(self) -> None:
+        with self._condition:
+            while not self._stopped:
+                remaining = self._timeout - (self._clock() - self._last_progress)
+                if remaining <= 0:
+                    self._expired()
+                    return
+                self._condition.wait(remaining)
+
+
+def _pid_churn(record: Path, *, progress: Callable[[], None]) -> None:
     """Exercise process enumeration and retained-handle cleanup against real exits."""
     from concurrent.futures import ThreadPoolExecutor
 
@@ -209,7 +257,9 @@ def _pid_churn(record: Path) -> None:
                     directory=record.parent,
                     environment=fixture_environment(),
                 )
-                assert process.wait(timeout=5) == 0
+                progress()
+                assert process.wait(timeout=HANG_GUARD_SECONDS) == 0
+                progress()
             return 16
 
         queries = 0
