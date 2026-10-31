@@ -183,6 +183,25 @@ def _is_spanish_search_keyword(word: str, dictionary: object) -> bool:
     return False
 
 
+def _is_search_keyword_surface(key: str) -> bool:
+    """Identify the three presentation families that declare search aliases."""
+    return (
+        key.startswith("desktop.ledger.category_keywords.")
+        or key.startswith("desktop.palette.keywords.")
+        or (key.startswith("navigation.view.") and key.endswith(".keywords"))
+    )
+
+
+def _is_known_search_keyword(word: str, spanish_dictionary: object | None, english_dictionary: object | None) -> bool:
+    """Check an alias against the exact inventory and its two dictionaries."""
+    english_lookup = getattr(english_dictionary, "lookup", None)
+    return (
+        word in _SEARCH_NAME_AND_INITIALISM_ALIASES
+        or (callable(english_lookup) and bool(english_lookup(word)))
+        or (spanish_dictionary is not None and _is_spanish_search_keyword(word, spanish_dictionary))
+    )
+
+
 def _discard_known_search_keywords(
     unknown_by_cell: dict[tuple[str, str], set[str]],
     spanish_dictionary: object | None,
@@ -200,19 +219,9 @@ def _discard_known_search_keywords(
         return
     for cell, words in tuple(unknown_by_cell.items()):
         _locale, key = cell
-        if not (
-            key.startswith("desktop.ledger.category_keywords.")
-            or key.startswith("desktop.palette.keywords.")
-            or (key.startswith("navigation.view.") and key.endswith(".keywords"))
-        ):
+        if not _is_search_keyword_surface(key):
             continue
-        accepted = {
-            word
-            for word in words
-            if word in _SEARCH_NAME_AND_INITIALISM_ALIASES
-            or (callable(english_lookup) and english_lookup(word))
-            or (spanish_dictionary is not None and _is_spanish_search_keyword(word, spanish_dictionary))
-        }
+        accepted = {word for word in words if _is_known_search_keyword(word, spanish_dictionary, english_dictionary)}
         words.difference_update(accepted)
         if not words:
             del unknown_by_cell[cell]
