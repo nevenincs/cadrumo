@@ -84,5 +84,5 @@ def test_a_reason_that_is_not_about_opening_data_serves_no_remedy_and_the_served
 
     assert row.absence_remedy_field_key is None
     assert OPENING_REMEDY_FIELD in TIMELINE_FIELD_PATHS
-    assert lookup_translation(f"ledger.actividad_asset.field.{OPENING_REMEDY_FIELD}", locale="en")
-    assert all(lookup_translation(key, locale="en") for key in OPENING_REMEDY_REASON_KEYS)
+    assert lookup_translation(f"ledger.actividad_asset.field.{OPENING_REMEDY_FIELD}", locale="en") is not None
+    assert all(lookup_translation(key, locale="en") is not None for key in OPENING_REMEDY_REASON_KEYS)

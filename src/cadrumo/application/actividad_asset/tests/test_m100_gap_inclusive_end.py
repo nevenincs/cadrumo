@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -17,7 +18,7 @@ from .operations_support import build_operations
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _gap_wire() -> dict[str, object]:
+def _gap_wire() -> dict[str, Any]:
     handoff = build_operations().filing_handoff(tax_year=2025)
     snapshot = ActivityAssetFilingHandoffSnapshot.from_domain(handoff)
     (gap,) = snapshot.m100_gaps
