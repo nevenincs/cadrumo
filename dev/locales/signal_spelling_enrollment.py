@@ -8,7 +8,11 @@ from collections.abc import Mapping
 
 from .signal_contracts import DictionaryLike, ExcludedStructuralInventory
 from .signal_policy import LOCALES, SPELLING_SURFACES
-from .signal_spelling_segments import spanish_word_context, translation_spelling_segments
+from .signal_spelling_segments import (
+    is_known_residence_region_label,
+    spanish_word_context,
+    translation_spelling_segments,
+)
 from .signal_tokens import filtered_translation_text
 
 # Exact, attested forms absent from the pinned dictionaries. AEAT and modelo
@@ -58,8 +62,17 @@ from .signal_tokens import filtered_translation_text
 # Preserve exactly those abbreviations, not arbitrary mixed-case tokens.
 # Pagefind is the search-engine name; Ceuta and Melilla are the named IVA
 # territories in the multilingual terminology definitions. Keep their exact case.
-_SHARED_SPELLINGS = frozenset(
-    {"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs", "Pagefind", "Ceuta", "Melilla", "WebP", "ITPyAJD", "LISyD"}
+# Exact software/format names in architecture/index.md, authoring-guide.md,
+# download.md and the signed-report verification recipe. pyproject.toml and
+# docs/conf.py identify the same tools; casing and adjacent typos stay checked.
+_SOFTWARE_PROPER_NAMES = frozenset(
+    {"GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Sphinx", "reStructuredText"}
+)
+_SHARED_SPELLINGS = (
+    frozenset(
+        {"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs", "Pagefind", "Ceuta", "Melilla", "WebP", "ITPyAJD", "LISyD"}
+    )
+    | _SOFTWARE_PROPER_NAMES
 )
 # Exact Spanish dictionary gaps in the canonical legal references: IVA flow
 # notes use enrutamiento, transmitente and registrales; IS uses deducibilidad
@@ -606,12 +619,6 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "hu": frozenset(
         {
-            # Exact format/tool names in the Hungarian authoring guide;
-            # docs/conf.py declares both source formats and pyproject.toml
-            # pins the Sphinx builder. Ordinary English prose is not enrolled.
-            "Markdown",
-            "reStructuredText",
-            "Sphinx",
             # Exact native, technical and retained tax forms attested in
             # _data/terminology/concepts; no new casing or inflections implied.
             "artefaktumokból",
@@ -1176,6 +1183,8 @@ def record_unknown_spelling_word(
     """Record unknown spelling word."""
     owner_cell = (owner_locale, key)
     value = cell_text[owner_cell]
+    if is_known_residence_region_label(owner_locale, key, value):
+        return
     stem = word.removesuffix(".") if dictionary_locale == "hu" else word
     if _known_latin_phrase_word(value, stem):
         return

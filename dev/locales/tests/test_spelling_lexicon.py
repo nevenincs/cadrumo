@@ -9,6 +9,7 @@ from dev._paths import REPO_ROOT
 from dev.locales._spelling import load_dictionaries
 from dev.locales.signal_spelling import spellcheck_catalogues
 from dev.locales.signal_spelling_enrollment import check_dictionary_spelling_words, is_project_spelling
+from dev.locales.signal_spelling_segments import is_known_residence_region_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,6 +32,68 @@ def test_identifier_labels_are_exact_shared_technical_terms() -> None:
             assert is_project_spelling(locale, form)
         assert not is_project_spelling(locale, "idd")
         assert not is_project_spelling(locale, "idss")
+
+
+@pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
+def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: str) -> None:
+    for name in ("GitHub", "Linux", "Markdown", "OpenSSL", "PowerShell", "Sphinx", "reStructuredText"):
+        assert is_project_spelling(locale, name)
+        assert not is_project_spelling(locale, name + "x")
+    for bad in ("GitHup", "Linuz", "Markdwon", "OpenSSl", "Powershell", "Sphinxx", "reStructuredTex"):
+        assert not is_project_spelling(locale, bad)
+
+
+@pytest.mark.parametrize(
+    "locale,region,label",
+    [
+        ("en", "cantabria", "Cantabria"),
+        ("en", "castilla_la_mancha", "Castilla-La Mancha"),
+        ("en", "castilla_la_mancha", "Castile-La Mancha"),
+        ("en", "castilla_y_leon", "Castilla y León"),
+        ("en", "castilla_y_leon", "Castile and León"),
+        ("en", "comunidad_valenciana", "Valencian Community"),
+        ("en", "extremadura", "Extremadura"),
+        ("en", "galicia", "Galicia"),
+        ("en", "la_rioja", "La Rioja"),
+        ("hu", "castilla_la_mancha", "Kasztília-La Mancha"),
+        ("hu", "extremadura", "Extremadura"),
+        ("hu", "galicia", "Galicia"),
+        ("hu", "la_rioja", "La Rioja"),
+    ],
+)
+@pytest.mark.parametrize(
+    "key_template",
+    ["profile.schema.field.tax_residence.ccaa.choices.{}", "wizard.setup.residence.ccaa.choices.{}.label"],
+)
+def test_reviewed_residence_names_are_whole_labels_under_their_actual_region(
+    locale: str, region: str, label: str, key_template: str
+) -> None:
+    from cadrumo.core.toml import parse_toml
+
+    source = parse_toml(
+        (REPO_ROOT / "src/cadrumo/_data/registry/aeat/facts/0129-renta-ccaa-tax-residence-catalogue.toml").read_text(
+            encoding="utf-8"
+        )
+    )
+    entries = {row["key"]: row["value"] for row in source["fact"]["variants"][0]["payload"]["entries"]}
+    assert entries[f"ccaa.{region}.value"] == region
+    key = key_template.format(region)
+    assert is_known_residence_region_label(locale, key, label)
+    assert not is_known_residence_region_label(locale, key, label + " misspellledd")
+    assert not is_known_residence_region_label(locale, key, label + "x")
+    assert not is_known_residence_region_label(locale, key, label.swapcase())
+    assert not is_known_residence_region_label(locale, key_template.format("madrid"), label)
+    assert not is_known_residence_region_label(locale, "application.test.prose", label)
+    assert not is_known_residence_region_label("es", key, label)
+
+
+def test_residence_name_recognition_does_not_hide_extra_or_misspelled_prose() -> None:
+    key = "profile.schema.field.tax_residence.ccaa.choices.galicia"
+    values = {"en": {key: "Galicia", "application.test.typo": "Galicia misspellledd"}}
+    unknown, inventory, _ = spellcheck_catalogues(set(), {}, REPO_ROOT, additional_values=values)
+    assert not inventory["spelling_tool_failures"]
+    assert ("en", key) not in unknown
+    assert "misspellledd" in unknown[("en", "application.test.typo")]
 
 
 def test_hungarian_documentation_format_and_builder_names_keep_exact_case_and_typo_checks() -> None:

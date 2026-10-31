@@ -27,9 +27,51 @@ from .signal_tokens import filtered_translation_text, translation_words
 # exception closed over complete forms; a productive suffix rule could conceal
 # a misspelled or malformed host from the dictionary check.
 _CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?P<form>Mantén-lo|revisar-los)(?![^\W\d_])")
-# The export format and VIES definition retain these complete English names.
+# The export/VIES definitions and architecture/CLI guides retain these
+# complete English standard names (PDF, OFX, AES, TOML and MCP).
 # Route each word to English rather than exempting its spelling.
-_ENGLISH_REFERENCE_NAME_RE = re.compile(r"(?<!\w)(?:JSON Lines|VAT Information Exchange System)(?!\w)")
+_ENGLISH_REFERENCE_NAME_RE = re.compile(
+    r"(?<!\w)(?:JSON Lines|VAT Information Exchange System|Model Context Protocol|"
+    r"Portable Document Format|Open Financial Exchange|Advanced Encryption Standard|"
+    r"Tom['’]s Obvious Minimal Language)(?!\w)"
+)
+# Fact 0129-renta-ccaa-tax-residence-catalogue owns these region identities;
+# profile/schema and
+# wizard choices supply their reviewed English/Hungarian display variants.
+# Validate complete names only on those typed choice-label surfaces. Their
+# individual words are not vocabulary exceptions elsewhere.
+_RESIDENCE_REGION_LABELS: dict[str, dict[str, tuple[str, ...]]] = {
+    "en": {
+        "cantabria": ("Cantabria",),
+        "castilla_la_mancha": ("Castilla-La Mancha", "Castile-La Mancha"),
+        "castilla_y_leon": ("Castilla y León", "Castile and León"),
+        "comunidad_valenciana": ("Valencian Community",),
+        "extremadura": ("Extremadura",),
+        "galicia": ("Galicia",),
+        "la_rioja": ("La Rioja",),
+    },
+    "hu": {
+        "castilla_la_mancha": ("Kasztília-La Mancha",),
+        "extremadura": ("Extremadura",),
+        "galicia": ("Galicia",),
+        "la_rioja": ("La Rioja",),
+    },
+}
+_RESIDENCE_REGION_LABEL_KEY_RE = re.compile(
+    r"(?:profile\.schema\.field\.tax_residence\.ccaa\.choices\.(?P<profile>[a-z_]+)|"
+    r"wizard\.setup\.residence\.ccaa\.choices\.(?P<wizard>[a-z_]+)\.label)\Z"
+)
+
+
+def is_known_residence_region_label(locale: str, key: str, value: str) -> bool:
+    """Validate one complete regional proper name under its declared choice."""
+    match = _RESIDENCE_REGION_LABEL_KEY_RE.fullmatch(key)
+    if match is None:
+        return False
+    region = match.group("profile") or match.group("wizard")
+    return value in _RESIDENCE_REGION_LABELS.get(locale, {}).get(region, ())
+
+
 # These are attested Hungarian endings on structural stems, not a productive
 # suffix rule for ordinary words. Keep acronym/endings paired; e.g. admitting
 # PDF-jét must not silently admit an arbitrary word followed by -jét.
@@ -44,6 +86,9 @@ _HUNGARIAN_STRUCTURAL_SUFFIX_PATTERNS = tuple(
         r"(?P<stem>NIF)-(?:jét|jének)",
         r"(?P<stem>URL)-jét",
         r"(?P<stem>Cl@ve)-vel",
+        r"(?P<stem>GitHub)on",
+        r"(?P<stem>PowerShell)ben",
+        r"(?P<stem>Model[ \t]+Context[ \t]+Protocol)t",
         r"(?P<stem>Modelo[ \t]+\d{1,4}|\*\*Modelo[ \t]+\d{1,4}\*\*)-(?:et|ban)",
         r"(?P<stem>\d{4}-\d{2}-\d{2})-tól",
         r"(?P<stem>1)-jén",

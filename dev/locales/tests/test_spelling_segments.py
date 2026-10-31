@@ -18,6 +18,47 @@ def words_by_language(value: str, locale: str = "en") -> dict[str, set[str]]:
     return words
 
 
+@pytest.mark.parametrize(
+    "name,component",
+    [
+        ("Model Context Protocol", "Protocol"),
+        ("Portable Document Format", "Portable"),
+        ("Open Financial Exchange", "Financial"),
+        ("Advanced Encryption Standard", "Encryption"),
+        ("Tom's Obvious Minimal Language", "Minimal"),
+    ],
+)
+@pytest.mark.parametrize("locale", ["ca", "es", "hu"])
+def test_complete_standard_names_keep_dictionary_ownership_and_adjacent_typos(
+    name: str, component: str, locale: str
+) -> None:
+    result = words_by_language(name + " misspellledd", locale)
+    assert component in result["en"]
+    assert "misspellledd" in result[locale]
+    assert "en" not in words_by_language(name + "x misspellledd", locale)
+    assert "en" not in words_by_language("`" + name + "` misspellledd", locale)
+    assert "en" not in words_by_language('<span lang="es">' + name + "</span>", "hu")
+
+
+@pytest.mark.parametrize(
+    "inflected,stem,owner",
+    [
+        ("GitHubon", "GitHub", "hu"),
+        ("PowerShellben", "PowerShell", "hu"),
+        ("Model Context Protocolt", "Protocol", "en"),
+    ],
+)
+def test_hungarian_software_name_endings_preserve_exact_stems_and_language(
+    inflected: str, stem: str, owner: str
+) -> None:
+    result = words_by_language(inflected + " misspellledd", "hu")
+    assert stem in result[owner]
+    assert "misspellledd" in result["hu"]
+    assert inflected.split()[-1] in words_by_language(inflected, "es")["es"]
+    for bad in (inflected + "x", "x" + inflected, inflected.replace("o", "q", 1)):
+        assert bad.split()[-1] in words_by_language(bad, "hu")["hu"]
+
+
 @pytest.mark.parametrize("target", ["https://www.boe.es/example", "https://sede.agenciatributaria.gob.es/example"])
 @pytest.mark.parametrize("markup", ["[{label}]({target})", "`{label} <{target}>`_"])
 def test_authority_destination_preserves_english_label(target: str, markup: str) -> None:
