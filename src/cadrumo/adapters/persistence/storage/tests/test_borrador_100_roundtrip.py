@@ -119,6 +119,44 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
     )
 
 
+def _save_superseded_original(
+    repo: SecureSnapshotRepository[Borrador100Snapshot], bucket_id: str
+) -> tuple[Borrador100Snapshot, Borrador100Snapshot]:
+    """Save a successor first so the supersession pointer names a real id, then its superseded predecessor."""
+    successor = _populated_snapshot(bucket_id=bucket_id)
+    repo.save(successor)
+
+    captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
+    binding_values = {
+        "casilla.0500": Decimal("39800.00"),
+        "casilla.identity.declarant_label": "Persona Prueba",
+    }
+    source_url = _borrador_detail_url("202410013522401X")
+    snapshot_id = derive_borrador_100_snapshot_id(
+        filing_year=2024,
+        period=_PERIOD,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+        captured_at=captured_at,
+        source_url=source_url,
+        binding_values=binding_values,
+    )
+    original = Borrador100Snapshot(
+        snapshot_id=snapshot_id,
+        bucket_id=bucket_id,
+        modelo="100",
+        filing_year=2024,
+        period=_PERIOD,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+        captured_at=captured_at,
+        source_url=source_url,
+        state=SnapshotLifecycleState.SUPERSEDED,
+        binding_values=binding_values,
+        superseded_by_snapshot_id=successor.snapshot_id,
+    )
+    repo.save(original)
+    return successor, original
+
+
 def test_borrador_100_snapshot_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
 ) -> None:
@@ -169,39 +207,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         repo = _borrador_repository(bucket_id=bucket_id)
-        # First save the successor so the supersession pointer references
-        # a real id; then build and save the superseded predecessor.
-        successor = _populated_snapshot(bucket_id=bucket_id)
-        repo.save(successor)
-
-        captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
-        binding_values = {
-            "casilla.0500": Decimal("39800.00"),
-            "casilla.identity.declarant_label": "Persona Prueba",
-        }
-        source_url = _borrador_detail_url("202410013522401X")
-        snapshot_id = derive_borrador_100_snapshot_id(
-            filing_year=2024,
-            period=_PERIOD,
-            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-            captured_at=captured_at,
-            source_url=source_url,
-            binding_values=binding_values,
-        )
-        original = Borrador100Snapshot(
-            snapshot_id=snapshot_id,
-            bucket_id=bucket_id,
-            modelo="100",
-            filing_year=2024,
-            period=_PERIOD,
-            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-            captured_at=captured_at,
-            source_url=source_url,
-            state=SnapshotLifecycleState.SUPERSEDED,
-            binding_values=binding_values,
-            superseded_by_snapshot_id=successor.snapshot_id,
-        )
-        repo.save(original)
+        successor, original = _save_superseded_original(repo, bucket_id)
         loaded = repo.load(original.snapshot_id)
 
         assert loaded == original
@@ -235,37 +241,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
         repo = _borrador_repository(bucket_id=bucket_id)
 
-        successor = _populated_snapshot(bucket_id=bucket_id)
-        repo.save(successor)
-
-        captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
-        binding_values = {
-            "casilla.0500": Decimal("39800.00"),
-            "casilla.identity.declarant_label": "Persona Prueba",
-        }
-        source_url = _borrador_detail_url("202410013522401X")
-        snapshot_id = derive_borrador_100_snapshot_id(
-            filing_year=2024,
-            period=_PERIOD,
-            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-            captured_at=captured_at,
-            source_url=source_url,
-            binding_values=binding_values,
-        )
-        original = Borrador100Snapshot(
-            snapshot_id=snapshot_id,
-            bucket_id=bucket_id,
-            modelo="100",
-            filing_year=2024,
-            period=_PERIOD,
-            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-            captured_at=captured_at,
-            source_url=source_url,
-            state=SnapshotLifecycleState.SUPERSEDED,
-            binding_values=binding_values,
-            superseded_by_snapshot_id=successor.snapshot_id,
-        )
-        repo.save(original)
+        _, original = _save_superseded_original(repo, bucket_id)
 
         # Surgically delete ``superseded_by_snapshot_id`` from the
         # persisted JSON envelope payload, then attempt to load. The
