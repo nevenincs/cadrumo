@@ -14,19 +14,19 @@ identity audit:
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
 
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    interleave_write_after_first_singleton_select,
+    isolated_runtime_profile,
+    secure_object_select_log,
+)
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
@@ -51,35 +51,6 @@ _WORK_UNIT_CATALOGUE_VERSION = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.schema_versi
 _WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 10, 30, 0, tzinfo=UTC)
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 35, 0, tzinfo=UTC)
 _FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 40, 0, tzinfo=UTC)
-
-
-def _is_secure_object_select(statement: str) -> bool:
-    """Return whether one cursor statement reads the encrypted singleton table."""
-    normalized = " ".join(statement.split()).upper()
-    return normalized.startswith("SELECT") and " FROM SECURE_OBJECTS " in f" {normalized} "
-
-
-@contextmanager
-def _secure_object_select_log(engine: Engine) -> Generator[list[str]]:
-    """Observe live encrypted-SQL singleton reads without replacing a repository."""
-    selects: list[str] = []
-
-    def _record(
-        _conn: object,
-        _cursor: object,
-        statement: str,
-        _parameters: object,
-        _context: object,
-        _executemany: bool,
-    ) -> None:
-        if _is_secure_object_select(statement):
-            selects.append(statement)
-
-    event.listen(engine, "before_cursor_execute", _record)
-    try:
-        yield selects
-    finally:
-        event.remove(engine, "before_cursor_execute", _record)
 
 
 def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
@@ -193,40 +164,13 @@ def test_load_revisioned_returns_one_enveloped_secure_object_record_across_an_in
         assert expected_record is not None
 
         writer = WorkUnitCatalogueRepository(objects=profile.repository)
-        selects: list[str] = []
-        fired = False
-        writing = False
-
-        def _interleave_after_singleton_select(
-            _conn: object,
-            _cursor: object,
-            statement: str,
-            _parameters: object,
-            _context: object,
-            _executemany: bool,
-        ) -> None:
-            nonlocal fired, writing
-            if not _is_secure_object_select(statement) or writing:
-                return
-            selects.append(statement)
-            if fired:
-                return
-            fired = True
-            writing = True
-            try:
-                writer.save(second)
-            finally:
-                writing = False
-
-        engine = profile.repository.engine
-        event.listen(engine, "after_cursor_execute", _interleave_after_singleton_select)
-        try:
+        with interleave_write_after_first_singleton_select(
+            profile.repository.engine, lambda: writer.save(second)
+        ) as interleave:
             observed, revision_id = repository.load_revisioned()
-        finally:
-            event.remove(engine, "after_cursor_execute", _interleave_after_singleton_select)
 
-    assert fired
-    assert len(selects) == 1
+    assert interleave.fired
+    assert len(interleave.selects) == 1
     assert observed == first
     assert revision_id == expected_record.revision_id
 
@@ -237,7 +181,7 @@ def test_load_revisioned_observes_an_absent_enveloped_singleton_with_one_select(
     """The absent enveloped singleton outcome also uses exactly one encrypted-SQL read."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        with _secure_object_select_log(profile.repository.engine) as selects:
+        with secure_object_select_log(profile.repository.engine) as selects:
             observed, revision_id = repository.load_revisioned()
 
     assert len(selects) == 1

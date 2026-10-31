@@ -5,14 +5,14 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
 from uuid import UUID
 
 import pytest
-from sqlalchemy import Engine, Select
+from sqlalchemy import Engine, Select, event
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
@@ -45,6 +45,84 @@ from .profile_capsule_runtime import provision_test_profile_bucket_session
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _DEFAULT_SECONDARY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
+
+
+def is_secure_object_select(statement: str) -> bool:
+    """Return whether one cursor statement reads the encrypted singleton table."""
+    normalized = " ".join(statement.split()).upper()
+    return normalized.startswith("SELECT") and " FROM SECURE_OBJECTS " in f" {normalized} "
+
+
+@contextmanager
+def secure_object_select_log(engine: Engine) -> Generator[list[str]]:
+    """Observe live encrypted-SQL singleton reads without replacing a repository."""
+    selects: list[str] = []
+
+    def _record(
+        _conn: object,
+        _cursor: object,
+        statement: str,
+        _parameters: object,
+        _context: object,
+        _executemany: bool,
+    ) -> None:
+        if is_secure_object_select(statement):
+            selects.append(statement)
+
+    event.listen(engine, "before_cursor_execute", _record)
+    try:
+        yield selects
+    finally:
+        event.remove(engine, "before_cursor_execute", _record)
+
+
+@dataclass
+class SingletonReadInterleave:
+    """What one interleaved singleton read observed."""
+
+    selects: list[str] = field(default_factory=list)
+    fired: bool = False
+
+
+@contextmanager
+def interleave_write_after_first_singleton_select(
+    engine: Engine, write: Callable[[], object]
+) -> Generator[SingletonReadInterleave]:
+    """Run ``write`` once, right after the first encrypted singleton read completes.
+
+    The write's own reads are not counted, so a caller can assert that the
+    observed load issued exactly one SELECT while a concurrent writer landed
+    between its read and its return.
+    """
+    state = SingletonReadInterleave()
+    writing = False
+
+    def _interleave(
+        _conn: object,
+        _cursor: object,
+        statement: str,
+        _parameters: object,
+        _context: object,
+        _executemany: bool,
+    ) -> None:
+        nonlocal writing
+        if not is_secure_object_select(statement) or writing:
+            return
+        state.selects.append(statement)
+        if state.fired:
+            return
+        state.fired = True
+        writing = True
+        try:
+            write()
+        finally:
+            writing = False
+
+    event.listen(engine, "after_cursor_execute", _interleave)
+    try:
+        yield state
+    finally:
+        event.remove(engine, "after_cursor_execute", _interleave)
 
 
 def reap_profile_session_keys(storage_root: Path) -> None:
