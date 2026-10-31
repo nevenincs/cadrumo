@@ -20,8 +20,9 @@
 //! Nothing here starts, stops or supervises a runtime.
 
 use crate::value::Sha256Digest;
+use cadrumo_platform::runtime_connect::ConnectRefusal;
 pub use cadrumo_platform::runtime_pipe::ConnectCancellation as OpenCancellation;
-use cadrumo_platform::runtime_pipe::{self, ConnectRefusal, Pipe};
+use cadrumo_platform::runtime_pipe::{self, Pipe};
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -249,6 +250,7 @@ impl From<ConnectRefusal> for Refusal {
     fn from(refusal: ConnectRefusal) -> Self {
         match refusal {
             ConnectRefusal::NotReady => Self::EndpointNotReady,
+            ConnectRefusal::EndpointUntrusted => Self::EndpointUntrusted,
             ConnectRefusal::PeerUntrusted => Self::PeerUntrusted,
             ConnectRefusal::Deadline => Self::Timeout,
             ConnectRefusal::Cancelled => Self::ConnectionClosed,
