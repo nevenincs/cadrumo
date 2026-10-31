@@ -192,20 +192,13 @@ class InventoryHistoryEntryPayload(OutputSchema):
     prior_descriptor: InventoryDescriptorPayload | None = None
 
 
-class InventoryAdvisoryPayload(OutputSchema):
-    """A stable advisory code and the key of its sentence."""
-
-    code: NonEmptyStr
-    key: NonEmptyStr
-    year: InventoryYear
-
-
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
     Mirrors :class:`InventoryLedger`'s
     ``model_dump(mode='json')`` plus the ``bucket_event_ids`` field the
-    CLI appends at the emit site.
+    CLI appends at the emit site. Worker advisories are presented separately
+    through envelope notices, rather than copied into this state payload.
     """
 
     actividad_id: NonEmptyStr
@@ -221,7 +214,6 @@ class InventoryLedgerPayload(OutputSchema):
     retired: bool = False
     retirement_reason: str | None = None
     history: list[InventoryHistoryEntryPayload] = []
-    advisories: list[InventoryAdvisoryPayload] = []
 
 
 class InventoryOptionPayload(OutputSchema):

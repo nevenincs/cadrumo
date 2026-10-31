@@ -32,7 +32,7 @@ pub use cadrumo_platform::runtime_socket::ConnectCancellation as OpenCancellatio
 
 /// The native channel a runtime connection runs over on this platform.
 #[cfg(windows)]
-pub type RuntimeChannel = cadrumo_platform::runtime_pipe::RuntimeChannel;
+pub type RuntimeChannel = cadrumo_platform::runtime_pipe::Pipe;
 /// The native channel a runtime connection runs over on this platform.
 #[cfg(unix)]
 pub type RuntimeChannel = cadrumo_platform::runtime_socket::Socket;

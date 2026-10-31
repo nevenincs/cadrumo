@@ -18,6 +18,7 @@ kind = "mapping"
 entries = [
   { key = "clave.codes", value = "A,C,D,E,F,G,I,J,K" },
   { key = "subclave.codes", value = "01,02,03,04,05,06" },
+  { key = "subclave.bearing_claves", value = "A,D,F,G,I,J,K" },
   { key = "naturaleza_inmueble.codes", value = "1,2" },
   { key = "situacion_inmueble.codes", value = "1,2,3,4,5" },
   { key = "clave_declarado.codes", value = "N,T,U,O" },

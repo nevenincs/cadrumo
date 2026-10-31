@@ -150,6 +150,7 @@ def _operations(
     *,
     today: date = date(2025, 12, 31),
     consumers: dict[str, tuple[str, ...]] | None = None,
+    last_admitted_year: int | None = None,
 ) -> tuple[ActivityAssetOperations, MemoryRepository]:
     repository = MemoryRepository()
     return (
@@ -158,7 +159,9 @@ def _operations(
             ledger=MemoryLedger(_ACQUISITION),
             forecast_operation=_forecast,
             taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-            register_authority=memory_register_authority(today=today, consumers=consumers),
+            register_authority=memory_register_authority(
+                today=today, consumers=consumers, last_admitted_year=last_admitted_year
+            ),
         ),
         repository,
     )

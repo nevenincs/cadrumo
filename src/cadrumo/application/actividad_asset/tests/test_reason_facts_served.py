@@ -44,9 +44,10 @@ def test_the_election_limits_of_a_year_no_edition_covers_state_the_year_that_wor
 
     limits = operations.plan_limits(_ASSET)
 
-    assert limits.unavailable_reason_key == _NO_EDITION
+    key = limits.unavailable_reason_key
+    assert key == _NO_EDITION
     assert _stated(limits.unavailable_reason_facts) == {"tax_year": "2021"}
-    rendered = tr(limits.unavailable_reason_key, **_stated(limits.unavailable_reason_facts))
+    rendered = tr(key, **_stated(limits.unavailable_reason_facts))
     assert "2021" in rendered
     assert "{" not in rendered
 
@@ -101,8 +102,10 @@ def test_a_year_the_plan_cannot_figure_serves_its_refusal_with_the_facts_the_abs
     row = {item.tax_year: item for item in operations.plan(_ASSET)}[2027]
 
     assert row.claimable_refusal_key == row.absence_reason_key == _NO_EDITION
+    key = row.claimable_refusal_key
+    assert key is not None
     assert _stated(row.claimable_refusal_facts) == _stated(row.absence_reason_facts) == {"tax_year": "2027"}
-    assert "2027" in tr(row.claimable_refusal_key, **_stated(row.claimable_refusal_facts))
+    assert "2027" in tr(key, **_stated(row.claimable_refusal_facts))
 
 
 def test_a_method_refusal_for_a_missing_year_serves_the_method_that_words_it() -> None:
@@ -114,5 +117,6 @@ def test_a_method_refusal_for_a_missing_year_serves_the_method_that_words_it() -
     assert row.claim_state is ActivityAssetClaimState.MISSING
     assert row.claimable_intervals == ()
     assert row.claimable_refusal_key == "ledger.actividad_asset.errors.earlier_year_depends_on_pending_value"
+    key = row.claimable_refusal_key
     assert _stated(row.claimable_refusal_facts) == {"method": "constant_percentage"}
-    assert "{" not in tr(row.claimable_refusal_key, **_stated(row.claimable_refusal_facts))
+    assert "{" not in tr(key, **_stated(row.claimable_refusal_facts))

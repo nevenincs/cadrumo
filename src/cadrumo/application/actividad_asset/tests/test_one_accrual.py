@@ -128,13 +128,16 @@ def _operations(
     revision: ActivityAssetRevision,
     today: date = date(2025, 6, 30),
     bounds: DisposalBoundsReader = _one_eighteenth,
+    last_admitted_year: int | None = None,
 ) -> ActivityAssetOperations:
     operations = ActivityAssetOperations(
         repository=MemoryRepository(),
         ledger=MemoryLedger(_ACQUISITION),
         forecast_operation=_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=replace(memory_register_authority(today=today), disposal_bounds=bounds),
+        register_authority=replace(
+            memory_register_authority(today=today, last_admitted_year=last_admitted_year), disposal_bounds=bounds
+        ),
     )
     operations.create(revision, ActivityAssetDescriptorFacts(name="Machine"))
     return operations
@@ -233,7 +236,7 @@ def test_opening_and_claims_lower_the_pending_value_in_every_view() -> None:
 
 
 def test_claims_and_plan_never_exceed_the_basis_and_stop_when_it_is_exhausted() -> None:
-    operations = _operations(revision=_revision(), today=date(2034, 12, 31))
+    operations = _operations(revision=_revision(), today=date(2034, 12, 31), last_admitted_year=2034)
     for year in range(2025, 2035):
         _claim(operations, year)
 

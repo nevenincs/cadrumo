@@ -23,7 +23,7 @@ from ..withholding_bindings import (
     resolve_withholding_binding_values,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_financial_asset_loss_preserves_signed_base_without_negative_withholding() -> None:
@@ -396,3 +396,31 @@ def test_m190_row_group_refuses_conflicting_non_additive_detail() -> None:
 
     with pytest.raises(RegistryValidationError, match=r"conflicting non-additive detail.*province_code"):
         resolve_withholding_binding_row_values(revision, observations)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "admitted"),
+    [
+        ("territorial_deduction_clave", 2, True),
+        ("territorial_deduction_clave", 3, False),
+        ("descendants_under_3_total", 9, True),
+        ("descendants_under_3_total", 10, False),
+        ("descendants_rest_total", 99, True),
+        ("descendants_rest_total", 100, False),
+        ("clave_mercado", "D", True),
+        ("clave_mercado", "E", False),
+        ("financial_asset_origin", "E", True),
+        ("financial_asset_origin", "F", False),
+        ("financial_asset_related_entity", "", True),
+        ("financial_asset_related_entity", "V", True),
+        ("financial_asset_related_entity", "W", False),
+    ],
+)
+def test_the_observation_admits_only_what_the_record_design_declares(field: str, value: object, admitted: bool) -> None:
+    observation = _observation(source_id="coded", subclave="01", amount="0", withholding="0")
+    values = {**observation.model_dump(), field: value}
+    if admitted:
+        assert getattr(WithholdingObservation.model_validate(values), field) == value
+    else:
+        with pytest.raises(ValidationError, match="record design"):
+            WithholdingObservation.model_validate(values)

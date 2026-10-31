@@ -11,11 +11,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.country_code import CountryCodeAlpha2
 from ...domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 from ...domain.modelos.row_models import (
-    M184Clave,
-    M184ClaveDeclarado,
-    M184NaturalezaInmueble,
-    M184SituacionInmueble,
-    M184Subclave,
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
     Modelo232VinculadaRow,
@@ -125,16 +120,16 @@ class Modelo184MemberRowWireV1(_WireDetailRowMirror):
     pais: CountryCodeAlpha2 | None = None
     porcentaje: _WireAmount
     importe: _WireAmount
-    clave: M184Clave
-    subclave: M184Subclave | None = None
+    clave: str = Field(min_length=1)
+    subclave: str | None = None
     codigo_provincia: Annotated[str, Field(max_length=2)] | None = None
     miembro_a_31_diciembre: bool | None = None
     dias_miembro: Annotated[int, Field(ge=0, le=366)] | None = None
     domicilio_fiscal: Annotated[str, Field(max_length=40)] | None = None
-    naturaleza_inmueble: M184NaturalezaInmueble | None = None
-    situacion_inmueble: M184SituacionInmueble | None = None
+    naturaleza_inmueble: str | None = None
+    situacion_inmueble: str | None = None
     referencia_catastral: Annotated[str, Field(max_length=20)] | None = None
-    clave_declarado: M184ClaveDeclarado | None = None
+    clave_declarado: str | None = None
     porcentaje_titularidad_inmueble: _WireOptionalAmount = None
     dias_arrendamiento: Annotated[int, Field(ge=0, le=366)] | None = None
     reduccion: _WireOptionalAmount = None

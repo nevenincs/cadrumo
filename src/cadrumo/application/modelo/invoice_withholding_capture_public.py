@@ -47,76 +47,76 @@ class PublicAnnualRecipientDetail(BaseModel):
     retencion_practicada: PublicDecimal = PublicDecimal(decimal="0")
     ingreso_a_cuenta: PublicDecimal = PublicDecimal(decimal="0")
     province_code: str | None = Field(default=None, pattern="^\\d{2}$")
-    territorial_deduction_clave: int | None = Field(default=None, ge=0, le=2)
+    territorial_deduction_clave: int | None = None
     perceptor_birth_year: int | None = Field(default=None, ge=1900, le=2100)
-    perceptor_situacion_familiar: int | None = Field(default=None, ge=1, le=3)
+    perceptor_situacion_familiar: int | None = None
     representative_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
     spouse_or_unit_titular_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
-    disability_clave: int | None = Field(default=None, ge=0, le=3)
-    contract_relation_clave: int | None = Field(default=None, ge=1, le=4)
-    unit_convivencia_titular_clave: int | None = Field(default=None, ge=1, le=2)
-    geographic_mobility_clave: int | None = Field(default=None, ge=0, le=1)
+    disability_clave: int | None = None
+    contract_relation_clave: int | None = None
+    unit_convivencia_titular_clave: int | None = None
+    geographic_mobility_clave: int | None = None
     ingreso_a_cuenta_repercutido: PublicDecimal = PublicDecimal(decimal="0")
     accrual_year: int | None = Field(default=None, ge=1900, le=2100)
     reducciones_aplicables: PublicDecimal = PublicDecimal(decimal="0")
     gastos_deducibles: PublicDecimal = PublicDecimal(decimal="0")
     pension_compensatoria: PublicDecimal = PublicDecimal(decimal="0")
     anualidades_alimentos: PublicDecimal = PublicDecimal(decimal="0")
-    descendants_under_3_total: int | None = Field(default=None, ge=0, le=9)
-    descendants_under_3_whole: int | None = Field(default=None, ge=0, le=9)
-    descendants_rest_total: int | None = Field(default=None, ge=0, le=99)
-    descendants_rest_whole: int | None = Field(default=None, ge=0, le=99)
-    descendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=99)
-    descendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=99)
-    descendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=99)
-    descendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=99)
-    descendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=99)
-    descendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=99)
-    ascendants_under_75_total: int | None = Field(default=None, ge=0, le=9)
-    ascendants_under_75_whole: int | None = Field(default=None, ge=0, le=9)
-    ascendants_75_plus_total: int | None = Field(default=None, ge=0, le=9)
-    ascendants_75_plus_whole: int | None = Field(default=None, ge=0, le=9)
-    ascendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=9)
-    ascendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=9)
-    ascendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=9)
-    ascendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=9)
-    ascendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=9)
-    ascendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=9)
-    first_child_compute: int | None = Field(default=None, ge=1, le=2)
-    second_child_compute: int | None = Field(default=None, ge=1, le=2)
-    third_child_compute: int | None = Field(default=None, ge=1, le=2)
-    housing_loan_communication_clave: int | None = Field(default=None, ge=0, le=1)
+    descendants_under_3_total: int | None = None
+    descendants_under_3_whole: int | None = None
+    descendants_rest_total: int | None = None
+    descendants_rest_whole: int | None = None
+    descendants_disabled_33_65_total: int | None = None
+    descendants_disabled_33_65_whole: int | None = None
+    descendants_disabled_mobility_total: int | None = None
+    descendants_disabled_mobility_whole: int | None = None
+    descendants_disabled_65_plus_total: int | None = None
+    descendants_disabled_65_plus_whole: int | None = None
+    ascendants_under_75_total: int | None = None
+    ascendants_under_75_whole: int | None = None
+    ascendants_75_plus_total: int | None = None
+    ascendants_75_plus_whole: int | None = None
+    ascendants_disabled_33_65_total: int | None = None
+    ascendants_disabled_33_65_whole: int | None = None
+    ascendants_disabled_mobility_total: int | None = None
+    ascendants_disabled_mobility_whole: int | None = None
+    ascendants_disabled_65_plus_total: int | None = None
+    ascendants_disabled_65_plus_whole: int | None = None
+    first_child_compute: int | None = None
+    second_child_compute: int | None = None
+    third_child_compute: int | None = None
+    housing_loan_communication_clave: int | None = None
     incapacity_cash_perception: PublicDecimal
     incapacity_cash_withholding: PublicDecimal
     incapacity_kind_value: PublicDecimal
     incapacity_kind_ingreso_a_cuenta: PublicDecimal
     incapacity_kind_repercutido: PublicDecimal
-    complemento_infancia_clave: int | None = Field(default=None, ge=1, le=2)
+    complemento_infancia_clave: int | None = None
     foral_retention_estatal: PublicDecimal
     foral_retention_navarra: PublicDecimal
     foral_retention_araba: PublicDecimal
     foral_retention_gipuzkoa: PublicDecimal
     foral_retention_bizkaia: PublicDecimal
-    emerging_stock_excess_clave: int | None = Field(default=None, ge=0, le=1)
-    startup_fund_rendimientos_clave: int | None = Field(default=None, ge=0, le=1)
-    pension_prestacion_jubilacion: int | None = Field(default=None, ge=0, le=1)
-    pension_prestacion_viudedad: int | None = Field(default=None, ge=0, le=1)
-    pension_prestacion_incapacidad: int | None = Field(default=None, ge=0, le=1)
-    pension_prestacion_no_contributiva: int | None = Field(default=None, ge=0, le=1)
-    pension_prestacion_resto: int | None = Field(default=None, ge=0, le=1)
+    emerging_stock_excess_clave: int | None = None
+    startup_fund_rendimientos_clave: int | None = None
+    pension_prestacion_jubilacion: int | None = None
+    pension_prestacion_viudedad: int | None = None
+    pension_prestacion_incapacidad: int | None = None
+    pension_prestacion_no_contributiva: int | None = None
+    pension_prestacion_resto: int | None = None
     perceptor_mediador_flag: str | None = Field(default=None, max_length=1)
-    clave_codigo: int | None = Field(default=None, ge=1, le=4)
+    clave_codigo: int | None = None
     codigo_emisor: str | None = Field(default=None, max_length=12)
     naturaleza: str | None = Field(default=None, pattern="^\\d{2}$")
-    pago: int | None = Field(default=None, ge=1, le=5)
-    tipo_codigo: str | None = Field(default=None, pattern="^[COP]$")
+    pago: int | None = None
+    tipo_codigo: str | None = None
     codigo_cuenta: str | None = Field(default=None, max_length=20)
-    financial_asset_origin: Literal["A", "B", "C", "D", "E"] | None = None
+    financial_asset_origin: str | None = None
     financial_asset_acquisition_value: PublicDecimal | None = None
     financial_asset_disposal_value: PublicDecimal | None = None
-    financial_asset_related_entity: Literal["V", ""] | None = None
+    financial_asset_related_entity: str | None = None
     pendiente_flag: str | None = Field(default=None, max_length=1)
-    tipo_percepcion: int | None = Field(default=None, ge=1, le=2)
+    tipo_percepcion: int | None = None
     reducciones: PublicDecimal = PublicDecimal(decimal="0")
     base_retenciones: PublicDecimal
     porcentaje_retencion: PublicDecimal = PublicDecimal(decimal="0")
@@ -129,7 +129,7 @@ class PublicAnnualRecipientDetail(BaseModel):
     garantias: PublicDecimal = PublicDecimal(decimal="0")
     nif_pagador_anterior: str | None = Field(default=None, min_length=9, max_length=9)
     fecha_devengo: str | None = Field(default=None, pattern="^\\d{8}$")
-    clave_mercado: str | None = Field(default=None, pattern="^[A-D]$")
+    clave_mercado: str | None = None
     numero_orden: int | None = Field(default=None, ge=1, le=9999999)
 
     @classmethod
@@ -150,11 +150,11 @@ class PublicModelo180Property(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     property_key: str = Field(min_length=1, max_length=128)
-    situation: Literal["1", "2", "3", "4"]
+    situation: str = Field(min_length=1)
     cadastral_reference: str | None = Field(default=None, min_length=1, max_length=20)
     address: PublicModelo180Address
     recipient_province_code: SpanishProvinceCode
-    modality: Literal["1", "2"]
+    modality: str = Field(min_length=1)
     accrual_year: int = Field(ge=1900, le=9999)
     withholding_percentage: PublicDecimal
     representative_nif: str | None = Field(default=None, min_length=1, max_length=16)
@@ -165,7 +165,7 @@ class PublicModelo193PendingPayment(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    perception_key: Literal["A", "B", "D"]
+    perception_key: str = Field(min_length=1)
     nonpayment_cause: Modelo193NonpaymentCause
     actual_recipient_detail: PublicAnnualRecipientDetail
 

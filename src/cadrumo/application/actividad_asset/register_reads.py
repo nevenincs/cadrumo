@@ -44,6 +44,7 @@ from .activity_asset_read_models import (
     ActivityAssetNotTableBoundReason,
     ActivityAssetPlanClaim,
     ActivityAssetPlanRow,
+    ActivityAssetReasonFact,
     ActivityAssetRegisterState,
     activity_asset_label_key,
     project_reason_facts,
@@ -99,12 +100,12 @@ def _claimable(
     revision: ActivityAssetRevision,
     row: WalkedYear,
     history: ActivityAssetHistory,
-) -> tuple[tuple[ActivityAssetClaimableInterval, ...], str | None, Mapping[str, str]]:
+) -> tuple[tuple[ActivityAssetClaimableInterval, ...], str | None, tuple[ActivityAssetReasonFact, ...]]:
     """Clip the year's gaps to what its charge covers, or say why nothing there can be claimed, and with which facts."""
     if row.absence in _NOT_ACCRUING or row.absence is PlanFigureAbsence.COVERED_BY_OPENING:
-        return (), None, {}
+        return (), None, ()
     if row.absence is not None and row.absence is not PlanFigureAbsence.FREE_ELECTION:
-        return (), row.reason_key, row.reason_facts
+        return (), row.reason_key, project_reason_facts(row.reason_facts)
     election = revision.amortization
     try:
         require_method_continuity(
@@ -118,8 +119,8 @@ def _claimable(
             ),
         )
     except ActividadAssetError as error:
-        return (), error.translated_message, error_reason_facts(error)
-    return _claimable_gaps(row), None, {}
+        return (), error.translated_message, project_reason_facts(error_reason_facts(error))
+    return _claimable_gaps(row), None, ()
 
 
 def _claimable_gaps(row: WalkedYear) -> tuple[ActivityAssetClaimableInterval, ...]:
@@ -260,7 +261,7 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
                 claim_state=_claim_state(row, intervals, today=context.today),
                 claimable_intervals=intervals,
                 claimable_refusal_key=refusal_key,
-                claimable_refusal_facts=project_reason_facts(refusal_facts),
+                claimable_refusal_facts=refusal_facts,
                 edition=_edition_or_none(context, row.tax_year),
                 service_days=None if row.charge is None else row.charge.service_days,
                 calendar_days=None if row.charge is None else row.charge.calendar_days,

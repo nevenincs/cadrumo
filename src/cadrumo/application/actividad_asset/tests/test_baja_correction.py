@@ -55,7 +55,7 @@ def _sale(on: date) -> ActivityAssetDisposal:
 
 
 def _disposed(on: date = date(2026, 6, 30)) -> tuple[ActivityAssetOperations, MemoryRepository, ActivityAssetRevision]:
-    operations, repository = _operations(today=date(2028, 12, 31))
+    operations, repository = _operations(today=date(2028, 12, 31), last_admitted_year=2027)
     operations.create(_revision(), _NAME)
     for year in (2025, 2026, 2027):
         operations.record_claim(_full_year(operations, year), creating_operation=f"test.{year}")

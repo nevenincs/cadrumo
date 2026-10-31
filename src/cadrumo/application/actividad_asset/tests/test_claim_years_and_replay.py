@@ -72,7 +72,7 @@ def _sale(on: date = date(2026, 6, 30), *, later_affectation_on: date | None = N
 
 
 def test_a_later_claim_moves_neither_the_forecast_nor_the_walk_of_an_earlier_year() -> None:
-    operations, repository = _operations(today=date(2031, 12, 31))
+    operations, repository = _operations(today=date(2031, 12, 31), last_admitted_year=2030)
     operations.create(_revision(basis="1000"), _NAME)
     before = _full_year(operations, 2025)
     for year in (2028, 2029, 2030):
@@ -92,7 +92,7 @@ def test_a_later_claim_moves_neither_the_forecast_nor_the_walk_of_an_earlier_yea
 
 
 def test_a_claim_behind_later_ones_that_consumed_the_basis_is_refused_at_the_write() -> None:
-    operations, repository = _operations(today=date(2031, 12, 31))
+    operations, repository = _operations(today=date(2031, 12, 31), last_admitted_year=2030)
     operations.create(_revision(basis="1000"), _NAME)
     for year in (2028, 2029, 2030):
         operations.record_claim(_full_year(operations, year), creating_operation=f"test.{year}")
@@ -137,7 +137,7 @@ def test_a_later_claim_still_refuses_a_method_that_follows_the_pending_value() -
         ledger=MemoryLedger(_ACQUISITION),
         forecast_operation=_constant_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2031, 12, 31)),
+        register_authority=memory_register_authority(today=date(2031, 12, 31), last_admitted_year=2030),
     )
     operations.create(_revision(method=AmortizationMethod.CONSTANT_PERCENTAGE), _NAME)
     operations.record_claim(_full_year(operations, 2027), creating_operation="test.2027")

@@ -26,6 +26,7 @@ from .binding_selector_utils import (
     provider_member,
 )
 from .errors import RegistryValidationError
+from .form_codes import resolve_form_codes
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
@@ -222,6 +223,68 @@ def _retencion_clave_declared_models(token: str, declarations: Mapping[str, str]
     return models
 
 
+_OBSERVATION_COUNT_FIELDS = frozenset(
+    {
+        "descendants_under_3_total",
+        "descendants_under_3_whole",
+        "descendants_rest_total",
+        "descendants_rest_whole",
+        "descendants_disabled_33_65_total",
+        "descendants_disabled_33_65_whole",
+        "descendants_disabled_mobility_total",
+        "descendants_disabled_mobility_whole",
+        "descendants_disabled_65_plus_total",
+        "descendants_disabled_65_plus_whole",
+        "ascendants_under_75_total",
+        "ascendants_under_75_whole",
+        "ascendants_75_plus_total",
+        "ascendants_75_plus_whole",
+        "ascendants_disabled_33_65_total",
+        "ascendants_disabled_33_65_whole",
+        "ascendants_disabled_mobility_total",
+        "ascendants_disabled_mobility_whole",
+        "ascendants_disabled_65_plus_total",
+        "ascendants_disabled_65_plus_whole",
+    }
+)
+_OBSERVATION_CODE_FIELDS = (
+    "territorial_deduction_clave",
+    "perceptor_situacion_familiar",
+    "disability_clave",
+    "contract_relation_clave",
+    "unit_convivencia_titular_clave",
+    "geographic_mobility_clave",
+    "first_child_compute",
+    "second_child_compute",
+    "third_child_compute",
+    "housing_loan_communication_clave",
+    "complemento_infancia_clave",
+    "emerging_stock_excess_clave",
+    "startup_fund_rendimientos_clave",
+    "pension_prestacion_jubilacion",
+    "pension_prestacion_viudedad",
+    "pension_prestacion_incapacidad",
+    "pension_prestacion_no_contributiva",
+    "pension_prestacion_resto",
+    "clave_codigo",
+    "pago",
+    "tipo_percepcion",
+    "tipo_codigo",
+    "clave_mercado",
+    "financial_asset_origin",
+    "financial_asset_related_entity",
+    *_OBSERVATION_COUNT_FIELDS,
+)
+#: The Modelo 194 related-entity indicator is written blank when the entity is not related.
+_OBSERVATION_BLANK_ADMITTING_FIELDS = frozenset({"financial_asset_related_entity"})
+_WITHHOLDING_CATALOGUE_FACT = "modelo-190-193-withholding-binding-catalogue"
+
+
+def _no_declared_values_origin() -> str:
+    """Return the Modelo 194 origin whose acquisition and disposal values stay absent."""
+    return resolve_form_codes(_WITHHOLDING_CATALOGUE_FACT).code("modelo.194.origin.without_values")
+
+
 class WithholdingObservation(BaseModel):
     """Per-perceptor retencion / ingreso-a-cuenta observation for modelo 190 / 193.
 
@@ -276,7 +339,7 @@ class WithholdingObservation(BaseModel):
     province a fabricated residence. Absence propagates as an ABSENT KEY in the
     built row, so a binding that needs the province refuses with the shipped
     not-produced error naming itself."""
-    territorial_deduction_clave: int | None = Field(default=None, ge=0, le=2)
+    territorial_deduction_clave: int | None = None
     """Modelo 190 CEUTA O MELILLA clave: 1 when the payer applied the art. 68.4
     deduction for Ceuta/Melilla rentas, 2 for the Isla de La Palma exceptional
     deduction, 0 otherwise. A retention-rate determination fact the payer's own
@@ -284,7 +347,7 @@ class WithholdingObservation(BaseModel):
     perceptor_birth_year: int | None = Field(default=None, ge=1900, le=2100)
     """Perceptor birth year, only declared by the design for claves A, B (subclaves
     01, 03, 04, 99) and C."""
-    perceptor_situacion_familiar: int | None = Field(default=None, ge=1, le=3)
+    perceptor_situacion_familiar: int | None = None
     """Perceptor family-situation clave (1-3) per the design's own relation, only
     declared for claves A, B (subclaves 01, 03, 04, 99) and C."""
     representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
@@ -293,17 +356,17 @@ class WithholdingObservation(BaseModel):
     spouse_or_unit_titular_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
     """NIF of the perceptor's spouse (situacion familiar 2, claves A/B/C) or of the
     unidad de convivencia's titular (clave L.29 with titular clave 2); spaces elsewhere."""
-    disability_clave: int | None = Field(default=None, ge=0, le=3)
+    disability_clave: int | None = None
     """Perceptor disability degree clave (0 none/<33%, 1 33-65%, 2 33-65% needing
     third-party help or reduced mobility, 3 >=65%), declared for claves A, B
     (subclaves 01, 03, 04, 99) and C."""
-    contract_relation_clave: int | None = Field(default=None, ge=1, le=4)
+    contract_relation_clave: int | None = None
     """Contract-or-relation type clave (1 general, 2 under-a-year/artists, 3 other
     special dependent relations, 4 sporadic peonadas), declared for clave A only."""
-    unit_convivencia_titular_clave: int | None = Field(default=None, ge=1, le=2)
+    unit_convivencia_titular_clave: int | None = None
     """Whether the perceptor is the unidad de convivencia's titular (1 yes, 2 no),
     declared for clave L.29 only."""
-    geographic_mobility_clave: int | None = Field(default=None, ge=0, le=1)
+    geographic_mobility_clave: int | None = None
     """Art. 19.2.f) geographic-mobility deduction flag (1 entitled, 0 not),
     declared for clave A only."""
     ingreso_a_cuenta_repercutido: Decimal = Decimal("0")
@@ -325,57 +388,57 @@ class WithholdingObservation(BaseModel):
     anualidades_alimentos: Decimal = Decimal("0")
     """Annual food annuities to children by judicial decision (design positions
     210-222); the design's own zeros when none."""
-    descendants_under_3_total: int | None = Field(default=None, ge=0, le=9)
+    descendants_under_3_total: int | None = None
     """Descendants under 3 (design position 223), counted per art. 58 mínimo por
     descendientes rules; the design's own zero when none."""
-    descendants_under_3_whole: int | None = Field(default=None, ge=0, le=9)
+    descendants_under_3_whole: int | None = None
     """Of the position-223 descendants, those computed por entero (design 224)."""
-    descendants_rest_total: int | None = Field(default=None, ge=0, le=99)
+    descendants_rest_total: int | None = None
     """Remaining descendants (design positions 225-226)."""
-    descendants_rest_whole: int | None = Field(default=None, ge=0, le=99)
+    descendants_rest_whole: int | None = None
     """Of the position 225-226 descendants, those computed por entero (227-228)."""
-    descendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_33_65_total: int | None = None
     """Disabled descendants 33-65% (design positions 229-230, art. 60.2)."""
-    descendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_33_65_whole: int | None = None
     """Of the 229-230 descendants, those computed por entero (231-232)."""
-    descendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_mobility_total: int | None = None
     """Disabled 33-65% descendants with reduced mobility or third-party help need
     (design positions 233-234)."""
-    descendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_mobility_whole: int | None = None
     """Of the 233-234 descendants, those computed por entero (235-236)."""
-    descendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_65_plus_total: int | None = None
     """Disabled descendants at 65% or more (design positions 237-238)."""
-    descendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=99)
+    descendants_disabled_65_plus_whole: int | None = None
     """Of the 237-238 descendants, those computed por entero (239-240)."""
-    ascendants_under_75_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_under_75_total: int | None = None
     """Ascendants under 75 (design position 241, art. 59)."""
-    ascendants_under_75_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_under_75_whole: int | None = None
     """Of the position-241 ascendants, those computed por entero (242)."""
-    ascendants_75_plus_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_75_plus_total: int | None = None
     """Ascendants at 75 or more (design position 243)."""
-    ascendants_75_plus_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_75_plus_whole: int | None = None
     """Of the position-243 ascendants, those computed por entero (244)."""
-    ascendants_disabled_33_65_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_33_65_total: int | None = None
     """Disabled ascendants 33-65% (design position 245)."""
-    ascendants_disabled_33_65_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_33_65_whole: int | None = None
     """Of the position-245 ascendants, those computed por entero (246)."""
-    ascendants_disabled_mobility_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_mobility_total: int | None = None
     """Disabled 33-65% ascendants with reduced mobility or third-party help need
     (design position 247)."""
-    ascendants_disabled_mobility_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_mobility_whole: int | None = None
     """Of the position-247 ascendants, those computed por entero (248)."""
-    ascendants_disabled_65_plus_total: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_65_plus_total: int | None = None
     """Disabled ascendants at 65% or more (design position 249)."""
-    ascendants_disabled_65_plus_whole: int | None = Field(default=None, ge=0, le=9)
+    ascendants_disabled_65_plus_whole: int | None = None
     """Of the position-249 ascendants, those computed por entero (250)."""
-    first_child_compute: int | None = Field(default=None, ge=1, le=2)
+    first_child_compute: int | None = None
     """How the first child was computed for the retention rate (design position
     251): 1 por entero, 2 por mitad."""
-    second_child_compute: int | None = Field(default=None, ge=1, le=2)
+    second_child_compute: int | None = None
     """How the second child was computed (design position 252)."""
-    third_child_compute: int | None = Field(default=None, ge=1, le=2)
+    third_child_compute: int | None = None
     """How the third child was computed (design position 253)."""
-    housing_loan_communication_clave: int | None = Field(default=None, ge=0, le=1)
+    housing_loan_communication_clave: int | None = None
     """Whether the perceptor communicated vivienda-habitual loan amounts at some
     point in the exercise (design position 254, art. 86.1 RIRPF last paragraph):
     clave 0 never applied, 1 applied -- both are recorded facts, never defaults."""
@@ -384,7 +447,7 @@ class WithholdingObservation(BaseModel):
     incapacity_kind_value: Decimal
     incapacity_kind_ingreso_a_cuenta: Decimal
     incapacity_kind_repercutido: Decimal
-    complemento_infancia_clave: int | None = Field(default=None, ge=1, le=2)
+    complemento_infancia_clave: int | None = None
     """Whether any mensualidad of the L.29 prestacion included the IMV complemento
     de ayuda para la infancia (design position 322): clave 1 included, 2 not --
     both are recorded facts, never defaults."""
@@ -393,34 +456,34 @@ class WithholdingObservation(BaseModel):
     foral_retention_araba: Decimal
     foral_retention_gipuzkoa: Decimal
     foral_retention_bizkaia: Decimal
-    emerging_stock_excess_clave: int | None = Field(default=None, ge=0, le=1)
+    emerging_stock_excess_clave: int | None = None
     """Whether the row's in-kind percepciones include emerging-company stock over
     the art. 42.3.f) exempt amount (design position 388): clave 1 yes, 0 the rest
     of the in-kind retributions -- both recorded facts, declared only for clave A
     and only when the especie block has content."""
-    startup_fund_rendimientos_clave: int | None = Field(default=None, ge=0, le=1)
+    startup_fund_rendimientos_clave: int | None = None
     """Whether the row's payments include D.A. 53a fund-management rendimientos
     del trabajo (2025-edition design position 389): clave 1 yes, 0 the rest. The
     cumplimentacion trigger is the payer's own composition judgment, so the clave
     is recorded-when-applicable: spaces when absent, refused outside clave A."""
-    pension_prestacion_jubilacion: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_jubilacion: int | None = None
     """Whether the clave B.01 prestaciones include jubilacion (2025-edition
     design position 390): each type's 0/1 flag is always recorded for B.01."""
-    pension_prestacion_viudedad: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_viudedad: int | None = None
     """Whether the clave B.01 prestaciones include viudedad (position 391)."""
-    pension_prestacion_incapacidad: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_incapacidad: int | None = None
     """Whether the clave B.01 prestaciones include incapacidad permanente total o
     parcial (position 392)."""
-    pension_prestacion_no_contributiva: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_no_contributiva: int | None = None
     """Whether the clave B.01 prestaciones include pensiones no contributivas por
     invalidez o jubilacion (position 393)."""
-    pension_prestacion_resto: int | None = Field(default=None, ge=0, le=1)
+    pension_prestacion_resto: int | None = None
     """Whether the clave B.01 prestaciones include the remaining non-exempt
     art. 17.2.a).1a prestaciones (position 394)."""
     perceptor_mediador_flag: str | None = Field(default=None, max_length=1)
     """Modelo 193 'X' flag (position 76) marking a perceptor that is itself a
     mediator entity paying by proxy, declared only for claves A, B and D."""
-    clave_codigo: int | None = Field(default=None, ge=1, le=4)
+    clave_codigo: int | None = None
     """Modelo 193 clave codigo (position 79) identifying what the codigo emisor
     and ISIN fields carry, always recorded for claves A, B and D (clave 4 is
     the general case)."""
@@ -431,16 +494,16 @@ class WithholdingObservation(BaseModel):
     naturaleza: str | None = Field(default=None, pattern=r"^\d{2}$")
     """Modelo 193 naturaleza (positions 93-94): the two-digit subclave of the
     clave de percepcion, always recorded."""
-    pago: int | None = Field(default=None, ge=1, le=5)
+    pago: int | None = None
     """Modelo 193 pago (position 95): who paid, always recorded for claves A,
     B and D (1 emisor, 2/3/4 mediador, 5 other mediation)."""
-    tipo_codigo: str | None = Field(default=None, pattern=r"^[COP]$")
+    tipo_codigo: str | None = None
     """Modelo 193 tipo codigo (position 96): what the codigo cuenta field
     holds, always recorded for claves A, B and D."""
     codigo_cuenta: str | None = Field(default=None, max_length=20)
     """Modelo 193 codigo cuenta valores / numero operacion prestamo (positions
     97-116), recorded only when a financial entity manages the valores."""
-    financial_asset_origin: Literal["A", "B", "C", "D", "E"] | None = None
+    financial_asset_origin: str | None = None
     """Modelo 194 origin at position 78, supplied by the transaction evidence.
 
     A transfer, B redemption, C exchange/conversion, D the specified pre-coupon
@@ -460,12 +523,12 @@ class WithholdingObservation(BaseModel):
     This is supplied independently from acquisition value and the declared tax
     base. The source's special cases preclude inferring one from the other two.
     """
-    financial_asset_related_entity: Literal["V", ""] | None = None
+    financial_asset_related_entity: str | None = None
     """Modelo 194 related-entity indicator at 187: V, explicitly blank, or unknown."""
     pendiente_flag: str | None = Field(default=None, max_length=1)
     """Modelo 193 'X' flag (position 117) marking percepciones devengadas but
     not yet paid because the holder did not claim them."""
-    tipo_percepcion: int | None = Field(default=None, ge=1, le=2)
+    tipo_percepcion: int | None = None
     """Modelo 193 tipo de percepcion (position 122): 1 dinerarias, 2 en
     especie, always recorded."""
     reducciones: Decimal = Decimal("0")
@@ -505,7 +568,7 @@ class WithholdingObservation(BaseModel):
     fecha_devengo: str | None = Field(default=None, pattern=r"^\d{8}$")
     """Modelo 193 fecha de devengo (positions 331-338, DDMMAAAA), declared only
     for clave A."""
-    clave_mercado: str | None = Field(default=None, pattern=r"^[A-D]$")
+    clave_mercado: str | None = None
     """Modelo 193 clave de mercado (position 339), always recorded for claves
     A, B and D."""
     numero_orden: int | None = Field(default=None, ge=1, le=9999999)
@@ -576,10 +639,30 @@ class WithholdingObservation(BaseModel):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
+    def _declared_form_codes(self) -> WithholdingObservation:
+        """Refuse a code or count the published record design does not declare."""
+        populated = {name: getattr(self, name) for name in _OBSERVATION_CODE_FIELDS}
+        if all(value is None for value in populated.values()):
+            return self
+        declared = resolve_form_codes(_WITHHOLDING_CATALOGUE_FACT)
+        for name, value in populated.items():
+            if value is None or (value == "" and name in _OBSERVATION_BLANK_ADMITTING_FIELDS):
+                continue
+            if name in _OBSERVATION_COUNT_FIELDS:
+                if not 0 <= value <= declared.integer(f"observation_count.{name}.maximum"):
+                    raise RegistryValidationError(f"{name} exceeds the width the record design declares")
+            elif str(value) not in declared.codes(f"observation_code.{name}"):
+                raise RegistryValidationError(f"{name} is not a code the record design declares")
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _financial_asset_conditions(self) -> WithholdingObservation:
         """Preserve the source design's absent amounts and negative-base rule."""
-        if self.financial_asset_origin == "D" and (
-            self.financial_asset_acquisition_value is not None or self.financial_asset_disposal_value is not None
+        if (
+            self.financial_asset_origin is not None
+            and self.financial_asset_origin == _no_declared_values_origin()
+            and (self.financial_asset_acquisition_value is not None or self.financial_asset_disposal_value is not None)
         ):
             raise RegistryValidationError("financial-asset origin D requires absent acquisition and disposal values")
         if self.financial_asset_origin is not None and self.base_retenciones < 0 and self.retencion_practicada != 0:
@@ -804,7 +887,7 @@ def _withholding_role_declarations(
     selected_authority = require_governed_fact_authority(authority, subject="withholding role catalogue")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
-            fact_id="modelo-190-193-withholding-binding-catalogue",
+            fact_id=_WITHHOLDING_CATALOGUE_FACT,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=effective_date,
         ),

@@ -33,9 +33,6 @@ from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bind
 from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
     renta_gastos_pago_fraccionado_target_casilla,
 )
-from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.schema_references import TemporalProjectionDirection
-from ...domain.calculations.registry.temporal import revision_temporal_resolution
 from ...domain.renta.actividad_asset.election import WORKFORCE_CONDITIONED_METHODS
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
@@ -99,7 +96,6 @@ from .activity_asset_contracts import (
     ActivityAssetPlanRequest,
     ActivityAssetTimelineRequest,
 )
-from .activity_asset_read_models import ActivityAssetEdition
 from .activity_asset_results import (
     ActivityAssetAcquisitionCandidatesResult,
     ActivityAssetClaimResult,
@@ -122,7 +118,12 @@ from .activity_asset_results import (
 from .disposal_calculation import pinned_disposal_bounds, project_disposal_calculation
 from .modality import direct_estimation_modality
 from .operation_dtos import ActivityAssetRevisionSnapshot
-from .operations import ActivityAssetOperations, ActivityAssetRegisterAuthority, SupersedingClaimRequest
+from .operations import (
+    ActivityAssetOperations,
+    ActivityAssetRegisterAuthority,
+    SupersedingClaimRequest,
+    pinned_edition,
+)
 from .register_reads import register_years
 
 _AGRARIAN_INSTALMENT_SELECTOR = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras"
@@ -182,23 +183,6 @@ def _activity_asset_operations(
             requested_free_amount=requested_free_amount,
         )
 
-    def edition(tax_year: int) -> tuple[ActivityAssetEdition, ModeloRevision]:
-        revision = operation.revision_for_context("100", filing_year=tax_year, period="0A")
-        resolution = revision_temporal_resolution(
-            revision,
-            filing_year=tax_year,
-            period="0A",
-            support=operation.supported_filing_years(),
-        )
-        return (
-            ActivityAssetEdition(
-                revision_id=revision.id,
-                authored_filing_year=resolution.authored_filing_year,
-                projected=resolution.projection_direction is not TemporalProjectionDirection.AUTHORED,
-            ),
-            revision,
-        )
-
     def schedule_authority(revision: ActivityAssetRevision, tax_year: int) -> ScheduleAuthority:
         return resolve_activity_asset_schedule_authority(
             operation.revision_for_context("100", filing_year=tax_year, period="0A"),
@@ -225,7 +209,7 @@ def _activity_asset_operations(
         forecast_operation=forecast,
         taxpayer_modality=taxpayer_modality,
         register_authority=ActivityAssetRegisterAuthority(
-            edition=edition,
+            edition=pinned_edition(operation),
             m100_amortization_casillas=lambda tax_year: activity_asset_amortization_casillas(
                 operation.revision_for_context("100", filing_year=tax_year, period="0A"),
             ),

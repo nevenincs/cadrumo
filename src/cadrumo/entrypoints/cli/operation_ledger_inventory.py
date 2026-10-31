@@ -191,7 +191,9 @@ def _collapse_public_decimal_objects(value: _JsonValue) -> _JsonValue:
 def _ledger_payload_json(ledger: InventoryLedgerProjection, *, outcome: str | None = None) -> str:
     # Pydantic serialized this strict projection; the standard decoder exposes its
     # result as Any, so restore the closed JSON value type at this boundary.
-    payload = cast(_JsonValue, json.loads(ledger.model_dump_json()))
+    # Diagnostics ride on envelope notices; the worker projection retains them
+    # for each frontend to present through its own diagnostic channel.
+    payload = cast(_JsonValue, json.loads(ledger.model_dump_json(exclude={"advisories"})))
     if not isinstance(payload, dict):
         raise ValueError("inventory ledger projection did not produce a JSON object")
     collapsed = _collapse_public_decimal_objects(payload)
@@ -231,7 +233,6 @@ def read_inventory_catalogue(
                     "year": row.year,
                     "valuation_method": row.valuation_method.value,
                     "opening_stock": row.opening_stock.decimal,
-                    "advisories": [item.model_dump(mode="json") for item in row.advisories],
                     "movement_count": row.movement_count,
                     "label": row.label,
                     "retired": row.retired,
