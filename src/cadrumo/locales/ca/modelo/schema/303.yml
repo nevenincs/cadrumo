@@ -1012,7 +1012,7 @@ modelo:
             x-d5r62bjiclpnar3kc5i6u:
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
           field:
-            label: Modelo 303, exercici 2024, a partir de períodos 09 i 3T i següents
+            label: Modelo 303, exercici 2024, a partir de períodes 09 i 3T i següents
         2024-hasta-08-y-2t:
           casilla:
             '64':

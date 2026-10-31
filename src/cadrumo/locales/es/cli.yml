@@ -3976,9 +3976,9 @@ cli:
         tu actividad.
       justificante_unverified: No se ha verificado el justificante de la AEAT de una
         declaración presentada
-      m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
-        cálculo forfait del régimen simplificado aún no está disponible; revisa las
-        casillas del régimen simplificado antes de presentar.
+      m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero aún no está
+        disponible el cálculo por módulos de la cuota del régimen simplificado del
+        IVA; revisa las casillas del régimen simplificado antes de presentar.
       retencion_arrendamientos_unset: En tu perfil aún no consta si pagas alquileres
         y practicas retenciones sobre ellos.
       retencion_capital_unset: En tu perfil aún no consta si pagas rendimientos del

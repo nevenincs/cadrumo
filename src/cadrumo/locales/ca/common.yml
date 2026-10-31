@@ -4341,7 +4341,7 @@ desktop:
     label: Espai de treball
     logs: Registres
     messages: Missatges
-    python: Shell de Python
+    python: Intèrpret de Python
     search: Cerca
     settings: Configuració
     tui: Espai de treball
@@ -5675,7 +5675,7 @@ navigation:
         label: Registres
       python:
         keywords: python consola repl intèrpret
-        label: Shell de Python
+        label: Intèrpret de Python
     profile:
       aeat_access:
         keywords: aeat accés identificar-se certificat electrònic clave certificado

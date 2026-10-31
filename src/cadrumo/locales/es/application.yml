@@ -2094,7 +2094,7 @@ application:
         compensación de este periodo. Registrar una anulación alteraría una declaración
         registrada como presentada.'
       seed_negative_amount: El importe inicial no puede ser negativo.
-      seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
+      seed_no_nif: No hay NIF definido para la operación de importe inicial; asócialo
         al perfil activo.
     lifecycle:
       calculate: Calcular

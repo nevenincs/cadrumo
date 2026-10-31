@@ -4339,7 +4339,7 @@ desktop:
     label: Espacio de trabajo
     logs: Registros
     messages: Mensajes
-    python: Shell de Python
+    python: Intérprete de Python
     search: Buscar
     settings: Ajustes
     tui: Espacio de trabajo

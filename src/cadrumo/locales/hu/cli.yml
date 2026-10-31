@@ -661,7 +661,7 @@ cli:
           és a rendszer NEM jelentette üresnek: {pairs}. Az elutasítás nem bizonyítja,
           hogy nem nyújtottak be semmit.'
         pull_dry_run_help: Megmutatja, mit töltene le ez a tömeges letöltés, anélkül
-          hogy barmit írna. Csak tömeges módban.
+          hogy bármit írna. Csak tömeges módban.
         pull_dry_run_single_mode_error: A --dry-run csak tömeges letöltésnél érvényes
           a --from-year/--to-year kapcsolókkal; egyetlen nyomtatvány letöltése nem
           támogatja a próbafuttatást.
@@ -1543,12 +1543,13 @@ cli:
           ügyek).
         compare_taxation_error: 'A közös és egyéni adózás összehasonlítása nem végezhető
           el: {detail}'
-        compare_taxation_help: 'Összehasonlítja az IRPF cuotát közös (conjunta, Art.
-          82-84 LIRPF) és egyéni adózás esetén egy meglévő Modelo 100 nyomtatvány
-          szerinti bevallásnál. A Cadrumo kétszer számol, egyszer declaration_type=2
-          (conjunta), egyszer declaration_type=1 (individual) értékkel, ugyanazokból
-          a profiladatokból, és kiírja a cuota különbözetét és egy javaslatot. Semmi
-          sem kerül mentésre: nem jön létre mentett számítás.'
+        compare_taxation_help: 'Összehasonlítja az IRPF szerinti adóösszeget közös
+          adózás (`conjunta`, Art. 82–84 LIRPF) és egyéni adózás esetén egy meglévő
+          Modelo 100-as bevallásnál. A Cadrumo kétszer számol: egyszer declaration_type=2
+          (`conjunta`, közös adózás), egyszer declaration_type=1 (`individual`, egyéni
+          adózás) értékkel, ugyanazokból a profiladatokból, és kiírja az adóösszeg
+          különbségét, valamint egy javaslatot. Semmit sem ment el: nem hoz létre
+          mentett számítást.'
         compare_taxation_recommendation_line: 'JAVASLAT: {recommendation} - {reason}'
         compare_taxation_work_unit_not_found: A(z) {work_unit_id} bevallás nem található;
           az aktív bevallásokat a 'aeat app modelo work list' paranccsal tekintheti
@@ -3904,9 +3905,9 @@ cli:
       iva_regime_unset: A profilodban még nem szerepel, hogy tevékenységedre melyik
         áfarendszer vonatkozik.
       justificante_unverified: Egy benyújtott bevallás AEAT-igazolását még nem ellenőrizték
-      m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazandó, de a simplificado
-        forfait számítási motor még nem elérhető; beadás előtt ellenőrizd az egyszerűsített
-        rezsim rovatait.
+      m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazandó, de az egyszerűsített
+        áfarendszer modulok szerinti adóösszegének kiszámítása még nem érhető el;
+        benyújtás előtt ellenőrizd az egyszerűsített áfarendszer rovatait.
       retencion_arrendamientos_unset: A profilodban még nem szerepel, hogy fizetsz-e
         olyan bérleti díjat, amelyből adóelőleget vonsz le.
       retencion_capital_unset: A profilodban még nem szerepel, hogy fizetsz-e adólevonással
