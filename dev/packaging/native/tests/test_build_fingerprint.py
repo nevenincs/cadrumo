@@ -289,9 +289,12 @@ def test_compiler_read_logs_and_the_desktop_snapshot_map_back_to_the_checkout(bu
     _write(header, "#define EXTRA 1\n")
     log = build / "native/cadrumo_python.dir/Debug/cadrumo_python.tlog/CL.read.1.tlog"
     log.parent.mkdir(parents=True)
+    # MSBuild logs upper-case every path it records, and only a case-folding
+    # host maps that back; elsewhere paths keep the case the checkout has.
+    shout = str.upper if os.name == "nt" else str
     lines = [
-        f"^{str(checkout / 'native/interpreter/windows/host.c').upper()}",
-        str(header).upper(),
+        f"^{shout(str(checkout / 'native/interpreter/windows/host.c'))}",
+        shout(str(header)),
         "C:\\SDK\\WINDOWS.H",
     ]
     log.write_bytes(("\ufeff" + "\r\n".join(lines) + "\r\n").encode("utf-16-le"))
