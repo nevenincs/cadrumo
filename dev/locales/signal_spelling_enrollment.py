@@ -186,6 +186,21 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "proration",
             "formalization",
             "formalized",
+            # Exact software prose in current sources: Quickstart/quickstart
+            # guide links, subpackages/docstrings in architecture and authoring
+            # docs, plaintext/decrypting/decrypted in custody/export guidance,
+            # and schemas/invariants in CLI docs and validation diagnostics.
+            # Quickstart is also the setuptools guide's own heading:
+            # https://setuptools.pypa.io/en/latest/userguide/quickstart.html
+            "Quickstart",
+            "quickstart",
+            "subpackages",
+            "docstrings",
+            "plaintext",
+            "decrypting",
+            "decrypted",
+            "schemas",
+            "invariants",
             # The English catalogue and authored docs also use these exact US
             # forms, absent from the pinned British dictionary: common.yml's
             # window actions, application.yml's synchronization/finalization
