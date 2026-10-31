@@ -12,7 +12,6 @@
 //! The service the person admits and the other frontends never present a
 //! proof: the runtime restores a service when its parent returns.
 
-#[cfg(windows)]
 pub(crate) mod rebind;
 
 use cadrumo_application::error::application::{ApplicationError, Cause};
@@ -76,7 +75,6 @@ impl Custody {
 
     /// Says what `session` shows. A session that does not wait any more
     /// clears only its own mark, never the one of the session that replaced it.
-    #[cfg(any(windows, test))]
     fn show(&self, session: &str, shown: Option<Reconnecting>) {
         self.waiting.send_if_modified(|held| {
             let next = match (shown, held.as_ref()) {
@@ -93,7 +91,6 @@ impl Custody {
     }
 
     /// The session returned or ended: it shows nothing more.
-    #[cfg(windows)]
     pub(crate) fn clear(&self, session: &str) {
         self.show(session, None);
     }
