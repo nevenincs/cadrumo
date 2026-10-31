@@ -759,6 +759,10 @@ export type CorrectionCheck = {
 
 const HEX64 = /^[0-9a-f]{64}$/;
 
+/** Whether `text` has the shape of a payment id: a transaction id, 64 lowercase
+ * hex digits. */
+export const isPaymentId = (text: string) => HEX64.test(text);
+
 /** The correction a draft makes to `invoice`, field by field, and what the
  * ledger would refuse in it. Only the fields the update accepts are ever
  * sent, and only those that changed. */
@@ -865,7 +869,7 @@ export function checkCorrection(
     );
   const paymentId = draft.paymentId.trim().toLowerCase();
   if (paymentId !== "") {
-    if (!HEX64.test(paymentId))
+    if (!isPaymentId(paymentId))
       problems.payment_id = { kind: "rule", rule: "payment_id_shape" };
     else set("payment_id", paymentId);
   }
