@@ -141,6 +141,8 @@ def _layout_lengths(modelo: str, field_key: str) -> set[int]:
         ("m347.inmueble.referencia_catastral_max", "347", "modelo-347-inmueble-row-referencia-catastral"),
         ("m360.numero_registro_anterior_max", "360", "m360.solicitud.numero_registro_declaracion_anterior"),
         ("m360.full_name_max", "360", "m360.representante.full_name"),
+        ("m360.email_max", "360", "m360.solicitante.email"),
+        ("m360.email_max", "360", "m360.representante.email"),
         ("m360.phone_max", "360", "m360.solicitante.phone"),
         ("m360.address.street_type_max", "360", "m360.solicitante.domicilio.tipo_via"),
         ("m360.address.street_name_max", "360", "m360.solicitante.domicilio.nombre_via"),

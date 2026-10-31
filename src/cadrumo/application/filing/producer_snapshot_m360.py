@@ -67,7 +67,12 @@ _FOREIGN_ADDRESS_FITS = {
     "postal_code": "m360.foreign_address.postal_code_max",
     "region": "m360.foreign_address.region_max",
 }
-_REPRESENTANTE_FITS = {"full_name": "m360.full_name_max", "phone": "m360.phone_max"}
+_SOLICITANTE_FITS = {"email": "m360.email_max", "phone": "m360.phone_max"}
+_REPRESENTANTE_FITS = {
+    "full_name": "m360.full_name_max",
+    "email": "m360.email_max",
+    "phone": "m360.phone_max",
+}
 
 
 def _fit(value: str | None, info: ValidationInfo, fits: dict[str, str]) -> str | None:
@@ -341,11 +346,11 @@ class Modelo360SolicitanteFacts(BaseModel):
     domicilio: Modelo360DomicilioEspana | None = None
     apartado_correos: Modelo360ApartadoCorreos | None = None
 
-    @field_validator("phone")
+    @field_validator(*_SOLICITANTE_FITS)
     @classmethod
     @pydantic_validation_boundary
-    def _phone_fits_the_design(cls, value: str | None) -> str | None:
-        return require_form_fit(value, "m360.phone_max")
+    def _fits_the_design(cls, value: str | None, info: ValidationInfo) -> str | None:
+        return _fit(value, info, _SOLICITANTE_FITS)
 
 
 class Modelo360RepresentanteFacts(BaseModel):

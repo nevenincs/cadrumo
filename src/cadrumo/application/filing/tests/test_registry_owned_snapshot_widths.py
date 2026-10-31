@@ -17,6 +17,7 @@ from ..producer_snapshot_m360 import (
     Modelo360DireccionExtranjero,
     Modelo360DomicilioEspana,
     Modelo360RepresentanteFacts,
+    Modelo360SolicitanteFacts,
     Modelo360SolicitudFacts,
 )
 
@@ -54,6 +55,14 @@ def test_a_modelo_296_digit_field_fits_the_design(model: type[BaseModel], field:
     assert not _field_refused(model, field, "1" * limit)
     assert _field_refused(model, field, "1" * (limit + 1))
     assert _field_refused(model, field, "x" * limit)
+
+
+@pytest.mark.parametrize("model", [Modelo360SolicitanteFacts, Modelo360RepresentanteFacts])
+def test_a_modelo_360_email_fits_the_design(model: type[BaseModel]) -> None:
+    limit = _declared("m360.email_max")
+    domain = "@example.test"
+    assert not _field_refused(model, "email", "x" * (limit - len(domain)) + domain)
+    assert _field_refused(model, "email", "x" * (limit - len(domain) + 1) + domain)
 
 
 @pytest.mark.parametrize(
