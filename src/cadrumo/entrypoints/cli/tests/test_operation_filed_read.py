@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from functools import partial
 from typing import cast
 from uuid import UUID
 
@@ -34,6 +35,7 @@ from ....core.register_scoping_signal import RegisterScopingSignal
 from .. import app_live_commands as handler
 from .. import operation_filed_read as bridge
 from ..app_live_filed_results import FiledDiscoverResult, FiledListResult
+from .operation_bridge_support import bind_profile_submission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -90,68 +92,22 @@ def _discover_projection() -> FiledDiscoverPublicResultV1:
     )
 
 
-def _bind_list(
-    monkeypatch: pytest.MonkeyPatch,
-    projection: FiledListPublicResultV1,
-    *,
-    effect: OperationEffect = OperationEffect.NONE,
-    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    refusal_code: str | None = None,
-) -> tuple[list[tuple[FiledListRequest, dict[str, object]]], list[UUID]]:
-    monkeypatch.setattr(bridge, "require_active_bucket_id", lambda: str(_PROFILE))
-    bound_profiles: list[UUID] = []
-
-    def require_client(_ctx: object, *, expected_profile_id: UUID):
-        bound_profiles.append(expected_profile_id)
-        return object()
-
-    monkeypatch.setattr(bridge, "require_profile_client", require_client)
-    submitted: list[tuple[FiledListRequest, dict[str, object]]] = []
-
-    def submit(_client: object, request: FiledListRequest, **kwargs: object):
-        submitted.append((request, kwargs))
-        return RegisteredOperationCompletion(
-            operation_id=_OPERATION_ID,
-            projection=projection,
-            effect=effect,
-            terminal_condition=condition,
-            refusal_code=refusal_code,
-        )
-
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
-    return submitted, bound_profiles
+_bind_list = partial(
+    bind_profile_submission,
+    bridge=bridge,
+    operation_id=_OPERATION_ID,
+    profile_id=_PROFILE,
+    effect=OperationEffect.NONE,
+)
 
 
-def _bind_discover(
-    monkeypatch: pytest.MonkeyPatch,
-    projection: FiledDiscoverPublicResultV1,
-    *,
-    effect: OperationEffect = OperationEffect.NONE,
-    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    refusal_code: str | None = None,
-) -> tuple[list[tuple[FiledDiscoverRequest, dict[str, object]]], list[UUID]]:
-    monkeypatch.setattr(bridge, "require_active_bucket_id", lambda: str(_PROFILE))
-    bound_profiles: list[UUID] = []
-
-    def require_client(_ctx: object, *, expected_profile_id: UUID):
-        bound_profiles.append(expected_profile_id)
-        return object()
-
-    monkeypatch.setattr(bridge, "require_profile_client", require_client)
-    submitted: list[tuple[FiledDiscoverRequest, dict[str, object]]] = []
-
-    def submit(_client: object, request: FiledDiscoverRequest, **kwargs: object):
-        submitted.append((request, kwargs))
-        return RegisteredOperationCompletion(
-            operation_id=_OPERATION_ID,
-            projection=projection,
-            effect=effect,
-            terminal_condition=condition,
-            refusal_code=refusal_code,
-        )
-
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
-    return submitted, bound_profiles
+_bind_discover = partial(
+    bind_profile_submission,
+    bridge=bridge,
+    operation_id=_OPERATION_ID,
+    profile_id=_PROFILE,
+    effect=OperationEffect.NONE,
+)
 
 
 def _list_read() -> bridge.FiledListRead:

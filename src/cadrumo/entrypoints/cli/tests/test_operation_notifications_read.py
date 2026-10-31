@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, date, datetime
+from functools import partial
 from typing import cast
 from uuid import UUID
 
@@ -12,7 +12,6 @@ import typer
 from pydantic import BaseModel
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 
 from ....application.live.notification_ports import NotificationType
@@ -32,6 +31,7 @@ from ....application.live.notifications_read_operation import (
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import operation_notifications_read as bridge
 from .. import operation_profile_operation as profile_operation
+from .operation_bridge_support import bind_profile_submission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -92,40 +92,14 @@ def _latest_projection() -> NotificationsLatestPublicResultV1:
     )
 
 
-def _bind(
-    monkeypatch: pytest.MonkeyPatch,
-    projections: Mapping[str, BaseModel],
-    *,
-    effect: OperationEffect = OperationEffect.NONE,
-    terminal_condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    refusal_code: str | None = None,
-) -> tuple[list[tuple[object, dict[str, object]]], list[UUID]]:
-    monkeypatch.setattr(bridge, "require_active_bucket_id", lambda: str(_PROFILE))
-    bound_profiles: list[UUID] = []
-    client = object()
-
-    def require_client(_ctx: object, *, expected_profile_id: UUID) -> object:
-        bound_profiles.append(expected_profile_id)
-        return client
-
-    monkeypatch.setattr(bridge, "require_profile_client", require_client)
-    submitted: list[tuple[object, dict[str, object]]] = []
-
-    def submit(submitted_client: object, request: object, **kwargs: object):
-        assert submitted_client is client
-        options = kwargs
-        submitted.append((request, options))
-        definition_id = cast(str, options["definition_id"])
-        return RegisteredOperationCompletion(
-            operation_id=_OPERATION_ID,
-            projection=projections[definition_id],
-            effect=effect,
-            terminal_condition=terminal_condition,
-            refusal_code=refusal_code,
-        )
-
-    monkeypatch.setattr(profile_operation, "run_registered_operation", submit)
-    return submitted, bound_profiles
+_bind = partial(
+    bind_profile_submission,
+    bridge=bridge,
+    operation_id=_OPERATION_ID,
+    profile_id=_PROFILE,
+    submit_module=profile_operation,
+    effect=OperationEffect.NONE,
+)
 
 
 def _context() -> typer.Context:
@@ -288,7 +262,7 @@ def test_scope_or_receipt_mismatch_is_a_correlated_invalid_frame(
         monkeypatch,
         projections,
         effect=effect,
-        terminal_condition=condition,
+        condition=condition,
         refusal_code=refusal,
     )
 

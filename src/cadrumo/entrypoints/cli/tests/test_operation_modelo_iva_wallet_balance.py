@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import cast
 from uuid import UUID
 
@@ -9,7 +10,6 @@ import pytest
 import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 
 from ....application.modelo.iva_wallet_balance_operation import (
@@ -19,6 +19,7 @@ from ....application.modelo.iva_wallet_balance_operation import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import operation_modelo_iva_wallet_balance as bridge
+from .operation_bridge_support import bind_profile_submission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -39,36 +40,13 @@ def _projection() -> ModeloIvaWalletBalanceProjection:
     )
 
 
-def _bind(
-    monkeypatch: pytest.MonkeyPatch,
-    projection: ModeloIvaWalletBalanceProjection,
-    *,
-    effect: OperationEffect = OperationEffect.NONE,
-    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    refusal_code: str | None = None,
-) -> tuple[list[tuple[ModeloIvaWalletBalanceRequest, dict[str, object]]], list[UUID]]:
-    monkeypatch.setattr(bridge, "require_active_bucket_id", lambda: str(_PROFILE))
-    bound_profiles: list[UUID] = []
-
-    def require_client(_ctx: object, *, expected_profile_id: UUID):
-        bound_profiles.append(expected_profile_id)
-        return object()
-
-    monkeypatch.setattr(bridge, "require_profile_client", require_client)
-    submitted: list[tuple[ModeloIvaWalletBalanceRequest, dict[str, object]]] = []
-
-    def submit(_client: object, request: ModeloIvaWalletBalanceRequest, **kwargs: object):
-        submitted.append((request, kwargs))
-        return RegisteredOperationCompletion(
-            operation_id=_OPERATION_ID,
-            projection=projection,
-            effect=effect,
-            terminal_condition=condition,
-            refusal_code=refusal_code,
-        )
-
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
-    return submitted, bound_profiles
+_bind = partial(
+    bind_profile_submission,
+    bridge=bridge,
+    operation_id=_OPERATION_ID,
+    profile_id=_PROFILE,
+    effect=OperationEffect.NONE,
+)
 
 
 def _read() -> bridge.ModeloIvaWalletBalanceRead:
