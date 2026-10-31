@@ -311,13 +311,20 @@ def _validate_machine_secret(
 
 
 def _bind_sessionless_target(ctx: typer.Context, spec: CommandSpec, posture: ProfileAuthenticationPosture) -> bool:
-    """Complete self-authenticating or custody-free commands without opening a client."""
+    """Complete self-authenticating or custody-free admission without a profile session."""
     if posture is ProfileAuthenticationPosture.SELF_AUTHENTICATING:
         if _root_profile_options_are_supplied(ctx):
             _refuse("profile_secrets_inapplicable")
         if runtime_root_context(ctx).profile is not None:
-            profile_id, _ = _profile_id(ctx)
+            profile_id, _ = _profile_id(ctx, through_runtime=spec.key == "config_passphrase_change")
             _bind_target(ctx, profile_id)
+        elif spec.key == "config_passphrase_change":
+            from cadrumo_client.commands.profile_selection import command_profile_id
+
+            active = command_profile_id()
+            if active is None:
+                raise CliRefusedBoundaryError(translated_message="cli.config.passphrase.no_active_profile")
+            _bind_target(ctx, UUID(active))
         return True
     profile_required = bool(spec.policy.capabilities & {"profile-custody", "encrypted-facts"})
     if not profile_required:

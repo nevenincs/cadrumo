@@ -800,18 +800,28 @@ def _minimal_resolved_target(inspection, *, modelo: str = "303", filing_year: in
 
 
 def test_static_inspection_family_dispositions_reports_only_declared_not_applicable_families() -> None:
-    inspection = _real_303_inspection()
+    inspection = _real_inspection("111", filing_year=_FILING_YEAR, period="1T")
 
     dispositions = static_inspection_family_dispositions(inspection)
 
     assert len(dispositions) == len(inspection.family_dispositions)
     by_family = {d.family: d for d in dispositions}
-    assert "applicability" in by_family
-    assert by_family["applicability"].disposition == RegistrySchemaFamilyDisposition.NOT_APPLICABLE
-    assert by_family["applicability"].legal_refs == inspection.family_dispositions["applicability"].legal_refs
+    assert "parameters" in by_family
+    for family, declaration in inspection.family_dispositions.items():
+        assert by_family[family].disposition == RegistrySchemaFamilyDisposition.NOT_APPLICABLE
+        assert by_family[family].legal_refs == declaration.legal_refs
+        assert by_family[family].source_refs == declaration.source_refs
     # A family the inspection has no data for at all (e.g. "constructs") is
     # never reported here -- reporting nothing is honest, guessing is not.
     assert "constructs" not in by_family
+
+
+def test_static_inspection_does_not_report_populated_applicability_as_not_applicable() -> None:
+    inspection = _real_303_inspection()
+
+    assert _real_303_snapshot().revision.applicability
+    assert "applicability" not in inspection.family_dispositions
+    assert "applicability" not in {item.family for item in static_inspection_family_dispositions(inspection)}
 
 
 def test_a_caller_can_spend_the_cursor_the_schema_facet_mints(

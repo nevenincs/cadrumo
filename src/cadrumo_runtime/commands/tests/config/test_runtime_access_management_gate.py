@@ -123,6 +123,37 @@ def test_resume_binds_the_explicit_profile_through_runtime_admission(monkeypatch
         ctx.close()
 
 
+@pytest.mark.parametrize("profile", [None, "Selected profile"])
+def test_passphrase_change_pins_the_runtime_target_before_handler_entry(
+    monkeypatch: pytest.MonkeyPatch, profile: str | None
+) -> None:
+    profile_id = uuid4()
+    questions: list[str] = []
+
+    def selected() -> str:
+        questions.append("selected")
+        return str(profile_id)
+
+    def named(label: str) -> LoginTarget:
+        questions.append(label)
+        return LoginTarget(str(profile_id), label)
+
+    monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", selected)
+    monkeypatch.setattr(profile_selection, "runtime_login_target", named)
+    monkeypatch.setattr(admission, "resolve_login_target", lambda *_args: pytest.fail("admission read local selection"))
+    ctx = _context(profile=profile)
+    try:
+        admission.preflight_runtime_command(
+            ctx,
+            RUNTIME_COMMAND_GRAPH.node("config_passphrase_change").spec,
+            {"secrets_stdin": True, "secrets_fd": None},
+        )
+        assert profile_selection.command_profile_id() == str(profile_id)
+        assert questions == [profile or "selected"]
+    finally:
+        ctx.close()
+
+
 def test_resume_rejects_root_password_source_before_binding(monkeypatch: pytest.MonkeyPatch) -> None:
     events: list[str] = []
     monkeypatch.setattr(admission, "_open_recovery_profile", lambda *_args: events.append("bind"))
