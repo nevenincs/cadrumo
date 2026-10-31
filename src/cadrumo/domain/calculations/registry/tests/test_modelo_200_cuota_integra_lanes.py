@@ -493,6 +493,39 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
 # ---------------------------------------------------------------------
 
 
+def _calculate_with_estado_percentage(estado_percentage: Decimal | None):
+    """Run the SL cuota chain from an 80.000 base; ``None`` leaves the estado percentage binding unsupplied."""
+    return calculate_registry_snapshot(
+        _snapshot(),
+        inputs={
+            _M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
+            _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
+            _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
+            _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
+            _M200_BIN_APLICADA_CASILLA: Decimal("0"),
+            _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+            _M200_BONIFICACIONES_CASILLA: Decimal("0"),
+            _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
+            _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
+        },
+        enum_binding_values={_FORM_BINDING: "sl"},
+        binding_values={
+            _NEW_ENTITY_BINDING: Decimal("0"),
+            _INCN_BINDING: Decimal("10000000"),
+            **({} if estado_percentage is None else {_ESTADO_PCT_BINDING: estado_percentage}),
+            # BIN-pendiente fresh-filer baseline.
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values={
+            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+
+
 def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_supplied() -> None:
     """DP200014B:00599 is non-zero when tributacion_estado_porcentaje = 100.
 
@@ -512,35 +545,7 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
     at the general 25 % rate with zero deductions, so the test does not
     bypass the formula-owned cuota líquida casilla.
     """
-    result = calculate_registry_snapshot(
-        _snapshot(),
-        inputs={
-            _M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
-            _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
-            _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
-            _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
-            _M200_BIN_APLICADA_CASILLA: Decimal("0"),
-            _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
-            _M200_BONIFICACIONES_CASILLA: Decimal("0"),
-            _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
-            _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
-        },
-        enum_binding_values={_FORM_BINDING: "sl"},
-        binding_values={
-            _NEW_ENTITY_BINDING: Decimal("0"),
-            _INCN_BINDING: Decimal("10000000"),
-            _ESTADO_PCT_BINDING: Decimal("100"),
-            # BIN-pendiente fresh-filer baseline.
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-        },
-        relation_values={
-            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
-        },
-        date_context={"filing_period": date(2024, 12, 31)},
-    )
+    result = _calculate_with_estado_percentage(Decimal("100"))
     cuota_ejercicio = result.values[_M200_CUOTA_EJERCICIO_CASILLA]
     assert cuota_ejercicio == Decimal("20000.00"), (
         "DP200014B:00599 must equal 20.000 when tributacion_estado_porcentaje = 100 "
@@ -560,32 +565,4 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
     from ..errors import RegistryValidationError
 
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
-        calculate_registry_snapshot(
-            _snapshot(),
-            inputs={
-                _M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
-                _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
-                _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
-                _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
-                _M200_BIN_APLICADA_CASILLA: Decimal("0"),
-                _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
-                _M200_BONIFICACIONES_CASILLA: Decimal("0"),
-                _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
-                _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
-            },
-            enum_binding_values={_FORM_BINDING: "sl"},
-            binding_values={
-                _NEW_ENTITY_BINDING: Decimal("0"),
-                _INCN_BINDING: Decimal("10000000"),
-                # _ESTADO_PCT_BINDING intentionally absent
-                # BIN-pendiente fresh-filer baseline (separate gate).
-                "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-                "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-                "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-            },
-            relation_values={
-                "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
-                "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
-            },
-            date_context={"filing_period": date(2024, 12, 31)},
-        )
+        _calculate_with_estado_percentage(None)
