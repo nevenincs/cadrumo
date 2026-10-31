@@ -49,9 +49,8 @@ def _record_auth_diagnostic_phone_state(diagnostic_id: str, phone_state: str):
     return prepared.result
 
 
-def test_auth_diagnostics_list_and_show_redact_page_bodies(
-    tmp_path: Path,
-) -> None:
+def _seed_two_diagnostics(repo: SecureObjectRepository) -> None:
+    """Store an older selector-landing diagnostic and a newer contrast-page one carrying an auth attempt."""
     external = load_external_constants().aeat
     selector_url = external.clave_movil.selector_access_url_template.format(
         target=f"{external.domains.sede}{external.sede_paths.expedientes_resumen}",
@@ -60,71 +59,74 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         f"{external.domains.www12}{external.clave_movil.autentica_dni_nie_contraste_path}"
         "?qAA=2&ref=%2Fprivate-target&storksp=secret&from=aeat&ts=20260521081409392278"
     )
+    older = datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
+    newer = datetime(2026, 5, 19, 9, 0, tzinfo=UTC)
+    repo.save(
+        namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
+        object_key="diag-old",
+        classification=SensitivityClass.SESSION,
+        schema_version=1,
+        written_at=older,
+        payload=json.dumps(
+            {
+                "diagnostic_id": "diag-old",
+                "reason": "post-auth-landing-timeout",
+                "url": selector_url,
+                "captured_at": older.isoformat(),
+                "html": "<html><body>older captured page</body></html>",
+                "screenshot_png_base64": "aW1hZ2U=",
+            },
+        ).encode(UTF_8_ENCODING),
+    )
+    repo.save(
+        namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
+        object_key="diag-new",
+        classification=SensitivityClass.SESSION,
+        schema_version=1,
+        written_at=newer,
+        payload=json.dumps(
+            {
+                "diagnostic_id": "diag-new",
+                "reason": "push-wait-state-not-reached",
+                "url": contrast_url,
+                "captured_at": newer.isoformat(),
+                "auth_attempt": {
+                    "auth_mode": "non_qr",
+                    "auth_route": "clave_movil_non_qr_request",
+                    "identity_kind": "NIE",
+                    "headless": True,
+                    "prefer_non_qr": True,
+                    "timeout_ms": 120000,
+                    "active_profile_ref": "sha256:profile123",
+                    "active_profile_label_present": True,
+                    "active_profile_registered": True,
+                    "profile_record_present": True,
+                    "profile_tax_id_present": True,
+                    "profile_tax_id_fingerprint": "sha256:profiletax",
+                    "clave_identity_configured": True,
+                    "clave_identity_fingerprint": "sha256:clavetax",
+                    "identity_alignment": "mismatch",
+                    "dni_fecha_configured": False,
+                    "dni_fecha_fingerprint": "",
+                    "nie_soporte_configured": True,
+                    "nie_soporte_fingerprint": "sha256:support",
+                    "certificate_path_configured": True,
+                    "certificate_password_configured": False,
+                    "certificate_file_present": False,
+                    "certificate_path_fingerprint": "sha256:certpath",
+                },
+                "html": "<html><body>newer captured page with sensitive form fields</body></html>",
+            },
+        ).encode(UTF_8_ENCODING),
+    )
+
+
+def test_auth_diagnostics_list_redacts_page_bodies_and_orders_newest_first(tmp_path: Path) -> None:
+    external = load_external_constants().aeat
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        repo = profile.repository
-        older = datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
-        newer = datetime(2026, 5, 19, 9, 0, tzinfo=UTC)
-        repo.save(
-            namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
-            object_key="diag-old",
-            classification=SensitivityClass.SESSION,
-            schema_version=1,
-            written_at=older,
-            payload=json.dumps(
-                {
-                    "diagnostic_id": "diag-old",
-                    "reason": "post-auth-landing-timeout",
-                    "url": selector_url,
-                    "captured_at": older.isoformat(),
-                    "html": "<html><body>older captured page</body></html>",
-                    "screenshot_png_base64": "aW1hZ2U=",
-                },
-            ).encode(UTF_8_ENCODING),
-        )
-        repo.save(
-            namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
-            object_key="diag-new",
-            classification=SensitivityClass.SESSION,
-            schema_version=1,
-            written_at=newer,
-            payload=json.dumps(
-                {
-                    "diagnostic_id": "diag-new",
-                    "reason": "push-wait-state-not-reached",
-                    "url": contrast_url,
-                    "captured_at": newer.isoformat(),
-                    "auth_attempt": {
-                        "auth_mode": "non_qr",
-                        "auth_route": "clave_movil_non_qr_request",
-                        "identity_kind": "NIE",
-                        "headless": True,
-                        "prefer_non_qr": True,
-                        "timeout_ms": 120000,
-                        "active_profile_ref": "sha256:profile123",
-                        "active_profile_label_present": True,
-                        "active_profile_registered": True,
-                        "profile_record_present": True,
-                        "profile_tax_id_present": True,
-                        "profile_tax_id_fingerprint": "sha256:profiletax",
-                        "clave_identity_configured": True,
-                        "clave_identity_fingerprint": "sha256:clavetax",
-                        "identity_alignment": "mismatch",
-                        "dni_fecha_configured": False,
-                        "dni_fecha_fingerprint": "",
-                        "nie_soporte_configured": True,
-                        "nie_soporte_fingerprint": "sha256:support",
-                        "certificate_path_configured": True,
-                        "certificate_password_configured": False,
-                        "certificate_file_present": False,
-                        "certificate_path_fingerprint": "sha256:certpath",
-                    },
-                    "html": "<html><body>newer captured page with sensitive form fields</body></html>",
-                },
-            ).encode(UTF_8_ENCODING),
-        )
+        _seed_two_diagnostics(profile.repository)
 
         listed = _list_auth_diagnostics()
-        detail = _load_auth_diagnostic("diag-new")
 
         assert listed.row_count == 2
         assert [row.diagnostic_id for row in listed.rows] == ["diag-new", "diag-old"]
@@ -155,6 +157,15 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert "secret" not in listed.rows[0].url
         assert listed.rows[1].screenshot_captured is True
         assert listed.rows[1].route_label == "selector_access"
+
+
+def test_auth_diagnostic_detail_redacts_the_page_body_and_reports_the_missing_phone_state(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        _seed_two_diagnostics(profile.repository)
+
+        listed = _list_auth_diagnostics()
+        detail = _load_auth_diagnostic("diag-new")
+
         assert detail is not None
         assert detail.diagnostic_id == "diag-new"
         assert detail.url == listed.rows[0].url
@@ -181,6 +192,12 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert evidence.values == {"diagnostic_available": True, "phone_state_observed": False}
         assert detail.html_excerpt == "[redacted html captured: 72 chars]"
         assert "sensitive form fields" not in detail.html_excerpt
+
+
+def test_auth_diagnostic_phone_state_report_is_persisted_and_unknown_states_are_refused(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        _seed_two_diagnostics(profile.repository)
+
         report = _record_auth_diagnostic_phone_state("diag-new", "app_did_not_prompt")
         reported_detail = _load_auth_diagnostic("diag-new")
         relisted = _list_auth_diagnostics()
