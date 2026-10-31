@@ -4786,12 +4786,12 @@ ledger:
       taxpayer_owned: Owned by the taxpayer, before business use
       whole_property: Whole property
     claim_state:
-      claimed: Claimed
+      claimed: Dotación recorded
       edition_unavailable: No official tables
-      missing: Not claimed
+      missing: The dotación is not recorded
       not_due: The dotación is not due
-      partial: Partly claimed
-      superseded: Claimed, corrected
+      partial: Part of the dotación recorded
+      superseded: Dotación recorded, then corrected
     declared_activity:
       A01: Rental of real estate
       A02: Independent livestock farming
@@ -4884,7 +4884,7 @@ ledger:
       claim_revision_absent: This changed since you opened it. Refresh and try again.
       claim_superseded_replay: This dotación was already replaced by a correction
         and cannot be recorded again.
-      claim_year_beyond_registry: 'There is no Modelo 100 edition for %{tax_year}
+      claim_year_beyond_registry: 'The form for tax year %{tax_year} isn''t available
         yet: the dotaciones can be recorded through %{last_admitted_year}. The forecast
         for that year is an estimate.'
       claim_year_not_after_opening_year: 'A dotación for %{claim_tax_year} cannot
@@ -5106,7 +5106,7 @@ ledger:
         (material or intangible).
       tax_residence_unresolved: Your tax residence could not be read, so the register
         cannot say whether Modelos 100 and 130 of the AEAT apply.
-      tax_year_without_edition: No Modelo 100 edition covers tax year {tax_year}.
+      tax_year_without_edition: The form for tax year {tax_year} isn't available yet.
       used_building_requires_construction_date: A used building requires its construction
         date.
       used_original_price_not_enrolled: 'Cadrumo doesn''t support this yet: the originating-price
