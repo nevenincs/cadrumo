@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-29'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:e1a955c817e25bfce8ef8ec9385b3b77393447cce4e0cbdedb6fe54213cbcd2a'
+body_hash: 'sha256:c0aa7f0703d61bdc5e45bb2d7034d6035e2d81ecf795b3804edd9e05a37210c7'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -61,7 +61,7 @@ On 2026-10-05 the user directed that the frontend keep React and Vite, adopt sha
 ## Constraints
 
 **Dependencies.**
-- Runtime additions are `radix-ui`, `cmdk`, `lucide-react`, `class-variance-authority`, `clsx` and `tailwind-merge`. Build-time additions are `tailwindcss`, `@tailwindcss/vite` and `tw-animate-css`. Development-only additions are `storybook`, `@storybook/react-vite` and `@storybook/addon-a11y`. Each is pinned to an exact version in `package.json` and the lockfile.
+- Runtime additions are `radix-ui`, `cmdk`, `lucide-react`, `class-variance-authority`, `clsx`, `tailwind-merge`, `react-day-picker` and `date-fns`. Build-time additions are `tailwindcss`, `@tailwindcss/vite` and `tw-animate-css`. Development-only additions are `storybook`, `@storybook/react-vite` and `@storybook/addon-a11y`. Each is pinned to an exact version in `package.json` and the lockfile.
 - Primitives are added from the official shadcn registry and then owned as source under `src/components/ui/`. The shadcn CLI is a tool, not a dependency.
 - Nothing loads from a network origin, and the shell policy is not widened for this work.
 
@@ -120,7 +120,7 @@ A separate development entry makes the scenario host structurally absent from th
 - Focus trapping, restoration, dismissal and keyboard operation come from one tested foundation.
 
 **Accepted costs.**
-- Nine bundled packages and three development packages to keep current.
+- Eleven bundled packages and three development packages to keep current.
 - Stable hooks constrain markup: some classes stay only because acceptance reads them.
 - Radix renders overlays in a portal on the document body, so an overlay takes the root scheme, not the scheme of the area that opened it.
 - A browser scenario proves presentation and interaction, not the host. Native menus, WebView2 focus behaviour, the real sign-in command and window state still need focused checks in the Tauri window.
@@ -159,3 +159,22 @@ Settings carries one backend-reaching provisioning section, built from the exist
 Authorized by the user's design-polish request to remove repeated page titles, keep the TUI out of the default view, persist page view choices, and remember the selected log-level mode. The shell layout store is the single presentation preference owner. It restores the selected page, pane visibility and maximization, panel visibility/tab/size, calendar face and profile section/filter/disclosure choices, alongside existing appearance, arrangement and zoom preferences. The selected minimum log level overrides the host default until reset; resetting filters restores the host default. Fresh layouts open Profile and the agent where supported with the TUI closed. Existing saved TUI visibility remains an explicit saved arrangement.
 
 This replaces the 2026-10-09 always-collapsed panel startup clause only; the single panel toggle, notifications and mounted-session retention still apply. The canonical pane header owns the visible page title and maximize control; page content supplies its own actions without repeating them. Profile navigation offers one section selector at each size. Search text, drafts, taxpayer values, log records, authentication and transient dialogs are not presentation settings and are not persisted here. Stored preferences are validated and tolerate unavailable storage. No runtime or host authority changes. Evidence: `native/desktop/frontend/src/shell/layout.ts`, `src/App.tsx`, `src/components/profile/UserProfilePage.tsx`, and `src/components/FilingCalendar.tsx`.
+
+### Amendment 2026-10-31: standard data entry
+
+Accepted by the user on 2026-10-31.
+
+- **Declared kinds.** Every entry field declares one kind from one closed union: text, notes, date, year, money, decimal, integer, percent, tax id, IBAN, BIC, country, currency or choice (`native/desktop/frontend/src/shared/fieldKind.ts:2`). `TypedField` switches on it (`native/desktop/frontend/src/components/editors/TypedField.tsx:67`). A kind with no editor gets none and never a generic text box; the Modelo form leaves such a box read-only (`native/desktop/frontend/src/components/modelo/form/entryField.ts:50`).
+- **Editor set.** `native/desktop/frontend/src/components/editors/` holds one editor per kind, the shared text control `EntryInput.tsx`, the dispatch `TypedField.tsx` and the per-kind check `fieldCheck.ts`. No surface builds its own entry control. The ledger grid keeps its own shell, `TypedEditor` in `native/desktop/frontend/src/components/ledger/editing/CellEditor.tsx:115`, around `TypedField` (`:226`); its choice cells use a combobox, `ChoiceEditor` (`:389`), and not `TypedField`.
+- **Editor contract.** An editor shows text in the window's language and holds canonical text: an ISO day, or a plain decimal. Text it cannot read stays as typed, so the host's refusal fires. Editors draw no error; the host shows it through `FieldError`. Checks stop at well-formedness, as the 2026-10-27 amendment of `2026-10-04-desktop-shell-adr` requires. Two checks in the window go beyond that and are named in the amendment of that record dated 2026-10-31: IBAN mod-97 and the two-way-decimal check behind `heldDecimal`.
+- **Percentages.** A percent editor takes a required unit, fraction or points, with no default (`native/desktop/frontend/src/shared/fieldKind.ts:27`). The person always types points. The unit is the field's contract and is not inferred. In `lexeme` mode the text goes as typed and the backend applies the unit.
+- **No float on money.** Money, decimal and percent values never pass through a JavaScript `number`, `Number()` or `parseFloat`. Counts and sizes may.
+- **One formatter module.** `native/desktop/frontend/src/shared/numbers.ts` formats money, decimals, percentages and counts. `native/desktop/frontend/src/shared/dateFormats.ts` formats dates. No other module builds an `Intl.NumberFormat` or `Intl.DateTimeFormat`. These modules, all under `native/desktop/frontend/src/`, still build their own and move to the two above: `components/agent/files.ts`, `components/agent/SkillDialog.tsx`, `shell/agentViews.ts`, `shell/localModelLanes.ts`, `components/ledger/transfer/transferWords.ts`, `components/ledger/ledgerWords.ts`, `components/ledger/movements/ReadinessStrip.tsx`, `components/ledger/movements/MovementsSection.tsx` and `components/ledger/setup/HealthSection.tsx`.
+- **Placement.** Editors are product components: they read the string catalogue and the shell's entry grammar, so they stay out of `native/desktop/frontend/src/components/ui/`. That directory holds `textarea.tsx`, `radio.tsx` (`RadioGroup` and `RadioGroupItem`; the registry item is named radio-group) and `calendar.tsx`. They take props only and import no catalogue. Textarea and radio add no dependency beyond `radix-ui`.
+- **Calendar.** `native/desktop/frontend/src/components/ui/calendar.tsx` is the Calendar from the official shadcn registry. `react-day-picker` 10.0.2 and `date-fns` 4.4.0 join the runtime dependencies, each pinned to an exact version in `package.json` and the lockfile, and those are the installed versions. Only this primitive imports them. Its value is an ISO day, converted at its edge through `native/desktop/frontend/src/shared/dates.ts`. Caption, month and weekday words come from `native/desktop/frontend/src/shared/dateFormats.ts` through the library's formatters. The library is also given its own `en`, `es`, `ca` and `hu` locale data (`calendar.tsx:1-4`, `:19`, `:122`).
+- **Codes.** Country and currency are typed codes (`CountryEditor.tsx`, `CurrencyEditor.tsx`). `Intl.DisplayNames` supplies their names (`native/desktop/frontend/src/shared/codeNames.ts:11`). No list of countries or currencies is served yet, so none is offered, and an editor takes a typed code until one is. Callers may pass suggestions, and the ledger passes the codes already present in its held rows (`native/desktop/frontend/src/components/ledger/suggestions/ledgerSuggestions.ts:205`).
+- **Suggestion seam.** `SuggestionProps` in `native/desktop/frontend/src/components/editors/editorProps.ts:23` is the one way an editor offers values, drawn by `EntryInput.tsx:98`. A secret field is never offered suggestions (`CodeEditor.tsx:42`). IBAN and BIC take none. Bank name has no suggestion kind.
+- **Setup fields.** Bank name, address and city on the setup page are plain `TextEditor`s and are not masked. Only IBAN, BIC and the bank country carry `secret` (`native/desktop/frontend/src/components/ledger/setup/AccountsPane.tsx:542`, `:556`, `:565-600`, `:613`).
+- **Number entry and language.** Reading typed numbers follows `2026-10-04-desktop-shell-adr`. Staged values stay in memory.
+
+File names and the editor props are hypotheses within these commitments.

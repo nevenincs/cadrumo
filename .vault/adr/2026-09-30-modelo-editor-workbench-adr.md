@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-10-02'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:df3fd20be867e4d01be55c049b6176da75eee6946656d2a0fb2112d5d92522f3'
+body_hash: 'sha256:1de4952c2cc83e2c3decb83e95fa879814993645f65e9914ff042ad13adb4522'
 related:
   - "[[2026-09-07-tuimodelo-form-projection-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -244,7 +244,7 @@ Amendment 2026-10-02, reconciling the approved P06 and P08 filing journey. Prepa
 ### D5 Editing interaction
 
 Editing starts on the first staged change. Values are typed through the application parser's
-grammar in the operator's locale, inline for simple types and in a detail editor for dates,
+grammar in the operator's locale, inline for simple types and in a detail editor for
 IBANs, choices and overrides. Staged changes live in memory, keyed by semantic address, each
 showing its previous value; revert, discard, an unsaved-change guard and a mandatory review with
 override warnings precede apply. Apply runs through the operation modal, and a diff separates the
@@ -261,6 +261,13 @@ comes from and whether it can change beside every entry. Repeated records (349 o
 simplified-regime activities, 390 activities) are read in the workbench and changed at their
 source, reached from the table; the row intents stay unoffered while every repeating block is fed
 from the filer's records, and a record list with no source is decided on its own when one appears.
+
+Amendment 2026-10-31, accepted by the user on 2026-10-31. A date or year casilla has no editor
+until the engine has a channel for it. The edit grammar marks its channel unavailable
+(`src/cadrumo/application/modelo/edit_value_grammar.py:146-149`), and the desktop form gives such
+a box no editor (`native/desktop/frontend/src/components/modelo/form/entryField.ts:50`). The
+reason shows in the details panel (`native/desktop/frontend/src/components/modelo/details/Details.tsx:135`),
+not on the row.
 
 ### D6 Sources hub
 

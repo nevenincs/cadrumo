@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-editor-workbench'
 date: '2026-09-30'
-modified: '2026-09-30'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:31174af6eccf04c64612ba82e154a9970e2589e1f2b593db7190bd1ced01c9fe'
+body_hash: 'sha256:57fbb2679285431a1b172f09422edade7424217683d10035ee1191eedc7dc6f6'
 related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-09-30-modelo-editor-workbench-edit-interaction-research]]"
@@ -122,6 +122,17 @@ template casillas and casillas without an engine channel are projected non-writa
 own reasons. Binding overrides stay writable for manual-input bindings and become writable for
 the carry sources the precedence ladder already classifies; every other source kind stays
 read-only, with its override policy shown as undecided, until a grounded decision classifies it.
+
+Amendment 2026-10-31, accepted by the user on 2026-10-31. The desktop chooses a box's editor from
+this projected grammar, read from the `permitted_surface` of the baseline admitted with the form
+(`native/desktop/frontend/src/components/modelo/form/session.ts:367`, `:559`). A box with no
+writable entry, an `unavailable` channel or no admitted baseline gets no editor. The grammar
+chooses the control and its hints and is never a check of the window's own: the window sends the
+raw lexeme and its language to `modelo.edit.preflight`, and the answer drives the field
+(`session.ts:254`). The window does not normalise a lexeme or convert a ratio in this path. A
+ratio box whose unit is undeclared gets a plain decimal editor
+(`native/desktop/frontend/src/components/modelo/form/entryField.ts:22`, `:77`), and no text there
+says the unit is undeclared.
 
 ## Rationale
 

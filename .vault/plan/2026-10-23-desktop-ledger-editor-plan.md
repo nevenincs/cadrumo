@@ -17,9 +17,9 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
   - '[[2026-07-05-ledger-latency-budget-adr]]'
   - '[[2026-10-09-desktop-titlebar-adr]]'
-modified: '2026-10-24'
+modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:84ed66eda75e8017e9119b5b09c4884701c9da42b0c6a45399dea129c051473c'
+body_hash: 'sha256:4bec6dcb648f187354a32755c26280bcbe1a47025851c611281a026f21f2e75b'
 ---
 
 # `desktop-ledger-editor` plan
@@ -28,7 +28,7 @@ body_hash: 'sha256:84ed66eda75e8017e9119b5b09c4884701c9da42b0c6a45399dea129c0514
 
 Approved 2026-10-23. Basis: in session CADRUMO-UX-LEDGER the owner asked for a table-based desktop batch editor for movements, invoices and categorisation, at parity with the CLI and TUI ledger. They asked for the interface to be prototyped, adversarially critiqued and improved before implementation, and said the work needs no decision from them.
 
-The work adds a Ledger page to the desktop shell and a host channel for the ledger family's registered operations. The decision is `2026-10-23-desktop-ledger-editor-adr`, grounded in `2026-10-23-desktop-ledger-editor-reference`. That ADR governs P01 (the host channel) and bounds every Step that submits an operation. The design system rules come from `2026-10-05-desktop-design-system-adr` (P02, P03, P04). The shell rules on storage, keys and strings come from `2026-10-04-desktop-shell-adr` (P03, P04). The ledger data contracts (`2026-06-10-ledger-interface-contract-adr`, `2026-06-10-ledger-amount-direction-adr`, `2026-06-10-ledger-input-localization-adr`, `2026-06-10-ledger-filter-period-adr`, `2026-06-30-ledger-add-idempotency-adr`, `2026-07-05-ledger-latency-budget-adr`) bound the P03 editors without new decisions. The interaction design is the reviewed prototype, kept with the session's design notes. No other costly decision is involved. A product batch operation for corrections is out of scope (see the ADR's consequences).
+The work adds a Ledger page to the desktop shell and a host channel for the ledger family's registered operations. The decision is `2026-10-23-desktop-ledger-editor-adr`, grounded in `2026-10-23-desktop-ledger-editor-reference`. That ADR governs P01 (the host channel) and bounds every Step that submits an operation. The design system rules come from `2026-10-05-desktop-design-system-adr` (P02, P03, P04). The shell rules on storage, keys and strings come from `2026-10-04-desktop-shell-adr` (P03, P04). The ledger data contracts (`2026-06-10-ledger-interface-contract-adr`, `2026-06-10-ledger-amount-direction-adr`, `2026-06-10-ledger-filter-period-adr`, `2026-06-30-ledger-add-idempotency-adr`, `2026-07-05-ledger-latency-budget-adr`) bound the P03 editors without new decisions. `2026-06-10-ledger-input-localization-adr` governs the CLI entry boundary and does not bind the window's editors, which follow `2026-10-05-desktop-design-system-adr`. The interaction design is the reviewed prototype, kept with the session's design notes. No other costly decision is involved. A product batch operation for corrections is out of scope (see the ADR's consequences).
 
 ## Steps
 

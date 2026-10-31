@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:72fa2259f4a862af5f636671a9e590786ecea421e577b85c5fde941266de4def'
+body_hash: 'sha256:89bf8fc31cc548237397b3ac3acada84c533e208e2dd4d7057ab28790abb9d66'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -395,6 +395,25 @@ Accepted by the user on 2026-10-27, who ruled that the frontend is not to contai
 - **One owner for all frontends.** A value the window needs is served through the same operation or contract the CLI and TUI use. Where none exists yet, the backend gains it before the window drops its copy; the window does not keep a copy while waiting.
 
 Evidence: the inventory in `2026-10-27-profile-field-remap-plan` (Steps S07 to S10), including `native/desktop/frontend/src/shell/ledgerVocabulary.ts`, `native/desktop/frontend/src/shell/ledgerCommands.ts`, `native/desktop/frontend/src/shell/ledgerPlan.ts`, `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts` and `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`.
+
+### Amendment 2026-10-31: dates and numbers follow the language
+
+Accepted by the user on 2026-10-31.
+
+Dates and numbers shown or entered in the window follow the language the frontend controller holds: `preferences.output_language` when signed in, the transient choice when signed out. No format or entry reading takes the browser or operating-system locale; the one read of the browser language is the startup page's first guess for its own wording until the host reports the language, and that page builds no `Intl` formatter (`native/desktop/frontend/src/startup.ts:8`, `:38`). The page language is set from the window's locale (`native/desktop/frontend/src/App.tsx:829`). Values on the wire stay canonical, whatever the language. A language change reformats held values and never reinterprets text not yet read.
+
+### Amendment 2026-10-31: the window reads number marks
+
+Accepted by the user on 2026-10-31.
+
+This amends the 2026-10-27 ruling that the window holds no domain logic, for number marks and for the one file named below.
+
+- **Presentation.** Reading the language's decimal and grouping marks into canonical decimal text is presentation, and the window does it in one function, `readLocaleDecimal` (`native/desktop/frontend/src/shared/numbers.ts:251`), which the editors reach through `decimalReading` (`native/desktop/frontend/src/components/editors/numberReading.ts:19`). Text that can be read two ways is refused, as the backend refuses it. Grammar for amounts and percentages, in the ruling, means the limits below and not the marks.
+- **Limits stay served.** Decimals, zero, sign, bounds, unit and every rule with a tax or ledger consequence come from the backend.
+- **Parity.** One table of lexeme, language and outcome, `native/desktop/frontend/tests/shared/locale-decimal-readings.json`, holds both readers. The window's reader is held to every row by `native/desktop/frontend/tests/shared/numbers.spec.ts:248`, and the backend's `read_edit_number_lexeme` (`src/cadrumo/application/modelo/edit_number_parsing.py:90`) by `src/cadrumo/application/modelo/tests/test_edit_number_table.py`. The table is a checked-in file; no generator produces its expected column. For this reader only, this replaces "a parity test that guards a hand-kept copy is not a substitute".
+- **Modelo stays lexeme.** Modelo entry sends the raw lexeme and its language to `modelo.edit.preflight` (`native/desktop/frontend/src/components/modelo/form/session.ts:254`, `native/desktop/frontend/src/components/modelo/form/ValueCell.tsx:164`). The window does not read it (`2026-08-24-modelo-edit-contract-adr`).
+- **`native/desktop/frontend/src/shell/ledgerGrammar.ts`.** Its amount rules (`:137-143`), percent limits and refusals (`:211`, `:220-264`), year bounds (`:352-353`) and period codes (`:354-381`) are copies under the ruling and move to served grammar. For this file only, and until `2026-10-27-profile-field-remap-plan` Step S10 lands, this replaces "the window does not keep a copy while waiting". That Step names `native/desktop/frontend/src/components/ledger/setup/setupModel.ts` and does not yet name this file. Exact decimal helpers and well-formedness checks stay.
+- **Held in the window, not authorized here.** Two checks beyond well-formedness remain in the window, and this amendment names them without carving them out. The first is IBAN mod-97, `ibanProblem` (`native/desktop/frontend/src/shared/iban.ts:10`), used by `native/desktop/frontend/src/components/editors/fieldCheck.ts:71` and by the setup page's accounts pane. The second is the two-way-decimal check, `isTwoWayDecimal` (`native/desktop/frontend/src/shared/numbers.ts:193`), which `ledgerGrammar.ts` applies locale-blind (`:163`, `:198`, `:256`), and `heldDecimal` (`native/desktop/frontend/src/shared/numbers.ts:278`), which spells a decimal the reader has settled with a trailing zero so that refusal does not fire. Each is a copy under the ruling and needs a ruling or a move to a served rule.
 
 ### Amendment 2026-10-27: the in-app Sede browser
 

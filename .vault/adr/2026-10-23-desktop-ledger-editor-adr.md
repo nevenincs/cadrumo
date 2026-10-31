@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-ledger-editor'
 date: '2026-10-23'
-modified: '2026-10-30'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:b08d53ea65a29b3a8ff9a07d4ff8482a861397f0f5e486a7744a3f062be596d3'
+body_hash: 'sha256:7f96d6ca81e1a4682474929385af2db069f5ff28fbd6dc8992a9b22bbb46a5af'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -94,6 +94,25 @@ Accepted under the owner's standing authorization to complete ledger parity and 
 The concurrently shipped `ledger.inventory.options` joins the same closed list as a read, exposing canonical form vocabularies without a new effect or path input.
 
 Inventory evidence uses the existing document-pick custody path: the window supplies a document token in `source_path`, the host resolves it for the held session and supplies `source_directory`. Window-supplied paths, directories and tokens from another purpose remain refused. Runtime request validation and exact-profile authority continue to govern both operations.
+
+### Amendment 2026-10-31: ledger entry uses the standard editors
+
+Accepted by the user on 2026-10-31.
+
+Entry fields on the Ledger page, including invoices, assets, stock, setup and documents, use the editors of `2026-10-05-desktop-design-system-adr` (`native/desktop/frontend/src/components/editors/`). The plain `Input` controls left in `native/desktop/frontend/src/components/ledger/` are search and filter boxes. Each request carries the spelling its registered contract takes, and the runtime contract still validates it. An empty field is not zero. Staged values stay in the window's memory under the constraint above.
+
+### Amendment 2026-10-31: admitted-list changes to activity assets, inventory and evidence
+
+Accepted by the user on 2026-10-31.
+
+The host's closed list and the contract manifest both hold the ids below, and no earlier amendment names them. They join the list this record governs.
+
+- Activity assets, reads: `ledger.actividad-asset.acquisition-candidates`, `.disposal-calculate`, `.form-options`, `.list`, `.plan`, `.timeline`.
+- Activity assets, writes: `ledger.actividad-asset.describe`, `.dispose`.
+- Inventory, read: `ledger.inventory.inspect`.
+- Inventory, writes: `ledger.inventory.correct`, `.describe`, `.movement.correct`, `.movement.reverse`, `.restore`, `.retire`.
+
+`ledger.evidence.reader-readiness` leaves the list; neither the host list nor the manifest holds it. Runtime request validation and exact-profile authority govern all of these. Evidence: `native/desktop/src-tauri/src/shell/ledger/admitted.rs:57-70` and `:105-119`.
 
 ## Rationale
 
