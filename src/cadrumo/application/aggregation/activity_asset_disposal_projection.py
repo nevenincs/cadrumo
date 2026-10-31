@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 from typing import Final
@@ -35,6 +36,7 @@ from ...domain.renta.actividad_asset.disposal import (
 )
 from ...domain.renta.actividad_asset.errors import ActividadAssetError, ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ...domain.transactions.dates import transaction_filing_date
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ..actividad_asset.disposal_calculation import (
     calculate_element_disposal,
@@ -148,26 +150,33 @@ class ActivityAssetDisposalRow:
     route: ActivityAssetDisposalRoute
     amount: Decimal
     calculation: ActivityAssetDisposalCalculation
+    acquisition_date: date | None = None
 
     @property
     def source_identity(self) -> str:
         """Identify the sale the row comes from."""
         return f"activity-asset:{self.revision.asset_id}:{self.revision.revision_id}"
 
-    def column(self, row_field: ActivityAssetDisposalRowField) -> Decimal | str | None:
+    def column(self, row_field: ActivityAssetDisposalRowField) -> Decimal | str | bool | None:
         """Return this sale's value for a column; the clave column is the revision's own."""
         disposal = self.revision.disposal
+        loss = self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_LOSS_ELEMENT else None
+        gain = self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT else None
         match row_field:
             case ActivityAssetDisposalRowField.TRANSMISSION_DATE:
                 return None if disposal is None else disposal.disposal_date.isoformat()
+            case ActivityAssetDisposalRowField.ACQUISITION_DATE:
+                return None if self.acquisition_date is None else self.acquisition_date.isoformat()
+            case ActivityAssetDisposalRowField.ONEROUS_TRANSFER:
+                return True if disposal is not None and disposal.reason in TRANSMISSION_REASONS else None
             case ActivityAssetDisposalRowField.TRANSMISSION_VALUE:
                 return self.calculation.net_transmission_value
             case ActivityAssetDisposalRowField.ACQUISITION_VALUE:
                 return self.calculation.net_value
-            case ActivityAssetDisposalRowField.GAIN:
-                return self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT else None
-            case ActivityAssetDisposalRowField.LOSS:
-                return self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_LOSS_ELEMENT else None
+            case ActivityAssetDisposalRowField.GAIN | ActivityAssetDisposalRowField.GAIN_DIFFERENCE:
+                return gain
+            case ActivityAssetDisposalRowField.LOSS | ActivityAssetDisposalRowField.LOSS_DIFFERENCE:
+                return loss
             case _:
                 return None
 
@@ -184,6 +193,7 @@ def disposal_row_source_identities(
                 "route": row.route.value,
                 "amount": str(row.amount),
                 "transmission_date": str(row.column(ActivityAssetDisposalRowField.TRANSMISSION_DATE)),
+                "acquisition_date": str(row.acquisition_date),
                 "transmission_value": str(row.calculation.transmission_value),
                 "transmission_costs": str(row.calculation.transmission_costs),
                 "net_value": str(row.calculation.net_value),
@@ -250,7 +260,13 @@ class ActivityAssetBajaReader:
             ),
             notes=tuple(notes),
             row_figures=tuple(
-                ActivityAssetDisposalRow(revision=revision, route=route, amount=amount, calculation=calculation)
+                ActivityAssetDisposalRow(
+                    revision=revision,
+                    route=route,
+                    amount=amount,
+                    calculation=calculation,
+                    acquisition_date=self._acquisition_date(revision),
+                )
                 for route, amount in figures
                 if route in ELEMENT_ROW_ROUTES or route in _PROPERTY_ROW_ROUTES
             ),
@@ -270,6 +286,13 @@ class ActivityAssetBajaReader:
             ),
         )
 
+    def _acquisition_date(self, revision: ActivityAssetRevision) -> date | None:
+        """Return the day the element was acquired: stated on it, or the day of its acquisition row."""
+        if revision.declared_acquisition_date is not None:
+            return revision.declared_acquisition_date
+        row = revision.acquisition_row_in(self._transactions.load().transactions)
+        return None if row is None else transaction_filing_date(row)
+
     def _figures(
         self, revision: ActivityAssetRevision, calculation: ActivityAssetDisposalCalculation
     ) -> tuple[list[tuple[ActivityAssetDisposalRoute, Decimal]], list[CalculationSourceDiagnostic]]:
@@ -286,6 +309,16 @@ class ActivityAssetBajaReader:
             )
         elif (route := _result_route(revision, calculation)) is not None and calculation.result is not None:
             figures.append((route, abs(calculation.result)))
+        elif calculation.result == Decimal("0"):
+            notes.append(
+                self._finding(
+                    revision,
+                    "the sale neither gains nor loses, so no box carries it",
+                    CalculationNoteSentence.DISPOSAL_ZERO_RESULT,
+                    transmission_value=calculation.net_transmission_value,
+                    net_value=calculation.net_value,
+                )
+            )
         if calculation.excess > Decimal("0"):
             excess_route = self._excess_route(revision)
             if excess_route is None:

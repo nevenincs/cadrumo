@@ -151,6 +151,7 @@ class CalculationNoteSentence(StrEnum):
     DISPOSAL_M131_EXCESS = "disposal_m131_excess"
     DISPOSAL_M131_EXCESS_UNRESOLVED = "disposal_m131_excess_unresolved"
     DISPOSAL_LATER_AFFECTATION = "disposal_later_affectation"
+    DISPOSAL_ZERO_RESULT = "disposal_zero_result"
     DISPOSAL_FIGURE_NO_BOX = "disposal_figure_no_box"
     DISPOSAL_FIGURE_IN_BOX = "disposal_figure_in_box"
     DISPOSAL_FIGURE_ELEMENT_ROW = "disposal_figure_element_row"

@@ -51,7 +51,9 @@ def test_two_sales_fill_two_rows_each_with_its_own_gain(revision_id: str) -> Non
 
     values, identities = resolve_activity_asset_disposal_row_values(revision, sales)
 
-    gain = next(binding_id for binding_id in activity_asset_disposal_row_binding_ids(revision) if "gain" in binding_id)
+    gain = next(
+        binding_id for binding_id in activity_asset_disposal_row_binding_ids(revision) if binding_id.endswith("-gain-1654")
+    )
     clave = next(binding_id for binding_id in activity_asset_disposal_row_binding_ids(revision) if "type" in binding_id)
     assert values[(gain, 1)] == Decimal("100.00")
     assert values[(gain, 2)] == Decimal("250.00")

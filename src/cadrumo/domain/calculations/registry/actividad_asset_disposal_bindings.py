@@ -50,10 +50,14 @@ class ActivityAssetDisposalRowField(StrEnum):
     """What one column of a sale's row of other elements states."""
 
     ELEMENT_TYPE = "element_type"
+    ONEROUS_TRANSFER = "onerous_transfer"
     TRANSMISSION_DATE = "transmission_date"
+    ACQUISITION_DATE = "acquisition_date"
     TRANSMISSION_VALUE = "transmission_value"
     ACQUISITION_VALUE = "acquisition_value"
+    LOSS_DIFFERENCE = "loss_difference"
     LOSS = "loss"
+    GAIN_DIFFERENCE = "gain_difference"
     GAIN = "gain"
 
 
@@ -96,7 +100,7 @@ class ActivityAssetDisposalRowProtocol(Protocol):
         """Identify the sale the row comes from."""
         ...
 
-    def column(self, row_field: ActivityAssetDisposalRowField) -> Decimal | str | None:
+    def column(self, row_field: ActivityAssetDisposalRowField) -> Decimal | str | bool | None:
         """Return this sale's value for a column; the clave column is the revision's own."""
         ...
 
@@ -227,7 +231,7 @@ def activity_asset_disposal_row_binding_ids(revision: ModeloRevision) -> tuple[B
 def resolve_activity_asset_disposal_row_values(
     revision: ModeloRevision,
     rows: Iterable[ActivityAssetDisposalRowProtocol],
-) -> tuple[dict[tuple[BindingId, int], Decimal | str], dict[tuple[BindingId, int], str]]:
+) -> tuple[dict[tuple[BindingId, int], Decimal | str | bool], dict[tuple[BindingId, int], str]]:
     """Give each sale its own row on every column this :class:`ModeloRevision` declares.
 
     The scalar bindings keep the totals the form's own sums read; these columns say what
@@ -236,7 +240,7 @@ def resolve_activity_asset_disposal_row_values(
     Returns:
         The values by binding and row, and the sale each coordinate comes from.
     """
-    values: dict[tuple[BindingId, int], Decimal | str] = {}
+    values: dict[tuple[BindingId, int], Decimal | str | bool] = {}
     identities: dict[tuple[BindingId, int], str] = {}
     columns = tuple(item for item in _all_bindings(revision) if item[1].fact == "row_field")
     for index, row in enumerate(rows, start=1):

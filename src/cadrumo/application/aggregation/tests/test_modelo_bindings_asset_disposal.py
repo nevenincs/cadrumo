@@ -461,3 +461,43 @@ def test_the_row_fingerprint_moves_with_the_costs_and_the_date_of_the_sale(
         calculation,
     )
     assert baseline == _fingerprint(revision, calculation)
+
+
+def test_the_row_states_the_day_of_the_acquisition_row_and_an_onerous_transfer() -> None:
+    row = _acquisition_row("acquired", activity=None)
+    resolution = resolve_m100(disposed_asset_history(transaction_id=row.transaction_id), rows=(row,))
+
+    assert _row_values(resolution, "1632") == {1: "2025-04-05"}
+    assert _row_values(resolution, "1612") == {1: True}
+    assert _row_values(resolution, "1640") == _row_values(resolution, "1654") == {1: Decimal("297.53")}
+    assert _row_values(resolution, "1638") == {}
+
+
+def test_a_loss_states_its_difference_and_no_gain() -> None:
+    resolution = resolve_m100(disposed_asset_history(proceeds="10000.00"))
+
+    assert _row_values(resolution, "1638") == _row_values(resolution, "1639") == {1: Decimal("1702.47")}
+    assert _row_values(resolution, "1640") == {}
+
+
+def test_an_acquisition_row_the_ledger_does_not_hold_leaves_the_date_off_the_row() -> None:
+    resolution = resolve_m100(disposed_asset_history())
+
+    assert _row_values(resolution, "1632") == {}
+    assert _row_values(resolution, "1633")
+
+
+def test_a_sale_with_no_gain_or_loss_is_a_note_and_takes_no_row() -> None:
+    # 12,000 less 297.53 of charge is a net value of 11,702.47; a sale at that figure neither gains nor loses.
+    resolution = resolve_m100(disposed_asset_history(proceeds="11702.47"))
+
+    notes = [
+        item.fact
+        for item in resolution.diagnostics
+        if item.fact is not None and item.fact.sentence is CalculationNoteSentence.DISPOSAL_ZERO_RESULT
+    ]
+    assert len(notes) == 1
+    assert dict(notes[0].values)["transmission_value"] == "11702.47"
+    assert not resolution.row_binding_values
+    assert _boxes(resolution) == {}
+    assert _blocks(resolution) == set()
