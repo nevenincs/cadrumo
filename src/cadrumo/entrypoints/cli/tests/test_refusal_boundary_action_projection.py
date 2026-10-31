@@ -42,6 +42,7 @@ from ....core.redaction.rules import redact_for_log
 from ..common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
 from ..errors import command_error_boundary
 from .cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
+from .corrupt_pointer_expectation import corrupt_pointer_action
 
 __all__ = ["english_locale_fixture"]
 
@@ -137,47 +138,7 @@ def test_corrupt_active_profile_pointer_projects_the_canonical_repair_action(tmp
         "pointer_corrupt": "true",
         "root_fallback_refused": "true",
     }
-    assert error["action"] == {
-        "failed_condition_id": "profile.active.pointer.valid",
-        "evidence": [
-            {
-                "condition_id": "profile.active.pointer.valid",
-                "evidence_id": "profile.active.pointer.corruption",
-                "provenance": "runtime_observation",
-                "values": {
-                    "path": str(pointer_file),
-                    "pointer_corrupt": True,
-                    "root_fallback_refused": True,
-                },
-            },
-        ],
-        "action": {
-            "action_id": "operator.profile.repair_active_pointer",
-            "target_command_key": "config.repair.profile",
-            "cli_path": ["aeat", "config", "repair", "profile"],
-        },
-        "argument_bindings": [
-            {
-                "argument_name": "clear_active",
-                "status": "resolved",
-                "value": True,
-                "source": "operator_action.verdict_context",
-                "source_key": "clear_active",
-                "source_evidence_id": None,
-            },
-            {
-                "argument_name": "yes",
-                "status": "missing",
-                "value": None,
-                "source": None,
-                "source_key": None,
-                "source_evidence_id": None,
-            },
-        ],
-        "missing_argument_names": ["yes"],
-        "conditionality": "requires_arguments",
-        "no_recovery_outcome": None,
-    }
+    assert error["action"] == corrupt_pointer_action(pointer_file)
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)

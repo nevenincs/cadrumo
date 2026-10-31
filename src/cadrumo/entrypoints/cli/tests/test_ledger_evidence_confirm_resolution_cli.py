@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import date
 from uuid import UUID
 
 import pytest
 
-from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceLineSnapshot
+from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ....application.ledger.invoice_evidence_confirm_operation import LedgerEvidenceConfirmProjection
 from ....application.ledger.invoice_evidence_operation_dtos import (
     ClassificationAssemblyProjectionV1,
@@ -20,19 +19,17 @@ from ....application.ledger.invoice_evidence_operation_dtos import (
     IvaCategoryResolutionProjectionV1,
     RegistryFactProjectionV1,
 )
-from ....application.operations.public_scalar import PublicDecimal
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....core.json_contract import NoticeSeverity
-from ....domain.invoices.enums import PaymentStatus
-from ....domain.iva.schema import InvoiceKind
 from ..ledger_evidence_commands import (
     _confirm_resolution_lines,
     _evidence_confirm_notices,
     _evidence_confirm_payload,
     _resolution_notices,
 )
+from .ledger_invoice_snapshot_support import received_invoice_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -41,60 +38,13 @@ _EVIDENCE_ID = "e" * 16
 _ATTACHMENT_ID = "a" * 64
 _SOURCE_SHA256 = "b" * 64
 _DRAFT_SHA256 = "c" * 64
-_INVOICE_ID = "d" * 64
 _FINDING_ID = "f" * 16
 _REDACTED_PARTY = "sha256:deadbeef"
 
 
 def _invoice() -> CatalogueInvoiceSnapshot:
     """Build a complete public invoice snapshot for the CLI projector."""
-    return CatalogueInvoiceSnapshot(
-        invoice_id=_INVOICE_ID,
-        bucket_id=str(_PROFILE_ID),
-        kind=InvoiceKind.RECEIVED,
-        invoice_number="ES-2026-000019",
-        issued_at=date(2026, 3, 11),
-        counterparty_name="Acme Suministros SL",
-        counterparty_tax_id=None,
-        counterparty_country="ES",
-        base_total=PublicDecimal(decimal="100.00"),
-        iva_total=PublicDecimal(decimal="21.00"),
-        grand_total=PublicDecimal(decimal="121.00"),
-        currency="EUR",
-        payment_status=PaymentStatus.PENDING,
-        linked_transaction_ids=(),
-        source_filename="factura.xml",
-        source_sha256=_SOURCE_SHA256,
-        source_row_index=None,
-        notes="",
-        retention_rate=None,
-        retention_amount=None,
-        recargo_amount=None,
-        operation_type=None,
-        lines=(
-            InvoiceLineSnapshot(
-                description="Komponenter",
-                quantity=PublicDecimal(decimal="1"),
-                unit_price=PublicDecimal(decimal="100.00"),
-                subtotal=PublicDecimal(decimal="100.00"),
-                iva_rate="21",
-                iva_amount=PublicDecimal(decimal="21.00"),
-            ),
-        ),
-        invoice_class="ORDINARIA",
-        series=None,
-        operation_date=None,
-        operation_date_role=None,
-        iva_category=None,
-        rectifies_invoice_number=None,
-        fx_rate=None,
-        fx_rate_date=None,
-        fx_rate_source=None,
-        base_total_eur=None,
-        iva_total_eur=None,
-        grand_total_eur=None,
-        referencia_catastral=None,
-    )
+    return received_invoice_snapshot(counterparty_tax_id=None)
 
 
 def _establishment(
