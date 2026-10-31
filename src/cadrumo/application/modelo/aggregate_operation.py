@@ -16,7 +16,7 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.calculations.registry.withholding_bindings import aggregate_withholding_by_clave
+from ...domain.calculations.registry.withholding_clave_breakdown import aggregate_withholding_by_clave
 from ..aggregation.errors import AggregationConfigError, AggregationUnsupportedModeloError
 from ..aggregation.ledger_payment_withholding import (
     LedgerPaymentWithholdingCapture,

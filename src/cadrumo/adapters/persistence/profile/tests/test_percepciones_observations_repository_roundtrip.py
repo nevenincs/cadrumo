@@ -31,10 +31,8 @@ from .....application.aggregation.percepciones_observations_repository import (
 from .....core.aggregation import AggregationCaptureKind, RetencionClave
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.period import Period
-from .....domain.calculations.registry.withholding_bindings import (
-    WithholdingObservation,
-    aggregate_withholding_by_clave,
-)
+from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
+from .....domain.calculations.registry.withholding_clave_breakdown import aggregate_withholding_by_clave
 from ...storage.crypto.encrypted_columns import secure_object_key_digest
 from ...storage.envelope.tests.record_set_authoring import replace_records
 from ...storage.errors import PathContainmentError, SecureObjectRowIdentityError

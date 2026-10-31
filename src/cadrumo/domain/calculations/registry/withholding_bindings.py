@@ -12,7 +12,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import BaseModel, Field, NonNegativeInt, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
@@ -41,10 +41,8 @@ if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
-    "WithholdingClaveBreakdown",
     "WithholdingObservation",
     "WithholdingProvider",
-    "aggregate_withholding_by_clave",
     "resolve_retencion_clave",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
@@ -1206,46 +1204,3 @@ def resolve_withholding_binding_row_values(
                     continue
                 resolved[(binding.id, row_index)] = value
     return resolved
-
-
-class WithholdingClaveBreakdown(BaseModel):
-    """One per-clave row of an annual withholding summary's reconciliation breakdown.
-
-    Groups the per-perceptor-clave rows an annual summary's calculation reads
-    (the type-2 perceptor records of the AEAT Diseño de Registros, as for
-    Modelos 190 and 193) by their ``clave`` and carries that clave's
-    distinct percepción count and percibido / retención magnitudes. The figures
-    reuse the scalar withholding-fact arithmetic
-    (:func:`resolve_withholding_binding_values`): ``percepcion_count`` is the
-    distinct ``(perceptor, clave, subclave)`` count, ``percibido_total`` is
-    ``percibido_dinerario + percibido_especie``, and ``retencion_total`` is
-    ``retencion_practicada + ingreso_a_cuenta``. It is a projection of the same
-    rows the percepciones resolver materialises for that calculation, so the
-    operator can reconcile the annual totals clave by clave against the periodic
-    filings and captured allocations they were composed from.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    clave: RetencionClave
-    percepcion_count: NonNegativeInt
-    percibido_total: Decimal = Field(ge=Decimal("0"))
-    retencion_total: Decimal = Field(ge=Decimal("0"))
-
-
-def aggregate_withholding_by_clave(
-    observations: Iterable[WithholdingObservation],
-) -> tuple[WithholdingClaveBreakdown, ...]:
-    """Aggregate by clave using the same totals as the binding resolver."""
-    by_clave: dict[RetencionClave, list[WithholdingObservation]] = {}
-    for observation in observations:
-        by_clave.setdefault(observation.clave, []).append(observation)
-    return tuple(
-        WithholdingClaveBreakdown(
-            clave=clave,
-            percepcion_count=len(distinct_percepcion_keys(group)),
-            percibido_total=percibido_total(group),
-            retencion_total=retencion_total(group),
-        )
-        for clave, group in sorted(by_clave.items())
-    )

@@ -18,11 +18,8 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import RetencionClave
-from ..withholding_bindings import (
-    WithholdingClaveBreakdown,
-    WithholdingObservation,
-    aggregate_withholding_by_clave,
-)
+from ..withholding_bindings import WithholdingObservation
+from ..withholding_clave_breakdown import WithholdingClaveBreakdown, aggregate_withholding_by_clave
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
