@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:74d553cd7b9fd8f4310bda5dd381a0fc8db22652c571905a364db357611d6314'
+body_hash: 'sha256:930b9491fc237255db2867c62c499c753d5a686544239e7ee208582bd8889e05'
 ---
 
 # `macos-platform` plan
@@ -41,6 +41,8 @@ Bring Cadrumo to a working build, package and run on macOS arm64: configure and 
 - [x] `S14` - Settle or durably record in-flight operations at quit so interrupted mutations stay UNKNOWN rather than lost, and stop logging session_unavailable as a failure on a normal quit; `native/desktop/src-tauri/src/app.rs, native/application/src/runtime_client.rs, src/cadrumo_runtime/host`.
 - [x] `S15` - Gate package sealing and the DMG on a runtime-role health check, rebuild the macOS bundle and DMG, and verify S10 containment and S11 window chrome (fullscreen inset, title-bar double-click, standard Window menu shortcuts) in the packaged app; `native/cmake/distribution/CMakeLists.txt, native/cmake/Packaging.cmake, native/desktop`.
 - [x] `S16` - Give native and Python tests an isolated transport namespace so they never write to the real per-user socket directory, and remove the stale test lock and socket files there; `native/platform/src, native/desktop/src-tauri/src/shell/single_instance, src/cadrumo_client/transport, native/manager/tests`.
+- [ ] `S17` - Fix the remaining desktop failures: quiet session_unavailable when quitting before the manager stage, the desktop-frontend-test virtual-module import failure, and the failing panicking-synchronous-command and logs host unit tests; `native/desktop/src-tauri/src, native/desktop/frontend`.
+- [ ] `S18` - Decide and implement an Apple-conformant split of the macOS payload into nested code and resources that keeps package-root containment checks sound, with a dated amendment to the darwin distribution decision; `native/platforms/macos-arm64.json, dev/packaging/native, src/cadrumo_agent_service/host/launch_environment.py, native/desktop/src-tauri/src/docs/request.rs, .vault/adr`.
 
 ## Parallelization
 
