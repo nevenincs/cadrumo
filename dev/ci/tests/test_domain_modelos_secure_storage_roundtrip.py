@@ -304,18 +304,21 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
             WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
-def test_work_unit_catalogue_wrong_inner_classification_is_localized(
+def _load_error_for_envelope(
     tmp_path: Path,
-) -> None:
-    """A corrupted envelope classification raises a translated persistence error."""
-
+    *,
+    schema_version: int,
+    written_at: datetime,
+    envelope_classification: SensitivityClass,
+) -> WorkUnitPersistenceError:
+    """Store an inner envelope the loader must refuse and return the persistence error it raises."""
     from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[WorkUnitCatalogue](
-            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
-            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
-            classification=SensitivityClass.AUDIT,
+            schema_version=schema_version,
+            written_at=written_at,
+            classification=envelope_classification,
             payload=WorkUnitCatalogue(),
         )
         profile.repository.save(
@@ -329,9 +332,23 @@ def test_work_unit_catalogue_wrong_inner_classification_is_localized(
 
         with pytest.raises(WorkUnitPersistenceError) as raised:
             WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
+    return raised.value
 
-    assert raised.value.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
-    assert raised.value.context == {
+
+def test_work_unit_catalogue_wrong_inner_classification_is_localized(
+    tmp_path: Path,
+) -> None:
+    """A corrupted envelope classification raises a translated persistence error."""
+
+    raised = _load_error_for_envelope(
+        tmp_path,
+        schema_version=_WORK_UNIT_CATALOGUE_VERSION,
+        written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
+        envelope_classification=SensitivityClass.AUDIT,
+    )
+
+    assert raised.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
+    assert raised.context == {
         "reason": "classification_mismatch",
         "expected_classification": "financial",
         "actual_classification": "audit",
@@ -343,30 +360,16 @@ def test_work_unit_catalogue_unsupported_inner_version_is_localized(
 ) -> None:
     """A future inner envelope schema version raises a translated persistence error."""
 
-    from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
-
     stored_schema_version = _WORK_UNIT_CATALOGUE_VERSION + 1
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        envelope = Envelope[WorkUnitCatalogue](
-            schema_version=stored_schema_version,
-            written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
-            classification=SensitivityClass.FINANCIAL,
-            payload=WorkUnitCatalogue(),
-        )
-        profile.repository.save(
-            namespace=_WORK_UNIT_NAMESPACE,
-            object_key=_WORK_UNIT_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
+    raised = _load_error_for_envelope(
+        tmp_path,
+        schema_version=stored_schema_version,
+        written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
+        envelope_classification=SensitivityClass.FINANCIAL,
+    )
 
-        with pytest.raises(WorkUnitPersistenceError) as raised:
-            WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
-
-    assert raised.value.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
-    assert raised.value.context == {
+    assert raised.translated_message == "errors.fail.fail_modelo_work_unit_persistence"
+    assert raised.context == {
         "reason": "unsupported_envelope_version",
         "stored_schema_version": stored_schema_version,
         "max_supported_version": _WORK_UNIT_CATALOGUE_VERSION,

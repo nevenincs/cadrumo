@@ -117,9 +117,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import (
-    BusinessClassification,
     TransactionDirection,
-    TransactionLifecycleState,
 )
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -130,6 +128,7 @@ from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.log_records import delivered_records
 
 from ..perf_measurement import wall_advisory_message
+from ._ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -258,33 +257,7 @@ def _synthetic_transaction(idx: int, *, booked: date) -> Transaction:
     construct at 30k-row scale.
     """
     direction = TransactionDirection.OUTGOING if idx % 3 else TransactionDirection.INCOMING
-    return Transaction.model_validate(
-        {
-            "raw": _raw(idx, booked=booked),
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": BusinessClassification.BUSINESS,
-            "business_pct": None,
-            "purchase_invoice_evidence_id": None,
-            "category_id": "material_oficina",
-            "taxable_base": Decimal("100.00"),
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": Decimal("21.00"),
-            "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(booked.year, booked.month, booked.day, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-
-def _dates_across_year(year: int, count: int) -> Iterator[date]:
-    """Yield ``count`` distinct booked dates spread evenly across ``year``."""
-    start = date(year, 1, 1)
-    span_days = (date(year, 12, 31) - start).days
-    for i in range(count):
-        offset_days = (i * span_days) // max(count - 1, 1)
-        yield start + timedelta(days=offset_days)
+    return classified_business_transaction(_raw(idx, booked=booked), direction=direction)
 
 
 def _seed_scale_ledger(objects: SecureObjectRepository) -> None:
@@ -299,7 +272,7 @@ def _seed_scale_ledger(objects: SecureObjectRepository) -> None:
     idx = 0
     transactions: list[Transaction] = []
     for year in range(_FIRST_YEAR, _FIRST_YEAR + _FILING_YEARS):
-        for booked in _dates_across_year(year, _TRANSACTIONS_PER_YEAR):
+        for booked in dates_across_year(year, _TRANSACTIONS_PER_YEAR):
             transactions.append(_synthetic_transaction(idx, booked=booked))
             idx += 1
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
@@ -377,13 +350,6 @@ def _seed_taxpayer_profile() -> None:
         updated_at=datetime(_FIRST_YEAR, 1, 1, tzinfo=UTC),
     )
     seed_test_profile_record(record)
-
-
-def _p95(samples: list[float]) -> float:
-    """Return the 95th percentile of ``samples`` (nearest-rank, no interpolation)."""
-    ordered = sorted(samples)
-    rank = max(0, min(len(ordered) - 1, round(0.95 * (len(ordered) - 1))))
-    return ordered[rank]
 
 
 def _save_benchmark_update(transaction: Transaction, sample_index: int) -> Transaction:
@@ -467,10 +433,10 @@ def test_ledger_read_reports_full_catalogue_latency(scale_bucket: SecureObjectRe
         samples.append(time.perf_counter() - started)
         assert len(catalogue) == _TOTAL_TRANSACTIONS
 
-    p95 = _p95(samples)
+    latency_p95 = p95(samples)
     print(
         f"\n[bench] ledger_read_diagnostic: n={_DIAGNOSTIC_SAMPLE_COUNT} "
-        f"p95={p95:.3f}s mean={statistics.mean(samples):.3f}s "
+        f"p95={latency_p95:.3f}s mean={statistics.mean(samples):.3f}s "
         f"min={min(samples):.3f}s max={max(samples):.3f}s "
         "budget_scope=out_of_scope_full_catalogue_read",
     )
@@ -515,10 +481,10 @@ def test_annual_renta_aggregation_reports_full_scan_latency(
         # a real casilla-values mapping for the target period.
         assert isinstance(result.casilla_values, Mapping)
 
-    p95 = _p95(samples)
+    latency_p95 = p95(samples)
     print(
         f"\n[bench] annual_renta_aggregation_diagnostic: n={_DIAGNOSTIC_SAMPLE_COUNT} "
-        f"p95={p95:.3f}s mean={statistics.mean(samples):.3f}s "
+        f"p95={latency_p95:.3f}s mean={statistics.mean(samples):.3f}s "
         f"min={min(samples):.3f}s max={max(samples):.3f}s "
         "budget_scope=out_of_scope_pending_invoice_date_key",
     )
@@ -578,9 +544,9 @@ def test_single_transaction_save_reports_write_path_latency(scale_bucket: Secure
     finally:
         repo.save(original_catalogue)
 
-    namespace_p95 = _p95(namespace_hash_samples)
-    serialise_hash_p95 = _p95(serialise_hash_samples)
-    save_p95 = _p95(save_samples)
+    namespace_p95 = p95(namespace_hash_samples)
+    serialise_hash_p95 = p95(serialise_hash_samples)
+    save_p95 = p95(save_samples)
     print(
         f"\n[bench] transaction_save_namespace_hash_scan: n={_DIAGNOSTIC_SAMPLE_COUNT} "
         f"p95={namespace_p95:.3f}s mean={statistics.mean(namespace_hash_samples):.3f}s "
@@ -737,9 +703,9 @@ def test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget(
     not the aggregation. Wall-clock is printed as an advisory alongside.
     """
     samples = quarterly_iva_samples
-    partitioned_cpu_p95 = _p95(list(samples.partitioned_cpu))
-    partitioned_wall_p95 = _p95(list(samples.partitioned_wall))
-    full_scan_cpu_p95 = _p95(list(samples.full_scan_cpu))
+    partitioned_cpu_p95 = p95(list(samples.partitioned_cpu))
+    partitioned_wall_p95 = p95(list(samples.partitioned_wall))
+    full_scan_cpu_p95 = p95(list(samples.full_scan_cpu))
     partition_read_count = len(samples.partition_messages)
     partition_in_window_rows = _partition_in_window_rows(samples.partition_messages)
 
@@ -751,7 +717,7 @@ def test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget(
     print(
         f"\n[bench] iva_quarterly_full_scan_diagnostic: n={_DIAGNOSTIC_SAMPLE_COUNT} "
         f"cpu_p95={full_scan_cpu_p95:.3f}s cpu_mean={statistics.mean(samples.full_scan_cpu):.3f}s "
-        f"wall_p95={_p95(list(samples.full_scan_wall)):.3f}s (wall advisory) "
+        f"wall_p95={p95(list(samples.full_scan_wall)):.3f}s (wall advisory) "
         f"cpu_min={min(samples.full_scan_cpu):.3f}s cpu_max={max(samples.full_scan_cpu):.3f}s",
     )
     print(
@@ -763,7 +729,7 @@ def test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget(
         f"wall_max={max(samples.partitioned_wall):.3f}s "
         f"(wall advisory<{_P95_WALL_ADVISORY_SECONDS:.1f}s, warned never asserted) "
         f"paired_cpu_p95_delta_vs_full_scan="
-        f"{(full_scan_cpu_p95 - _p95(list(samples.paired_partitioned_cpu))):.3f}s "
+        f"{(full_scan_cpu_p95 - p95(list(samples.paired_partitioned_cpu))):.3f}s "
         f"partition_reads={partition_read_count} partition_in_window_rows={partition_in_window_rows}",
     )
     wall_advisory_message(
@@ -798,7 +764,7 @@ def test_iva_quarterly_budget_still_fails_without_the_partition(
     CPU-s ceiling.
     """
     samples = quarterly_iva_samples
-    full_scan_cpu_p95 = _p95(list(samples.full_scan_cpu))
+    full_scan_cpu_p95 = p95(list(samples.full_scan_cpu))
     assert full_scan_cpu_p95 > _P95_BUDGET_CPU_SECONDS, (
         f"the unpartitioned full scan measured {full_scan_cpu_p95:.3f} CPU-s P95, which does NOT "
         f"exceed the {_P95_BUDGET_CPU_SECONDS:.1f} CPU-s budget — the budget can no longer detect "

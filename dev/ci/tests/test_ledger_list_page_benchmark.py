@@ -22,7 +22,7 @@ import statistics
 import tempfile
 import time
 from collections.abc import Iterator
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -45,14 +45,13 @@ from cadrumo.application.ledger.transaction_projection import (
 from cadrumo.core.ledger_sort import LedgerSortField
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.transactions.enums import (
-    BusinessClassification,
     TransactionDirection,
-    TransactionLifecycleState,
 )
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 from ..perf_measurement import wall_advisory_message
+from ._ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -102,31 +101,7 @@ def _synthetic_transaction(idx: int, *, booked: date) -> Transaction:
         ),
         raw_fields={"Concepto": f"row {idx}"},
     )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": BusinessClassification.BUSINESS,
-            "business_pct": None,
-            "purchase_invoice_evidence_id": None,
-            "category_id": "material_oficina",
-            "taxable_base": Decimal("100.00"),
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": Decimal("21.00"),
-            "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(booked.year, booked.month, booked.day, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-
-
-def _dates_across_year(year: int, count: int) -> Iterator[date]:
-    start = date(year, 1, 1)
-    span_days = (date(year, 12, 31) - start).days
-    for i in range(count):
-        yield start + timedelta(days=(i * span_days) // max(count - 1, 1))
+    return classified_business_transaction(raw, direction=direction)
 
 
 @pytest.fixture(scope="module")
@@ -139,7 +114,7 @@ def scale_bucket(authority_operation: PinnedAuthorityOperation) -> Iterator[Secu
         transactions: list[Transaction] = []
         idx = 0
         for year in range(_FIRST_YEAR, _FIRST_YEAR + _FILING_YEARS):
-            for booked in _dates_across_year(year, _TRANSACTIONS_PER_YEAR):
+            for booked in dates_across_year(year, _TRANSACTIONS_PER_YEAR):
                 transactions.append(_synthetic_transaction(idx, booked=booked))
                 idx += 1
         TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository).save(
@@ -190,12 +165,6 @@ def _read_page(
     )
 
 
-def _p95(samples: list[float]) -> float:
-    ordered = sorted(samples)
-    rank = max(0, min(len(ordered) - 1, round(0.95 * (len(ordered) - 1))))
-    return ordered[rank]
-
-
 @pytest.mark.perf
 @pytest.mark.serial
 def test_period_filtered_list_page_p95_cpu_within_budget(
@@ -222,8 +191,8 @@ def test_period_filtered_list_page_p95_cpu_within_budget(
         assert page.truncated
         assert all(row.transaction.date.startswith(str(_LAST_YEAR)) for row in page.rows)
 
-    cpu_p95 = _p95(cpu)
-    wall_p95 = _p95(wall)
+    cpu_p95 = p95(cpu)
+    wall_p95 = p95(wall)
     print(
         f"\n[bench] ledger_list_period_page: n={_BUDGET_SAMPLE_COUNT} cpu_p95={cpu_p95:.3f}s "
         f"cpu_mean={statistics.mean(cpu):.3f}s gate=cpu<{_P95_BUDGET_CPU_SECONDS:.1f}s "
@@ -256,5 +225,5 @@ def test_unfiltered_list_page_reports_full_ledger_latency(
         assert len(page.rows) == _PAGE_SIZE
     print(
         f"\n[bench] ledger_list_unfiltered_page_diagnostic: n={_DIAGNOSTIC_SAMPLE_COUNT} "
-        f"cpu_p95={_p95(cpu):.3f}s cpu_mean={statistics.mean(cpu):.3f}s (outside the period budget)"
+        f"cpu_p95={p95(cpu):.3f}s cpu_mean={statistics.mean(cpu):.3f}s (outside the period budget)"
     )

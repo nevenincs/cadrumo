@@ -166,6 +166,8 @@ from cadrumo.entrypoints.tests.registered_executor_case_support import (
 )
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 
+from ._ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
+
 pytestmark = [pytest.mark.integration, pytest.mark.perf, pytest.mark.serial, pytest.mark.hex_entrypoint]
 
 _TOTAL_TRANSACTIONS: Final = 30_000
@@ -223,13 +225,6 @@ _PROFILE_FACTS: Final = (
 # ---------------------------------------------------------------------------
 
 
-def _dates_across_year(year: int, count: int) -> Iterator[date]:
-    start = date(year, 1, 1)
-    span_days = (date(year, 12, 31) - start).days
-    for i in range(count):
-        yield start + timedelta(days=(i * span_days) // max(count - 1, 1))
-
-
 def _base_and_iva(idx: int, *, stride: int) -> tuple[Decimal, Decimal]:
     """A spread taxable base and its 21 % IVA, so amounts rarely coincide.
 
@@ -275,31 +270,14 @@ def _synthetic_transaction(idx: int, *, booked: date) -> Transaction:
                 "lifecycle_state": TransactionLifecycleState.ACTIVE,
             },
         )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": BusinessClassification.BUSINESS,
-            "business_pct": None,
-            "purchase_invoice_evidence_id": None,
-            "category_id": "material_oficina",
-            "taxable_base": base,
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": iva,
-            "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(booked.year, booked.month, booked.day, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
+    return classified_business_transaction(raw, direction=direction, taxable_base=base, iva_amount=iva)
 
 
 def _seed_transactions(bucket_id: str) -> None:
     transactions: list[Transaction] = []
     idx = 0
     for year in range(_FIRST_YEAR, _LAST_YEAR + 1):
-        for booked in _dates_across_year(year, _TRANSACTIONS_PER_YEAR):
+        for booked in dates_across_year(year, _TRANSACTIONS_PER_YEAR):
             transactions.append(_synthetic_transaction(idx, booked=booked))
             idx += 1
     TransactionCatalogueRepository(bucket_id=bucket_id).save(TransactionCatalogue.from_transactions(transactions))
@@ -479,21 +457,15 @@ class ReadMeasurement:
     @property
     def cpu_p95(self) -> float:
         """Nearest-rank 95th percentile of the CPU samples."""
-        return _p95(self.cpu)
+        return p95(self.cpu)
 
     def line(self) -> str:
         """Render the diagnostic row."""
         return (
             f"[bench] {self.name}: n={len(self.cpu)} cpu_p95={self.cpu_p95:.3f}s "
             f"cpu_mean={statistics.mean(self.cpu):.3f}s cpu_min={min(self.cpu):.3f}s "
-            f"wall_p95={_p95(self.wall):.3f}s wall_mean={statistics.mean(self.wall):.3f}s (wall advisory)"
+            f"wall_p95={p95(self.wall):.3f}s wall_mean={statistics.mean(self.wall):.3f}s (wall advisory)"
         )
-
-
-def _p95(samples: tuple[float, ...]) -> float:
-    """Nearest-rank 95th percentile, no interpolation."""
-    ordered = sorted(samples)
-    return ordered[max(0, min(len(ordered) - 1, round(0.95 * (len(ordered) - 1))))]
 
 
 def _period() -> PublicPeriod:
