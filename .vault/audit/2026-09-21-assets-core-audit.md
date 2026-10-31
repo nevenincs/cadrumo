@@ -306,3 +306,40 @@ Executed. `work_form_next_step.py:269`.
 ### Reduction citation | info | The block on clave A lifted once the design's citation was explained as a stale renumbering
 
 The socio record of the Modelo 184 design cites LIRPF art. 24.2, which does not fit Ley 35/2006, whose art. 24 has no apartado 2. RDLeg 3/2004 art. 24 (BOE-A-2004-4347) is the old number: its apartado 2 reduced income of more than two years' generation. The current rule is LIRPF art. 26.2, reducing the net income of art. 25.4, which is the socio record's clave A subclave 02. The entity record of the same design cites art. 26.2 itself. `2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr` allowed the block to lift on this explanation. The fact key `reduccion.bearing` now reads `A:02,C,D`; clave A without 02 and clave E refuse. No filing-grade example has confirmed the reading.
+
+## Third integrated review
+
+Reviewed through `b49f3e2399` against the assets core and registry-owned facts plans. The plan sum above pending (9,000 against 7,000) is not a defect: a past unclaimed row states that year's own figure, rows from today stay within pending, and claim writes cap at the excess.
+
+### boxes | high | Two sales export as one summed element with no warning
+`application/filing/_export_xml_dictionary.py:224,606-612`, `application/aggregation/activity_asset_disposal_projection.py:315-323`. No filing module reads `row_binding_values`, and the shared-row finding is gone.
+
+### boxes | high | Box 1633 carries the sale price before costs
+`domain/renta/actividad_asset/disposal.py:309-317`. The Renta manual defines the value net of costs; with sale 5,000, costs 100, net value 3,000 the boxes imply 2,000 where 1654 states 1,900.
+
+### boxes | medium | Sale rows omit boxes and a zero-result sale leaves no trace
+`_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml:763-823`, `activity_asset_disposal_projection.py:466`. Boxes 1632, 1612, 1613, 1638, 1640 are unbound.
+
+### boxes | medium | The sale row's identity ignores costs and date
+`activity_asset_disposal_projection.py:180-189`.
+
+### literal-sweep | medium | The sweep misses whole classes of tax literal and stops at domain and application
+`dev/quality/tests/test_tax_literal_sweep.py`. Missed shapes include `StringConstraints`, `Field(pattern=)`, `Decimal` values, bare thresholds, box names, `match` cases and date literals.
+
+### registry-facts | medium | Literal bounds duplicate facts that now own the values
+`domain/modelos/row_models.py:72,244`, `application/modelo/edit_apply_row_contracts.py:127`, `application/filing/producer_snapshot.py:68-69`, `core/filing_projection_ref.py:159-213`.
+
+### registry-facts | medium | The M180 municipality regex probably disagrees with its five-position field
+`application/aggregation/retenciones.py:74`.
+
+### parity | medium | The TUI asset reads omit what other surfaces state
+`entrypoints/tui/ledger/actividad_asset.py:256-269,519-552`.
+
+### registry-readers | low | The leased reader is an implicit fallback outside validation scope
+`domain/calculations/registry/form_codes.py:701-729`.
+
+### notes | low | Notes stored in one development window fail to render
+`application/modelo/calculation_notes.py:263-269`. Test data only; no migration.
+
+### registry-facts | low | Stale comment and remaining literals
+`domain/modelos/row_models.py:262`, `application/actividad_asset/operations.py:207,211`, `_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml:740-745`.
