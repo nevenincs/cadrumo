@@ -71,6 +71,11 @@ _PERCENT_FORMULA_CALL_RE = re.compile(r"(?<![\w.])percent\([ \t]*\d+[ \t]*,[ \t]
 # handling and leave bare or misspelled words visible.
 # https://www.nist.gov/pml/special-publication-330/sp-330-section-4
 _MINUTE_QUANTITY_RE = re.compile(r"(?<![\w.])(?P<value>\{minutes\}|\d+(?:[.,]\d+)?)[ \t]+min(?![\w])")
+# Exact boolean choice notation documented by parse_descendiente_flag; an
+# unknown field or changed option remains visible to the spelling signal.
+_DESCENDANT_BOOL_CHOICES_RE = re.compile(
+    r"(?<![\w])(?:CONVIVENCIA|DEPENDENCIA|CUSTODIA|DECLARACION_PROPIA|PRORRATA)=true\|false(?![\w|])"
+)
 # These exact Latin suffixes identify statutory articles, rather than prose in
 # the surrounding locale. They are attested by Ley 37/1992's article headings:
 # https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740
@@ -157,6 +162,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (TRANSLATION_PLACEHOLDER_RE, " "),
         (_OUTPUT_LANGUAGE_CHOICES_RE, " "),
         (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
+        (_DESCENDANT_BOOL_CHOICES_RE, " "),
         (_LEGISLATIVE_DECREE_REFERENCE_RE, " "),
         (_SPREADSHEET_SUFFIX_RE, " "),
         (TRANSLATION_URL_RE, " "),

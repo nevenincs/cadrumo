@@ -21,7 +21,7 @@ from .signal_syntax import (
     TRANSLATION_SPANISH_AUTHORITY_RE,
     TRANSLATION_SPANISH_TAX_TERM_RE,
 )
-from .signal_tokens import filtered_translation_text, translation_words
+from .signal_tokens import _DESCENDANT_BOOL_CHOICES_RE, filtered_translation_text, translation_words
 
 # These exact Catalan pronoun forms are attested in the operator guides. Keep
 # the verb visible and the set closed; arbitrary stems still need checking.
@@ -193,7 +193,7 @@ def legal_title_spelling_segments(
     # such as "modelo" first would split its path before command masking.
     literal_ranges = tuple(
         (match.start(), match.end())
-        for pattern in (TRANSLATION_LITERAL_RE, command_path_pattern())
+        for pattern in (TRANSLATION_LITERAL_RE, command_path_pattern(), _DESCENDANT_BOOL_CHOICES_RE)
         for match in pattern.finditer(value)
     )
     for pattern in (

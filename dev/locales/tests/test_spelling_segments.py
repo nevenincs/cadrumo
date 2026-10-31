@@ -11,7 +11,7 @@ from ..signal_spelling_segments import (
     spanish_word_context,
     translation_spelling_segments,
 )
-from ..signal_tokens import filtered_translation_text, translation_words
+from ..signal_tokens import _DESCENDANT_BOOL_CHOICES_RE, filtered_translation_text, translation_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -89,6 +89,19 @@ def test_minute_symbol_requires_a_quantity_and_leaves_unrelated_words() -> None:
     for value in ("min", "{count} min", "20 minn", "20 minute"):
         prose, _excluded = filtered_translation_text(value)
         assert "min" in prose
+
+
+def test_descendant_boolean_choices_match_only_actual_field_and_complete_values() -> None:
+    for field in ("CONVIVENCIA", "DEPENDENCIA", "CUSTODIA", "DECLARACION_PROPIA", "PRORRATA"):
+        prose, excluded = filtered_translation_text(f"{field}=true|false typo")
+        assert prose == "typo"
+        assert excluded == 1
+    for value in ("UNKNOWN=true|false", "CONVIVENCIA=true|falsx", "CONVIVENCIA=true|false|extra"):
+        assert _DESCENDANT_BOOL_CHOICES_RE.search(value) is None
+    words = words_by_language("PRORRATA=true|false hibásszó", "hu")
+    assert "hibásszó" in words["hu"]
+    assert not {"true", "false"}.intersection(words["hu"])
+    assert "prorrata" in words_by_language("prorrata hibásszó", "hu")["es"]
 
 
 @pytest.mark.parametrize(
