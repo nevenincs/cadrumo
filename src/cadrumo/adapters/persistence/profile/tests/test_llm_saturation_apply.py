@@ -33,22 +33,19 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["repositories"]
 
 
-def test_apply_persists_derived_substrate_with_llm_provenance(
-    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    repository, events = repositories
-    gross = Decimal("121.00")
-    tx_id = _seed_unclassified(repository, amount=gross)
+def _saturate_and_apply(
+    repository: TransactionCatalogueRepository,
+    events: BucketEventHistoryRepository,
+    tx_id: str,
+    iva_category: IvaCategory,
+):
+    """Saturate the LLM classification to ``iva_category`` for ``tx_id`` and apply it as ``operator-A``."""
     with bundled_indexed_authority().operation() as operation:
         suggestion = saturate_llm_classification(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            classifier=_saturating_subprocess_classifier(
-                iva_category=IvaCategory("domestic_general"), operation=operation
-            ),
+            classifier=_saturating_subprocess_classifier(iva_category=iva_category, operation=operation),
             transaction_repository=repository,
             settings=load_settings(),
             ports=NO_EVIDENCE_LLM_PORTS,
@@ -60,7 +57,7 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
         transaction_repository=repository,
         bucket_event_repository=events,
     ) as ports:
-        result = apply_saturated_llm_classification(
+        return apply_saturated_llm_classification(
             suggestion,
             bucket_id=_BUCKET,
             actor="operator-A",
@@ -68,6 +65,17 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
             ports=ports,
             occurred_at=_NOW,
         )
+
+
+def test_apply_persists_derived_substrate_with_llm_provenance(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    repository, events = repositories
+    gross = Decimal("121.00")
+    tx_id = _seed_unclassified(repository, amount=gross)
+    result = _saturate_and_apply(repository, events, tx_id, IvaCategory("domestic_general"))
 
     persisted = result.transaction
     assert persisted.business_classification is BusinessClassification.BUSINESS
@@ -89,33 +97,7 @@ def test_apply_non_derivable_persists_category_without_numbers(
 ) -> None:
     repository, events = repositories
     tx_id = _seed_unclassified(repository)
-    with bundled_indexed_authority().operation() as operation:
-        suggestion = saturate_llm_classification(
-            bucket_id=_BUCKET,
-            transaction_id=tx_id,
-            operation=operation,
-            classifier=_saturating_subprocess_classifier(
-                iva_category=IvaCategory("intra_community_supply"), operation=operation
-            ),
-            transaction_repository=repository,
-            settings=load_settings(),
-            ports=NO_EVIDENCE_LLM_PORTS,
-        )
-
-    with ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=repository._objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports:
-        result = apply_saturated_llm_classification(
-            suggestion,
-            bucket_id=_BUCKET,
-            actor="operator-A",
-            source_command="aeat app ledger classify --llm --saturate --apply",
-            ports=ports,
-            occurred_at=_NOW,
-        )
+    result = _saturate_and_apply(repository, events, tx_id, IvaCategory("intra_community_supply"))
 
     persisted = result.transaction
     assert persisted.iva_category == IvaCategory("intra_community_supply")
