@@ -418,9 +418,9 @@ export function FieldsGrid({
                 )}
               </EditorField>
             ) : field.control === "amount" ||
-            field.control === "share" ||
-            field.control === "quantity" ||
-            field.control === "whole" ? (
+              field.control === "share" ||
+              field.control === "quantity" ||
+              field.control === "whole" ? (
               <TextField
                 label={label}
                 name={field.key}

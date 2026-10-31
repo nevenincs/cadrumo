@@ -172,13 +172,7 @@ export function servedWord(t: (key: string) => string, served: Served): string {
 // ---- The fields a form draws -------------------------------------------------
 
 export type FieldControl =
-  | "text"
-  | "choice"
-  | "money"
-  | "quantity"
-  | "unit_price"
-  | "share"
-  | "date";
+  "text" | "choice" | "money" | "quantity" | "unit_price" | "share" | "date";
 
 /** One field of a form: what it is called, how it is typed and whether the
  * request cannot be made without it. A field's key is where its text and its

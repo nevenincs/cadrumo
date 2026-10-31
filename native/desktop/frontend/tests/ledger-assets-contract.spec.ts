@@ -136,6 +136,7 @@ const change = (
   after: string | null,
   afterKey: string | null = null,
 ) => ({
+  kind: "added" as const,
   field,
   field_key: `ledger.actividad_asset.field.${field}`,
   before: null,
