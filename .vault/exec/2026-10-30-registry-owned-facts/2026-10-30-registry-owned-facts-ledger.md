@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:8445dba1a5fa4cc48e0b747b572621022b4216263152cfe46ba7c1efddab6d5d'
+body_hash: 'sha256:a47b5ef69330668086b8fdf24072ae191bc60b729c28036372813d2dede04249'
 related:
   - "[[2026-10-30-registry-owned-facts-plan]]"
 ---
@@ -29,6 +29,11 @@ related:
 - `S03` `M` `src/cadrumo/application/wizard/catalogue.py`
 - `S03` `M` `src/cadrumo/application/wizard/command_parameters.py`
 - `S03` `verify:` `lint-imports` -> `pass`
+- `S05` `A` `src/cadrumo/_data/registry/aeat/facts/0163-modelo-202-instalment-payment-months.toml`
+- `S05` `M` `src/cadrumo/domain/period.py`
+- `S05` `M` `src/cadrumo/domain/renta/maritime_exemption.py`
+- `S05` `M` `src/cadrumo/domain/renta/tests/test_maritime_exemption.py`
+- `S05` `verify:` `test_maritime_exemption` -> `pass`
 
 ## Notes
 
