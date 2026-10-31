@@ -9,6 +9,9 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.application.modelo.iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
+from cadrumo.application.user_profile.projections import profile_path_values_for_bucket
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -419,3 +422,30 @@ def _save_wallet_gate_decision(*, amount: Decimal, blocked: bool = False) -> Non
             decided_at=_DECIDED_AT,
         ),
     )
+
+
+def resolve_without_caller_inputs(
+    work_unit: WorkUnit,
+    *,
+    snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
+    repository: IvaWalletDecisionRepository,
+    observation_repository: CalculationObservationRepository,
+) -> IvaCompensationReconciliationDecision | None:
+    """Drive the calculation gate with no supplied, persisted or caller-bound compensation."""
+    decision = resolve_iva_compensation_decision_for_calculation(
+        work_unit,
+        snapshot=snapshot,
+        operation=operation,
+        supplied_decision=None,
+        repository=repository,
+        observation_repository=observation_repository,
+        history_repository=IvaCompensationHistoryRepository(),
+        binding_values=None,
+        backend_binding_values=None,
+        casilla_inputs=None,
+        backend_casilla_inputs=None,
+        profile_values=profile_path_values_for_bucket(work_unit.bucket_id),
+    )
+    assert decision is None or isinstance(decision, IvaCompensationReconciliationDecision)
+    return decision

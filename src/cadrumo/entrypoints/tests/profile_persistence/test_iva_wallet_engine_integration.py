@@ -38,12 +38,10 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationOverride,
     IvaCompensationReconciliationDecision,
 )
-from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
@@ -70,35 +68,9 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+from ._iva_wallet_engine_support import resolve_without_caller_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
-
-
-def _resolve_without_caller_inputs(
-    work_unit: WorkUnit,
-    *,
-    snapshot: RegistrySnapshot,
-    operation: PinnedAuthorityOperation,
-    repository: IvaWalletDecisionRepository,
-    observation_repository: CalculationObservationRepository,
-) -> IvaCompensationReconciliationDecision | None:
-    """Drive the calculation gate with no supplied, persisted or caller-bound compensation."""
-    decision = resolve_iva_compensation_decision_for_calculation(
-        work_unit,
-        snapshot=snapshot,
-        operation=operation,
-        supplied_decision=None,
-        repository=repository,
-        observation_repository=observation_repository,
-        history_repository=IvaCompensationHistoryRepository(),
-        binding_values=None,
-        backend_binding_values=None,
-        casilla_inputs=None,
-        backend_casilla_inputs=None,
-        profile_values=profile_path_values_for_bucket(work_unit.bucket_id),
-    )
-    assert decision is None or isinstance(decision, IvaCompensationReconciliationDecision)
-    return decision
 
 
 def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history(
@@ -730,7 +702,7 @@ def test_compensated_filed_envelope_reports_its_validated_credit_to_wallet(
             _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation
         )
         with _indexed_authority_for_test().operation() as operation:
-            decision = _resolve_without_caller_inputs(
+            decision = resolve_without_caller_inputs(
                 target,
                 snapshot=_snapshot_303(period="2T"),
                 operation=operation,
@@ -781,7 +753,7 @@ def test_official_and_local_refund_envelopes_feed_the_same_wallet_recurrence(
                 _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation
             )
             with _indexed_authority_for_test().operation() as operation:
-                decision = _resolve_without_caller_inputs(
+                decision = resolve_without_caller_inputs(
                     target,
                     snapshot=_snapshot_303(period="2T"),
                     operation=operation,
@@ -827,7 +799,7 @@ def test_wallet_refuses_revision_mismatched_or_header_conflicting_official_envel
         with _indexed_authority_for_test().operation() as operation:
             if stamped_revision_id is None:
                 with pytest.raises(PersistenceDegradationError) as refusal:
-                    _resolve_without_caller_inputs(
+                    resolve_without_caller_inputs(
                         target,
                         snapshot=_snapshot_303(period="2T"),
                         operation=operation,
@@ -837,7 +809,7 @@ def test_wallet_refuses_revision_mismatched_or_header_conflicting_official_envel
                 assert isinstance(refusal.value.__cause__, ValidationError)
                 assert "stamped_revision_id" in str(refusal.value.__cause__)
                 return
-            decision = _resolve_without_caller_inputs(
+            decision = resolve_without_caller_inputs(
                 target,
                 snapshot=_snapshot_303(period="2T"),
                 operation=operation,
@@ -880,7 +852,7 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
             _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation
         )
         with _indexed_authority_for_test().operation() as operation:
-            initial = _resolve_without_caller_inputs(
+            initial = resolve_without_caller_inputs(
                 target,
                 snapshot=_snapshot_303(period="2T"),
                 operation=operation,

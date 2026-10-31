@@ -119,7 +119,7 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
     )
 
 
-def _raw_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
+def raw_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
         booked_date=booked_date,
@@ -150,7 +150,7 @@ def _iva_transaction(
     booked_date = date(_YEAR, 2, 15)
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(provider_id, booked_date=booked_date, amount=taxable_base + iva_amount),
+            "raw": raw_transaction(provider_id, booked_date=booked_date, amount=taxable_base + iva_amount),
             "direction": direction,
             "group_label": None,
             "source_jurisdiction": "ES",
@@ -266,4 +266,4 @@ def calculate_irene_revision(
     return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
 
 
-__all__ = ["BUCKET_ID", "TAX_ID", "calculate_irene_revision", "workflow_profile"]
+__all__ = ["BUCKET_ID", "TAX_ID", "calculate_irene_revision", "raw_transaction", "workflow_profile"]

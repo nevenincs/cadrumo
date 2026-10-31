@@ -86,7 +86,6 @@ from ....domain.modelos.verification_report import (
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.env_scope import ready_clave_settings
@@ -96,6 +95,7 @@ from ...adapter_composition_work_ports import (
     build_ledger_evidence_ports,
     build_verification_repository_bundle,
 )
+from .ledger_drift_support import raw_transaction
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -278,27 +278,6 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
     )
 
 
-def _raw_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=booked_date,
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente o proveedor",
-        description=f"M303 evidence gate {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="e" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=_T0,
-            provider_name="manual-ledger",
-        ),
-        raw_fields={"source_kind": "ledger_transaction"},
-    )
-
-
 def iva_transaction(
     provider_id: str,
     *,
@@ -309,7 +288,7 @@ def iva_transaction(
     booked_date = date(_YEAR, 2, 15)
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(
+            "raw": raw_transaction(
                 provider_id,
                 booked_date=booked_date,
                 amount=taxable_base + iva_amount,
