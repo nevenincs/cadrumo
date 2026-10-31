@@ -1,6 +1,7 @@
 import * as React from "react";
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui";
 import { cn } from "@/components/ui/cn";
+import { chooseOnArrowFocus } from "@/components/ui/radio";
 
 /**
  * A radio group drawn as one segmented row: a choice among a few short,
@@ -33,17 +34,7 @@ function SegmentedControlItem({
       data-slot="segmented-control-item"
       onFocus={(event) => {
         onFocus?.(event);
-        // An arrow key moves the choice along with the focus. The foundation
-        // checks the radio only while it still sees the key held down, which
-        // a key sent by software may no longer be. Keyboard focus arriving on
-        // an unchecked segment of a group that has a choice is that move.
-        const item = event.currentTarget;
-        if (
-          item.getAttribute("aria-checked") === "false" &&
-          item.matches(":focus-visible") &&
-          item.parentElement?.querySelector('[aria-checked="true"]')
-        )
-          item.click();
+        chooseOnArrowFocus(event);
       }}
       className={cn(
         // A segment is as wide as its words need, sharing what is left over;

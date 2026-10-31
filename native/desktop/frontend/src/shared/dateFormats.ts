@@ -12,20 +12,88 @@ const makeFormats = (locale: string) => ({
     timeStyle: "short",
   }),
   relative: new Intl.RelativeTimeFormat(locale, { numeric: "auto" }),
+  // An ISO date read at midnight UTC and drawn in UTC: no local clock change
+  // or skipped local date can move it.
+  isoDay: new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeZone: "UTC",
+  }),
+  isoDayNoYear: new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }),
 });
+
+/** The value held under `key`, made if absent; the least recently used goes
+ * once `limit` is passed. */
+function reuse<Value>(
+  held: Map<string, Value>,
+  limit: number,
+  key: string,
+  make: () => Value,
+): Value {
+  const found = held.get(key);
+  const value = found ?? make();
+  held.delete(key);
+  held.set(key, value);
+  if (held.size > limit) {
+    const oldest = held.keys().next().value;
+    if (oldest !== undefined) held.delete(oldest);
+  }
+  return value;
+}
 
 // A bounded cache also serves hosts whose locale list changes during a launch.
 const CACHE_LIMIT = 16;
 const formats = new Map<string, ReturnType<typeof makeFormats>>();
 
 export function dateFormats(locale: string): ReturnType<typeof makeFormats> {
-  const held = formats.get(locale);
-  const value = held ?? makeFormats(locale);
-  formats.delete(locale);
-  formats.set(locale, value);
-  if (formats.size > CACHE_LIMIT) {
-    const oldest = formats.keys().next().value;
-    if (oldest !== undefined) formats.delete(oldest);
-  }
-  return value;
+  return reuse(formats, CACHE_LIMIT, locale, () => makeFormats(locale));
+}
+
+const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** Midnight UTC of an ISO date, or null when the text names no real day. */
+function utcDay(iso: string): Date | null {
+  const found = ISO_DAY.exec(iso);
+  if (!found) return null;
+  const month = Number(found[2]) - 1;
+  const day = Number(found[3]);
+  const date = new Date(0);
+  date.setUTCFullYear(Number(found[1]), month, day);
+  return date.getUTCMonth() === month && date.getUTCDate() === day
+    ? date
+    : null;
+}
+
+/** How many drawn dates are kept: a few periods' worth. */
+const DAYS_KEPT = 4096;
+const days = new Map<string, string>();
+
+/** A calendar date, with its year unless `withYear` is false. Text that names
+ * no real day is returned as it came. */
+export function formatDay(
+  locale: string,
+  iso: string,
+  { withYear = true }: { withYear?: boolean } = {},
+): string {
+  const date = utcDay(iso);
+  if (!date) return iso;
+  const key = `${locale} ${withYear ? "y" : "-"} ${iso}`;
+  return reuse(days, DAYS_KEPT, key, () => {
+    const named = dateFormats(locale);
+    return (withYear ? named.isoDay : named.isoDayNoYear).format(date);
+  });
+}
+
+/** A moment, as the person's clock reads it. A date without a time is not a
+ * moment, so it stays that calendar date. Unreadable text comes back as it
+ * came. */
+export function formatTime(locale: string, instant: string): string {
+  if (ISO_DAY.test(instant)) return formatDay(locale, instant);
+  const time = Date.parse(instant);
+  return Number.isNaN(time)
+    ? instant
+    : dateFormats(locale).dateTime.format(new Date(time));
 }
