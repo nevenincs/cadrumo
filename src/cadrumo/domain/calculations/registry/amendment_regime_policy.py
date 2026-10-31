@@ -50,7 +50,8 @@ def _boundary_model(value: str) -> Modelo:
         raise RegistryValidationError("amendment-regime-policy boundary model must be a Modelo identifier") from exc
 
 
-def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
+def _procedure_kinds(entries: Mapping[str, str]) -> tuple[frozenset[str], frozenset[str]]:
+    """Validate the declared procedures and both regime-specific selections."""
     procedure_order = unique_mapping_tokens(entries, _PROCEDURE_ORDER_KEY, subject=_ENTRY_SUBJECT)
     for token in procedure_order:
         if required_mapping_entry(entries, f"procedure.{token}.value", subject=_ENTRY_SUBJECT) != token:
@@ -65,7 +66,11 @@ def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
         raise RegistryValidationError("amendment-regime-policy pre-regime uses an undeclared procedure")
     if not set(post_order).issubset(declared_procedures):
         raise RegistryValidationError("amendment-regime-policy post-regime uses an undeclared procedure")
+    return frozenset(pre_order), frozenset(post_order)
 
+
+def _boundary_models(entries: Mapping[str, str]) -> tuple[str, ...]:
+    """Require boundary fields to name exactly the declared model identities."""
     boundary_models = unique_mapping_tokens(entries, _BOUNDARY_ORDER_KEY, subject=_ENTRY_SUBJECT)
     declared_models = {_boundary_model(modelo) for modelo in boundary_models}
     entry_models: set[Modelo] = set()
@@ -78,25 +83,31 @@ def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
         entry_models.add(_boundary_model(parts[1]))
     if entry_models != declared_models:
         raise RegistryValidationError("amendment-regime-policy boundary rows must match boundary.order")
-    boundaries: dict[str, date] = {}
-    for modelo in boundary_models:
-        try:
-            boundaries[modelo] = date.fromisoformat(
-                required_mapping_entry(entries, f"boundary.{modelo}.date", subject=_ENTRY_SUBJECT)
-            )
-        except ValueError as exc:
-            raise RegistryValidationError(
-                f"amendment-regime-policy boundary for {modelo!r} must be an ISO date",
-            ) from exc
-        if not any(entries.get(f"boundary.{modelo}.{field}", "").strip() for field in ("source_fact", "source")):
-            raise RegistryValidationError(
-                f"amendment-regime-policy boundary for {modelo!r} lacks source evidence",
-            )
+    return boundary_models
 
+
+def _boundary_date(entries: Mapping[str, str], modelo: str) -> date:
+    """Read a dated boundary only when it also declares source evidence."""
+    try:
+        boundary = date.fromisoformat(
+            required_mapping_entry(entries, f"boundary.{modelo}.date", subject=_ENTRY_SUBJECT)
+        )
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"amendment-regime-policy boundary for {modelo!r} must be an ISO date",
+        ) from exc
+    if not any(entries.get(f"boundary.{modelo}.{field}", "").strip() for field in ("source_fact", "source")):
+        raise RegistryValidationError(f"amendment-regime-policy boundary for {modelo!r} lacks source evidence")
+    return boundary
+
+
+def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
+    pre_kinds, post_kinds = _procedure_kinds(entries)
+    boundaries = {modelo: _boundary_date(entries, modelo) for modelo in _boundary_models(entries)}
     return AmendmentRegimePolicy(
         rectificativa_effective_from=MappingProxyType(boundaries),
-        pre_rectificativa_kinds=frozenset(pre_order),
-        post_rectificativa_kinds=frozenset(post_order),
+        pre_rectificativa_kinds=pre_kinds,
+        post_rectificativa_kinds=post_kinds,
     )
 
 

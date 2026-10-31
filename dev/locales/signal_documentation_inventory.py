@@ -272,14 +272,26 @@ def inventory_generated_document_file(
     )
     counts["docs_generated_prose_cells"] += len(prose) + len(embedded)
     if spelling_values is not None:
-        relative = path.relative_to(repository).as_posix()
-        link_chrome_lines = {line for line, language, _text in links if language == "en"}
-        for line, text in prose:
-            spelling_values.setdefault("en", {})[f"parallel:{relative}:line[{line}]"] = text
-        for line, language, text in embedded:
-            suffix = ":legal-link-chrome" if language == "en" and line in link_chrome_lines else ""
-            key = f"parallel:{relative}:line[{line}]:lang[{language}]{suffix}"
-            spelling_values.setdefault(language, {})[key] = text
+        _enroll_generated_document_prose(path, repository, prose, embedded, links, spelling_values)
+
+
+def _enroll_generated_document_prose(
+    path: Path,
+    repository: Path,
+    prose: tuple[tuple[int, str], ...],
+    embedded: tuple[tuple[int, str, str], ...],
+    links: tuple[tuple[int, str, str], ...],
+    spelling_values: dict[str, dict[str, str]],
+) -> None:
+    """Enroll ordinary and language-owned generated prose under their source lines."""
+    relative = path.relative_to(repository).as_posix()
+    link_chrome_lines = {line for line, language, _text in links if language == "en"}
+    for line, text in prose:
+        spelling_values.setdefault("en", {})[f"parallel:{relative}:line[{line}]"] = text
+    for line, language, text in embedded:
+        suffix = ":legal-link-chrome" if language == "en" and line in link_chrome_lines else ""
+        key = f"parallel:{relative}:line[{line}]:lang[{language}]{suffix}"
+        spelling_values.setdefault(language, {})[key] = text
 
 
 _LEGAL_NOTE_BODY = re.compile(

@@ -191,24 +191,26 @@ def legal_title_spelling_segments(
         TRANSLATION_SPANISH_TAX_TERM_RE,
         TRANSLATION_CLAVE_NAME_RE,
     ):
-        for match in pattern.finditer(value):
-            if any(start <= match.start() and match.end() <= end for start, end in literal_ranges):
-                continue
-            text = match.group(0)
-            # Both names identify a numbered return, but the English
-            # word "Form" is not the Spanish word "modelo".
-            language = "en" if pattern is MODELO_FORM_RE and text.split(maxsplit=1)[0].casefold() == "form" else "es"
-            if language == default_locale:
-                continue
-            foreign.append(
-                (
-                    match.start(),
-                    match.end(),
-                    language,
-                    text,
-                    filtered_translation_text(text)[1],
-                )
-            )
+        _append_legal_title_matches(value, pattern, default_locale, literal_ranges, foreign)
+
+
+def _append_legal_title_matches(
+    value: str,
+    pattern: re.Pattern[str],
+    default_locale: str,
+    literal_ranges: tuple[tuple[int, int], ...],
+    foreign: list[tuple[int, int, str, str, int]],
+) -> None:
+    """Route one family of complete legal names outside literal syntax."""
+    for match in pattern.finditer(value):
+        if any(start <= match.start() and match.end() <= end for start, end in literal_ranges):
+            continue
+        text = match.group(0)
+        # Both names identify a numbered return, but "Form" is English.
+        language = "en" if pattern is MODELO_FORM_RE and text.split(maxsplit=1)[0].casefold() == "form" else "es"
+        if language == default_locale:
+            continue
+        foreign.append((match.start(), match.end(), language, text, filtered_translation_text(text)[1]))
 
 
 def english_reference_spelling_segments(

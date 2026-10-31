@@ -83,6 +83,15 @@ def legal_citation_link_language_prose(
 def _legal_link_citation_marker(
     lines: list[str], index: int, marker: str, prefix: str, prose: tuple[tuple[int, str], ...]
 ) -> tuple[tuple[int, str, str], ...]:
+    label, citation, target = _decode_legal_link_citation(marker, prefix)
+    line = _validate_legal_link_citation(lines, index, label, citation, target, prose)
+    before, after = label.split(citation)
+    chrome = " ".join(part.strip() for part in (before, after) if part.strip())
+    return ((line, "en", chrome), (line, "es", citation)) if chrome else ((line, "es", citation),)
+
+
+def _decode_legal_link_citation(marker: str, prefix: str) -> tuple[str, str, str]:
+    """Decode the three nonempty strings carried by a generated link marker."""
     try:
         value = json.loads(marker[len(prefix) :].strip())
     except json.JSONDecodeError as exc:
@@ -93,8 +102,15 @@ def _legal_link_citation_marker(
     label, citation, target = (payload[key] for key in ("label", "citation", "target"))
     if not isinstance(label, str) or not isinstance(citation, str) or not isinstance(target, str):
         raise ValueError("invalid legal link citation marker")
-    if not label or not citation or not target:
+    if not all((label, citation, target)):
         raise ValueError("invalid legal link citation marker")
+    return label, citation, target
+
+
+def _validate_legal_link_citation(
+    lines: list[str], index: int, label: str, citation: str, target: str, prose: tuple[tuple[int, str], ...]
+) -> int:
+    """Require the marker, rendered link, and parsed visible text to agree."""
     if label.count(citation) != 1 or index + 4 >= len(lines):
         raise ValueError("legal link citation must occur exactly once in its label")
     if lines[index + 1 : index + 4] != ["", ".. container:: cadrumo-legal-official", ""]:
@@ -105,9 +121,7 @@ def _legal_link_citation_marker(
     line = index + 5
     if sum(item_line == line and text == label for item_line, text in prose) != 1:
         raise ValueError("legal link citation marker does not match parsed link text")
-    before, after = label.split(citation)
-    chrome = " ".join(part.strip() for part in (before, after) if part.strip())
-    return ((line, "en", chrome), (line, "es", citation)) if chrome else ((line, "es", citation),)
+    return line
 
 
 def _legal_citation_marker(
