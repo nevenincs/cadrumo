@@ -70,12 +70,12 @@ class _M131ResolveModulosPrevioArgs:
 #: highest-cardinality tabled activities — 644.1 "Comercio al por menor de
 #: pan, pastelería..." and 644.2/644.3 — use all seven; activities with fewer
 #: signos pass a literal ``0`` for the unused trailing slots).
-_M131_MODULOS_SLOT_COUNT = 7
+_M131_MODULOS_ARITY = 7
 
 
 def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131ResolveModulosPrevioArgs:
     op = "m131_resolve_modulos_previo"
-    expected_arg_count = 2 + _M131_MODULOS_SLOT_COUNT
+    expected_arg_count = 2 + _M131_MODULOS_ARITY
     if len(expression.args) != expected_arg_count:
         raise RegistryValidationError(
             f"formula op {op!r} expects {expected_arg_count} args, got {len(expression.args)}",
@@ -83,8 +83,8 @@ def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131Res
             context={"op": op, "expected": str(expected_arg_count)},
         )
     epigrafe_arg = expression.args[0]
-    modulo_args = expression.args[1 : 1 + _M131_MODULOS_SLOT_COUNT]
-    coefficient_arg = expression.args[1 + _M131_MODULOS_SLOT_COUNT]
+    modulo_args = expression.args[1 : 1 + _M131_MODULOS_ARITY]
+    coefficient_arg = expression.args[1 + _M131_MODULOS_ARITY]
     if epigrafe_arg.casilla_id is None:
         raise RegistryValidationError(
             f"formula op {op!r} requires args[0] to be a casilla leaf",
@@ -102,11 +102,11 @@ def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131Res
         resolved_modulo_ids.append(modulo_arg.casilla_id)
     if coefficient_arg.parameter is None:
         raise RegistryValidationError(
-            f"formula op {op!r} requires args[{1 + _M131_MODULOS_SLOT_COUNT}] to be a parameter leaf",
+            f"formula op {op!r} requires args[{1 + _M131_MODULOS_ARITY}] to be a parameter leaf",
             translated_message="errors.calc.lookup_dispatch_arg_kind",
             context={
                 "op": op,
-                "position": f"args[{1 + _M131_MODULOS_SLOT_COUNT}]",
+                "position": f"args[{1 + _M131_MODULOS_ARITY}]",
                 "expected_kind": "parameter",
             },
         )

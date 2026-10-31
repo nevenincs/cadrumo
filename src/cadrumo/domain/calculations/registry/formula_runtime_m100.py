@@ -320,7 +320,7 @@ def _m100_validate_imputation_days(
 #: dispatcher carries (Anexo I instrucción 2.3, letras a) to h) — índices 1 to 8;
 #: índice 9, mejillón en batea (letra i), applies to a separate producto
 #: (casilla 0160) outside this cascade).
-_M100_EO_AGRARIA_INDICE_COUNT = 8
+_M100_EO_AGRARIA_INDICE_ARITY = 8
 
 
 @dataclass(frozen=True, slots=True)
@@ -335,7 +335,7 @@ def _m100_resolve_eo_agraria_indices_correctores_args(
     expression: FormulaExpression,
 ) -> _M100ResolveEoAgrariaIndicesCorrectoresArgs:
     op = "m100_resolve_eo_agraria_indices_correctores"
-    expected_arg_count = 1 + _M100_EO_AGRARIA_INDICE_COUNT
+    expected_arg_count = 1 + _M100_EO_AGRARIA_INDICE_ARITY
     if len(expression.args) != expected_arg_count:
         raise RegistryValidationError(
             f"formula op {op!r} expects {expected_arg_count} args, got {len(expression.args)}",

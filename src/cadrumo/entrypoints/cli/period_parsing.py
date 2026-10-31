@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ...core.filing_year import FILING_YEAR_MIN
 from ...core.i18n.render import tr
 from .common import bad
 
@@ -64,7 +65,7 @@ def _ledger_aeat_token(token: str) -> str | None:
 #: Year used only to probe whether a token maps to a calendar date span. The
 #: span shape depends on the token's cadence, not the year, so any supported
 #: year answers identically; it never leaks into an operator-supplied period.
-_ACCEPTED_PERIOD_PROBE_YEAR = 2024
+_ACCEPTED_PERIOD_PROBE_YEAR = FILING_YEAR_MIN
 
 
 def _ledger_period_accepted_tokens() -> tuple[str, ...]:
