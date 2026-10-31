@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import replace
@@ -36,11 +35,11 @@ from cadrumo.domain.portals.registry import PORTAL_REGISTRY
 from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_mcp.mcp.server import build_server
 from cadrumo_mcp.mcp.tests.admitted_lease import admitted_adapter
+from cadrumo_mcp.mcp.tests.authority_corruption import DESCRIPTOR_NAME, copy_and_corrupt_published_database
 from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_DESCRIPTOR_NAME = "authority.current.json"
 _SYNTHETIC_MODELO = "130"
 """The modelo whose titles the synthetic publications borrow, and the only one they hold."""
 
@@ -179,7 +178,7 @@ async def test_authority_response_provenance_is_the_publication_the_report_was_r
 ) -> None:
     artifact = _synthetic_artifact("mcp-provenance-publication")
     published = publish_authority_artifact(artifact)
-    authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
+    authority = IndexedRegistryAuthority(tmp_path / DESCRIPTOR_NAME)
     with authority.operation() as held:
         pin = held.pin()
     with bundled_indexed_authority().operation() as packaged:
@@ -222,30 +221,13 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
         await adapter.close()
 
 
-def _copy_and_corrupt_published_database(source_descriptor: Path, destination: Path) -> Path:
-    """Copy one real publication and alter one database byte in the isolated copy."""
-    descriptor = AuthorityDescriptor.read(source_descriptor)
-    copied_descriptor = destination / _DESCRIPTOR_NAME
-    copied_database = destination / descriptor.database
-    shutil.copy2(source_descriptor, copied_descriptor)
-    shutil.copy2(source_descriptor.parent / descriptor.database, copied_database)
-
-    offset = copied_database.stat().st_size // 2
-    with copied_database.open("r+b") as stream:
-        stream.seek(offset)
-        original = stream.read(1)
-        stream.seek(offset)
-        stream.write(bytes([original[0] ^ 0xFF]))
-    return copied_descriptor
-
-
 @pytest.mark.anyio
 async def test_corrupt_configured_database_refuses_without_packaged_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     source_descriptor = bundled_authority_descriptor_path()
-    _copy_and_corrupt_published_database(source_descriptor, tmp_path)
+    copy_and_corrupt_published_database(source_descriptor, tmp_path)
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
 
     adapter = admitted_adapter()
@@ -275,7 +257,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
         assert pinned.profile_decode_context().generation == first_pin
         held_through_cutover.append(pinned)
 
-    authority = _SucceededWhileHeld(tmp_path / _DESCRIPTOR_NAME, succeed=succeed)
+    authority = _SucceededWhileHeld(tmp_path / DESCRIPTOR_NAME, succeed=succeed)
     with authority.operation() as initial:
         first_pin = initial.pin()
         expected_entries = registry_support_matrix(operation=initial).model_dump(mode="json")["entries"]

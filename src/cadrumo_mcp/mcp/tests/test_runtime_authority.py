@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import date
@@ -38,11 +37,10 @@ from cadrumo_client.contracts.contracts import RefusalCode
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from .admitted_lease import admitted_adapter
+from .authority_corruption import DESCRIPTOR_NAME, copy_and_corrupt_published_database
 from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
-
-_DESCRIPTOR_NAME = "authority.current.json"
 
 
 async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAdapter, code: str) -> None:
@@ -188,30 +186,13 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
         await adapter.close()
 
 
-def _copy_and_corrupt_published_database(source_descriptor: Path, destination: Path) -> Path:
-    """Copy one real publication and alter one database byte in the isolated copy."""
-    descriptor = AuthorityDescriptor.read(source_descriptor)
-    copied_descriptor = destination / _DESCRIPTOR_NAME
-    copied_database = destination / descriptor.database
-    shutil.copy2(source_descriptor, copied_descriptor)
-    shutil.copy2(source_descriptor.parent / descriptor.database, copied_database)
-
-    offset = copied_database.stat().st_size // 2
-    with copied_database.open("r+b") as stream:
-        stream.seek(offset)
-        original = stream.read(1)
-        stream.seek(offset)
-        stream.write(bytes([original[0] ^ 0xFF]))
-    return copied_descriptor
-
-
 @pytest.mark.anyio
 async def test_corrupt_configured_database_refuses_without_packaged_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     source_descriptor = bundled_authority_descriptor_path()
-    _copy_and_corrupt_published_database(source_descriptor, tmp_path)
+    copy_and_corrupt_published_database(source_descriptor, tmp_path)
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
 
     adapter = admitted_adapter()
@@ -245,7 +226,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
     )
     second_artifact = replace(first_artifact, identity_digest=synthetic_legal_identity("mcp-second-publication"))
     first = publish_authority_artifact(first_artifact)
-    authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
+    authority = IndexedRegistryAuthority(tmp_path / DESCRIPTOR_NAME)
     canonical_query = reference_catalogue.registry_support_matrix
     with authority.operation() as initial:
         first_pin = initial.pin()
