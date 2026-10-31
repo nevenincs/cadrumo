@@ -584,12 +584,12 @@ application:
         no_stock_held: Sin existencias
     service:
       errors:
-        activity_conflict: "Ya existe un registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Ábrelo en lugar de crear otro."
-        activity_not_found: "No existe ningún registro de inventario para la actividad %{actividad_id} y el ejercicio %{year}. Créalo primero o revisa la actividad y el ejercicio."
+        activity_conflict: "Ya existe un registro de inventario para esta actividad y el ejercicio %{year}. Ábrelo en lugar de crear otro."
+        activity_not_found: "No existe ningún registro de inventario para esta actividad y el ejercicio %{year}. Créalo primero o revisa la actividad y el ejercicio."
         closing_authority_conflict: "Ya hay otro valor de cierre registrado para esta actividad y este año."
         evidence_file_not_admitted: "Este archivo no se puede guardar. Elige un PDF, un archivo XML o una imagen (PNG, JPEG, TIFF, WebP o HEIC) que se abra e inténtalo de nuevo."
         closing_authority_invalid: "Este valor de cierre no se pudo registrar porque sus datos no concuerdan entre sí. Revísalos e inténtalo de nuevo."
-        closing_authority_recorded: "El inventario %{year} de %{actividad_id} ya tiene registrado su valor de cierre, así que sus datos de existencias ya no pueden cambiar."
+        closing_authority_recorded: "El inventario %{year} de esta actividad ya tiene registrado su valor de cierre, así que sus datos de existencias ya no pueden cambiar."
         correction_changes_nothing: Esta corrección no indica ningún valor inicial
           ni método de valoración distinto del actual.
         correction_id_conflict: "Esta corrección ya se registró con otros datos."
@@ -598,15 +598,15 @@ application:
         duplicate_movement_id: "Este movimiento ya está en el registro de inventario. Revisa los movimientos registrados antes de añadirlo de nuevo."
         invalid_valuation_method: 'El método de valoración de inventario no está admitido:
           %{valuation_method}.'
-        inventory_already_retired: El inventario %{year} de %{actividad_id} ya está
+        inventory_already_retired: El inventario %{year} de esta actividad ya está
           retirado.
-        inventory_not_retired: El inventario %{year} de %{actividad_id} no está retirado.
-        inventory_retired: El inventario %{year} de %{actividad_id} está retirado.
+        inventory_not_retired: El inventario %{year} de esta actividad no está retirado.
+        inventory_retired: El inventario %{year} de esta actividad está retirado.
           Restáuralo antes de cambiar sus datos de existencias.
         inventory_validation: "Estos datos de inventario no se pudieron aceptar. Revísalos e inténtalo de nuevo."
-        later_closing_authority_recorded: "El valor de cierre %{later_year} de %{actividad_id} parte de este cierre, así que los datos de existencias de %{year} ya no pueden cambiar."
+        later_closing_authority_recorded: "El valor de cierre %{later_year} de esta actividad parte de este cierre, así que los datos de existencias de %{year} ya no pueden cambiar."
         movement_already_superseded: "Este movimiento ya se corrigió o se anuló."
-        movement_not_found: "El inventario %{year} de %{actividad_id} no tiene este movimiento."
+        movement_not_found: "El inventario %{year} de esta actividad no tiene este movimiento."
         movement_outside_year: "Este movimiento tiene una fecha fuera del inventario %{year}."
         stock_would_go_negative: 'Esto dejaría las existencias por debajo de cero:
           %{sku} necesitaría más unidades de las que quedan.'

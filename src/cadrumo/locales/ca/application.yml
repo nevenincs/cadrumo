@@ -583,12 +583,12 @@ application:
         no_stock_held: Sense existències
     service:
       errors:
-        activity_conflict: "Ja existeix un registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Obre'l en lloc de crear-ne un altre."
-        activity_not_found: "No existeix cap registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Crea'l primer o revisa l'activitat i l'exercici."
+        activity_conflict: "Ja existeix un registre d'inventari per a aquesta activitat i l'exercici %{year}. Obre'l en lloc de crear-ne un altre."
+        activity_not_found: "No existeix cap registre d'inventari per a aquesta activitat i l'exercici %{year}. Crea'l primer o revisa l'activitat i l'exercici."
         closing_authority_conflict: "Ja hi ha un altre valor de tancament registrat per a aquesta activitat i aquest any."
         evidence_file_not_admitted: "Aquest fitxer no es pot desar. Tria un PDF, un fitxer XML o una imatge (PNG, JPEG, TIFF, WebP o HEIC) que s'obri i torna-ho a provar."
         closing_authority_invalid: "Aquest valor de tancament no s'ha pogut registrar perquè les seves dades no concorden entre si. Revisa-les i torna-ho a provar."
-        closing_authority_recorded: "L'inventari %{year} de %{actividad_id} ja té registrat el seu valor de tancament, així que les seves dades d'existències ja no poden canviar."
+        closing_authority_recorded: "L'inventari %{year} d'aquesta activitat ja té registrat el seu valor de tancament, així que les seves dades d'existències ja no poden canviar."
         correction_changes_nothing: Aquesta correcció no indica cap valor inicial
           ni mètode de valoració diferent de l'actual.
         correction_id_conflict: "Aquesta correcció ja es va registrar amb altres dades."
@@ -597,15 +597,15 @@ application:
         duplicate_movement_id: "Aquest moviment ja és al registre d'inventari. Revisa els moviments registrats abans d'afegir-lo de nou."
         invalid_valuation_method: 'El mètode de valoració d''inventari no està admès:
           %{valuation_method}.'
-        inventory_already_retired: L'inventari %{year} de %{actividad_id} ja està
+        inventory_already_retired: L'inventari %{year} d'aquesta activitat ja està
           retirat.
-        inventory_not_retired: L'inventari %{year} de %{actividad_id} no està retirat.
-        inventory_retired: L'inventari %{year} de %{actividad_id} està retirat. Restaura'l
+        inventory_not_retired: L'inventari %{year} d'aquesta activitat no està retirat.
+        inventory_retired: L'inventari %{year} d'aquesta activitat està retirat. Restaura'l
           abans de canviar les seves dades d'existències.
         inventory_validation: "Aquestes dades d'inventari no s'han pogut acceptar. Revisa-les i torna-ho a provar."
-        later_closing_authority_recorded: "El valor de tancament %{later_year} de %{actividad_id} parteix d'aquest tancament, així que les dades d'existències de %{year} ja no poden canviar."
+        later_closing_authority_recorded: "El valor de tancament %{later_year} d'aquesta activitat parteix d'aquest tancament, així que les dades d'existències de %{year} ja no poden canviar."
         movement_already_superseded: "Aquest moviment ja es va corregir o anul·lar."
-        movement_not_found: "L'inventari %{year} de %{actividad_id} no té aquest moviment."
+        movement_not_found: "L'inventari %{year} d'aquesta activitat no té aquest moviment."
         movement_outside_year: "Aquest moviment té una data fora de l'inventari %{year}."
         stock_would_go_negative: 'Això deixaria les existències per sota de zero:
           %{sku} necessitaria més unitats de les que queden.'
