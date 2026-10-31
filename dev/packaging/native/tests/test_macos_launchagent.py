@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.tests.test_native_installation import bundle_fixture, payload_fixture
+from dev.packaging.tests.test_native_installation import DigestSeal, bundle_fixture, payload_fixture
 
 from ..identity import identity
 from ..installation import member, prepare, verify_inventory
@@ -48,7 +48,7 @@ def test_agent_uses_projected_identity_and_accepted_profile(channel: str) -> Non
         author_agent(identity("linux-x86-64"), manager, bundle)
 
 
-def test_unsigned_bundle_carries_dormant_inventory_owned_agent(tmp_path: Path) -> None:
+def test_sealed_bundle_carries_dormant_inventory_owned_agent(tmp_path: Path) -> None:
     payload, identity_file = payload_fixture(tmp_path, "macos-arm64", manager=True)
     build = tmp_path / "build"
     build.mkdir()
@@ -58,7 +58,8 @@ def test_unsigned_bundle_carries_dormant_inventory_owned_agent(tmp_path: Path) -
         ),
         encoding="utf-8",
     )
-    stage = prepare(payload, identity_file, build, "cadrumo", bundle=bundle_fixture(tmp_path))
+    sealer = DigestSeal()
+    stage = prepare(payload, identity_file, build, "cadrumo", bundle=bundle_fixture(tmp_path, sealer))
     product = identity("macos-arm64")
     bundle = member(stage, f"{product.name}.app")
     agent = bundle / f"Contents/Library/LaunchAgents/{product.manager_id}.plist"
@@ -68,7 +69,12 @@ def test_unsigned_bundle_carries_dormant_inventory_owned_agent(tmp_path: Path) -
         payload / "cadrumo-manager"
     ).read_bytes()
     assert not (stage / "Library/LaunchAgents").exists()
-    assert not list(stage.rglob("_CodeSignature"))
+    # The agent is a member of the bundle seal, and the seal is the only one in the stage.
+    assert [path.relative_to(bundle).as_posix() for path in stage.rglob("_CodeSignature")] == [
+        "Contents/_CodeSignature"
+    ]
+    (members,) = sealer.sealed
+    assert f"Contents/Library/LaunchAgents/{product.manager_id}.plist" in members
     receipt = build / "installation/metadata/installation.json"
     verify_inventory(stage, receipt)
     agent.write_bytes(agent.read_bytes().replace(b"Aqua", b"Background"))
