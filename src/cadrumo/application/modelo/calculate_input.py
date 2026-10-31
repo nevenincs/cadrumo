@@ -39,7 +39,6 @@ from typing import TYPE_CHECKING
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.modelo import Modelo
 from ...core.rescate_type import RescateType
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
@@ -48,6 +47,7 @@ from ...domain.calculations.registry.casilla_membership import (
     row_field_template_records_by_casilla,
 )
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -366,7 +366,7 @@ def calculate_modelo_work_revision(
     revision = calculation.revision
     work_unit = calculation.publication.work_unit
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
-    if work_unit.modelo == Modelo("210"):
+    if work_unit.modelo == form_for_role("irnr.income"):
         from .m303_regimen_simplificado_scope import taxpayer_profile_for_work
         from .work_plazo import calculated_m210_plazo_resolution
 
@@ -717,7 +717,7 @@ def modelo_202_modality_for_record(
     Core types:
     :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
-    if str(work_unit.modelo) != Modelo("202"):
+    if str(work_unit.modelo) != form_for_role("sociedades.instalment"):
         return None
 
     from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality

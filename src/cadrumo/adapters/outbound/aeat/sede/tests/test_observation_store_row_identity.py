@@ -50,7 +50,7 @@ from ..schema import (
 )
 from .wallet_observation_inventory import list_iva_wallet_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _BUCKET_ID = "d0ab4fce-5ade-4781-9880-7a851f2bf2e1"  # was 'sede-row-identity'
 _AEAT = Settings.external_constants().aeat

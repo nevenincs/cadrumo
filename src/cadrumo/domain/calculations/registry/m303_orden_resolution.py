@@ -9,6 +9,7 @@ from ....core.modelo import Modelo
 from ...iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ...period import period_end_date
 from .errors import RegistryValidationError
+from .form_codes import form_for_role
 from .ids import SourceRefId
 from .m303_orden_projection_models import (
     ActividadOrdenAnualRef,
@@ -34,7 +35,7 @@ def resolve_m303_regimen_simplificado_snapshot(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
-    if registry_snapshot.modelo.id != Modelo("303"):
+    if registry_snapshot.modelo.id != form_for_role("iva.periodic"):
         raise RegistryValidationError("M303 regimen simplificado resolver requires a Modelo 303 registry snapshot")
     record_design = _unique_active_record_design(
         sources=registry_snapshot.sources,
@@ -83,7 +84,7 @@ def m303_annual_orden_snapshot_from_projection(
 
 def _select_m303_annual_orden_projection(registry_snapshot: RegistrySnapshot) -> M303AnnualOrdenProjection:
     """Select the internal projection consumed only by the canonical resolver."""
-    if registry_snapshot.modelo.id != Modelo("303"):
+    if registry_snapshot.modelo.id != form_for_role("iva.periodic"):
         raise RegistryValidationError("annual Orden projection selector requires a Modelo 303 registry snapshot")
     support = registry_snapshot.supported_filing_years
     source_year = (

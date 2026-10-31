@@ -8,6 +8,7 @@ from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.period import Period as _Period
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
 )
@@ -62,7 +63,7 @@ def _prior_period_observation_requirement(
             filing_year=snapshot.filing_year,
             period=snapshot.period,
         )
-        if requirement.source_modelo == Modelo("303").value
+        if requirement.source_modelo == form_for_role("iva.periodic")
         and _M303_PRIOR_COMPENSATION_BINDING_ID in requirement.binding_ids
     )
     if len(requirements) != 1 or len(requirements[0].periods) != 1:

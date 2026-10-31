@@ -83,7 +83,7 @@ def _quickfile_request(
         row=row,
     )
     ordinary_m303_evidence = None
-    if modelo == "303" and joint_return_elected is not None:
+    if joint_return_elected is not None:
         ordinary_m303_evidence = ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
             joint_return_elected=joint_return_elected,
             m303_exonerado_390_attachment_id=m303_exonerado_390_attachment_id,

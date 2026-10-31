@@ -19,7 +19,7 @@ from ....domain.iva_compensation.reconciliation import (
 from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "34343434-3434-4343-8343-343434343434"
 _TAXPAYER_REF = "taxpayeralpha"

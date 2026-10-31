@@ -13,6 +13,7 @@ from ...core.filing_projection_ref import (
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.export import derive_export_layouts_from_bindings
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.form_context import resolve_form_context_field
 from ...domain.calculations.registry.form_projection_fields import resolve_form_projection_fields
 from ...domain.calculations.registry.m303_exonerado_390_projection import project_m303_exonerado_390_activity_rows
@@ -66,7 +67,7 @@ def saved_projection_context_value(
     supported = (M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef)
     if not isinstance(field.projection_ref, supported):
         raise RegistryValidationError("unsupported scalar form projection")
-    if snapshot.modelo.id != "303":
+    if snapshot.modelo.id != form_for_role("iva.periodic"):
         raise RegistryValidationError("annual activity projection requires Modelo 303")
     evidence = _annual_evidence(snapshot, revision)
     if evidence is None:
@@ -153,7 +154,7 @@ def saved_projection_form_records(
     )
     if not all(isinstance(ref, supported) for ref in refs):
         return False, ()
-    if snapshot.modelo.id != "303":
+    if snapshot.modelo.id != form_for_role("iva.periodic"):
         raise RegistryValidationError("simplified-regime projection requires Modelo 303")
     evidence = _simplified_evidence(snapshot, revision)
     if evidence is None:

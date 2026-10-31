@@ -18,9 +18,9 @@ from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_verification import VerificationExpectationDefinition
 from ...domain.modelos.calculation_revision import (
@@ -339,7 +339,7 @@ def m303_m349_intracom_reconcile_findings(
         return []
 
     # The finding names each total by its modelo, whichever side is being verified.
-    if contract.sibling_modelo == Modelo("303").value:
+    if contract.sibling_modelo == form_for_role("iva.periodic"):
         m303_total, m349_total = sibling_total, own_total
     else:
         m303_total, m349_total = own_total, sibling_total

@@ -10,6 +10,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.form_codes import differs_from_role, form_for_role
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
@@ -55,7 +56,7 @@ class ModeloWorkRevisionSnapshotProjection(BaseModel):
             or self.calculation.modelo != self.unit.modelo
             or self.calculation.filing_year != self.unit.filing_year
             or self.calculation.period != self.unit.period
-            or (self.modality is not None and self.unit.modelo != "202")
+            or (self.modality is not None and differs_from_role(self.unit.modelo, "sociedades.instalment"))
         ):
             raise ValueError("revision snapshot and parent coordinates disagree")
         return self
@@ -93,7 +94,7 @@ class ModeloWorkRevisionSnapshotExecutor:
             if unit is None or unit.bucket_id != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             modality = None
-            if str(unit.modelo) == "202":
+            if str(unit.modelo) == form_for_role("sociedades.instalment"):
                 record = ProfileRecordRepository.for_current_session(
                     profile_id, profile_decode_context=operation.profile_decode_context()
                 ).load(profile_id)

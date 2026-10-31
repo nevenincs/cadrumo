@@ -29,8 +29,8 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -90,7 +90,7 @@ def require_persisted_revision_required_bindings_resolved(
         operation: Caller-held authority operation used to select the exact
             generation-pinned revision.
     """
-    if str(work_unit.modelo) != Modelo("202").value:
+    if str(work_unit.modelo) != form_for_role("sociedades.instalment"):
         return
     registry_revision = operation.revision_for_context(
         str(work_unit.modelo),
@@ -121,7 +121,7 @@ def missing_modelo_required_binding_ids(
         resolved_binding_ids: Binding ids available from caller inputs or
             resolved source data.
     """
-    if str(work_unit.modelo) != Modelo("202").value:
+    if str(work_unit.modelo) != form_for_role("sociedades.instalment"):
         return ()
     resolved = frozenset(resolved_binding_ids)
     return tuple(
@@ -144,7 +144,7 @@ def resolved_required_profile_binding_values(
             profile-sourced binding declarations are inspected.
         profile: The work profile the calculation already loaded and checked.
     """
-    if str(work_unit.modelo) != Modelo("202").value:
+    if str(work_unit.modelo) != form_for_role("sociedades.instalment"):
         return {}
     facts = profile_fact_index(profile.record, profile.profile_decode_context.schema)
     return _resolved_profile_binding_values(registry_revision, facts)

@@ -25,6 +25,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculations.revision_carry_gate import revision_carry_outcome
@@ -73,7 +74,7 @@ class Borrador100Snapshot(BaseModel):
     superseded_by_snapshot_id: SnapshotId | None = None
     discarded_at: datetime | None = None
     discarded_by: str = Field(default="", max_length=128)
-    discard_reason: str = Field(default="", max_length=500)
+    discard_reason: str = Field(default="", max_length=512)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -148,7 +149,7 @@ def derive_borrador_100_snapshot_id(
     the hashed bytes.
     """
     if (
-        registry_snapshot_ref.modelo != Modelo("100").value
+        registry_snapshot_ref.modelo != form_for_role("renta.annual")
         or registry_snapshot_ref.modelo_year != filing_year
         or registry_snapshot_ref.period != period.registry_token
     ):

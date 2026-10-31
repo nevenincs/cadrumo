@@ -53,7 +53,7 @@ from ..iva_compensation_wallet_parsing import (
     wallet_page_shape_context,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 EXTERNAL = Settings.external_constants()
 _AEAT_AUTH_GATE_URL = f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.sede_paths.auth_gate_4033}"

@@ -10,6 +10,7 @@ from typing import NoReturn, Protocol
 
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
@@ -186,7 +187,9 @@ def _evidence(
     receipt_number = receipt.presentation_id
     if receipt_number is None:
         _raise(command, "persisted justificante has no AEAT presentation receipt")
-    if identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA or work_unit.modelo != Modelo("303").value:
+    if identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA or work_unit.modelo != form_for_role(
+        "iva.periodic"
+    ):
         return identity.m303_rectificativa_motive, receipt_number
     validated = validate_calculation_revision_aggregate(
         revision,

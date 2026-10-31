@@ -20,6 +20,7 @@ from ...core.operations import (
 )
 from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
     RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
@@ -260,10 +261,8 @@ def _ordinary_m303_filing_instance_evidence(
     replayed, because those are the operator's standing filing facts for this
     declaration. Only when neither exists is the evidence missing.
     """
-    from ...core.modelo import Modelo
-
     supplied = payload.ordinary_m303_filing_evidence
-    if work_unit.modelo != Modelo("303"):
+    if work_unit.modelo != form_for_role("iva.periodic"):
         if supplied is None:
             return None
         raise M303FilingEvidenceError(

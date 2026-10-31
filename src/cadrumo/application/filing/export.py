@@ -58,6 +58,7 @@ from ...core.hashing import sha256_hex
 from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.time.clock import now
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
 )
@@ -700,7 +701,7 @@ def render_filing_layout(
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     if (
-        draft.modelo == Modelo("303").value
+        draft.modelo == form_for_role("iva.periodic")
         and producer_snapshot.elections.prior_domiciliation is not prior_domiciliation_election
     ):
         raise FilingExportValidationError(
@@ -847,19 +848,19 @@ def _projection_plan_for_layout(
     draft: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
 ) -> FilingProjectionPlan:
-    if draft.modelo == Modelo("303").value:
+    if draft.modelo == form_for_role("iva.periodic"):
         return build_m303_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,
             producer_snapshot=producer_snapshot,
         )
-    if draft.modelo == Modelo("200").value:
+    if draft.modelo == form_for_role("sociedades.annual"):
         return build_m200_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,
             producer_snapshot=producer_snapshot,
         )
-    if draft.modelo == Modelo("296").value:
+    if draft.modelo == form_for_role("irnr.withholding_annual"):
         return build_m296_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,

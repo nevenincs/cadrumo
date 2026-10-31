@@ -25,6 +25,7 @@ from ...domain.calculations.registry.applicability_modelo202 import Modelo202Mod
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines.models import TaxpayerProfile
@@ -577,8 +578,8 @@ def _iva_wallet_decision_covers_cross_period_dependency(
         return False
     requirement = evidence.requirement
     if not (
-        verdict.target_modelo == "303"
-        and requirement.source_modelo == "303"
+        verdict.target_modelo == form_for_role("iva.periodic")
+        and requirement.source_modelo == form_for_role("iva.periodic")
         and set(requirement.origin_ids) & _IVA_WALLET_CROSS_PERIOD_ORIGIN_IDS
     ):
         return False

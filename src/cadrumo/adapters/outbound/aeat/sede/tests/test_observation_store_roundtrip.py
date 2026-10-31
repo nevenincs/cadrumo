@@ -44,7 +44,7 @@ from ..schema import (
     ObservedCasillaValue,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "83a88c7e-9334-477e-83a8-40856124b522"  # was 'sede-observation'
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"

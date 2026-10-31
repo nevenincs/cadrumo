@@ -44,7 +44,7 @@ from ..cross_period_models import (
     NoPriorObligationProvenanceKind,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 _TARGET_YEAR = 2026
 _M202_SOURCE_CASILLA_03: CasillaId = validated_casilla_id("03", surface="_M202_SOURCE_CASILLA_03")

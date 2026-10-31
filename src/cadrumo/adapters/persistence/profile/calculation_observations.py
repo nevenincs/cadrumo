@@ -53,6 +53,7 @@ from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 
+from ....core.period import StandardPeriodCode
 from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.errors import STORED_RECORD_FAILURES, SecureObjectRowIdentityError
@@ -226,7 +227,7 @@ class CalculationObservationRepository:
             observations: list[ObservationEnvelopePayload] = []
             revisions: list[ProrrataSourceRevision] = []
             objects = self._layers.secure_object_repository
-            for period_token in ("4T", "12"):
+            for period_token in (StandardPeriodCode.Q4.value, StandardPeriodCode.DEC.value):
                 identifier = observation_key_for_token("303", prior_year, period_token)
                 layers, revision = self._layers.load_revisioned(identifier)
                 if layers is not None and layers.effective is not None:

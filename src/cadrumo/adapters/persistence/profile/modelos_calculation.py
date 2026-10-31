@@ -51,6 +51,7 @@ from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.form_codes import form_for_role
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
@@ -331,7 +332,7 @@ class CalculationRevisionCatalogueRepository:
                 period=unit.period.registry_token,
             )
             for unit in work_units.values()
-            if unit.modelo == Modelo("303").value
+            if unit.modelo == form_for_role("iva.periodic")
         }
         return CalculationRevisionAggregateContext(
             work_units=work_units,

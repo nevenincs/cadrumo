@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from enum import StrEnum
-from typing import Literal, Protocol
+from typing import Annotated, Literal, Protocol
 
-from pydantic import BaseModel, field_validator
+from pydantic import AfterValidator, BaseModel, field_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -14,6 +14,7 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import StandardPeriodCode
 from .errors import RegistryValidationError
+from .form_codes import form_role_validator
 
 __all__ = [
     "ProrrataRegularizacionOutput",
@@ -94,7 +95,7 @@ class ProrrataRegularizacionProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.PRORRATA_REGULARIZACION] = BindingSourceKind.PRORRATA_REGULARIZACION
 
-    source_modelo: Literal["303"]
+    source_modelo: Annotated[str, AfterValidator(form_role_validator("iva.periodic"))]
     source_casilla_ids: tuple[CasillaId, ...]
     source_periods: tuple[str, ...]
     regularizacion_output: ProrrataRegularizacionOutputValue

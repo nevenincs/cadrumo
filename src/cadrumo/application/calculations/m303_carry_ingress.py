@@ -28,6 +28,7 @@ from ...domain.calculations.registry.authority_artifact import AuthorityComponen
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -297,7 +298,7 @@ def normalize_m303_carry_observation_envelope(
     projection, and the normalized available/generated pair are checked before
     a later reader can treat the observation as carry evidence.
     """
-    if envelope.observation.modelo != Modelo("303").value:
+    if envelope.observation.modelo != form_for_role("iva.periodic"):
         return envelope
 
     registry_mapping = _selected_registry_mapping(
@@ -338,7 +339,7 @@ def validate_normalized_m303_carry_observation_envelope(
     Every supported Modelo 303 writer produces this canonical shape; an
     unnormalized payload is invalid persisted state, not a compatibility form.
     """
-    if envelope.observation.modelo != Modelo("303").value:
+    if envelope.observation.modelo != form_for_role("iva.periodic"):
         raise M303CarryIngressError(
             translated_message=_translated_error("non_target_modelo_envelope"),
             context={"modelo": envelope.observation.modelo},

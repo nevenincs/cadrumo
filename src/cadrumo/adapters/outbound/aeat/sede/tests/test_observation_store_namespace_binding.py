@@ -49,7 +49,7 @@ from ..schema import (
     IvaCompensationWalletRow,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _BUCKET_ID = "7303a2b7-83c8-4937-99f7-8259455fafe4"  # was 'sede-namespace-binding'
 _AEAT = Settings.external_constants().aeat

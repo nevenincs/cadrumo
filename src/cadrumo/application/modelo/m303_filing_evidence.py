@@ -7,9 +7,9 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
@@ -71,7 +71,7 @@ def validate_m303_filing_instance_evidence_for_revision(
     :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`,
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
-    if work_unit.modelo != Modelo("303"):
+    if work_unit.modelo != form_for_role("iva.periodic"):
         if evidence is not None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(

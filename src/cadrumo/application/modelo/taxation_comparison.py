@@ -57,6 +57,7 @@ from ...core.errors.hierarchy import CoreError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period as _Period
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -451,7 +452,7 @@ def compare_taxation_for_work_unit(
             context={"work_unit_id": work_unit_id},
         )
     work_unit = resolution.work_unit
-    if str(work_unit.modelo) != "100":
+    if str(work_unit.modelo) != form_for_role("renta.annual"):
         raise TaxationComparisonError("taxation comparison requires Modelo 100")
 
     try:

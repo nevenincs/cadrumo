@@ -31,6 +31,7 @@ from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ...domain.attachments.m303_filing_evidence import M303Exonerado390ApplicabilityAssertion
 from ...domain.attachments.protocols import AttachmentStoreProtocol
+from ...domain.calculations.registry.form_codes import form_for_role
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -161,7 +162,7 @@ class ModeloWorkM303AttestationExecutor:
                 )
                 if unit.bucket_id != bucket_id:
                     raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-                if str(unit.modelo) != "303":
+                if str(unit.modelo) != form_for_role("iva.periodic"):
                     raise M303Exonerado390AttestationUnadmissibleError(
                         "Modelo 390 applicability attestation requires a Modelo 303 work unit",
                         context={"work_unit_id": unit.work_unit_id},

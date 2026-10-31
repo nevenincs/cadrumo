@@ -53,13 +53,13 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienInversionRecordError
 from ...domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterResolutionError,
     resolve_bienes_inversion_regularizacion_parameters,
 )
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
@@ -121,7 +121,7 @@ def collect_bienes_inversion_regularizacion_diagnostics(
         for ``filing_year``, or a one-element ``storage_degraded`` diagnostic
         when the encrypted register cannot be read; an empty tuple otherwise.
     """
-    if modelo != Modelo("303").value:
+    if modelo != form_for_role("iva.periodic"):
         return ()
     if not is_m303_annual_settlement_period(Period.from_year_and_code(filing_year, period_token)):
         return ()

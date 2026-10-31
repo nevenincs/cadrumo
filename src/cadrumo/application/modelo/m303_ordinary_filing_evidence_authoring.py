@@ -13,11 +13,11 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, model_validator
 
 from ...core.filing_year import FilingYear
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments.protocols import AttachmentStoreProtocol
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...domain.calculations.registry.schedules import applicable_filing_schedules
 from ...domain.filing_evidence import FilingEvidenceReference
@@ -271,7 +271,7 @@ def _require_ordinary_work_coordinate(
     *, work_unit: WorkUnit, request: OrdinaryM303FilingEvidenceRequest, operation: PinnedAuthorityOperation
 ) -> None:
     if (
-        work_unit.modelo != Modelo("303")
+        work_unit.modelo != form_for_role("iva.periodic")
         or (work_unit.filing_year, work_unit.period) != (request.filing_year, request.period)
         or not ordinary_m303_evidence_coordinate_supported(
             filing_year=request.filing_year, period=request.period, operation=operation

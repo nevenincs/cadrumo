@@ -31,6 +31,7 @@ from ._ledger_binding_resolution import (
     unsupported_ledger_family_observations,
 )
 from .binding_selector_utils import provider_member
+from .form_codes import differs_from_role
 from .ids import BindingId
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
@@ -70,7 +71,7 @@ class LedgerIrnrIncomeProvider(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_modelo_210(cls, value: Modelo) -> Modelo:
-        if value != Modelo("210"):
+        if differs_from_role(value, "irnr.income"):
             raise ValueError("ledger_irnr_income_aggregation modelo must be '210'")
         return value
 

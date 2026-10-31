@@ -63,6 +63,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import differs_from_role
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
@@ -348,7 +349,7 @@ class ObservationEnvelopePayload(BaseModel):
     @pydantic_validation_boundary
     def _require_canonical_m303_shape(self, info: ValidationInfo) -> ObservationEnvelopePayload:
         """Reject persisted M303 envelopes that predate canonical carry ingress."""
-        if self.observation.modelo != "303":
+        if differs_from_role(self.observation.modelo, "iva.periodic"):
             return self
         ingress_candidate = False
         if is_object_mapping(info.context):

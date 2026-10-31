@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...core.modelo import Modelo
 from ...core.period import Period
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from .errors import ModeloApplicationError as FilingExportError
@@ -49,7 +50,7 @@ def _validate_producer_snapshot_shape(period: Period, producer_snapshot: FilingP
 
 
 def _require_m303_producer_snapshot(producer_snapshot: FilingProducerSnapshot) -> None:
-    if producer_snapshot.modelo != Modelo("303"):
+    if producer_snapshot.modelo != form_for_role("iva.periodic"):
         raise FilingExportError(
             translated_message="application.filing.m303_export_applicability.errors.producer_snapshot_wrong_modelo",
             context={
@@ -89,7 +90,7 @@ def _validate_snapshot_selection(
     layout: ExportLayoutDefinition,
 ) -> None:
     if (
-        registry_snapshot.modelo.id != Modelo("303").value
+        registry_snapshot.modelo.id != form_for_role("iva.periodic")
         or registry_snapshot.filing_year != period.filing_year
         or registry_snapshot.period != period.registry_token
     ):

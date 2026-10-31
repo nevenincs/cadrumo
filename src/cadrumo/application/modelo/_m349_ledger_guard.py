@@ -14,9 +14,9 @@ from __future__ import annotations
 
 from typing import NoReturn
 
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.iva_category_catalogue import registry_category_projection
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
@@ -30,7 +30,7 @@ from .preconditions import build_modelo_precondition_failure
 
 def _guarded_ledger_categories(work_unit: WorkUnit) -> frozenset[IvaCategory]:
     """Return the intra-community IVA categories guarded for a Modelo 349 work unit."""
-    if str(work_unit.modelo) != Modelo("349").value:
+    if str(work_unit.modelo) != form_for_role("iva.intracommunity_summary"):
         return frozenset[IvaCategory]()
     return registry_category_projection("m349_raw_ledger_guard", effective_date=work_unit.period.end_date)
 

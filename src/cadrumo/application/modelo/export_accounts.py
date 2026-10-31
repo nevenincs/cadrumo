@@ -49,6 +49,7 @@ from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.time.clock import MADRID_TZ
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.m303_casilla_roles import m303_importe_rectificacion_casilla
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window
@@ -595,7 +596,7 @@ def _require_m360_solicitud(
     here: its header, parties and account holder exist nowhere else, and a solicitud
     rendered without them would be a blank page 1, not a smaller one.
     """
-    if modelo != Modelo("360"):
+    if modelo != form_for_role("iva.foreign_refund"):
         return None
     entry = export_ports.m360_solicitud.load().entry_for(work_unit.period)
     if entry is None:
@@ -647,7 +648,7 @@ def _resolve_export_model_profile(
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
     if m360_solicitud is not None:
         return m360_solicitud.facts, None
-    if modelo == Modelo("303"):
+    if modelo == form_for_role("iva.periodic"):
         if iva_profile is None:
             raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")
         return iva_profile, _resolve_m303_filing_facts_for_export(
@@ -657,9 +658,9 @@ def _resolve_export_model_profile(
             export_ports=export_ports,
             operation=operation,
         )
-    if modelo == Modelo("202"):
+    if modelo == form_for_role("sociedades.instalment"):
         return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
-    if modelo == Modelo("111"):
+    if modelo == form_for_role("withholding.work_periodic"):
         return Modelo111ProfileFacts(colegio_concertado=workflow_profile.colegio_concertado), None
     return GeneralFilingProfileFacts(), None
 

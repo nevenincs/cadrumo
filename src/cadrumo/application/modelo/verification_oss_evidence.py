@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind
-from ...core.modelo import Modelo
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
@@ -80,7 +80,7 @@ def m369_unresolved_oss_source_finding(
     Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
     ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
     """
-    if str(work_unit.modelo) != Modelo("369").value:
+    if str(work_unit.modelo) != form_for_role("iva.one_stop_shop"):
         return None
     oss_bindings = m369_oss_bindings(snapshot)
     if not oss_bindings:

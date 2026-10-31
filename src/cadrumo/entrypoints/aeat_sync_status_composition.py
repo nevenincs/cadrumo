@@ -15,6 +15,7 @@ from uuid import UUID
 
 from ..application.aeat_sync.status_operation import AeatSyncStatusPorts
 from ..application.persistence_errors import PersistenceDegradationError
+from ..domain.calculations.registry.form_codes import form_for_role
 
 if TYPE_CHECKING:
     from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -91,7 +92,6 @@ def compose_aeat_sync_status_ports(
             FiledDeclaracionObservationRepository,
             IvaCompensationWalletObservationRepository,
         )
-        from ..core.modelo import Modelo
 
         wallet = (
             observation.captured_at
@@ -100,7 +100,7 @@ def compose_aeat_sync_status_ports(
         history = (
             artefact.captured_at
             for observation in FiledDeclaracionObservationRepository(objects=objects()).iter_records()
-            if observation.modelo == Modelo("303").value
+            if observation.modelo == form_for_role("iva.periodic")
             for artefact in observation.artefacts
         )
         return max((*wallet, *history), default=None)

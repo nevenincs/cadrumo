@@ -25,11 +25,11 @@ from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN, FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind, StandardPeriodCode
 from ...core.time.utc import UtcInstant
 from ..calculations.registry.authority import PinnedAuthorityOperation
+from ..calculations.registry.form_codes import differs_from_role
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from .carry_window import resolve_iva_compensation_carry_window_years
 from .errors import (
@@ -121,7 +121,7 @@ class IvaCompensationPeriodState(BaseModel):
     final_result_amount: Decimal | None = None
     generated_amount: Decimal = Field(ge=Decimal("0"))
     available_end_amount: Decimal = Field(ge=Decimal("0"))
-    source_observation_key: str = Field(min_length=1, max_length=96)
+    source_observation_key: str = Field(min_length=1, max_length=128)
     source_artefact_sha256: ContentDigest | None = Field(
         default=None,
         description=(
@@ -163,7 +163,7 @@ class IvaCompensationPeriodState(BaseModel):
         if self.period.filing_year != self.filing_year:
             raise ValueError("period.filing_year must match filing_year")
         if (
-            self.registry_snapshot_ref.modelo != Modelo("303").value
+            differs_from_role(self.registry_snapshot_ref.modelo, "iva.periodic")
             or self.registry_snapshot_ref.modelo_year != self.filing_year
             or self.registry_snapshot_ref.period != self.period.registry_token
         ):
@@ -191,7 +191,7 @@ class IvaCompensationCarryForwardLot(BaseModel):
     remaining_amount: Decimal = Field(ge=ZERO)
     age_years: NonNegativeInt
     expiry_review_state: IvaCompensationExpiryReviewState
-    source_observation_key: str = Field(min_length=1, max_length=96)
+    source_observation_key: str = Field(min_length=1, max_length=128)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

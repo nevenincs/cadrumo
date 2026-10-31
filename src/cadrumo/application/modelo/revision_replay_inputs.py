@@ -29,12 +29,12 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.modelo import Modelo
 from ...domain.calculations.registry.applicability import derive_modelo_applicability
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -292,7 +292,7 @@ def revision_detail_record_binding_inputs(
     assessing completeness must also establish that ``detail_rows`` was
     explicitly recorded, rather than supplied by a missing-field default.
     """
-    if modelo != Modelo("349").value:
+    if modelo != form_for_role("iva.intracommunity_summary"):
         return None
     if binding_record == "operador":
         rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349OperadorRow))
@@ -352,7 +352,7 @@ def _m232_detail_row_replay_inputs(
     Money values are rendered through the canonical decimal string so the
     replayed scalar matches what every other numeric replay input carries.
     """
-    if str(work_unit.modelo) != Modelo("232").value:
+    if str(work_unit.modelo) != form_for_role("sociedades.related_party_informative"):
         return {}
     rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo232VinculadaRow))
     if not rows:

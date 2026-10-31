@@ -10,8 +10,8 @@ from ...core.aggregation import (
     CalculationSourceLineageRole,
 )
 from ...core.hashing import prefixed_digest
-from ...core.modelo import Modelo
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.invoice_bindings import (
     InvoiceObservation,
     resolve_invoice_binding_values,
@@ -123,7 +123,7 @@ def _invoice_resolution_from_observations(
         context=context,
         resolver_id=resolver_id,
     )
-    if context.modelo == Modelo("349").value:
+    if context.modelo == form_for_role("iva.intracommunity_summary"):
         diagnostics += _m349_inferred_clave_diagnostics(
             declared_invoices,
             bucket_invoices=catalogue_invoices,
@@ -324,7 +324,7 @@ def _m349_incoherent_verdict(
     ``FX_UNRESOLVED`` is likewise excluded here because the unconverted-foreign
     gate upstream already withholds those records.
     """
-    if context.modelo != Modelo("349").value:
+    if context.modelo != form_for_role("iva.intracommunity_summary"):
         return None
     verdict = decompose_invoice(invoice)
     contradictions = tuple(defect for defect in verdict.defects if defect in _M349_SELF_CONTRADICTION_DEFECTS)

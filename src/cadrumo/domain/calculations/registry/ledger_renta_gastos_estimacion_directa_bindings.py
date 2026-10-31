@@ -21,6 +21,7 @@ from ._ledger_binding_resolution import (
 )
 from .binding_selector_utils import provider_member
 from .errors import RegistryError
+from .form_codes import differs_from_role
 from .ids import BindingId
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
@@ -90,7 +91,7 @@ class LedgerRentaGastosEstimacionDirectaProvider(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_modelo_100(cls, value: Modelo) -> Modelo:
-        if value != Modelo("100"):
+        if differs_from_role(value, "renta.annual"):
             raise ValueError("ledger_renta_gastos_estimacion_directa_aggregation modelo must be '100'")
         return value
 

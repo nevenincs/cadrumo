@@ -34,10 +34,10 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ...core.logging import get_logger
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
 from ...domain.deadlines.models import Recovery, TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -307,7 +307,7 @@ def calculated_m210_plazo_resolution(
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
-    if work_unit.modelo != Modelo("210"):
+    if work_unit.modelo != form_for_role("irnr.income"):
         return None
     if revision.unresolved_outcomes:
         # The declaration result rests on a value the engine could not resolve,

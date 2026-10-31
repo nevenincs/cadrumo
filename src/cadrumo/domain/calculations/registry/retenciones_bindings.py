@@ -30,6 +30,7 @@ from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .facts.resolution import ResolvedMappingFact
+from .form_codes import form_for_role
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
 from .schema_base import coerce_enum_member, coerce_enum_tuple
@@ -356,7 +357,7 @@ def _retenciones_type2_row_bindings(
 
 
 def _require_modelo_180_row_bindings(modelo: str) -> None:
-    if modelo != "180":
+    if modelo != form_for_role("withholding.lease_annual"):
         raise RegistryValidationError("retenciones type-2 row bindings are only supported for Modelo 180")
 
 

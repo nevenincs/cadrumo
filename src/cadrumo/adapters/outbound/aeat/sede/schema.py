@@ -63,9 +63,10 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from functools import partial
+from typing import Annotated, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import AfterValidator, AnyHttpUrl, BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
@@ -80,6 +81,7 @@ from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....core.time.utc import UtcInstant
 from .....core.unit_proportion import UnitFraction
+from .....domain.calculations.registry.form_codes import form_for_role, form_role_validator
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .errors import SedeValidationError
 
@@ -96,7 +98,7 @@ class FiledDeclaracionArtefact(BaseModel):
 
     kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"]
     source_url: AnyHttpUrl
-    content_type: str = Field(min_length=1, max_length=255)
+    content_type: str = Field(min_length=1, max_length=256)
     byte_count: NonNegativeInt
     sha256: ContentDigest
     captured_at: datetime
@@ -227,7 +229,9 @@ class IvaCompensationWalletObservation(BaseModel):
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     authenticated_identity: str = Field(min_length=1, max_length=32)
-    target_modelo: Literal["303"] = "303"
+    target_modelo: Annotated[str, AfterValidator(form_role_validator("iva.periodic"))] = Field(
+        default_factory=partial(form_for_role, "iva.periodic")
+    )
     target_year: FilingYear
     target_period: Period
     rows: tuple[IvaCompensationWalletRow, ...] = ()
@@ -260,7 +264,7 @@ class FiledDeclarationAvailability(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     ejercicios: tuple[int, ...] = ()
     mode: Literal["read"] = "read"
 
@@ -330,7 +334,7 @@ class FiledDeclaracionObservation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear
     period: Period
     expediente_id: AeatExpedienteId

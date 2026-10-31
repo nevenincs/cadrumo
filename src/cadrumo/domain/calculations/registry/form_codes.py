@@ -161,6 +161,33 @@ def forms_for_role(role: str, *, authority: GovernedFactSource | None = None) ->
     return resolve_form_codes(_ROLE_ROUTING_FACT, authority=authority).codes(role)
 
 
+def form_for_role_in_scope(role: str) -> str | None:
+    """Return the form that holds ``role`` for a model validator, or ``None`` outside every scope.
+
+    Only a validator may use this reader; see :func:`form_codes_in_scope`.
+    """
+    codes = form_codes_in_scope(_ROLE_ROUTING_FACT)
+    return None if codes is None else codes.code(role)
+
+
+def differs_from_role(value: object, role: str) -> bool:
+    """Return whether the scope's registry names another form than ``value`` for ``role``."""
+    form = form_for_role_in_scope(role)
+    return form is not None and str(value) != form
+
+
+def form_role_validator(role: str) -> Callable[[str], str]:
+    """Return a Pydantic validator that refuses any form but the one holding ``role`` in the scope."""
+
+    @pydantic_validation_boundary
+    def validate(value: str) -> str:
+        if differs_from_role(value, role):
+            raise CoreValidationError(f"this record belongs to the form holding {role}")
+        return value
+
+    return validate
+
+
 class RegistryCodedEnum(StrEnum):
     """A closed vocabulary whose form codes the registry declares.
 
@@ -244,8 +271,11 @@ class RegistryCodedEnum(StrEnum):
 __all__ = [
     "FormCodes",
     "RegistryCodedEnum",
+    "differs_from_role",
     "exceeds_form_bound",
     "form_codes_in_scope",
+    "form_for_role_in_scope",
+    "form_role_validator",
     "require_form_fit",
     "require_form_width",
     "resolve_form_codes",

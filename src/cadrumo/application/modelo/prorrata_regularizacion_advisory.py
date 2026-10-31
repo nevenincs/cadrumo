@@ -63,6 +63,7 @@ from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_order_key
@@ -361,7 +362,7 @@ def collect_prorrata_regularizacion_diagnostics(
         not yet derivable). Empty when no advisory fires (non-settlement period,
         no exempt-without-right operations, no resolvable prorrata register).
     """
-    if modelo != Modelo("303").value:
+    if modelo != form_for_role("iva.periodic"):
         return ()
 
     with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as authority:

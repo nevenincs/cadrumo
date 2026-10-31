@@ -46,6 +46,7 @@ from .....domain.calculations.registry.errors import (
 from .....domain.calculations.registry.export import resolve_export_layout, row_binding_casilla_ids_by_field
 from .....domain.calculations.registry.export_parse import parse_filed_payload
 from .....domain.calculations.registry.export_parse_models import ParsedExportFieldValue
+from .....domain.calculations.registry.form_codes import form_for_role
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -838,7 +839,9 @@ def _with_derived_303_compensation_available_observation(
 ) -> FiledDeclaracionObservation:
     """Add Modelo 303 carry-forward availability derived from canonical filed casillas."""
     target_id = M303_COMPENSATION_AVAILABLE_CASILLA
-    if observation.modelo != Modelo("303") or any(casilla.casilla_id == target_id for casilla in observation.casillas):
+    if observation.modelo != form_for_role("iva.periodic") or any(
+        casilla.casilla_id == target_id for casilla in observation.casillas
+    ):
         return observation
     values = _m303_compensation_source_values(observation)
     # A fetched AEAT filing carries casillas only, and the compensación /

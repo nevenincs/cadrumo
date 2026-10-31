@@ -34,6 +34,7 @@ from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.work_unit import WorkUnit
@@ -169,7 +170,7 @@ def derive_art109_activity_income_coverage_for_work_unit(
     movements fail closed because they cannot prove whether the receipt was
     subject to withholding.
     """
-    if str(work_unit.modelo) != Modelo("130").value:
+    if str(work_unit.modelo) != form_for_role("renta.direct_instalment"):
         return _insufficient("not_modelo_130")
     period = work_unit.period
     if not period.has_date_span():

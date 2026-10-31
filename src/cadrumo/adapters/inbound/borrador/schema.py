@@ -18,15 +18,17 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
+from functools import partial
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Annotated, Protocol
 
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
 
 from ....core.casilla_id import CasillaId
 from ....core.identity.aeat_csv import AeatCsv
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....domain.calculations.registry.form_codes import form_for_role, form_role_validator
 from ..pdf.extracted_casilla import ExtractedCasilla
 
 
@@ -132,9 +134,11 @@ class InboundBorradorObservation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: Literal["100"] = "100"
-    ejercicio: str = Field(min_length=4, max_length=4)
-    tax_id: str = Field(min_length=4, max_length=32)
+    modelo: Annotated[str, AfterValidator(form_role_validator("renta.annual"))] = Field(
+        default_factory=partial(form_for_role, "renta.annual")
+    )
+    ejercicio: str = Field(pattern=r"^(?P<year>\d{4})$")
+    tax_id: str = Field(min_length=1, max_length=32)
     artefact_kind: ArtefactKind
     values: tuple[ExtractedCasilla, ...]
     registry_extraction_profile_id: str | None = None

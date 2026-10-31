@@ -33,7 +33,7 @@ from ...domain.bienes_inversion.register import (
 from ...domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
-from ...domain.calculations.registry.form_codes import form_width_validator
+from ...domain.calculations.registry.form_codes import form_fit_validator, form_for_role, form_width_validator
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import (
@@ -65,7 +65,7 @@ from .producer_snapshot_m210 import Modelo210ProfileFacts
 from .producer_snapshot_m296 import Modelo296ProfileFacts
 from .producer_snapshot_m360 import Modelo360ProfileFacts
 
-_NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+_NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
 _AeatReceiptNumber = Annotated[
     str,
     StringConstraints(pattern=r"^\d+$", max_length=16),
@@ -230,8 +230,14 @@ class Modelo111ProfileFacts(BaseModel):
     colegio_concertado: bool | None
 
 
-_GrupoNumber = Annotated[str, StringConstraints(min_length=1, max_length=7)]
-_ForalTerritory = Annotated[str, StringConstraints(min_length=1, max_length=2)]
+_GrupoNumber = Annotated[
+    str, StringConstraints(min_length=1, max_length=16), AfterValidator(form_fit_validator("m222.numero_grupo_max"))
+]
+_ForalTerritory = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=16),
+    AfterValidator(form_fit_validator("m222.dominant_territory_max")),
+]
 
 
 class Modelo222ProfileFacts(BaseModel):
@@ -286,7 +292,9 @@ class Modelo222ProfileFacts(BaseModel):
     numero_referencia_sociedades_variacion: str | None = None
 
 
-_M353GrupoNumber = Annotated[str, StringConstraints(min_length=1, max_length=10)]
+_M353GrupoNumber = Annotated[
+    str, StringConstraints(min_length=1, max_length=16), AfterValidator(form_fit_validator("m353.numero_grupo_max"))
+]
 _SiNoMark = Annotated[str, StringConstraints(pattern=r"^[12]$")]
 _XOrBlankMark = Annotated[str, StringConstraints(pattern=r"^X$")]
 
@@ -619,12 +627,12 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
 
 
 def _validate_snapshot_cross_model_facts(snapshot: FilingProducerSnapshot) -> None:
-    if snapshot.modelo != Modelo("303") and snapshot.m303_filing_facts is not None:
+    if snapshot.modelo != form_for_role("iva.periodic") and snapshot.m303_filing_facts is not None:
         raise ValueError("M303FilingFacts are valid only for modelo 303")
-    if snapshot.modelo != Modelo("390") and snapshot.m390_filing_facts is not None:
+    if snapshot.modelo != form_for_role("iva.annual_summary") and snapshot.m390_filing_facts is not None:
         raise ValueError("M390FilingFacts are valid only for modelo 390")
     if (
-        snapshot.modelo != Modelo("303")
+        snapshot.modelo != form_for_role("iva.periodic")
         and snapshot.amendment_evidence is not None
         and snapshot.amendment_evidence.m303_rectificativa_motive is not None
     ):
@@ -632,28 +640,28 @@ def _validate_snapshot_cross_model_facts(snapshot: FilingProducerSnapshot) -> No
 
 
 def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
-    if snapshot.modelo == Modelo("111"):
+    if snapshot.modelo == form_for_role("withholding.work_periodic"):
         _validate_modelo_111_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("200"):
+    if snapshot.modelo == form_for_role("sociedades.annual"):
         _validate_modelo_200_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("202"):
+    if snapshot.modelo == form_for_role("sociedades.instalment"):
         _validate_modelo_202_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("222"):
+    if snapshot.modelo == form_for_role("sociedades.group_instalment"):
         _validate_modelo_222_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("303"):
+    if snapshot.modelo == form_for_role("iva.periodic"):
         _validate_modelo_303_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("296"):
+    if snapshot.modelo == form_for_role("irnr.withholding_annual"):
         _validate_modelo_296_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("353"):
+    if snapshot.modelo == form_for_role("iva.group_periodic"):
         _validate_modelo_353_snapshot(snapshot)
         return
-    if snapshot.modelo == Modelo("360"):
+    if snapshot.modelo == form_for_role("iva.foreign_refund"):
         _validate_modelo_360_snapshot(snapshot)
         return
     _validate_general_modelo_snapshot(snapshot)
@@ -776,14 +784,14 @@ def _account_page_carries_refund_account(snapshot: FilingProducerSnapshot) -> bo
     modelo 360 always does: a solicitud de devolución has no result casilla to derive a
     refund disposition from, yet DR360 campos 113-117 are its obligatorio datos bancarios.
     """
-    return _m303_nota_three_shape(snapshot) or snapshot.modelo == Modelo("360")
+    return _m303_nota_three_shape(snapshot) or snapshot.modelo == form_for_role("iva.foreign_refund")
 
 
 def _m303_nota_three_shape(snapshot: FilingProducerSnapshot) -> bool:
     """Whether Modelo 303 Nota 3 may carry the refund account on the account page."""
     amendment = snapshot.amendment_evidence
     return (
-        snapshot.modelo == Modelo("303")
+        snapshot.modelo == form_for_role("iva.periodic")
         and amendment is not None
         and amendment.is_rectificativa
         and snapshot.elections.prior_domiciliation is PriorDomiciliationElection.KEEP

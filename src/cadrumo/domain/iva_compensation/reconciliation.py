@@ -30,6 +30,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
+from ..calculations.registry.form_codes import form_for_role
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from .errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 
@@ -116,7 +117,7 @@ class IvaCompensationAuthoritySource(BaseModel):
     amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     source_locator: str = Field(min_length=1, max_length=1024)
     captured_at: UtcInstant | None = None
-    source_modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    source_modelo: str | None = Field(default=None, min_length=1, max_length=16)
     source_filing_year: FilingYear | None = None
     source_periods: tuple[Period, ...] = ()
     registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
@@ -233,7 +234,7 @@ def _validate_reconciliation_target(decision: IvaCompensationReconciliationDecis
         raise ValueError("target_period.filing_year must match target_year")
     target_ref = decision.target_registry_snapshot_ref
     if (
-        target_ref.modelo != "303"
+        target_ref.modelo != form_for_role("iva.periodic")
         or target_ref.modelo_year != decision.target_year
         or target_ref.period != decision.target_period.registry_token
     ):

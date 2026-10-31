@@ -26,8 +26,8 @@ from typing import TYPE_CHECKING
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -459,7 +459,7 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
     transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> None:
     """Refuse Modelo 200 ledger-backed calculation without accounting-result input."""
-    if str(work_unit.modelo) != Modelo("200").value:
+    if str(work_unit.modelo) != form_for_role("sociedades.annual"):
         return
     if _M200_ACCOUNTING_RESULT_CASILLA in casilla_inputs or (
         backend_casilla_inputs is not None and _M200_ACCOUNTING_RESULT_CASILLA in backend_casilla_inputs

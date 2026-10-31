@@ -21,6 +21,7 @@ from ._ledger_binding_resolution import (
 )
 from .binding_selector_utils import provider_member
 from .errors import RegistryError, RegistryValidationError
+from .form_codes import differs_from_role
 from .ids import BindingId
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
@@ -80,7 +81,7 @@ class LedgerRentaGastosPagoFraccionadoProvider(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_modelo_130(cls, value: Modelo) -> Modelo:
-        if value != Modelo("130"):
+        if differs_from_role(value, "renta.direct_instalment"):
             raise ValueError("ledger_renta_gastos_pago_fraccionado_aggregation modelo must be '130'")
         return value
 

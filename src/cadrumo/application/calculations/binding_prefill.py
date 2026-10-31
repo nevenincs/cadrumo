@@ -63,6 +63,7 @@ from ...domain.calculations.registry.bindings_previous_filing import (
     resolve_previous_filing_binding_values,
 )
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
     RevisionId,
@@ -373,7 +374,7 @@ def _gather_single_key_observation(
         ),
         operation=operation,
     )
-    if requirement_modelo == Modelo("303").value:
+    if requirement_modelo == form_for_role("iva.periodic"):
         state = iva_history_repository.load_period(
             Period.from_year_and_code(requirement_filing_year, requirement_period),
         )
@@ -962,7 +963,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     ``None`` when no compensation binding is present) and the underlying
     :class:`BindingPrefillReport`.
     """
-    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo("303").value:
+    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != form_for_role("iva.periodic"):
         from ..modelo.action_errors import ModeloApplicabilityFilterError
 
         raise ModeloApplicabilityFilterError(

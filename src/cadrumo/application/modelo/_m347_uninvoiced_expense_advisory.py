@@ -19,8 +19,8 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Final
 
-from ...core.modelo import Modelo
 from ...core.period import Period
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
@@ -67,7 +67,7 @@ def collect_m347_uninvoiced_expense_diagnostics(
         One advisory naming the transactions, or an empty tuple when the modelo
         is not 347 or every business expense of the ejercicio is invoiced.
     """
-    if modelo != Modelo("347").value:
+    if modelo != form_for_role("third_party.annual_operations"):
         return ()
     period = Period.from_year_and_code(filing_year, period_token)
     catalogue = transaction_repository.load_for_date_range(period.start_date, period.end_date)

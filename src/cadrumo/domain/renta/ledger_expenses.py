@@ -16,10 +16,11 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from functools import partial
 from types import MappingProxyType
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import AfterValidator, BaseModel, Field, field_validator, model_validator
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
@@ -31,6 +32,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ..calculations.registry.authority_artifact import AuthorityComponentCodecError
+from ..calculations.registry.form_codes import form_for_role, form_role_validator
 from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from ..calculations.registry.renta_expense_policy import renta_expense_policy_declarations
 from ..categories.profile import CategoryProfile
@@ -349,11 +351,13 @@ def renta_first_slice_expense_routing(
 class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     """Binding-ready Renta expense observation for the first Modelo 100 slice."""
 
-    observation_id: str = Field(min_length=1, max_length=160)
+    observation_id: str = Field(min_length=1, max_length=256)
     source_kind: Literal[BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION] = (
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
-    modelo: Literal["100"] = "100"
+    modelo: Annotated[str, AfterValidator(form_role_validator("renta.annual"))] = Field(
+        default_factory=partial(form_for_role, "renta.annual")
+    )
     period: Literal["0A"] = "0A"
     tax_year: FilingYear
     activity_key: str = Field(min_length=1, max_length=128)

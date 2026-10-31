@@ -15,6 +15,7 @@ from ...domain.calculations.registry.casilla_membership import (
     declared_casilla_ids,
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -133,7 +134,7 @@ def validate_detail_rows(
             translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
         ) from exc
 
-    if str(work_unit.modelo) != "349":
+    if str(work_unit.modelo) != form_for_role("iva.intracommunity_summary"):
         return
     validate_m349_detail_rows(rows, work_unit=work_unit, operation=operation)
 
@@ -451,8 +452,9 @@ def validated_canonical_casilla_id(key: str, revision: ModeloRevision, *, work_u
             translated_message="application.modelo.errors.calculate_casilla_noncanonical_refused",
         )
 
-    accepted_hint = ", ".join(sorted(known_ids)[:20])
-    if len(known_ids) > 20:
+    shown = sorted(known_ids)[:20]
+    accepted_hint = ", ".join(shown)
+    if len(known_ids) > len(shown):
         accepted_hint += ", ..."
     raise ModeloCalculateCasillaInputError(
         context={"key": key, "accepted": accepted_hint},

@@ -389,12 +389,14 @@ def test_a_warm_read_refuses_altered_stored_rendering_bytes(tmp_path: Path, tamp
 
 
 class _RefusingFacts:
-    """A later generation in which the governed facts behind a saved snapshot no longer resolve."""
+    """A later generation in which the governed facts behind a saved snapshot no longer resolve; form routing still does."""
 
     def __init__(self, operation: PinnedAuthorityOperation) -> None:
         self._operation = operation
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        if query.fact_id == "modelo-role-routing":
+            return self._operation.resolve_governed_fact(query)
         raise ValueError("this generation does not declare the fact")
 
     def supported_filing_years(self) -> TemporalSupportEnvelope:

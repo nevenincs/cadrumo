@@ -48,12 +48,12 @@ from typing import TYPE_CHECKING, Final, NamedTuple, Never, override
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.tax_id import same_tax_identifier
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period as _Period
 from ...core.type_guards import is_object_collection
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -621,7 +621,7 @@ def apply_iva_compensation_decision_binding(
     the calculation source mesh records the IVA-wallet provenance instead of a
     generic ``previous_filing`` source.
     """
-    if modelo != Modelo("303"):
+    if modelo != form_for_role("iva.periodic"):
         return
     target = _WalletBindingTarget(
         bucket_id=bucket_id,
@@ -670,7 +670,7 @@ def require_persisted_iva_compensation_decision_for_work_unit(
     from feeding calculation values unless the repository contains the same
     authority record.
     """
-    if work_unit.modelo != Modelo("303"):
+    if work_unit.modelo != form_for_role("iva.periodic"):
         return supplied_decision
     persisted = load_persisted_iva_compensation_decision_for_work_unit(
         work_unit,
@@ -719,7 +719,7 @@ def load_persisted_iva_compensation_decision_for_work_unit(
         303 work units, or ``None`` when the work unit or bucket has no wallet
         authority record.
     """
-    if work_unit.modelo != Modelo("303"):
+    if work_unit.modelo != form_for_role("iva.periodic"):
         return None
     taxpayer_nif = taxpayer_nif_from_path_values(profile_values)
     if taxpayer_nif is None:
@@ -988,7 +988,7 @@ def _activity_start_proves_first_iva_period(
     requirements = tuple(
         requirement
         for requirement in cross_period_dependency_requirements(snapshot)
-        if requirement.source_modelo == Modelo("303").value
+        if requirement.source_modelo == form_for_role("iva.periodic")
         and _M303_PRIOR_COMPENSATION_ORIGIN_IDS.intersection(requirement.origin_ids)
     )
     if not requirements:
@@ -1043,7 +1043,7 @@ def _reconcile_local_iva_compensation(
     wallet: IvaCompensationWalletObservationProtocol | None = None,
     evaluated_at: datetime | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    if work_unit.modelo != Modelo("303"):
+    if work_unit.modelo != form_for_role("iva.periodic"):
         return None
     taxpayer_nif = taxpayer_nif_from_path_values(profile_values)
     if taxpayer_nif is None:
@@ -1123,7 +1123,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
         The matching :class:`IvaCompensationReconciliationDecision` for Modelo
         303, or ``None`` for non-Modelo 303 work units.
     """
-    if work_unit.modelo != Modelo("303"):
+    if work_unit.modelo != form_for_role("iva.periodic"):
         return None
     profile_values = _profile_path_values_for_bucket(work_unit.bucket_id)
     decision = _persisted_decision_for_calculation(

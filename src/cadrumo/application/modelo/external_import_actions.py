@@ -51,13 +51,13 @@ from typing import TYPE_CHECKING
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.coercion import normalize_decimal_separators
 from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.modelo import Modelo
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -432,7 +432,7 @@ def _validate_external_import_evidence_requirements(
     justificante_repository: JustificanteRepositoryProtocol | None,
 ) -> None:
     """Enforce filing-instance and receipt-bound evidence requirements."""
-    if work_unit.modelo == Modelo("303").value and filing_instance_evidence is None:
+    if work_unit.modelo == form_for_role("iva.periodic") and filing_instance_evidence is None:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
             context={"work_unit_id": work_unit.work_unit_id},

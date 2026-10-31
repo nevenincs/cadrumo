@@ -9,10 +9,10 @@ from decimal import Decimal
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.export import export_fields_overlap
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.retenciones_bindings import (
     RetencionesAggregationFact,
@@ -155,7 +155,7 @@ def _require_m180_row_casillas(
     do not describe M190's clave-dependent fields, so this guard stays scoped.
     Binding targets and requiredness come from the same pinned revision.
     """
-    if registry_snapshot.modelo.id != Modelo("180") or record.repeat != "binding_rows":
+    if registry_snapshot.modelo.id != form_for_role("withholding.lease_annual") or record.repeat != "binding_rows":
         return
     required_binding_ids = _required_m180_bindings(registry_snapshot)
     binding_fields = _record_binding_fields(record)

@@ -37,7 +37,7 @@ from .._first_slice_routing import (
 )
 from ..actividad_asset.lifecycle import AssetKind
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_domain]
 
 # The routing check reads no dated authority, so any snapshot year serves.
 _FILING_YEAR = 2025

@@ -27,14 +27,13 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.errors.severity import BaseSeverity
-from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...domain.calculations.registry.applicability import derive_modelo_applicability
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
-from ...domain.calculations.registry.form_codes import forms_for_role
+from ...domain.calculations.registry.form_codes import form_for_role, forms_for_role
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.calculations.registry.profile_grounding import (
@@ -136,7 +135,7 @@ def _modelo_work_baseline_paths(record: UserProfileRecord, *, modelo: str | None
         ):
             return (*_FILING_BASELINE_PROFILE_PATHS, _PROFILE_ACTIVITY_DESCRIPTION_PATH)
         return _FILING_BASELINE_PROFILE_PATHS
-    if modelo.strip() != Modelo("100").value or not income_categories or declares_economic_activity:
+    if modelo.strip() != form_for_role("renta.annual") or not income_categories or declares_economic_activity:
         return (*_FILING_BASELINE_PROFILE_PATHS, _PROFILE_ACTIVITY_DESCRIPTION_PATH)
     return _FILING_BASELINE_PROFILE_PATHS
 

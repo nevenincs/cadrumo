@@ -244,7 +244,6 @@ def run_modelo_work_amend_wizard(
         corrections, amendment_kind, motive, reason = _prompt_values_kind_reason(
             selected=selected,
             baseline_values=baseline_values,
-            modelo=str(baseline.modelo),
             permitted_amendment_kinds=context_projection.permitted_amendment_kinds,
             m303_rectificativa_motive_applicable=context_projection.m303_rectificativa_motive_applicable,
             grammars=grammars,
@@ -396,7 +395,6 @@ def _prompt_values_kind_reason(
     *,
     selected: tuple[ModeloCasillaRow, ...],
     baseline_values: Mapping[str, Decimal],
-    modelo: str,
     permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...],
     m303_rectificativa_motive_applicable: bool,
     grammars: Mapping[str, ModeloEditValueGrammarV1],
@@ -420,7 +418,6 @@ def _prompt_values_kind_reason(
     definition = _values_kind_reason_definition(
         selected=selected,
         baseline_values=baseline_values,
-        modelo=modelo,
         permitted_amendment_kinds=permitted_amendment_kinds,
         m303_rectificativa_motive_applicable=m303_rectificativa_motive_applicable,
         run_token=run_token,
@@ -445,7 +442,6 @@ def _values_kind_reason_definition(
     *,
     selected: tuple[ModeloCasillaRow, ...],
     baseline_values: Mapping[str, Decimal],
-    modelo: str,
     permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...],
     m303_rectificativa_motive_applicable: bool,
     run_token: str,
@@ -461,7 +457,6 @@ def _values_kind_reason_definition(
     )
     pages.append(_amendment_kind_page(permitted_kinds=permitted_amendment_kinds, run_token=run_token, table=table))
     motive_page = _m303_motive_page(
-        modelo=modelo,
         m303_rectificativa_motive_applicable=m303_rectificativa_motive_applicable,
         run_token=run_token,
         table=table,
@@ -548,9 +543,9 @@ def _amendment_kind_choice(
 
 
 def _m303_motive_page(
-    *, modelo: str, m303_rectificativa_motive_applicable: bool, run_token: str, table: dict[str, str]
+    *, m303_rectificativa_motive_applicable: bool, run_token: str, table: dict[str, str]
 ) -> FlowPage | None:
-    if modelo != "303" or not m303_rectificativa_motive_applicable:
+    if not m303_rectificativa_motive_applicable:
         return None
     motive_choices = tuple(
         _m303_motive_choice(motive=motive, run_token=run_token, table=table) for motive in M303RectificativaMotive

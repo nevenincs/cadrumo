@@ -37,7 +37,6 @@ from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.modelo import Modelo
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_value_contract import BindingDataType
@@ -45,6 +44,7 @@ from ...domain.calculations.registry.export_xml_dictionary import (
     XmlDictionaryEntry,
     xml_dictionary_entries,
 )
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
@@ -88,10 +88,10 @@ def _modelo100_render_exclusions(
     casilla_values: Mapping[CasillaId, object],
 ) -> tuple[Mapping[str, str] | None, frozenset[str]]:
     declarations: Mapping[str, str] | None = (
-        registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
+        registry_modelo_100_xml_declarations() if draft.modelo == form_for_role("renta.annual") else None
     )
     unfiled_paths = frozenset[str]()
-    if draft.modelo == Modelo("100"):
+    if draft.modelo == form_for_role("renta.annual"):
         if declarations is None:
             raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
         unfiled_paths = modelo_100_unfiled_comunidad_paths(
@@ -140,7 +140,7 @@ def _write_xml_dictionary_entries(
 def _finish_xml_dictionary_root(
     root: ElementTree.Element[str], draft: ModeloDraft, *, optional_element_paths: frozenset[str]
 ) -> None:
-    if draft.modelo == Modelo("100"):
+    if draft.modelo == form_for_role("renta.annual"):
         _stamp_toma_datos_nif(root, draft)
         _prune_zero_only_xml_subtrees(root, optional_element_paths=optional_element_paths)
 
@@ -618,7 +618,7 @@ def _modelo100_sign_routed_value(
     draft: ModeloDraft,
     declarations: Mapping[str, str] | None,
 ) -> object | None:
-    if draft.modelo != Modelo("100"):
+    if draft.modelo != form_for_role("renta.annual"):
         return raw
     if declarations is None:
         raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
@@ -665,7 +665,7 @@ def _xml_dictionary_rendered_value(
     if routed is None:
         return None
     rendered = format_xml_dictionary_value(entry.data_type, routed)
-    if draft.modelo == Modelo("100") and entry.field_id in {"DP_APENOM_D", "DP_APENOM_C"}:
+    if draft.modelo == form_for_role("renta.annual") and entry.field_id in {"DP_APENOM_D", "DP_APENOM_C"}:
         rendered = rendered.upper()
     return _apply_xml_dictionary_value_converter(entry, rendered, declarations)
 

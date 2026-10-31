@@ -41,10 +41,10 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import prefixed_digest
-from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva_compensation.errors import IvaCompensationReconciliationInputError
@@ -123,7 +123,7 @@ class IvaWalletDecisionSourceResolver:
                 not target this filing year and period, blocks the
                 calculation, or carries no selected amount.
         """
-        if context.modelo != Modelo("303").value or self._decision is None:
+        if context.modelo != form_for_role("iva.periodic") or self._decision is None:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
@@ -322,7 +322,7 @@ def reconcile_modelo_303_iva_compensation(
             Converts a persisted non-blocking decision into the Modelo 303
             ``iva_wallet_decision`` source value.
     """
-    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo("303").value:
+    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != form_for_role("iva.periodic"):
         raise IvaCompensationReconciliationInputError(
             translated_message="application.calculations.iva_wallet.errors.modelo_303_only",
             context={"modelo": str(getattr(snapshot.modelo, "id", snapshot.modelo))},

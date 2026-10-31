@@ -9,7 +9,6 @@ from typing import ClassVar, Protocol
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
 from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
     resolve_activity_asset_disposal_binding_values,
     resolve_activity_asset_disposal_element_type_values,
@@ -17,6 +16,7 @@ from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
 )
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     RentaGastosEstimacionDirectaObservationProtocol,
     activity_asset_amortization_casillas,
@@ -540,7 +540,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     period=aggregation_period,
                     modelo=context.modelo,
                     target_casilla_id=target_casilla_id,
-                    accept_activity_marker=context.modelo == Modelo("130").value,
+                    accept_activity_marker=context.modelo == form_for_role("renta.direct_instalment"),
                     transaction_repository=self._transaction_repository,
                     usage_ratios=resolve_effective_usage_ratios(
                         bucket_id=context.bucket_id,

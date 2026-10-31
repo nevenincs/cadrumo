@@ -43,8 +43,8 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
-from ...core.modelo import Modelo
 from ...core.time.clock import now
+from ..calculations.registry.form_codes import form_for_role
 from ..submission.models import ModeloDraftStatus
 from .protocols import (
     CasillaCollection,
@@ -309,7 +309,7 @@ def _required_missing_finding(casilla: CasillaSchema) -> ModeloValidationFinding
 
 
 def _required_casilla_satisfied_by_row_bindings(draft: ModeloDraft, casilla_id: str) -> bool:
-    if draft.modelo != Modelo("349").value:
+    if draft.modelo != form_for_role("iva.intracommunity_summary"):
         return False
     binding_ids = _M349_OPERADOR_TEMPLATE_BINDINGS_BY_CASILLA.get(casilla_id)
     if binding_ids is not None:

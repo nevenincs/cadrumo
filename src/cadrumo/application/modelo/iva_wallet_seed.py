@@ -39,6 +39,7 @@ from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState, iva_compensation_period_sort_key
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
@@ -225,7 +226,7 @@ def _sealed_modelo_303_blocker_for_period(
         work_unit = work_units.work_units.get(revision.work_unit_id)
         if work_unit is None or work_unit.bucket_id != bucket_id:
             continue
-        if work_unit.modelo != Modelo("303").value:
+        if work_unit.modelo != form_for_role("iva.periodic"):
             continue
         consuming_key = (work_unit.period.filing_year, iva_compensation_period_sort_key(work_unit.period))
         if consuming_key < seeded_key:

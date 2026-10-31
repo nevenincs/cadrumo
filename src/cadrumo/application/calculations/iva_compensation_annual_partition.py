@@ -31,6 +31,7 @@ from ...domain.calculations.registry.bindings import (
 )
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_APLICADA_CASILLA as M303_COMPENSACION_APLICADA_CASILLA,
@@ -176,7 +177,8 @@ def resolve_iva_compensation_annual_partition_binding_values(
     states = tuple(
         period_state_from_303_envelope(envelope, operation=operation)
         for envelope in envelopes
-        if envelope.observation.modelo == Modelo("303").value and envelope.observation.filing_year == filing_year
+        if envelope.observation.modelo == form_for_role("iva.periodic")
+        and envelope.observation.filing_year == filing_year
     )
     if not states:
         return {}

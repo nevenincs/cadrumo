@@ -9,6 +9,7 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.retenciones_bindings import (
     resolve_retenciones_aggregation_binding_row_values,
     resolve_retenciones_aggregation_binding_values,
@@ -161,7 +162,7 @@ class RetencionesAggregationSourceResolver:
         if observations is None:
             return empty_source_resolution(self.resolver_id, self.owned_sources)
         if not observations:
-            is_m115 = context.modelo == Modelo("115").value
+            is_m115 = context.modelo == form_for_role("withholding.lease_periodic")
             is_m115_no_relevant_payment = is_m115 and is_m115_no_relevant_payment_period(
                 filing_year=context.filing_year,
                 period_token=context.period.registry_token,
@@ -194,7 +195,7 @@ class RetencionesAggregationSourceResolver:
             # that path, following the Modelo 180 precedent of carrying the flag
             # in the message. The typed action channel cannot express it -- the
             # wizard setup command projects no inputs to bind against.
-            is_m111 = context.modelo == Modelo("111").value
+            is_m111 = context.modelo == form_for_role("withholding.work_periodic")
             message = tr(
                 "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
                 if is_m111

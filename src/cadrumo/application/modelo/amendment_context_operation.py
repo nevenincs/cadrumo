@@ -19,6 +19,7 @@ from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import profile_operation_subject
 from ...domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
 from ...domain.modelos.calculation_revision_amendment import (
@@ -151,7 +152,7 @@ def _capture(
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     evidence = revision.filing_instance_evidence
     motive_applicable = False
-    if evidence is not None and str(unit.modelo) == "303":
+    if evidence is not None and str(unit.modelo) == form_for_role("iva.periodic"):
         regimen = evidence.m303.regimen_simplificado.regimen_snapshot
         motive_applicable = m303_rectificativa_motive_is_applicable(
             registry_revision_id=regimen.registry_revision_id,

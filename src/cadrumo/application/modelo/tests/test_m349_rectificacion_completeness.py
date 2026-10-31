@@ -32,7 +32,7 @@ from .._calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..verification_finding_contracts import M349_IMPORTE_RECTIFICACIONES_CASILLA, M349_NUMERO_RECTIFICACIONES_CASILLA
 from ..verification_required_fields import detail_row_template_casilla_is_satisfied
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
 _BUCKET_ID = "5f0e7a52-2a3c-4f4e-9d1e-6a2b9c0f8e11"

@@ -421,7 +421,6 @@ def _scripted_amend(
             corrections_definition = _values_kind_reason_definition(
                 selected=selected,
                 baseline_values=baseline_values,
-                modelo=str(baseline.modelo),
                 permitted_amendment_kinds=context.permitted_amendment_kinds,
                 m303_rectificativa_motive_applicable=context.m303_rectificativa_motive_applicable,
                 run_token=run_id,
@@ -521,7 +520,6 @@ def _permitted_kind_choice_values(
             definition = _values_kind_reason_definition(
                 selected=selected,
                 baseline_values=baseline_values,
-                modelo=str(baseline.modelo),
                 permitted_amendment_kinds=context.permitted_amendment_kinds,
                 m303_rectificativa_motive_applicable=context.m303_rectificativa_motive_applicable,
                 run_token=run_id,

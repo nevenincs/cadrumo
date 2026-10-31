@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
+from ..calculations.registry.form_codes import form_for_role
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_references import SourceReference
 from ..justificante.schema import Justificante
@@ -63,7 +64,7 @@ def validate_calculation_revision_aggregate(
     if identity is None:
         return None
     work_unit = _require_parent_work_unit(revision, context)
-    if work_unit.modelo != Modelo("303").value:
+    if work_unit.modelo != form_for_role("iva.periodic"):
         if identity.m303_rectificativa_motive is not None:
             raise ModeloValidationError("an M303 rectificativa motive is forbidden for another modelo")
         return None
@@ -153,7 +154,7 @@ def _require_registry_snapshot(
     snapshot = context.registry_snapshots.get(work_unit.work_unit_id)
     if snapshot is None:
         raise ModeloValidationError("M303 rectificativa revision lacks exact registry snapshot context")
-    if snapshot.modelo.id != Modelo("303") or snapshot.revision.id != work_unit.revision_id:
+    if snapshot.modelo.id != form_for_role("iva.periodic") or snapshot.revision.id != work_unit.revision_id:
         raise ModeloValidationError("M303 rectificativa registry snapshot disagrees with its parent WorkUnit")
     return snapshot
 

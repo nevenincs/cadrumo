@@ -39,11 +39,11 @@ from typing import TYPE_CHECKING, Literal
 from ...core.aeat_csv import normalise_aeat_csv
 from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
-from ...core.modelo import Modelo
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
@@ -748,7 +748,7 @@ def _record_aeat_content(
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_filing_no_casilla_values",
         )
-    if entry.modelo == Modelo("303").value and entry.filing_instance_evidence is None:
+    if entry.modelo == form_for_role("iva.periodic") and entry.filing_instance_evidence is None:
         return _unverifiable(
             context,
             subject=superseded,

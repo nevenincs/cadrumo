@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
 from ...domain.calculations.export_field_kind import CasillaFieldKind
@@ -168,6 +168,15 @@ def _require_m280_wire(
     magnitude = _field_wire(wire, integer) + _field_wire(wire, fraction)
     if not _m280_wire_matches(_field_wire(wire, key), _field_wire(wire, sign), magnitude):
         raise FilingExportValidationError("modelo 280 negative imputation requires key 2 and N or other-key zero fill")
+
+
+def m280_key_wire(record: ExportRecordDefinition, buffer: Sequence[str]) -> str:
+    """Return the key byte the declared M280 record already holds, or a blank before it is rendered."""
+    key = next((item for item in record.fields if item.id == _M280_KEY_ID), None)
+    if key is None:
+        return " "
+    start, _ = _span(key)
+    return buffer[start - 1] if len(buffer) >= start else " "
 
 
 def m280_contextual_sign_byte(

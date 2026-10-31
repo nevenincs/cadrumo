@@ -7,11 +7,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.casilla_membership import (
     row_field_template_records_by_casilla,
 )
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
 )
@@ -148,7 +148,7 @@ def detail_row_template_casilla_is_satisfied(
     if not casilla.section:
         return False
     section = casilla.section[0]
-    if str(work_unit.modelo) != Modelo("349").value:
+    if str(work_unit.modelo) != form_for_role("iva.intracommunity_summary"):
         return casilla.id in row_field_template_records_by_casilla(revision)
     if section == "operador":
         return any(getattr(row, "row_type", None) == "operador" for row in target.detail_rows)

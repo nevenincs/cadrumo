@@ -14,10 +14,10 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...core.result_disposition import ResultDisposition
 from ..calculations.registry.errors import RegistrySnapshotError
+from ..calculations.registry.form_codes import form_for_role
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from .errors import DeadlineValidationError
 
@@ -129,7 +129,7 @@ def _resolve_filing_window_with_operation(
     # this modelo fixes in code.
     filing_year_close = date(filing_year, 12, 31)
     if tipo_renta_code is not None and (
-        modelo != Modelo("210")
+        modelo != form_for_role("irnr.income")
         or tipo_renta_code
         not in m210_tipo_renta_code_projection(
             effective_date=filing_year_close,
@@ -199,7 +199,7 @@ def _is_qualified_m210_event(
     from ..calculations.registry.period_selector_match import selector_period_matches_request
 
     return (
-        modelo == Modelo("210")
+        modelo == form_for_role("irnr.income")
         and selector_period_matches_request("EVENT-N", period.registry_token)
         and (resultado is not None or tipo_renta_code is not None)
     )

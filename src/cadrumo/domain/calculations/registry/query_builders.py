@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from ....core.i18n.render import output_language
-from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
@@ -25,6 +24,7 @@ from .errors import (
     RegistryFailureCondition,
     RegistryValidationError,
 )
+from .form_codes import form_for_role
 from .ids import BindingId
 from .query_reports import (
     BindingInputChannel,
@@ -275,8 +275,9 @@ def _find_casilla_for_detail(
     if matched is not None:
         return matched
     valid_ids = [item.id for item in revision.casillas]
-    sample = ", ".join(valid_ids[:20])
-    overflow = "" if len(valid_ids) <= 20 else f" (+{len(valid_ids) - 20} more)"
+    shown = valid_ids[:20]
+    sample = ", ".join(shown)
+    overflow = "" if len(valid_ids) == len(shown) else f" (+{len(valid_ids) - len(shown)} more)"
     raise RegistryValidationError(
         f"casilla {casilla!r} is not defined by revision {revision.id} of modelo {definition.id}; "
         f"valid casilla ids include: {sample}{overflow}.",
@@ -369,7 +370,7 @@ def _operator_input_required_by_binding(
 ) -> dict[BindingId, bool]:
     """Return missing-input visibility for relation slots with period-scoped defaults."""
     required = {binding.id: True for binding in revision.bindings}
-    if modelo is None or modelo != Modelo("202").value or period is None:
+    if modelo is None or modelo != form_for_role("sociedades.instalment") or period is None:
         return required
     for binding in revision.bindings:
         if _relation_prefill_is_period_default(binding, modelo=modelo, period=period):

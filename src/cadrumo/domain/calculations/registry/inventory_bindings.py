@@ -17,16 +17,16 @@ destination is what the operation means, not a value the law re-sets per year.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model, selector_as_dict
 from .binding_temporal import BindingTemporalSelector, SameTargetContext
-from .form_codes import resolve_form_codes
+from .form_codes import form_role_validator, resolve_form_codes
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition
@@ -51,7 +51,7 @@ class InventoryProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.INVENTORY] = BindingSourceKind.INVENTORY
 
-    modelo: Literal["100"]
+    modelo: Annotated[str, AfterValidator(form_role_validator("renta.annual"))]
     # The source year is the TARGET's year, never an authored constant: the
     # declaration states timeless intent and the filing context supplies the
     # year. The casilla-renumbering hazard the former absolute ``filing_year``

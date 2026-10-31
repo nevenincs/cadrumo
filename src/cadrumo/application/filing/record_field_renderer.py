@@ -6,7 +6,6 @@ from collections.abc import Callable, Mapping
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -16,6 +15,7 @@ from ...domain.calculations.registry.fixed_width_codec import (
     render_empty_block_slot,
     render_fixed_width_export_field,
 )
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
@@ -23,7 +23,7 @@ from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
 from .m190_context_validation import require_m190_signed_reintegro_context
-from .m280_context_validation import m280_contextual_sign_byte, require_m280_negative_imputation_context
+from .m280_context_validation import m280_contextual_sign_byte, m280_key_wire, require_m280_negative_imputation_context
 from .producer_snapshot import ChargeAccountSelection, FilingProducerSnapshot, RefundAccountSelection
 from .projection import FilingRecordRenderContext
 from .record_types import ProjectionAddress, RecordRenderRow
@@ -193,7 +193,7 @@ def _render_positioned_field_bytes(
         record,
         field,
         rendered,
-        key_wire=buffer[136] if len(buffer) > 136 else " ",
+        key_wire=m280_key_wire(record, buffer),
         raw_amount=casilla_values.get(field.casilla_id) if field.casilla_id is not None else None,
         source_digests=source_digests,
     )
@@ -304,7 +304,7 @@ def _field_value(
 
 def _m369_period_binding_value(field: ExportFieldDefinition, draft: ModeloDraft) -> object | None:
     """Project the typed Exterior period into the three official detail fields."""
-    if draft.modelo != Modelo("369") or not draft.period.registry_token.startswith("EXT-"):
+    if draft.modelo != form_for_role("iva.one_stop_shop") or not draft.period.registry_token.startswith("EXT-"):
         return None
     if "2-ejercicio-y-periodo-ejercicio" in field.id:
         return draft.period.filing_year
@@ -376,7 +376,7 @@ def _header_field_value(
 
 def _m369_complementaria_slot(field: ExportFieldDefinition, modelo: str | None) -> bool:
     return (
-        modelo == Modelo("369")
+        modelo == form_for_role("iva.one_stop_shop")
         and field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
         and "aeat-dr-369-2021" in field.source_refs
     )
@@ -446,7 +446,11 @@ def _draft_filing_year(draft: ModeloDraft) -> str:
 
 def _draft_period_code(draft: ModeloDraft) -> str:
     registry_token = draft.period.registry_token
-    if draft.modelo == Modelo("369") and registry_token.startswith("EXT-") and registry_token.endswith("T"):
+    if (
+        draft.modelo == form_for_role("iva.one_stop_shop")
+        and registry_token.startswith("EXT-")
+        and registry_token.endswith("T")
+    ):
         return f"{int(registry_token.removeprefix('EXT-').removesuffix('T')):02d}"
     return registry_token
 

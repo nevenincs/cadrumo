@@ -20,6 +20,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.invoice_bindings import (
     InvoiceObservation,
@@ -229,7 +230,7 @@ def invoice_observation(
         # simplificada legitimately carries none (RD 1619/2012 art. 6.1.d), so
         # it has nothing these informativas can declare rather than a defect.
         return None
-    if context.modelo == Modelo("347").value:
+    if context.modelo == form_for_role("third_party.annual_operations"):
         return _m347_invoice_observation(
             invoice,
             m347_filer=m347_filer,
@@ -238,7 +239,7 @@ def invoice_observation(
     clave = intracommunity_clave(invoice)
     if clave is None:
         return None
-    if context.modelo == Modelo("349").value:
+    if context.modelo == form_for_role("iva.intracommunity_summary"):
         validate_m349_country_prefix_context(
             country_code=invoice.counterparty_country,
             clave_operacion=clave,
@@ -299,7 +300,7 @@ def resolve_m347_filer(context: CalculationSourceContext) -> M347Filer:
     operation: claves C, D and E simply do not classify, and nothing is left
     out that art. 32.b has not been shown to exclude.
     """
-    if context.modelo != Modelo("347").value:
+    if context.modelo != form_for_role("third_party.annual_operations"):
         return _UNSCOPED_M347_FILER
     from ..modelo.profile_readiness_gate import load_modelo_work_profile
     from ..user_profile.projections import projection_for_taxpayer

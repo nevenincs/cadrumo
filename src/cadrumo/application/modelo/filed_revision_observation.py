@@ -53,11 +53,11 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
@@ -130,7 +130,7 @@ def require_filing_result_disposition(
     copies of the condition would be two authorities on when a filing is
     under-declared, and they would drift.
     """
-    if work_unit.modelo == Modelo("303").value and result_disposition is None:
+    if work_unit.modelo == form_for_role("iva.periodic") and result_disposition is None:
         raise ModeloLocalObservationError(
             translated_message="errors.error.error_modelos",
             context={"modelo": work_unit.modelo, "period": work_unit.period.registry_token},
@@ -177,7 +177,7 @@ def prepare_filed_revision_observation(
     )
     key = observation_key(work_unit.modelo, work_unit.period)
     projects_iva_history = (
-        work_unit.modelo == Modelo("303").value and taxpayer_nif is not None and bool(taxpayer_nif.strip())
+        work_unit.modelo == form_for_role("iva.periodic") and taxpayer_nif is not None and bool(taxpayer_nif.strip())
     )
     # Resolve the history repository BEFORE the carry write: both rows describe
     # the one filed period, so a mismatched pair must refuse with neither

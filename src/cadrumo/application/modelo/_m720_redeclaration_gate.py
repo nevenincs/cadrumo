@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import ModeloVerificationFinding
 from ...domain.modelos.work_unit import WorkUnit
@@ -58,7 +59,7 @@ def modelo_720_redeclaration_findings(
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
-    if str(work_unit.modelo) != Modelo("720").value:
+    if str(work_unit.modelo) != form_for_role("foreign_assets.informative"):
         return ()
     filing_year = work_unit.filing_year
     period = work_unit.period.registry_token

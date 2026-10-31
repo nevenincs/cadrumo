@@ -36,6 +36,7 @@ from pydantic import BaseModel
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from ...domain.calculations.registry.form_codes import form_for_role
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
 
 if TYPE_CHECKING:
@@ -203,7 +204,7 @@ def _start_work_unit_step(
     diverted Modelo 210 row does: its description target needs only the modelo
     the diversion itself identified.
     """
-    if Modelo("210").value in report.unsupported_work_create_modelos:
+    if form_for_role("irnr.income") in report.unsupported_work_create_modelos:
         return OverviewStatusNextStep(
             step_id=OverviewStatusNextStepId.MODELO_210_SEDE_ONLY,
             next_action=declare_next_action("operator.modelo.describe", modelo=Modelo("210").value),

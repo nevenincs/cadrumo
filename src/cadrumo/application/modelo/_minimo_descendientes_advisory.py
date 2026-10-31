@@ -18,10 +18,10 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_absence import AbsentCasillaReading
-from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.formula_runtime_ops import resolve_dated_value
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -104,7 +104,7 @@ def _selected_registry_scope(
     period_token: str,
 ) -> _RegistryScope | None:
     """Select one validated registry revision using the live filing scope."""
-    if modelo != Modelo("100").value:
+    if modelo != form_for_role("renta.annual"):
         return None
     if type(filing_year) is not int or filing_year <= 0 or not period_token.strip():
         raise RegistryValidationError("descendant advisory registry scope is incomplete")
@@ -701,7 +701,7 @@ def _guarderia_descendants(
     Assembled once so the two cannot drift into disagreeing about when they
     apply.
     """
-    if modelo != Modelo("100").value:
+    if modelo != form_for_role("renta.annual"):
         return None
     casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
         revision,

@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "form-row-codes:design"
 date_axis = "filing_period"
 legal_refs = ["ley-37-1992:art-164"]
-source_refs = ["aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026"]
+source_refs = ["aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
@@ -36,6 +36,16 @@ required_text = ["TABLA DE TIPOS DE VINCULACIÓN", "TABLA DE METODOS DE VALORACI
 [[fact.variants.source_citations]]
 source_ref = "enrolled-modelo-156-layout"
 required_text = ["APELLIDOS Y NOMBRE DEL AFILIADO O MUTUALISTA", "NÚMERO DE AFILIACIÓN"]
+
+# The Modelo 222 group number (positions 92-98) and the dominant entity's country (136-137).
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-222-2025"
+required_text = ["Número de grupo", "Pais / territorio foral de la Entidad Dominante"]
+
+# The Modelo 353 group number (positions 109-118).
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-353-2026"
+required_text = ["Identificación. Nº Grupo"]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -97,6 +107,9 @@ entries = [
   { key = "m180.address.complement", value = "40" },
   { key = "m303.prorrata.cnae_digits", value = "3,4" },
   { key = "m100.ascendant_cohabiting_descendants_max", value = "10" },
+  { key = "m222.numero_grupo_max", value = "7" },
+  { key = "m222.dominant_territory_max", value = "2" },
+  { key = "m353.numero_grupo_max", value = "10" },
   { key = "aeat.aux.version_width", value = "4" },
   { key = "aeat.aux.program_identifier_width", value = "4" },
   { key = "aeat.aux.developer_tax_id_width", value = "9" },

@@ -21,7 +21,7 @@ from ..borrador_100 import (
 )
 from ..snapshot_base import SnapshotLifecycleState
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "0acc74be-7842-4530-95f8-8ffca3a6b654"  # was 'bucket-renta'
 _SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))

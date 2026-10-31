@@ -19,7 +19,7 @@ from .filing_record_test_support import (
     build_modelo_filing_record_for_test,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_default_settlement_keeps_existing_and_non_iva_filing_records_valid() -> None:

@@ -54,6 +54,7 @@ from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
@@ -206,7 +207,7 @@ def _load_amendment_baseline[CasillaKey](
     # carry a scalar a detail-row casilla cannot hold.
     for stored_revision in (source_revision, baseline_revision):
         _refuse_stored_row_field_scalar_inputs(stored_revision, work_unit=work_unit, operation=operation)
-    if work_unit.modelo == Modelo("303").value and source_revision.filing_instance_evidence is None:
+    if work_unit.modelo == form_for_role("iva.periodic") and source_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
             translated_message="errors.error.error_modelo_amendment_evidence_missing",
             context={
@@ -268,7 +269,8 @@ def _resolve_m303_rectificativa_motive_before_identity(
         operation=operation,
     )
     requires_motive = (
-        work_unit.modelo == Modelo("303").value and amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+        work_unit.modelo == form_for_role("iva.periodic")
+        and amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
     )
     if (requires_motive and applicable and supplied is not None) or (not requires_motive and supplied is None):
         return supplied
@@ -291,7 +293,7 @@ def _m303_rectificativa_motive_is_applicable(
     baseline_revision: CalculationRevision,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    if work_unit.modelo != Modelo("303").value:
+    if work_unit.modelo != form_for_role("iva.periodic"):
         return False
     filing_evidence = baseline_revision.filing_instance_evidence
     if filing_evidence is None:
@@ -448,7 +450,7 @@ def _amendment_aggregate_context(
                 period=unit.period.registry_token,
             )
             for unit in work_units.values()
-            if unit.modelo == Modelo("303").value
+            if unit.modelo == form_for_role("iva.periodic")
         },
         expected_taxpayer_tax_id=taxpayer_tax_id,
     )
@@ -714,7 +716,7 @@ def _amendment_result_disposition(
     kept, and with none recorded the disposition the corrected result implies
     before any refund or payment election is used.
     """
-    if supplied is not None or work_unit.modelo != Modelo("303").value:
+    if supplied is not None or work_unit.modelo != form_for_role("iva.periodic"):
         return supplied
     recorded = ports.observation_repository.load_observation(work_unit.modelo, work_unit.period)
     if recorded is not None and recorded.result_disposition is not None:

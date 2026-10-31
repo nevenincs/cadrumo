@@ -39,6 +39,7 @@ from ._ledger_binding_resolution import (
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
+from .form_codes import differs_from_role
 from .ids import BindingId
 from .ledger_binding_selector_support import (
     IMPATRIADO_LEDGER_INCOME_FACTS,
@@ -134,7 +135,7 @@ class LedgerImpatriadoIncomeProvider(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_modelo_151(cls, value: Modelo) -> Modelo:
-        if value != Modelo("151"):
+        if differs_from_role(value, "renta.impatriado_annual"):
             raise ValueError("ledger_impatriado_income_aggregation modelo must be '151'")
         return value
 

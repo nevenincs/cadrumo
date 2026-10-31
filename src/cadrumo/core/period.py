@@ -81,7 +81,12 @@ class StandardPeriodCode(StrEnum):
     DEC = "12"
 
 
+_PERIOD_YEAR_FIRST = 1980
+_PERIOD_YEAR_LAST = 2200
 _STANDARD_PERIOD_SET: frozenset[str] = frozenset(member.value for member in StandardPeriodCode)
+_INSTALMENT_PERIOD_SET: frozenset[str] = frozenset(
+    (StandardPeriodCode.P1, StandardPeriodCode.P2, StandardPeriodCode.P3, StandardPeriodCode.P4),
+)
 _EXTENDED_PERIOD_SET: frozenset[str] = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
 _ADMINISTRATIVE_PERIOD_SET: frozenset[str] = frozenset(
     ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"),
@@ -309,7 +314,7 @@ def _period_kind_for_code(code: str) -> PeriodKind:
         return PeriodKind.ANNUAL
     if len(code) == 2 and code.isdigit():
         return PeriodKind.MONTHLY
-    if len(code) == 2 and code.endswith("P") and code[0] in "1234":
+    if code in _INSTALMENT_PERIOD_SET:
         return PeriodKind.INSTALMENT
     return PeriodKind.EXTENDED
 
@@ -369,7 +374,7 @@ class Period(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    filing_year: int = Field(ge=1980, le=2200)
+    filing_year: int = Field(ge=_PERIOD_YEAR_FIRST, le=_PERIOD_YEAR_LAST)
     """Deliberately wider than the registry's authored filing-year window.
 
     A period is a calendar span, not a claim that a revision exists for it. It

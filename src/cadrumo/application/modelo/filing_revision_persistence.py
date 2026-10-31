@@ -14,6 +14,7 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     general_prorrata_register_regime,
     ninguna_prorrata_register_regime,
@@ -122,7 +123,7 @@ def validate_filing_instance_evidence_for_work_unit(
     operation: str,
 ) -> FilingInstanceEvidence | None:
     """Validate the closed Modelo 303 evidence branch at creation or replay."""
-    if work_unit.modelo == Modelo("303").value:
+    if work_unit.modelo == form_for_role("iva.periodic"):
         if evidence is None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(
@@ -230,7 +231,7 @@ def _prorrata_settlement_values(
     filed_target: CalculationRevision,
     work_unit: WorkUnit,
 ) -> tuple[Decimal, Decimal, Decimal] | None:
-    if str(work_unit.modelo) != Modelo("303").value:
+    if str(work_unit.modelo) != form_for_role("iva.periodic"):
         return None
     if not is_m303_annual_settlement_period(work_unit.period):
         return None
@@ -341,7 +342,7 @@ def _new_local_m303_settlement_snapshot(
     result_disposition: ResultDisposition | None,
 ) -> IvaSettlementSnapshot | None:
     """Derive a new local M303 settlement snapshot from filing-time owners only."""
-    if work_unit.modelo != Modelo("303").value:
+    if work_unit.modelo != form_for_role("iva.periodic"):
         return None
     state = prepared_observation.iva_compensation_state
     result_ids = result_disposition_casilla_ids(str(work_unit.modelo))
@@ -517,7 +518,7 @@ def _rectificativa_aggregate_context(
                 period=work_unit.period.registry_token,
             )
         }
-        if work_unit.modelo == Modelo("303").value
+        if work_unit.modelo == form_for_role("iva.periodic")
         else {},
         expected_taxpayer_tax_id=taxpayer_nif,
     )

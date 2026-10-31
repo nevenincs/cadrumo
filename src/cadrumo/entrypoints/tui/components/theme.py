@@ -125,7 +125,7 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         "cadrumo-modal-width": "80%",
         "cadrumo-modal-height": "80%",
         "cadrumo-modal-max-height": "80vh",
-        "cadrumo-log-max-height": "12",
+        "cadrumo-log-max-height": str(12),
         # -- Spacing scale, in terminal cells -------------------------------
         # Cells, not rem: the unit here is a character, so the useful scale is
         # tiny and every step has to earn itself. A web 4-point scale has no
@@ -177,7 +177,7 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # Textual's own default is 16. The previous 14 made buttons SMALLER
         # than the library intends, while the complaint was that they were
         # small.
-        "cadrumo-control-min-width": "16",
+        "cadrumo-control-min-width": str(16),
         # Wide enough that no declared action label wraps. Derived, not
         # chosen: the longest is 43 cells ("Obtener todas las declaraciones
         # presentadas" in es, and the Catalan of the same length), and a button
@@ -192,7 +192,7 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # 5 rows tall. It also had a consequence beyond looks: the taller
         # neighbour reached far enough to consume a simulated press aimed at
         # the button above it.
-        "cadrumo-control-max-width": "48",
+        "cadrumo-control-max-width": str(48),
         # The gap between sibling action buttons. Nine stylesheets each
         # repeated this as a literal; two bordered boxes one cell apart
         # read as one smeared control, so the role gets a name and a
@@ -211,7 +211,7 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # it?" blocks: one width for every term, so the answers share a left
         # edge. Wide enough for the longest such term in any shipped language
         # (19 cells today) with a gap before its answer.
-        "cadrumo-term-width": "22",
+        "cadrumo-term-width": str(22),
         # -- Chrome ---------------------------------------------------------
         "cadrumo-scrollbar": "1",
         # The field-help panel docked under a page: tall enough for a short
@@ -221,7 +221,7 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         # The same panel opened on request, for a casilla whose formula,
         # official wording and legal basis do not fit the docked height: most
         # of a 24-row terminal, still leaving the stepper and one list row.
-        "cadrumo-help-expanded-max-height": "18",
+        "cadrumo-help-expanded-max-height": str(18),
         # The box panel docked in place of that band, which grows upward over
         # the list: a little over half the terminal, so on the shortest
         # terminal it docks in (30 rows) the box being changed and its

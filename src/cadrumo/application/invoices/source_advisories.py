@@ -9,8 +9,8 @@ from ...core.aggregation import (
     BindingSourceKind,
     ThirdPartyDeclarationRole,
 )
-from ...core.modelo import Modelo
 from ...core.period import Period
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.invoice_bindings import (
     m347_declarable_set,
 )
@@ -58,7 +58,7 @@ def m347_role_fact_advisories(
     clave E carries no direction restriction in the article, so every
     invoice from a public-administration filer is in scope.
     """
-    if context.modelo != Modelo("347").value:
+    if context.modelo != form_for_role("third_party.annual_operations"):
         return ()
     if not declaration_roles:
         return ()
@@ -348,7 +348,7 @@ def m347_declaration_advisories(
     over the same declarable set, and the inmueble record fields the leases
     leave open by :func:`_m347_inmueble_record_advisories`.
     """
-    if context.modelo != Modelo("347").value:
+    if context.modelo != form_for_role("third_party.annual_operations"):
         return ()
     m347_items = _m347_observed_items(observed_items)
     if not m347_items:
@@ -649,7 +649,7 @@ def m347_exclusion_reading_advisories(
     art. 34.1.d has it relate the lease, withheld or not, so an invoice that
     records the lease is declared without an advisory.
     """
-    if context.modelo != Modelo("347").value:
+    if context.modelo != form_for_role("third_party.annual_operations"):
         return ()
     declared = tuple(invoice for invoice, observation in observed_items if observation.operation_clave is not None)
     unsettled = _m347_unsettled_exclusion_invoice_numbers(declared, effective_date=filing_period_date(context))
@@ -735,7 +735,7 @@ def m347_received_invoice_dating_advisories(
     previous ejercicio's last month that this declaration would otherwise
     relate, which it leaves out.
     """
-    if context.modelo != Modelo("347").value:
+    if context.modelo != form_for_role("third_party.annual_operations"):
         return ()
     declared, left_out = _m347_received_dating_numbers(
         observed_items, catalogue_invoices, context=context, m347_filer=m347_filer

@@ -40,6 +40,8 @@ from .categorisation_common import (
 from .categorisation_doors import LedgerRuleAddDoorV1, LedgerRuleApplyDoorV1, LedgerRuleListDoorV1
 from .controller import LedgerWorkspaceController
 
+_DEFAULT_RULE_PRIORITY = 100
+
 RULES_PAGE_SIZE: Final = 200
 """The most rules or previewed matches the screen renders at once."""
 
@@ -130,7 +132,7 @@ class LedgerRulesScreen(CategorisationScreen):
 
     @override
     def mount_body(self) -> None:
-        self.query_one("#categorisation-rule-priority", Input).value = "100"
+        self.query_one("#categorisation-rule-priority", Input).value = str(_DEFAULT_RULE_PRIORITY)
         self.query_one("#categorisation-rule-matches", DataTable).display = False
         self.run_read(self._load)
 
@@ -201,7 +203,9 @@ class LedgerRulesScreen(CategorisationScreen):
         self.paint_tables()
 
     def _stage_add(self) -> StagedChangeV1:
-        priority_text = self.query_one("#categorisation-rule-priority", Input).value.strip() or "100"
+        priority_text = self.query_one("#categorisation-rule-priority", Input).value.strip() or str(
+            _DEFAULT_RULE_PRIORITY
+        )
         if not priority_text.isdigit():
             raise ValueError(tr("tui.ledger.categorisation.rules.priority_invalid"))
         classification = BusinessClassification(

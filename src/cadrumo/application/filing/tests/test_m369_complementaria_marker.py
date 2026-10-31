@@ -11,7 +11,7 @@ from cadrumo.domain.filing.errors import FilingExportValidationError
 
 from ..record_field_renderer import _header_field_value, format_field
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _fields():

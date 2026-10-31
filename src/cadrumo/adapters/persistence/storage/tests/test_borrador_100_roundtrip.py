@@ -40,7 +40,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_template_path
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 _PERIOD = Period.from_year_and_code(2024, "0A")
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="100",

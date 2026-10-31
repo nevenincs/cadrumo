@@ -8,12 +8,13 @@ annual box, so one is never a spelling of the other.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
 
 from ....core.aggregation import BindingSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
+from .form_codes import form_role_validator
 
 __all__ = [
     "BienesInversionRegularizacionOutput",
@@ -48,5 +49,5 @@ class BienesInversionRegularizacionProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.BIENES_INVERSION_REGULARIZACION] = BindingSourceKind.BIENES_INVERSION_REGULARIZACION
 
-    source_modelo: Literal["303"]
+    source_modelo: Annotated[str, AfterValidator(form_role_validator("iva.periodic"))]
     regularizacion_output: BienesInversionRegularizacionOutputValue

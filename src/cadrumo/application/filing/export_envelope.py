@@ -20,6 +20,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import RecordId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import (
@@ -199,7 +200,7 @@ def _declared_envelope_period_token(
         return envelope_period_token(period)
     if (
         envelope is None
-        or modelo.value != "369"
+        or modelo.value != form_for_role("iva.one_stop_shop")
         or envelope.source_ref != "aeat-dr-369-2021"
         or envelope.source_sha256 != "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
         or envelope.record_identity != "T3690 Estruc. gral"

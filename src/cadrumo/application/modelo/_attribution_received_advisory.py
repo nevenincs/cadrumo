@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -91,7 +92,7 @@ def _attribution_received_omission_advisory_findings(
         empty when the handoff is coherent (both halves present, or both
         absent), one finding when exactly one half is present.
     """
-    if str(getattr(work_unit.modelo, "value", work_unit.modelo)) != Modelo("100").value:
+    if str(getattr(work_unit.modelo, "value", work_unit.modelo)) != form_for_role("renta.annual"):
         return ()
 
     casilla_id = casilla_id_for_unique_revision_semantic_role(

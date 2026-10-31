@@ -46,7 +46,6 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.authority import (
@@ -61,6 +60,7 @@ from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     FormulaId,
     LegalRefId,
@@ -830,7 +830,7 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     # rows exist.
     row_owned: frozenset[CasillaId] = (
         frozenset[CasillaId]()
-        if modelo.id == Modelo("349").value
+        if modelo.id == form_for_role("iva.intracommunity_summary")
         else frozenset(row_field_template_records_by_casilla(revision))
     )
     casillas = tuple(

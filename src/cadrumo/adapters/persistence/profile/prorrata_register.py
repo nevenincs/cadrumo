@@ -34,6 +34,7 @@ from ....application.prorrata_register.sector_lifecycle import (
 )
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
+from ....core.period import StandardPeriodCode
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
@@ -186,7 +187,7 @@ class ProrrataRegisterRepository:
             raise StorageValidationError("prorrata seed source and target must share the same profile store")
         expected = {
             (CALCULATION_OBSERVATIONS_NAMESPACE.namespace, observation_key_for_token("303", ejercicio - 1, token))
-            for token in ("4T", "12")
+            for token in (StandardPeriodCode.Q4.value, StandardPeriodCode.DEC.value)
         }
         actual = {(revision.namespace, revision.object_key) for revision in source_snapshot.revisions}
         if len(source_snapshot.revisions) != 2 or actual != expected:

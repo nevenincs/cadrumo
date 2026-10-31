@@ -17,7 +17,6 @@ from ...core.hashing import SHA256_HEX_LENGTH as _SHA256_HEX_LENGTH
 from ...core.hashing import hash_file, sha256_file, sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
@@ -26,6 +25,7 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.export_parse import parse_export_payload
 from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from ...domain.calculations.registry.fixed_width_codec import render_empty_block_slot, render_fixed_width_export_field
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
@@ -63,7 +63,7 @@ class DeclaracionExportResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     draft_id: str = Field(min_length=1, max_length=128)
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     format: DeclaracionExportFormat
     output_path: Path
@@ -92,7 +92,7 @@ class FilingExportConsumedResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     draft_id: str = Field(min_length=1, max_length=128)
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     format: DeclaracionExportFormat
     byte_size: int = Field(gt=0)
@@ -115,7 +115,7 @@ class FilingExportValidatedPayload(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     draft_id: str = Field(min_length=1, max_length=128)
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     format: DeclaracionExportFormat
     payload: bytes = Field(min_length=1)
@@ -461,7 +461,9 @@ def _mismatched_xml_dictionary_casilla_ids(
         layout, draft=draft, entries=declared_entries, schema_provider=schema_provider
     )
     values = {value.casilla_id: value.value for value in draft.values}
-    modelo_100_declarations = registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
+    modelo_100_declarations = (
+        registry_modelo_100_xml_declarations() if draft.modelo == form_for_role("renta.annual") else None
+    )
     mismatched: list[CasillaId] = list(mismatched_xml_dictionary_repeated_casillas(payload, repeated_rows))
     checked: list[CasillaId] = []
     parsed_payload = parse_export_payload(
@@ -526,7 +528,7 @@ def _xml_dictionary_expected_wire_value(
     verification must project the raw draft value before comparing either wire
     token.  The renderer owns the projection; this reader reuses it.
     """
-    if modelo == Modelo("100"):
+    if modelo == form_for_role("renta.annual"):
         if modelo_100_declarations is None:
             raise FilingExportValidationError("Modelo 100 XML verification declarations were not resolved")
         value = modelo_100_sign_branch_value(

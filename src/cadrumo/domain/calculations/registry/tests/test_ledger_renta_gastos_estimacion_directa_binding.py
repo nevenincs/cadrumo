@@ -36,7 +36,7 @@ from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_domain]
 
 # The newest Modelo 100 edition the registry authors; its ledger expense bindings
 # are the ones resolved here.

@@ -8,13 +8,89 @@ family = "mapping"
 variant_id = "modelo-role-routing:design"
 date_axis = "filing_period"
 legal_refs = ["ley-37-1992:art-164", "ley-35-2006:art-99", "rd-439-2007:art-109"]
-source_refs = ["aeat-modelo-303-procedure"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-modelo-111-instructions", "aeat-modelo-115-obligaciones-retenedor", "aeat-modelo-123-procedure", "aeat-modelo-145-procedure", "aeat-modelo-151-procedure", "aeat-modelo-184-procedure", "aeat-modelo-193-procedure", "boe-modelo-200-2025-form", "aeat-modelo-202-instructions", "aeat-modelo-210-procedure", "aeat-modelo-222-instructions", "aeat-modelo-232-procedure", "aeat-modelo-296-procedure", "aeat-modelo-347-procedure", "aeat-modelo-349-procedure", "aeat-modelo-353-procedure", "aeat-modelo-360-procedure", "aeat-modelo-369-procedure", "aeat-modelo-720-procedure"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["303"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Modelo 111. Retenciones e ingresos a cuenta. Rendimientos del trabajo"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-115-obligaciones-retenedor"
+required_text = ["Modelo 115. Retenciones e ingresos a cuenta"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-123-procedure"
+required_text = ["Modelo 123. Retenciones e ingresos a cuenta"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-145-procedure"
+required_text = ["Modelo 145. IRPF. Retenciones sobre rendimientos del trabajo"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["Modelo 151. Régimen especial aplicable a los trabajadores"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["Entidades en régimen de atribución de rentas"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["Modelo 193. Declaración Informativa. Retenciones e ingresos a cuenta"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-200-2025-form"
+required_text = ["Modelo 200: Declaración del Impuesto sobre Sociedades"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["Modelo 202. IS. Impuesto sobre Sociedades"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["Modelo 210 - Impuesto sobre la Renta de no Residentes - No residentes sin establecimiento permanente"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-222-instructions"
+required_text = ["Modelo 222. IS. Régimen de consolidación fiscal. Pago fraccionado"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-232-procedure"
+required_text = ["Modelo 232. Declaración informativa de operaciones vinculadas"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-296-procedure"
+required_text = ["Modelo 296. Declaración Informativa. Retenciones e ingresos a cuenta"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["Declaración anual de operaciones con terceras personas"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-349-procedure"
+required_text = ["Declaración recapitulativa de operaciones intracomunitarias"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["Modelo 353. IVA. Grupo de entidades. Modelo agregado"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-360-procedure"
+required_text = ["Modelo 360-Modelo 361. IVA."]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-369-procedure"
+required_text = ["Modelo 369. Declaraciones de IVA del régimen One Stop Shop (OSS)"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["Declaración sobre bienes y derechos situados en el extranjero"]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -25,6 +101,25 @@ entries = [
   { key = "renta.direct_instalment", value = "130" },
   { key = "renta.objective_instalment", value = "131" },
   { key = "withholding.lease_annual", value = "180" },
+  { key = "iva.group_periodic", value = "353" },
+  { key = "iva.intracommunity_summary", value = "349" },
+  { key = "iva.one_stop_shop", value = "369" },
+  { key = "iva.foreign_refund", value = "360" },
+  { key = "third_party.annual_operations", value = "347" },
+  { key = "renta.impatriado_annual", value = "151" },
+  { key = "withholding.work_periodic", value = "111" },
+  { key = "withholding.lease_periodic", value = "115" },
+  { key = "withholding.capital_periodic", value = "123" },
+  { key = "withholding.capital_annual", value = "193" },
+  { key = "withholding.payer_communication", value = "145" },
+  { key = "attribution.annual_informative", value = "184" },
+  { key = "sociedades.annual", value = "200" },
+  { key = "sociedades.instalment", value = "202" },
+  { key = "sociedades.group_instalment", value = "222" },
+  { key = "sociedades.related_party_informative", value = "232" },
+  { key = "irnr.income", value = "210" },
+  { key = "irnr.withholding_annual", value = "296" },
+  { key = "foreign_assets.informative", value = "720" },
   { key = "renta_income_ledger.modelos", value = "100,130,131" },
   { key = "filed_declaration_reconciliation.modelos", value = "100,111,130,190,303,390" },
   { key = "pre_activity_lifecycle.modelos", value = "130,303" },

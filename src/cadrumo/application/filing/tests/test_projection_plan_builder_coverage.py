@@ -23,7 +23,9 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+from cadrumo.domain.calculations.registry.form_codes import form_for_role
+
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.integration, pytest.mark.hex_application]
 
 _REGISTRY_MODELOS = Path(__file__).resolve().parents[3] / "_data" / "registry" / "aeat" / "modelos"
 #: Source of the projection-plan dispatcher inspected by this coverage gate.
@@ -31,6 +33,8 @@ _EXPORT_SOURCE = Path(__file__).resolve().parents[1] / "export.py"
 _PROJECTION_KIND = re.compile(r"""kind\s*=\s*['"]projection['"]""")
 #: A dispatch arm names its modelo either as an enum member or as a constructed code.
 _DISPATCHED_MODELO = re.compile(r"""Modelo(?:\.M(\d{3})\b|\(\s*['"](\d{3})['"]\s*\))""")
+#: Or by the role the registry routes to that form.
+_DISPATCHED_ROLE = re.compile(r"""form_for_role\(\s*['"]([^'"]+)['"]\s*\)""")
 
 
 def _modelos_with_projection_fields() -> dict[str, int]:
@@ -47,7 +51,8 @@ def _modelos_with_projection_fields() -> dict[str, int]:
 def _dispatched_modelos(source: str) -> set[str]:
     """Return the modelos the ``_projection_plan_for_layout`` body in ``source`` dispatches on."""
     body = source.partition("def _projection_plan_for_layout(")[2].partition("\ndef ")[0]
-    return {enum_member or constructed for enum_member, constructed in _DISPATCHED_MODELO.findall(body)}
+    named = {enum_member or constructed for enum_member, constructed in _DISPATCHED_MODELO.findall(body)}
+    return named | {form_for_role(role) for role in _DISPATCHED_ROLE.findall(body)}
 
 
 def _modelos_with_a_plan_builder() -> set[str]:
@@ -65,6 +70,7 @@ def _modelos_with_a_plan_builder() -> set[str]:
         'if draft.modelo == Modelo("303").value:',
         "if draft.modelo == Modelo('303'):",
         "if draft.modelo == Modelo.M303:",
+        'if draft.modelo == form_for_role("iva.periodic"):',
     ],
 )
 def test_the_dispatcher_scan_reads_every_spelling_of_a_dispatch_arm(arm: str) -> None:

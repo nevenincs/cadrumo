@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
 )
@@ -232,7 +232,7 @@ def m210_gross_source_mode(
     mode: M210GrossIncomeSourceMode | None,
 ) -> M210GrossIncomeSourceMode | None:
     """Resolve the persisted M210 [5] authority without affecting other modelos."""
-    if str(work_unit.modelo) == Modelo("210").value:
+    if str(work_unit.modelo) == form_for_role("irnr.income"):
         return mode or M210GrossIncomeSourceMode.MANUAL
     if mode is M210GrossIncomeSourceMode.LEDGER:
         raise ModeloAggregationBindingError(

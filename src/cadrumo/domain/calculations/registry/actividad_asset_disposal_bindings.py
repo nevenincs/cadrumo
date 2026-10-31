@@ -11,7 +11,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Protocol
 
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import AfterValidator, BaseModel, BeforeValidator, Field
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -19,6 +19,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import provider_member
 from .errors import RegistryValidationError
+from .form_codes import form_role_validator
 from .ids import BindingId
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
@@ -74,7 +75,7 @@ class ActivityAssetDisposalProvider(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal[BindingSourceKind.ACTIVITY_ASSET_DISPOSAL] = BindingSourceKind.ACTIVITY_ASSET_DISPOSAL
-    modelo: Literal["100"] = "100"
+    modelo: Annotated[str, AfterValidator(form_role_validator("renta.annual"))]
     period: Literal["0A"] = "0A"
     route: (
         Annotated[ActivityAssetDisposalRoute, BeforeValidator(coerce_enum_member(ActivityAssetDisposalRoute))] | None

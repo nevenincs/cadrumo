@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from ....core.modelo import Modelo
+from .form_codes import form_for_role
 from .ids import BindingId, RevisionId
 
 __all__ = [
@@ -41,7 +41,7 @@ def is_iva_wallet_owned_carry_target(
 ) -> bool:
     """Return whether one exact binding coordinate belongs to the wallet."""
     del revision_id  # the carry keeps its binding id in every edition that declares it
-    return modelo_id == Modelo("303").value and binding_id == MODELO_303_IVA_COMPENSATION_BINDING_ID
+    return modelo_id == form_for_role("iva.periodic") and binding_id == MODELO_303_IVA_COMPENSATION_BINDING_ID
 
 
 def iva_wallet_owned_binding_ids_for_revision(
@@ -51,6 +51,6 @@ def iva_wallet_owned_binding_ids_for_revision(
 ) -> frozenset[BindingId]:
     """Return wallet-owned binding ids within one exact revision coordinate."""
     del revision_id  # the carry keeps its binding id in every edition that declares it
-    if modelo_id != Modelo("303").value:
+    if modelo_id != form_for_role("iva.periodic"):
         return frozenset[BindingId]()
     return frozenset((MODELO_303_IVA_COMPENSATION_BINDING_ID,))

@@ -25,7 +25,7 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 
 from .test_verification_preconditions import _blocked_report, _finding
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_filing_snapshot_preserves_settlement_amounts_evidence_and_time() -> None:

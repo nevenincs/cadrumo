@@ -56,6 +56,7 @@ from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.codes import ModeloCode
@@ -172,7 +173,7 @@ def record_operator_local_observation[CasillaKey](
     """
     captured_by, stated_reason = _required_audit_text(actor=actor, reason=reason)
     _require_period_year(filing_year=filing_year, period=period)
-    if modelo == "303":
+    if modelo == form_for_role("iva.periodic"):
         raise ModeloLocalObservationError(
             "Modelo 303 observations require canonical filed or official evidence with a result disposition",
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},

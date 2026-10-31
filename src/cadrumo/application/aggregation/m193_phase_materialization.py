@@ -12,17 +12,18 @@ from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal
+from functools import partial
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AfterValidator, BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
-from ...core.filing_year import FilingYear
+from ...core.filing_year import FILING_YEAR_MIN, FilingYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.form_codes import resolve_form_codes
+from ...domain.calculations.registry.form_codes import form_for_role, form_role_validator, resolve_form_codes
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .retenciones import Modelo193CapitalDetail, RetencionObservation
 
@@ -85,14 +86,18 @@ class Modelo193SettledAmountAuthorityAdvisory(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     reason: Literal["m193_settled_row_amounts_unresolved_authority"] = "m193_settled_row_amounts_unresolved_authority"
-    modelo: Literal["193"] = "193"
+    modelo: Annotated[str, AfterValidator(form_role_validator("withholding.capital_annual"))] = Field(
+        default_factory=partial(form_for_role, "withholding.capital_annual")
+    )
     filing_year: FilingYear
-    accrual_year: int = Field(ge=2000, le=9999)
+    accrual_year: int = Field(ge=FILING_YEAR_MIN, le=9999)
     affected_fields: tuple[Modelo193PhaseAmountField, ...] = (
         Modelo193PhaseAmountField.BASE_RETENCIONES,
         Modelo193PhaseAmountField.RETENCION_PRACTICADA,
     )
-    source_modelo: Literal["123"] = "123"
+    source_modelo: Annotated[str, AfterValidator(form_role_validator("withholding.capital_periodic"))] = Field(
+        default_factory=partial(form_for_role, "withholding.capital_periodic")
+    )
     """The periodic modelo whose captured capital allocation the row derives from."""
     source_kind: BindingSourceKind
     """The captured allocation's own source family."""
@@ -122,7 +127,7 @@ class Modelo193PhaseRow(BaseModel):
 
     phase: Modelo193DisclosurePhase
     filing_year: FilingYear
-    original_accrual_year: int = Field(ge=2000, le=9999)
+    original_accrual_year: int = Field(ge=FILING_YEAR_MIN, le=9999)
     recognized_on: date
     source_kind: BindingSourceKind
     source_object_id: str = Field(min_length=1, max_length=128)

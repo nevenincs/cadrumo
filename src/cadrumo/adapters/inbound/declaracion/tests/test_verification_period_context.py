@@ -9,7 +9,7 @@ import pytest
 from .....core.period import PeriodError
 from ._verification_chain_support import _period_to_date
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 @pytest.mark.parametrize(

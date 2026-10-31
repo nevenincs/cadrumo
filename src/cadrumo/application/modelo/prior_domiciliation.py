@@ -15,11 +15,11 @@ would compute.
 
 from __future__ import annotations
 
-from ...core.modelo import Modelo
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord
@@ -45,7 +45,7 @@ def _require_rectificativa_baseline_link(
     The marker asks AEAT to act on a PRIOR return, so the request is only
     coherent from a Modelo 303 rectificativa that says which return it amends.
     """
-    if work_unit.modelo != Modelo("303").value:
+    if work_unit.modelo != form_for_role("iva.periodic"):
         raise ModeloPriorDomiciliationElectionRefusedError(
             "prior domiciliation cancellation/modification is supported only for Modelo 303",
             context={"modelo": str(work_unit.modelo)},

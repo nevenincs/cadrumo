@@ -40,7 +40,7 @@ from ..schema import (
     IvaCompensationWalletObservation,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _DIGEST = "3a" * 32
 _CAPTURED_AT = datetime(2026, 1, 2, 12, 0, tzinfo=UTC)

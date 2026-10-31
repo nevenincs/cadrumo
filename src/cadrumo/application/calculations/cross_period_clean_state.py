@@ -20,11 +20,11 @@ from datetime import date
 from typing import Final, NamedTuple
 
 from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.modelo import Modelo
 from ...core.period import Period, is_filing_period_token
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
@@ -383,7 +383,7 @@ def _qualifies_for_first_year_fractional_suppression(
       year is the taxpayer's first IS year, so no prior IS return provides the
       art. 40.2 cuota basis.
     """
-    if requirement.source_modelo != Modelo("202").value:
+    if requirement.source_modelo != form_for_role("sociedades.instalment"):
         return False
     if modelo_202_modality is not Modelo202Modality.ART_40_2_OPTIONAL:
         return False

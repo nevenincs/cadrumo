@@ -59,6 +59,7 @@ from ...domain.calculations.registry.casilla_membership import (
     format_noncanonical_casilla_reference,
 )
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.result_casillas import derive_result_disposition, result_disposition_casilla_ids
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -481,7 +482,7 @@ def _apply_modelo_303_refund_election(
     A non-REDEME taxpayer who does not elect ``DEVOLVER`` keeps the carry-forward
     ``C``; every disposition other than a Modelo 303 ``COMPENSACION`` is untouched.
     """
-    if work_unit.modelo != Modelo("303").value or declaration_type is not ResultDisposition.COMPENSACION:
+    if work_unit.modelo != form_for_role("iva.periodic") or declaration_type is not ResultDisposition.COMPENSACION:
         return declaration_type
 
     iva_profile = workflow_profile.iva

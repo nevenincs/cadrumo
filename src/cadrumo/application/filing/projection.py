@@ -18,9 +18,9 @@ from ...core.filing_projection_ref import (
     M303RegimenSimplificadoModuleProjectionRef,
     is_typed_filing_projection_ref,
 )
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.export_field_kind import CasillaFieldKind
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import RecordId
 from ...domain.calculations.registry.m303_differentiated_deduction_projection import (
     project_m303_differentiated_deduction_rows,
@@ -126,7 +126,11 @@ def _validate_m303_projection_request(
 ) -> M303FilingFacts:
     """Validate the shared snapshot/layout boundary before projecting rows."""
     facts = producer_snapshot.m303_filing_facts
-    if producer_snapshot.modelo != Modelo("303") or registry_snapshot.modelo.id != Modelo("303") or facts is None:
+    if (
+        producer_snapshot.modelo != form_for_role("iva.periodic")
+        or registry_snapshot.modelo.id != form_for_role("iva.periodic")
+        or facts is None
+    ):
         raise FilingExportValidationError("M303 filing projection requires one complete Modelo 303 snapshot")
     if (
         facts.period.filing_year != registry_snapshot.filing_year
