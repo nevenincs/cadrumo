@@ -1226,7 +1226,7 @@ text = "Es el supuesto al que remite el art 32.e del RD 1065/2007 para excluir d
 
 [[legal."rd-1624-1992:art-62"]]
 language = "es"
-text = "Apartado 6 añadido con efectos desde el 1 de enero de 2017 por el RD 596/2016 (BOE-A-2016-11575); texto verificado contra el consolidado bundled corpus/normatives/html/rd-1624-1992.html."
+text = "Apartado 6 añadido con efectos desde el 1 de enero de 2017 por el RD 596/2016 (BOE-A-2016-11575); texto verificado contra el consolidado incluido en el paquete corpus/normatives/html/rd-1624-1992.html."
 
 [[legal."rd-1065-2007:art-31"]]
 language = "es"
@@ -1238,7 +1238,7 @@ text = "El artículo no fija ningun importe: el umbral por contraparte lo establ
 
 [[legal."rd-1065-2007:art-31"]]
 language = "es"
-text = "Texto verificado contra el consolidado bundled corpus/normatives/html/rd-1065-2007.html (redacción del apartado 1 por RD 828/2013, BOE-A-2013-11216)."
+text = "Texto verificado contra el consolidado incluido en el paquete corpus/normatives/html/rd-1065-2007.html (redacción del apartado 1 por RD 828/2013, BOE-A-2013-11216)."
 
 [[legal."orden-hac-1347-2024:anexo-i-instruccion-3"]]
 language = "es"
@@ -1391,3 +1391,15 @@ text = "autoliquidación"
 [[legal."ley-58-2003:art-122"]]
 language = "es"
 text = "rectificación"
+
+[[legal."ley-35-2006:art-75"]]
+language = "es"
+text = "anualidades por alimentos"
+
+[[legal."orden-eha-1033-2011:disposicion-final-unica"]]
+language = "es"
+text = "Disposición final única de la Orden EHA/1033/2011: sustituye el anexo II de la Orden EHA/3786/2008 y establece la entrada en vigor el 1 de julio de 2011. Corrobora la frontera intraanual entre los diseños de registro del modelo 308."
+
+[[legal."ley-27-2014:art-12"]]
+language = "es"
+text = "porcentaje constante degresivo"

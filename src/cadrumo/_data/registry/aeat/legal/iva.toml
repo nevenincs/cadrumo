@@ -803,7 +803,7 @@ effective_from = 2011-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-26
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Disposición final única de la Orden EHA/1033/2011: sustituye el anexo II de la Orden EHA/3786/2008 y establece la entrada en vigor el 1 de julio de 2011. Corrobora la frontera intranual entre los diseños de registro del modelo 308."
+notes = "Disposición final única de la Orden EHA/1033/2011: sustituye el anexo II de la Orden EHA/3786/2008 y establece la entrada en vigor el 1 de julio de 2011. Corrobora la frontera intraanual entre los diseños de registro del modelo 308."
 required_text = [
     "La presente Orden entrará en vigor el día 1 de julio de 2011.",
 ]

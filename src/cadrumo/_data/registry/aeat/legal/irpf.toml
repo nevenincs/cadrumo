@@ -4692,7 +4692,7 @@ effective_from = 2025-04-03
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "LIRPF art 75: autonomic-side special rule for judicial child-support annuities, applying the art 74 scale separately to those annuities and to the rest of the general taxable base. It is not the generic autonomic quota article; art 73 is the generic autonomic integral-quota article. Base legal for Modelo 100 annualidades por alimentos surfaces."
+notes = "LIRPF art 75: autonomic-side special rule for judicial child-support annuities, applying the art 74 scale separately to those annuities and to the rest of the general taxable base. It is not the generic autonomic quota article; art 73 is the generic autonomic integral-quota article. Base legal for the Modelo 100 child-support annuity fields (anualidades por alimentos)."
 required_text = [
     "Especialidades aplicables en los supuestos de anualidades por alimentos a favor de los hijos.",
     "satisfagan las anualidades por alimentos a sus hijos",

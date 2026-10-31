@@ -216,14 +216,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = """\
-LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la \
-amortización según depreciación efectiva, los cinco métodos validos (tabla lineal \
-art-12.1.a, porcentaje constante degresivo, números dígitos, plan aceptado por la \
-Administración, justificación del importe) y la tabla de coeficientes máximos por tipo de \
-elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, \
-equipos electrónicos 20-33 por ciento, etc.). Base sustantiva de las casillas de \
-amortización de M200, desarrollada en RIS art-3."""
+notes = "LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la amortización según depreciación efectiva, los cinco métodos validos (tabla lineal art-12.1.a, constant-percentage declining-balance method (porcentaje constante degresivo), números dígitos, plan aceptado por la Administración, justificación del importe) y la tabla de coeficientes máximos por tipo de elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, equipos electrónicos 20-33 por ciento, etc.). Base sustantiva de las casillas de amortización de M200, desarrollada en RIS art-3."
 required_text = [
     "Correcciones de valor: amortizaciones",
     "depreciación efectiva",
@@ -2242,7 +2235,7 @@ published_at = 2015-10-22
 effective_from = 2015-10-24
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-30
-reviewed_by = "verified against official BOE-A-2015-11071 consolidated art. 14; corpus excerpt currentized"
+reviewed_by = "verified against official BOE-A-2015-11071 consolidated art. 14; corpus excerpt updated"
 notes = """\
 Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deben constituir una reserva \
 especial dotada con el diez por ciento del beneficio liquido de cada ejercicio hasta que alcance al \
