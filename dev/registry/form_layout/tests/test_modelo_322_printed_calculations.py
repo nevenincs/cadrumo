@@ -6,28 +6,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
-from cadrumo.domain.calculations.registry.schema import FormulaDefinition
 
 from ...compiler.loader import load_modelo_directory
+from ._formula_evaluation_support import evaluate_formula
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-def _evaluate(formula: FormulaDefinition, values: dict[str, Decimal]) -> Decimal:
-    return evaluate_expression(
-        formula.expression,
-        values=values,
-        binding_values={},
-        parameters={},
-        date_context={},
-        relation_values={},
-        unresolved_relation_ids=frozenset(),
-        unresolved_casilla_ids=set(),
-        operand_refs=[],
-        operand_casilla_refs=[],
-        operand_values=[],
-    )
 
 
 @pytest.mark.parametrize(
@@ -140,7 +123,7 @@ def test_printed_total_uses_every_operand_and_refuses_missing_values(
         expected += inputs.pop("112")
     formula = next(f for f in revision.formulas if f.target_casilla_id == target)
     values = {key: Decimal(value) for key, value in inputs.items()}
-    assert _evaluate(formula, values) == Decimal(expected)
+    assert evaluate_formula(formula, values) == Decimal(expected)
     owner = next(c for c in revision.casillas if c.id == target)
     assert owner.input_kind == "computed"
     assert owner.formula == formula.id
@@ -152,4 +135,4 @@ def test_printed_total_uses_every_operand_and_refuses_missing_values(
     }[revision_id] in formula.source_refs
     for missing in inputs:
         with pytest.raises(RegistryValidationError, match="referenced before evaluation"):
-            _evaluate(formula, {key: value for key, value in values.items() if key != missing})
+            evaluate_formula(formula, {key: value for key, value in values.items() if key != missing})
