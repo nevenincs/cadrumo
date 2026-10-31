@@ -874,15 +874,21 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
 # https://www.rae.es/diccionario-estudiante/docs/ortografia.pdf
 _SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
     {
+        "acóta",
+        "actíva",
         "actualíza",
+        "adminístra",
         "adjúnta",
         "alinéa",
         "apláza",
         "archíva",
+        "anóta",
+        "apórta",
         "calcúla",
         "clasifíca",
         "combína",
         "comuníca",
+        "concília",
         "configúra",
         "confírma",
         "consérva",
@@ -894,11 +900,16 @@ _SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
         "edíta",
         "elimína",
         "elíge",
+        "enuméra",
+        "establéce",
+        "examína",
         "exclúye",
+        "expórta",
         "gestióna",
         "guía",
         "impórta",
         "instála",
+        "inicialíza",
         "introdúce",
         "investíga",
         "manten",
@@ -908,21 +919,47 @@ _SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
         "omíte",
         "presénta",
         "previsualíza",
+        "proporcióna",
         "quíta",
         "reanúda",
+        "recompíla",
         "reconstrúye",
         "regístra",
         "repíte",
+        "respónde",
+        "resuélve",
         "restáura",
+        "revóca",
         "revísa",
+        "rastréa",
+        "sálta",
         "sepára",
         "termína",
+        "tráta",
         "vacía",
+        "vincúla",
     }
 )
 # These observed infinitives retain their original stress with one clitic.
 # They are deliberately separate from the accented imperative stems above.
-_SPANISH_DIRECT_OBJECT_INFINITIVES = frozenset({"recargar", "reconciliar", "indexar"})
+_SPANISH_DIRECT_OBJECT_INFINITIVES = frozenset(
+    {
+        "configurar",
+        "descartar",
+        "indexar",
+        "juntar",
+        "ofrecer",
+        "rastrear",
+        "recargar",
+        "reconciliar",
+        "reejecutar",
+        "sobrescribir",
+    }
+)
+# The observed gerund has a different stress pattern from an imperative.
+_SPANISH_DIRECT_OBJECT_GERUNDS = frozenset({"replicándo"})
+# Only these reviewed imperative stems additionally take an indirect object.
+_SPANISH_INDIRECT_OBJECT_IMPERATIVES = frozenset({"indíca", "quíta"})
 _SPANISH_DIRECT_OBJECT_CLITICS = ("lo", "la", "los", "las")
 
 
@@ -933,11 +970,14 @@ def _spanish_reviewed_imperative(word: str) -> bool:
     word = word[:1].lower() + word[1:]
     if word == "autentícate":
         return True
+    if any(word == stem + clitic for stem in _SPANISH_INDIRECT_OBJECT_IMPERATIVES for clitic in ("le", "les")):
+        return True
     return any(
         word.endswith(clitic)
         and (
             word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_IMPERATIVES
             or word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_INFINITIVES
+            or word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_GERUNDS
         )
         for clitic in _SPANISH_DIRECT_OBJECT_CLITICS
     )
