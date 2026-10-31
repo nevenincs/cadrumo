@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from types import SimpleNamespace
-from typing import cast
 from uuid import UUID
 
-from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...modelo.tests.m036_operation_support import PROFILE_ID, CommitFence, Events, Operands
 from ...operations.owner import OperationExecutorContext
+from ...tests.operation_host_fakes import executor_context
 from ..archive_operation_ports import (
     ArchiveLocalWriter,
     ArchiveProviderHandoff,
@@ -101,15 +99,11 @@ class Subject:
         return self.ports
 
     def context(self, definition_id: str) -> OperationExecutorContext:
-        return cast(
-            OperationExecutorContext,
-            SimpleNamespace(
-                identity=SimpleNamespace(
-                    definition_id=definition_id, subject_ref=profile_operation_subject(str(PROFILE_ID))
-                ),
-                authority_operation=self.operation,
-                cancellation=self.fence,
-                events=self.events,
-                operands=self.operands,
-            ),
+        return executor_context(
+            definition_id,
+            profile_id=str(PROFILE_ID),
+            operation=self.operation,
+            cancellation=self.fence,
+            events=self.events,
+            operands=self.operands,
         )

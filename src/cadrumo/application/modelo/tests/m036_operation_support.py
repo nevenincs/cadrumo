@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-from types import SimpleNamespace
-from typing import cast, override
+from typing import override
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -14,7 +13,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import DisclosurePermission
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -22,6 +21,7 @@ from ...operations.access_resolution import ResolvedOperationAccess
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
 from ...tests.access_authority_support import scoped_policy_decision
+from ...tests.operation_host_fakes import executor_context
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..m036_lifecycle import M036DeclarationAmbiguousError, M036DeclarationNotFoundError, M036DeclarationResult
 from ..m036_lifecycle_ports import M036LifecyclePorts
@@ -164,17 +164,13 @@ class Subject:
         return self.ports
 
     def context(self, definition_id: str) -> OperationExecutorContext:
-        return cast(
-            OperationExecutorContext,
-            SimpleNamespace(
-                identity=SimpleNamespace(
-                    definition_id=definition_id, subject_ref=profile_operation_subject(str(PROFILE_ID))
-                ),
-                authority_operation=self.operation,
-                cancellation=self.fence,
-                events=self.events,
-                operands=self.operands,
-            ),
+        return executor_context(
+            definition_id,
+            profile_id=str(PROFILE_ID),
+            operation=self.operation,
+            cancellation=self.fence,
+            events=self.events,
+            operands=self.operands,
         )
 
 

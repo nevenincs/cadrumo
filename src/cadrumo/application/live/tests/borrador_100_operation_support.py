@@ -8,7 +8,6 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from hashlib import sha256
-from types import SimpleNamespace
 from typing import cast, override
 from uuid import UUID
 
@@ -17,13 +16,14 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import DisclosurePermission
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
 from ...operations.access_resolution import ResolvedOperationAccess
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
 from ...tests.access_authority_support import scoped_policy_decision
+from ...tests.operation_host_fakes import executor_context
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..borrador_100 import Borrador100Snapshot
 from ..borrador_100_operation_ports import (
@@ -174,17 +174,13 @@ class Subject:
         return self.ports
 
     def context(self, definition_id: str) -> OperationExecutorContext:
-        return cast(
-            OperationExecutorContext,
-            SimpleNamespace(
-                identity=SimpleNamespace(
-                    definition_id=definition_id, subject_ref=profile_operation_subject(str(PROFILE_ID))
-                ),
-                authority_operation=self.operation,
-                cancellation=self.fence,
-                events=self.events,
-                operands=self.operands,
-            ),
+        return executor_context(
+            definition_id,
+            profile_id=str(PROFILE_ID),
+            operation=self.operation,
+            cancellation=self.fence,
+            events=self.events,
+            operands=self.operands,
         )
 
 
