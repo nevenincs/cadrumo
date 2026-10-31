@@ -153,7 +153,7 @@ Reference numbers to know:
 
 - the declaration reference, from `aeat app modelo work list`
 - the saved calculation reference, from `aeat app modelo work revisions`
-- the rules version reference, shown in status output (you rarely need this)
+- the rules version reference, shown in `status` output (you rarely need this)
 - a run reference, which only appears when a command was interrupted mid-way
 
 (how-verify-file-and-export-choose-a-revision)=

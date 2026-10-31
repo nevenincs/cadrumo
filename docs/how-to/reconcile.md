@@ -106,7 +106,7 @@ This check is local. It reads the PDF you supply and never contacts AEAT.
 
 Both routes report one of two verdicts:
 
-- **matches** - every compared field agrees with the local filing record.
+- **`matches`** - every compared field agrees with the local filing record.
 - **`mismatches`** - one or more fields differ. The report names each field and
   shows the local value next to the value found in the PDF.
 

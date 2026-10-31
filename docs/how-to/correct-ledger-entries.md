@@ -44,18 +44,18 @@ Each flag fully replaces that field - write the complete new value, not an addit
 
 An update gives the transaction a new ID - the update output prints it. You don't have to track the change for read commands: an ID you wrote down before the update still answers in `history`, `view`, and `track`, resolving to the corrected transaction, exactly as the `view` in the update sequence does. For a further mutation - another `update`, `classify`, or `archive` - use the current ID from the update output or from `list`, because those commands act on the live transaction.
 
-Update works on active transactions only. Archived and stashed transactions refuse it, as does a split parent - the active parts of a split can be updated normally.
+`update` works on active transactions only. Archived and stashed transactions refuse it, as does a split parent - the active parts of a split can be updated normally.
 
 (remove-a-transaction)=
 ## Remove a transaction
 
-Remove deletes a transaction from your active records. Preview it first with `--dry-run`, then remove it for real. The removed id no longer resolves, which is how the sequence confirms the deletion:
+`remove` deletes a transaction from your active records. Preview it first with `--dry-run`, then remove it for real. The removed id no longer resolves, which is how the sequence confirms the deletion:
 
 ```{cli-sequence} correct-remove-transaction
 :verify: Confirm the removed transaction no longer resolves.
 ```
 
-A removed transaction is gone from your active records: the final `view` refuses because the id no longer names an active row. Remove also refuses a row that a checked or presented calculation cites. Removing a transaction releases its links to catalogue invoices.
+A removed transaction is gone from your active records: the final `view` refuses because the id no longer names an active row. `remove` also refuses a row that a checked or presented calculation cites. Removing a transaction releases its links to catalogue invoices.
 
 (split-one-transaction-into-parts)=
 ## Split one transaction into parts
@@ -84,7 +84,7 @@ The parts and the original parent move to history, and the merge creates a fresh
 (stash-a-transaction-you-are-unsure-about)=
 ## Stash a transaction you are unsure about
 
-Stash sets a transaction aside for later. A stashed transaction is kept out of ordinary work. The sequence stashes a row and confirms its new lifecycle state:
+`stash` sets a transaction aside for later. A stashed transaction is kept out of ordinary work. The sequence stashes a row and confirms its new lifecycle state:
 
 ```{cli-sequence} correct-stash-transaction
 :verify: Confirm the transaction moved to the stashed state.
@@ -101,7 +101,7 @@ Use stash for a row you have not resolved yet and archive for a row you have del
 :verify: Confirm the excluded row stays active and carries the excluded state.
 ```
 
-Exclude works on active rows only, refuses a row that is already excluded, and refuses a row that a checked or presented calculation cites. To count the row again, classify it with `aeat app ledger classify`.
+`exclude` works on active rows only, refuses a row that is already excluded, and refuses a row that a checked or presented calculation cites. To count the row again, classify it with `aeat app ledger classify`.
 
 (archive-a-transaction)=
 ## Archive a transaction
@@ -112,12 +112,12 @@ Archive keeps a transaction in history but out of ordinary work - it's the right
 :verify: Confirm the duplicate moved to the archived state.
 ```
 
-Like stash, the command prints the transaction's fields but not its new lifecycle state, so `view` confirms the row now reads `ARCHIVED`.
+Like `stash`, the command prints the transaction's fields but not its new lifecycle state, so `view` confirms the row now reads `ARCHIVED`.
 
 (restore-a-stashed-or-archived-transaction)=
 ## Restore a stashed or archived transaction
 
-If you stashed or archived a transaction by mistake, restore it to active. Restore is the inverse of stash and archive: the row returns to your everyday lists and totals. The example starts with a stashed row and restores it:
+If you stashed or archived a transaction by mistake, restore it to active. `restore` is the inverse of `stash` and `archive`: the row returns to your everyday lists and totals. The example starts with a stashed row and restores it:
 
 ```{cli-sequence} correct-restore-transaction
 :verify: Confirm the restored transaction is active again.
@@ -125,7 +125,7 @@ If you stashed or archived a transaction by mistake, restore it to active. Resto
 
 Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, restore each one by id - you do not need to clear all your records. `list` does not have a stashed-only filter, so identify the stashed rows from the ids you stashed, or from each row's lifecycle state shown by `view`.
 
-Restore refuses a row that is already active, and it refuses a row whose period you have already filed - restoring it would change the inputs behind a return you have presented. Restore one of these only after you have corrected the filing through a correction.
+`restore` refuses a row that is already active, and it refuses a row whose period you have already filed - restoring it would change the inputs behind a return you have presented. Restore one of these only after you have corrected the filing through a correction.
 
 ## Review what changed
 
@@ -150,7 +150,7 @@ If your records are beyond repair - for example, after importing the wrong files
 :verify: Confirm the reset cleared the active records.
 ```
 
-Reset clears all your records for the active profile. Use the [transactions guide](import-bank-statements.md) to rebuild them from your statements.
+`reset` clears all your records for the active profile. Use the [transactions guide](import-bank-statements.md) to rebuild them from your statements.
 
 ## Where to get help
 

@@ -15,7 +15,7 @@ Protocol (MCP) executable is `cadrumo-mcp`.
 | Non-interactive conventions | Root and leaf help | [Automation reference](../cli/automation.rst) |
 
 The filing stages relate as `calculate` → `review` → `verify` → `export` →
-human filing → local record → reconcile. The stage names describe Cadrumo's
+human filing → local record → `reconcile`. The stage names describe Cadrumo's
 local workflow. Exact command definitions come from live `aeat ... --help`.
 Read [the workflow explanation](../explanation/index.md) for why the stages are
 separate and [the how-to guides](../how-to/index.md) for task sequences.

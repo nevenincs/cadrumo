@@ -288,7 +288,7 @@ msgid ""
 " modelo file."
 msgstr ""
 "[Gyorsindító](how-to/quickstart.md) - az üres profiltól az exportált "
-"modelofájlig."
+"nyomtatványfájlig."
 
 #: ../../workstation-setup.md:123
 msgid ""

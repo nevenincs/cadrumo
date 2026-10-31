@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-31 12:58+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -273,9 +273,9 @@ msgid "Both routes report one of two verdicts:"
 msgstr "Mindkét út két eredmény egyikét jelzi:"
 
 #: ../../how-to/reconcile.md:109
-msgid "**matches** - every compared field agrees with the local filing record."
+msgid "**`matches`** - every compared field agrees with the local filing record."
 msgstr ""
-"**matches** - minden összevetett mező egyezik a helyi benyújtási "
+"**`matches`** - minden összevetett mező egyezik a helyi benyújtási "
 "nyilvántartással."
 
 #: ../../how-to/reconcile.md:110

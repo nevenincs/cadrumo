@@ -341,7 +341,7 @@ tool tells you both things at the end of every interactive edit, so an edit
 never silently half-applies.
 
 Descendientes are not part of profile edit. Manage them with the
-[descendiente command](#manage-your-descendants). The edit summary
+[`descendiente` command](#manage-your-descendants). The edit summary
 reminds you of this every time.
 
 For a scripted change, pass `--quiet` with only the flags you want to change;
