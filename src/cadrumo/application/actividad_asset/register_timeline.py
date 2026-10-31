@@ -27,6 +27,8 @@ from .activity_asset_read_models import (
     ActivityAssetTimelineClaimUse,
     ActivityAssetTimelineEvent,
     ActivityAssetTimelineEventKind,
+    text_in_meaning,
+    timeline_change_kind,
     timeline_field_key,
     timeline_token_key,
 )
@@ -87,20 +89,16 @@ def _changes(
             field_key=timeline_field_key(name),
             before=old.get(name),
             after=new.get(name),
+            kind=timeline_change_kind(old.get(name), new.get(name)),
             before_key=timeline_token_key(name, old.get(name)),
             after_key=timeline_token_key(name, new.get(name)),
             before_label=_changed_value_label(name, old.get(name), old_names),
             after_label=_changed_value_label(name, new.get(name), new_names),
         )
         for name in sorted({*old, *new})
-        if _in_meaning(old.get(name)) != _in_meaning(new.get(name))
+        if text_in_meaning(old.get(name)) != text_in_meaning(new.get(name))
         and indexed_to_step_path(name) not in TIMELINE_INTERNAL_FIELDS
     )
-
-
-def _in_meaning(value: str | None) -> str | None:
-    """Read a text fact as it means: a blank text states nothing, as an absent one does."""
-    return None if value is None or not value.strip() else value
 
 
 def _class_names_reader(context: RegisterReadContext) -> ClassNames:
@@ -242,6 +240,7 @@ def _timeline_claim_changes(
             field_key=timeline_field_key(CLAIM_AMOUNT_PATH),
             before=None if replaced is None else str(replaced.amount),
             after=str(claim.amount),
+            kind=timeline_change_kind(None if replaced is None else str(replaced.amount), str(claim.amount)),
         ),
     )
 

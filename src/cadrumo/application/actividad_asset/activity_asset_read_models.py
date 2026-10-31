@@ -410,6 +410,28 @@ class ActivityAssetElectionLimits(_ReadModel):
     unavailable_reason_facts: tuple[ActivityAssetReasonFact, ...] = ()
 
 
+class ActivityAssetTimelineChangeKind(StrEnum):
+    """What a record did to one field: gave it a first value, replaced its value, or took the value away."""
+
+    ADDED = "added"
+    CHANGED = "changed"
+    REMOVED = "removed"
+
+
+def text_in_meaning(value: str | None) -> str | None:
+    """Read a text fact as it means: a blank text states nothing, as an absent one does."""
+    return None if value is None or not value.strip() else value
+
+
+def timeline_change_kind(before: str | None, after: str | None) -> ActivityAssetTimelineChangeKind:
+    """Say what a change did from the values on its two sides, a blank side counting as no value."""
+    if text_in_meaning(before) is None:
+        return ActivityAssetTimelineChangeKind.ADDED
+    if text_in_meaning(after) is None:
+        return ActivityAssetTimelineChangeKind.REMOVED
+    return ActivityAssetTimelineChangeKind.CHANGED
+
+
 class ActivityAssetTimelineChange(_ReadModel):
     """One field a record changed, as display text."""
 
@@ -428,6 +450,15 @@ class ActivityAssetTimelineChange(_ReadModel):
     A share reads as a percentage and a class as the official name of its table class.  A class
     the pinned authority does not name has no label, and its key shows.
     """
+
+    kind: ActivityAssetTimelineChangeKind
+    """Whether the record added the value, replaced it or removed it, read from ``before`` and ``after``."""
+
+    @model_validator(mode="after")
+    def _kind_follows_the_values(self) -> Self:
+        if self.kind is not timeline_change_kind(self.before, self.after):
+            raise ValueError("a change's kind follows from its before and after values")
+        return self
 
 
 class ActivityAssetTimelineClaimUse(_ReadModel):
@@ -710,6 +741,7 @@ __all__ = [
     "ActivityAssetStageFactValue",
     "ActivityAssetTableGroup",
     "ActivityAssetTimelineChange",
+    "ActivityAssetTimelineChangeKind",
     "ActivityAssetTimelineClaimUse",
     "ActivityAssetTimelineEvent",
     "ActivityAssetTimelineEventKind",
@@ -718,6 +750,8 @@ __all__ = [
     "reason_fact_kind",
     "reason_fact_text",
     "remedy_field_key",
+    "text_in_meaning",
+    "timeline_change_kind",
     "timeline_field_key",
     "timeline_field_word_key",
     "timeline_token_key",
