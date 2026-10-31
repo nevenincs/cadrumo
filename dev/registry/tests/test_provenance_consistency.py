@@ -13,15 +13,10 @@ from datetime import date
 
 import pytest
 
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY, CasillaDataType
+from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY
 from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportFieldDefinition,
     ExportLayoutDefinition,
-    ExportRecordDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
@@ -29,52 +24,29 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 
 from ..analysis.provenance_consistency import provenance_findings
 from ..compiler.authority import compiled_bundled_authority
+from .single_casilla_export_layout_support import (
+    CASILLA_01,
+    LEGAL_REF,
+    SOURCE_REF,
+    single_casilla_export_layout,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_LEGAL_REF = "ley-35-2006:art-test"
 _EXTRA_LEGAL_REF = "ley-37-1992:art-extra"
-_SOURCE_REF = "aeat-test-source-001"
 _EXTRA_SOURCE_REF = "aeat-test-source-002"
-_CASILLA_01 = validated_casilla_id("01", surface="_CASILLA_01")
 
 
 def _casilla(*, legal_refs: tuple[str, ...]) -> CasillaDefinition:
     return CasillaDefinition(
-        id=_CASILLA_01,
+        id=CASILLA_01,
         number="01",
         localization_keys=("test.schema.casilla.label",),
         section=("totales",),
         input_kind=InputKind.MANUAL,
         legal_refs=legal_refs,
-        source_refs=(_SOURCE_REF,),
+        source_refs=(SOURCE_REF,),
     )
-
-
-def _layout(*, field_source_refs: tuple[str, ...]) -> ExportLayoutDefinition:
-    field = ExportFieldDefinition(
-        id="importe",
-        offset=1,
-        length=10,
-        kind=CasillaFieldKind.CASILLA,
-        casilla_id=_CASILLA_01,
-        data_type=CasillaDataType.MONEY,
-        required=False,
-        padding="left_zero",
-        justification="right",
-        signed=False,
-        legal_refs=(_LEGAL_REF,),
-        source_refs=field_source_refs,
-    )
-    record = ExportRecordDefinition(
-        id="declaracion",
-        record_type="declaracion",
-        order=1,
-        encoding=ExportEncoding.ASCII,
-        line_ending="none",
-        fields=(field,),
-    )
-    return ExportLayoutDefinition(id="layout", legal_refs=(_LEGAL_REF,), source_refs=(_SOURCE_REF,), records=(record,))
 
 
 def _revision(
@@ -85,8 +57,8 @@ def _revision(
         localization_key="test.schema.revision.test-revision.label",
         valid_from=date(2026, 1, 1),
         period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
+        legal_refs=(LEGAL_REF,),
+        source_refs=(SOURCE_REF,),
         casillas=casillas,
         export_layouts=layouts,
     )
@@ -94,25 +66,26 @@ def _revision(
 
 def test_child_inside_manifest_is_clean() -> None:
     revision = _revision(
-        casillas=(_casilla(legal_refs=(_LEGAL_REF,)),), layouts=(_layout(field_source_refs=(_SOURCE_REF,)),)
+        casillas=(_casilla(legal_refs=(LEGAL_REF,)),),
+        layouts=(single_casilla_export_layout(field_source_refs=(SOURCE_REF,)),),
     )
 
     assert provenance_findings(revision, modelo_id="000") == ()
 
 
 def test_casilla_citing_outside_legal_ref_is_reported_with_the_ref() -> None:
-    revision = _revision(casillas=(_casilla(legal_refs=(_LEGAL_REF, _EXTRA_LEGAL_REF)),), layouts=())
+    revision = _revision(casillas=(_casilla(legal_refs=(LEGAL_REF, _EXTRA_LEGAL_REF)),), layouts=())
 
     (finding,) = provenance_findings(revision, modelo_id="000")
 
-    assert (finding.child_kind, finding.child_id, finding.ref_kind) == ("casillas", str(_CASILLA_01), "legal")
+    assert (finding.child_kind, finding.child_id, finding.ref_kind) == ("casillas", str(CASILLA_01), "legal")
     assert finding.outside == (_EXTRA_LEGAL_REF,)
 
 
 def test_resolved_export_field_citing_outside_source_is_reported() -> None:
     revision = _revision(
-        casillas=(_casilla(legal_refs=(_LEGAL_REF,)),),
-        layouts=(_layout(field_source_refs=(_SOURCE_REF, _EXTRA_SOURCE_REF)),),
+        casillas=(_casilla(legal_refs=(LEGAL_REF,)),),
+        layouts=(single_casilla_export_layout(field_source_refs=(SOURCE_REF, _EXTRA_SOURCE_REF)),),
     )
 
     (finding,) = provenance_findings(revision, modelo_id="000")

@@ -13,51 +13,20 @@ from datetime import date
 
 import pytest
 
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportFieldDefinition,
     ExportLayoutDefinition,
-    ExportRecordDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from ..analysis.grade_earned import grade_findings
+from .single_casilla_export_layout_support import (
+    LEGAL_REF,
+    SOURCE_REF,
+    single_casilla_export_layout,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_LEGAL_REF = "ley-35-2006:art-test"
-_SOURCE_REF = "aeat-test-source-001"
-_CASILLA_01 = validated_casilla_id("01", surface="_CASILLA_01")
-
-
-def _layout() -> ExportLayoutDefinition:
-    field = ExportFieldDefinition(
-        id="importe",
-        offset=1,
-        length=10,
-        kind=CasillaFieldKind.CASILLA,
-        casilla_id=_CASILLA_01,
-        data_type=CasillaDataType.MONEY,
-        required=False,
-        padding="left_zero",
-        justification="right",
-        signed=False,
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
-    )
-    record = ExportRecordDefinition(
-        id="declaracion",
-        record_type="declaracion",
-        order=1,
-        encoding=ExportEncoding.ASCII,
-        line_ending="none",
-        fields=(field,),
-    )
-    return ExportLayoutDefinition(id="layout", legal_refs=(_LEGAL_REF,), source_refs=(_SOURCE_REF,), records=(record,))
 
 
 def _revision(*, grade: str, layouts: tuple[ExportLayoutDefinition, ...]) -> ModeloRevision:
@@ -66,8 +35,8 @@ def _revision(*, grade: str, layouts: tuple[ExportLayoutDefinition, ...]) -> Mod
         localization_key="test.schema.revision.test-revision.label",
         valid_from=date(2026, 1, 1),
         period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
+        legal_refs=(LEGAL_REF,),
+        source_refs=(SOURCE_REF,),
         authority_grade=grade,
         export_layouts=layouts,
     )
@@ -84,13 +53,15 @@ def test_filing_grade_without_prerequisites_is_under_supported_on_each() -> None
 
 
 def test_filing_grade_with_layout_is_under_supported_only_on_the_manifest() -> None:
-    findings = grade_findings(_revision(grade="filing", layouts=(_layout(),)), modelo_id="000")
+    findings = grade_findings(_revision(grade="filing", layouts=(single_casilla_export_layout(),)), modelo_id="000")
 
     assert [(f.kind, f.prerequisite) for f in findings] == [("under_supported", "completeness_manifest")]
 
 
 def test_applicability_grade_carrying_a_layout_is_under_declared() -> None:
-    findings = grade_findings(_revision(grade="applicability", layouts=(_layout(),)), modelo_id="000")
+    findings = grade_findings(
+        _revision(grade="applicability", layouts=(single_casilla_export_layout(),)), modelo_id="000"
+    )
 
     assert [(f.kind, f.prerequisite) for f in findings] == [("under_declared", "export_layout")]
 
