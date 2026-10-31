@@ -1,0 +1,137 @@
+"""Ordinary profile text exports through the real CLI, and text the XSD cannot hold refuses by its box.
+
+An operator types names in mixed case with accents, while the official schema spells
+its alphabet in capitals. This module drives calculate, verify and export through the
+real CLI against the real registry, so nothing here stands in for the export route.
+The name's alphabet is read from the bundled XSD, never from the code under test.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Iterator
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+from defusedxml import ElementTree as DefusedElementTree
+
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
+from cadrumo.tests.cli_envelope import require_schema_envelope
+
+from .cli_runner import invoke_cached_cli
+from .runtime_profile_backend import runtime_cli_profile
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+_LABEL = "Modelo 100 text export limits test profile"
+_FILING_YEAR = 2025
+_PERIOD = "0A"
+_XSD = "{http://www.w3.org/2001/XMLSchema}"
+_XSD_FILE = "03-100-esquema-xsd-ejercicio-2025-actualizado-24-06-2026-793-kb-ejecutable.xsd"
+_NAME_PATH = "./DatosIdentificativos/Declarante/DP_APENOM_D"
+_CALCULATE_FLAGS: tuple[str, ...] = (
+    "--casilla",
+    "0003=24000",
+    "--binding",
+    "renta-certificado-trabajo-retenciones=2400",
+    "--binding",
+    "renta-base-liquidable-negativa-general-anterior=0",
+)
+
+
+@pytest.fixture
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with runtime_cli_profile(tmp_path=tmp_path, label=_LABEL) as profile:
+        yield profile
+
+
+def _seed(runtime_profile: TestRuntimeProfile, *, name: str, surnames: str) -> None:
+    record = create_user_profile_record(
+        profile_id=runtime_profile.bucket_id,
+        setup_state=ProfileSetupState.COMPLETE,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value=name),
+            UserProfileFact(path="identity.surnames", value=surnames),
+            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="activities.description", value="salaried employment"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
+            UserProfileFact(path="renta_taxpayer.sex", value="M"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value=Decimal("4")),
+            UserProfileFact(path="renta_filing.declaration_type", value=Decimal("1")),
+        ),
+        context=profile_creation_context_for_test(),
+    )
+    seed_test_profile_record(record, root=runtime_profile.storage_root, label=_LABEL)
+
+
+def _name_pattern() -> str:
+    path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files", _XSD_FILE)
+    root = DefusedElementTree.parse(Path(path)).getroot()
+    assert root is not None
+    for simple_type in root.iter(f"{_XSD}simpleType"):
+        if simple_type.get("name") == "tipo_ApeNom":
+            facet = simple_type.find(f"{_XSD}restriction/{_XSD}pattern")
+            assert facet is not None
+            return str(facet.get("value"))
+    pytest.fail("the bundled XSD declares no tipo_ApeNom")
+
+
+def _verified_work_unit() -> str:
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(_FILING_YEAR)
+    )
+    calculated = invoke_cached_cli(
+        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_CALCULATE_FLAGS]
+    )
+    assert calculated.exit_code == 0, calculated.output
+    revision_id = require_schema_envelope(calculated.output)["calculation_revision_id"]
+    verified = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "verify", revision_id])
+    assert verified.exit_code == 0, verified.output
+    return work_unit_id
+
+
+def test_a_mixed_case_accented_name_exports_in_capitals(runtime_profile: TestRuntimeProfile, tmp_path: Path) -> None:
+    _seed(runtime_profile, name="José María", surnames="Pérez Núñez")
+    output = tmp_path / "modelo-100.xml"
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "modelo", "export", _verified_work_unit(), "--output", str(output)]
+    )
+
+    assert result.exit_code == 0, result.output
+    root = DefusedElementTree.fromstring(output.read_bytes())
+    assert root.findtext(_NAME_PATH) == "PÉREZ NÚÑEZ JOSÉ MARÍA"
+
+
+def test_a_name_no_case_can_make_valid_refuses_naming_it_and_writes_nothing(
+    runtime_profile: TestRuntimeProfile, tmp_path: Path
+) -> None:
+    surnames = "Pérez Gil 5"
+    assert re.fullmatch(_name_pattern(), f"{surnames} ANA".upper()) is None
+    _seed(runtime_profile, name="Ana", surnames=surnames)
+    output = tmp_path / "modelo-100.xml"
+
+    result = invoke_cached_cli(["app", "modelo", "export", _verified_work_unit(), "--output", str(output)])
+
+    assert result.exit_code != 0
+    assert "DP_APENOM_D" in result.output
+    assert "application.filing" not in result.output
+    assert surnames not in result.output
+    assert surnames.upper() not in result.output
+    assert not output.exists()
