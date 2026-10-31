@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Literal, cast
+from typing import cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -13,6 +13,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.text_bounds import CalendarMonth, is_calendar_month, is_canonical_month_set
 from ...core.time.clock import today_madrid
+from ..calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ..calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_adoption_token,
     descendant_relacion_default_token,
@@ -37,7 +38,7 @@ class DescendantRecordFields(BaseModel):
     inscripcion_registro_civil_date: date | None = None
     acogimiento_resolucion_date: date | None = None
     death_date: date | None = None
-    discapacidad_grado: Literal[0, 33, 65] | None = None
+    discapacidad_grado: int | None = None
     convive_con_contribuyente: bool = True
     dependencia_economica: bool | None = None
     custodia_compartida: bool = False
@@ -93,7 +94,7 @@ class DescendantRecordBase(DescendantRecordFields):
         in total, not six. A temporal placement is not entitling and therefore
         has no truthful value for this field.
     discapacidad_grado
-        0 = sin discapacidad, 33 = grado ≥ 33 % < 65 %, 65 = grado ≥ 65 %.
+        One of the grades the governed descendant disability catalogue accepts.
         A disabled descendant remains mínimo-eligible regardless of age.
     convive_con_contribuyente
         Whether the descendant cohabits with the taxpayer (Art. 58.1 condition).
@@ -371,6 +372,14 @@ class DescendantRecordBase(DescendantRecordFields):
         self._refuse_out_of_range_entry_dates()
         self._refuse_incoherent_entry_dates()
         return self
+
+    @field_validator("discapacidad_grado")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_governed_disability_grade(cls, value: int | None) -> int | None:
+        if value is not None and value not in accepted_descendant_disability_grades():
+            raise ValueError("discapacidad_grado must be a grade the governed catalogue accepts")
+        return value
 
     @field_validator("meses_madre_trabajo")
     @classmethod

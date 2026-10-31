@@ -2,7 +2,7 @@
 
 The schema declared ``renta_taxpayer.sex`` and ``renta_spouse.sex`` as
 ``["1", "2"]`` while every writer and reader used ``H`` / ``M``: the
-wizard emitted ``RentaSexCode.HOMBRE.value`` and the setup parser coerced
+wizard emitted ``RentaSexCode.HOMBRE`` and the setup parser coerced
 through ``RentaSexCode(value)``, which would have raised on ``"1"``. A
 writer satisfying one authority violated the other, and nothing caught it
 because a schema ``enum_values`` list is not enforced at write time.

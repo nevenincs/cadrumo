@@ -29,13 +29,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.situacion_familiar_catalogue import (
     require_situacion_familiar,
     situacion_familiar_monoparental_required,
 )
-from ...domain.contribuyente.renta_codes import SituacionFamiliar
+from ...domain.contribuyente.renta_codes import RentaDeclaracionType, SituacionFamiliar
 from ..flows.definition import FlowDefinition, FlowSection
 from ..flows.validators import ValidationVerdict, register_cross_field_validator
 from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
@@ -88,7 +87,7 @@ def validate_unidad_familiar_conjunta(answers: Mapping[str, str]) -> tuple[Valid
     axis later requires widening this predicate and the registry signal
     together, not relaxing this gate alone.
     """
-    if answers.get(_TAXATION_TYPE_PAGE, "") != RentaDeclaracionType.JOINT.value:
+    if answers.get(_TAXATION_TYPE_PAGE, "") != RentaDeclaracionType.JOINT.code:
         return (ValidationVerdict.passed(),)
     situacion = _parse_situacion(answers.get(_SITUACION_FAMILIAR_PAGE, ""))
     if situacion is None or not situacion_familiar_monoparental_required(situacion):

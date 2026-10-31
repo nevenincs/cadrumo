@@ -403,8 +403,6 @@ def _wizard_option(field_key: str) -> OptionSpec:
         )
     if field_key in _WIZARD_CHECKBOX_FIELDS:
         return _option(name, (f"--{field_key}",), TEXT_VALUE, help_key, default=(), multiple=True)
-    if field_key == "taxpayer-marital-status":
-        return replace(_option(name, (f"--{field_key}",), TEXT_VALUE, help_key), metavar="<1|2|3|4|5>")
     if field_key == "situacion-familiar":
         return replace(
             _option(name, (f"--{field_key}",), TEXT_VALUE, help_key),

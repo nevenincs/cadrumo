@@ -47,10 +47,10 @@ number can never be substituted for the law's.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Final, Literal, TypedDict, TypeIs
+from typing import Final, TypedDict
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
@@ -60,16 +60,14 @@ from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.text_bounds import is_calendar_month
-from ...core.time.clock import today_madrid
+from ..calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ..calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_default_token,
     descendant_relacion_tokens,
     require_descendant_relacion,
 )
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
-from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.tax_id_format import runtime_tax_id_format
 from .descendant import DescendantInfo
 from .family_types import GuarderiaMonthSpend
@@ -91,7 +89,6 @@ _RENTAS_GRAMMAR_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_
 
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
 _COUNT_PATH = "renta_family.descendientes_count"
-_DISABILITY_BAND_FACT_ID = "lirpf-descendant-disability-grade-catalogue"
 
 _DESCENDIENTE_FLAG_KEYS = frozenset(
     {
@@ -144,57 +141,14 @@ familiar at all.
 """
 
 
-def _disability_band_declarations(*, authority: GovernedFactSource | None = None) -> Mapping[str, str]:
-    """Resolve descendant disability-grade vocabulary from the dated registry fact."""
-    authority = require_governed_fact_authority(authority, subject="descendant facts")
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_DISABILITY_BAND_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("descendant disability catalogue must resolve as a mapping fact")
-    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
-
-
-type _DisabilityGrade = Literal[0, 33, 65]
-
-_DISABILITY_GRADES: Final[frozenset[_DisabilityGrade]] = frozenset({0, 33, 65})
-
-
-def _is_disability_grade(value: int) -> TypeIs[_DisabilityGrade]:
-    """Narrow a declared integer to the three statutory disability bands."""
-    return value in _DISABILITY_GRADES
-
-
-def _accepted_disability_grades(*, authority: GovernedFactSource | None = None) -> frozenset[_DisabilityGrade]:
-    declarations = _disability_band_declarations(authority=authority)
-    try:
-        accepted = declarations["accepted_grades"]
-    except KeyError as exc:
-        raise RegistryValidationError("descendant disability catalogue is missing accepted_grades") from exc
-    try:
-        parsed = frozenset(int(token.strip()) for token in accepted.split(",") if token.strip())
-    except ValueError as exc:
-        raise RegistryValidationError("descendant disability catalogue has invalid accepted_grades") from exc
-    if not parsed.issubset(_DISABILITY_GRADES):
-        raise RegistryValidationError("descendant disability catalogue declares unsupported accepted_grades")
-    return frozenset(grade for grade in parsed if _is_disability_grade(grade))
-
-
 def _discapacidad_grade(
     value: int | None,
     *,
     authority: GovernedFactSource | None = None,
-) -> _DisabilityGrade | None:
-    if value is None:
+) -> int | None:
+    if value is None or value not in accepted_descendant_disability_grades(authority=authority):
         return None
-    for accepted_grade in _accepted_disability_grades(authority=authority):
-        if value == accepted_grade:
-            return accepted_grade
-    return None
+    return value
 
 
 def descendant_facts_from_list(
@@ -335,7 +289,7 @@ class _CivilFields(TypedDict):
     inscripcion_registro_civil_date: date | None
     acogimiento_resolucion_date: date | None
     death_date: date | None
-    discapacidad_grado: _DisabilityGrade | None
+    discapacidad_grado: int | None
 
 
 class _FamilyFields(TypedDict):
@@ -483,7 +437,7 @@ def _stored_civil_fields(
     fallecimiento_raw = row.get("fallecimiento")
     discapacidad_raw = row.get("discapacidad")
     disc_val = int(discapacidad_raw) if discapacidad_raw is not None else None
-    if disc_val is not None and disc_val not in _accepted_disability_grades(authority=authority):
+    if disc_val is not None and disc_val not in accepted_descendant_disability_grades(authority=authority):
         raise ProfileAnswerTypeError(f"DISCAPACIDAD carries an unsupported governed grade: {disc_val!r}")
     return {
         "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw)
@@ -904,7 +858,9 @@ def _flag_civil_fields(
     fallecimiento_raw = parts.get("FALLECIMIENTO")
     disc_raw = parts.get("DISCAPACIDAD")
     discapacidad_grado = _flag_integer(disc_raw, key="DISCAPACIDAD") if disc_raw is not None else None
-    if discapacidad_grado is not None and discapacidad_grado not in _accepted_disability_grades(authority=authority):
+    if discapacidad_grado is not None and discapacidad_grado not in accepted_descendant_disability_grades(
+        authority=authority
+    ):
         raise ProfileAnswerTypeError(
             f"DISCAPACIDAD carries an unsupported governed grade: {discapacidad_grado!r}",
             context={"key": "DISCAPACIDAD"},

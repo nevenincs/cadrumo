@@ -33,7 +33,7 @@ from .....core.modelo import Modelo
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
-from .....domain.contribuyente.renta_codes import RentaMaritalStatus
+from .....domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus
 from .....domain.user_profile.values import UserProfileFact
 from ...storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from .advisory_profile_bucket_fixture import (
@@ -56,6 +56,7 @@ _KIND = "minimo_descendientes_prorrata_inferred"
 _CLAIMED = {_ESTATAL_CASILLA: Decimal("1200")}
 _NOTHING_CLAIMED = {_ESTATAL_CASILLA: Decimal("0")}
 
+
 #: The signals that make the engine INFER a second entitled contribuyente: a
 #: partnered filer declaring individually. Exactly the ordinary two-parent
 #: household the derivation exists to correct.
@@ -64,10 +65,11 @@ _NOTHING_CLAIMED = {_ESTATAL_CASILLA: Decimal("0")}
 #: because the profile schema constrains marital_status to the numeric enum --
 #: so a code is what a real profile can hold, and these facts go through the
 #: real write path.
-_INFERRED_SECOND_FILER = {
-    "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
-    "renta_filing.declaration_type": "1",
-}
+def _inferred_second_filer() -> dict[str, str]:
+    return {
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
+        "renta_filing.declaration_type": RentaDeclaracionType.INDIVIDUAL.code,
+    }
 
 
 @pytest.fixture
@@ -86,7 +88,7 @@ def _write(*descendants: DescendantInfo, **profile_facts: str) -> None:
 
 
 def _write_household(*descendants: DescendantInfo, signals: dict[str, str] | None = None) -> None:
-    _write(*descendants, **(_INFERRED_SECOND_FILER if signals is None else signals))
+    _write(*descendants, **(_inferred_second_filer() if signals is None else signals))
 
 
 def _collect(
@@ -187,7 +189,7 @@ def test_silent_when_no_second_filer_is_indicated() -> None:
     _write_household(
         _child(),
         signals={
-            "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
+            "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.code,
             "renta_filing.declaration_type": "1",
         },
     )
@@ -199,7 +201,7 @@ def test_silent_for_a_married_conjunta_return() -> None:
     _write_household(
         _child(),
         signals={
-            "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+            "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
             "renta_filing.declaration_type": "2",
         },
     )
@@ -241,11 +243,11 @@ def test_the_conjunta_branch_is_pinned_on_the_codes_the_schema_can_store() -> No
     from .....application.modelo.profile_derived_facts import second_entitled_filer_indicated
 
     unmarried = {
-        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.code,
         "renta_filing.declaration_type": "2",
     }
     married = {
-        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
         "renta_filing.declaration_type": "2",
     }
     # Art. 82.1.2a: no marriage bond, so the unit is one progenitor plus the

@@ -2078,7 +2078,6 @@
         "cadrumo.core.register_scoping_signal",
         "cadrumo.core.registry_token",
         "cadrumo.core.remote_authority",
-        "cadrumo.core.renta_declaracion_type",
         "cadrumo.core.repository_id",
         "cadrumo.core.request_faults",
         "cadrumo.core.requirement",

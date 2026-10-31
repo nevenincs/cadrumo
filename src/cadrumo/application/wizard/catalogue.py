@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING, Final, Protocol
 
 from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n.translatable import Translatable as tr
-from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...domain.contribuyente.renta_codes import (
+    RentaDeclaracionType,
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
@@ -234,38 +234,45 @@ def _build_profile_and_personal_choices(
         _localized_choice(language, f"wizard.setup.profile.output-language.choices.{language}.label")
         for language in SUPPORTED_OUTPUT_LANGUAGES
     )
+    declaration_type_codes = RentaDeclaracionType.form_codes(authority=operation)
+    sex_codes = RentaSexCode.form_codes(authority=operation)
+    marital_status_codes = RentaMaritalStatus.form_codes(authority=operation)
+    disability_grade_codes = RentaDisabilityGrade.form_codes(authority=operation)
     wizard_declaration_type_choices = (
         _localized_choice(
-            RentaDeclaracionType.INDIVIDUAL.value,
+            declaration_type_codes[RentaDeclaracionType.INDIVIDUAL],
             "wizard.setup.profile.taxation-type.choices.individual.label",
             "wizard.setup.profile.taxation-type.choices.individual.description",
         ),
         _localized_choice(
-            RentaDeclaracionType.JOINT.value,
+            declaration_type_codes[RentaDeclaracionType.JOINT],
             "wizard.setup.profile.taxation-type.choices.joint.label",
             "wizard.setup.profile.taxation-type.choices.joint.description",
         ),
     )
     wizard_sex_choices = (
-        _localized_choice(RentaSexCode.HOMBRE.value, "wizard.setup.codes.sex.choices.h.label"),
-        _localized_choice(RentaSexCode.MUJER.value, "wizard.setup.codes.sex.choices.m.label"),
+        _localized_choice(sex_codes[RentaSexCode.HOMBRE], "wizard.setup.codes.sex.choices.h.label"),
+        _localized_choice(sex_codes[RentaSexCode.MUJER], "wizard.setup.codes.sex.choices.m.label"),
     )
     wizard_marital_status_choices = (
         _localized_choice(
-            RentaMaritalStatus.SOLTERO.value, "wizard.setup.taxpayer.taxpayer-marital-status.choices.soltero.label"
+            marital_status_codes[RentaMaritalStatus.SOLTERO],
+            "wizard.setup.taxpayer.taxpayer-marital-status.choices.soltero.label",
         ),
         _localized_choice(
-            RentaMaritalStatus.CASADO.value, "wizard.setup.taxpayer.taxpayer-marital-status.choices.casado.label"
+            marital_status_codes[RentaMaritalStatus.CASADO],
+            "wizard.setup.taxpayer.taxpayer-marital-status.choices.casado.label",
         ),
         _localized_choice(
-            RentaMaritalStatus.VIUDO.value, "wizard.setup.taxpayer.taxpayer-marital-status.choices.viudo.label"
+            marital_status_codes[RentaMaritalStatus.VIUDO],
+            "wizard.setup.taxpayer.taxpayer-marital-status.choices.viudo.label",
         ),
         _localized_choice(
-            RentaMaritalStatus.SEPARADO_DIVORCIADO.value,
+            marital_status_codes[RentaMaritalStatus.SEPARADO_DIVORCIADO],
             "wizard.setup.taxpayer.taxpayer-marital-status.choices.separado-divorciado.label",
         ),
         _localized_choice(
-            RentaMaritalStatus.PAREJA_HECHO.value,
+            marital_status_codes[RentaMaritalStatus.PAREJA_HECHO],
             "wizard.setup.taxpayer.taxpayer-marital-status.choices.pareja-hecho.label",
         ),
     )
@@ -279,22 +286,22 @@ def _build_profile_and_personal_choices(
     )
     wizard_disability_grade_choices = (
         _localized_choice(
-            RentaDisabilityGrade.GE_33_LT_65.value,
+            disability_grade_codes[RentaDisabilityGrade.GE_33_LT_65],
             "wizard.setup.codes.disability-grade.choices.33-64.label",
             "wizard.setup.codes.disability-grade.choices.33-64.description",
         ),
         _localized_choice(
-            RentaDisabilityGrade.GE_65.value,
+            disability_grade_codes[RentaDisabilityGrade.GE_65],
             "wizard.setup.codes.disability-grade.choices.65-plus.label",
             "wizard.setup.codes.disability-grade.choices.65-plus.description",
         ),
         _localized_choice(
-            RentaDisabilityGrade.JUDICIAL_INCAPACITY.value,
+            disability_grade_codes[RentaDisabilityGrade.JUDICIAL_INCAPACITY],
             "wizard.setup.codes.disability-grade.choices.judicial-incapacity.label",
             "wizard.setup.codes.disability-grade.choices.judicial-incapacity.description",
         ),
         _localized_choice(
-            RentaDisabilityGrade.ASSISTANCE_OR_REDUCED_MOBILITY.value,
+            disability_grade_codes[RentaDisabilityGrade.ASSISTANCE_OR_REDUCED_MOBILITY],
             "wizard.setup.codes.disability-grade.choices.assistance-or-reduced-mobility.label",
             "wizard.setup.codes.disability-grade.choices.assistance-or-reduced-mobility.description",
         ),
@@ -385,8 +392,17 @@ def _entity_token_readers(
     return entity_type_attribution_entity_token, entity_type_legal_entity_token, entity_type_natural_person_token
 
 
-def _family_visibility() -> tuple[WizardCondition, WizardCondition, WizardCondition, WizardCondition]:
-    _joint_declaration = WizardCondition(question_id="taxation-type", equals="2")
+def _family_visibility(
+    operation: PinnedAuthorityOperation,
+) -> tuple[WizardCondition, WizardCondition, WizardCondition, WizardCondition, WizardCondition]:
+    _joint_declaration = WizardCondition(
+        question_id="taxation-type",
+        equals=RentaDeclaracionType.form_codes(authority=operation)[RentaDeclaracionType.JOINT],
+    )
+    _married = WizardCondition(
+        question_id="taxpayer-marital-status",
+        equals=RentaMaritalStatus.form_codes(authority=operation)[RentaMaritalStatus.CASADO],
+    )
     _premio_loteria_declared = WizardCondition(
         question_id="premio-loteria-gravamen-especial-sin-retencion",
         equals="true",
@@ -394,7 +410,7 @@ def _family_visibility() -> tuple[WizardCondition, WizardCondition, WizardCondit
     _non_resident_irpf = WizardCondition(question_id="spouse-non-resident-irpf", equals="true")
     _eu_eea_resident = WizardCondition(question_id="spouse-eu-eea-resident", equals="true")
 
-    return _joint_declaration, _premio_loteria_declared, _non_resident_irpf, _eu_eea_resident
+    return _joint_declaration, _married, _premio_loteria_declared, _non_resident_irpf, _eu_eea_resident
 
 
 def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
@@ -427,7 +443,9 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     )
     _natural_person = WizardCondition(question_id="entity-type", equals=entity_type_natural_person_token().value)
 
-    _joint_declaration, _premio_loteria_declared, _non_resident_irpf, _eu_eea_resident = _family_visibility()
+    _joint_declaration, _married, _premio_loteria_declared, _non_resident_irpf, _eu_eea_resident = _family_visibility(
+        operation
+    )
 
     _iva_regime_tokens = iva_regime_choices()
     _default_iva_regime_value: str = default_iva_regime().value
@@ -510,6 +528,7 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     _familia_section = build_family_section(
         _eu_eea_resident,
         _joint_declaration,
+        _married,
         _natural_person,
         _non_resident_irpf,
         wizard_declaration_type_choices,
