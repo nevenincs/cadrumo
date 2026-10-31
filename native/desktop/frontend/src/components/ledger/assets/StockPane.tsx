@@ -63,6 +63,7 @@ import {
   BOOK_FIELDS,
   bookListed,
   bookName,
+  bookNameOptions,
   bookRequest,
   bookTouched,
   changeLanded,
@@ -329,6 +330,7 @@ function StockEntry({
       ) : (
         <TextEditor
           {...editor}
+          {...field.offers}
           maxLength={field.max ?? (field.key === "description" ? 1024 : 120)}
         />
       )}
@@ -653,12 +655,15 @@ function Section({
 function BookForm({
   port,
   year,
+  books,
   catalogue,
   onClose,
   onWritten,
 }: {
   port: LedgerPort;
   year: number;
+  /** The books held, in every year; null while unread or where it failed. */
+  books: readonly InventoryBookRow[] | null;
   catalogue: OfferState;
   onClose(): void;
   onWritten(): void;
@@ -704,7 +709,14 @@ function BookForm({
       >
         <OffersNote state={catalogue.state} />
         <StockFields
-          fields={BOOK_FIELDS}
+          fields={BOOK_FIELDS.map((field) =>
+            field.key === "name" && books !== null
+              ? {
+                  ...field,
+                  offers: { suggestions: bookNameOptions(books, year) },
+                }
+              : field,
+          )}
           valueOf={(field) => draft[field.key as keyof BookDraft]}
           onValue={(field, value) =>
             setDraft((current) => ({ ...current, [field.key]: value }))
@@ -2335,6 +2347,7 @@ export function StockPane({
           key={`book|${year}`}
           port={port}
           year={year}
+          books={list?.kind === "done" ? listed : null}
           catalogue={catalogue}
           onClose={close}
           onWritten={written}

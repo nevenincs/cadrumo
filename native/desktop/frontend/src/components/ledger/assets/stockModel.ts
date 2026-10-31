@@ -5,6 +5,8 @@
 // purchase states are the person's own; nothing here adds, rounds or rates
 // anything, and a value nobody typed is never made up.
 
+import type { SuggestionProps } from "@/components/editors/editorProps";
+import type { Suggestion } from "@/components/ui/suggestions";
 import type { FileToken, PublicDecimal } from "../../../shell/ledger";
 import {
   AMOUNT_RULE,
@@ -186,6 +188,8 @@ export type StockField = {
   required: boolean;
   /** The most characters it takes, where that is not the usual. */
   max?: number;
+  /** The text the field offers as it is typed in, where the form holds any. */
+  offers?: SuggestionProps;
 };
 
 export const BOOK_FIELDS: readonly StockField[] = [
@@ -1281,6 +1285,27 @@ export function bookName(row: {
 }): string {
   const label = row.label?.trim();
   return label ? label : row.actividad_id;
+}
+
+/** The activities books are held for in other years, each once and none that
+ * has its book for `year` already. A book is named by its activity, so a
+ * changed spelling would start another book. */
+export function bookNameOptions(
+  rows: readonly InventoryBookRow[],
+  year: number,
+): Suggestion[] {
+  const held = new Set(
+    rows.filter((row) => row.year === year).map((row) => row.actividad_id),
+  );
+  const named = new Map<string, InventoryBookRow>();
+  for (const row of rows)
+    if (!held.has(row.actividad_id) && !named.has(row.actividad_id))
+      named.set(row.actividad_id, row);
+  return [...named.values()].map((row) => ({
+    value: row.actividad_id,
+    label: row.actividad_id,
+    note: bookName(row) === row.actividad_id ? undefined : bookName(row),
+  }));
 }
 
 /** Whether a book is listed for the activity and year. */
