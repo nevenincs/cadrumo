@@ -85,6 +85,11 @@ class OperationErrorDetailKind(StrEnum):
     RECORD_VALIDATION = "record_validation"
 
 
+_KEY_MIN_LENGTH = 3
+_MESSAGE_KEY_MAX_LENGTH = 256
+_EMPTY_JSON_OBJECT_LENGTH = 2
+
+
 class OperationErrorContextEntryV1(BaseModel):
     """One scrubbed context fact, already rendered as the envelope renders it."""
 
@@ -101,15 +106,29 @@ class OperationErrorDetailV1(BaseModel):
 
     detail_version: Literal[1] = 1
     kind: OperationErrorDetailKind
-    error_code: Annotated[str, StringConstraints(min_length=3, max_length=128, pattern=_ERROR_CODE_PATTERN)] | None
-    message_key: Annotated[str, StringConstraints(min_length=3, max_length=256, pattern=_MESSAGE_KEY_PATTERN)] | None
+    error_code: (
+        Annotated[str, StringConstraints(min_length=_KEY_MIN_LENGTH, max_length=128, pattern=_ERROR_CODE_PATTERN)]
+        | None
+    )
+    message_key: (
+        Annotated[
+            str,
+            StringConstraints(
+                min_length=_KEY_MIN_LENGTH, max_length=_MESSAGE_KEY_MAX_LENGTH, pattern=_MESSAGE_KEY_PATTERN
+            ),
+        ]
+        | None
+    )
     context: Annotated[tuple[OperationErrorContextEntryV1, ...], Field(max_length=MAX_OPERATION_ERROR_CONTEXT_ENTRIES)]
     context_entries_omitted: NonNegativeInt = 0
     #: The typed precondition verdict as its canonical JSON. Its evidence model
     #: serializes differently from how it validates, so it cannot be a public
     #: schema member; the text is validated as the verdict on both sides.
     precondition_verdict_json: (
-        Annotated[str, StringConstraints(min_length=2, max_length=MAX_OPERATION_ERROR_VERDICT_LENGTH)] | None
+        Annotated[
+            str, StringConstraints(min_length=_EMPTY_JSON_OBJECT_LENGTH, max_length=MAX_OPERATION_ERROR_VERDICT_LENGTH)
+        ]
+        | None
     ) = None
 
     @model_validator(mode="after")
@@ -180,7 +199,10 @@ def _bounded_context(context: dict[str, str] | None) -> tuple[tuple[OperationErr
 
 def _is_message_key(candidate: str) -> bool:
     """Return whether ``candidate`` is shaped as a catalogue key rather than free text."""
-    return 3 <= len(candidate) <= 256 and re.fullmatch(_MESSAGE_KEY_PATTERN, candidate) is not None
+    return (
+        _KEY_MIN_LENGTH <= len(candidate) <= _MESSAGE_KEY_MAX_LENGTH
+        and re.fullmatch(_MESSAGE_KEY_PATTERN, candidate) is not None
+    )
 
 
 def build_operation_error_detail(error: BaseException) -> OperationErrorDetailV1 | None:

@@ -15,7 +15,8 @@ from __future__ import annotations
 
 import re
 
-ISIN_SHAPE_RE = re.compile(r"\A[A-Z]{2}[A-Z0-9]{9}[0-9]\Z")
+_ISO_6166_SHAPE = r"\A[A-Z]{2}[A-Z0-9]{9}[0-9]\Z"
+ISIN_SHAPE_RE = re.compile(_ISO_6166_SHAPE)
 """ISO 6166 shape: two letters, nine ASCII alphanumerics, one ASCII digit."""
 
 
@@ -40,9 +41,7 @@ def isin_check_digit(body: str) -> int:
     for index, char in enumerate(reversed(digits)):
         value = int(char)
         if index % 2 == 0:
-            value *= 2
-            if value > 9:
-                value -= 9
+            value = sum(divmod(value * 2, 10))
         total += value
     return (10 - total % 10) % 10
 

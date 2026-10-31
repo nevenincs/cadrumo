@@ -205,10 +205,14 @@ _UNKNOWN_DATE_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.date_unk
 _UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
 _UNKNOWN_MODELO_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.modelo_unknown"
 _ABSENT_VALUE_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.value_absent"
-_BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
-_MODELO_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{3}")
-_YEAR: Final[re.Pattern[str]] = re.compile(r"\d{4}")
+_BOX_NUMBER_SHAPE: Final = r"\d{1,4}[A-Z]?"
+_MODELO_ID_SHAPE: Final = r"\d{3}"
+_YEAR_SHAPE: Final = r"\d{4}"
+_BOX_NUMBER: Final[re.Pattern[str]] = re.compile(_BOX_NUMBER_SHAPE)
+_MODELO_NUMBER: Final[re.Pattern[str]] = re.compile(_MODELO_ID_SHAPE)
+_YEAR: Final[re.Pattern[str]] = re.compile(_YEAR_SHAPE)
 _MONEY_PLACES: Final[Decimal] = Decimal("0.01")
+_MONEY_EXPONENT: Final = -2
 
 type FindingFactValue = str | int | bool | Decimal
 
@@ -254,7 +258,7 @@ def _figure_text(value: FindingFactValue, kind: FindingFactKind, language: Outpu
     if figure is None:
         return _in_words(_ABSENT_VALUE_LOCALE_KEY, language)
     exponent = figure.as_tuple().exponent
-    if kind is FindingFactKind.MONEY and isinstance(exponent, int) and exponent > -2:
+    if kind is FindingFactKind.MONEY and isinstance(exponent, int) and exponent > _MONEY_EXPONENT:
         figure = figure.quantize(_MONEY_PLACES)
     data_type = "integer" if kind is FindingFactKind.COUNT else "decimal"
     return format_casilla_value(figure, data_type=data_type, language=language)

@@ -650,7 +650,7 @@ def _render_fractional_digits(field: ExportField, value: object) -> str:
     length = require_length(field)
     number = _coerce_numeric(field, value)
     fraction = number - number.to_integral_value(rounding=ROUND_DOWN)
-    scaled = fraction * (Decimal(10) ** length)
+    scaled = fraction * Decimal(10**length)
     if scaled != scaled.to_integral_value():
         raise RegistryValidationError(
             f"export field {field.id!r} cannot represent {length} fractional digits of a value carrying more precision",
@@ -660,7 +660,7 @@ def _render_fractional_digits(field: ExportField, value: object) -> str:
 
 def _render_scaled_numeric(field: ExportField, value: object, *, scale: int) -> str:
     number = _coerce_numeric(field, value)
-    scaled = (abs(number) * (Decimal(10) ** scale)).to_integral_value(rounding=ROUND_HALF_UP)
+    scaled = (abs(number) * Decimal(10**scale)).to_integral_value(rounding=ROUND_HALF_UP)
     return _render_numeric_digits(field, str(int(scaled)), negative=number < 0)
 
 

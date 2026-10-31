@@ -85,7 +85,10 @@ from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, Revision
 from .errors import RegistryValidationError
 from .ids import RevisionId
 
-REVISION_REVIEW_DATE_CEILING: date = date(2100, 1, 1)
+_REVIEW_YEAR_CEILING = 2100
+_REVIEW_YEAR_FLOOR = 2000
+
+REVISION_REVIEW_DATE_CEILING: date = date(_REVIEW_YEAR_CEILING, 1, 1)
 """Exclusive upper bound on a governance stamp's ``reviewed_at`` signoff date.
 
 A signoff dated beyond any living reviewer's horizon is not a signoff: it is a
@@ -95,7 +98,7 @@ module's docstring for why the bound is a fixed calendar date rather than a
 reading of the local clock.
 """
 
-REVISION_REVIEW_DATE_FLOOR: date = date(2000, 1, 1)
+REVISION_REVIEW_DATE_FLOOR: date = date(_REVIEW_YEAR_FLOOR, 1, 1)
 """Inclusive lower bound on a governance stamp's ``reviewed_at`` signoff date.
 
 A signoff predating the year 2000 is a sentinel or a template artefact: the Unix

@@ -10,13 +10,17 @@ from typing import cast
 
 from .log_scrubbing import FORMAT_SIZE_RE
 
+_MAX_NESTING = 6
+_MAX_CAUSE_CHAIN = 8
+_MAX_FORMAT_SIZE_DIGITS = 5
+
 
 def snapshot_value(value: object, *, depth: int = 0, budget: list[int] | None = None) -> object:
     """Copy bounded builtin shapes without invoking application rendering hooks."""
     if budget is None:
         budget = [256, 65536]
     budget[0] -= 1
-    if depth >= 6 or budget[0] < 0:
+    if depth >= _MAX_NESTING or budget[0] < 0:
         return "<omitted:nesting>"
     if type(value) in (str, int, float, bool, bytes, bytearray) or value is None:
         return _snapshot_scalar(value, budget)
@@ -79,7 +83,7 @@ def _snapshot_exception(error: BaseException, budget: list[int]) -> tuple[object
     """Keep bounded causal frames and builtin arguments without retaining live frames."""
     chain: list[object] = []
     seen: set[int] = set()
-    while id(error) not in seen and len(chain) < 8:
+    while id(error) not in seen and len(chain) < _MAX_CAUSE_CHAIN:
         seen.add(id(error))
         name = snapshot_value(type.__dict__["__name__"].__get__(type(error)), budget=budget)
         arguments = snapshot_value(BaseException.__dict__["args"].__get__(error), budget=budget)
@@ -119,7 +123,7 @@ def bound_format(record: logging.LogRecord) -> None:
 
 def _oversized_format(match: re.Match[str], args: object) -> bool:
     sizes = (match.group("width"), match.group("precision"))
-    if any(size and size != "*" and (len(size) > 5 or int(size) > 16384) for size in sizes):
+    if any(size and size != "*" and (len(size) > _MAX_FORMAT_SIZE_DIGITS or int(size) > 16384) for size in sizes):
         return True
     return (
         "*" in sizes

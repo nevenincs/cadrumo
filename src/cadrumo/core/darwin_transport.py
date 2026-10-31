@@ -56,7 +56,11 @@ def _open_directory(path: Path) -> int:
 
 def _private_identity(descriptor: int) -> tuple[int, int]:
     metadata = os.fstat(descriptor)
-    if not stat.S_ISDIR(metadata.st_mode) or metadata.st_uid != _owner_uid() or stat.S_IMODE(metadata.st_mode) != 0o700:
+    if (
+        not stat.S_ISDIR(metadata.st_mode)
+        or metadata.st_uid != _owner_uid()
+        or stat.S_IMODE(metadata.st_mode) != stat.S_IRWXU
+    ):
         raise PermissionError("Darwin transport directory must be owned by the current user with mode 0700")
     return metadata.st_dev, metadata.st_ino
 

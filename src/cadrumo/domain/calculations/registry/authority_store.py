@@ -39,6 +39,8 @@ from .snapshot_proof import (
     ValidatorSource,
 )
 
+_MAX_CONNECTION_CHECKOUTS: Final = 4
+
 AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v5"
 #: The preceding format: identical components, no snapshot proof tables.
 _PROOFLESS_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v4"
@@ -259,7 +261,7 @@ class SQLiteAuthorityReader:
         """Admit one exact database without hydrating any domain payload."""
         if sqlite3.sqlite_version_info < (3, 37, 0) or sqlite3.threadsafety == 0:
             raise AuthorityStoreError("authority SQLite requires SQLite 3.37+ with a thread-safe build")
-        if not 1 <= max_connections <= 4:
+        if not 1 <= max_connections <= _MAX_CONNECTION_CHECKOUTS:
             raise ValueError("authority reader permits between one and four connection checkouts")
         self._descriptor_path = descriptor_path.resolve()
         self._descriptor = AuthorityDescriptor.read(self._descriptor_path)

@@ -17,6 +17,18 @@ from typing import cast
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
+_LOGON_INTERACTIVE = 2
+_LOGON_REMOTE_INTERACTIVE = 10
+_LOGON_CACHED_INTERACTIVE = 11
+_LOGON_CACHED_REMOTE_INTERACTIVE = 12
+_DESKTOP_LOGON_KINDS = (
+    _LOGON_INTERACTIVE,
+    _LOGON_REMOTE_INTERACTIVE,
+    _LOGON_CACHED_INTERACTIVE,
+    _LOGON_CACHED_REMOTE_INTERACTIVE,
+)
+"""The ``SECURITY_LOGON_TYPE`` values of a logon with a person at a desktop."""
+
 _WINDOWS_DLL_LOADER = "WinDLL"
 _SID_MAX_BYTES = 68
 _TEXT_MAX_BYTES = 512
@@ -304,7 +316,7 @@ def _native_token_role_is_valid(token: _TokenSnapshot) -> bool:
         type(token.logon_sid_count) is not int
         or token.logon_sid_count != 1
         or type(token.logon_kind) is not int
-        or (token.logon_kind not in (2, 10, 11, 12))
+        or (token.logon_kind not in _DESKTOP_LOGON_KINDS)
     )
 
 
@@ -377,7 +389,7 @@ def _validated_native_logon_kind(logon: object, authentication: int, owner: str,
         or type(logon_session) is not int
         or logon_session != session
         or type(kind) is not int
-        or kind not in (2, 10, 11, 12)
+        or kind not in _DESKTOP_LOGON_KINDS
     ):
         raise _unavailable()
     return kind

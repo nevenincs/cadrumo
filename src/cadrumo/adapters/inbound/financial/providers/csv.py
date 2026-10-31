@@ -96,7 +96,11 @@ class CsvColumnMap(BaseModel):
 
 
 #: A header closing with a currency code, bare or bracketed, once normalized.
-_CURRENCY_SUFFIX_RE = re.compile(r"^(.+?) \(?([a-z]{3})\)?$")
+_ISO_4217_HEADER_SUFFIX = r"^(.+?) \(?([a-z]{3})\)?$"
+_CURRENCY_SUFFIX_RE = re.compile(_ISO_4217_HEADER_SUFFIX)
+
+_MINIMUM_HEADER_SCORE = 3
+"""How many statement columns a row must name before it counts as the header."""
 
 STATEMENT_COLUMNS = CsvColumnMap(
     booked_date=(
@@ -448,7 +452,7 @@ class CsvProvider(FinancialProvider):
             if score > best_score:
                 best = (index, row, lookup)
                 best_score = score
-        if best_score < 3:
+        if best_score < _MINIMUM_HEADER_SCORE:
             return None
         return best
 
