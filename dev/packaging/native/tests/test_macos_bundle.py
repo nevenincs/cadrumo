@@ -237,6 +237,7 @@ if {behavior!r} == "ready_and_stop":
     print('{{"kind":"runtime_ready","product_version":"1.2.3"}}', flush=True)
     sys.stdin.buffer.read()
 elif {behavior!r} == "not_ready":
+    sys.stderr.write("x" * 5000 + "role refused: missing component\\n")
     sys.exit(3)
 elif {behavior!r} == "ignore_close":
     print('{{"kind":"runtime_ready"}}', flush=True)
@@ -276,8 +277,12 @@ def test_runtime_role_refuses_a_bundle_that_does_not_report_ready(tmp_path: Path
     bundle, main = _bundle(tmp_path)
     tool, _ = _recording_codesign(tmp_path)
     _runtime_main(main, tmp_path / "ran", "not_ready")
-    with pytest.raises(ValueError, match="did not report ready"):
+    with pytest.raises(ValueError, match="did not report ready") as refused:
         verify_runtime_role(tool, bundle, identity("macos-arm64").application_id)
+    message = str(refused.value)
+    assert message.endswith("role refused: missing component")
+    assert "standard error tail: xxx" in message
+    assert len(message) < 2600
 
 
 def test_runtime_role_refuses_a_role_that_ignores_closed_input(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

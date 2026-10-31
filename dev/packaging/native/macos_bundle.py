@@ -164,39 +164,82 @@ def _runtime_environment(root: Path) -> dict[str, str]:
     return {"PATH": "/usr/bin:/bin", "CADRUMO_STORAGE_ROOT": str(root), "PYTHONDONTWRITEBYTECODE": "1"}
 
 
+_STDERR_TAIL_BYTES = 2000
+
+
+async def _keep_tail(stream: asyncio.StreamReader, tail: bytearray) -> None:
+    """Drain `stream` so the role never blocks on a full pipe, keeping only its last bytes."""
+    while chunk := await stream.read(4096):
+        tail.extend(chunk)
+        del tail[:-_STDERR_TAIL_BYTES]
+
+
+async def _failure(
+    process: asyncio.subprocess.Process,
+    draining: asyncio.Future[None] | None,
+    tail: bytearray,
+    message: str,
+) -> ValueError:
+    """Stops the role, collects what it wrote to standard error and returns the failure."""
+    if process.returncode is None:
+        process.kill()
+    await process.wait()
+    if draining is not None:
+        await draining
+    text = bytes(tail).decode("utf-8", "replace").strip()
+    return ValueError(f"{message}; standard error tail: {text}" if text else message)
+
+
 async def _serve_until_ready(main_executable: Path, root: Path) -> str:
-    """Run the runtime role until it reports ready, close its input, require it to stop; return its version."""
+    """Run the runtime role until it reports ready, close its input, require it to stop; return its version.
+
+    The role binds its sockets in the account's per-user transport directory, since the
+    platform offers no way to relocate that namespace without weakening its production
+    resolution. The sockets are named for the private temporary root, so the run never
+    contends with an installed runtime, and the role removes them when it stops. A failure
+    carries the last bytes of the role's standard error.
+    """
     process = await asyncio.create_subprocess_exec(
         str(main_executable),
         *_RUNTIME_ROLE,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
         env=_runtime_environment(root),
     )
+    tail = bytearray()
+    draining = asyncio.ensure_future(_keep_tail(process.stderr, tail)) if process.stderr else None
     try:
         if process.stdout is None or process.stdin is None:
             raise ValueError("The runtime role's standard streams are unavailable")
         try:
             line = await asyncio.wait_for(process.stdout.readline(), _RUNTIME_START_SECONDS)
-        except TimeoutError as error:
-            raise ValueError("Sealed bundle's runtime role did not report ready in time") from error
+        except TimeoutError:
+            raise await _failure(
+                process, draining, tail, "Sealed bundle's runtime role did not report ready in time"
+            ) from None
         try:
             ready = json.loads(line)
         except ValueError:
             ready = None
         if not isinstance(ready, dict) or ready.get("kind") != "runtime_ready":
-            raise ValueError(f"Sealed bundle's runtime role did not report ready: {line[:300]!r}")
+            raise await _failure(
+                process, draining, tail, f"Sealed bundle's runtime role did not report ready: {line[:300]!r}"
+            )
         process.stdin.close()
         try:
             await asyncio.wait_for(process.wait(), _RUNTIME_STOP_SECONDS)
-        except TimeoutError as error:
-            raise ValueError("Sealed bundle's runtime role did not stop when its input closed") from error
+        except TimeoutError:
+            raise await _failure(
+                process, draining, tail, "Sealed bundle's runtime role did not stop when its input closed"
+            ) from None
         return str(ready.get("product_version", ""))
     finally:
         if process.returncode is None:
             process.kill()
             await process.wait()
+        if draining is not None:
+            await draining
 
 
 def verify_runtime_role(codesign: Path, bundle: Path, application_id: str) -> str:
