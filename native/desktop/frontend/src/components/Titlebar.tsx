@@ -61,6 +61,15 @@ export function Titlebar({
   // The system's own controls, when it draws them, replace the page's. Until
   // the host reports, a native window shows neither.
   const chrome = native ? (state?.chrome ?? "pending") : "custom";
+  // The host seats its controls in a row of its own measure; the header takes
+  // the same row, so the controls and the header's items share one centre.
+  const seated = state?.nativeControls;
+  const geometry = seated
+    ? ({
+        "--titlebar-height": `${seated.height}px`,
+        "--titlebar-native-controls-inset": `${seated.inset}px`,
+      } as React.CSSProperties)
+    : undefined;
   const dragging = (event: React.MouseEvent) => {
     if (event.button !== 0 || (event.target as Element).closest("button"))
       return;
@@ -73,6 +82,7 @@ export function Titlebar({
       className="titlebar"
       data-chrome={chrome}
       data-fullscreen={state?.fullscreen ? "" : undefined}
+      style={geometry}
       aria-label={t("desktop.titlebar.label")}
     >
       <h1
@@ -80,7 +90,7 @@ export function Titlebar({
         aria-label={identity.name}
         onMouseDown={dragging}
       >
-        <Logo size="sm" />
+        <Logo size={chrome === "native" ? "xs" : "sm"} />
       </h1>
       <div
         className="titlebar-drag-space"

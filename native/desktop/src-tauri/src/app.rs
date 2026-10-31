@@ -543,6 +543,10 @@ pub(crate) async fn assemble<R: Runtime>(
     manager.start(false).await?;
     startup.check_cancelled()?;
     startup.stage(crate::startup::Phase::Workspace);
+    #[cfg(target_os = "macos")]
+    let placement = shell::traffic_lights::placement();
+    #[cfg(target_os = "macos")]
+    app.manage(placement.controls);
     let config = &app.config().app.windows[0];
     let origins = startup.origins.clone();
     let workspace = tauri::WebviewWindowBuilder::from_config(&app, config).and_then(|builder| {
@@ -567,7 +571,7 @@ pub(crate) async fn assemble<R: Runtime>(
             .decorations(true)
             .title_bar_style(tauri::TitleBarStyle::Overlay)
             .hidden_title(true)
-            .traffic_light_position(tauri::LogicalPosition::new(16.0, 15.0));
+            .traffic_light_position(placement.position);
         let builder = builder.visible(false);
         builder
             .initialization_script(startup.script.clone())

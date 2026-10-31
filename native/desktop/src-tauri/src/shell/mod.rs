@@ -20,6 +20,8 @@ pub mod setup;
 pub mod sign_in;
 pub mod single_instance;
 pub mod token;
+#[cfg(target_os = "macos")]
+pub mod traffic_lights;
 pub mod user_profile;
 #[cfg(windows)]
 pub mod webview;

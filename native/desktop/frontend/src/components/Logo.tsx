@@ -3,6 +3,7 @@ import { cn } from "@/components/ui/cn";
 import mark from "../../../../../docs/_static/cadrumo-icon.svg";
 
 const SIZES = {
+  xs: { mark: "size-mark-xs", name: "text-base", gap: "gap-1.5" },
   sm: { mark: "size-mark-sm", name: "text-base", gap: "gap-2" },
   md: { mark: "size-mark-md", name: "text-md", gap: "gap-3" },
 } as const;
