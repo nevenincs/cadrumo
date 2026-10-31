@@ -60,6 +60,7 @@ function invoice(
     base_total_eur: null,
     iva_total_eur: null,
     grand_total_eur: null,
+    referencia_catastral: null,
     ...rest,
   };
 }

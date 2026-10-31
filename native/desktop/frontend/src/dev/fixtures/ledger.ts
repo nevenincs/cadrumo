@@ -443,6 +443,7 @@ function receivedInvoice(
     base_total_eur: null,
     iva_total_eur: null,
     grand_total_eur: null,
+    referencia_catastral: null,
   };
 }
 
@@ -658,6 +659,7 @@ export function fixtureLedger(): FixtureLedger {
         base_total_eur: null,
         iva_total_eur: null,
         grand_total_eur: null,
+        referencia_catastral: null,
       });
     }
     // A client abroad pays in dollars every other month.

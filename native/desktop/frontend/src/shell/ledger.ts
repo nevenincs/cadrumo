@@ -652,6 +652,9 @@ export type CatalogueInvoice = {
   base_total_eur: PublicDecimal | null;
   iva_total_eur: PublicDecimal | null;
   grand_total_eur: PublicDecimal | null;
+  /** The issued invoice's leased premises' cadastral reference, as the
+   * ledger holds it. */
+  referencia_catastral: string | null;
 };
 /** The catalogue filters by kind only. */
 export type InvoiceListRequest = { kind?: InvoiceKind | null };

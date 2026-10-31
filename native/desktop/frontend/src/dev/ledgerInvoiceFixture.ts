@@ -269,6 +269,10 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
     const recargo = decimal(request.recargo_amount);
     const total = baseUnits + ivaUnits + (recargo ? units(recargo) : 0n);
     const taxId = text(request.counterparty_tax_id);
+    const lease = request.business_premises_lease;
+    const referencia = isObject(lease)
+      ? text(lease.referencia_catastral)?.trim().toUpperCase()
+      : undefined;
     const invoice: CatalogueInvoice = {
       invoice_id: hex64(
         JSON.stringify([
@@ -318,6 +322,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
       base_total_eur: null,
       iva_total_eur: null,
       grand_total_eur: null,
+      referencia_catastral: referencia || null,
     };
     if (!holds(invoice)) refuseAdd("invalid_invoice");
     // The identity is the kind, number, issue date, tax id, currency and

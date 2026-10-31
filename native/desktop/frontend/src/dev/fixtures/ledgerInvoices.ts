@@ -27,6 +27,7 @@ type Example = {
   retention?: [string, string];
   rectifies?: string;
   notes?: string;
+  referencia?: string;
 };
 
 const line = ([
@@ -71,6 +72,7 @@ const EXAMPLES: Example[] = [
     currency: "EUR",
     payment: "PAID",
     lines: [["Rediseño de catálogo", "1", "800", "800.00", "RATE_21", null]],
+    referencia: "9999999VH9999S0001AB",
   },
   {
     kind: "issued",
@@ -221,6 +223,7 @@ export function exampleInvoices(
       base_total_eur: null,
       iva_total_eur: null,
       grand_total_eur: null,
+      referencia_catastral: example.referencia ?? null,
     };
   });
 }
