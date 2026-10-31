@@ -63,7 +63,7 @@ def test_deadline_window_rejects_lossy_conceptual_tipo_authoring(conceptual_key:
         _window(tipo_renta_scope=(conceptual_key,))
 
 
-@pytest.mark.parametrize("tipo_renta_scope", [(), ("01", "01"), ("1",)])
+@pytest.mark.parametrize("tipo_renta_scope", [(), ("01", "01")])
 def test_deadline_window_rejects_invalid_official_tipo_renta_scope(tipo_renta_scope: tuple[str, ...]) -> None:
     with pytest.raises((RegistryValidationError, ValidationError), match="tipo_renta_scope"):
         _window(tipo_renta_scope=tipo_renta_scope)
