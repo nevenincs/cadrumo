@@ -59,7 +59,6 @@ def test_a_value_longer_than_the_declared_field_is_refused() -> None:
         (WithholdingObservation, "codigo_emisor", "withholding.codigo_emisor_max"),
         (M210IncomeClassification, "official_tipo_renta_code", "m210.tipo_renta_digits"),
         (LedgerEvidenceRow, "m210_official_tipo_renta_code", "m210.tipo_renta_digits"),
-        (CalculationRevision, "m210_official_tipo_renta_code", "m210.tipo_renta_digits"),
     ],
 )
 def test_a_binding_row_refuses_a_code_past_the_declared_width(model: type[BaseModel], field: str, key: str) -> None:
@@ -103,3 +102,8 @@ def test_a_prorrata_cnae_of_another_width_is_refused() -> None:
     for width in widths:
         assert not _refused_field(ProrrataActivityRow, "cnae_code", "1" * int(width))
     assert _refused_field(ProrrataActivityRow, "cnae_code", "1" * (max(int(width) for width in widths) + 1))
+
+
+def test_a_calculation_revision_refuses_a_tipo_renta_past_the_declared_width() -> None:
+    limit = _declared("m210.tipo_renta_digits")
+    assert _refused_field(CalculationRevision, "m210_official_tipo_renta_code", "1" * (limit + 1))
