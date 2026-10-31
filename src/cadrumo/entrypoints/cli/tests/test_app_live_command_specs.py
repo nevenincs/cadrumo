@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 from importlib import import_module
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 from typer.main import get_command
@@ -22,7 +23,7 @@ from cadrumo_client.commands.shared_contracts import (
     SchemaState,
     ValueContract,
 )
-from cadrumo_client.commands.spec import ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import CommandWriteRoute
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
@@ -328,16 +329,41 @@ def test_live_specs_are_the_exact_complete_current_surface() -> None:
     assert actual == EXPECTED_LIVE_PATHS
 
 
-def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
-    foundation = {spec.key: spec for spec in LIVE_FOUNDATION_COMMAND_SPECS}
-    borrador = {spec.key: spec for spec in LIVE_BORRADOR_COMMAND_SPECS}
-    expedientes = {spec.key: spec for spec in LIVE_EXPEDIENTES_COMMAND_SPECS}
-    iva_wallet = {spec.key: spec for spec in LIVE_IVA_WALLET_COMMAND_SPECS}
-    justificante = {spec.key: spec for spec in LIVE_JUSTIFICANTE_COMMAND_SPECS}
-    verify = {spec.key: spec for spec in LIVE_VERIFY_COMMAND_SPECS}
-    portals = {spec.key: spec for spec in LIVE_PORTALS_COMMAND_SPECS}
-    notifications = {spec.key: spec for spec in LIVE_NOTIFICATIONS_COMMAND_SPECS}
+class _SharedSpecs(NamedTuple):
+    """Each shared live spec family indexed by command key."""
 
+    foundation: dict[str, CommandSpec]
+    borrador: dict[str, CommandSpec]
+    expedientes: dict[str, CommandSpec]
+    iva_wallet: dict[str, CommandSpec]
+    justificante: dict[str, CommandSpec]
+    verify: dict[str, CommandSpec]
+    portals: dict[str, CommandSpec]
+    notifications: dict[str, CommandSpec]
+
+
+def _shared_specs() -> _SharedSpecs:
+    return _SharedSpecs(
+        foundation={spec.key: spec for spec in LIVE_FOUNDATION_COMMAND_SPECS},
+        borrador={spec.key: spec for spec in LIVE_BORRADOR_COMMAND_SPECS},
+        expedientes={spec.key: spec for spec in LIVE_EXPEDIENTES_COMMAND_SPECS},
+        iva_wallet={spec.key: spec for spec in LIVE_IVA_WALLET_COMMAND_SPECS},
+        justificante={spec.key: spec for spec in LIVE_JUSTIFICANTE_COMMAND_SPECS},
+        verify={spec.key: spec for spec in LIVE_VERIFY_COMMAND_SPECS},
+        portals={spec.key: spec for spec in LIVE_PORTALS_COMMAND_SPECS},
+        notifications={spec.key: spec for spec in LIVE_NOTIFICATIONS_COMMAND_SPECS},
+    )
+
+
+def _assert_group_and_leaf_invocations(specs: _SharedSpecs) -> None:
+    foundation = specs.foundation
+    borrador = specs.borrador
+    expedientes = specs.expedientes
+    iva_wallet = specs.iva_wallet
+    justificante = specs.justificante
+    verify = specs.verify
+    portals = specs.portals
+    notifications = specs.notifications
     for spec in (
         foundation["app_live"],
         foundation["app_live_filed"],
@@ -354,7 +380,6 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         assert spec.invocation is _METADATA_GROUP_INVOCATION
         assert spec.policy is _METADATA_POLICY
         assert spec.result_schema is NO_RESULT_SCHEMA
-
     for spec in (
         *LIVE_FOUNDATION_COMMAND_SPECS[2:],
         *LIVE_IVA_WALLET_COMMAND_SPECS[1:],
@@ -367,6 +392,13 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     ):
         assert spec.invocation is _LEAF_INVOCATION
 
+
+def _assert_read_and_capture_policies(specs: _SharedSpecs) -> None:
+    foundation = specs.foundation
+    borrador = specs.borrador
+    expedientes = specs.expedientes
+    iva_wallet = specs.iva_wallet
+    justificante = specs.justificante
     for key in ("app_live_filed_list", "app_live_filed_discover"):
         assert foundation[key].policy is _NETWORK_READ_POLICY
     for key in (
@@ -388,6 +420,14 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         "app_live_justificante_view",
     ):
         assert justificante[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    _assert_capture_policies(specs)
+
+
+def _assert_capture_policies(specs: _SharedSpecs) -> None:
+    foundation = specs.foundation
+    expedientes = specs.expedientes
+    iva_wallet = specs.iva_wallet
+    justificante = specs.justificante
     for key in (
         "app_live_filed_pull_all",
         "app_live_filed_pull",
@@ -404,6 +444,35 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     assert foundation["app_live_filed_discover"].policy is not _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
     assert iva_wallet["app_live_iva_wallet_pull_evidence"].policy is not _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
 
+    _assert_verify_portal_and_notification_policies(specs)
+
+
+def _assert_verify_portal_and_notification_policies(specs: _SharedSpecs) -> None:
+    verify = specs.verify
+    portals = specs.portals
+    notifications = specs.notifications
+    for key in (
+        "app_live_verify_list",
+        "app_live_verify_view",
+        "app_live_verify_latest",
+    ):
+        assert verify[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+    for key in ("app_live_portals_list", "app_live_portals_view"):
+        assert portals[key].policy is _METADATA_POLICY
+    for key in (
+        "app_live_notifications_list",
+        "app_live_notifications_view",
+        "app_live_notifications_latest",
+        "app_live_notifications_document_view",
+        "app_live_notifications_document_history",
+    ):
+        assert notifications[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
+
+
+def _assert_option_positions(specs: _SharedSpecs) -> None:
+    foundation = specs.foundation
+    borrador = specs.borrador
+    expedientes = specs.expedientes
     assert foundation["app_live_filed_list"].parameters[1] is _OPTIONAL_YEAR_FROM_OPTION
     assert foundation["app_live_filed_list"].parameters[2] is _OPTIONAL_YEAR_TO_OPTION
     assert foundation["app_live_filed_pull"].parameters[2] is _OPTIONAL_YEAR_FROM_OPTION
@@ -418,6 +487,13 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     )
     assert borrador["app_live_borrador_100_import"].parameters[1] is _REQUIRED_FILING_YEAR_OPTION
     assert borrador["app_live_borrador_100_latest"].parameters[0] is _REQUIRED_FILING_YEAR_OPTION
+    _assert_output_root_and_period_options(specs)
+
+
+def _assert_output_root_and_period_options(specs: _SharedSpecs) -> None:
+    foundation = specs.foundation
+    iva_wallet = specs.iva_wallet
+    justificante = specs.justificante
     for spec, position in (
         (foundation["app_live_filed_pull_all"], 0),
         (foundation["app_live_filed_pull"], 4),
@@ -450,23 +526,10 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         assert spec.parameters[0] is _REQUIRED_YEAR_FROM_OPTION
         assert spec.parameters[1] is _REQUIRED_YEAR_TO_OPTION
 
-    for key in (
-        "app_live_verify_list",
-        "app_live_verify_view",
-        "app_live_verify_latest",
-    ):
-        assert verify[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
-    for key in ("app_live_portals_list", "app_live_portals_view"):
-        assert portals[key].policy is _METADATA_POLICY
-    for key in (
-        "app_live_notifications_list",
-        "app_live_notifications_view",
-        "app_live_notifications_latest",
-        "app_live_notifications_document_view",
-        "app_live_notifications_document_history",
-    ):
-        assert notifications[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
 
+def _assert_verify_and_notification_parameters(specs: _SharedSpecs) -> None:
+    verify = specs.verify
+    notifications = specs.notifications
     for key in ("app_live_verify_nif_iva", "app_live_verify_tgvi"):
         assert verify[key].policy is _PROFILE_BOUND_NETWORK_CAPTURE_POLICY
         assert tuple(parameter.name for parameter in verify[key].parameters) == ("nif", "expected")
@@ -494,6 +557,16 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         is not notifications["app_live_notifications_document_view"].result_schema
     )
 
+
+def _assert_resolved_paths(specs: _SharedSpecs) -> None:
+    foundation = specs.foundation
+    borrador = specs.borrador
+    expedientes = specs.expedientes
+    iva_wallet = specs.iva_wallet
+    justificante = specs.justificante
+    verify = specs.verify
+    portals = specs.portals
+    notifications = specs.notifications
     graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS), resolver=resolve_deferred_target)
     for path, spec in (
         (("aeat", "app", "live"), foundation["app_live"]),
@@ -516,6 +589,15 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         ),
     ):
         assert graph.resolve_path(path) is spec
+
+
+def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
+    specs = _shared_specs()
+    _assert_group_and_leaf_invocations(specs)
+    _assert_read_and_capture_policies(specs)
+    _assert_option_positions(specs)
+    _assert_verify_and_notification_parameters(specs)
+    _assert_resolved_paths(specs)
 
 
 def test_every_live_leaf_has_public_resolvable_behavior_and_schema_targets() -> None:
