@@ -2,14 +2,14 @@
 
 import re
 from collections import defaultdict
+from enum import Enum
+from typing import get_args, get_type_hints
 
 import pytest
-from click import Choice, Group
-from typer.main import get_command
 from typer.testing import CliRunner
 
 from cadrumo.core.i18n.render import tr
-from dev.docs.terminology_handbook.cli import app
+from dev.docs.terminology_handbook.cli import app, seed
 from dev.docs.terminology_handbook.schema import ConceptRecord, LanguageSection, TermSection
 
 from ..signal_spelling_enrollment import check_dictionary_spelling_words
@@ -87,8 +87,6 @@ def test_language_field_literals_match_the_public_language_and_term_models() -> 
 
 
 def test_seed_literals_are_choices_of_the_public_cli() -> None:
-    command = get_command(app)
-    assert isinstance(command, Group)
-    source = next(parameter for parameter in command.commands["seed"].params if parameter.name == "source")
-    assert isinstance(source.type, Choice)
-    assert set(_LITERAL_FIELDS["seed_source"]) <= {str(value) for value in source.type.choices}
+    source = get_args(get_type_hints(seed, include_extras=True)["source"])[0]
+    assert isinstance(source, type) and issubclass(source, Enum)
+    assert set(_LITERAL_FIELDS["seed_source"]) <= {str(value.value) for value in source}
