@@ -945,7 +945,8 @@ class ActivityAssetListExecutor(_ActivityAssetReadExecutor[ActivityAssetListRequ
     def _read(self, operations: ActivityAssetOperations, payload: ActivityAssetListRequest) -> dict[str, object]:
         del payload
         rows = operations.list_elements()
-        return {"rows": rows, "years": register_years(rows)}
+        years = register_years(rows)
+        return {"rows": rows, "years": years, "default_year": operations.default_register_year(years)}
 
 
 class ActivityAssetPlanExecutor(_ActivityAssetReadExecutor[ActivityAssetPlanRequest]):

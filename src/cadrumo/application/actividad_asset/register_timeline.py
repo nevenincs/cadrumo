@@ -9,7 +9,12 @@ from pydantic import BaseModel
 
 from ...core.type_guards import is_object_list_or_tuple, is_object_mapping
 from ...domain.calculations.registry.errors import RegistryError
-from ...domain.renta.actividad_asset.claims import AmortizationClaim, current_revisions
+from ...domain.renta.actividad_asset.claims import (
+    AmortizationClaim,
+    current_revisions,
+    effective_claims,
+    last_day_covered,
+)
 from ...domain.renta.actividad_asset.election import DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import ActividadAssetError
 from ...domain.renta.actividad_asset.fact_leaves import FactKind, indexed_to_step_path
@@ -21,6 +26,7 @@ from .activity_asset_read_models import (
     ActivityAssetTimelineChange,
     ActivityAssetTimelineClaimUse,
     ActivityAssetTimelineEvent,
+    ActivityAssetTimelineEventKind,
     timeline_field_key,
     timeline_token_key,
 )
@@ -128,30 +134,42 @@ def element_timeline(
     descriptors = {item.descriptor_id: item for item in history.descriptors}
     current = current_revisions(history.revisions)[asset_id]
     class_names = _class_names_reader(context)
+    effective = effective_claims(history.claims)
     timeline: list[ActivityAssetTimelineEvent] = []
     for event in history.ordered_events():
         if event.asset_id != asset_id:
             continue
         effect_date: date | None = None
+        event_kind: ActivityAssetTimelineEventKind
         changes: tuple[ActivityAssetTimelineChange, ...]
         claim_use: ActivityAssetTimelineClaimUse | None = None
         if event.kind in {ActivityAssetEventKind.REVISION, ActivityAssetEventKind.BAJA}:
             revision = revisions[event.record_id]
             previous = revisions.get(revision.supersedes_revision_id or "")
             changes = _changes(previous, revision, class_names=class_names)
-            effect_date = _revision_effect_date(revision, event.kind)
+            event_kind, effect_date = _revision_event(revision, previous)
         elif event.kind is ActivityAssetEventKind.CLAIM:
             claim = claims[event.record_id]
             replaced = claims.get(claim.supersedes_claim_id or "")
             changes = _timeline_claim_changes(claim, replaced)
             effect_date = claim.covered_from
+            event_kind = (
+                ActivityAssetTimelineEventKind.CLAIM_REPLACED
+                if replaced is not None
+                else ActivityAssetTimelineEventKind.CLAIM_RECORDED
+            )
             stale = matches_current_schedule(claim, current, context)
             claim_use = ActivityAssetTimelineClaimUse(
                 used_by=used_by.get(claim.claim_id, ()),
                 matches_current_schedule=stale is None,
                 stale_reason=stale,
+                in_effect=claim in effective,
+                tax_year=claim.tax_year,
+                covered_from=claim.covered_from,
+                covered_through=last_day_covered(claim.covered_until),
             )
         else:
+            event_kind = ActivityAssetTimelineEventKind.DESCRIBED
             descriptor = descriptors[event.record_id]
             changes = _descriptor_changes(descriptor, history, asset_id=asset_id, class_names=class_names)
         timeline.append(
@@ -159,6 +177,7 @@ def element_timeline(
                 sequence=event.sequence,
                 recorded_at=event.recorded_at,
                 kind=event.kind,
+                event_kind=event_kind,
                 asset_id=asset_id,
                 record_id=event.record_id,
                 effect_date=effect_date,
@@ -171,10 +190,26 @@ def element_timeline(
     return tuple(timeline)
 
 
-def _revision_effect_date(revision: ActivityAssetRevision, kind: ActivityAssetEventKind) -> date:
-    if kind is ActivityAssetEventKind.BAJA and revision.disposal is not None:
-        return revision.disposal.disposal_date
-    return revision.in_service_date
+def _revision_event(
+    revision: ActivityAssetRevision, previous: ActivityAssetRevision | None
+) -> tuple[ActivityAssetTimelineEventKind, date]:
+    """Say what a revision did and the day it takes effect.
+
+    A baja takes effect on its date, and removing one on the date it had; any other revision on the
+    day the element entered service.
+    """
+    if previous is None:
+        return ActivityAssetTimelineEventKind.CREATED, revision.in_service_date
+    if revision.disposal is not None and revision.disposal != previous.disposal:
+        kind = (
+            ActivityAssetTimelineEventKind.BAJA_RECORDED
+            if previous.disposal is None
+            else ActivityAssetTimelineEventKind.BAJA_CHANGED
+        )
+        return kind, revision.disposal.disposal_date
+    if revision.disposal is None and previous.disposal is not None:
+        return ActivityAssetTimelineEventKind.BAJA_REMOVED, previous.disposal.disposal_date
+    return ActivityAssetTimelineEventKind.CORRECTED, revision.in_service_date
 
 
 def _timeline_claim_changes(

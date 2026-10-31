@@ -163,7 +163,11 @@ class ActivityAssetFindingCounts(_ReadModel):
     missing: int = Field(ge=0)
     incomplete: int = Field(ge=0)
     conflict: int = Field(ge=0)
+    unsupported: int = Field(default=0, ge=0)
+    without_tables: int = Field(default=0, ge=0)
+    """Years no Modelo 100 edition covers, which have no table to charge under."""
     stale: int = Field(ge=0)
+    """Claims in effect that no longer match the current schedule; a claim, not a year."""
 
 
 class ActivityAssetListDisposal(_ReadModel):
@@ -189,7 +193,12 @@ class ActivityAssetListRow(_ReadModel):
     basis: PublicDecimal
     accumulated: PublicDecimal | None = None
     pending: PublicDecimal | None = None
+    pending_applies: bool = True
+    """False once a baja is recorded: ``pending`` stays the basis less the deductions, but none is left to amortize."""
     findings: ActivityAssetFindingCounts
+    default_claim_year: int | None = None
+    """The year a claim form opens on: the latest year up to the backend's current one that still has something to
+    claim, else the earliest year that has; null when no year has a remainder."""
     years: tuple[int, ...] = ()
     """The tax years the element can be read in with an edition: its service window through the registry's last."""
     projected_years: tuple[int, ...] = ()
@@ -272,9 +281,14 @@ class ActivityAssetPlanRow(_ReadModel):
     calendar_days: int | None = None
     claims: tuple[ActivityAssetPlanClaim, ...] = ()
     minimum_through: PublicDecimal | None = None
-    """Minimum amortization from entry to this year's end, which reduces cost at a baja and not the value pending."""
+    """Minimum amortization from entry to this year's end, which reduces cost at a baja and not the value pending.
+
+    Null while a year up to this one has no minimum authority: a partial sum would read as a figure.
+    """
+    minimum_reason_key: str | None = None
+    """Why ``minimum_through`` is null."""
     minimum_complete: bool = True
-    """False when a year up to this one has no minimum authority, so ``minimum_through`` leaves it out."""
+    """False when a year up to this one has no minimum authority."""
 
 
 class ActivityAssetPlanAdvisory(_ReadModel):
@@ -339,6 +353,25 @@ class ActivityAssetTimelineClaimUse(_ReadModel):
     used_by: tuple[str, ...]
     matches_current_schedule: bool
     stale_reason: ActivityAssetClaimStaleReason | None = None
+    in_effect: bool = True
+    """False for a claim a later one replaced; only a claim in effect can mismatch the schedule."""
+    tax_year: int | None = None
+    covered_from: date | None = None
+    covered_through: date | None = None
+    """The last day the claim covers."""
+
+
+class ActivityAssetTimelineEventKind(StrEnum):
+    """What a record did to the element, worded apart from the storage kind of the record."""
+
+    CREATED = "created"
+    CORRECTED = "corrected"
+    BAJA_RECORDED = "baja_recorded"
+    BAJA_CHANGED = "baja_changed"
+    BAJA_REMOVED = "baja_removed"
+    CLAIM_RECORDED = "claim_recorded"
+    CLAIM_REPLACED = "claim_replaced"
+    DESCRIBED = "described"
 
 
 class ActivityAssetTimelineEvent(_ReadModel):
@@ -347,9 +380,12 @@ class ActivityAssetTimelineEvent(_ReadModel):
     sequence: int = Field(ge=1)
     recorded_at: datetime | None = None
     kind: ActivityAssetEventKind
+    event_kind: ActivityAssetTimelineEventKind | None = None
     asset_id: str = Field(min_length=1, max_length=128)
     record_id: str = Field(min_length=1, max_length=128)
     effect_date: date | None = None
+    """The day the record takes effect: entry into service for a creation or correction, the baja's date for a baja
+    recorded, changed or removed, and the first day a claim covers."""
     origin: str | None = None
     changes: tuple[ActivityAssetTimelineChange, ...] = ()
     affects_calculation: bool
@@ -537,6 +573,7 @@ __all__ = [
     "ActivityAssetTimelineChange",
     "ActivityAssetTimelineClaimUse",
     "ActivityAssetTimelineEvent",
+    "ActivityAssetTimelineEventKind",
     "activity_asset_label_key",
     "project_reason_facts",
     "timeline_field_key",

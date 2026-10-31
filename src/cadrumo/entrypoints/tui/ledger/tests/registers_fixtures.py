@@ -150,7 +150,6 @@ def synthetic_closing_value_facts() -> InventoryClosingValueFactsInput:
     """Plain movement-derived closing facts carrying no fingerprint of their own."""
     return InventoryClosingValueFactsInput(
         decision_id="decision-1",
-        decided_at=datetime(2026, 1, 2, tzinfo=UTC),
         authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
         reason="Synthetic reviewed movement-derived closing.",
         decision_evidence=(

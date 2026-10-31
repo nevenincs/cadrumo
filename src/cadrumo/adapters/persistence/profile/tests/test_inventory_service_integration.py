@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -61,6 +62,7 @@ from cadrumo.application.inventory.errors import (
 )
 from cadrumo.application.inventory.ports import InventoryServicePorts
 from cadrumo.application.inventory.service import InventoryLedgerResult, InventoryMovementCommand, InventoryService
+from cadrumo.core.time.clock import now
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -1084,7 +1086,6 @@ def _closing_facts(
         year=year,
         authority=authority,
         reason="Reviewed closing.",
-        decided_at=datetime(year + 1, 1, 2, tzinfo=UTC),
         decision_evidence=_closing_decision_evidence(),
         physical_count=physical_count,
         prior_evidence=_closing_prior_evidence() if prior_evidence is None else prior_evidence,
@@ -1216,6 +1217,75 @@ class TestClosingValueFromPlainFacts:
                 source_command=_CLOSING_SOURCE,
             )
         assert refused.value.translated_message == "application.inventory.service.errors.closing_authority_conflict"
+
+    def test_the_backend_stamps_the_decision_and_a_retry_keeps_the_stamp(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _closing_book(svc, bucket)
+        before = now()
+        first = svc.closing_value_record(
+            bucket_id=bucket, facts=_closing_facts(), actor="runtime", source_command=_CLOSING_SOURCE
+        )
+        after = now()
+        replay = svc.closing_value_record(
+            bucket_id=bucket, facts=_closing_facts(), actor="runtime", source_command=_CLOSING_SOURCE
+        )
+
+        assert first.changed is True
+        assert replay.changed is False
+        record = svc.show(bucket_id=bucket, actividad_id="A1", year=2025).closing_authority_record
+        assert record is not None
+        assert before <= record.decision.decided_at <= after
+
+    def test_a_retry_with_other_details_still_conflicts_at_a_later_instant(
+        self, secure_engine: TestRuntimeProfile
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _closing_book(svc, bucket)
+        svc.closing_value_record(
+            bucket_id=bucket, facts=_closing_facts(), actor="runtime", source_command=_CLOSING_SOURCE
+        )
+
+        with pytest.raises(InventoryServiceInputError) as refused:
+            svc.closing_value_record(
+                bucket_id=bucket,
+                facts=replace(_closing_facts(), reason="Another reason."),
+                actor="runtime",
+                source_command=_CLOSING_SOURCE,
+            )
+
+        assert refused.value.translated_message == "application.inventory.service.errors.closing_authority_conflict"
+
+    def test_a_copy_that_read_the_book_before_the_commit_replays_the_stored_stamp(
+        self, secure_engine: TestRuntimeProfile, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        svc = _make_svc(secure_engine)
+        bucket = secure_engine.bucket_id
+        _closing_book(svc, bucket)
+        repository = svc._repository_for(bucket)
+        before_the_commit = repository.load()
+        first = svc.closing_value_record(
+            bucket_id=bucket, facts=_closing_facts(), actor="runtime", source_command=_CLOSING_SOURCE
+        )
+        assert first.ledger.closing_authority_record is not None
+        real_load = type(repository).load
+        reads: list[object] = []
+
+        def stale_first_read(instance: object) -> object:
+            reads.append(instance)
+            return before_the_commit if len(reads) == 1 else real_load(instance)
+
+        monkeypatch.setattr(type(repository), "load", stale_first_read)
+        copy = svc.closing_value_record(
+            bucket_id=bucket, facts=_closing_facts(), actor="runtime", source_command=_CLOSING_SOURCE
+        )
+
+        assert copy.changed is False
+        assert copy.ledger.closing_authority_record is not None
+        assert copy.ledger.closing_authority_record.fingerprint == first.ledger.closing_authority_record.fingerprint
 
     def test_a_closed_prior_book_needs_no_document_and_its_closing_must_be_the_opening(
         self, secure_engine: TestRuntimeProfile

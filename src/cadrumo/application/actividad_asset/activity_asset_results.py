@@ -266,6 +266,8 @@ class ActivityAssetListResult(ActivityAssetOperationResult):
 
     rows: tuple[ActivityAssetListRow, ...] | None = None
     years: tuple[int, ...] = ()
+    default_year: int | None = None
+    """The year the register opens on: the latest listed year up to the backend's current one, else the earliest."""
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
