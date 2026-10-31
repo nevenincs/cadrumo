@@ -29,7 +29,7 @@ from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.transactions.models import TransactionCatalogue
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.ledger_filing_snapshot import stale_filed_revisions
-from ...aggregation.tests.test_modelo_source_mesh_ledger import (
+from ...aggregation.tests.ledger_source_mesh_support import (
     InMemoryTransactionCatalogueRepository,
     activity_asset_ledger_membership,
     m130_box,

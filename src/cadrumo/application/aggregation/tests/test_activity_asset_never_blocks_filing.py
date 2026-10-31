@@ -18,7 +18,7 @@ from ....domain.transactions.models import Transaction
 from ...actividad_asset.history import ActivityAssetHistory
 from ...modelo.calculation_notes import BLOCKING_REASONS, GATE_REFUSED_REASONS
 from ..source_mesh import CalculationSourceResolution
-from .test_modelo_source_mesh_ledger import (
+from .ledger_source_mesh_support import (
     machine_acquisition_transaction,
     reasons,
     register_asset,

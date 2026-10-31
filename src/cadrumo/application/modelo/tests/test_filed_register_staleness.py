@@ -23,14 +23,14 @@ from ....domain.transactions.models import TransactionCatalogue
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.ledger_filing_snapshot import stale_filed_revisions
 from ...aggregation.ledger_membership import LedgerMembershipPorts
-from ...aggregation.tests.test_modelo_bindings_asset_disposal import disposed_asset_history
-from ...aggregation.tests.test_modelo_source_mesh_ledger import (
+from ...aggregation.tests.ledger_source_mesh_support import (
     InMemoryTransactionCatalogueRepository,
     activity_asset_ledger_membership,
     machine_asset,
     machine_claim,
     resolve_m100,
 )
+from ...aggregation.tests.test_modelo_bindings_asset_disposal import disposed_asset_history
 from ...ledger.stale_filing_query import read_stale_ledger_filings
 from ..calculation_bucket_actions import _source_provenance_refs
 from ..filed_register_reader import filed_register_reader

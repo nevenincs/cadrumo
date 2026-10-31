@@ -26,7 +26,7 @@ from ...actividad_asset.history import ActivityAssetHistory
 from ...actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
 from ...actividad_asset.tests.ledger_support import MemoryLedger, acquisition_transaction
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
-from .test_modelo_source_mesh_ledger import _register_claim, reasons, register_asset, resolve_m100, resolve_m130
+from .ledger_source_mesh_support import _register_claim, reasons, register_asset, resolve_m100, resolve_m130
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

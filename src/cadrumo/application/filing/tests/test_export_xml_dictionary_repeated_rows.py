@@ -33,8 +33,8 @@ from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.submission.models import ModeloDraftStatus
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.source_mesh import CalculationSourceResolution
+from ...aggregation.tests.ledger_source_mesh_support import register_asset, resolve_m100
 from ...aggregation.tests.ledger_transaction_support import renta_acquisition_row
-from ...aggregation.tests.test_modelo_source_mesh_ledger import register_asset, resolve_m100
 from .._export_xml_dictionary import render_xml_dictionary_layout
 from ..draft_construction import build_draft
 from ..export import export_draft

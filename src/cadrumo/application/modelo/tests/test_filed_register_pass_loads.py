@@ -36,7 +36,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.ledger_filing_snapshot import stale_filed_revisions
 from ...aggregation.ledger_membership import LedgerMembershipPorts
-from ...aggregation.tests.test_modelo_source_mesh_ledger import (
+from ...aggregation.tests.ledger_source_mesh_support import (
     BUCKET_ID,
     EmptyInventoryRepository,
     EmptyInvestmentRegisterRepository,

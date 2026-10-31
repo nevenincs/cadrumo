@@ -37,7 +37,7 @@ from ....domain.calculations.registry.tests.scenarios import (
     run_registry_calculation_scenario,
 )
 from ...actividad_asset.history import ActivityAssetHistory
-from .test_modelo_source_mesh_ledger import (
+from .ledger_source_mesh_support import (
     _register_claim,
     _renta_expense_binding_id,
     _revision,

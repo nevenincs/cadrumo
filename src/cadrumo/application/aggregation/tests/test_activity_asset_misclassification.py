@@ -30,7 +30,7 @@ from ...modelo.calculation_notes import CALCULATION_NOTE_ATTENTION
 from ...modelo.work_form_findings import ModeloFormAttention
 from ..activity_asset_ledger_reconciliation import possibly_durable_expense_findings
 from ..source_mesh import CalculationSourceResolution
-from .test_modelo_source_mesh_ledger import (
+from .ledger_source_mesh_support import (
     BUCKET_ID,
     InMemoryTransactionCatalogueRepository,
     _InMemoryInvoiceCatalogueRepository,
@@ -40,7 +40,7 @@ from .test_modelo_source_mesh_ledger import (
     resolve_m100,
     resolve_m130,
 )
-from .test_modelo_source_mesh_ledger import (
+from .ledger_source_mesh_support import (
     reasons as _reasons,
 )
 

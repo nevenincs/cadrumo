@@ -32,7 +32,7 @@ from ...modelo.calculation_notes import GATE_REFUSED_REASONS
 from ...modelo.work_profile import ModeloWorkProfile
 from .. import activity_asset_disposal_projection
 from ..source_mesh import CalculationSourceResolution
-from .test_modelo_source_mesh_ledger import (
+from .ledger_source_mesh_support import (
     _PRIOR_YEAR_ROW_NOTE,
     BUCKET_ID,
     _prior_year_purchase,

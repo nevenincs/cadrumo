@@ -29,7 +29,7 @@ from ....domain.modelos.calculation_revision_sources import (
 )
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
-from ...aggregation.tests.test_modelo_source_mesh_ledger import register_asset, resolve_m100
+from ...aggregation.tests.ledger_source_mesh_support import register_asset, resolve_m100
 from ..calculation_bucket_actions import _unrouted_source_issues
 from ..calculation_notes import (
     GATE_REFUSED_REASONS,

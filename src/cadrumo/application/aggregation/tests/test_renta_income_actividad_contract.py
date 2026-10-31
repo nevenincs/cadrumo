@@ -23,6 +23,7 @@ from ...actividad_asset.tests.register_support import MemoryRepository
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
+from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
 from .renta_income_aggregation_support import (
     _M130_RETENCIONES_BINDING,
     _M130_RETENCIONES_CASILLA,
@@ -35,7 +36,6 @@ from .renta_income_aggregation_support import (
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
-from .test_modelo_source_mesh_ledger import InMemoryTransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

@@ -29,7 +29,7 @@ from ....domain.modelos.calculation_revision_sources import CalculationNoteFact,
 from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...actividad_asset.history import ActivityAssetHistory
 from ...actividad_asset.ports import ActivityAssetHistoryRepository
-from ...aggregation.tests.test_modelo_source_mesh_ledger import register_asset, resolve_m100
+from ...aggregation.tests.ledger_source_mesh_support import register_asset, resolve_m100
 from ..calculation_notes import fact_locale_key, note_fact_text, read_element_names, read_recorded_notes
 from ..printed_boxes import snapshot_printed_boxes
 from ..work_form_issue_lines import form_issue_lines

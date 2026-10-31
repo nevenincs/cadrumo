@@ -18,7 +18,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
 
-from ...aggregation.tests.test_modelo_source_mesh_ledger import (
+from ...aggregation.tests.ledger_source_mesh_support import (
     machine_acquisition_transaction,
     reasons,
     register_asset,

@@ -77,7 +77,7 @@ from ...actividad_asset.tests.register_support import MemoryRepository, memory_r
 from ...calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from ...modelo.calculation_notes import GATE_REFUSED_REASONS
 from ..source_mesh import CalculationSourceResolution
-from .test_modelo_source_mesh_ledger import (
+from .ledger_source_mesh_support import (
     _m130_binding_id,
     _renta_expense_binding_id,
     _revision,
