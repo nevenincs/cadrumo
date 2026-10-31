@@ -112,14 +112,7 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = """\
-RIRPF art 86: tipo de retención. Heart of the personalized retention scheme for trabajo \
-rendimientos. Define el tipo como cuota de retención / cuantía total de retribuciones \
-(art-83.2) expresado con dos decimales. Aplica tipo cero cuando la base menos el mínimo \
-personal-familiar es no positiva, reducción de 2 puntos para contribuyentes con \
-vivienda-habitual DT-18 (cifra inferior a 33.007,2 EUR), y un suelo del 2 por ciento para \
-contratos de duración inferior al anio. Base reglamentaria del calculo del tipo \
-personalizado de retención del trabajo, citado por art-80 RIRPF."""
+notes = "RIRPF art 86: tipo de retención. Heart of the personalized retention scheme for trabajo rendimientos. Define el tipo como cuota de retención / cuantía total de retribuciones (art-83.2) expresado con dos decimales. Aplica tipo cero cuando la base menos el mínimo personal-familiar es no positiva, reducción de 2 puntos para contribuyentes con vivienda-habitual DT-18 (cifra inferior a 33.007,2 EUR), y un suelo del 2 por ciento para contratos de duración inferior al año. Base reglamentaria del cálculo del tipo personalizado de retención del trabajo, citado por art-80 RIRPF."
 required_text = [
     "Tipo de retención",
     "cociente obtenido de dividir la cuota de retención",
@@ -422,7 +415,7 @@ effective_from = 2007-03-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "verified against official BOE-A-2007-6820#a110 and bundled rd-439-2007-art-110.html; operator to re-stamp"
-notes = "Base reglamentaria del importe del pago fraccionado de actividades económicas: 20 por ciento para estimación directa, escala 4/3/2 por ciento para estimación objetiva con datos-base, regla sin datos-base al 2 por ciento, actividades agrarias al 2 por ciento, minoraciones y porcentajes superiores. Para la revision 2019-y-siguientes, la regla especifica de resultados negativos de trimestres anteriores del Modelo 130 se verifica contra las instrucciones AEAT del modelo; no contra un apartado 110.5 vigente."
+notes = "Base reglamentaria del importe del pago fraccionado de actividades económicas: 20 por ciento para estimación directa, escala 4/3/2 por ciento para estimación objetiva con datos-base, regla sin datos-base al 2 por ciento, actividades agrarias al 2 por ciento, minoraciones y porcentajes superiores. Para la revisión 2019-y-siguientes, la regla especifica de resultados negativos de trimestres anteriores del Modelo 130 se verifica contra las instrucciones AEAT del modelo; no contra un apartado 110.5 vigente."
 required_text = [
     "20 por ciento del rendimiento neto",
     "el 4 por ciento de los rendimientos netos",
@@ -633,7 +626,7 @@ effective_from = 2007-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-14
 reviewed_by = "operator"
-notes = "Limites de determinadas deducciones. Caps the base of the art. 68.3 (donativos) and art. 68.5 (Patrimonio Histórico) deductions at 10 per cent of the contribuyente's base liquidable. The limits on art. 68.2 (actividades económicas) follow the Impuesto sobre Sociedades incentivos regime and are computed after subtracting art. 68.1 (empresas nueva creación) and art. 68.5 (Patrimonio Histórico) from the combined estatal + autonómica cuota integra."
+notes = "Límites de determinadas deducciones. Caps the base of the art. 68.3 (donativos) and art. 68.5 (Patrimonio Histórico) deductions at 10 per cent of the taxpayer's base liquidable. The limits on art. 68.2 (actividades económicas) follow the Impuesto sobre Sociedades incentivos regime and are computed after subtracting art. 68.1 (empresas nueva creación) and art. 68.5 (Patrimonio Histórico) from the combined estatal + autonómica cuota íntegra."
 required_text = [
     "Límites de determinadas deducciones",
     "no podrá exceder para cada una de ellas del 10 por ciento de la base liquidable del contribuyente",
@@ -1838,16 +1831,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = """\
-Fase 2a: minoración por incentivos a la inversion. Son deducibles las cantidades que, en concepto de \
-amortización del inmovilizado material o intangible afecto a la actividad, correspondan a la \
-depreciación efectiva, calculada según la tabla de amortización de la propia orden (coeficiente \
-lineal máximo, mínimo derivado del periodo máximo, o cualquier coeficiente intermedio). El primer \
-slice del motor no modela un registro de bienes de inversion por elemento; la minoración se recoge \
-como un importe declarado por el operador, grounded en esta instrucción, y se resta del rendimiento \
-neto previo junto con la minoración por incentivos al empleo. Cross-checked byte-identical against \
-the AEAT Manual practico de Renta 2025, Parte 1, worked example epígrafe 673.1 (minoración por \
-incentivos a la inversion 6.050,00 euros, libro registro de bienes de inversion)."""
+notes = "Fase 2a: minoración por incentivos a la inversión. Son deducibles las cantidades que, en concepto de amortización del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciación efectiva, calculada según la tabla de amortización de la propia orden (coeficiente lineal máximo, mínimo derivado del periodo máximo, o cualquier coeficiente intermedio). La primera etapa del motor no modela un registro de bienes de inversión por elemento; la minoración se recoge como un importe declarado por el operador, fundamentado en esta instrucción, y se resta del rendimiento neto previo junto con la minoración por incentivos al empleo. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epígrafe 673.1 (minoración por incentivos a la inversión 6.050,00 euros, libro registro de bienes de inversión)."
 required_text = [
     "b) Minoración por incentivos a la inversión.",
     "Serán deducibles las cantidades que, en concepto de amortización del inmovilizado, material o intangible, correspondan a la depreciación efectiva",
@@ -1888,7 +1872,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequeña dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de módulos M131 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, m131_resolve_modulos_indices_generales) aplica ahora los cuatro indices generales (b.1, b.2, b.4, b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades: el indice b.1 declarado se ignora para las dos actividades tabuladas con indice especial (721.2 transporte por autotaxis, 722 transporte de mercancías); cuando b.1 se aplica, b.3 se omite; cuando ambos b.2 y b.4 se declaran, prevalece la temporada (orden de enumeración de la Orden) y se ignora el inicio de nuevas actividades. Dos indicadores internos (modulos-pequena-dimension-ignorado-flag, modulos-temporada-inicio-actividad-conflicto-flag) fundamentan los advisories no bloqueantes que señalan al operador cuando una de sus declaraciones fue ignorada, per no-silent-under-declaration. El motor M100 (0293-...-rendimiento-base.toml) sigue modelando únicamente su propio cascade agrario (indices 1-8, Anexo I instrucción 2.3), sin relación con este Anexo II."
+notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequeña dimensión (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de módulos M131 (0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml, m131_resolve_modulos_indices_generales) aplica ahora los cuatro indices generales (b.1, b.2, b.4, b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades: el indice b.1 declarado se ignora para las dos actividades tabuladas con indice especial (721.2 transporte por autotaxis, 722 transporte de mercancías); cuando b.1 se aplica, b.3 se omite; cuando ambos b.2 y b.4 se declaran, prevalece la temporada (orden de enumeración de la Orden) y se ignora el inicio de nuevas actividades. Dos indicadores internos (modulos-pequena-dimension-ignorado-flag, modulos-temporada-inicio-actividad-conflicto-flag) fundamentan los advisories no bloqueantes que señalan al operador cuando una de sus declaraciones fue ignorada, per no-silent-under-declaration. El motor M100 (0293-...-rendimiento-base.toml) sigue modelando únicamente su propio cascade agrario (indices 1-8, Anexo I instrucción 2.3), sin relación con este Anexo II."
 required_text = [
     "Incompatibilidades entre los índices correctores:",
     "En ningún caso será aplicable el índice corrector para empresas de pequeña dimensión (b.1) a las actividades para las que están previstos los índices correctores especiales enumerados en las letras a.2), a.3), a.4) y a.5).",
@@ -2005,19 +1989,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = """\
-Fase 2a agraria: rendimiento neto minorado. El rendimiento neto minorado se obtiene deduciendo del \
-rendimiento neto previo (fase 1a) las cantidades que, en concepto de amortización del inmovilizado \
-material e intangible (excluidas las actividades forestales), correspondan a la depreciación \
-efectiva que sufran los distintos elementos afectos por funcionamiento, uso, disfrute u \
-obsolescencia, calculada elemento por elemento conforme a la tabla de amortización de este mismo \
-Anexo I (para grupos no tabulados en el Anexo I, la orden remite a la letra b) del punto 2.2 del \
-Anexo II). El primer slice del motor no modela un registro de bienes de inversion por elemento \
-(valor de adquisición, coeficiente, periodo transcurrido por bien); la amortización se recoge como \
-un importe declarado por el operador, grounded en esta instrucción, y se resta del rendimiento neto \
-previo (casilla 1538 del Modelo 100, minorando la casilla 1537 para obtener la casilla 1539). Mismo \
-patron honesto-escalar que la minoración por incentivos a la inversion del motor de módulos del \
-Anexo II (instrucción 2.2.b), ver orden-hac-1347-2024:instruccion-2-2-b."""
+notes = "Fase 2a agraria: rendimiento neto minorado. El rendimiento neto minorado se obtiene deduciendo del rendimiento neto previo (fase 1a) las cantidades que, en concepto de amortización del inmovilizado material e intangible (excluidas las actividades forestales), correspondan a la depreciación efectiva que sufran los distintos elementos afectos por funcionamiento, uso, disfrute u obsolescencia, calculada elemento por elemento conforme a la tabla de amortización de este mismo Anexo I (para grupos no tabulados en el Anexo I, la orden remite a la letra b) del punto 2.2 del Anexo II). La primera etapa del motor no modela un registro de bienes de inversión por elemento (valor de adquisición, coeficiente, periodo transcurrido por bien); la amortización se recoge como un importe declarado por el operador, fundamentado en esta instrucción, y se resta del rendimiento neto previo (casilla 1538 del Modelo 100, minorando la casilla 1537 para obtener la casilla 1539). Mismo patrón honesto-escalar que la minoración por incentivos a la inversión del motor de módulos del Anexo II (instrucción 2.2.b), ver orden-hac-1347-2024:instruccion-2-2-b."
 required_text = [
     "2.2 Fase 2: Rendimiento neto minorado.",
     "El rendimiento neto minorado se obtiene deduciendo del anterior las cantidades que, en concepto de amortización del inmovilizado material e intangible correspondan a la depreciación efectiva",
@@ -2059,15 +2031,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = """\
-Fase 4a agraria: reducción agricultores jóvenes. Los agricultores jóvenes o asalariados agrarios \
-podran reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por \
-ciento durante los periodos impositivos cerrados durante los cinco anos siguientes a su primera \
-instalación como titulares de una explotación prioritaria (capitulo IV, titulo I, Ley 19/1995), \
-siempre que acrediten un plan de mejora de la explotación. Desarrolla, para el ejercicio 2025, la \
-disposición adicional sexta de la Ley del IRPF (ley-35-2006:da-6). Base legal de la casilla 1551 del \
-Modelo 100 2025 (motor: percent(1550, 25) cuando la casilla informativa AJ del Diseño de Registros \
-AEAT declara la elegibilidad; en blanco/No no se fabrica ninguna reducción)."""
+notes = "Fase 4a agraria: reducción agricultores jóvenes. Los agricultores jóvenes o asalariados agrarios podran reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento durante los periodos impositivos cerrados durante los cinco años siguientes a su primera instalación como titulares de una explotación prioritaria (capitulo IV, titulo I, Ley 19/1995), siempre que acrediten un plan de mejora de la explotación. Desarrolla, para el ejercicio 2025, la disposición adicional sexta de la Ley del IRPF (ley-35-2006:da-6). Base legal de la casilla 1551 del Modelo 100 2025 (motor: percent(1550, 25) cuando la casilla informativa AJ del Diseño de Registros AEAT declara la elegibilidad; en blanco/No no se fabrica ninguna reducción)."
 required_text = [
     "Los agricultores jóvenes o asalariados agrarios podrán reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento",
     "primera instalación como titulares de una explotación prioritaria",
@@ -2287,22 +2251,7 @@ effective_to = 2026-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
-notes = """\
-Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de \
-pequeña dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices \
-correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 \
-transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
-indice b.1 tampoco se aplica el indice corrector de exceso (b.3), y cuando resulte aplicable el \
-indice corrector de temporada (b.2) no se aplica el de inicio de nuevas actividades (b.4). El motor \
-de módulos M131 (0003-modulos-engine.toml) aplica para 2026 la cascada completa b.1 -> b.2 -> b.3 \
--> b.4 mediante el op m131_resolve_modulos_indices_generales, que modela estructuralmente ambas \
-incompatibilidades: el indice b.1 se ignora para los epígrafes tabulados que llevan indice especial \
-(721.2 transporte por autotaxis, letra a.2; 722 transporte de mercancías por carretera, letra a.4), \
-y el indice de temporada desplaza al de inicio de nuevas actividades. Esta entrada fundamenta los \
-advisories no bloqueantes que señalan al operador la declaración ignorada, per \
-orden-hac-1425-2025-Anexo-II-instruccion-2-3 y no-silent-under-declaration. Cross-checked \
-byte-identical against the 2025 instrucción \
-(orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades)."""
+notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequeña dimensión (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancías por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3), y cuando resulte aplicable el indice corrector de temporada (b.2) no se aplica el de inicio de nuevas actividades (b.4). El motor de módulos M131 (0003-modulos-engine.toml) aplica para 2026 la cascada completa b.1 -> b.2 -> b.3 -> b.4 mediante el op m131_resolve_modulos_indices_generales, que modela estructuralmente ambas incompatibilidades: el indice b.1 se ignora para los epígrafes tabulados que llevan indice especial (721.2 transporte por autotaxis, letra a.2; 722 transporte de mercancías por carretera, letra a.4), y el indice de temporada desplaza al de inicio de nuevas actividades. Esta entrada fundamenta los advisories no bloqueantes que señalan al operador la declaración ignorada, per orden-hac-1425-2025-Anexo-II-instruccion-2-3 y no-silent-under-declaration. Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades)."
 required_text = [
     "Incompatibilidades entre los índices correctores:",
     "En ningún caso será aplicable el índice corrector para empresas de pequeña dimensión (b.1) a las actividades para las que están previstos los índices correctores especiales enumerados en las letras a.2), a.3), a.4) y a.5).",
@@ -5138,7 +5087,7 @@ published_at = 2006-11-29
 effective_from = 2012-03-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-30
-reviewed_by = "agent-reviewed against bundled datrigesima and live BOE consolidated provision; no operator attestation"
+reviewed_by = "agent-reviewed against bundled datrigesima and live BOE consolidated provisión; no operator attestation"
 notes = "LIRPF DA 30.2, redactada por el art. 2 del Real Decreto-ley 12/2012 (BOE-A-2012-4441), publicado y en vigor el 31/03/2012: en la transmisión de elementos acogidos a la libertad de amortización de la DA 11 o DT 37 TRLIS, el exceso sobre la amortización ordinaria no reduce el valor de adquisición y constituye rendimiento integro de la actividad en el periodo de transmisión. Este régimen anterior sustenta el exceso histórico; no anticipa la DA 59, vigente desde 28/06/2024."
 required_text = [
     "Libertad de amortización en elementos nuevos del activo material fijo",
@@ -5304,21 +5253,7 @@ effective_from = 2018-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-05
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a81; operator to re-stamp"
-notes = """\
-LIRPF art 81.3 third paragraph: how the apartado 2 increment is PRORATED and BOUNDED. Read this \
-before assuming the proration is a manual gloss -- it is statutory, and an earlier reading of this \
-campaign wrongly attributed it to the AEAT manual alone. The clause states three things the \
-calculation depends on. It is proportional to 'el numero de meses en que se cumplan de forma \
-simultanea los requisitos de los apartados 1 y 2', so the month basis is an INTERSECTION of the two \
-apartados rather than either alone. It carves out the under-three condition for the turning-three \
-extension months ('salvo el relativo a que sea menor de tres años en los meses a los que se refiere \
-el segundo párrafo del apartado 2'). And it caps the result at 'el importe total del gasto efectivo \
-no subvencionado satisfecho en dicho periodo a la guardería o centro educativo EN RELACION CON ESE \
-HIJO' -- per child by its own words, which is the authority for bounding the increment per \
-descendant rather than over the household. The apartado's FIRST paragraph prorates the apartado 1 \
-deducción and is a different rule for a different figure; do not conflate them. AGENT-AUTHORED, \
-grounded in the bundled authoritative consolidated ley-35-2006.html#a81; operator to confirm and \
-re-stamp."""
+notes = "LIRPF art 81.3 third paragraph: how the apartado 2 increment is PRORATED and BOUNDED. Read this before assuming the proration is a manual gloss -- it is statutory, and an earlier reading of this campaign wrongly attributed it to the AEAT manual alone. The clause states three things the calculation depends on. It is proportional to 'el numero de meses en que se cumplan de forma simultanea los requisitos de los apartados 1 y 2', so the month basis is an INTERSECTION of the two apartados rather than either alone. It carves out the under-three condition for the turning-three extension months ('salvo el relativo a que sea menor de tres años en los meses a los que se refiere el segundo párrafo del apartado 2'). And it caps the result at 'el importe total del gasto efectivo no subvencionado satisfecho en dicho periodo a la guardería o centro educativo EN RELACION CON ESE HIJO' -- per child by its own words, which is the authority for bounding the increment per descendant rather than over the household. The paragraph's FIRST paragraph prorates the apartado 1 deducción and is a different rule for a different figure; do not conflate them. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a81; operator to confirm and re-stamp."
 required_text = [
     "El incremento de la deducción previsto en el apartado 2 anterior se calculará de forma proporcional al número de meses en que se cumplan de forma simultánea",
     "tendrá como límite el importe total del gasto efectivo no subvencionado",
@@ -7656,7 +7591,7 @@ effective_from = 2007-03-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-27
 reviewed_by = "agent-authored from bundled rd-439-2007.html#a22; operator to re-stamp"
-notes = "RIRPF art 22: elementos patrimoniales afectos a una actividad económica. This is the affectation rule the vehículo and telefonía spending categories rest on: it admits only elements the contribuyente uses for the purposes of the activity and excludes those destined to the titular's private use, which is why those categories are usage-ratio rather than fully deductible. A sweep of the bundled consolidated text between this article and art. 23 found no amending note, so the text is the original 2007 wording."
+notes = "RIRPF art 22: elementos patrimoniales afectos a una actividad económica. This is the affectation rule the vehículo and telefonía spending categories rest on: it admits only elements the contribuyente uses for the purposes of the activity and excludes those destined to the holder's private use, which is why those categories are usage-ratio rather than fully deductible. A sweep of the bundled consolidated text between this article and art. 23 found no amending note, so the text is the original 2007 wording."
 required_text = [
     "Elementos patrimoniales afectos a una actividad",
     "Los bienes inmuebles en los que se desarrolle la actividad",

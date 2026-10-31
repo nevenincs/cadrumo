@@ -171,14 +171,7 @@ effective_from = 2012-10-31
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = """\
-Embargo de bienes o derechos en entidades de crédito o de deposito. The seizure may extend beyond \
-the office where it was notified, within the amount due. Where the seized balance derives from a \
-transfer of salary, pension or wage, the limits protecting those sums apply as though the balance \
-were the payment itself. On a jointly held account only the obligado's share is seized, and where \
-the shares are not evidenced the balance is presumed divided equally unless a different material \
-ownership is proved. The protective limits themselves are set by the Ley de Enjuiciamiento Civil, \
-not here."""
+notes = "Embargo de bienes o derechos en entidades de crédito o de deposito. The seizure may extend beyond the office where it was notified, within the amount due. Where the seized balance derives from a transfer of salary, pension or wage, the limits protecting those sums apply as though the balance were the payment itself. On a jointly held account only the debtor's share is seized, and where the shares are not evidenced the balance is presumed divided equally unless a different material ownership is proved. The protective limits themselves are set by the Ley de Enjuiciamiento Civil, not here."
 required_text = [
     "sólo se embargará la parte correspondiente al obligado tributario",
     "el saldo se presumirá dividido en partes iguales, salvo que se pruebe una titularidad material diferente",
@@ -197,7 +190,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Enajenación de los bienes embargados. Sale proceeds by public auction, competition or direct award. Where the assets are not sold the procedure may end with their adjudication to the Hacienda Publica: that adjudication is agreed for the amount of the debt pursued and may never exceed 75 por ciento of the initial price set in the sale procedure -- the one percentage this article establishes. Assets may not be sold until the liquidación being enforced is firm, save for force majeure, perishable goods, or the obligado's express request. The obligado may release the seized assets at any point before adjudication by extinguishing the debt and the costs."
+notes = "Enajenación de los bienes embargados. Sale proceeds by public auction, competition or direct award. Where the assets are not sold the procedure may end with their adjudication to the Hacienda Pública: that adjudication is agreed for the amount of the debt pursued and may never exceed 75 por ciento of the initial price set in the sale procedure -- the one percentage this article establishes. Assets may not be sold until the liquidación being enforced is firm, save for force majeure, perishable goods, or the debtor's express request. The obligado may release the seized assets at any point before adjudication by extinguishing the debt and the costs."
 required_text = [
     "podrá concluir con la adjudicación de bienes a la Hacienda Pública",
     "sin que, en ningún caso, pueda rebasar el 75 por ciento del tipo inicial fijado en el procedimiento de enajenación",

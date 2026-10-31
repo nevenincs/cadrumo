@@ -90,7 +90,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversión del sujeto pasivo (apartado uno 2o), donde el destinatario de la operación asume la condición de sujeto pasivo y debe autorepercutirse el IVA."
+notes = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversión del sujeto pasivo (apartado uno 2o), donde el destinatario de la operación asume la condición de sujeto pasivo y debe autorrepercutirse el IVA."
 required_text = [
     "Sujetos pasivos",
     "Los empresarios o profesionales para quienes se realicen las operaciones",
@@ -148,7 +148,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "LIVA art 92: cuotas tributarias deducibles. Establece el derecho del sujeto pasivo a deducir las cuotas del IVA devengadas por las operaciones que ha soportado por repercusión directa o por las operaciones equivalentes (importaciones, adquisiciones intracomunitarias, autorepercusion). Es la base legal del flujo IVA soportado y deducible."
+notes = "LIVA art 92: cuotas tributarias deducibles. Establece el derecho del sujeto pasivo a deducir las cuotas del IVA devengadas por las operaciones que ha soportado por repercusión directa o por las operaciones equivalentes (importaciones, adquisiciones intracomunitarias, autorrepercusión). Es la base legal del flujo IVA soportado y deducible."
 required_text = [
     "Cuotas tributarias deducibles",
     "podrán deducir",
@@ -672,15 +672,7 @@ effective_from = 2017-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-03
 reviewed_by = "agent-review"
-notes = """RIVA art 62: libros registros del IVA. El apartado 6 obliga a llevar los libros \
-registro a través de la Sede electrónica de la AEAT, mediante el suministro electrónico de \
-los registros de facturación (SII), a quienes tengan un periodo de liquidación mensual \
-conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los \
-terminos del art 68 bis. Es el supuesto al que remite el art 32.e del RD 1065/2007 para \
-excluir de la declaración anual de operaciones con terceras personas (Modelo 347) tanto a los \
-obligados como a los acogidos voluntariamente. Apartado 6 añadido con efectos desde el \
-1 de enero de 2017 por el RD 596/2016 (BOE-A-2016-11575); texto verificado contra el \
-consolidado bundled corpus/normatives/html/rd-1624-1992.html."""
+notes = "RIVA art 62: libros registros del IVA. El apartado 6 obliga a llevar los libros registro a través de la Sede electrónica de la AEAT, mediante el suministro electrónico de los registros de facturación (SII), a quienes tengan un periodo de liquidación mensual conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los términos del art 68 bis. Es el supuesto al que remite el art 32.e del RD 1065/2007 para excluir de la declaración anual de operaciones con terceras personas (Modelo 347) tanto a los obligados como a los acogidos voluntariamente. Apartado 6 añadido con efectos desde el 1 de enero de 2017 por el RD 596/2016 (BOE-A-2016-11575); texto verificado contra el consolidado bundled corpus/normatives/html/rd-1624-1992.html."
 required_text = [
     "Libros registros del Impuesto sobre el Valor Añadido",
     "deberán llevarse a través de la Sede electrónica de la Agencia Estatal de Administración Tributaria, mediante el suministro electrónico de los registros de facturación",

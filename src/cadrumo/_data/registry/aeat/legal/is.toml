@@ -130,14 +130,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = """\
-LIS art 21: exención sobre dividendos y rentas derivadas de la transmisión de valores \
-representativos de los fondos propios de entidades residentes y no residentes en \
-territorio español. Establece el régimen de participation exemption: dividendos y \
-ganancias por transmisión de acciones quedan exentos cuando se cumple el umbral del 5 por \
-ciento de participación sostenida durante un anio, con requisito adicional para no \
-residentes de tributación mínima al 10 por ciento nominal. Base sustantiva de las \
-correcciones negativas por dividendos exentos en M200."""
+notes = "LIS art 21: exención sobre dividendos y rentas derivadas de la transmisión de valores representativos de los fondos propios de entidades residentes y no residentes en territorio español. Establece el régimen de participation exemption: dividendos y ganancias por transmisión de acciones quedan exentos cuando se cumple el umbral del 5 por ciento de participación sostenida durante un año, con requisito adicional para no residentes de tributación mínima al 10 por ciento nominal. Base sustantiva de las correcciones negativas por dividendos exentos en M200."
 required_text = [
     "Exención sobre dividendos",
     "5 por ciento",
@@ -157,14 +150,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = """\
-LIS art 22: exención de las rentas obtenidas en el extranjero a través de un \
-establecimiento permanente. Establece la exención para rentas positivas obtenidas por EPs \
-no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de \
-al menos el 10 por ciento, junto con la exención en transmisión o cese del EP. Las rentas \
-negativas no se integran salvo en caso de cese (con minorizacion por rentas positivas \
-previamente exentas o deducidas). Base sustantiva de las correcciones por \
-rentas-EP-no-residente en M200."""
+notes = "LIS art 22: exención de las rentas obtenidas en el extranjero a través de un establecimiento permanente. Establece la exención para rentas positivas obtenidas por EPs no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de al menos el 10 por ciento, junto con la exención en transmisión o cese del EP. Las rentas negativas no se integran salvo en caso de cese (con minoración por rentas positivas previamente exentas o deducidas). Base sustantiva de las correcciones por rentas-EP-no-residente en M200."
 required_text = [
     "Exención de las rentas obtenidas en el extranjero",
     "establecimiento permanente",
@@ -210,7 +196,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 32: deducción para evitar la doble imposición económica internacional - dividendos y participaciones en beneficios. Permite deducir el impuesto efectivamente pagado por la entidad no residente sobre los beneficios distribuidos como dividendos, condicionado a participación mínima del 5 por ciento mantenida ininterrumpidamente durante un anio y a la inclusion de la cuantía en la base imponible. Base sustantiva del underlying-tax-credit (deducción DIE) en M200."
+notes = "LIS art 32: deducción para evitar la doble imposición económica internacional - dividendos y participaciones en beneficios. Permite deducir el impuesto efectivamente pagado por la entidad no residente sobre los beneficios distribuidos como dividendos, condicionado a participación mínima del 5 por ciento mantenida ininterrumpidamente durante un año y a la inclusión de la cuantía en la base imponible. Base sustantiva del underlying-tax-credit (deducción DIE) en M200."
 required_text = [
     "Deducción para evitar la doble imposición económica internacional",
     "dividendos",
@@ -304,7 +290,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 36: deducción por inversiones en producciones cinematográficas, series audiovisuales y espectáculos en vivo de artes escénicas y musicales. Establece las tasas de deducción (30 por ciento primer millón de base, 25 por ciento exceso), los limites por producción y episodio (20M / 10M EUR), el requisito de gasto territorial español (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
+notes = "LIS art 36: deducción por inversiones en producciones cinematográficas, series audiovisuales y espectáculos en vivo de artes escénicas y musicales. Establece las tasas de deducción (30 por ciento primer millón de base, 25 por ciento exceso), los límites por producción y episodio (20M / 10M EUR), el requisito de gasto territorial español (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
 required_text = [
     "Deducción por inversiones en producciones cinematográficas",
     "30 por ciento",
@@ -505,7 +491,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 26: compensación de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensación de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millón de euros y plazo de prescripción de 10 años para la facultad de comprobación."
+notes = "LIS art 26: compensación de bases imponibles negativas. Establece el límite del 70 por ciento de la base imponible previa para la compensación de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millón de euros y plazo de prescripción de 10 años para la facultad de comprobación."
 required_text = [
     "Compensación de bases imponibles negativas",
     "70 por ciento de la base imponible previa",
@@ -740,7 +726,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIS art 30: cuota integra. Define la cuota integra como la cantidad resultante de aplicar a la base imponible el tipo de gravamen del articulo 29, con regla de proporcionalidad para periodos impositivos de duración inferior al anio. La definición sustantiva del Impuesto sobre Sociedades reside en este articulo."
+notes = "LIS art 30: cuota íntegra. Define la cuota íntegra como la cantidad resultante de aplicar a la base imponible el tipo de gravamen del artículo 29, con regla de proporcionalidad para periodos impositivos de duración inferior al año. La definición sustantiva del Impuesto sobre Sociedades reside en este artículo."
 required_text = [
     "Cuota íntegra",
     "aplicar a la base imponible el tipo de gravamen",
@@ -2332,7 +2318,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a130 resolved through the production resolver against the bundled consolidated LIS (ley-27-2014.html, 212 units, exactly one unit for this anchor) and each required_text phrase confirmed present in that resolved unit; corroborated by the AEAT Manual practico de Sociedades 2024 anchors 59 and 61 (pp. 529, 534); pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 130: derecho a la conversion de activos por impuesto diferido (AID) en crédito exigible frente a la Administración Tributaria. Los AID correspondientes a dotaciones por deterioro de créditos por insolvencias de deudores no vinculados y no adeudados con entidades de derecho publico cuya deducibilidad no se produce por el art. 13.1.a), y los derivados de los apartados 1 y 2 del art. 14 (sistemas de prevision social y prejubilacion), pueden convertirse en crédito exigible por un importe igual a la cuota liquida positiva del periodo impositivo de generación, cuando concurra alguna de las circunstancias del apartado 2 (perdidas contables en los términos que fija, o liquidación o insolvencia judicialmente declarada). Funda la sección activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba únicamente la lista genérica de 18 artículos común a toda la revision y no el articulo que establece el derecho."
+notes = "LIS art. 130: derecho a la conversión de activos por impuesto diferido (AID) en crédito exigible frente a la Administración Tributaria. Los AID correspondientes a dotaciones por deterioro de créditos por insolvencias de deudores no vinculados y no adeudados con entidades de derecho público cuya deducibilidad no se produce por el art. 13.1.a), y los derivados de los apartados 1 y 2 del art. 14 (sistemas de previsión social y prejubilación), pueden convertirse en crédito exigible por un importe igual a la cuota líquida positiva del periodo impositivo de generación, cuando concurra alguna de las circunstancias del apartado 2 (perdidas contables en los términos que fija, o liquidación o insolvencia judicialmente declarada). Funda la sección activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba únicamente la lista genérica de 18 artículos común a toda la revisión y no el artículo que establece el derecho."
 required_text = [
     "podrán convertirse en un crédito exigible frente a la Administración Tributaria",
     "Que la entidad sea objeto de liquidación o insolvencia judicialmente declarada",
@@ -2503,7 +2489,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a45 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and its rubric reads Uniones temporales de empresas, matching the section it grounds; required_text confirmed present in the resolved unit; the anchor was checked against the measured collision set for this corpus and is not shadowed; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interés económico españolas), salvo la regla de valoración del segundo párrafo del apartado 4 de ese articulo. Funda la sección del Modelo 200 cuyo tag nombra el art. 45.1."
+notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interés económico españolas), salvo la regla de valoración del segundo párrafo del apartado 4 de ese artículo. Funda la sección del Modelo 200 cuyo tag nombra el art. 45.1."
 required_text = [
     "Las uniones temporales de empresas reguladas en la Ley 18/1982",
     "inscritas en el registro especial",
@@ -2520,7 +2506,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a106"
 published_at = 2014-11-28
 effective_from = 2015-01-01
 review_status = "agent_reviewed"
-reviewed_by = "agent-prepared; anchor #a106 resolved to exactly one unit through the production resolver, rubric Contratos de arrendamiento financiero, matching the section it grounds; required_text confirmed present; the minimum contract durations the provision states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_by = "agent-prepared; anchor #a106 resolved to exactly one unit through the production resolver, rubric Contratos de arrendamiento financiero, matching the section it grounds; required_text confirmed present; the minimum contract durations the provisión states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
 reviewed_at = 2026-08-26
 notes = "LIS art. 106: contratos de arrendamiento financiero. Se aplica a los contratos en que el arrendador es una entidad de crédito o un establecimiento financiero de crédito. El texto bundled fija duraciones mínimas según el objeto sea bien mueble o inmueble, con habilitación reglamentaria para otros plazos; esas cifras no han sido contrastadas contra el texto vivo del BOE y no se afirman en required_text. Funda la sección de arrendamiento financiero del Modelo 200."
 required_text = [
@@ -2541,7 +2527,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a83 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and checked against this corpus's measured anchor-collision set so it is not one of the shadowed bis/ter provisions; required_text confirmed present in the resolved unit; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 83: limitación en la deducción de gastos financieros destinados a la adquisición de participaciones en el capital o en los fondos propios de entidades. Opera a los efectos del art. 16, anadiendo un limite propio para la deuda destinada a adquirir participaciones cuando la entidad adquirida se incorpora al grupo fiscal o es objeto de una reestructuración. Es la SEGUNDA MITAD del compuesto que nombra la sección limite_art_16_5_y_o_83_lis del Modelo 200: esa sección descansa sobre el art. 16.5 y sobre este articulo, de modo que fundarla solo en el art. 16 declararía una autoridad mas estrecha que la que la propia sección invoca."
+notes = "LIS art. 83: limitación en la deducción de gastos financieros destinados a la adquisición de participaciones en el capital o en los fondos propios de entidades. Opera a los efectos del art. 16, añadiendo un límite propio para la deuda destinada a adquirir participaciones cuando la entidad adquirida se incorpora al grupo fiscal o es objeto de una reestructuración. Es la SEGUNDA MITAD del compuesto que nombra la sección limite_art_16_5_y_o_83_lis del Modelo 200: esa sección descansa sobre el art. 16.5 y sobre este artículo, de modo que fundarla solo en el art. 16 declararía una autoridad más estrecha que la que la propia sección invoca."
 required_text = [
     "Limitación en la deducción de gastos financieros destinados a la adquisición de participaciones",
     "A los efectos de lo previsto en el artículo 16 de esta Ley",
@@ -2620,7 +2606,7 @@ effective_from = 2022-10-20
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-23
 reviewed_by = "agent-prepared; BOE anchors this disposición as #da-2, which collides with another unit, so the compact ordinal form #dadecimoseptima reaches it through the resolver's structural-title fallback; verified to resolve to exactly one unit through resolve_anchored_extracted_unit with every required_text phrase present; pending operator re-stamp"
-notes = "LIS disposición adicional decimoséptima (added by RDL 18/2022): libertad de amortización en instalaciones de autoconsumo eléctrico y de uso térmico de consumo propio con energía renovable que sustituyan instalaciones fósiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion máxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
+notes = "LIS disposición adicional decimoséptima (added by RDL 18/2022): libertad de amortización en instalaciones de autoconsumo eléctrico y de uso térmico de consumo propio con energía renovable que sustituyan instalaciones fósiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversión máxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
 required_text = [
     "Libertad de amortización en inversiones que utilicen energía procedente de fuentes renovables",
     "la plantilla media total de la entidad se mantenga respecto de la plantilla media de los doce meses anteriores",
@@ -2719,7 +2705,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared; anchor #a102 resolved to exactly one unit through the production resolver and checked against this corpus's measured collision set; required_text confirmed present. Adjudicated as the ENTIDADES DE REDUCIDA DIMENSION regime rather than a general one: art. 102 sits in the incentives chapter whose ámbito is fixed by art. 101, which the catalogue already carries, so it grounds the ERD libertad-de-amortizacion section and not the other varieties; pending operator re-stamp"
 reviewed_at = 2026-08-26
-notes = "LIS art. 102: libertad de amortización de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades económicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la sección empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
+notes = "LIS art. 102: libertad de amortización de las entidades de reducida dimensión. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades económicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la sección empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
 required_text = [
     "Libertad de amortización",
     "Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias",

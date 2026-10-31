@@ -66,16 +66,7 @@ effective_from = 2017-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = """\
-Aplazamiento y fraccionamiento del pago. Debts in periodo voluntario or ejecutivo may be deferred on \
-request where the obligado's economic-financial situation transitorily prevents payment. Apartado 2 \
-lists the debts that may NOT be deferred (retenciones and ingresos a cuenta among them) and provides \
-that a request over such a debt is inadmitted. A deferral request filed in periodo voluntario \
-prevents the periodo ejecutivo from starting but does not stop intereses de demora accruing. \
-Deferred debts must be secured under art-82. Where the debt is fully secured by aval solidario de \
-entidad de crédito or certificado de seguro de caución the interest demanded is the interés legal \
-rather than the interés de demora; this article fixes neither rate, both being set annually by the \
-LPGE."""
+notes = "Aplazamiento y fraccionamiento del pago. Debts in periodo voluntario or ejecutivo may be deferred on request where the debtor's economic-financial situation transitorily prevents payment. Apartado 2 lists the debts that may NOT be deferred (retenciones and ingresos a cuenta among them) and provides that a request over such a debt is inadmissible. A deferral request filed in periodo voluntario prevents the periodo ejecutivo from starting but does not stop intereses de demora accruing. Deferred debts must be secured under art-82. Where the debt is fully secured by aval solidario de entidad de crédito or certificado de seguro de caución the interest demanded is the interés legal rather than the interés de demora; this article fixes neither rate, both being set annually by the LPGE."
 required_text = [
     "cuando su situación económico-financiera le impida, de forma transitoria, efectuar el pago",
     "deberán garantizarse en los términos previstos en el artículo 82",

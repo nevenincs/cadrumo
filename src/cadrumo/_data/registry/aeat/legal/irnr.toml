@@ -40,7 +40,7 @@ effective_from = 2008-11-18
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-27
 reviewed_by = "agent-authored from BOE-A-2008-18497#a6 downloaded from boe.es; operator to re-stamp"
-notes = "Orden EHA/3290/2008 articulo 6: aprueba el modelo 296. Articulo 1 of the same orden approves modelo 216 and is bundled separately; the pre-existing excerpt covers only that article, which is why 296 read as ungrounded."
+notes = "Orden EHA/3290/2008 artículo 6: aprueba el modelo 296. Artículo 1 of the same orden approves modelo 216 and is bundled separately; the pre-existing excerpt covers only that article, which is why 296 read as ungrounded."
 required_text = [
     "Aprobación del modelo 296",
     "Se aprueba el modelo 296",
@@ -592,17 +592,7 @@ consolidated_as_of = 2026-06-23
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-24
 reviewed_by = "re-adjudicated verbatim against bundled art 5 and official AEAT M210 instructions; agent-prepared, corpus-grounded, pending operator re-stamp"
-notes = """\
-Orden EHA/3316/2010 art 5, plazo de presentación del modelo 210 (IRNR sin establecimiento \
-permanente). The source distinguishes six presentation cases: transmission tipo 28 is event-relative; \
-tipo 02 presentation for the 2025 devengo schedule spans the whole following natural year; general \
-a-ingresar is quarterly; rented-property a-ingresar is annual-April under the consolidated article; \
-cuota cero is 1-20 January; and a devolver opens 1 February with the four-year statutory horizon. \
-The official instructions also publish payment-domiciliation sub-windows. Those are payment-modality \
-cutoffs, not presentation openings or closes, and must not narrow tipo 02's presentation window. \
-Orden HAC/623/2026 later changes art 5.b and its tipo-02 domiciliation interval; its amended figures \
-must be attached only to the schedule they govern, never retrojected onto the 2025 devengo window. \
-The stable general quarterly dates remain grounded by the twenty-natural-day clause."""
+notes = "Orden EHA/3316/2010 art 5, plazo de presentación del modelo 210 (IRNR sin establecimiento permanente). The source distinguishes six presentation cases: transmission tipo 28 is event-relative; tipo 02 presentation for the 2025 devengo schedule spans the whole following natural year; general a-ingresar is quarterly; rented-property a-ingresar is annual-April under the consolidated article; cuota cero is 1-20 January; and a devolver opens 1 February with the four-year statutory horizon. The official instructions also publish payment-domiciliation sub-windows. Those are payment-modality cutoffs, not presentation openings or closes, and must not narrow tipo 02's presentation window. Orden HAC/623/2026 later changes art 5.b and its tipo-02 domiciliation interval; its amended figures must be attached only to the schedule they govern, never applied retrospectively to the 2025 devengo window. The stable general quarterly dates remain grounded by the twenty-natural-day clause."
 required_text = [
     "Plazo de presentación de las autoliquidaciones del Impuesto por las rentas obtenidas en España sin mediación de establecimiento permanente",
     "el plazo de presentación e ingreso será del 1 de abril al 31 de diciembre del año natural siguiente a la fecha de devengo",

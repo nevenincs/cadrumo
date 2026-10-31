@@ -12,7 +12,7 @@ consolidated_as_of = 2026-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE consolidated LIRPF corpus audit on 2026-07-01"
-notes = "Current consolidated LIRPF DA 33: special levy on lottery and betting prizes, 40,000 euro exemption, 20 percent rate, and autoliquidation duty when no withholding or payment on account applies."
+notes = "Current consolidated LIRPF DA 33: special levy on lottery and betting prizes, 40,000 euro exemption, 20 percent rate, and self-assessment duty when no withholding or payment on account applies."
 required_text = [
     "Gravamen especial sobre los premios de determinadas loterías y apuestas",
     "premios cuyo importe íntegro sea igual o inferior a 40.000 euros",
@@ -136,7 +136,7 @@ effective_from = 2013-02-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
-notes = "Articulo 12 grounds the banking and domiciliation payment fields used by Modelo 136."
+notes = "Artículo 12 grounds the banking and direct-debit payment fields used by Modelo 136."
 required_text = [
     "Artículo 12. Pago de las deudas tributarias resultantes de las autoliquidaciones de los modelos 230 o 136 mediante domiciliación bancaria",
     "presenten el modelo 136 por vía telemática por Internet",
@@ -176,7 +176,7 @@ effective_from = 2018-07-19
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
-notes = "Final provision: the new Modelo 136 applies to 2018 Q3 and later autoliquidations."
+notes = "Final provisión: the new Modelo 136 applies to 2018 Q3 and later self-assessments."
 required_text = [
     "Disposición final única. Entrada en vigor",
     "El nuevo modelo 136",
