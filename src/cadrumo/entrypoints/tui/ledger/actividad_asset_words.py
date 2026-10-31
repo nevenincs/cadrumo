@@ -289,6 +289,10 @@ def _change_value(change: ActivityAssetTimelineChange, side: Literal["before", "
     value = change.before if side == "before" else change.after
     label = change.before_label if side == "before" else change.after_label
     key = change.before_key if side == "before" else change.after_key
+    return _change_value_text(value, label, key)
+
+
+def _change_value_text(value: str | None, label: str | None, key: str | None) -> str:
     if value is None:
         return _text("value_changed")
     if label is not None and label.strip():
@@ -321,20 +325,25 @@ def timeline_line(event: ActivityAssetTimelineEvent) -> str:
     ]
     if not event.affects_calculation:
         fields.append(_text("not_in_calculation"))
-    claim = event.claim
-    if claim is not None and claim.tax_year is not None and claim.covered_from and claim.covered_through:
-        fields.append(
-            _text(
-                "claim_span",
-                year=claim.tax_year,
-                **{"from": date_text(claim.covered_from)},
-                through=date_text(claim.covered_through),
-            ),
-        )
+    claim_span = _timeline_claim_span(event)
+    if claim_span is not None:
+        fields.append(claim_span)
     fields.extend(_change_text(change) for change in event.changes)
     if not event.changes:
         fields.append(_text("no_changes"))
     return "\t".join(fields)
+
+
+def _timeline_claim_span(event: ActivityAssetTimelineEvent) -> str | None:
+    claim = event.claim
+    if claim is not None and claim.tax_year is not None and claim.covered_from and claim.covered_through:
+        return _text(
+            "claim_span",
+            year=claim.tax_year,
+            **{"from": date_text(claim.covered_from)},
+            through=date_text(claim.covered_through),
+        )
+    return None
 
 
 __all__ = [

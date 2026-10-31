@@ -79,7 +79,6 @@ from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from cadrumo.domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
-from cadrumo.entrypoints.tui.ledger.actividad_asset import ActivityAssetTuiActionsV1
 from cadrumo.entrypoints.tui.ledger.models_actividad_asset import (
     ActivityAssetClaimRequestV1,
     ActivityAssetCorrectionRequestV1,
@@ -87,6 +86,7 @@ from cadrumo.entrypoints.tui.ledger.models_actividad_asset import (
     ActivityAssetFilingRequestV1,
     ActivityAssetForecastRequestV1,
     ActivityAssetInspectionV1,
+    ActivityAssetTuiActionsV1,
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient

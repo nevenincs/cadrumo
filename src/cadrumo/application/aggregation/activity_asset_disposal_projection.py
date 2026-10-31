@@ -160,8 +160,6 @@ class ActivityAssetDisposalRow:
     def column(self, row_field: ActivityAssetDisposalRowField) -> Decimal | str | bool | None:
         """Return this sale's value for a column; the clave column is the revision's own."""
         disposal = self.revision.disposal
-        loss = self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_LOSS_ELEMENT else None
-        gain = self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT else None
         match row_field:
             case ActivityAssetDisposalRowField.TRANSMISSION_DATE:
                 return None if disposal is None else disposal.disposal_date.isoformat()
@@ -169,14 +167,19 @@ class ActivityAssetDisposalRow:
                 return None if self.acquisition_date is None else self.acquisition_date.isoformat()
             case ActivityAssetDisposalRowField.ONEROUS_TRANSFER:
                 return True if disposal is not None and disposal.reason in TRANSMISSION_REASONS else None
+            case _:
+                return self._amount_column(row_field)
+
+    def _amount_column(self, row_field: ActivityAssetDisposalRowField) -> Decimal | None:
+        match row_field:
             case ActivityAssetDisposalRowField.TRANSMISSION_VALUE:
                 return self.calculation.net_transmission_value
             case ActivityAssetDisposalRowField.ACQUISITION_VALUE:
                 return self.calculation.net_value
             case ActivityAssetDisposalRowField.GAIN | ActivityAssetDisposalRowField.GAIN_DIFFERENCE:
-                return gain
+                return self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_GAIN_ELEMENT else None
             case ActivityAssetDisposalRowField.LOSS | ActivityAssetDisposalRowField.LOSS_DIFFERENCE:
-                return loss
+                return self.amount if self.route is ActivityAssetDisposalRoute.TRANSMISSION_LOSS_ELEMENT else None
             case _:
                 return None
 

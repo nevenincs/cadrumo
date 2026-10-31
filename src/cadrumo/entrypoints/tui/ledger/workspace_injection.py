@@ -35,9 +35,9 @@ from .models import (
 from .tools import require_unique_tool_keys
 
 if TYPE_CHECKING:
-    from .actividad_asset import ActivityAssetTuiActionsV1
     from .evidence import LedgerEvidenceReviewListDoorV1
     from .models import LedgerRecordDoorsV1
+    from .models_actividad_asset import ActivityAssetTuiActionsV1
     from .own_accounts import LedgerOwnAccountDoorV1
     from .review import LedgerReviewDoorV1
     from .tools import LedgerToolV1
