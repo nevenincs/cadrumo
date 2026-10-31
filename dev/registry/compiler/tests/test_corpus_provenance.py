@@ -10,9 +10,10 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 
+from .. import corpus_provenance
 from ..corpus_provenance import (
-    _classified_normative_corpus_file,
     classify_normative_corpus_provenance,
+    corpus_digest_pass,
     resolve_normative_corpus_path,
 )
 
@@ -208,48 +209,62 @@ def test_packaged_normatives_directory_symlinked_to_data_root_is_rejected(tmp_pa
         resolve_normative_corpus_path(tmp_path, "corpus/normatives/attested.html")
 
 
-def test_one_file_cited_at_several_anchors_is_classified_once(tmp_path: Path) -> None:
-    """References sharing a file share its classification rather than re-reading it.
+def _count_reads(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
+    reads: list[Path] = []
+    original = Path.read_bytes
+
+    def counting_read_bytes(path: Path) -> bytes:
+        reads.append(path)
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", counting_read_bytes)
+    return reads
+
+
+def test_one_file_cited_at_several_anchors_is_classified_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """References sharing a file share one read and one classification within a pass.
 
     Provenance is decided by the file's bytes but asked per REFERENCE, and the
     corpus is cited at many anchors per file. Re-reading per reference made one
     validation pass scan 415 MB of a 36.8 MB corpus.
     """
-    _write_corpus_fixture(tmp_path, "ley.html", "<!-- Official BOE consolidated source excerpt -->")
-    _classified_normative_corpus_file.cache_clear()
-
-    for anchor in ("art-1", "art-2", "art-3"):
-        assert (
-            classify_normative_corpus_provenance(tmp_path, f"corpus/normatives/html/ley.html#{anchor}")
-            is NormativeCorpusProvenance.BOE_ATTESTED
-        )
-
-    info = _classified_normative_corpus_file.cache_info()
-    assert info.misses == 1, "one file must be read exactly once however many anchors cite it"
-    assert info.hits == 2
-
-
-def test_an_edited_corpus_file_is_reclassified(tmp_path: Path) -> None:
-    """The memo keys on the file's stat identity, so a rewrite is not served a stale verdict."""
     path = _write_corpus_fixture(tmp_path, "ley.html", "<!-- Official BOE consolidated source excerpt -->")
-    _classified_normative_corpus_file.cache_clear()
+    corpus_provenance._PROVENANCE_BY_CONTENT.clear()
+    reads = _count_reads(monkeypatch)
+
+    with corpus_digest_pass():
+        verdicts = {
+            classify_normative_corpus_provenance(tmp_path, f"corpus/normatives/html/ley.html#{anchor}")
+            for anchor in ("art-1", "art-2", "art-3")
+        }
+
+    assert verdicts == {NormativeCorpusProvenance.BOE_ATTESTED}
+    assert reads.count(path) == 2, "one digest read and one classifying read, however many anchors cite it"
+
+
+def test_a_stat_preserving_rewrite_is_reclassified(tmp_path: Path) -> None:
+    """The verdict is keyed on content, so a rewrite that forges size and mtime is not served stale."""
+    path = _write_corpus_fixture(tmp_path, "ley.html", "<!-- Official BOE consolidated source excerpt -->")
+    corpus_provenance._PROVENANCE_BY_CONTENT.clear()
     ref = "corpus/normatives/html/ley.html#art-1"
+    original = path.stat()
 
     assert classify_normative_corpus_provenance(tmp_path, ref) is NormativeCorpusProvenance.BOE_ATTESTED
 
-    path.write_bytes(b"<p>hand written summary</p>")
-    stat = path.stat()
-    os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000))
+    path.write_bytes(b"<p>hand written summary</p>".ljust(original.st_size, b" "))
+    os.utime(path, ns=(original.st_atime_ns, original.st_mtime_ns))
+    forged = path.stat()
+    assert (forged.st_size, forged.st_mtime_ns) == (original.st_size, original.st_mtime_ns)
 
     assert classify_normative_corpus_provenance(tmp_path, ref) is NormativeCorpusProvenance.AUTHORED
 
 
 def test_an_out_of_scope_reference_reads_nothing(tmp_path: Path) -> None:
-    """A path outside the normative tree is classified without consulting the memo."""
-    _classified_normative_corpus_file.cache_clear()
+    """A path outside the normative tree is classified without reading any file."""
+    corpus_provenance._PROVENANCE_BY_CONTENT.clear()
 
     assert (
         classify_normative_corpus_provenance(tmp_path, "corpus/manuals/renta/2025/part1/source.pdf")
         is NormativeCorpusProvenance.OUT_OF_SCOPE
     )
-    assert _classified_normative_corpus_file.cache_info().misses == 0
+    assert not corpus_provenance._PROVENANCE_BY_CONTENT

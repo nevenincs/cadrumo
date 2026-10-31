@@ -753,7 +753,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Importe de la reducción aplicable al rendimiento atribuido al socio, heredero, comunero o partícipe (posiciones 109-119 del registro de socio). Aplicable cuando clave = C (reducciones del artículo 23.2 y 23.3 de la Ley IRPF sobre rendimientos del capital inmobiliario) o clave = D (reducción del artículo 32.1 de la Ley IRPF sobre rendimientos de actividades económicas), y sólo para los miembros que sean contribuyentes por el Impuesto."
 model_selectors = ["attribution_entity_socios.reduccion"]
-legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-32", "orden-hap-2250-2015:art-3"]
+legal_refs = ["ley-35-2006:art-23", "ley-35-2006:art-26", "ley-35-2006:art-32", "orden-hap-2250-2015:art-3"]
 
 # The clave-D subclave 03/04 rendimiento-neto fields (estimación objetiva).
 [[sections.fields]]

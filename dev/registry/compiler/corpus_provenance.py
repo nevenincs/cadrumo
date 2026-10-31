@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.paths import path_stat_fingerprint
+from cadrumo.core.hashing import blake2b_hex
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from dev.registry.compiler.corpus_source_location import PACKAGED_DATA_ROOT
@@ -15,6 +18,8 @@ from dev.registry.compiler.corpus_source_location import PACKAGED_DATA_ROOT
 __all__ = [
     "classify_normative_corpus_bytes",
     "classify_normative_corpus_provenance",
+    "corpus_content_digest",
+    "corpus_digest_pass",
     "resolve_normative_corpus_path",
 ]
 
@@ -62,24 +67,53 @@ def classify_normative_corpus_provenance(source_root: Path, corpus_ref: str) -> 
     path = resolve_normative_corpus_path(source_root, corpus_ref)
     if path is None:
         return NormativeCorpusProvenance.OUT_OF_SCOPE
-    return _classified_normative_corpus_file(*path_stat_fingerprint(path))
+    provenance = _PROVENANCE_BY_CONTENT.get(corpus_content_digest(path))
+    if provenance is None:
+        payload = path.read_bytes()
+        provenance = classify_normative_corpus_bytes(payload)
+        _PROVENANCE_BY_CONTENT[blake2b_hex(payload)] = provenance
+    return provenance
 
 
-@lru_cache(maxsize=512)
-def _classified_normative_corpus_file(path: str, byte_count: int, modified_ns: int) -> NormativeCorpusProvenance:
-    """Classify one corpus FILE, once per observed identity in this process.
+_PROVENANCE_BY_CONTENT: dict[str, NormativeCorpusProvenance] = {}
+"""Each classified corpus payload's provenance, keyed on the payload's content digest.
 
-    Provenance is decided by the file's bytes, but it is asked per legal
-    REFERENCE, and references cite the same file at different anchors: 732
-    declarations resolve to 388 distinct files, so one validation pass read and
-    regex-scanned 415 MB where the distinct files hold 36.8 MB -- an 11.3x
-    redundancy, with ``ley-35-2006.html`` alone read 86 times. Keyed on the stat
-    identity the record-design and loader caches already key on, so an edited
-    file reclassifies. In-process only: a published artifact carries its own
-    provenance and never consults this.
+Provenance is decided by the file's bytes but asked per legal REFERENCE, and
+references cite one file at many anchors: 732 declarations resolve to 388
+files, and re-reading per reference scanned 415 MB of a 36.8 MB corpus. The
+verdict is stored under the digest of the very bytes it was decided from, so a
+rewrite that preserves size and mtime still reclassifies.
+"""
+
+_PASS_DIGESTS: ContextVar[dict[str, str] | None] = ContextVar("corpus_pass_digests", default=None)
+
+
+@contextmanager
+def corpus_digest_pass() -> Iterator[None]:
+    """Hash each corpus file at most once for the duration of one verification pass.
+
+    Inside the pass a file is read and hashed on first use and its digest is
+    reused by every later reference that cites it; the observations end with
+    the pass, so no pass inherits another's view of the corpus. Outside a pass
+    every call hashes the file's current bytes.
     """
-    del byte_count, modified_ns
-    return classify_normative_corpus_bytes(Path(path).read_bytes())
+    token = _PASS_DIGESTS.set({})
+    try:
+        yield
+    finally:
+        _PASS_DIGESTS.reset(token)
+
+
+def corpus_content_digest(path: Path) -> str:
+    """Return the content digest of one corpus file's bytes, never of its stat identity."""
+    observed = _PASS_DIGESTS.get()
+    key = str(path)
+    if observed is not None and (digest := observed.get(key)) is not None:
+        return digest
+    digest = blake2b_hex(path.read_bytes())
+    if observed is not None:
+        observed[key] = digest
+    return digest
 
 
 def classify_normative_corpus_bytes(payload: bytes) -> NormativeCorpusProvenance:

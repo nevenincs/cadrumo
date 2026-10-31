@@ -31,7 +31,7 @@ from cadrumo.domain.calculations.registry.runtime_graph import expression_casill
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.submission.models import ModeloDraftStatus
-from dev.registry.compiler.authority import compile_validated_authority, compiled_bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.legal_grounding import verify_legal_catalogue_grounding
 from dev.registry.compiler.loader import modelo_fact_scope
 from dev.registry.edition_export_periods import M200_SCENARIO_PERIODS
@@ -681,7 +681,7 @@ def _normalized_text(value: str) -> str:
     )
 
 
-def test_modelo_200_scenario_renders_its_projection_pages_and_page_21_incn_nif() -> None:
+def test_modelo_200_scenario_renders_its_projection_pages_and_page_21_incn_nif(registry_authority) -> None:
     """The canonical 2025 scenario exports, and page 21's INCN block carries its NIF.
 
     Six records of the layout consist of projection fields alone and are
@@ -698,7 +698,9 @@ def test_modelo_200_scenario_renders_its_projection_pages_and_page_21_incn_nif()
     period = M200_SCENARIO_PERIODS["2025-y-siguientes"]
     scenario = m200_export_scenario(period)
     registry_root = bundled_path("registry", "aeat")
-    payload, profile = _render_scenario_payload(scenario, registry_root=registry_root, period=period)
+    payload, profile = _render_scenario_payload(
+        scenario, registry_root=registry_root, authority=registry_authority, period=period
+    )
 
     page_21 = next(record for record in payload.split(b"\r\n") if record.startswith(b"<T20021000>"))
     assert isinstance(profile, Modelo200ProfileFacts)
@@ -717,31 +719,29 @@ class _ScenarioPayloadSink:
         self.payload = payload.payload
 
 
-def _render_scenario_payload(scenario, *, registry_root, period) -> tuple[bytes, object]:
-    with modelo_fact_scope(registry_root / "modelos" / "200"):
-        authority = compile_validated_authority(registry_root, bundled_path())
-        with validating_governed_facts(authority):
-            provider = schema_provider_from_authority(
-                authority,
-                modelos=("200",),
-                filing_year=period.filing_year,
-                period=period,
-            )
-            draft = build_draft(
-                modelo="200",
-                period=period,
-                profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Modelo 200 projection pages"),
-                inputs=scenario.inputs,
-                schema_provider=provider,
-            ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-            sink = _ScenarioPayloadSink()
-            producer_snapshot = scenario.producer_snapshot()
-            export_draft(
-                draft,
-                payload_consumer=sink,
-                producer_snapshot=producer_snapshot,
-                prior_domiciliation_election=scenario.prior_domiciliation_election,
-                product_software_identity=scenario.product_software_identity_factory(),
-                schema_provider=provider,
-            )
+def _render_scenario_payload(scenario, *, registry_root, authority, period) -> tuple[bytes, object]:
+    with modelo_fact_scope(registry_root / "modelos" / "200"), validating_governed_facts(authority):
+        provider = schema_provider_from_authority(
+            authority,
+            modelos=("200",),
+            filing_year=period.filing_year,
+            period=period,
+        )
+        draft = build_draft(
+            modelo="200",
+            period=period,
+            profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Modelo 200 projection pages"),
+            inputs=scenario.inputs,
+            schema_provider=provider,
+        ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+        sink = _ScenarioPayloadSink()
+        producer_snapshot = scenario.producer_snapshot()
+        export_draft(
+            draft,
+            payload_consumer=sink,
+            producer_snapshot=producer_snapshot,
+            prior_domiciliation_election=scenario.prior_domiciliation_election,
+            product_software_identity=scenario.product_software_identity_factory(),
+            schema_provider=provider,
+        )
     return sink.payload, producer_snapshot.model_profile
