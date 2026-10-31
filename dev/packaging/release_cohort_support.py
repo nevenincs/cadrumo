@@ -41,8 +41,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-from dev.cache_root import dev_cache_dir
+from dev._paths import REPO_ROOT, TEMP_ROOT
 from dev.packaging.command_execution import run_command
 
 from .acquire_common import venv_bin_dir, venv_executable
@@ -115,12 +114,15 @@ def client_venv_template() -> Path:
 
     Callers hard-link this template into their own root rather than reinstalling,
     and treat it as read-only. It is keyed by the cohort's content key and the
-    owning interpreter and kept in the development cache, so every process of a
+    owning interpreter and kept in the worktree's temporary cache, so every process of a
     run and every later run over the same content shares one install; a reused
     template must still attest to the sealed wheel's payload.
     """
     cohort = shared_cohort()
-    cache = dev_cache_dir("packaging-client-venv")
+    # Native extension loading on Windows has a tighter path limit than file
+    # creation. Keep the complete content key while avoiding the storage
+    # taxonomy's longer prefix inside an already nested QA checkout.
+    cache = TEMP_ROOT / "client-venv"
     cache.mkdir(parents=True, exist_ok=True)
     key = hashlib.sha256(f"{cohort.key}\0{sys.executable}".encode()).hexdigest()
     root = cache / key

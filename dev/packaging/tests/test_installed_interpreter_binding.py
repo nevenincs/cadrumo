@@ -107,6 +107,21 @@ def test_attested_interpreter_stays_inside_the_launcher_environment() -> None:
     )
 
 
+def test_installed_environment_loads_the_profile_creation_dependency_closure() -> None:
+    """An installed CLI must load native dependencies needed after its bootstrap."""
+    template = client_venv_template()
+    cli = venv_executable(template, "aeat").resolve(strict=True)
+    interpreter = installed_python_for_cli(cli)
+
+    completed = run_command(
+        [str(interpreter), "-I", "-c", "import cadrumo.application.user_profile.lifecycle"],
+        cwd=template,
+        environment=_UV_ENVIRONMENT,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+
+
 def test_a_genuine_install_attests_equal_to_the_sealed_wheel_and_refuses_displaced_bytes(
     tmp_path: Path,
 ) -> None:
