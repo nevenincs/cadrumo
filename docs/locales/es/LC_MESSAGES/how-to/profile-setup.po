@@ -320,8 +320,9 @@ msgid ""
 "examples in this documentation are recorded in English."
 msgstr ""
 "La variable de entorno `CADRUMO_OUTPUT_LANGUAGE` fija el idioma de toda "
-"una sesión de shell y tiene prioridad sobre el valor predeterminado del "
-"perfil. Los ejemplos de esta documentación están grabados en inglés."
+"una sesión del intérprete de comandos y tiene prioridad sobre el valor "
+"predeterminado del perfil. Los ejemplos de esta documentación están "
+"grabados en inglés."
 
 #: ../../how-to/profile-setup.md:131
 msgid "Save now, finish later"

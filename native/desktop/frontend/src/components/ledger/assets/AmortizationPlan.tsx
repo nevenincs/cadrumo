@@ -39,6 +39,7 @@ import {
 } from "./assetsWords";
 import {
   absenceNotApplicable,
+  recordedMark,
   figureText,
   isStatedZero,
   PLAN_KEYS,
@@ -413,10 +414,14 @@ function Status({ locale, planned }: { locale: string; planned: PlanRow }) {
   );
 }
 
-function Days({ planned }: { planned: PlanRow }) {
+function Days({ planned, applies }: { planned: PlanRow; applies: boolean }) {
   const t = useStrings();
   if (planned.service_days === null)
-    return <NotKnown why={t(ASSET_KEYS.plan.days_missing)} />;
+    return applies ? (
+      <NotKnown why={t(ASSET_KEYS.plan.days_missing)} />
+    ) : (
+      <NotApplicable why={t(ASSET_KEYS.plan.days_missing)} />
+    );
   return (
     <span className="whitespace-nowrap tabular-nums">
       {planned.calendar_days === null
@@ -767,11 +772,13 @@ function PlanTable({
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     {/* No claim in effect is no figure to draw: it is a year with
-                        nothing recorded, or one where nothing applies. */}
+                        nothing recorded, or one where nothing applies. A year
+                        with a span still open is one with nothing recorded,
+                        whatever its absence is. */}
                     <Figure
                       locale={locale}
                       amount={kept ? planned.claimed : null}
-                      mark={applies ? "nothing_recorded" : "not_applicable"}
+                      mark={recordedMark(planned)}
                     />
                     {kept && isStatedZero(planned.claimed) && (
                       <span className="block text-xs text-muted-foreground">
@@ -791,7 +798,7 @@ function PlanTable({
                     />
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
-                    <Days planned={planned} />
+                    <Days planned={planned} applies={applies} />
                   </td>
                 </tr>
                 <tr id={detail} hidden={!shown}>

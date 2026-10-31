@@ -1393,7 +1393,7 @@ desktop:
       count:
         conflict: 'Overlapping dotaciones, all years: {count}'
         incomplete: 'Years that cannot be worked out, all years: {count}'
-        missing: 'Years without a dotación, all years: {count}'
+        missing: 'Years with something left to record, all years: {count}'
         stale: 'Dotaciones that no longer match the schedule, all years: {count}'
         unsupported: 'Years under a method Cadrumo doesn''t support yet, all years:
           {count}'
@@ -1505,10 +1505,14 @@ desktop:
       handoff: Dotaciones in your tax returns
       handoff_agrarian_count: 'Left out of Modelo 130, because they belong to an agricultural
         activity, which pays a share of income: {count} elements.'
+      handoff_agrarian_count_one: 'Left out of Modelo 130, because it belongs to an
+        agricultural activity, which pays a share of income: 1 element.'
       handoff_agrarian_named: 'Left out of Modelo 130, because they belong to an agricultural
         activity, which pays a share of income: {names}.'
       handoff_free_count: 'Not counted in Modelo 130, because their method leaves
         the dotación to you: {count} elements.'
+      handoff_free_count_one: 'Not counted in Modelo 130, because its method leaves
+        the dotación to you: 1 element.'
       handoff_free_named: 'Not counted in Modelo 130, because their method leaves
         the dotación to you: {names}.'
       handoff_gap_accrued: 'Modelo 100: {name} has no dotación recorded from {start}
@@ -1519,9 +1523,18 @@ desktop:
         to {end}, and it could not be worked out.'
       handoff_gap_unnamed: 'Also left out: {count} periods of elements that this list
         does not name.'
+      handoff_gap_unnamed_one: 'Also left out: 1 period of elements that this list
+        does not name.'
       handoff_left_out: Left out of these amounts
       handoff_partial: 'Partial: {count} elements can''t be worked out and are left
         out of this amount.'
+      handoff_partial_one: 'Partial: 1 element can''t be worked out and is left out
+        of this amount.'
+      handoff_unavailable_count: '{count} elements couldn''t be worked out, so they
+        are left out.'
+      handoff_unavailable_count_one: 1 element couldn't be worked out, so it is left
+        out.
+      handoff_unavailable_named: 'Couldn''t be worked out, so left out: {names}.'
       handoff_year: Year for the filing figures
       list:
         column:
@@ -4773,12 +4786,12 @@ ledger:
       taxpayer_owned: Owned by the taxpayer, before business use
       whole_property: Whole property
     claim_state:
-      claimed: Claimed
+      claimed: Dotación recorded
       edition_unavailable: No official tables
-      missing: Not claimed
-      not_due: Nothing to claim
-      partial: Partly claimed
-      superseded: Claimed, corrected
+      missing: The dotación is not recorded
+      not_due: The dotación is not due
+      partial: Part of the dotación recorded
+      superseded: Dotación recorded, then corrected
     declared_activity:
       A01: Rental of real estate
       A02: Independent livestock farming
@@ -4796,6 +4809,8 @@ ledger:
     disposal_finding:
       claim_gap: Year with depreciation not recorded
       exemption_not_computed: Gain exemption not computed
+      method_has_no_minimum: This method has no table minimum, so the year adds nothing
+        to the reduction of cost
       minimum_exceeded_deduction: Deduction above the minimum amortisation
       minimum_unresolved: 'Minimum amortisation not available for this year: no edition
         covers it, so the reduction of cost may be understated'
@@ -4867,20 +4882,20 @@ ledger:
       claim_not_under_current_revision: This changed since you opened it. Refresh
         and try again.
       claim_revision_absent: This changed since you opened it. Refresh and try again.
-      claim_superseded_replay: This claim was already replaced by a correction and
-        cannot be recorded again.
-      claim_year_beyond_registry: 'There is no Modelo 100 edition for %{tax_year}
-        yet: claims can be recorded through %{last_admitted_year}. The forecast for
-        that year is an estimate.'
-      claim_year_not_after_opening_year: 'A claim for %{claim_tax_year} cannot be
-        recorded: the opening amount already covers the years through %{opening_tax_year}.'
-      claims_exceed_amortizable_basis: The opening amount and the effective claims
+      claim_superseded_replay: This dotación was already replaced by a correction
+        and cannot be recorded again.
+      claim_year_beyond_registry: 'The form for tax year %{tax_year} isn''t available
+        yet: the dotaciones can be recorded through %{last_admitted_year}. The forecast
+        for that year is an estimate.'
+      claim_year_not_after_opening_year: 'A dotación for %{claim_tax_year} cannot
+        be recorded: the opening amount already covers the years through %{opening_tax_year}.'
+      claims_exceed_amortizable_basis: The opening amount and the dotaciones in effect
         exceed the lawful amortisable basis.
-      claims_overlap: Claims of one element cannot cover overlapping intervals.
+      claims_overlap: The dotaciones of one element cannot cover overlapping intervals.
       constant_percentage_weighting_not_enrolled: 'Cadrumo doesn''t support this yet:
         the constant-percentage weighting for this amortisation period.'
-      correction_below_effective_claims: The correction leaves effective claims above
-        the new amortisable basis; replace them in the same correction.
+      correction_below_effective_claims: The correction leaves the dotaciones in effect
+        above the new amortisable basis; replace them in the same correction.
       correction_must_supersede_current: This changed since you opened it. Refresh
         and try again.
       covered_interval_empty: The covered interval must end after it starts.
@@ -4902,8 +4917,8 @@ ledger:
         with at most two decimals.
       disposal_before_service: The baja date cannot be before the element entered
         service.
-      disposal_claim_past_boundary: This claim runs to %{covered_through}, past the
-        element's baja, which ends its charges on %{boundary_through}.
+      disposal_claim_past_boundary: This dotación runs to %{covered_through}, past
+        the element's baja, which ends its charges on %{boundary_through}.
       disposal_donation_refused: A donation is not supported as a baja of an activity
         asset.
       disposal_excess_without_table_class: The excess for %{tax_year} needs a table
@@ -4953,17 +4968,17 @@ ledger:
       free_amount_not_positive_cents: The elected amount must be positive and in whole
         cents.
       free_amount_required: A free-depreciation method requires an elected amount.
-      free_claims_disagree_on_cap: Effective free-depreciation claims disagree on
-        the annual cap.
-      free_claims_exceed_annual_cap: Effective free-depreciation claims exceed the
-        annual cap.
+      free_claims_disagree_on_cap: The dotaciones in effect for free depreciation
+        disagree on the annual cap.
+      free_claims_exceed_annual_cap: The dotaciones in effect for free depreciation
+        exceed the annual cap.
       from_start_method_after_other_election: Constant percentage and sum of digits
         run from the start of amortisation; an element already charged under another
         election cannot adopt them.
       history_changed_after_forecast: The element's history changed after this figure
         was worked out; work it out again.
-      interval_has_different_claim: That period already has a different claim; correct
-        that claim instead of recording a new one.
+      interval_has_different_claim: That period already holds a dotación with different
+        figures; correct that dotación instead of recording a new one.
       investment_cap_exceeded: The investment entering service in {entry_year} under
         the free depreciation you chose would reach {investment}, above the cap of
         {investment_cap}; an element is not split between free and ordinary amortisation.
@@ -5077,7 +5092,7 @@ ledger:
       superseded_claim_absent: This changed since you opened it. Refresh and try again.
       superseded_claim_not_effective: This changed since you opened it. Refresh and
         try again.
-      superseding_claim_changes_interval: A claim that replaces another must keep
+      superseding_claim_changes_interval: A dotación that replaces another must keep
         the same element and covered period.
       table_class_group_not_a_flag: The tax tables give this table class a group classification
         that can't be read, so the amortisation can't be worked out.
@@ -5091,7 +5106,7 @@ ledger:
         (material or intangible).
       tax_residence_unresolved: Your tax residence could not be read, so the register
         cannot say whether Modelos 100 and 130 of the AEAT apply.
-      tax_year_without_edition: No Modelo 100 edition covers tax year {tax_year}.
+      tax_year_without_edition: The form for tax year {tax_year} isn't available yet.
       used_building_requires_construction_date: A used building requires its construction
         date.
       used_original_price_not_enrolled: 'Cadrumo doesn''t support this yet: the originating-price

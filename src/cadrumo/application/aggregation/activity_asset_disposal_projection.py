@@ -254,6 +254,20 @@ class ActivityAssetBajaReader:
             ),
         )
 
+    def read_all(self, revisions: Iterable[ActivityAssetRevision], history: ActivityAssetHistory) -> _BajaReading:
+        """Read the disposals together and retain the element rows the form can repeat."""
+        readings = tuple(self.read(revision, history) for revision in revisions)
+        return _BajaReading(
+            observations=tuple(item for reading in readings for item in reading.observations),
+            notes=(
+                *(note for reading in readings for note in reading.notes),
+                *self.shared_row_findings(readings),
+            ),
+            row_figures=tuple(
+                figure for reading in readings for figure in reading.row_figures if figure.route in ELEMENT_ROW_ROUTES
+            ),
+        )
+
     def _figures(
         self, revision: ActivityAssetRevision, calculation: ActivityAssetDisposalCalculation
     ) -> tuple[list[tuple[ActivityAssetDisposalRoute, Decimal]], list[CalculationSourceDiagnostic]]:

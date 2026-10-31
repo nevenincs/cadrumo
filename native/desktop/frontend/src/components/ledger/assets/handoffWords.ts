@@ -9,6 +9,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import type { Translate } from "../../../shell/strings";
 import { amountText, dateText } from "../movements/movementWords";
+import { ASSET_KEYS, countSentence } from "./assetsWords";
 
 export type Handoff = NonNullable<ActivityAssetFilingResult["filing_handoff"]>;
 
@@ -24,11 +25,24 @@ const GAP_KEYS = {
 const LEFT_OUT_KEYS = {
   free_gap_asset_ids: {
     named: "desktop.ledger.assets.handoff_free_named",
-    count: "desktop.ledger.assets.handoff_free_count",
+    count: {
+      one: "desktop.ledger.assets.handoff_free_count_one",
+      other: "desktop.ledger.assets.handoff_free_count",
+    },
   },
   agrarian_excluded_asset_ids: {
     named: "desktop.ledger.assets.handoff_agrarian_named",
-    count: "desktop.ledger.assets.handoff_agrarian_count",
+    count: {
+      one: "desktop.ledger.assets.handoff_agrarian_count_one",
+      other: "desktop.ledger.assets.handoff_agrarian_count",
+    },
+  },
+  unavailable_asset_ids: {
+    named: "desktop.ledger.assets.handoff_unavailable_named",
+    count: {
+      one: "desktop.ledger.assets.handoff_unavailable_count_one",
+      other: "desktop.ledger.assets.handoff_unavailable_count",
+    },
   },
 } as const;
 
@@ -61,9 +75,7 @@ export function leftOutNotes(
     );
   }
   if (unnamed > 0)
-    notes.push(
-      t("desktop.ledger.assets.handoff_gap_unnamed", { count: unnamed }),
-    );
+    notes.push(countSentence(t, ASSET_KEYS.handoff.unnamed, unnamed));
   const quarter = [handoff.material_m130, handoff.intangible_m130].filter(
     (found): found is M130Projection => found !== null,
   );
@@ -76,7 +88,7 @@ export function leftOutNotes(
     notes.push(
       known.length === ids.length
         ? t(LEFT_OUT_KEYS[field].named, { names: listOf(locale, known) })
-        : t(LEFT_OUT_KEYS[field].count, { count: ids.length }),
+        : countSentence(t, LEFT_OUT_KEYS[field].count, ids.length),
     );
   }
   return notes;

@@ -1437,7 +1437,7 @@ desktop:
       count:
         conflict: 'Dotaciones solapadas, todos los años: {count}'
         incomplete: 'Años que no se pueden calcular, todos los años: {count}'
-        missing: 'Años sin dotación, todos los años: {count}'
+        missing: 'Años con algo pendiente de registrar, todos los años: {count}'
         stale: 'Dotaciones que ya no coinciden con el cuadro, todos los años: {count}'
         unsupported: 'Años con un método que Cadrumo aún no admite, todos los años:
           {count}'
@@ -1549,10 +1549,14 @@ desktop:
       handoff: Dotaciones en tus declaraciones
       handoff_agrarian_count: 'Quedan fuera del Modelo 130, porque pertenecen a una
         actividad agrícola, que paga un porcentaje de los ingresos: {count} elementos.'
+      handoff_agrarian_count_one: 'Queda fuera del Modelo 130, porque pertenece a
+        una actividad agrícola, que paga un porcentaje de los ingresos: 1 elemento.'
       handoff_agrarian_named: 'Quedan fuera del Modelo 130, porque pertenecen a una
         actividad agrícola, que paga un porcentaje de los ingresos: {names}.'
       handoff_free_count: 'No cuentan en el Modelo 130, porque su método te deja la
         dotación a ti: {count} elementos.'
+      handoff_free_count_one: 'No cuenta en el Modelo 130, porque su método te deja
+        la dotación a ti: 1 elemento.'
       handoff_free_named: 'No cuentan en el Modelo 130, porque su método te deja la
         dotación a ti: {names}.'
       handoff_gap_accrued: 'Modelo 100: {name} no tiene dotación registrada del {start}
@@ -1565,9 +1569,19 @@ desktop:
         {start} al {end}, y no se pudo calcular.'
       handoff_gap_unnamed: También quedan fuera {count} periodos de elementos que
         esta lista no nombra.
+      handoff_gap_unnamed_one: También queda fuera 1 periodo de elementos que esta
+        lista no nombra.
       handoff_left_out: Fuera de estos importes
       handoff_partial: 'Parcial: {count} elementos no se pueden calcular y quedan
         fuera de este importe.'
+      handoff_partial_one: 'Parcial: 1 elemento no se puede calcular y queda fuera
+        de este importe.'
+      handoff_unavailable_count: '{count} elementos no se han podido calcular, así
+        que quedan fuera.'
+      handoff_unavailable_count_one: 1 elemento no se ha podido calcular, así que
+        queda fuera.
+      handoff_unavailable_named: 'No se han podido calcular, así que quedan fuera:
+        {names}.'
       handoff_year: Año de las cifras para la declaración
       list:
         column:
@@ -4884,6 +4898,8 @@ ledger:
     disposal_finding:
       claim_gap: Año con amortización sin registrar
       exemption_not_computed: Exención de la ganancia no calculada
+      method_has_no_minimum: Este método no tiene mínimo en las tablas, así que el
+        año no suma nada a la reducción del coste
       minimum_exceeded_deduction: Deducción superior a la amortización mínima
       minimum_unresolved: 'Amortización mínima no disponible para este año: ninguna
         edición lo cubre, así que la reducción del coste puede quedar por debajo de
@@ -5907,8 +5923,8 @@ topic:
     title: Calendario de obligaciones
   casilla:
     body: Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales,
-      calculadas (computed) o derivadas de bindings. 'aeat app modelo casillas <modelo>'
-      las lista.
+      calculadas (computed) o derivadas de vinculaciones. 'aeat app modelo casillas
+      <modelo>' las lista.
     title: Casillas
   formats:
     body: La CLI emite salida en texto, JSON, table o csv según '--format'. JSON es

@@ -220,11 +220,15 @@ def _block_casilla_references(block: FormBlockDefinition) -> Iterator[str]:
     if isinstance(block, FormFieldBlock) and block.casilla_id is not None:
         yield block.casilla_id
     elif isinstance(block, FormGridBlock):
-        yield from (cell.casilla_id for row in block.rows for cell in row.cells if cell.casilla_id is not None)
+        yield from _grid_casilla_references(block)
     elif isinstance(block, FormRepeatingGroupBlock):
         yield from (
             column.casilla_id for column in block.columns if column.casilla_id is not None and column.binding_id is None
         )
+
+
+def _grid_casilla_references(block: FormGridBlock) -> Iterator[str]:
+    yield from (cell.casilla_id for row in block.rows for cell in row.cells if cell.casilla_id is not None)
 
 
 def _referenced_bindings(layout: FormLayoutDefinition) -> Iterator[str]:

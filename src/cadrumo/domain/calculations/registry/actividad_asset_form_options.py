@@ -16,7 +16,6 @@ from .actividad_asset_parameters import (
     ACTIVITY_ASSET_METHOD_ADMISSION_IDS,
     ACTIVITY_ASSET_PERIOD_IDS,
     ACTIVITY_ASSET_REFUSED_METHOD_LOCALE_KEYS,
-    ACTIVITY_ASSET_RESTRICTED_VEHICLE_CLASS_ID,
     ActivityAssetParameters,
 )
 from .errors import RegistryValidationError
@@ -35,6 +34,8 @@ class ActivityAssetTableGroup:
     minimum_coefficient: Decimal
     maximum_period_years: Decimal
     class_label: str
+    requires_vehicle_declaration: bool
+    """Whether an asset of this class is charged only on a vehicle affectation declaration."""
     can_hold_vehicle: bool
     """Whether the registry classes a material asset of this class as one that can be a restricted vehicle.
 
@@ -137,9 +138,7 @@ def _form_table_groups(
             or parameters.keyed(kind_parameter, class_key) != Decimal("1")
         ):
             continue
-        can_hold_vehicle = asset_kind is AssetKind.MATERIAL and parameters.class_flag(
-            ACTIVITY_ASSET_RESTRICTED_VEHICLE_CLASS_ID, class_key
-        )
+        requires_vehicle_declaration = parameters.requires_vehicle_declaration(asset_kind, class_key)
         class_label = class_labels.get(class_key)
         if class_label is None:
             raise RegistryValidationError(
@@ -152,7 +151,8 @@ def _form_table_groups(
                 minimum_coefficient=Decimal("1") / period_years,
                 maximum_period_years=period_years,
                 class_label=class_label,
-                can_hold_vehicle=can_hold_vehicle,
+                can_hold_vehicle=requires_vehicle_declaration,
+                requires_vehicle_declaration=requires_vehicle_declaration,
             ),
         )
     return tuple(groups)

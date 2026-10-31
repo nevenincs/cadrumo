@@ -201,6 +201,21 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "decrypted",
             "schemas",
             "invariants",
+            # Exact English legal/operator prose: Modelo 349 guidance uses
+            # recapitulative, ledger help uses unestablished/linkable, and
+            # legal references use unamended/citable/exigibility/intracommunity
+            # and telematically. EU legislation uses intracommunity, and its
+            # legislation directory uses exigibility; AEAT English guidance
+            # likewise uses telematically. These are dictionary gaps, with no
+            # permission to accept new inflections or arbitrary capitalization.
+            "recapitulative",
+            "unamended",
+            "citable",
+            "unestablished",
+            "linkable",
+            "exigibility",
+            "intracommunity",
+            "telematically",
             # The English catalogue and authored docs also use these exact US
             # forms, absent from the pinned British dictionary: common.yml's
             # window actions, application.yml's synchronization/finalization

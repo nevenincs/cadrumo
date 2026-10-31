@@ -7,6 +7,7 @@ import type { LedgerPort } from "../../../shell/ledger";
 import { translator, useStrings } from "../../../shell/strings";
 import { AssetsSection } from "./AssetsSection";
 import { amountText, dateText } from "../movements/movementWords";
+import { listOf } from "../../../shared/lists";
 import { ASSET_KEYS } from "./assetsWords";
 
 // The Assets tab over the scenario's ledger: its list, the detail of one
@@ -14,7 +15,13 @@ import { ASSET_KEYS } from "./assetsWords";
 // states a read can end in. Stock is another part's view and stays a stand-in
 // that names its place.
 
-type LeftOut = "named" | "unnamed" | "unknown";
+type LeftOut =
+  | "named"
+  | "unnamed"
+  | "unknown"
+  | "unavailable_named"
+  | "unavailable_unnamed"
+  | "singular";
 
 type Answer = "register" | "empty" | "refused" | "loading";
 
@@ -175,11 +182,17 @@ function withLeftOut(port: LedgerPort, leftOut: LeftOut): LedgerPort {
           ...SPAN,
           accrued: accrued === null ? null : { decimal: accrued },
         });
-        const quarter = (free: string[], agrarian: string[]) => {
+        const quarter = (
+          free: string[],
+          agrarian: string[],
+          unavailable?: string[],
+        ) => {
           for (const found of [handoff.material_m130, handoff.intangible_m130])
             if (found !== null) {
               found.free_gap_asset_ids = free;
               found.agrarian_excluded_asset_ids = agrarian;
+              if (unavailable !== undefined)
+                found.unavailable_asset_ids = unavailable;
             }
         };
         if (leftOut === "named") {
@@ -195,6 +208,15 @@ function withLeftOut(port: LedgerPort, leftOut: LeftOut): LedgerPort {
             gap("no-list-name-b", "accrued", "310.00"),
           ];
           quarter(["no-list-name-a", "impresora"], ["no-list-name-b"]);
+        } else if (leftOut === "unavailable_named") {
+          handoff.m100_gaps = [];
+          quarter([], [], ["furgoneta", "impresora"]);
+        } else if (leftOut === "unavailable_unnamed") {
+          handoff.m100_gaps = [];
+          quarter([], [], ["no-list-name-a", "no-list-name-b"]);
+        } else if (leftOut === "singular") {
+          handoff.m100_gaps = [gap("no-list-name-a", "free_method", null)];
+          quarter(["no-list-name-a"], ["no-list-name-b"], ["no-list-name-c"]);
         } else {
           handoff.m100_gaps = [gap("furgoneta", "accrued", null)];
           quarter([], []);
@@ -348,6 +370,26 @@ export const ElementWithoutAName: Story = {
     press(context, "button", wordsOf(context)(ASSET_KEYS.list.no_name)),
 };
 
+export const ElementWithoutASerialNumber: Story = {
+  name: "An element with no serial number: nothing recorded, not Not known",
+  play: async (context) => {
+    const t = wordsOf(context);
+    const mark = await waitFor(() => {
+      const found = within(context.canvasElement).queryAllByRole("img", {
+        name: new RegExp(
+          t(ASSET_KEYS.list.serial_missing).replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&",
+          ),
+        ),
+      })[0];
+      if (!found) throw new Error("the serial number mark is not drawn yet");
+      return found;
+    });
+    await userEvent.hover(mark);
+  },
+};
+
 export const FormAsked: Story = {
   name: "A form asked for",
   play: (context) =>
@@ -446,6 +488,56 @@ export const FilingHandoffLeftOutUnnamed: Story = {
       context,
       t("desktop.ledger.assets.handoff_free_count", { count: 2 }),
     );
+  },
+};
+
+export const FilingHandoffLeftOutCouldNotBeWorkedOutNamed: Story = {
+  name: "Filing handoff, elements that could not be worked out are named",
+  args: { leftOut: "unavailable_named" },
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openQuarter(context);
+    await saysLeftOut(
+      context,
+      t("desktop.ledger.assets.handoff_unavailable_named", {
+        names: listOf(t.locale ?? "en", [
+          "Furgoneta de reparto",
+          "Impresora 3D",
+        ]),
+      }),
+    );
+  },
+};
+
+export const FilingHandoffLeftOutCouldNotBeWorkedOutCount: Story = {
+  name: "Filing handoff, elements that could not be worked out and have no name: a count",
+  args: { leftOut: "unavailable_unnamed" },
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openQuarter(context);
+    await saysLeftOut(
+      context,
+      t("desktop.ledger.assets.handoff_unavailable_count", { count: 2 }),
+    );
+  },
+};
+
+export const FilingHandoffSingularCounts: Story = {
+  name: "Filing handoff, one element of each kind is said in the singular",
+  args: { leftOut: "singular" },
+  play: async (context) => {
+    const t = wordsOf(context);
+    await openQuarter(context);
+    for (const key of [
+      "desktop.ledger.assets.handoff_gap_unnamed_one",
+      "desktop.ledger.assets.handoff_free_count_one",
+      "desktop.ledger.assets.handoff_agrarian_count_one",
+      "desktop.ledger.assets.handoff_unavailable_count_one",
+    ])
+      await saysLeftOut(context, t(key));
+    await within(context.canvasElement).findAllByRole("img", {
+      name: t("desktop.ledger.assets.handoff_partial_one"),
+    });
   },
 };
 

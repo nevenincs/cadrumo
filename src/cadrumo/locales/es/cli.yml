@@ -493,7 +493,7 @@ cli:
           tu partición del art. 9.1.c, nunca inferida de tus registros.'
         ejercicio_help: Ejercicio (año) que cubre la elección.
         elect_especial_help: 'Elige prorrata especial para un ejercicio (LIVA art.
-          103.Dos.1): la deducción por input se enruta con --input-classification
+          103.Dos.1): la deducción del IVA soportado se determina con --input-classification
           en cada apunte de tus registros.'
         elect_general_help: 'Elige prorrata general para un ejercicio (LIVA art. 104):
           un único porcentaje de deducción se aplica a cada cuota deducible.'
@@ -906,7 +906,7 @@ cli:
           conocidos para {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La lista de orígenes no está acotada por %{missing_filters};
           puede incluir ids de orígenes de una versión del modelo oficial que no coincide
-          con la declaración usada por work calculate.
+          con la declaración usada por aeat app modelo work calculate.
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casilla:
         casilla_help: Id de casilla o número impreso de casilla que se debe describir
@@ -999,7 +999,7 @@ cli:
           o registrado como presentado.
         work_unit_id_help: Identificador de la declaración (SHA-256 o prefijo inequívoco).
       filing_record:
-        app_help: Inspeccionar las presentaciones internas (filing records) registradas
+        app_help: Inspeccionar los registros internos de presentación guardados
         bucket_id_help: Filtrar por perfil
         evidence_kind_help: Tipo de evidencia importada (aeat_justificante_pdf, aeat_csv_register,
           aeat_live_capture)
@@ -1010,7 +1010,7 @@ cli:
           revisión del cálculo guardado.
         export_missing: El cálculo histórico seleccionado ya no se conserva; la exportación
           no puede usar el cálculo actual.
-        filing_record_id_help: Identificador estable de un filing record
+        filing_record_id_help: Identificador estable de un registro de presentación
         import_casilla_help: Valor de casilla importado con sintaxis CASILLA_ID=DECIMAL
           (repetible; al menos uno requerido)
         import_declared_kind_help: Tipo de declaración que la AEAT registra para esta
@@ -1021,9 +1021,9 @@ cli:
         import_help: Guarda una declaración presentada fuera de Cadrumo como registro
           de presentación base, con evidencia oficial importada de la AEAT
         import_set_required: --set es obligatorio al menos una vez para una importación.
-        include_superseded_help: Incluir los filing records superados (excluidos por
-          defecto)
-        list_help: Listar los filing records registrados
+        include_superseded_help: Incluir los registros de presentación superados (excluidos
+          por defecto)
+        list_help: Listar los registros de presentación guardados
         modelo_help: Filtrar por código de modelo (p. ej. 303, 130, 100)
         observe_local_clear_help: Elimina tu sustitución para que se vuelva a usar
           la observación oficial de la AEAT
@@ -1073,7 +1073,7 @@ cli:
           receipt_totals_only: 'Modelo {modelo} {period} {filing_year}: la confirmación
             se basa en los importes del justificante, no en la igualdad casilla a
             casilla.'
-        view_help: Mostrar un filing record por id
+        view_help: Mostrar un registro de presentación por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
@@ -1255,9 +1255,10 @@ cli:
       readiness_help: Informa de si el perfil activo está listo para presentar un
         modelo / ejercicio / periodo.
       reconcile:
-        app_help: 'Compara un cálculo local guardado con evidencia de la AEAT: pull
-          descarga un justificante o una declaración presentada; import compara un
-          PDF local; list muestra las comparaciones anteriores.'
+        app_help: 'Compara un cálculo local guardado con evidencia de la AEAT: aeat
+          app modelo reconcile pull descarga un justificante o una declaración presentada;
+          aeat app modelo reconcile import compara un PDF local; aeat app modelo reconcile
+          list muestra las comparaciones anteriores.'
         calculation_revision_help: ID de revisión de cálculo guardada que se comparará.
           Por defecto, presentada o verificada, después la última guardada.
         export_all_help: Exportar explícitamente todo el historial de conciliación
@@ -1735,7 +1736,7 @@ cli:
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la declaración
         name_required: Proporciona --name.
-        notes_help: Notas opcionales asociadas al filing record
+        notes_help: Notas opcionales asociadas al registro de presentación
         observations_help: Mostrar observaciones de cálculo tipadas por casilla y
           el origen de cada valor.
         observed_at_help: Cuándo confirmaste la atestación, como instante ISO 8601
@@ -2017,7 +2018,8 @@ cli:
     auth:
       apoderado:
         check_help: Verificar contra la AEAT (no disponible; las lecturas en vivo
-          están selladas). Usa 'status' para la lectura sin conexión.
+          están selladas). Usa 'cadrumo-runtime config auth apoderado status' para
+          la lectura sin conexión.
         clear_help: Retirar la configuración de apoderado
         configure:
           no_console_hint: 'La configuración interactiva del apoderamiento requiere
@@ -2326,12 +2328,12 @@ cli:
           Activa el almacén de claves del sistema para esta cuenta o pasa la contraseña
           del perfil a cada comando con --profile-secrets-stdin.'
         session_not_persisted_unconfirmed: 'Sesión iniciada solo para este comando:
-          el runtime no conservó este inicio de sesión, aunque este proceso puede
-          usar el almacén de claves del sistema. O bien el inicio de sesión cambió
-          mientras terminaba este acceso, o bien el runtime se ejecuta en un inicio
-          de sesión que no puede usar el almacén de claves. Vuelve a iniciar sesión;
-          si se repite, inicia el runtime desde el mismo inicio de sesión que este
-          comando.'
+          el servicio local no conservó este inicio de sesión, aunque este proceso
+          puede usar el almacén de claves del sistema. O bien el inicio de sesión
+          cambió mientras terminaba este acceso, o bien el servicio local se ejecuta
+          en un inicio de sesión que no puede usar el almacén de claves. Vuelve a
+          iniciar sesión; si se repite, inicia el servicio local desde el mismo inicio
+          de sesión que este comando.'
       passphrase_channel_absent: No hay ningún canal de contraseña disponible. Ejecuta
         este verbo en un terminal o usa --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '
@@ -2415,7 +2417,8 @@ cli:
             el archivo existente; no se ha leído ningún perfil.
       automation:
         approve:
-          digest_help: Huella exacta de revisión mostrada por inspect.
+          digest_help: Huella exacta de revisión mostrada por cadrumo-runtime config
+            profile automation inspect.
           help: Aprobar la solicitud exacta revisada introduciendo de nuevo la contraseña
             del perfil.
           request_help: UUID de la solicitud revisada.
@@ -2428,7 +2431,8 @@ cli:
             mediante --secrets-stdin o --secrets-fd. La clave llega al almacenamiento
             protegido tras tu aprobación por separado.
         decline:
-          digest_help: Huella exacta de revisión mostrada por inspect.
+          digest_help: Huella exacta de revisión mostrada por cadrumo-runtime config
+            profile automation inspect.
           help: Rechazar la solicitud exacta revisada.
           request_help: UUID de la solicitud revisada.
         deny:
@@ -2523,7 +2527,7 @@ cli:
         incomplete: 'Faltan datos obligatorios en el perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contraseña del nuevo perfil: '
       create_guidance_unavailable: El perfil se ha creado correctamente, pero no se
-        han podido preparar los avisos con los pasos siguientes. Consulta 'config
+        han podido preparar los avisos con los pasos siguientes. Consulta 'aeat config
         profile status' para ver qué falta.
       create_help: Crea un perfil protegido por una contraseña. En un terminal ofrece
         después un código de recuperación opcional; puedes omitirlo o añadirlo más
@@ -2703,8 +2707,8 @@ cli:
       row:
         invalid_row: '''%{row}'' no es una clave de fila válida; usa un entero no
           negativo o base.'
-        row_help: Clave estable de la fila mostrada por profile view; usa base para
-          la fila sin índice.
+        row_help: Clave estable de la fila mostrada por aeat config profile view;
+          usa base para la fila sin índice.
         section_help: Clave de la sección repetible del perfil.
       sandbox:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
@@ -2727,15 +2731,15 @@ cli:
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       help: Diagnosticar y reparar configuración local, definiciones de los modelos,
-        perfil, autenticación y logs
+        perfil, autenticación y registros
       integrity:
         objects_help: Comprueba la integridad de los objetos seguros.
         objects_namespace_help: Limita las comprobaciones de integridad de objetos
           seguros a un espacio de nombres.
       integrity_help: Comprobar la integridad de los objetos seguros y de las definiciones
         de los modelos.
-      logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
-      logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
+      logs_help: Mostrar la ruta del archivo de registro y las líneas recientes
+      logs_lines_help: Número de líneas recientes del archivo de registro a mostrar
       profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
         cuando apunta a estado de perfil ilegible.
       profile_clear_active_mismatch: --clear-active solo puede borrar el puntero del
@@ -3070,29 +3074,31 @@ cli:
         la fila. Omítala para añadir un duplicado deliberado.'
       idempotent_noop: 'Operación idempotente sin efecto: ya existe una transacción
         con esta clave de idempotencia (%{transaction_id}); no se añadió nada.'
-      input_classification_help: 'Clasificación de uso por input que declaras tú (LIVA
-        art. 106 prorrata especial: exclusively_deductible deducción íntegra; exclusively_non_deductible
-        sin deducción; common al porcentaje general de prorrata); solo relevante para
-        operaciones soportadas en un bucket con prorrata especial.'
+      input_classification_help: 'Clasificación de uso que declaras para el IVA soportado
+        (LIVA art. 106 prorrata especial: exclusively_deductible deducción íntegra;
+        exclusively_non_deductible sin deducción; common al porcentaje general de
+        prorrata); solo relevante para operaciones soportadas en un bucket con prorrata
+        especial.'
       input_classification_inert: '--input-classification no tiene efecto para el
         ejercicio {ejercicio}: no se aplica ninguna elección de prorrata especial,
-        por lo que el input se deduce al porcentaje general. La clasificación solo
-        es operativa mientras se aplica una elección de prorrata especial.'
+        por lo que el IVA soportado se deduce al porcentaje general. La clasificación
+        solo es operativa mientras se aplica una elección de prorrata especial.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       notes_help: Tus notas, guardadas con el movimiento
       prorrata_reference_help: Referencia de prorrata de IVA
       prorrata_sector_help: Identificador del sector diferenciado (arts. 9.1.c y 101
-        LIVA) al que pertenece este input; debe coincidir con un sector ya declarado.
+        LIVA) al que corresponde este IVA soportado; debe coincidir con un sector
+        ya declarado.
       purchase_invoice_evidence_help: Id de justificante de factura de compra
       recargo_amount_help: Cuota del recargo de equivalencia repercutida en esta venta
         a un minorista en recargo (art. 161 LIVA); se agrega a la cuota de recargo
         del Modelo 303 por tipo de IVA
       sector_unmatched: --sector '{sector_id}' no coincide con ningún sector diferenciado
-        declarado (arts. 9.1.c y 101 LIVA), por lo que este input se deduce al porcentaje
-        de uso común y no al porcentaje del sector. El sector debe existir antes de
-        poder asignarle el input.
+        declarado (arts. 9.1.c y 101 LIVA), por lo que este IVA soportado se deduce
+        al porcentaje de uso común y no al porcentaje del sector. El sector debe existir
+        antes de poder asignarle el IVA soportado.
       source_jurisdiction_help: Código de país ISO 3166-1 alfa-2 (dos letras) que
         identifica la jurisdicción fiscal de origen del ingreso o gasto (p. ej. ES
         para fuente española, FR para fuente francesa). Necesario para IRNR y para
@@ -3169,7 +3175,7 @@ cli:
         afectada no es fiable.'
       period_help: 'Periodo de declaración opcional como código de periodo AEAT: 1T-4T
         (trimestres), 0A (anual), 01-12 (meses). Combínalo con --year para coincidir
-        con ledger status.'
+        con aeat app ledger status.'
       year_help: Año de declaración para --period (p. ej. 2024).
     classify:
       apply_help: 'Guarda la sugerencia del LLM con origen llm: en lugar de solo previsualizarla.'
@@ -3269,8 +3275,8 @@ cli:
       reason_empty: Rechazado. --reason debe registrar por qué clasificas esta transacción.
         Indica un motivo no vacío, u omite --reason.
       reason_help: Motivo en texto libre que se registra como notas del movimiento
-        y como motivo de la decisión de clasificación (visible en ledger view), o
-        con una decisión --reject.
+        y como motivo de la decisión de clasificación (visible en aeat app ledger
+        view), o con una decisión --reject.
       reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra
         una sugerencia rechazada, apply una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como

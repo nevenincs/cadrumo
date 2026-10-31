@@ -407,18 +407,13 @@ def test_attested_english_aeat_legal_terms_are_exact_and_language_scoped() -> No
 
 
 def test_oauth_and_dehu_names_are_exact_and_scoped_to_attested_locales() -> None:
-    for locale in ("es", "ca", "hu"):
+    for locale in ("en", "es", "ca", "hu"):
         assert is_project_spelling(locale, "OAuth")
         assert is_project_spelling(locale, "DEHú")
         assert not is_project_spelling(locale, "OAUTH")
         assert not is_project_spelling(locale, "OAutH")
         assert not is_project_spelling(locale, "DEHu")
         assert not is_project_spelling(locale, "DEHÚ")
-
-    for locale in ("en",):
-        assert not is_project_spelling(locale, "DEHú")
-    # OAuth is separately attested and enrolled for English above.
-    assert is_project_spelling("en", "OAuth")
 
 
 def test_attested_spanish_ui_forms_are_exact_and_language_scoped() -> None:

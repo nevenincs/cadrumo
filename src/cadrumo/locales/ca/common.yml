@@ -1433,7 +1433,7 @@ desktop:
       count:
         conflict: 'Dotacions superposades, tots els anys: {count}'
         incomplete: 'Anys que no es poden calcular, tots els anys: {count}'
-        missing: 'Anys sense dotació, tots els anys: {count}'
+        missing: 'Anys amb alguna cosa pendent de registrar, tots els anys: {count}'
         stale: 'Dotacions que ja no coincideixen amb el quadre, tots els anys: {count}'
         unsupported: 'Anys amb un mètode que Cadrumo encara no admet, tots els anys:
           {count}'
@@ -1545,10 +1545,14 @@ desktop:
       handoff: Dotacions a les teves declaracions
       handoff_agrarian_count: 'Queden fora del Model 130, perquè pertanyen a una activitat
         agrícola, que paga un percentatge dels ingressos: {count} elements.'
+      handoff_agrarian_count_one: 'Queda fora del Model 130, perquè pertany a una
+        activitat agrícola, que paga un percentatge dels ingressos: 1 element.'
       handoff_agrarian_named: 'Queden fora del Model 130, perquè pertanyen a una activitat
         agrícola, que paga un percentatge dels ingressos: {names}.'
       handoff_free_count: 'No compten al Model 130, perquè el seu mètode et deixa
         la dotació a tu: {count} elements.'
+      handoff_free_count_one: 'No compta al Model 130, perquè el seu mètode et deixa
+        la dotació a tu: 1 element.'
       handoff_free_named: 'No compten al Model 130, perquè el seu mètode et deixa
         la dotació a tu: {names}.'
       handoff_gap_accrued: 'Model 100: {name} no té dotació registrada del {start}
@@ -1561,9 +1565,19 @@ desktop:
         al {end}, i no s''ha pogut calcular.'
       handoff_gap_unnamed: També queden fora {count} períodes d'elements que aquesta
         llista no anomena.
+      handoff_gap_unnamed_one: També queda fora 1 període d'elements que aquesta llista
+        no anomena.
       handoff_left_out: Fora d'aquests imports
       handoff_partial: 'Parcial: {count} elements no es poden calcular i queden fora
         d''aquest import.'
+      handoff_partial_one: 'Parcial: 1 element no es pot calcular i queda fora d''aquest
+        import.'
+      handoff_unavailable_count: '{count} elements no s''han pogut calcular, així
+        que queden fora.'
+      handoff_unavailable_count_one: 1 element no s'ha pogut calcular, així que queda
+        fora.
+      handoff_unavailable_named: 'No s''han pogut calcular, així que queden fora:
+        {names}.'
       handoff_year: Any de les xifres per a la declaració
       list:
         column:
@@ -4875,6 +4889,8 @@ ledger:
     disposal_finding:
       claim_gap: Any amb amortització sense registrar
       exemption_not_computed: Exempció del guany no calculada
+      method_has_no_minimum: Aquest mètode no té mínim a les taules, de manera que
+        l'any no suma res a la reducció del cost
       minimum_exceeded_deduction: Deducció superior a l'amortització mínima
       minimum_unresolved: 'Amortització mínima no disponible per a aquest any: cap
         edició no el cobreix, de manera que la reducció del cost pot quedar per sota

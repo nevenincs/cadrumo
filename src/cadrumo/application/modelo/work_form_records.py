@@ -21,7 +21,11 @@ from ...domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.calculations.registry.schema_form_layouts import FormRepeatingGroupBlock, FormRepeatingRowSource
+from ...domain.calculations.registry.schema_form_layouts import (
+    FormRepeatingColumn,
+    FormRepeatingGroupBlock,
+    FormRepeatingRowSource,
+)
 from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type
 from ...domain.filing.protocols import ModeloInputScalar
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -231,9 +235,7 @@ def _saved_row_column_records(
     A box total with no rows behind it comes from a calculation saved before the rows were
     recorded, so those rows stay unknown rather than read as none.
     """
-    columns = tuple(
-        column for column in block.columns if column.binding_id is not None and column.casilla_id is not None
-    )
+    columns = _bound_row_columns(block)
     if not columns:
         return False, ()
     data_types = {casilla.id: str(casilla.data_type) for casilla in snapshot.revision.casillas}
@@ -245,6 +247,10 @@ def _saved_row_column_records(
     if not by_row and any(revision.casilla_values.get(str(column.casilla_id)) for column in columns):
         return False, ()
     return True, _rows_from_values(by_row, tuple(column.casilla_id for column in block.columns))
+
+
+def _bound_row_columns(block: FormRepeatingGroupBlock) -> tuple[FormRepeatingColumn, ...]:
+    return tuple(column for column in block.columns if column.binding_id is not None and column.casilla_id is not None)
 
 
 def saved_form_records(

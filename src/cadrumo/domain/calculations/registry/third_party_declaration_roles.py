@@ -121,7 +121,18 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
     if len(definitions) != len({item.token for item in definitions}):
         raise RegistryValidationError("third-party declaration role catalogue contains duplicate roles")
 
-    role_choices = {item.token for item in definitions}
+    selections = _catalogue_selections(entries, {item.token for item in definitions})
+
+    return ThirdPartyDeclarationRoleCatalogue(
+        declarations=entries,
+        definitions=tuple(definitions),
+        selections=MappingProxyType(selections),
+    )
+
+
+def _catalogue_selections(
+    entries: Mapping[str, str], role_choices: set[ThirdPartyDeclarationRole]
+) -> dict[str, tuple[ThirdPartyDeclarationRole, ...]]:
     selections: dict[str, tuple[ThirdPartyDeclarationRole, ...]] = {}
     for clave in (match[1] for key in entries if (match := _SELECTION_KEY.fullmatch(key))):
         raw_roles = unique_mapping_tokens(entries, f"{_SELECTION_PREFIX}{clave}.roles", subject=_ENTRY_SUBJECT)
@@ -132,11 +143,7 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
             )
         selections[clave] = selected
 
-    return ThirdPartyDeclarationRoleCatalogue(
-        declarations=entries,
-        definitions=tuple(definitions),
-        selections=MappingProxyType(selections),
-    )
+    return selections
 
 
 def resolve_third_party_declaration_role_catalogue(

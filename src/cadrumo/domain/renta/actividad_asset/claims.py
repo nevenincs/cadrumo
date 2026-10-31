@@ -253,17 +253,24 @@ def _validate_claim_interval(
     candidate: AmortizationClaim,
     matching_superseded: AmortizationClaim | None,
 ) -> None:
+    overlapping: list[str] = []
     for existing in effective_claims(existing_claims):
         if existing.asset_id != candidate.asset_id or matching_superseded is existing:
             continue
-        if _has_same_interval(existing, candidate):
+        if _has_same_interval(existing, candidate) and not overlapping:
             raise ActividadAssetClaimConflictError(
-                translated_message="ledger.actividad_asset.errors.interval_has_different_claim"
+                context={"conflicting_claim_ids": existing.claim_id},
+                translated_message="ledger.actividad_asset.errors.interval_has_different_claim",
             )
         if _intervals_overlap(
             existing.covered_from, existing.covered_until, candidate.covered_from, candidate.covered_until
         ):
-            raise ActividadAssetClaimConflictError(translated_message="ledger.actividad_asset.errors.claims_overlap")
+            overlapping.append(existing.claim_id)
+    if overlapping:
+        raise ActividadAssetClaimConflictError(
+            context={"conflicting_claim_ids": ",".join(overlapping)},
+            translated_message="ledger.actividad_asset.errors.claims_overlap",
+        )
 
 
 def _has_same_interval(left: AmortizationClaim, right: AmortizationClaim) -> bool:

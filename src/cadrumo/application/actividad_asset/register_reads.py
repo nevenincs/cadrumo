@@ -31,6 +31,7 @@ from ...domain.renta.actividad_asset.schedule import (
 )
 from ..operations.public_scalar import PublicDecimal, project_scalar
 from .activity_asset_read_models import (
+    NO_TABLE_MINIMUM_REASON_KEY,
     ActivityAssetClaimableInterval,
     ActivityAssetClaimStaleReason,
     ActivityAssetClaimState,
@@ -48,13 +49,14 @@ from .activity_asset_read_models import (
     ActivityAssetRegisterState,
     activity_asset_label_key,
     project_reason_facts,
+    remedy_field_key,
 )
 from .disposal_calculation import DisposalBoundsReader, year_minimum
 from .fact_wording import token_family
 from .history import ActivityAssetHistory
 from .legal_citations import ResolvedLegalCitations
 from .ports import ActivityAssetForecastOperation
-from .schedule_walk import PlanFigureAbsence, WalkedYear, error_reason_facts, walk_element
+from .schedule_walk import NOT_APPLICABLE_ABSENCES, PlanFigureAbsence, WalkedYear, error_reason_facts, walk_element
 
 _WALK_YEARS_LIMIT = 100
 """How far a plan looks ahead; every method settles long before this."""
@@ -237,18 +239,17 @@ def element_plan(revision: ActivityAssetRevision, context: RegisterReadContext) 
     boundary = date.max if revision.disposal is None else revision.disposal.boundary
     basis = revision.amortizable_ceiling()
     minimum = Decimal("0")
-    minimum_complete = True
+    minimum_reason_key: str | None = None
     for row in _walk_to_settlement(revision, context):
         claimable = _claimable(revision, row, context.history)
-        year = year_minimum(
-            revision,
-            tax_year=row.tax_year,
-            boundary=boundary,
-            bounds=context.minimum_bounds(revision, row.tax_year),
-        )
-        minimum_complete = minimum_complete and year is not None
+        bounds = context.minimum_bounds(revision, row.tax_year)
+        year = year_minimum(revision, tax_year=row.tax_year, boundary=boundary, bounds=bounds)
+        if year is None and minimum_reason_key is None:
+            minimum_reason_key = (
+                _MINIMUM_UNRESOLVED_KEY if not bounds.edition_available else NO_TABLE_MINIMUM_REASON_KEY
+            )
         minimum += year or Decimal("0")
-        rows.append(_plan_row(revision, context, row, claimable, basis, minimum, minimum_complete))
+        rows.append(_plan_row(revision, context, row, claimable, basis, minimum, minimum_reason_key))
     return tuple(rows)
 
 
@@ -259,7 +260,7 @@ def _plan_row(
     claimable: tuple[tuple[ActivityAssetClaimableInterval, ...], str | None, tuple[ActivityAssetReasonFact, ...]],
     basis: Decimal,
     minimum: Decimal,
-    minimum_complete: bool,
+    minimum_reason_key: str | None,
 ) -> ActivityAssetPlanRow:
     intervals, refusal_key, refusal_facts = claimable
     return ActivityAssetPlanRow(
@@ -270,18 +271,21 @@ def _plan_row(
         absence=row.absence,
         absence_reason_key=row.reason_key,
         absence_reason_facts=project_reason_facts(row.reason_facts),
+        absence_remedy_field_key=remedy_field_key(row.reason_key),
+        applies=row.absence not in NOT_APPLICABLE_ABSENCES or bool(intervals),
         claimed=_amount(row.claimed),
         claim_state=_claim_state(row, intervals, today=context.today),
         claimable_intervals=intervals,
         claimable_refusal_key=refusal_key,
         claimable_refusal_facts=refusal_facts,
+        claimable_refusal_remedy_field_key=remedy_field_key(refusal_key),
         edition=_edition_or_none(context, row.tax_year),
         service_days=None if row.charge is None else row.charge.service_days,
         calendar_days=None if row.charge is None else row.charge.calendar_days,
         claims=_plan_claims(revision, row.tax_year, context),
-        minimum_through=_amount(min(basis, round_to_cents(minimum))) if minimum_complete else None,
-        minimum_reason_key=None if minimum_complete else _MINIMUM_UNRESOLVED_KEY,
-        minimum_complete=minimum_complete,
+        minimum_through=_amount(min(basis, round_to_cents(minimum))) if minimum_reason_key is None else None,
+        minimum_reason_key=minimum_reason_key,
+        minimum_complete=minimum_reason_key is None,
     )
 
 
@@ -434,7 +438,7 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
         basis=_amount(basis),
         accumulated=_optional_amount(accumulated),
         pending=_optional_amount(pending),
-        pending_applies=revision.disposal is None,
+        pending_applies=not _left_service(revision, context.today),
         findings=_finding_counts(plan, claims, revision, context),
         default_claim_year=default_claim_year(plan, today=context.today),
         years=tuple(year for year in readable if year <= context.last_admitted_year),

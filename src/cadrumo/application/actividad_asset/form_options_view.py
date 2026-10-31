@@ -58,6 +58,7 @@ def form_options_view(
                 minimum_coefficient=project_scalar(group.minimum_coefficient),
                 maximum_period_years=project_scalar(group.maximum_period_years),
                 can_hold_vehicle=group.can_hold_vehicle,
+                requires_vehicle_declaration=group.requires_vehicle_declaration,
             )
             for group in options.table_groups
         ),

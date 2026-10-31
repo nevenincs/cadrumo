@@ -30,6 +30,45 @@ _CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?P<form>Mantén-lo|revisar-los)(?!
 # The export labels retain this complete English serialization-format name.
 # Route it to its dictionary rather than exempting its words from spelling.
 _ENGLISH_FORMAT_NAME_RE = re.compile(r"(?<!\w)JSON Lines(?!\w)")
+# These are attested Hungarian endings on structural stems, not a productive
+# suffix rule for ordinary words. Keep acronym/endings paired; e.g. admitting
+# PDF-jét must not silently admit an arbitrary word followed by -jét.
+_HUNGARIAN_STRUCTURAL_SUFFIX_PATTERNS = tuple(
+    re.compile(r"(?<![\w-])" + pattern + r"(?![\w-])")
+    for pattern in (
+        r"(?<!`)(?P<stem>``[^`\r\n]+``|`[^`\r\n]+`)-(?:ból|ből|tól|től|ig|vel|nek|et)",
+        r"(?P<stem>IVA)-(?:jának|jával)",
+        r"(?P<stem>PDF)-(?:jét|jének)",
+        r"(?P<stem>UUID)-jával",
+        r"(?P<stem>NIF)-(?:jét|jének)",
+        r"(?P<stem>URL)-jét",
+        r"(?P<stem>Cl@ve)-vel",
+        r"(?P<stem>Modelo[ \t]+\d{1,4}|\*\*Modelo[ \t]+\d{1,4}\*\*)-(?:et|ban)",
+        r"(?P<stem>\d{4}-\d{2}-\d{2})-tól",
+        r"(?P<stem>1)-jén",
+        r"(?P<stem>\{expected\})-nek",
+    )
+)
+
+
+def hungarian_suffix_spelling_text(value: str) -> tuple[str, int]:
+    """Mask attested endings while retaining every stem and its source offsets."""
+    masked = list(value)
+    ranges: set[tuple[int, int]] = set()
+    foreign_ranges = tuple(
+        (match.start(), match.end())
+        for match in TRANSLATION_HTML_LANGUAGE_RE.finditer(value)
+        if match.group("locale").casefold() != "hu"
+    )
+    for pattern in (TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE, *_HUNGARIAN_STRUCTURAL_SUFFIX_PATTERNS):
+        for match in pattern.finditer(value):
+            start, end = match.end("stem"), match.end()
+            if any(start < foreign_end and foreign_start < end for foreign_start, foreign_end in foreign_ranges):
+                continue
+            if (start, end) not in ranges:
+                masked[start:end] = [" "] * (end - start)
+                ranges.add((start, end))
+    return "".join(masked), len(ranges)
 
 
 def html_spelling_segments(value: str, foreign: list[tuple[int, int, str, str, int]]) -> None:
@@ -134,6 +173,11 @@ def translation_spelling_segments(
     therefore checked with the dictionary that owns that rendered text rather
     than with the language of the surrounding catalogue cell.
     """
+    # Resolve Hungarian endings before a Spanish title recognizer takes away
+    # the stem (e.g. Modelo 111-et). Otherwise -et becomes an isolated word.
+    suffix_excluded = 0
+    if default_locale == "hu":
+        value, suffix_excluded = hungarian_suffix_spelling_text(value)
     foreign: list[tuple[int, int, str, str, int]] = []
     html_spelling_segments(value, foreign)
     markdown_link_spelling_segments(value, foreign)
@@ -155,7 +199,7 @@ def translation_spelling_segments(
     for start, end, _language, _text, _excluded in accepted:
         masked[start:end] = [" "] * (end - start)
     words, excluded = locale_spelling_words("".join(masked), default_locale)
-    segments: list[tuple[str, tuple[str, ...], int]] = [(default_locale, words, excluded)]
+    segments: list[tuple[str, tuple[str, ...], int]] = [(default_locale, words, excluded + suffix_excluded)]
     for _start, _end, language, text, structural_excluded in accepted:
         words, _excluded = locale_spelling_words(text, language)
         wrapper_excluded = structural_excluded - filtered_translation_text(text)[1]
@@ -175,7 +219,7 @@ def locale_spelling_words(value: str, locale: str) -> tuple[tuple[str, ...], int
         excluded += matches
         # Keep the stem visible to ordinary spelling checks; only the
         # recognized Hungarian suffix is structural notation.
-        value, matches = TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE.subn(lambda match: match.group("stem"), value)
+        value, matches = hungarian_suffix_spelling_text(value)
         excluded += matches
     elif locale == "ca":
         value, matches = _CATALAN_HYPHENATED_CLITIC_RE.subn(lambda match: match.group("form").split("-")[0], value)

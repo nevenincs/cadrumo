@@ -878,7 +878,8 @@ cli:
           a(z) {code}@{revision} ({period}) számára: {suggestion}.'
         unscoped_revision_warning: A rovatforrások listája nincs %{missing_filters}
           szerint szűkítve; a hivatalos nyomtatvány olyan változatának forrásazonosítóit
-          is tartalmazhatja, amely nem egyezik a work calculate által használt bevallással.
+          is tartalmazhatja, amely nem egyezik a aeat app modelo work calculate által
+          használt bevallással.
         year_help: A nyomtatvány adóéve (pl. 2026).
       casilla:
         casilla_help: Leírandó mezőazonosító vagy nyomtatott mezőszám (pl. 0596).
@@ -1218,8 +1219,9 @@ cli:
         benyújtására.
       reconcile:
         app_help: 'Hasonlítsd össze a mentett helyi számítást az AEAT adataival: a
-          pull igazolást vagy benyújtott bevallást tölt le; az import helyi PDF-et
-          hasonlít össze; a list a korábbi összehasonlításokat mutatja.'
+          aeat app modelo reconcile pull igazolást vagy benyújtott bevallást tölt
+          le; az aeat app modelo reconcile import helyi PDF-et hasonlít össze; a aeat
+          app modelo reconcile list a korábbi összehasonlításokat mutatja.'
         calculation_revision_help: Az összehasonlítandó mentett számítási változat
           azonosítója. Alapértelmezés szerint beadott vagy ellenőrzött, majd a legutóbbi
           mentett változat.
@@ -1989,7 +1991,8 @@ cli:
     auth:
       apoderado:
         check_help: Ellenőrzés az AEAT-nál (nem érhető el; az élő lekérdezés le van
-          zárva). Használd a 'status' parancsot az offline olvasáshoz.
+          zárva). Használd a 'cadrumo-runtime config auth apoderado status' parancsot
+          az offline olvasáshoz.
         clear_help: Az apoderado-konfiguráció megszüntetése.
         configure:
           no_console_hint: 'Az apoderamiento interaktív beállításához konzol szükséges.
@@ -2376,7 +2379,8 @@ cli:
             át a meglévő fájlt; egyetlen profil sem került beolvasásra.
       automation:
         approve:
-          digest_help: Az inspect által megjelenített pontos felülvizsgálati kivonat.
+          digest_help: Az cadrumo-runtime config profile automation inspect által
+            megjelenített pontos felülvizsgálati kivonat.
           help: A felülvizsgált kérelem jóváhagyása a profil jelszavának újbóli megadásával.
           request_help: A felülvizsgált kérelem UUID-azonosítója.
         change:
@@ -2388,7 +2392,8 @@ cli:
             --secrets-fd csatornán adsz meg. A kulcs a külön jóváhagyásod után kerül
             a védett tárolóba.
         decline:
-          digest_help: Az inspect által megjelenített pontos felülvizsgálati kivonat.
+          digest_help: Az cadrumo-runtime config profile automation inspect által
+            megjelenített pontos felülvizsgálati kivonat.
           help: A felülvizsgált kérelem elutasítása.
           request_help: A felülvizsgált kérelem UUID-azonosítója.
         deny:
@@ -2484,8 +2489,8 @@ cli:
         incomplete: 'A profilból még hiányoznak kötelező adatok: {paths}'
       create_confirm_passphrase_prompt: 'Erősítsd meg az új profil jelszavát: '
       create_guidance_unavailable: A profil sikeresen elkészült, de a következő lépésekről
-        szóló értesítéseket nem sikerült előállítani. A 'config profile status' megmutatja,
-        mi van még hátra.
+        szóló értesítéseket nem sikerült előállítani. A 'aeat config profile status'
+        megmutatja, mi van még hátra.
       create_help: Jelszóval védett profilt hoz létre. Terminálon ezután opcionális
         helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'cadrumo-runtime
         config profile recovery enable' paranccsal.
@@ -2664,8 +2669,8 @@ cli:
       row:
         invalid_row: A(z) '%{row}' nem érvényes sorkulcs; használj nemnegatív egész
           számot vagy base értéket.
-        row_help: A profile view által mutatott stabil sorkulcs; az index nélküli
-          sorhoz használd a base értéket.
+        row_help: A aeat config profile view által mutatott stabil sorkulcs; az index
+          nélküli sorhoz használd a base értéket.
         section_help: Az ismételhető profilszakasz kulcsa.
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
@@ -3108,8 +3113,8 @@ cli:
       link_inconsistency_notice: '{link_count} számlakapcsolat eltér a számla- és
         a tranzakciókatalógus között; az érintett számlatársítás nem megbízható.'
       period_help: 'Opcionális bevallási időszak AEAT-időszakkódként: 1T-4T (negyedévek),
-        0A (éves), 01-12 (hónapok). A --year kapcsolóval használd, a ledger status
-        paranccsal egyezően.'
+        0A (éves), 01-12 (hónapok). A --year kapcsolóval használd, a aeat app ledger
+        status paranccsal egyezően.'
       year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     classify:
       apply_help: 'Az LLM javaslatát llm: forrással menti, nem csak előnézetet készít.'
@@ -3208,8 +3213,8 @@ cli:
       reason_empty: Elutasítva. A --reason mezőnek rögzítenie kell, miért sorolod
         be ezt a tranzakciót. Adj meg nem üres indokot, vagy hagyd el a --reason kapcsolót.
       reason_help: Szabadszöveges indok, amelyet kézi besoroláskor a tranzakció jegyzeteibe
-        és a besorolási döntés indokaként (a ledger view parancsban látható) is rögzít,
-        vagy egy --reject döntéssel együtt rögzít.
+        és a besorolási döntés indokaként (a aeat app ledger view parancsban látható)
+        is rögzít, vagy egy --reject döntéssel együtt rögzít.
       reject_apply_exclusive: 'A --reject nem kombinálható a --apply kapcsolóval:
         a reject elutasított javaslatot, az apply elfogadottat rögzít.'
       reject_help: A modell javaslatának kifejezett elutasítását naplóeseményként

@@ -625,13 +625,8 @@ function methodFacts(context: FieldContext, draft: FormDraft): FormField[] {
 }
 
 /** The question whether the element is a vehicle, and the declaration it
- * opens. A declaration is a fact of a material element. */
+ * opens. The class the registry serves says whether it can hold one. */
 function vehicleFields(context: FieldContext, draft: FormDraft): FormField[] {
-  const kind =
-    draft.asset_kind ||
-    context.row?.asset_kind ||
-    String(context.revision?.asset_kind ?? "");
-  if (kind !== "material") return [];
   // Only a class the registry says can hold a vehicle is asked about one.
   const chosen = draft[factKey(["authority_class_key"])] ?? "";
   const group = context.options?.table_groups.find(

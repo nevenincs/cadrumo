@@ -199,7 +199,7 @@ export function AssetList({
         sort: (row) => row.serial_number,
         cell: (row) =>
           row.serial_number ?? (
-            <NotKnown why={t(ASSET_KEYS.list.serial_missing)} />
+            <NothingRecorded why={t(ASSET_KEYS.list.serial_missing)} />
           ),
       },
       {

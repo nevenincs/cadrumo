@@ -265,8 +265,8 @@ errors:
     error_ledger_own_account_register_record: Un registro de cuentas bancarias propias
       no es estructuralmente válido.
     error_llm: Se produjo un error en el modelo de lenguaje.
-    error_modelo_aggregation_binding: Los bindings de agregación derivados del bucket
-      entran en conflicto con los datos indicados.
+    error_modelo_aggregation_binding: Las vinculaciones de agregación derivadas del
+      bucket entran en conflicto con los datos indicados.
     error_modelo_amendment_evidence_missing: No se puede complementar una declaración
       que no tiene evidencia oficial importada. Importa primero el justificante de
       la declaración original.
@@ -545,7 +545,8 @@ errors:
       de ancho fijo.
     ledger_check: Una comprobación de consistencia del libro detectó un problema que
       impide continuar.
-    ledger_link: No se pudo vincular una transacción del libro a un binding de modelo.
+    ledger_link: No se pudo vincular una transacción del libro a una vinculación de
+      modelo.
     missing_exchange_rate: Falta el tipo de cambio para la fecha y la moneda indicadas.
     modelo_036_lifecycle: Se produjo un error en el ciclo de vida del Modelo 036 (alta,
       modificación o baja).
@@ -634,7 +635,7 @@ errors:
     canonical_modelo_workspace_materialization_provenance_missing: Un valor de fila
       repetida almacenado no indica su vinculación de origen.
     canonical_relation_binding_join: No se pudo leer conforme a lo declarado la correspondencia
-      incluida entre relaciones y bindings.
+      incluida entre relaciones y vinculaciones.
     canonical_tampered_manifest_payload: El resumen del manifiesto del corpus no coincide
       con su contenido; puede estar dañado o manipulado.
     canonical_unsupported_manifest_version: El manifiesto del corpus usa una versión
@@ -1172,7 +1173,7 @@ errors:
       de Google que necesita para iniciar sesión. Las funciones de Google no están
       disponibles.
     refused_google_non_interactive: El inicio de sesión de Google necesita un terminal
-      interactivo con navegador; ejecútalo desde una shell interactiva.
+      interactivo con navegador; ejecútalo desde un intérprete de comandos interactivo.
     refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona
       un perfil o usa --profile.
     refused_google_sign_in_required: El acceso a Google de este perfil ha caducado
@@ -1499,14 +1500,14 @@ errors:
       unknown_classification: 'El espacio de nombres de objetos seguros %{namespace}
         contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
-        para almacenamiento runtime.
+        para almacenamiento del servicio local.
     runtime:
       cold_bootstrap_active_profile_refused: El almacenamiento de arranque en frío
         solo está disponible antes de seleccionar un bucket de perfil activo.
       cold_bootstrap_explicit_database_refused: El almacenamiento de arranque en frío
         no puede omitir una ruta de base de datos explícita.
-      not_ready: 'El runtime de almacenamiento no está listo para almacenamiento vinculado
-        a perfil: %{details}'
+      not_ready: 'El servicio local de almacenamiento no está listo para almacenar
+        datos vinculados al perfil: %{details}'
     stored_data_validation_boundary: Un registro de perfil o flujo de trabajo almacenado
       ya no coincide con el esquema esperado - los datos en disco han divergido del
       formato actual. Ejecuta `aeat config repair` para diagnosticar y recuperar.

@@ -61,7 +61,11 @@ import {
   leftOutNotes,
   type Handoff,
 } from "../src/components/ledger/assets/handoffWords";
-import { changeValueText } from "../src/components/ledger/assets/planWords";
+import {
+  changeValueText,
+  nothingOpenWhy,
+  recordedMark,
+} from "../src/components/ledger/assets/planWords";
 import type { SetupCall } from "../src/components/ledger/setup/setupModel";
 import {
   LEDGER_DEFINITIONS,
@@ -2797,8 +2801,8 @@ test("the vehicle declaration is asked only for a table class the options say ca
   // No class chosen, or one the options do not list, asks nothing.
   expect(asks("")).toBe(false);
   expect(asks("not-a-class")).toBe(false);
-  // The kind alone no longer opens it.
-  expect(asks(holds[0]!.class_key, "intangible")).toBe(false);
+  // The class the options serve decides alone; the kind does not gate it.
+  expect(asks(holds[0]!.class_key, "intangible")).toBe(true);
 });
 
 test("a baja form offers exactly the reasons the options serve, each worded by the key served with it", async () => {
@@ -2917,11 +2921,14 @@ const HANDOFF_WORDS = words({
   "desktop.ledger.assets.handoff_gap_unavailable":
     "{name}: nothing from {start} to {end}, not worked out.",
   "desktop.ledger.assets.handoff_gap_unnamed": "{count} more periods.",
+  "desktop.ledger.assets.handoff_gap_unnamed_one": "1 more period.",
   "desktop.ledger.assets.handoff_free_named": "Free: {names}.",
   "desktop.ledger.assets.handoff_free_count": "Free: {count} elements.",
   "desktop.ledger.assets.handoff_agrarian_named": "Agricultural: {names}.",
   "desktop.ledger.assets.handoff_agrarian_count":
     "Agricultural: {count} elements.",
+  "desktop.ledger.assets.handoff_agrarian_count_one":
+    "Agricultural: 1 element.",
 });
 
 const projection = (
@@ -2997,10 +3004,10 @@ test("a handoff says what it leaves out by the elements' names, and by their num
     "Laptop: nothing from Jan 1, 2025 to Mar 31, 2025, 412.50 EUR accrued.",
     "Printer: nothing from Feb 1, 2025 to Mar 31, 2025, left to you.",
     "Laptop: nothing from Apr 1, 2025 to Apr 30, 2025, not worked out.",
-    "1 more periods.",
+    "1 more period.",
     // Both kinds name the element once; one element has no name here.
     "Free: Laptop and Printer.",
-    "Agricultural: 1 elements.",
+    "Agricultural: 1 element.",
   ]);
   expect(said.join(" ")).not.toMatch(/asset-/);
   // A handoff that leaves nothing out says nothing.
@@ -3362,4 +3369,132 @@ test("the Modelo 130 periods are the ones the options serve for the year", async
       M130_PERIODS[year],
     );
   }
+});
+
+/** A translator over a table of strings, filling `{name}` as the catalogue does. */
+const wordsOf = (strings: Record<string, string>, locale = "en"): Translate =>
+  Object.assign(
+    (key: string, values?: Record<string, string | number>) =>
+      (strings[key] ?? key).replace(/\{(\w+)\}/g, (_, name: string) =>
+        String(values?.[name] ?? `{${name}}`),
+      ),
+    { locale },
+  ) as unknown as Translate;
+
+test("a year with a span still open draws nothing recorded, whatever its absence is, and one with none draws by its absence", async () => {
+  const port = portOf();
+  let open = 0;
+  for (const seed of SEED_ELEMENTS)
+    for (const row of await planOf(port, seed.id)) {
+      if (row.claimable_intervals.length > 0) {
+        open += 1;
+        expect(recordedMark(row), `${seed.id} ${row.tax_year}`).toBe(
+          "nothing_recorded",
+        );
+      }
+    }
+  expect(open).toBeGreaterThan(0);
+  const free = { absence: "free_election", claimable_intervals: [] };
+  expect(recordedMark(free)).toBe("not_applicable");
+  expect(
+    recordedMark({
+      ...free,
+      claimable_intervals: [
+        {
+          covered_from: "2026-01-01",
+          covered_until: "2027-01-01",
+          covered_through: "2026-12-31",
+        },
+      ],
+    }),
+  ).toBe("nothing_recorded");
+  expect(recordedMark({ ...free, absence: "incomplete" })).toBe(
+    "nothing_recorded",
+  );
+});
+
+test("a year with nothing open says the plan's own reason, the absence's when the refusal gives none, and never blank", () => {
+  const refusalKey = `${ASSET_REASON_FAMILY}amortization_period_elapsed`;
+  const absenceKey = `${ASSET_REASON_FAMILY}opening_history_missing`;
+  const t = wordsOf({
+    [refusalKey]: "Ended on {ended_on}.",
+    [absenceKey]: "The opening amount is not entered.",
+    "desktop.ledger.assets.plan.claimable_none": "Nothing left to record",
+  });
+  const none = {
+    claimable_intervals: [],
+    claimable_refusal_key: null,
+    claimable_refusal_facts: [],
+    absence_reason_key: null,
+    absence_reason_facts: [],
+  };
+  expect(
+    nothingOpenWhy(t, {
+      ...none,
+      claimable_refusal_key: refusalKey,
+      claimable_refusal_facts: [
+        { key: "ended_on", value: "2025-12-31", kind: "date" },
+      ],
+      absence_reason_key: absenceKey,
+    }),
+  ).toContain("2025");
+  expect(nothingOpenWhy(t, { ...none, absence_reason_key: absenceKey })).toBe(
+    "The opening amount is not entered.",
+  );
+  expect(nothingOpenWhy(t, none)).toBe("Nothing left to record");
+  expect(
+    nothingOpenWhy(t, {
+      ...none,
+      claimable_intervals: [
+        {
+          covered_from: "2026-01-01",
+          covered_until: "2027-01-01",
+          covered_through: "2026-12-31",
+        },
+      ],
+    }),
+  ).toBeNull();
+});
+
+test("the handoff says what could not be worked out, by name or by count, in the singular for one", async () => {
+  const port = portOf();
+  const handoff = (
+    await settled<LedgerResult<typeof HANDOFF>>(
+      port.submit(HANDOFF, { tax_year: 2025, m130_period: "4T" }),
+    )
+  ).filing_handoff!;
+  const strings = {
+    "desktop.ledger.assets.handoff_unavailable_named":
+      "Couldn't be worked out, so left out: {names}.",
+    "desktop.ledger.assets.handoff_unavailable_count":
+      "{count} elements couldn't be worked out, so they are left out.",
+    "desktop.ledger.assets.handoff_unavailable_count_one":
+      "1 element couldn't be worked out, so it is left out.",
+  };
+  const t = wordsOf(strings);
+  const only = (ids: string[]): Handoff => ({
+    ...handoff,
+    m100_gaps: [],
+    material_m130: {
+      ...handoff.material_m130!,
+      unavailable_asset_ids: ids,
+      free_gap_asset_ids: [],
+      agrarian_excluded_asset_ids: [],
+    },
+    intangible_m130: null,
+  });
+  const names = new Map([
+    ["a", "Van"],
+    ["b", "Printer"],
+  ]);
+  expect(leftOutNotes(t, "en", only(["a", "b"]), names)).toEqual([
+    "Couldn't be worked out, so left out: Van and Printer.",
+  ]);
+  expect(leftOutNotes(t, "en", only(["a", "x", "y"]), names)).toEqual([
+    "3 elements couldn't be worked out, so they are left out.",
+  ]);
+  expect(leftOutNotes(t, "en", only(["x"]), names)).toEqual([
+    "1 element couldn't be worked out, so it is left out.",
+  ]);
+  expect(leftOutNotes(t, "en", only([]), names)).toEqual([]);
 });

@@ -7,8 +7,8 @@ adapters:
   auth:
     authenticator:
       errors:
-        already_active: AeatAuthenticator already has an active session; call close()
-          or reauthenticate() before authenticating again.
+        already_active: AeatAuthenticator already has an active session; call AeatAuthenticator.close()
+          before authenticating again.
         assertion_failed: Fresh AEAT authentication did not produce a valid login
           assertion.
         capture_requires_active_session: Saving the browser session requires the currently
@@ -16,7 +16,8 @@ adapters:
         capture_requires_certificate: Saving the browser session requires an active
           certificate-backed session with protected-resource metadata.
         metadata_parse_failed: Persisted metadata did not produce a parsed model.
-        no_active_context: No active browser context; call authenticate() first.
+        no_active_context: No active browser context; call AeatAuthenticator.authenticate()
+          first.
         no_context_capture_storage: No active browser context; cannot capture storage
           state.
         persisted_session_verification_failed: Persisted AEAT browser session failed
@@ -25,8 +26,8 @@ adapters:
         session_stale: The AEAT session is stale; the idle deadline has elapsed.
     clave_movil:
       errors:
-        already_active: Cl@ve Móvil already has an active session; call close() before
-          authenticating again.
+        already_active: Cl@ve Móvil already has an active session; call ClaveMovilAuthProvider.close()
+          before authenticating again.
         approval_timeout: Cl@ve Móvil browser authentication did not complete within
           the configured timeout.
         desktop_unavailable: 'No interactive desktop is available. QR browser launch
@@ -42,8 +43,9 @@ adapters:
         session_expired: Cl@ve Movil session has passed its idle deadline.
         storage_state_hash_mismatch: Cl@ve Movil storage-state hash mismatch; session
           data may be corrupt.
-        verify_requires_active_context: Cl@ve Móvil verify() requires an active browser
-          context; call authenticate() first.
+        verify_requires_active_context: Cl@ve Móvil ClaveMovilAuthProvider.verify()
+          requires an active browser context; call ClaveMovilAuthProvider.authenticate()
+          first.
   browser:
     errors:
       not_available: The browser isn't installed, so this can't run.

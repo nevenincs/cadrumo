@@ -60,3 +60,19 @@ def test_no_intangible_class_can_hold_a_vehicle() -> None:
 
     assert groups
     assert not any(group.can_hold_vehicle for group in groups)
+
+
+def test_each_material_class_serves_whether_it_requires_a_vehicle_declaration_as_the_resolver_enforces() -> None:
+    groups = _options(AssetKind.MATERIAL).table_groups
+
+    assert groups
+    for group in groups:
+        assert group.requires_vehicle_declaration is _asks_for_a_vehicle_declaration(group.class_key), group.class_key
+    assert {group.class_key for group in groups if group.requires_vehicle_declaration} >= {"transporte"}
+
+
+def test_no_intangible_class_requires_a_vehicle_declaration() -> None:
+    groups = _options(AssetKind.INTANGIBLE).table_groups
+
+    assert groups
+    assert not any(group.requires_vehicle_declaration for group in groups)

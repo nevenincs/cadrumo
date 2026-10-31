@@ -146,7 +146,14 @@ export const ASSET_KEYS = {
   opening_unknown: "desktop.ledger.assets.opening_unknown",
   field_other: "desktop.ledger.assets.field.other",
   handoff: {
-    partial: "desktop.ledger.assets.handoff_partial",
+    partial: {
+      one: "desktop.ledger.assets.handoff_partial_one",
+      other: "desktop.ledger.assets.handoff_partial",
+    },
+    unnamed: {
+      one: "desktop.ledger.assets.handoff_gap_unnamed_one",
+      other: "desktop.ledger.assets.handoff_gap_unnamed",
+    },
   },
   year: "desktop.ledger.assets.year",
   year_estimated: "desktop.ledger.assets.year_estimated",
@@ -400,3 +407,11 @@ export const countWord = (
   kind: keyof AssetCounts,
   count: number,
 ) => t(COUNT[kind], { count });
+
+/** The sentence of a count, in its singular form for one and its plural form
+ * otherwise, filled in with the count. */
+export const countSentence = (
+  t: Translate,
+  words: { one: string; other: string },
+  count: number,
+) => t(count === 1 ? words.one : words.other, { count });

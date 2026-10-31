@@ -869,7 +869,7 @@ def _require_vehicle_affectation(
     references: tuple[str, ...] = ()
     restricted = False
     if class_key is not None and asset_revision.asset_kind is AssetKind.MATERIAL:
-        restricted = parameters.class_flag(ACTIVITY_ASSET_RESTRICTED_VEHICLE_CLASS_ID, class_key)
+        restricted = parameters.requires_vehicle_declaration(asset_revision.asset_kind, class_key)
         references = (parameters.reference(ACTIVITY_ASSET_RESTRICTED_VEHICLE_CLASS_ID, class_key),)
     if affectation is None:
         if restricted and class_key is not None:

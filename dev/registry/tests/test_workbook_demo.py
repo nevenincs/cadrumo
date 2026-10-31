@@ -344,8 +344,9 @@ def test_322_form_uses_printed_calculations_and_independent_activity_description
 @pytest.mark.parametrize("case", [case for case in DEMO_CASES if case.modelo == "194"], ids=lambda case: case.revision)
 def test_194_summary_and_form_share_five_transactions(case: DemoCase) -> None:
     snapshot, plan = build_demonstration_plan(case)
-    saved = financial_asset_records(snapshot)
-    inputs, bindings = demonstration_inputs(snapshot, case)
+    with validating_governed_facts(compiled_bundled_authority()):
+        saved = financial_asset_records(snapshot)
+        inputs, bindings = demonstration_inputs(snapshot, case)
     values = _numeric_inputs(inputs)
     assert values == {"01": Decimal("2"), "04": Decimal("3")}
     for box, expected in (("02", "125"), ("03", "23.75"), ("05", "50")):
@@ -580,7 +581,8 @@ def test_181_compact_date_has_a_human_projection_without_changing_source() -> No
 def test_184_member_amounts_are_saved_declarations_not_invented_formulas(case: DemoCase) -> None:
     snapshot, plan = build_demonstration_plan(case)
     assert not snapshot.revision.formulas
-    revision = member_attribution_records(snapshot)
+    with validating_governed_facts(compiled_bundled_authority()):
+        revision = member_attribution_records(snapshot)
     block = snapshot.revision.form_layouts[0].pages[2].sections[0].blocks[0]
     assert isinstance(block, FormRepeatingGroupBlock)
     columns = tuple(column.casilla_id for column in block.columns)
@@ -624,7 +626,8 @@ def test_184_member_amounts_are_saved_declarations_not_invented_formulas(case: D
 def test_184_saved_amount_uses_numeric_casilla_despite_text_wire_slot(raw: str, expected: Decimal | None) -> None:
     case = next(case for case in DEMO_CASES if case.modelo == "184")
     snapshot, _ = build_demonstration_plan(case)
-    revision = member_attribution_records(snapshot)
+    with validating_governed_facts(compiled_bundled_authority()):
+        revision = member_attribution_records(snapshot)
     bindings = {binding: dict(values) for binding, values in revision.row_binding_values.items()}
     bindings["modelo-184-member-row-base-assigned"]["1"] = raw
     revision = revision.model_copy(update={"row_binding_values": bindings})
@@ -885,9 +888,12 @@ def test_145_family_cells_reference_distinct_inputs_and_do_not_invent_receipt() 
     assert tr("application.storage.calc_sheets.engine.guide.pull_command") not in raw_plan.guide.paragraphs
     with override_settings(cadrumo_output_language="en"):
         spanish_form = add_form_workbook(raw_plan, snapshot)
-    for key in ("communication_caption", "communication_guide"):
-        expected = lookup_translation(f"application.storage.calc_sheets.form.{key}", locale="es")
-        assert expected is not None and any(c.value == expected for c in spanish_form.value_cells)
+    caption = tr("application.storage.calc_sheets.form.communication_caption", locale="es")
+    guide = tr(
+        "application.storage.calc_sheets.form.communication_guide", locale="es", inputs_tab=TabName.ENTRADAS.value
+    )
+    assert any(c.address.tab is TabName.FORM and c.value == caption for c in spanish_form.value_cells)
+    assert any(c.address.tab is TabName.GUIDE and c.value == guide for c in spanish_form.value_cells)
     workbook = load_workbook(BytesIO(materialize_export_plan(plan)), data_only=False)
     for supplied in inputs.values:
         source = next(c for c in plan.value_cells if c.casilla_id == supplied.casilla_id and c.role == "operator_input")
@@ -1079,7 +1085,8 @@ def test_current_registry_generates_form_geometry_and_xlsx(case: DemoCase) -> No
         assert "4500" in form_text
         assert len(plan.row_sets) == 2
     elif case.result_casilla is not None:
-        inputs, bindings = demonstration_inputs(snapshot, case)
+        with validating_governed_facts(compiled_bundled_authority()):
+            inputs, bindings = demonstration_inputs(snapshot, case)
         values = _numeric_inputs(inputs)
         assert not {str(c.id) for c in snapshot.revision.casillas if c.formula is not None} & set(values)
         assert _expected_result(snapshot, values, bindings, case.result_casilla) == case.expected_result

@@ -77,6 +77,28 @@ def timeline_field_word_key(path: str) -> str:
     return f"{ACTIVITY_ASSET_LABEL_NAMESPACE}{TIMELINE_FIELD_FAMILY}.{path.replace(SEQUENCE_STEP, '')}"
 
 
+NO_TABLE_MINIMUM_REASON_KEY: Final = "ledger.actividad_asset.disposal_finding.method_has_no_minimum"
+"""Words a minimum that cannot be summed because the method has no table minimum, though an edition covers the year."""
+
+OPENING_REMEDY_FIELD: Final = "opening_history.accumulated_amount"
+"""The field whose entry settles a reason that the amortization already deducted is unknown."""
+
+OPENING_REMEDY_REASON_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "ledger.actividad_asset.errors.opening_history_missing",
+        "ledger.actividad_asset.errors.opening_history_amount_missing",
+    },
+)
+"""The reasons whose remedy is to enter the opening amount."""
+
+
+def remedy_field_key(reason_key: str | None) -> str | None:
+    """Name the catalogue word of the field that is the remedy of a reason, or ``None`` when entering a field is not."""
+    if reason_key is None or reason_key not in OPENING_REMEDY_REASON_KEYS:
+        return None
+    return timeline_field_word_key(OPENING_REMEDY_FIELD)
+
+
 def timeline_field_key(field: str) -> str | None:
     """Name the catalogue key of a timeline field, or ``None`` when no fact of the timeline has that path."""
     path = indexed_to_step_path(field)
@@ -321,11 +343,16 @@ class ActivityAssetPlanRow(_ReadModel):
     absence: PlanFigureAbsence | None = None
     absence_reason_key: str | None = None
     absence_reason_facts: tuple[ActivityAssetReasonFact, ...] = ()
+    absence_remedy_field_key: str | None = None
+    """The catalogue word of the register field that supplies what the absence lacks, when entering it is the remedy."""
+    applies: bool = True
+    """Whether the year has something to work out: false for a known state of nothing to work out with no span open."""
     claimed: PublicDecimal
     claim_state: ActivityAssetClaimState
     claimable_intervals: tuple[ActivityAssetClaimableInterval, ...] = ()
     claimable_refusal_key: str | None = None
     claimable_refusal_facts: tuple[ActivityAssetReasonFact, ...] = ()
+    claimable_refusal_remedy_field_key: str | None = None
     edition: ActivityAssetEdition | None = None
     service_days: int | None = None
     calendar_days: int | None = None
@@ -492,6 +519,8 @@ class ActivityAssetTableGroup(_ReadModel):
     minimum_coefficient: PublicDecimal
     maximum_period_years: PublicDecimal
     can_hold_vehicle: bool
+    requires_vehicle_declaration: bool = False
+    """Whether an asset of this class is charged only on a vehicle affectation declaration."""
     """Whether a material asset of this class can be a restricted vehicle, so the election is asked
     for a vehicle affectation declaration; the registry classifies each table class."""
 
@@ -625,6 +654,9 @@ __all__ = [
     "ACTIVITY_ASSET_LABEL_NAMESPACE",
     "DISPOSAL_FINDING_FAMILY",
     "NON_DEDUCTIBLE_IVA_STATE_FAMILY",
+    "NO_TABLE_MINIMUM_REASON_KEY",
+    "OPENING_REMEDY_FIELD",
+    "OPENING_REMEDY_REASON_KEYS",
     "PLAN_ADVISORY_FAMILY",
     "TIMELINE_FIELD_FAMILY",
     "TIMELINE_FIELD_PATHS",
@@ -671,6 +703,7 @@ __all__ = [
     "project_reason_facts",
     "reason_fact_kind",
     "reason_fact_text",
+    "remedy_field_key",
     "timeline_field_key",
     "timeline_field_word_key",
     "timeline_token_key",
