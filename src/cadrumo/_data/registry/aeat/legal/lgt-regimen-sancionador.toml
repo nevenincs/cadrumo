@@ -87,7 +87,7 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = """\
-Infraccion por dejar de ingresar la deuda tributaria resultante de una autoliquidacion. The severity \
+Infraccion por dejar de ingresar la deuda tributaria resultante de una autoliquidación. The severity \
 axis: leve where the base is 3.000 euros or less, or greater without ocultacion; grave where the \
 base exceeds 3.000 euros and there is ocultacion; muy grave where medios fraudulentos were used. \
 Incorrect books or registers push the infraction off leve above a 10 per cent incidence and make it \
@@ -189,7 +189,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Infraccion por imputar incorrectamente o no imputar bases imponibles, rentas o resultados por las entidades sometidas a un régimen de imputacion de rentas. Always grave. Nominal band: multa pecuniaria proporcional del 40 por ciento of the amounts wrongly imputed or not imputed, graduated under art-187 and reduced under art-188."
+notes = "Infraccion por imputar incorrectamente o no imputar bases imponibles, rentas o resultados por las entidades sometidas a un régimen de imputación de rentas. Always grave. Nominal band: multa pecuniaria proporcional del 40 por ciento of the amounts wrongly imputed or not imputed, graduated under art-187 and reduced under art-188."
 required_text = [
     "La sanción consistirá en multa pecuniaria proporcional del 40 por ciento",
 ]
@@ -207,7 +207,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Infraccion por imputar incorrectamente deducciones, bonificaciones y pagos a cuenta por las entidades sometidas a un régimen de imputacion de rentas. Always grave. Nominal band: multa pecuniaria proporcional del 75 por ciento of the amounts wrongly imputed, the highest proportional band in the range, graduated under art-187 and reduced under art-188."
+notes = "Infraccion por imputar incorrectamente deducciones, bonificaciones y pagos a cuenta por las entidades sometidas a un régimen de imputación de rentas. Always grave. Nominal band: multa pecuniaria proporcional del 75 por ciento of the amounts wrongly imputed, the highest proportional band in the range, graduated under art-187 and reduced under art-188."
 required_text = [
     "La sanción consistirá en multa pecuniaria proporcional del 75 por ciento",
 ]

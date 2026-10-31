@@ -89,7 +89,7 @@ reviewed_at = 2026-08-13
 reviewed_by = "agent-prepared-pending-operator"
 notes = """\
 RDL 6/2024 art. 1: objeto y ámbito de aplicación de las medidas DANA. Apartado 1 fija el ámbito por \
-remision al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024. \
+remisión al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024. \
 Apartado 4 declara el anexo MUTABLE: puede modificarse mediante Acuerdo de Consejo de Ministros. Esa \
 mutabilidad es la razon de que la geografia se cite siempre con consolidated_as_of y nunca se \
 transcriba como lista fija. PROVENANCIA DE LA CORRECCION. El propio apartado 4 lleva la nota de \
@@ -195,7 +195,7 @@ identifica por el apartado, siguiendo la granularidad ya usada en el catalogo \
 se tiene en cuenta para el calculo de la CUOTA ANUAL de 2024: no es una reducción trimestral \
 repetida cuatro veces, y required_text exige esa frase precisamente porque es la que distingue las \
 dos lecturas. GEOGRAFIA. El apartado no enumera municipios: se remite al anexo del RDL 6/2024, que \
-required_text exige literalmente, de modo que esta entrada no puede satisfacerse si la remision \
+required_text exige literalmente, de modo que esta entrada no puede satisfacerse si la remisión \
 desapareciera del texto. APLICABILIDAD. Cuando la reducción rige no lo dice este articulo sino la \
 disposición final decimocuarta de la misma norma; la entrada real-decreto-ley-7-2024:df-14 la cita, \
 y effective_from se toma de alli en lugar de deducirse. PROVENANCIA DE LA REVISION. Entrada \

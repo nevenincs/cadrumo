@@ -134,7 +134,7 @@ effective_from = 2022-12-04
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2022-20274 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1192/2022 articulo cuarto: modifica el campo de extincion del Plan de Ahorro a Largo Plazo del Modelo 280 para incluir el supuesto de fallecimiento del tomador."
+notes = "Orden HFP/1192/2022 articulo cuarto: modifica el campo de extinción del Plan de Ahorro a Largo Plazo del Modelo 280 para incluir el supuesto de fallecimiento del tomador."
 required_text = [
     "Artículo cuarto. Modificación de la Orden HAP/2118/2015",
     "EXTINCIÓN DEL PLAN DE AHORRO A LARGO PLAZO",

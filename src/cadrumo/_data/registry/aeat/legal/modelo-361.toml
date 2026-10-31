@@ -11,7 +11,7 @@ effective_from = 2010-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
-notes = "Orden EHA/789/2010 articulo 7: aprueba el Modelo 361 de solicitud de devolucion del IVA a determinados empresarios o profesionales no establecidos en el TAI ni en la Comunidad, Islas Canarias, Ceuta o Melilla."
+notes = "Orden EHA/789/2010 articulo 7: aprueba el Modelo 361 de solicitud de devolución del IVA a determinados empresarios o profesionales no establecidos en el TAI ni en la Comunidad, Islas Canarias, Ceuta o Melilla."
 required_text = [
     "Artículo 7. Aprobación del modelo 361",
     "Se aprueba el modelo 361",
@@ -51,7 +51,7 @@ effective_from = 2010-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
-notes = "Orden EHA/789/2010 articulo 9: procedimiento para la presentación telematica por Internet de las solicitudes de devolucion correspondientes al Modelo 361."
+notes = "Orden EHA/789/2010 articulo 9: procedimiento para la presentación telematica por Internet de las solicitudes de devolución correspondientes al Modelo 361."
 required_text = [
     "Artículo 9. Procedimiento",
     "presentación telemática por Internet",

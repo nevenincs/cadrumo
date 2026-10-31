@@ -634,7 +634,7 @@ text = "c\u00e1nones EN SU REDACCI\u00d3N VIGENTE tras el Protocolo de 2013 (Art
 
 [[legal."orden-eha-3290-2008:art-1"]]
 language = "es"
-text = "Orden EHA/3290/2008 art 1: aprobación del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso."
+text = "Orden EHA/3290/2008 art 1: aprobación del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediación de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso."
 
 [[legal."orden-eha-3290-2008:art-11"]]
 language = "es"
@@ -654,7 +654,7 @@ text = "ingreso/devolucion"
 
 [[legal."orden-hac-623-2026:art-segundo"]]
 language = "es"
-text = "Articulo segundo de la Orden HAC/623/2026: modifica en el registro de tipo 2 del modelo 296 los campos CODIGO (135), CODIGO EMISOR (136-147) y CLAVE DE MERCADO (412), y crea el campo CLAVE DE PERSONALIDAD DEL TITULAR REGISTRAL (310) en el anexo Valores negociables. Relacion de certificados de pago."
+text = "Articulo segundo de la Orden HAC/623/2026: modifica en el registro de tipo 2 del modelo 296 los campos CODIGO (135), CODIGO EMISOR (136-147) y CLAVE DE MERCADO (412), y crea el campo CLAVE DE PERSONALIDAD DEL TITULAR REGISTRAL (310) en el anexo Valores negociables. Relación de certificados de pago."
 
 [[legal."orden-hac-623-2026:disposicion-final-unica"]]
 language = "es"
@@ -666,15 +666,15 @@ text = "Articulo quinto de la Orden HFP/1351/2021: modifica el anexo III de la O
 
 [[legal."trlirnr-rdleg-5-2004:art-2"]]
 language = "es"
-text = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+text = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribución de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
 
 [[legal."trlirnr-rdleg-5-2004:art-24"]]
 language = "es"
-text = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de establecimiento permanente. Apartado 1 fija la regla general (importe integro según LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades económicas en Espana. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
+text = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediación de establecimiento permanente. Apartado 1 fija la regla general (importe integro según LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades económicas en Espana. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.a"]]
 language = "es"
-text = "TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas sin mediacion de establecimiento permanente."
+text = "TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas sin mediación de establecimiento permanente."
 
 [[legal."trlirnr-rdleg-5-2004:art-25.1.a"]]
 language = "es"
@@ -726,7 +726,7 @@ text = "ámbito del régimen exterior para empresarios o profesionales no establ
 
 [[legal."ley-37-1992:art-163-quinvicies"]]
 language = "es"
-text = "ámbito del régimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
+text = "ámbito del régimen de importación para ventas a distancia de bienes importados de paises o territorios terceros."
 
 [[legal."ley-37-1992:art-163-quaterdecies"]]
 language = "es"
@@ -770,15 +770,15 @@ text = "exención de las rentas obtenidas en el extranjero a traves de un establ
 
 [[legal."ley-27-2014:art-26"]]
 language = "es"
-text = "compensación de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensación de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millon de euros y plazo de prescripcion de 10 anios para la facultad de comprobación."
+text = "compensación de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensación de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millon de euros y plazo de prescripción de 10 anios para la facultad de comprobación."
 
 [[legal."ley-27-2014:art-29"]]
 language = "es"
-text = "el tipo de gravamen. Establece los tipos del Impuesto sobre Sociedades: 25 por ciento general; escala micro-empresa 17 por ciento (0-50.000) / 20 por ciento (resto); cooperativas fiscalmente protegidas -3 pp; entidades sin fines lucrativos 10 por ciento; nuevas creacion 15 por ciento (primeros dos ejercicios); entidades de crédito y exploracion de hidrocarburos 30 por ciento."
+text = "el tipo de gravamen. Establece los tipos del Impuesto sobre Sociedades: 25 por ciento general; escala micro-empresa 17 por ciento (0-50.000) / 20 por ciento (resto); cooperativas fiscalmente protegidas -3 pp; entidades sin fines lucrativos 10 por ciento; nuevas creación 15 por ciento (primeros dos ejercicios); entidades de crédito y exploracion de hidrocarburos 30 por ciento."
 
 [[legal."ley-27-2014:art-30"]]
 language = "es"
-text = "cuota integra. Define la cuota integra como la cantidad resultante de aplicar a la base imponible el tipo de gravamen del articulo 29, con regla de proporcionalidad para periodos impositivos de duracion inferior al anio. La definicion sustantiva del Impuesto sobre Sociedades reside en este articulo."
+text = "cuota integra. Define la cuota integra como la cantidad resultante de aplicar a la base imponible el tipo de gravamen del articulo 29, con regla de proporcionalidad para periodos impositivos de duración inferior al anio. La definición sustantiva del Impuesto sobre Sociedades reside en este articulo."
 
 [[legal."ley-27-2014:art-32"]]
 language = "es"
@@ -786,7 +786,7 @@ text = "deducción para evitar la doble imposición económica internacional - d
 
 [[legal."ley-27-2014:art-36"]]
 language = "es"
-text = "deducción por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deducción (30 por ciento primer millon de base, 25 por ciento exceso), los limites por produccion y episodio (20M / 10M EUR), el requisito de gasto territorial espanol (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
+text = "deducción por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deducción (30 por ciento primer millon de base, 25 por ciento exceso), los limites por producción y episodio (20M / 10M EUR), el requisito de gasto territorial espanol (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
 
 [[legal."ley-27-2014:art-45"]]
 language = "es"
@@ -802,7 +802,7 @@ text = "régimen transitorio del tipo de gravamen de las microempresas cuyo INCN
 
 [[legal."ley-27-2014:art-105"]]
 language = "es"
-text = "reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada también a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalizacion del articulo 25."
+text = "reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada también a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalización del articulo 25."
 
 [[legal."ley-27-2014:art-15"]]
 language = "es"
@@ -814,7 +814,7 @@ text = "limitacion en la deducibilidad de gastos financieros. Establece el limit
 
 [[legal."ley-27-2014:art-100"]]
 language = "es"
-text = "Transparencia Fiscal Internacional. Imputacion de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes cuando el contribuyente tenga (solo o con vinculadas art-18) participación igual o superior al 50 por ciento Y el gravamen extranjero sea inferior al 75 por ciento del que hubiera correspondido en Espana. Base sustantiva de la imputacion-rentas-positivas-art-100-LIS section de M200."
+text = "Transparencia Fiscal Internacional. Imputación de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes cuando el contribuyente tenga (solo o con vinculadas art-18) participación igual o superior al 50 por ciento Y el gravamen extranjero sea inferior al 75 por ciento del que hubiera correspondido en Espana. Base sustantiva de la imputacion-rentas-positivas-art-100-LIS section de M200."
 
 [[legal."ley-35-2006:art-35"]]
 language = "es"
@@ -946,7 +946,7 @@ language = "es"
 text = "Gestión e inspección del Impuesto"
 [[legal."ley-27-2014:art-25"]]
 language = "es"
-text = "reserva de capitalizacion. Establece la reducción en la base imponible del 15 por ciento del incremento de los fondos propios (23 por ciento si la plantilla media aumenta), condicionada al mantenimiento durante 3 anios y a la dotacion de una reserva indisponible."
+text = "reserva de capitalización. Establece la reducción en la base imponible del 15 por ciento del incremento de los fondos propios (23 por ciento si la plantilla media aumenta), condicionada al mantenimiento durante 3 anios y a la dotacion de una reserva indisponible."
 
 [[legal."ley-27-2014:art-31"]]
 language = "es"
@@ -970,7 +970,7 @@ text = "El apartado declara que la reducción se tiene en cuenta para el calculo
 
 [[legal."real-decreto-ley-7-2024:art-11.2"]]
 language = "es"
-text = "El apartado no enumera municipios: se remite al anexo del RDL 6/2024, que required_text exige literalmente, de modo que esta entrada no puede satisfacerse si la remision desapareciera del texto."
+text = "El apartado no enumera municipios: se remite al anexo del RDL 6/2024, que required_text exige literalmente, de modo que esta entrada no puede satisfacerse si la remisión desapareciera del texto."
 
 [[legal."real-decreto-ley-7-2024:art-11.2"]]
 language = "es"
@@ -1022,11 +1022,11 @@ text = "Fase 2a agraria: rendimiento neto minorado."
 
 [[legal."orden-hac-1347-2024:anexo-i-instruccion-2-2"]]
 language = "es"
-text = "El rendimiento neto minorado se obtiene deduciendo del rendimiento neto previo (fase 1a) las cantidades que, en concepto de amortización del inmovilizado material e intangible (excluidas las actividades forestales), correspondan a la depreciacion efectiva que sufran los distintos elementos afectos por funcionamiento, uso, disfrute u obsolescencia, calculada elemento por elemento conforme a la tabla de amortización de este mismo Anexo I (para grupos no tabulados en el Anexo I, la orden remite a la letra b) del punto 2.2 del Anexo II)."
+text = "El rendimiento neto minorado se obtiene deduciendo del rendimiento neto previo (fase 1a) las cantidades que, en concepto de amortización del inmovilizado material e intangible (excluidas las actividades forestales), correspondan a la depreciación efectiva que sufran los distintos elementos afectos por funcionamiento, uso, disfrute u obsolescencia, calculada elemento por elemento conforme a la tabla de amortización de este mismo Anexo I (para grupos no tabulados en el Anexo I, la orden remite a la letra b) del punto 2.2 del Anexo II)."
 
 [[legal."orden-hac-1347-2024:anexo-i-instruccion-2-2"]]
 language = "es"
-text = "Mismo patron honesto-escalar que la minoracion por incentivos a la inversion del motor de módulos del Anexo II (instrucción 2.2.b), ver orden-hac-1347-2024:instruccion-2-2-b."
+text = "Mismo patron honesto-escalar que la minoración por incentivos a la inversion del motor de módulos del Anexo II (instrucción 2.2.b), ver orden-hac-1347-2024:instruccion-2-2-b."
 
 [[legal."rd-439-2007:art-95"]]
 language = "es"
@@ -1090,7 +1090,7 @@ text = "RDL 6/2024 art."
 
 [[legal."real-decreto-ley-6-2024:art-1"]]
 language = "es"
-text = "Apartado 1 fija el ámbito por remision al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024."
+text = "Apartado 1 fija el ámbito por remisión al anexo de la propia norma y a la ventana del 28 de octubre al 4 de noviembre de 2024."
 
 [[legal."real-decreto-ley-6-2024:art-1"]]
 language = "es"
@@ -1138,7 +1138,7 @@ text = "Un periodo impositivo concluido antes del 28 de junio de 2024 (en el IRP
 
 [[legal."real-decreto-ley-4-2024:art-4"]]
 language = "es"
-text = "Los apartados Dos y Tres del articulo (reserva de capitalizacion) no se citan desde esta entrada."
+text = "Los apartados Dos y Tres del articulo (reserva de capitalización) no se citan desde esta entrada."
 
 [[legal."ley-35-2006:da-6"]]
 language = "es"
@@ -1166,15 +1166,15 @@ text = "El tipo super-reducido del 4 por ciento es anterior a esta norma y neces
 
 [[legal."orden-hac-1347-2024:instruccion-2-2-b"]]
 language = "es"
-text = "Fase 2a: minoracion por incentivos a la inversion."
+text = "Fase 2a: minoración por incentivos a la inversion."
 
 [[legal."orden-hac-1347-2024:instruccion-2-2-b"]]
 language = "es"
-text = "Son deducibles las cantidades que, en concepto de amortización del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada según la tabla de amortización de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio)."
+text = "Son deducibles las cantidades que, en concepto de amortización del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciación efectiva, calculada según la tabla de amortización de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio)."
 
 [[legal."orden-hac-1347-2024:instruccion-2-2-b"]]
 language = "es"
-text = "El primer slice del motor no modela un registro de bienes de inversion por elemento; la minoracion se recoge como un importe declarado por el operador, grounded en esta instrucción, y se resta del rendimiento neto previo junto con la minoracion por incentivos al empleo."
+text = "El primer slice del motor no modela un registro de bienes de inversion por elemento; la minoración se recoge como un importe declarado por el operador, grounded en esta instrucción, y se resta del rendimiento neto previo junto con la minoración por incentivos al empleo."
 
 [[legal."rd-1619-2012:disp-adicional-4.7"]]
 language = "es"
@@ -1202,7 +1202,7 @@ text = "Esta entrada existe para que la aplicabilidad de la reducción se lea de
 
 [[legal."rd-1624-1992:art-62"]]
 language = "es"
-text = "El apartado 6 obliga a llevar los libros registro a traves de la Sede electronica de la AEAT, mediante el suministro electronico de los registros de facturacion (SII), a quienes tengan un periodo de liquidación mensual conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los terminos del art 68 bis."
+text = "El apartado 6 obliga a llevar los libros registro a traves de la Sede electronica de la AEAT, mediante el suministro electronico de los registros de facturación (SII), a quienes tengan un periodo de liquidación mensual conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los terminos del art 68 bis."
 
 [[legal."rd-1624-1992:art-62"]]
 language = "es"
@@ -1226,7 +1226,7 @@ text = "Texto verificado contra el consolidado bundled corpus/normatives/html/rd
 
 [[legal."orden-hac-1347-2024:anexo-i-instruccion-3"]]
 language = "es"
-text = "Los agricultores jovenes o asalariados agrarios podran reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento durante los periodos impositivos cerrados durante los cinco anos siguientes a su primera instalación como titulares de una explotacion prioritaria (capitulo IV, titulo I, Ley 19/1995), siempre que acrediten un plan de mejora de la explotacion."
+text = "Los agricultores jovenes o asalariados agrarios podran reducir el rendimiento neto de módulos correspondiente a su actividad agraria en un 25 por ciento durante los periodos impositivos cerrados durante los cinco anos siguientes a su primera instalación como titulares de una explotación prioritaria (capitulo IV, titulo I, Ley 19/1995), siempre que acrediten un plan de mejora de la explotación."
 
 [[legal."orden-hac-1347-2024:anexo-i-instruccion-3"]]
 language = "es"
@@ -1246,7 +1246,7 @@ text = "Texto original, publicado el 26/06/2022"
 
 [[legal."ley-37-1992:art-70"]]
 language = "es"
-text = "inmuebles, transporte, acceso a manifestaciones, servicios electronicos, restauracion, mediacion, trabajos sobre bienes muebles, arrendamiento de medios de transporte"
+text = "inmuebles, transporte, acceso a manifestaciones, servicios electronicos, restauracion, mediación, trabajos sobre bienes muebles, arrendamiento de medios de transporte"
 
 [[legal."orden-hac-510-2021:dt-unica"]]
 language = "es"
@@ -1270,7 +1270,7 @@ text = "Garantias para el aplazamiento y fraccionamiento de la deuda."
 
 [[legal."ley-58-2003:art-191"]]
 language = "es"
-text = "Infraccion por dejar de ingresar la deuda tributaria resultante de una autoliquidacion."
+text = "Infraccion por dejar de ingresar la deuda tributaria resultante de una autoliquidación."
 
 [[legal."ley-27-2014:da-17"]]
 language = "es"

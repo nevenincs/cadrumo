@@ -11,7 +11,7 @@ effective_from = 2015-10-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden HAP/2250/2015: aprobación del modelo 184 'Declaración informativa anual de Entidades en régimen de atribucion de rentas' y de los diseños de registro a los que deberan ajustarse los ficheros que contengan la información a suministrar."
+notes = "Articulo 1 de la Orden HAP/2250/2015: aprobación del modelo 184 'Declaración informativa anual de Entidades en régimen de atribución de rentas' y de los diseños de registro a los que deberan ajustarse los ficheros que contengan la información a suministrar."
 required_text = [
     "Aprobación del modelo 184",
     "Declaración informativa anual de Entidades en régimen de atribución de rentas",
@@ -31,7 +31,7 @@ effective_from = 2015-10-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 2 de la Orden HAP/2250/2015: obligados a presentar el modelo 184. Entidades en régimen de atribucion de rentas (Seccion 2.a del titulo X de la Ley 35/2006 LIRPF y Capitulo V del TRLIRNR aprobado por RDLeg 5/2004). Excluidas las entidades sin actividad económica con rentas inferiores a 3.000 EUR anuales y las entidades en el extranjero sin miembros residentes en territorio espanol."
+notes = "Articulo 2 de la Orden HAP/2250/2015: obligados a presentar el modelo 184. Entidades en régimen de atribución de rentas (Seccion 2.a del titulo X de la Ley 35/2006 LIRPF y Capitulo V del TRLIRNR aprobado por RDLeg 5/2004). Excluidas las entidades sin actividad económica con rentas inferiores a 3.000 EUR anuales y las entidades en el extranjero sin miembros residentes en territorio espanol."
 required_text = [
     "Están obligadas a presentar el modelo 184",
     "régimen de atribución de rentas",
@@ -71,7 +71,7 @@ effective_from = 2015-10-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 4 de la Orden HAP/2250/2015: plazo de presentación del Modelo 184. La presentación se realizara en el mes de febrero de cada ano en relacion con las rentas obtenidas por la entidad y las rentas atribuibles a cada uno de sus miembros en el ano natural inmediato anterior."
+notes = "Articulo 4 de la Orden HAP/2250/2015: plazo de presentación del Modelo 184. La presentación se realizara en el mes de febrero de cada ano en relación con las rentas obtenidas por la entidad y las rentas atribuibles a cada uno de sus miembros en el ano natural inmediato anterior."
 required_text = [
     "Plazo de presentación",
     "mes de febrero",
@@ -238,7 +238,7 @@ effective_from = 2025-12-13
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-22
-notes = "Articulo cuarto de la Orden HAC/1430/2025: modifica los diseños de registro del modelo 184 aprobados por la Orden HAP/2250/2015. El apartado Uno introduce el campo NUMERO TOTAL DE REGISTROS DE ENTIDAD en las posiciones 221-229 del tipo de registro 1 (registro del declarante) y desplaza BLANCOS a 230-487; el apartado Dos reescribe la relacion de subclaves del campo SUBCLAVE (posiciones 94-95) del tipo de registro 2. La propia orden fija la frontera temporal entre los dos diseños empaquetados: sera aplicable por primera vez a las declaraciones informativas correspondientes al ejercicio 2025 para el modelo 184."
+notes = "Articulo cuarto de la Orden HAC/1430/2025: modifica los diseños de registro del modelo 184 aprobados por la Orden HAP/2250/2015. El apartado Uno introduce el campo NUMERO TOTAL DE REGISTROS DE ENTIDAD en las posiciones 221-229 del tipo de registro 1 (registro del declarante) y desplaza BLANCOS a 230-487; el apartado Dos reescribe la relación de subclaves del campo SUBCLAVE (posiciones 94-95) del tipo de registro 2. La propia orden fija la frontera temporal entre los dos diseños empaquetados: sera aplicable por primera vez a las declaraciones informativas correspondientes al ejercicio 2025 para el modelo 184."
 required_text = [
     "Artículo cuarto.",
     "NÚMERO TOTAL DE REGISTROS DE ENTIDAD",

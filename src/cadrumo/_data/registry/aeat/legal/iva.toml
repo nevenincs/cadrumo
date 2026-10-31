@@ -11,7 +11,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/789/2010: aprobación del formulario 360 de solicitud de devolucion del IVA soportado por empresarios o profesionales establecidos en el TAI por operaciones efectuadas en otros Estados miembros (procedimiento Octava Directiva 2008/9/CE)."
+notes = "Articulo 1 de la Orden EHA/789/2010: aprobación del formulario 360 de solicitud de devolución del IVA soportado por empresarios o profesionales establecidos en el TAI por operaciones efectuadas en otros Estados miembros (procedimiento Octava Directiva 2008/9/CE)."
 required_text = [
     "Aprobación del formulario 360",
     "solicitud de devolución",
@@ -31,7 +31,7 @@ effective_from = 2010-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 4 de la Orden EHA/789/2010: plazo de presentación del formulario 360. El plazo se inicia el dia siguiente al final del periodo de devolucion y concluye el 30 de septiembre siguiente al ano natural en el que se hayan soportado las cuotas a que se refiera."
+notes = "Articulo 4 de la Orden EHA/789/2010: plazo de presentación del formulario 360. El plazo se inicia el dia siguiente al final del periodo de devolución y concluye el 30 de septiembre siguiente al ano natural en el que se hayan soportado las cuotas a que se refiera."
 required_text = [
     "Plazo de presentación del formulario 360",
     "30 de septiembre",
@@ -416,7 +416,7 @@ effective_from = 2007-11-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/3434/2007: aprobación del modelo 322 'Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo individual. Autoliquidacion mensual'. Aplicable a sujetos pasivos del IVA que formen parte de un grupo de entidades conforme al articulo 163 quinquies.Uno de la LIVA."
+notes = "Articulo 1 de la Orden EHA/3434/2007: aprobación del modelo 322 'Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo individual. Autoliquidación mensual'. Aplicable a sujetos pasivos del IVA que formen parte de un grupo de entidades conforme al articulo 163 quinquies.Uno de la LIVA."
 required_text = [
     "Aprobación del modelo 322",
     "Grupo de entidades",
@@ -436,7 +436,7 @@ effective_from = 2007-11-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 2 de la Orden EHA/3434/2007: aprobación del modelo 353 'Grupo de entidades. Modelo agregado. Autoliquidacion mensual' del IVA. Lo presenta la entidad dominante del grupo."
+notes = "Articulo 2 de la Orden EHA/3434/2007: aprobación del modelo 353 'Grupo de entidades. Modelo agregado. Autoliquidación mensual' del IVA. Lo presenta la entidad dominante del grupo."
 required_text = [
     "Aprobación del modelo 353",
     "Modelo agregado",
@@ -723,7 +723,7 @@ effective_from = 2009-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden EHA/3786/2008: aprobación del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidacion. Ingreso del Impuesto sobre el Valor Anadido a la importacion liquidado por la Aduana'."
+notes = "Articulo 1 de la Orden EHA/3786/2008: aprobación del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidación. Ingreso del Impuesto sobre el Valor Anadido a la importación liquidado por la Aduana'."
 required_text = [
     "Aprobación del modelo 303",
     "Impuesto sobre el Valor Añadido",
@@ -763,7 +763,7 @@ effective_from = 2009-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 2 de la Orden EHA/3786/2008: aprobación del modelo 308 'Impuesto sobre el Valor Anadido, solicitud de devolucion: recargo de equivalencia, articulo 30 bis del Reglamento del IVA, articulo 21.4 de la Ley del IVA y sujetos pasivos ocasionales'."
+notes = "Articulo 2 de la Orden EHA/3786/2008: aprobación del modelo 308 'Impuesto sobre el Valor Anadido, solicitud de devolución: recargo de equivalencia, articulo 30 bis del Reglamento del IVA, articulo 21.4 de la Ley del IVA y sujetos pasivos ocasionales'."
 required_text = [
     "Aprobación del modelo 308",
     "solicitud de devolución",
@@ -1520,7 +1520,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 1 de la Orden HAC/610/2021: aprobación del modelo 369, autoliquidacion de los regimenes especiales OSS/IOSS del IVA."
+notes = "Articulo 1 de la Orden HAC/610/2021: aprobación del modelo 369, autoliquidación de los regimenes especiales OSS/IOSS del IVA."
 required_text = [
     "Aprobación del modelo 369",
     "Impuesto sobre el Valor Añadido",
@@ -1540,7 +1540,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 2 de la Orden HAC/610/2021: obligados a presentar Modelo 369. Esquemas Exterior y Union presentan por trimestre natural; el régimen de importacion presenta por mes natural."
+notes = "Articulo 2 de la Orden HAC/610/2021: obligados a presentar Modelo 369. Esquemas Exterior y Union presentan por trimestre natural; el régimen de importación presenta por mes natural."
 required_text = [
     "por cada trimestre natural",
     "por cada mes natural",
@@ -1560,7 +1560,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 3 de la Orden HAC/610/2021: el Modelo 369 se presenta dentro del mes natural siguiente al final del periodo de autoliquidacion."
+notes = "Articulo 3 de la Orden HAC/610/2021: el Modelo 369 se presenta dentro del mes natural siguiente al final del periodo de autoliquidación."
 required_text = [
     "Plazo de presentación del modelo 369",
     "dentro del mes natural siguiente",
@@ -1642,7 +1642,7 @@ effective_from = 2021-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Ley 37/1992, articulo 163 quinvicies: ámbito del régimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
+notes = "Ley 37/1992, articulo 163 quinvicies: ámbito del régimen de importación para ventas a distancia de bienes importados de paises o territorios terceros."
 required_text = [
     "Artículo 163 quinvicies",
     "ventas a distancia de bienes importados",
@@ -1742,7 +1742,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
 notes = """\
-RD 1619/2012 Reglamento de facturacion art 6.1.d: contenido de la factura, NIF. Ademas del NIF del \
+RD 1619/2012 Reglamento de facturación art 6.1.d: contenido de la factura, NIF. Ademas del NIF del \
 expedidor, la consignacion del NIF del DESTINATARIO es obligatoria en tres casos, y el tercero -- \
 operaciones realizadas en el territorio de aplicación del Impuesto por un empresario o profesional \
 establecido en dicho territorio -- es el que fundamenta el aviso de la CLI cuando una factura \
@@ -1787,7 +1787,7 @@ effective_from = 2013-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-13
 reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
-notes = "RD 1619/2012 Reglamento de facturacion art 7: contenido de la factura simplificada. Fundamenta la clase SIMPLIFICADA. corpus_ref nombra el acto consolidado completo porque no hay captura por articulo para el 7; la del articulo 6 no lo contiene."
+notes = "RD 1619/2012 Reglamento de facturación art 7: contenido de la factura simplificada. Fundamenta la clase SIMPLIFICADA. corpus_ref nombra el acto consolidado completo porque no hay captura por articulo para el 7; la del articulo 6 no lo contiene."
 required_text = [
     "Contenido de las facturas simplificadas",
     "las facturas simplificadas y sus copias contendrán los siguientes datos o requisitos",
@@ -2121,7 +2121,7 @@ Articulo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deducción
 1a las cuotas soportadas en bienes/servicios utilizados EXCLUSIVAMENTE en operaciones con derecho a \
 deducción se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin \
 derecho NO son deducibles (0%); 3a las utilizadas SOLO EN PARTE en operaciones con derecho se \
-deducen en la proporcion del porcentaje general del art 104.Dos y siguientes, con el procedimiento \
+deducen en la proporción del porcentaje general del art 104.Dos y siguientes, con el procedimiento \
 del art 105. Base legal del enrutado por InputClassification \
 (exclusively_deductible/exclusively_non_deductible/common)."""
 required_text = [
@@ -2181,8 +2181,8 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-08
 reviewed_by = "agent-authored from bundled ley-37-1992.html#a9 definicion de sectores diferenciados letra c; operator to re-stamp"
 notes = """\
-Articulo 9, numero 1.o, letra c) LIVA: la definicion de los SECTORES DIFERENCIADOS de la actividad \
-(base del art 101). Letra a': actividades económicas con grupos DISTINTOS en la Clasificacion \
+Articulo 9, numero 1.o, letra c) LIVA: la definición de los SECTORES DIFERENCIADOS de la actividad \
+(base del art 101). Letra a': actividades económicas con grupos DISTINTOS en la Clasificación \
 Nacional de Actividades Económicas (CNAE) cuyos regimenes de deducción difieran; los regimenes se \
 consideran distintos cuando los porcentajes de deducción del art 104 difieran en mas de 50 PUNTOS \
 PORCENTUALES respecto de la actividad principal. Letra b': actividades acogidas a los regimenes \
@@ -2368,7 +2368,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Articulo 163 tervicies LIVA: régimen especial aplicable a empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo (Union One Stop Shop). Habilita la declaración única de servicios y ventas a distancia intracomunitarias a traves del Estado miembro de identificacion."
+notes = "Articulo 163 tervicies LIVA: régimen especial aplicable a empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo (Union One Stop Shop). Habilita la declaración única de servicios y ventas a distancia intracomunitarias a traves del Estado miembro de identificación."
 required_text = [
     "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
     "No obstante lo anterior, los empresarios o profesionales que se acojan a este régimen especial tendrán derecho a la devolución de ",
@@ -2690,7 +2690,7 @@ effective_from = 2017-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electronica de la AEAT mediante el suministro electronico de registros de facturacion."
+notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electronica de la AEAT mediante el suministro electronico de registros de facturación."
 required_text = [
     "Sede electrónica de la Agencia Estatal de la Administración Tributaria",
     "suministro electrónico de los registros de facturación",
@@ -2711,7 +2711,7 @@ consolidated_as_of = 2025-12-03
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "agent-review"
-notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informaticos de facturacion: IS, IRPF con actividades económicas, IRNR con establecimiento permanente y entidades en atribucion de rentas con actividades económicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica también a productores/comercializadores en su actividad."
+notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informaticos de facturación: IS, IRPF con actividades económicas, IRNR con establecimiento permanente y entidades en atribución de rentas con actividades económicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica también a productores/comercializadores en su actividad."
 required_text = [
     "El presente Reglamento se aplicará a los obligados tributarios que se indican a continuación, que utilicen sistemas informáticos de facturación",
     "Los contribuyentes del Impuesto sobre Sociedades",

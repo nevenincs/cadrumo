@@ -48,9 +48,9 @@ notes = """\
 LGT art 93: obligaciones de información. Base sustantiva de toda obligación informativa frente a \
 AEAT - personas fisicas y juridicas obligadas a proporcionar datos, informes, antecedentes y \
 justificantes con trascendencia tributaria. Enumera obligados especificos (retenedores, sociedades \
-de cobro de honorarios profesionales, entidades bancarias y de mediacion). Base sustantiva de las \
+de cobro de honorarios profesionales, entidades bancarias y de mediación). Base sustantiva de las \
 declaraciones informativas: M347 (operaciones con terceros), M180/M190/M193 (resumenes anuales de \
-retenciones), M184 (atribucion de rentas), M232 (vinculadas y paraisos), M349 (intracomunitarias), \
+retenciones), M184 (atribución de rentas), M232 (vinculadas y paraisos), M349 (intracomunitarias), \
 M720 (bienes en el extranjero), M193 (capital mobiliario)."""
 required_text = [
     "Obligaciones de información",
@@ -115,8 +115,8 @@ notes = """\
 Autoliquidaciones: declarations in which the obligado tributario performs the calificacion \
 + cuantificación necessary to determine the deuda tributaria and either pays, claims a \
 refund, or claims compensation. AEAT may verify and comprobar. Where the obligado \
-considers the autoliquidacion has harmed their legitimate interests they may instar la \
-rectificación per the apartado 3 procedure; otherwise the autoliquidacion rectificativa \
+considers the autoliquidación has harmed their legitimate interests they may instar la \
+rectificación per the apartado 3 procedure; otherwise the autoliquidación rectificativa \
 procedure of apartado 4 applies where the tax-specific regulation so establishes."""
 required_text = [
     "Las autoliquidaciones son declaraciones en las que los obligados tributarios",

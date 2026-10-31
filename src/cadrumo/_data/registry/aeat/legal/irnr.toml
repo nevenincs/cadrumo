@@ -59,7 +59,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+notes = "TRLIRNR art 2: ámbito de aplicación territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribución de obligación IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
 required_text = ["Este impuesto se aplicara en todo el territorio espanol", "regimenes tributarios forales"]
 
 [legal."trlirnr-rdleg-5-2004:art-10"]
@@ -124,7 +124,7 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = """\
-TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de \
+TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediación de \
 establecimiento permanente. Apartado 1 fija la regla general (importe integro según LIRPF, \
 sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por \
 diferencia para prestaciones de servicios y actividades económicas en Espana. Apartado 6 \
@@ -148,7 +148,7 @@ reviewed_at = 2026-05-27
 reviewed_by = "operator"
 notes = """\
 TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas sin \
-mediacion de establecimiento permanente. El mismo apartado fija un tipo reducido del 19 \
+mediación de establecimiento permanente. El mismo apartado fija un tipo reducido del 19 \
 por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE \
 con efectivo intercambio de información tributaria, lo que motiva la fila \
 tipo_renta=ue_residente del parametro registry m210-tipo-gravamen-2025. Los valores \
@@ -639,7 +639,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of arts. 1 and 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
-notes = "Orden EHA/3290/2008 art 1: aprobación del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso. Approval-order anchor for the Modelo 216 quarterly IRNR retención return."
+notes = "Orden EHA/3290/2008 art 1: aprobación del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediación de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso. Approval-order anchor for the Modelo 216 quarterly IRNR retención return."
 required_text = [
     "Se aprueba el modelo 216",
     "Retenciones e ingresos a cuenta",
@@ -1061,7 +1061,7 @@ effective_from = 2026-06-24
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Articulo segundo de la Orden HAC/623/2026: modifica en el registro de tipo 2 del modelo 296 los campos CODIGO (135), CODIGO EMISOR (136-147) y CLAVE DE MERCADO (412), y crea el campo CLAVE DE PERSONALIDAD DEL TITULAR REGISTRAL (310) en el anexo Valores negociables. Relacion de certificados de pago."
+notes = "Articulo segundo de la Orden HAC/623/2026: modifica en el registro de tipo 2 del modelo 296 los campos CODIGO (135), CODIGO EMISOR (136-147) y CLAVE DE MERCADO (412), y crea el campo CLAVE DE PERSONALIDAD DEL TITULAR REGISTRAL (310) en el anexo Valores negociables. Relación de certificados de pago."
 required_text = [
     "Modificación de la Orden EHA/3290/2008",
     "CLAVE DE PERSONALIDAD DEL TITULAR REGISTRAL",

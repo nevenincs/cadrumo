@@ -11,7 +11,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-12399 consolidated HTML from BOE on 2026-07-01"
-notes = "Real Decreto 1021/2015 articulo 3: regula la identificacion de la residencia fiscal de las personas que ostenten la titularidad o el control de cuentas financieras."
+notes = "Real Decreto 1021/2015 articulo 3: regula la identificación de la residencia fiscal de las personas que ostenten la titularidad o el control de cuentas financieras."
 required_text = [
     "titularidad o el control de cuentas financieras",
     "conforme a lo previsto en el anexo",

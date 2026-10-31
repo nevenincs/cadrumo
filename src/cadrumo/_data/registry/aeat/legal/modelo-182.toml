@@ -30,7 +30,7 @@ effective_from = 2007-10-12
 review_status = "operator_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "operator"
-notes = "Orden EHA/3021/2007 articulo 5: plazo de presentación del modelo 182. La declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas se presenta en el mes de enero de cada ano, en relacion con las operaciones del ano natural inmediato anterior."
+notes = "Orden EHA/3021/2007 articulo 5: plazo de presentación del modelo 182. La declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas se presenta en el mes de enero de cada ano, en relación con las operaciones del ano natural inmediato anterior."
 required_text = [
     "Plazo de presentación",
     "se realizará en el mes de enero de cada año",

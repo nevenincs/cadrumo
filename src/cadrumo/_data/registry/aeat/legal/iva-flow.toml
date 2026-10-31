@@ -109,7 +109,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-06
 reviewed_by = "agent-review"
-notes = "LIVA art 85: sujetos pasivos de las adquisiciones intracomunitarias de bienes. Distinto de art. 84, que gobierna la inversion del sujeto pasivo para servicios/entregas de no establecidos; el sujeto pasivo de una AIB de bienes es quien realiza la adquisición, por remision al art. 71."
+notes = "LIVA art 85: sujetos pasivos de las adquisiciones intracomunitarias de bienes. Distinto de art. 84, que gobierna la inversion del sujeto pasivo para servicios/entregas de no establecidos; el sujeto pasivo de una AIB de bienes es quien realiza la adquisición, por remisión al art. 71."
 required_text = [
     "Sujetos pasivos",
     "En las adquisiciones intracomunitarias de bienes los sujetos pasivos del impuesto serán quienes las realicen",
@@ -188,7 +188,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmisión de unidad económica autonoma, muestras gratuitas, entregas publicitarias, servicios en régimen de dependencia, operaciones de Administraciones Publicas sin contraprestacion, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificacion no-sujeta en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmisión de unidad económica autonoma, muestras gratuitas, entregas publicitarias, servicios en régimen de dependencia, operaciones de Administraciones Publicas sin contraprestación, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificación no-sujeta en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Operaciones no sujetas al impuesto",
     "No estarán sujetas al impuesto",
@@ -247,7 +247,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 17: hecho imponible de las importaciones de bienes. Sujeta al impuesto las importaciones de bienes cualquiera que sea el fin a que se destinen y la condicion del importador. Base sustantiva del hecho imponible de importacion en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 17: hecho imponible de las importaciones de bienes. Sujeta al impuesto las importaciones de bienes cualquiera que sea el fin a que se destinen y la condicion del importador. Base sustantiva del hecho imponible de importación en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Estarán sujetas al impuesto las importaciones de bienes",
     "cualquiera que sea el fin a que se destinen y la condición del importador",
@@ -266,7 +266,7 @@ effective_from = 2019-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 20: exenciones en operaciones interiores. Enumera las exenciones limitadas (sin derecho a deducción) aplicables a las operaciones interiores: servicio postal, sanidad, educacion, asistencia social, operaciones financieras y de seguros, arrendamientos y entregas de inmuebles, entre otras. Base sustantiva de la clasificacion exenta interior en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 20: exenciones en operaciones interiores. Enumera las exenciones limitadas (sin derecho a deducción) aplicables a las operaciones interiores: servicio postal, sanidad, educacion, asistencia social, operaciones financieras y de seguros, arrendamientos y entregas de inmuebles, entre otras. Base sustantiva de la clasificación exenta interior en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Estarán exentas de este impuesto las siguientes operaciones",
     # Apartado Dos (renuncia a la exención) and the closing clause of apartado
@@ -297,7 +297,7 @@ notes = """\
 LIVA art 22: exenciones en las operaciones asimiladas a las exportaciones. Exime entregas y \
 servicios relativos a buques afectos a navegacion maritima internacional, aeronaves de companias que \
 se dediquen al trafico internacional, operaciones con organismos internacionales y misiones \
-diplomaticas. Base sustantiva de la clasificacion exenta asimilada a exportacion en el enrutamiento \
+diplomaticas. Base sustantiva de la clasificación exenta asimilada a exportacion en el enrutamiento \
 M303 (Tier-2 routing). REDACTION HISTORY, read from the BOE open-data article endpoint (12 \
 redacciones): first vigencia 19930101 by BOE-A-1992-28740 (the law itself), last 20230101 by \
 BOE-A-2022-22128. The article has therefore been in force continuously since 1993 and DID govern \
@@ -330,7 +330,7 @@ notes = """\
 LIVA art 25: exenciones en las entregas de bienes destinados a otro Estado miembro (entregas \
 intracomunitarias). Exime las entregas de bienes expedidos o transportados al territorio de otro \
 Estado miembro cuando el adquirente disponga de un NIF-IVA asignado por otro Estado miembro y la \
-operación se incluya en la declaración recapitulativa. Base sustantiva de la clasificacion exenta \
+operación se incluya en la declaración recapitulativa. Base sustantiva de la clasificación exenta \
 intracomunitaria en el enrutamiento M303 (Tier-2 routing). REDACTION HISTORY, read from the BOE \
 open-data article endpoint (6 redacciones): first vigencia 19930101 by BOE-A-1992-28740, last \
 20200301 by BOE-A-2020-1651. Same authoring inconsistency corrected as on art-22: effective_from had \
@@ -354,7 +354,7 @@ effective_from = 2010-03-03
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 26: exenciones en las adquisiciones intracomunitarias de bienes, incluida la operación triangular. Exime las adquisiciones intracomunitarias cuya entrega interior estaria no sujeta o exenta, las que corresponden a importaciones exentas, las realizadas en el marco de una operación triangular y aquellas con derecho a devolucion total. Base sustantiva de la exención intracomunitaria y la triangulacion en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 26: exenciones en las adquisiciones intracomunitarias de bienes, incluida la operación triangular. Exime las adquisiciones intracomunitarias cuya entrega interior estaria no sujeta o exenta, las que corresponden a importaciones exentas, las realizadas en el marco de una operación triangular y aquellas con derecho a devolución total. Base sustantiva de la exención intracomunitaria y la triangulacion en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Exenciones en las adquisiciones intracomunitarias de bienes",
     "Las adquisiciones intracomunitarias de bienes cuya entrega en el territorio de aplicación del impuesto hubiera estado",
@@ -373,7 +373,7 @@ effective_from = 2011-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
-notes = "LIVA art 27.12: importaciones exentas followed by onward delivery to another Member State. Base sustantiva de las claves M349 M y H when the M349 instructions cite importacion exenta and representative-fiscal flows."
+notes = "LIVA art 27.12: importaciones exentas followed by onward delivery to another Member State. Base sustantiva de las claves M349 M y H when the M349 instructions cite importación exenta and representative-fiscal flows."
 required_text = [
     "Importaciones de bienes cuya entrega en el interior estuviese exenta del impuesto",
     "los bienes cuya expedición o transporte tenga como punto de llegada un lugar situado en otro Estado miembro",
@@ -424,7 +424,7 @@ reviewed_by = "agent-review"
 notes = """LIVA art 70: special place-of-supply rules for services. Complements art 69 \
 for M349 service keys S and I where official instructions distinguish services localized \
 in or outside the TAI. Its apartado Uno reglas (inmuebles, transporte, acceso a \
-manifestaciones, servicios electronicos, restauracion, mediacion, trabajos sobre bienes \
+manifestaciones, servicios electronicos, restauracion, mediación, trabajos sobre bienes \
 muebles, arrendamiento de medios de transporte) override the art. 69 general rule, so \
 category selection for a cross-border service must be read here before art. 69 is \
 applied; the selection stays a declared operator judgement. \
@@ -636,7 +636,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "Reglamento del IVA art 30 bis: devolucion de cuotas deducibles a los sujetos pasivos que ejerzan la actividad de transporte de viajeros o de mercancias por carretera tributando por el régimen simplificado. Articulo invocado en el official_name del Modelo 308 como el reglamentario de la solicitud de devolucion."
+notes = "Reglamento del IVA art 30 bis: devolución de cuotas deducibles a los sujetos pasivos que ejerzan la actividad de transporte de viajeros o de mercancias por carretera tributando por el régimen simplificado. Articulo invocado en el official_name del Modelo 308 como el reglamentario de la solicitud de devolución."
 required_text = [
     "Devolución de cuotas deducibles",
     "transporte de viajeros o de mercancías por carretera",
@@ -684,7 +684,7 @@ reviewed_at = 2026-10-03
 reviewed_by = "agent-review"
 notes = """RIVA art 62: libros registros del IVA. El apartado 6 obliga a llevar los libros \
 registro a traves de la Sede electronica de la AEAT, mediante el suministro electronico de \
-los registros de facturacion (SII), a quienes tengan un periodo de liquidación mensual \
+los registros de facturación (SII), a quienes tengan un periodo de liquidación mensual \
 conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los \
 terminos del art 68 bis. Es el supuesto al que remite el art 32.e del RD 1065/2007 para \
 excluir de la declaración anual de operaciones con terceras personas (Modelo 347) tanto a los \
