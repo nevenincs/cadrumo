@@ -61,6 +61,7 @@ def _two_revision_modelo(
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_duplicate_deadline_identifier_across_revisions_bites_independently() -> None:
     modelo = _two_revision_modelo(
         _window("same-id", resultado_scope=ResultDisposition.INGRESO),
@@ -73,6 +74,7 @@ def test_duplicate_deadline_identifier_across_revisions_bites_independently() ->
     assert not any("deadline semantic coordinate" in failure for failure in failures)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_duplicate_atomic_qualified_coordinate_across_revisions_bites_independently() -> None:
     modelo = _two_revision_modelo(
         _window("unqualified"),
@@ -88,6 +90,7 @@ def test_duplicate_atomic_qualified_coordinate_across_revisions_bites_independen
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_distinct_ids_and_qualified_coordinates_are_accepted() -> None:
     modelo = _two_revision_modelo(
         _window("ingreso", resultado_scope=ResultDisposition.INGRESO),

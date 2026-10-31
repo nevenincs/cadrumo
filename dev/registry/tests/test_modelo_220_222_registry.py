@@ -79,6 +79,7 @@ _CASES = (
 )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_220_222_validators_accept_committed_definitions(case: _ModeloCase) -> None:
     modelo, catalogues = _committed_modelo(case.modelo_id)

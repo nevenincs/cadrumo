@@ -34,6 +34,7 @@ def _revision_validation_years(revision: ModeloRevision) -> tuple[int, ...]:
     return tuple(sorted(years))
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_schema_coordinate() -> None:
     """Reference identity and runtime projection must hold at EVERY bundled coordinate.
 

@@ -25,6 +25,7 @@ def _schema_provider(period: Period) -> RegistrySchemaAccessor:
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_snapshot_resolution_uses_only_the_authority_private_cache() -> None:
     """Repeated filing resolution serves the pinned entry without growing the cache.
 
@@ -45,6 +46,7 @@ def test_snapshot_resolution_uses_only_the_authority_private_cache() -> None:
     assert len(authority._snapshots) == cache_size
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_law_determined_resolution_is_preserved() -> None:
     """Resolution stays driven by ``(modelo, filing_year, period)``.
 

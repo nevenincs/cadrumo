@@ -21,6 +21,7 @@ def _projection_identity(item: tuple[str, ModeloRevision, DeadlineWindowDefiniti
     return modelo_id, revision.id, window.id
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_fleet_deadline_projection_is_canonically_owned_exact_and_filter_invariant() -> None:
     """The authority projects every owned row once without masking corpus defects.
 

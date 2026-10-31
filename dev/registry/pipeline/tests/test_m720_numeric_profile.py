@@ -99,6 +99,7 @@ def _public_record_context() -> tuple[ModeloDraft, FilingProducerSnapshot]:
     return draft, producer
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_complete_source_renders_two_500_position_records_with_exact_contact_and_decimal_values(
     inputs: RevisionRenderInputs, tmp_path: Path
 ) -> None:

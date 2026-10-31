@@ -341,6 +341,7 @@ def test_322_form_uses_printed_calculations_and_independent_activity_description
     assert all(rule.address.tab is TabName.ENTRADAS for rule in zero_rules.values())
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", [case for case in DEMO_CASES if case.modelo == "194"], ids=lambda case: case.revision)
 def test_194_summary_and_form_share_five_transactions(case: DemoCase) -> None:
     snapshot, plan = build_demonstration_plan(case)
@@ -388,6 +389,7 @@ def test_194_summary_and_form_share_five_transactions(case: DemoCase) -> None:
     assert "Presentador ficticio" not in form_values
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", [case for case in DEMO_CASES if case.modelo == "193"], ids=lambda case: case.revision)
 def test_193_expense_rows_do_not_leak_into_recipient_sections(case: DemoCase) -> None:
     snapshot, plan = build_demonstration_plan(case)
@@ -425,6 +427,7 @@ def test_193_expense_rows_do_not_leak_into_recipient_sections(case: DemoCase) ->
     assert "08" in form_values
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", [case for case in DEMO_CASES if case.modelo == "190"], ids=lambda case: case.revision)
 def test_190_sections_keep_recipient_identity_and_unknown_circumstances(case: DemoCase) -> None:
     snapshot, plan = build_demonstration_plan(case)
@@ -577,6 +580,7 @@ def test_181_compact_date_has_a_human_projection_without_changing_source() -> No
     assert "DATE(" not in identifier.formula
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", [case for case in DEMO_CASES if case.modelo == "184"], ids=lambda case: case.revision)
 def test_184_member_amounts_are_saved_declarations_not_invented_formulas(case: DemoCase) -> None:
     snapshot, plan = build_demonstration_plan(case)
@@ -620,6 +624,7 @@ def test_184_member_amounts_are_saved_declarations_not_invented_formulas(case: D
     assert not any(str(c.casilla_id) in excluded for c in (*plan.value_cells, *plan.formula_cells))
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize(
     "raw, expected", [("0", Decimal("0")), ("-125.50", Decimal("-125.50")), ("NaN", None), ("invalid", None)]
 )
@@ -640,6 +645,7 @@ def test_184_saved_amount_uses_numeric_casilla_despite_text_wire_slot(raw: str, 
     assert rows[1].values[columns.index("tipo3.importe")] == Decimal("2400")
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", [case for case in DEMO_CASES if case.modelo == "180"], ids=lambda case: case.revision)
 def test_180_saved_recipients_remain_separate_and_missing_fields_unknown(case: DemoCase) -> None:
     snapshot, plan = build_demonstration_plan(case)

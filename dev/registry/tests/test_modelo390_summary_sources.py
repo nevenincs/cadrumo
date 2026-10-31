@@ -27,6 +27,7 @@ from ..workbook_demo_cases import DemoCase
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("year", (2024, 2025))
 @pytest.mark.parametrize("amount", (Decimal("123.45"), Decimal("-67.89"), Decimal("0"), None))
 def test_printed_summary_and_filing_ignore_obsolete_manual_amounts(year, amount):

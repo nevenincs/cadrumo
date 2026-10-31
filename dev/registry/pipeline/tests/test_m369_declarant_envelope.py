@@ -89,6 +89,7 @@ def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
         )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("quarter", ("1T", "4T"))
 def test_exterior_quarter_uses_source_pinned_369_envelope(quarter: str) -> None:
     declaration = _declaration()
