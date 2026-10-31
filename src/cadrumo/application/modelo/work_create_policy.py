@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.modelos.errors import ModeloError
 
 if TYPE_CHECKING:
@@ -45,19 +46,13 @@ if TYPE_CHECKING:
 #: instead of surfacing a generic not-present-in-registry error. The values
 #: reuse the work-create refusal copy, which already names the ceded tax, its
 #: enabling law, and the regional filing route in every locale.
-CEDED_AUTONOMIC_MODELO_LOCALE_KEYS: dict[str, str] = {
-    "600": "cli.app.modelo.work.create_stub_modelo_600_refused",
-    "620": "cli.app.modelo.work.create_stub_modelo_620_refused",
-    "650": "cli.app.modelo.work.create_stub_modelo_650_refused",
-    "660": "cli.app.modelo.work.create_stub_modelo_660_refused",
-}
+_CEDED_AUTONOMIC_LOCALE_KEY = "cli.app.modelo.work.create_stub_modelo_{modelo}_refused"
 
 
 def ceded_autonomic_modelo_locale_key(modelo: str) -> str | None:
     """Return the instructive autonomic-redirect locale key for a ceded modelo.
 
-    ITP-AJD (``600`` / ``620``) and ISD (``650`` / ``660``) are ceded autonomic
-    taxes administered by the Comunidades Autónomas, not AEAT modelos present in
+    ITP-AJD and ISD are ceded autonomic taxes administered by the Comunidades Autónomas, not AEAT modelos present in
     the calculation registry. Discovery surfaces (``describe`` / ``casillas`` /
     ``formulas``) must redirect an operator who references one of these codes to
     the competent regional Hacienda / CCAA rather than surface a generic
@@ -68,7 +63,10 @@ def ceded_autonomic_modelo_locale_key(modelo: str) -> str | None:
         :func:`modelo_work_create_refusal_locale_key`:
             The sibling work-create refusal this discovery redirect mirrors.
     """
-    return CEDED_AUTONOMIC_MODELO_LOCALE_KEYS.get(modelo.strip())
+    code = modelo.strip()
+    if code not in resolve_form_codes("form-row-codes").codes("ceded_autonomic.modelos"):
+        return None
+    return _CEDED_AUTONOMIC_LOCALE_KEY.format(modelo=code)
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,7 +171,6 @@ def guard_active_profile_foral_ccaa(record: UserProfileRecord | None) -> None:
 
 
 __all__ = [
-    "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
     "ModeloWorkCreateApplicabilityRefusal",
     "ModeloWorkCreateApplicabilityRefusedError",
     "ceded_autonomic_modelo_locale_key",

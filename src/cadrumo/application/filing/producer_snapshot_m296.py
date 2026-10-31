@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import AfterValidator, BaseModel, StringConstraints
 
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.form_codes import form_width_validator
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
-_AeatReceiptNumber = Annotated[str, StringConstraints(pattern=r"^\d{13}$")]
+_AeatReceiptNumber = Annotated[
+    str,
+    StringConstraints(pattern=r"^\d+$", max_length=16),
+    AfterValidator(form_width_validator("aeat.receipt_digits")),
+]
 
 
 _M296SupportType = Annotated[str, StringConstraints(pattern=r"^[TC]$")]

@@ -1149,9 +1149,16 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
     assert _CHARGE_IBAN not in snapshot.model_dump_json()
 
 
-@pytest.mark.parametrize("receipt", ["123456789012", "12345678901234", "123456789012A"])
-def test_amendment_evidence_requires_original_aeat_thirteen_digit_receipt(receipt: str) -> None:
-    with pytest.raises(ValidationError, match="string_pattern_mismatch"):
+@pytest.mark.parametrize(
+    ("receipt", "refusal"),
+    [
+        ("123456789012", "aeat.receipt_digits"),
+        ("12345678901234", "aeat.receipt_digits"),
+        ("123456789012A", "string_pattern_mismatch"),
+    ],
+)
+def test_amendment_evidence_requires_original_aeat_thirteen_digit_receipt(receipt: str, refusal: str) -> None:
+    with pytest.raises(ValidationError, match=refusal):
         AmendmentEvidence(
             kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
             m303_rectificativa_motive=None,

@@ -16,7 +16,7 @@ does. Outside one the read refuses rather than guess.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -127,6 +127,28 @@ def require_form_fit(value: str | None, key: str) -> str | None:
     if value is not None and exceeds_form_bound(len(value), key):
         raise CoreValidationError(f"a value is longer than the form declares for {key}")
     return value
+
+
+def form_width_validator(key: str) -> Callable[[str], str]:
+    """Return a Pydantic validator that applies :func:`require_form_width` to a required string."""
+
+    @pydantic_validation_boundary
+    def validate(value: str) -> str:
+        require_form_width(value, key)
+        return value
+
+    return validate
+
+
+def form_fit_validator(key: str) -> Callable[[str], str]:
+    """Return a Pydantic validator that applies :func:`require_form_fit` to a required string."""
+
+    @pydantic_validation_boundary
+    def validate(value: str) -> str:
+        require_form_fit(value, key)
+        return value
+
+    return validate
 
 
 def form_for_role(role: str, *, authority: GovernedFactSource | None = None) -> str:

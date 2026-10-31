@@ -33,7 +33,6 @@ import re
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from enum import StrEnum
 from typing import Annotated, Literal, NoReturn
 
 from pydantic import (
@@ -48,7 +47,6 @@ from pydantic import (
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.irnr import M210PayerMode
-from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
@@ -344,29 +342,22 @@ class Modelo184MemberRow(BaseModel):
 # One row per related-party transaction group.
 # ---------------------------------------------------------------------------
 
-# The three coded fields' value sets are AEAT's published Tablas A, C and B
-# of the diseño de registro DR23200. They are declared once in ``core`` --
-# see :class:`~core.modelo_232_codigos.TipoVinculacion`, :class:`~core.modelo_232_codigos.TipoOperacionVinculada`
-# and :class:`~core.modelo_232_codigos.MetodoValoracion` -- because the registry's own
-# related-party observation is typed with the same sets.
+# The three coded fields' value sets are AEAT's published Tablas A, C and B of
+# the record design, held by the registry. A blank is the design's own state: the
+# whole block is conditional, and a default code would declare a relationship the
+# taxpayer never stated.
 
 
-def _hydrate_m232_codigo[EnumT: StrEnum](*, field_name: str, value: object, code_set: type[EnumT]) -> EnumT | object:
-    """Hydrate the operator's text into its typed DR23200 code set.
-
-    The CLI delivers `--row vinculada k=v` as plain strings and the model is
-    strict, so this is the boundary that turns a token into a member. An
-    off-catalogue token is refused here rather than by the strict-instance
-    check, so the message can name the codes AEAT actually publishes instead
-    of only reporting the wrong type.
-    """
+def _hydrate_m232_codigo(*, field_name: str, value: object, key: str) -> object:
+    """Normalise the operator's token and refuse one the scope's record design does not publish."""
     if not isinstance(value, str):
         return value
-    try:
-        return code_set(value.upper())
-    except ValueError:
-        accepted = ", ".join(repr(str(member)) for member in code_set)
-        raise ValueError(f"{field_name} must be one of {accepted}; got {value!r}") from None
+    token = value.upper()
+    codes = form_codes_in_scope()
+    if token and codes is not None and token not in codes.codes(key):
+        accepted = ", ".join(sorted(codes.codes(key)))
+        raise ValueError(f"{field_name} must be blank or one of {accepted}; got {value!r}")
+    return token
 
 
 class Modelo232VinculadaRow(BaseModel):
@@ -395,21 +386,23 @@ class Modelo232VinculadaRow(BaseModel):
     # against what the counterparty itself declared.
     pais: _IsoCountryCode
     tipo_vinculacion: Annotated[
-        TipoVinculacion | str,
+        str,
         BeforeValidator(
-            lambda v: _hydrate_m232_codigo(field_name="tipo_vinculacion", value=v, code_set=TipoVinculacion),
+            lambda v: _hydrate_m232_codigo(field_name="tipo_vinculacion", value=v, key="m232.tipo_vinculacion.codes"),
         ),
-    ] = TipoVinculacion.NO_DECLARADO
+    ] = ""
     tipo_operacion: Annotated[
-        TipoOperacionVinculada | str,
+        str,
         BeforeValidator(
-            lambda v: _hydrate_m232_codigo(field_name="tipo_operacion", value=v, code_set=TipoOperacionVinculada),
+            lambda v: _hydrate_m232_codigo(field_name="tipo_operacion", value=v, key="m232.tipo_operacion.codes"),
         ),
-    ] = TipoOperacionVinculada.NO_DECLARADO
+    ] = ""
     metodo: Annotated[
-        MetodoValoracion | str,
-        BeforeValidator(lambda v: _hydrate_m232_codigo(field_name="metodo", value=v, code_set=MetodoValoracion)),
-    ] = MetodoValoracion.NO_DECLARADO
+        str,
+        BeforeValidator(
+            lambda v: _hydrate_m232_codigo(field_name="metodo", value=v, key="m232.metodo_valoracion.codes")
+        ),
+    ] = ""
     importe: Decimal
 
     @field_validator("pais")

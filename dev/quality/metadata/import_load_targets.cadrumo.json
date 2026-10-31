@@ -2033,7 +2033,6 @@
         "cadrumo.core.logging",
         "cadrumo.core.model_roles",
         "cadrumo.core.modelo",
-        "cadrumo.core.modelo_232_codigos",
         "cadrumo.core.modelo_export_artefact",
         "cadrumo.core.modelo_work_progress_state",
         "cadrumo.core.models",

@@ -7,7 +7,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import AfterValidator, BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -18,7 +18,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.form_codes import exceeds_form_bound
+from ..calculations.registry.form_codes import exceeds_form_bound, form_fit_validator
 from ..calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 from ..filing_evidence import FilingEvidenceReference
 from .errors import ModeloValidationError
@@ -52,11 +52,13 @@ class M303Exonerado390EndpointEvidence(BaseModel):
 
 _M303Exonerado390CodigoActividad = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=3, to_upper=True),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=64, to_upper=True),
+    AfterValidator(form_fit_validator("m303.exonerado_390.codigo_actividad_max")),
 ]
 _M303Exonerado390EpigrafeIae = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=4, to_upper=True),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=64, to_upper=True),
+    AfterValidator(form_fit_validator("m303.exonerado_390.epigrafe_max")),
 ]
 
 

@@ -13,7 +13,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, StringConstraints, ValidationError, model_validator
+from pydantic import AfterValidator, BaseModel, StringConstraints, ValidationError, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
@@ -33,6 +33,7 @@ from ...domain.bienes_inversion.register import (
 from ...domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
+from ...domain.calculations.registry.form_codes import form_width_validator
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import (
@@ -65,8 +66,16 @@ from .producer_snapshot_m296 import Modelo296ProfileFacts
 from .producer_snapshot_m360 import Modelo360ProfileFacts
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
-_AeatReceiptNumber = Annotated[str, StringConstraints(pattern=r"^\d{13}$")]
-_CnaeCode = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+_AeatReceiptNumber = Annotated[
+    str,
+    StringConstraints(pattern=r"^\d+$", max_length=16),
+    AfterValidator(form_width_validator("aeat.receipt_digits")),
+]
+_CnaeCode = Annotated[
+    str,
+    StringConstraints(pattern=r"^\d+$", max_length=16),
+    AfterValidator(form_width_validator("cnae.digits")),
+]
 _M303_OFFICIAL_FILING_PERIODS: Final[frozenset[StandardPeriodCode]] = frozenset(
     {
         StandardPeriodCode.Q1,

@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "form-row-codes:design"
 date_axis = "filing_period"
 legal_refs = ["ley-37-1992:art-164"]
-source_refs = ["aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026"]
+source_refs = ["aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
@@ -27,10 +27,35 @@ required_text = ["Transporte por autotaxis", "Transporte de mercancías por carr
 source_ref = "aeat-dr-303-2026"
 required_text = ["El número máximo de ocurrencias de la página 2 del modelo es 6", "el número máximo de páginas 2 será 3", "Módulo Mesas", "Prorratas - 5 - Código CNAE", "Versión del Programa (Nota 1)", "NIF Empresa Desarrollo (Nota 1)"]
 
+# Tablas A, B and C of the Modelo 232 record design.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-232-2018"
+required_text = ["TABLA DE TIPOS DE VINCULACIÓN", "TABLA DE METODOS DE VALORACIÓN", "Clave 11: Otras operaciones"]
+
+# The affiliate record's name (positions 36-75) and membership number (positions 76-87).
+[[fact.variants.source_citations]]
+source_ref = "enrolled-modelo-156-layout"
+required_text = ["APELLIDOS Y NOMBRE DEL AFILIADO O MUTUALISTA", "NÚMERO DE AFILIACIÓN"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [
   { key = "m347.non_resident_provincia", value = "99" },
+  { key = "m232.tipo_vinculacion.codes", value = "A,B,C,D,E,F,G,H" },
+  { key = "m232.tipo_operacion.codes", value = "01,02,03,04,05,06,07,08,09,10,11" },
+  { key = "m232.metodo_valoracion.codes", value = "1A,1B,1C,1D,1E" },
+  { key = "aeat.receipt_digits", value = "13" },
+  { key = "cnae.digits", value = "4" },
+  { key = "m156.nif_max", value = "9" },
+  { key = "m156.nombre_max", value = "40" },
+  { key = "m156.numero_afiliacion_digits", value = "12" },
+  { key = "withholding.province_digits", value = "2" },
+  { key = "withholding.naturaleza_digits", value = "2" },
+  { key = "withholding.date_digits", value = "8" },
+  { key = "withholding.numero_orden_max", value = "9999999" },
+  { key = "m303.exonerado_390.codigo_actividad_max", value = "3" },
+  { key = "m303.exonerado_390.epigrafe_max", value = "4" },
+  { key = "ceded_autonomic.modelos", value = "600,620,650,660" },
   { key = "m131.special_index_epigrafes", value = "721.2,722" },
   { key = "m100.inventory.complete_acquisition_cost", value = "0181" },
   { key = "m100.inventory.closing_minus_opening_positive", value = "0177" },

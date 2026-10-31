@@ -26,7 +26,7 @@ from .binding_selector_utils import (
     provider_member,
 )
 from .errors import RegistryValidationError
-from .form_codes import require_form_fit
+from .form_codes import exceeds_form_bound, require_form_fit, require_form_width
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
@@ -264,7 +264,7 @@ class WithholdingObservation(BaseModel):
     percibido_especie: Decimal = Decimal("0")
     retencion_practicada: Decimal = Decimal("0")
     ingreso_a_cuenta: Decimal = Decimal("0")
-    province_code: str | None = Field(default=None, pattern=r"^\d{2}$")
+    province_code: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Perceptor domicilio province code (01-52, 53 La Palma), or 98 for a Spanish IRPF
     contributor resident abroad, per the Modelo 190 record design's own list.
 
@@ -424,7 +424,7 @@ class WithholdingObservation(BaseModel):
     """Modelo 193 codigo emisor (positions 80-91), declared only for claves A,
     B and D: the issuer's NIF for clave codigo 1/4, empty for 2, ZXX country
     code for 3."""
-    naturaleza: str | None = Field(default=None, pattern=r"^\d{2}$")
+    naturaleza: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Modelo 193 naturaleza (positions 93-94): the two-digit subclave of the
     clave de percepcion, always recorded."""
     pago: int | None = None
@@ -482,10 +482,10 @@ class WithholdingObservation(BaseModel):
     """Modelo 193 perceptor-record naturaleza del declarante (position 208):
     'S' when the declarante is outside the design's categories, blank
     otherwise -- recorded-when-applicable."""
-    fecha_inicio_prestamo: str | None = Field(default=None, pattern=r"^\d{8}$")
+    fecha_inicio_prestamo: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Modelo 193 fecha de inicio del prestamo (positions 209-216, AAAAMMDD),
     declared only when tipo codigo is 'P'."""
-    fecha_vencimiento_prestamo: str | None = Field(default=None, pattern=r"^\d{8}$")
+    fecha_vencimiento_prestamo: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Modelo 193 fecha de vencimiento del prestamo (positions 217-224,
     AAAAMMDD), declared only when tipo codigo is 'P'."""
     compensaciones: Decimal = Decimal("0")
@@ -498,13 +498,13 @@ class WithholdingObservation(BaseModel):
     """Modelo 193 NIF of the immediately previous payer in the payment chain
     (positions 322-330), obligatory when pago is 2-5 except where the previous
     payer is foreign without a Spanish NIF -- recorded-when-applicable."""
-    fecha_devengo: str | None = Field(default=None, pattern=r"^\d{8}$")
+    fecha_devengo: str | None = Field(default=None, pattern=r"^\d+$", max_length=16)
     """Modelo 193 fecha de devengo (positions 331-338, DDMMAAAA), declared only
     for clave A."""
     clave_mercado: str | None = None
     """Modelo 193 clave de mercado (position 339), always recorded for claves
     A, B and D."""
-    numero_orden: int | None = Field(default=None, ge=1, le=9999999)
+    numero_orden: int | None = Field(default=None, ge=1)
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -591,6 +591,25 @@ class WithholdingObservation(BaseModel):
         )
         return self
 
+    @field_validator("naturaleza")
+    @classmethod
+    @pydantic_validation_boundary
+    def _naturaleza_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "withholding.naturaleza_digits")
+
+    @field_validator("fecha_inicio_prestamo", "fecha_vencimiento_prestamo", "fecha_devengo")
+    @classmethod
+    @pydantic_validation_boundary
+    def _date_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "withholding.date_digits")
+
+    @field_validator("numero_orden")
+    @classmethod
+    def _numero_orden_fits_the_design(cls, value: int | None) -> int | None:
+        if value is not None and exceeds_form_bound(value, "withholding.numero_orden_max"):
+            raise ValueError("numero_orden is past the bound the record design declares")
+        return value
+
     @field_validator("codigo_emisor")
     @classmethod
     @pydantic_validation_boundary
@@ -602,6 +621,12 @@ class WithholdingObservation(BaseModel):
     @pydantic_validation_boundary
     def _subclave_fits_the_declared_field(cls, value: str | None) -> str | None:
         return require_form_fit(value, "withholding.subclave_max")
+
+    @field_validator("province_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _province_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "withholding.province_digits")
 
 
 class WithholdingProvider(BaseModel):

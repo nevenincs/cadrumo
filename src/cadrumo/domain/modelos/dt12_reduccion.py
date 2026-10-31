@@ -155,9 +155,9 @@ def dt12_regime_window_eligibility(
         PensionReduccionError: When either year is not a plausible calendar year.
     """
     for field_name, value in (("contingencia_year", contingencia_year), ("rescate_year", rescate_year)):
-        if value < 1900 or value > 2200:
+        if value < 1900 or value > 9999:
             raise PensionReduccionError(
-                f"{field_name} must be a plausible calendar year (1900–2200); got {value}",
+                f"{field_name} must be a plausible calendar year (1900-9999); got {value}",
                 context={"field": field_name, "value": str(value)},
             )
 
