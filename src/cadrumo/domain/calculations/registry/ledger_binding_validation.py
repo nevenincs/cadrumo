@@ -27,6 +27,7 @@ from .errors import RegistryValidationError
 from .schema_input_kind import InputKind
 
 if TYPE_CHECKING:
+    from .ids import BindingId
     from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
@@ -117,7 +118,7 @@ def ledger_target_casilla_failures(
             failures.append(f"binding {binding.id!r} targets casilla {target!r}, which the edition does not declare")
             continue
         owners = bound_casilla_binding_ids(casilla)
-        if casilla.input_kind is not InputKind.BOUND or not owners or not family.issuperset(owners):
+        if not _ledger_family_owns_casilla(casilla.input_kind, owners, family):
             failures.append(
                 f"binding {binding.id!r} targets casilla {target!r}, which is {casilla.input_kind.value} "
                 f"and bound by {sorted(owners)!r} rather than by the {source_kind.value} family",
@@ -127,6 +128,12 @@ def ledger_target_casilla_failures(
                 f"binding {binding.id!r} targets casilla {target!r}, which is bound by {sorted(owners)!r}",
             )
     return failures
+
+
+def _ledger_family_owns_casilla(
+    input_kind: InputKind, owners: tuple[BindingId, ...], family: frozenset[BindingId]
+) -> bool:
+    return input_kind is InputKind.BOUND and bool(owners) and family.issuperset(owners)
 
 
 def require_ledger_fact(binding: BindingDefinition, fact: str, supported: Collection[str]) -> None:
