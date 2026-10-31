@@ -53,59 +53,8 @@ def test_bundledexport_field_kinds_are_hydrated_enum_members() -> None:
 
 def test_binding_derived_export_fields_preserve_enum_kind() -> None:
     """The binding-derived export path emits CasillaFieldKind members."""
-    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
-
-    selector = WithholdingProvider.model_validate(
-        {
-            "fact": "row_field",
-            "record": "perceptor",
-            "row_field": "retencion_practicada",
-            "grouping": "per_perceptor",
-        }
-    )
-    binding = BindingDefinition(
-        id="binding.rows",
-        provider=selector,
-        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
-        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
-    )
-    template = ExportFieldDefinition(
-        id="importe.template",
-        offset=1,
-        length=10,
-        kind=CasillaFieldKind.CASILLA,
-        casilla_id=_CASILLA_01,
-        data_type=CasillaDataType.MONEY,
-        required=False,
-        padding="left_zero",
-        justification="right",
-        signed=False,
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
-    )
-    record = ExportRecordDefinition(
-        id="perceptor",
-        record_type="perceptor",
-        order=1,
-        encoding=ExportEncoding.ASCII,
-        line_ending="none",
-        binding_record="perceptor",
-        row_field_casilla_ids={"retencion_practicada": _CASILLA_01},
-        fields=(template,),
-    )
-    revision = _minimal_revision(
-        bindings=(binding,),
-        export_layouts=(
-            ExportLayoutDefinition(
-                id="layout",
-                legal_refs=(_LEGAL_REF,),
-                source_refs=(_SOURCE_REF,),
-                records=(record,),
-            ),
-        ),
-    )
+    template = _export_field("importe.template", kind=CasillaFieldKind.CASILLA, casilla_id=_CASILLA_01)
+    revision = _perceptor_revision(bindings=(_rows_binding("binding.rows"),), field=template)
 
     (layout,) = derive_export_layouts_from_bindings(revision)
     (derived_record,) = layout.records
@@ -134,73 +83,10 @@ def test_m720_binding_fields_remain_visible_when_a_resolved_revision_is_derived_
 
 def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_authored() -> None:
     """One official fixed-width field can represent multiple source-specific row bindings."""
-    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
-
-    public_binding = BindingDefinition(
-        id="binding.rows.public",
-        provider=WithholdingProvider.model_validate(
-            {
-                "fact": "row_field",
-                "record": "perceptor",
-                "row_field": "retencion_practicada",
-                "grouping": "per_perceptor",
-            }
-        ),
-        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
-        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
-    )
-    mirror_binding = BindingDefinition(
-        id="binding.rows.mirror",
-        provider=WithholdingProvider.model_validate(
-            {
-                "fact": "row_field",
-                "record": "perceptor",
-                "row_field": "retencion_practicada",
-                "grouping": "per_perceptor",
-            }
-        ),
-        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
-        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
-    )
-    hand_authored_field = ExportFieldDefinition(
-        id="ventas.importe",
-        offset=1,
-        length=10,
-        kind=CasillaFieldKind.BINDING,
-        binding=public_binding.id,
-        data_type=CasillaDataType.MONEY,
-        required=False,
-        padding="left_zero",
-        justification="right",
-        signed=False,
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
-    )
-    record = ExportRecordDefinition(
-        id="perceptor",
-        record_type="perceptor",
-        order=1,
-        encoding=ExportEncoding.ASCII,
-        line_ending="none",
-        binding_record="perceptor",
-        row_field_casilla_ids={"retencion_practicada": _CASILLA_01},
-        fields=(hand_authored_field,),
-    )
-    revision = _minimal_revision(
-        bindings=(public_binding, mirror_binding),
-        export_layouts=(
-            ExportLayoutDefinition(
-                id="layout",
-                legal_refs=(_LEGAL_REF,),
-                source_refs=(_SOURCE_REF,),
-                records=(record,),
-            ),
-        ),
-    )
+    public_binding = _rows_binding("binding.rows.public")
+    mirror_binding = _rows_binding("binding.rows.mirror")
+    hand_authored_field = _export_field("ventas.importe", kind=CasillaFieldKind.BINDING, binding=public_binding.id)
+    revision = _perceptor_revision(bindings=(public_binding, mirror_binding), field=hand_authored_field)
 
     (layout,) = derive_export_layouts_from_bindings(revision)
     (derived_record,) = layout.records
@@ -212,10 +98,25 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
 
 def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> None:
     """A casilla template row field becomes one binding export field, not one per source."""
+    public_binding = _rows_binding("binding.rows.public")
+    mirror_binding = _rows_binding("binding.rows.mirror")
+    template = _export_field("importe.template", kind=CasillaFieldKind.CASILLA, casilla_id=_CASILLA_01)
+    revision = _perceptor_revision(bindings=(public_binding, mirror_binding), field=template)
+
+    (layout,) = derive_export_layouts_from_bindings(revision)
+    (derived_record,) = layout.records
+    binding_fields = tuple(field for field in derived_record.fields if field.kind is CasillaFieldKind.BINDING)
+
+    assert tuple(field.binding for field in binding_fields) == (public_binding.id,)
+    assert binding_fields[0].offset == template.offset
+    assert binding_fields[0].length == template.length
+
+
+def _rows_binding(binding_id: str) -> BindingDefinition:
     from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
 
-    public_binding = BindingDefinition(
-        id="binding.rows.public",
+    return BindingDefinition(
+        id=binding_id,
         provider=WithholdingProvider.model_validate(
             {
                 "fact": "row_field",
@@ -229,27 +130,22 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
     )
-    mirror_binding = BindingDefinition(
-        id="binding.rows.mirror",
-        provider=WithholdingProvider.model_validate(
-            {
-                "fact": "row_field",
-                "record": "perceptor",
-                "row_field": "retencion_practicada",
-                "grouping": "per_perceptor",
-            }
-        ),
-        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
-        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
-    )
-    template = ExportFieldDefinition(
-        id="importe.template",
+
+
+def _export_field(
+    field_id: str,
+    *,
+    kind: CasillaFieldKind,
+    casilla_id: CasillaId | None = None,
+    binding: str | None = None,
+) -> ExportFieldDefinition:
+    return ExportFieldDefinition(
+        id=field_id,
         offset=1,
         length=10,
-        kind=CasillaFieldKind.CASILLA,
-        casilla_id=_CASILLA_01,
+        kind=kind,
+        casilla_id=casilla_id,
+        binding=binding,
         data_type=CasillaDataType.MONEY,
         required=False,
         padding="left_zero",
@@ -258,6 +154,9 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
     )
+
+
+def _perceptor_revision(*, bindings: tuple[BindingDefinition, ...], field: ExportFieldDefinition):
     record = ExportRecordDefinition(
         id="perceptor",
         record_type="perceptor",
@@ -266,10 +165,10 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
         line_ending="none",
         binding_record="perceptor",
         row_field_casilla_ids={"retencion_practicada": _CASILLA_01},
-        fields=(template,),
+        fields=(field,),
     )
-    revision = _minimal_revision(
-        bindings=(public_binding, mirror_binding),
+    return _minimal_revision(
+        bindings=bindings,
         export_layouts=(
             ExportLayoutDefinition(
                 id="layout",
@@ -279,14 +178,6 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
             ),
         ),
     )
-
-    (layout,) = derive_export_layouts_from_bindings(revision)
-    (derived_record,) = layout.records
-    binding_fields = tuple(field for field in derived_record.fields if field.kind is CasillaFieldKind.BINDING)
-
-    assert tuple(field.binding for field in binding_fields) == (public_binding.id,)
-    assert binding_fields[0].offset == template.offset
-    assert binding_fields[0].length == template.length
 
 
 def _minimal_revision(
