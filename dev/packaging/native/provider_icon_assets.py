@@ -239,10 +239,11 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     arguments = parser.parse_args()
     paths = build_paths(arguments.build)
-    expected = paths["desktop_frontend_generated"] / "provider-icons.json"
-    if arguments.output.resolve() != expected.resolve():
-        parser.error("--output must be the enrolled build's desktop frontend generated output")
-    generate(agent_wheel(paths["agent"]), expected)
+    # The content build names a staging file beside its record, so that the
+    # published file stays readable until the new bytes are whole.
+    if not arguments.output.resolve().is_relative_to(Path(arguments.build).resolve()):
+        parser.error("--output must be inside the enrolled build")
+    generate(agent_wheel(paths["agent"]), arguments.output)
 
 
 if __name__ == "__main__":
