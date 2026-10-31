@@ -57,6 +57,7 @@ pub enum ForeignReason {
 pub enum StandDownReason {
     RootMismatch,
     ElevatedTokenRefused,
+    LaunchRefused,
     VersionMismatch,
 }
 

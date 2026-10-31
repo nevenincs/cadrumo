@@ -335,6 +335,7 @@ enum_projection!(
     StandDownReason,
     RootMismatch,
     ElevatedTokenRefused,
+    LaunchRefused,
     VersionMismatch
 );
 enum_projection!(

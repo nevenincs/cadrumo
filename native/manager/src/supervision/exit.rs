@@ -101,6 +101,13 @@ impl RuntimeExit {
         }
     }
 
+    /// Whether the native host refused the role with its declared launch refusal,
+    /// before any runtime code ran. The refusal depends only on the image and its
+    /// arguments, so it is terminal; other launch failures may be transient.
+    pub fn is_launch_refusal(self) -> bool {
+        self == Self::LaunchFailure(LAUNCH_PROFILE_REFUSED_EXIT)
+    }
+
     /// Whether the code means the runtime ended through a graceful stop signal or command.
     pub fn is_stop(self) -> bool {
         matches!(
@@ -144,6 +151,14 @@ mod tests {
                     .any(|reserved| (reserved.first..=reserved.last).contains(&reason.code())),
                 "{reason:?}"
             );
+        }
+    }
+
+    #[test]
+    fn only_the_declared_host_refusal_is_terminal() {
+        assert!(RuntimeExit::from_code(LAUNCH_PROFILE_REFUSED_EXIT).is_launch_refusal());
+        for code in [1, 2, 3, 124, 126] {
+            assert!(!RuntimeExit::from_code(code).is_launch_refusal(), "{code}");
         }
     }
 

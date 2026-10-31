@@ -83,13 +83,15 @@ impl LogFile {
             backups,
         })
     }
-    pub fn append(&self, record: &crate::diagnostics::Event) -> Result<()> {
+    /// Appends one JSON line under the file's lock, rotating by its bounds. The file
+    /// is created owner-only where the platform has modes.
+    pub fn append<T: Serialize>(&self, record: &T) -> Result<()> {
         self.append_batch(std::slice::from_ref(record), |_| {})
     }
     /// `enter` is told each phase as the batch reaches it.
-    pub(super) fn append_batch(
+    pub(super) fn append_batch<T: Serialize>(
         &self,
-        records: &[crate::diagnostics::Event],
+        records: &[T],
         mut enter: impl FnMut(WritePhase),
     ) -> Result<()> {
         enter(WritePhase::Open);

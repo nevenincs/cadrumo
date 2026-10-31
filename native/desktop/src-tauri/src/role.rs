@@ -26,7 +26,7 @@ pub fn dispatch() -> Option<i32> {
 fn run(role: Role, forwarded: &[OsString]) -> i32 {
     let hosted = role.hosted();
     let Ok(executable) = std::env::current_exe() else {
-        return refuse(ErrorCode::EnvironmentFailed);
+        return refuse_launch(ErrorCode::EnvironmentFailed);
     };
     cadrumo_interpreter_host::run_entrypoint(
         hosted.image,
@@ -34,22 +34,50 @@ fn run(role: Role, forwarded: &[OsString]) -> i32 {
         executable.as_os_str(),
         forwarded,
     )
-    .unwrap_or_else(|| refuse(ErrorCode::InvalidArguments))
+    .unwrap_or_else(|| refuse_launch(ErrorCode::InvalidArguments))
 }
 
 #[cfg(not(any(windows, unix)))]
 fn run(_: Role, _: &[OsString]) -> i32 {
-    refuse(ErrorCode::UnsupportedPlatform)
+    refuse_launch(ErrorCode::UnsupportedPlatform)
 }
 
-fn refuse(code: ErrorCode) -> i32 {
+/// Refuses a role the host cannot start at all, with the declared launch refusal a
+/// supervisor reads as final: the same image would refuse again, so it is not retried.
+fn refuse_launch(code: ErrorCode) -> i32 {
+    report(code);
+    LAUNCH_REFUSED_EXIT
+}
+
+const LAUNCH_REFUSED_EXIT: i32 = cadrumo_platform::LAUNCH_PROFILE_REFUSED_EXIT as i32;
+
+fn report(code: ErrorCode) {
     let error = ApplicationError::new(code, Operation::Launch);
     eprintln!(
         "{}",
         serde_json::to_string(&error).unwrap_or_else(|_| "application_error".into())
     );
-    match code {
-        ErrorCode::InvalidArguments => 64,
-        _ => 1,
+}
+
+fn refuse(code: ErrorCode) -> i32 {
+    report(code);
+    64
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_role_the_host_cannot_start_exits_with_the_declared_terminal_refusal() {
+        for code in [
+            ErrorCode::UnsupportedPlatform,
+            ErrorCode::EnvironmentFailed,
+            ErrorCode::InvalidArguments,
+        ] {
+            assert_eq!(refuse_launch(code), 125, "{code:?}");
+        }
+        // A malformed role argument is a usage error for the person at the command line.
+        assert_eq!(refuse(ErrorCode::InvalidArguments), 64);
     }
 }

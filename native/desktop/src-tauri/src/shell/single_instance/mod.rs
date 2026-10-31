@@ -38,8 +38,9 @@ mod posix;
 use posix::{InstanceClaim, InstanceLock, claim_instance};
 
 /// How long a second launch waits for the open window to acknowledge it, or
-/// for a closing one to release the lock.
-const PATIENCE: std::time::Duration = std::time::Duration::from_secs(10);
+/// for a closing one to release the lock: the declared shutdown budget, so a
+/// relaunch during a slow close succeeds.
+const PATIENCE: std::time::Duration = cadrumo_application::shutdown::RELAUNCH_PATIENCE;
 
 /// The generated configuration the Tauri context is compiled from, read here
 /// before the context exists so the claim precedes all per-user state.
@@ -51,10 +52,13 @@ pub enum Admission {
     Headless,
     /// This launch holds the lock and opens the window.
     Primary(Primary),
-    /// Another window holds the lock, and this launch exits with 0: the
-    /// window accepted activation, or it is open in another session of this
-    /// user, which the launch reported on standard error.
+    /// Another window holds the lock and accepted activation; this launch
+    /// exits with 0.
     Activated,
+    /// Another window holds the lock in another session of this user, which
+    /// cannot be activated from here. The launch reported it on standard
+    /// error and exits with 0.
+    OpenInOtherSession,
 }
 
 /// The standard error line of a launch whose window is open in another
@@ -176,10 +180,18 @@ pub fn admit(mode: &Mode) -> Result<Admission> {
 }
 
 fn admit_with(mode: &Mode, key: impl FnOnce() -> Result<String>) -> Result<Admission> {
+    admit_within(mode, key, PATIENCE)
+}
+
+fn admit_within(
+    mode: &Mode,
+    key: impl FnOnce() -> Result<String>,
+    patience: std::time::Duration,
+) -> Result<Admission> {
     if matches!(mode, Mode::Cli(_) | Mode::Health { .. }) {
         return Ok(Admission::Headless);
     }
-    let admission = claim(&key()?)?;
+    let admission = claim_within(&key()?, patience)?;
     if let Admission::Primary(primary) = &admission
         && ACTIVATION.set(primary.activation.clone()).is_err()
     {
@@ -188,9 +200,14 @@ fn admit_with(mode: &Mode, key: impl FnOnce() -> Result<String>) -> Result<Admis
     Ok(admission)
 }
 
+#[cfg(test)]
 fn claim(family: &str) -> Result<Admission> {
+    claim_within(family, PATIENCE)
+}
+
+fn claim_within(family: &str, patience: std::time::Duration) -> Result<Admission> {
     admitted(
-        claim_instance(family, PATIENCE),
+        claim_instance(family, patience),
         &mut std::io::stderr().lock(),
     )
 }
@@ -207,7 +224,7 @@ fn admitted(
         Ok(InstanceClaim::OtherSession) => {
             // Best effort: a launch without a console has nowhere to report.
             let _ = writeln!(report, "{OTHER_SESSION_REPORT}");
-            Ok(Admission::Activated)
+            Ok(Admission::OpenInOtherSession)
         }
         Ok(InstanceClaim::Primary(mut lock)) => {
             let activation = Arc::new(Activation::default());
@@ -302,6 +319,9 @@ mod tests {
     };
 
     const FAMILY_VARIABLE: &str = "CADRUMO_INSTANCE_TEST_FAMILY";
+    const PATIENCE_VARIABLE: &str = "CADRUMO_INSTANCE_TEST_PATIENCE_MS";
+    const RECORD_VARIABLE: &str = "CADRUMO_INSTANCE_TEST_RECORD";
+    const CLOSING_VARIABLE: &str = "CADRUMO_INSTANCE_TEST_CLOSING_MS";
     /// Marks the helper's reports among the test harness's own output.
     const REPORT: &str = "@instance-report ";
 
@@ -387,7 +407,7 @@ mod tests {
     fn a_window_in_another_session_is_reported_and_the_launch_exits() {
         let mut report = Vec::new();
         let admission = admitted(Ok(InstanceClaim::OtherSession), &mut report).unwrap();
-        assert!(matches!(admission, Admission::Activated));
+        assert!(matches!(admission, Admission::OpenInOtherSession));
         assert_eq!(
             report,
             format!(
@@ -536,15 +556,46 @@ $held.Dispose()
         let Ok(family) = std::env::var(FAMILY_VARIABLE) else {
             return;
         };
-        match admit_with(&Mode::Gui, || root_key(&family)).unwrap() {
-            Admission::Activated => println!("{REPORT}activated"),
-            Admission::Headless => panic!("a GUI launch was admitted headless"),
-            Admission::Primary(_primary) => {
+        let patience = std::env::var(PATIENCE_VARIABLE)
+            .ok()
+            .and_then(|value| value.parse().ok())
+            .map_or(PATIENCE, std::time::Duration::from_millis);
+        let admission = admit_within(&Mode::Gui, || root_key(&family), patience);
+        // A launch that ends here leaves its record, as the real host does.
+        if std::env::var_os(RECORD_VARIABLE).is_some()
+            && let Some((outcome, reason)) = crate::startup_outcome::of_admission(&admission)
+        {
+            let parent = crate::environment::Parent::current().unwrap();
+            crate::startup_outcome::record(
+                &parent,
+                outcome,
+                cadrumo_application::diagnostics::HostStage::Admission,
+                reason,
+            )
+            .unwrap();
+        }
+        match admission {
+            Err(error) => println!("{REPORT}error={:?}", error.code),
+            Ok(Admission::Activated) => println!("{REPORT}activated"),
+            Ok(Admission::OpenInOtherSession) => println!("{REPORT}other_session"),
+            Ok(Admission::Headless) => panic!("a GUI launch was admitted headless"),
+            Ok(Admission::Primary(_primary)) => {
                 let count = Arc::new(AtomicUsize::new(0));
                 let seen = count.clone();
                 ACTIVATION.get().unwrap().attach(Box::new(move || {
                     seen.fetch_add(1, Ordering::SeqCst);
                 }));
+                // A window that is closing refuses activation and keeps the lock until
+                // it has finished, as a slow shutdown does.
+                let closing = std::env::var(CLOSING_VARIABLE)
+                    .ok()
+                    .and_then(|value| value.parse::<u64>().ok());
+                if let Some(milliseconds) = closing {
+                    close();
+                    println!("{REPORT}primary");
+                    std::thread::sleep(std::time::Duration::from_millis(milliseconds));
+                    return;
+                }
                 println!("{REPORT}primary");
                 let _ = std::io::stdin().read_to_end(&mut Vec::new());
                 println!("{REPORT}activations={}", count.load(Ordering::SeqCst));
@@ -574,7 +625,18 @@ $held.Dispose()
         root: &std::path::Path,
         stdin: Stdio,
     ) -> std::process::Child {
+        launch_with(executable, family, root, stdin, &[])
+    }
+
+    fn launch_with(
+        executable: &PathBuf,
+        family: &str,
+        root: &std::path::Path,
+        stdin: Stdio,
+        environment: &[(&str, &str)],
+    ) -> std::process::Child {
         let mut command = Command::new(executable);
+        command.envs(environment.iter().copied());
         command
             .args([
                 "--exact",
@@ -725,5 +787,132 @@ $held.Dispose()
                 .any(|line| report(line) == Some("activations=1")),
             "{rest:?}"
         );
+    }
+
+    /// The records the launches on `root` left, oldest first.
+    fn startup_records(root: &std::path::Path) -> Vec<serde_json::Value> {
+        let file = crate::startup_logging::Contract::current()
+            .unwrap()
+            .log_directory(root)
+            .unwrap()
+            .join(crate::startup_outcome::FILE_NAME);
+        std::fs::read_to_string(file)
+            .unwrap_or_default()
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect()
+    }
+
+    /// The second launch hands off to the open window and exits 0; the record it leaves
+    /// names the outcome, its own process and the root only by digest.
+    #[test]
+    fn a_handoff_leaves_a_durable_privacy_safe_record() {
+        let scratch = scratch("handoff-record");
+        let root = scratch.0.join("storage");
+        let current = std::env::current_exe().unwrap();
+        let family = unique_family("handoff-record");
+        let mut first = Running(launch(&current, &family, &root, Stdio::piped()));
+        let _lines = held(&mut first);
+
+        let second = launch_with(
+            &current,
+            &family,
+            &root,
+            Stdio::null(),
+            &[(RECORD_VARIABLE, "1")],
+        );
+        let pid = second.id();
+        let second = second.wait_with_output().unwrap();
+        assert!(second.status.success());
+        assert_eq!(reports(&second.stdout), ["activated"]);
+
+        let records = startup_records(&root);
+        assert_eq!(records.len(), 1, "{records:?}");
+        let record = &records[0];
+        assert_eq!(record["event"], "startup_outcome");
+        assert_eq!(record["outcome"], "handed_off");
+        assert_eq!(record["stage"], "admission");
+        assert_eq!(record["reason"], serde_json::Value::Null);
+        assert_eq!(record["root"], "selected");
+        assert_eq!(record["pid"], pid);
+        assert!(record["timestampMs"].as_u64().unwrap() > 0);
+        let identity = record["rootIdentity"].as_str().unwrap();
+        assert_eq!(identity.len(), 64);
+        assert!(identity.bytes().all(|byte| byte.is_ascii_hexdigit()));
+        let text = serde_json::to_string(record).unwrap();
+        assert!(!text.contains(root.to_str().unwrap()), "{text}");
+    }
+
+    /// A holder that never releases the lock times the claim out; the launch reports the
+    /// refusal and leaves a record with the typed reason.
+    #[test]
+    fn a_lock_timeout_leaves_a_record_with_its_reason() {
+        let scratch = scratch("timeout-record");
+        let root = scratch.0.join("storage");
+        let current = std::env::current_exe().unwrap();
+        let family = unique_family("timeout-record");
+        let mut closing = Running(launch_with(
+            &current,
+            &family,
+            &root,
+            Stdio::null(),
+            &[(CLOSING_VARIABLE, "30000")],
+        ));
+        let _lines = held(&mut closing);
+
+        let waiting = launch_with(
+            &current,
+            &family,
+            &root,
+            Stdio::null(),
+            &[(RECORD_VARIABLE, "1"), (PATIENCE_VARIABLE, "300")],
+        )
+        .wait_with_output()
+        .unwrap();
+        assert_eq!(reports(&waiting.stdout), ["error=TimedOut"]);
+
+        let records = startup_records(&root);
+        assert_eq!(records.len(), 1, "{records:?}");
+        assert_eq!(records[0]["outcome"], "timed_out");
+        assert_eq!(records[0]["reason"], "timed_out");
+        assert_eq!(records[0]["stage"], "admission");
+    }
+
+    /// A launch during a slow close waits for the closing window to release the lock and
+    /// then becomes the window, instead of giving up.
+    #[test]
+    fn a_relaunch_during_a_slow_close_takes_over_when_the_lock_is_released() {
+        let scratch = scratch("close-relaunch");
+        let root = scratch.0.join("storage");
+        let current = std::env::current_exe().unwrap();
+        let family = unique_family("close-relaunch");
+        let mut closing = Running(launch_with(
+            &current,
+            &family,
+            &root,
+            Stdio::null(),
+            &[(CLOSING_VARIABLE, "1500")],
+        ));
+        let _lines = held(&mut closing);
+
+        let started = std::time::Instant::now();
+        let relaunch = launch_with(
+            &current,
+            &family,
+            &root,
+            Stdio::null(),
+            &[(PATIENCE_VARIABLE, "20000")],
+        )
+        .wait_with_output()
+        .unwrap();
+        assert!(relaunch.status.success());
+        assert_eq!(reports(&relaunch.stdout), ["primary", "activations=0"]);
+        assert!(started.elapsed() < std::time::Duration::from_secs(20));
+    }
+
+    #[test]
+    fn the_relaunch_patience_covers_the_shutdown_and_drain_budgets() {
+        use cadrumo_application::shutdown::{RUNTIME_DRAIN_BOUND, SUPERVISOR_CLOSE_BOUND};
+        assert!(PATIENCE >= SUPERVISOR_CLOSE_BOUND + RUNTIME_DRAIN_BOUND);
     }
 }

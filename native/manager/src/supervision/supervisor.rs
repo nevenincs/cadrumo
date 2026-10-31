@@ -73,7 +73,7 @@ impl Default for SupervisorConfig {
             heartbeat_staleness: Duration::from_secs(30),
             accept_tick_ceiling: Duration::from_secs(30),
             // The runtime drains for 15 s and its watchdog forces an exit 2 s later.
-            drain_bound: Duration::from_secs(25),
+            drain_bound: cadrumo_application::shutdown::RUNTIME_DRAIN_BOUND,
             session_end_bound: Duration::from_secs(3),
             termination_bound: Duration::from_secs(5),
             poll_interval: Duration::from_millis(100),
@@ -124,6 +124,10 @@ pub enum Effects {
 pub enum StandDownReason {
     RootMismatch,
     ElevatedTokenRefused,
+    /// The runtime image's native host refused to start the role before readiness.
+    /// The refusal is a property of the image and its launch arguments, so a relaunch
+    /// would be refused the same way.
+    LaunchRefused,
     /// The runtime still reported VERSION_MISMATCH after one re-probe and relaunch.
     VersionMismatch,
 }
@@ -394,6 +398,7 @@ fn decide(exit: RuntimeExit, cause: Option<StopCause>) -> Decision {
         }
         RuntimeExit::Reason(ExitReason::VersionMismatch) => Decision::VersionMismatch,
         RuntimeExit::Reason(ExitReason::LoginWitnessLoss) => Decision::WitnessLoss,
+        exit if exit.is_launch_refusal() => Decision::StandDown(StandDownReason::LaunchRefused),
         RuntimeExit::LaunchFailure(_) => Decision::Restart(RestartClass::LaunchFailure),
         RuntimeExit::Reason(
             ExitReason::SupervisorStop
@@ -1529,6 +1534,11 @@ mod tests {
                 Decision::Restart(RestartClass::LaunchFailure)
             );
         }
+        // A declared native-host refusal is deterministic: it is never retried.
+        assert_eq!(
+            decide(code(crate::contract::LAUNCH_PROFILE_REFUSED_EXIT), None),
+            Decision::StandDown(StandDownReason::LaunchRefused)
+        );
     }
 
     #[test]

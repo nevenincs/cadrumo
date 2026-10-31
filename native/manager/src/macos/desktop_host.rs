@@ -39,7 +39,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-const CLOSE_BOUND: Duration = Duration::from_secs(35);
+const CLOSE_BOUND: Duration = cadrumo_application::shutdown::SUPERVISOR_CLOSE_BOUND;
 // Back-off before re-admitting after a transient host fault.
 const RESTART_DELAY: Duration = Duration::from_secs(1);
 // Pacing: how often another owner's status is read and the lock claimed again.

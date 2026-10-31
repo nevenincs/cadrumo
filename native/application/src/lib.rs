@@ -44,6 +44,7 @@ pub mod role;
 pub mod runtime;
 #[cfg(feature = "platform")]
 pub mod runtime_client;
+pub mod shutdown;
 pub mod value;
 pub mod view_stream;
 
