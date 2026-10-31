@@ -31,17 +31,17 @@ from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.ledger_filing_snapshot import stale_filed_revisions
 from ...aggregation.ledger_membership import LedgerMembershipPorts
 from ...aggregation.tests.test_modelo_source_mesh_ledger import (
-    _BUCKET_ID,
+    BUCKET_ID,
+    EmptyInventoryRepository,
+    EmptyInvestmentRegisterRepository,
     InMemoryTransactionCatalogueRepository,
-    _catalogue_read_ports,
+    StaticActivityAssetHistoryRepository,
     _create_profile_record_for_test,
-    _empty_invoice_repository,
-    _empty_prorrata_repository,
-    _EmptyInventoryRepository,
-    _EmptyInvestmentRegisterRepository,
-    _machine_acquisition_transaction,
     _profile_creation_context_for_test,
-    _StaticActivityAssetHistoryRepository,
+    catalogue_read_ports,
+    empty_invoice_repository,
+    empty_prorrata_repository,
+    machine_acquisition_transaction,
     machine_asset,
     machine_claim,
     no_stored_usage_ratios,
@@ -59,7 +59,7 @@ _YEARS = (2025, 2024, 2023)
 """One sealed revision per year; each year asks the stores a different window."""
 
 
-class _CountingHistory(_StaticActivityAssetHistoryRepository):
+class _CountingHistory(StaticActivityAssetHistoryRepository):
     """The register store, counting how often a pass reads it."""
 
     def __init__(self, history: ActivityAssetHistory) -> None:
@@ -79,7 +79,7 @@ class _CountingTransactions(InMemoryTransactionCatalogueRepository):
     """The ledger store, counting each distinct read a pass makes of it."""
 
     def __init__(self, catalogue: TransactionCatalogue) -> None:
-        super().__init__(bucket_id=_BUCKET_ID)
+        super().__init__(bucket_id=BUCKET_ID)
         self.save(catalogue)
         self.reads: list[tuple[object, ...]] = []
 
@@ -109,9 +109,9 @@ def _seal(operation: PinnedAuthorityOperation, history: ActivityAssetHistory, ro
         period = Period.from_year_and_code(year, "0A")
         unit = WorkUnit(
             work_unit_id=derive_work_unit_id(
-                bucket_id=_BUCKET_ID, modelo="100", filing_year=year, period=period, revision_id=snapshot.revision.id
+                bucket_id=BUCKET_ID, modelo="100", filing_year=year, period=period, revision_id=snapshot.revision.id
             ),
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo=ModeloCode("100"),
             filing_year=year,
             period=period,
@@ -151,14 +151,14 @@ def _seal(operation: PinnedAuthorityOperation, history: ActivityAssetHistory, ro
 def _pass_ports(history: _CountingHistory, transactions: _CountingTransactions) -> LedgerMembershipPorts:
     return LedgerMembershipPorts(
         transaction_repository=transactions,
-        invoice_catalogue_read_ports=_catalogue_read_ports(
-            invoice_repository=_empty_invoice_repository(), transaction_repository=transactions
+        invoice_catalogue_read_ports=catalogue_read_ports(
+            invoice_repository=empty_invoice_repository(), transaction_repository=transactions
         ),
-        prorrata_register_repository=_empty_prorrata_repository(),
-        bienes_inversion_repository=_EmptyInvestmentRegisterRepository(),
+        prorrata_register_repository=empty_prorrata_repository(),
+        bienes_inversion_repository=EmptyInvestmentRegisterRepository(),
         activity_asset_history_repository=history,
         usage_ratio_profile_loader=no_stored_usage_ratios,
-        inventory_repository=_EmptyInventoryRepository(),
+        inventory_repository=EmptyInventoryRepository(),
     )
 
 
@@ -166,7 +166,7 @@ def _pass_ports(history: _CountingHistory, transactions: _CountingTransactions) 
 def world(operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch):
     """Three sealed revisions over a three-asset register and its three purchases."""
     purchases = tuple(
-        _machine_acquisition_transaction("hardware_amortizable", provider_id=f"purchase-{index}") for index in range(3)
+        machine_acquisition_transaction("hardware_amortizable", provider_id=f"purchase-{index}") for index in range(3)
     )
     assets = tuple(
         machine_asset(purchase.transaction_id).model_copy(update={"asset_id": f"machine-{index}"})
@@ -180,7 +180,7 @@ def world(operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch):
     profile = ModeloWorkProfile(
         record=_create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=BUCKET_ID,
             facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"),),
             context=_profile_creation_context_for_test(),
         ),
@@ -196,7 +196,7 @@ def world(operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch):
 def test_a_pass_reads_the_register_once_however_many_revisions_it_compares(world) -> None:
     units, sealed, history, transactions, operation = world
     read = filed_register_reader(
-        bucket_id=_BUCKET_ID, work_units=units, ports=_pass_ports(history, transactions), operation=operation
+        bucket_id=BUCKET_ID, work_units=units, ports=_pass_ports(history, transactions), operation=operation
     )
 
     findings = stale_filed_revisions(revisions=sealed, catalogue=TransactionCatalogue(), register_reader=read)
@@ -212,7 +212,7 @@ def test_a_later_pass_reads_the_register_again_and_sees_what_changed_in_between(
     ports = _pass_ports(history, transactions)
 
     def run_pass():
-        read = filed_register_reader(bucket_id=_BUCKET_ID, work_units=units, ports=ports, operation=operation)
+        read = filed_register_reader(bucket_id=BUCKET_ID, work_units=units, ports=ports, operation=operation)
         return stale_filed_revisions(revisions=sealed, catalogue=TransactionCatalogue(), register_reader=read)
 
     assert run_pass() == ()

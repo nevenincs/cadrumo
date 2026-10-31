@@ -31,8 +31,8 @@ from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.ledger_filing_snapshot import stale_filed_revisions
 from ...aggregation.tests.test_modelo_source_mesh_ledger import (
     InMemoryTransactionCatalogueRepository,
-    _m130_box,
     activity_asset_ledger_membership,
+    m130_box,
     machine_asset,
     machine_claim,
     register_asset,
@@ -268,8 +268,8 @@ def test_a_prior_year_claim_that_moves_a_constant_percentage_box_makes_the_model
     draft = _calculated_draft(before, modelo="130", period_code="4T")
 
     # 30% of the 12,000.00 pending, then of the 9,000.00 left by the 2024 claim.
-    assert _m130_box(resolve_m130(before, "4T")) == Decimal("3600.00")
-    assert _m130_box(resolve_m130(after, "4T")) == Decimal("2700.00")
+    assert m130_box(resolve_m130(before, "4T")) == Decimal("3600.00")
+    assert m130_box(resolve_m130(after, "4T")) == Decimal("2700.00")
     facts = _asset_facts(_asset_drift(draft, after, modelo="130", period_code="4T"))
 
     assert facts["schedules_changed"] == 1
