@@ -814,20 +814,72 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
 # attachment and accentuation of these pronouns in its orthography:
 # https://www.rae.es/diccionario-estudiante/docs/ortografia.pdf
 _SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
-    {"elimína", "actualíza", "archíva", "exclúye", "restáura", "vacía", "clasifíca", "revísa", "adjúnta"}
+    {
+        "actualíza",
+        "adjúnta",
+        "alinéa",
+        "apláza",
+        "archíva",
+        "calcúla",
+        "clasifíca",
+        "combína",
+        "comuníca",
+        "configúra",
+        "confírma",
+        "consérva",
+        "cópia",
+        "declára",
+        "desactíva",
+        "descárga",
+        "desígna",
+        "edíta",
+        "elimína",
+        "elíge",
+        "exclúye",
+        "gestióna",
+        "guía",
+        "impórta",
+        "instála",
+        "introdúce",
+        "investíga",
+        "manten",
+        "muéstra",
+        "márca",
+        "nómbra",
+        "omíte",
+        "presénta",
+        "previsualíza",
+        "quíta",
+        "reanúda",
+        "reconstrúye",
+        "regístra",
+        "repíte",
+        "restáura",
+        "revísa",
+        "sepára",
+        "termína",
+        "vacía",
+    }
 )
+# These two observed infinitives retain their original stress with one clitic.
+# They are deliberately separate from the accented imperative stems above.
+_SPANISH_DIRECT_OBJECT_INFINITIVES = frozenset({"recargar", "reconciliar"})
 _SPANISH_DIRECT_OBJECT_CLITICS = ("lo", "la", "los", "las")
 
 
 def _spanish_reviewed_imperative(word: str) -> bool:
-    """Recognize one pronoun on a reviewed imperative, preserving its accent."""
+    """Recognize one pronoun on a reviewed verb form, preserving its accent."""
     # Sentence-initial capitalization is grammatical; do not casefold the
     # entire token, which would admit arbitrary internal capitalization.
     word = word[:1].lower() + word[1:]
     if word == "autentícate":
         return True
     return any(
-        word.endswith(clitic) and word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_IMPERATIVES
+        word.endswith(clitic)
+        and (
+            word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_IMPERATIVES
+            or word[: -len(clitic)] in _SPANISH_DIRECT_OBJECT_INFINITIVES
+        )
         for clitic in _SPANISH_DIRECT_OBJECT_CLITICS
     )
 
