@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import partial
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -29,6 +30,7 @@ from ...application.modelo.reconciliation_pull_operation import (
     ModeloReconciliationPullRequest,
 )
 from ...application.modelo.reconciliation_records import (
+    ModeloReconciliationHistoryEntry,
     ModeloReconciliationRecord,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
@@ -42,6 +44,7 @@ from ...core.period import Period
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.modelos.work_unit import WorkUnit
 from ...tests.aeat_literal_fixtures import (
     SEDE_TEST_URL_FIXTURE,
 )
@@ -51,6 +54,138 @@ from . import registered_executor_case_support as conformance
 from .test_modelo_reconciliation_import_operation import _CommitWitness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _declaration_manifest(
+    profile_id: UUID, tmp_path: Path, operation: PinnedAuthorityOperation
+) -> tuple[str, WorkUnit, FiledDeclaracionObservation, FiledDeclaracionObservationStore]:
+    """Seed a calculation revision and build the filed declaration that differs from it in casilla 19."""
+    revision_id = modelo_operation_test_support.seeded_modelo_calculation_revision(profile_id, operation=operation)
+    revision = CalculationRevisionCatalogueRepository().load(operation=operation).get(revision_id)
+    assert revision is not None
+    unit = WorkUnitCatalogueRepository().load().get(revision.work_unit_id)
+    assert unit is not None
+    values = dict(revision.casilla_values)
+    values["19"] = Decimal("123.45")
+    store = FiledDeclaracionObservationStore(tmp_path / "filed")
+    manifest = FiledDeclaracionObservation(
+        modelo=str(unit.modelo),
+        ejercicio=unit.filing_year,
+        period=unit.period,
+        expediente_id="202513000000001Z",
+        status="ALTA",
+        presented_at=datetime(2025, 4, 20, tzinfo=UTC),
+        authenticated_identity=modelo_operation_test_support.SEEDED_SOURCE_TAX_ID,
+        artefacts=(
+            FiledDeclaracionArtefact(
+                kind="submitted_file",
+                source_url=SEDE_TEST_URL_FIXTURE,
+                content_type="text/plain",
+                byte_count=5,
+                sha256=sha256_hex(b"filed"),
+                captured_at=datetime(2026, 9, 29, tzinfo=UTC),
+            ),
+        ),
+        casillas=tuple(
+            ObservedCasillaValue(
+                casilla_id=key,
+                value=str(value),
+                value_kind=CasillaValueKind.NUMERIC,
+                source_artefact_kind="submitted_file",
+                source_locator="synthetic",
+                confidence=1.0,
+            )
+            for key, value in values.items()
+        ),
+        extraction_coverage={"submitted_file": 1.0},
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=unit.modelo,
+            modelo_year=unit.filing_year,
+            period=unit.period.registry_token,
+            revision_id=unit.revision_id,
+        ),
+    )
+    return revision_id, unit, manifest, store
+
+
+def _corrupt_manifest(
+    manifest: FiledDeclaracionObservation, unit: WorkUnit, invalid_evidence: str | None
+) -> FiledDeclaracionObservation:
+    """Return ``manifest`` with the named defect, or unchanged when no defect is requested."""
+    if invalid_evidence == "wrong_period":
+        manifest = manifest.model_copy(
+            update={
+                "period": Period.from_year_and_code(unit.filing_year, "2T"),
+                "registry_snapshot_ref": manifest.registry_snapshot_ref.model_copy(update={"period": "2T"}),
+            }
+        )
+    elif invalid_evidence == "empty_casillas":
+        manifest = manifest.model_copy(update={"casillas": ()})
+    elif invalid_evidence == "non_numeric_casillas":
+        manifest = manifest.model_copy(
+            update={
+                "casillas": tuple(
+                    row.model_copy(update={"value_kind": CasillaValueKind.TEXT}) for row in manifest.casillas
+                ),
+            }
+        )
+    elif invalid_evidence == "stale_snapshot":
+        manifest = manifest.model_copy(
+            update={
+                "registry_snapshot_ref": manifest.registry_snapshot_ref.model_copy(
+                    update={"revision_id": "retired-revision"}
+                ),
+            }
+        )
+    return manifest
+
+
+def _justificante_snapshot_id(profile_id: UUID, operation: PinnedAuthorityOperation) -> tuple[WorkUnit, str]:
+    """Capture the synthetic justificante for the seeded work unit and return the unit with its snapshot id."""
+    unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+    pdf = (
+        Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "justificantes" / "130" / "2024-1T.pdf"
+    ).read_bytes()
+    snapshot = build_justificante_capture_service(str(profile_id)).capture(
+        modelo=str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period,
+        expediente_id="202413000000001Z",
+        csv="ABCD1234EFGH",
+        pdf_bytes=pdf,
+        pdf_sha256=sha256_hex(pdf),
+        captured_at=datetime(2026, 9, 29, tzinfo=UTC),
+    )
+    return unit, snapshot.snapshot_id
+
+
+def _assert_declaration_difference(projection: ModeloReconciliationImportProjection, revision_id: str | None) -> None:
+    assert projection.calculation_revision_id == revision_id
+    assert projection.verdict is ModeloReconciliationVerdict.MISMATCHES
+    difference = next(diff for diff in projection.diffs if diff.field_name == "19")
+    assert difference.evidence_value == "123.45"
+    assert difference.legal_refs and difference.source_refs
+    assert projection.advisories == ()
+
+
+def _assert_history_and_atomic_write(
+    projection: ModeloReconciliationImportProjection,
+    history: tuple[ModeloReconciliationHistoryEntry, ...],
+    before_records: tuple[ModeloReconciliationRecord, ...],
+    after_records: tuple[ModeloReconciliationRecord, ...],
+    before_events: Sequence[BucketEvent],
+    after_events: Sequence[BucketEvent],
+) -> None:
+    assert history[-1].calculation_revision_id == projection.calculation_revision_id
+    assert after_records[-1].calculation_revision_id == projection.calculation_revision_id
+    assert history[-1].advisory_count == len(projection.advisories)
+    assert ModeloReconciliationListEntryProjection.from_history_entry(history[-1]).advisory_count == len(
+        projection.advisories
+    )
+    assert after_records[: len(before_records)] == before_records
+    assert len(after_records) == len(before_records) + 1
+    assert after_records[-1].bucket_event_id in after_events
+    assert set(before_events).issubset(after_events)
 
 
 @pytest.mark.parametrize(
@@ -107,97 +242,12 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
         with override_settings(cadrumo_active_profile=str(profile_id)):
             revision_id: str | None = None
             if source is ModeloReconciliationEvidenceKind.DECLARATION:
-                revision_id = modelo_operation_test_support.seeded_modelo_calculation_revision(
-                    profile_id, operation=operation
-                )
-                revision = CalculationRevisionCatalogueRepository().load(operation=operation).get(revision_id)
-                assert revision is not None
-                unit = WorkUnitCatalogueRepository().load().get(revision.work_unit_id)
-                assert unit is not None
-                values = dict(revision.casilla_values)
-                values["19"] = Decimal("123.45")
-                store = FiledDeclaracionObservationStore(tmp_path / "filed")
-                manifest = FiledDeclaracionObservation(
-                    modelo=str(unit.modelo),
-                    ejercicio=unit.filing_year,
-                    period=unit.period,
-                    expediente_id="202513000000001Z",
-                    status="ALTA",
-                    presented_at=datetime(2025, 4, 20, tzinfo=UTC),
-                    authenticated_identity=modelo_operation_test_support.SEEDED_SOURCE_TAX_ID,
-                    artefacts=(
-                        FiledDeclaracionArtefact(
-                            kind="submitted_file",
-                            source_url=SEDE_TEST_URL_FIXTURE,
-                            content_type="text/plain",
-                            byte_count=5,
-                            sha256=sha256_hex(b"filed"),
-                            captured_at=datetime(2026, 9, 29, tzinfo=UTC),
-                        ),
-                    ),
-                    casillas=tuple(
-                        ObservedCasillaValue(
-                            casilla_id=key,
-                            value=str(value),
-                            value_kind=CasillaValueKind.NUMERIC,
-                            source_artefact_kind="submitted_file",
-                            source_locator="synthetic",
-                            confidence=1.0,
-                        )
-                        for key, value in values.items()
-                    ),
-                    extraction_coverage={"submitted_file": 1.0},
-                    registry_snapshot_ref=RegistrySnapshotRef(
-                        modelo=unit.modelo,
-                        modelo_year=unit.filing_year,
-                        period=unit.period.registry_token,
-                        revision_id=unit.revision_id,
-                    ),
-                )
-                if invalid_evidence == "wrong_period":
-                    manifest = manifest.model_copy(
-                        update={
-                            "period": Period.from_year_and_code(unit.filing_year, "2T"),
-                            "registry_snapshot_ref": manifest.registry_snapshot_ref.model_copy(update={"period": "2T"}),
-                        }
-                    )
-                elif invalid_evidence == "empty_casillas":
-                    manifest = manifest.model_copy(update={"casillas": ()})
-                elif invalid_evidence == "non_numeric_casillas":
-                    manifest = manifest.model_copy(
-                        update={
-                            "casillas": tuple(
-                                row.model_copy(update={"value_kind": CasillaValueKind.TEXT})
-                                for row in manifest.casillas
-                            ),
-                        }
-                    )
-                elif invalid_evidence == "stale_snapshot":
-                    manifest = manifest.model_copy(
-                        update={
-                            "registry_snapshot_ref": manifest.registry_snapshot_ref.model_copy(
-                                update={"revision_id": "retired-revision"}
-                            ),
-                        }
-                    )
+                revision_id, unit, manifest, store = _declaration_manifest(profile_id, tmp_path, operation)
+                manifest = _corrupt_manifest(manifest, unit, invalid_evidence)
                 observation_id = store.persist_observation(manifest, operation=operation).name
                 snapshot_id = None
             else:
-                unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
-                pdf = (
-                    Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "justificantes" / "130" / "2024-1T.pdf"
-                ).read_bytes()
-                snapshot = build_justificante_capture_service(str(profile_id)).capture(
-                    modelo=str(unit.modelo),
-                    filing_year=unit.filing_year,
-                    period=unit.period,
-                    expediente_id="202413000000001Z",
-                    csv="ABCD1234EFGH",
-                    pdf_bytes=pdf,
-                    pdf_sha256=sha256_hex(pdf),
-                    captured_at=datetime(2026, 9, 29, tzinfo=UTC),
-                )
-                snapshot_id = snapshot.snapshot_id
+                unit, snapshot_id = _justificante_snapshot_id(profile_id, operation)
                 observation_id = None
             before_records = tuple(ModeloReconciliationPersistence().iter_records())
             before_events = BucketEventHistoryRepository().load().events
@@ -269,24 +319,12 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
         assert projection.work_unit_id == unit.work_unit_id
         assert projection.source_path.endswith(snapshot_id or observation_id or "unreachable")
         if source is ModeloReconciliationEvidenceKind.DECLARATION:
-            assert projection.calculation_revision_id == revision_id
-            assert projection.verdict is ModeloReconciliationVerdict.MISMATCHES
-            difference = next(diff for diff in projection.diffs if diff.field_name == "19")
-            assert difference.evidence_value == "123.45"
-            assert difference.legal_refs and difference.source_refs
-            assert projection.advisories == ()
+            _assert_declaration_difference(projection, revision_id)
         with override_settings(cadrumo_active_profile=str(profile_id)):
             history = list_modelo_reconciliations(bucket_id=str(profile_id), operation=operation)
-        assert history[-1].calculation_revision_id == projection.calculation_revision_id
-        assert after_records[-1].calculation_revision_id == projection.calculation_revision_id
-        assert history[-1].advisory_count == len(projection.advisories)
-        assert ModeloReconciliationListEntryProjection.from_history_entry(history[-1]).advisory_count == len(
-            projection.advisories
+        _assert_history_and_atomic_write(
+            projection, history, before_records, after_records, before_events, after_events
         )
-        assert after_records[: len(before_records)] == before_records
-        assert len(after_records) == len(before_records) + 1
-        assert after_records[-1].bucket_event_id in after_events
-        assert set(before_events).issubset(after_events)
         assert witness.events[:3] == [
             ("commit-enter", submission.receipt.operation_id),
             ("atomic-persist", after_records[-1].bucket_event_id),
