@@ -243,8 +243,15 @@ def _subscript_names(target: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(names))
 
 
-def dangling_references(roots: tuple[Path, ...]) -> tuple[DanglingReference, ...]:
-    """Report each cross-reference naming something no package under ``roots`` defines."""
+def dangling_references(
+    roots: tuple[Path, ...], *, siblings: tuple[Path, ...] | None = None
+) -> tuple[DanglingReference, ...]:
+    """Report each cross-reference naming something no package under ``roots`` defines.
+
+    ``siblings`` are the unscanned trees whose module names a docstring may cite;
+    ``None`` selects the repository's own development tree. A caller that screens
+    a self-contained tree passes ``()`` and is not charged a walk of ``dev/``.
+    """
     defined: set[str] = set()
     imported: set[str] = set()
     modules: set[str] = set()
@@ -258,7 +265,7 @@ def dangling_references(roots: tuple[Path, ...]) -> tuple[DanglingReference, ...
         imported |= root_imported
         modules |= root_modules
     owned = frozenset(root.name for root in roots)
-    for sibling in _SIBLING_TREES:
+    for sibling in _SIBLING_TREES if siblings is None else siblings:
         if sibling.exists():
             # MODULE names only. Pulling in every symbol these trees define
             # would let a shipped docstring resolve against a dev-only function
@@ -280,13 +287,18 @@ def dangling_references(roots: tuple[Path, ...]) -> tuple[DanglingReference, ...
     return tuple(findings)
 
 
-def main(argv: list[str] | None = None, *, roots: tuple[Path, ...] = _SOURCE_ROOTS) -> int:
+def main(
+    argv: list[str] | None = None,
+    *,
+    roots: tuple[Path, ...] = _SOURCE_ROOTS,
+    siblings: tuple[Path, ...] | None = None,
+) -> int:
     """Print one greppable row per dangling reference and enforce live zero."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--limit", type=int, default=0, help="show at most this many rows")
     args = parser.parse_args(argv)
 
-    findings = dangling_references(roots)
+    findings = dangling_references(roots, siblings=siblings)
     rows = findings[: args.limit] if args.limit else findings
     for finding in rows:
         sys.stdout.write(f"dangling target={finding.target} module={finding.module}\n")
