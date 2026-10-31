@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b1e4b611ee8c62f8078e50ba309aa4b1e3dd212053ac5b6543d038ade53d56b'
+body_hash: 'sha256:716e5bf4aebe6d68e850c5a264c45996f3fef8efa9e097800c59c1e3a6f4775b'
 related:
   - "[[2026-10-30-test-suite-budget-plan]]"
 ---
@@ -67,7 +67,11 @@ related:
 - `S15` `M` `src/cadrumo_runtime/host/worker_operation_requests.py`
 - `S15` `A` `dev/locales/tests/test_notice_message_catalogue.py`
 - `S15` `verify:` `pytest projection journal lease and bindings suites` -> `pass`
+- `S04` `verify:` `pytest dev/tests/test_import_quality_gate.py` -> `fail`
+- `S04` `verify:` `ruff check and format dev/tests/test_import_quality_gate.py` -> `pass`
 
 ## Notes
 
 - `S15` Diagnosis only, no fix built
+- `S04` Measured 502s wall (492s pytest) before, 468s (434s) after on a loaded shared box; the per-defect batching that took the file from 2255s had already landed in bddc174afb
+- `S04` `test_a_gate_whose_steps_overrun_their_budget_is_unavailable_never_green` failed once under load (0.01 CPU-s budget can finish before the first sample) and passes alone; pre-existing race, not fixed

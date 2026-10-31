@@ -8,7 +8,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:888dff76d009673a18326230e2e12f6805dad2bf1bf28fae9bc47a972384108d'
+body_hash: 'sha256:097ad1e99c6fc7bbf7610fbb8f8b1772cfdf58564bd694574b27b91f8c83897e'
 ---
 
 # `test-suite-budget` plan
@@ -32,7 +32,7 @@ Operator authorization, 2026-10-31: heavy real builds move from the full lane to
 - [x] `S01` - Compose the conformance runtime once per worker instead of per case: registered-executor conformance and subject binding (7,100s); `src/cadrumo/entrypoints/tests/registered_executor_case_support.py`.
 - [ ] `S02` - Share the remaining per-case composition across the actor-by-frontend and parity families (about 3,500s); `src/cadrumo/entrypoints/tests`.
 - [ ] `S03` - Reuse one compiled tree across generated-export trees and inheritance cases (2,500s); `dev/registry/pipeline/tests`.
-- [ ] `S04` - Replace per-defect real-gate launches in the import quality gate with one shared baseline (2,255s); `dev/tests/test_import_quality_gate.py`.
+- [x] `S04` - Replace per-defect real-gate launches in the import quality gate with one shared baseline (2,255s); `dev/tests/test_import_quality_gate.py`.
 - [ ] `S05` - Bound TUI sequence walks and workbench acceptance to one composed app per module (2,800s); `dev/tui/harness/tests, src/cadrumo/entrypoints/tui/tests`.
 - [x] `S06` - Reduce the per-command CPU floor and repeated calculation cost on the product CLI path; `src/cadrumo_client, src/cadrumo_runtime, src/cadrumo/application/modelo`.
 - [ ] `S07` - Stop seeding test state through whole CLI commands where the command is not the subject; `src/cadrumo_runtime/host/tests/frontend/cli, src/cadrumo/entrypoints/tests/profile_persistence`.
