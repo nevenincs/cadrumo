@@ -630,9 +630,9 @@ application:
         duplicate_invoice: 'An invoice with the same identity already exists in the
           catalogue: %{invoice_id}.'
         intracom_operation_type_required: 'An intra-community supply must state its
-          Modelo 349 operation type: the category alone cannot tell an ordinary entrega
-          intracomunitaria (clave E) from a supply following an exempt importation
-          (clave M, or H via a fiscal representative).'
+          Modelo 349 operation type: the category alone cannot tell an ordinary intra-community
+          supply (code E) from a supply following an exempt importation (code M, or
+          H via a fiscal representative).'
         unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
           %{accepted}.'
     lifecycle:
@@ -887,7 +887,8 @@ application:
           the modelo definitions must declare the borrador capability.
     calc_diagnostic:
       activity_asset_accrual_unavailable:
-        what: The dotación of an asset could not be worked out, so it is not included.
+        what: The depreciation charge of an asset could not be worked out, so it is
+          not included.
         what_to_do: Complete or correct the asset in the register, then calculate
           again.
       activity_asset_activity_undeclared:
@@ -897,13 +898,13 @@ application:
       activity_asset_agrarian_excluded:
         what: An asset of an agricultural activity is left out of this instalment,
           which is based on that activity's income.
-        what_to_do: You do not have to do anything. Its dotación is deducted in your
-          annual return.
+        what_to_do: You do not have to do anything. Its depreciation charge is deducted
+          in your annual return.
       activity_asset_claim_gap:
-        what: An asset has no recorded dotación for part of the year, so that part
-          is not deducted.
-        what_to_do: Record the dotación for that period if you want to deduct it,
-          then calculate again.
+        what: An asset has no recorded depreciation charge for part of the year, so
+          that part is not deducted.
+        what_to_do: Record the depreciation charge for that period if you want to
+          deduct it, then calculate again.
       activity_asset_disposal_finding:
         what: The baja of an asset has a point you should check, though it does not
           stop this form.
@@ -1031,8 +1032,9 @@ application:
       ledger_expense_may_be_durable:
         what: A ledger entry deducted as a current expense may be an asset that lasts
           more than a year. Is it?
-        what_to_do: If it is, register the asset, because it deducts through dotaciones,
-          then calculate again. If it is a consumable, leave the entry as it is.
+        what_to_do: If it is, register the asset, because its cost is deducted through
+          depreciation, then calculate again. If it is a consumable, leave the entry
+          as it is.
       m193_settled_row_amounts_unresolved_authority:
         what: Some amounts in a record of a payment made in a later year have no official
           source that confirms them.
@@ -1112,7 +1114,7 @@ application:
           then calculate again.
       register_owned_capital_acquisition:
         what: A purchase of equipment is left out of your expenses, because it is
-          deducted through its yearly dotación.
+          deducted through its yearly depreciation charge.
         what_to_do: No action is needed.
       reopen_hint: Calculate again to see the calculation's notes.
       settlement_not_computed:
@@ -1203,21 +1205,21 @@ application:
         what_to_do: Add the detail records for the year in your records, then calculate
           again.
     calc_diagnostic_fact:
-      accrual_unavailable: '{element}: its dotación could not be worked out, so it
-        is not included.'
+      accrual_unavailable: '{element}: its depreciation charge could not be worked
+        out, so it is not included.'
       activity_undeclared: '{element}: its purchase has no type of activity and another
         of your assets is agricultural, so it counts as non-agricultural.'
       agrarian_excluded: '{element}: it belongs to an agricultural activity, so it
         is left out of the instalment for the period ending {period_end}.'
-      amortization_box_unbound: '{element}: this edition has no box for its dotación,
-        so it adds nothing to this calculation.'
-      claim_gap_accrued: '{element}: no dotación is recorded from {start} to {end}.
-        {amount} accrued, and box {box} declares only what is recorded.'
-      claim_gap_free_method: '{element}: no dotación is recorded from {start} to {end}.
-        Its method leaves the amount to you, so none can be worked out, and box {box}
-        declares only what is recorded.'
-      disposal_claim_gap: '{element}: its baja is on {date} and part of {year} has
-        no recorded dotación. Its minimum still reduces the cost.'
+      amortization_box_unbound: '{element}: this edition has no box for its depreciation
+        charge, so it adds nothing to this calculation.'
+      claim_gap_accrued: '{element}: no depreciation charge is recorded from {start}
+        to {end}. {amount} accrued, and box {box} declares only what is recorded.'
+      claim_gap_free_method: '{element}: no depreciation charge is recorded from {start}
+        to {end}. Its method leaves the amount to you, so none can be worked out,
+        and box {box} declares only what is recorded.'
+      disposal_claim_gap: '{element}: its disposal is on {date} and part of {year}
+        has no recorded depreciation charge. Its minimum still reduces the cost.'
       disposal_exemption_not_computed: '{element}: any exemption or deferral on its
         baja on {date} is not worked out here, so the full result stands.'
       disposal_figure_element_row: '{element}: {amount} from its sale on {date} enters
@@ -1264,16 +1266,17 @@ application:
       disposal_zero_result: '{element}: its sale on {date}, at {transmission_value}
         of transmission value against {net_value} of net value, neither gains nor
         loses, so no box carries it.'
-      instalment_free_gap: '{element}: no dotación is recorded from {start} to {end}.
-        Its method leaves the amount to you, so it adds nothing to box {box}.'
+      instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
+        to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
       register_cost_exceeds_paid: '{elements}: these assets state a cost of {cost},
         and the ledger entries they name paid {paid}.'
       register_owned_acquisition: '{element}: the ledger entry of {row_date} for {row_amount}
-        is its purchase, so it deducts through dotaciones rather than as an expense.'
+        is its purchase, so it is deducted through depreciation rather than as an
+        expense.'
       register_owned_acquisition_undated: '{element}: a ledger entry is its purchase,
-        so it deducts through dotaciones rather than as an expense.'
+        so it is deducted through depreciation rather than as an expense.'
       register_partly_accounted: '{elements}: the ledger entries of these assets declare
         a base of {base} and the assets account for {price}, so the remaining {remainder}
         deducts nothing.'

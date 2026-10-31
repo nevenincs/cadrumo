@@ -391,7 +391,7 @@ errors:
       be read.
     canonical_operator_scope_storage: The operator authentication storage operation
       failed.
-    canonical_percepcion_observation_persistence: Perceptor observations could not
+    canonical_percepcion_observation_persistence: Recipient observations could not
       be persisted.
     canonical_persistence_degradation: The persistence capability could not provide
       the requested operation.

@@ -39,7 +39,7 @@ docs:
       relation_prefill: from a related modelo's result
       retenciones_aggregation: from the retenciones you recorded
       withholding: from the withholdings you recorded
-      withholding296: from the modelo 296 withholdings per perceptor
+      withholding296: from the modelo 296 withholdings per recipient
     cadence:
       annual: Filed annually
       event: Filed when the event occurs

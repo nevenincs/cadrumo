@@ -167,9 +167,9 @@ cli:
         confirm_link_hint_message: The invoice was recorded without a matching transaction
           in your records.
         confirm_operation_date_help: Date of the taxable operation (ISO YYYY-MM-DD).
-        confirm_operation_type_help: 'Modelo 349 clave for an entrega intracomunitaria.
-          Required when the document states an intra-community supply: the category
-          cannot say whether it followed an exempt importation.'
+        confirm_operation_type_help: 'Modelo 349 operation code for an intra-community
+          supply. Required when the document states an intra-community supply: the
+          category cannot say whether it followed an exempt importation.'
         confirm_printed_total_mismatch_message: The total printed on the document
           does not match the total recorded. The recorded total is derived from the
           taxable base and the IVA rate, so a difference means the document carries
@@ -775,7 +775,7 @@ cli:
         received_invoice_retencion_help: 'JSON InvoiceWithholdingEvidenceRequest:
           one withholding allocation from a received invoice, with its payment or
           exigibility evidence. One allocation per command; the scheme is a legal
-          fact about the perceptor''s activity and is never inferred from the invoice.'
+          fact about the recipient''s activity and is never inferred from the invoice.'
       aggregate_help: Aggregate the figures for one modelo and period. Counterpart
         and foreign-asset observations are passed as JSON options. Withholding modelos
         read the rows already stored for the period, after recording the one withholding
@@ -830,7 +830,7 @@ cli:
           regularizacion_bienes_inversion: capital-goods adjustment
           regularizacion_prorrata: prorrata adjustment
           retencion: withholding
-          withholding296_perceptor: withholding-declaration perceptor
+          withholding296_perceptor: withholding-declaration recipient
         relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse\
           \ --relation %{relation_id}=VALUE"
         relation_input_guidance: Some box sources below are fed by relations in the

@@ -193,7 +193,7 @@ flows:
           relation_prefill: Related filing
           retenciones_aggregation: Withholding totals
           withholding: Withholding record
-          withholding296: Withholding perceptor (modelo 296)
+          withholding296: Withholding recipient (modelo 296)
         estado_casilla_oficial:
           addressed: Directly addressed
           represented_via_binding: Represented through binding

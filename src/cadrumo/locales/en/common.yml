@@ -180,8 +180,8 @@ aggregation:
       m193_phase_allocation_collision: 'Modelo %{modelo} %{filing_year}: allocation(s)
         %{source_allocations} are declared manually and also come from captured capital
         withholding. Remove the manual row.'
-      perceptor_nif_blank: Perceptor NIF must not be blank.
-      perceptor_observations_missing: No per-perceptor retention observations exist
+      perceptor_nif_blank: The recipient's NIF must not be blank.
+      perceptor_observations_missing: No per-recipient withholding observations exist
         for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot
         resolve.
       withholding_annual_source_not_quarterly: 'The annual summary cannot be built:
@@ -1353,7 +1353,7 @@ desktop:
       action:
         add: Add element
         change_baja: Change or remove the baja
-        claim: Record dotación
+        claim: Record a depreciation charge
         correct: Correct
         describe: Edit details
         dispose: Record disposal
@@ -1363,11 +1363,11 @@ desktop:
       areas: Asset areas
       baja:
         acquisition_value: Acquisition value
-        change_confirm: Change the baja of {name} to {date}? The dotaciones it moves
-          are worked out again.
+        change_confirm: Change the disposal of {name} to {date}? The depreciation
+          charges it moves are worked out again.
         change_submit: Save the change
-        confirm: Record the baja of {name} on {date}? Dotaciones after that day are
-          cancelled.
+        confirm: Record the disposal of {name} on {date}? Depreciation charges after
+          that day are cancelled.
         confirm_back: Go back
         confirm_yes: Record the baja
         deducted: Amortisation deducted
@@ -1379,41 +1379,43 @@ desktop:
         preview: Calculate the figures
         reduction: Reduction of the acquisition value
         remove: Remove the baja
-        remove_confirm: Remove the baja of {name}? The element goes back into service
-          and the dotaciones the baja cancelled come back. A dotación it shortened
-          stays short until you record the rest.
+        remove_confirm: Remove the disposal of {name}? The element goes back into
+          service and the depreciation charges the disposal cancelled come back. A
+          depreciation charge it shortened stays short until you record the rest.
         remove_yes: Remove the baja
         result: Gain or loss
         route_changed: A later affectation to the activity changes how this baja is
           taxed.
         transmission_value: Transmission value
-        warning: A baja can be changed or removed later. Dotaciones after its date
-          are cancelled and the one it crosses is shortened. Changing or removing
-          the baja brings the cancelled ones back, but a shortened one stays short
-          until you record the rest.
-        warning_change: Changing or removing this baja brings back the dotaciones
-          it cancelled. A dotación it shortened stays short until you record the rest.
+        warning: A disposal can be changed or removed later. Depreciation charges
+          after its date are cancelled and the one it crosses is shortened. Changing
+          or removing the disposal brings the cancelled ones back, but a shortened
+          one stays short until you record the rest.
+        warning_change: Changing or removing this disposal brings back the depreciation
+          charges it cancelled. A depreciation charge it shortened stays short until
+          you record the rest.
       claim_no_plan: This element has no plan for {year}
       claim_period: Period to record
       claim_period_option: '{from} to {until}'
-      claim_reused: 'Dotación already recorded: nothing was recorded twice.'
-      claim_title: Record the dotación of {name} for {year}
-      claimed: Dotación recorded.
+      claim_reused: 'Depreciation charge already recorded: nothing was recorded twice.'
+      claim_title: Record the depreciation charge of {name} for {year}
+      claimed: Depreciation charge recorded.
       column:
         amount: Amount
         casilla: Casilla
         unavailable: Not worked out
       correct:
         claim_item: '{year} · {amount} · {from} – {until}'
-        supersede: 'Record these dotaciones again under the corrected figures, in
-          the same step:'
-      correct_claim_title: Correct the dotación of {name} for {year}
-      correct_that_claim: Correct that dotación
+        supersede: 'Record these depreciation charges again under the corrected figures,
+          in the same step:'
+      correct_claim_title: Correct the depreciation charge of {name} for {year}
+      correct_that_claim: Correct that depreciation charge
       count:
-        conflict: 'Overlapping dotaciones, all years: {count}'
+        conflict: 'Overlapping depreciation charges, all years: {count}'
         incomplete: 'Years that cannot be worked out, all years: {count}'
         missing: 'Years with something left to record, all years: {count}'
-        stale: 'Dotaciones that no longer match the schedule, all years: {count}'
+        stale: 'Depreciation charges that no longer match the schedule, all years:
+          {count}'
         unsupported: 'Years that can''t be worked out here, all years: {count}'
         without_tables: 'Years with no official tables, all years: {count}'
       detail:
@@ -1515,14 +1517,15 @@ desktop:
         vehicle_propulsion: Electric drive (if any)
         wholly_business_hint: Used only for your activity? Write {share}.
       filing:
-        choose_year: Choose a year to see where the dotaciones go.
+        choose_year: Choose a year to see where the depreciation charges go.
         unavailable: The filing handoff isn't available.
-      forecast: Dotación {amount} · {days} days · {from} – {until}
-      forecast_note: The forecast saves nothing until you record the dotación.
+      forecast: Depreciation charge {amount} · {days} days · {from} – {until}
+      forecast_note: The forecast saves nothing until you record the depreciation
+        charge.
       free: Free amortisation requested
       free_hint: Only for a free-amortisation method
       from: From
-      handoff: Dotaciones in your tax returns
+      handoff: Depreciation charges in your tax returns
       handoff_agrarian_count: 'Left out of Modelo 130, because they belong to an agricultural
         activity, which pays a share of income: {count} elements.'
       handoff_agrarian_count_one: 'Left out of Modelo 130, because it belongs to an
@@ -1530,17 +1533,19 @@ desktop:
       handoff_agrarian_named: 'Left out of Modelo 130, because they belong to an agricultural
         activity, which pays a share of income: {names}.'
       handoff_free_count: 'Not counted in Modelo 130, because their method leaves
-        the dotación to you: {count} elements.'
+        the depreciation charge to you: {count} elements.'
       handoff_free_count_one: 'Not counted in Modelo 130, because its method leaves
-        the dotación to you: 1 element.'
+        the depreciation charge to you: 1 element.'
       handoff_free_named: 'Not counted in Modelo 130, because their method leaves
-        the dotación to you: {names}.'
-      handoff_gap_accrued: 'Modelo 100: {name} has no dotación recorded from {start}
-        to {end}. The {amount} EUR it accrued in that time is not in the amounts above.'
-      handoff_gap_free: 'Modelo 100: {name} has no dotación recorded from {start}
-        to {end}. Its method leaves the amount to you, so none can be worked out.'
-      handoff_gap_unavailable: 'Modelo 100: {name} has no dotación recorded from {start}
-        to {end}, and it could not be worked out.'
+        the depreciation charge to you: {names}.'
+      handoff_gap_accrued: 'Modelo 100: {name} has no depreciation charge recorded
+        from {start} to {end}. The {amount} EUR it accrued in that time is not in
+        the amounts above.'
+      handoff_gap_free: 'Modelo 100: {name} has no depreciation charge recorded from
+        {start} to {end}. Its method leaves the amount to you, so none can be worked
+        out.'
+      handoff_gap_unavailable: 'Modelo 100: {name} has no depreciation charge recorded
+        from {start} to {end}, and it could not be worked out.'
       handoff_gap_unnamed: 'Also left out: {count} periods of elements that this list
         does not name.'
       handoff_gap_unnamed_one: 'Also left out: 1 period of elements that this list
@@ -1580,9 +1585,9 @@ desktop:
       opening_unknown: Fill in “{field}” to work this out.
       plan:
         baja: 'Baja on {date}: {reason}'
-        claimable: Dotación can still be recorded {from} – {until}
+        claimable: A depreciation charge can still be recorded {from} – {until}
         claimable_none: Nothing left to record
-        claims: Dotaciones for {year}
+        claims: Depreciation charges for {year}
         column:
           claimed: Recorded
           days: Days
@@ -1595,7 +1600,7 @@ desktop:
           replaced_by: Replaced by
           status: Status
           year: Year
-        correct_this: Correct this dotación
+        correct_this: Correct this depreciation charge
         days_missing: No days in service are counted for this year.
         edition: Tables from {edition}
         election_changed: Amortisation method changes here
@@ -1614,7 +1619,7 @@ desktop:
           title: Limits for this method
         matches: Matches the current schedule
         minimum_missing: The minimum for this year can't be worked out.
-        no_claims: No dotación is recorded for this year.
+        no_claims: No depreciation charge is recorded for this year.
         no_match: No longer matches the schedule
         planned_missing: No figure is worked out for this year.
         projected_note: 'Estimated: official tables for {year} aren''t available.
@@ -1624,24 +1629,24 @@ desktop:
         rate_missing: No rate applies because no figure is worked out for this year.
         recorded_zero: Recorded as zero
         replaced: Replaced
-        stale_fix: This dotación no longer matches the plan. Correct it.
-        unrecorded_note: A year with no dotación recorded does not count towards the
-          years after it, so these planned figures can add up to more than the basis
-          until you record them.
+        stale_fix: This depreciation charge no longer matches the plan. Correct it.
+        unrecorded_note: A year with no depreciation charge recorded does not count
+          towards the years after it, so these planned figures can add up to more
+          than the basis until you record them.
       quarter: Modelo 130 quarter
       quarter_none: No Modelo 130 quarter
       refused: The register did not accept that.
-      replace_claim: Replace a dotación (optional)
-      replace_none: Record a new dotación
+      replace_claim: Replace a depreciation charge (optional)
+      replace_none: Record a new depreciation charge
       submit:
         correct: Save the correction
         create: Create the asset
-        forecast: Work out the dotación
+        forecast: Calculate the depreciation charge
       timeline:
         change_added: '{field}: {after}'
         change_cleared: '{field}: {before} removed'
         change_to: to
-        claim_span: 'Dotación for {year}: {from} to {through}'
+        claim_span: 'Depreciation charge for {year}: {from} to {through}'
         column:
           changes: Changes
           effect: Effective date
@@ -4827,12 +4832,12 @@ ledger:
         activity
       whole_property: A whole property, not yet split into building, land and use
     claim_state:
-      claimed: Dotación recorded
+      claimed: Depreciation charge recorded
       edition_unavailable: No official tables
-      missing: The dotación is not recorded
-      not_due: The dotación is not due
-      partial: Part of the dotación recorded
-      superseded: Dotación recorded, then corrected
+      missing: The depreciation charge is not recorded
+      not_due: The depreciation charge is not due
+      partial: Part of the depreciation charge recorded
+      superseded: Depreciation charge recorded, then corrected
     declared_activity:
       A01: Rental of real estate
       A02: Independent livestock farming
@@ -4946,20 +4951,21 @@ ledger:
       claim_not_under_current_revision: This changed since you opened it. Refresh
         and try again.
       claim_revision_absent: This changed since you opened it. Refresh and try again.
-      claim_superseded_replay: This dotación was already replaced by a correction
-        and cannot be recorded again.
+      claim_superseded_replay: This depreciation charge was already replaced by a
+        correction and cannot be recorded again.
       claim_year_beyond_registry: 'The form for tax year %{tax_year} isn''t available
-        yet: the dotaciones can be recorded through %{last_admitted_year}. The forecast
-        for that year is an estimate.'
-      claim_year_not_after_opening_year: 'A dotación for %{claim_tax_year} cannot
-        be recorded: the opening amount already covers the years through %{opening_tax_year}.'
-      claims_exceed_amortizable_basis: The opening amount and the dotaciones in effect
-        exceed the lawful amortisable basis.
-      claims_overlap: The dotaciones of one element cannot cover overlapping intervals.
+        yet: the depreciation charges can be recorded through %{last_admitted_year}.
+        The forecast for that year is an estimate.'
+      claim_year_not_after_opening_year: 'A depreciation charge for %{claim_tax_year}
+        cannot be recorded: the opening amount already covers the years through %{opening_tax_year}.'
+      claims_exceed_amortizable_basis: The opening amount and the depreciation charges
+        in effect exceed the lawful amortisable basis.
+      claims_overlap: The depreciation charges of one element cannot cover overlapping
+        intervals.
       constant_percentage_weighting_not_enrolled: 'This isn''t supported yet: the
         constant-percentage weighting for this amortisation period.'
-      correction_below_effective_claims: The correction leaves the dotaciones in effect
-        above the new amortisable basis; replace them in the same correction.
+      correction_below_effective_claims: The correction leaves the depreciation charges
+        in effect above the new amortisable basis; replace them in the same correction.
       correction_must_supersede_current: This changed since you opened it. Refresh
         and try again.
       covered_interval_empty: The covered interval must end after it starts.
@@ -4987,8 +4993,8 @@ ledger:
         with at most two decimals.
       disposal_before_service: The baja date cannot be before the element entered
         service.
-      disposal_claim_past_boundary: This dotación runs to %{covered_through}, past
-        the element's baja, which ends its charges on %{boundary_through}.
+      disposal_claim_past_boundary: This depreciation charge runs to %{covered_through},
+        past the element's disposal, which ends its charges on %{boundary_through}.
       disposal_donation_refused: A donation is not supported as a baja of an activity
         asset.
       disposal_excess_without_table_class: The excess for %{tax_year} needs a table
@@ -5048,9 +5054,9 @@ ledger:
       free_amount_not_positive_cents: The elected amount must be positive and in whole
         cents.
       free_amount_required: A free-depreciation method requires an elected amount.
-      free_claims_disagree_on_cap: The dotaciones in effect for free depreciation
+      free_claims_disagree_on_cap: The depreciation charges in effect for free depreciation
         disagree on the annual cap.
-      free_claims_exceed_annual_cap: The dotaciones in effect for free depreciation
+      free_claims_exceed_annual_cap: The depreciation charges in effect for free depreciation
         exceed the annual cap.
       free_depreciation_only_low_value: Only a low-value element carries the facts
         of the free-depreciation election.
@@ -5067,8 +5073,9 @@ ledger:
         to a mixed vehicle.
       history_changed_after_forecast: The element's history changed after this figure
         was worked out; work it out again.
-      interval_has_different_claim: That period already holds a dotación with different
-        figures; correct that dotación instead of recording a new one.
+      interval_has_different_claim: That period already holds a depreciation charge
+        with different figures; correct that depreciation charge instead of recording
+        a new one.
       investment_cap_exceeded: The investment entering service in {entry_year} under
         the free depreciation you chose would reach {investment}, above the cap of
         {investment_cap}; an element is not split between free and ordinary amortisation.
@@ -5211,8 +5218,8 @@ ledger:
       superseded_claim_absent: This changed since you opened it. Refresh and try again.
       superseded_claim_not_effective: This changed since you opened it. Refresh and
         try again.
-      superseding_claim_changes_interval: A dotación that replaces another must keep
-        the same element and covered period.
+      superseding_claim_changes_interval: A depreciation charge that replaces another
+        must keep the same element and covered period.
       table_class_group_not_a_flag: The tax tables give this table class a group classification
         that can't be read, so the amortisation can't be worked out.
       table_class_not_enrolled: 'Cadrumo doesn''t support this yet: this table class
@@ -5267,8 +5274,8 @@ ledger:
       baja_changed: Baja changed
       baja_recorded: Baja recorded
       baja_removed: Baja removed
-      claim_recorded: Dotación recorded
-      claim_replaced: Dotación replaced
+      claim_recorded: Depreciation charge recorded
+      claim_replaced: Depreciation charge replaced
       corrected: Details corrected
       created: Added to the register
       described: Description updated
@@ -5452,8 +5459,8 @@ ledger:
       electricity_self_consumption: Electricity for self-consumption
       thermal_own_use: Thermal energy for own use
     stale_reason:
-      authority_changed: The tax tables changed after this dotación
-      revision_changed: The element was corrected after this dotación
+      authority_changed: The tax tables changed after this depreciation charge
+      revision_changed: The element was corrected after this depreciation charge
       schedule_unavailable: The schedule cannot be worked out now
     vehicle_category:
       aircraft: Aircraft
@@ -5711,7 +5718,7 @@ sheets:
       business_premises_lease_mark: Business premises lease
       cadastral_reference: Cadastral reference
       cash_accounting_mark: Cash accounting
-      clave: Clave
+      clave: Code
       clave_codigo: Code key
       clave_declarado: Property ownership key
       clave_mercado: Market key
@@ -5850,12 +5857,12 @@ sheets:
       pension_prestacion_resto: 'Benefit: other'
       pension_prestacion_viudedad: 'Benefit: widowhood'
       perceptor_birth_year: Birth year
-      perceptor_legal_name: Perceptor legal name
-      perceptor_mediador_flag: Mediator perceptor
+      perceptor_legal_name: Recipient legal name
+      perceptor_mediador_flag: Intermediary recipient
       perceptor_name: Recipient name
       perceptor_nif: Recipient NIF
       perceptor_situacion_familiar: Family situation
-      perceptor_tax_id: Perceptor tax id
+      perceptor_tax_id: Recipient tax id
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
       porcentaje_retencion: Withholding %
@@ -9528,8 +9535,8 @@ workspace:
       source_locked: It follows your records; correct it there and recalculate.
       value_channel_unavailable: Values of this kind cannot be entered here yet.
     notes:
-      lead: These do not stop the file. They say what the dotaciones of your assets
-        leave out, so you can decide what to add.
+      lead: These do not stop the file. They say what the depreciation charges of
+        your assets leave out, so you can decide what to add.
       title: Worth knowing before you file
     operation:
       calculated: Calculated. {direction} {value}.

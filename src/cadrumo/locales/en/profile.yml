@@ -147,7 +147,7 @@ profile:
         base_imponible_assigned:
           label: Assigned taxable base
         clave:
-          label: Income line clave (Modelo 184)
+          label: Income line code (Modelo 184)
         clave_declarado:
           label: Property ownership key
         codigo_provincia:
@@ -170,7 +170,7 @@ profile:
         nif:
           label: Member NIF
         participe_clave:
-          label: Type of member (Modelo 184 clave)
+          label: Type of member (Modelo 184 code)
         porcentaje_titularidad_inmueble:
           label: Property ownership percentage
         reduccion:
