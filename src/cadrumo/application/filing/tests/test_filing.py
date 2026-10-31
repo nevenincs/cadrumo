@@ -111,6 +111,32 @@ _M131_CASILLA_14: CasillaId = validated_casilla_id("14", surface="test_filing.ca
 _M131_CASILLA_15: CasillaId = validated_casilla_id("15", surface="test_filing.casilla")
 
 
+_M111_INPUTS = {
+    _M111_CASILLA_03: Decimal("180.25"),
+    _M111_CASILLA_06: Decimal("12.10"),
+    _M111_CASILLA_09: Decimal("300.00"),
+    _M111_CASILLA_12: Decimal("14.40"),
+    _M111_CASILLA_15: Decimal("25.00"),
+    _M111_CASILLA_18: Decimal("0.50"),
+    _M111_CASILLA_21: Decimal("7.00"),
+    _M111_CASILLA_24: Decimal("8.00"),
+    _M111_CASILLA_27: Decimal("9.00"),
+    _M111_CASILLA_29: Decimal("40.00"),
+}
+
+_M123_INPUTS = {
+    _M123_CASILLA_01: Decimal("2"),
+    _M123_CASILLA_02: Decimal("3"),
+    _M123_CASILLA_04: Decimal("1000.25"),
+    _M123_CASILLA_05: Decimal("200.75"),
+    _M123_CASILLA_07: Decimal("190.05"),
+    _M123_CASILLA_08: Decimal("38.14"),
+    _M123_CASILLA_10: Decimal("0"),
+    _M123_CASILLA_11: Decimal("7.50"),
+    _M123_CASILLA_13: Decimal("12.25"),
+}
+
+
 def _profile() -> ModeloOperatorProfile:
     return ModeloOperatorProfile(
         tax_id="12345678Z",
@@ -234,18 +260,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
         modelo="111",
         period=_PERIOD,
         profile=_profile(),
-        inputs={
-            _M111_CASILLA_03: Decimal("180.25"),
-            _M111_CASILLA_06: Decimal("12.10"),
-            _M111_CASILLA_09: Decimal("300.00"),
-            _M111_CASILLA_12: Decimal("14.40"),
-            _M111_CASILLA_15: Decimal("25.00"),
-            _M111_CASILLA_18: Decimal("0.50"),
-            _M111_CASILLA_21: Decimal("7.00"),
-            _M111_CASILLA_24: Decimal("8.00"),
-            _M111_CASILLA_27: Decimal("9.00"),
-            _M111_CASILLA_29: Decimal("40.00"),
-        },
+        inputs=_M111_INPUTS,
         schema_provider=_unscoped_schema_provider(),
     )
 
@@ -313,17 +328,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123(operation: PinnedAuth
         modelo="123",
         period=_PERIOD,
         profile=_profile(),
-        inputs={
-            _M123_CASILLA_01: Decimal("2"),
-            _M123_CASILLA_02: Decimal("3"),
-            _M123_CASILLA_04: Decimal("1000.25"),
-            _M123_CASILLA_05: Decimal("200.75"),
-            _M123_CASILLA_07: Decimal("190.05"),
-            _M123_CASILLA_08: Decimal("38.14"),
-            _M123_CASILLA_10: Decimal("0"),
-            _M123_CASILLA_11: Decimal("7.50"),
-            _M123_CASILLA_13: Decimal("12.25"),
-        },
+        inputs=_M123_INPUTS,
         schema_provider=build_runtime_schema_provider(
             modelos=("123",), filing_year=_PERIOD.filing_year, period=_PERIOD, operation=operation
         ),
@@ -571,18 +576,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint(operation: Pi
         modelo="111",
         period=_PERIOD,
         profile=_profile(),
-        inputs={
-            _M111_CASILLA_03: Decimal("180.25"),
-            _M111_CASILLA_06: Decimal("12.10"),
-            _M111_CASILLA_09: Decimal("300.00"),
-            _M111_CASILLA_12: Decimal("14.40"),
-            _M111_CASILLA_15: Decimal("25.00"),
-            _M111_CASILLA_18: Decimal("0.50"),
-            _M111_CASILLA_21: Decimal("7.00"),
-            _M111_CASILLA_24: Decimal("8.00"),
-            _M111_CASILLA_27: Decimal("9.00"),
-            _M111_CASILLA_29: Decimal("40.00"),
-        },
+        inputs=_M111_INPUTS,
         schema_provider=schema_provider,
     )
 
@@ -643,17 +637,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint(operation: Pi
         modelo="123",
         period=_PERIOD,
         profile=_profile(),
-        inputs={
-            _M123_CASILLA_01: Decimal("2"),
-            _M123_CASILLA_02: Decimal("3"),
-            _M123_CASILLA_04: Decimal("1000.25"),
-            _M123_CASILLA_05: Decimal("200.75"),
-            _M123_CASILLA_07: Decimal("190.05"),
-            _M123_CASILLA_08: Decimal("38.14"),
-            _M123_CASILLA_10: Decimal("0"),
-            _M123_CASILLA_11: Decimal("7.50"),
-            _M123_CASILLA_13: Decimal("12.25"),
-        },
+        inputs=_M123_INPUTS,
         schema_provider=schema_provider,
     )
 
