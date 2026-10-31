@@ -16,7 +16,6 @@ from ...domain.renta.actividad_asset.claims import (
     asset_schedule_history,
     current_revisions,
     effective_claims,
-    last_day_covered,
 )
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, AmortizationMethod, DirectEstimationRegime
@@ -27,6 +26,7 @@ from ...domain.renta.actividad_asset.schedule import (
     AssetScheduleHistory,
     ScheduleAuthority,
     add_years,
+    last_day_covered,
     require_method_continuity,
 )
 from ..operations.public_scalar import PublicDecimal, project_scalar

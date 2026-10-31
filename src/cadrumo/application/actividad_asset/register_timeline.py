@@ -13,13 +13,13 @@ from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     current_revisions,
     effective_claims,
-    last_day_covered,
 )
 from ...domain.renta.actividad_asset.election import DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import ActividadAssetError
 from ...domain.renta.actividad_asset.fact_leaves import FactKind, indexed_to_step_path
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptor, ActivityAssetEventKind
+from ...domain.renta.actividad_asset.schedule import last_day_covered
 from .activity_asset_read_models import (
     TIMELINE_INTERNAL_FIELDS,
     TIMELINE_LABELLED_FIELDS,

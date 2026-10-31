@@ -457,7 +457,10 @@ def _charge_interval(
     if interval_end <= interval_start:
         if interval_start >= amortization_end:
             raise ActividadAssetPeriodElapsedError(
-                context={"ended_on": amortization_end.isoformat()},
+                context={
+                    "ended_on": last_day_covered(amortization_end).isoformat(),
+                    "ended_before": amortization_end.isoformat(),
+                },
                 translated_message="ledger.actividad_asset.errors.amortization_period_elapsed",
             )
         raise ActividadAssetUnsupportedError(
@@ -805,6 +808,16 @@ def _require_low_value_election(
         )
 
 
+def last_day_covered(covered_until: date) -> date:
+    """Return the last day a half-open claim interval covers, for display beside its exclusive boundary."""
+    return covered_until - timedelta(days=1)
+
+
+def covered_until_after(covered_through: date) -> date:
+    """Return the exclusive boundary after a stated last covered day; the inverse of ``last_day_covered``."""
+    return covered_through + timedelta(days=1)
+
+
 def add_years(start: date, years: int) -> date:
     """Return the same calendar day ``years`` later, folding 29 February to the 28th."""
     target_year = start.year + years
@@ -842,6 +855,8 @@ __all__ = [
     "add_fractional_years",
     "add_years",
     "calendar_days_in_tax_year",
+    "covered_until_after",
+    "last_day_covered",
     "require_claim_after_opening_year",
     "require_method_continuity",
     "require_opening_method",

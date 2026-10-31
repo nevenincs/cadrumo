@@ -29,16 +29,6 @@ from .lifecycle import ActivityAssetRevision, AssetKind
 from .schedule import AssetScheduleHistory, ScheduledAmortizationCharge
 
 
-def last_day_covered(covered_until: date) -> date:
-    """Return the last day a half-open claim interval covers, for display beside its exclusive boundary."""
-    return covered_until - timedelta(days=1)
-
-
-def covered_until_after(covered_through: date) -> date:
-    """Return the exclusive boundary after a stated last covered day; the inverse of ``last_day_covered``."""
-    return covered_through + timedelta(days=1)
-
-
 class AmortizationClaim(CachedIdentityModel):
     """An immutable recorded charge, distinct from a recomputable forecast."""
 
@@ -601,11 +591,9 @@ __all__ = [
     "amount_before_baja_zeroed",
     "asset_schedule_history",
     "claims_through_year",
-    "covered_until_after",
     "current_revisions",
     "effective_claims",
     "effective_free_depreciation_claims",
-    "last_day_covered",
     "project_m100",
     "record_claim",
     "select_effective_claims",

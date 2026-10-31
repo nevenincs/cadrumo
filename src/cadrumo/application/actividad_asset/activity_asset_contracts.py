@@ -15,7 +15,6 @@ from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.renta.actividad_asset.claims import covered_until_after, last_day_covered
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
     ActividadAssetClaimConflictError,
@@ -26,6 +25,7 @@ from ...domain.renta.actividad_asset.errors import (
 )
 from ...domain.renta.actividad_asset.lifecycle import AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from ...domain.renta.actividad_asset.schedule import covered_until_after, last_day_covered
 from ..operations.models import CredentialFreeOperationRequest
 from ..operations.public_scalar import PublicDecimal
 from ..operator_actions.projection import PreconditionVerdictSnapshot

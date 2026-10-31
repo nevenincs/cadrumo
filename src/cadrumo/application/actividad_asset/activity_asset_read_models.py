@@ -18,12 +18,12 @@ from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.tipos_actividad import TipoActividad
-from ...domain.renta.actividad_asset.claims import last_day_covered
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind, ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
 from ...domain.renta.actividad_asset.fact_leaves import SEQUENCE_STEP, FactKind, indexed_to_step_path
 from ...domain.renta.actividad_asset.lifecycle import AcquisitionShape, AssetKind
 from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
+from ...domain.renta.actividad_asset.schedule import last_day_covered
 from ..operations.public_scalar import PublicDecimal
 from .fact_wording import (
     timeline_field_paths,

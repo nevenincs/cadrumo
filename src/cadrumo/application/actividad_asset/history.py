@@ -31,6 +31,7 @@ from ...domain.renta.actividad_asset.register_records import (
     ActivityAssetHistoryEvent,
 )
 from ...domain.renta.actividad_asset.schedule import (
+    last_day_covered,
     require_claim_after_opening_year,
     require_method_continuity,
     require_opening_method,
@@ -441,7 +442,12 @@ def _require_claim_within_boundary(claim: AmortizationClaim, revision: ActivityA
     boundary = revision.out_of_service_date
     if boundary is not None and claim.amount > Decimal("0") and claim.covered_until > boundary:
         raise ActividadAssetClaimConflictError(
-            context={"covered_until": claim.covered_until.isoformat(), "boundary": boundary.isoformat()},
+            context={
+                "covered_until": claim.covered_until.isoformat(),
+                "covered_through": last_day_covered(claim.covered_until).isoformat(),
+                "boundary": boundary.isoformat(),
+                "boundary_through": last_day_covered(boundary).isoformat(),
+            },
             translated_message="ledger.actividad_asset.errors.disposal_claim_past_boundary",
         )
 

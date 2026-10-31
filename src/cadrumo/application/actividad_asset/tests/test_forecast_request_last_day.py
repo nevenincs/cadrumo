@@ -13,9 +13,9 @@ from pydantic import ValidationError
 from cadrumo.application.actividad_asset.activity_asset_contracts import ActivityAssetForecastRequest
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.core.hashing import content_hash_hex
-from cadrumo.domain.renta.actividad_asset.claims import covered_until_after, last_day_covered
 from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from cadrumo.domain.renta.actividad_asset.schedule import covered_until_after, last_day_covered
 
 from .ledger_support import MemoryLedger, acquisition_transaction
 from .operations_support import build_forecast, build_revision

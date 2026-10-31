@@ -20,7 +20,7 @@ from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.tipos_actividad import TipoActividad
-from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection, last_day_covered
+from ...domain.renta.actividad_asset.claims import AmortizationClaim, ClaimProjection
 from ...domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
     ActivityAssetDisposalReason,
@@ -53,7 +53,7 @@ from ...domain.renta.actividad_asset.lifecycle import (
     AssetKind,
 )
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptor, ActivityAssetHistoryEvent
-from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, last_day_covered
 from ...domain.renta.actividad_asset.vehicle_affectation import VehicleAffectation
 from .acquisition_dtos import (
     AcquisitionLineageSnapshot,
