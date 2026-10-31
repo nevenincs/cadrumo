@@ -83,6 +83,28 @@ def _local_recurrence_source(
     )
 
 
+def _save_positive_second_quarter_filing() -> None:
+    """Record a local 2026 2T M303 filing with a positive result and nothing pending."""
+    IvaCompensationHistoryRepository().save_period(
+        IvaCompensationPeriodState(
+            provenance=IvaCompensationStateProvenance.APP_FILING,
+            taxpayer_nif=_TAXPAYER_REF,
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "2T"),
+            registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+            presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
+            prior_pending_amount=Decimal("0"),
+            applied_amount=Decimal("0"),
+            pending_for_later_amount=Decimal("0"),
+            period_result_amount=Decimal("399"),
+            final_result_amount=Decimal("399"),
+            generated_amount=Decimal("0"),
+            available_end_amount=Decimal("0"),
+            source_observation_key="303:2026:2T:positive-local-filing",
+        ),
+    )
+
+
 def test_registry_derived_authority_source_requires_exact_period_coordinates() -> None:
     with pytest.raises(ValidationError, match="coordinates"):
         IvaCompensationAuthoritySource(
@@ -349,24 +371,7 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
     tmp_path: Path,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        IvaCompensationHistoryRepository().save_period(
-            IvaCompensationPeriodState(
-                provenance=IvaCompensationStateProvenance.APP_FILING,
-                taxpayer_nif=_TAXPAYER_REF,
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "2T"),
-                registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
-                presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
-                prior_pending_amount=Decimal("0"),
-                applied_amount=Decimal("0"),
-                pending_for_later_amount=Decimal("0"),
-                period_result_amount=Decimal("399"),
-                final_result_amount=Decimal("399"),
-                generated_amount=Decimal("0"),
-                available_end_amount=Decimal("0"),
-                source_observation_key="303:2026:2T:positive-local-filing",
-            ),
-        )
+        _save_positive_second_quarter_filing()
         snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
         decision_repository = IvaWalletDecisionRepository()
@@ -421,24 +426,7 @@ def test_disabled_generic_recurrence_producer_contributes_nothing_to_the_returne
     that had just declared the producer must have no authority.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        IvaCompensationHistoryRepository().save_period(
-            IvaCompensationPeriodState(
-                provenance=IvaCompensationStateProvenance.APP_FILING,
-                taxpayer_nif=_TAXPAYER_REF,
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "2T"),
-                registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
-                presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
-                prior_pending_amount=Decimal("0"),
-                applied_amount=Decimal("0"),
-                pending_for_later_amount=Decimal("0"),
-                period_result_amount=Decimal("399"),
-                final_result_amount=Decimal("399"),
-                generated_amount=Decimal("0"),
-                available_end_amount=Decimal("0"),
-                source_observation_key="303:2026:2T:positive-local-filing",
-            ),
-        )
+        _save_positive_second_quarter_filing()
         snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
 
