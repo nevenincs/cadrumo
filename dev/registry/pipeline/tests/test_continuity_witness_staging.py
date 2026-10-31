@@ -22,128 +22,28 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ...compiler.loader import load_modelo_directory
+from ...tests.edition_staging_tree_support import (
+    edition_casilla,
+    migrated_chain,
+    staged_modelo,
+    write_edition,
+)
 from .._tree_validation import _load_continuity_metadata_modelo
 from ..edition_candidate_staging import stage_continuity_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_LEGAL_REF = "ley-58-2003:art-29"
-_MANIFEST = (
-    "[modelo]\n"
-    'id = "999"\n'
-    'tax_domain = "iva"\n'
-    'cadence = "annual"\n'
-    'jurisdiction = "ES-AEAT"\n'
-    f'legal_refs = ["{_LEGAL_REF}"]\n'
-    'source_refs = ["aeat-manual"]\n'
-)
-
-
-def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str) -> str:
-    return (
-        f'[[revisions."{revision_id}".casillas]]\n'
-        f'id = "{casilla_id}"\n'
-        f'number = "{number}"\n'
-        'section = ["liquidacion"]\n'
-        f'continuidad_id = "{lineage}"\n'
-        f'legal_refs = ["{_LEGAL_REF}"]\n'
-        'source_refs = ["aeat-manual"]\n\n'
-    )
-
-
-def _write_edition(
-    modelo_dir: Path,
-    revision_id: str,
-    *,
-    year: int,
-    casillas: str,
-    predecessor: str | None = None,
-    retire: tuple[str, str] | None = None,
-) -> None:
-    revision_dir = modelo_dir / "revisions" / revision_id
-    (revision_dir / "casillas").mkdir(parents=True)
-    predecessor_line = f'predecessor = "{predecessor}"\n' if predecessor is not None else ""
-    (revision_dir / "revision.toml").write_text(
-        f'[revisions."{revision_id}"]\n'
-        f"valid_from = {year}-01-01\n"
-        f"valid_to = {year}-12-31\n"
-        f'period_selector = {{ years = [{year}], periods = ["0A"] }}\n'
-        f'legal_refs = ["{_LEGAL_REF}"]\n'
-        'source_refs = ["aeat-manual"]\n'
-        f"{predecessor_line}",
-        encoding="utf-8",
-        newline="\n",
-    )
-    (revision_dir / "casillas" / "0001-casillas.toml").write_text(casillas, encoding="utf-8", newline="\n")
-    if retire is not None:
-        lineage, from_revision = retire
-        (revision_dir / "casilla_continuidad_evolutions").mkdir()
-        (revision_dir / "casilla_continuidad_evolutions" / "0001-evolutions.toml").write_text(
-            f'[[revisions."{revision_id}".casilla_continuidad_evolutions]]\n'
-            f'id = "retire-{lineage}"\n'
-            f'continuidad_id = "{lineage}"\n'
-            f'from_revision = "{from_revision}"\n'
-            f'to_revision = "{revision_id}"\n'
-            'evolution_kind = "retired"\n'
-            f'legal_refs = ["{_LEGAL_REF}"]\n'
-            'source_refs = ["aeat-manual"]\n',
-            encoding="utf-8",
-            newline="\n",
-        )
-
-
-def _modelo(root: Path) -> Path:
-    modelo_dir = root / "source" / "999"
-    modelo_dir.mkdir(parents=True)
-    (modelo_dir / "manifest.toml").write_text(_MANIFEST, encoding="utf-8", newline="\n")
-    return modelo_dir
-
-
-def _migrated_chain(root: Path, *, retire_from: str = "2024") -> Path:
-    """2023 states everything; 2024 names 2023, and 2025 names 2024, each stating only what changed.
-
-    ``retire_from`` is the ``from_revision`` of 2025's one retirement record,
-    which is the only link the continuity evolution chain offers out of 2025.
-    """
-    modelo_dir = _modelo(root)
-    _write_edition(
-        modelo_dir,
-        "2023",
-        year=2023,
-        casillas=(
-            _casilla("2023", "0001", number="1", lineage="base-imponible")
-            + _casilla("2023", "0002", number="2", lineage="cuota-integra")
-            + _casilla("2023", "0003", number="3", lineage="deduccion-retirada")
-        ),
-    )
-    _write_edition(
-        modelo_dir,
-        "2024",
-        year=2024,
-        predecessor="2023",
-        casillas=_casilla("2024", "0002", number="22", lineage="cuota-integra"),
-    )
-    _write_edition(
-        modelo_dir,
-        "2025",
-        year=2025,
-        predecessor="2024",
-        casillas=_casilla("2025", "0004", number="4", lineage="recargo-nuevo"),
-        retire=("deduccion-retirada", retire_from),
-    )
-    return modelo_dir
-
 
 def _full_copy_modelo(root: Path) -> Path:
-    modelo_dir = _modelo(root)
+    modelo_dir = staged_modelo(root)
     for revision_id, year in (("2023", 2023), ("2024", 2024), ("2025", 2025)):
-        _write_edition(
+        write_edition(
             modelo_dir,
             revision_id,
             year=year,
             casillas=(
-                _casilla(revision_id, "0001", number="1", lineage="base-imponible")
-                + _casilla(revision_id, "0002", number="2", lineage="cuota-integra")
+                edition_casilla(revision_id, "0001", number="1", lineage="base-imponible")
+                + edition_casilla(revision_id, "0002", number="2", lineage="cuota-integra")
             ),
             retire=("deduccion-retirada", "2023") if revision_id == "2025" else None,
         )
@@ -174,7 +74,7 @@ def _comparable(revision: ModeloRevision) -> dict[str, object]:
 
 
 def test_an_inheriting_predecessor_stages_as_the_complete_edition_it_stands_for(tmp_path: Path) -> None:
-    source = _migrated_chain(tmp_path)
+    source = migrated_chain(tmp_path)
     live = load_modelo_directory(source)
 
     metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision="2025")
@@ -195,7 +95,7 @@ def test_an_inheriting_predecessor_stages_as_the_complete_edition_it_stands_for(
 
 def test_successors_inheriting_through_the_excluded_target_still_stage_complete(tmp_path: Path) -> None:
     """Staging the first edition leaves out the edition both successors inherit through."""
-    source = _migrated_chain(tmp_path)
+    source = migrated_chain(tmp_path)
     live = load_modelo_directory(source)
 
     metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision="2023")
@@ -214,7 +114,7 @@ def test_successors_inheriting_through_the_excluded_target_still_stage_complete(
 
 def test_copying_an_inheriting_sibling_raw_leaves_a_witness_that_cannot_load(tmp_path: Path) -> None:
     """The defect complete staging prevents: the raw rows of a delta name a predecessor the witness lacks."""
-    source = _migrated_chain(tmp_path)
+    source = migrated_chain(tmp_path)
     raw_witness = tmp_path / "raw" / "999"
     shutil.copytree(source, raw_witness)
     shutil.rmtree(raw_witness / "revisions" / "2023")
@@ -231,7 +131,7 @@ def test_the_declared_predecessor_chain_is_followed_not_the_evolution_chain(tmp_
     does: a sibling's inherited rows come from 2024 and 2023, and the record
     pointing elsewhere decides nothing.
     """
-    source = _migrated_chain(tmp_path, retire_from="2022")
+    source = migrated_chain(tmp_path, retire_from="2022")
     live = load_modelo_directory(source)
     assert [str(item.from_revision) for item in live.revisions["2025"].casilla_continuidad_evolutions] == ["2022"]
 
