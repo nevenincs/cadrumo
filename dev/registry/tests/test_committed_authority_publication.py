@@ -93,7 +93,7 @@ def test_a_changed_input_gets_a_new_publication_and_never_reuses_the_old_one(tmp
     assert first.descriptor.logical_generation == first.source_identity_digest
 
 
-def test_an_entry_whose_database_bytes_changed_is_refused_not_admitted(tmp_path: Path) -> None:
+def test_an_entry_whose_database_bytes_changed_is_published_again_not_admitted(tmp_path: Path) -> None:
     sources = _stage_inputs(tmp_path / "inputs")
     cache_root = tmp_path / "cache"
     calls: list[Path] = []
@@ -102,11 +102,12 @@ def test_an_entry_whose_database_bytes_changed_is_refused_not_admitted(tmp_path:
     tampered = bytearray(database.read_bytes())
     tampered[-1] ^= 0xFF
     database.write_bytes(bytes(tampered))
-    assert sha256_hex(bytes(tampered)) != first.descriptor.database_sha256
 
-    with pytest.raises(RegistryValidationError, match="collision"):
-        published_authority(sources, cache_root=cache_root, publish=_recording_publisher(calls))
+    again = published_authority(sources, cache_root=cache_root, publish=_recording_publisher(calls))
+
+    assert again.published_by_this_call
     assert len(calls) == 2
+    assert sha256_hex((again.root / again.descriptor.database).read_bytes()) == again.descriptor.database_sha256
 
 
 def test_a_publication_recording_other_sources_is_refused(tmp_path: Path) -> None:

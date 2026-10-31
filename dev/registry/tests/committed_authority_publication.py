@@ -100,12 +100,9 @@ def published_authority(
         verify=lambda root: _descriptor(root, identity) is not None,
         cache_root=cache_root,
     )
-    descriptor = _descriptor(artifact.root, identity)
-    if descriptor is None:
-        raise RegistryValidationError(f"the run publication at {artifact.root} changed after admission")
     return RunPublishedAuthority(
         descriptor_path=artifact.root / _DESCRIPTOR_NAME,
-        descriptor=descriptor,
+        descriptor=AuthorityDescriptor.read(artifact.root / _DESCRIPTOR_NAME),
         source_identity_digest=identity,
         published_by_this_call=artifact.published_by_this_call,
     )
