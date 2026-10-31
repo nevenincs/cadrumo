@@ -4,13 +4,13 @@ import re
 from collections import defaultdict
 
 import pytest
+from click import Choice, Group
+from typer.main import get_command
 from typer.testing import CliRunner
 
 from cadrumo.core.i18n.render import tr
-from dev.docs.terminology_handbook._seed_import import SeedSource
 from dev.docs.terminology_handbook.cli import app
-from dev.docs.terminology_handbook.curation import _CURATED_FIELDS
-from dev.docs.terminology_handbook.schema import ConceptRecord
+from dev.docs.terminology_handbook.schema import ConceptRecord, LanguageSection, TermSection
 
 from ..signal_spelling_enrollment import check_dictionary_spelling_words
 from ..signal_spelling_segments import translation_spelling_segments
@@ -19,10 +19,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _LITERAL_FIELDS = {
     "authority": ("source",),
-    "field_name": (*_CURATED_FIELDS, "source", "term"),
+    "field_name": ("short_description", "definition", "scope_note", "source", "term"),
     "field_value": ("source", "term"),
     "relation_kind": ("broader", "related"),
-    "seed_source": (SeedSource.IATE.value, SeedSource.UBTERM.value, SeedSource.EUROVOC.value),
+    "seed_source": ("iate", "ubterm", "eurovoc"),
     "term_status": ("term",),
 }
 
@@ -79,3 +79,16 @@ def test_typer_help_renders_the_canonical_literal_tokens(command: str, tokens: t
     compact = " ".join(result.output.split())
     for token in tokens:
         assert "`" + token + "`" in compact
+
+
+def test_language_field_literals_match_the_public_language_and_term_models() -> None:
+    assert set(_LITERAL_FIELDS["field_name"]) - {"term"} <= LanguageSection.model_fields.keys()
+    assert "label" in TermSection.model_fields
+
+
+def test_seed_literals_are_choices_of_the_public_cli() -> None:
+    command = get_command(app)
+    assert isinstance(command, Group)
+    source = next(parameter for parameter in command.commands["seed"].params if parameter.name == "source")
+    assert isinstance(source.type, Choice)
+    assert set(_LITERAL_FIELDS["seed_source"]) <= {str(value) for value in source.type.choices}
