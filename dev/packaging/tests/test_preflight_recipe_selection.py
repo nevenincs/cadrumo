@@ -338,6 +338,9 @@ def _boot_collection(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     the summary count -- and the two readings must agree, so a reader that
     stopped matching cannot report an empty selection as a successful one.
 
+    ``--color=no`` keeps the summary line free of terminal escapes, which sit
+    directly against the count and defeat the line reader.
+
     ``-q -n0`` is appended after the recipe's own arguments. The final ``-q``
     keeps collection in the node-id format these independent readers verify even
     when the executable recipe deliberately uses ``-v`` for live failure
@@ -363,6 +366,7 @@ def _boot_collection(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
             "-p",
             "no:cacheprovider",
             "--collect-only",
+            "--color=no",
             *collection_arguments,
             "-q",
             "-n0",
