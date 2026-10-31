@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import cast
 from uuid import UUID
@@ -28,11 +28,9 @@ from cadrumo.application.actividad_asset.registered_operations import (
     build_activity_asset_inspect_registration,
 )
 from cadrumo.application.operations.frontend_projection import (
-    OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
@@ -42,7 +40,6 @@ from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
@@ -68,6 +65,7 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_actividad_asset import RuntimeActivityAssetTuiActionsV1
+from ._door_session_support import terminal_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -75,7 +73,6 @@ _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
 _AUTHORITY = ActivityAssetAuthorityProvenance(logical_generation="b" * 64, reader_incarnation="c" * 64)
-_NOW = datetime(2026, 9, 29, tzinfo=UTC)
 
 
 class _Client:
@@ -156,61 +153,21 @@ def _revision() -> ActivityAssetRevision:
     )
 
 
-def _inspect_contract():
-    factory = cast(ActivityAssetOperationPortsFactory, cast(object, lambda **_kwargs: None))
-    definition = build_activity_asset_inspect_definition(factory)
-    registration = build_activity_asset_inspect_registration(definition)
-    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    return registry.lookup_public_contract(ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID), registry.public_contract_set
-
-
 def _observation(
     *,
     effect: OperationEffect = OperationEffect.NONE,
     refusal_code: str | None = None,
 ) -> OperationObservationSuccessV1:
-    contract, contract_set = _inspect_contract()
-    state = OperationPublicProjectionV1(
-        operation_id=_OPERATION_ID,
-        definition_id=ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(_PROFILE_ID)),
-        revision=1,
-        anchor_cursor=0,
-        definition_contract=contract,
-        contract_set_digest=contract_set.contract_set_digest,
-        lifecycle=OperationLifecycle.TERMINAL,
-        terminal_condition=(
-            OperationTerminalCondition.SUCCEEDED if refusal_code is None else OperationTerminalCondition.REFUSED
-        ),
+    factory = cast(ActivityAssetOperationPortsFactory, cast(object, lambda **_kwargs: None))
+    definition = build_activity_asset_inspect_definition(factory)
+    registration = build_activity_asset_inspect_registration(definition)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    return terminal_observation(
+        registry,
+        ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
+        condition=OperationTerminalCondition.SUCCEEDED if refusal_code is None else OperationTerminalCondition.REFUSED,
         effect=effect,
-        phase_code=None,
-        started_at=_NOW,
-        updated_at=_NOW,
-        progress=None,
-        close_policy=contract.close_policy,
-        cancellation=contract.cancellation,
-        cancellable_now=False,
-        cancellation_requested=False,
-        cancellation_acknowledged=False,
-        execution_deadline_at=None,
-        cleanup_deadline_at=None,
-        pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref="f" * 64 if refusal_code is None else None,
         refusal_ref=refusal_code,
-        failure_error_code=None,
-        diagnostic_ref=None,
-    )
-    return OperationObservationSuccessV1(
-        projection=state,
-        event_page=OperationPublicEventPageV1(
-            operation_id=_OPERATION_ID,
-            anchor_cursor=0,
-            requested_cursor=0,
-            status=OperationReplayStatus.CAUGHT_UP,
-            events=(),
-            next_cursor=0,
-            restart_cursor=None,
-        ),
     )
 
 

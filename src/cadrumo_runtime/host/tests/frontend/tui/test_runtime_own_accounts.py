@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from typing import cast
 from uuid import UUID
 
 import pytest
-from pydantic import BaseModel
 
 from cadrumo.application.ledger.own_account_operation import (
     LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
@@ -21,93 +18,36 @@ from cadrumo.application.ledger.own_account_operation import (
 )
 from cadrumo.application.ledger.own_account_ports import OwnAccountRepositoryFactory
 from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
-from cadrumo.application.operations.frontend_projection import (
-    OperationNoPendingInteractionV1,
-    OperationPublicProjectionV1,
-)
-from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
-    profile_operation_subject,
 )
 from cadrumo.domain.transactions.own_accounts import OwnAccountHolding
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_own_accounts import RuntimeOwnAccountTuiDoorV1
+from ._door_session_support import (
+    PROFILE_ID,
+    SESSION_ID,
+    ScriptedController,
+    SessionClient,
+    install_scripted_controller,
+    terminal_observation,
+)
 from .unsupported_result import raises_unsupported_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 10, 4, tzinfo=UTC)
 _ES_IBAN = "ES9121000418450200051332"
 _REFUSAL_CODE = "REFUSED_LEDGER_OWN_ACCOUNT_REGISTER_VALIDATION"
 _REFUSAL_KEY = "errors.refused.refused_ledger_own_account_register_validation"
-
-
-class _Client:
-    frontend = OperationFrontendProjection.TUI
-
-    def __init__(self) -> None:
-        self.profile_id = _PROFILE_ID
-        self.session_id = _SESSION_ID
-
-
-@dataclass(kw_only=True)
-class _Controller:
-    operation_id = _OPERATION_ID
-    observation: OperationObservationSuccessV1
-    result: LedgerOwnAccountResult | None
-    detail: OperationErrorDetailV1 | None = None
-    # The client it was submitted through, as the real controller keeps it.
-    client: _Client = field(default_factory=_Client)
-    deadline: float | None = None
-    result_reads: list[tuple[type[BaseModel], int, bool]] = field(default_factory=list)
-    detail_reads: int = 0
-
-    @property
-    def definition_contract(self) -> OperationPublicDefinitionContractV1:
-        return self.observation.projection.definition_contract
-
-    async def start(self) -> str:
-        return self.operation_id
-
-    async def observe(self, after_cursor: int, *, page_limit: int) -> OperationObservationSuccessV1:
-        assert after_cursor == 0
-        assert page_limit == 1
-        return self.observation
-
-    async def read_settled_result(
-        self,
-        projection: OperationPublicProjectionV1,
-        result_type: type[BaseModel],
-        *,
-        result_version: int,
-        allow_refusal_detail: bool = False,
-    ) -> LedgerOwnAccountResult:
-        assert projection.operation_id == self.operation_id
-        self.result_reads.append((result_type, result_version, allow_refusal_detail))
-        assert self.result is not None
-        return self.result
-
-    async def settled_error_detail(self, projection: OperationPublicProjectionV1) -> OperationErrorDetailV1 | None:
-        assert projection.operation_id == self.operation_id
-        self.detail_reads += 1
-        return self.detail
 
 
 def _observation(
@@ -121,47 +61,12 @@ def _observation(
         definitions=(definition,),
         public_registrations=(build_ledger_own_account_registration(definition),),
     )
-    contract = registry.lookup_public_contract(LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID)
-    refused = condition is OperationTerminalCondition.REFUSED
-    state = OperationPublicProjectionV1(
-        operation_id=_OPERATION_ID,
-        definition_id=LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(_PROFILE_ID)),
-        revision=1,
-        anchor_cursor=0,
-        definition_contract=contract,
-        contract_set_digest=registry.public_contract_set.contract_set_digest,
-        lifecycle=OperationLifecycle.TERMINAL,
-        terminal_condition=condition,
+    return terminal_observation(
+        registry,
+        LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
+        condition=condition,
         effect=effect,
-        phase_code=None,
-        started_at=_NOW,
-        updated_at=_NOW,
-        progress=None,
-        close_policy=contract.close_policy,
-        cancellation=contract.cancellation,
-        cancellable_now=False,
-        cancellation_requested=False,
-        cancellation_acknowledged=False,
-        execution_deadline_at=None,
-        cleanup_deadline_at=None,
-        pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref=None if refused else "f" * 64,
-        refusal_ref=_REFUSAL_CODE if refused else None,
-        failure_error_code=None,
-        diagnostic_ref=None,
-    )
-    return OperationObservationSuccessV1(
-        projection=state,
-        event_page=OperationPublicEventPageV1(
-            operation_id=_OPERATION_ID,
-            anchor_cursor=0,
-            requested_cursor=0,
-            status=OperationReplayStatus.CAUGHT_UP,
-            events=(),
-            next_cursor=0,
-            restart_cursor=None,
-        ),
+        refusal_ref=_REFUSAL_CODE,
     )
 
 
@@ -179,45 +84,13 @@ def _account() -> OwnAccountProjection:
     )
 
 
-def _install(monkeypatch: pytest.MonkeyPatch, client: _Client, controller: _Controller) -> list[dict[str, object]]:
-    from ....frontend.tui.operations import runtime_profile_session as bridge
-
-    def read_session(
-        _client: FrontendClient,
-        *,
-        profile_id: UUID,
-        session_id: UUID,
-        profile_label: str,
-    ) -> object:
-        assert profile_label == "Fixture profile"
-        if client.profile_id != profile_id or client.session_id != session_id:
-            raise AccountSessionExpiredError()
-        return object()
-
-    monkeypatch.setattr(bridge, "read_runtime_account_session", read_session)
-    submissions: list[dict[str, object]] = []
-
-    async def submit(
-        _controller_type: type[OperationController],
-        received_client: FrontendClient,
-        **kwargs: object,
-    ) -> _Controller:
-        assert received_client is client
-        submissions.append(kwargs)
-        controller.client = client
-        return controller
-
-    monkeypatch.setattr(OperationController, "submit", classmethod(submit))
-    return submissions
-
-
-def _door(client: _Client) -> RuntimeOwnAccountTuiDoorV1:
+def _door(client: SessionClient) -> RuntimeOwnAccountTuiDoorV1:
     return RuntimeOwnAccountTuiDoorV1(cast(FrontendClient, client), profile_label="Fixture profile")
 
 
 def _add_request() -> LedgerOwnAccountRequest:
     return LedgerOwnAccountRequest(
-        profile_id=_PROFILE_ID,
+        profile_id=PROFILE_ID,
         action="add",
         label="main",
         holding=OwnAccountHolding.TITULAR,
@@ -228,30 +101,32 @@ def _add_request() -> LedgerOwnAccountRequest:
 def test_own_account_door_submits_the_exact_request_and_reads_its_masked_result(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = _Client()
+    client = SessionClient()
     result = LedgerOwnAccountResult(
-        profile_id=_PROFILE_ID, action="add", own_account_id="acc-01", accounts=(_account(),), changed=True
+        profile_id=PROFILE_ID, action="add", own_account_id="acc-01", accounts=(_account(),), changed=True
     )
-    controller = _Controller(observation=_observation(effect=OperationEffect.UPDATED), result=result)
-    submissions = _install(monkeypatch, client, controller)
+    controller = ScriptedController(observation=_observation(effect=OperationEffect.UPDATED), result=result)
+    submissions = install_scripted_controller(monkeypatch, client, controller)
     door = _door(client)
 
-    assert door.profile_id == _PROFILE_ID
+    assert door.profile_id == PROFILE_ID
     assert asyncio.run(door(_add_request())) == result
     assert submissions[0]["definition_id"] == LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID
     assert submissions[0]["payload"] == _add_request()
-    assert submissions[0]["expected_session_id"] == _SESSION_ID
+    assert submissions[0]["expected_session_id"] == SESSION_ID
     assert controller.result_reads == [(LedgerOwnAccountResult, 1, False)]
 
 
 def test_own_account_door_reads_its_session_binding_off_the_event_loop(monkeypatch: pytest.MonkeyPatch) -> None:
     from ....frontend.tui.operations import runtime_profile_session as bridge
 
-    client = _Client()
+    client = SessionClient()
     result = LedgerOwnAccountResult(
-        profile_id=_PROFILE_ID, action="add", own_account_id="acc-01", accounts=(_account(),), changed=True
+        profile_id=PROFILE_ID, action="add", own_account_id="acc-01", accounts=(_account(),), changed=True
     )
-    _install(monkeypatch, client, _Controller(observation=_observation(effect=OperationEffect.UPDATED), result=result))
+    install_scripted_controller(
+        monkeypatch, client, ScriptedController(observation=_observation(effect=OperationEffect.UPDATED), result=result)
+    )
     read_session = bridge.read_runtime_account_session
     on_loop: list[bool] = []
 
@@ -281,20 +156,20 @@ def test_own_account_door_reads_its_session_binding_off_the_event_loop(monkeypat
         # A change that the receipt reports as having no effect.
         (
             LedgerOwnAccountResult(
-                profile_id=_PROFILE_ID, action="add", own_account_id="acc-01", accounts=(_account(),), changed=True
+                profile_id=PROFILE_ID, action="add", own_account_id="acc-01", accounts=(_account(),), changed=True
             ),
             OperationEffect.NONE,
         ),
         # A result answering a different action.
         (
             LedgerOwnAccountResult(
-                profile_id=_PROFILE_ID, action="list", own_account_id="acc-01", accounts=(_account(),), changed=True
+                profile_id=PROFILE_ID, action="list", own_account_id="acc-01", accounts=(_account(),), changed=True
             ),
             OperationEffect.UPDATED,
         ),
         # An add that names no account.
         (
-            LedgerOwnAccountResult(profile_id=_PROFILE_ID, action="add", changed=True),
+            LedgerOwnAccountResult(profile_id=PROFILE_ID, action="add", changed=True),
             OperationEffect.UPDATED,
         ),
     ],
@@ -304,29 +179,29 @@ def test_own_account_door_refuses_a_result_its_receipt_does_not_support(
     result: LedgerOwnAccountResult,
     effect: OperationEffect,
 ) -> None:
-    client = _Client()
+    client = SessionClient()
     receipt = _observation(effect=effect)
-    _install(monkeypatch, client, _Controller(observation=receipt, result=result))
+    install_scripted_controller(monkeypatch, client, ScriptedController(observation=receipt, result=result))
 
     with raises_unsupported_result(effect, receipt.projection.definition_contract):
         asyncio.run(_door(client)(_add_request()))
 
 
 def test_own_account_door_raises_the_recorded_refusal_of_a_refused_removal(monkeypatch: pytest.MonkeyPatch) -> None:
-    client = _Client()
+    client = SessionClient()
     detail = OperationErrorDetailV1(
         kind=OperationErrorDetailKind.REGISTERED_ERROR,
         error_code=_REFUSAL_CODE,
         message_key=_REFUSAL_KEY,
         context=(),
     )
-    controller = _Controller(
+    controller = ScriptedController(
         observation=_observation(condition=OperationTerminalCondition.REFUSED),
         result=None,
         detail=detail,
     )
-    _install(monkeypatch, client, controller)
-    request = LedgerOwnAccountRequest(profile_id=_PROFILE_ID, action="remove", own_account_id="acc-01")
+    install_scripted_controller(monkeypatch, client, controller)
+    request = LedgerOwnAccountRequest(profile_id=PROFILE_ID, action="remove", own_account_id="acc-01")
 
     with pytest.raises(RecordedRegisteredError) as raised:
         asyncio.run(_door(client)(request))
@@ -337,10 +212,10 @@ def test_own_account_door_raises_the_recorded_refusal_of_a_refused_removal(monke
 
 
 def test_own_account_door_keeps_the_bare_code_when_no_detail_was_recorded(monkeypatch: pytest.MonkeyPatch) -> None:
-    client = _Client()
-    controller = _Controller(observation=_observation(condition=OperationTerminalCondition.REFUSED), result=None)
-    _install(monkeypatch, client, controller)
-    request = LedgerOwnAccountRequest(profile_id=_PROFILE_ID, action="remove", own_account_id="acc-01")
+    client = SessionClient()
+    controller = ScriptedController(observation=_observation(condition=OperationTerminalCondition.REFUSED), result=None)
+    install_scripted_controller(monkeypatch, client, controller)
+    request = LedgerOwnAccountRequest(profile_id=PROFILE_ID, action="remove", own_account_id="acc-01")
 
     with pytest.raises(FrontendRefusedError) as raised:
         asyncio.run(_door(client)(request))
@@ -349,12 +224,14 @@ def test_own_account_door_keeps_the_bare_code_when_no_detail_was_recorded(monkey
 
 
 def test_own_account_door_fails_closed_when_its_session_changes(monkeypatch: pytest.MonkeyPatch) -> None:
-    client = _Client()
-    submissions = _install(monkeypatch, client, _Controller(observation=_observation(), result=None))
+    client = SessionClient()
+    submissions = install_scripted_controller(
+        monkeypatch, client, ScriptedController(observation=_observation(), result=None)
+    )
     door = _door(client)
     client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
 
     with pytest.raises(AccountSessionExpiredError):
-        asyncio.run(door(LedgerOwnAccountRequest(profile_id=_PROFILE_ID, action="list")))
+        asyncio.run(door(LedgerOwnAccountRequest(profile_id=PROFILE_ID, action="list")))
 
     assert submissions == []
