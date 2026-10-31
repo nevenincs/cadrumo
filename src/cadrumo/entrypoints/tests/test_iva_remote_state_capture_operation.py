@@ -48,6 +48,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings, load_settings
@@ -293,6 +294,133 @@ class _Composition:
     iva_remote_state_port: IvaRemoteStatePort
 
 
+def _assert_settled_updated(terminal: OperationPersistedSnapshot) -> None:
+    assert terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.effect is OperationEffect.UPDATED
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.effect is OperationEffect.UPDATED
+
+
+def _assert_public_result(
+    result: IvaRemoteStateCapturePublicResultV1, port: _SyntheticIvaRemoteStatePort, output_root: Path
+) -> None:
+    assert result.model_dump() == {
+        "acquisition_manifest_id": port.manifests[0].acquisition_id,
+        "output_root": str(output_root),
+        "year_from": 2024,
+        "year_to": 2025,
+        "target_year": 2025,
+        "target_period": "1T",
+        "auth": {
+            "status": LiveIvaReadStatus.SUCCEEDED,
+            "outcome_mode": "authenticated",
+            "failure_mode": None,
+            "failure_type": None,
+            "diagnostic_ref": None,
+            "provider_kind": "clave_permanente",
+            "reused_persisted_session": True,
+            "fresh": False,
+        },
+        "filed_history_succeeded": True,
+        "wallet_succeeded": True,
+        "outcomes": (
+            {
+                "surface": LiveIvaReadSurface.FILED_HISTORY,
+                "status": LiveIvaReadStatus.SUCCEEDED,
+                "outcome_mode": "authenticated",
+                "failure_mode": None,
+                "failure_type": None,
+                "failure_context_json": None,
+                "captured_count": 1,
+                "calculation_observation_count": 1,
+            },
+            {
+                "surface": LiveIvaReadSurface.WALLET_CARTERA,
+                "status": LiveIvaReadStatus.SUCCEEDED,
+                "outcome_mode": "authenticated",
+                "failure_mode": None,
+                "failure_type": None,
+                "failure_context_json": None,
+                "captured_count": None,
+                "calculation_observation_count": None,
+            },
+        ),
+    }
+    public_json = json.dumps(result.model_dump(), default=str, sort_keys=True)
+    assert "reloaded_rows" not in public_json
+    assert "taxpayer_nif" not in public_json
+    assert "taxpayer_ref" not in public_json
+    assert _PRIVATE_HISTORY_AMOUNT not in public_json
+    assert _PRIVATE_WALLET_AMOUNT not in public_json
+    assert "private-synthetic-decision-key" not in public_json
+
+
+def _assert_guarded_effects(
+    port: _SyntheticIvaRemoteStatePort,
+    trace: list[str],
+    profile_id: UUID,
+    authority: PinnedAuthorityOperation,
+    output_root: Path,
+    provider_preflights: list[tuple[UUID, PinnedAuthorityOperation]],
+    composition_roots: list[Path],
+) -> None:
+    assert provider_preflights == [(profile_id, authority)]
+    assert composition_roots == [output_root]
+    assert trace == [
+        "provider-preflight",
+        "composition",
+        "resources",
+        "authentication",
+        "history-capture",
+        "wallet-capture",
+        "manifest-persist",
+    ]
+    assert port.authentication_requests == [("live-iva-remote-state-read", port.wallet_target_url, authority)]
+    assert port.history_calls == [
+        (2024, 2025, output_root / "filed-history", authority),
+    ]
+    assert port.wallet_calls == [
+        (2025, _TARGET_PERIOD, _NIF, output_root / "wallet", authority),
+    ]
+    assert port.surface_guards == ["history", "wallet"]
+    assert port.guard_depth == 0
+    assert port.local_effects == ["history", "wallet"]
+    assert port.storage_span_entries == port.storage_span_exits == 1
+    assert port.storage_span_depth == 0
+
+
+def _assert_manifest_and_resources(
+    port: _SyntheticIvaRemoteStatePort,
+    result: IvaRemoteStateCapturePublicResultV1,
+    resources: list[ProcessResourceScope],
+) -> None:
+    assert len(port.manifests) == 1
+    manifest = port.manifests[0]
+    assert manifest.acquisition_id == result.acquisition_manifest_id
+    assert (manifest.year_from, manifest.year_to, manifest.target_year, manifest.target_period) == (
+        2024,
+        2025,
+        2025,
+        _TARGET_PERIOD,
+    )
+    assert manifest.filed_history_succeeded and manifest.wallet_succeeded
+    assert tuple(surface.surface for surface in manifest.surfaces) == (
+        LiveIvaReadSurface.FILED_HISTORY,
+        LiveIvaReadSurface.WALLET_CARTERA,
+    )
+    assert tuple(surface.status for surface in manifest.surfaces) == (
+        LiveIvaReadStatus.SUCCEEDED,
+        LiveIvaReadStatus.SUCCEEDED,
+    )
+    assert manifest.surfaces[0].reloaded_history_count == 1
+    assert manifest.surfaces[1].wallet_row_count == 2
+    assert len(resources) == 1
+    assert resources[0].activation_entries == 1
+    assert resources[0].closed and resources[0].close_calls == 1
+    assert resources[0].activation_depth == 0
+
+
 def test_supervisor_captures_iva_remote_state_for_exact_external_client_profile(tmp_path: Path) -> None:
     """Record both IVA evidence surfaces through pinned, guarded synthetic ports."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
@@ -384,108 +512,10 @@ def test_supervisor_captures_iva_remote_state_for_exact_external_client_profile(
             )
         )
 
-    assert terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    assert terminal.effect is OperationEffect.UPDATED
-    assert terminal.terminal_receipt is not None
-    assert terminal.terminal_receipt.effect is OperationEffect.UPDATED
+    _assert_settled_updated(terminal)
     assert isinstance(projected, OperationResultProjectionSuccessV1)
     assert isinstance(projected.projection, IvaRemoteStateCapturePublicResultV1)
     result = projected.projection
-    assert result.model_dump() == {
-        "acquisition_manifest_id": port.manifests[0].acquisition_id,
-        "output_root": str(output_root),
-        "year_from": 2024,
-        "year_to": 2025,
-        "target_year": 2025,
-        "target_period": "1T",
-        "auth": {
-            "status": LiveIvaReadStatus.SUCCEEDED,
-            "outcome_mode": "authenticated",
-            "failure_mode": None,
-            "failure_type": None,
-            "diagnostic_ref": None,
-            "provider_kind": "clave_permanente",
-            "reused_persisted_session": True,
-            "fresh": False,
-        },
-        "filed_history_succeeded": True,
-        "wallet_succeeded": True,
-        "outcomes": (
-            {
-                "surface": LiveIvaReadSurface.FILED_HISTORY,
-                "status": LiveIvaReadStatus.SUCCEEDED,
-                "outcome_mode": "authenticated",
-                "failure_mode": None,
-                "failure_type": None,
-                "failure_context_json": None,
-                "captured_count": 1,
-                "calculation_observation_count": 1,
-            },
-            {
-                "surface": LiveIvaReadSurface.WALLET_CARTERA,
-                "status": LiveIvaReadStatus.SUCCEEDED,
-                "outcome_mode": "authenticated",
-                "failure_mode": None,
-                "failure_type": None,
-                "failure_context_json": None,
-                "captured_count": None,
-                "calculation_observation_count": None,
-            },
-        ),
-    }
-    public_json = json.dumps(result.model_dump(), default=str, sort_keys=True)
-    assert "reloaded_rows" not in public_json
-    assert "taxpayer_nif" not in public_json
-    assert "taxpayer_ref" not in public_json
-    assert _PRIVATE_HISTORY_AMOUNT not in public_json
-    assert _PRIVATE_WALLET_AMOUNT not in public_json
-    assert "private-synthetic-decision-key" not in public_json
-
-    assert provider_preflights == [(profile_id, authority)]
-    assert composition_roots == [output_root]
-    assert trace == [
-        "provider-preflight",
-        "composition",
-        "resources",
-        "authentication",
-        "history-capture",
-        "wallet-capture",
-        "manifest-persist",
-    ]
-    assert port.authentication_requests == [("live-iva-remote-state-read", port.wallet_target_url, authority)]
-    assert port.history_calls == [
-        (2024, 2025, output_root / "filed-history", authority),
-    ]
-    assert port.wallet_calls == [
-        (2025, _TARGET_PERIOD, _NIF, output_root / "wallet", authority),
-    ]
-    assert port.surface_guards == ["history", "wallet"]
-    assert port.guard_depth == 0
-    assert port.local_effects == ["history", "wallet"]
-    assert port.storage_span_entries == port.storage_span_exits == 1
-    assert port.storage_span_depth == 0
-    assert len(port.manifests) == 1
-    manifest = port.manifests[0]
-    assert manifest.acquisition_id == result.acquisition_manifest_id
-    assert (manifest.year_from, manifest.year_to, manifest.target_year, manifest.target_period) == (
-        2024,
-        2025,
-        2025,
-        _TARGET_PERIOD,
-    )
-    assert manifest.filed_history_succeeded and manifest.wallet_succeeded
-    assert tuple(surface.surface for surface in manifest.surfaces) == (
-        LiveIvaReadSurface.FILED_HISTORY,
-        LiveIvaReadSurface.WALLET_CARTERA,
-    )
-    assert tuple(surface.status for surface in manifest.surfaces) == (
-        LiveIvaReadStatus.SUCCEEDED,
-        LiveIvaReadStatus.SUCCEEDED,
-    )
-    assert manifest.surfaces[0].reloaded_history_count == 1
-    assert manifest.surfaces[1].wallet_row_count == 2
-    assert len(resources) == 1
-    assert resources[0].activation_entries == 1
-    assert resources[0].closed and resources[0].close_calls == 1
-    assert resources[0].activation_depth == 0
+    _assert_public_result(result, port, output_root)
+    _assert_guarded_effects(port, trace, profile_id, authority, output_root, provider_preflights, composition_roots)
+    _assert_manifest_and_resources(port, result, resources)
