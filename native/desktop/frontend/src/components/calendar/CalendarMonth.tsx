@@ -15,7 +15,7 @@ import { evaluatedLabel } from "@/shell/calendar";
 import { labelled, listed, noted } from "@/shell/compose";
 import { entryKey, entrySpan } from "@/shell/calendarEntries";
 import { isoDay as day } from "@/shared/dates";
-import { dateFormats } from "@/shared/dateFormats";
+import { dateFormats, weekdayLetters } from "@/shared/dateFormats";
 import { useStrings } from "@/shell/strings";
 import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendarMarks";
 
@@ -48,11 +48,7 @@ export function CalendarMonth({
   const heading = useId();
   const wholeControl = useRef<HTMLButtonElement>(null);
   const formats = dateFormats(locale);
-  // The seven weekday letters, from the week's first day. 4 January 1970
-  // was a Sunday.
-  const weekdays = Array.from({ length: 7 }, (_, column) =>
-    formats.weekdayNarrow.format(new Date(1970, 0, 4 + weekStart + column)),
-  );
+  const weekdays = weekdayLetters(locale, weekStart);
   // What a window says for itself: its Modelo and period, the days it is
   // open, and where it stands.
   const describe = (bar: GridBar) => {

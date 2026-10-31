@@ -14,7 +14,7 @@ import {
   type AeatSyncResult,
   type AeatSyncResultsPort,
 } from "../../shell/aeatSyncResults";
-import { dateFormats } from "../../shared/dateFormats";
+import { formatInstantDay } from "../../shared/dateFormats";
 import { useStrings, type Translate } from "../../shell/strings";
 import { BorradorImport } from "./BorradorImport";
 import { FiledResults } from "./FiledResults";
@@ -175,7 +175,7 @@ export const Results = memo(function Results({
           const sentence = ending(t, result);
           const day =
             result.at && (result.outcome !== "failed" || lines.length > 0)
-              ? dateFormats(language).medium.format(new Date(result.at))
+              ? formatInstantDay(language, result.at)
               : null;
           const busy = trying?.startsWith(`${result.area}:`) ?? false;
           const problem = trouble[result.area];

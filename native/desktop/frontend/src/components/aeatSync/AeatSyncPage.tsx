@@ -22,7 +22,7 @@ import {
   useAeatSyncRun,
   type AeatSyncRunPort,
 } from "../../shell/aeatSyncRun";
-import { dateFormats } from "../../shared/dateFormats";
+import { formatInstantDay } from "../../shared/dateFormats";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AeatSyncFlow } from "./AeatSyncFlow";
 import { AeatSyncRunView } from "./AeatSyncProgress";
@@ -47,7 +47,7 @@ const COUNT_KEYS: Partial<Record<AeatSyncCountKind, string>> = {
 /** The area's standing in words: only what the host served, with its date. */
 function standing(t: Translate, locale: string, area: AeatSyncArea): string {
   const day = area.captured_at
-    ? dateFormats(locale).medium.format(new Date(area.captured_at))
+    ? formatInstantDay(locale, area.captured_at)
     : null;
   switch (area.state) {
     case "current":
@@ -71,7 +71,7 @@ function lastTry(t: Translate, locale: string, area: AeatSyncArea) {
   if (!attempt) return null;
   if (attempt.outcome !== "failed" && attempt.outcome !== "unknown")
     return null;
-  const date = dateFormats(locale).medium.format(new Date(attempt.at));
+  const date = formatInstantDay(locale, attempt.at);
   return t(`desktop.aeat_sync.attempt.${attempt.outcome}`, { date });
 }
 

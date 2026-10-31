@@ -125,7 +125,7 @@ export function DetailsSection({
           ) : tx.value_in_eur !== null ? (
             <span className="grid">
               <span className="font-medium tabular-nums">
-                {formatAmount(locale, tx.value_in_eur)} EUR
+                {formatAmount(locale, tx.value_in_eur, { currency: "EUR" })}
               </span>
               {tx.fx_rate && (
                 <span className="text-xs text-muted-foreground">

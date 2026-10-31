@@ -3,7 +3,7 @@ import type { Attendance, AttendanceCandidate } from "../shell/host";
 import { failureCode } from "../errors";
 import { formatTime } from "../shared/dateFormats";
 import { labelled, listed } from "../shell/compose";
-import { SOURCE_LOCALE, useStrings } from "../shell/strings";
+import { useStrings } from "../shell/strings";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 
 /** Exact runtime peer requests, read when the runtime says they changed and
@@ -11,9 +11,11 @@ import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 export function AttendanceRequests({
   attendance,
   profile,
+  locale,
 }: {
   attendance?: Attendance;
   profile: string | null;
+  locale: string;
 }) {
   const t = useStrings();
   const [state, setState] = useState<{
@@ -133,7 +135,7 @@ export function AttendanceRequests({
             labelled(
               t,
               t("desktop.attendance.expires"),
-              formatTime(t.locale ?? SOURCE_LOCALE, candidate.expires_at),
+              formatTime(locale, candidate.expires_at),
             ),
             labelled(
               t,

@@ -12,9 +12,15 @@ import {
   dateFormats,
   dayOrderOf,
   formatDay,
+  formatClock,
   formatDayFigures,
+  formatInstantDay,
+  formatMonth,
+  formatRelative,
+  monthNames,
   readLocaleDay,
   formatTime,
+  weekdayLetters,
 } from "../../src/shared/dateFormats";
 import { evaluatedLabel, evaluatedWord } from "../../src/shell/calendar";
 
@@ -212,4 +218,118 @@ test("a date is drawn in the figures it is typed in", () => {
     expect(readLocaleDay(locale, formatDayFigures(locale, "2026-03-09"))).toBe(
       "2026-03-09",
     );
+});
+
+// Newer ICU data separates a clock's AM or PM with a narrow space.
+const plain = (text: string) => text.replace(/\s/g, " ");
+
+test("a clock reads the time of day in each language", () => {
+  const at = new Date(2026, 9, 9, 14, 5);
+  expect(plain(formatClock("en-US", at))).toBe("2:05 PM");
+  expect(formatClock("es", at)).toBe("14:05");
+  expect(formatClock("hu", at)).toBe("14:05");
+  expect(plain(formatClock("en-US", at, { withDay: true }))).toBe(
+    "Oct 9, 2:05 PM",
+  );
+  expect(formatClock("es", at, { withDay: true })).toBe("9 oct, 14:05");
+  // A number is a moment in milliseconds, as a Date is.
+  expect(formatClock("es", at.getTime())).toBe("14:05");
+  // A date has no clock, and unreadable text has none to read.
+  expect(formatClock("en-US", "2026-10-09")).toBe("2026-10-09");
+  expect(formatClock("en-US", "soon")).toBe("soon");
+});
+
+test("the day an instant falls on is the day where the person is", () => {
+  const late = new Date(2026, 9, 9, 23, 30).toISOString();
+  const early = new Date(2026, 9, 10, 0, 30).toISOString();
+  expect(formatInstantDay("en-US", late)).toBe("Oct 9, 2026");
+  expect(formatInstantDay("en-US", early)).toBe("Oct 10, 2026");
+  expect(formatInstantDay("es", late)).toBe("9 oct 2026");
+  // A date without a time stays that date, whatever the zone.
+  expect(formatInstantDay("en-US", "2026-10-09")).toBe("Oct 9, 2026");
+  expect(formatInstantDay("en-US", "soon")).toBe("soon");
+});
+
+test("an instant's day follows the process time zone", () => {
+  const module = pathToFileURL(resolve("src/shared/dateFormats.ts")).href;
+  // 2026-01-01T00:30Z is 16:30 on 31 December at UTC-8, 21:30 at UTC-3 and
+  // already the afternoon of 1 January at UTC+13 and UTC+14.
+  for (const [zone, day] of [
+    ["UTC", "Jan 1, 2026"],
+    ["America/Los_Angeles", "Dec 31, 2025"],
+    ["America/Sao_Paulo", "Dec 31, 2025"],
+    ["Pacific/Apia", "Jan 1, 2026"],
+    ["Pacific/Kiritimati", "Jan 1, 2026"],
+  ] as const) {
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "--eval",
+        `
+      import { formatInstantDay } from ${JSON.stringify(module)};
+      process.stdout.write(formatInstantDay("en-US", "2026-01-01T00:30:00Z"));
+    `,
+      ],
+      { env: { ...process.env, TZ: zone }, encoding: "utf8" },
+    );
+    expect(result.status, `${zone}: ${result.stderr}`).toBe(0);
+    expect(result.stdout, zone).toBe(day);
+  }
+});
+
+test("a month is named in full with its year", () => {
+  expect(formatMonth("en-US", "2026-10")).toBe("October 2026");
+  expect(formatMonth("es", "2026-01")).toBe("enero de 2026");
+  expect(formatMonth("hu", "2026-10")).toBe("2026. október");
+  expect(formatMonth("en-US", new Date(2026, 9, 31))).toBe("October 2026");
+  // Text that names no month comes back as it came.
+  for (const raw of ["", "2026", "2026-00", "2026-13", "soon"]) {
+    expect(formatMonth("en-US", raw)).toBe(raw);
+  }
+});
+
+test("the twelve month names run from January", () => {
+  const long = monthNames("en-US", "long");
+  expect(long).toHaveLength(12);
+  expect([long[0], long[5], long[11]]).toEqual(["January", "June", "December"]);
+  const short = monthNames("en-US");
+  expect([short[0], short[9], short[11]]).toEqual(["Jan", "Oct", "Dec"]);
+  expect(monthNames("es", "long")[0]).toBe("enero");
+  expect(monthNames("es")[9]).toBe("oct");
+  expect(monthNames("hu", "long")[9]).toBe("október");
+  // Held names are the same list, and a width keeps its own.
+  expect(monthNames("en-US")).toBe(short);
+  expect(monthNames("en-US", "long")).toBe(long);
+});
+
+test("the weekday letters start on the week's first day", () => {
+  expect(weekdayLetters("en-US", 0)).toEqual([
+    "S",
+    "M",
+    "T",
+    "W",
+    "T",
+    "F",
+    "S",
+  ]);
+  expect(weekdayLetters("en-US", 1)).toEqual([
+    "M",
+    "T",
+    "W",
+    "T",
+    "F",
+    "S",
+    "S",
+  ]);
+  expect(weekdayLetters("es", 1)).toEqual(["L", "M", "X", "J", "V", "S", "D"]);
+});
+
+test("a distance in time is said in words where the locale has them", () => {
+  expect(formatRelative("en-US", 0, "day")).toBe("today");
+  expect(formatRelative("en-US", -1, "day")).toBe("yesterday");
+  expect(formatRelative("en-US", -2, "day")).toBe("2 days ago");
+  expect(formatRelative("en-US", 3, "hour")).toBe("in 3 hours");
+  expect(formatRelative("es", -1, "day")).toBe("ayer");
+  expect(formatRelative("es", 0, "day")).toBe("hoy");
 });

@@ -3864,6 +3864,7 @@ export function App({ host }: { host: Host }) {
         <AttendanceRequests
           attendance={host.attendance}
           profile={signedIn ? (account.status?.active_profile ?? null) : null}
+          locale={locale}
         />
       </TooltipProvider>
     </ShellContexts>

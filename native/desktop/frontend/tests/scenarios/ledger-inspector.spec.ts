@@ -976,8 +976,10 @@ test("the selection's totals are per currency and direction, and shared values s
   await target.keyboard.press("Alt+KeyI");
   const selection = panel(target).locator(".ledger-selection");
   const sums = selection.locator(".ledger-selection-sums");
-  await expect(sums).toContainText("USD");
-  await expect(sums).toContainText("EUR");
+  // Each currency is drawn in its own English form: its sign, the comma
+  // grouping and two places.
+  await expect(sums).toContainText(/\$\d[\d,]*\.\d{2}/);
+  await expect(sums).toContainText(/€\d[\d,]*\.\d{2}/);
   await expect(selection.locator("[data-common=direction]")).toHaveText(
     label("desktop.ledger.inspector.selection.mixed_values", { count: 2 }),
   );

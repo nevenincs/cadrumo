@@ -26,6 +26,27 @@ const makeFormats = (locale: string) => ({
     timeZone: "UTC",
   }),
   monthName: new Intl.DateTimeFormat(locale, { month: "long" }),
+  // A month named by its number, so it is read in UTC like an ISO day.
+  isoMonth: new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }),
+  monthShortWord: new Intl.DateTimeFormat(locale, {
+    month: "short",
+    timeZone: "UTC",
+  }),
+  monthLongWord: new Intl.DateTimeFormat(locale, {
+    month: "long",
+    timeZone: "UTC",
+  }),
+  clock: new Intl.DateTimeFormat(locale, { timeStyle: "short" }),
+  dayClock: new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  }),
   isoDayNoYear: new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
@@ -142,4 +163,85 @@ export function formatTime(locale: string, instant: string): string {
   return Number.isNaN(time)
     ? instant
     : dateFormats(locale).dateTime.format(new Date(time));
+}
+
+/** The calendar day an instant falls on where the person is, as a medium
+ * date. A date without a time is not an instant, so it stays that calendar
+ * date. Unreadable text comes back as it came. */
+export function formatInstantDay(locale: string, instant: string): string {
+  if (ISO_DAY.test(instant)) return formatDay(locale, instant);
+  const time = Date.parse(instant);
+  return Number.isNaN(time)
+    ? instant
+    : dateFormats(locale).medium.format(new Date(time));
+}
+
+/** The time of day of a moment, as the person's clock reads it, with its
+ * short date first when `withDay` is set. A date without a time has no clock
+ * to read, and unreadable text has none either: both come back as they
+ * came. */
+export function formatClock(
+  locale: string,
+  instant: string | number | Date,
+  { withDay = false }: { withDay?: boolean } = {},
+): string {
+  if (typeof instant === "string" && ISO_DAY.test(instant)) return instant;
+  const at = instant instanceof Date ? instant : new Date(instant);
+  if (Number.isNaN(at.getTime())) return String(instant);
+  const named = dateFormats(locale);
+  return (withDay ? named.dayClock : named.clock).format(at);
+}
+
+const MONTH = /^(\d{4})-(\d{2})$/;
+
+/** A month with its year, the month in full. `YYYY-MM` names a calendar
+ * month and a `Date` is read on the person's clock. Text that names no real
+ * month comes back as it came. */
+export function formatMonth(locale: string, month: string | Date): string {
+  const named = dateFormats(locale);
+  if (month instanceof Date) return named.month.format(month);
+  const found = MONTH.exec(month);
+  const number = Number(found?.[2]);
+  if (!found || number < 1 || number > 12) return month;
+  const date = new Date(0);
+  date.setUTCFullYear(Number(found[1]), number - 1, 1);
+  return named.isoMonth.format(date);
+}
+
+const NAMES_KEPT = 8;
+const names = new Map<string, string[]>();
+
+/** The twelve months' names in `locale`, January first. */
+export function monthNames(
+  locale: string,
+  width: "short" | "long" = "short",
+): string[] {
+  return reuse(names, NAMES_KEPT, `${locale} ${width}`, () => {
+    const named = dateFormats(locale);
+    const format =
+      width === "short" ? named.monthShortWord : named.monthLongWord;
+    return Array.from({ length: 12 }, (_, month) =>
+      format.format(new Date(Date.UTC(2000, month, 1))),
+    );
+  });
+}
+
+/** The seven weekdays' letters in `locale`, from the week's first day, where
+ * 0 is Sunday. */
+export function weekdayLetters(locale: string, weekStart: number): string[] {
+  const { weekdayNarrow } = dateFormats(locale);
+  // 4 January 1970 was a Sunday.
+  return Array.from({ length: 7 }, (_, column) =>
+    weekdayNarrow.format(new Date(1970, 0, 4 + weekStart + column)),
+  );
+}
+
+/** A distance in time in words, where `0` and `-1` of a day are `today` and
+ * `yesterday` in the locale. */
+export function formatRelative(
+  locale: string,
+  value: number,
+  unit: Intl.RelativeTimeFormatUnit,
+): string {
+  return dateFormats(locale).relative.format(value, unit);
 }

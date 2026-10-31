@@ -18,8 +18,9 @@ import {
   type LedgerPeriod,
   type LedgerPeriodCode,
 } from "../../shell/ledgerGrammar";
+import { monthNames } from "../../shared/dateFormats";
 import { useStrings } from "../../shell/strings";
-import { monthNames, periodText } from "./ledgerWords";
+import { periodText } from "./ledgerWords";
 
 const ARROWS: Record<string, [number, number]> = {
   ArrowLeft: [-1, 0],

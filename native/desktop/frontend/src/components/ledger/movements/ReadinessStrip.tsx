@@ -8,6 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatClock } from "../../../shared/dateFormats";
 import { readinessSnapshot, type Readiness } from "../../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../../shell/strings";
 import type {
@@ -160,9 +161,7 @@ function pillsOf(
       icon: "check",
       tone: "success",
       label: t("desktop.ledger.readiness.ready", {
-        time: new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(
-          new Date(snapshot.checkedAt),
-        ),
+        time: formatClock(locale, snapshot.checkedAt),
       }),
     });
   return pills;

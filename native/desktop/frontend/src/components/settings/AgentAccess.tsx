@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
-import { dateFormats } from "../../shared/dateFormats";
+import { formatInstantDay, formatTime } from "../../shared/dateFormats";
 import { useStrings, type Translate } from "../../shell/strings";
 
 // The keys the signed-in profile has issued to agents outside Cadrumo: AI
@@ -111,8 +111,7 @@ function refusalWords(t: Translate, code: string): string {
 function when(locale: string, instant: string, time: boolean): string | null {
   const at = new Date(instant);
   if (!Number.isFinite(at.getTime())) return null;
-  const formats = dateFormats(locale);
-  return (time ? formats.dateTime : formats.medium).format(at);
+  return time ? formatTime(locale, instant) : formatInstantDay(locale, instant);
 }
 
 function Refusal({ children }: { children: string }) {

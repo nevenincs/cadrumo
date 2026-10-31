@@ -542,7 +542,9 @@ export function SelectionInspector({
                   : [
                       <li key={`${sum.currency}:${side}`}>
                         {t(label, {
-                          amount: `${formatAmount(locale, sum[side]!)} ${sum.currency}`,
+                          amount: formatAmount(locale, sum[side]!, {
+                            currency: sum.currency,
+                          }),
                         })}
                       </li>,
                     ],

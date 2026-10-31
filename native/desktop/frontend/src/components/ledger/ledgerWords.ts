@@ -8,6 +8,7 @@ import {
   periodGranularity,
   type LedgerPeriod,
 } from "../../shell/ledgerGrammar";
+import { monthNames } from "../../shared/dateFormats";
 import type { Translate } from "../../shell/strings";
 
 /** The sections shown as tabs, and those under the setup menu. */
@@ -39,19 +40,6 @@ export const sectionTabId = (panel: string, section: LedgerSection) =>
 
 export const sectionName = (t: Translate, section: LedgerSection) =>
   t(`desktop.ledger.section.${section}`);
-
-const months = new Map<string, string[]>();
-/** The twelve months' short names in `locale`, January first. */
-export function monthNames(locale: string): string[] {
-  const held = months.get(locale);
-  if (held) return held;
-  const format = new Intl.DateTimeFormat(locale, { month: "short" });
-  const names = Array.from({ length: 12 }, (_, month) =>
-    format.format(new Date(2000, month, 1)),
-  );
-  months.set(locale, names);
-  return names;
-}
 
 /** A period as the chrome writes it: `2026`, `2026 · 3T` or `2026 · Oct`.
  * Quarter codes are the tax period's own tokens and are never translated. */

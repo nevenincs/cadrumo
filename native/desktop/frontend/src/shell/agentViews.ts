@@ -5,6 +5,11 @@ import type {
   TranscriptItem,
 } from "@/components/agent/types";
 import { failureCode } from "../errors";
+import {
+  formatClock,
+  formatMonth,
+  formatRelative,
+} from "../shared/dateFormats";
 import { formatCount } from "../shared/numbers";
 import { effortWords } from "./agentCatalog";
 import { sentFiles } from "./agentDocuments";
@@ -385,22 +390,9 @@ function failureWords(
 }
 
 /** When a message was sent, in words: the time today, else the day too. */
-const timeFormats = new Map<string, Intl.DateTimeFormat>();
-
 function sentLabel(locale: string, at: Date, now: Date): string | undefined {
   if (!Number.isFinite(at.getTime())) return undefined;
-  const sameDay = dayStart(at) === dayStart(now);
-  const key = `${locale}:${sameDay}`;
-  let format = timeFormats.get(key);
-  if (!format) {
-    format = new Intl.DateTimeFormat(locale, {
-      ...(sameDay ? {} : { day: "numeric", month: "short" }),
-      hour: "numeric",
-      minute: "2-digit",
-    });
-    timeFormats.set(key, format);
-  }
-  return format.format(at);
+  return formatClock(locale, at, { withDay: dayStart(at) !== dayStart(now) });
 }
 
 type TranscriptProjectionEntry = {
@@ -581,7 +573,6 @@ const capitalized = (text: string, locale: string) =>
 
 /** How long ago an instant was, in the largest whole unit, in words. */
 function agoLabel(locale: string, at: Date, now: Date): string {
-  const words = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
   const seconds = Math.round((at.getTime() - now.getTime()) / 1000);
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
     ["year", 365 * 86_400],
@@ -593,8 +584,8 @@ function agoLabel(locale: string, at: Date, now: Date): string {
   ];
   for (const [unit, size] of units)
     if (Math.abs(seconds) >= size)
-      return words.format(Math.round(seconds / size), unit);
-  return words.format(0, "minute");
+      return formatRelative(locale, Math.round(seconds / size), unit);
+  return formatRelative(locale, 0, "minute");
 }
 
 /** The calendar day of an instant, where the person is. */
@@ -625,11 +616,6 @@ export function conversationGroups(
     documentCounts?: Readonly<Record<string, number>>;
   },
 ): ConversationGroup[] {
-  const days = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-  const months = new Intl.DateTimeFormat(locale, {
-    month: "long",
-    year: "numeric",
-  });
   const today = dayStart(now);
   const groups: {
     heading: string;
@@ -644,8 +630,8 @@ export function conversationGroups(
     const behind = Math.round((today - dayStart(at)) / 86_400_000);
     const heading = capitalized(
       behind <= 1
-        ? days.format(-Math.max(0, behind), "day")
-        : months.format(at),
+        ? formatRelative(locale, -Math.max(0, behind), "day")
+        : formatMonth(locale, at),
       locale,
     );
     let group = groups.at(-1);

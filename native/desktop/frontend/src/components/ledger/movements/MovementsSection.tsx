@@ -74,7 +74,7 @@ import {
   type Readiness,
 } from "../../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { dateFormats } from "../../../shared/dateFormats";
+import { formatMonth, monthNames } from "../../../shared/dateFormats";
 import { formatAmount, formatCount } from "../../../shared/numbers";
 import { draftRow, stageTally, typedPoints } from "../editing/editingModel";
 import {
@@ -116,7 +116,6 @@ import {
   type SortLabels,
 } from "./movementsModel";
 import { MovementsToolbar } from "./MovementsToolbar";
-import { monthNames } from "../ledgerWords";
 import {
   accountLabel,
   categoryLabel,
@@ -365,12 +364,8 @@ function groupLabelOf(
       return t(`desktop.ledger.review.${value}`);
     case "direction":
       return directionLabel(t, value);
-    case "month": {
-      const [year, month] = value.split("-").map(Number);
-      const date = new Date(2000, (month ?? 1) - 1, 1);
-      date.setFullYear(year ?? 2000);
-      return dateFormats(locale).month.format(date);
-    }
+    case "month":
+      return formatMonth(locale, value);
     case "iva_category":
       return ivaCategoryLabel(t, value);
     case "counterparty":
@@ -587,13 +582,7 @@ export function MovementsSection({
   );
   const terms = useMemo(() => searchTerms(search), [search]);
   const months = useMemo(() => {
-    const long = new Intl.DateTimeFormat(locale, { month: "long" });
-    return [
-      Array.from({ length: 12 }, (_, month) =>
-        long.format(new Date(2000, month, 1)),
-      ),
-      monthNames(locale),
-    ];
+    return [monthNames(locale, "long"), monthNames(locale)];
   }, [locale]);
   const filtered = useMemo(
     () =>

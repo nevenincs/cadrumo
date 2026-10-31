@@ -31,6 +31,7 @@ import {
   type ReadinessFilter,
 } from "../movements/movementsModel";
 import { reasonShort } from "../movements/movementWords";
+import { formatClock } from "../../../shared/dateFormats";
 import { formatAmount, formatCount } from "../../../shared/numbers";
 import { ReadinessStrip } from "../movements/ReadinessStrip";
 import {
@@ -274,9 +275,7 @@ export function HealthSection({
               {snapshot && (
                 <TooltipContent className="ledger-health-checked-at">
                   {t("desktop.ledger.health.checked_at", {
-                    time: new Intl.DateTimeFormat(locale, {
-                      timeStyle: "short",
-                    }).format(new Date(snapshot.checkedAt)),
+                    time: formatClock(locale, snapshot.checkedAt),
                   })}
                 </TooltipContent>
               )}

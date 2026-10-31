@@ -14,7 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { dateFormats } from "../../../shared/dateFormats";
+import { formatInstantDay } from "../../../shared/dateFormats";
 import { facts } from "../../../shell/compose";
 import type {
   ModeloFormAttention,
@@ -234,7 +234,7 @@ export function ModeloWorkspace({
   const target = action ? ACTION_VIEW[action] : undefined;
   const levels = new Map(header.attention.map((a) => [a.level, a]));
   const day = (iso: string | null) =>
-    iso ? dateFormats(locale).medium.format(new Date(iso)) : "";
+    iso ? formatInstantDay(locale, iso) : "";
 
   const runNext = () => {
     if (!action) return;
