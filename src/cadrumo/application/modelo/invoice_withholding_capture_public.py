@@ -15,6 +15,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.spanish_postcode import SpanishProvinceCode
+from ...domain.calculations.registry.form_codes import require_form_fit
 from ..aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from ..aggregation.retenciones import Modelo180StructuredAddress, Modelo193NonpaymentCause
 from ..aggregation.service import PerModeloAggregationCommand
@@ -43,7 +44,7 @@ class PublicAnnualRecipientDetail(BaseModel):
     country_code: str | None = None
     transaction_date: date
     clave: str
-    subclave: str = Field(default="", max_length=4, pattern="^[0-9]*$")
+    subclave: str = Field(default="", max_length=16, pattern="^[0-9]*$")
     percibido_dinerario: PublicDecimal = PublicDecimal(decimal="0")
     percibido_especie: PublicDecimal = PublicDecimal(decimal="0")
     retencion_practicada: PublicDecimal = PublicDecimal(decimal="0")
@@ -108,7 +109,7 @@ class PublicAnnualRecipientDetail(BaseModel):
     pension_prestacion_resto: int | None = None
     perceptor_mediador_flag: str | None = Field(default=None, max_length=1)
     clave_codigo: int | None = None
-    codigo_emisor: str | None = Field(default=None, max_length=12)
+    codigo_emisor: str | None = Field(default=None, max_length=16)
     naturaleza: str | None = Field(default=None, pattern="^\\d{2}$")
     pago: int | None = None
     tipo_codigo: str | None = None
@@ -138,6 +139,18 @@ class PublicAnnualRecipientDetail(BaseModel):
     def from_domain(cls, value: BaseModel) -> Self:
         """Project every canonical annual-recipient field into the public graph."""
         return cls.model_validate(public_value(value), strict=True)
+
+    @field_validator("subclave")
+    @classmethod
+    @pydantic_validation_boundary
+    def _subclave_fits_the_declared_field(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "withholding.subclave_max")
+
+    @field_validator("codigo_emisor")
+    @classmethod
+    @pydantic_validation_boundary
+    def _emisor_fits_the_declared_field(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "withholding.codigo_emisor_max")
 
 
 class PublicModelo180Address(Modelo180StructuredAddress):

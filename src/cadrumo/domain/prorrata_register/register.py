@@ -65,6 +65,7 @@ from ...core.prorrata_register import (
 from ...core.prorrata_register import (
     SectorDiferenciadoLetra as _SectorDiferenciadoLetra,
 )
+from ...domain.calculations.registry.form_codes import require_form_width
 from ..calculations.registry.form_codes import resolve_form_codes_leased
 from ..calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance as _carried_prior_definitiva,
@@ -239,7 +240,7 @@ class ProrrataActivityRow(BaseModel):
     ejercicio: FilingYear
     activity_id: str = Field(min_length=1, max_length=128)
     slot: int = Field(ge=1)
-    cnae_code: str = Field(min_length=3, max_length=4, pattern=r"^\d{3,4}$")
+    cnae_code: str = Field(min_length=1, max_length=16, pattern=r"^\d+$")
     operaciones_total: Decimal = Field(ge=Decimal("0"))
     operaciones_con_derecho: Decimal = Field(ge=Decimal("0"))
     prorrata_type: _ProrrataActivityRowType
@@ -263,6 +264,12 @@ class ProrrataActivityRow(BaseModel):
                 "operaciones_con_derecho must not exceed operaciones_total for an activity row",
             )
         return self
+
+    @field_validator("cnae_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _cnae_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m303.prorrata.cnae_digits")
 
 
 class ProrrataRegisterEntry(BaseModel):

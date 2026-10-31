@@ -57,6 +57,17 @@ def require_declared_orden_shape(census: M303AnnualOrdenSourceCensus) -> None:
         raise RegistryValidationError(f"annual Orden seasonal band is past the {max_days} days of a seasonal activity")
 
 
+def require_single_page_edition(*, ejercicio: int, registry_revision_id: str, record_design_epoch: str | None) -> None:
+    """Refuse a single-page edition year whose revision or record design is of another edition."""
+    editions = resolve_form_codes("form-row-codes", effective_date=date(ejercicio, 1, 1)).codes(
+        "m303.dp30302.single_page_epochs"
+    )
+    if str(ejercicio) in editions and (registry_revision_id not in editions or record_design_epoch not in editions):
+        raise RegistryValidationError(
+            f"annual Orden {ejercicio} must retain its single-page revision and record design"
+        )
+
+
 def compile_m303_annual_orden_projection(
     *,
     census: M303AnnualOrdenSourceCensus,

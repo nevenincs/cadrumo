@@ -268,14 +268,14 @@ def _flow_pointer(
 
 
 def _require_distinct_flow_pointers(catalogue: IvaFlowDirectionCatalogue) -> None:
-    pointers = {
+    pointers = (
         catalogue.issued_token,
         catalogue.received_token,
         catalogue.recipient_reverse_charge_token,
         catalogue.supplier_reverse_charge_token,
-    }
-    if len(pointers) < 4:
-        raise RegistryValidationError("IVA flow catalogue pointers must identify four distinct flow directions")
+    )
+    if len(set(pointers)) != len(pointers):
+        raise RegistryValidationError("IVA flow catalogue pointers must identify distinct flow directions")
 
 
 def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:

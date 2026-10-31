@@ -126,11 +126,12 @@ def validate_m303_regimen_simplificado_endpoint_epoch(
 ) -> None:
     """Refuse simplified fact multiplicity that the selected record-design epoch never admits."""
     early_epoch = _validate_m303_regimen_simplificado_revision_epoch(revision_id)
+    single_page_epochs = resolve_form_codes_leased("form-row-codes").codes("m303.dp30302.single_page_epochs")
     for ref in refs:
         if not isinstance(ref, M303RegimenSimplificadoFactProjectionRef):
             continue
-        if revision_id == "2022" and (ref.fact not in _SINGLE_PAGE_FACTS or ref.sub_index is not None):
-            raise RegistryValidationError("fact is not admitted by the single-page 2022 record")
+        if revision_id in single_page_epochs and (ref.fact not in _SINGLE_PAGE_FACTS or ref.sub_index is not None):
+            raise RegistryValidationError(f"fact is not admitted by the single-page {revision_id} record")
         _validate_mesa_fact_epoch(ref)
         _validate_horno_days_fact_epoch(ref, revision_id=revision_id, early_epoch=early_epoch)
         _validate_horno_surface_fact_epoch(ref, revision_id=revision_id, early_epoch=early_epoch)

@@ -6,9 +6,11 @@ import re
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.country_code import CountryCodeAlpha2
+from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...domain.calculations.registry.form_codes import require_form_width
 from ...domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
@@ -248,7 +250,7 @@ class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
 
     row_type: Literal["agrupacion_renta"] = "agrupacion_renta"
     source_id: Annotated[str, Field(min_length=1, max_length=200)]
-    tipo_renta_code: Annotated[str, Field(min_length=2, max_length=2)]
+    tipo_renta_code: Annotated[str, Field(min_length=1, max_length=16)]
     importe: _WireAmount
     tipo_gravamen: _WireAmount
     pagador_mode: str
@@ -268,6 +270,12 @@ class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
             deriva_de_bien_derecho=self.deriva_de_bien_derecho,
             bien_derecho_id=self.bien_derecho_id,
         )
+
+    @field_validator("tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 type ModeloDetailRowWireV1 = Annotated[

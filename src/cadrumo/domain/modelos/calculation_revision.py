@@ -64,6 +64,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnit
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
+from ...domain.calculations.registry.form_codes import require_form_width
 from ..calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
@@ -725,7 +726,7 @@ class CalculationRevision(BaseModel):
     )
     relation_overrides: Mapping[RelationId, str] = Field(default_factory=dict)
     source_transaction_ids: tuple[CalculationRevisionId, ...] = Field(default_factory=tuple)
-    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
+    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     borrador_snapshot_id: SnapshotId | None = None
     bindings_sourced_from_borrador: tuple[BindingId, ...] = Field(default_factory=tuple)
@@ -1077,6 +1078,12 @@ class CalculationRevision(BaseModel):
         payload["row_casilla_values"] = canonical_row_casilla_values(self.row_casilla_values)
         payload["row_casilla_provenance"] = canonical_row_casilla_provenance(self.row_casilla_provenance)
         return payload
+
+    @field_validator("m210_official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 def calculation_revision_identity_inputs_from_revision(
