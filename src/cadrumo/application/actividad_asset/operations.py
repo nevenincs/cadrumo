@@ -57,7 +57,14 @@ from ...domain.renta.actividad_asset.errors import (
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
 )
-from ...domain.renta.actividad_asset.lifecycle import REGISTERABLE_ACQUISITION_SHAPES, ActivityAssetRevision, AssetKind
+from ...domain.renta.actividad_asset.lifecycle import (
+    BASIS_STAGE_FACTS,
+    OPENING_STATUS_FACTS,
+    REGISTERABLE_ACQUISITION_SHAPES,
+    ActivityAssetRevision,
+    AssetBasisStage,
+    AssetKind,
+)
 from ...domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ...domain.renta.actividad_asset.schedule import (
     ScheduleAuthority,
@@ -70,12 +77,14 @@ from .acquisition_ledger import require_acquisition_in_ledger
 from .activity_asset_read_models import (
     PLAN_ADVISORY_FAMILY,
     ActivityAssetAcquisitionCandidate,
+    ActivityAssetBasisStageOption,
     ActivityAssetDisposalReasonOption,
     ActivityAssetEdition,
     ActivityAssetElectionLimits,
     ActivityAssetFormOptionsView,
     ActivityAssetListRow,
     ActivityAssetNotTableBoundReason,
+    ActivityAssetOpeningStatusOption,
     ActivityAssetPlanAdvisory,
     ActivityAssetPlanAdvisoryKind,
     ActivityAssetPlanRow,
@@ -218,6 +227,19 @@ def pinned_edition(operation: PinnedAuthorityOperation) -> Callable[[int], tuple
     return read
 
 
+def pinned_m130_periods(operation: PinnedAuthorityOperation) -> Callable[[int], tuple[str, ...]]:
+    """Read the Modelo 130 periods the registry serves for a filing year; none when it serves no edition."""
+
+    def read(tax_year: int) -> tuple[str, ...]:
+        try:
+            revision = operation.revision_for_context("130", filing_year=tax_year, period="4T")
+        except RegistryError:
+            return ()
+        return tuple(str(period) for period in revision.period_selector.periods_for_year(tax_year))
+
+    return read
+
+
 @dataclass(frozen=True, slots=True)
 class ActivityAssetRegisterAuthority:
     """The pinned-authority and profile facts the register's reads and handoff depend on."""
@@ -234,6 +256,7 @@ class ActivityAssetRegisterAuthority:
     disposal_bounds: Callable[[ActivityAssetRevision, int], ActivityAssetDisposalBounds]
     legal_reference: Callable[[str], LegalReference]
     m130_amortization_casilla: Callable[[Period], CasillaId]
+    m130_periods: Callable[[int], tuple[str, ...]]
     m100_amortization_casillas: Callable[[int], Mapping[AssetKind, CasillaId]]
 
 
@@ -968,6 +991,17 @@ class ActivityAssetOperations:
                 )
                 for reason in ADMITTED_DISPOSAL_REASONS
             ),
+            basis_stages=tuple(
+                ActivityAssetBasisStageOption(
+                    stage=stage, facts=facts, is_property=stage is AssetBasisStage.WHOLE_PROPERTY
+                )
+                for stage, facts in BASIS_STAGE_FACTS.items()
+            ),
+            opening_statuses=tuple(
+                ActivityAssetOpeningStatusOption(status=status, facts=facts)
+                for status, facts in OPENING_STATUS_FACTS.items()
+            ),
+            m130_periods=self._authority.m130_periods(tax_year),
         )
 
     def acquisition_candidates(self) -> tuple[ActivityAssetAcquisitionCandidate, ...]:

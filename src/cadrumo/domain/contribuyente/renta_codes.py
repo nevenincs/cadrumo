@@ -1,133 +1,117 @@
 """AEAT Renta profile-code types and stable export projections.
 
-The closed profile vocabularies remain here where they are form-owned. The
-cross-cutting fiscal-residency vocabulary is an opaque token projected from
-the governed facts registry, so CLI and wizard surfaces obtain its choices
-through the registry resolver rather than maintaining a second catalogue.
+The closed profile vocabularies keep their semantic members here. The code each
+member carries on Modelo 100 and in a stored profile answer is a form datum that
+the registry declares in the ``modelo-100-profile-form-codes`` fact, together with
+the Modelo 100 numbering of the autonomous communities. Reading a code needs a
+generation-pinned governed-fact scope. The cross-cutting fiscal-residency vocabulary
+is an opaque token projected from the governed facts registry, so CLI and wizard
+surfaces obtain its choices through the registry resolver.
 
-:class:`RentaSexCode`, :class:`RentaMaritalStatus`, and
-:class:`RentaDisabilityGrade` back Modelo 100
-profile bindings; :class:`SituacionFamiliar` and
-:class:`SituacionFamiliarM145` keep the Art. 82 LIRPF joint-taxation axis
-separate from Modelo 145 withholding categories.
+:class:`SituacionFamiliar` and :class:`SituacionFamiliarM145` keep the Art. 82 LIRPF
+joint-taxation axis separate from Modelo 145 withholding categories.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from enum import StrEnum
-from functools import cache
 from types import MappingProxyType
+from typing import Final, override
 
 from ...core.registry_token import StrictRegistryToken
+from ..calculations.registry.form_codes import RegistryCodedEnum, resolve_form_codes
+from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from .ccaa import CCAA
 
-
-class RentaSexCode(StrEnum):
-    """Modelo 100 ``tipo_Sexo`` values."""
-
-    HOMBRE = "H"
-    MUJER = "M"
+_PROFILE_FORM_CODES_FACT: Final = "modelo-100-profile-form-codes"
 
 
-class RentaMaritalStatus(StrEnum):
-    """Renta taxpayer marital / registered-partnership profile values."""
+class RentaSexCode(RegistryCodedEnum):
+    """Modelo 100 ``tipo_Sexo`` vocabulary."""
 
-    SOLTERO = "1"
-    CASADO = "2"
-    VIUDO = "3"
-    SEPARADO_DIVORCIADO = "4"
-    PAREJA_HECHO = "5"
+    HOMBRE = "hombre"
+    MUJER = "mujer"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _PROFILE_FORM_CODES_FACT, "sex"
 
 
-RENTA_MODELO100_ECIVIL_EXPORT_CODES: frozenset[str] = frozenset(
-    {
-        RentaMaritalStatus.SOLTERO.value,
-        RentaMaritalStatus.CASADO.value,
-        RentaMaritalStatus.VIUDO.value,
-        RentaMaritalStatus.SEPARADO_DIVORCIADO.value,
-    }
-)
-"""Official Modelo 100 ECIVIL export codes accepted by the bundled XSD."""
+class RentaMaritalStatus(RegistryCodedEnum):
+    """Renta taxpayer marital / registered-partnership profile vocabulary."""
+
+    SOLTERO = "soltero"
+    CASADO = "casado"
+    VIUDO = "viudo"
+    SEPARADO_DIVORCIADO = "separado_divorciado"
+    PAREJA_HECHO = "pareja_hecho"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _PROFILE_FORM_CODES_FACT, "marital_status"
+
+
+class RentaDeclaracionType(RegistryCodedEnum):
+    """Modelo 100 ``TIPOTRIBUTACION`` vocabulary."""
+
+    INDIVIDUAL = "individual"
+    JOINT = "joint"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _PROFILE_FORM_CODES_FACT, "declaration_type"
+
+
+class RentaDisabilityGrade(RegistryCodedEnum):
+    """Modelo 100 ``tipo_GradoDiscapacidad`` vocabulary."""
+
+    GE_33_LT_65 = "ge_33_lt_65"
+    GE_65 = "ge_65"
+    JUDICIAL_INCAPACITY = "judicial_incapacity"
+    ASSISTANCE_OR_REDUCED_MOBILITY = "assistance_or_reduced_mobility"
+
+    @classmethod
+    @override
+    def _form_code_source(cls) -> tuple[str, str]:
+        return _PROFILE_FORM_CODES_FACT, "disability_grade"
 
 
 def modelo100_ecivil_export_code(value: object) -> str:
     """Return a validated official Modelo 100 ECIVIL export code.
 
-    ``RentaMaritalStatus.PAREJA_HECHO`` is intentionally profile-only. The
-    official Modelo 100 ECIVIL field is restricted to Estado Civil codes 1-4,
-    so callers must supply the taxpayer's true official civil-status code
-    instead of exporting the registered-partnership profile marker.
+    The registered-partnership marker is profile-only. The official ECIVIL field
+    takes the members the fact lists for export, so a caller supplies the taxpayer's
+    true official civil status instead of exporting that marker.
     """
     code = str(value).strip()
-    if code in RENTA_MODELO100_ECIVIL_EXPORT_CODES:
+    declared = resolve_form_codes(_PROFILE_FORM_CODES_FACT)
+    accepted = sorted(
+        declared.code(f"marital_status.{member}") for member in declared.ordered_codes("marital_status_export.members")
+    )
+    if code in accepted:
         return code
-    if code == RentaMaritalStatus.PAREJA_HECHO.value:
+    if code == declared.code(f"marital_status.{RentaMaritalStatus.PAREJA_HECHO.value}"):
         raise ValueError(
-            "profile-only pareja de hecho marital status code '5' is not a valid Modelo 100 ECIVIL export code; "
-            "supply the official Estado Civil code 1-4"
+            f"profile-only pareja de hecho marital status code {code!r} is not a valid Modelo 100 ECIVIL export code; "
+            f"supply the official Estado Civil code, one of {', '.join(accepted)}"
         )
-    raise ValueError(f"Modelo 100 ECIVIL export code must be one of 1, 2, 3, or 4; got {code!r}")
+    raise ValueError(f"Modelo 100 ECIVIL export code must be one of {', '.join(accepted)}; got {code!r}")
 
 
-# The código each autonomous community carries on a Modelo 100 declaration.
-#
-# Grounded in the ``tipo_CCAA`` simpleType of the bundled Modelo 100 record-design
-# XSD (``corpus/aeat_official/disenos_registro/modelo_100/files/``): the código
-# table is an ``xs:documentation`` annotation sitting inside the same simpleType
-# that carries the ``xs:enumeration`` constraining ``codigoCADeclaracion``, so it
-# cannot disagree with AEAT's own validator. All six bundled exercises (2020-2025,
-# four distinct AEAT update dates) carry a byte-identical enumeration and table.
-#
-# This table is Modelo 100's, and is NOT a general-purpose CCAA numbering. Two
-# other numberings for the same communities disagree with it and must never be
-# substituted:
-#   * Modelo 763's design register diverges almost everywhere past código 03 --
-#     its 13 is Madrid, where Modelo 100's 13 is Región de Murcia.
-#   * The INE comunidad codes agree on 01-06, 09, 18 and 19 and then diverge on
-#     eight entries -- INE swaps Castilla y León with Castilla-La Mancha, and its
-#     12, 13, 16 and 17 are Galicia, Madrid, País Vasco and La Rioja against
-#     Modelo 100's Madrid, Murcia, La Rioja and C. Valenciana. A spot-check of
-#     the leading entries passes against INE while more than half of Spain would
-#     still misfile, which is why the grounding test derives every código from
-#     the XSD rather than checking a sample.
-#
-# Códigos 18, 19 and 20 (Ceuta, Melilla, no residente) are declared by the XSD but
-# unreachable from :class:`CCAA`, which is the ordinary common-regime catalogue:
-# the autonomous cities raise ``ForalRegimeError`` and "no residente" is not a
-# comunidad. Códigos 14 and 15 are assigned to nothing in the AEAT table.
-_MODELO100_CCAA_CODIGOS_BY_NAME: Mapping[str, str] = MappingProxyType(
-    {
-        "ANDALUCIA": "01",
-        "ARAGON": "02",
-        "ASTURIAS": "03",
-        "BALEARES": "04",
-        "CANARIAS": "05",
-        "CANTABRIA": "06",
-        "CASTILLA_LA_MANCHA": "07",
-        "CASTILLA_Y_LEON": "08",
-        "CATALUNA": "09",
-        "EXTREMADURA": "10",
-        "GALICIA": "11",
-        "MADRID": "12",
-        "MURCIA": "13",
-        "LA_RIOJA": "16",
-        "COMUNIDAD_VALENCIANA": "17",
-    },
-)
+def renta_modelo100_ccaa_codigos(*, authority: GovernedFactSource | None = None) -> Mapping[CCAA, str]:
+    """Return the official Modelo 100 CCAA códigos the registry declares.
 
-
-@cache
-def renta_modelo100_ccaa_codigos() -> Mapping[CCAA, str]:
-    """Return the official Modelo 100 CCAA códigos accepted by the bundled XSD.
-
-    Keyed lazily rather than at module scope because :class:`CCAA` members are
-    projected from the governed facts registry: naming one resolves the
-    catalogue, and resolving it while this module is being imported reaches the
-    registry authority through an import cycle. The códigos themselves are the
-    form's own datum and stay here.
+    The numbering belongs to Modelo 100 alone. Other modelos and the INE number the
+    same communities differently, so it is never a general CCAA numbering.
     """
-    return MappingProxyType({getattr(CCAA, name): codigo for name, codigo in _MODELO100_CCAA_CODIGOS_BY_NAME.items()})
+    from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+
+    catalogue = resolve_ccaa_catalogue(authority=authority)
+    declared = resolve_form_codes(_PROFILE_FORM_CODES_FACT, authority=authority).under("ccaa")
+    return MappingProxyType({catalogue.require(token): codigo for token, codigo in declared.items()})
 
 
 def modelo100_ccaa_codigo(value: CCAA | str) -> str:
@@ -140,7 +124,7 @@ def modelo100_ccaa_codigo(value: CCAA | str) -> str:
             resolved.
 
     Returns:
-        The two-digit código AEAT's Modelo 100 schema accepts for ``value``.
+        The código AEAT's Modelo 100 schema accepts for ``value``.
 
     Raises:
         ValueError: when ``value`` names no community that carries a Modelo 100
@@ -158,18 +142,9 @@ def modelo100_ccaa_codigo(value: CCAA | str) -> str:
     codigos = renta_modelo100_ccaa_codigos()
     codigo = codigos.get(community) if community is not None else None
     if codigo is None:
-        valid = ", ".join(sorted(member.value for member in codigos))
+        valid = ", ".join(sorted(str(member) for member in codigos))
         raise ValueError(f"no Modelo 100 CCAA código is assigned to {value!r}; communities carrying a código: {valid}")
     return codigo
-
-
-class RentaDisabilityGrade(StrEnum):
-    """Modelo 100 ``tipo_GradoDiscapacidad`` values."""
-
-    GE_33_LT_65 = "1"
-    GE_65 = "2"
-    JUDICIAL_INCAPACITY = "3"
-    ASSISTANCE_OR_REDUCED_MOBILITY = "4"
 
 
 class FiscalResidency(StrictRegistryToken):
@@ -209,8 +184,8 @@ class SituacionFamiliarM145(StrictRegistryToken):
 
 
 __all__ = [
-    "RENTA_MODELO100_ECIVIL_EXPORT_CODES",
     "FiscalResidency",
+    "RentaDeclaracionType",
     "RentaDisabilityGrade",
     "RentaMaritalStatus",
     "RentaSexCode",

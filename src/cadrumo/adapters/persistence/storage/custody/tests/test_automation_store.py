@@ -24,6 +24,7 @@ from pydantic import BaseModel, SecretBytes, ValidationError
 if TYPE_CHECKING:
     from _ctypes import _CArgObject
 
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copied_profile_world, sealed_profile_world
 from cadrumo.adapters.persistence.storage.custody import automation_secret_store as windows_secret_store
 from cadrumo.adapters.persistence.storage.custody import filesystem_primitives
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import (
@@ -53,7 +54,6 @@ from cadrumo.adapters.persistence.storage.custody.zeroise import zeroise
 from cadrumo.adapters.persistence.storage.master_key.active_session import get_active_master_key
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.access_contracts import ApiKeyRecord, AutomationGrant, ProfileAccessBinding
 from cadrumo.application.user_profile.automation_custody_port import (
     AutomationCustodyPort,
@@ -105,14 +105,18 @@ class Subject:
 @pytest.fixture
 def subject(tmp_path: Path) -> Iterator[Subject]:
     create, decode = profile_authority_contexts()
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = register_profile_with_credentials(
-            label="Automation test",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=create,
-            profile_decode_context=decode,
-        )
-        profile_id = UUID(outcome.profile_id)
+    world = sealed_profile_world(
+        "automation store subject",
+        lambda: (
+            register_profile_with_credentials(
+                label="Automation test",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=create,
+                profile_decode_context=decode,
+            ).profile_id
+        ),
+    )
+    with copied_profile_world(world, tmp_path, profile_decode_context=decode) as (_, profile_id):
         password = load_committed_profile_password_material(profile_id)
         # The test-owned storage root is the ancestor of the buckets directory.
         root = password.capsule_path.parent.parent

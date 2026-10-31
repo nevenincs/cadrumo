@@ -276,7 +276,7 @@ def test_two_entitled_filers_declaring_individually_each_take_half(*, operation:
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
         "renta_filing.declaration_type": "1",
     }
     _inject(facts, snapshot, operation=operation)
@@ -294,7 +294,7 @@ def test_conjunta_return_is_not_prorated(*, operation: PinnedAuthorityOperation)
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
         "renta_filing.declaration_type": "2",
     }
     _inject(facts, snapshot, operation=operation)
@@ -307,7 +307,7 @@ def test_unpartnered_individual_filer_takes_the_full_minimo(*, operation: Pinned
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.code,
         "renta_filing.declaration_type": "1",
     }
     _inject(facts, snapshot, operation=operation)
@@ -325,7 +325,7 @@ def test_explicit_override_beats_the_derivation_in_both_directions(*, operation:
     full = _parameter(snapshot, "primer-hijo")
     base: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
         "renta_filing.declaration_type": "1",
     }
 
@@ -345,13 +345,14 @@ def test_shared_custody_still_prorates_without_any_partner_signal(*, operation: 
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_family.descendiente.0.custodia_compartida": "true",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.code,
         "renta_filing.declaration_type": "1",
     }
     _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo") * Decimal("0.5")
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_second_filer_derivation_reads_a_spouse_record_when_status_is_absent() -> None:
     """A spouse record alone indicates a second entitled contribuyente."""
     assert second_entitled_filer_indicated({"renta_spouse.tax_id": "12345678Z"}) is True

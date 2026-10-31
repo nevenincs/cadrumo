@@ -46,7 +46,7 @@ def recorded_fx_seeded_backend(
     @pytest.fixture(name=origin_name, scope="module")
     def origin(
         tmp_path_factory: pytest.TempPathFactory, invoke_cli: CliInvocation, cli_world_provider: CliWorldProvider
-    ) -> Iterator[Path]:
+    ) -> Iterator[object]:
         with cli_world_provider.seeded_origin(
             seed=seed, tmp_path_factory=tmp_path_factory, invoke_cli=invoke_cli, name=name, origin_name=origin_name
         ) as root:

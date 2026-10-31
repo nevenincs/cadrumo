@@ -146,6 +146,27 @@ class AssetBasisStage(StrEnum):
     BUSINESS_ALLOCATED = "business_allocated"
 
 
+BASIS_STAGE_FACTS: Mapping[AssetBasisStage, tuple[str, ...]] = {
+    AssetBasisStage.WHOLE_PROPERTY: (
+        "construction_cost",
+        "land_cost",
+        "ownership_mode",
+        "ownership_share",
+        "office_area",
+        "total_area",
+    ),
+    AssetBasisStage.TAXPAYER_OWNED: ("business_use_share",),
+    AssetBasisStage.BUSINESS_ALLOCATED: ("prior_allocation_provenance",),
+}
+"""The facts of a basis, beyond its amounts, that each stage states and no other stage may."""
+
+OPENING_STATUS_FACTS: Mapping[OpeningHistoryStatus, tuple[str, ...]] = {
+    OpeningHistoryStatus.KNOWN: ("accumulated_amount", "amortization_method", "covered_through_tax_year"),
+    OpeningHistoryStatus.MISSING: (),
+}
+"""The facts of an opening history that each status can state; a missing history states none."""
+
+
 class ActivityAssetBasis(BaseModel):
     """Typed cost basis that applies each allocation fact at most once.
 
@@ -509,6 +530,8 @@ class ActivityAssetRevision(CachedIdentityModel):
 
 
 __all__ = [
+    "BASIS_STAGE_FACTS",
+    "OPENING_STATUS_FACTS",
     "REGISTERABLE_ACQUISITION_SHAPES",
     "AcquisitionLineageReference",
     "AcquisitionShape",

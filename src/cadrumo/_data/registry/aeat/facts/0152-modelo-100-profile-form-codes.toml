@@ -16,6 +16,10 @@ required_text = ["tipo_EstadoCivil", "1 = SOLTERO", "4 = SEPARADO / DIVORCIADO",
 source_ref = "aeat-dr-100-2025-dictionary"
 required_text = ["ECIVIL", "TIPOTRIBUTACION"]
 
+# The ccaa entries are the tipo_CCAA numbering of the Modelo 100 record design, not a
+# general CCAA numbering: Modelo 763 and the INE comunidad codes differ. Ceuta, Melilla
+# and no residente are declared by the design but carry no common-regime CCAA token, and
+# the design assigns two numbers to nothing.
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -26,28 +30,28 @@ entries = [
   { key = "marital_status.viudo", value = "3" },
   { key = "marital_status.separado_divorciado", value = "4" },
   { key = "marital_status.pareja_hecho", value = "5" },
-  { key = "marital_status.export_members", value = "soltero,casado,viudo,separado_divorciado" },
+  { key = "marital_status_export.members", value = "soltero,casado,viudo,separado_divorciado" },
   { key = "disability_grade.ge_33_lt_65", value = "1" },
   { key = "disability_grade.ge_65", value = "2" },
   { key = "disability_grade.judicial_incapacity", value = "3" },
   { key = "disability_grade.assistance_or_reduced_mobility", value = "4" },
   { key = "declaration_type.individual", value = "1" },
   { key = "declaration_type.joint", value = "2" },
-  { key = "ccaa.ANDALUCIA", value = "01" },
-  { key = "ccaa.ARAGON", value = "02" },
-  { key = "ccaa.ASTURIAS", value = "03" },
-  { key = "ccaa.BALEARES", value = "04" },
-  { key = "ccaa.CANARIAS", value = "05" },
-  { key = "ccaa.CANTABRIA", value = "06" },
-  { key = "ccaa.CASTILLA_LA_MANCHA", value = "07" },
-  { key = "ccaa.CASTILLA_Y_LEON", value = "08" },
-  { key = "ccaa.CATALUNA", value = "09" },
-  { key = "ccaa.EXTREMADURA", value = "10" },
-  { key = "ccaa.GALICIA", value = "11" },
-  { key = "ccaa.MADRID", value = "12" },
-  { key = "ccaa.MURCIA", value = "13" },
-  { key = "ccaa.LA_RIOJA", value = "16" },
-  { key = "ccaa.COMUNIDAD_VALENCIANA", value = "17" },
+  { key = "ccaa.andalucia", value = "01" },
+  { key = "ccaa.aragon", value = "02" },
+  { key = "ccaa.asturias", value = "03" },
+  { key = "ccaa.baleares", value = "04" },
+  { key = "ccaa.canarias", value = "05" },
+  { key = "ccaa.cantabria", value = "06" },
+  { key = "ccaa.castilla_la_mancha", value = "07" },
+  { key = "ccaa.castilla_y_leon", value = "08" },
+  { key = "ccaa.cataluna", value = "09" },
+  { key = "ccaa.extremadura", value = "10" },
+  { key = "ccaa.galicia", value = "11" },
+  { key = "ccaa.madrid", value = "12" },
+  { key = "ccaa.murcia", value = "13" },
+  { key = "ccaa.la_rioja", value = "16" },
+  { key = "ccaa.comunidad_valenciana", value = "17" },
   { key = "holder.declarante", value = "2" },
   { key = "holder.conyuge", value = "3" },
   { key = "holder.hijo1", value = "4" },

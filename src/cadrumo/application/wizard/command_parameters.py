@@ -62,6 +62,10 @@ _SITUACION_FAMILIAR_CHOICE_VALUES: list[str] = []
 IVA_REGIME_CHOICE_VALUES: list[str] = []
 _M303_REGIME_COMPOSITION_CHOICE_VALUES: list[str] = []
 _M303_TAX_TERRITORY_CHOICE_VALUES: list[str] = []
+_DECLARATION_TYPE_CHOICE_VALUES: list[str] = []
+_SEX_CHOICE_VALUES: list[str] = []
+_MARITAL_STATUS_CHOICE_VALUES: list[str] = []
+_DISABILITY_GRADE_CHOICE_VALUES: list[str] = []
 
 
 def flag_name(question: WizardQuestion) -> str:
@@ -87,8 +91,8 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "taxation-type": typer.Option(
         "--taxation-type",
-        click_type=_choice(["1", "2"]),
-        metavar=_choice_metavar(["1", "2"]),
+        click_type=_choice(_DECLARATION_TYPE_CHOICE_VALUES),
+        metavar=_choice_metavar(_DECLARATION_TYPE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.taxation-type.help"),
     ),
     "output-language": typer.Option(
@@ -99,14 +103,14 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "taxpayer-sex": typer.Option(
         "--taxpayer-sex",
-        click_type=_choice(["H", "M"]),
-        metavar=_choice_metavar(["H", "M"]),
+        click_type=_choice(_SEX_CHOICE_VALUES),
+        metavar=_choice_metavar(_SEX_CHOICE_VALUES),
         help=tr("wizard.setup.flags.taxpayer-sex.help"),
     ),
     "taxpayer-marital-status": typer.Option(
         "--taxpayer-marital-status",
-        click_type=_choice(["1", "2", "3", "4", "5"]),
-        metavar=_choice_metavar(["1", "2", "3", "4", "5"]),
+        click_type=_choice(_MARITAL_STATUS_CHOICE_VALUES),
+        metavar=_choice_metavar(_MARITAL_STATUS_CHOICE_VALUES),
         help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
     ),
     "taxpayer-marriage-date": typer.Option(
@@ -119,8 +123,8 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "taxpayer-disability-grade": typer.Option(
         "--taxpayer-disability-grade",
-        click_type=_choice(["1", "2", "3", "4"]),
-        metavar=_choice_metavar(["1", "2", "3", "4"]),
+        click_type=_choice(_DISABILITY_GRADE_CHOICE_VALUES),
+        metavar=_choice_metavar(_DISABILITY_GRADE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.taxpayer-disability-grade.help"),
     ),
     "taxpayer-death-date": typer.Option(
@@ -136,14 +140,14 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "spouse-sex": typer.Option(
         "--spouse-sex",
-        click_type=_choice(["H", "M"]),
-        metavar=_choice_metavar(["H", "M"]),
+        click_type=_choice(_SEX_CHOICE_VALUES),
+        metavar=_choice_metavar(_SEX_CHOICE_VALUES),
         help=tr("wizard.setup.flags.spouse-sex.help"),
     ),
     "spouse-disability-grade": typer.Option(
         "--spouse-disability-grade",
-        click_type=_choice(["1", "2", "3", "4"]),
-        metavar=_choice_metavar(["1", "2", "3", "4"]),
+        click_type=_choice(_DISABILITY_GRADE_CHOICE_VALUES),
+        metavar=_choice_metavar(_DISABILITY_GRADE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.spouse-disability-grade.help"),
     ),
     "spouse-non-resident-irpf": typer.Option(
@@ -435,8 +439,8 @@ def _configure_select_option(
     operation: PinnedAuthorityOperation,
     option: typer.models.OptionInfo,
 ) -> None:
-    """Apply registry choices and reviewed help overrides for selects."""
-    if question.widget is not WizardWidget.SELECT:
+    """Apply registry choices and reviewed help overrides for closed questions."""
+    if question.widget is not WizardWidget.SELECT and not question.choices:
         return
     values = [choice.value for choice in question.choices]
     if question.id == "tax-residence-ccaa":

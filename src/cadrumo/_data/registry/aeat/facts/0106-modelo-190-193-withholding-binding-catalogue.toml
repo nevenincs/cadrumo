@@ -92,5 +92,6 @@ entries = [
   { key = "observation_count.ascendants_disabled_65_plus_total.maximum", value = "9" },
   { key = "observation_count.ascendants_disabled_65_plus_whole.maximum", value = "9" },
   { key = "modelo.194.origin.without_values", value = "D" },
+  { key = "modelo.194.clave_codigo", value = "1,2,3" },
   { key = "modelo.193.pendiente.flag", value = "X" },
 ]

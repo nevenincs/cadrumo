@@ -23,7 +23,7 @@ from ...domain.contribuyente.family_fact_context import FamilyFactResolutionCont
 from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.contribuyente.family_types import MinimoDescendientesThresholds
 from ...domain.contribuyente.marriage_facts import marriage_full_year, marriage_month_start
-from ...domain.contribuyente.renta_codes import RentaMaritalStatus
+from ...domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus
 from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
@@ -38,13 +38,21 @@ class ProfileBindingResolutionError(ModeloError):
     """Raised when a profile-sourced binding cannot be resolved for a calculation."""
 
 
-MARRIED_STATUS_TOKENS = frozenset({RentaMaritalStatus.CASADO.value})
+def married_status_codes() -> frozenset[str]:
+    """Return the stored marital-status codes that mean married, from the pinned scope."""
+    return frozenset({RentaMaritalStatus.CASADO.code})
 
-PARTNERED_STATUS_TOKENS = MARRIED_STATUS_TOKENS | frozenset({RentaMaritalStatus.PAREJA_HECHO.value})
 
-UNMARRIED_STATUS_TOKENS = frozenset(
-    member.value for member in RentaMaritalStatus if member is not RentaMaritalStatus.CASADO
-)
+def partnered_status_codes() -> frozenset[str]:
+    """Return the stored marital-status codes of a filer with a partner, from the pinned scope."""
+    return frozenset({RentaMaritalStatus.CASADO.code, RentaMaritalStatus.PAREJA_HECHO.code})
+
+
+def unmarried_status_codes() -> frozenset[str]:
+    """Return the stored marital-status codes that do not mean married, from the pinned scope."""
+    codes = RentaMaritalStatus.form_codes()
+    return frozenset(code for member, code in codes.items() if member is not RentaMaritalStatus.CASADO)
+
 
 _MARRIAGE_DERIVED_MONTH_FACT_PATHS = (
     "renta_taxpayer.marriage_month_start",
@@ -98,8 +106,6 @@ _MINIMO_DESCENDIENTES_DECLARACION_PROPIA_SUFFIX = "declaracion-propia-rentas-lim
 _ANUALIDADES_ALIMENTOS_KEY = "renta_family.anualidades_alimentos_euros"
 
 _MADRID_CCAA_CODE = "madrid"
-
-_CONJUNTA_DECLARATION_TYPE = "2"
 
 _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY = "renta_family.madrid_nacimiento_adopcion_eligible_count"
 
@@ -170,7 +176,7 @@ def inject_derived_marriage_facts(
     raw_date = fact_index.get("renta_taxpayer.marriage_date")
     if not isinstance(raw_date, date):
         marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
-        if marital_status in UNMARRIED_STATUS_TOKENS:
+        if marital_status in unmarried_status_codes():
             fact_index.setdefault("renta_taxpayer.marriage_full_year", False)
             for fact_path in _MARRIAGE_DERIVED_MONTH_FACT_PATHS:
                 fact_index.setdefault(fact_path, Decimal("0"))
@@ -635,10 +641,10 @@ def second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactValu
     """
     marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
     declaration_type = str(fact_index.get("renta_filing.declaration_type", "")).strip()
-    if declaration_type == _CONJUNTA_DECLARATION_TYPE:
+    if declaration_type == RentaDeclaracionType.JOINT.code:
         # Only marriage puts the other progenitor inside this same unit.
-        return marital_status in PARTNERED_STATUS_TOKENS - MARRIED_STATUS_TOKENS
-    if marital_status in PARTNERED_STATUS_TOKENS:
+        return marital_status in partnered_status_codes() - married_status_codes()
+    if marital_status in partnered_status_codes():
         return True
     return any(
         str(value).strip() != ""
@@ -915,10 +921,10 @@ def is_indeterminate_unidad_familiar(fact_index: Mapping[str, UserProfileFactVal
     advisory so both surfaces agree on exactly which units are indeterminate.
     """
     declaration_type = str(fact_index.get("renta_filing.declaration_type", "")).strip()
-    if declaration_type == _CONJUNTA_DECLARATION_TYPE:
+    if declaration_type == RentaDeclaracionType.JOINT.code:
         return True
     marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
-    return marital_status in PARTNERED_STATUS_TOKENS
+    return marital_status in partnered_status_codes()
 
 
 def madrid_nacimiento_adopcion_candidate_weighted_count(

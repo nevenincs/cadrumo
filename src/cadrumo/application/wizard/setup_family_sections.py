@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from ...core.i18n.translatable import Translatable as tr
-from ...domain.contribuyente.renta_codes import RentaMaritalStatus
 from .models import WizardChoice, WizardCondition, WizardQuestion, WizardSection, WizardWidget
 from .setup_questions import confirmation_question
 
@@ -11,6 +10,7 @@ from .setup_questions import confirmation_question
 def build_family_section(
     _eu_eea_resident: WizardCondition,
     _joint_declaration: WizardCondition,
+    _married: WizardCondition,
     _natural_person: WizardCondition,
     _non_resident_irpf: WizardCondition,
     wizard_declaration_type_choices: tuple[WizardChoice, ...],
@@ -74,15 +74,13 @@ def build_family_section(
                 # Art. 82.1 LIRPF: matrimonio sobrevenido — records the date the
                 # current marriage began.  Drives casillas 0245 (vigente todo el año),
                 # 0246 (primer mes), and 0247 (último mes completo).  Only asked when
-                # the taxpayer is married (marital_status = "2").
+                # the taxpayer is married.
                 id="taxpayer-marriage-date",
                 profile_key="renta_taxpayer.marriage_date",
                 widget=WizardWidget.TEXT,
                 prompt=tr("wizard.setup.taxpayer.taxpayer-marriage-date.prompt"),
                 required=False,
-                visible_when=WizardCondition(
-                    question_id="taxpayer-marital-status", equals=RentaMaritalStatus.CASADO.value
-                ),
+                visible_when=_married,
                 answer_type=str,
             ),
             WizardQuestion(

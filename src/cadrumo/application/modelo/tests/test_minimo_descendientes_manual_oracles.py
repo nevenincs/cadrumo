@@ -161,7 +161,7 @@ def _asturias_children() -> dict[str, UserProfileFactValue]:
         "renta_family.descendiente.0.discapacidad": "33",
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 22}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 19}-01-01",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code,
     }
 
 
@@ -217,7 +217,7 @@ def _valenciana_children(*, youngest_files_own_return: bool) -> dict[str, UserPr
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 12}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
         "renta_family.descendiente.2.rentas_anuales": "4050",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.code,
         "renta_filing.declaration_type": "1",
     }
     if youngest_files_own_return:
@@ -264,7 +264,7 @@ def _valenciana_conjunta() -> dict[str, UserProfileFactValue]:
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 12}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
         "renta_family.descendiente.2.rentas_anuales": "4050",
-        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
+        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.code,
         "renta_filing.declaration_type": "2",
     }
 
@@ -328,7 +328,7 @@ def test_an_unmarried_conjunta_return_is_prorated_and_a_married_one_is_not(
 
     unmarried, _ = _aggregates(_valenciana_conjunta(), operation=operation)
     married, _ = _aggregates(
-        {**_valenciana_conjunta(), "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value},
+        {**_valenciana_conjunta(), "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code},
         operation=operation,
     )
 
@@ -339,6 +339,7 @@ def test_an_unmarried_conjunta_return_is_prorated_and_a_married_one_is_not(
     assert unmarried < married
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_the_unmarried_conjunta_branch_is_the_thing_being_exercised() -> None:
     """Pins the derivation input directly, so the branch cannot go unentered.
 
@@ -349,7 +350,7 @@ def test_the_unmarried_conjunta_branch_is_the_thing_being_exercised() -> None:
     conjunta = _valenciana_conjunta()
     assert second_entitled_filer_indicated(conjunta) is True
     assert (
-        second_entitled_filer_indicated({**conjunta, "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value})
+        second_entitled_filer_indicated({**conjunta, "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.code})
         is False
     )
 

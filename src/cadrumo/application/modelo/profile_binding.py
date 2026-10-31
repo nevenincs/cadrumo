@@ -96,18 +96,18 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
-# Marital-status token sets, derived from the enum rather than restated.
+# Marital-status code sets, derived from the enum and the registry rather than restated.
 #
 # Every predicate below reads ``renta_taxpayer.marital_status``, which the
-# profile schema constrains to :class:`RentaMaritalStatus` -- the AEAT ECIVIL
-# filing code, ``'1'``-``'5'``. These sets previously also carried word forms
+# profile schema constrains to the codes of :class:`RentaMaritalStatus` -- the
+# AEAT ECIVIL filing code. These sets previously also carried word forms
 # (``"casado"``, ``"pareja_hecho_registrada"``, ...) belonging to
 # :class:`SituacionFamiliar`, a DIFFERENT taxonomy stored at a different field
 # (``renta_family.situacion_familiar``). Those words could never match a value
 # this field can hold, so they were dead -- and worse than dead: a test passing
 # a word form straight to an injector matched on the dead half while every real
 # filer took the code half, so dropping a CODE from the set regressed
-# production and failed nothing. Measured: removing ``'5'`` left the word form
+# production and failed nothing. Measured: removing the partnership code left the word form
 # answering True while the code form flipped to False.
 #
 # Deriving them from the enum removes the foreign vocabulary by construction
@@ -742,7 +742,7 @@ def resolve_profile_binding_value(
     # gate fact states WHETHER the binding applies, never WHAT it holds, so it
     # must not stand in as a value. Without this, a gated binding whose real
     # fact is absent silently resolves to its precondition: a conjunta filing
-    # missing the spouse's birth date wrote the declaration type ("2") into
+    # missing the spouse's birth date wrote the joint declaration-type code into
     # DPFNAC_C, and a missing EU country wrote a boolean into ZRUE2 -- wrong
     # values on a filed artefact, indistinguishable from real ones. Measured
     # across the whole registry: 12 gated bindings, all Modelo 100, every one

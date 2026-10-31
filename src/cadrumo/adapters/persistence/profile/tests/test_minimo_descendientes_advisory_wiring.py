@@ -153,7 +153,7 @@ def test_the_prorrata_inferred_advisory_reaches_the_coordinator() -> None:
     """
     _write(
         DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1)),
-        marital_status=RentaMaritalStatus.CASADO.value,
+        marital_status=RentaMaritalStatus.CASADO.code,
         declaration_type="1",
     )
     assert _PRORRATA_INFERRED in _source_kinds({_ESTATAL_CASILLA: Decimal("1200")})
@@ -244,7 +244,7 @@ def test_the_coordinator_stays_quiet_when_no_collector_has_anything_to_say() -> 
             rentas_anuales_euros=Decimal("0"),
             prorrata_minimo=False,
         ),
-        marital_status=RentaMaritalStatus.SOLTERO.value,
+        marital_status=RentaMaritalStatus.SOLTERO.code,
         declaration_type="1",
     )
     kinds = _source_kinds({_ESTATAL_CASILLA: Decimal("2400")})

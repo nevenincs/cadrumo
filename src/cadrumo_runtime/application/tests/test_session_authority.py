@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     administration_subject,
     changed,
 )
+from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
@@ -213,12 +214,13 @@ class AdmissionOwner:
     def authenticate_human(self, connection_id: UUID) -> Generator[tuple[ProfileLoginOutcome, str]]:
         self.login_calls += 1
         _, decode = profile_authority_contexts()
-        outcome = authenticate_profile_for_invocation(
-            name=str(self.current.profile.binding.profile_id),
-            passphrase_callback=lambda: PROFILE_INPUT,
-            profile_decode_context=decode,
-            now=self.current.context.now,
-        )
+        with portable_password_custody():
+            outcome = authenticate_profile_for_invocation(
+                name=str(self.current.profile.binding.profile_id),
+                passphrase_callback=lambda: PROFILE_INPUT,
+                profile_decode_context=decode,
+                now=self.current.context.now,
+            )
         self.human_bound.clear()
         try:
             yield outcome, self.human_login_id

@@ -82,7 +82,7 @@ class CliWorldProvider(Protocol):
         invoke_cli: CliInvocation,
         name: str,
         origin_name: str,
-    ) -> AbstractContextManager[Path]: ...
+    ) -> AbstractContextManager[object]: ...
     def seeded_copy(
         self,
         *,

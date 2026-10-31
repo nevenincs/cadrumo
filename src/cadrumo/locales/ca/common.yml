@@ -4956,8 +4956,8 @@ ledger:
         no negatives, amb dos decimals com a màxim.
       disposal_before_service: La data de baixa no pot ser anterior a la posada en
         servei de l'element.
-      disposal_claim_past_boundary: Aquesta dotació arriba fins a %{covered_until},
-        més enllà de la baixa de l'element, que acaba les dotacions el %{boundary}.
+      disposal_claim_past_boundary: Aquesta dotació arriba fins a %{covered_through},
+        més enllà de la baixa de l'element, que acaba les dotacions el %{boundary_through}.
       disposal_donation_refused: La donació no s'admet com a baixa d'un element de
         l'activitat.
       disposal_excess_without_table_class: L'excés de %{tax_year} necessita un grup
@@ -5176,9 +5176,9 @@ ledger:
       useful_life_must_end_after_service: Una vida útil definida ha d'acabar després
         de l'entrada en funcionament de l'element.
       useful_life_not_positive: La vida útil ha de ser un nombre positiu i finit d'anys.
-      vehicle_affectation_required_for_class: L’element {asset_id} és en una classe
-        de taula que pot incloure un vehicle restringit pel RIRPF art. 22.4, per la
-        qual cosa necessita una declaració d'afectació del vehicle.
+      vehicle_affectation_required_for_class: Aquest element és en una classe de taula
+        que pot incloure un vehicle restringit pel RIRPF art. 22.4, per la qual cosa
+        necessita una declaració d'afectació del vehicle.
       vehicle_missing_from_books: Un vehicle que falta als llibres de l'activitat
         no és un element afecte (RIRPF art. 22.2.2º).
       vehicle_private_use_category_restricted: Un vehicle amb qualsevol ús privat

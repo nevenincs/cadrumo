@@ -33,7 +33,6 @@ from ...core.errors.hierarchy import ProfileAnswerTypeError, pydantic_validation
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.utils import parse_bool
-from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...core.spanish_postcode import OptionalSpanishPostcode
 from ..calculations.registry.activity_kind_catalogue import require_irpf_activity_kind
 from ..calculations.registry.ccaa_catalogue import default_ccaa, require_ccaa
@@ -48,6 +47,7 @@ from ..contribuyente.ccaa import CCAA
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import (
     FiscalResidency,
+    RentaDeclaracionType,
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
@@ -197,7 +197,7 @@ class SetupAnswers(BaseModel):
     taxpayer_disability_grade: OptionalDisabilityGrade = ""
     taxpayer_death_date: str = ""
 
-    # ── spouse (taxation_type == "2") ────────────────────────────────────
+    # ── spouse (joint taxation_type) ─────────────────────────────────────
     spouse_tax_id: str = ""
     spouse_name: str = ""
     spouse_surnames: str = ""
@@ -513,7 +513,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, RentaDeclaracionType):
             return value
         if isinstance(value, str):
-            return RentaDeclaracionType(value)
+            return RentaDeclaracionType.from_code(value)
         raise ProfileAnswerTypeError("taxation_type must be a RentaDeclaracionType member, string token, or blank")
 
     @field_validator("taxpayer_sex", "spouse_sex", mode="before")
@@ -525,7 +525,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, RentaSexCode):
             return value
         if isinstance(value, str):
-            return RentaSexCode(value)
+            return RentaSexCode.from_code(value)
         raise ProfileAnswerTypeError("sex code must be a RentaSexCode member, string token, or blank")
 
     @field_validator("taxpayer_marital_status", mode="before")
@@ -537,7 +537,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, RentaMaritalStatus):
             return value
         if isinstance(value, str):
-            return RentaMaritalStatus(value)
+            return RentaMaritalStatus.from_code(value)
         raise ProfileAnswerTypeError(
             "taxpayer_marital_status must be a RentaMaritalStatus member, string token, or blank",
         )
@@ -569,7 +569,7 @@ class SetupAnswers(BaseModel):
         if isinstance(value, RentaDisabilityGrade):
             return value
         if isinstance(value, str):
-            return RentaDisabilityGrade(value)
+            return RentaDisabilityGrade.from_code(value)
         raise ProfileAnswerTypeError("disability grade must be a RentaDisabilityGrade member, string token, or blank")
 
     @field_validator("incn_prior_12_months")
@@ -635,7 +635,7 @@ class SetupAnswers(BaseModel):
             # own localized message rather than the raw English text below.
             raise PydanticCustomError(
                 "spouse_tax_id_required_joint",
-                "spouse_tax_id is required when taxation_type is joint (taxation_type='2')",
+                "spouse_tax_id is required when taxation_type is joint",
             )
         return self
 

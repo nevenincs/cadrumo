@@ -256,6 +256,7 @@ def test_migration_rekeys_a_catalogue_through_encrypted_storage(tmp_path: Path) 
 
         result = migrate_stored_relation_overrides_to_binding_ids(repository, operation=_authority_operation_for_test)
 
+        assert result is not None
         assert result.changed
         reloaded = repository.load()
         assert stored.calculation_revision_id not in reloaded
@@ -264,6 +265,44 @@ def test_migration_rekeys_a_catalogue_through_encrypted_storage(tmp_path: Path) 
 
         # Re-running against the now-migrated encrypted row is a no-op, so a
         # migration interrupted after its write can simply be repeated.
-        rerun = migrate_stored_relation_overrides_to_binding_ids(repository, operation=_authority_operation_for_test)
+        rerun = migrate_stored_relation_overrides_to_binding_ids(
+            CalculationRevisionCatalogueRepository(objects=profile.repository),
+            operation=_authority_operation_for_test,
+        )
+        assert rerun is not None
         assert not rerun.changed
         assert tuple(repository.load().revisions) == tuple(reloaded.revisions)
+
+
+def test_one_operation_reads_the_catalogue_for_migration_once(tmp_path: Path) -> None:
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+    ):
+        _seed_parent_work_unit(profile)
+        repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        repository.save(_catalogue(_revision(relation_overrides={_ABSORBING_BINDING_ID: _OVERRIDE_VALUE})))
+
+        first = migrate_stored_relation_overrides_to_binding_ids(repository, operation=operation)
+        second = migrate_stored_relation_overrides_to_binding_ids(repository, operation=operation)
+
+    assert first is not None
+    assert second is None
+
+
+def test_the_next_operation_still_refuses_an_unknown_stored_override_key(tmp_path: Path) -> None:
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+    ):
+        _seed_parent_work_unit(profile)
+        settled = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        settled.save(_catalogue(_revision(relation_overrides={_ABSORBING_BINDING_ID: _OVERRIDE_VALUE})))
+        migrate_stored_relation_overrides_to_binding_ids(settled, operation=operation)
+        next_operation = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        next_operation.save(_catalogue(_revision(relation_overrides={"not-a-known-key": _OVERRIDE_VALUE})))
+
+        for _attempt in range(2):
+            # A refused run settles nothing, so the operation's next caller is refused too.
+            with pytest.raises(OrphanedRelationOverrideError):
+                migrate_stored_relation_overrides_to_binding_ids(next_operation, operation=operation)

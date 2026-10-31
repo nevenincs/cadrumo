@@ -371,13 +371,12 @@ class ActivityAssetDisposalSnapshot(BaseModel):
             ) from error
 
 
-class ActivityAssetRevisionSnapshot(BaseModel):
+class _ActivityAssetRevisionFields(BaseModel):
     """Public revision DTO with all monetary and fractional facts explicit."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     asset_id: str = Field(min_length=1, max_length=128)
-    revision_number: int = Field(ge=1)
     supersedes_revision_id: Hex64Str | None = None
     acquisition: AcquisitionLineageSnapshot
     acquisition_shape: AcquisitionShape
@@ -401,36 +400,38 @@ class ActivityAssetRevisionSnapshot(BaseModel):
     @classmethod
     def from_domain(cls, value: ActivityAssetRevision) -> Self:
         """Project one immutable revision without changing its facts."""
-        return cls(
-            asset_id=value.asset_id,
-            revision_number=value.revision_number,
-            supersedes_revision_id=value.supersedes_revision_id,
-            acquisition=AcquisitionLineageSnapshot.from_domain(value.acquisition),
-            acquisition_shape=value.acquisition_shape,
-            further_acquisitions=tuple(
-                FurtherAcquisitionSnapshot.from_domain(row) for row in value.further_acquisitions
-            ),
-            declared_acquisition_date=value.declared_acquisition_date,
-            declared_activity=value.declared_activity,
-            asset_kind=value.asset_kind,
-            basis=ActivityAssetBasisSnapshot.from_domain(value.basis),
-            residual_value=project_scalar(value.residual_value),
-            in_service_date=value.in_service_date,
-            out_of_service_date=value.out_of_service_date,
-            disposal=None if value.disposal is None else ActivityAssetDisposalSnapshot.from_domain(value.disposal),
-            opening_history=OpeningHistorySnapshot.from_domain(value.opening_history),
-            acquired_condition=value.acquired_condition,
-            building_construction_date=value.building_construction_date,
-            amortization=ActivityAssetAmortizationElectionSnapshot.from_domain(value.amortization),
-            vehicle_affectation=value.vehicle_affectation,
+        return cls.model_validate(
+            dict(
+                asset_id=value.asset_id,
+                revision_number=value.revision_number,
+                supersedes_revision_id=value.supersedes_revision_id,
+                acquisition=AcquisitionLineageSnapshot.from_domain(value.acquisition),
+                acquisition_shape=value.acquisition_shape,
+                further_acquisitions=tuple(
+                    FurtherAcquisitionSnapshot.from_domain(row) for row in value.further_acquisitions
+                ),
+                declared_acquisition_date=value.declared_acquisition_date,
+                declared_activity=value.declared_activity,
+                asset_kind=value.asset_kind,
+                basis=ActivityAssetBasisSnapshot.from_domain(value.basis),
+                residual_value=project_scalar(value.residual_value),
+                in_service_date=value.in_service_date,
+                out_of_service_date=value.out_of_service_date,
+                disposal=None if value.disposal is None else ActivityAssetDisposalSnapshot.from_domain(value.disposal),
+                opening_history=OpeningHistorySnapshot.from_domain(value.opening_history),
+                acquired_condition=value.acquired_condition,
+                building_construction_date=value.building_construction_date,
+                amortization=ActivityAssetAmortizationElectionSnapshot.from_domain(value.amortization),
+                vehicle_affectation=value.vehicle_affectation,
+            )
         )
 
-    def to_domain(self) -> ActivityAssetRevision:
-        """Restore and revalidate the canonical immutable revision."""
+    def _to_domain(self, number: int) -> ActivityAssetRevision:
+        """Restore and revalidate the canonical immutable revision under its assigned number."""
         disposal = None if self.disposal is None else self.disposal.to_domain()
         return ActivityAssetRevision(
             asset_id=self.asset_id,
-            revision_number=self.revision_number,
+            revision_number=number,
             supersedes_revision_id=self.supersedes_revision_id,
             acquisition=self.acquisition.to_domain(),
             acquisition_shape=self.acquisition_shape,
@@ -450,6 +451,16 @@ class ActivityAssetRevisionSnapshot(BaseModel):
             vehicle_affectation=self.vehicle_affectation,
         )
 
+
+class ActivityAssetRevisionSnapshot(_ActivityAssetRevisionFields):
+    """A complete public revision with its assigned number."""
+
+    revision_number: int = Field(ge=1)
+
+    def to_domain(self, *, revision_number: int | None = None) -> ActivityAssetRevision:
+        """Restore the revision, optionally under a supplied number."""
+        return self._to_domain(self.revision_number if revision_number is None else revision_number)
+
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _canonical(self) -> Self:
@@ -457,11 +468,30 @@ class ActivityAssetRevisionSnapshot(BaseModel):
         return self
 
 
-class ActivityAssetCorrectionRevisionSnapshot(ActivityAssetRevisionSnapshot):
-    """The revision a correct request states, whose baja is always stated."""
+class ActivityAssetCorrectionRevisionSnapshot(_ActivityAssetRevisionFields):
+    """The revision a correct request states: its baja is always stated and its number is the backend's to assign.
 
+    The number follows the revision this one supersedes.  A number a caller states is checked
+    against that rule and refused only when it disagrees.
+    """
+
+    revision_number: int | None = Field(default=None, ge=1)
+    """Left out, it is assigned as one more than the superseded revision's."""
     disposal: ActivityAssetDisposalSnapshot | None = Field(...)
     """The baja the correction records: another one replaces it and null removes it.  Leaving it out is refused."""
+
+    def to_domain(self, *, revision_number: int | None = None) -> ActivityAssetRevision:
+        """Restore the revision, which needs the number its superseded revision implies when none is stated."""
+        number = self.revision_number if revision_number is None else revision_number
+        if number is None:
+            raise ValueError("a correction's number is assigned from the revision it supersedes")
+        return self._to_domain(number)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _canonical(self) -> Self:
+        self._to_domain(self.revision_number or 2)
+        return self
 
 
 class AmortizationClaimSnapshot(BaseModel):

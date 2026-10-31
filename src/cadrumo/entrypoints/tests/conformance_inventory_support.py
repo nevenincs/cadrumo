@@ -10,7 +10,11 @@ from ...application.inventory.registered_evidence_operation import (
     InventoryEvidenceAddProjection,
     InventoryEvidenceAddRequest,
 )
-from ...application.inventory.registered_options_operation import InventoryOptionsProjection, InventoryOptionsRequest
+from ...application.inventory.registered_options_operation import (
+    INVENTORY_OPTION_FAMILIES,
+    InventoryOptionsProjection,
+    InventoryOptionsRequest,
+)
 from ...application.inventory.registered_projections import InventoryClosingAuthorityOperationProjection
 from ...application.inventory.registered_requests import (
     InventoryClosingValueFactsInput,
@@ -50,21 +54,9 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             result = outcome.resolve_result(InventoryOptionsProjection)
             assert result.profile_id == context.profile_id
             families = {family.family: family.options for family in result.families}
-            assert set(families) == {
-                "acquisition_evidence_kind",
-                "attributable_cost_kind",
-                "closing_authority",
-                "closing_valuation_basis",
-                "correction_reason",
-                "decision_evidence_role",
-                "movement_kind",
-                "physical_evidence_role",
-                "retirement_reason",
-                "valuation_method",
+            assert {family: tuple(option.value for option in options) for family, options in families.items()} == {
+                family: tuple(member.value for member in members) for family, members in INVENTORY_OPTION_FAMILIES
             }
-            assert tuple(option.value for option in families["closing_authority"]) == tuple(
-                authority.value for authority in InventoryClosingAuthority
-            )
             for family, options in families.items():
                 assert options and len({option.value for option in options}) == len(options)
                 assert all(
@@ -87,7 +79,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             result = outcome.resolve_result(InventoryEvidenceAddProjection)
             assert result.profile_id == context.profile_id
             assert result.content_digest == digest
-            assert result.reference == f"attachment:{digest}"
+            assert result.reference == f"document-{digest}"
             store = AttachmentStore(bucket_id=profile)
             assert store.read_bytes(digest) == payload
             assert store.load_manifest(digest).bucket_id == profile

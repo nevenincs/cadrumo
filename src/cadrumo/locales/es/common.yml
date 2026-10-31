@@ -4965,8 +4965,8 @@ ledger:
         negativas, con dos decimales como máximo.
       disposal_before_service: La fecha de baja no puede ser anterior a la puesta
         en servicio del elemento.
-      disposal_claim_past_boundary: Esta dotación llega hasta %{covered_until}, más
-        allá de la baja del elemento, que termina sus dotaciones el %{boundary}.
+      disposal_claim_past_boundary: Esta dotación llega hasta %{covered_through},
+        más allá de la baja del elemento, que termina sus dotaciones el %{boundary_through}.
       disposal_donation_refused: La donación no se admite como baja de un elemento
         de la actividad.
       disposal_excess_without_table_class: El exceso de %{tax_year} necesita un grupo
@@ -5186,9 +5186,9 @@ ledger:
         de la entrada en funcionamiento del elemento.
       useful_life_not_positive: La vida útil debe ser un número positivo y finito
         de años.
-      vehicle_affectation_required_for_class: El elemento {asset_id} está en una clase
-        de tabla que puede incluir un vehículo restringido por el RIRPF art. 22.4,
-        por lo que necesita una declaración de afectación del vehículo.
+      vehicle_affectation_required_for_class: Este elemento está en una clase de tabla
+        que puede incluir un vehículo restringido por el RIRPF art. 22.4, por lo que
+        necesita una declaración de afectación del vehículo.
       vehicle_missing_from_books: Un vehículo que falta en los libros de la actividad
         no es un elemento afecto (RIRPF art. 22.2.2º).
       vehicle_private_use_category_restricted: Un vehículo con cualquier uso privado

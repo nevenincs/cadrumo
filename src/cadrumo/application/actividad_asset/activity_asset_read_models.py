@@ -23,7 +23,12 @@ from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindin
 from ...domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import PercentFact
 from ...domain.renta.actividad_asset.fact_leaves import SEQUENCE_STEP, FactKind, indexed_to_step_path
-from ...domain.renta.actividad_asset.lifecycle import AcquisitionShape, AssetKind
+from ...domain.renta.actividad_asset.lifecycle import (
+    AcquisitionShape,
+    AssetBasisStage,
+    AssetKind,
+    OpeningHistoryStatus,
+)
 from ...domain.renta.actividad_asset.register_records import ActivityAssetEventKind
 from ...domain.renta.actividad_asset.schedule import last_day_covered
 from ..operations.public_scalar import PublicDecimal
@@ -523,6 +528,23 @@ class ActivityAssetDisposalReasonOption(_ReadModel):
     label_key: str
 
 
+class ActivityAssetBasisStageOption(_ReadModel):
+    """One stage a basis can be stated at, with the facts only that stage carries."""
+
+    stage: AssetBasisStage
+    facts: tuple[str, ...]
+    """Names of the basis facts this stage states; the form carries these and no others of the stages."""
+    is_property: bool
+    """Whether the basis is the whole-property one, which flags the element as property."""
+
+
+class ActivityAssetOpeningStatusOption(_ReadModel):
+    """One status an opening history can have, with the facts it can state."""
+
+    status: OpeningHistoryStatus
+    facts: tuple[str, ...]
+
+
 class ActivityAssetFormOptionsView(_ReadModel):
     """What the registry admits for one asset kind and tax year."""
 
@@ -539,6 +561,10 @@ class ActivityAssetFormOptionsView(_ReadModel):
     table_groups: tuple[ActivityAssetTableGroup, ...]
     disposal_reasons: tuple[ActivityAssetDisposalReasonOption, ...]
     """The reasons a baja is accepted with, in the order the record's own check admits them."""
+    basis_stages: tuple[ActivityAssetBasisStageOption, ...] = ()
+    opening_statuses: tuple[ActivityAssetOpeningStatusOption, ...] = ()
+    m130_periods: tuple[str, ...] = ()
+    """The Modelo 130 periods the registry serves for the tax year, as the handoff names them."""
 
 
 class ActivityAssetAcquisitionCandidate(_ReadModel):
@@ -591,6 +617,7 @@ __all__ = [
     "TIMELINE_LABELLED_FIELDS",
     "TIMELINE_TOKEN_FAMILIES",
     "ActivityAssetAcquisitionCandidate",
+    "ActivityAssetBasisStageOption",
     "ActivityAssetClaimStaleReason",
     "ActivityAssetClaimState",
     "ActivityAssetClaimableInterval",
@@ -611,6 +638,7 @@ __all__ = [
     "ActivityAssetMethodFacts",
     "ActivityAssetNonDeductibleIvaState",
     "ActivityAssetNotTableBoundReason",
+    "ActivityAssetOpeningStatusOption",
     "ActivityAssetPlanAdvisory",
     "ActivityAssetPlanAdvisoryKind",
     "ActivityAssetPlanClaim",
