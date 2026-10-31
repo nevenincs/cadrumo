@@ -6025,9 +6025,8 @@ topic:
       felsorolja azokat.
     title: Mezők (casillák)
   formats:
-    body: A CLI szöveges, JSON-, táblázatos vagy CSV-formátumban adja ki a kimenetet
-      a `--format` kapcsoló alapján. Automatizáláshoz a JSON ajánlott, emberi olvasáshoz
-      a szöveges.
+    body: A CLI `text` vagy `json` formátumban adja ki a kimenetet a `--format` kapcsoló
+      alapján. Automatizáláshoz a JSON ajánlott, emberi olvasáshoz a `text` formátum.
     title: Kimeneti formátumok
   irpf-regime:
     body: Önálló vállalkozó IRPF-rezsimje. Közvetlen becslés (normál vagy egyszerűsített)

@@ -6045,8 +6045,8 @@ topic:
       calculades o derivades de bindings. 'aeat app modelo casillas <model>' les llista.
     title: Caselles
   formats:
-    body: La CLI emet sortida en text, JSON, taula o csv segons '--format'. JSON és
-      recomanat per a automatització; text per a inspecció humana.
+    body: La CLI emet sortida en `text` o `json` segons `--format`. JSON és recomanat
+      per a automatització; `text` per a inspecció humana.
     title: Formats de sortida
   irpf-regime:
     body: Règim IRPF d'un autònom. Estimació directa (normal o simplificada) o estimació

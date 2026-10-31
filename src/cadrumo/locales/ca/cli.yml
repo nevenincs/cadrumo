@@ -826,10 +826,11 @@ cli:
           720)
         period_help: 'Token de període d''agregació: 0A anual, 1T-4T trimestres, 01-12
           mesos.'
-        received_invoice_retencion_help: 'JSON InvoiceWithholdingEvidenceRequest:
+        received_invoice_retencion_help: 'JSON `InvoiceWithholdingEvidenceRequest`:
           una assignació de retenció d''una factura rebuda, amb la seva prova de pagament
-          o d''exigibilitat. Una assignació per ordre; el règim és un fet legal sobre
-          l''activitat del perceptor i mai s''infereix de la factura.'
+          o d''exigibilitat. Una assignació per ordre; el valor del camp `scheme`
+          és un fet legal sobre l''activitat del perceptor i mai s''infereix de la
+          factura.'
       aggregate_help: Agrega les xifres d'un model i un període. Les observacions
         de contrapartida i de béns a l'estranger es passen com a opcions JSON. Els
         models de retencions llegeixen les files ja desades per al període, després
@@ -902,7 +903,7 @@ cli:
           coneguts per a {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La llista d'orígens no està acotada per %{missing_filters};
           pot incloure ids d'orígens d'una versió del model oficial que no coincideix
-          amb la declaració emprada per work calculate.
+          amb la declaració emprada per `aeat app modelo work calculate`.
         year_help: Exercici fiscal del model (p. ex. 2026)
       casilla:
         casilla_help: Id de casella o número imprès de casella que cal descriure (p.
@@ -2515,8 +2516,8 @@ cli:
         incomplete: 'Falten dades obligatòries al perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contrasenya del nou perfil: '
       create_guidance_unavailable: El perfil s'ha creat correctament, però no s'han
-        pogut preparar els avisos amb els passos següents. Consulta l'estat del perfil
-        per veure què falta.
+        pogut preparar els avisos amb els passos següents. Executa `aeat config profile
+        status` per veure què falta al perfil.
       create_help: Crea un perfil protegit per una contrasenya. En un terminal ofereix
         després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
         amb 'cadrumo-runtime config profile recovery enable'.

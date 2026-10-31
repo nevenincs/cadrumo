@@ -832,10 +832,11 @@ cli:
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: 'Token de periodo de agregación: 0A anual, 1T-4T trimestres,
           01-12 meses.'
-        received_invoice_retencion_help: 'JSON InvoiceWithholdingEvidenceRequest:
+        received_invoice_retencion_help: 'JSON `InvoiceWithholdingEvidenceRequest`:
           una asignación de retención de una factura recibida, con su prueba de pago
-          o de exigibilidad. Una asignación por comando; el scheme es un hecho legal
-          sobre la actividad del perceptor y nunca se infiere de la factura.'
+          o de exigibilidad. Una asignación por comando; el valor del campo `scheme`
+          es un hecho legal sobre la actividad del perceptor y nunca se infiere de
+          la factura.'
       aggregate_help: Agrega las cifras de un modelo y un periodo. Las observaciones
         de contrapartes y de bienes en el extranjero se pasan como opciones JSON.
         Los modelos de retenciones leen las filas ya almacenadas para el periodo,
@@ -909,7 +910,7 @@ cli:
           conocidos para {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La lista de orígenes no está acotada por %{missing_filters};
           puede incluir ids de orígenes de una versión del modelo oficial que no coincide
-          con la declaración usada por work calculate.
+          con la declaración usada por `aeat app modelo work calculate`.
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casilla:
         casilla_help: Id de casilla o número impreso de casilla que se debe describir
@@ -2531,8 +2532,8 @@ cli:
         incomplete: 'Faltan datos obligatorios en el perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contraseña del nuevo perfil: '
       create_guidance_unavailable: El perfil se ha creado correctamente, pero no se
-        han podido preparar los avisos con los pasos siguientes. Consulta el estado
-        del perfil para ver qué falta.
+        han podido preparar los avisos con los pasos siguientes. Ejecuta `aeat config
+        profile status` para ver qué falta en el perfil.
       create_help: Crea un perfil protegido por una contraseña. En un terminal ofrece
         después un código de recuperación opcional; puedes omitirlo o añadirlo más
         tarde con 'cadrumo-runtime config profile recovery enable'.

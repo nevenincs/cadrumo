@@ -6047,8 +6047,8 @@ topic:
       <modelo>' las lista.
     title: Casillas
   formats:
-    body: La CLI emite salida en texto, JSON, table o csv según '--format'. JSON es
-      el formato recomendado para automatización; text para inspección humana.
+    body: La CLI emite salida en `text` o `json` según `--format`. JSON es el formato
+      recomendado para automatización; `text` para inspección humana.
     title: Formatos de salida
   irpf-regime:
     body: Régimen IRPF de un autónomo. Estimación directa (normal o simplificada)

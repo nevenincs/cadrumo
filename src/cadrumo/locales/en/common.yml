@@ -5931,8 +5931,8 @@ topic:
       or derived from bindings. 'aeat app modelo casillas <modelo>' lists them.
     title: Casillas
   formats:
-    body: The CLI emits output in text, JSON, table, or csv based on '--format'. JSON
-      is recommended for automation; text for human inspection.
+    body: The CLI emits output in `text` or `json` based on `--format`. JSON is recommended
+      for automation; `text` for human inspection.
     title: Output formats
   irpf-regime:
     body: An autonomo's IRPF regime. Estimación directa (normal or simplified) or

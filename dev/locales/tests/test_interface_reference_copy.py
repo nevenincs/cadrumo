@@ -5,7 +5,9 @@ import re
 
 import pytest
 
+from cadrumo.application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.output_rendering import OutputFormat
 
 from ..._paths import REPO_ROOT
 from ..signal_command_paths import command_path_pattern, executable_command_paths
@@ -47,6 +49,22 @@ def test_referenced_commands_are_complete_executable_paths(locale: str, key: str
 
     assert paths <= referenced
     assert all(tuple(path.split()) in executable_command_paths() for path in paths)
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_format_topic_advertises_only_the_global_output_format_values(locale: str) -> None:
+    value = tr("topic.formats.body", locale=locale)
+    literals = set(re.findall(r"`([^`]+)`", value))
+    assert literals == {member.value for member in OutputFormat} | {"--format"}
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_invoice_evidence_help_names_the_public_request_and_its_scheme_field(locale: str) -> None:
+    value = tr("cli.app.modelo.aggregate.received_invoice_retencion_help", locale=locale)
+    assert set(re.findall(r"`([^`]+)`", value)) == {InvoiceWithholdingEvidenceRequest.__name__, "scheme"}
+    field = InvoiceWithholdingEvidenceRequest.model_fields["scheme"]
+    assert field.alias in (None, "scheme")
+    assert field.validation_alias in (None, "scheme")
 
 
 @pytest.fixture(scope="module")
