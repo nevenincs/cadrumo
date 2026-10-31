@@ -198,10 +198,19 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
         raise ValueError("Mach-O relocation requires an explicit sealing identity")
     for path in images:
         _select_arm64(path)
-    names = dependencies_by_name(images)
+    names = load_targets(images)
     system = set(contract["native_system_libraries"])
     for path in images:
         _relocate_image(path, floor, names, system, tools, signing_identity)
+
+
+def load_targets(images: list[Path]) -> dict[str, Path]:
+    """Index the images a load command can name: dynamic libraries with an install name.
+
+    Executables and loadable bundles carry no install name and no load command can
+    reference them, so equally named but different programs do not conflict.
+    """
+    return dependencies_by_name([path for path in images if inspect(path).identity is not None])
 
 
 def _relocate_image(

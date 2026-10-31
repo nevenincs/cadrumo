@@ -184,6 +184,36 @@ def test_macho_newer_deployment_refused_before_native_tools(tmp_path: Path) -> N
         macos.relocate([image], tmp_path, contract)
 
 
+def _macho_library(path: Path, install_name: str | None, payload: bytes) -> Path:
+    """An ARM64 Mach-O whose only optional command is an LC_ID_DYLIB install name."""
+    commands = struct.pack("<6I", 0x32, 24, 1, 14 << 16, 0, 0)
+    count = 1
+    if install_name is not None:
+        name = install_name.encode() + b"\0"
+        name += b"\0" * (-(24 + len(name)) % 8)
+        commands += struct.pack("<6I", 0xD, 24 + len(name), 24, 0, 0, 0) + name
+        count = 2
+    filetype = 6 if install_name is not None else 2
+    header = struct.pack("<8I", 0xFEEDFACF, 0x0100000C, 0, filetype, count, len(commands), 0, 0)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(header + commands + payload)
+    return path
+
+
+def test_macho_load_targets_ignore_equally_named_programs(tmp_path: Path) -> None:
+    first = _macho_library(tmp_path / "playwright/driver/node", None, b"one")
+    second = _macho_library(tmp_path / "agent/node/bin/node", None, b"two")
+    library = _macho_library(tmp_path / "bin/libshared.dylib", "@rpath/libshared.dylib", b"lib")
+    assert macos.load_targets([first, second, library]) == {"libshared.dylib": library}
+
+
+def test_macho_load_targets_refuse_conflicting_libraries(tmp_path: Path) -> None:
+    first = _macho_library(tmp_path / "one/libshared.dylib", "@rpath/libshared.dylib", b"one")
+    second = _macho_library(tmp_path / "two/libshared.dylib", "@rpath/libshared.dylib", b"two")
+    with pytest.raises(ValueError, match="Ambiguous"):
+        macos.load_targets([first, second])
+
+
 def test_conflicting_native_basenames_are_refused(tmp_path: Path) -> None:
     first = tmp_path / "first/libdependency.so"
     second = tmp_path / "second/libdependency.so"

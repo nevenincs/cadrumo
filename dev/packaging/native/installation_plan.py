@@ -16,7 +16,7 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 
 from .hashing import digest
 from .identity import DistributionIdentity
-from .layout import ApplicationImage, application_images, load_layout
+from .layout import ApplicationBundle, ApplicationImage, application_bundle, application_images, load_layout
 from .macos_launchagent import author_agent, verify_agent
 from .package_inventory import package_inventory
 
@@ -34,6 +34,14 @@ def output_mode(name: str, mode: int = 0o644) -> int:
     return (0o666 if mode & 0o200 else 0o444) | (0o111 if executable else 0)
 
 
+@dataclass(frozen=True)
+class BundleInputs:
+    """Build artifacts an application wrapper needs beyond the payload it nests."""
+
+    launcher: Path
+    icon: Path
+
+
 @dataclass
 class Preparation:
     """Trusted source projection; none of these expectations comes from a receipt."""
@@ -46,7 +54,13 @@ class Preparation:
     identity: dict[str, object]
 
 
-def project(payload: Path, identity_file: Path, desktop: str | None, control_root: Path) -> Preparation:
+def project(
+    payload: Path,
+    identity_file: Path,
+    desktop: str | None,
+    control_root: Path,
+    bundle: BundleInputs | None = None,
+) -> Preparation:
     """Project an already validated payload and current installation controls."""
     manifest_file = payload / "data/package-manifest.json"
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
@@ -55,7 +69,8 @@ def project(payload: Path, identity_file: Path, desktop: str | None, control_roo
     managers = [image for image in application_images(manifest["layout"]) if image.target == "rust_manager"]
     versioned = target.startswith("windows-") and bool(managers)
     definition = manifest["layout"].get("installation", {})
-    destination = _installation_destination(target, value, definition, managers, desktop, versioned)
+    wrapper = application_bundle(manifest["layout"]) if target.startswith("macos-") else None
+    destination = _installation_destination(target, value, definition, managers, desktop, versioned, wrapper)
     source = {**package_inventory(payload, manifest), "data/package-manifest.json": digest(manifest_file)}
     files, modes = _payload_projection(payload, destination, source)
     controls: dict[str, bytes] = {}
@@ -74,7 +89,8 @@ def project(payload: Path, identity_file: Path, desktop: str | None, control_roo
             modes,
         )
     _linux_controls(target, desktop, value, control_root, controls)
-    _macos_controls(target, desktop, value, managers, manifest["files"], controls)
+    if wrapper is not None and desktop is not None:
+        _macos_controls(wrapper, bundle, desktop, value, managers, manifest["files"], controls, modes)
     if target.startswith("windows-") and bool(desktop) and not versioned:
         metadata = windows_metadata(value, managers, destination, desktop, versioned)
     _include_controls(controls, files, modes)
@@ -196,33 +212,46 @@ def _linux_controls(
 
 
 def _macos_controls(
-    target: str,
-    desktop: str | None,
+    wrapper: ApplicationBundle,
+    bundle: BundleInputs | None,
+    desktop: str,
     value: Mapping[str, str],
     managers: list[ApplicationImage],
     files: Mapping[str, object],
     controls: dict[str, bytes],
+    modes: dict[str, int],
 ) -> None:
-    if target.startswith("macos-"):
-        plist = {
-            "CFBundleIdentifier": value["application_id"],
-            "CFBundleName": value["name"],
-            "CFBundleDisplayName": value["name"],
-            "CFBundleExecutable": desktop,
-            "CFBundlePackageType": "APPL",
-            "CFBundleShortVersionString": value["version"],
-            "CFBundleVersion": value["version"],
-            "LSMinimumSystemVersion": value["compatibility_floor"].removeprefix("macos-"),
-            "LSApplicationCategoryType": "public.app-category.finance",
-            "NSHighResolutionCapable": True,
-        }
-        controls[f"{value['name']}.app/Contents/Info.plist"] = plistlib.dumps(plist)
-        if managers:
-            if len(managers) != 1 or managers[0].package_path not in files:
-                raise ValueError("A macOS LaunchAgent requires one inventory-owned manager image")
-            agent = author_agent(DistributionIdentity(**value), managers[0])
-            verify_agent(agent.contents, DistributionIdentity(**value), managers[0])
-            controls[f"{value['name']}.app/{agent.destination.as_posix()}"] = agent.contents
+    if bundle is None:
+        raise ValueError("A macOS application bundle requires its main executable and icon")
+    application = f"{value['name']}.app"
+    icon = f"{PurePosixPath(desktop).name}.icns"
+    plist = {
+        "CFBundleIdentifier": value["application_id"],
+        "CFBundleName": value["name"],
+        "CFBundleDisplayName": value["name"],
+        "CFBundleExecutable": desktop,
+        "CFBundleIconFile": icon,
+        "CFBundleInfoDictionaryVersion": "6.0",
+        "CFBundlePackageType": "APPL",
+        "CFBundleShortVersionString": value["version"],
+        "CFBundleVersion": value["version"],
+        "LSMinimumSystemVersion": value["compatibility_floor"].removeprefix("macos-"),
+        "LSApplicationCategoryType": "public.app-category.finance",
+        # The desktop is an ordinary windowed application with a Dock presence.
+        "LSUIElement": False,
+        "NSHighResolutionCapable": True,
+    }
+    controls[f"{application}/Contents/Info.plist"] = plistlib.dumps(plist, sort_keys=True)
+    launcher = f"{application}/{wrapper.executable_directory}/{desktop}"
+    controls[launcher] = bundle.launcher.read_bytes()
+    modes[launcher] = output_mode(launcher, 0o755)
+    controls[f"{application}/{wrapper.resources}/{icon}"] = bundle.icon.read_bytes()
+    if managers:
+        if len(managers) != 1 or managers[0].package_path not in files:
+            raise ValueError("A macOS LaunchAgent requires one inventory-owned manager image")
+        agent = author_agent(DistributionIdentity(**value), managers[0], wrapper)
+        verify_agent(agent.contents, DistributionIdentity(**value), managers[0], wrapper)
+        controls[f"{application}/{agent.destination.as_posix()}"] = agent.contents
 
 
 def _installation_destination(
@@ -232,6 +261,7 @@ def _installation_destination(
     managers: list[ApplicationImage],
     desktop: str | None,
     versioned: bool,
+    wrapper: ApplicationBundle | None,
 ) -> str:
     if versioned:
         _require_versioned_layout(definition, managers, value["version"])
@@ -240,7 +270,9 @@ def _installation_destination(
     elif target.startswith("macos-"):
         if desktop is None or not desktop or "/" in desktop:
             raise ValueError("A macOS application bundle requires a root-level desktop executable")
-        destination = f"{value['name']}.app/Contents/MacOS"
+        if wrapper is None:
+            raise ValueError("The macOS platform mapping must declare its application bundle")
+        destination = f"{value['name']}.app/{wrapper.payload}"
     elif versioned:
         destination = f"{definition['versions']}/{value['version']}"
     else:

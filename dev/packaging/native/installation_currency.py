@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import NotRequired, TypedDict, cast
 
-from .installation_plan import Preparation, project
+from .installation_plan import BundleInputs, Preparation, project
 
 
 def public_permissions(path: Path) -> bool:
@@ -109,6 +109,7 @@ def existing(
     control_root: Path,
     *,
     allow_change: bool,
+    bundle: BundleInputs | None = None,
 ) -> bool:
     """Return currency only after actual source, stage and control admission.
 
@@ -122,7 +123,7 @@ def existing(
         raise ValueError("Existing native installation stage has no owning receipt; select a fresh build directory")
     receipt = cast(_Receipt, json.loads(receipt_file.read_text(encoding="utf-8")))
     validate_payload(payload, identity_file, desktop)
-    plan = project(payload, identity_file, desktop, control_root)
+    plan = project(payload, identity_file, desktop, control_root, bundle)
     recorded = receipt.get("preparation")
     # Bind the existing package manifest independently of a potentially edited
     # file inventory. A forged inventory cannot disguise a different package.

@@ -314,7 +314,11 @@ def build_product(
     client = build_client_json(REPO_ROOT)
     output = output.absolute()
     output.mkdir(parents=True, exist_ok=True)
-    python = python.resolve(strict=True)
+    # A virtual environment's interpreter is a link to its base interpreter on POSIX;
+    # following the link would leave the environment that provides the build backend.
+    python = python.absolute()
+    if not python.is_file():
+        raise ValueError(f"Product construction requires an existing host interpreter: {python}")
     pin = _require_host_python(python)
     dependencies = dependencies.resolve(strict=True)
     uv = selected_uv(build_toolchain, executable=uv_executable)

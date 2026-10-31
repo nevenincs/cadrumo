@@ -53,6 +53,11 @@
       ]
     }
   ],
+  "application_bundle": {
+    "executable_directory": "Contents/MacOS",
+    "resources": "Contents/Resources",
+    "payload": "Contents/Resources/app"
+  },
   "files": {
     "development_executable": "python_d",
     "path_file": "lib/cadrumo/python.pth",
@@ -113,6 +118,8 @@
     "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
     "/System/Library/Frameworks/ColorSync.framework/Versions/A/ColorSync",
     "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+    "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+    "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
     "/usr/lib/libobjc.A.dylib"
   ]
 }

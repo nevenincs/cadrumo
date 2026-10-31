@@ -11,7 +11,7 @@ import stat
 import sys
 from collections.abc import Callable
 from pathlib import Path, PurePosixPath
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from dev._paths import REPO_ROOT
 
@@ -23,6 +23,9 @@ from .installation_windows import windows_path_redirects
 from .layout import desktop_image, load_layout
 from .linux_desktop_runtime import validate_payload as validate_linux_desktop_runtime
 from .package_inventory import package_inventory
+
+if TYPE_CHECKING:
+    from .installation_plan import BundleInputs
 
 
 def _validate_member_name(relative: str) -> PurePosixPath:
@@ -205,6 +208,7 @@ def prepare(
     desktop: str | None = None,
     *,
     copy_file: Callable[[str | Path, str | Path], str | Path] | None = None,
+    bundle: BundleInputs | None = None,
 ) -> Path:
     """Reuse only an unchanged, identical owning stage; never erase existing state."""
     build = build.absolute()
@@ -214,15 +218,15 @@ def prepare(
     if root.exists():
         from .installation_currency import existing
 
-        if existing(payload, identity_file, root, metadata, desktop, REPO_ROOT, allow_change=False):
+        if existing(payload, identity_file, root, metadata, desktop, REPO_ROOT, allow_change=False, bundle=bundle):
             return root
         # Legacy/mismatched helper generations migrate through the same admitted
         # candidate and rollback publication path; never scratch-copy to compare.
         from .distribution_prepare import refresh
 
-        refresh(payload, identity_file, build, desktop)
+        refresh(payload, identity_file, build, desktop, bundle)
         return root
-    return _prepare_fresh(payload, identity_file, root, metadata, desktop, copy_file=copy_file)
+    return _prepare_fresh(payload, identity_file, root, metadata, desktop, copy_file=copy_file, bundle=bundle)
 
 
 def _prepare_fresh(
@@ -233,12 +237,13 @@ def _prepare_fresh(
     desktop: str | None = None,
     *,
     copy_file: Callable[[str | Path, str | Path], str | Path] | None = None,
+    bundle: BundleInputs | None = None,
 ) -> Path:
     """Create platform installation layout, with desktop registration only for a real entrypoint."""
     validate_payload(payload, identity_file, desktop)
     from .installation_plan import project
 
-    plan = project(payload, identity_file, desktop, REPO_ROOT)
+    plan = project(payload, identity_file, desktop, REPO_ROOT, bundle)
     build = build.absolute()
     build.mkdir(parents=True, exist_ok=True)
     if payload.resolve().is_relative_to(root) or root.is_relative_to(payload.resolve()):

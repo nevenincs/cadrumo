@@ -2231,8 +2231,9 @@ not available. `CADRUMO_CHANNEL` selects `stable` or `preview`. An optional
 `CADRUMO_DESKTOP_EXECUTABLE` must name an actual file in the hashed payload
 inventory, and that file must be the application image the payload manifest's
 platform mapping marks `desktop`, such as `cadrumo.exe` on Windows. Only that image
-receives desktop registration. macOS requires a root-level desktop executable. Its runtime backend and WebView containment validation
-must be completed before a macOS application release.
+receives desktop registration. macOS requires a root-level desktop executable, the
+bundle launcher and its icon. Its WebView containment validation must be completed
+before a macOS application release.
 
 CPack's `package` target selects MSI on Windows, DEB and RPM on Linux, and DMG
 on macOS. Native format targets validate and refresh the selected payload before
@@ -2398,9 +2399,31 @@ through them. The one-MSI topology still requires disposable-host verification o
 integrated process lifetime and installer transactions before release acceptance.
 The catalogue alone does not implement manager cutover or obsolete-version removal.
 Linux installs under `/opt/cadrumo` with desktop/icon registrations
-under `/usr/share`. Preview uses separate names. macOS packages a CADRUMO.app
-bundle for the Applications folder. Runtime storage remains owned by Settings;
-current packaging adds no services or automatic launch.
+under `/usr/share`. Preview uses separate names. Runtime storage remains owned by
+Settings; current packaging adds no services or automatic launch.
+
+macOS packages one `<name>.app` bundle, `<name>` being the channel's product name,
+for the Applications folder in a CPack DragNDrop image. The platform mapping's
+`application_bundle` declares its placements, which the layout loader validates:
+the unchanged payload lies at `Contents/Resources/app`, because a bundle's
+executable directory may hold only signed code, and `Contents/MacOS/<desktop>` is
+the bundle's main executable. That executable, `bundle-launcher` from the source
+build's `cadrumo_bundle_launcher` target, holds the declared package location
+relative to itself and replaces itself with the payload's desktop image, keeping
+the process, arguments and environment, so the desktop resolves its package from
+its own image as everywhere else. `Contents/Info.plist` carries the identity's
+application ID, name, version and canonical floor as `LSMinimumSystemVersion`,
+`LSUIElement` false for an ordinary windowed application, and
+`Contents/Resources/<desktop>.icns`, the `icon.icns` the desktop icon step renders
+from `docs/_static/cadrumo-icon.svg`. `native-installer` passes the launcher, the
+icon, `CADRUMO_CODESIGN` and `CADRUMO_NATIVE_SIGNING_IDENTITY` to the distribution
+preset. The installation stage stays receipt-bound and unsigned; a CPack pre-build
+script seals CPack's own copy with the hardened runtime and verifies it with
+`codesign --verify --strict --deep`, so the DMG and the distribution ZIP carry the
+sealed bundle. Nested images keep the seals package assembly gave them. The
+ad-hoc identity `-` is a local seal, not a distributable release: Developer ID
+signing, notarization, hardened-runtime entitlements for the nested images and
+Gatekeeper acceptance remain release gates.
 
 For development, `cmake --install <build> --prefix <absolute-test-prefix>` uses
 relative installation definitions. Set `CADRUMO_UNINSTALL_PREFIX` to that exact
