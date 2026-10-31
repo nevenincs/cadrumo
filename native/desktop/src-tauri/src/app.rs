@@ -306,13 +306,14 @@ pub fn run(
             cadrumo_platform::application_icon::set(include_bytes!(env!("CADRUMO_DESKTOP_ICON")));
         }
         tauri::RunEvent::ExitRequested { .. } => {
-            diagnostics.host_event(EventKind::HostExitRequested, HostStage::Shutdown);
+            diagnostics.host_exit_requested();
         }
         tauri::RunEvent::Exit => {
-            // The process may end before the failure could be returned.
-            if let Err(error) = exiting(handle) {
-                diagnostics.failure(error);
-            }
+            // A quit that skips the exit request still records it, and the process
+            // may end before the return path could record the outcome or drain the
+            // log writer, so both are durable here.
+            diagnostics.host_exit_requested();
+            finish_exit(exiting(handle), &diagnostics);
         }
         _ => {}
     });
@@ -321,6 +322,20 @@ pub fn run(
         return Ok(1);
     }
     Ok(code)
+}
+
+/// Records a shutdown outcome and drains the log before the platform may end the process.
+/// The first recorded stop wins, so the return path repeating it adds nothing.
+fn finish_exit(outcome: Result<()>, diagnostics: &Diagnostics) {
+    let code = match outcome {
+        Ok(()) => 0,
+        Err(error) => {
+            diagnostics.failure(error);
+            1
+        }
+    };
+    diagnostics.host_stopped(code);
+    let _ = diagnostics.flush_logs(std::time::Duration::from_millis(250));
 }
 
 /// A termination request (a logout, a system shutdown or a stop sent to the process)
@@ -756,6 +771,28 @@ pub(crate) fn supervision_continues(
 
 #[cfg(test)]
 mod tests {
+    use cadrumo_application::diagnostics::Diagnostics;
+
+    #[test]
+    fn every_exit_path_leaves_one_durable_request_and_stop_record() {
+        // The exit hook, the signal path and the return path may all report; the file
+        // must hold exactly one of each, written before finish_exit returns.
+        let directory = std::env::temp_dir().join(format!("exit-records-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let diagnostics = Diagnostics::default();
+        diagnostics.configure(&directory, 1 << 20, 1).unwrap();
+        assert!(diagnostics.host_exit_requested());
+        assert!(!diagnostics.host_exit_requested());
+        super::finish_exit(Ok(()), &diagnostics);
+        diagnostics.host_stopped(1);
+        let current = diagnostics.snapshot(u64::MAX).paths.unwrap().current;
+        let text = std::fs::read_to_string(current).unwrap();
+        let _ = std::fs::remove_dir_all(&directory);
+        assert_eq!(text.matches("host_exit_requested").count(), 1, "{text}");
+        assert_eq!(text.matches("host_stopped").count(), 1, "{text}");
+        assert!(text.contains("\"hostExitCode\":0"), "{text}");
+    }
+
     #[cfg(unix)]
     #[test]
     fn a_signal_delivered_to_the_process_asks_the_window_to_close() {
