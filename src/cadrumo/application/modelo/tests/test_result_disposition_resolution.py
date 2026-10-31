@@ -74,7 +74,9 @@ def _work_unit(*, modelo: str, filing_year: int, period_code: str, revision_id: 
     )
 
 
-def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) -> CalculationRevision:
+def _verified_revision_with(
+    work_unit: WorkUnit, values: dict[CasillaId, Decimal], observations: tuple[CasillaObservation, ...]
+) -> CalculationRevision:
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
@@ -94,12 +96,7 @@ def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) ->
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         casilla_values=values,
-        observations=registry_grounded_observations(
-            modelo=str(work_unit.modelo),
-            filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-            casilla_values=values,
-        ),
+        observations=observations,
         created_at=_NOW,
         updated_at=_NOW,
         verified_at=_NOW,
@@ -109,27 +106,24 @@ def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) ->
     )
 
 
-def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) -> CalculationRevision:
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values=values,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    return CalculationRevision(
-        calculation_revision_id=revision_id,
-        work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=work_unit.modelo,
-            revision_id=work_unit.revision_id,
-            modelo_year=work_unit.filing_year,
+def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) -> CalculationRevision:
+    return _verified_revision_with(
+        work_unit,
+        values,
+        registry_grounded_observations(
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
+            casilla_values=values,
         ),
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        casilla_values=values,
-        observations=tuple(
+    )
+
+
+def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) -> CalculationRevision:
+    return _verified_revision_with(
+        work_unit,
+        values,
+        tuple(
             CasillaObservation(
                 casilla_id=casilla_id,
                 value=value,
@@ -138,12 +132,6 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
             )
             for casilla_id, value in values.items()
         ),
-        created_at=_NOW,
-        updated_at=_NOW,
-        verified_at=_NOW,
-        verified_by="operator",
-        filing_instance_evidence=None,
-        source_provenance=(),
     )
 
 
