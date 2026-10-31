@@ -6,7 +6,7 @@ date: '2026-10-30'
 tier: L1
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:49cc331614187eb4e0d88392a0179ff90ce77ca0ca9d69fd9a888b105e670d39'
+body_hash: 'sha256:e40343a46a2619c2fef7fd233a403a3b4fd36f58a120693e533a7a6116c31de0'
 ---
 
 # `registry-owned-facts` plan
@@ -21,7 +21,7 @@ Move every remaining tax number, limit, period rule and form code from productio
 
 - [x] `S01` - Replace code copies of values the registry already holds: the DT12 threshold, Modelo 190 and 280 offsets, Modelo 720 subclaves; `src/cadrumo/application/modelo/dt12_advisory.py, src/cadrumo/application/filing/, src/cadrumo/domain/foreign_assets/register.py`.
 - [x] `S02` - Derive box lists from registry declarations per revision; `src/cadrumo/application/modelo/projection.py, src/cadrumo/application/calculations/, src/cadrumo/domain/calculations/registry/`.
-- [ ] `S03` - Move form claves and code tables into registry vocabularies; `src/cadrumo/application/filing/, src/cadrumo/domain/contribuyente/renta_codes.py, src/cadrumo/application/wizard/, src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
+- [x] `S03` - Move form claves and code tables into registry vocabularies; `src/cadrumo/application/filing/, src/cadrumo/domain/contribuyente/renta_codes.py, src/cadrumo/application/wizard/, src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
 - [ ] `S04` - Move modelo routing rules and sets into registry declarations; `src/cadrumo/application/aggregation/, src/cadrumo/domain/calculations/registry/applicability.py, src/cadrumo/domain/deadlines/`.
 - [ ] `S05` - Move period rules with legal force into the registry; `src/cadrumo/domain/period.py, src/cadrumo/domain/renta/maritime_exemption.py`.
 - [ ] `S06` - Extend the literal gate across domain and application, covering field bounds, box ids and letter claves, and republish the authority; `dev/quality/tests/`.

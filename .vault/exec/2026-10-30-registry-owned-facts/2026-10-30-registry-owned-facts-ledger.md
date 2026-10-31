@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd8b3d8314ce0cb8282580088e2d1a7ef84f6e054aaa5a78ec21e2e93418c1bb'
+body_hash: 'sha256:8445dba1a5fa4cc48e0b747b572621022b4216263152cfe46ba7c1efddab6d5d'
 related:
   - "[[2026-10-30-registry-owned-facts-plan]]"
 ---
@@ -24,6 +24,11 @@ related:
 - `S02` `M` `src/cadrumo/domain/calculations/registry/ledger_binding_validation.py`
 - `S02` `verify:` `pytest focused registry and consumer suites` -> `pass`
 - `S02` `verify:` `lint-imports` -> `fail`
+- `S03` `M` `src/cadrumo/domain/contribuyente/renta_codes.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/descendant_disability_catalogue.py`
+- `S03` `M` `src/cadrumo/application/wizard/catalogue.py`
+- `S03` `M` `src/cadrumo/application/wizard/command_parameters.py`
+- `S03` `verify:` `lint-imports` -> `pass`
 
 ## Notes
 
