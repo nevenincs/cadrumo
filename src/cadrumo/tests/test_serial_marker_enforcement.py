@@ -30,14 +30,12 @@ See Also:
 
 from __future__ import annotations
 
-import subprocess
-import sys
 import textwrap
 from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
+from cadrumo.tests.nested_pytest_support import nested_pytest_over_generated_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -92,32 +90,6 @@ def test_needs_isolation():
 """
 
 
-def _nested_pytest(package: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    """Run a real nested pytest over ``package`` with the shared hook installed."""
-    return ensure_text_completed_process(
-        run_audited_process(
-            [
-                sys.executable,
-                "-m",
-                "pytest",
-                "-p",
-                "no:cacheprovider",
-                "-c",
-                str(package / "pytest.ini"),
-                "-v",
-                *args,
-                str(package / "test_generated.py"),
-            ],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=None,
-            check=False,
-        )
-    )
-
-
 @pytest.fixture
 def serial_marker_package(tmp_path: Path) -> Path:
     """Materialise a two-test package wired to the real marker hook."""
@@ -136,7 +108,7 @@ def test_serial_item_runs_when_no_xdist_workers_are_active(serial_marker_package
     This is the conditional half of the contract. Without it a hook that
     unconditionally dropped every serial test would look correct.
     """
-    completed = _nested_pytest(serial_marker_package, "-n0")
+    completed = nested_pytest_over_generated_module(serial_marker_package, "-n0")
 
     assert completed.returncode == 0, completed.stdout + completed.stderr
     assert "test_parallel_safe" in completed.stdout
@@ -152,7 +124,7 @@ def test_serial_item_is_held_and_announced_under_real_xdist_workers(serial_marke
     The announcement is asserted structurally -- the warning class name and the
     held node id -- never on the message prose.
     """
-    completed = _nested_pytest(serial_marker_package, "-n2", "--dist=loadfile")
+    completed = nested_pytest_over_generated_module(serial_marker_package, "-n2", "--dist=loadfile")
     output = completed.stdout + completed.stderr
 
     assert completed.returncode == int(pytest.ExitCode.USAGE_ERROR), output
@@ -176,7 +148,7 @@ def test_a_lane_that_never_selected_the_serial_item_is_not_refused(serial_marker
     green summary, because the tree holds ``serial`` items marked
     ``integration``.
     """
-    completed = _nested_pytest(serial_marker_package, "-n2", "--dist=loadfile", "-m", "not serial")
+    completed = nested_pytest_over_generated_module(serial_marker_package, "-n2", "--dist=loadfile", "-m", "not serial")
     output = completed.stdout + completed.stderr
 
     assert completed.returncode == 0, output
