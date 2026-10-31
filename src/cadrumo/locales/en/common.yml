@@ -1351,7 +1351,7 @@ desktop:
     assets:
       action:
         add: Add element
-        change_baja: Change or remove the baja
+        change_baja: Change or remove the disposal
         claim: Record a depreciation charge
         correct: Correct
         describe: Edit details
@@ -1368,23 +1368,23 @@ desktop:
         confirm: Record the disposal of {name} on {date}? Depreciation charges after
           that day are cancelled.
         confirm_back: Go back
-        confirm_yes: Record the baja
+        confirm_yes: Record the disposal
         deducted: Amortisation deducted
         effect_missing: No effect on the cost is worked out for this point.
         excess: Excess
-        figures: Figures of the baja (nothing is saved)
+        figures: Figures of the disposal (nothing is saved)
         findings: Points to check
         net_value: Net value
         preview: Calculate the figures
         reduction: Reduction of the acquisition value
-        remove: Remove the baja
+        remove: Remove the disposal
         remove_confirm: Remove the disposal of {name}? The element goes back into
           service and the depreciation charges the disposal cancelled come back. A
           depreciation charge it shortened stays short until you record the rest.
-        remove_yes: Remove the baja
+        remove_yes: Remove the disposal
         result: Gain or loss
-        route_changed: A later affectation to the activity changes how this baja is
-          taxed.
+        route_changed: A later affectation to the activity changes how this disposal
+          is taxed.
         transmission_value: Transmission value
         warning: A disposal can be changed or removed later. Depreciation charges
           after its date are cancelled and the one it crosses is shortened. Changing
@@ -1418,7 +1418,7 @@ desktop:
         unsupported: 'Years that can''t be worked out here, all years: {count}'
         without_tables: 'Years with no official tables, all years: {count}'
       detail:
-        baja_reason: Reason for the baja
+        baja_reason: Reason for the disposal
         close: Close
         panel: Element details
         plan: Plan
@@ -1663,8 +1663,8 @@ desktop:
       unrecognised: Not recognised
       until: Until
       write:
-        baja_changed: Baja updated.
-        baja_recorded: Baja recorded.
+        baja_changed: Disposal updated.
+        baja_recorded: Disposal recorded.
         cannot_clear: This can't be left empty.
         corrected: Correction saved.
         described: Details saved.
@@ -5257,7 +5257,7 @@ ledger:
       workforce_year_not_declared: The average workforce of %{year} is not declared.
     event_kind:
       baja_changed: Disposal changed
-      baja_recorded: Baja recorded
+      baja_recorded: Disposal recorded
       baja_removed: Disposal removed
       claim_recorded: Depreciation charge recorded
       claim_replaced: Depreciation charge replaced

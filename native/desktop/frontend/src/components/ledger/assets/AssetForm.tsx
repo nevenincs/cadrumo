@@ -1063,16 +1063,18 @@ export function AssetForm({
                 </Button>
               </WriteHold>
             )}
-            <WriteHold>
-              <Button
-                type="submit"
-                size="sm"
-                className="ledger-asset-submit"
-                aria-disabled={write.busy || undefined}
-              >
-                {write.busy ? t("desktop.ledger.form.saving") : t(act.submit)}
-              </Button>
-            </WriteHold>
+            {!(kind === "baja" && view.kind === "saved") && (
+              <WriteHold>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="ledger-asset-submit"
+                  aria-disabled={write.busy || undefined}
+                >
+                  {write.busy ? t("desktop.ledger.form.saving") : t(act.submit)}
+                </Button>
+              </WriteHold>
+            )}
           </div>
         )}
         {tried &&

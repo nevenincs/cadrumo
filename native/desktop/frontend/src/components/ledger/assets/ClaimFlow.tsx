@@ -228,6 +228,7 @@ export function ClaimFlow({
       }),
     );
     if (viewOf(done, claimReused).kind === "saved") {
+      setForecast(null);
       plan.reload();
       onWritten?.();
     }
