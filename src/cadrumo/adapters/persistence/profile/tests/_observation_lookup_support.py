@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
+from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 
 
 def find_observation(
@@ -28,3 +32,20 @@ def find_observation(
         if obs.filing_year == filing_year and selector_period_matches_request(obs.period, period):
             return payload
     return None
+
+
+def save_app_filing_observation(
+    repo: CalculationObservationRepository,
+    observation: RegistryModeloObservation,
+    *,
+    captured_at: datetime,
+) -> None:
+    """Persist ``observation`` as an application filing stamped with its own revision id."""
+    repo.save(
+        repo.prepare_observation_envelope(
+            observation,
+            source_kind="app_filing",
+            captured_at=captured_at,
+            stamped_revision_id=revision_id_for_observation(observation),
+        )
+    )

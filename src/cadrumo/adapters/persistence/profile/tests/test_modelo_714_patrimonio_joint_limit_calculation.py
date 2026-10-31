@@ -36,10 +36,10 @@ from .....domain.calculations.registry.formula_runtime import RegistryCalculatio
 from .....domain.calculations.registry.ids import RelationId
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
+from ._observation_lookup_support import save_app_filing_observation
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -239,14 +239,7 @@ def test_modelo_714_joint_limit_calculates_from_local_m100_observation(
     scenario = _SCENARIOS[2023]
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                _m100_observation(scenario),
-                source_kind="app_filing",
-                captured_at=_CAPTURED_AT,
-                stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)),
-            )
-        )
+        save_app_filing_observation(repo, _m100_observation(scenario), captured_at=_CAPTURED_AT)
         result = _calculate_714_from_local_m100(scenario=scenario, repository=repo, operation=operation)
 
     _assert_joint_limit_outputs(result, scenario)
@@ -260,13 +253,6 @@ def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(
         repo = CalculationObservationRepository()
         for filing_year in _RENTA_YEARS:
             scenario = _SCENARIOS[filing_year]
-            repo.save(
-                repo.prepare_observation_envelope(
-                    _m100_observation(scenario),
-                    source_kind="app_filing",
-                    captured_at=_CAPTURED_AT,
-                    stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)),
-                )
-            )
+            save_app_filing_observation(repo, _m100_observation(scenario), captured_at=_CAPTURED_AT)
             result = _calculate_714_from_local_m100(scenario=scenario, repository=repo, operation=operation)
             _assert_joint_limit_outputs(result, scenario)
