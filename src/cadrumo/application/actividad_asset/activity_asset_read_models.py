@@ -516,6 +516,8 @@ class ActivityAssetTableGroup(_ReadModel):
     minimum_coefficient: PublicDecimal
     maximum_period_years: PublicDecimal
     can_hold_vehicle: bool
+    requires_vehicle_declaration: bool = False
+    """Whether an asset of this class is charged only on a vehicle affectation declaration."""
     """Whether a material asset of this class can be a restricted vehicle, so the election is asked
     for a vehicle affectation declaration; the registry classifies each table class."""
 

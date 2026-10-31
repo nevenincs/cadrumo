@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from ...renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
 from ...renta.actividad_asset.errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
+from ...renta.actividad_asset.lifecycle import AssetKind
 from .formula_runtime_ops import resolve_dated_value, resolve_keyed_bracket
 from .schema_base import DateAxis, ThresholdComparison
 from .schema_formula import ParameterDefinition
@@ -150,6 +151,10 @@ class _Parameters:
                 translated_message="ledger.actividad_asset.errors.table_class_group_not_a_flag",
             )
         return flag == Decimal("1")
+
+    def requires_vehicle_declaration(self, asset_kind: AssetKind, class_key: str) -> bool:
+        """Say whether a material asset of this table class is charged only on a vehicle affectation declaration."""
+        return asset_kind is AssetKind.MATERIAL and self.class_flag(_RESTRICTED_VEHICLE_CLASS_ID, class_key)
 
     def scalar(self, parameter_id: str) -> tuple[Decimal, ThresholdComparison]:
         try:
