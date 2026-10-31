@@ -1,6 +1,5 @@
 import { useId } from "react";
 import { DecimalEditor } from "@/components/editors/DecimalEditor";
-import { MoneyEditor } from "@/components/editors/MoneyEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -175,8 +174,7 @@ export function DraftLines({
                     />
                   </td>
                   <td className={CELL}>
-                    <MoneyEditor
-                      decimals={6}
+                    <DecimalEditor
                       controlSize="sm"
                       value={line.unitPrice}
                       aria-label={name("unit_price")}

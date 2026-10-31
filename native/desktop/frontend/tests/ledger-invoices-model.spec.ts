@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readLocaleDecimal } from "../src/shared/numbers";
 import type { CatalogueInvoice } from "../src/shell/ledger";
 import {
   NO_FILTER,
@@ -252,10 +253,8 @@ test("each creation invariant and rule refuses on its own field", () => {
     ).problems.retention_amount,
   ).toMatchObject({ rule: "retention_differs" });
   expect(
-    checkDraft(filled({ retentionRate: "0.15" })).problems.retention_rate,
-  ).toMatchObject({
-    refusal: { key: "percent_as_fraction", suggestion: "15" },
-  });
+    checkDraft(filled({ retentionRate: "150" })).problems.retention_rate,
+  ).toMatchObject({ refusal: { key: "percent_above_100" } });
   const rectificativa = checkDraft(
     filled({ invoiceClass: "RECTIFICATIVA", series: "" }),
   );
@@ -277,6 +276,20 @@ test("each creation invariant and rule refuses on its own field", () => {
   expect(
     checkDraft(filled({ taxId: "", invoiceClass: "SIMPLIFICADA" })).problems,
   ).toEqual({});
+});
+
+test("a retención rate is read as points and reaches the wire as a fraction", () => {
+  const wire = (retentionRate: string) =>
+    checkDraft(filled({ retentionRate })).request?.retention_rate?.decimal;
+  expect(wire("15")).toBe("0.15");
+  expect(wire("0.5")).toBe("0.005");
+  expect(wire("0.5%")).toBe("0.005");
+  // What a Spanish-language window hands over for `0,5%`: the percent editor
+  // takes the sign off and the language's own marks are read to a point.
+  const typed = readLocaleDecimal("es", "0,5");
+  expect(typed).toBe("0.5");
+  expect(wire(typed ?? "")).toBe("0.005");
+  expect(checkDraft(filled({ retentionRate: "0.5" })).problems).toEqual({});
 });
 
 test("a retención amount can stand alone; a rate cannot", () => {

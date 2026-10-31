@@ -298,13 +298,22 @@ export type RetentionFigures = {
   implied: string | null;
   problems: Partial<Record<"rate" | "amount", Problem>>;
 };
+
+/** The retención rate a draft holds, read as points: the draft takes `15`,
+ * `0.5` or `0.5%` as percentages, so a bare number is never taken for a
+ * fraction. The value is the fraction the wire carries. */
+function retentionRate(text: string): ReturnType<typeof parsePercent> {
+  const typed = text.trim();
+  return parsePercent(typed === "" || typed.endsWith("%") ? text : `${typed}%`);
+}
+
 export function retentionFigures(
   base: string,
   rateText: string,
   amountText: string,
 ): RetentionFigures {
   const problems: RetentionFigures["problems"] = {};
-  const rate = parsePercent(rateText);
+  const rate = retentionRate(rateText);
   const amount = parseDecimal(amountText, TAX_AMOUNT_RULE);
   if (rate.kind === "refused") problems.rate = grammar(rate.refusal);
   if (amount.kind === "refused") problems.amount = grammar(amount.refusal);
@@ -395,7 +404,7 @@ export function shownRetentionAmount(
   base: string,
 ): string {
   if (draft.retentionTouched) return draft.retentionAmount;
-  const rate = parsePercent(draft.retentionRate);
+  const rate = retentionRate(draft.retentionRate);
   return rate.kind === "value" ? retentionFor(base, rate.value) : "";
 }
 
