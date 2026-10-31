@@ -74,6 +74,7 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.verification_report import VerificationReport
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -201,6 +202,38 @@ def _verification_repositories(
         observation=observation_repository,
         bucket_event=bucket_event_repository,
     )
+
+
+def _verify_with_fixture_repositories(
+    revision_id: str,
+    *,
+    work_units: WorkUnitCatalogueRepository,
+    calculations: CalculationRevisionCatalogueRepository,
+    filings: ModeloRecordCatalogueRepository,
+    reports: VerificationReportCatalogueRepository,
+    observations: CalculationObservationRepository,
+    events: BucketEventHistoryRepository,
+    taxpayer: TaxpayerProfile,
+) -> VerificationReport:
+    """Verify one revision over the fixture repositories under a freshly pinned authority."""
+    with bundled_indexed_authority().operation() as operation:
+        return verify_modelo_revision_with_preconditions(
+            revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories(
+                work_unit_repository=work_units,
+                calculation_repository=calculations,
+                filing_repository=filings,
+                verification_repository=reports,
+                observation_repository=observations,
+                bucket_event_repository=events,
+            ),
+            actor="test-operator",
+            workflow_profile=taxpayer,
+            clock=_CLOCK,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        ).report
 
 
 def _source_values(period: str, source_casilla_ids: tuple[CasillaId, ...]) -> dict[CasillaId, Decimal]:
@@ -477,24 +510,16 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
             calculation_repository=calculations,
         )
 
-        with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision_with_preconditions(
-                revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=_verification_repositories(
-                    work_unit_repository=work_units,
-                    calculation_repository=calculations,
-                    filing_repository=filings,
-                    verification_repository=reports,
-                    observation_repository=observations,
-                    bucket_event_repository=events,
-                ),
-                actor="test-operator",
-                workflow_profile=workflow_profile(),
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            ).report
+        report = _verify_with_fixture_repositories(
+            revision_id,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+            reports=reports,
+            observations=observations,
+            events=events,
+            taxpayer=workflow_profile(),
+        )
         stored_reports = reports.load().for_calculation_revision(revision_id)
 
     cross_period_findings = tuple(
@@ -538,24 +563,16 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
             calculation_repository=calculations,
         )
 
-        with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision_with_preconditions(
-                revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=_verification_repositories(
-                    work_unit_repository=work_units,
-                    calculation_repository=calculations,
-                    filing_repository=filings,
-                    verification_repository=reports,
-                    observation_repository=observations,
-                    bucket_event_repository=events,
-                ),
-                actor="test-operator",
-                workflow_profile=workflow_profile(),
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            ).report
+        report = _verify_with_fixture_repositories(
+            revision_id,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+            reports=reports,
+            observations=observations,
+            events=events,
+            taxpayer=workflow_profile(),
+        )
 
     cross_period_findings = tuple(
         finding for finding in report.findings if finding.kind.value == "cross_period_dependency_unclean"
@@ -593,24 +610,16 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
         no_activity_profile = workflow_profile()
         assert no_activity_profile.activity_start_date is None
 
-        with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision_with_preconditions(
-                revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=_verification_repositories(
-                    work_unit_repository=work_units,
-                    calculation_repository=calculations,
-                    filing_repository=filings,
-                    verification_repository=reports,
-                    observation_repository=observations,
-                    bucket_event_repository=events,
-                ),
-                actor="test-operator",
-                workflow_profile=no_activity_profile,
-                clock=_CLOCK,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            ).report
+        report = _verify_with_fixture_repositories(
+            revision_id,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+            reports=reports,
+            observations=observations,
+            events=events,
+            taxpayer=no_activity_profile,
+        )
 
     assert report.granted_verificado_completo is False
     fail_closed_findings = tuple(
