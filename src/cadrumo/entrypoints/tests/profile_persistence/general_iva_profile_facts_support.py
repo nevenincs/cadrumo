@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 from cadrumo.domain.user_profile.values import UserProfileFact
 
@@ -25,4 +26,21 @@ def general_iva_profile_facts(
         UserProfileFact(path="activities.description", value=activity),
         *GENERAL_REGIME_NATURAL_PERSON_FACTS,
         UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+    )
+
+
+def renta_single_taxpayer_facts(*, birth_date: date) -> tuple[UserProfileFact, ...]:
+    """Return the renta facts of a single taxpayer filing alone, with no dependants."""
+    return (
+        UserProfileFact(path="renta_taxpayer.birth_date", value=birth_date),
+        UserProfileFact(path="renta_taxpayer.sex", value="H"),
+        UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+        UserProfileFact(path="renta_filing.declaration_type", value="1"),
+        UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
+        UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
     )

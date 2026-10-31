@@ -110,6 +110,7 @@ from cadrumo.tests.env_scope import ready_clave_settings
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -564,17 +565,7 @@ def _seed_taxpayer_profile() -> None:
             UserProfileFact(path="activities.description", value="design services"),
             *GENERAL_REGIME_NATURAL_PERSON_FACTS,
             UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-            UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
         ),
         created_at=_T0,
         updated_at=_T0,
