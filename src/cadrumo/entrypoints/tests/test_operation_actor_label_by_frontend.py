@@ -44,6 +44,7 @@ from ...application.modelo.reconciliation_pull_operation import (
     MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
     ModeloReconciliationPullRequest,
 )
+from ...application.modelo.reconciliation_records import ModeloReconciliationRecord
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
 from ...application.operations.registry import OperationFrontendProjection
@@ -259,6 +260,26 @@ def test_inventory_closing_authority_records_the_session_label_for_an_automation
         assert ledger.closing_authority_record.decision.actor == recorded
 
 
+def _run_reconciliation(
+    driver: conformance._ExecutionDriver,
+    definition_id: str,
+    profile_id: UUID,
+    request: ModeloReconciliationImportRequest | ModeloReconciliationPullRequest,
+) -> tuple[ModeloReconciliationRecord, ...]:
+    """Submit the reconciliation, require it to update, and return the stored records afterwards."""
+    _submitted, observed = asyncio.run(
+        driver.run(
+            definition_id=definition_id,
+            subject_ref=profile_operation_subject(str(profile_id)),
+            payload=request,
+        )
+    )
+    records_after = tuple(ModeloReconciliationPersistence().iter_records())
+    assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert observed.projection.effect is OperationEffect.UPDATED
+    return records_after
+
+
 @_FRONTENDS
 def test_reconciliation_import_records_the_session_label_for_an_automation(
     tmp_path: Path,
@@ -284,17 +305,8 @@ def test_reconciliation_import_records_the_session_label_for_an_automation(
                 actor=_TYPED_ACTOR,
             )
 
-            _submitted, observed = asyncio.run(
-                driver.run(
-                    definition_id=definition_id,
-                    subject_ref=profile_operation_subject(str(profile_id)),
-                    payload=request,
-                )
-            )
-            records_after = tuple(ModeloReconciliationPersistence().iter_records())
+            records_after = _run_reconciliation(driver, definition_id, profile_id, request)
 
-        assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert observed.projection.effect is OperationEffect.UPDATED
         assert len(records_after) == len(records_before) + 1
         assert records_after[-1].actor == recorded
 
@@ -334,17 +346,8 @@ def test_reconciliation_pull_records_the_session_label_for_an_automation(
                 actor=_TYPED_ACTOR,
             )
 
-            _submitted, observed = asyncio.run(
-                driver.run(
-                    definition_id=definition_id,
-                    subject_ref=profile_operation_subject(str(profile_id)),
-                    payload=request,
-                )
-            )
-            records_after = tuple(ModeloReconciliationPersistence().iter_records())
+            records_after = _run_reconciliation(driver, definition_id, profile_id, request)
 
-        assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert observed.projection.effect is OperationEffect.UPDATED
         assert len(records_after) == len(records_before) + 1
         assert records_after[-1].actor == recorded
 
@@ -357,15 +360,14 @@ _INVOICE_FRONTENDS = pytest.mark.parametrize(
 )
 
 
-@_INVOICE_FRONTENDS
-def test_invoice_add_records_the_session_label_for_an_automation(
+def _assert_invoice_event_actor(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection,
     recorded: str,
+    definition_id: str,
+    result_type: type[InvoiceAddResult] | type[InvoiceUpdateResult],
 ) -> None:
-    """The creation event of an added invoice names the derived label; a person's frontend keeps its own."""
-    definition_id = "ledger.invoice.add"
     with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
         cleanup=conformance.OperationRuntimeCloseWitness(),
@@ -387,10 +389,21 @@ def test_invoice_add_records_the_session_label_for_an_automation(
             definition_id=definition_id,
             operation_id=submitted.receipt.operation_id,
             terminal_revision=observed.projection.revision,
-            projection_type=InvoiceAddResult,
+            projection_type=result_type,
         )
-        assert isinstance(result, InvoiceAddResult)
+        assert isinstance(result, result_type)
         assert _event_actors(profile_id, result.bucket_event_ids) == {recorded}
+
+
+@_INVOICE_FRONTENDS
+def test_invoice_add_records_the_session_label_for_an_automation(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection,
+    recorded: str,
+) -> None:
+    """The creation event of an added invoice names the derived label; a person's frontend keeps its own."""
+    _assert_invoice_event_actor(tmp_path, operation, frontend, recorded, "ledger.invoice.add", InvoiceAddResult)
 
 
 @_INVOICE_FRONTENDS
@@ -401,32 +414,7 @@ def test_invoice_update_records_the_session_label_for_an_automation(
     recorded: str,
 ) -> None:
     """The correction event of an updated invoice names the derived label; a person's frontend keeps its own."""
-    definition_id = "ledger.invoice.update"
-    with conformance.conformance_operation_runtime(
-        tmp_path / "runtime",
-        cleanup=conformance.OperationRuntimeCloseWitness(),
-        execution_caller_reader=_session_host(definition_id, frontend),
-    ) as (driver, registry, profile_id):
-        definition = {item.definition_id: item for item in registry.definitions}[definition_id]
-        submission = conformance.seeded_conformance_operation_submission(
-            definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
-        )
-
-        submitted, observed = asyncio.run(
-            driver.run(definition_id=definition_id, subject_ref=submission.subject_ref, payload=submission.payload)
-        )
-
-        assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        result = conformance._resolve_result_projection(
-            driver,
-            registry,
-            definition_id=definition_id,
-            operation_id=submitted.receipt.operation_id,
-            terminal_revision=observed.projection.revision,
-            projection_type=InvoiceUpdateResult,
-        )
-        assert isinstance(result, InvoiceUpdateResult)
-        assert _event_actors(profile_id, result.bucket_event_ids) == {recorded}
+    _assert_invoice_event_actor(tmp_path, operation, frontend, recorded, "ledger.invoice.update", InvoiceUpdateResult)
 
 
 @pytest.mark.parametrize(
