@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-environment'
 date: '2026-10-04'
-modified: '2026-10-30'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:7290813c7c9410dbec13da33a46b577cf02cb5db01fe68b705b9157944cc5b81'
+body_hash: 'sha256:076f8759955c370503f7c102470f3e95f9baf1d1be2931ccfe840efab8885ea9'
 related:
   - "[[2026-10-04-canonical-environment-reference]]"
   - "[[2026-08-03-canonical-storage-management-adr]]"
@@ -174,3 +174,19 @@ Accepted 2026-10-19 on operator directive 2026-10-19 under `2026-10-19-google-ap
 ## Amendment 2026-10-30 - build-time development storage root
 
 Accepted 2026-10-30 on the owner's rulings of that date: "A product should not have awareness of the repository it is built in; it only ever uses environment overrides." and "CADRUMO_STORAGE_ROOT is the only env variable that controls storage. Rename local storage root to storage root. No divergent overrides. Single control. The root folder's absolute path controls the app directory; everything else is a relative path under the main root." The product, native and Python, resolves its root from an absolute `CADRUMO_STORAGE_ROOT` or the per-user default for its channel, and holds no repository, checkout, development default or baked root. Repository runs obtain their storage only from the environment: the task runner exports `CADRUMO_STORAGE_ROOT` as an absolute path into the checkout's `var/storage` unless the operator supplies another absolute root, and test and acceptance harnesses pin the one variable to an isolated root. The root declaration, constraints, overrides, root resolution, projection and allowlist passages above state the resulting rules.
+
+## Amendment 2026-10-31 - no package mode, and a managed override root
+
+Basis: the user's ruling of 2026-10-30 that Cadrumo has no development-versus-installed (dev/prod) mode and that the storage location is selected only by the environment: an absolute `CADRUMO_STORAGE_ROOT`, otherwise the per-user default for the channel. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`. Implemented in commits 212247032d (Python `StorageMode` removal), 0a27935448 (native storage resolves from the environment alone) and 947fa42364 (runtime containment on macOS and Linux).
+
+The 2026-10-30 amendment removed the development root. This amendment removes the remaining mode wording.
+
+- Constraints, "Two resolver implementations, one oracle": the vector inputs are platform, environment, home or Known Folder and channel. "mode" is removed from that list.
+- Implementation, Overrides: "is operator-owned, and is unmanaged by the runtime manager" now reads "is operator-owned, and the runtime manager manages it like the default root (`2026-10-04-runtime-manager-architecture-adr`, amendment 2026-10-31)". Windows entry dispatch still refuses an override root until plan Step `S12` of `2026-10-30-macos-platform-plan` lands.
+- Implementation, Reserved: "is not an operator override in installed mode" now reads "is not an operator override".
+- Implementation, root-declaration bullet "Except for default transient transport in installed Darwin mode": now reads "Except for transient transport on Darwin".
+- Projection: the `contract.json` section named `mode` (manifest path, package root from the executable) is renamed `package`. It locates package files and proves an installed package; it selects no root.
+- Rollout step 3: "manifest-based mode" now reads "manifest-based package location".
+- 2026-10-08 Darwin exception: "only for the default `RUNTIME_SOCKETS` namespace in installed Darwin mode" now reads "only for the `RUNTIME_SOCKETS` namespace on Darwin". "Selection depends on installed mode and no explicit runtime-socket member/namespace override" now reads "Selection depends on the platform and on the absence of an explicit namespace passed by a caller". "The manager's default-storage-only admission is unchanged." is superseded. "Development roots remain root-relative, and explicit synthetic/operator socket namespaces retain isolation. Custom installed data roots remain separated by root-derived endpoint identities." now reads: "Every root uses the transient directory and remains separated by root-derived endpoint identities; a caller-passed namespace keeps its isolation; no environment variable selects a socket directory." The amendment 2026-10-31 of `2026-10-08-canonical-environment-darwin-transport-adr` governs the detail.
+
+Not changed by this amendment: the Scope exclusion's provider-credential sentence about "the admitted development agent service". It is a provider-settings question, not a storage location, and is left to its owner.

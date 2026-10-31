@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-10-30'
-body_hash: 'sha256:e074ea2d7dcdd5850b204a00a9094d0074e180ce2b450c89934f85d9fef094ee'
+modified: '2026-10-31'
+body_hash: 'sha256:689d7b588635623a77b62c56b13bcf8b07b650544d2f289e40ba79368bdb9dd0'
 related:
   - "[[2026-07-13-data-output-standardization-research]]"
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
@@ -228,3 +228,9 @@ R5 formerly named scratch as the general workspace; that spelling has no continu
 Native compilation, generated assets, test results and native verification scratch remain under the enrolled CMake build/<preset> tree. Native build producers must reject arbitrary output destinations and source-local output defaults. This qualifies the general .tmp rule for native build ownership; it does not authorize moving native outputs into root .tmp.
 
 Installed runtime state, machine-managed dependency/tool caches and destination-adjacent atomic-publication transactions retain their separate contracts. The amendment changes development workspace placement and cleanup, not taxpayer custody or installed storage. Historical ledgers/research record prior paths and must not be rewritten as though past runs used the new convention.
+
+## Amendment 2026-10-31 - Darwin transport selection without a mode
+
+Basis: the user's ruling of 2026-10-30 that Cadrumo has no development-versus-installed (dev/prod) mode and that the storage location is selected only by the environment: an absolute `CADRUMO_STORAGE_ROOT`, otherwise the per-user default for the channel. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`. Implemented in commits 212247032d (Python `StorageMode` removal), 0a27935448 (native storage resolves from the environment alone) and 947fa42364 (runtime containment on macOS and Linux).
+
+R1, the Consequences and the 2026-10-08 exception name "installed Darwin mode". No such mode exists. Those passages now read "on Darwin": the runtime, worker and manager socket leaves and their namespace-ownership locks, plus the desktop single-instance lock and activation sockets, use the declared external anchor for every storage root. In the 2026-10-08 exception, "development roots stay root-relative and explicit synthetic/operator socket namespaces do not resolve into the installed transport namespace. Custom installed data roots remain separated by root-derived endpoint identities." now reads: "A namespace passed explicitly by a caller does not resolve into the shared transport directory; every other root remains separated there by its root-derived endpoint identity." R8 isolation of test roots still holds through `CADRUMO_STORAGE_ROOT` and endpoint identity. Persistent data locations are unchanged.

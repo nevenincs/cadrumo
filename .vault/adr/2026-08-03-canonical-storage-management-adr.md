@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-10-30'
+modified: '2026-10-31'
 body_schema: 'body-v1'
-body_hash: 'sha256:7d66f5761b6af9f9c66292408e031ed8252ef88f059082c3526883c922ba6ffa'
+body_hash: 'sha256:eeb9ae693ffb10688b36e35b95e61e16cbef0685fb1998810a9df770659ec3e4'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -1258,3 +1258,9 @@ Accepted 2026-10-08 under the user's advance authorization to fix defects and co
 ## 2026-10-30 single storage control
 
 Accepted 2026-10-30 on the owner's rulings of that date: "CADRUMO_STORAGE_ROOT is the only env variable that controls storage. [...] No divergent overrides. Single control. The root folder's absolute path controls the app directory; everything else is a relative path under the main root." No taxonomy member carries an override variable or a settings field, so the `OPERATOR_OVERRIDABLE` policy, its guard step and the per-member variables named in this record (for example `CADRUMO_LIVE_STATE_DIR` in R28) are retired: each names a location beneath the root. The bucket and keystore layout stays fixed, and relocation stays refuse-and-instruct.
+
+## Amendment 2026-10-31 - Darwin transport selection without a mode
+
+Basis: the user's ruling of 2026-10-30 that Cadrumo has no development-versus-installed (dev/prod) mode and that the storage location is selected only by the environment: an absolute `CADRUMO_STORAGE_ROOT`, otherwise the per-user default for the channel. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`. Implemented in commits 212247032d (Python `StorageMode` removal), 0a27935448 (native storage resolves from the environment alone) and 947fa42364 (runtime containment on macOS and Linux).
+
+The 2026-10-08 Darwin exception is restated without a mode. It refines R1/R3/R5 for the `RUNTIME_SOCKETS` namespace on Darwin, for every storage root. The owner-level lookup sanctioned in the location-lookup rule is the canonical owner's lazy Darwin transport query, not a "default-installed-Darwin" query. "Development roots remain root-relative and explicit synthetic/operator socket namespaces keep their isolation; custom installed data roots retain root-derived endpoint identities" now reads: "Every root keeps its root-derived endpoint identity in the transient directory; a namespace passed explicitly by a caller keeps its isolation; no environment variable selects a socket directory." Materialisation, reclaim, no-migration and refusal rules are unchanged. `2026-10-08-canonical-environment-darwin-transport-adr`, amendment 2026-10-31, governs the detail.
