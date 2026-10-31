@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -15,7 +14,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
@@ -26,6 +25,7 @@ from ..metadata_read_operation import (
     build_modelo_metadata_registration,
 )
 from ..work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
+from .work_operation_support import first_quarter_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -33,27 +33,10 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _PERIOD = Period.from_year_and_code(2026, "1T")
 
 
-def _unit() -> WorkUnit:
-    instant = datetime(2026, 3, 10, tzinfo=UTC)
-    return WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=_PERIOD, revision_id="2026-y-siguientes"
-        ),
-        bucket_id=str(_PROFILE),
-        modelo="303",
-        filing_year=2026,
-        period=_PERIOD,
-        revision_id="2026-y-siguientes",
-        name="First quarter",
-        created_at=instant,
-        updated_at=instant,
-    )
-
-
 def test_metadata_read_is_admitted_on_the_external_client_frontend_without_a_commit_door(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    unit = _unit()
+    unit = first_quarter_unit(_PROFILE)
 
     class Repository:
         bucket_id = str(_PROFILE)

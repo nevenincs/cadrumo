@@ -17,8 +17,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 from ....core.external_constants import OutputLanguage
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
-from ...operations.models import OperationIdentity, OperationRequest
-from ...operations.owner import OperationExecutorContext
+from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..calculation_action_ports import CalculationActionPortsFactory
@@ -36,48 +35,12 @@ from ..work_calculation_contracts import ModeloWorkCalculateRequest
 from ..work_lifecycle_ports import WorkLifecyclePorts
 from ..work_wizard import ModeloWorkWizardStep
 from .test_wizard_context_operation import _unit, _WorkRepository
+from .work_operation_support import GuardPhaseReachedError, guarded_executor_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-
-
-class _GuardPhaseReachedError(Exception):
-    pass
-
-
-class _GuardEvents:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-        raise _GuardPhaseReachedError(phase)
-
-
-def _executor_context(
-    request: OperationRequest[ModeloWorkWizardAttemptRequest],
-    *,
-    definition_id: str | None = None,
-    subject_ref: str | None = None,
-) -> tuple[OperationExecutorContext, _GuardEvents]:
-    events = _GuardEvents()
-    context = cast(
-        OperationExecutorContext,
-        cast(
-            object,
-            SimpleNamespace(
-                identity=OperationIdentity(
-                    operation_id="a" * 64,
-                    definition_id=definition_id if definition_id is not None else request.definition_id,
-                    subject_ref=subject_ref if subject_ref is not None else request.subject_ref,
-                ),
-                events=events,
-            ),
-        ),
-    )
-    return context, events
 
 
 def _executor() -> ModeloWorkWizardAttemptExecutor:
@@ -154,7 +117,7 @@ def test_wizard_executor_profile_guard_preserves_work_unit_subject(
     unit_id = original.payload.calculation.work_unit_id
     request_subject = "another-work-unit" if failure == "wrong_unit" else unit_id
     request = original.model_copy(update={"subject_ref": request_subject})
-    context, events = _executor_context(
+    context, events = guarded_executor_context(
         request,
         definition_id="modelo.work.other" if failure == "identity_definition" else None,
         subject_ref="another-work-unit" if failure == "identity_subject" else None,
@@ -171,10 +134,10 @@ def test_wizard_executor_profile_guard_preserves_work_unit_subject(
 
 def test_wizard_executor_accepts_its_work_unit_subject_at_the_guard_boundary(monkeypatch: pytest.MonkeyPatch) -> None:
     request = _executor_request()
-    context, events = _executor_context(request)
+    context, events = guarded_executor_context(request)
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
 
-    with pytest.raises(_GuardPhaseReachedError) as reached:
+    with pytest.raises(GuardPhaseReachedError) as reached:
         asyncio.run(_executor().execute(request, context))
 
     assert str(reached.value) == MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID
