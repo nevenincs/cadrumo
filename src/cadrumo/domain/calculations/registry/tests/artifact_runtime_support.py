@@ -95,9 +95,15 @@ def _snapshot_checked_facts(restated_on: date | None) -> tuple[GovernedFact, ...
     binds neither: the M130 retenciones routing is resolved without a
     retenciones binding, and the M190 perceptor clave scope by a cross-domain
     check. A scope naming no casilla is refused as an empty declaration, so it
-    names one.
+    names one. The first-slice check asks the role routing whether it is looking
+    at the annual renta form, whichever modelo the snapshot holds.
     """
     return (
+        _snapshot_checked_fact(
+            "modelo-role-routing",
+            (("renta.annual", "100"),),
+            restated_on=restated_on,
+        ),
         _snapshot_checked_fact(
             M130_RETENCIONES_ROUTING_FACT_ID,
             (("modelo", "130"), ("binding_id", "fixture-retenciones"), ("output_casilla", "01")),

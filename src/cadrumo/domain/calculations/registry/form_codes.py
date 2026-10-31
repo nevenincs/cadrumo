@@ -116,8 +116,10 @@ def exceeds_form_bound(count: int, key: str) -> bool:
 
 def require_form_width(value: str | None, key: str) -> str | None:
     """Return ``value`` unless the scope's ``form-row-codes`` fact declares another width for ``key``."""
+    if value is None:
+        return None
     codes = form_codes_in_scope()
-    if value is not None and codes is not None and str(len(value)) not in codes.codes(key):
+    if codes is not None and str(len(value)) not in codes.codes(key):
         raise CoreValidationError(f"a value does not have the width the form declares for {key}")
     return value
 

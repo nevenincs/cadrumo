@@ -464,6 +464,7 @@ class RegistryQueryService:
         """
         return build_modelo_bindings_report(
             self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            authority=self._authority,
         )
 
     def bindings_for_year(
@@ -476,6 +477,7 @@ class RegistryQueryService:
         """Return revision-wide bindings for one filing year and effective date."""
         return build_modelo_bindings_report(
             self._resolve_revision_for_year(modelo, filing_year=filing_year, as_of=as_of),
+            authority=self._authority,
         )
 
     def formulas_for_scope(
@@ -520,7 +522,10 @@ class RegistryQueryService:
             ``RegistryValidationError``: When the modelo or period is not
                 registered, or no revision covers the requested scope.
         """
-        return build_modelo_bindings_report(self._resolve_revision(modelo, period=period, as_of=as_of))
+        return build_modelo_bindings_report(
+            self._resolve_revision(modelo, period=period, as_of=as_of),
+            authority=self._authority,
+        )
 
     def formulas(
         self,
@@ -830,7 +835,10 @@ class PinnedRegistryQueryService:
         as_of: date | None = None,
     ) -> ModeloBindingsReport:
         """Return bindings for one unscoped modelo query."""
-        return build_modelo_bindings_report(self._resolve_revision(modelo, period=period, as_of=as_of))
+        return build_modelo_bindings_report(
+            self._resolve_revision(modelo, period=period, as_of=as_of),
+            authority=self._operation,
+        )
 
     def bindings_for_year(
         self,
@@ -842,6 +850,7 @@ class PinnedRegistryQueryService:
         """Return bindings for one filing year."""
         return build_modelo_bindings_report(
             self._resolve_revision_for_year(modelo, filing_year=filing_year, as_of=as_of),
+            authority=self._operation,
         )
 
     def bindings_for_scope(
@@ -855,6 +864,7 @@ class PinnedRegistryQueryService:
         """Return bindings for one filing-year scope."""
         return build_modelo_bindings_report(
             self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            authority=self._operation,
         )
 
     def formulas(

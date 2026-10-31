@@ -51,7 +51,7 @@ from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 
 if TYPE_CHECKING:
-    pass
+    from .governed_fact_scope import GovernedFactSource
 
 
 _PUBLIC_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(
@@ -211,7 +211,11 @@ def build_modelo_formulas_report(context: ResolvedRegistryQueryContext) -> Model
     )
 
 
-def build_modelo_bindings_report(context: ResolvedRegistryQueryContext) -> ModeloBindingsReport:
+def build_modelo_bindings_report(
+    context: ResolvedRegistryQueryContext,
+    *,
+    authority: GovernedFactSource,
+) -> ModeloBindingsReport:
     """Assemble a :class:`ModeloBindingsReport` from a resolved query context."""
     modelo = context.definition.id
     return ModeloBindingsReport(
@@ -220,7 +224,7 @@ def build_modelo_bindings_report(context: ResolvedRegistryQueryContext) -> Model
         filing_year=context.filing_year,
         filing_period=_query_filing_period(context.filing_year, context.registry_period),
         period=context.registry_period,
-        rows=_binding_rows(context.revision, modelo=modelo, period=context.registry_period),
+        rows=_binding_rows(context.revision, modelo=modelo, period=context.registry_period, authority=authority),
     )
 
 
@@ -229,6 +233,7 @@ def _binding_rows(
     *,
     modelo: str | None = None,
     period: str | None = None,
+    authority: GovernedFactSource,
 ) -> tuple[ModeloBindingQueryRow, ...]:
     """Build the typed binding rows for one revision.
 
@@ -241,7 +246,7 @@ def _binding_rows(
     fold_binding_ids = frozenset(
         binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period=period)
     )
-    operator_required = _operator_input_required_by_binding(revision, modelo=modelo, period=period)
+    operator_required = _operator_input_required_by_binding(revision, modelo=modelo, period=period, authority=authority)
     return tuple(
         ModeloBindingQueryRow(
             binding_id=binding.id,
@@ -367,10 +372,11 @@ def _operator_input_required_by_binding(
     *,
     modelo: str | None,
     period: str | None,
+    authority: GovernedFactSource,
 ) -> dict[BindingId, bool]:
     """Return missing-input visibility for relation slots with period-scoped defaults."""
     required = {binding.id: True for binding in revision.bindings}
-    if modelo is None or modelo != form_for_role("sociedades.instalment") or period is None:
+    if modelo is None or modelo != form_for_role("sociedades.instalment", authority=authority) or period is None:
         return required
     for binding in revision.bindings:
         if _relation_prefill_is_period_default(binding, modelo=modelo, period=period):
