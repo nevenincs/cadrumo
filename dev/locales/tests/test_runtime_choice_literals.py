@@ -6,17 +6,25 @@ from enum import Enum
 import pytest
 
 from cadrumo.application.live.snapshot_base import SnapshotStateFilter
+from cadrumo.application.live.verify import VerifySurface
+from cadrumo.application.modelo.m145_communication_period import M145CommunicationPeriod
 from cadrumo.application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelector
 from cadrumo.application.modelo.verify_selector import ModeloVerifySelector
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import extract_placeholders, tr
 from cadrumo.core.identity_check_verdict import IdentityCheckVerdict
-from cadrumo.core.ledger_sort import LedgerSortOrder
+from cadrumo.core.ledger_sort import LedgerSortField, LedgerSortOrder
 from cadrumo.core.output_rendering import OutputFormat
+from cadrumo.core.rescate_type import RescateType
+from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.contribuyente.inventory.records import MovementKind, ValuationMethod
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
+from cadrumo.domain.renta.actividad_asset.disposal import ADMITTED_DISPOSAL_REASONS
+from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from dev._paths import REPO_ROOT
 
 from ..signal_command_paths import _command_graphs
@@ -44,6 +52,16 @@ _HELP_KEYS = [
     "application.workflow.errors.resume_revision_selector_invalid",
     "cli.app.modelo.work.document_format_help",
     "cli.app.modelo.list.domain_help",
+    "cli.app.modelo.filing_record.import_declared_kind_help",
+    "cli.app.live.verify.latest_surface_help",
+    "cli.app.live.verify.surface_help",
+    "cli.config.storage.view.area_argument_help",
+    "cli.config.profile.plantilla_media.state_help",
+    "cli.root.language_help",
+    "cli.app.modelo.work.rescate_type_help",
+    "cli.app.modelo.m145.period_help",
+    "tui.ledger.activity_asset.disposal_reason",
+    "cli.ledger.list.sort_by_help",
 ]
 
 
@@ -56,6 +74,13 @@ _DECLARED_AXES: tuple[type[Enum], ...] = (
     ModeloReconciliationEvidenceKind,
     CalculationReportDocumentFormat,
     ModeloVerifySelector,
+    VerifySurface,
+    StorageArea,
+    PlantillaMediaState,
+    OutputLanguage,
+    RescateType,
+    M145CommunicationPeriod,
+    FilingDeclarationKind,
 )
 
 
@@ -73,6 +98,17 @@ def accepted_choice_values() -> dict[str, set[str]]:
     # Keep the two names advertised by this help, checked against their actual
     # enum members; this copy repair does not expand the advertised choices.
     result["cli.app.ledger.inventory.valuation_method_help"] = {ValuationMethod.FIFO.value, ValuationMethod.PMP.value}
+    result["tui.ledger.activity_asset.disposal_reason"] = {reason.value for reason in ADMITTED_DISPOSAL_REASONS}
+    result["cli.ledger.list.sort_by_help"] = {
+        field.value
+        for field in (
+            LedgerSortField.DATE,
+            LedgerSortField.AMOUNT,
+            LedgerSortField.DESCRIPTION,
+            LedgerSortField.CREATED_AT,
+            LedgerSortField.MODIFIED_AT,
+        )
+    }
     result["cli.app.modelo.list.domain_help"] = {
         parse_toml(
             (REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos" / modelo / "manifest.toml").read_text(

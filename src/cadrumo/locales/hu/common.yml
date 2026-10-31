@@ -6656,8 +6656,8 @@ tui:
       disposal_prior_regime: 'Igazolt korábbi szabad értékcsökkenés: trlis_da_11 vagy
         trlis_dt_37'
       disposal_proceeds: Bevétel
-      disposal_reason: 'Ok: sale, part_exchange, theft, destruction, scrapping vagy
-        withdrawal'
+      disposal_reason: 'Ok: `sale`, `part_exchange`, `theft`, `destruction`, `scrapping`
+        vagy `withdrawal`'
       dispose: Kivezetés rögzítése
       filing: Adónyomtatványra átvitel előkészítése
       forecast: Előrejelzés kiszámítása

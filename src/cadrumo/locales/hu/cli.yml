@@ -763,14 +763,14 @@ cli:
           `valid`, `invalid`, `unknown`.'
         latest_help: A legfrissebb megfigyelés megjelenítése felületre és NIF-re.
         latest_nif_help: A keresett NIF.
-        latest_surface_help: 'Ellenőrzés típusa: nif_iva vagy tgvi.'
+        latest_surface_help: 'Ellenőrzés típusa: `nif_iva` vagy `tgvi`.'
         list_help: Mentett ellenőrzési megfigyelések listázása.
         nif_help: Szűrés egy NIF szerint.
         nif_iva_arg_help: NIF-IVA érték (pl. ESB12345678).
         nif_iva_help: Intraközösségi NIF-IVA ellenőrzése az AEAT IXVI rendszerében
           és a megfigyelés mentése.
         observation_id_help: Megfigyelés azonosítója (vagy egyértelmű előtag).
-        surface_help: 'Szűrés felület szerint: nif_iva vagy tgvi.'
+        surface_help: 'Szűrés felület szerint: `nif_iva` vagy `tgvi`.'
         tgvi_arg_help: Ellenőrizendő spanyol NIF/NIE.
         tgvi_help: NIF ROI/VIES-regisztrációjának ellenőrzése a GROI-ban és a megfigyelés
           mentése.
@@ -885,8 +885,7 @@ cli:
           a(z) {code}@{revision} ({period}) számára: {suggestion}.'
         unscoped_revision_warning: A rovatforrások listája nincs %{missing_filters}
           szerint szűkítve; a hivatalos nyomtatvány olyan változatának forrásazonosítóit
-          is tartalmazhatja, amely nem egyezik a work calculate által
-          használt bevallással.
+          is tartalmazhatja, amely nem egyezik a work calculate által használt bevallással.
         year_help: A nyomtatvány adóéve (pl. 2026).
       casilla:
         casilla_help: Leírandó mezőazonosító vagy nyomtatott mezőszám (pl. 0596).
@@ -992,8 +991,8 @@ cli:
         import_casilla_help: Importált mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
         import_declared_kind_help: Az AEAT által erre a benyújtásra rögzített bevallásfajta
-          (original, complementaria, sustitutiva, rectificativa); kötelező, ha az
-          AEAT-nál már van megerősített bevallás az időszakra
+          (`original`, `complementaria`, `sustitutiva`, `rectificativa`); kötelező,
+          ha az AEAT-nál már van megerősített bevallás az időszakra
         import_file_help: A külső bevallási forrásból exportált CSV- vagy XLSX-casillajegyzék
           elérési útja.
         import_help: Cadrumón kívül benyújtott bevallás mentése alap-benyújtási rekordként,
@@ -1183,7 +1182,7 @@ cli:
         mark_locally_completed_help: Jelöld meg a helyi Modelo 145 kommunikációs rekordot
           helyileg befejezettként.
         note_help: Opcionális saját megjegyzés.
-        period_help: 'A kommunikáció időszakának tokenje: comunicacion vagy variacion.'
+        period_help: 'A kommunikáció időszakának tokenje: `comunicacion` vagy `variacion`.'
         validate_help: Ellenőrizz egy helyi Modelo 145 kifizetői kommunikációs rekordot.
         year_help: A kommunikáció éve.
       m360:
@@ -1838,10 +1837,10 @@ cli:
           decimális összegeknek kell lenniük; kapott érték: {value}. Használj tizedespontot
           ezreselválasztó nélkül, pl. 1234.56.'
         rescate_type_help: 'A nyugdíjpénztári tőke visszaváltásának típusa (LIRPF
-          DT 12a): total (a teljes tőke egyszerre) vagy parcial (részletekben). Osztályozási
-          és eredetjelző jel, nem változtatja meg az összeget: a 40%-os csökkentés
-          a kifizetett összeg 2007 előtti részére vonatkozik. Parciális esetén minden
-          részkifizetés ugyanazt a 4. bekezdés szerinti ablakot osztja.'
+          DT 12a): `total` (a teljes tőke egyszerre) vagy `parcial` (részletekben).
+          Osztályozási és eredetjelző jel, nem változtatja meg az összeget: a 40%-os
+          csökkentés a kifizetett összeg 2007 előtti részére vonatkozik. Parciális
+          esetén minden részkifizetés ugyanazt a 4. bekezdés szerinti ablakot osztja.'
         rescate_year_help: Az az év, amikor a visszaváltási juttatást megkapják (alapértelmezetten
           a bevallás éve). Összehasonlítva a LIRPF DT 12a 4. bekezdés szerinti ablakkal,
           a --contingencia-year évtől mérve.
@@ -2497,7 +2496,8 @@ cli:
         incomplete: 'A profilból még hiányoznak kötelező adatok: {paths}'
       create_confirm_passphrase_prompt: 'Erősítsd meg az új profil jelszavát: '
       create_guidance_unavailable: A profil sikeresen elkészült, de a következő lépésekről
-        szóló értesítéseket nem sikerült előállítani. A profil állapota megmutatja, mi van még hátra.
+        szóló értesítéseket nem sikerült előállítani. A profil állapota megmutatja,
+        mi van még hátra.
       create_help: Jelszóval védett profilt hoz létre. Terminálon ezután opcionális
         helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'cadrumo-runtime
         config profile recovery enable' paranccsal.
@@ -2626,8 +2626,8 @@ cli:
         remove_year_help: A visszavonandó naptári év.
         set_help: Egy naptári év átlagos állományi létszámának megadása vagy cseréje
           az aktív profilban.
-        state_help: observed lezárt évre; committed még le nem zárt évre, amelyet
-          teljesítés hiányában helyesbíteni kell.
+        state_help: '`observed` lezárt évre; `committed` még le nem zárt évre, amelyet
+          teljesítés hiányában helyesbíteni kell.'
         year_help: Az a naptári év, amelyre az átlag vonatkozik.
       recovery:
         channel_absent: A helyreállítási kód csak terminálon jeleníthető meg. Terminál
@@ -2850,8 +2850,8 @@ cli:
           populated: adatokat tartalmaz
           unresolved: feloldatlan
       view:
-        area_argument_help: A megtekintendő tárolási terület (state, logs, cache vagy
-          exports).
+        area_argument_help: A megtekintendő tárolási terület (`state`, `logs`, `cache`
+          vagy `exports`).
         area_help: Részletesen megjelenít egy megadott tárolási helyet.
     workflow_help: Konfiguráció-munkafolyamat súgó megjelenítése.
   diagnostics:
@@ -3434,8 +3434,8 @@ cli:
         elutasították (a felülvizsgált és elutasított sor kikerül a függő sorból).
       limit_help: 'Megjelenítendő sorok maximális száma (alapértelmezett: az összes).'
       offset_help: 'Ennyi sor kihagyása a listázás előtt (alapértelmezett: 0).'
-      sort_by_help: A listázott sorok rendezése e mező szerint (date, amount, description,
-        created_at, modified_at, ...).
+      sort_by_help: A listázott sorok rendezése e mező szerint (`date`, `amount`,
+        `description`, `created_at`, `modified_at`, ...).
       sort_order_help: 'Rendezési sorrend: `asc` (növekvő) vagy `desc` (csökkenő).'
       ungrouped_label: (nincs csoport)
     llm_diagnostics:
@@ -4003,7 +4003,7 @@ cli:
       session_unchecked: A munkamenet és készültség nem következik a kiválasztott
         profilból.
       tagline: Helyi munkafolyamat a spanyol adóhatósággal (AEAT) adózóknak és tanácsadóknak.
-    language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
+    language_help: A kimenet és a súgószöveg nyelve (`en`, `es`, `ca`, `hu`).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
     verbose_help: Részletes kimenet engedélyezése.

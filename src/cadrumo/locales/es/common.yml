@@ -6679,8 +6679,8 @@ tui:
       disposal_prior_regime: 'Libertad de amortización anterior acreditada: trlis_da_11
         o trlis_dt_37'
       disposal_proceeds: Importe de venta
-      disposal_reason: 'Motivo: sale, part_exchange, theft, destruction, scrapping
-        o withdrawal'
+      disposal_reason: 'Motivo: `sale`, `part_exchange`, `theft`, `destruction`, `scrapping`
+        o `withdrawal`'
       dispose: Registrar baja
       filing: Preparar traslado a modelos
       forecast: Calcular previsión

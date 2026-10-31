@@ -726,13 +726,13 @@ cli:
         expected_values_error: '--expected must be one of: `valid`, `invalid`, `unknown`.'
         latest_help: Show the most recent observation for surface and NIF
         latest_nif_help: NIF to look up
-        latest_surface_help: 'Check type: nif_iva or tgvi'
+        latest_surface_help: 'Check type: `nif_iva` or `tgvi`'
         list_help: List saved check observations
         nif_help: Filter by one NIF
         nif_iva_arg_help: NIF-IVA value (e.g. ESB12345678)
         nif_iva_help: Check an intra-community NIF-IVA in AEAT IXVI and save the observation
         observation_id_help: Observation id (or unambiguous prefix)
-        surface_help: 'Filter by surface: nif_iva or tgvi'
+        surface_help: 'Filter by surface: `nif_iva` or `tgvi`'
         tgvi_arg_help: Spanish NIF/NIE to check
         tgvi_help: Check a NIF's ROI/VIES registration in GROI and save the observation
         view_help: Show a saved check observation
@@ -944,8 +944,8 @@ cli:
         import_casilla_help: Imported casilla value with CASILLA_ID=DECIMAL syntax
           (repeatable; at least one required)
         import_declared_kind_help: Declaration type AEAT records for this presentation
-          (original, complementaria, sustitutiva, rectificativa); required when AEAT
-          already holds a confirmed declaration for the period
+          (`original`, `complementaria`, `sustitutiva`, `rectificativa`); required
+          when AEAT already holds a confirmed declaration for the period
         import_file_help: Path to a CSV or XLSX casilla manifest exported from the
           external filing source
         import_help: Store a return filed outside Cadrumo as a baseline filing record
@@ -1126,8 +1126,8 @@ cli:
         mark_locally_completed_help: Mark a Modelo 145 local communication record
           locally completed.
         note_help: Optional note of your own.
-        period_help: 'Communication period token: comunicacion (communication) or
-          variacion (change).'
+        period_help: 'Communication period token: `comunicacion` (communication) or
+          `variacion` (change).'
         validate_help: Validate a Modelo 145 local payer communication record.
         year_help: Communication year.
       m360:
@@ -1741,11 +1741,11 @@ cli:
         rescate_plan_pensiones_not_decimal: '--rescate-plan-pensiones-* values must
           be decimal amounts; received: {value}. Use a dot decimal separator with
           no thousands grouping, e.g. 1234.56.'
-        rescate_type_help: 'Pension-plan capital rescate type (LIRPF DT 12a): total
-          (whole capital at once) or parcial (staged withdrawals). It classifies the
-          payment and records where it comes from; it does not change the amount:
+        rescate_type_help: 'Pension-plan capital withdrawal type (LIRPF DT 12a): `total`
+          (whole capital at once) or `parcial` (staged withdrawals). It classifies
+          the payment and records where it comes from; it does not change the amount:
           the 40% reduction applies to the pre-2007 share of whatever is received.
-          For parcial, each withdrawal shares the same apartado-4 window.'
+          For `parcial`, each withdrawal shares the same apartado-4 window.'
         rescate_year_help: Year the rescate benefit is received (defaults to the filing
           year). Compared against the LIRPF DT 12a apartado-4 window measured from
           --contingencia-year.
@@ -2471,8 +2471,8 @@ cli:
         remove_year_help: Calendar year to withdraw.
         set_help: Declare or replace one calendar year's average workforce on the
           active profile.
-        state_help: observed for a closed year; committed for a year not yet closed,
-          which must be regularised if not met.
+        state_help: '`observed` for a closed year; `committed` for a year not yet
+          closed, which must be regularised if not met.'
         year_help: Calendar year the average applies to.
       recovery:
         channel_absent: A recovery code can only be shown on a terminal. On a headless
@@ -2680,7 +2680,8 @@ cli:
           populated: populated
           unresolved: unresolved
       view:
-        area_argument_help: The storage area to inspect (state, logs, cache, or exports).
+        area_argument_help: The storage area to inspect (`state`, `logs`, `cache`,
+          or `exports`).
         area_help: Show one declared storage location in full.
     workflow_help: Show config workflow help
   diagnostics:
@@ -3245,8 +3246,8 @@ cli:
         (a reviewed-and-declined row drops out of the pending queue).
       limit_help: 'Maximum rows to show (default: all rows).'
       offset_help: 'Skip this many rows before listing (default: 0).'
-      sort_by_help: Sort the listed rows by this field (date, amount, description,
-        created_at, modified_at, ...).
+      sort_by_help: Sort the listed rows by this field (`date`, `amount`, `description`,
+        `created_at`, `modified_at`, ...).
       sort_order_help: 'Sort order: `asc` (ascending) or `desc` (descending).'
       ungrouped_label: (ungrouped)
     llm_diagnostics:
@@ -3791,7 +3792,7 @@ cli:
         profile.
       tagline: Local-first workflow with the Spanish Tax Agency (AEAT) for taxpayers
         and advisers.
-    language_help: Language for output and help text (en, es, ca, hu).
+    language_help: Language for output and help text (`en`, `es`, `ca`, `hu`).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
     verbose_help: Enable detailed output.

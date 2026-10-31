@@ -6542,8 +6542,8 @@ tui:
       disposal_market_value: Market value, if stated
       disposal_prior_regime: 'Attested prior free depreciation: trlis_da_11 or trlis_dt_37'
       disposal_proceeds: Proceeds
-      disposal_reason: 'Reason: sale, part_exchange, theft, destruction, scrapping
-        or withdrawal'
+      disposal_reason: 'Reason: `sale`, `part_exchange`, `theft`, `destruction`, `scrapping`
+        or `withdrawal`'
       dispose: Record baja
       filing: Prepare tax form transfer
       forecast: Calculate forecast

@@ -782,14 +782,14 @@ cli:
         expected_values_error: '--expected debe ser uno de: `valid`, `invalid`, `unknown`.'
         latest_help: Muestra la observación más reciente para superficie y NIF
         latest_nif_help: NIF que quieres consultar
-        latest_surface_help: 'Tipo de comprobación: nif_iva o tgvi'
+        latest_surface_help: 'Tipo de comprobación: `nif_iva` o `tgvi`'
         list_help: Lista las observaciones de comprobación guardadas
         nif_help: Filtra por un NIF
         nif_iva_arg_help: Valor NIF-IVA (p. ej. ESB12345678)
         nif_iva_help: Comprueba un NIF-IVA intracomunitario en AEAT IXVI y guarda
           la observación
         observation_id_help: Id de observación (o prefijo no ambiguo)
-        surface_help: 'Filtra por superficie: nif_iva o tgvi'
+        surface_help: 'Filtra por superficie: `nif_iva` o `tgvi`'
         tgvi_arg_help: NIF/NIE español que quieres comprobar
         tgvi_help: Comprueba el alta ROI/VIES de un NIF en GROI y guarda la observación
         view_help: Muestra una observación de comprobación guardada
@@ -1017,8 +1017,8 @@ cli:
         import_casilla_help: Valor de casilla importado con sintaxis CASILLA_ID=DECIMAL
           (repetible; al menos uno requerido)
         import_declared_kind_help: Tipo de declaración que la AEAT registra para esta
-          presentación (original, complementaria, sustitutiva, rectificativa); obligatorio
-          cuando la AEAT ya tiene una declaración confirmada del periodo
+          presentación (`original`, `complementaria`, `sustitutiva`, `rectificativa`);
+          obligatorio cuando la AEAT ya tiene una declaración confirmada del periodo
         import_file_help: Ruta a un manifiesto de casillas CSV o XLSX exportado desde
           la fuente de la declaración externa
         import_help: Guarda una declaración presentada fuera de Cadrumo como registro
@@ -1214,7 +1214,8 @@ cli:
         mark_locally_completed_help: Marca un registro local de comunicación del Modelo
           145 como completado localmente.
         note_help: Nota opcional tuya.
-        period_help: 'Token del periodo de la comunicación: comunicación o variación.'
+        period_help: 'Token del periodo de la comunicación: `comunicacion` (comunicación)
+          o `variacion` (variación).'
         validate_help: Valida un registro local de comunicación al pagador del Modelo
           145.
         year_help: Año de la comunicación.
@@ -1859,9 +1860,9 @@ cli:
           deben ser importes decimales; se recibió: {value}. Usa el punto como separador
           decimal y sin separador de miles, p. ej. 1234.56.'
         rescate_type_help: 'Tipo de rescate del plan de pensiones (DT 12a LIRPF):
-          total (todo el capital de una vez) o parcial (cobros escalonados). Clasifica
+          `total` (todo el capital de una vez) o `parcial` (cobros escalonados). Clasifica
           el cobro y deja constancia de su origen; no cambia el importe: la reducción
-          del 40% se aplica a la parte pre-2007 de lo percibido. En parcial, cada
+          del 40% se aplica a la parte pre-2007 de lo percibido. En `parcial`, cada
           cobro comparte la misma ventana del apartado 4.'
         rescate_year_help: Año en que se percibe la prestación del rescate (por defecto
           el año de la declaración). Se compara con la ventana del apartado 4 DT 12a
@@ -2659,8 +2660,8 @@ cli:
         remove_year_help: Año natural que se retira.
         set_help: Declarar o sustituir la plantilla media de un año natural en el
           perfil activo.
-        state_help: observed para un año cerrado; committed para un año aún no cerrado,
-          que deberá regularizarse si no se cumple.
+        state_help: '`observed` para un año cerrado; `committed` para un año aún no
+          cerrado, que deberá regularizarse si no se cumple.'
         year_help: Año natural al que corresponde la media.
       recovery:
         channel_absent: Un código de recuperación solo puede mostrarse en un terminal.
@@ -2888,8 +2889,8 @@ cli:
           populated: con datos
           unresolved: sin resolver
       view:
-        area_argument_help: El área de almacenamiento a consultar (state, logs, cache
-          o exports).
+        area_argument_help: El área de almacenamiento a consultar (`state`, `logs`,
+          `cache` o `exports`).
         area_help: Muestra en detalle una ubicación de almacenamiento declarada.
     workflow_help: Mostrar ayuda del flujo de configuración
   diagnostics:
@@ -3495,8 +3496,8 @@ cli:
         fue rechazada (una fila revisada y descartada sale de la cola pendiente).
       limit_help: 'Número máximo de filas a mostrar (por defecto: todas).'
       offset_help: 'Omitir este número de filas antes de listar (por defecto: 0).'
-      sort_by_help: Ordena las filas listadas por este campo (date, amount, description,
-        created_at, modified_at, ...).
+      sort_by_help: Ordena las filas listadas por este campo (`date`, `amount`, `description`,
+        `created_at`, `modified_at`, ...).
       sort_order_help: 'Orden: `asc` (ascendente) o `desc` (descendente).'
       ungrouped_label: (sin grupo)
     llm_diagnostics:
@@ -4076,7 +4077,7 @@ cli:
       session_unchecked: La sesión y la preparación no se infieren del perfil seleccionado.
       tagline: Flujo local con la Agencia Estatal de Administración Tributaria (AEAT)
         para contribuyentes y asesores.
-    language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
+    language_help: Idioma de la salida y del texto de ayuda (`en`, `es`, `ca`, `hu`).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
     verbose_help: Habilitar salida detallada.
