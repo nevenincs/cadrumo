@@ -209,12 +209,12 @@ msgid ""
 "and time types, and the error taxonomy."
 msgstr ""
 "**`core`** es la capa más interna. Se encarga de los primitivos "
-"transversales que comparten todas las demás capas. Sus enums tipados "
+"transversales que comparten todas las demás capas. Sus tipos enumerados "
 "definen conjuntos cerrados de valores como los códigos de periodo, los "
 "dominios tributarios, los identificadores de modelo y los tipos de origen"
-" de vinculación. Core también se encarga del contrato de la envoltura "
-"JSON, la configuración, los tipos de dinero y de tiempo, y la taxonomía "
-"de errores."
+" de vinculación. Esta capa también se encarga del contrato de la "
+"envoltura JSON, la configuración, los tipos de dinero y de tiempo, y la "
+"taxonomía de errores."
 
 #: ../../architecture/index.md:93
 msgid ""
@@ -317,7 +317,7 @@ msgstr "`calculations`, `modelo`, `aggregation`"
 
 #: ../../architecture/index.md:64
 msgid "Ledger and transactions"
-msgstr "Ledger y transacciones"
+msgstr "Libro registro y transacciones"
 
 #: ../../architecture/index.md:64
 msgid "`transactions`, `invoices`, `categories`, `iva`, `currency`, `attachments`"
@@ -341,7 +341,7 @@ msgstr "`filing`, `export`, `review`"
 
 #: ../../architecture/index.md:64
 msgid "Live, portals, and auth"
-msgstr "Live, portales y autenticación"
+msgstr "Lecturas en directo, portales y autenticación"
 
 #: ../../architecture/index.md:64
 msgid "`portals`, `auth`, `notifications`"
@@ -614,17 +614,17 @@ msgid ""
 "then to the operator. The provenance never drops on the way out."
 msgstr ""
 "Cada vinculación de una casilla declara un origen tipado. Una malla de "
-"resolvedores (agregación del ledger, catálogo de facturas, arrastre de la"
-" presentación anterior, prellenado por relación entre modelos, inventario"
-" y activos extranjeros) convierte esos orígenes en valores de "
-"vinculación, fusionados mediante `merge_source_resolutions`. Los datos "
-"del perfil se resuelven antes que la malla, como el nivel de menor "
-"precedencia. El motor de fórmulas del registro evalúa la fórmula de la "
-"casilla sobre las entradas resueltas y sella el resultado como una "
-"`CasillaObservation` portadora de sus `legal_refs`, `source_refs` y "
-"`formula_id`. Esa observación viaja dentro de la `CalculationRevision` "
-"persistida, luego a las cargas de la CLI y luego hasta el operador. La "
-"procedencia nunca se pierde por el camino."
+"resolvedores (agregación del libro registro, catálogo de facturas, "
+"arrastre de la presentación anterior, cumplimentación previa por relación"
+" entre modelos, inventario y activos extranjeros) convierte esos orígenes"
+" en valores de vinculación, fusionados mediante "
+"`merge_source_resolutions`. Los datos del perfil se resuelven antes que "
+"la malla, como el nivel de menor precedencia. El motor de fórmulas del "
+"registro evalúa la fórmula de la casilla sobre las entradas resueltas y "
+"sella el resultado como una `CasillaObservation` portadora de sus "
+"`legal_refs`, `source_refs` y `formula_id`. Esa observación viaja dentro "
+"de la `CalculationRevision` persistida, luego a las cargas de la CLI y "
+"luego hasta el operador. La procedencia nunca se pierde por el camino."
 
 #: ../../architecture/index.md:290
 msgid ""

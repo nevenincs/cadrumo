@@ -144,12 +144,12 @@ msgstr ""
 "les dades censals del qual encara no estiguin del tot emplenades, canvia "
 "la data de referència amb `--date` i amplia la finestra de properes "
 "obligacions amb `--horizon` (el valor per defecte és de 14 dies). El "
-"perfil d'exemple és un autónomo els ingressos del qual provenen d'una "
-"activitat econòmica. L'1 d'abril el proper termini és el Modelo 130 del "
-"primer trimestre, que venç el 20 d'abril. A partir del 15 d'abril, el "
-"Modelo 130 i el Modelo 303 d'aquell trimestre cauen tots dos dins de la "
-"finestra de dues setmanes. Les dades del perfil que encara no s'han "
-"establert apareixen com a avisos que anomenen els models als quals "
+"perfil d'exemple és una persona autònoma els ingressos de la qual "
+"provenen d'una activitat econòmica. L'1 d'abril el proper termini és el "
+"Modelo 130 del primer trimestre, que venç el 20 d'abril. A partir del 15 "
+"d'abril, el Modelo 130 i el Modelo 303 d'aquell trimestre cauen tots dos "
+"dins de la finestra de dues setmanes. Les dades del perfil que encara no "
+"s'han establert apareixen com a avisos que anomenen els models als quals "
 "afecten:"
 
 #: ../../how-to/filing-calendar.md:46
@@ -482,4 +482,3 @@ msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 #: ../../how-to/filing-calendar.md:181
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
-

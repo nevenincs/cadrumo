@@ -457,7 +457,7 @@ msgstr "Què no demostra"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "AEAT fichero or XML export"
-msgstr "Exportació de fichero o XML de l'AEAT"
+msgstr "Exportació de fitxer o XML de l'AEAT"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
@@ -503,12 +503,14 @@ msgid ""
 "checksums"
 msgstr ""
 "Comparteix l'esborrany, el càlcul desat, l'origen de cada valor i els "
-"justificants, quan n'hi ha, en un ZIP que pots comprovar amb els seus "
-"checksums"
+"justificants, quan n'hi ha, en un ZIP que pots comprovar amb les seves "
+"sumes de verificació"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Checksums alone do not identify who created or approved it"
-msgstr "Els checksums per si sols no identifiquen qui el va crear o aprovar"
+msgstr ""
+"Les sumes de verificació per si soles no identifiquen qui el va crear o "
+"aprovar"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Evidence bundle"
@@ -581,12 +583,12 @@ msgid ""
 "filing authority."
 msgstr ""
 "El ZIP base de revisió per a l'assessor és text pla i verificable per "
-"checksum. Operacions separades poden afegir un sobre de signatura Ed25519"
-" o xifrar el paquet per a un destinatari registrat. Verifica les "
-"signatures contra una clau pública de confiança. Signar, contrasignar, "
-"verificar el justificant i xifrar per al destinatari són operacions "
-"diferents. Un lliurament només de revisió no comporta cap autoritat de "
-"presentació."
+"suma de verificació. Operacions separades poden afegir un sobre de "
+"signatura Ed25519 o xifrar el paquet per a un destinatari registrat. "
+"Verifica les signatures contra una clau pública de confiança. Signar, "
+"contrasignar, verificar el justificant i xifrar per al destinatari són "
+"operacions diferents. Un lliurament només de revisió no comporta cap "
+"autoritat de presentació."
 
 #: ../../reference/import-export-and-evidence.md:144
 msgid ""
@@ -601,8 +603,9 @@ msgstr ""
 "contrasignatura no verifica la signatura original ni el fitxer; la "
 "verificació del justificant fa aquelles comprovacions. El xifratge per al"
 " destinatari xifra els bytes que se li proporcionen, però no requereix "
-"primer la verificació del checksum ni de la signatura. Després de "
-"desxifrar, verifica el paquet recuperat i les signatures per separat."
+"primer la verificació de la suma de verificació ni de la signatura. "
+"Després de desxifrar, verifica el paquet recuperat i les signatures per "
+"separat."
 
 #: ../../reference/import-export-and-evidence.md:150
 msgid ""
@@ -836,10 +839,11 @@ msgid ""
 "(justificante) can become official proof. Import it through the workflow "
 "for AEAT receipts."
 msgstr ""
-"Una observació local aportada per tu, una exportació local, un checksum, "
-"un Google Sheet o un ZIP de revisió no poden demostrar l'acceptació de "
-"l'AEAT. Un justificant de l'AEAT que tinguis localment pot esdevenir "
-"prova oficial. Importa'l a través del flux de justificants de l'AEAT."
+"Una observació local aportada per tu, una exportació local, una suma de "
+"verificació, un Google Sheet o un ZIP de revisió no poden demostrar "
+"l'acceptació de l'AEAT. Un justificant de l'AEAT que tinguis localment "
+"pot esdevenir prova oficial. Importa'l a través del flux de justificants "
+"de l'AEAT."
 
 #: ../../reference/import-export-and-evidence.md:233
 msgid ""

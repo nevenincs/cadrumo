@@ -467,7 +467,7 @@ msgstr ""
 "El contracte de l'entorn d'execució és per a rodes instal·lades en un "
 "sistema de fitxers ordinari, on el descriptor i la base de dades SQLite "
 "tenen camins físics estables. No s'admet l'execució directa per "
-"importació des d'un zip: SQLite no pot obrir un membre de fitxer "
+"importació des d'un arxiu ZIP: SQLite no pot obrir un membre de fitxer "
 "comprimit com la seva base de dades de només lectura."
 
 #: ../../reference/registry-legal-api.md:139

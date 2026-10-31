@@ -379,7 +379,7 @@ msgid ""
 "directly."
 msgstr ""
 "Si el mateix justificant de l'AEAT sembla incorrecte, contacta amb el teu"
-" asesor o amb l'AEAT directament."
+" assessor o amb l'AEAT directament."
 
 #: ../../how-to/reconcile.md:144
 msgid "If a box value looks wrong"
