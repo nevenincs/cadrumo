@@ -101,7 +101,7 @@ def test_configured_actions_use_selected_uv_despite_path_reordering(
             monkeypatch.setattr(product_snapshot, "repository_files", lambda root, *, under=(): ())
             monkeypatch.setattr(product_snapshot, "snapshot", snapshot)
             monkeypatch.setattr(product, "selected_published_authority", lambda *args: ())
-            monkeypatch.setattr(product, "_wheel_input_digest", lambda *args, **kwargs: "selected-inputs")
+            monkeypatch.setattr(product, "distribution_input_digest", lambda *args, **kwargs: "selected-inputs")
             dependencies = tmp_path / "dependencies"
             dependencies.mkdir()
             product.build_product(

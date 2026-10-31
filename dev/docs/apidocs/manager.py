@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.tests.run_artifact import run_artifact
+from dev._paths import REPO_ROOT
+from dev.cache_root import dev_cache_dir
 from dev.first_party_source import FIRST_PARTY_ROOTS
 
 from .type_aliases import public_type_aliases, type_alias_declarations
@@ -18,12 +24,19 @@ class ApiDocsError(RuntimeError):
     """Raised on API documentation stub management errors."""
 
 
-#: The most recent renderings, keyed by the configured roots and the content of
-#: every Python source under their ``src/`` parent. Two entries: a rendering of
-#: the repository tree is a few megabytes, the repository and primary-package
-#: scopes alternate, and a changed tree never reads an older rendering again.
-_EXPECTED_STUB_CONTENTS: dict[tuple[tuple[Path, ...], str], dict[str, str]] = {}
-_RETAINED_RENDERINGS = 2
+#: The most recent rendering per configured root set, with the content
+#: fingerprint it was rendered for, least recently used first. One entry per root
+#: set, so a rendering of a small synthetic tree never evicts the repository's.
+_EXPECTED_STUB_CONTENTS: dict[tuple[Path, ...], tuple[str, dict[str, str]]] = {}
+_RETAINED_RENDERINGS = 4
+
+#: The rendering of the checkout's own sources is shared between processes:
+#: every pytest worker, every later run and the documentation build read one
+#: published rendering per content fingerprint instead of each rendering ~1,800
+#: stubs again.
+_PUBLISHED_KIND: Final = "api-stubs"
+_PUBLISHED_FILE: Final = "stubs.json"
+_PUBLISHED_RETAINED: Final = 4
 
 
 def _python_source_fingerprint(src_parent: Path) -> str:
@@ -38,6 +51,25 @@ def _python_source_fingerprint(src_parent: Path) -> str:
         digest.update(b"\0")
         digest.update(hashlib.sha256(path.read_bytes()).digest())
     return digest.hexdigest()
+
+
+def _published_stubs(root: Path, key: str) -> dict[str, str] | None:
+    """Return the rendering published under ``root`` for ``key``, or None when it is not that one."""
+    try:
+        document = json.loads((root / _PUBLISHED_FILE).read_text(encoding=_UTF_8))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(document, dict) or document.get("key") != key:
+        return None
+    stubs = document.get("stubs")
+    if not isinstance(stubs, dict) or not stubs:
+        return None
+    validated: dict[str, str] = {}
+    for name, content in stubs.items():
+        if not isinstance(name, str) or not isinstance(content, str):
+            return None
+        validated[name] = content
+    return validated
 
 
 @dataclass(frozen=True)
@@ -481,14 +513,56 @@ class ApiStubManager:
         # Every stub is a pure function of the Python sources under the shared
         # ``src/`` parent (type resolution follows imports across sibling roots),
         # so one rendering serves every caller that sees the same bytes.
-        key = (self.source_roots, _python_source_fingerprint(self.source_roots[0].parent))
-        cached = _EXPECTED_STUB_CONTENTS.get(key)
-        if cached is None:
-            cached = self._render_stub_contents(self.discover_modules())
-            while len(_EXPECTED_STUB_CONTENTS) >= _RETAINED_RENDERINGS:
-                del _EXPECTED_STUB_CONTENTS[next(iter(_EXPECTED_STUB_CONTENTS))]
-            _EXPECTED_STUB_CONTENTS[key] = cached
+        fingerprint = _python_source_fingerprint(self.source_roots[0].parent)
+        known = _EXPECTED_STUB_CONTENTS.pop(self.source_roots, None)
+        current = known is not None and known[0] == fingerprint
+        cached = known[1] if known is not None and current else self._published_or_rendered(fingerprint)
+        while len(_EXPECTED_STUB_CONTENTS) >= _RETAINED_RENDERINGS:
+            del _EXPECTED_STUB_CONTENTS[next(iter(_EXPECTED_STUB_CONTENTS))]
+        _EXPECTED_STUB_CONTENTS[self.source_roots] = (fingerprint, cached)
         return dict(cached)
+
+    def _published_or_rendered(self, fingerprint: str) -> dict[str, str]:
+        """Render the stubs, reading the shared rendering when the roots are the checkout's own.
+
+        A tree outside the checkout (a test's synthetic package) is rendered in
+        this process and never published, so it cannot crowd out the
+        checkout's renderings.
+        """
+        repository = REPO_ROOT.resolve()
+        roots = tuple(root.resolve() for root in self.source_roots)
+        if not all(root.is_relative_to(repository) for root in roots):
+            return self._render_stub_contents(self.discover_modules())
+        key = hashlib.sha256(
+            json.dumps(
+                {
+                    "schema": "cadrumo-api-stubs/v1",
+                    "python": list(sys.version_info[:2]),
+                    "roots": [root.relative_to(repository).as_posix() for root in roots],
+                    "sources": fingerprint,
+                    "renderer": _python_source_fingerprint(Path(__file__).parent),
+                },
+                sort_keys=True,
+            ).encode(_UTF_8)
+        ).hexdigest()[:32]
+
+        def publish(destination: Path) -> None:
+            rendering = self._render_stub_contents(self.discover_modules())
+            payload = json.dumps({"key": key, "stubs": rendering}, ensure_ascii=False)
+            (destination / _PUBLISHED_FILE).write_text(payload, encoding=_UTF_8, newline="\n")
+
+        artifact = run_artifact(
+            _PUBLISHED_KIND,
+            key,
+            publish=publish,
+            verify=lambda root: _published_stubs(root, key) is not None,
+            cache_root=dev_cache_dir("run-artifacts"),
+            retain=_PUBLISHED_RETAINED,
+        )
+        published = _published_stubs(artifact.root, key)
+        if published is None:
+            raise ApiDocsError(f"the shared API stub rendering at {artifact.root} no longer verifies")
+        return published
 
     def _render_stub_contents(self, modules: list[tuple[str, bool]]) -> dict[str, str]:
         expected: dict[str, str] = {}

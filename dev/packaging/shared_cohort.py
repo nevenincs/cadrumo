@@ -27,17 +27,21 @@ import hashlib
 import json
 import os
 import platform
+import re
 import shutil
 import sys
 import uuid
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
 from dev.cache_root import dev_cache_dir
-from dev.source_tree import content_digest, repository_files
+from dev.source_tree import normalised_contents, repository_files
 
 from .authority_staging import selected_published_authority
 from .command_execution import run_command
@@ -45,12 +49,19 @@ from .google_oauth import build_client_json, client_build_identity
 from .hashing import sha256_path
 from .lane_verification_core import build_companion_wheels, build_root_snapshot, build_sdist, build_wheel
 from .native.action_cache import action_lock
+from .native.product import distribution_input_digest
 
 _COHORT_CACHE: Final[str] = "packaging-cohort"
 _MANIFEST: Final[str] = "cohort.json"
-_SCHEMA: Final[int] = 1
+_SCHEMA: Final[int] = 2
 #: Entries kept besides the one in use; older content keys are pruned on publication.
 _RETAINED_ENTRIES: Final[int] = 3
+#: Members a build hook stages from inputs the key names on their own (the published
+#: authority and the publisher client), wherever the hook found them.
+_SEPARATELY_KEYED_MEMBER: Final = re.compile(
+    r"(?:^|/)cadrumo/_data/(?:registry/authority/authority(?:\.current\.json|-[0-9a-f]{64}\.sqlite3)"
+    r"|google/oauth_client\.json)$"
+)
 
 
 @dataclass(frozen=True)
@@ -71,6 +82,84 @@ def _uv() -> str:
     return uv
 
 
+def _companion_projects(source_root: Path) -> tuple[Path, ...]:
+    """The data companion projects, read from the declarations the build resolves them by."""
+    project = parse_toml((source_root / "pyproject.toml").read_text(encoding=UTF_8))
+    sources = project["tool"]["uv"]["sources"]
+    return tuple(source_root.joinpath(sources[name]["path"]) for name in PRODUCT_IDENTITY.companion_distributions)
+
+
+class _BuildVisibleMembers:
+    """Select and digest distribution members as a :func:`build_root_snapshot` holds them.
+
+    A cohort is built from a snapshot of the enumerated tree, never from the
+    live one, so a member counts only when the snapshot would carry it: a file
+    inside the root must be an enumerated repository file, and its bytes are
+    the repository-normalised content the snapshot writes. A file a build hook
+    stages outside the root (the publisher client) is digested as it is. The
+    live tree and a snapshot of it therefore name the same selection.
+    """
+
+    def __init__(self, source_root: Path) -> None:
+        self.root = source_root.resolve()
+        self._enumerated: dict[str, frozenset[str]] = {}
+
+    def _relative(self, path: Path) -> str | None:
+        resolved = path.resolve()
+        return resolved.relative_to(self.root).as_posix() if resolved.is_relative_to(self.root) else None
+
+    def selected(self, distribution_path: str, path: Path) -> bool:
+        if _SEPARATELY_KEYED_MEMBER.search(distribution_path.replace("\\", "/")):
+            return False
+        relative = self._relative(path)
+        if relative is None:
+            return True
+        top = relative.split("/", 1)[0]
+        if top not in self._enumerated:
+            self._enumerated[top] = frozenset(repository_files(self.root, under=(top,)))
+        return relative in self._enumerated[top]
+
+    def digests(self, paths: Sequence[Path]) -> list[str]:
+        relatives = [self._relative(path) for path in paths]
+        inside = sorted({relative for relative in relatives if relative is not None})
+        normalised = {
+            relative: hashlib.sha256(content).hexdigest()
+            for relative, content in normalised_contents(self.root, inside)
+        }
+        return [
+            sha256_path(path) if relative is None else normalised[relative]
+            for path, relative in zip(paths, relatives, strict=True)
+        ]
+
+
+def cohort_inputs_digest(source_root: Path = REPO_ROOT) -> str:
+    """Digest exactly what the cohort's wheel, data companions and sdist are built from.
+
+    Each distribution's members come from its own build backend's selection
+    (:func:`~dev.packaging.native.product.distribution_input_digest`): the
+    product wheel's packages, the sdist's ``only-include`` set, each companion's
+    hook-owned corpus slice, plus metadata and hook implementations. Files no
+    distribution selects (the vault, documentation, development tooling, tests)
+    are not inputs, so a peer editing them in a shared worktree leaves the key,
+    and the published cohort, in place.
+    """
+    members = _BuildVisibleMembers(source_root)
+    projects: list[tuple[Path, Literal["wheel", "sdist"]]] = [(source_root, "wheel"), (source_root, "sdist")]
+    projects.extend((project, "wheel") for project in _companion_projects(source_root))
+    selected: Callable[[str, Path], bool] = members.selected
+    rows = [
+        [
+            project.resolve().relative_to(members.root).as_posix(),
+            target,
+            distribution_input_digest(
+                project, toolchain=None, target=target, selected=selected, member_digests=members.digests
+            ),
+        ]
+        for project, target in projects
+    ]
+    return hashlib.sha256(json.dumps(rows, sort_keys=True).encode(UTF_8)).hexdigest()
+
+
 def cohort_key(source_root: Path = REPO_ROOT, *, client_root: Path = REPO_ROOT) -> str:
     """Name every input a cohort build consumes, so equal keys mean equal artifacts.
 
@@ -79,16 +168,18 @@ def cohort_key(source_root: Path = REPO_ROOT, *, client_root: Path = REPO_ROOT) 
     so an unchanged tree and its snapshot share one key. The build client is
     always read from ``client_root``, the checkout a snapshot stages it from.
     """
-    source = content_digest(source_root, repository_files(source_root))
+    source = cohort_inputs_digest(source_root)
     descriptor, database = selected_published_authority(source_root)
     uv_version = run_command([_uv(), "--version"], cwd=client_root)
     if uv_version.returncode != 0:
         raise RuntimeError(f"uv --version failed: {uv_version.stderr}")
+    build_constraint = os.environ.get("UV_BUILD_CONSTRAINT", "")
     inputs = {
         "schema": _SCHEMA,
         "source": source,
         "authority": [sha256_path(descriptor), sha256_path(database)],
         "build_client": client_build_identity(source, build_client_json(client_root)),
+        "build_constraint": sha256_path(Path(build_constraint)) if build_constraint != "" else None,
         "python": sys.version,
         "platform": platform.platform(),
         "uv": uv_version.stdout.strip(),
@@ -227,4 +318,4 @@ def shared_cohort(repo_root: Path = REPO_ROOT) -> SharedCohort:
         return cohort
 
 
-__all__ = ["SharedCohort", "cohort_key", "shared_cohort"]
+__all__ = ["SharedCohort", "cohort_inputs_digest", "cohort_key", "shared_cohort"]

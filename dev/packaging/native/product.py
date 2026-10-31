@@ -9,12 +9,12 @@ import os
 import shutil
 import sys
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import nullcontext
 from email.message import Message
 from importlib.metadata import version
 from pathlib import Path
-from typing import cast
+from typing import Literal, cast
 
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
@@ -32,7 +32,7 @@ from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .build_toolchain import selected_uv
 from .hashing import digest, digest_cache
-from .product_hatch_types import HatchWheelBuilder
+from .product_hatch_types import HatchHook, HatchWheelBuilder
 from .product_snapshot import capture_product_source_snapshot
 from .target import uv_environment, uv_platform
 
@@ -46,38 +46,80 @@ without the extra.
 """
 
 
-def _include_hook_metadata(hook_path: Path, directory: Path, metadata: dict[str, str]) -> None:
-    if hook_path.is_file():
-        metadata[hook_path.relative_to(directory).as_posix()] = digest(hook_path)
+def _raw_digests(paths: Sequence[Path]) -> list[str]:
+    return [digest(path) for path in paths]
 
 
-def _wheel_input_digest(directory: Path, *, toolchain: Mapping[str, object] | None) -> str:
-    """Name the actual Hatch selection, including hook-owned payloads and metadata."""
+def _distribution_metadata_paths(directory: Path, builder: HatchWheelBuilder, hooks: Sequence[HatchHook]) -> list[Path]:
+    """Find metadata and hook implementations that affect the distribution."""
+    paths = {directory / "pyproject.toml"}
+    if bool(builder.metadata.core.readme_path):
+        paths.add(directory / builder.metadata.core.readme_path)
+    for pattern in builder.metadata.core.license_files:
+        paths.update(path for path in directory.glob(pattern) if path.is_file())
+    for hook in hooks:
+        hook_path = directory / hook.config.get("path", "hatch_build.py")
+        if hook_path.is_file():
+            paths.add(hook_path)
+    return sorted(paths)
+
+
+def _included_distribution_members(
+    builder: HatchWheelBuilder, data: dict[str, object], selected: Callable[[str, Path], bool] | None
+) -> list[tuple[str, Path]]:
+    """Select the build backend's members under its active build data."""
+    with builder.config.set_build_data(data):
+        return sorted(
+            (item.distribution_path, Path(item.path))
+            for item in builder.recurse_included_files()
+            if selected is None or selected(item.distribution_path, Path(item.path))
+        )
+
+
+def distribution_input_digest(
+    directory: Path,
+    *,
+    toolchain: Mapping[str, object] | None,
+    target: Literal["wheel", "sdist"] = "wheel",
+    selected: Callable[[str, Path], bool] | None = None,
+    member_digests: Callable[[Sequence[Path]], Sequence[str]] = _raw_digests,
+) -> str:
+    """Name the actual Hatch selection of one distribution, including hook-owned payloads and metadata.
+
+    The selection is the one the build backend itself makes from the project's
+    configuration and build hooks, so this key and the artifact cannot disagree
+    about what the artifact contains.
+
+    Args:
+        directory: The project directory Hatch builds.
+        toolchain: Build-tool identity folded into the digest.
+        target: The Hatch build target whose selection is named.
+        selected: Keeps only the members, by distribution path and source file, that the
+            caller's build actually sees; every member is kept when omitted.
+        member_digests: Digests a batch of member, metadata and hook files, in order.
+    """
+    from hatchling.builders.sdist import SdistBuilder
     from hatchling.builders.wheel import WheelBuilder
 
-    builder = cast(HatchWheelBuilder, WheelBuilder(str(directory)))
+    builder_type = WheelBuilder if target == "wheel" else SdistBuilder
+    builder = cast(HatchWheelBuilder, builder_type(str(directory)))
     data = builder.get_default_build_data()
     builder.set_build_data_defaults(data)
     hooks = list(builder.get_build_hooks(str(directory.parent)).values())
     try:
         for hook in hooks:
             hook.initialize("standard", data)
-        with builder.config.set_build_data(data):
-            members = sorted(
-                (item.distribution_path, digest(Path(item.path))) for item in builder.recurse_included_files()
-            )
-        # Metadata and hook implementations affect the archive even when they
-        # aren't themselves selected as wheel members.
-        metadata_paths = {directory / "pyproject.toml"}
-        if bool(builder.metadata.core.readme_path):
-            metadata_paths.add(directory / builder.metadata.core.readme_path)
-        for pattern in builder.metadata.core.license_files:
-            metadata_paths.update(path for path in directory.glob(pattern) if path.is_file())
-        metadata = {path.relative_to(directory).as_posix(): digest(path) for path in metadata_paths}
-        for hook in hooks:
-            hook_path = directory / hook.config.get("path", "hatch_build.py")
-            _include_hook_metadata(hook_path, directory, metadata)
+        included = _included_distribution_members(builder, data, selected)
+        metadata_order = _distribution_metadata_paths(directory, builder, hooks)
+        digests = list(member_digests([*(path for _, path in included), *metadata_order]))
+        members = [[name, value] for (name, _), value in zip(included, digests, strict=False)]
+        metadata = {
+            path.relative_to(directory).as_posix(): value
+            for path, value in zip(metadata_order, digests[len(included) :], strict=True)
+        }
         configuration = dict(members=members, metadata=metadata, backend=version("hatchling"), toolchain=toolchain)
+        if target != "wheel":
+            configuration["target"] = target
         return hashlib.sha256(json.dumps(configuration, sort_keys=True).encode()).hexdigest()
     finally:
         for hook in hooks:
@@ -154,7 +196,7 @@ def _wheel_identity(
     prior_authority = os.environ.get(AUTHORITY_ROOT_ENV)
     os.environ[AUTHORITY_ROOT_ENV] = str(source / ".authority")
     try:
-        identity = _wheel_input_digest(
+        identity = distribution_input_digest(
             directory,
             toolchain={
                 "python": digest(python),

@@ -185,12 +185,12 @@ def test_companion_wheel_identity_uses_its_actual_hook_owned_payload(tmp_path: P
     unrelated.parent.mkdir(parents=True)
     unrelated.write_text("value = 1\n", encoding="utf-8")
 
-    before = product._wheel_input_digest(project, toolchain=None)
+    before = product.distribution_input_digest(project, toolchain=None)
     unrelated.write_text("value = 2\n", encoding="utf-8")
-    assert product._wheel_input_digest(project, toolchain=None) == before
+    assert product.distribution_input_digest(project, toolchain=None) == before
     new_owned = owned.with_name("new.pdf")
     new_owned.write_bytes(b"new official corpus")
-    assert product._wheel_input_digest(project, toolchain=None) != before
+    assert product.distribution_input_digest(project, toolchain=None) != before
 
 
 def test_product_build_reuses_companion_wheels_and_installed_files_on_python_edit(
