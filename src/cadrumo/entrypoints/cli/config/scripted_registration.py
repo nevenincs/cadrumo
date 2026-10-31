@@ -41,10 +41,12 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.recovery_handover import recovery_handover
 from cadrumo_client.commands.secure_input import MachineSecretPayload
 
+from ....application.operator_actions.models import ActionReference
 from ....core.i18n.render import tr
-from ....core.json_contract import Notice, NoticeSeverity
+from ....core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ....core.logging import get_logger
-from ..common import emit_envelope
+from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from ..common import emit_envelope, resolve_notice_action
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -193,6 +195,18 @@ def _creation_notices(*, recovery_enrolled: bool, label: str) -> tuple[Notice, .
                 code="PROFILE_LOGIN_REQUIRED",
                 severity=NoticeSeverity.WARNING,
                 message=tr("cli.config.profile.create_login_required", profile=label),
+                action=resolve_notice_action(
+                    action=ActionReference(action_id="operator.profile.login"),
+                    argument_bindings=(
+                        ResolvedActionArgument(
+                            argument_name="name",
+                            status=ActionArgumentStatus.RESOLVED,
+                            value=label,
+                            source=ActionArgumentSource.VERDICT_CONTEXT,
+                            source_key="name",
+                        ),
+                    ),
+                ),
             ),
         )
     except Exception:

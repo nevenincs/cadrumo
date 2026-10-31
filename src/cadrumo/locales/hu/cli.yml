@@ -2500,14 +2500,13 @@ cli:
         incomplete: 'A profilból még hiányoznak kötelező adatok: {paths}'
       create_confirm_passphrase_prompt: 'Erősítsd meg az új profil jelszavát: '
       create_guidance_unavailable: A profil sikeresen elkészült, de a következő lépésekről
-        szóló értesítéseket nem sikerült előállítani. Az `aeat config profile status`
-        parancs megmutatja, mi van még hátra a profilban.
+        szóló értesítéseket nem sikerült előállítani. Jelentkezz be, mielőtt ellenőrzöd,
+        mi van még hátra a profilban.
       create_help: Jelszóval védett profilt hoz létre. Terminálon ezután opcionális
         helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'cadrumo-runtime
         config profile recovery enable' paranccsal.
       create_login_required: A(z) '{profile}' profil elkészült, de még nincs megnyitott
-        munkamenet hozzá. A folytatás előtt lépj be a `aeat config login {profile}`
-        paranccsal az adatok feloldásához.
+        munkamenet hozzá. A folytatás előtt jelentkezz be az adatok feloldásához.
       create_name_required: 'Profilnév szükséges. Futtasd: ''aeat config profile create
         NÉV''.'
       create_passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtasd ezt

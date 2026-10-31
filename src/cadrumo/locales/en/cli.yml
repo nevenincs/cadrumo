@@ -2350,14 +2350,13 @@ cli:
         incomplete: 'The profile is still missing required data: {paths}'
       create_confirm_passphrase_prompt: 'Confirm new profile passphrase: '
       create_guidance_unavailable: The profile was created successfully, but the next-step
-        notices could not be prepared. Run `aeat config profile status` to see what
-        remains for the profile.
+        notices could not be prepared. Sign in before checking what remains for the
+        profile.
       create_help: Create a profile protected by a passphrase. At a terminal it then
         offers an optional recovery code; skip it, or add it later with 'cadrumo-runtime
         config profile recovery enable'.
       create_login_required: Profile '{profile}' was created, but you do not have
-        a session open on it yet. Sign in with the command `aeat config login {profile}`
-        to unlock its data before continuing.
+        an open session yet. Sign in to unlock its data before continuing.
       create_name_required: A profile name is required. Run 'aeat config profile create
         NAME'.
       create_passphrase_channel_absent: No passphrase channel is available. Run this

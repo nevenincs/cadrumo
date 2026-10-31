@@ -15,7 +15,10 @@ from .....adapters.persistence.storage.custody.kdf_supervision import unlock_pro
 from .....application.workflow.profile_bucket_scan import list_profile_buckets
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from .....core.json_contract import ResolvedNoticeAction
+from ...common import _action_text_lines
 from ...tests.cli_runner import invoke_cached_cli
+from .. import scripted_registration
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -123,6 +126,10 @@ def test_seven_scalar_refusal_is_real_in_every_language(tmp_path: Path, locale: 
 def test_scripted_accepted_boundaries_unlock_only_with_the_exact_sequence(tmp_path: Path, candidate: str) -> None:
     created = _invoke_create(tmp_path, candidate)
     assert created.exit_code == 0, created.output
+    envelope = json.loads(created.stdout)
+    login = next(notice for notice in envelope["notices"] if notice["code"] == "PROFILE_LOGIN_REQUIRED")
+    assert login["action"]["action"]["action_id"] == "operator.profile.login"
+    assert login["action"]["argument_bindings"][0]["value"] == "Matrix"
     buckets = list_profile_buckets(root=tmp_path / "storage")
     assert len(buckets) == 1
     profile_id = UUID(next(iter(buckets)))
@@ -133,3 +140,51 @@ def test_scripted_accepted_boundaries_unlock_only_with_the_exact_sequence(tmp_pa
     if counterpart != candidate:
         with pytest.raises(ProfileCustodyPasswordError):
             unlock_profile_custody(password=counterpart, envelope=material.envelope, sentinel=material.sentinel)
+
+
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+def test_created_profile_login_notice_has_a_resolved_safe_action(locale: str) -> None:
+    label = "operator $env:USERNAME's profile"
+    with override_settings(cadrumo_output_language=locale):
+        notices = scripted_registration._creation_notices(recovery_enrolled=False, label=label)
+
+    login = next(notice for notice in notices if notice.code == "PROFILE_LOGIN_REQUIRED")
+    assert label in login.message
+    assert "aeat config" not in login.message.casefold()
+    assert isinstance(login.action, ResolvedNoticeAction)
+    assert login.action.action.action_id == "operator.profile.login"
+    assert login.action.action.target_command_key == "config.login"
+    assert login.action.argument_bindings[0].argument_name == "name"
+    assert login.action.argument_bindings[0].value == label
+    assert _action_text_lines(notices) == ("next_action\taeat config login 'operator $env:USERNAME''s profile'",)
+
+
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+def test_created_profile_fallback_stays_a_valid_notice_when_action_resolution_fails(
+    locale: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail_action(**_kwargs: object) -> None:
+        raise RuntimeError("injected action resolution failure")
+
+    monkeypatch.setattr(scripted_registration, "resolve_notice_action", fail_action)
+    with override_settings(cadrumo_output_language=locale):
+        notices = scripted_registration._creation_notices(recovery_enrolled=False, label="Matrix")
+    assert len(notices) == 1
+    assert notices[0].code == "PROFILE_CREATED_GUIDANCE_UNAVAILABLE"
+    assert notices[0].action is None
+    assert "aeat config" not in notices[0].message.casefold()
+
+
+def test_committed_profile_still_reports_success_if_notice_action_resolution_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail_action(**_kwargs: object) -> None:
+        raise RuntimeError("injected action resolution failure")
+
+    monkeypatch.setattr(scripted_registration, "resolve_notice_action", fail_action)
+    created = _invoke_create(tmp_path, "a strong test passphrase")
+    assert created.exit_code == 0, created.output
+    envelope = json.loads(created.stdout)
+    assert envelope["result"]["profile_name"] == "Matrix"
+    assert [notice["code"] for notice in envelope["notices"]] == ["PROFILE_CREATED_GUIDANCE_UNAVAILABLE"]
+    assert len(list_profile_buckets(root=tmp_path / "storage")) == 1

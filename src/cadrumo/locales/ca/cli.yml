@@ -2516,14 +2516,14 @@ cli:
         incomplete: 'Falten dades obligatòries al perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contrasenya del nou perfil: '
       create_guidance_unavailable: El perfil s'ha creat correctament, però no s'han
-        pogut preparar els avisos amb els passos següents. Executa `aeat config profile
-        status` per veure què falta al perfil.
+        pogut preparar els avisos amb els passos següents. Inicia la sessió abans
+        de comprovar què falta al perfil.
       create_help: Crea un perfil protegit per una contrasenya. En un terminal ofereix
         després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
         amb 'cadrumo-runtime config profile recovery enable'.
       create_login_required: El perfil '{profile}' s'ha creat, però encara no tens
-        cap sessió oberta. Inicia la sessió amb l'ordre `aeat config login {profile}`
-        per desbloquejar-ne les dades abans de continuar.
+        cap sessió oberta. Inicia la sessió per desbloquejar-ne les dades abans de
+        continuar.
       create_name_required: Cal un nom de perfil. Executa 'aeat config profile create
         NOM'.
       create_passphrase_channel_absent: No hi ha cap canal de contrasenya disponible.
