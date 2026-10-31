@@ -38,18 +38,9 @@ from .....domain.calculations.registry.tests.registry_tree import bundled_regist
 from ...storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import build_m145_communication_records_ports
+from .m145_communication_support import valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-def _field_values() -> dict[str, str]:
-    return {
-        "perceptor.nif": "12345678Z",
-        "perceptor.primer-apellido": "Garcia",
-        "perceptor.segundo-apellido": "Lopez",
-        "perceptor.nombre": "Ana",
-        "perceptor.anio-nacimiento": "1981",
-    }
 
 
 def _command(
@@ -60,7 +51,7 @@ def _command(
     return M145CommunicationCreateCommand(
         communication_year=2026,
         period_token=period_token,
-        field_values=_field_values(),
+        field_values=valid_field_values(),
         note=note,
     )
 
@@ -91,13 +82,13 @@ def test_create_m145_communication_record_persists_bucket_scoped_registry_record
     assert record.period_token is M145CommunicationPeriod.COMMUNICATION
     assert record.revision_id == "2012-01-31-y-siguientes"
     assert record.state.value == "created"
-    assert record.field_values == _field_values()
+    assert record.field_values == valid_field_values()
     assert record.communication_record_id == derive_m145_communication_record_id(
         bucket_id=runtime.bucket_id,
         communication_year=2026,
         period_token=M145CommunicationPeriod.COMMUNICATION,
         revision_id="2012-01-31-y-siguientes",
-        field_values=_field_values(),
+        field_values=valid_field_values(),
     )
     assert "rd-439-2007:art-88" in record.legal_refs
     assert "aeat-modelo-145-form" in record.source_refs
@@ -214,7 +205,7 @@ def test_create_m145_communication_command_refuses_an_undeclared_event_token(inv
         M145CommunicationCreateCommand(
             communication_year=2026,
             period_token=invalid_token,
-            field_values=_field_values(),
+            field_values=valid_field_values(),
         )
 
 
@@ -251,5 +242,5 @@ def test_create_m145_communication_record_uses_real_registry_membership() -> Non
     modelo = next(m for m in modelos if m.id == "145")
     revision = select_revision(modelo, filing_year=2026, period="comunicacion")
 
-    assert undeclared_casilla_ids(revision, _field_values()) == ()
+    assert undeclared_casilla_ids(revision, valid_field_values()) == ()
     assert undeclared_casilla_ids(revision, {"perceptor.no-declarado": "x"}) == ("perceptor.no-declarado",)

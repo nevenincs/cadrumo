@@ -17,18 +17,9 @@ from .....application.modelo.m145_communication_records import (
 )
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import build_m145_communication_records_ports
+from .m145_communication_support import valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-def _field_values() -> dict[str, str]:
-    return {
-        "perceptor.nif": "12345678Z",
-        "perceptor.primer-apellido": "Garcia",
-        "perceptor.segundo-apellido": "Lopez",
-        "perceptor.nombre": "Ana",
-        "perceptor.anio-nacimiento": "1981",
-    }
 
 
 @pytest.mark.parametrize("period_token", tuple(M145CommunicationPeriod))
@@ -42,7 +33,7 @@ def test_create_records_the_requested_declared_communication_period(
             M145CommunicationCreateCommand(
                 communication_year=2026,
                 period_token=period_token,
-                field_values=_field_values(),
+                field_values=valid_field_values(),
             ),
             bucket_id=runtime.bucket_id,
             actor="requested-period-test",

@@ -21,7 +21,6 @@ from pathlib import Path
 import pytest
 
 from .....application.modelo.m145_communication_records import (
-    M145CommunicationCreateCommand,
     M145CommunicationRecordValidationError,
     create_m145_communication_record,
     export_m145_communication_record,
@@ -34,6 +33,7 @@ from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidth
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..buckets import BucketEventHistoryRepository
 from ..m145_communication_records import build_m145_communication_records_ports
+from .m145_communication_support import communication_command, valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -49,25 +49,6 @@ _FORBIDDEN_TERMS = (
     "tramite",
     "tr\u00e1mite",
 )
-
-
-def _field_values(**overrides: str) -> dict[str, str]:
-    values = {
-        "perceptor.nif": "12345678Z",
-        "perceptor.primer-apellido": "Garcia",
-        "perceptor.segundo-apellido": "Lopez",
-        "perceptor.nombre": "Ana",
-        "perceptor.anio-nacimiento": "1981",
-    }
-    values.update(overrides)
-    return values
-
-
-def _command(*, field_values: dict[str, str] | None = None) -> M145CommunicationCreateCommand:
-    return M145CommunicationCreateCommand(
-        communication_year=2026,
-        field_values=field_values if field_values is not None else _field_values(),
-    )
 
 
 def _events_for_record(
@@ -99,7 +80,7 @@ def test_m145_communication_lifecycle_emits_communication_specific_events(
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         created = create_m145_communication_record(
-            _command(),
+            communication_command(),
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
@@ -163,14 +144,14 @@ def test_m145_communication_idempotent_retries_do_not_duplicate_mutation_events(
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         created = create_m145_communication_record(
-            _command(),
+            communication_command(),
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
         )
         create_m145_communication_record(
-            _command(),
+            communication_command(),
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
@@ -217,13 +198,13 @@ def test_m145_communication_invalid_delivery_does_not_emit_delivery_event(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    field_values = _field_values()
+    field_values = valid_field_values()
     field_values.pop("perceptor.nif")
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         created = create_m145_communication_record(
-            _command(field_values=field_values),
+            communication_command(field_values=field_values),
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
