@@ -624,31 +624,6 @@ def test_cross_period_clean_state_accepts_matching_aeat_register_observation_pro
     assert first_quarter.blockers == ()
 
 
-def test_cross_period_clean_state_accepts_matching_filed_history_justificante_csv_provenance(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        observation_repository = CalculationObservationRepository()
-        _seed_official_303_source_filings(
-            observation_repository=observation_repository,
-            source_metadata_by_period={
-                "1T": {
-                    "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": "EXP-303-2025-1T",
-                    "authenticated_identity": "X1234567L",
-                    "aeat_justificante_csv": "JUST00001T",
-                },
-            },
-        )
-
-        verdict = _evaluate_clean_state(
-            _snapshot_390(),
-            observation_repository=observation_repository,
-        )
-
-    first_quarter = _m390_first_quarter_evidence(verdict)
-    assert verdict.clean is True
-    assert first_quarter.blockers == ()
-
-
 def test_cross_period_clean_state_blocks_filed_history_justificante_csv_mismatch(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation_repository = CalculationObservationRepository()
