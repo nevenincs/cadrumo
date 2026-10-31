@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import re
 from collections import Counter, defaultdict
 from collections.abc import Mapping
 
 from .signal_contracts import DictionaryLike, ExcludedStructuralInventory
 from .signal_policy import LOCALES, SPELLING_SURFACES
 from .signal_spelling_segments import spanish_word_context, translation_spelling_segments
+from .signal_tokens import filtered_translation_text
 
 # Exact, attested forms absent from the pinned dictionaries. AEAT and modelo
 # are documented in src/cadrumo/_data/terminology/concepts/{aeat,modelo}.toml.
@@ -54,7 +56,11 @@ from .signal_spelling_segments import spanish_word_context, translation_spelling
 # The mixed-case tax abbreviations in cli.app.modelo.work are attested by
 # BOE-A-2024-3329 (ITPyAJD) and Hacienda's TEAC 24/01192/2021 (LISyD).
 # Preserve exactly those abbreviations, not arbitrary mixed-case tokens.
-_SHARED_SPELLINGS = frozenset({"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs", "WebP", "ITPyAJD", "LISyD"})
+# Pagefind is the search-engine name; Ceuta and Melilla are the named IVA
+# territories in the multilingual terminology definitions. Keep their exact case.
+_SHARED_SPELLINGS = frozenset(
+    {"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs", "Pagefind", "Ceuta", "Melilla", "WebP", "ITPyAJD", "LISyD"}
+)
 # Exact Spanish dictionary gaps in the canonical legal references: IVA flow
 # notes use enrutamiento, transmitente and registrales; IS uses deducibilidad
 # and extracontables; IRPF uses autotaxis, subclaves, reinversión and aportante.
@@ -80,6 +86,22 @@ _SPANISH_LEGAL_SPELLINGS = frozenset(
         "reutilizables",
     }
 )
+# The concepts modelo and prorrata-especial use these complete Latin phrases.
+# Their individual words are not general spelling exceptions.
+_LATIN_PHRASES = (
+    (re.compile(r"(?<![\w-])ad[ \t]+hoc(?![\w-])"), frozenset({"ad", "hoc"})),
+    (re.compile(r"(?<![\w-])pro[ \t]+rata(?![\w-])"), frozenset({"pro", "rata"})),
+)
+
+
+def _known_latin_phrase_word(value: str, word: str) -> bool:
+    """Recognize words only within the two complete, authored Latin phrases."""
+    if not any(word in words for _pattern, words in _LATIN_PHRASES):
+        return False
+    prose = filtered_translation_text(value)[0]
+    return any(word in words and pattern.search(prose) is not None for pattern, words in _LATIN_PHRASES)
+
+
 _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     # These ordinary English technical/domain terms are absent from the pinned
     # dictionary-en-gb data, but are attested in the canonical English catalogue:
@@ -89,6 +111,19 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     # adapters.yml. Keep only the observed spellings and capitalisation.
     "en": frozenset(
         {
+            # Exact native, technical and retained tax forms attested in
+            # _data/terminology/concepts; no new casing or inflections implied.
+            "embeddings",
+            "artifacts",
+            "normalized",
+            "indexable",
+            "preprocessor",
+            "preprocessors",
+            "materializes",
+            "redemptions",
+            "regularization",
+            "capitalization",
+            "integrations",
             "modelo",
             "Modelo",
             "Gmail",
@@ -285,6 +320,15 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "es": frozenset(
         {
+            # Exact native, technical and retained tax forms attested in
+            # _data/terminology/concepts; no new casing or inflections implied.
+            "autorrepercute",
+            "superreducido",
+            "transfronterizas",
+            "indexador",
+            "preprocesador",
+            "preprocesadores",
+            "terminológica",
             *_SPANISH_LEGAL_SPELLINGS,
             # The unchanged surname names the impatriate regime in CLI help,
             # wizard choices and the Modelo 151 title; retain its exact case.
@@ -459,6 +503,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "ca": frozenset(
         {
+            # Exact native, technical and retained tax forms attested in
+            # _data/terminology/concepts; no new casing or inflections implied.
+            "autorepercuteix",
             # The unchanged surname names the impatriate regime in CLI help,
             # wizard choices and the Modelo 151 title; retain its exact case.
             "Beckham",
@@ -559,6 +606,18 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "hu": frozenset(
         {
+            # Exact native, technical and retained tax forms attested in
+            # _data/terminology/concepts; no new casing or inflections implied.
+            "artefaktumokból",
+            "artefaktumba",
+            "artefaktumok",
+            "szabadfoglalkozásúak",
+            "prorratából",
+            "prorratát",
+            "rentát",
+            "recargo",
+            "autónomos",
+            "presentado",
             "modelo",
             "Modelo",
             "Gmail",
@@ -861,9 +920,9 @@ _SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
         "vacía",
     }
 )
-# These two observed infinitives retain their original stress with one clitic.
+# These observed infinitives retain their original stress with one clitic.
 # They are deliberately separate from the accented imperative stems above.
-_SPANISH_DIRECT_OBJECT_INFINITIVES = frozenset({"recargar", "reconciliar"})
+_SPANISH_DIRECT_OBJECT_INFINITIVES = frozenset({"recargar", "reconciliar", "indexar"})
 _SPANISH_DIRECT_OBJECT_CLITICS = ("lo", "la", "los", "las")
 
 
@@ -1071,6 +1130,9 @@ def record_unknown_spelling_word(
     """Record unknown spelling word."""
     owner_cell = (owner_locale, key)
     value = cell_text[owner_cell]
+    stem = word.removesuffix(".") if dictionary_locale == "hu" else word
+    if _known_latin_phrase_word(value, stem):
+        return
     foreign_context = spanish_word_context(
         value,
         key,

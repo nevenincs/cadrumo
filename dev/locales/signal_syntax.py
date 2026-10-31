@@ -163,7 +163,7 @@ TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
 # must stay whole so their prepositions do not become global exceptions.
 # Owners: _data/terminology/concepts and the bienes de inversión register.
 TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w'’-])['‘’]?(?:bien(?:es)? de inversión|recargo de equivalencia|"
+    r"(?<![\w'’-])['‘’]?(?:bien(?:es)? de inversión|recargo de equivalencia|grupo de entidades de IVA|"
     # Retained in the capital-goods labels and bilingual home-office notes.
     # Route the whole phrase; its words still go through the Spanish dictionary.
     r"cuota soportada|regla de prorrata|prorrata especial|datos censales|"
@@ -190,7 +190,8 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"tipo de renta|libertad de amortización|colegio concertado|"
     r"importe neto de la cifra de negocios|suministro inmediato de información|"
     r"acuse de recibo|número de rentas|"
-    r"(?:(?<=Objective assessment \()|(?<=Objective estimation \())módulos(?=\))|"
+    r"(?:(?<=Objective assessment \()|(?<=Objective estimation \()|"
+    r"(?<=simplified VAT regime \()|(?<=objective-estimation \())módulos(?=\))|"
     r"reales decretos|órdenes ministeriales|"
     r"(?<=Spanish )leyes|(?<=per )contribuyente|"
     r"certificado de retenciones e ingresos a cuenta|retenciones e ingresos a cuenta|"

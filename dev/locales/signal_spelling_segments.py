@@ -27,9 +27,9 @@ from .signal_tokens import filtered_translation_text, translation_words
 # exception closed over complete forms; a productive suffix rule could conceal
 # a misspelled or malformed host from the dictionary check.
 _CATALAN_HYPHENATED_CLITIC_RE = re.compile(r"(?P<form>Mantén-lo|revisar-los)(?![^\W\d_])")
-# The export labels retain this complete English serialization-format name.
-# Route it to its dictionary rather than exempting its words from spelling.
-_ENGLISH_FORMAT_NAME_RE = re.compile(r"(?<!\w)JSON Lines(?!\w)")
+# The export format and VIES definition retain these complete English names.
+# Route each word to English rather than exempting its spelling.
+_ENGLISH_REFERENCE_NAME_RE = re.compile(r"(?<!\w)(?:JSON Lines|VAT Information Exchange System)(?!\w)")
 # These are attested Hungarian endings on structural stems, not a productive
 # suffix rule for ordinary words. Keep acronym/endings paired; e.g. admitting
 # PDF-jét must not silently admit an arbitrary word followed by -jét.
@@ -39,6 +39,7 @@ _HUNGARIAN_STRUCTURAL_SUFFIX_PATTERNS = tuple(
         r"(?<!`)(?P<stem>``[^`\r\n]+``|`[^`\r\n]+`)-(?:ból|ből|tól|től|ig|vel|nek|et)",
         r"(?P<stem>IVA)-(?:jának|jával)",
         r"(?P<stem>PDF)-(?:jét|jének)",
+        r"(?P<stem>IGIC|IPSI)-jére",
         r"(?P<stem>UUID)-jával",
         r"(?P<stem>NIF)-(?:jét|jének)",
         r"(?P<stem>URL)-jét",
@@ -161,6 +162,23 @@ def legal_title_spelling_segments(
                 )
 
 
+def english_reference_spelling_segments(
+    value: str, default_locale: str, foreign: list[tuple[int, int, str, str, int]]
+) -> None:
+    """Check complete English names without taking over explicit code spans."""
+    if default_locale == "en":
+        return
+    matches = tuple(_ENGLISH_REFERENCE_NAME_RE.finditer(value))
+    if not matches:
+        return
+    literals = tuple(match.span() for match in TRANSLATION_LITERAL_RE.finditer(value))
+    for match in matches:
+        if any(start <= match.start() and match.end() <= end for start, end in literals):
+            continue
+        text = match.group()
+        foreign.append((match.start(), match.end(), "en", text, filtered_translation_text(text)[1]))
+
+
 def translation_spelling_segments(
     value: str,
     key: str,
@@ -183,10 +201,7 @@ def translation_spelling_segments(
     markdown_link_spelling_segments(value, foreign)
     rst_link_spelling_segments(value, foreign)
     legal_title_spelling_segments(value, default_locale, foreign)
-    if default_locale != "en":
-        for match in _ENGLISH_FORMAT_NAME_RE.finditer(value):
-            text = match.group()
-            foreign.append((match.start(), match.end(), "en", text, filtered_translation_text(text)[1]))
+    english_reference_spelling_segments(value, default_locale, foreign)
 
     # Keep the first structured span when two recognizers describe the same
     # source range (for example a legal title inside a marked link).
