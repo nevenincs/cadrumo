@@ -226,6 +226,38 @@ test("the shell policy frames only the documentation origin of the target platfo
   }
 });
 
+test("the macOS deployment floor reaches the Tauri bundle configuration", () => {
+  const template = JSON.parse(
+    readFileSync(
+      new URL("../src-tauri/tauri.conf.json.in", import.meta.url),
+      "utf8",
+    ),
+  );
+  const product = {
+    name: "Configured application",
+    application_id: "example.configured",
+    version: "1.2.3",
+  };
+  const locations = {
+    configDirectory: resolve(sep, "host", "src-tauri"),
+    frontend: resolve(sep, "host", "assets"),
+    icons: resolve(sep, "host", "icons"),
+  };
+  assert.equal(
+    tauriConfig(template, product, locations, "darwin", "14.0").bundle.macOS
+      .minimumSystemVersion,
+    "14.0",
+  );
+  assert.equal(
+    tauriConfig(template, product, locations, "darwin", undefined).bundle.macOS,
+    undefined,
+  );
+  assert.equal(
+    tauriConfig(template, product, locations, "win32", "14.0").bundle.macOS,
+    undefined,
+  );
+});
+
 // Tauri reads frontendDist as a URL before a path; a drive path such as
 // C:\dist then embeds no frontend, so the generated value must stay relative.
 test("the frontend directory is emitted relative to the Tauri configuration", () => {

@@ -30,6 +30,7 @@ export function tauriConfig(
   product: ProductIdentity,
   locations: { configDirectory: string; frontend: string; icons: string },
   platform?: string,
+  deploymentTarget?: string,
 ): Record<string, unknown>;
 export function docsOrigin(
   window: { useHttpsScheme?: boolean },
