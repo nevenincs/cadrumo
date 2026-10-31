@@ -7,11 +7,14 @@ from typing import Any
 
 import yaml
 
-from cadrumo.core.directory_scan import iter_directory
+from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
+from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.logging import get_logger
 from cadrumo.core.product_identity import normalise_product_identity_references
+from dev._paths import REPO_ROOT
 from dev.first_party_source import is_test_source
+from dev.quality.shared_scan import shared_scan_result
 
 from ._subtree_move import (
     LocaleMoveConflict,
@@ -48,6 +51,72 @@ from .wizard_translation_audit import wizard_descriptor_keys
 from .write_guard import CatalogueWriteGuard, catalogue_write_guard
 
 _log = get_logger(__name__)
+
+
+#: Suffixes of the product files the codebase-key scan reads: Python source,
+#: which it parses and whose command and wizard registries it imports, and the
+#: TOML registry, schema and navigation data it reads keys from.
+_CODEBASE_KEY_SUFFIXES = frozenset({".py", ".toml"})
+
+#: Directories no input of the scan lives in: bytecode and the test surface.
+_NOT_SCANNED = ("__pycache__", "tests")
+
+#: Repository tooling whose code decides the key set: this package's scanners
+#: and the registry compiler that projects the Modelo key universe.
+_CODEBASE_KEY_TOOLING = ("dev/locales", "dev/registry/compiler", "dev/quality", "dev/first_party_source.py")
+
+
+def _is_repository_tree(root: Path) -> bool:
+    """Whether ``root`` is part of this checkout's source, not scratch planted under its temporary root."""
+    resolved = root.resolve()
+    return resolved.is_relative_to(REPO_ROOT) and not resolved.is_relative_to(REPO_ROOT / ".tmp")
+
+
+def _committed_locales_dir() -> Path:
+    from ._paths import LOCALES_DIR
+
+    return LOCALES_DIR
+
+
+def _codebase_key_tree_inputs(tree: Path) -> Iterable[Path]:
+    """Enumerate production source and data files under one scan root."""
+    return (
+        path
+        for path in scan_directory(tree, pattern="*", recursive=True, prune_directories=_NOT_SCANNED)
+        if path.suffix in _CODEBASE_KEY_SUFFIXES and path.is_file() and not is_test_source(path, root=tree)
+    )
+
+
+def _codebase_key_tooling_inputs(tooling: Path) -> Iterable[Path]:
+    """Enumerate one scanner file or the production Python of its directory."""
+    if tooling.is_file():
+        yield tooling
+    elif tooling.is_dir():
+        yield from (
+            path
+            for path in scan_directory(tooling, pattern="*.py", recursive=True, prune_directories=_NOT_SCANNED)
+            if not is_test_source(path, root=tooling)
+        )
+
+
+def _codebase_key_inputs(source_roots: Sequence[Path]) -> tuple[Path, ...]:
+    """Every file the codebase-key scan of ``source_roots`` can read, over-approximated, never under.
+
+    The scan parses the roots' Python, imports product registries from anywhere
+    under ``src`` and reads TOML data packaged there, so every Python and TOML
+    file under ``src`` is an input, as is the Python of each root outside it and
+    of the tooling that implements the scan. The test surface is not: the scan
+    skips test sources, and no registry it imports or reads lives there, so an
+    edit to a test cannot move the key set and does not invalidate it.
+    """
+    product = REPO_ROOT / "src"
+    trees = (product, *(root for root in source_roots if not root.resolve().is_relative_to(product)))
+    found: set[Path] = set()
+    for tree in trees:
+        found.update(_codebase_key_tree_inputs(tree))
+    for relative in _CODEBASE_KEY_TOOLING:
+        found.update(_codebase_key_tooling_inputs(REPO_ROOT / relative))
+    return tuple(sorted(found))
 
 
 class LocaleManager:
@@ -105,6 +174,12 @@ class LocaleManager:
         A fresh ``set`` is returned per call so no caller can mutate another's
         view; copying 41,926 strings costs milliseconds against a 9s scan.
 
+        A manager over this checkout's own tree also shares the scan across the
+        run: every manager in every process asking about the same roots reads
+        one result per distinct content of the sources and registry data the
+        scan reads and of the scanner code (see :func:`_codebase_key_inputs`).
+        A manager over a planted tree scans it in place.
+
         Only production modules are scanned: test files are excluded so a
         fixture payload or assertion literal can never inject a phantom
         required key that no production code requests.
@@ -145,8 +220,38 @@ class LocaleManager:
         through a separate parity assertion that verifies at least one
         concrete locale key exists under each declared prefix.
         """
-        from cadrumo_client.contracts.navigation import load_navigation_register
         from dev.quality.unread_inputs import report_unread
+
+        if self._codebase_keys is not None:
+            return set(self._codebase_keys)
+        source_roots = (self.src_dir, *self.extra_src_dirs)
+        if all(_is_repository_tree(root) for root in source_roots):
+            scanner = content_hash_hex(
+                {
+                    "roots": [root.resolve().relative_to(REPO_ROOT).as_posix() for root in source_roots],
+                    "committed_catalogues": self.locales_dir == _committed_locales_dir(),
+                }
+            )
+            found, unread = shared_scan_result(
+                "locale-codebase-keys",
+                root=REPO_ROOT,
+                inputs=lambda: _codebase_key_inputs(source_roots),
+                scanner=scanner,
+                compute=self._scan_codebase_keys,
+            )
+        else:
+            found, unread = self._scan_codebase_keys()
+        report_unread(
+            "locale key scan",
+            "any key they use is absent from this set and would look unused",
+            unread,
+        )
+        self._codebase_keys = found
+        return set(found)
+
+    def _scan_codebase_keys(self) -> tuple[frozenset[str], tuple[str, ...]]:
+        """Run every discovery path; return the keys and the sources that could not be read."""
+        from cadrumo_client.contracts.navigation import load_navigation_register
 
         from ._ast_scanner import scan_source_trees
         from ._command_spec_scanner import scan_command_spec_keys
@@ -154,9 +259,6 @@ class LocaleManager:
         from .desktop_chrome import DESKTOP_CHROME_KEYS
         from .fstring_registry import get_registered_keys
         from .manager_chrome import MANAGER_CHROME_KEYS
-
-        if self._codebase_keys is not None:
-            return set(self._codebase_keys)
 
         keys: set[str] = set()
         unread: list[str] = []
@@ -182,13 +284,7 @@ class LocaleManager:
         if self.locales_dir == LOCALES_DIR:
             prefixes = tuple(f"{namespace}.{family}." for namespace, family in SERVICE_FAMILIES)
             keys = {key for key in keys if not key.startswith(prefixes) and key not in SERVICE_KEYS}
-        report_unread(
-            "locale key scan",
-            "any key they use is absent from this set and would look unused",
-            unread,
-        )
-        self._codebase_keys = frozenset(keys)
-        return keys
+        return frozenset(keys), tuple(sorted(unread))
 
     def _scan_literal_keys(self, source_roots: tuple[Path, ...], keys: set[str], unread: list[str]) -> None:
         """Collect readable literal call sites and retain every unread-source diagnostic."""
