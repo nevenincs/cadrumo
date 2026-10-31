@@ -287,26 +287,35 @@ def _reconcile(
     )
 
 
-def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen(
+def _reconcile_against_m349_resumen(
     repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
-    *,
     operation: PinnedAuthorityOperation,
-) -> None:
+    *,
+    m349_importe: Decimal,
+):
+    """Reconcile a 303 declaring 6000 + 4000 intracommunity against a 349 resumen of ``m349_importe``."""
     work_unit_repository, calculation_repository = repositories
     m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
     m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
     target = _build_revision(
         m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
     )
-    _persist_revision(m349, _m349_values(importe=Decimal("8000")), calculation_repository, operation=operation)
-
-    findings = _reconcile(
+    _persist_revision(m349, _m349_values(importe=m349_importe), calculation_repository, operation=operation)
+    return _reconcile(
         m303,
         target,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         operation=operation,
     )
+
+
+def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen(
+    repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    findings = _reconcile_against_m349_resumen(repositories, operation, m349_importe=Decimal("8000"))
 
     assert len(findings) == 1
     finding = findings[0]
@@ -325,24 +334,7 @@ def test_advisory_silent_when_totals_reconcile(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
-    target = _build_revision(
-        m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
-    )
-    _persist_revision(m349, _m349_values(importe=Decimal("10000")), calculation_repository, operation=operation)
-
-    assert (
-        _reconcile(
-            m303,
-            target,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-            operation=operation,
-        )
-        == []
-    )
+    assert _reconcile_against_m349_resumen(repositories, operation, m349_importe=Decimal("10000")) == []
 
 
 def test_advisory_fires_when_verifying_the_m349_side(
@@ -403,25 +395,8 @@ def test_within_de_minimis_gap_is_silent(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
-    target = _build_revision(
-        m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
-    )
     # gap of 0.50 EUR <= 1.00 de-minimis tolerance -> no advisory.
-    _persist_revision(m349, _m349_values(importe=Decimal("9999.50")), calculation_repository, operation=operation)
-
-    assert (
-        _reconcile(
-            m303,
-            target,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-            operation=operation,
-        )
-        == []
-    )
+    assert _reconcile_against_m349_resumen(repositories, operation, m349_importe=Decimal("9999.50")) == []
 
 
 def test_no_finding_when_nothing_intracommunity_declared(
