@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
@@ -43,13 +43,12 @@ from cadrumo.application.live.filed_single_capture_operation import (
 from cadrumo.application.live.remote_state_models import FiledDataCaptureReport
 from cadrumo.application.live.session import SessionWriteReporter
 from cadrumo.application.live.tests.filed_observation_test_support import in_memory_filed_observation_test_bundle
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -59,9 +58,14 @@ from cadrumo.core.operations import (
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
-from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    cli_submit_context,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -367,14 +371,7 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
             ),
         )
 
-        access_context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=registration.contract,
-            published_authority=Availability.AVAILABLE,
-        )
+        access_context = cli_submit_context(profile_id=profile_id, contract=registration.contract)
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
         assert admitted.request.period_independent
         assert admitted.request.periods == frozenset()
@@ -387,23 +384,16 @@ def test_supervisor_binds_single_capture_to_exact_profile_and_projects_guarded_a
             tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
 
-        async def run():
-            operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            terminal = await run_to_terminal(supervisor, operation_id)
-            contract = registry.lookup_public_contract(definition.definition_id)
-            assert contract.result_schema is not None
-            projected = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=operation_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
+        terminal, projected = asyncio.run(
+            settle_and_project(
+                supervisor,
+                result_service,
+                registry,
+                definition.definition_id,
+                request,
                 FiledSingleCapturePublicResultV1,
             )
-            return terminal, projected
-
-        terminal, projected = asyncio.run(run())
+        )
 
     assert definition.definition_id == "live.filed-capture.single"
     assert terminal.lifecycle is OperationLifecycle.TERMINAL

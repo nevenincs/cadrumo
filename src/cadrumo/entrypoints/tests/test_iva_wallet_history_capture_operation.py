@@ -43,7 +43,6 @@ from cadrumo.application.live.remote_state_models import (
 from cadrumo.application.live.session import SessionWriteReporter
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
@@ -62,7 +61,11 @@ from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.integration, pytest.mark.hex_application]
 
@@ -340,23 +343,16 @@ def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iv
             tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
 
-        async def run():
-            operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            terminal = await run_to_terminal(supervisor, operation_id)
-            contract = registry.lookup_public_contract(definition.definition_id)
-            assert contract.result_schema is not None
-            projected = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=operation_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
+        terminal, projected = asyncio.run(
+            settle_and_project(
+                supervisor,
+                result_service,
+                registry,
+                definition.definition_id,
+                request,
                 IvaWalletHistoryCapturePublicResultV1,
             )
-            return terminal, projected
-
-        terminal, projected = asyncio.run(run())
+        )
 
     assert definition.definition_id == "live.iva-wallet.history-capture"
     assert terminal.lifecycle is OperationLifecycle.TERMINAL

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
@@ -33,13 +33,13 @@ from cadrumo.application.live.filed_observation_ports import FiledObservationPer
 from cadrumo.application.live.remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
 from cadrumo.application.live.session import SessionWriteReporter
 from cadrumo.application.live.tests.filed_observation_test_support import in_memory_filed_observation_test_bundle
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from cadrumo.core.operations import (
     OperationEffect,
@@ -52,9 +52,14 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
-from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    cli_submit_context,
+    run_to_terminal,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -175,14 +180,7 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
                 dry_run=True,
             ),
         )
-        access_context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=registration.contract,
-            published_authority=Availability.AVAILABLE,
-        )
+        access_context = cli_submit_context(profile_id=profile_id, contract=registration.contract)
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
         assert admitted.request.profile_id == profile_id
         assert admitted.policy.requires_all_periods

@@ -5,24 +5,32 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, NamedTuple
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
+from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.frontend_contracts import OperationResultProjectionResultV1
+from cadrumo.application.operations.frontend_requests import OperationResultProjectionRequestV1
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
-from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 
 class SupervisedOperation(NamedTuple):
@@ -84,3 +92,40 @@ def assert_foreign_profile_refused(
     with pytest.raises(ProfileAccessRefusedError) as refusal:
         resolve_operation_access(registry=registry, request=foreign_request, context=context)
     assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+async def settle_and_project[Result: BaseModel](
+    supervisor: OperationSupervisor,
+    result_service: OperationResultProjectionService,
+    registry: OperationRegistry,
+    definition_id: str,
+    request: OperationRequest[Any],
+    result_type: type[Result],
+) -> tuple[OperationPersistedSnapshot, OperationResultProjectionResultV1[Result]]:
+    """Submit ``request``, settle it, and read the public result the contract projects for its terminal revision."""
+    operation_id = await supervisor.submit(request, operation_id="3" * 64)
+    terminal = await run_to_terminal(supervisor, operation_id)
+    contract = registry.lookup_public_contract(definition_id)
+    assert contract.result_schema is not None
+    projected = await result_service.resolve(
+        OperationResultProjectionRequestV1(
+            operation_id=operation_id,
+            terminal_revision=terminal.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        ),
+        result_type,
+    )
+    return terminal, projected
+
+
+def cli_submit_context(*, profile_id: UUID, contract: OperationPublicDefinitionContractV1) -> OperationAccessContext:
+    """Return the access context of a CLI submission against published authority for a random destination."""
+    return OperationAccessContext(
+        profile_id=profile_id,
+        destination_id=uuid4(),
+        action=AccessAction.SUBMIT,
+        frontend=OperationFrontendProjection.CLI,
+        contract=contract,
+        published_authority=Availability.AVAILABLE,
+    )

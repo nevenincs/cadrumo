@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
@@ -52,13 +52,12 @@ from cadrumo.application.modelo.filing_chain_reconciliation import (
     FilingReconciliationOutcome,
     FilingReconciliationResult,
 )
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.operations import (
     OperationEffect,
@@ -70,9 +69,14 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.justificante.schema import Justificante
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
-from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    cli_submit_context,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -406,14 +410,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
             ),
         )
 
-        access_context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=registration.contract,
-            published_authority=Availability.AVAILABLE,
-        )
+        access_context = cli_submit_context(profile_id=profile_id, contract=registration.contract)
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
         assert admitted.request.period_independent
         assert admitted.request.periods == frozenset()
@@ -426,23 +423,16 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
             tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
 
-        async def run():
-            operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            terminal = await run_to_terminal(supervisor, operation_id)
-            contract = registry.lookup_public_contract(definition.definition_id)
-            assert contract.result_schema is not None
-            projected = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=operation_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
+        terminal, projected = asyncio.run(
+            settle_and_project(
+                supervisor,
+                result_service,
+                registry,
+                definition.definition_id,
+                request,
                 FiledSourceCapturePublicResultV1,
             )
-            return terminal, projected
-
-        terminal, projected = asyncio.run(run())
+        )
 
     assert definition.definition_id == "live.filed-capture.source"
     assert terminal.lifecycle is OperationLifecycle.TERMINAL
