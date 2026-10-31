@@ -22,6 +22,7 @@ from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.tests.legal_inventory import legal_reference_ids
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from ..errors import RentaValidationError
 from ..maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
@@ -298,7 +299,7 @@ class TestCheckRetmarMandatoryFiling:
 
 
 class TestCalculateArt7pExemption:
-    """Art. 7.p) calculation: min(annual_salary / 365 * qualifying_days, 60_100).
+    """Art. 7.p) calculation: min(annual_salary / days_of_year * qualifying_days, 60_100).
 
     Expected values are derived from Ley 35/2006 Art. 7.p) BOE-A-2006-20764:
     cap = 60,100 EUR. The formula is statutory, not hand-computed.
@@ -309,6 +310,40 @@ class TestCalculateArt7pExemption:
         vessel_flag="foreign",
         waters_type="international",
     )
+
+    @pytest.mark.parametrize(
+        ("year", "salary", "expected"),
+        [
+            (2023, "36500", "10000"),
+            (2024, "36600", "10000"),
+        ],
+    )
+    def test_the_reparto_runs_over_every_day_of_the_year(self, year: int, salary: str, expected: str) -> None:
+        # RIRPF art. 6.2: "un criterio de reparto proporcional teniendo en cuenta el
+        # numero total de dias del ano". 100 days of a salary that earns 100 EUR a day.
+        obs = calculate_art_7p_exemption(
+            annual_salary=Decimal(salary),
+            qualifying_days=100,
+            facts=self._BASE_FACTS,
+            filing_period=date(year, 12, 31),
+        )
+        assert obs.value == Decimal(expected)
+
+    def test_only_a_leap_year_admits_a_366th_day(self) -> None:
+        obs = calculate_art_7p_exemption(
+            annual_salary=Decimal("36600"),
+            qualifying_days=366,
+            facts=self._BASE_FACTS,
+            filing_period=date(2024, 12, 31),
+        )
+        assert obs.value == Decimal("36600")
+        with pytest.raises(RentaValidationError):
+            calculate_art_7p_exemption(
+                annual_salary=Decimal("36500"),
+                qualifying_days=366,
+                facts=self._BASE_FACTS,
+                filing_period=date(2023, 12, 31),
+            )
 
     def test_standard_case_below_cap(self) -> None:
         # No published AEAT worked example covers this prorate input set;

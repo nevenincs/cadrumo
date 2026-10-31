@@ -9,10 +9,9 @@ Do not treat this module as canonical period storage. Prefer typed
 ``filing_year`` plus ``registry_token`` only at registry/helper seams.
 
 The ``nP`` tokens are the Impuesto sobre Sociedades pago-fraccionado
-instalment claves (Modelo 202). Per the AEAT Modelo 202 instructions,
-``1P`` is the payment made in the first twenty days of April, ``2P``
-the equivalent October payment, and ``3P`` the December payment; the
-period-boundary helpers map each instalment to its payment month.
+instalment claves. The ``modelo-202-instalment-payment-months`` fact declares the
+month of each payment (LIS art. 40.1), and the period-boundary helpers map each
+instalment to that month.
 
 These helpers are not a display parser, not a ledger date-span authority, and
 not a replacement for registry period validation. They accept the bare tokens
@@ -26,11 +25,16 @@ they own.
 
 from __future__ import annotations
 
+import calendar
 from datetime import date
+from typing import Final
 
 from ..core.errors.hierarchy import CadrumoError
 from ..core.period import Period
 from ..core.period import PeriodError as CorePeriodError
+from .calculations.registry.form_codes import resolve_form_codes_leased
+
+_INSTALMENT_MONTHS_FACT: Final = "modelo-202-instalment-payment-months"
 
 
 class RegistryPeriodError(CadrumoError):
@@ -63,13 +67,10 @@ def period_start_date(filing_year: int, registry_period: str) -> date:
     period = _periodfrom_registry_token(filing_year, registry_period)
     if period.has_date_span():
         return period.start_date
-    if registry_period == "1P":
-        return date(filing_year, 4, 1)
-    if registry_period == "2P":
-        return date(filing_year, 10, 1)
-    if registry_period == "3P":
-        return date(filing_year, 12, 1)
-    raise PeriodValidationError(f"invalid registry period {registry_period!r}")
+    month = _instalment_month(registry_period)
+    if month is None:
+        raise PeriodValidationError(f"invalid registry period {registry_period!r}")
+    return date(filing_year, month, 1)
 
 
 def period_end_date(filing_year: int, registry_period: str) -> date:
@@ -93,13 +94,10 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
     period = _periodfrom_registry_token(filing_year, registry_period)
     if period.has_date_span():
         return period.end_date
-    if registry_period == "1P":
-        return date(filing_year, 4, 30)
-    if registry_period == "2P":
-        return date(filing_year, 10, 31)
-    if registry_period == "3P":
-        return date(filing_year, 12, 31)
-    raise PeriodValidationError(f"invalid registry period {registry_period!r}")
+    month = _instalment_month(registry_period)
+    if month is None:
+        raise PeriodValidationError(f"invalid registry period {registry_period!r}")
+    return _last_day_of_month(filing_year, month)
 
 
 def calculation_filing_date(period: Period) -> date:
@@ -126,15 +124,22 @@ def calculation_filing_date(period: Period) -> date:
     code = period.registry_token
     if code.startswith("EXT-"):
         return Period.from_year_and_code(period.filing_year, code.removeprefix("EXT-")).end_date
-    if code == "1P":
-        return date(period.filing_year, 4, 30)
-    if code == "2P":
-        return date(period.filing_year, 10, 31)
-    if code == "3P":
-        return date(period.filing_year, 12, 31)
+    month = _instalment_month(code)
+    if month is not None:
+        return _last_day_of_month(period.filing_year, month)
     if code == "4P" or code.startswith("EVENT-"):
         return date(period.filing_year, 12, 31)
     raise PeriodValidationError(f"calculation filing date is undefined for registry period {code!r}")
+
+
+def _instalment_month(token: str) -> int | None:
+    """Return the payment month the registry declares for an instalment token, if it is one."""
+    declared = resolve_form_codes_leased(_INSTALMENT_MONTHS_FACT)
+    return declared.integer(token) if token in declared.entries else None
+
+
+def _last_day_of_month(year: int, month: int) -> date:
+    return date(year, month, calendar.monthrange(year, month)[1])
 
 
 def _periodfrom_registry_token(filing_year: int, registry_period: str) -> Period:
