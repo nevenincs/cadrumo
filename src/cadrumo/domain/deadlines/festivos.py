@@ -22,12 +22,12 @@ The rule covers national holidays plus the autonomous-community holiday
 of the taxpayer's domicilio fiscal. Local (municipal) holidays do NOT
 affect AEAT filing deadlines and are not part of this calendar.
 
-One well-known exception: **Modelo 369** (OSS / IOSS one-stop-shop)
-deadlines do NOT shift, even when the close date falls on a non-
+One well-known exception: one-stop-shop (OSS / IOSS) deadlines do NOT
+shift, even when the close date falls on a non-
 business day, because the OSS / IOSS regime is governed by the EU
 Council Directive's harmonised cutoffs and the AEAT cannot lengthen
 the EU-wide window unilaterally. The exception list is encoded in
-:data:`MODELOS_WITHOUT_SHIFT` so future modelo additions land as data,
+the ``deadline-shift-exempt-modelos`` fact so future modelo additions land as data,
 not as a fork in :func:`shift_deadline`.
 
 The substrate is pure domain logic: it never touches the CLI, never
@@ -42,16 +42,16 @@ from collections.abc import Callable, Iterable
 from datetime import date, timedelta
 from enum import StrEnum
 from threading import RLock
-from typing import TYPE_CHECKING, Annotated, Self
+from typing import TYPE_CHECKING, Annotated, Final, Self
 
 from pydantic import BaseModel, Field, GetCoreSchemaHandler, NonNegativeInt, StringConstraints
 from pydantic_core import CoreSchema, core_schema
 
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.registry_token import RegistryToken
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
+from ..calculations.registry.form_codes import resolve_form_codes
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import TemporalProjectionDirection
 from .errors import DeadlineValidationError
@@ -232,15 +232,12 @@ class DeadlineShift(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-#: Modelos whose deadlines are NOT shifted by the AEAT día-inhábil rule.
+#: The fact declaring the modelos whose deadlines the día-inhábil rule does not shift.
 #:
-#: Per the AEAT Calendario del Contribuyente, the OSS / IOSS one-stop-shop
-#: regime (Modelo 369) is governed by the EU-harmonised cutoff date and
-#: AEAT cannot extend the window unilaterally even when the close date
-#: falls on a Spanish holiday or weekend. Adding new modelos to this
-#: tuple keeps the exception list data-driven; :func:`shift_deadline`
-#: never grows a switch statement.
-MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo("369"),)
+#: A one-stop-shop period is governed by the EU-harmonised cutoff date, which AEAT
+#: cannot extend unilaterally even when the close date falls on a Spanish holiday or
+#: weekend.
+_SHIFT_EXEMPT_MODELOS_FACT: Final = "deadline-shift-exempt-modelos"
 
 
 # ---------------------------------------------------------------------------
@@ -642,7 +639,7 @@ def shift_deadline(
     established: only national holidays are checked and the result's
     coverage says so rather than implying the date is final.
 
-    Modelo-specific exceptions (e.g., Modelo 369 OSS / IOSS) bypass
+    A modelo the ``deadline-shift-exempt-modelos`` fact names bypasses
     the shift and return an unshifted :class:`DeadlineShift` with reason
     ``modelo_exception``.
 
@@ -658,7 +655,7 @@ def shift_deadline(
     if not modelo:
         raise DeadlineValidationError("modelo must be a non-empty string")
 
-    if modelo in MODELOS_WITHOUT_SHIFT:
+    if modelo in resolve_form_codes(_SHIFT_EXEMPT_MODELOS_FACT, authority=operation).codes("modelos"):
         return DeadlineShift(
             original_close_date=original_close_date,
             adjusted_close_date=original_close_date,
@@ -722,7 +719,6 @@ def shift_deadline(
 __all__ = (
     "HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID",
     "HOLIDAY_EVENT_FACT_ID",
-    "MODELOS_WITHOUT_SHIFT",
     "CalendarCCAA",
     "DeadlineHolidayCoverage",
     "DeadlineShift",

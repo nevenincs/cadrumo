@@ -69,6 +69,7 @@ from ...domain.calculations.registry.withholding_bindings import WithholdingObse
 from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from .retenciones import Modelo193PendingPaymentEvidence
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
+from .withholding_modelo_routing import LEDGER_PAID_INCOME_KINDS, modelo_for_income_kind
 from .withholding_observation_service import (
     SourceLiabilitySnapshot,
     WithholdingMutationMode,
@@ -89,13 +90,6 @@ from .withholding_recognition import (
 
 if TYPE_CHECKING:
     from ...domain.transactions.models import Transaction, TransactionCatalogue
-
-# The periodic modelo each ledger-paid income kind settles through. The shared
-# producer re-derives it from the scheme at capture and refuses a disagreement.
-_PERIODIC_MODELO: dict[WithholdingIncomeKind, str] = {
-    WithholdingIncomeKind.WORK: "111",
-    WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL: "123",
-}
 
 
 class LedgerPaymentWithholdingEvidenceError(CadrumoError):
@@ -148,7 +142,7 @@ class LedgerPaymentWithholdingEvidenceRequest(BaseModel):
     @classmethod
     def _only_ledger_paid_income(cls, value: WithholdingIncomeKind) -> WithholdingIncomeKind:
         """Keep other income kinds on the producers whose evidence proves them."""
-        if value not in _PERIODIC_MODELO:
+        if value not in LEDGER_PAID_INCOME_KINDS:
             raise ValueError("ledger payment withholding capture accepts work or ordinary movable capital income only")
         return value
 
@@ -226,7 +220,10 @@ def build_ledger_payment_withholding_capture(
     recognition quarter it does not assign is refused.
     """
     _validate_ledger_payment_capture(transaction, request, applicable_year=applicable_year, cadence=cadence)
-    modelo = _PERIODIC_MODELO[request.income_kind]
+    # The shared producer re-derives the modelo from the scheme at capture and refuses a disagreement.
+    modelo = modelo_for_income_kind(request.income_kind)
+    if modelo is None:
+        raise LedgerPaymentWithholdingEvidenceError("unsupported_income_projection")
     payment_on = transaction.raw.booked_date
     evidence = _recognition_evidence(request, applicable_year=applicable_year, payment_on=payment_on)
     recognized_on = _recognized_payment_date(

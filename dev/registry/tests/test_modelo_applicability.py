@@ -86,7 +86,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
     was hiding a real defect: nine modelos -- 136, 145, 151, 210, 216, 232, 296,
     360 and 714 -- carried applicability rules authored and loader-validated in
     their registry trees while absent from
-    ``REGISTRY_RESOLVED_APPLICABILITY_MODELOS``, so ``has_applicability_rule``
+    a hand-kept enrolment set, so ``has_applicability_rule``
     answered ``False`` for them and every profile got ``INCOMPLETE``. Authored
     regulatory data that nothing reads is the dormant-capacity failure, and a
     hand-maintained id list agreed with itself while it happened.

@@ -48,6 +48,7 @@ from .source_resolution_operations import (
     source_provenance_for as _provenance_for,
 )
 from .source_resolution_operations import storage_degradation_resolution
+from .withholding_modelo_routing import annual_source_observations_modelo
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import ModeloRevision
@@ -138,8 +139,8 @@ class RetencionesAggregationSourceResolver:
             or modelo not in _RETENCIONES_AGGREGATORS
         ):
             return None
-        if modelo == Modelo("180").value:
-            return self._ports.repository.load_annual_source_observations(Modelo("115").value, period.filing_year)
+        if (source_modelo := annual_source_observations_modelo(modelo)) is not None:
+            return self._ports.repository.load_annual_source_observations(source_modelo, period.filing_year)
         return self._ports.repository.load_observations(modelo, period)
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:

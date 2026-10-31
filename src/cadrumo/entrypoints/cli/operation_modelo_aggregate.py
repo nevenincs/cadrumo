@@ -11,7 +11,7 @@ from cadrumo_client.commands.registered_operation_errors import invalid_completi
 
 from ...application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
 from ...application.aggregation.service import PerModeloAggregationCommand
-from ...application.aggregation.withholding_filing_cadence import PERIODIC_WITHHOLDING_MODELOS
+from ...application.aggregation.withholding_modelo_routing import periodic_withholding_modelos
 from ...application.modelo.aggregate_contracts import (
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
     MODELO_AGGREGATE_REFUSAL_CODES,
@@ -20,8 +20,6 @@ from ...application.modelo.aggregate_projection import ModeloAggregateProjection
 from ...application.modelo.aggregate_request import ModeloAggregateOperationRequest
 from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-
-_PERIODIC_WINDOW_MODELOS = frozenset(modelo.value for modelo in PERIODIC_WITHHOLDING_MODELOS)
 
 
 def run_modelo_aggregate(
@@ -138,7 +136,7 @@ def _require_aggregate_success(
     expected_effects = (
         {OperationEffect.UPDATED, OperationEffect.NONE} if ledger_payment is not None else {OperationEffect.NONE}
     )
-    expects_window = command.modelo in _PERIODIC_WINDOW_MODELOS
+    expects_window = command.modelo in periodic_withholding_modelos()
     if (
         _missing_aggregate_success_payload(projection)
         or _invalid_aggregate_window(projection, expects_window)

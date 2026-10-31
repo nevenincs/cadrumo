@@ -14,7 +14,11 @@ from ...application.aggregation.invoice_retencion import (
 )
 from ...application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
 from ...application.aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor
-from ...application.aggregation.withholding_filing_cadence import PERIODIC_WITHHOLDING_MODELOS
+from ...application.aggregation.withholding_modelo_routing import (
+    invoice_evidence_modelos,
+    ledger_payment_modelos,
+    periodic_withholding_modelos,
+)
 from ...application.modelo.aggregate_projection import (
     ModeloAggregateGenerationAudit,
     ModeloAggregateProjection,
@@ -24,7 +28,6 @@ from ...application.modelo.invoice_withholding_capture_contracts import ModeloIn
 from ...core.aggregation import RetencionClave
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode
 from ._modelo_behavior_support import resolve_year_period
@@ -38,12 +41,6 @@ from .modelo_query_results import (
 )
 from .operation_modelo_aggregate import run_modelo_aggregate
 from .operation_modelo_invoice_withholding import aggregate_modelo_with_received_invoice_retencion
-
-# Modelo 123 is absent on purpose: its capital withholding is evidenced by the
-# paying ledger transaction, and invoice evidence for it is refused outright.
-_INVOICE_EVIDENCE_MODELOS = frozenset({Modelo("111").value, Modelo("115").value})
-_PERIODIC_WINDOW_MODELOS = frozenset(modelo.value for modelo in PERIODIC_WITHHOLDING_MODELOS)
-_LEDGER_PAYMENT_WITHHOLDING_MODELOS = frozenset({"111", "123"})
 
 
 def _invoice_capture_period(year: int, token: str) -> Period:
@@ -175,7 +172,7 @@ def _refuse_misplaced_ledger_payment_withholding(
     """
     if not (ledger_payment_withholding is not None and ledger_payment_withholding):
         return
-    if modelo not in _LEDGER_PAYMENT_WITHHOLDING_MODELOS:
+    if modelo not in ledger_payment_modelos():
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_wrong_modelo", modelo=modelo))
     if any(
         (
@@ -249,12 +246,13 @@ def _aggregate_invoice_evidence(
         flag="--received-invoice-retencion",
     )
     invoice_evidence = next(iter(invoice_withholding_requests), None)
-    if modelo not in _INVOICE_EVIDENCE_MODELOS:
+    accepted_modelos = invoice_evidence_modelos()
+    if modelo not in accepted_modelos:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.aggregate.invoice_retencion_wrong_modelo",
                 modelo=modelo,
-                accepted_modelos=", ".join(sorted(_INVOICE_EVIDENCE_MODELOS)),
+                accepted_modelos=", ".join(sorted(accepted_modelos)),
             )
         )
     if invoice_evidence is None:
@@ -272,7 +270,7 @@ def _aggregate_invoice_evidence(
 
 
 def _refuse_m123_invoice(modelo: str, received_invoice_retencion: list[str] | None) -> None:
-    if modelo == Modelo("123").value and (received_invoice_retencion is not None and received_invoice_retencion):
+    if received_invoice_retencion and modelo in ledger_payment_modelos() - invoice_evidence_modelos():
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.m123_ledger_payment_only"))
 
 
@@ -333,7 +331,7 @@ def aggregate_modelo(
 
 def _require_aggregate_window(projection: ModeloAggregateProjection, window: ModeloAggregateWindow | None) -> None:
     """Require a window exactly for the established periodic withholding models."""
-    if projection.modelo in _PERIODIC_WINDOW_MODELOS:
+    if projection.modelo in periodic_withholding_modelos():
         if window is None:
             raise ValueError("registered modelo aggregate omitted its withholding-window readback")
     elif window is not None:

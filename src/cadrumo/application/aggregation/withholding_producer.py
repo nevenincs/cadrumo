@@ -26,6 +26,7 @@ from .retenciones import (
     RetencionObservation,
 )
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
+from .withholding_modelo_routing import modelo_for_income_kind
 from .withholding_observation_service import (
     EconomicAllocation,
     SourceLiabilitySnapshot,
@@ -262,13 +263,10 @@ def _modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> 
     allowed: tuple[RetencionScheme, ...]
     if income_kind is WithholdingIncomeKind.WORK:
         allowed = (RetencionScheme("rendimientos_trabajo"), RetencionScheme("rendimientos_trabajo_administrador"))
-        modelo = "111"
     elif income_kind is WithholdingIncomeKind.PROFESSIONAL:
         allowed = (RetencionScheme("actividades_economicas"), RetencionScheme("actividades_profesionales"))
-        modelo = "111"
     elif income_kind is WithholdingIncomeKind.URBAN_RENT:
         allowed = (RetencionScheme("arrendamiento_urbano"),)
-        modelo = "115"
     elif income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL:
         # The selected 2025 withholding-scheme catalogue is the scope here.
         # It deliberately does not make formalisation, IS, or IRNR branches
@@ -278,11 +276,13 @@ def _modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> 
             RetencionScheme("dividendos"),
             RetencionScheme("otros_capital_mobiliario"),
         )
-        modelo = "123"
     else:
         raise WithholdingProducerError("unsupported_income_projection")
     if scheme not in allowed:
         raise WithholdingProducerError("scheme_income_kind_mismatch")
+    modelo = modelo_for_income_kind(income_kind)
+    if modelo is None:
+        raise WithholdingProducerError("unsupported_income_projection")
     return modelo
 
 

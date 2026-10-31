@@ -1,0 +1,43 @@
+[fact]
+fact_id = "withholding-modelo-routing"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "withholding-modelo-routing:design"
+date_axis = "filing_period"
+legal_refs = ["rd-439-2007:art-108", "ley-35-2006:art-99"]
+source_refs = ["aeat-modelo-111-instructions", "aeat-modelo-115-180-folleto-actividades", "aeat-modelo-123-procedure", "aeat-modelo-190-procedure", "aeat-modelo-193-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Rendimientos del trabajo y de actividades", "Actividades profesionales"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-115-180-folleto-actividades"
+required_text = ["modelo 115", "resumen anual de las retenciones", "modelo 180"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-123-procedure"
+required_text = ["Determinados rendimientos del capital mobiliario"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["193"]
+
+# The periodic self-assessment each withholding income kind settles through, and the annual
+# summary that restates it. A formalization projection never files into the two capital forms.
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "periodic.modelos", value = "111,115,123" },
+  { key = "income_kind.work", value = "111" },
+  { key = "income_kind.professional", value = "111" },
+  { key = "income_kind.urban_rent", value = "115" },
+  { key = "income_kind.ordinary_movable_capital", value = "123" },
+  { key = "annual.periodic_percepciones.190", value = "111" },
+  { key = "annual.capital_disclosure_retenciones.193", value = "123" },
+  { key = "annual.source_observations.180", value = "115" },
+  { key = "formalization.refused.modelos", value = "123,193" },
+]

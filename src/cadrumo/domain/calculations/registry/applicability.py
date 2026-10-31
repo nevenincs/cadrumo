@@ -88,12 +88,13 @@ seed rule is reported INCOMPLETE with a rationale that says so.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Final, override
 
 if TYPE_CHECKING:
     from .authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
+    from .schema import ModeloRevision
 
 from ....core.i18n.render import tr
 from ....core.modelo import Modelo
@@ -125,6 +126,7 @@ from .applicability_payer_facts import (
 )
 from .applicability_routes import TaxRoute, tax_route_for_entity_type
 from .errors import RegistryValidationError
+from .form_codes import resolve_form_codes_leased
 from .ids import LegalRefId
 from .irpf_income_categories import (
     irpf_income_category_actividad_economica_token,
@@ -352,66 +354,8 @@ a rationale naming the deferred expansion, never a confident guess.
 """
 
 
-#: Modelo ids whose applicability rule is authored in the registry rather than
-#: declared as a Python literal in :data:`MODELO_APPLICABILITY_RULES` below.
-#: 303 and 390 stay literal -- their authoring trees are owned by the
-#: export-fragment-generator-authority campaign, not unplaced by omission.
-#:
-#: Membership is reached two ways, and the difference matters when reading a
-#: rule's provenance. Most entries arrived by MIGRATION: every revision of each
-#: was hydration-verified equal to the literal it replaces, through the real
-#: loader, before it was added here and the literal deleted in the same commit.
-#: Modelo 840 arrived by AUTHORING instead -- it never had a literal to be
-#: verified against, and its rule is grounded directly on TRLRHL arts. 78, 82
-#: and 90 with real-profile verdicts asserted in
-#: ``test_modelo_840_applicability``. A migrated entry's guarantee is
-#: equivalence; an authored entry's is its citations and its tests, and no
-#: count is stated here because a tally of either goes stale on the next entry.
-#:
-#: This is the single declaration of the mixed-surface state
-#: ``MODELO_APPLICABILITY_RULES`` is now in: these modelos resolve from the
-#: registry, 303 and 390 still resolve from the literal table. The literal
-#: table retires outright once the export-fragment campaign closes those two
-#: trees and they are migrated the same way; this module then stops authoring
-#: applicability data at all -- it only reads it.
-REGISTRY_RESOLVED_APPLICABILITY_MODELOS: frozenset[Modelo] = frozenset(
-    {
-        Modelo("100"),
-        Modelo("111"),
-        Modelo("115"),
-        Modelo("117"),
-        Modelo("123"),
-        Modelo("126"),
-        Modelo("128"),
-        Modelo("130"),
-        Modelo("131"),
-        Modelo("136"),
-        Modelo("151"),
-        Modelo("180"),
-        Modelo("184"),
-        Modelo("187"),
-        Modelo("188"),
-        Modelo("190"),
-        Modelo("193"),
-        Modelo("194"),
-        Modelo("200"),
-        Modelo("202"),
-        Modelo("210"),
-        Modelo("216"),
-        Modelo("232"),
-        Modelo("296"),
-        Modelo("322"),
-        Modelo("347"),
-        Modelo("349"),
-        Modelo("353"),
-        Modelo("360"),
-        Modelo("369"),
-        Modelo("714"),
-        Modelo("720"),
-        Modelo("721"),
-        Modelo("840"),
-    },
-)
+_ROUTES_FACT: Final = "modelo-applicability-routes"
+"""The fact naming the forms the art. 93 regime reroutes while its window is open."""
 
 
 def resolve_applicability_rule_from_authority(
@@ -460,10 +404,7 @@ def resolve_applicability_rule_from_authority(
     ):
         if revision.applicability:
             return hydrate_applicability_rule(modelo, revision.applicability[0])
-    raise RegistryValidationError(
-        f"modelo {modelo.value!r} is declared in REGISTRY_RESOLVED_APPLICABILITY_MODELOS but no "
-        "declared revision carries an applicability rule",
-    )
+    raise RegistryValidationError(f"no declared revision of modelo {modelo.value!r} carries an applicability rule")
 
 
 def resolve_applicability_rule_from_operation(
@@ -471,15 +412,30 @@ def resolve_applicability_rule_from_operation(
     modelo: Modelo,
 ) -> ModeloApplicabilityRule:
     """Resolve one modelo's applicability rule from a generation-pinned directory."""
-    directory = operation.modelo_directory(modelo.value)
-    for metadata in directory.revisions:
+    rule = _declared_applicability_rule(operation, modelo)
+    if rule is None:
+        raise RegistryValidationError(f"no declared revision of modelo {modelo.value!r} carries an applicability rule")
+    return rule
+
+
+def _declared_applicability_rule(
+    operation: PinnedAuthorityOperation,
+    modelo: Modelo,
+) -> ModeloApplicabilityRule | None:
+    """Return the rule a pinned revision of ``modelo`` declares, or ``None`` when none does."""
+    if modelo.value not in operation.modelo_ids():
+        return None
+    for metadata in operation.modelo_directory(modelo.value).revisions:
         revision = operation.revision(modelo.value, metadata.id)
         if revision.applicability:
             return hydrate_applicability_rule(modelo, revision.applicability[0])
-    raise RegistryValidationError(
-        f"modelo {modelo.value!r} is declared in REGISTRY_RESOLVED_APPLICABILITY_MODELOS but no "
-        "declared revision carries an applicability rule",
-    )
+    return None
+
+
+def _authority_revisions(authority: ValidatedRegistryAuthority, modelo: Modelo) -> Iterable[tuple[str, ModeloRevision]]:
+    from .queries import RegistryQueryService
+
+    return RegistryQueryService(authority).iter_modelo_revisions(modelo_codes=(modelo.value,))
 
 
 def _resolve_registry_applicability_rule(
@@ -487,7 +443,7 @@ def _resolve_registry_applicability_rule(
     *,
     authority: ValidatedRegistryAuthority | None = None,
     operation: PinnedAuthorityOperation | None = None,
-) -> ModeloApplicabilityRule:
+) -> ModeloApplicabilityRule | None:
     """Resolve one modelo's applicability rule from the pinned registry generation.
 
     The import is function-local by necessity, not preference: ``_authority``
@@ -506,14 +462,16 @@ def _resolve_registry_applicability_rule(
     cache, exactly the defect that consolidation removed.
     """
     if authority is not None:
+        if not any(revision.applicability for _id, revision in _authority_revisions(authority, modelo)):
+            return None
         return resolve_applicability_rule_from_authority(authority, modelo)
     if operation is not None:
-        return resolve_applicability_rule_from_operation(operation, modelo)
+        return _declared_applicability_rule(operation, modelo)
 
     from .authority import bundled_indexed_authority
 
     with bundled_indexed_authority().operation() as indexed_operation:
-        return resolve_applicability_rule_from_operation(indexed_operation, modelo)
+        return _declared_applicability_rule(indexed_operation, modelo)
 
 
 def _modelo_applicability_rule(
@@ -531,9 +489,10 @@ def _modelo_applicability_rule(
     matching the pre-cutover dict-lookup behaviour exactly; it is never an
     error to ask about an unruled modelo.
     """
-    if modelo in REGISTRY_RESOLVED_APPLICABILITY_MODELOS:
-        return _resolve_registry_applicability_rule(Modelo(modelo), authority=authority, operation=operation)
-    return MODELO_APPLICABILITY_RULES.get(modelo)
+    seed = MODELO_APPLICABILITY_RULES.get(modelo)
+    if seed is not None:
+        return seed
+    return _resolve_registry_applicability_rule(Modelo(modelo), authority=authority, operation=operation)
 
 
 def iter_modelo_applicability_rules(
@@ -552,15 +511,16 @@ def iter_modelo_applicability_rules(
     lease per modelo re-verified the published database for each of them and
     could read two modelos from two generations.
     """
-    known_modelos = sorted(
-        {modelo for modelo in MODELO_APPLICABILITY_RULES} | REGISTRY_RESOLVED_APPLICABILITY_MODELOS,
-    )
     if operation is None:
         from .authority import bundled_indexed_authority
 
         with bundled_indexed_authority().operation() as leased:
-            return _applicability_rules(known_modelos, operation=leased)
-    return _applicability_rules(known_modelos, operation=operation)
+            return _applicability_rules(_known_modelos(leased), operation=leased)
+    return _applicability_rules(_known_modelos(operation), operation=operation)
+
+
+def _known_modelos(operation: PinnedAuthorityOperation) -> list[str]:
+    return sorted({*MODELO_APPLICABILITY_RULES, *operation.modelo_ids()})
 
 
 def _applicability_rules(
@@ -685,16 +645,17 @@ def derive_modelo_applicability(
     # filing route. Once the window expires, both modelos fall back to their
     # ordinary applicability rules: M100 through the seed table below, M151
     # to a positive NOT_APPLICABLE.
-    if beckham_window_active and modelo == Modelo("100"):
+    routes = resolve_form_codes_leased(_ROUTES_FACT, authority=operation)
+    if beckham_window_active and modelo == routes.code("impatriado.suppressed"):
         return ModeloApplicability(
-            modelo=Modelo("100"),
+            modelo=Modelo(modelo),
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
             reason=tr(_IMPATRIADO_M100_SUPPRESSED_REASON_LOCALE_KEY),
             legal_refs=_IMPATRIADO_M151_ROUTE_LEGAL_REFS,
         )
-    if modelo == Modelo("151"):
+    if modelo == routes.code("impatriado.route"):
         return ModeloApplicability(
-            modelo=Modelo("151"),
+            modelo=Modelo(modelo),
             verdict=(ApplicabilityVerdict.APPLICABLE if beckham_window_active else ApplicabilityVerdict.NOT_APPLICABLE),
             reason=(
                 tr(
@@ -714,9 +675,9 @@ def derive_modelo_applicability(
     # exemption before the rule table so the payer-fact gate is never reached.
     # Year-7+ filers whose window has expired revert to the general IRPF
     # regime and owe M720 again — the window-expiry check is wired here.
-    if modelo == Modelo("720") and beckham_window_active:
+    if modelo == routes.code("impatriado.exempt") and beckham_window_active:
         return ModeloApplicability(
-            modelo=Modelo("720"),
+            modelo=Modelo(modelo),
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
             reason=registry_applicability_reason("impatriado_m720_exempt.reason", operation=operation),
             legal_refs=_IMPATRIADO_M720_LEGAL_REFS,

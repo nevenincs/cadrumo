@@ -1,0 +1,28 @@
+[fact]
+fact_id = "modelo-applicability-routes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-applicability-routes:design"
+date_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-115", "rd-439-2007:art-116", "ley-7-2012:da-1"]
+source_refs = ["aeat-modelo-151-procedure", "aeat-modelo-720-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["151"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["720"]
+
+# While the art. 93 window is open the annual return is the route form and not the ordinary
+# form. The exempt form is an obligation of IRPF residents, which the regime does not owe.
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "impatriado.route", value = "151" },
+  { key = "impatriado.suppressed", value = "100" },
+  { key = "impatriado.exempt", value = "720" },
+]

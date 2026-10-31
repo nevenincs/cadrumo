@@ -351,7 +351,7 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
             command=_command().model_copy(update={"retencion_observations": (observation,)}),
         )
 
-    with pytest.raises(ValidationError, match="only for Modelos 111 and 123"):
+    with pytest.raises(ValidationError, match="not supported for this modelo"):
         ModeloAggregateOperationRequest.from_inputs(
             profile_id=_PROFILE,
             command=_command(modelo="115"),
