@@ -389,6 +389,7 @@ class PublicSpanishTaxIdFormat(BaseModel):
     nie_leaders: str
     cif_leaders: str
     nif_letters: str
+    nif_check_modulus: int
     nie_prefix_substitutions: tuple[tuple[str, str], ...]
     cif_digit_only_kinds: str
     cif_letter_only_kinds: str
