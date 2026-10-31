@@ -1423,7 +1423,6 @@ desktop:
       column:
         amount: Import
         casilla: Casella
-        target: Declaració
         unavailable: Sense calcular
       correct:
         claim_item: '{year} · {amount} · {from} – {until}'
@@ -1436,6 +1435,9 @@ desktop:
         incomplete: 'Anys que no es poden calcular, tots els anys: {count}'
         missing: 'Anys sense dotació, tots els anys: {count}'
         stale: 'Dotacions que ja no coincideixen amb el quadre, tots els anys: {count}'
+        unsupported: 'Anys amb un mètode que Cadrumo encara no admet, tots els anys:
+          {count}'
+        without_tables: 'Anys sense taules oficials, tots els anys: {count}'
       detail:
         baja_reason: Motiu de la baixa
         close: Tanca
@@ -1474,6 +1476,10 @@ desktop:
         disposal_reason: Motiu
         document_kind: Tipus de document
         document_number: Número de document
+        further_purchase: Pagament posterior d'aquest llibre (opcional)
+        further_purchase_hint: Un pagament que vas registrar aquí després de comprar-ho
+          fora, com un termini.
+        further_shape: Què és aquest pagament
         in_service_date: En servei des de
         kind: Tipus
         land_cost: Cost del sòl
@@ -1638,15 +1644,11 @@ desktop:
         correct: Desa la correcció
         create: Crea l'element
         forecast: Calcula la dotació
-      target:
-        intangible_m100: Model 100 · intangible
-        intangible_m130: Model 130 · intangible
-        material_m100: Model 100 · material
-        material_m130: Model 130 · material
       timeline:
         change_added: '{field}: {after}'
         change_cleared: '{field}: es treu {before}'
         change_to: a
+        claim_span: 'Dotació de {year}: del {from} al {through}'
         column:
           changes: Canvis
           effect: Data d'efecte
@@ -5228,10 +5230,14 @@ ledger:
         no es pot mesurar amb mitjanes d'anys naturals.
       workforce_year_not_declared: La plantilla mitjana de %{year} no està declarada.
     event_kind:
-      baja: Baixa registrada
-      claim: Dotació registrada
-      descriptor: Descripció afegida
-      revision: Dades fiscals registrades
+      baja_changed: Baixa modificada
+      baja_recorded: Baixa registrada
+      baja_removed: Baixa eliminada
+      claim_recorded: Dotació registrada
+      claim_replaced: Dotació substituïda
+      corrected: Dades corregides
+      created: Afegit al registre
+      described: Descripció actualitzada
     field:
       acquired_condition: Estat en adquirir-lo
       acquisition:
@@ -9561,8 +9567,6 @@ workspace:
       lead: Això no impedeix el fitxer. Diu què deixen fora les dotacions dels teus
         elements, perquè decideixis què afegir.
       title: Convé saber abans de presentar
-      unworded: El càlcul ha anotat alguna cosa sobre els teus elements que no es
-        pot mostrar aquí.
     operation:
       calculated: Calculada. {direction} {value}.
       checked:

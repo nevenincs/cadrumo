@@ -8,12 +8,13 @@ import { WriteHold } from "../WritePause";
 import { dateText } from "../movements/movementWords";
 import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
-import { NotKnown } from "./AssetList";
+import { NotApplicable, NotKnown } from "./AssetList";
 import { figureText } from "./planWords";
 import type { AssetListRow } from "../../../shell/ledgerSetup";
 import type { FormKind } from "./assetFields";
 import {
   ASSET_KEYS,
+  bajaText,
   fieldWord,
   openingRemedy,
   tokenWord,
@@ -196,8 +197,18 @@ export function AssetDetail({
               )}
             </Fact>
             <Fact label={t(ASSET_KEYS.list.column.pending)}>
-              {figureText(locale, row.pending) ?? (
-                <NotKnown why={openingRemedy(t)} />
+              {!row.pending_applies ? (
+                <NotApplicable
+                  why={
+                    row.disposal === null
+                      ? null
+                      : bajaText(t, locale, row.disposal)
+                  }
+                />
+              ) : (
+                (figureText(locale, row.pending) ?? (
+                  <NotKnown why={openingRemedy(t)} />
+                ))
               )}
             </Fact>
           </dl>

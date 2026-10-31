@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
-import type { LedgerPort } from "../../../shell/ledger";
-import { QUARTER_CODES } from "../../../shell/ledgerGrammar";
+import type { LedgerPort, PublicDecimal } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import { amountText } from "../movements/movementWords";
 import {
@@ -18,43 +17,61 @@ import { handoffRequest } from "./assetWrites";
 import { leftOutNotes } from "./handoffWords";
 import { ASSET_KEYS, refusalText } from "./assetsWords";
 
-/** The words of the declaration boxes the handoff can name. A box outside
- * this list reads as the generic word, never as the key the backend uses. */
-const TARGET_KEYS = {
-  material_m100: "desktop.ledger.assets.target.material_m100",
-  intangible_m100: "desktop.ledger.assets.target.intangible_m100",
-  material_m130: "desktop.ledger.assets.target.material_m130",
-  intangible_m130: "desktop.ledger.assets.target.intangible_m130",
-} as const;
-type Target = keyof typeof TARGET_KEYS;
-const TARGETS = Object.keys(TARGET_KEYS) as Target[];
+/** One box the handoff states: its casilla, its amount, and how many
+ * elements its amount leaves out. */
+type Stated = {
+  casilla: string;
+  amount: PublicDecimal;
+  left: number;
+};
 
 /**
  * Which declaration boxes the claims of a year reach, read only. The year
  * is the pane's, and it alone reads the Modelo 100 boxes; the Modelo 130
- * quarter is chosen here, and only a chosen quarter is sent and adds the
- * Modelo 130 rows. Each row shows the box and the amount the backend states
- * for it. Nothing is added up or worked out here, and an amount the backend
- * does not state is not drawn as zero.
+ * quarter is chosen here from the quarters the registry serves for that
+ * year, and only a chosen quarter is sent and adds the Modelo 130 rows. Each
+ * row shows the box by its casilla and the amount the backend states for it.
+ * Nothing is added up or worked out here, and an amount the backend does not
+ * state is not drawn as zero.
  */
 export function FilingHandoffPanel({
   port,
   reader,
   locale,
   year,
+  assetKind,
   names,
 }: {
   port: LedgerPort;
   reader: string | null;
   locale: string;
   year: number | null;
+  /** The kind of any element the register lists, which the registry's
+   * options for the year are read under; null while there is none. */
+  assetKind: string | null;
   /** The elements' names by their ids, from the list the pane holds; an
    * element without a name is absent. */
   names: ReadonlyMap<string, string>;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
-  const [period, setPeriod] = useState("");
+  const [typedPeriod, setPeriod] = useState("");
+  // The quarters the registry serves for the year; a quarter chosen for
+  // another year is not asked of this one.
+  const options = useSetupRead(
+    port,
+    reader,
+    "ledger.actividad-asset.form-options",
+    open && year !== null && assetKind !== null
+      ? { asset_kind: assetKind, tax_year: year }
+      : null,
+    open ? `${assetKind ?? ""}:${year ?? ""}` : "closed",
+  );
+  const periods =
+    options.read?.kind === "done"
+      ? (options.read.result.options?.m130_periods ?? [])
+      : [];
+  const period = periods.includes(typedPeriod) ? typedPeriod : "";
   const asked =
     open && reader !== null && year !== null
       ? handoffRequest(year, period)
@@ -93,27 +110,36 @@ export function FilingHandoffPanel({
       return note("desktop.ledger.assets.filing.unavailable");
     // A box the backend does not state, because no quarter was asked, is not
     // drawn: it is not unknown, and it is not zero.
-    const stated = TARGETS.flatMap((target) => {
-      const found = handoff[target];
-      return found === null ? [] : [[target, found] as const];
-    });
+    const stated: Stated[] = [
+      ...[handoff.material_m100, handoff.intangible_m100].map((found) => ({
+        casilla: found.target_casilla_id,
+        amount: found.amount,
+        left: 0,
+      })),
+      ...[handoff.material_m130, handoff.intangible_m130].flatMap((found) =>
+        found === null
+          ? []
+          : [
+              {
+                casilla: found.target_casilla_id,
+                amount: found.amount,
+                left: found.unavailable_asset_ids.length,
+              },
+            ],
+      ),
+    ];
     const left = leftOutNotes(t, locale, handoff, names);
     return (
       <>
         <SetupTable
           label={t("desktop.ledger.assets.handoff")}
           rows={stated}
-          rowKey={([target]) => target}
+          rowKey={(found) => String(stated.indexOf(found))}
           columns={[
-            {
-              key: "target",
-              label: t("desktop.ledger.assets.column.target"),
-              cell: ([target]) => t(TARGET_KEYS[target]),
-            },
             {
               key: "casilla",
               label: t("desktop.ledger.assets.column.casilla"),
-              cell: ([, found]) => found.target_casilla_id,
+              cell: (found) => found.casilla,
             },
             {
               key: "amount",
@@ -121,11 +147,8 @@ export function FilingHandoffPanel({
               numeric: true,
               // An amount that leaves elements out is marked partial on the
               // amount itself.
-              cell: ([, found]) => {
-                const left =
-                  "unavailable_asset_ids" in found
-                    ? found.unavailable_asset_ids.length
-                    : 0;
+              cell: (found) => {
+                const left = found.left;
                 return (
                   <span className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
                     {left > 0 && (
@@ -180,7 +203,7 @@ export function FilingHandoffPanel({
         onValue={setPeriod}
         options={[
           { value: "", label: t("desktop.ledger.assets.quarter_none") },
-          ...QUARTER_CODES.map((code) => ({ value: code, label: code })),
+          ...periods.map((code) => ({ value: code, label: code })),
         ]}
         className="max-w-48"
       />

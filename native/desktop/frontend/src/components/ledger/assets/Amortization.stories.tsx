@@ -1,12 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { userEvent, waitFor, within } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import type { LedgerPort } from "../../../shell/ledger";
-import type { ListDisposal } from "../../../shell/ledgerSetup";
+import type {
+  ActivityAssetForecast,
+  DisposalFacts,
+  ListDisposal,
+  ReasonFact,
+} from "../../../shell/ledgerSetup";
+import { translator } from "../../../shell/strings";
 import { setupCall } from "../setup/setupModel";
 import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
+import { bajaRequest, type RevisionBase } from "./assetRevision";
+import { ASSET_KEYS } from "./assetsWords";
 
 // One element's amortization plan and its append-only timeline over the
 // scenario's register. Each story names the element whose plan or history
@@ -15,7 +23,10 @@ import { AssetTimeline } from "./AssetTimeline";
 // an unknown opening history, a baja and a claim that no longer matches. A
 // story can also change what the plan says, to show a state the register has
 // no element in: the remedy for a missing opening amount, and a legal basis
-// that is long and partial at once.
+// that is long and partial at once. A story on the timeline can first do what
+// a person did, through the scenario's own writes, so the record shows what
+// those writes leave: a baja recorded, changed and removed, and a dotación a
+// later one replaced.
 
 type Answer = "register" | "empty" | "refused" | "loading" | "unavailable";
 
@@ -26,11 +37,16 @@ type Tweak =
   | "refusal_facts"
   | "nothing_left";
 
+/** What a person did to the element before the story opens. */
+type Prepare = "none" | "baja_cycle" | "replaced_claim";
+
 type Args = {
   assetId: string;
   year: number | null;
   /** What the plan is made to say beyond the register's own. */
   tweak: Tweak;
+  /** What was done to the element before the view opens. */
+  prepare: Prepare;
   /** What the read answers; the register's own unless said. */
   answer: Answer;
   /** Drawn at the width of the detail panel rather than the pane. */
@@ -46,13 +62,13 @@ type PlanShape = {
         claim_state: string;
         claimable_intervals: unknown[];
         claimable_refusal_key: string | null;
-        claimable_refusal_facts: { key: string; value: string }[];
+        claimable_refusal_facts: ReasonFact[];
       }[]
     | null;
   limits?: {
     legal_citations_complete: boolean;
     unavailable_reason_key: string | null;
-    unavailable_reason_facts: { key: string; value: string }[];
+    unavailable_reason_facts: ReasonFact[];
   } | null;
 };
 
@@ -98,7 +114,9 @@ function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
                 "ledger.actividad_asset.errors.opening_history_missing";
         } else if (tweak === "refusal_facts") {
           const first = plan.rows?.[0];
-          const facts = [{ key: "ended_on", value: "2024-12-31" }];
+          const facts: ReasonFact[] = [
+            { key: "ended_on", value: "2024-12-31", kind: "date" },
+          ];
           if (first) {
             first.claimable_intervals = [];
             first.claimable_refusal_key = ELAPSED;
@@ -176,21 +194,105 @@ function withAnswer(port: LedgerPort, answer: Answer): LedgerPort {
   };
 }
 
+const sale = (disposal_date: string): DisposalFacts => ({
+  disposal_date,
+  reason: "sale",
+  proceeds: { decimal: "100.00" },
+  transmission_costs: { decimal: "0.00" },
+  market_value: null,
+  prior_free_depreciation_regime: null,
+  later_affectation_on: null,
+});
+
+/** Does what a person did before the view opens, through the scenario's own
+ * writes: a baja recorded, changed to another day and removed, or a dotación
+ * recorded again in place of the one in effect. */
+async function prepared(port: LedgerPort, assetId: string, prepare: Prepare) {
+  const lastRevision = async (): Promise<RevisionBase | null> => {
+    const read = await setupCall(
+      port,
+      "ledger.actividad-asset.inspect",
+      { asset_id: assetId },
+      false,
+    );
+    return read.kind === "done"
+      ? (read.result.revisions?.at(-1) ?? null)
+      : null;
+  };
+  if (prepare === "baja_cycle") {
+    await setupCall(
+      port,
+      "ledger.actividad-asset.dispose",
+      { asset_id: assetId, disposal: sale("2026-09-30") },
+      true,
+    );
+    for (const disposal of [sale("2026-06-30"), null]) {
+      const request = bajaRequest(await lastRevision(), disposal);
+      if (request !== null)
+        await setupCall(port, "ledger.actividad-asset.correct", request, true);
+    }
+  } else if (prepare === "replaced_claim") {
+    const plan = await setupCall(
+      port,
+      "ledger.actividad-asset.plan",
+      { asset_id: assetId },
+      false,
+    );
+    const old =
+      plan.kind === "done"
+        ? plan.result.rows
+            ?.flatMap((row) => row.claims)
+            .find((found) => found.effective)
+        : undefined;
+    if (old === undefined) return;
+    const forecast = await setupCall(
+      port,
+      "ledger.actividad-asset.forecast",
+      {
+        asset_id: assetId,
+        covered_from: old.covered_from,
+        covered_through: old.covered_through,
+        requested_free_amount: null,
+        supersedes_claim_id: old.claim_id,
+      },
+      false,
+    );
+    const made: ActivityAssetForecast | null =
+      forecast.kind === "done" ? forecast.result.forecast : null;
+    if (made !== null)
+      await setupCall(
+        port,
+        "ledger.actividad-asset.claim",
+        { forecast: made, supersedes_claim_id: old.claim_id },
+        true,
+      );
+  }
+}
+
 function Stage({
   view,
   assetId,
   year,
   tweak,
+  prepare,
   answer,
   narrow,
   locale,
 }: Args & { view: "plan" | "timeline" }) {
   const base = useLedgerPort();
+  const [ready, setReady] = useState(prepare === "none");
+  const started = useRef(false);
+  useEffect(() => {
+    if (prepare === "none" || started.current) return;
+    started.current = true;
+    void prepared(base, assetId, prepare).then(() => setReady(true));
+  }, [base, assetId, prepare]);
   const port = useMemo(
     () => withAnswer(withTweak(base, tweak), answer),
     [base, tweak, answer],
   );
   const disposal = useDisposal(base, assetId);
+  if (!ready) return null;
   return (
     <div
       className={
@@ -228,6 +330,7 @@ const meta: Meta<Args> = {
     assetId: "furgoneta",
     year: null,
     tweak: "none",
+    prepare: "none",
     answer: "register",
     narrow: false,
     locale: "en",
@@ -262,13 +365,16 @@ const open =
     }
   };
 
-/** Shows the tooltip of the mark or glyph the person can focus by its name. */
+/** Shows the tooltip of the mark or glyph the person can focus by its name,
+ * which the story takes from the catalogue in its own language. */
 const hint =
-  (name: RegExp): Story["play"] =>
-  async ({ canvasElement }: PlayContext) => {
+  (key: string, values?: Record<string, string | number>): Story["play"] =>
+  async ({ canvasElement, globals }: PlayContext) => {
+    const words = translator(String(globals.locale ?? "en"))(key, values);
+    const name = new RegExp(words.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
     const mark = await waitFor(() => {
       const found = within(canvasElement).queryAllByRole("img", { name })[0];
-      if (!found) throw new Error("the mark is not drawn yet");
+      if (!found) throw new Error(`the mark "${words}" is not drawn yet`);
       return found;
     });
     await userEvent.hover(mark);
@@ -354,25 +460,36 @@ export const PlanCoveredByOpening: Story = plan({
 export const PlanProjectedRates: Story = plan({
   name: "Plan, estimated years carry their own glyph beside the year and each figure",
   args: { assetId: "licencia", year: 2027 },
-  play: hint(/Estimated: official tables/),
+  play: hint(ASSET_KEYS.plan.projected_note, { year: 2027 }),
 });
 
 export const PlanMinimumAccumulated: Story = plan({
   name: "Plan, the minimum column is headed as accumulated to year end, with its note",
   args: { assetId: "furgoneta", year: 2026 },
-  play: hint(/Counts towards the cost/),
+  play: hint(ASSET_KEYS.plan.column.minimum_note),
 });
 
 export const PlanNothingRecordedMark: Story = plan({
   name: "Plan, a year with nothing recorded has its own mark, not Not known",
   args: { assetId: "servidor" },
-  play: hint(/Nothing recorded/),
+  play: hint(ASSET_KEYS.mark.nothing_recorded),
 });
 
 export const PlanDoesNotApplyMark: Story = plan({
   name: "Plan, a figure that does not apply has its own mark, not Not known",
   args: { assetId: "plotter" },
-  play: hint(/Doesn't apply/),
+  play: hint(ASSET_KEYS.mark.not_applicable),
+});
+
+export const PlanMinimumUnknown: Story = plan({
+  name: "Plan, a minimum with an earlier year unresolved is Not known with its reason, never a figure",
+  args: { assetId: "plotter" },
+  play: hint("ledger.actividad_asset.disposal_finding.minimum_unresolved"),
+});
+
+export const PlanLimitsLastDayOfThePeriod: Story = plan({
+  name: "Plan, the maximum period ends on its last day, not on the boundary after it",
+  args: { assetId: "cristaleria", narrow: true },
 });
 
 export const PlanReasonWithFacts: Story = plan({
@@ -431,7 +548,7 @@ export const PlanStaleClaim: Story = plan({
 export const PlanStaleClaimCollapsed: Story = plan({
   name: "Plan, a stale dotación shows a warning on the collapsed year, not a tick",
   args: { assetId: "servidor", narrow: true },
-  play: hint(/No longer matches the schedule/),
+  play: hint(ASSET_KEYS.plan.no_match),
 });
 
 export const PlanInThePanel: Story = plan({
@@ -464,6 +581,16 @@ export const PlanUnavailable: Story = plan({
 export const TimelineCorrection: Story = timeline({
   name: "Timeline, a correction and a claim that no longer matches",
   args: { assetId: "servidor" },
+});
+
+export const TimelineBajaRecordedChangedRemoved: Story = timeline({
+  name: "Timeline, a baja recorded, changed to another day and removed, each on its own day",
+  args: { assetId: "taladro", prepare: "baja_cycle" },
+});
+
+export const TimelineReplacedClaim: Story = timeline({
+  name: "Timeline, a dotación a later one replaced is dimmed and no longer in effect",
+  args: { assetId: "furgoneta", prepare: "replaced_claim" },
 });
 
 export const TimelineDescription: Story = timeline({

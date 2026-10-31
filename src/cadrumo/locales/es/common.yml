@@ -1427,7 +1427,6 @@ desktop:
       column:
         amount: Importe
         casilla: Casilla
-        target: Declaración
         unavailable: Sin calcular
       correct:
         claim_item: '{year} · {amount} · {from} – {until}'
@@ -1440,6 +1439,9 @@ desktop:
         incomplete: 'Años que no se pueden calcular, todos los años: {count}'
         missing: 'Años sin dotación, todos los años: {count}'
         stale: 'Dotaciones que ya no coinciden con el cuadro, todos los años: {count}'
+        unsupported: 'Años con un método que Cadrumo aún no admite, todos los años:
+          {count}'
+        without_tables: 'Años sin tablas oficiales, todos los años: {count}'
       detail:
         baja_reason: Motivo de la baja
         close: Cerrar
@@ -1478,6 +1480,10 @@ desktop:
         disposal_reason: Motivo
         document_kind: Tipo de documento
         document_number: Número de documento
+        further_purchase: Pago posterior de este libro (opcional)
+        further_purchase_hint: Un pago que registraste aquí después de comprarlo fuera,
+          como un plazo.
+        further_shape: Qué es este pago
         in_service_date: En servicio desde
         kind: Tipo
         land_cost: Coste del suelo
@@ -1642,15 +1648,11 @@ desktop:
         correct: Guardar la corrección
         create: Crear el elemento
         forecast: Calcular la dotación
-      target:
-        intangible_m100: Modelo 100 · intangible
-        intangible_m130: Modelo 130 · intangible
-        material_m100: Modelo 100 · material
-        material_m130: Modelo 130 · material
       timeline:
         change_added: '{field}: {after}'
         change_cleared: '{field}: se quita {before}'
         change_to: a
+        claim_span: 'Dotación de {year}: del {from} al {through}'
         column:
           changes: Cambios
           effect: Fecha de efectos
@@ -5238,10 +5240,14 @@ ledger:
         no se puede medir con medias de años naturales.
       workforce_year_not_declared: La plantilla media de %{year} no está declarada.
     event_kind:
-      baja: Baja registrada
-      claim: Dotación registrada
-      descriptor: Descripción añadida
-      revision: Datos fiscales registrados
+      baja_changed: Baja modificada
+      baja_recorded: Baja registrada
+      baja_removed: Baja eliminada
+      claim_recorded: Dotación registrada
+      claim_replaced: Dotación sustituida
+      corrected: Datos corregidos
+      created: Añadido al registro
+      described: Descripción actualizada
     field:
       acquired_condition: Estado al adquirirlo
       acquisition:
@@ -9575,8 +9581,6 @@ workspace:
       lead: Esto no impide el archivo. Dice qué dejan fuera las dotaciones de tus
         elementos, para que decidas qué añadir.
       title: Conviene saber antes de presentar
-      unworded: El cálculo anotó algo sobre tus elementos que no se puede mostrar
-        aquí.
     operation:
       calculated: Calculada. {direction} {value}.
       checked:

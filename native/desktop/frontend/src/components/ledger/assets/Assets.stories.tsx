@@ -26,6 +26,10 @@ type Args = {
   parts?: boolean;
   /** The handoff leaves elements out of its Modelo 130 amounts. */
   partial?: boolean;
+  /** The year the list says the register opens on, whatever the clock says. */
+  servedYear?: number;
+  /** Every kind of count stated on the first element. */
+  allCounts?: boolean;
   /** What the handoff leaves out of its amounts, named by the made-up list,
    * by an element the list holds no name for, or with an accrual not worked out. */
   leftOut?: LeftOut;
@@ -59,6 +63,7 @@ function withListAnswer(port: LedgerPort, answer: Answer): LedgerPort {
           refusal: null,
           rows: [],
           years: [],
+          default_year: null,
         });
       return settled({
         outcome: "refused",
@@ -71,6 +76,7 @@ function withListAnswer(port: LedgerPort, answer: Answer): LedgerPort {
         },
         rows: null,
         years: [],
+        default_year: null,
       });
     }) as LedgerPort["submit"],
   };
@@ -101,6 +107,34 @@ function withPartialHandoff(port: LedgerPort): LedgerPort {
         ))
           if (found !== null && target.endsWith("_m130"))
             found.unavailable_asset_ids = ["first", "second"];
+        return { ...answer, result };
+      });
+    }) as LedgerPort["submit"],
+  };
+}
+
+type ListShape = {
+  default_year: number | null;
+  rows: { findings: Record<string, number> }[];
+};
+
+/** The scenario's port, with the list changed as the story asks. */
+function withList(
+  port: LedgerPort,
+  change: (list: ListShape) => void,
+): LedgerPort {
+  return {
+    ...port,
+    submit: ((definition: string, payload: never) => {
+      const sent = port.submit(definition as never, payload) as Promise<{
+        kind: string;
+        result?: unknown;
+      }>;
+      if (definition !== "ledger.actividad-asset.list") return sent;
+      return sent.then((answer) => {
+        if (answer.kind !== "settled") return answer;
+        const result = structuredClone(answer.result) as ListShape;
+        change(result);
         return { ...answer, result };
       });
     }) as LedgerPort["submit"],
@@ -178,21 +212,36 @@ function Stage({
   parts,
   partial,
   leftOut,
+  servedYear,
+  allCounts,
   locale,
 }: Args) {
   const base = useLedgerPort(shape);
-  const port = useMemo(
-    () =>
-      withListAnswer(
-        leftOut
-          ? withLeftOut(base, leftOut)
-          : partial
-            ? withPartialHandoff(base)
-            : base,
-        answer,
-      ),
-    [base, answer, partial, leftOut],
-  );
+  const port = useMemo(() => {
+    let served = leftOut
+      ? withLeftOut(base, leftOut)
+      : partial
+        ? withPartialHandoff(base)
+        : base;
+    if (servedYear !== undefined)
+      served = withList(served, (list) => {
+        list.default_year = servedYear;
+      });
+    if (allCounts)
+      served = withList(served, (list) => {
+        const first = list.rows[0];
+        if (first)
+          first.findings = {
+            missing: 1,
+            incomplete: 2,
+            conflict: 3,
+            unsupported: 4,
+            without_tables: 5,
+            stale: 6,
+          };
+      });
+    return withListAnswer(served, answer);
+  }, [base, answer, partial, leftOut, servedYear, allCounts]);
   return (
     <div className="flex h-full min-h-0 flex-col">
       <AssetsSection
@@ -240,6 +289,26 @@ async function press(
 
 export const Register: Story = { name: "Register spanning decades" };
 
+export const RegisterOpensOnTheServedYear: Story = {
+  name: "Register opens on the year the list serves, whatever the clock says",
+  args: { servedYear: 2024 },
+  play: async (context) => {
+    const t = wordsOf(context);
+    const year = await within(context.canvasElement).findByLabelText(
+      t(ASSET_KEYS.year),
+    );
+    await waitFor(() => {
+      if ((year as HTMLSelectElement).value !== "2024")
+        throw new Error("the register did not open on the served year");
+    });
+  },
+};
+
+export const CountsOfEveryKind: Story = {
+  name: "Counts of every kind, each with a glyph of its own",
+  args: { allCounts: true },
+};
+
 export const OneElement: Story = {
   name: "An element chosen",
   play: (context) => press(context, "button", "Furgoneta de reparto"),
@@ -250,6 +319,26 @@ export const ElementOutOfService: Story = {
   play: async (context) => {
     await press(context, "button", "Cámara de revelado");
     await press(context, "tab", wordsOf(context)(ASSET_KEYS.detail.record));
+  },
+};
+
+export const ElementOutOfServiceInTheList: Story = {
+  name: "An element out of service: nothing left to amortize, said as not applying",
+  play: async (context) => {
+    const t = wordsOf(context);
+    const mark = await waitFor(() => {
+      const found = within(context.canvasElement).queryAllByRole("img", {
+        name: new RegExp(
+          t(ASSET_KEYS.mark.not_applicable).replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&",
+          ),
+        ),
+      })[0];
+      if (!found) throw new Error("the mark is not drawn yet");
+      return found;
+    });
+    await userEvent.hover(mark);
   },
 };
 
@@ -283,6 +372,14 @@ export const FilingHandoff: Story = {
       if (!control) throw new Error("the quarter is not drawn yet");
       return control;
     });
+    // The quarters are the ones the registry serves for the year.
+    await waitFor(
+      () => {
+        if (!quarter.querySelector('option[value="4T"]'))
+          throw new Error("the quarters are not offered yet");
+      },
+      { timeout: 5000 },
+    );
     await userEvent.selectOptions(quarter, "4T");
   },
 };

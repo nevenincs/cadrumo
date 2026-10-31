@@ -17,6 +17,8 @@ import type {
   PlanClaim,
   PlanRow,
   ReasonFact,
+  ReasonFactKind,
+  TimelineClaimUse,
   TimelineEvent,
 } from "@/shell/ledgerSetup";
 import type {
@@ -26,7 +28,10 @@ import type {
 } from "../shell/ledger";
 import {
   ADMITTED_METHODS,
+  BASIS_STAGES,
   DISPOSAL_REASONS,
+  M130_PERIODS,
+  OPENING_STATUSES,
   SEED_ELEMENTS,
   TABLE_GROUPS,
   TIMELINE_FACT_PATHS,
@@ -549,9 +554,22 @@ const FIRST_SUPPORTED_YEAR = 2022;
 /** The last year the registry carries official tables for; later years are estimates. */
 const LAST_ADMITTED_YEAR = 2026;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+/** The shapes a later ledger payment of an element can take. */
+const FURTHER_SHAPES = ["split_payment", "ancillary_cost"];
 
 const json = <T>(value: T): JsonObject => value as unknown as JsonObject;
 const dec = (value: string) => ({ decimal: value });
+
+/** A reason fact stated with the kind of the value it was raised with, as the
+ * backend serves it; a bare string is a text. */
+type Fact = string | { value: string; kind: ReasonFactKind };
+const typed =
+  (kind: ReasonFactKind) =>
+  (value: string | number): Fact => ({ value: String(value), kind });
+const asDate = typed("date");
+const asCount = typed("count");
+const asAmount = typed("amount");
+const asPercent = typed("percent");
 
 // ---- Amounts, in whole cents --------------------------------------------------
 
@@ -726,7 +744,7 @@ export function assetOperations(tools: Tools) {
   const refuse = (
     code: string,
     key: string | null,
-    facts: Record<string, string> = {},
+    facts: Record<string, Fact> = {},
     shape: JsonObject = {},
     missing: string[] = [],
   ): never =>
@@ -743,7 +761,11 @@ export function assetOperations(tools: Tools) {
           reason_key: key === null ? null : `${ERRORS}${key}`,
           reason_facts: Object.entries(facts)
             .sort(([a], [b]) => a.localeCompare(b))
-            .map(([name, value]): ReasonFact => ({ key: name, value })),
+            .map(([name, fact]): ReasonFact =>
+              typeof fact === "string"
+                ? { key: name, value: fact, kind: "text" }
+                : { key: name, ...fact },
+            ),
         },
         ...shape,
       }),
@@ -787,9 +809,42 @@ export function assetOperations(tools: Tools) {
     TIMELINE_FACT_PATHS.includes(field.replace(/\[\d+\]/g, "[]"))
       ? `${FAMILY}field.${field.replace(/\[\d*\]/g, "")}`
       : null;
+  /** What the timeline says of a dotación: its year and last day, and that it
+   * is in effect; a replaced one is judged against nothing. */
+  const claimUse = (
+    claim: PlanClaim,
+    year: number,
+    verdict: Pick<
+      TimelineClaimUse,
+      "matches_current_schedule" | "stale_reason"
+    >,
+  ): TimelineClaimUse => ({
+    used_by: [],
+    ...verdict,
+    in_effect: claim.effective,
+    tax_year: year,
+    covered_from: claim.covered_from,
+    covered_through: claim.covered_through,
+  });
+  /** A dotación a later one replaced stops being in effect, and no longer
+   * disagrees with the schedule. */
+  const retire = (element: Element, claimId: string) => {
+    for (const event of element.events)
+      if (event.kind === "claim" && event.record_id === claimId)
+        event.claim =
+          event.claim === null
+            ? null
+            : {
+                ...event.claim,
+                in_effect: false,
+                matches_current_schedule: true,
+                stale_reason: null,
+              };
+  };
   const record = (
     element: Element,
     kind: string,
+    eventKind: string,
     origin: string,
     effect: string | null,
     changes: { field: string; before: string | null; after: string | null }[],
@@ -815,6 +870,7 @@ export function assetOperations(tools: Tools) {
       sequence: element.events.length + 1,
       recorded_at: now(),
       kind,
+      event_kind: eventKind,
       asset_id: element.id,
       record_id: hex64(`${kind}:${element.id}:${element.events.length + 1}`),
       effect_date: effect,
@@ -890,10 +946,22 @@ export function assetOperations(tools: Tools) {
             : "claimed";
   };
 
+  /** The year a dotación form opens on: the latest year up to the scenario's
+   * with something left to claim, else the earliest later one. */
+  const claimYearOf = (rows: readonly PlanRow[]): number | null => {
+    const open = rows
+      .filter((row) => row.claimable_intervals.length > 0)
+      .map((row) => row.tax_year);
+    const elapsed = open.filter((year) => year <= Number(TODAY.slice(0, 4)));
+    if (elapsed.length > 0) return Math.max(...elapsed);
+    return open.length > 0 ? Math.min(...open) : null;
+  };
+
   const recount = (element: Element) => {
     const stale = element.events.filter(
       (event) =>
         event.claim !== null &&
+        event.claim.in_effect &&
         !event.claim.matches_current_schedule &&
         element.rows.some((row) =>
           row.claims.some(
@@ -901,15 +969,23 @@ export function assetOperations(tools: Tools) {
           ),
         ),
     ).length;
+    // Each year is counted once, under the first thing that stops it: a year
+    // whose figure cannot be worked out is never also counted as not claimed.
+    const absent = (name: string) =>
+      element.rows.filter((row) => row.absence === name).length;
     element.list.findings = {
       missing: element.rows.filter(
-        (row) => row.claim_state === "missing" || row.claim_state === "partial",
+        (row) =>
+          (row.absence === null || row.absence === "free_election") &&
+          (row.claim_state === "missing" || row.claim_state === "partial"),
       ).length,
-      incomplete: element.rows.filter((row) => row.absence === "incomplete")
-        .length,
-      conflict: 0,
+      incomplete: absent("incomplete"),
+      conflict: absent("conflict"),
+      unsupported: absent("unsupported"),
+      without_tables: absent("edition_unavailable"),
       stale,
     };
+    element.list.default_claim_year = claimYearOf(element.rows);
   };
 
   // ---- Reads ---------------------------------------------------------------------
@@ -926,7 +1002,14 @@ export function assetOperations(tools: Tools) {
       const years = [...new Set(rows.flatMap((row) => row.years))].sort(
         (a, b) => a - b,
       );
-      return json({ ...ok, rows, years });
+      const elapsed = years.filter((year) => year <= Number(TODAY.slice(0, 4)));
+      return json({
+        ...ok,
+        rows,
+        years,
+        default_year:
+          elapsed.length > 0 ? Math.max(...elapsed) : (years[0] ?? null),
+      });
     },
     "ledger.actividad-asset.plan": (request) => {
       exact(request, ["asset_id"]);
@@ -997,7 +1080,7 @@ export function assetOperations(tools: Tools) {
         return refuse(
           VALIDATION,
           "tax_year_without_edition",
-          { tax_year: String(year) },
+          { tax_year: asCount(year) },
           { options: null },
         );
       return json({
@@ -1015,6 +1098,9 @@ export function assetOperations(tools: Tools) {
           ),
           table_groups: TABLE_GROUPS[kind],
           disposal_reasons: DISPOSAL_REASONS,
+          basis_stages: BASIS_STAGES,
+          opening_statuses: OPENING_STATUSES,
+          m130_periods: M130_PERIODS[year] ?? [],
         },
       });
     },
@@ -1055,8 +1141,16 @@ export function assetOperations(tools: Tools) {
       return prefix === "" ? {} : { [prefix]: null };
     const stated = decimalOf(value);
     if (stated !== null) return { [prefix]: stated };
-    if (typeof value !== "object" || Array.isArray(value))
-      return { [prefix]: String(value) };
+    if (Array.isArray(value))
+      return value.length === 0
+        ? { [prefix]: null }
+        : Object.assign(
+            {},
+            ...value.map((item, position) =>
+              flatten(item, `${prefix}[${position}]`),
+            ),
+          );
+    if (typeof value !== "object") return { [prefix]: String(value) };
     return Object.assign(
       {},
       ...Object.entries(value).map(([name, item]) =>
@@ -1151,14 +1245,41 @@ export function assetOperations(tools: Tools) {
           VALIDATION,
           "declared_acquisition_after_service",
           {
-            declared_acquisition_date: bought,
-            in_service_date: inService,
+            declared_acquisition_date: asDate(bought),
+            in_service_date: asDate(inService),
           },
           shape,
         );
       const activity = textOf(revision.declared_activity);
       if (activity === null || !SERVED_ACTIVITIES.includes(activity))
         return refuse(VALIDATION, "declared_activity_required", {}, shape);
+      // Later ledger payments the element owns: each is a payment that
+      // exists, named once.
+      const further = revision.further_acquisitions;
+      if (!Array.isArray(further)) return invalid();
+      const named = new Set<string>();
+      for (const row of further) {
+        const given = obj(row);
+        const lineage = obj(given?.lineage);
+        if (
+          !given ||
+          !lineage ||
+          !FURTHER_SHAPES.includes(String(given.shape)) ||
+          typeof lineage.observed_transaction_id !== "string"
+        )
+          return invalid();
+        const id = lineage.observed_transaction_id;
+        if (!PURCHASES.some((found) => found.transaction_id === id))
+          return refuse(
+            VALIDATION,
+            "acquisition_transaction_missing",
+            { transaction_id: id },
+            shape,
+          );
+        if (named.has(id))
+          return refuse(VALIDATION, "acquisition_row_named_twice", {}, shape);
+        named.add(id);
+      }
     } else {
       for (const name of ["observed_transaction_id", "evidence_fingerprint"])
         if (typeof acquisition[name] !== "string") return invalid();
@@ -1239,7 +1360,10 @@ export function assetOperations(tools: Tools) {
           return refuse(
             VALIDATION,
             "opening_year_before_in_service",
-            { opening_tax_year: String(through) },
+            {
+              opening_tax_year: asCount(through),
+              in_service_tax_year: asCount(inService.slice(0, 4)),
+            },
             shape,
           );
       } else if (through !== undefined && through !== null) return invalid();
@@ -1289,9 +1413,9 @@ export function assetOperations(tools: Tools) {
           VALIDATION,
           "elected_coefficient_out_of_range",
           {
-            elected: coefficient,
-            minimum: group.minimum_coefficient.decimal,
-            maximum: group.maximum_coefficient.decimal,
+            elected: asPercent(coefficient),
+            minimum: asPercent(group.minimum_coefficient.decimal),
+            maximum: asPercent(group.maximum_coefficient.decimal),
           },
           shape,
         );
@@ -1418,6 +1542,7 @@ export function assetOperations(tools: Tools) {
       record(
         element,
         "descriptor",
+        "described",
         "ledger.actividad-asset.describe",
         null,
         changes,
@@ -1493,11 +1618,19 @@ export function assetOperations(tools: Tools) {
         claim_state: year > Number(TODAY.slice(0, 4)) ? "not_due" : "missing",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition,
         service_days: days,
         calendar_days: days === null ? null : calendar,
         claims: [],
-        minimum_through: dec(fromCents(Math.min(toCents(basis), minimum))),
+        // A minimum with an earlier year unresolved is unknown, with the
+        // reason, and never a partial sum.
+        minimum_through: minimumComplete
+          ? dec(fromCents(Math.min(toCents(basis), minimum)))
+          : null,
+        minimum_reason_key: minimumComplete
+          ? null
+          : `${FINDING}minimum_unresolved`,
         minimum_complete: minimumComplete,
       };
     };
@@ -1605,6 +1738,10 @@ export function assetOperations(tools: Tools) {
         return invalid();
       taken.add(purchase.transaction_id);
     }
+    for (const row of (revision.further_acquisitions as JsonObject[]) ?? []) {
+      const id = obj(row.lineage)?.observed_transaction_id;
+      if (typeof id === "string") taken.add(id);
+    }
 
     const basis = obj(revision.basis)!;
     const election = obj(revision.amortization)!;
@@ -1643,7 +1780,16 @@ export function assetOperations(tools: Tools) {
         accumulated === null
           ? null
           : dec(fromCents(Math.max(toCents(amount) - toCents(accumulated), 0))),
-      findings: { missing: 0, incomplete: 0, conflict: 0, stale: 0 },
+      pending_applies: true,
+      findings: {
+        missing: 0,
+        incomplete: 0,
+        conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
+        stale: 0,
+      },
+      default_claim_year: null,
       disposal: null,
       years: rows
         .map((row) => row.tax_year)
@@ -1674,6 +1820,12 @@ export function assetOperations(tools: Tools) {
           group === undefined
             ? null
             : `${Number(inService.slice(0, 4)) + Number(group.maximum_period_years.decimal)}${inService.slice(4)}`,
+        maximum_period_last_day:
+          group === undefined
+            ? null
+            : dayBefore(
+                `${Number(inService.slice(0, 4)) + Number(group.maximum_period_years.decimal)}${inService.slice(4)}`,
+              ),
         ...citationsFor(kind, method),
         not_table_bound: group
           ? null
@@ -1684,6 +1836,7 @@ export function assetOperations(tools: Tools) {
           group || accumulated !== null
             ? null
             : `${ERRORS}opening_history_missing`,
+        unavailable_reason_facts: [],
       },
       events: [],
       revisions: [
@@ -1698,16 +1851,30 @@ export function assetOperations(tools: Tools) {
     record(
       element,
       "revision",
+      "created",
       "ledger.actividad-asset.create",
       inService,
       changesBetween(null, revision),
     );
-    record(element, "descriptor", "ledger.actividad-asset.describe", null, [
-      { field: "name", before: null, after: name },
-      ...(list.serial_number
-        ? [{ field: "serial_number", before: null, after: list.serial_number }]
-        : []),
-    ]);
+    record(
+      element,
+      "descriptor",
+      "described",
+      "ledger.actividad-asset.describe",
+      null,
+      [
+        { field: "name", before: null, after: name },
+        ...(list.serial_number
+          ? [
+              {
+                field: "serial_number",
+                before: null,
+                after: list.serial_number,
+              },
+            ]
+          : []),
+      ],
+    );
     return json({ ...ok, history: history(element) });
   };
 
@@ -1721,8 +1888,13 @@ export function assetOperations(tools: Tools) {
     const element = find(id);
     if (!element) return notFound(shape);
     const current = latest(element);
+    // A correction states its baja, another one or null to remove it, and
+    // leaves its number to the register: a number stated is checked and
+    // refused only when it disagrees.
+    if (!Object.hasOwn(revision, "disposal")) return invalid();
     if (
-      revision.revision_number !== element.list.revision_number + 1 ||
+      (revision.revision_number !== undefined &&
+        revision.revision_number !== element.list.revision_number + 1) ||
       revision.supersedes_revision_id !== current.revision_id
     )
       return refuse(VALIDATION, "correction_must_supersede_current", {}, shape);
@@ -1770,16 +1942,32 @@ export function assetOperations(tools: Tools) {
           stale_reason: event.claim.stale_reason ?? "revision_changed",
         };
     const number = element.list.revision_number + 1;
-    const revisionId = hex64(`revision:${JSON.stringify(revision)}`);
-    element.revisions.push({
-      revision: structuredClone(revision),
-      revision_id: revisionId,
-    });
+    const numbered: JsonObject = {
+      ...structuredClone(revision),
+      revision_number: number,
+    };
+    const revisionId = hex64(`revision:${JSON.stringify(numbered)}`);
+    element.revisions.push({ revision: numbered, revision_id: revisionId });
+    // What the record did: a baja recorded, changed or removed, which takes
+    // effect on its own day, or else a correction from the day of service.
+    const bajaKind =
+      stated !== null && bajaMoves
+        ? recorded === null
+          ? "baja_recorded"
+          : "baja_changed"
+        : stated === null && recorded !== null
+          ? "baja_removed"
+          : null;
     record(
       element,
       "revision",
+      bajaKind ?? "corrected",
       "ledger.actividad-asset.correct",
-      textOf(revision.in_service_date),
+      bajaKind === null
+        ? textOf(revision.in_service_date)
+        : bajaKind === "baja_removed"
+          ? textOf(recorded?.disposal_date)
+          : textOf(stated?.disposal_date),
       changes,
     );
     for (const row of element.rows)
@@ -1797,9 +1985,11 @@ export function assetOperations(tools: Tools) {
         old.effective = false;
         old.superseded_by = next.claim_id;
         row.claims.push(next);
+        retire(element, old.claim_id);
         record(
           element,
           "claim",
+          "claim_replaced",
           "ledger.actividad-asset.correct",
           next.covered_from,
           [
@@ -1811,11 +2001,10 @@ export function assetOperations(tools: Tools) {
           ],
           {
             record_id: next.claim_id,
-            claim: {
-              used_by: [],
+            claim: claimUse(next, row.tax_year, {
               matches_current_schedule: true,
               stale_reason: null,
-            },
+            }),
           },
         );
         restate(element, row);
@@ -1825,6 +2014,7 @@ export function assetOperations(tools: Tools) {
       element.baja = null;
       element.outOfService = null;
       element.list.disposal = null;
+      element.list.pending_applies = true;
       element.list.state = "in_service";
     }
     element.list.revision_number = number;
@@ -2058,8 +2248,8 @@ export function assetOperations(tools: Tools) {
         VALIDATION,
         "later_affectation_out_of_order",
         {
-          later_affectation_on: facts.later_affectation_on,
-          in_service_date: element.list.in_service_date,
+          later_affectation_on: asDate(facts.later_affectation_on),
+          in_service_date: asDate(element.list.in_service_date),
         },
         shape,
       );
@@ -2069,7 +2259,7 @@ export function assetOperations(tools: Tools) {
       refuse(
         VALIDATION,
         "disposal_scrapping_with_proceeds",
-        { proceeds },
+        { proceeds: asAmount(proceeds) },
         shape,
       );
     if (
@@ -2108,6 +2298,8 @@ export function assetOperations(tools: Tools) {
       reason: facts.reason,
       reason_key: `${FAMILY}disposal_reason.${facts.reason}`,
     };
+    // Nothing is left to amortize once the element has a baja.
+    element.list.pending_applies = false;
     element.rows = element.rows.filter(
       (row) => row.tax_year <= Number(facts.disposal_date.slice(0, 4)),
     );
@@ -2129,7 +2321,7 @@ export function assetOperations(tools: Tools) {
       return refuse(
         VALIDATION,
         "disposal_already_recorded",
-        { disposal_date: element.baja.disposal_date },
+        { disposal_date: asDate(element.baja.disposal_date) },
         { history: null },
       );
     judge(element, facts, { history: null });
@@ -2157,6 +2349,7 @@ export function assetOperations(tools: Tools) {
     record(
       element,
       "baja",
+      "baja_recorded",
       "ledger.actividad-asset.dispose",
       facts.disposal_date,
       changes,
@@ -2306,14 +2499,14 @@ export function assetOperations(tools: Tools) {
         : refuse(
             VALIDATION,
             "tax_year_without_edition",
-            { tax_year: String(year) },
+            { tax_year: asCount(year) },
             { forecast: null },
           );
     if (row.absence === "period_elapsed")
       return refuse(
         UNSUPPORTED,
         "amortization_period_elapsed",
-        { ended_on: element.limits.maximum_period_ends_on ?? "" },
+        { ended_on: asDate(element.limits.maximum_period_last_day ?? "") },
         { forecast: null },
       );
     if (
@@ -2446,7 +2639,7 @@ export function assetOperations(tools: Tools) {
       return refuse(
         UNSUPPORTED,
         "amortization_period_elapsed",
-        { ended_on: element.limits.maximum_period_ends_on ?? "" },
+        { ended_on: asDate(element.limits.maximum_period_last_day ?? "") },
         { claim_result: null, claim_id: null },
       );
     const supersedes = textOf(request.supersedes_claim_id);
@@ -2466,8 +2659,8 @@ export function assetOperations(tools: Tools) {
         UNSUPPORTED,
         "claim_year_beyond_registry",
         {
-          tax_year: String(given.tax_year),
-          last_admitted_year: String(LAST_ADMITTED_YEAR),
+          tax_year: asCount(given.tax_year),
+          last_admitted_year: asCount(LAST_ADMITTED_YEAR),
         },
         { claim_result: null, claim_id: null },
       );
@@ -2518,6 +2711,7 @@ export function assetOperations(tools: Tools) {
     if (target) {
       target.effective = false;
       target.superseded_by = claimId;
+      retire(element, target.claim_id);
     }
     row.claims.push(next);
     const delta =
@@ -2535,6 +2729,7 @@ export function assetOperations(tools: Tools) {
     record(
       element,
       "claim",
+      target ? "claim_replaced" : "claim_recorded",
       "ledger.actividad-asset.claim",
       next.covered_from,
       [
@@ -2546,11 +2741,10 @@ export function assetOperations(tools: Tools) {
       ],
       {
         record_id: claimId,
-        claim: {
-          used_by: [],
+        claim: claimUse(next, row.tax_year, {
           matches_current_schedule: true,
           stale_reason: null,
-        },
+        }),
       },
     );
     restate(element, row);

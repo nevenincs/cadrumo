@@ -8,6 +8,7 @@
 import {
   answer,
   fieldsFor,
+  FURTHER_PURCHASE,
   initialOf,
   type FieldContext,
   type FormDraft,
@@ -41,6 +42,9 @@ type Served = {
   acquisition_shapes: string[];
   declared_activities: string[];
   disposal_reasons: FormOptions["disposal_reasons"];
+  basis_stages: FormOptions["basis_stages"];
+  opening_statuses: FormOptions["opening_statuses"];
+  m130_periods: string[];
 };
 
 type Scenario =
@@ -89,6 +93,16 @@ const CANDIDATE: AcquisitionCandidate = {
   non_deductible_iva: { decimal: "0.00" },
   invoice_evidence_id: hex("b"),
   evidence_fingerprint: hex("c"),
+};
+
+/** The later payment the person picks for an element bought outside the
+ * ledger: the ledger's own account of it. */
+const FURTHER: AcquisitionCandidate = {
+  ...CANDIDATE,
+  transaction_id: hex("e"),
+  description: "Segundo plazo",
+  invoice_evidence_id: null,
+  evidence_fingerprint: null,
 };
 
 const optionsFor = (kind: string, served: Served): FormOptions => ({
@@ -200,6 +214,10 @@ function run(scenario: Scenario, served: Served) {
       assetId: hex("d"),
       regime: "normal",
       candidate: CANDIDATE,
+      further:
+        scenario.draft[FURTHER_PURCHASE] === FURTHER.transaction_id
+          ? FURTHER
+          : null,
       base: null,
       options,
     });

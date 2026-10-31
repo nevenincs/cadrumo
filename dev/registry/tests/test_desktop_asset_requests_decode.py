@@ -23,6 +23,7 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ActivityAssetCorrectRequest,
@@ -30,7 +31,11 @@ from cadrumo.application.actividad_asset.activity_asset_contracts import (
     ActivityAssetFilingHandoffRequest,
     ActivityAssetForecastRequest,
 )
-from cadrumo.application.actividad_asset.activity_asset_read_models import activity_asset_label_key
+from cadrumo.application.actividad_asset.activity_asset_read_models import (
+    ActivityAssetBasisStageOption,
+    ActivityAssetOpeningStatusOption,
+    activity_asset_label_key,
+)
 from cadrumo.application.actividad_asset.fact_wording import token_family
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory
 from cadrumo.application.actividad_asset.operation_dtos import (
@@ -46,7 +51,13 @@ from cadrumo.domain.renta.actividad_asset.disposal import (
 )
 from cadrumo.domain.renta.actividad_asset.election import AmortizationMethod
 from cadrumo.domain.renta.actividad_asset.election_facts import method_is_statable
-from cadrumo.domain.renta.actividad_asset.lifecycle import REGISTERABLE_ACQUISITION_SHAPES, AcquisitionShape
+from cadrumo.domain.renta.actividad_asset.lifecycle import (
+    BASIS_STAGE_FACTS,
+    OPENING_STATUS_FACTS,
+    REGISTERABLE_ACQUISITION_SHAPES,
+    AcquisitionShape,
+    AssetBasisStage,
+)
 from cadrumo.domain.renta.actividad_asset.vehicle_affectation import VehicleCategory, VehiclePrivateUse
 from dev._paths import REPO_ROOT
 
@@ -186,6 +197,15 @@ _OUTSIDE = {
     "acquisition_reference": "Factura 2024-118",
 }
 
+#: The ledger payment the form's test double offers as the later payment, as `assetRequests.ts` names it.
+_LATER_PAYMENT = "e" * 64
+
+_OUTSIDE_WITH_LATER_PAYMENT = {
+    **_OUTSIDE,
+    "further_purchase": _LATER_PAYMENT,
+    "further_shape": "split_payment",
+}
+
 
 def _offered_methods() -> list[AmortizationMethod]:
     """The methods the backend offers: those whose required facts a form can state as single values."""
@@ -214,6 +234,7 @@ _METHODS: dict[str, dict[str, str]] = {
 #: Facts the forms could not state, and the way an element comes to the register.
 _STATED: dict[str, dict[str, str]] = {
     "outside_ledger": _OUTSIDE,
+    "outside_ledger_with_later_payment": _OUTSIDE_WITH_LATER_PAYMENT,
     "whole_property_sole": _PROPERTY,
     "whole_property_fractional": {
         **_PROPERTY,
@@ -282,6 +303,20 @@ def _served() -> dict[str, Any]:
             }
             for reason in ADMITTED_DISPOSAL_REASONS
         ],
+        "basis_stages": [
+            json.loads(
+                ActivityAssetBasisStageOption(
+                    stage=stage, facts=facts, is_property=stage is AssetBasisStage.WHOLE_PROPERTY
+                ).model_dump_json()
+            )
+            for stage, facts in BASIS_STAGE_FACTS.items()
+        ],
+        "opening_statuses": [
+            json.loads(ActivityAssetOpeningStatusOption(status=status, facts=facts).model_dump_json())
+            for status, facts in OPENING_STATUS_FACTS.items()
+        ],
+        # The Modelo 130 periods come from the published registry, which no request builder reads.
+        "m130_periods": [],
     }
 
 
@@ -375,11 +410,36 @@ def test_a_correct_request_the_form_makes_decodes_and_chains_to_the_revision_it_
     request = ActivityAssetCorrectRequest.model_validate_json(
         json.dumps({"profile_id": str(uuid4()), **result["request"]}),
     )
-    second = request.revision.to_domain()
+    # The request states no number and always states its baja; the backend numbers the revision.
+    assert "revision_number" not in result["request"]["revision"]
+    assert "disposal" in result["request"]["revision"]
+    assert request.revision.revision_number is None
+    second = request.revision.to_domain(revision_number=first.revision_number + 1)
     assert second.revision_number == 2
     assert second.supersedes_revision_id == first.revision_id
     assert [claim.supersedes_claim_id for claim in request.superseding_claims] == [claim_id]
     ActivityAssetHistory().append_revision(first).append_revision(second)
+
+
+def test_a_correct_request_that_leaves_its_baja_out_is_refused_and_null_removes_it(
+    created: tuple[Path, dict[str, dict[str, Any]]],
+) -> None:
+    first = _decode_create(created[1]["linear"]).revision.to_domain()
+    base = {
+        "revision": ActivityAssetRevisionSnapshot.from_domain(first).model_dump(mode="json"),
+        "revision_id": first.revision_id,
+    }
+    result = _run(
+        created[0],
+        [{"id": "residual", "kind": "correct", "base": base, "changes": _CORRECT["residual_value"], "supersede": []}],
+    )["residual"]
+    sent = json.loads(json.dumps({"profile_id": str(uuid4()), **result["request"]}))
+    assert sent["revision"]["disposal"] is None
+    ActivityAssetCorrectRequest.model_validate_json(json.dumps(sent))
+
+    del sent["revision"]["disposal"]
+    with pytest.raises(ValidationError, match="disposal"):
+        ActivityAssetCorrectRequest.model_validate_json(json.dumps(sent))
 
 
 def _revision_of(made: dict[str, Any], name: str) -> Any:
@@ -417,6 +477,21 @@ def test_an_element_bought_outside_the_ledger_names_its_document_date_and_activi
     ledger = created[1]["linear"]["request"]["revision"]
     assert ledger["acquisition"]["observed_transaction_id"] is not None
     assert "declared_activity" not in ledger
+
+
+def test_an_element_bought_outside_the_ledger_can_own_a_later_ledger_payment(
+    created: tuple[Path, dict[str, dict[str, Any]]],
+) -> None:
+    revision = _revision_of(created[1], "outside_ledger_with_later_payment")
+
+    assert revision.acquisition_shape is AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER
+    assert revision.acquisition.observed_transaction_id is None
+    (later,) = revision.further_acquisitions
+    assert later.shape is AcquisitionShape.SPLIT_PAYMENT
+    assert later.lineage.observed_transaction_id == _LATER_PAYMENT
+    assert later.lineage.invoice_evidence_id == ""
+    assert later.lineage.evidence_fingerprint is None
+    assert revision.acquisition_transaction_ids == (_LATER_PAYMENT,)
 
 
 def test_a_whole_property_and_a_vehicle_and_the_hours_of_a_shift_reach_the_revision(
@@ -486,7 +561,7 @@ def test_a_correction_of_an_element_with_a_baja_keeps_the_baja(
     request = ActivityAssetCorrectRequest.model_validate_json(
         json.dumps({"profile_id": str(uuid4()), **result["request"]}),
     )
-    corrected = request.revision.to_domain()
+    corrected = request.revision.to_domain(revision_number=chain["current"].revision_number + 1)
 
     assert corrected.disposal == _SALE
     assert corrected.out_of_service_date == _SALE.boundary
@@ -522,7 +597,7 @@ def test_a_baja_is_changed_by_stating_another_and_removed_by_stating_none(
             json.dumps({"profile_id": str(uuid4()), **made[name]["request"]}),
         )
         assert request.superseding_claims == ()
-        return request.revision.to_domain()
+        return request.revision.to_domain(revision_number=chain["current"].revision_number + 1)
 
     changed = decoded("change")
     removed = decoded("removal")

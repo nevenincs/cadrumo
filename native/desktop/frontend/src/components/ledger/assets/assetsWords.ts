@@ -8,8 +8,12 @@
 
 import type { IconName } from "@/components/ui/icon";
 import type { Translate } from "../../../shell/strings";
-import type { AssetCounts, ReasonFact } from "../../../shell/ledgerSetup";
-import { dateText } from "../movements/movementWords";
+import type {
+  AssetCounts,
+  ListDisposal,
+  ReasonFact,
+} from "../../../shell/ledgerSetup";
+import { amountText, dateText, percentText } from "../movements/movementWords";
 
 /** The labels the tab's parts name directly. */
 export const ASSET_KEYS = {
@@ -60,7 +64,6 @@ export const ASSET_KEYS = {
       replaced_by: "desktop.ledger.assets.plan.column.replaced_by",
       period: "desktop.ledger.assets.plan.column.period",
     },
-    minimum_incomplete: "tui.ledger.activity_asset.plan_minimum_incomplete",
     claims: "desktop.ledger.assets.plan.claims",
     in_effect: "desktop.ledger.assets.plan.in_effect",
     replaced: "desktop.ledger.assets.plan.replaced",
@@ -106,6 +109,7 @@ export const ASSET_KEYS = {
     not_in_calculation: "desktop.ledger.assets.timeline.not_in_calculation",
     used_by: "desktop.ledger.assets.timeline.used_by",
     used_by_one: "desktop.ledger.assets.timeline.used_by_one",
+    claim_span: "desktop.ledger.assets.timeline.claim_span",
     effect_missing: "desktop.ledger.assets.timeline.effect_missing",
     no_changes: "desktop.ledger.assets.timeline.no_changes",
     value_changed: "desktop.ledger.assets.timeline.value_changed",
@@ -226,32 +230,47 @@ export function tokenWord(
   return said === key ? t(ASSET_KEYS.unrecognised) : said;
 }
 
-/** A fact as the person reads it: a date in the language of the interface,
- * any other value as the backend states it. */
-function factText(t: Translate, value: string): string {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value)
-    ? dateText(t.locale ?? "en", value, true)
-    : value;
+/** A fact as the person reads it, drawn by the kind the backend served with
+ * it: a date in the language of the interface, an amount to the cent, a
+ * percent as a percentage. A count, such as a tax year, and a text stand as
+ * they are, so a year never gets a thousands separator. */
+export function factText(t: Translate, fact: ReasonFact): string {
+  const locale = t.locale ?? "en";
+  switch (fact.kind) {
+    case "date":
+      return dateText(locale, fact.value, true);
+    case "amount":
+      return amountText(locale, fact.value);
+    case "percent":
+      return percentText(locale, fact.value);
+    case "count":
+    case "text":
+      return fact.value;
+  }
 }
+
+/** Whether a key is one the backend words a reason with: a refusal's own
+ * family, or one of the token families, such as a finding. */
+const inReasonFamilies = (key: string) =>
+  key.startsWith(ASSET_REASON_FAMILY) ||
+  Object.values(ASSET_FAMILY).some((family) => key.startsWith(family));
 
 /**
  * A reason in words: the catalogue sentence of the key the backend gave,
  * filled in with the facts it gave. Null where the sentence cannot be said
- * whole: no key, a key outside the reason family or that the generated strings
- * lack, or a fact the sentence needs that was not given. The caller then
- * shows its own generic word.
+ * whole: no key, a key outside the reason families or that the generated
+ * strings lack, or a fact the sentence needs that was not given. The caller
+ * then shows its own generic word.
  */
 export function reasonText(
   t: Translate,
   key: string | null,
   facts: readonly ReasonFact[] = [],
 ): string | null {
-  if (key === null || !key.startsWith(ASSET_REASON_FAMILY)) return null;
+  if (key === null || !inReasonFamilies(key)) return null;
   const said = t(
     key,
-    Object.fromEntries(
-      facts.map((fact) => [fact.key, factText(t, fact.value)]),
-    ),
+    Object.fromEntries(facts.map((fact) => [fact.key, factText(t, fact)])),
   );
   return said === key || /\{\w+\}/.test(said) ? null : said;
 }
@@ -316,6 +335,20 @@ export const fieldWord = (t: Translate, path: string) =>
 export const changeFieldWord = (t: Translate, key: string | null) =>
   wordOfKey(t, key) ?? t(ASSET_KEYS.field_other);
 
+/** The baja an element records, said by its day and its reason. */
+export function bajaText(
+  t: Translate,
+  locale: string,
+  disposal: ListDisposal,
+): string {
+  return t(ASSET_KEYS.plan.baja, {
+    date: dateText(locale, disposal.disposal_date, true),
+    reason:
+      wordOfKey(t, disposal.reason_key) ??
+      tokenWord(t, "disposal_reason", disposal.reason),
+  });
+}
+
 /** What to do when the amortization already deducted is not known: where to
  * enter it, by the word of that field. */
 export const openingRemedy = (t: Translate) =>
@@ -343,14 +376,18 @@ const COUNT = {
   missing: "desktop.ledger.assets.count.missing",
   incomplete: "desktop.ledger.assets.count.incomplete",
   conflict: "desktop.ledger.assets.count.conflict",
+  unsupported: "desktop.ledger.assets.count.unsupported",
+  without_tables: "desktop.ledger.assets.count.without_tables",
   stale: "desktop.ledger.assets.count.stale",
 } as const satisfies Record<keyof AssetCounts, string>;
 
-/** The glyph each kind of count is drawn with. */
+/** The glyph each kind of count is drawn with; no two share one. */
 export const COUNT_ICON: Record<keyof AssetCounts, IconName> = {
   missing: "alert",
   incomplete: "unknown",
   conflict: "refused",
+  unsupported: "unplug",
+  without_tables: "book",
   stale: "reset",
 };
 

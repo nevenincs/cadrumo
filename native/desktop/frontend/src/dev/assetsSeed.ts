@@ -10,10 +10,12 @@
 import type { JsonObject } from "@/shell/ledger";
 import type {
   AssetListRow,
+  BasisStageOption,
   DisposalCalculation,
   DisposalFinding,
   DisposalReasonOption,
   ElectionLimits,
+  OpeningStatusOption,
   PlanRow,
   TableGroup,
   TimelineEvent,
@@ -69,6 +71,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -96,6 +99,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "1291.59",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -116,6 +120,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -143,6 +148,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "3005.87",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -163,6 +169,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -190,6 +197,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "4720.16",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -216,6 +224,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -243,6 +252,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "6434.44",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -269,6 +279,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -280,6 +291,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "8148.73",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -306,6 +318,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -317,6 +330,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "9863.01",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -343,6 +357,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -354,6 +369,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "11577.30",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -380,6 +396,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -391,6 +408,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "13291.59",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -417,6 +435,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -428,6 +447,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "15005.87",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -446,6 +466,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -457,6 +478,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "16720.16",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
     ],
@@ -472,8 +494,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         decimal: "14",
       },
       maximum_period_ends_on: "2037-04-01",
+      maximum_period_last_day: "2037-03-31",
       not_table_bound: null,
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: "Elementos de transporte externo",
       legal_citations: [
         {
@@ -556,12 +580,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "14641.98",
       },
+      pending_applies: true,
       findings: {
         missing: 1,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
         stale: 0,
       },
+      default_claim_year: 2026,
       years: [2023, 2024, 2025, 2026],
       projected_years: [2027, 2028, 2029, 2030, 2031, 2032],
       disposal: null,
@@ -571,6 +599,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2023-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "furgoneta",
         record_id:
           "560cd54b111d30e2ced2bbefb05643bf173c17734e430c33efa12beb75d8db32",
@@ -708,6 +737,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "furgoneta",
         record_id: "descriptor:furgoneta:2",
         effect_date: null,
@@ -741,6 +771,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 3,
         recorded_at: "2023-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "furgoneta",
         record_id: "claim:furgoneta:2023:a",
         effect_date: "2023-04-01",
@@ -762,12 +793,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2023,
+          covered_from: "2023-04-01",
+          covered_through: "2023-12-31",
         },
       },
       {
         sequence: 4,
         recorded_at: "2024-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "furgoneta",
         record_id: "claim:furgoneta:2024:a",
         effect_date: "2024-01-01",
@@ -789,12 +825,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2024,
+          covered_from: "2024-01-01",
+          covered_through: "2024-12-31",
         },
       },
       {
         sequence: 5,
         recorded_at: "2025-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "furgoneta",
         record_id: "claim:furgoneta:2025:a",
         effect_date: "2025-01-01",
@@ -816,12 +857,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2025,
+          covered_from: "2025-01-01",
+          covered_through: "2025-12-31",
         },
       },
       {
         sequence: 6,
         recorded_at: "2026-07-02T08:15:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "furgoneta",
         record_id: "claim:furgoneta:2026:a",
         effect_date: "2026-01-01",
@@ -843,6 +889,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2026,
+          covered_from: "2026-01-01",
+          covered_through: "2026-06-30",
         },
       },
     ],
@@ -1036,13 +1086,14 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: null,
         service_days: null,
         calendar_days: null,
         claims: [],
-        minimum_through: {
-          decimal: "0.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1059,13 +1110,14 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: null,
         service_days: null,
         calendar_days: null,
         claims: [],
-        minimum_through: {
-          decimal: "0.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1082,13 +1134,14 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: null,
         service_days: null,
         calendar_days: null,
         claims: [],
-        minimum_through: {
-          decimal: "0.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1109,6 +1162,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2022",
           authored_filing_year: 2022,
@@ -1133,9 +1187,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "400.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1156,6 +1210,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -1180,9 +1235,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "800.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1201,6 +1256,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -1209,9 +1265,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         service_days: 366,
         calendar_days: 366,
         claims: [],
-        minimum_through: {
-          decimal: "1200.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1230,6 +1286,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -1238,9 +1295,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         service_days: 365,
         calendar_days: 365,
         claims: [],
-        minimum_through: {
-          decimal: "1600.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1259,6 +1316,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -1267,9 +1325,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         service_days: 365,
         calendar_days: 365,
         claims: [],
-        minimum_through: {
-          decimal: "2000.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
     ],
@@ -1285,8 +1343,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         decimal: "8",
       },
       maximum_period_ends_on: "2027-03-01",
+      maximum_period_last_day: "2027-02-28",
       not_table_bound: null,
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: "Equipos para procesos de información",
       legal_citations: [
         {
@@ -1362,12 +1422,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "0.00",
       },
+      pending_applies: true,
       findings: {
         missing: 0,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
         stale: 0,
       },
+      default_claim_year: null,
       years: [2022, 2023, 2024, 2025, 2026],
       projected_years: [],
       disposal: null,
@@ -1377,6 +1441,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2022-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "plotter",
         record_id:
           "a8cd7f9d5df28f6131c5ab45818b40dce38e64e727349deab86ed0d4adb9dc76",
@@ -1514,6 +1579,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "plotter",
         record_id: "descriptor:plotter:2",
         effect_date: null,
@@ -1547,6 +1613,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 3,
         recorded_at: "2022-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "plotter",
         record_id: "claim:plotter:2022:a",
         effect_date: "2022-01-01",
@@ -1568,12 +1635,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2022,
+          covered_from: "2022-01-01",
+          covered_through: "2022-12-31",
         },
       },
       {
         sequence: 4,
         recorded_at: "2023-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "plotter",
         record_id: "claim:plotter:2023:a",
         effect_date: "2023-01-01",
@@ -1595,6 +1667,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2023,
+          covered_from: "2023-01-01",
+          covered_through: "2023-12-31",
         },
       },
     ],
@@ -1833,13 +1909,14 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "edition_unavailable",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: null,
         service_days: null,
         calendar_days: null,
         claims: [],
-        minimum_through: {
-          decimal: "0.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1856,13 +1933,14 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "edition_unavailable",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: null,
         service_days: null,
         calendar_days: null,
         claims: [],
-        minimum_through: {
-          decimal: "0.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1879,13 +1957,14 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "edition_unavailable",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: null,
         service_days: null,
         calendar_days: null,
         claims: [],
-        minimum_through: {
-          decimal: "0.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1906,6 +1985,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2022",
           authored_filing_year: 2022,
@@ -1930,9 +2010,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "166.67",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -1953,6 +2033,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -1977,9 +2058,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "333.33",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -2000,6 +2081,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -2024,9 +2106,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "500.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -2047,6 +2129,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2071,9 +2154,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "666.67",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -2094,6 +2177,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2118,9 +2202,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "833.33",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -2147,6 +2231,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2155,9 +2240,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         service_days: 365,
         calendar_days: 365,
         claims: [],
-        minimum_through: {
-          decimal: "1000.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -2184,6 +2269,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2192,9 +2278,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         service_days: 366,
         calendar_days: 366,
         claims: [],
-        minimum_through: {
-          decimal: "1166.67",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -2221,6 +2307,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2229,9 +2316,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         service_days: 365,
         calendar_days: 365,
         claims: [],
-        minimum_through: {
-          decimal: "1333.33",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -2258,6 +2345,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2266,9 +2354,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         service_days: 365,
         calendar_days: 365,
         claims: [],
-        minimum_through: {
-          decimal: "1500.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -2287,6 +2375,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2295,9 +2384,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         service_days: 365,
         calendar_days: 365,
         claims: [],
-        minimum_through: {
-          decimal: "1666.67",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
     ],
@@ -2313,8 +2402,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         decimal: "18",
       },
       maximum_period_ends_on: "2037-06-01",
+      maximum_period_last_day: "2037-05-31",
       not_table_bound: null,
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: "Maquinaria",
       legal_citations: [
         {
@@ -2395,12 +2486,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "1200.00",
       },
+      pending_applies: true,
       findings: {
         missing: 0,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 3,
         stale: 0,
       },
+      default_claim_year: 2027,
       years: [2022, 2023, 2024, 2025, 2026],
       projected_years: [2027, 2028, 2029, 2030, 2031],
       disposal: null,
@@ -2410,6 +2505,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2022-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "compresor",
         record_id:
           "7127fc69e0644ada65bed7cc0b0d6a7a3b75ca98b43993765254dfa0fff56d18",
@@ -2547,6 +2643,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "compresor",
         record_id: "descriptor:compresor:2",
         effect_date: null,
@@ -2580,6 +2677,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 3,
         recorded_at: "2022-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "compresor",
         record_id: "claim:compresor:2022:a",
         effect_date: "2022-01-01",
@@ -2601,12 +2699,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2022,
+          covered_from: "2022-01-01",
+          covered_through: "2022-12-31",
         },
       },
       {
         sequence: 4,
         recorded_at: "2023-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "compresor",
         record_id: "claim:compresor:2023:a",
         effect_date: "2023-01-01",
@@ -2628,12 +2731,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2023,
+          covered_from: "2023-01-01",
+          covered_through: "2023-12-31",
         },
       },
       {
         sequence: 5,
         recorded_at: "2024-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "compresor",
         record_id: "claim:compresor:2024:a",
         effect_date: "2024-01-01",
@@ -2655,12 +2763,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2024,
+          covered_from: "2024-01-01",
+          covered_through: "2024-12-31",
         },
       },
       {
         sequence: 6,
         recorded_at: "2025-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "compresor",
         record_id: "claim:compresor:2025:a",
         effect_date: "2025-01-01",
@@ -2682,12 +2795,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2025,
+          covered_from: "2025-01-01",
+          covered_through: "2025-12-31",
         },
       },
       {
         sequence: 7,
         recorded_at: "2026-07-02T08:15:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "compresor",
         record_id: "claim:compresor:2026:a",
         effect_date: "2026-01-01",
@@ -2709,6 +2827,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2026,
+          covered_from: "2026-01-01",
+          covered_through: "2026-12-31",
         },
       },
     ],
@@ -2966,6 +3088,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2022",
           authored_filing_year: 2022,
@@ -2993,6 +3116,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "200.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -3013,6 +3137,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -3040,6 +3165,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "400.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -3066,6 +3192,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -3077,6 +3204,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "600.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -3103,6 +3231,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -3114,6 +3243,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "800.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -3127,7 +3257,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence_reason_facts: [
           {
             key: "ended_on",
-            value: "2026-01-01",
+            value: "2025-12-31",
+            kind: "date",
           },
         ],
         claimed: {
@@ -3136,6 +3267,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -3147,6 +3279,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "800.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
     ],
@@ -3162,8 +3295,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         decimal: "4",
       },
       maximum_period_ends_on: "2026-01-01",
+      maximum_period_last_day: "2025-12-31",
       not_table_bound: null,
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: "Cristalería",
       legal_citations: [
         {
@@ -3242,12 +3377,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "400.00",
       },
+      pending_applies: true,
       findings: {
         missing: 2,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
         stale: 0,
       },
+      default_claim_year: 2025,
       years: [2022, 2023, 2024, 2025, 2026],
       projected_years: [],
       disposal: null,
@@ -3257,6 +3396,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2022-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "cristaleria",
         record_id:
           "88db509d3004cfed2c0949be881afc41a18c287e85d6dbd20f3f08bb81f0e7e4",
@@ -3394,6 +3534,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "cristaleria",
         record_id: "descriptor:cristaleria:2",
         effect_date: null,
@@ -3417,6 +3558,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 3,
         recorded_at: "2022-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "cristaleria",
         record_id: "claim:cristaleria:2022:a",
         effect_date: "2022-01-01",
@@ -3438,12 +3580,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2022,
+          covered_from: "2022-01-01",
+          covered_through: "2022-12-31",
         },
       },
       {
         sequence: 4,
         recorded_at: "2023-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "cristaleria",
         record_id: "claim:cristaleria:2023:a",
         effect_date: "2023-01-01",
@@ -3465,6 +3612,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2023,
+          covered_from: "2023-01-01",
+          covered_through: "2023-12-31",
         },
       },
     ],
@@ -3690,13 +3841,14 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "edition_unavailable",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: null,
         service_days: null,
         calendar_days: null,
         claims: [],
-        minimum_through: {
-          decimal: "0.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -3717,6 +3869,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2022",
           authored_filing_year: 2022,
@@ -3741,9 +3894,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "333.33",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -3764,6 +3917,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -3788,9 +3942,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "666.67",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -3811,6 +3965,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -3835,9 +3990,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "1000.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
       {
@@ -3858,6 +4013,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -3882,9 +4038,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "1333.33",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
     ],
@@ -3900,8 +4056,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         decimal: "18",
       },
       maximum_period_ends_on: "2039-01-01",
+      maximum_period_last_day: "2038-12-31",
       not_table_bound: null,
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: "Maquinaria",
       legal_citations: [
         {
@@ -3977,12 +4135,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "3482.96",
       },
+      pending_applies: false,
       findings: {
         missing: 0,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 1,
         stale: 0,
       },
+      default_claim_year: null,
       years: [2022, 2023, 2024, 2025],
       projected_years: [],
       disposal: {
@@ -3996,6 +4158,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2022-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "camara",
         record_id:
           "1fdac19279e0acbe427bafdd6e9953d7d5e48de48848a183910eab414fda725e",
@@ -4143,6 +4306,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "camara",
         record_id: "descriptor:camara:2",
         effect_date: null,
@@ -4176,6 +4340,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 3,
         recorded_at: "2022-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "camara",
         record_id: "claim:camara:2022:a",
         effect_date: "2022-01-01",
@@ -4197,12 +4362,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2022,
+          covered_from: "2022-01-01",
+          covered_through: "2022-12-31",
         },
       },
       {
         sequence: 4,
         recorded_at: "2023-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "camara",
         record_id: "claim:camara:2023:a",
         effect_date: "2023-01-01",
@@ -4224,12 +4394,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2023,
+          covered_from: "2023-01-01",
+          covered_through: "2023-12-31",
         },
       },
       {
         sequence: 5,
         recorded_at: "2024-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "camara",
         record_id: "claim:camara:2024:a",
         effect_date: "2024-01-01",
@@ -4251,12 +4426,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2024,
+          covered_from: "2024-01-01",
+          covered_through: "2024-12-31",
         },
       },
       {
         sequence: 6,
         recorded_at: "2025-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "camara",
         record_id: "claim:camara:2025:a",
         effect_date: "2025-01-01",
@@ -4278,6 +4458,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2025,
+          covered_from: "2025-01-01",
+          covered_through: "2025-06-30",
         },
       },
     ],
@@ -4488,6 +4672,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -4515,6 +4700,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "274.59",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -4535,6 +4721,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4562,6 +4749,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "574.59",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -4588,6 +4776,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4599,6 +4788,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "874.59",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -4625,6 +4815,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4636,6 +4827,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "1174.59",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -4662,6 +4854,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4673,6 +4866,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "1474.59",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -4699,6 +4893,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4710,6 +4905,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "1774.59",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -4728,6 +4924,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4739,6 +4936,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "1800.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
     ],
@@ -4754,8 +4952,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         decimal: "6",
       },
       maximum_period_ends_on: "2030-02-01",
+      maximum_period_last_day: "2030-01-31",
       not_table_bound: null,
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: "Sistemas y programas informáticos",
       legal_citations: [
         {
@@ -4827,12 +5027,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "1110.49",
       },
+      pending_applies: true,
       findings: {
         missing: 1,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
         stale: 0,
       },
+      default_claim_year: 2026,
       years: [2024, 2025, 2026],
       projected_years: [2027, 2028, 2029, 2030],
       disposal: null,
@@ -4842,6 +5046,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2024-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "licencia",
         record_id:
           "15f70714e8eb30f1db70722c0c66f88b5427f6d7c9aef3ff75fcf32ef6f8166e",
@@ -4979,6 +5184,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "licencia",
         record_id: "descriptor:licencia:2",
         effect_date: null,
@@ -5002,6 +5208,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 3,
         recorded_at: "2024-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "licencia",
         record_id: "claim:licencia:2024:a",
         effect_date: "2024-02-01",
@@ -5023,12 +5230,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2024,
+          covered_from: "2024-02-01",
+          covered_through: "2024-12-31",
         },
       },
       {
         sequence: 4,
         recorded_at: "2025-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "licencia",
         record_id: "claim:licencia:2025:a",
         effect_date: "2025-01-01",
@@ -5050,6 +5262,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2025,
+          covered_from: "2025-01-01",
+          covered_through: "2025-12-31",
         },
       },
     ],
@@ -5232,6 +5448,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -5259,6 +5476,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "73.09",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -5279,6 +5497,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5306,6 +5525,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "198.09",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -5326,6 +5546,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5353,6 +5574,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "323.09",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -5379,6 +5601,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5390,6 +5613,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "448.09",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -5416,6 +5640,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5427,6 +5652,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "573.09",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -5445,6 +5671,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5456,6 +5683,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "698.09",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
     ],
@@ -5471,8 +5699,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         decimal: "8",
       },
       maximum_period_ends_on: "2032-06-01",
+      maximum_period_last_day: "2032-05-31",
       not_table_bound: null,
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: "Útiles y herramientas",
       legal_citations: [
         {
@@ -5546,12 +5776,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "353.83",
       },
+      pending_applies: true,
       findings: {
         missing: 0,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
         stale: 0,
       },
+      default_claim_year: 2027,
       years: [2024, 2025, 2026],
       projected_years: [2027, 2028, 2029],
       disposal: null,
@@ -5561,6 +5795,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2024-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "herramienta",
         record_id:
           "0a17aacb8134c450951172aecfa93f86d70c297854cc6d583b3b124e3379944e",
@@ -5698,6 +5933,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2024-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "herramienta",
         record_id: "claim:herramienta:2024:a",
         effect_date: "2024-06-01",
@@ -5719,12 +5955,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2024,
+          covered_from: "2024-06-01",
+          covered_through: "2024-12-31",
         },
       },
       {
         sequence: 3,
         recorded_at: "2025-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "herramienta",
         record_id: "claim:herramienta:2025:a",
         effect_date: "2025-01-01",
@@ -5746,12 +5987,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2025,
+          covered_from: "2025-01-01",
+          covered_through: "2025-12-31",
         },
       },
       {
         sequence: 4,
         recorded_at: "2026-07-02T08:15:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "herramienta",
         record_id: "claim:herramienta:2026:a",
         effect_date: "2026-01-01",
@@ -5773,6 +6019,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2026,
+          covered_from: "2026-01-01",
+          covered_through: "2026-12-31",
         },
       },
     ],
@@ -5942,6 +6192,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5969,6 +6220,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "475.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -5995,6 +6247,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6006,6 +6259,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "950.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -6032,6 +6286,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6043,6 +6298,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "1425.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -6069,6 +6325,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6080,6 +6337,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "1900.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -6098,6 +6356,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "not_due",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6109,6 +6368,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "2375.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
     ],
@@ -6124,8 +6384,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         decimal: "8",
       },
       maximum_period_ends_on: "2033-01-01",
+      maximum_period_last_day: "2032-12-31",
       not_table_bound: null,
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: "Equipos para procesos de información",
       legal_citations: [
         {
@@ -6205,12 +6467,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "2800.00",
       },
+      pending_applies: true,
       findings: {
         missing: 1,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
         stale: 1,
       },
+      default_claim_year: 2026,
       years: [2025, 2026],
       projected_years: [2027, 2028, 2029],
       disposal: null,
@@ -6220,6 +6486,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2025-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "servidor",
         record_id:
           "78d8df9f5e59d09c169c49c0e16a9734b4b053ac1dddb6681b6ac448c8a2bea3",
@@ -6357,6 +6624,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "servidor",
         record_id: "descriptor:servidor:2",
         effect_date: null,
@@ -6390,6 +6658,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 3,
         recorded_at: "2025-02-01T11:00:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "servidor",
         record_id: "claim:servidor:2025:a",
         effect_date: "2025-01-01",
@@ -6411,12 +6680,17 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: false,
           stale_reason: "revision_changed",
+          in_effect: true,
+          tax_year: 2025,
+          covered_from: "2025-01-01",
+          covered_through: "2025-12-31",
         },
       },
       {
         sequence: 4,
         recorded_at: "2026-03-02T16:40:00Z",
         kind: "revision",
+        event_kind: "corrected",
         asset_id: "servidor",
         record_id:
           "437861476814dff5dfdb02a1e63e995fb682429873c5596eb9c85ec38c1defe0",
@@ -6668,6 +6942,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key:
           "ledger.actividad_asset.errors.opening_history_missing",
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -6679,6 +6954,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "450.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -6697,6 +6973,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key:
           "ledger.actividad_asset.errors.opening_history_missing",
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -6708,6 +6985,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "900.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -6726,6 +7004,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key:
           "ledger.actividad_asset.errors.opening_history_missing",
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6737,6 +7016,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "1350.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
       {
@@ -6755,6 +7035,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key:
           "ledger.actividad_asset.errors.opening_history_missing",
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6766,6 +7047,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         minimum_through: {
           decimal: "1800.00",
         },
+        minimum_reason_key: null,
         minimum_complete: true,
       },
     ],
@@ -6775,9 +7057,11 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       minimum_coefficient: null,
       maximum_period_years: null,
       maximum_period_ends_on: null,
+      maximum_period_last_day: null,
       not_table_bound: "authority_unavailable",
       unavailable_reason_key:
         "ledger.actividad_asset.errors.opening_history_missing",
+      unavailable_reason_facts: [],
       class_label: "Resto instalaciones",
       legal_citations: [],
       legal_citations_complete: true,
@@ -6798,12 +7082,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       },
       accumulated: null,
       pending: null,
+      pending_applies: true,
       findings: {
-        missing: 4,
+        missing: 0,
         incomplete: 4,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
         stale: 0,
       },
+      default_claim_year: null,
       years: [2023, 2024, 2025, 2026],
       projected_years: [],
       disposal: null,
@@ -6813,6 +7101,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2023-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "estanteria",
         record_id:
           "d102612d27089ac5a69339bb13de2dad99bc3269bd7cce1d1482b49fccccd76d",
@@ -6950,6 +7239,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "estanteria",
         record_id: "descriptor:estanteria:2",
         effect_date: null,
@@ -7061,6 +7351,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claim_state: "claimed",
         claimable_intervals: [],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -7085,9 +7376,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             stale_reason: null,
           },
         ],
-        minimum_through: {
-          decimal: "0.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
     ],
@@ -7097,8 +7388,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       minimum_coefficient: null,
       maximum_period_years: null,
       maximum_period_ends_on: null,
+      maximum_period_last_day: null,
       not_table_bound: "free_election",
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: null,
       legal_citations: [
         {
@@ -7166,12 +7459,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "0.00",
       },
+      pending_applies: true,
       findings: {
         missing: 0,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
         stale: 0,
       },
+      default_claim_year: null,
       years: [2026],
       projected_years: [],
       disposal: null,
@@ -7181,6 +7478,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2026-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "taladro",
         record_id:
           "af334604210b0c356bbd26d6ad7608a666a8de6b661261030333d021fc8e7021",
@@ -7296,6 +7594,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "taladro",
         record_id: "descriptor:taladro:2",
         effect_date: null,
@@ -7329,6 +7628,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 3,
         recorded_at: "2026-07-02T08:15:00Z",
         kind: "claim",
+        event_kind: "claim_recorded",
         asset_id: "taladro",
         record_id: "claim:taladro:2026:a",
         effect_date: "2026-03-10",
@@ -7350,6 +7650,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           used_by: [],
           matches_current_schedule: true,
           stale_reason: null,
+          in_effect: true,
+          tax_year: 2026,
+          covered_from: "2026-03-10",
+          covered_through: "2026-12-31",
         },
       },
     ],
@@ -7498,6 +7802,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
           },
         ],
         claimable_refusal_key: null,
+        claimable_refusal_facts: [],
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -7506,9 +7811,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         service_days: null,
         calendar_days: null,
         claims: [],
-        minimum_through: {
-          decimal: "0.00",
-        },
+        minimum_through: null,
+        minimum_reason_key:
+          "ledger.actividad_asset.disposal_finding.minimum_unresolved",
         minimum_complete: false,
       },
     ],
@@ -7518,8 +7823,10 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       minimum_coefficient: null,
       maximum_period_years: null,
       maximum_period_ends_on: null,
+      maximum_period_last_day: null,
       not_table_bound: "free_election",
       unavailable_reason_key: null,
+      unavailable_reason_facts: [],
       class_label: null,
       legal_citations: [
         {
@@ -7587,12 +7894,16 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
       pending: {
         decimal: "250.00",
       },
+      pending_applies: true,
       findings: {
         missing: 1,
         incomplete: 0,
         conflict: 0,
+        unsupported: 0,
+        without_tables: 0,
         stale: 0,
       },
+      default_claim_year: 2026,
       years: [2026],
       projected_years: [],
       disposal: null,
@@ -7602,6 +7913,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 1,
         recorded_at: "2026-01-15T09:30:00Z",
         kind: "revision",
+        event_kind: "created",
         asset_id: "impresora",
         record_id:
           "b8bb0e27d52d1277a1c2f1d96970de75db557819ed4a1214ced8930c73e553f6",
@@ -7717,6 +8029,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         sequence: 2,
         recorded_at: "2026-01-20T10:05:00Z",
         kind: "descriptor",
+        event_kind: "described",
         asset_id: "impresora",
         record_id: "descriptor:impresora:2",
         effect_date: null,
@@ -8487,3 +8800,60 @@ export const TIMELINE_FACT_PATHS: readonly string[] = [
   "supplier_tax_id",
   "amount",
 ];
+
+/** The facts each basis stage states, as the form options serve them. */
+export const BASIS_STAGES: readonly BasisStageOption[] = [
+  {
+    stage: "whole_property",
+    facts: [
+      "construction_cost",
+      "land_cost",
+      "ownership_mode",
+      "ownership_share",
+      "office_area",
+      "total_area",
+    ],
+    is_property: true,
+  },
+  {
+    stage: "taxpayer_owned",
+    facts: ["business_use_share"],
+    is_property: false,
+  },
+  {
+    stage: "business_allocated",
+    facts: ["prior_allocation_provenance"],
+    is_property: false,
+  },
+];
+
+/** The facts each opening status can state, as the form options serve them. */
+export const OPENING_STATUSES: readonly OpeningStatusOption[] = [
+  {
+    status: "known",
+    facts: [
+      "accumulated_amount",
+      "amortization_method",
+      "covered_through_tax_year",
+    ],
+  },
+  {
+    status: "missing",
+    facts: [],
+  },
+];
+
+/** The Modelo 130 periods the registry serves for each tax year; none where it has no edition. */
+export const M130_PERIODS: Record<number, readonly string[]> = {
+  "2022": ["1T", "2T", "3T", "4T"],
+  "2023": ["1T", "2T", "3T", "4T"],
+  "2024": ["1T", "2T", "3T", "4T"],
+  "2025": ["1T", "2T", "3T", "4T"],
+  "2026": ["1T", "2T", "3T", "4T"],
+  "2027": ["1T", "2T", "3T", "4T"],
+  "2028": ["1T", "2T", "3T", "4T"],
+  "2029": ["1T", "2T", "3T", "4T"],
+  "2030": ["1T", "2T", "3T", "4T"],
+  "2031": ["1T", "2T", "3T", "4T"],
+  "2032": ["1T", "2T", "3T", "4T"],
+};

@@ -206,6 +206,10 @@ export const factKey = (path: readonly string[]) =>
 const PURCHASE = "primary_purchase";
 /** The shape of an element bought before the ledger began. */
 export const OUTSIDE = "acquired_outside_ledger";
+/** The later ledger payment an element bought outside the ledger owns, and
+ * what that payment is. */
+export const FURTHER_PURCHASE = "further_purchase";
+export const FURTHER_SHAPE = "further_shape";
 const SHAPE_WORD: Record<string, string> = {
   [PURCHASE]: "desktop.ledger.assets.field.shape_ledger",
   [OUTSIDE]: "desktop.ledger.assets.field.shape_outside",
@@ -676,52 +680,111 @@ function vehicleFields(context: FieldContext, draft: FormDraft): FormField[] {
   ];
 }
 
-/** The facts of the basis the stage chosen adds. */
+/** How each fact a basis stage states is drawn. Which facts a stage states
+ * is the options' to say; a served fact with no entry here cannot be drawn. */
+const BASIS_FACT: Record<string, (context: FieldContext) => FormField> = {
+  business_use_share: () =>
+    share(
+      "business_use_share",
+      "desktop.ledger.assets.field.business_use_share",
+      true,
+    ),
+  prior_allocation_provenance: () =>
+    text(
+      "prior_allocation_provenance",
+      "desktop.ledger.assets.field.allocation_provenance",
+      true,
+    ),
+  construction_cost: () =>
+    amount(
+      "construction_cost",
+      "desktop.ledger.assets.field.construction_cost",
+      true,
+    ),
+  land_cost: () =>
+    amount("land_cost", "desktop.ledger.assets.field.land_cost", true),
+  ownership_mode: (context) =>
+    choice(
+      "ownership_mode",
+      "desktop.ledger.assets.field.ownership_mode",
+      tokenChoices(context, "ownership_mode"),
+      true,
+    ),
+  ownership_share: () =>
+    share(
+      "ownership_share",
+      "desktop.ledger.assets.field.ownership_share",
+      true,
+    ),
+  office_area: () =>
+    quantity("office_area", "desktop.ledger.assets.field.office_area", true),
+  total_area: () =>
+    quantity("total_area", "desktop.ledger.assets.field.total_area", true),
+};
+
+/** How each fact an opening history states is drawn, by the name the options
+ * serve it under; the method is chosen among the methods offered. */
+const OPENING_FACT: Record<
+  string,
+  (methods: readonly FieldChoice[]) => FormField
+> = {
+  accumulated_amount: () =>
+    amount(
+      "opening_amount",
+      "desktop.ledger.assets.field.opening_amount",
+      true,
+    ),
+  covered_through_tax_year: () => ({
+    ...whole("opening_through", "desktop.ledger.assets.field.opening_through"),
+    hint_key: "desktop.ledger.form.year_hint",
+  }),
+  amortization_method: (methods) =>
+    choice("opening_method", "desktop.ledger.assets.field.opening_method", [
+      ...methods,
+    ]),
+};
+
+/** The names of the basis and opening facts the options serve that the form
+ * has no control for. */
+export const undrawableFacts = (options: FormOptions | null): string[] => [
+  ...new Set([
+    ...(options?.basis_stages ?? [])
+      .flatMap((stage) => stage.facts)
+      .filter((name) => !Object.hasOwn(BASIS_FACT, name)),
+    ...(options?.opening_statuses ?? [])
+      .flatMap((status) => status.facts)
+      .filter((name) => !Object.hasOwn(OPENING_FACT, name)),
+  ]),
+];
+
+/** The facts of the basis the stage chosen states, as the options serve them. */
 function basisFields(context: FieldContext, stage: string): FormField[] {
-  if (stage === "taxpayer_owned")
-    return [
-      share(
-        "business_use_share",
-        "desktop.ledger.assets.field.business_use_share",
-        true,
-      ),
-    ];
-  if (stage === "business_allocated")
-    return [
-      text(
-        "prior_allocation_provenance",
-        "desktop.ledger.assets.field.allocation_provenance",
-        true,
-      ),
-    ];
-  if (stage === "whole_property")
-    return [
-      amount(
-        "construction_cost",
-        "desktop.ledger.assets.field.construction_cost",
-        true,
-      ),
-      amount("land_cost", "desktop.ledger.assets.field.land_cost", true),
-      choice(
-        "ownership_mode",
-        "desktop.ledger.assets.field.ownership_mode",
-        tokenChoices(context, "ownership_mode"),
-        true,
-      ),
-      share(
-        "ownership_share",
-        "desktop.ledger.assets.field.ownership_share",
-        true,
-      ),
-      quantity("office_area", "desktop.ledger.assets.field.office_area", true),
-      quantity("total_area", "desktop.ledger.assets.field.total_area", true),
-      date(
-        "building_construction_date",
-        "desktop.ledger.assets.field.building_construction_date",
-      ),
-    ];
-  return [];
+  const served =
+    context.options?.basis_stages.find((found) => found.stage === stage)
+      ?.facts ?? [];
+  return served.flatMap((name) =>
+    Object.hasOwn(BASIS_FACT, name) ? [BASIS_FACT[name]!(context)] : [],
+  );
 }
+
+/** The facts of the opening history the status chosen can state. */
+function openingFields(
+  context: FieldContext,
+  status: string,
+  methods: readonly FieldChoice[],
+): FormField[] {
+  const served =
+    context.options?.opening_statuses.find((found) => found.status === status)
+      ?.facts ?? [];
+  return served.flatMap((name) =>
+    Object.hasOwn(OPENING_FACT, name) ? [OPENING_FACT[name]!(methods)] : [],
+  );
+}
+
+/** The shapes a later ledger payment of an element bought outside the ledger
+ * can take. The options list only the shapes an element is registered under,
+ * so these two are not served. */
+const FURTHER_SHAPES: readonly string[] = ["split_payment", "ancillary_cost"];
 
 /** The facts of the revision an element or a correction states. Which of them
  * are drawn follows what the typed text already says. */
@@ -745,7 +808,6 @@ function revisionFields(
   if (kept !== null && !offered.some((found) => found.token === kept))
     offered.push({ token: kept, family: "method" });
   const said = (key: string) => draft[key] ?? "";
-  const known = said("opening_status") === "known";
   const outside = said("acquisition_shape") === OUTSIDE;
   return [
     ...(creating
@@ -791,6 +853,27 @@ function revisionFields(
                   "desktop.ledger.assets.field.acquisition_reference",
                   true,
                 ),
+                {
+                  ...field(
+                    "candidate",
+                    FURTHER_PURCHASE,
+                    "desktop.ledger.assets.field.further_purchase",
+                  ),
+                  hint_key: "desktop.ledger.assets.field.further_purchase_hint",
+                },
+                ...(said(FURTHER_PURCHASE) === ""
+                  ? []
+                  : [
+                      choice(
+                        FURTHER_SHAPE,
+                        "desktop.ledger.assets.field.further_shape",
+                        FURTHER_SHAPES.map((token): FieldChoice => ({
+                          token,
+                          family: "acquisition_shape",
+                        })),
+                        true,
+                      ),
+                    ]),
               ]
             : [
                 field(
@@ -808,10 +891,22 @@ function revisionFields(
       tokenChoices(context, "acquired_condition"),
       true,
     ),
+    // The date the building was built is a fact of an element bought used.
+    ...(said("acquired_condition") === "used"
+      ? [
+          date(
+            "building_construction_date",
+            "desktop.ledger.assets.field.building_construction_date",
+          ),
+        ]
+      : []),
     choice(
       "basis_stage",
       "desktop.ledger.assets.field.basis_stage",
-      tokenChoices(context, "basis_stage"),
+      (context.options?.basis_stages ?? []).map(({ stage }): FieldChoice => ({
+        token: stage,
+        family: "basis_stage",
+      })),
       true,
     ),
     amount("basis_amount", "desktop.ledger.assets.field.basis", true),
@@ -828,30 +923,15 @@ function revisionFields(
     choice(
       "opening_status",
       "desktop.ledger.assets.field.opening_status",
-      tokenChoices(context, "opening_history_status"),
+      (context.options?.opening_statuses ?? []).map(
+        ({ status }): FieldChoice => ({
+          token: status,
+          family: "opening_history_status",
+        }),
+      ),
       true,
     ),
-    ...(known
-      ? [
-          amount(
-            "opening_amount",
-            "desktop.ledger.assets.field.opening_amount",
-            true,
-          ),
-          {
-            ...whole(
-              "opening_through",
-              "desktop.ledger.assets.field.opening_through",
-            ),
-            hint_key: "desktop.ledger.form.year_hint",
-          },
-          choice(
-            "opening_method",
-            "desktop.ledger.assets.field.opening_method",
-            methods,
-          ),
-        ]
-      : []),
+    ...openingFields(context, said("opening_status"), methods),
     choice("method", "desktop.ledger.assets.field.method", offered, true),
     ...methodFacts(context, draft),
     ...vehicleFields(context, draft),

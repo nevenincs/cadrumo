@@ -47,6 +47,7 @@ def _enum_families() -> dict[str, type[Enum]]:
         ActivityAssetNotTableBoundReason,
         ActivityAssetPlanAdvisoryKind,
         ActivityAssetRegisterState,
+        ActivityAssetTimelineEventKind,
     )
     from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence
     from cadrumo.domain.renta.actividad_asset.disposal import (
@@ -61,10 +62,7 @@ def _enum_families() -> dict[str, type[Enum]]:
         OriginalPriceDetermination,
     )
     from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
-    from cadrumo.domain.renta.actividad_asset.register_records import (
-        AcquisitionDocumentKind,
-        ActivityAssetEventKind,
-    )
+    from cadrumo.domain.renta.actividad_asset.register_records import AcquisitionDocumentKind
 
     return {
         f"{ASSET_NAMESPACE}asset_kind.": AssetKind,
@@ -74,7 +72,7 @@ def _enum_families() -> dict[str, type[Enum]]:
         f"{ASSET_NAMESPACE}digit_order.": DigitOrder,
         f"{ASSET_NAMESPACE}disposal_reason.": ActivityAssetDisposalReason,
         f"{ASSET_NAMESPACE}document_kind.": AcquisitionDocumentKind,
-        f"{ASSET_NAMESPACE}event_kind.": ActivityAssetEventKind,
+        f"{ASSET_NAMESPACE}event_kind.": ActivityAssetTimelineEventKind,
         f"{ASSET_NAMESPACE}method.": AmortizationMethod,
         f"{ASSET_NAMESPACE}{NON_DEDUCTIBLE_IVA_STATE_FAMILY}.": ActivityAssetNonDeductibleIvaState,
         f"{ASSET_NAMESPACE}not_table_bound.": ActivityAssetNotTableBoundReason,
@@ -140,7 +138,6 @@ ASSET_ENUM_FAMILIES: Final[Mapping[str, type[Enum]]] = MappingProxyType(_enum_fa
 ASSET_SHARED_KEYS: Final[frozenset[str]] = frozenset(
     {
         "tui.ledger.activity_asset.plan_minimum",
-        "tui.ledger.activity_asset.plan_minimum_incomplete",
     }
 )
 

@@ -1383,7 +1383,6 @@ desktop:
       column:
         amount: Amount
         casilla: Casilla
-        target: Declaration
         unavailable: Not worked out
       correct:
         claim_item: '{year} · {amount} · {from} – {until}'
@@ -1396,6 +1395,9 @@ desktop:
         incomplete: 'Years that cannot be worked out, all years: {count}'
         missing: 'Years without a dotación, all years: {count}'
         stale: 'Dotaciones that no longer match the schedule, all years: {count}'
+        unsupported: 'Years under a method Cadrumo doesn''t support yet, all years:
+          {count}'
+        without_tables: 'Years with no official tables, all years: {count}'
       detail:
         baja_reason: Reason for the baja
         close: Close
@@ -1434,6 +1436,10 @@ desktop:
         disposal_reason: Reason
         document_kind: Document kind
         document_number: Document number
+        further_purchase: Later payment from this ledger (optional)
+        further_purchase_hint: A payment you booked here after buying it elsewhere,
+          such as an instalment.
+        further_shape: What this payment is
         in_service_date: In service from
         kind: Kind
         land_cost: Cost of the land
@@ -1595,15 +1601,11 @@ desktop:
         correct: Save the correction
         create: Create the asset
         forecast: Work out the dotación
-      target:
-        intangible_m100: Modelo 100 · intangible
-        intangible_m130: Modelo 130 · intangible
-        material_m100: Modelo 100 · tangible
-        material_m130: Modelo 130 · tangible
       timeline:
         change_added: '{field}: {after}'
         change_cleared: '{field}: {before} removed'
         change_to: to
+        claim_span: 'Dotación for {year}: {from} to {through}'
         column:
           changes: Changes
           effect: Effective date
@@ -5126,10 +5128,14 @@ ledger:
         be measured from calendar-year averages.
       workforce_year_not_declared: The average workforce of %{year} is not declared.
     event_kind:
-      baja: Disposal recorded
-      claim: Depreciation recorded
-      descriptor: Description added
-      revision: Tax facts recorded
+      baja_changed: Baja changed
+      baja_recorded: Baja recorded
+      baja_removed: Baja removed
+      claim_recorded: Dotación recorded
+      claim_replaced: Dotación replaced
+      corrected: Details corrected
+      created: Added to the register
+      described: Description updated
     field:
       acquired_condition: Condition when acquired
       acquisition:
@@ -9385,8 +9391,6 @@ workspace:
       lead: These do not stop the file. They say what the dotaciones of your assets
         leave out, so you can decide what to add.
       title: Worth knowing before you file
-      unworded: The calculation noted something about your assets that cannot be shown
-        here.
     operation:
       calculated: Calculated. {direction} {value}.
       checked:

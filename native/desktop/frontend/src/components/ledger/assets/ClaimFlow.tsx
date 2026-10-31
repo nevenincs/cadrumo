@@ -55,8 +55,9 @@ const NO_CLAIMS: readonly PlanClaim[] = [];
 /**
  * Records a year's dotación in two steps: the forecast first, which works
  * out the span and records nothing, then the dotación itself. The year
- * starts on the plan's latest year that can still take one, and the person
- * can choose another of the plan's years. The span starts from what the plan
+ * starts on the year the register names for the element, or on the year of
+ * the dotación being corrected, and the person can choose another of the
+ * plan's years. The span starts from what the plan
  * says is still open, or from the dotación being replaced; its first and last
  * day can be changed, and the last day is sent as typed. The forecast the
  * backend serves is the one claimed, unchanged. A dotación that meets another is refused with the
@@ -97,11 +98,8 @@ export function ClaimFlow({
   );
   const rows = plan.read?.kind === "done" ? plan.read.result.rows : null;
   const years = (rows ?? []).map((found) => found.tax_year);
-  // The latest year that can still take a dotación, else the latest year.
-  const latestOpen = [...(rows ?? [])]
-    .reverse()
-    .find((found) => found.claimable_intervals.length > 0);
-  const year = chosenYear ?? latestOpen?.tax_year ?? years.at(-1) ?? taxYear;
+  // The year the register opens a dotación on, else the page's year.
+  const year = chosenYear ?? asset.row?.default_claim_year ?? taxYear;
   const row = rows?.find((found) => found.tax_year === year) ?? null;
   const effective = (row?.claims ?? NO_CLAIMS).filter(
     (claim) => claim.effective,

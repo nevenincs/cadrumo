@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac73de00f6e1e7ce67ac10799b2e78176f2fecc41dca71c8aced76730c72c6be'
+body_hash: 'sha256:49b94bcd32b1ba99d7806c6e9873d0dd86994ba62b3f4722c3af3cba5ac03ee5'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -291,6 +291,14 @@ related:
 - `S07` `M` `native/desktop/frontend/src/components/ledger/assets/StockPane.tsx`
 - `S07` `M` `native/desktop/frontend/src/components/ledger/assets/YearStepper.tsx`
 - `S07` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/assets/handoffWords.ts`
+- `S07` `M` `dev/locales/desktop_assets_keys.py`
+- `S07` `M` `dev/locales/tests/test_desktop_asset_vocabulary.py`
+- `S07` `M` `dev/registry/tests/test_desktop_asset_seed_follows_the_table.py`
+- `S07` `verify:` `npx tsc --noEmit` -> `pass`
+- `S07` `verify:` `ledger-assets-contract.spec.ts` -> `pass`
+- `S07` `verify:` `ledger-setup and ledger-shell scenarios` -> `pass`
+- `S07` `verify:` `pytest decode, seed and locale vocabulary tests` -> `pass`
 
 ## Notes
 

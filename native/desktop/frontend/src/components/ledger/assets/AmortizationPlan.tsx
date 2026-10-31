@@ -28,6 +28,7 @@ import type {
 import { Hint, NotApplicable, NotKnown, NothingRecorded } from "./AssetList";
 import {
   ASSET_KEYS,
+  bajaText,
   reasonText,
   refusalText,
   fieldWord,
@@ -35,7 +36,6 @@ import {
   openingRemedy,
   stateIcon,
   tokenWord,
-  wordOfKey,
 } from "./assetsWords";
 import {
   absenceNotApplicable,
@@ -558,9 +558,9 @@ function Limits({
             })}
           </Fact>
         )}
-        {limits.maximum_period_ends_on !== null && (
+        {limits.maximum_period_last_day !== null && (
           <Fact label={t(text.ends_on)}>
-            {dateText(locale, limits.maximum_period_ends_on, true)}
+            {dateText(locale, limits.maximum_period_last_day, true)}
           </Fact>
         )}
       </dl>
@@ -783,20 +783,12 @@ function PlanTable({
                     <Figure
                       locale={locale}
                       amount={planned.minimum_through}
-                      why={t(ASSET_KEYS.plan.minimum_missing)}
-                      absent={
-                        planned.minimum_complete
-                          ? null
-                          : t(ASSET_KEYS.plan.minimum_incomplete)
+                      why={
+                        reasonText(t, planned.minimum_reason_key) ??
+                        t(ASSET_KEYS.plan.minimum_missing)
                       }
                       estimatedYear={estimated ? planned.tax_year : undefined}
                     />
-                    {!planned.minimum_complete &&
-                      planned.minimum_through !== null && (
-                        <span className="block text-xs text-muted-foreground">
-                          {t(ASSET_KEYS.plan.minimum_incomplete)}
-                        </span>
-                      )}
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     <Days planned={planned} />
@@ -913,12 +905,7 @@ export function AmortizationPlan({
       {disposal !== null && (
         <p className="ledger-assets-baja flex items-center gap-1.5 border-b px-3 py-2 text-sm">
           <Icon name="archive" size="xs" className="shrink-0" />
-          {t(ASSET_KEYS.plan.baja, {
-            date: dateText(locale, disposal.disposal_date, true),
-            reason:
-              wordOfKey(t, disposal.reason_key) ??
-              tokenWord(t, "disposal_reason", disposal.reason),
-          })}
+          {bajaText(t, locale, disposal)}
         </p>
       )}
       <PlanTable
