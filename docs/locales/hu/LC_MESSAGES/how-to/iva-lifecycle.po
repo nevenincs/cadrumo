@@ -395,9 +395,9 @@ msgid ""
 msgstr ""
 "Végigvitted ugyanazt az adózót egy teljes IVA-éven: egy egyszer megadott "
 "nyitó tárcaegyenlegen, egy fizetéses negyedéven, egy követeléses "
-"negyedéven, amelynek compensaciónja átkerült a következő bevallásba, egy "
-"opcionális összesítő ágon, és egy éves összesítőn, amely egyezett a saját"
-" nyilvántartásodban szereplő négy negyedévvel."
+"negyedéven, amelynek IVA-kompenzációs egyenlege átkerült a következő "
+"bevallásba, egy opcionális összesítő ágon, és egy éves összesítőn, amely "
+"egyezett a saját nyilvántartásodban szereplő négy negyedévvel."
 
 #: ../../how-to/iva-lifecycle.md:155
 msgid "Next steps"

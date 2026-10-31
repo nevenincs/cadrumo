@@ -368,7 +368,7 @@ msgid ""
 "online portal."
 msgstr ""
 "Rögzíts egy alta, modificación vagy baja bejelentést, amelyet az AEAT "
-"sedéjén nyújtottál be."
+"portálján nyújtottál be."
 
 #: ../../how-to/index.md:221
 msgid "Modelo 100 (Renta)"

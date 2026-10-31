@@ -312,9 +312,8 @@ msgid ""
 msgstr ""
 "Hozd létre a piszkozatot. A parancs létrehozza az adott modelóhoz tartozó"
 " bevallást, ha még nem létezik; újbóli futtatásakor a meglévő bevallást "
-"adja vissza. A `--period 1T` az első negyedévet jelenti (primer "
-"trimestre). A további negyedévek időszakkódjai `2T`, `3T`, `4T`, az éves "
-"benyújtásé pedig `0A`."
+"adja vissza. A `--period 1T` az első negyedévet jelenti. A további "
+"negyedévek időszakkódjai `2T`, `3T`, `4T`, az éves benyújtásé pedig `0A`."
 
 #: ../../how-to/quickstart.md:149
 msgid ""
