@@ -26,7 +26,7 @@ from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model, selector_as_dict
 from .binding_temporal import BindingTemporalSelector, SameTargetContext
-from .form_codes import resolve_form_codes_leased
+from .form_codes import resolve_form_codes
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition
@@ -80,7 +80,7 @@ def validate_inventory_binding(binding: BindingDefinition) -> list[str]:
     failures = selector_against_model(binding, InventoryProvider)
     if not failures:
         selector = InventoryProvider.model_validate(selector_as_dict(binding))
-        expected = resolve_form_codes_leased("form-row-codes").code(f"m100.inventory.{selector.row_field}")
+        expected = resolve_form_codes("form-row-codes").code(f"m100.inventory.{selector.row_field}")
         if selector.target_casilla_id != expected:
             failures.append(
                 f"inventory operation {selector.row_field!r} must target casilla {expected!r}, "

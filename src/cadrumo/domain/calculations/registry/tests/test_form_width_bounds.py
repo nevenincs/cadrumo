@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 from pydantic import BaseModel, ValidationError
 
@@ -16,14 +18,20 @@ from ....transactions.m210_income_classification import M210IncomeClassification
 from ..authority import bundled_indexed_authority
 from ..detail_record_bindings import AtributionMemberObservation
 from ..errors import RegistryValidationError
-from ..form_codes import require_form_fit, require_form_width, resolve_form_codes_leased
+from ..form_codes import require_form_fit, require_form_width, resolve_form_codes
 from ..withholding_bindings import WithholdingObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
+
+
 def _declared(key: str) -> int:
-    return int(resolve_form_codes_leased("form-row-codes").code(key))
+    return int(resolve_form_codes("form-row-codes").code(key))
 
 
 def _refused_field(model: type[BaseModel], field: str, value: object) -> bool:
@@ -81,13 +89,10 @@ def test_an_ascendant_past_the_declared_descendant_count_is_refused() -> None:
     ],
 )
 def test_a_software_identifier_of_another_width_is_refused(field: str, key: str) -> None:
-    with bundled_indexed_authority().operation():
-        identity = development_mock_software_identity()
-        assert len(getattr(identity, field)) == _declared(key)
-        with pytest.raises(ValidationError):
-            AeatProductSoftwareIdentity.model_validate(
-                {**dict(identity), field: getattr(identity, field) + "0"},
-            )
+    identity = development_mock_software_identity()
+    assert len(getattr(identity, field)) == _declared(key)
+    with pytest.raises(ValidationError):
+        AeatProductSoftwareIdentity.model_validate({**dict(identity), field: getattr(identity, field) + "0"})
 
 
 def test_a_perceptor_scope_subclave_of_another_width_is_refused() -> None:
@@ -98,7 +103,7 @@ def test_a_perceptor_scope_subclave_of_another_width_is_refused() -> None:
 
 
 def test_a_prorrata_cnae_of_another_width_is_refused() -> None:
-    widths = resolve_form_codes_leased("form-row-codes").codes("m303.prorrata.cnae_digits")
+    widths = resolve_form_codes("form-row-codes").codes("m303.prorrata.cnae_digits")
     for width in widths:
         assert not _refused_field(ProrrataActivityRow, "cnae_code", "1" * int(width))
     assert _refused_field(ProrrataActivityRow, "cnae_code", "1" * (max(int(width) for width in widths) + 1))

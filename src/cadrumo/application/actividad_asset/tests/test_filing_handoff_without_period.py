@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import replace
 from datetime import date
 from decimal import Decimal
@@ -32,12 +33,21 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
     ScheduledAmortizationCharge,
 )
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..schedule_walk import M100GapKind
 from .ledger_support import MemoryLedger
 from .operations_support import ACQUISITION, build_forecast, build_operations, build_revision
 from .register_support import MemoryRepository, memory_register_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _AUTHORITY = {"logical_generation": "a" * 64, "reader_incarnation": "b" * 64}
 

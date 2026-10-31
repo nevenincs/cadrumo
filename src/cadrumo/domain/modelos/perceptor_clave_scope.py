@@ -26,7 +26,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period, StandardPeriodCode
 from ..calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.form_codes import resolve_form_codes_leased
+from ..calculations.registry.form_codes import resolve_form_codes
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.schema import ModeloRevision
@@ -64,7 +64,7 @@ class ClaveScopeToken:
 
 
 def _subclave_widths() -> frozenset[str]:
-    return resolve_form_codes_leased("form-row-codes").codes("perceptor.subclave_digits")
+    return resolve_form_codes("form-row-codes").codes("perceptor.subclave_digits")
 
 
 @dataclass(frozen=True, slots=True)

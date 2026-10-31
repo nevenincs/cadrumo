@@ -9,6 +9,7 @@ own placeholders, so a sentence added to the family is covered without a new row
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from string import Formatter
 from typing import cast
@@ -18,7 +19,7 @@ import pytest
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from ....core.i18n.render import lookup_translation
 from ....domain.calculations.registry.actividad_asset_disposal_bindings import activity_asset_disposal_route_casillas
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     activity_asset_amortization_casillas,
 )
@@ -35,6 +36,14 @@ from ..work_form_issue_lines import form_issue_lines
 from .test_work_form_gate_agreement import _checked_form, _revision, _work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None, "the published authority declares no support envelope"

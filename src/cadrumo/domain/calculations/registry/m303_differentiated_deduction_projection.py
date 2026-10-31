@@ -21,7 +21,7 @@ from ....core.prorrata_register import ProrrataRegisterRegime
 from ...bienes_inversion.register import RegistroRegularizacionResult
 from ...prorrata_register.register import ProrrataRegister
 from .errors import RegistryValidationError
-from .form_codes import resolve_form_codes_leased
+from .form_codes import exceeds_form_bound, resolve_form_codes
 from .iva_deduction_catalogue import is_iva_deduction_kind, iva_deduction_fact_kinds
 from .prorrata_register_catalogue import regime_apportions_deduction
 
@@ -64,7 +64,7 @@ class M303DifferentiatedDeductionRowProjection(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _slot_is_a_declared_row(cls, slot: int) -> int:
-        if slot > int(resolve_form_codes_leased("form-row-codes").code("m303.differentiated.row_slots")):
+        if exceeds_form_bound(slot, "m303.differentiated.row_slots"):
             raise RegistryValidationError(f"differentiated deduction slot {slot} is past the form's declared rows")
         return slot
 
@@ -117,7 +117,7 @@ def _sector_ids(register: ProrrataRegister) -> tuple[str, ...]:
     definitions = register.sector_definitions
     if not definitions:
         return ()
-    row_slots = int(resolve_form_codes_leased("form-row-codes").code("m303.differentiated.row_slots"))
+    row_slots = int(resolve_form_codes("form-row-codes").code("m303.differentiated.row_slots"))
     if len(definitions) != row_slots:
         raise RegistryValidationError(f"modelo 303 differentiated deductions require exactly {row_slots} sectors")
     return tuple(item.sector_id for item in definitions)
@@ -281,7 +281,7 @@ def _endpoint_matrix(
                 f"duplicate differentiated deduction projection reference {ref.slot}/{ref.field.value}",
             )
         resolved[ref.slot][ref.field] = ref
-    row_slots = int(resolve_form_codes_leased("form-row-codes").code("m303.differentiated.row_slots"))
+    row_slots = int(resolve_form_codes("form-row-codes").code("m303.differentiated.row_slots"))
     expected = {slot: set(_FIELDS) for slot in range(1, row_slots + 1)}
     if {slot: set(fields) for slot, fields in resolved.items()} != expected:
         raise RegistryValidationError(

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from datetime import UTC, date, datetime
@@ -30,6 +30,7 @@ from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ...aggregation.counterpart import CounterpartObservation
 from ...aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -72,6 +73,14 @@ from ..aggregate_request import ModeloAggregateOperationRequest
 from .withholding_window_operation_test_support import WithholdingWindowServiceFixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")

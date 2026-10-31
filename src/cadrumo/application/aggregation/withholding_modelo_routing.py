@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from ...core.modelo import Modelo
-from ...domain.calculations.registry.form_codes import FormCodes, resolve_form_codes_leased
+from ...domain.calculations.registry.form_codes import form_codes_in_scope, FormCodes, resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from .withholding_recognition import WithholdingIncomeKind
 
@@ -50,7 +50,7 @@ class AnnualWithholdingComposition:
 
 
 def _routing(authority: GovernedFactSource | None = None) -> FormCodes:
-    return resolve_form_codes_leased(_ROUTING_FACT, authority=authority)
+    return resolve_form_codes(_ROUTING_FACT, authority=authority)
 
 
 def periodic_withholding_modelos(*, authority: GovernedFactSource | None = None) -> tuple[str, ...]:
@@ -79,8 +79,11 @@ def invoice_evidence_modelos() -> frozenset[str]:
 
 
 def require_invoice_evidence_modelo(value: str) -> str:
-    """Return ``value`` when a received invoice can evidence withholding on it, else refuse."""
-    if value not in invoice_evidence_modelos():
+    """Return ``value`` unless the scope's routing says a received invoice cannot evidence it.
+
+    The wire models validate with this, and a client reading a result holds no authority.
+    """
+    if form_codes_in_scope(_ROUTING_FACT) is not None and value not in invoice_evidence_modelos():
         raise ValueError(f"a received invoice evidences no withholding on modelo {value!r}")
     return value
 

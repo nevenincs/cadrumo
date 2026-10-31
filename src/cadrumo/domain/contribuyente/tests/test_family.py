@@ -2,14 +2,23 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..family_profile import RentaFamilyProfile
 from ..family_types import RentaAscendantProfile, RentaDescendantProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def test_renta_family_profile_round_trips_descendants_and_ascendants() -> None:
@@ -62,5 +71,5 @@ def test_renta_family_member_tax_id_rejects_blank_via_the_checksum_validator() -
 def test_renta_ascendant_cohabiting_descendant_count_follows_dictionary_range() -> None:
     # The declared bound is read from the registry at the parse boundary.
     invalid_count: int = 11
-    with pytest.raises(ValueError, match=r"must be at most 10"):
+    with pytest.raises(ValueError, match=r"past the declared bound"):
         RentaAscendantProfile(birth_date=date(1940, 1, 1), cohabiting_descendant_count=invalid_count)

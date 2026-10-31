@@ -14,7 +14,7 @@ from ....core.filing_projection_ref import (
 )
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
-from .form_codes import resolve_form_codes_leased
+from .form_codes import resolve_form_codes
 
 if TYPE_CHECKING:
     from ...modelos.calculation_revision_m303_evidence import (
@@ -110,7 +110,7 @@ def _validate_projection_refs(refs: tuple[_ExoneradoProjectionRef, ...]) -> tupl
                 field=field,
             )
             for slot in range(
-                1, int(resolve_form_codes_leased("form-row-codes").code("m303.exonerado_390.activity_slots")) + 1
+                1, int(resolve_form_codes("form-row-codes").code("m303.exonerado_390.activity_slots")) + 1
             )
             for field in M303Exonerado390ActivityField
         ),

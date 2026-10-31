@@ -19,7 +19,7 @@ from ...core.filing_projection_ref import M303_MESA_FACTS, M303_REPEATING_FACTS,
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.registry_token import StrictRegistryToken
-from ..calculations.registry.form_codes import resolve_form_codes_leased
+from ..calculations.registry.form_codes import exceeds_form_bound, form_codes_in_scope, resolve_form_codes
 from ..filing_evidence import FilingEvidenceReference
 from .errors import IvaValidationError
 from .schema import validate_orden_module_identities
@@ -312,8 +312,12 @@ class HechoActividadSimplificado(BaseModel):
             raise IvaValidationError("a Mesa simplified-regime fact requires sub_index")
         if self.fact not in M303_REPEATING_FACTS and self.sub_index is not None:
             raise IvaValidationError("a singleton simplified-regime fact must not carry sub_index")
-        declared = resolve_form_codes_leased("form-row-codes").codes("m303.dp30302.sub_indices")
-        if self.sub_index is not None and str(self.sub_index) not in declared:
+        codes = form_codes_in_scope()
+        if (
+            self.sub_index is not None
+            and codes is not None
+            and str(self.sub_index) not in codes.codes("m303.dp30302.sub_indices")
+        ):
             raise IvaValidationError("sub_index is not a row the DP30302 record declares")
         return self
 
@@ -388,7 +392,7 @@ class ActividadNoAgricolaSimplificado(BaseModel):
     def _modules_fit_the_declared_rows(
         cls, modulos: tuple[EntradaModuloSimplificado, ...]
     ) -> tuple[EntradaModuloSimplificado, ...]:
-        if len(modulos) > int(resolve_form_codes_leased("form-row-codes").code("m303.orden.modules_per_activity")):
+        if exceeds_form_bound(len(modulos), "m303.orden.modules_per_activity"):
             raise IvaValidationError("an activity holds more modules than the record declares")
         return modulos
 
@@ -426,9 +430,9 @@ class RegimenSimplificadoFilingRows(BaseModel):
             "simplified-regime activity identities must be unique",
         )
         agricultural, non_agricultural = _activities_by_kind(self.activities)
-        per_kind = int(resolve_form_codes_leased("form-row-codes").code("m303.dp30302.activities_per_kind"))
-        if len(agricultural) > per_kind or len(non_agricultural) > per_kind:
-            raise IvaValidationError(f"DP30302 permits at most {per_kind} activities of each kind")
+        key = "m303.dp30302.activities_per_kind"
+        if exceeds_form_bound(len(agricultural), key) or exceeds_form_bound(len(non_agricultural), key):
+            raise IvaValidationError("DP30302 permits fewer activities of each kind")
         if self.activities != agricultural + non_agricultural:
             raise IvaValidationError("activities must be ordered agricultural then non-agricultural")
         return self
@@ -436,7 +440,7 @@ class RegimenSimplificadoFilingRows(BaseModel):
     def records(self) -> tuple[tuple[RegimenSimplificadoActivity, ...], ...]:
         """Pack each kind's activities into the page the record design declares for them."""
         agricultural, non_agricultural = _activities_by_kind(self.activities)
-        per_record = int(resolve_form_codes_leased("form-row-codes").code("m303.dp30302.activities_per_record"))
+        per_record = int(resolve_form_codes("form-row-codes").code("m303.dp30302.activities_per_record"))
         count = max(ceil(len(agricultural) / per_record), ceil(len(non_agricultural) / per_record))
         return tuple(
             agricultural[index * per_record : (index + 1) * per_record]

@@ -22,7 +22,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CalendarMonth, NonNegativeDecimal
-from ..calculations.registry.form_codes import resolve_form_codes_leased
+from ..calculations.registry.form_codes import exceeds_form_bound
 from .errors import ProfileValidationError
 
 
@@ -173,7 +173,6 @@ class RentaAscendantProfile(_RentaPersonProfileBase):
     @classmethod
     @pydantic_validation_boundary
     def _count_fits_the_declared_bound(cls, count: int | None) -> int | None:
-        limit = int(resolve_form_codes_leased("form-row-codes").code("m100.ascendant_cohabiting_descendants_max"))
-        if count is not None and count > limit:
-            raise ValueError(f"cohabiting descendant count must be at most {limit}")
+        if count is not None and exceeds_form_bound(count, "m100.ascendant_cohabiting_descendants_max"):
+            raise ValueError("cohabiting descendant count is past the declared bound")
         return count

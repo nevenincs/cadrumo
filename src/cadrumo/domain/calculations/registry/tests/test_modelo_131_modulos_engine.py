@@ -36,12 +36,14 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ..formula_runtime import calculate_registry_snapshot
 from ._modelo_131_modulos_engine_support import (
     _ALIMENTACION_647_1,
@@ -61,6 +63,13 @@ from ._modelo_131_modulos_engine_support import (
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 #: Fase 1ª (rendimiento neto previo) clone-collapsed dataset: each entry was a

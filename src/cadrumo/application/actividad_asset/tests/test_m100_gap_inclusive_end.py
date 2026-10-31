@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date, timedelta
 from typing import Any
 
@@ -13,9 +14,17 @@ from cadrumo.application.actividad_asset.operation_dtos import (
     ActivityAssetM100GapSnapshot,
 )
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .operations_support import build_operations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _gap_wire() -> dict[str, Any]:

@@ -18,7 +18,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.form_codes import resolve_form_codes_leased
+from ..calculations.registry.form_codes import exceeds_form_bound
 from ..calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 from ..filing_evidence import FilingEvidenceReference
 from .errors import ModeloValidationError
@@ -81,7 +81,7 @@ class M303Exonerado390ActivityRowEvidence(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _slot_is_a_declared_row(cls, slot: int) -> int:
-        if slot > int(resolve_form_codes_leased("form-row-codes").code("m303.exonerado_390.activity_slots")):
+        if exceeds_form_bound(slot, "m303.exonerado_390.activity_slots"):
             raise ValueError(f"activity row slot {slot} is past the form's declared rows")
         return slot
 
@@ -209,9 +209,7 @@ class M303RegimenSimplificadoActivityCalculationResult(BaseModel):
     def _modules_fit_the_declared_rows(
         cls, module_results: tuple[M303RegimenSimplificadoModuleCalculationResult, ...]
     ) -> tuple[M303RegimenSimplificadoModuleCalculationResult, ...]:
-        if len(module_results) > int(
-            resolve_form_codes_leased("form-row-codes").code("m303.orden.modules_per_activity")
-        ):
+        if exceeds_form_bound(len(module_results), "m303.orden.modules_per_activity"):
             raise ValueError("an activity holds more module results than the record declares")
         return module_results
 

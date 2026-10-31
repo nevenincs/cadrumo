@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from itertools import product
 
 import pytest
@@ -13,6 +14,7 @@ from .....core.aggregation import (
     BindingSourceKind,
 )
 from .....core.modelo import Modelo
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ..binding_provider_registration import validator_for
 from ..binding_selector_utils import binding_row_set_selector
 from ..binding_value_contract import (
@@ -26,6 +28,14 @@ from ..schema import BindingDefinition
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _OPERATION_DESTINATIONS = {
     "complete_acquisition_cost": "0181",

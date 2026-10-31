@@ -60,10 +60,11 @@ from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profil
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(

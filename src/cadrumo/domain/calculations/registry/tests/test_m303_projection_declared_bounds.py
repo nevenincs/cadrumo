@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
@@ -22,7 +23,8 @@ from ....modelos.calculation_revision_m303_evidence import (
     M303RegimenSimplificadoModuleCalculationResult,
 )
 from ....prorrata_register.register import ProrrataActivityRow
-from ..form_codes import resolve_form_codes_leased
+from ..authority import bundled_indexed_authority
+from ..form_codes import resolve_form_codes
 from ..m303_differentiated_deduction_projection import M303DifferentiatedDeductionRowProjection
 from ..m303_prorrata_activity_projection import M303ProrrataActivityRowProjection
 from ..m303_regimen_simplificado_projection import M303RegimenSimplificadoRecordProjection
@@ -30,8 +32,14 @@ from ..m303_regimen_simplificado_projection import M303RegimenSimplificadoRecord
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
+
+
 def _declared(key: str) -> int:
-    return int(resolve_form_codes_leased("form-row-codes").code(key))
+    return int(resolve_form_codes("form-row-codes").code(key))
 
 
 def test_a_differentiated_row_past_the_declared_slots_is_refused() -> None:
@@ -107,7 +115,7 @@ def test_an_exonerado_row_past_the_declared_slots_is_refused() -> None:
 
 
 def test_a_sub_index_the_record_does_not_declare_is_refused() -> None:
-    codes = resolve_form_codes_leased("form-row-codes").codes("m303.dp30302.sub_indices")
+    codes = resolve_form_codes("form-row-codes").codes("m303.dp30302.sub_indices")
     with pytest.raises(ValidationError, match="not a row the DP30302 record declares"):
         HechoActividadSimplificado(
             fact=next(iter(M303_MESA_FACTS)),

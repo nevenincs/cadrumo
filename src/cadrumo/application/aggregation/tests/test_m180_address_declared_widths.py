@@ -10,10 +10,18 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.form_codes import resolve_form_codes_leased
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.form_codes import resolve_form_codes
 from ..retenciones import Modelo180StructuredAddress
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _MODELO_180 = Path(__file__).resolve().parents[3] / "_data" / "registry" / "aeat" / "modelos" / "180" / "revisions"
 _DESIGN_FIELD = {
@@ -59,7 +67,7 @@ def _valid_address() -> dict[str, str]:
 
 
 def _declared(field: str) -> int:
-    return int(resolve_form_codes_leased("form-row-codes").code(f"m180.address.{field}"))
+    return int(resolve_form_codes("form-row-codes").code(f"m180.address.{field}"))
 
 
 @pytest.mark.parametrize("code", ["079", "28", "2807", "280790", "99079"])

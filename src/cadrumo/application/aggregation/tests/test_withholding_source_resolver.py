@@ -11,7 +11,7 @@ monthly is refused instead of receiving a quarterly-only count.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -26,7 +26,7 @@ from ....core.aggregation import (
 )
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -45,6 +45,14 @@ from .withholding_filer_profile_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _PERCEPCION_BINDING_ID = "modelo-190-percepciones-anual"
 _M190_WITHHOLDING_LEGAL_REFS = (

@@ -1,6 +1,7 @@
 """The register's descriptor, event order, reads, atomic correction and one accrual route.
 
 Figures are hand-worked from a fixed 26% linear charge on a 2,000.00 basis in service
+from collections.abc import Iterator
 from 1 January 2025: 520.00 a full year, so 2,000 / 520 = 3.85 years of charge.
 """
 
@@ -77,6 +78,14 @@ from .ledger_support import MemoryLedger, acquisition_transaction
 from .register_support import MemoryRepository, memory_register_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _ACQUISITION = acquisition_transaction()
 _NAME = ActivityAssetDescriptorFacts(name="Office laptop", serial_number="SN-1")

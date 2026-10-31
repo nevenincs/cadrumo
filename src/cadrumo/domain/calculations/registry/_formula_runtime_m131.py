@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ZERO
 from .errors import RegistryValidationError
-from .form_codes import resolve_form_codes_leased
+from .form_codes import resolve_form_codes
 from .formula_runtime_ops import (
     numeric_casilla_value as _numeric_casilla_value,
 )
@@ -457,7 +457,7 @@ def evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, c
 #: incompatibilidades clause this frozenset structurally enforces for the
 #: a.2/a.3/a.4/a.5-vs-b.1 half.
 def _m131_epigrafes_indice_especial() -> frozenset[str]:
-    return resolve_form_codes_leased("form-row-codes").codes("m131.special_index_epigrafes")
+    return resolve_form_codes("form-row-codes").codes("m131.special_index_epigrafes")
 
 
 @dataclass(frozen=True, slots=True)

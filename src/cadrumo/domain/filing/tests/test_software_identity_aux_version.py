@@ -2,13 +2,23 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .. import software_identity as identity_module
 from ..errors import FilingExportValidationError
 from ..software_identity import aeat_aux_version
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 @pytest.mark.parametrize(("package_version", "token"), (("0.5.1", "051"), ("0.6.0", "060"), ("1.10.2", "1102")))

@@ -21,7 +21,7 @@ from ....core.filing_projection_ref import (
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...prorrata_register.register import ProrrataActivityRow, ProrrataRegister
 from .errors import RegistryValidationError
-from .form_codes import resolve_form_codes_leased
+from .form_codes import exceeds_form_bound, resolve_form_codes
 
 _FIELDS = frozenset(M303ProrrataActivityProjectionField)
 
@@ -47,7 +47,7 @@ class M303ProrrataActivityRowProjection(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _slot_is_a_declared_row(cls, slot: int) -> int:
-        if slot > int(resolve_form_codes_leased("form-row-codes").code("m303.prorrata.activity_slots")):
+        if exceeds_form_bound(slot, "m303.prorrata.activity_slots"):
             raise RegistryValidationError(f"prorrata activity slot {slot} is past the form's declared rows")
         return slot
 
@@ -99,7 +99,7 @@ def _validate_projection_refs(
                 f"m303 prorrata projection has duplicate reference for slot {ref.slot} field {ref.field.value!r}",
             )
         by_field[ref.field] = ref
-    activity_slots = int(resolve_form_codes_leased("form-row-codes").code("m303.prorrata.activity_slots"))
+    activity_slots = int(resolve_form_codes("form-row-codes").code("m303.prorrata.activity_slots"))
     expected = {slot: set(_FIELDS) for slot in range(1, activity_slots + 1)}
     actual = {slot: set(by_field) for slot, by_field in resolved.items()}
     if actual != expected:

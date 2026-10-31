@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from functools import cache
@@ -41,11 +42,20 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .ledger_support import MemoryLedger, acquisition_transaction
 from .register_support import MemoryRepository as _MemoryRepository
 from .register_support import describing, memory_register_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _LINEAR = ActivityAssetAmortizationElection(
     regime=DirectEstimationRegime.SIMPLIFIED,

@@ -9,7 +9,7 @@ keeps the guard on the real resolver with an inward empty-port fake.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import date, datetime
 
 import pytest
@@ -17,6 +17,7 @@ import pytest
 from ....core.aggregation import AggregationCaptureKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from .._preconditions import AggregationPreconditionCondition
@@ -27,6 +28,14 @@ from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _M180_BINDING_ID = "modelo-180-115-perceptores-anual"
 _M180_RETENCIONES_LEGAL_REFS = (

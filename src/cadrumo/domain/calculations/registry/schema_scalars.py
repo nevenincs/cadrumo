@@ -294,9 +294,10 @@ def _validate_ccaa_code(value: object) -> object:
     """Validate that a value has the shape of a comunidad code; it binds no code to a community."""
     if not isinstance(value, str):
         raise RegistryValidationError(f"ccaa_code value must be a string, got {type(value).__name__}")
-    from .form_codes import resolve_form_codes_leased
+    from .form_codes import form_codes_in_scope
 
-    if value not in resolve_form_codes_leased("comunidad-code-shape").codes("codes"):
+    codes = form_codes_in_scope("comunidad-code-shape")
+    if codes is not None and value not in codes.codes("codes"):
         raise RegistryValidationError(
             f"ccaa_code value {value!r} must be a two-digit Spanish autonomous-community code",
         )

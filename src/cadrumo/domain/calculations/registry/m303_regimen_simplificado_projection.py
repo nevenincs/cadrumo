@@ -29,7 +29,7 @@ from ...iva.regimen_simplificado_rows import (
     validate_regimen_simplificado_rows,
 )
 from .errors import RegistryValidationError
-from .form_codes import resolve_form_codes_leased
+from .form_codes import exceeds_form_bound, resolve_form_codes
 
 if TYPE_CHECKING:
     from ...modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoCalculationResult
@@ -86,7 +86,7 @@ _SINGLE_PAGE_FACTS = frozenset(
 
 
 def _validate_m303_regimen_simplificado_revision_epoch(revision_id: str) -> bool:
-    row_codes = resolve_form_codes_leased("form-row-codes")
+    row_codes = resolve_form_codes("form-row-codes")
     early = row_codes.codes("m303.dp30302.early_epochs")
     if revision_id not in early | row_codes.codes("m303.dp30302.late_epochs"):
         raise RegistryValidationError(f"unknown DP30302 simplified-regime revision {revision_id!r}")
@@ -126,7 +126,7 @@ def validate_m303_regimen_simplificado_endpoint_epoch(
 ) -> None:
     """Refuse simplified fact multiplicity that the selected record-design epoch never admits."""
     early_epoch = _validate_m303_regimen_simplificado_revision_epoch(revision_id)
-    single_page_epochs = resolve_form_codes_leased("form-row-codes").codes("m303.dp30302.single_page_epochs")
+    single_page_epochs = resolve_form_codes("form-row-codes").codes("m303.dp30302.single_page_epochs")
     for ref in refs:
         if not isinstance(ref, M303RegimenSimplificadoFactProjectionRef):
             continue
@@ -147,7 +147,7 @@ class M303RegimenSimplificadoFieldProjection(BaseModel):
 
 
 def _sub_indices() -> frozenset[int]:
-    codes = resolve_form_codes_leased("form-row-codes").codes("m303.dp30302.sub_indices")
+    codes = resolve_form_codes("form-row-codes").codes("m303.dp30302.sub_indices")
     return frozenset(int(code) for code in codes)
 
 
@@ -163,7 +163,7 @@ class M303RegimenSimplificadoRecordProjection(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _record_is_a_declared_page(cls, record: int) -> int:
-        if record > int(resolve_form_codes_leased("form-row-codes").code("m303.dp30302.records")):
+        if exceeds_form_bound(record, "m303.dp30302.records"):
             raise RegistryValidationError(f"DP30302 record {record} is past the form's declared pages")
         return record
 
@@ -292,7 +292,7 @@ def m303_iae_epigraph_wire_value(iae_epigrafe: str) -> str:
 
 
 def _is_canonical_dotted_iae_epigraph(whole: str, fractional: str) -> bool:
-    row_codes = resolve_form_codes_leased("form-row-codes")
+    row_codes = resolve_form_codes("form-row-codes")
     return (
         len(whole) == int(row_codes.code("m303.dp30302.iae_whole_digits"))
         and len(fractional) == int(row_codes.code("m303.dp30302.iae_fractional_digits"))
@@ -304,7 +304,7 @@ def _is_canonical_dotted_iae_epigraph(whole: str, fractional: str) -> bool:
 
 
 def _is_canonical_plain_iae_epigraph(value: str) -> bool:
-    whole_digits = int(resolve_form_codes_leased("form-row-codes").code("m303.dp30302.iae_whole_digits"))
+    whole_digits = int(resolve_form_codes("form-row-codes").code("m303.dp30302.iae_whole_digits"))
     return len(value) == whole_digits and value.isascii() and value.isdecimal()
 
 

@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.withholding_bindings import Withholdin
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ...aggregation.invoice_retencion import (
     InvoiceRetencionProjectionDefect,
     InvoiceWithholdingCapture,
@@ -200,12 +201,20 @@ def test_definition_and_access_are_confidential_exact_profile_and_period_scoped(
 
 
 def test_request_rejects_modelo_123_and_caller_authored_retencion_rows() -> None:
-    with pytest.raises(ValidationError):
+    with bundled_indexed_authority().operation(), pytest.raises(ValidationError):
         ModeloInvoiceWithholdingCaptureRequest.from_inputs(
             profile_id=_PROFILE,
             command=_command(modelo="123"),
             evidence=_evidence(),
         )
+
+
+def test_a_client_with_no_authority_parses_the_request_and_leaves_the_route_to_the_runtime() -> None:
+    assert ModeloInvoiceWithholdingCaptureRequest.from_inputs(
+        profile_id=_PROFILE,
+        command=_command(modelo="123"),
+        evidence=_evidence(),
+    )
 
 
 def test_request_typed_operands_round_trip_canonically() -> None:

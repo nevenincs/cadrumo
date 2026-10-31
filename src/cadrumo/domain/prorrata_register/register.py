@@ -66,7 +66,7 @@ from ...core.prorrata_register import (
     SectorDiferenciadoLetra as _SectorDiferenciadoLetra,
 )
 from ...domain.calculations.registry.form_codes import require_form_width
-from ..calculations.registry.form_codes import resolve_form_codes_leased
+from ..calculations.registry.form_codes import exceeds_form_bound, resolve_form_codes
 from ..calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance as _carried_prior_definitiva,
 )
@@ -221,7 +221,7 @@ class SectorDefinition(BaseModel):
 
 
 def _activity_slots() -> int:
-    return int(resolve_form_codes_leased("form-row-codes").code("m303.prorrata.activity_slots"))
+    return int(resolve_form_codes("form-row-codes").code("m303.prorrata.activity_slots"))
 
 
 class ProrrataActivityRow(BaseModel):
@@ -251,7 +251,7 @@ class ProrrataActivityRow(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _slot_is_a_declared_row(cls, slot: int) -> int:
-        if slot > _activity_slots():
+        if exceeds_form_bound(slot, "m303.prorrata.activity_slots"):
             raise ValueError(f"activity row slot {slot} is past the form's declared rows")
         return slot
 

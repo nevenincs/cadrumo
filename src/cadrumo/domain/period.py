@@ -32,7 +32,7 @@ from typing import Final
 from ..core.errors.hierarchy import CadrumoError
 from ..core.period import Period
 from ..core.period import PeriodError as CorePeriodError
-from .calculations.registry.form_codes import resolve_form_codes_leased
+from .calculations.registry.form_codes import resolve_form_codes
 
 _INSTALMENT_MONTHS_FACT: Final = "modelo-202-instalment-payment-months"
 
@@ -134,7 +134,7 @@ def calculation_filing_date(period: Period) -> date:
 
 def _instalment_month(token: str) -> int | None:
     """Return the payment month the registry declares for an instalment token, if it is one."""
-    declared = resolve_form_codes_leased(_INSTALMENT_MONTHS_FACT)
+    declared = resolve_form_codes(_INSTALMENT_MONTHS_FACT)
     return declared.integer(token) if token in declared.entries else None
 
 

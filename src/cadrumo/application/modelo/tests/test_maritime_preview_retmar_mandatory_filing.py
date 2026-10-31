@@ -23,8 +23,11 @@ rather than silently telling a registered taxpayer their filing is optional.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.renta.maritime_exemption import MaritimeWorkerFacts, ProfileCompletenessError
 from ...calculations.maritime_exemption_service import (
     resolve_maritime_exemption,
@@ -33,6 +36,14 @@ from ...calculations.maritime_exemption_service import (
 from ..maritime_preview import ModeloMaritimeExemptionPreview
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 #: A registered taxpayer whose profile is missing what the resolution needs.
 #: Registration is the fact under test; the rest is deliberately unstated, which

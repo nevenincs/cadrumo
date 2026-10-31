@@ -8,13 +8,14 @@ resolver would silently compute as a sum.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 
 import pytest
 from pydantic import BaseModel
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import validated_casilla_id
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ..errors import RegistryValidationError
 from ..irnr_ledger_bindings import (
     LedgerIrnrIncomeProvider,
@@ -39,6 +40,14 @@ from ..ledger_renta_income_bindings import validate_ledger_renta_income_aggregat
 from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _IRNR_SELECTOR: Mapping[str, object] = {
     "kind": "ledger_irnr_income_aggregation",

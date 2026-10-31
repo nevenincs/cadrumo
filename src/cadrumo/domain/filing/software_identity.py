@@ -17,7 +17,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.package_version import PACKAGE_VERSION
-from ..calculations.registry.form_codes import resolve_form_codes_leased
+from ..calculations.registry.form_codes import form_codes_in_scope, resolve_form_codes
 from .errors import FilingExportValidationError
 
 _PACKAGE_VERSION_AEAT_AUX_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$", re.ASCII)
@@ -37,7 +37,7 @@ def aeat_aux_version() -> str:
             "PACKAGE_VERSION must contain exactly three ASCII decimal components for AEAT Aux/VERSION",
         )
     aux_version = PACKAGE_VERSION.replace(".", "")
-    limit = int(resolve_form_codes_leased("form-row-codes").code("aeat.aux.version_width"))
+    limit = int(resolve_form_codes("form-row-codes").code("aeat.aux.version_width"))
     if len(aux_version) > limit:
         raise FilingExportValidationError(
             f"PACKAGE_VERSION exceeds AEAT Aux/VERSION's {limit}-character limit after removing dots",
@@ -117,7 +117,9 @@ class AeatProductSoftwareIdentity(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_exact_wire_widths(self) -> AeatProductSoftwareIdentity:
-        widths = resolve_form_codes_leased("form-row-codes")
+        widths = form_codes_in_scope()
+        if widths is None:
+            return self
         program_width = int(widths.code("aeat.aux.program_identifier_width"))
         if len(self.program_identifier.encode("ascii")) != program_width:
             raise ValueError(f"AEAT program identifier must encode to exactly {program_width} ASCII bytes")

@@ -47,7 +47,7 @@ from ..calculations.registry.authority import bundled_indexed_authority
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
-from ..calculations.registry.form_codes import resolve_form_codes_leased
+from ..calculations.registry.form_codes import resolve_form_codes
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import LegalRefId
 from ..calculations.registry.schema_base import DateAxis
@@ -133,7 +133,7 @@ def rebeca_eligible(facts: MaritimeWorkerFacts) -> bool:
     """
     if facts.worker_class != _MARITIME_WORKER_CLASS:
         return False
-    registries = resolve_form_codes_leased(_ELIGIBLE_VESSEL_REGISTRIES_FACT).codes("registries")
+    registries = resolve_form_codes(_ELIGIBLE_VESSEL_REGISTRIES_FACT).codes("registries")
     return facts.vessel_registry in registries
 
 

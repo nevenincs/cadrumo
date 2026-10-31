@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 
 from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetFilingHandoffSnapshot
@@ -9,9 +11,18 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .operations_support import build_operations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _PERIOD = Period.from_year_and_code(2025, "4T")
 

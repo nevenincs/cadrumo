@@ -34,6 +34,7 @@ from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _ROLE_ROUTING_FACT = "modelo-role-routing"
+_FORM_ROW_CODES_FACT = "form-row-codes"
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,45 +96,47 @@ def resolve_form_codes(
     )
 
 
-def resolve_form_codes_leased(fact_id: str, *, authority: GovernedFactSource | None = None) -> FormCodes:
-    """Resolve one form-code fact from the authority, the pinned scope, else a published lease.
+def form_codes_in_scope(fact_id: str = _FORM_ROW_CODES_FACT) -> FormCodes | None:
+    """Return one form-code fact for a model validator, or ``None`` outside every authority scope.
 
-    For a reader that may stand outside every operation, such as a transport model
-    validated on the client side. The lease lasts only for the read, and every entry
-    comes from one generation.
+    A model is validated twice: in the runtime, which holds the pinned authority and
+    enforces the form's geometry, and in a client reading the runtime's result, which
+    holds none and has nothing to decide. The client keeps the model's technical bound.
+    Only a validator may use this reader. Code that needs the value itself resolves it
+    with :func:`resolve_form_codes`, which refuses outside a scope.
     """
-    selected = authority or governed_facts_in_scope()
-    if selected is not None:
-        return resolve_form_codes(fact_id, authority=selected)
+    return None if governed_facts_in_scope() is None else resolve_form_codes(fact_id)
 
-    from .authority import bundled_indexed_authority
 
-    with bundled_indexed_authority().operation() as operation:
-        return resolve_form_codes(fact_id, authority=operation)
+def exceeds_form_bound(count: int, key: str) -> bool:
+    """Return whether ``count`` is past the ``form-row-codes`` bound in the current scope."""
+    codes = form_codes_in_scope()
+    return codes is not None and count > codes.integer(key)
 
 
 def require_form_width(value: str | None, key: str) -> str | None:
-    """Return ``value`` when its length is one the ``form-row-codes`` fact declares for ``key``."""
-    if value is not None and str(len(value)) not in resolve_form_codes_leased("form-row-codes").codes(key):
+    """Return ``value`` unless the scope's ``form-row-codes`` fact declares another width for ``key``."""
+    codes = form_codes_in_scope()
+    if value is not None and codes is not None and str(len(value)) not in codes.codes(key):
         raise CoreValidationError(f"a value does not have the width the form declares for {key}")
     return value
 
 
 def require_form_fit(value: str | None, key: str) -> str | None:
-    """Return ``value`` when it fits the length the ``form-row-codes`` fact declares for ``key``."""
-    if value is not None and len(value) > int(resolve_form_codes_leased("form-row-codes").code(key)):
+    """Return ``value`` unless it is longer than the scope's ``form-row-codes`` fact declares for ``key``."""
+    if value is not None and exceeds_form_bound(len(value), key):
         raise CoreValidationError(f"a value is longer than the form declares for {key}")
     return value
 
 
 def form_for_role(role: str, *, authority: GovernedFactSource | None = None) -> str:
     """Return the form that holds ``role``, from the registry's role routing."""
-    return resolve_form_codes_leased(_ROLE_ROUTING_FACT, authority=authority).code(role)
+    return resolve_form_codes(_ROLE_ROUTING_FACT, authority=authority).code(role)
 
 
 def forms_for_role(role: str, *, authority: GovernedFactSource | None = None) -> frozenset[str]:
     """Return the forms a rule named ``role`` covers, from the registry's role routing."""
-    return resolve_form_codes_leased(_ROLE_ROUTING_FACT, authority=authority).codes(role)
+    return resolve_form_codes(_ROLE_ROUTING_FACT, authority=authority).codes(role)
 
 
 class RegistryCodedEnum(StrEnum):
@@ -219,8 +222,9 @@ class RegistryCodedEnum(StrEnum):
 __all__ = [
     "FormCodes",
     "RegistryCodedEnum",
+    "exceeds_form_bound",
+    "form_codes_in_scope",
     "require_form_fit",
     "require_form_width",
     "resolve_form_codes",
-    "resolve_form_codes_leased",
 ]

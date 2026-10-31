@@ -8,6 +8,7 @@ anything.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -18,7 +19,7 @@ import pytest
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from ....core.i18n.render import lookup_translation
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
@@ -46,6 +47,13 @@ from .test_verification_preconditions import _blocked_report
 from .test_work_form_gate_agreement import _checked_form, _revision, _work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _two_elements_without_claims() -> tuple[CalculationSourceDiagnostic, ...]:

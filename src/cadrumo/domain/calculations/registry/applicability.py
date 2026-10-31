@@ -111,7 +111,7 @@ from .applicability_payer_facts import (
 )
 from .applicability_routes import TaxRoute, tax_route_for_entity_type
 from .errors import RegistryValidationError
-from .form_codes import resolve_form_codes_leased
+from .form_codes import resolve_form_codes
 from .ids import LegalRefId
 from .irpf_income_categories import (
     irpf_income_category_actividad_economica_token,
@@ -514,7 +514,7 @@ def derive_modelo_applicability(
     # filing route. Once the window expires, both modelos fall back to their
     # ordinary applicability rules: M100 through its declared rule, M151
     # to a positive NOT_APPLICABLE.
-    routes = resolve_form_codes_leased(_ROUTES_FACT, authority=operation)
+    routes = resolve_form_codes(_ROUTES_FACT, authority=operation)
     if beckham_window_active and modelo == routes.code("impatriado.suppressed"):
         return ModeloApplicability(
             modelo=Modelo(modelo),

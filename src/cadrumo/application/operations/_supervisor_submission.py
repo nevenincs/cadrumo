@@ -11,6 +11,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...core.hashing import content_hash_hex
 from ...core.operations import OperationLifecycle
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ._supervisor_host import SupervisorHost
 from .capabilities import OperationRequestStoragePolicy
 from .models import OperationId, OperationIdentity, OperationRequest, new_operation_id
@@ -74,6 +75,9 @@ class SupervisorSubmissionMixin(SupervisorHost):
         definition = self.registry.lookup(request.definition_id)
         definition_contract = self.registry.lookup_public_contract(request.definition_id)
         self._validate_request_payload(request.payload, definition.request_type)
+        # The client parsed this request with no authority, so form geometry is first decided here.
+        with validating_governed_facts(self._authority_operation):
+            definition.request_type.model_validate(request.payload.model_dump(mode="python"))
         now = self._clock()
         identity = OperationIdentity(
             operation_id=operation_id or new_operation_id(),

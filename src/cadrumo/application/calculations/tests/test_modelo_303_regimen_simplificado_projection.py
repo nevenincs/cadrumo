@@ -45,10 +45,11 @@ from ..m303_regimen_simplificado import calculate_m303_regimen_simplificado_resu
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _activity_ref() -> M303RegimenSimplificadoActivityProjectionRef:

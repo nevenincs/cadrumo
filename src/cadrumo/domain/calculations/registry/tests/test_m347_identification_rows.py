@@ -3,16 +3,25 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 
 import pytest
 from pydantic import ValidationError
 
 from .....core.identity.nif_iva import NifIvaFormatSpec, NifIvaPrefix
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .. import _invoice_row_materialization as materialization
 from ..invoice_bindings import M347ThirdPartyOperationProvider
 from ..nif_iva_catalogue import NifIvaCatalogue, NifIvaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 @pytest.fixture

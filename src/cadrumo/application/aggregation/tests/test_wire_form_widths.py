@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....domain.calculations.registry.form_codes import resolve_form_codes_leased
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.form_codes import resolve_form_codes
 from ...ledger.transaction_projection import LedgerM210IncomeProjection
 from ...modelo.edit_apply_row_contracts import Modelo210AgrupacionRentaRowWireV1
 from ...modelo.invoice_withholding_capture_public import PublicAnnualRecipientDetail
@@ -13,6 +16,13 @@ from ..irnr_income_ledger import IrnrIncomeLedgerAggregation, IrnrIncomeObservat
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _TIPO_RENTA = "m210.tipo_renta_digits"
 
@@ -38,6 +48,6 @@ def _refused(model: type[BaseModel], field: str, value: object) -> bool:
     ],
 )
 def test_a_code_past_the_declared_width_is_refused(model: type[BaseModel], field: str, key: str) -> None:
-    limit = int(resolve_form_codes_leased("form-row-codes").code(key))
+    limit = int(resolve_form_codes("form-row-codes").code(key))
     assert not _refused(model, field, "1" * limit)
     assert _refused(model, field, "1" * (limit + 1))

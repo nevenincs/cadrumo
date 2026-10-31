@@ -32,6 +32,7 @@ Out of scope for this backend, and therefore not asserted as figures:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
@@ -42,7 +43,7 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.categories.spending_category_catalogue import amortizable_spending_categories
 from ....domain.renta.actividad_asset.claims import effective_claims
 from ....domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
@@ -87,6 +88,14 @@ from .test_modelo_source_mesh_ledger import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _NORMAL = DirectEstimationRegime.NORMAL
 _SIMPLIFIED = DirectEstimationRegime.SIMPLIFIED

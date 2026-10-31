@@ -5,6 +5,7 @@ Figures use the 26% test table: 2,000.00 charges 520.00 a full year and 1,000.00
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -35,12 +36,21 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
     schedule_charge,
 )
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
 from .test_baja_correction import _low_value_forecast, _low_value_revision
 from .test_register import _ACQUISITION, _NAME, _forecast, _full_year, _operations, _revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _ASSET = "laptop-1"
 
