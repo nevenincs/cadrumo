@@ -212,7 +212,8 @@ def _invoice_class_semantic_tokens(
     ordinaria = _pointer(entries, _INVOICE_CLASS_ORDINARIA_KEY, choices, label="invoice-class")
     simplificada = _pointer(entries, _INVOICE_CLASS_SIMPLIFICADA_KEY, choices, label="invoice-class")
     rectificativa = _pointer(entries, _INVOICE_CLASS_RECTIFICATIVA_KEY, choices, label="invoice-class")
-    if len({ordinaria, simplificada, rectificativa}) != 3:
+    pointers = (ordinaria, simplificada, rectificativa)
+    if len(set(pointers)) != len(pointers):
         raise RegistryValidationError("invoice legal-classification class pointers must be distinct")
     return ordinaria, simplificada, rectificativa
 

@@ -26,6 +26,7 @@ from .binding_selector_utils import (
     provider_member,
 )
 from .errors import RegistryValidationError
+from .form_codes import require_form_fit
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
@@ -257,7 +258,7 @@ class WithholdingObservation(BaseModel):
     default replaced."""
     transaction_date: date
     clave: RetencionClave
-    subclave: str = Field(default="", max_length=4, pattern=r"^[0-9]*$")
+    subclave: str = Field(default="", max_length=16, pattern=r"^[0-9]*$")
     percibido_dinerario: Decimal = Decimal("0")
     """The NON-incapacidad part of the row's dineraria percepciones: the design's
     campo 11 excludes the incapacidad-laboral prestaciones, which file in their
@@ -421,7 +422,7 @@ class WithholdingObservation(BaseModel):
     """Modelo 193 clave codigo (position 79) identifying what the codigo emisor
     and ISIN fields carry, always recorded for claves A, B and D (clave 4 is
     the general case)."""
-    codigo_emisor: str | None = Field(default=None, max_length=12)
+    codigo_emisor: str | None = Field(default=None, max_length=16)
     """Modelo 193 codigo emisor (positions 80-91), declared only for claves A,
     B and D: the issuer's NIF for clave codigo 1/4, empty for 2, ZXX country
     code for 3."""
@@ -591,6 +592,18 @@ class WithholdingObservation(BaseModel):
             self.retencion_practicada,
         )
         return self
+
+    @field_validator("codigo_emisor")
+    @classmethod
+    @pydantic_validation_boundary
+    def _emisor_fits_the_declared_field(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "withholding.codigo_emisor_max")
+
+    @field_validator("subclave")
+    @classmethod
+    @pydantic_validation_boundary
+    def _subclave_fits_the_declared_field(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "withholding.subclave_max")
 
 
 class WithholdingProvider(BaseModel):

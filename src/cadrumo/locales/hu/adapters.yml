@@ -55,7 +55,7 @@ adapters:
         api_call_failed: A Google {action} hívás sikertelen.
         api_call_refused: A Google {action} hívást elutasították (HTTP {status}).
         api_target_not_found: A Google {action} célpontja nem található.
-        googleapiclient_not_importable: A googleapiclient nem importálható; a Google-adapter
+        googleapiclient_not_importable: A `googleapiclient` nem importálható; a Google-adapter
           nem tud kapcsolódni az API-hoz.
     installation_client:
       errors:

@@ -55,8 +55,8 @@ adapters:
         api_call_failed: Google {action} call failed.
         api_call_refused: Google {action} call was refused (HTTP {status}).
         api_target_not_found: Google {action} target was not found.
-        googleapiclient_not_importable: googleapiclient is not importable; the Google
-          adapter cannot reach the API.
+        googleapiclient_not_importable: '`googleapiclient` is not importable; the
+          Google adapter cannot reach the API.'
     installation_client:
       errors:
         client_metadata_invalid: The Google client included with this installation

@@ -170,7 +170,7 @@ class DificilJustificacionOrdenAnual(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     percentage: _NonNegative
-    legal_refs: tuple[_Token, ...] = Field(min_length=2, max_length=2)
+    legal_refs: tuple[_Token, ...] = Field(min_length=1)
     source_refs: tuple[_Token, ...] = Field(min_length=1)
 
 

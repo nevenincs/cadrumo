@@ -1032,6 +1032,8 @@ export type AssetListRow = {
   /** False once a baja is recorded: nothing is left to amortize, so `pending`
    * is not drawn. */
   pending_applies: boolean;
+  /** What to fill in when the opening amount is unknown. */
+  opening_remedy_field_key: string | null;
   findings: AssetCounts;
   /** The year a dotación form opens on; null where no year has anything left
    * to record. */

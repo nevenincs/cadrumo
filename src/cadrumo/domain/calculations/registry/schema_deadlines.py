@@ -112,11 +112,11 @@ class DeadlineWindowDefinition(RegistryModel):
             raise RegistryValidationError("deadline window tipo_renta_scope must not be empty")
         if len(set(value)) != len(value):
             raise RegistryValidationError("deadline window tipo_renta_scope entries must be unique")
-        malformed_codes = tuple(code for code in value if len(code) != 2 or not code.isdecimal())
+        malformed_codes = tuple(code for code in value if not code.isdecimal())
         if malformed_codes:
             raise RegistryValidationError(
                 f"deadline window tipo_renta_scope contains malformed official Modelo 210 codes "
-                f"{malformed_codes!r}; codes must be two-digit decimal tokens",
+                f"{malformed_codes!r}; codes must be decimal tokens",
             )
         return value
 

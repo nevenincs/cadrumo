@@ -22,6 +22,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CalendarMonth, NonNegativeDecimal
+from ..calculations.registry.form_codes import resolve_form_codes_leased
 from .errors import ProfileValidationError
 
 
@@ -166,4 +167,13 @@ class RentaDescendantProfile(_RentaPersonProfileBase):
 class RentaAscendantProfile(_RentaPersonProfileBase):
     """One ascendant row from the official Modelo 100 family section."""
 
-    cohabiting_descendant_count: int | None = Field(default=None, ge=0, le=10)
+    cohabiting_descendant_count: int | None = Field(default=None, ge=0)
+
+    @field_validator("cohabiting_descendant_count")
+    @classmethod
+    @pydantic_validation_boundary
+    def _count_fits_the_declared_bound(cls, count: int | None) -> int | None:
+        limit = int(resolve_form_codes_leased("form-row-codes").code("m100.ascendant_cohabiting_descendants_max"))
+        if count is not None and count > limit:
+            raise ValueError(f"cohabiting descendant count must be at most {limit}")
+        return count

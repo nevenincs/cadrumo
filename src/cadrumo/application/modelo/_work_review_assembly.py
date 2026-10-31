@@ -48,10 +48,10 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.source_byte_availability import layout_embedded_source_ids
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
+from ...domain.modelos.calculation_binding_values import persisted_boolean_binding_value
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    persisted_boolean_binding_value,
 )
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (

@@ -43,32 +43,16 @@ def test_the_flag_of_each_material_class_is_what_the_resolver_enforces() -> None
 
     assert groups
     for group in groups:
-        assert group.can_hold_vehicle is _asks_for_a_vehicle_declaration(group.class_key), group.class_key
+        assert group.requires_vehicle_declaration is _asks_for_a_vehicle_declaration(group.class_key), group.class_key
 
 
-def test_some_material_class_can_hold_a_vehicle_and_some_cannot() -> None:
-    flags = {group.class_key: group.can_hold_vehicle for group in _options(AssetKind.MATERIAL).table_groups}
+def test_some_material_class_requires_a_vehicle_declaration_and_some_do_not() -> None:
+    flags = {group.class_key: group.requires_vehicle_declaration for group in _options(AssetKind.MATERIAL).table_groups}
 
     assert flags["transporte"] is True
     assert flags["equipo-informacion-software"] is False
     assert any(flags.values())
     assert not all(flags.values())
-
-
-def test_no_intangible_class_can_hold_a_vehicle() -> None:
-    groups = _options(AssetKind.INTANGIBLE).table_groups
-
-    assert groups
-    assert not any(group.can_hold_vehicle for group in groups)
-
-
-def test_each_material_class_serves_whether_it_requires_a_vehicle_declaration_as_the_resolver_enforces() -> None:
-    groups = _options(AssetKind.MATERIAL).table_groups
-
-    assert groups
-    for group in groups:
-        assert group.requires_vehicle_declaration is _asks_for_a_vehicle_declaration(group.class_key), group.class_key
-    assert {group.class_key for group in groups if group.requires_vehicle_declaration} >= {"transporte"}
 
 
 def test_no_intangible_class_requires_a_vehicle_declaration() -> None:

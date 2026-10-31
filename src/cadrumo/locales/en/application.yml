@@ -1996,8 +1996,8 @@ application:
         enum_boolean_invalid: The profile fact for enum-channel value source %{binding_id}
           resolved to a boolean; boolean facts are not valid enum dispatch keys.
     quickfile:
-      stage_incomplete: The quickfile %{stage} stage finished with status %{status}.
-      stage_refused: 'Quickfile stopped at the %{stage} stage: the stage was refused
+      stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
+      stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
     work_form:
       additional_data_for_box: Additional data for box {box}
@@ -2483,8 +2483,8 @@ application:
       resume_refused_terminal_reason: Workflow run {run_id} aborted for {reason},
         which is terminal by design and may not be resumed.
       resume_revision_selector_invalid: Unknown selector {selector} for the saved
-        calculation to resume; choose current, latest-draft, latest-verified, filed,
-        or explicit.
+        calculation to resume; choose `current`, `latest-draft`, `latest-verified`,
+        `filed`, or `explicit`.
       resume_run_ambiguous: More than one workflow run matches modelo {modelo} period
         {period}. Choose an exact workflow run id. {candidates}
       resume_run_id_invalid: workflow_run_id must be a 16-character lowercase hex

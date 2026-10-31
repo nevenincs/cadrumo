@@ -30,6 +30,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.time.utc import UtcInstant
 from ...core.unit_proportion import UnitProportion
+from ...domain.calculations.registry.form_codes import require_form_width
 from ..calculations.registry.ids import LegalRefId, SourceRefId
 
 
@@ -237,7 +238,7 @@ class LedgerEvidenceRow(BaseModel):
     category_id: str | None = None
     irpf_category: str | None = None
     source_jurisdiction: CountryCodeAlpha2 | None = None
-    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
+    m210_official_tipo_renta_code: str | None = Field(default=None, min_length=1, max_length=16)
     m210_gross_income_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     m210_applicable_rate: UnitProportion | None = None
     m210_payer_mode: str | None = None
@@ -279,6 +280,12 @@ class LedgerEvidenceRow(BaseModel):
         if value is not None and value < Decimal("0"):
             raise ValueError("ledger evidence amount must be a non-negative magnitude; flow is carried by direction")
         return value
+
+    @field_validator("m210_official_tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
 
 
 class ManualFactBasisEntry(BaseModel):

@@ -26,6 +26,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period, StandardPeriodCode
 from ..calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.form_codes import resolve_form_codes_leased
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.schema import ModeloRevision
@@ -53,13 +54,17 @@ class ClaveScopeToken:
     def parse(cls, raw: str) -> ClaveScopeToken:
         """Parse ``CLAVE`` or ``CLAVE.SUBCLAVE``; refuse any other shape."""
         clave, separator, subclave = raw.strip().partition(".")
-        if not clave or (separator and not (len(subclave) == 2 and subclave.isdigit())):
+        if not clave or (separator and not (str(len(subclave)) in _subclave_widths() and subclave.isdigit())):
             raise RegistryValidationError(f"perceptor clave scope token {raw!r} is not CLAVE or CLAVE.NN")
         return cls(clave=clave, subclave=subclave if separator else None)
 
     def admits(self, clave: str, subclave: str | None) -> bool:
         """Whether a record with ``clave``/``subclave`` falls inside this token."""
         return clave == self.clave and (self.subclave is None or self.subclave == subclave)
+
+
+def _subclave_widths() -> frozenset[str]:
+    return resolve_form_codes_leased("form-row-codes").codes("perceptor.subclave_digits")
 
 
 @dataclass(frozen=True, slots=True)

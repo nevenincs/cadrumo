@@ -294,6 +294,7 @@ test("the list states the backend's fields, and the years on offer span the regi
         "in_service_date",
         "method",
         "name",
+        "opening_remedy_field_key",
         "pending",
         "pending_applies",
         "projected_years",

@@ -366,10 +366,10 @@ export function bajaText(
 
 /** What to do when the amortization already deducted is not known: where to
  * enter it, by the word of that field. */
-export const openingRemedy = (t: Translate) =>
-  t(ASSET_KEYS.opening_unknown, {
-    field: fieldWord(t, "opening_history.accumulated_amount"),
-  });
+export const openingRemedy = (t: Translate, fieldKey: string | null) => {
+  const field = wordOfKey(t, fieldKey);
+  return field === null ? null : t(ASSET_KEYS.opening_unknown, { field });
+};
 
 /** The word the catalogue has for a key the backend served with a value, or
  * null where the key is outside the register's families or has no word. */

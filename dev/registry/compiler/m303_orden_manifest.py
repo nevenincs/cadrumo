@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from ._m303_orden_legal import compile_annual_orden_legal_references
-from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
+from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection, require_single_page_edition
 from ._m303_orden_source import (
     extract_m303_annual_orden_source,
     validate_m303_annual_orden_lorca_projection,
@@ -345,6 +345,11 @@ def _annual_orden_projections_for_source(
                 f"Modelo 303 revision {revision.id!r} must cite exactly its filing-year annual Orden source",
             )
         record_design_source = _annual_orden_record_design_source(revision.source_refs, sources=sources)
+        require_single_page_edition(
+            ejercicio=census.ejercicio,
+            registry_revision_id=revision.id,
+            record_design_epoch=record_design_source.record_design_epoch,
+        )
         projections.append(
             compile_m303_annual_orden_projection(
                 census=census,

@@ -4964,8 +4964,8 @@ ledger:
       claims_exceed_amortizable_basis: A nyitó összeg és az érvényes elszámolások
         meghaladják a törvényes leírható alapot.
       claims_overlap: Egy elem elszámolásai nem fedhetnek át egymással átfedő időszakokat.
-      constant_percentage_weighting_not_enrolled: 'A Cadrumo ezt még nem támogatja:
-        az állandó százalék súlyozása erre az értékcsökkenési időtartamra.'
+      constant_percentage_weighting_not_enrolled: 'Ez még nem támogatott: az állandó
+        százalék súlyozása erre az értékcsökkenési időtartamra.'
       correction_below_effective_claims: A javítás után az érvényes elszámolások meghaladják
         az új leírható alapot; ugyanabban a javításban cseréld le őket.
       correction_must_supersede_current: Ez megváltozott, mióta megnyitottad. Frissíts,

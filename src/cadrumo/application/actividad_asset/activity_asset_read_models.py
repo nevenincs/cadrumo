@@ -83,9 +83,10 @@ NO_TABLE_MINIMUM_REASON_KEY: Final = "ledger.actividad_asset.disposal_finding.me
 OPENING_REMEDY_FIELD: Final = "opening_history.accumulated_amount"
 """The field whose entry settles a reason that the amortization already deducted is unknown."""
 
+OPENING_HISTORY_MISSING_KEY: Final = "ledger.actividad_asset.errors.opening_history_missing"
 OPENING_REMEDY_REASON_KEYS: Final[frozenset[str]] = frozenset(
     {
-        "ledger.actividad_asset.errors.opening_history_missing",
+        OPENING_HISTORY_MISSING_KEY,
         "ledger.actividad_asset.errors.opening_history_amount_missing",
     },
 )
@@ -265,6 +266,8 @@ class ActivityAssetListRow(_ReadModel):
     basis: PublicDecimal
     accumulated: PublicDecimal | None = None
     pending: PublicDecimal | None = None
+    opening_remedy_field_key: str | None = None
+    """The catalogue word of the field that supplies the unknown opening amount, which leaves ``pending`` null."""
     pending_applies: bool = True
     """False once a baja is recorded: ``pending`` stays the basis less the deductions, but none is left to amortize."""
     findings: ActivityAssetFindingCounts
@@ -518,11 +521,9 @@ class ActivityAssetTableGroup(_ReadModel):
     maximum_coefficient: PublicDecimal
     minimum_coefficient: PublicDecimal
     maximum_period_years: PublicDecimal
-    can_hold_vehicle: bool
-    requires_vehicle_declaration: bool = False
-    """Whether an asset of this class is charged only on a vehicle affectation declaration."""
-    """Whether a material asset of this class can be a restricted vehicle, so the election is asked
-    for a vehicle affectation declaration; the registry classifies each table class."""
+    requires_vehicle_declaration: bool
+    """Whether a material asset of this class is charged only on a vehicle affectation declaration;
+    the registry classifies each table class."""
 
 
 class ActivityAssetMethodFact(_ReadModel):
@@ -655,6 +656,7 @@ __all__ = [
     "DISPOSAL_FINDING_FAMILY",
     "NON_DEDUCTIBLE_IVA_STATE_FAMILY",
     "NO_TABLE_MINIMUM_REASON_KEY",
+    "OPENING_HISTORY_MISSING_KEY",
     "OPENING_REMEDY_FIELD",
     "OPENING_REMEDY_REASON_KEYS",
     "PLAN_ADVISORY_FAMILY",
