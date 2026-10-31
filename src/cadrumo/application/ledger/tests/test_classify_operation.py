@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from datetime import UTC, date, datetime
-from decimal import Decimal
-from pathlib import Path
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -17,9 +15,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.models import Transaction
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
@@ -31,6 +26,7 @@ from .. import classify_requests, classify_result_contracts
 from ..action_ports import LedgerActionPorts, LedgerActionPortsFactory
 from ..classify_result_projection import project_classify_operation_result
 from ..transaction_projection import LedgerTransactionProjection
+from .ledger_input_rule_support import current_transaction
 from .transaction_projection_support import ledger_transaction_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -54,36 +50,6 @@ def _transaction_projection() -> LedgerTransactionProjection:
         transaction_id=_TRANSACTION_ID,
         business_classification="PERSONAL",
         business_pct=None,
-    )
-
-
-def _current_transaction() -> Transaction:
-    """Build a domain-valid row for the executor's pre-write projection check."""
-    raw = RawTransaction(
-        provider_transaction_id="classify-executor-row",
-        booked_date=date(2026, 4, 15),
-        value_date=None,
-        amount=Decimal("121.00"),
-        currency="EUR",
-        counterparty="Client SL",
-        description="Invoice 1",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="c" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 15, 9, 30, tzinfo=UTC),
-            provider_name="test",
-        ),
-        raw_fields={"source": "test"},
-    )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "source_jurisdiction": "ES",
-            "group_label": None,
-        },
     )
 
 
@@ -228,7 +194,7 @@ async def test_executor_loads_in_commit_and_passes_the_same_row_as_expected_curr
     loaded: list[object] = []
     mutations: list[dict[str, object]] = []
     authority = cast(PinnedAuthorityOperation, object())
-    current = _current_transaction()
+    current = current_transaction("classify-executor-row")
     transaction_id = current.transaction_id
     catalogue = SimpleNamespace(transactions={transaction_id: current})
 

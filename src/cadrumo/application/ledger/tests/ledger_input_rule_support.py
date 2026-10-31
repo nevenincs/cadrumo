@@ -21,10 +21,10 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
 
-def current_transaction() -> Transaction:
+def current_transaction(provider_transaction_id: str = "input-rule-row") -> Transaction:
     """Build a domain-valid active row for an executor to read."""
     raw = RawTransaction(
-        provider_transaction_id="input-rule-row",
+        provider_transaction_id=provider_transaction_id,
         booked_date=date(2026, 4, 15),
         value_date=None,
         amount=Decimal("121.00"),
