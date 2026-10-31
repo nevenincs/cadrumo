@@ -173,8 +173,8 @@ cli:
         confirm_link_hint_message: A számla a nyilvántartásodban megfelelő tranzakció
           nélkül került rögzítésre.
         confirm_operation_date_help: Az adóköteles ügylet dátuma (ISO ÉÉÉÉ-HH-NN).
-        confirm_operation_type_help: 'A Modelo 349 kulcsa kozossegen belüli termekertekesiteshez.
-          Kötelező, ha a dokumentum kozossegen belüli ertekesitest jelöl: a kategória
+        confirm_operation_type_help: 'A Modelo 349 kulcsa közösségen belüli termékértékesítéshez.
+          Kötelező, ha a dokumentum közösségen belüli értékesítést jelöl: a kategória
           nem mondja meg, hogy adómentes behozatalt követett-e.'
         confirm_printed_total_mismatch_message: A dokumentumon szereplő végösszeg
           nem egyezik a rögzített végösszeggel. A rögzített végösszeg az adóalapból

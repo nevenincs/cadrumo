@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Final
 from dev._paths import REPO_ROOT
 
 from ._spelling import load_dictionaries
+from .signal_spelling import is_search_keyword_surface
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
@@ -396,7 +397,8 @@ def unaccented_words_for_locale(
     accepted = reviewed.get(locale, frozenset())
     verdicts: dict[str, tuple[str, ...]] = {}
     for key, value in sorted(values.get(locale, {}).items()):
-        if value is None:
+        # Search aliases omit accents on purpose: the frontend folds diacritics when matching.
+        if value is None or is_search_keyword_surface(key):
             continue
         prose = _NOT_PROSE.sub(" ", _CODE_SPAN.sub(" ", value))
         for word in sorted(set(_WORD.findall(prose))):

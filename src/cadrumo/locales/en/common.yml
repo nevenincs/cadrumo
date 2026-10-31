@@ -1789,8 +1789,7 @@ desktop:
       telefonia_fija: landline phone line telefono fijo linea telefonia
       telefonia_movil: mobile cell phone telefono movil celular telefonia
       tributos_fiscalmente_deducibles: tasa tributo impuesto ayuntamiento
-      vehiculo_combustible: petrol diesel gas fuel car gasolina gasoil diesel combustible
-        carburante gasolinera coche
+      vehiculo_combustible: petrol diesel gas fuel car gasolina gasoleo combustible
       vehiculo_mantenimiento: garage service tyres car taller revision itv neumaticos
         coche
       vehiculo_parking: parking car park parking aparcamiento estacionamiento
