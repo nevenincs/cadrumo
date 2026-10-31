@@ -72,6 +72,7 @@ export function Titlebar({
     <header
       className="titlebar"
       data-chrome={chrome}
+      data-fullscreen={state?.fullscreen ? "" : undefined}
       aria-label={t("desktop.titlebar.label")}
     >
       <h1

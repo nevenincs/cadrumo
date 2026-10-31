@@ -6,12 +6,15 @@ that every nested image already carries a valid signature, then signs the bundle
 last: the main executable's signature binds ``Info.plist`` and the resource seal
 in ``Contents/_CodeSignature/CodeResources`` hashes every other member. Nothing
 writes into the bundle afterwards; packaging only copies the sealed stage and
-verifies each copy it produces.
+verifies each copy it produces. The staging check also starts the sealed bundle's
+runtime role, only after the seal verifies, so no package is built from a bundle
+that cannot start.
 """
 
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import plistlib
 import posixpath
@@ -148,6 +151,67 @@ def verify_seal(codesign: Path, bundle: Path, application_id: str) -> str:
     return details
 
 
+_RUNTIME_ROLE = ("--role", "runtime", "--configured-root")
+_RUNTIME_START_SECONDS = 60
+_RUNTIME_STOP_SECONDS = 30
+
+
+def _runtime_environment(root: Path) -> dict[str, str]:
+    """The minimal environment of a health run: a private root and nothing written beside the bundle."""
+    return {"PATH": "/usr/bin:/bin", "CADRUMO_STORAGE_ROOT": str(root), "PYTHONDONTWRITEBYTECODE": "1"}
+
+
+async def _serve_until_ready(main_executable: Path, root: Path) -> str:
+    """Run the runtime role until it reports ready, close its input, require it to stop; return its version."""
+    process = await asyncio.create_subprocess_exec(
+        str(main_executable),
+        *_RUNTIME_ROLE,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
+        env=_runtime_environment(root),
+    )
+    try:
+        if process.stdout is None or process.stdin is None:
+            raise ValueError("The runtime role's standard streams are unavailable")
+        try:
+            line = await asyncio.wait_for(process.stdout.readline(), _RUNTIME_START_SECONDS)
+        except TimeoutError as error:
+            raise ValueError("Sealed bundle's runtime role did not report ready in time") from error
+        try:
+            ready = json.loads(line)
+        except ValueError:
+            ready = None
+        if not isinstance(ready, dict) or ready.get("kind") != "runtime_ready":
+            raise ValueError(f"Sealed bundle's runtime role did not report ready: {line[:300]!r}")
+        process.stdin.close()
+        try:
+            await asyncio.wait_for(process.wait(), _RUNTIME_STOP_SECONDS)
+        except TimeoutError as error:
+            raise ValueError("Sealed bundle's runtime role did not stop when its input closed") from error
+        return str(ready.get("product_version", ""))
+    finally:
+        if process.returncode is None:
+            process.kill()
+            await process.wait()
+
+
+def verify_runtime_role(codesign: Path, bundle: Path, application_id: str) -> str:
+    """Start the sealed bundle's runtime role and require ready and a stop on closed input.
+
+    The seal is verified first, so a bundle that fails its seal is never executed, and
+    verified again afterwards, so a run that wrote beneath the bundle fails. The role
+    serves a private temporary storage root and stops when its standard input closes.
+    """
+    verify_seal(codesign, bundle, application_id)
+    info = plistlib.loads((bundle / "Contents/Info.plist").read_bytes())
+    main_executable = bundle / "Contents/MacOS" / str(info["CFBundleExecutable"])
+    with TemporaryDirectory(prefix="cadrumo-health-") as directory:
+        version = asyncio.run(_serve_until_ready(main_executable, Path(directory)))
+    verify_seal(codesign, bundle, application_id)
+    return version
+
+
 def assess(spctl: Path, bundle: Path) -> str:
     """Return Gatekeeper's execution assessment; an ad-hoc seal is expected to be rejected."""
     _require_tool(spctl, "spctl")
@@ -235,8 +299,11 @@ def main() -> None:
     identity = json.loads(arguments.identity.read_text(encoding="utf-8"))
     application = f"{identity['name']}.app"
     if arguments.command == "verify-staging":
-        verify_seal(arguments.codesign, locate_bundle(arguments.root, application), identity["application_id"])
+        bundle = locate_bundle(arguments.root, application)
+        verify_seal(arguments.codesign, bundle, identity["application_id"])
         print(f"[cadrumo:bundle] staged {application}: seal valid")
+        version = verify_runtime_role(arguments.codesign, bundle, identity["application_id"])
+        print(f"[cadrumo:bundle] staged {application}: runtime role ready ({version}), seal intact")
     else:
         tools = PackageTools(arguments.codesign, arguments.spctl, arguments.hdiutil, arguments.ditto)
         verify_packages(tools, arguments.packages, application, identity["application_id"])

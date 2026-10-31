@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ...command_execution import run_command
+from .. import macos_bundle
 from ..identity import identity
 from ..layout import application_bundle, load_layout
 from ..macos_bundle import (
@@ -19,6 +20,7 @@ from ..macos_bundle import (
     nested_images,
     sealed_members,
     verify_packages,
+    verify_runtime_role,
     verify_seal,
 )
 
@@ -186,3 +188,49 @@ def test_ad_hoc_seal_is_inside_out_complete_and_breaks_on_later_change(tmp_path:
     (bundle / "Contents/_CodeSignature/CodeResources").unlink()
     with pytest.raises(ValueError, match="codesign --verify failed"):
         verify_seal(_CODESIGN, bundle, product.application_id)
+
+
+def _runtime_main(main: Path, marker: Path, body: str) -> None:
+    main.write_text(f"#!/bin/sh\nprintf '%s\\n' \"$*\" > '{marker}'\n{body}\n", encoding="utf-8")
+    main.chmod(0o755)
+
+
+def test_runtime_role_starts_between_two_seal_verifications(tmp_path: Path) -> None:
+    bundle, main = _bundle(tmp_path)
+    tool, log = _recording_codesign(tmp_path)
+    marker = tmp_path / "ran"
+    _runtime_main(main, marker, 'printf \'{"kind":"runtime_ready","product_version":"1.2.3"}\\n\'\ncat > /dev/null')
+    assert verify_runtime_role(tool, bundle, identity("macos-arm64").application_id) == "1.2.3"
+    assert marker.read_text(encoding="utf-8").strip() == "--role runtime --configured-root"
+    verifications = [call for call in log.read_text(encoding="utf-8").splitlines() if "--deep" in call]
+    assert len(verifications) == 2
+
+
+def test_runtime_role_is_not_started_when_the_seal_is_refused(tmp_path: Path) -> None:
+    bundle, main = _bundle(tmp_path)
+    tool = tmp_path / "tools/codesign"
+    tool.parent.mkdir()
+    tool.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    tool.chmod(0o755)
+    marker = tmp_path / "ran"
+    _runtime_main(main, marker, "cat > /dev/null")
+    with pytest.raises(ValueError, match="codesign --verify failed"):
+        verify_runtime_role(tool, bundle, identity("macos-arm64").application_id)
+    assert not marker.exists()
+
+
+def test_runtime_role_refuses_a_bundle_that_does_not_report_ready(tmp_path: Path) -> None:
+    bundle, main = _bundle(tmp_path)
+    tool, _ = _recording_codesign(tmp_path)
+    _runtime_main(main, tmp_path / "ran", "exit 3")
+    with pytest.raises(ValueError, match="did not report ready"):
+        verify_runtime_role(tool, bundle, identity("macos-arm64").application_id)
+
+
+def test_runtime_role_refuses_a_role_that_ignores_closed_input(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    bundle, main = _bundle(tmp_path)
+    tool, _ = _recording_codesign(tmp_path)
+    monkeypatch.setattr(macos_bundle, "_RUNTIME_STOP_SECONDS", 1)
+    _runtime_main(main, tmp_path / "ran", 'printf \'{"kind":"runtime_ready"}\\n\'\nexec sleep 30')
+    with pytest.raises(ValueError, match="did not stop"):
+        verify_runtime_role(tool, bundle, identity("macos-arm64").application_id)
