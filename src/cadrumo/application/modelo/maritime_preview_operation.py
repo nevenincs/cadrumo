@@ -53,7 +53,7 @@ class ModeloMaritimePreviewRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
     annual_salary: _Text | None = None
-    qualifying_days: Annotated[int, Field(ge=1, le=365)] | None = None
+    qualifying_days: Annotated[int, Field(ge=1, le=366)] | None = None
     gross_navigation_income: _Text | None = None
 
     @model_validator(mode="after")
