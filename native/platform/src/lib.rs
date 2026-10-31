@@ -16,6 +16,8 @@ include!(env!("CADRUMO_CONTRACT_RS"));
 include!(env!("CADRUMO_CONTRACT_VECTORS_RS"));
 #[cfg(unix)]
 pub mod account;
+#[cfg(all(target_os = "macos", feature = "appkit"))]
+pub mod application_icon;
 #[cfg(test)]
 mod conformance_tests;
 #[cfg(windows)]

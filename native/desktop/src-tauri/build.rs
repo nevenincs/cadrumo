@@ -33,6 +33,22 @@ fn main() {
         println!("cargo:rustc-env=CADRUMO_DISPLAY_VERSION={version}+{build_id}{suffix}");
     }
     let mut windows = tauri_build::WindowsAttributes::new();
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
+        // The installed desktop runs outside its bundle's executable directory, where
+        // AppKit finds no icon, so the image carries the icon it sets for itself.
+        println!("cargo:rerun-if-env-changed=CADRUMO_DESKTOP_ICON");
+        let icon = std::env::var("CADRUMO_DESKTOP_ICON")
+            .expect("CADRUMO_DESKTOP_ICON must select the generated application icon");
+        println!("cargo:rustc-env=CADRUMO_DESKTOP_ICON={icon}");
+        // Nor does it find its bundle's Info.plist there, so the executable carries
+        // the application's identity in the section AppKit and codesign read when an
+        // executable has no bundle of its own.
+        println!("cargo:rerun-if-env-changed=CADRUMO_DESKTOP_INFO_PLIST");
+        let info = std::env::var("CADRUMO_DESKTOP_INFO_PLIST")
+            .expect("CADRUMO_DESKTOP_INFO_PLIST must select the generated desktop Info.plist");
+        println!("cargo:rerun-if-changed={info}");
+        println!("cargo:rustc-link-arg-bins=-Wl,-sectcreate,__TEXT,__info_plist,{info}");
+    }
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         // The window claims the package identity of its build kind, rendered beside the contract
         // from windows/desktop.manifest: Tauri's Common Controls dependency, the interpreter

@@ -18,6 +18,7 @@ from .hashing import digest
 from .identity import DistributionIdentity
 from .layout import ApplicationBundle, ApplicationImage, application_bundle, application_images, load_layout
 from .macos_bundle import BundleSealer, sealed_members
+from .macos_info import identity_keys
 from .macos_launchagent import author_agent, verify_agent
 from .package_inventory import package_inventory
 
@@ -292,20 +293,13 @@ def _macos_controls(
     application = f"{value['name']}.app"
     icon = f"{PurePosixPath(desktop).name}.icns"
     plist = {
-        "CFBundleIdentifier": value["application_id"],
-        "CFBundleName": value["name"],
-        "CFBundleDisplayName": value["name"],
+        **identity_keys(value),
         "CFBundleExecutable": desktop,
         "CFBundleIconFile": icon,
         "CFBundleInfoDictionaryVersion": "6.0",
         "CFBundlePackageType": "APPL",
-        "CFBundleShortVersionString": value["version"],
-        "CFBundleVersion": value["version"],
-        "LSMinimumSystemVersion": value["compatibility_floor"].removeprefix("macos-"),
-        "LSApplicationCategoryType": "public.app-category.finance",
         # The desktop is an ordinary windowed application with a Dock presence.
         "LSUIElement": False,
-        "NSHighResolutionCapable": True,
     }
     controls[f"{application}/Contents/Info.plist"] = plistlib.dumps(plist, sort_keys=True)
     launcher = f"{application}/{wrapper.executable_directory}/{desktop}"

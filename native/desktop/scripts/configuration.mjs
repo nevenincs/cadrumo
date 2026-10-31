@@ -204,6 +204,7 @@ export function tauriConfig(
   product,
   { configDirectory, frontend, icons },
   platform = process.platform,
+  deploymentTarget = process.env.MACOSX_DEPLOYMENT_TARGET,
 ) {
   const [main] = template.app.windows;
   return {
@@ -231,6 +232,16 @@ export function tauriConfig(
       icon: ["icon.ico", "icon.png"].map((name) =>
         iconFile(configDirectory, resolve(icons, name)),
       ),
+      // The Tauri driver exports its own deployment target from this key, replacing the
+      // canonical floor the build environment carries, so the key restates that floor.
+      ...(platform === "darwin" && deploymentTarget
+        ? {
+            macOS: {
+              ...template.bundle?.macOS,
+              minimumSystemVersion: deploymentTarget,
+            },
+          }
+        : {}),
     },
   };
 }

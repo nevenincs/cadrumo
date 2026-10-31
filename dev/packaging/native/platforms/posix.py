@@ -25,7 +25,7 @@ from .posix_sdk_download import download_sdk
 
 # These inputs describe assembly on the builder, rather than shipped runtime paths.
 # Preserve every other contract field until the common manifest owns that projection.
-_BUILD_LAYOUT_FIELDS = frozenset({"native_tools", "native_signing_identity"})
+_BUILD_LAYOUT_FIELDS = frozenset({"native_tools", "native_signing_identity", "desktop_info_plist"})
 
 
 def _validate_decoder_provenance(decoder: dict[str, object]) -> None:

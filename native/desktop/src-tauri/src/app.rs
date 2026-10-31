@@ -299,6 +299,12 @@ pub fn run(
     };
     let exiting = settle.clone();
     let code = app.run_return(move |handle, event| match event {
+        // AppKit has started on this thread; the installed desktop gets no icon from
+        // its bundle, so it sets its own.
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Ready => {
+            cadrumo_platform::application_icon::set(include_bytes!(env!("CADRUMO_DESKTOP_ICON")));
+        }
         tauri::RunEvent::ExitRequested { .. } => {
             diagnostics.host_event(EventKind::HostExitRequested, HostStage::Shutdown);
         }

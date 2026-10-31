@@ -15,6 +15,7 @@ from dev._paths import REPO_ROOT
 from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
 
 from .build_directory import require_enrolled_output
+from .macos_info import DESKTOP_INFO_PLIST_NAME, render_identity_plist
 
 PREVIEW_NAME_SUFFIX = " Preview"
 """User-facing suffix that separates the preview installation family from stable."""
@@ -128,13 +129,16 @@ def main() -> None:
     args = parser.parse_args()
     value = identity(args.target, args.channel)
     args.output.mkdir(parents=True, exist_ok=True)
-    for name, content in {
-        "identity.json": json.dumps(asdict(value), indent=2) + "\n",
-        "Identity.cmake": cmake_projection(value),
-    }.items():
+    documents: dict[str, bytes] = {
+        "identity.json": (json.dumps(asdict(value), indent=2) + "\n").encode("utf-8"),
+        "Identity.cmake": cmake_projection(value).encode("utf-8"),
+    }
+    if value.target.startswith("macos-"):
+        documents[DESKTOP_INFO_PLIST_NAME] = render_identity_plist(asdict(value))
+    for name, content in documents.items():
         destination = args.output / name
-        if not destination.exists() or destination.read_text(encoding="utf-8") != content:
-            destination.write_text(content, encoding="utf-8")
+        if not destination.exists() or destination.read_bytes() != content:
+            destination.write_bytes(content)
 
 
 if __name__ == "__main__":

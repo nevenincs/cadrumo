@@ -120,6 +120,10 @@ def native_assembly_layout(contract: dict[str, Any], provenance: Mapping[str, An
         if not isinstance(identity, str) or not identity:
             raise ValueError("Native macOS assembly requires an explicit signing identity")
         projected["native_signing_identity"] = identity
+        info_plist = toolchain.get("desktop_info_plist")
+        if not isinstance(info_plist, str) or not Path(info_plist).is_absolute():
+            raise ValueError("Native macOS assembly requires the generated desktop identity property list")
+        projected["desktop_info_plist"] = info_plist
     return projected
 
 

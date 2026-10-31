@@ -35,6 +35,7 @@
       "artifact": "CADRUMO_DESKTOP_HOST_EXECUTABLE",
       "desktop": true,
       "signed": true,
+      "entitlements": "native/platforms/macos-desktop.entitlements",
       "version_arguments": [
         "--headless",
         "--",
@@ -120,6 +121,7 @@
     "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
     "/System/Library/Frameworks/Security.framework/Versions/A/Security",
     "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+    "/System/Library/Frameworks/ServiceManagement.framework/Versions/A/ServiceManagement",
     "/usr/lib/libobjc.A.dylib"
   ]
 }

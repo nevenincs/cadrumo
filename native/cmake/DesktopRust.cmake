@@ -1,8 +1,13 @@
 # The desktop image uses the native host Cargo layout declared by its locator.
 # Supply the same admitted Rust tools/platform environment as the native owners.
 function(cadrumo_desktop_rust_environment output)
+  # Identity keys the desktop image embeds, generated beside the product identity they come from.
+  set(identity_environment)
+  if(CADRUMO_TARGET MATCHES "^macos-")
+    set(identity_environment "CADRUMO_DESKTOP_INFO_PLIST=${CADRUMO_PATH_GENERATED}/desktop-info.plist")
+  endif()
   if(NOT CADRUMO_RUST_ROOT)
-    set(${output} "" PARENT_SCOPE)
+    set(${output} "${identity_environment}" PARENT_SCOPE)
     return()
   endif()
   set(rust_bin "${CADRUMO_RUST_ROOT}/bin")
@@ -22,7 +27,7 @@ function(cadrumo_desktop_rust_environment output)
   endif()
   set(environment "CADRUMO_DESKTOP_RUST_BIN=${rust_bin}"
     "RUSTC=${rust_bin}/rustc${CMAKE_EXECUTABLE_SUFFIX}"
-    "RUSTDOC=${rust_bin}/rustdoc${CMAKE_EXECUTABLE_SUFFIX}")
+    "RUSTDOC=${rust_bin}/rustdoc${CMAKE_EXECUTABLE_SUFFIX}" ${identity_environment})
   if(TARGET rust_platform)
     get_directory_property(names DIRECTORY "${CADRUMO_SOURCE_ROOT}/native"
       DEFINITION CADRUMO_RUST_ENVIRONMENT_NAMES)

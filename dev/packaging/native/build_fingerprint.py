@@ -40,6 +40,7 @@ from dev._paths import REPO_ROOT
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest, digest_cache
+from .macos_info import DESKTOP_INFO_PLIST_NAME
 
 EXCLUDED_DIRECTORIES = frozenset({"target", "node_modules", "tests", "__pycache__", "test-results", "dist", ".vite"})
 """Build outputs, installed packages and test-only trees never reach a shipped image."""
@@ -181,7 +182,12 @@ COMPONENTS: Mapping[str, Component] = {
             "native/interpreter/windows/host.manifest",
         ),
         # The linked host compiles the shared layout header under the desktop's own identity.
-        outputs=(*_CONTRACT, ("generated", "build_layout.h"), ("desktop_frontend", "")),
+        outputs=(
+            *_CONTRACT,
+            ("generated", "build_layout.h"),
+            ("generated", DESKTOP_INFO_PLIST_NAME),
+            ("desktop_frontend", ""),
+        ),
         records=tuple(f"cargo/desktop/{profile}/cadrumo.d" for profile in _RUST_PROFILES),
         desktop_tools=True,
         snapshots=("desktop/host",),
