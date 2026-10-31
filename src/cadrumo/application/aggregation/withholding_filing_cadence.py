@@ -1,7 +1,7 @@
 """The withholding filing periods a filer's canonical schedule assigns, and the refusal when none is quarterly.
 
 Captured withholding and the annual summaries built from it use quarterly
-windows only. Whether a filer's Modelo 111, 115 or 123 is quarterly is decided
+windows only. Whether a filer's periodic withholding modelo is quarterly is decided
 by the profile conditions on the modelo revision's filing schedules. The
 deadline engine reads the same schedules through
 :func:`~cadrumo.domain.calculations.registry.schedules.applicable_filing_schedules`
@@ -26,11 +26,12 @@ from ...core.filing_year import FilingYear
 from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
+from ...core.period import Period, StandardPeriodCode
 from ...domain.calculations.registry.schedules import applicable_filing_schedules
 from ...domain.calculations.registry.temporal import select_revision_metadata
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .errors import AggregationError
+from .withholding_modelo_routing import periodic_withholding_modelos
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -39,15 +40,17 @@ if TYPE_CHECKING:
     from ...domain.deadlines.models import TaxpayerProfile
     from ..modelo.work_profile import ModeloWorkProfile
 
-#: The periodic withholding modelos captured withholding is placed in.
-PERIODIC_WITHHOLDING_MODELOS: Final[tuple[Modelo, ...]] = (Modelo("111"), Modelo("115"), Modelo("123"))
-
 #: The quarterly windows captured withholding is placed in and annual summaries total.
 #:
 #: Public because a filing-grade gate downstream has to ask about the same four
 #: windows this module refuses an annual source for; a second literal there
 #: would be free to disagree with the set the totals were actually built from.
-QUARTERLY_WITHHOLDING_PERIODS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T")
+QUARTERLY_WITHHOLDING_PERIODS: Final[tuple[str, ...]] = (
+    StandardPeriodCode.Q1.value,
+    StandardPeriodCode.Q2.value,
+    StandardPeriodCode.Q3.value,
+    StandardPeriodCode.Q4.value,
+)
 
 
 class WithholdingFilingCadenceRefusal(StrEnum):
@@ -170,8 +173,8 @@ def resolve_withholding_filer_cadence(
     return WithholdingFilerCadence(
         filing_year=filing_year,
         schedules=tuple(
-            _modelo_schedule(taxpayer_profile, modelo=modelo, filing_year=filing_year, operation=operation)
-            for modelo in PERIODIC_WITHHOLDING_MODELOS
+            _modelo_schedule(taxpayer_profile, modelo=Modelo(modelo), filing_year=filing_year, operation=operation)
+            for modelo in periodic_withholding_modelos(authority=operation)
         ),
     )
 
@@ -285,7 +288,6 @@ def require_quarterly_withholding_source(
 
 
 __all__ = [
-    "PERIODIC_WITHHOLDING_MODELOS",
     "QUARTERLY_WITHHOLDING_PERIODS",
     "WithholdingFilerCadence",
     "WithholdingFilingCadenceError",

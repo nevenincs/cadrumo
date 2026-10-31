@@ -45,6 +45,7 @@ from ..aggregation.withholding_filing_cadence import (
     WithholdingFilingCadenceError,
     load_bucket_withholding_filer_cadence,
 )
+from ..aggregation.withholding_modelo_routing import periodic_withholding_modelos
 from ..aggregation.withholding_observation_service import (
     WithholdingObservationMutationError,
     WithholdingWindowScope,
@@ -79,7 +80,6 @@ from .aggregate_contracts import (
     AGGREGATE_PHASES,
     AGGREGATE_PREPARE_PHASE,
     AGGREGATE_RESULT_PHASE,
-    AGGREGATE_WITHHOLDING_MODELOS,
     MODELO_AGGREGATE_CADENCE_REFUSAL_CODE,
     MODELO_AGGREGATE_LEDGER_PAYMENT_REFUSAL_CODE,
     MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
@@ -269,7 +269,7 @@ class ModeloAggregateExecutor:
                 ports.withholding_observation_service.read_window(
                     WithholdingWindowScope(modelo=command.modelo, period=command.period)
                 )
-                if command.modelo in AGGREGATE_WITHHOLDING_MODELOS
+                if command.modelo in periodic_withholding_modelos()
                 else None
             )
             command = self._withholding_command(command, window_state)
@@ -358,7 +358,7 @@ class ModeloAggregateExecutor:
         withholding store. Every other modelo is an annual summary composed from
         stored windows, so it aggregates exactly what its calculation reads.
         """
-        if command.modelo in AGGREGATE_WITHHOLDING_MODELOS or not RetencionesAggregationSourceResolver.supports_modelo(
+        if command.modelo in periodic_withholding_modelos() or not RetencionesAggregationSourceResolver.supports_modelo(
             command.modelo
         ):
             return None

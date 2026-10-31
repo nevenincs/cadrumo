@@ -64,6 +64,7 @@ from ...domain.calculations.registry.withholding_bindings import WithholdingObse
 from ...domain.iva.components import category_components, registry_retencion_role_token
 from .retenciones import Modelo180PropertyEvidence, Modelo193PendingPaymentEvidence
 from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
+from .withholding_modelo_routing import modelo_for_income_kind
 from .withholding_observation_service import (
     SourceLiabilitySnapshot,
     WithholdingMutationMode,
@@ -403,13 +404,10 @@ def build_invoice_withholding_capture(
 
 
 def _modelo_for_income(income_kind: WithholdingIncomeKind) -> str:
-    if income_kind in {WithholdingIncomeKind.WORK, WithholdingIncomeKind.PROFESSIONAL}:
-        return "111"
-    if income_kind is WithholdingIncomeKind.URBAN_RENT:
-        return "115"
-    if income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL:
-        return "123"
-    raise InvoiceWithholdingEvidenceError("unsupported_income_projection")
+    modelo = modelo_for_income_kind(income_kind)
+    if modelo is None:
+        raise InvoiceWithholdingEvidenceError("unsupported_income_projection")
+    return modelo
 
 
 def invoice_retencion_liability_defects(invoice: Invoice) -> tuple[InvoiceRetencionProjectionDefect, ...]:

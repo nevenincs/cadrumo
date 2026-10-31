@@ -1,0 +1,24 @@
+[fact]
+fact_id = "deadline-shift-exempt-modelos"
+family = "mapping"
+
+# The close date of these forms stays where it is on a weekend or a holiday, because the
+# one-stop-shop period is a Union deadline. The bundled procedure page names the form and its
+# period; it does not state the exception in words, so the fact stays pending review.
+[[fact.variants]]
+variant_id = "deadline-shift-exempt-modelos:design"
+date_axis = "filing_period"
+legal_refs = ["ley-37-1992:art-163-unvicies"]
+source_refs = ["aeat-modelo-369-procedure"]
+review_status = "pending_review"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-369-procedure"
+required_text = ["369"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelos", value = "369" },
+]

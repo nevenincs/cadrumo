@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.form_codes import resolve_form_codes_leased
 
 
 class WithholdingRecognitionRule(StrEnum):
@@ -159,7 +160,7 @@ def derive_withholding_recognition(
             raise WithholdingRecognitionError("unsupported_operation_kind")
         event = _require_event(evidence.formalization, "missing_formalization_evidence")
         _reject_event(evidence.exigibility, "conflicting_exigibility_evidence")
-        if modelo in {"123", "193"}:
+        if modelo in resolve_form_codes_leased("withholding-modelo-routing").codes("formalization.refused.modelos"):
             raise WithholdingRecognitionError("unsupported_formalization_projection")
         return WithholdingRecognition(
             rule=WithholdingRecognitionRule.FORMALIZATION,

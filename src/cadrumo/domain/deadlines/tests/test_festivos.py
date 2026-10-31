@@ -31,7 +31,6 @@ from cadrumo.domain.calculations.registry.tests.legal_text import legal_effectiv
 from ....core.directory_scan import scan_directory
 from ..errors import DeadlineValidationError
 from ..festivos import (
-    MODELOS_WITHOUT_SHIFT,
     CalendarCCAA,
     DeadlineHolidayCoverage,
     DeadlineShift,
@@ -347,12 +346,6 @@ def test_modelo_369_is_never_shifted_and_says_so() -> None:
         )
     assert result.adjusted_close_date == date(2025, 10, 18)
     assert result.coverage is DeadlineHolidayCoverage.NOT_SHIFTED
-
-
-def test_shift_deadline_modelos_without_shift_constant_contains_369() -> None:
-    """Regression guard for the OSS / IOSS exception list."""
-
-    assert "369" in MODELOS_WITHOUT_SHIFT
 
 
 def test_shift_deadline_accepts_externally_supplied_calendar() -> None:

@@ -6,10 +6,6 @@ from typing import Annotated
 
 from pydantic import Field
 
-from ..aggregation.withholding_filing_cadence import (
-    PERIODIC_WITHHOLDING_MODELOS,
-)
-
 MODELO_AGGREGATE_OPERATION_DEFINITION_ID = "modelo.aggregate"
 
 
@@ -55,12 +51,6 @@ AGGREGATE_MAX_RESULT_BYTES = 16 * 1024
 
 
 AGGREGATE_MAX_CLAVE_ROWS = 64
-
-
-AGGREGATE_WITHHOLDING_MODELOS = frozenset(modelo.value for modelo in PERIODIC_WITHHOLDING_MODELOS)
-
-
-AGGREGATE_LEDGER_PAYMENT_MODELOS = frozenset({"111", "123"})
 
 
 AGGREGATE_SAFE_REFUSAL_REASON = Annotated[

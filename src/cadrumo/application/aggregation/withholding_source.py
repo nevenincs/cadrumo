@@ -8,7 +8,7 @@ relations. The pull and calculate surfaces read this ONE store
 (``aeat-calculation-aggregation``).
 
 Each annual modelo declares how its source is composed in
-:data:`_ANNUAL_WITHHOLDING_SOURCES`: Modelo 190 folds the active quarterly
+the routing fact's annual composition: Modelo 190 folds the active quarterly
 Modelo 111 projections, and Modelo 193 adds the pending and settled
 disclosure phases of captured Modelo 123 capital allocations to its manual
 window. Every other modelo reads its own window.
@@ -86,41 +86,12 @@ from .withholding_filing_cadence import (
     require_quarterly_withholding_source,
     withholding_filer_cadence_for_work_profile,
 )
+from .withholding_modelo_routing import AnnualWithholdingComposition, annual_withholding_composition
 
 if TYPE_CHECKING:
     from ...core.period import Period
 
 _WITHHOLDING_SOURCE = BindingSourceKind.WITHHOLDING
-
-
-@dataclass(frozen=True, slots=True)
-class _AnnualWithholdingSource:
-    """How one annual modelo composes its per-perceptor-clave source.
-
-    ``periodic_percepciones`` names the periodic modelo whose active
-    projections replace the annual window; ``None`` reads the modelo's own
-    window. ``capital_disclosure_retenciones`` names the periodic retención
-    modelo whose captured capital allocations materialise Modelo 193 disclosure
-    phases next to that window; ``None`` adds no phase rows.
-    """
-
-    periodic_percepciones: Modelo | None = None
-    capital_disclosure_retenciones: Modelo | None = None
-
-    @property
-    def periodic_source(self) -> Modelo | None:
-        """Return the periodic modelo whose quarterly windows this composition reads, if any."""
-        return self.periodic_percepciones or self.capital_disclosure_retenciones
-
-
-_OWN_WINDOW = _AnnualWithholdingSource()
-
-_ANNUAL_WITHHOLDING_SOURCES: Mapping[str, _AnnualWithholdingSource] = MappingProxyType(
-    {
-        Modelo("190").value: _AnnualWithholdingSource(periodic_percepciones=Modelo("111")),
-        Modelo("193").value: _AnnualWithholdingSource(capital_disclosure_retenciones=Modelo("123")),
-    }
-)
 
 
 def _revision_declares_withholding_scalar(revision: ModeloRevision) -> bool:
@@ -146,13 +117,13 @@ def annual_withholding_periodic_source(modelo: str) -> Modelo | None:
     """Return the periodic withholding modelo whose windows ``modelo``'s annual source reads.
 
     ``None`` for a modelo that reads its own window, which is every modelo
-    outside :data:`_ANNUAL_WITHHOLDING_SOURCES`. Exposed so a later filing-grade
+    the routing fact does not name. Exposed so a later filing-grade
     gate can name the periodic source whose absence it is judging without
     restating the composition table: that table decides which quarters this
     resolver totals, so the gate's question and the resolver's answer have to
     come from the same declaration.
     """
-    return _ANNUAL_WITHHOLDING_SOURCES.get(Modelo(modelo).value, _OWN_WINDOW).periodic_source
+    return annual_withholding_composition(Modelo(modelo).value).periodic_source
 
 
 def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[CalculationSourceProvenance, ...]:
@@ -326,7 +297,7 @@ def _refuse_allocation_collisions(
 
 
 def _refuse_unscheduled_quarters(
-    composition: _AnnualWithholdingSource,
+    composition: AnnualWithholdingComposition,
     *,
     modelo: str,
     cadence: Callable[[], WithholdingFilerCadence],
@@ -373,7 +344,7 @@ class WithholdingSourceResolver:
 
     def _window(
         self,
-        composition: _AnnualWithholdingSource,
+        composition: AnnualWithholdingComposition,
         *,
         modelo: str,
         period: Period,
@@ -388,7 +359,7 @@ class WithholdingSourceResolver:
 
     def _disclosure_phase_rows(
         self,
-        composition: _AnnualWithholdingSource,
+        composition: AnnualWithholdingComposition,
         *,
         filing_year: int,
     ) -> tuple[Modelo193PhaseRow, ...]:
@@ -432,7 +403,7 @@ class WithholdingSourceResolver:
         """
         if not _revision_declares_withholding_scalar(revision):
             return None
-        composition = _ANNUAL_WITHHOLDING_SOURCES.get(modelo, _OWN_WINDOW)
+        composition = annual_withholding_composition(modelo)
         _refuse_unscheduled_quarters(composition, modelo=modelo, cadence=cadence)
         window = self._window(composition, modelo=modelo, period=period)
         phase_rows = self._disclosure_phase_rows(composition, filing_year=period.filing_year)

@@ -10,7 +10,8 @@ Active pathways:
   Art. 7.p) LIRPF (Ley 35/2006, BOE-A-2006-20764)
     Foreign-flagged vessel or international waters. The annual cap is the
     ``lirpf-art-7p-exemption-cap`` governed fact.
-    Formula: min(annual_salary / 365 * qualifying_days, cap)
+    Formula: min(annual_salary / days_of_year * qualifying_days, cap), where
+    days_of_year is every day of the year (RIRPF art. 6.2).
 
   REBECA exemption (Ley 19/1994, Arts. 73.2 73.3 75.1 75.3, BOE-A-1994-15794)
     Crew of REBECA-registered vessels or scheduled Canary Islands routes. The
@@ -33,6 +34,7 @@ category in the registry.
 
 from __future__ import annotations
 
+import calendar
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
@@ -64,7 +66,6 @@ _RETMAR_LEGAL_REF: Final[LegalRefId] = "ley-35-2006:art-96"
 
 _ART_7P_EXEMPTION_CAP_FACT_ID: Final = "lirpf-art-7p-exemption-cap"
 _REBECA_EXEMPTION_FRACTION_FACT_ID: Final = "rebeca-maritime-exemption-fraction"
-_DAYS_IN_YEAR: Final = 365
 
 
 class MaritimeExemptionInactiveError(RentaError):
@@ -198,8 +199,9 @@ def calculate_art_7p_exemption(
 ) -> CasillaObservation:
     """Calculate the Art. 7.p) exempt amount.
 
-    Formula (Ley 35/2006 Art. 7.p) BOE-A-2006-20764):
-        exempt_amount = min(annual_salary / 365 * qualifying_days, cap)
+    Formula (Ley 35/2006 Art. 7.p) BOE-A-2006-20764; RIRPF art. 6.2 reparto over
+    "el numero total de dias del ano"):
+        exempt_amount = min(annual_salary / days_of_year * qualifying_days, cap)
 
     Args:
         annual_salary: Gross annual employment salary in EUR (Decimal).
@@ -208,7 +210,8 @@ def calculate_art_7p_exemption(
         facts: Resolved profile facts; :func:`art_7p_eligible` must hold.
         authority: Governed-fact authority. Defaults to the scoped authority,
             else the published one.
-        filing_period: Filing-period coordinate for the cap; defaults to today.
+        filing_period: Coordinate inside the tax year, for the cap and the days of
+            that year; defaults to today.
 
     Returns:
         :class:`CasillaObservation` carrying the exempt amount and provenance.
@@ -221,15 +224,17 @@ def calculate_art_7p_exemption(
         raise RentaValidationError("art_7p_eligible predicate is False; cannot calculate Art. 7.p) exemption")
     if not annual_salary.is_finite() or annual_salary <= Decimal("0"):
         raise RentaValidationError("annual_salary must be a positive finite Decimal")
-    if not (1 <= qualifying_days <= _DAYS_IN_YEAR):
+    coordinate = filing_period or today_madrid()
+    days_of_year = 366 if calendar.isleap(coordinate.year) else 365
+    if not (1 <= qualifying_days <= days_of_year):
         raise RentaValidationError("qualifying_days must be within the ordinary calendar-day input range")
     cap, resolved_cap = _resolve_decimal_fact(
         authority,
         fact_id=_ART_7P_EXEMPTION_CAP_FACT_ID,
         date_axis=DateAxis.FILING_PERIOD,
-        effective_date=filing_period or today_madrid(),
+        effective_date=coordinate,
     )
-    prorated = annual_salary / Decimal(_DAYS_IN_YEAR) * Decimal(qualifying_days)
+    prorated = annual_salary / Decimal(days_of_year) * Decimal(qualifying_days)
     return _exempt_observation(min(prorated, cap), resolved_cap)
 
 

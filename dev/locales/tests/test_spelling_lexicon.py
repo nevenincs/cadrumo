@@ -89,6 +89,66 @@ def test_input_tax_phrase_uses_spanish_without_hiding_adjacent_or_phrase_typos(m
     assert not is_project_spelling("hu", "soportada")
 
 
+def test_bilingual_search_aliases_do_not_exempt_prose_or_misspelled_aliases(monkeypatch: pytest.MonkeyPatch) -> None:
+    class Dictionary:
+        def __init__(self, accepted: set[str]) -> None:
+            self.accepted = accepted
+
+        def lookup(self, word: str) -> bool:
+            return word in self.accepted
+
+    monkeypatch.setattr(
+        "dev.locales.signal_spelling.load_dictionaries",
+        lambda repository: {"en": Dictionary(set()), "es": Dictionary({"retenciones"})},
+    )
+    keys = (
+        "desktop.ledger.category_keywords.ibi_local_afecto",
+        "navigation.view.withholding.keywords",
+        "navigation.view.withholding.label",
+        "guide",
+    )
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        set(keys),
+        {"en": {key: "ibi irpf retenciones ibii irpff retencioness misspeling" for key in keys}},
+        REPO_ROOT,
+    )
+    for key in keys[:2]:
+        assert set(spelling[("en", key)]) == {"ibii", "irpff", "retencioness", "misspeling"}
+    for key in keys[2:]:
+        assert set(spelling[("en", key)]) == {
+            "ibi",
+            "irpf",
+            "retenciones",
+            "ibii",
+            "irpff",
+            "retencioness",
+            "misspeling",
+        }
+    assert not is_project_spelling("en", "ibi")
+    assert not is_project_spelling("en", "irpf")
+
+
+def test_observed_technical_spellings_keep_case_and_near_misses_distinct(monkeypatch: pytest.MonkeyPatch) -> None:
+    dictionaries = load_dictionaries(REPO_ROOT)
+    monkeypatch.setattr("dev.locales.signal_spelling.load_dictionaries", lambda repository: dictionaries)
+    forms = {"en": ("sectorised", "sectorisedd"), "es": ("Snapshots", "Snapshotss"), "ca": ("Snapshots", "Snapshotss")}
+    for locale, (word, typo) in forms.items():
+        assert not dictionaries[locale].lookup(word)
+        assert is_project_spelling(locale, word)
+        assert not is_project_spelling(locale, typo)
+        assert not is_project_spelling(locale, word.upper())
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        {"technical"},
+        {locale: {"technical": f"{word} {typo} misspeling"} for locale, (word, typo) in forms.items()},
+        REPO_ROOT,
+    )
+    assert {cell: set(words) for cell, words in spelling.items()} == {
+        (locale, "technical"): {typo, "misspeling"} for locale, (_word, typo) in forms.items()
+    }
+    assert not is_project_spelling("hu", "Snapshots")
+    assert not is_project_spelling("es", "sectorised")
+
+
 def test_only_english_possessives_of_exact_project_stems_are_accepted() -> None:
     assert is_project_spelling("en", "Cadrumo's")
     assert is_project_spelling("en", "modelo's")

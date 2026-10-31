@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from itertools import combinations
 from pathlib import Path
+from typing import Final
 
 from ._spelling import SpellingToolError, load_dictionaries
 from .signal_contracts import SpellingInventory
@@ -14,6 +15,11 @@ from .signal_spelling_enrollment import (
     enroll_spelling_locale,
     excluded_structural_inventory,
 )
+
+# Exact lowercase search aliases: IBI is named in the ibi_* category labels,
+# and IRPF in _data/terminology/concepts/irpf.toml. These are accepted only on
+# bilingual search-keyword surfaces, never as general prose vocabulary.
+_SPANISH_SEARCH_ABBREVIATIONS: Final[frozenset[str]] = frozenset({"ibi", "irpf"})
 
 
 def spellcheck_catalogues(
@@ -145,6 +151,8 @@ def spellcheck_catalogues(
 
 def _is_spanish_search_keyword(word: str, dictionary: object) -> bool:
     """Accept Spanish search terms with omitted diacritics in keyword fields."""
+    if word in _SPANISH_SEARCH_ABBREVIATIONS:
+        return True
     lookup = getattr(dictionary, "lookup", None)
     if not callable(lookup):
         return False
@@ -173,7 +181,10 @@ def _discard_known_spanish_search_keywords(
         return
     for cell, words in tuple(unknown_by_cell.items()):
         _locale, key = cell
-        if not key.startswith("desktop.ledger.category_keywords."):
+        if not (
+            key.startswith("desktop.ledger.category_keywords.")
+            or (key.startswith("navigation.view.") and key.endswith(".keywords"))
+        ):
             continue
         accepted = {word for word in words if _is_spanish_search_keyword(word, spanish_dictionary)}
         words.difference_update(accepted)

@@ -30,7 +30,7 @@ from ....core.errors.hierarchy import CoreValidationError, pydantic_validation_b
 from .errors import RegistryValidationError
 from .facts.resolution import unique_mapping_tokens
 from .facts.string_mapping import MappingValueWhitespace, StringMappingFact, StringMappingPolicy
-from .governed_fact_scope import GovernedFactSource
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 
@@ -91,6 +91,23 @@ def resolve_form_codes(
         fact_id=fact_id,
         entries=fact.resolve_scoped_entries(effective_date=effective_date, authority=authority),
     )
+
+
+def resolve_form_codes_leased(fact_id: str, *, authority: GovernedFactSource | None = None) -> FormCodes:
+    """Resolve one form-code fact from the authority, the pinned scope, else a published lease.
+
+    For a reader that may stand outside every operation, such as a transport model
+    validated on the client side. The lease lasts only for the read, and every entry
+    comes from one generation.
+    """
+    selected = authority or governed_facts_in_scope()
+    if selected is not None:
+        return resolve_form_codes(fact_id, authority=selected)
+
+    from .authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_form_codes(fact_id, authority=operation)
 
 
 class RegistryCodedEnum(StrEnum):
@@ -173,4 +190,4 @@ class RegistryCodedEnum(StrEnum):
         )
 
 
-__all__ = ["FormCodes", "RegistryCodedEnum", "resolve_form_codes"]
+__all__ = ["FormCodes", "RegistryCodedEnum", "resolve_form_codes", "resolve_form_codes_leased"]

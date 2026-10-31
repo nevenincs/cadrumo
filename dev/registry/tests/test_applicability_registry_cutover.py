@@ -15,10 +15,8 @@ established fixture shape in ``test_authority.py``:
    what it always did. This is the anti-tautology proof for the deliberate
    no-cache decision -- a `@cache`-wrapped resolver would fail proof 2.
 
-``REGISTRY_RESOLVED_APPLICABILITY_MODELOS`` stays empty in production until
-the migrator's ``--apply`` run lands and is verified against the real bundled
-tree (tracked separately); this module proves the MECHANISM these tests
-exercise directly, not through that module-level switch.
+A modelo resolves from the registry when a revision declares a rule; this module
+proves the MECHANISM these tests exercise directly.
 """
 
 from __future__ import annotations
