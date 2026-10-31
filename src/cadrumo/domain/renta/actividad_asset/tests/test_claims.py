@@ -126,7 +126,7 @@ def test_any_other_figure_on_the_same_interval_still_refuses_whatever_the_genera
     recorded = record_claim((), _claim())
 
     with pytest.raises(ActividadAssetClaimConflictError, match="interval_has_different_claim"):
-        record_claim(recorded.claims, _claim(authority_generation="next-generation", **changed))
+        record_claim(recorded.claims, _claim(_YEAR, authority_generation="next-generation", **changed))
 
 
 def test_a_claim_already_superseded_is_not_a_replay_of_its_equal_figures() -> None:

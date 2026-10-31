@@ -649,7 +649,9 @@ class WithholdingObservation(BaseModel):
             if value is None or (value == "" and name in _OBSERVATION_BLANK_ADMITTING_FIELDS):
                 continue
             if name in _OBSERVATION_COUNT_FIELDS:
-                if not 0 <= value <= declared.integer(f"observation_count.{name}.maximum"):
+                if not isinstance(value, int) or not 0 <= value <= declared.integer(
+                    f"observation_count.{name}.maximum"
+                ):
                     raise RegistryValidationError(f"{name} exceeds the width the record design declares")
             elif str(value) not in declared.codes(f"observation_code.{name}"):
                 raise RegistryValidationError(f"{name} is not a code the record design declares")

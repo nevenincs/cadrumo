@@ -5,7 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import Repos, file_flow_repositories
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
+    Repos,
+    file_flow_module_profile,
+    file_flow_repositories,
+)
 
 from .....adapters.persistence.profile.tests import profile_persistence_fixtures
 
@@ -21,4 +25,5 @@ secure_objects = profile_persistence_fixtures.secure_objects
 
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[Repos]:
-    yield from file_flow_repositories(tmp_path)
+    for shared in file_flow_module_profile(tmp_path):
+        yield from file_flow_repositories(shared)

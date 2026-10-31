@@ -30,7 +30,6 @@ from cadrumo.domain.calculations.registry.situacion_familiar_catalogue import si
 from cadrumo.domain.contribuyente.renta_codes import SituacionFamiliar
 
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ....core.renta_declaracion_type import RentaDeclaracionType
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import SECTION_VERDICT_PREFIX, answer, next_page, start_flow
 from ...flows.validators import ValidationVerdict, resolve_cross_field_validator
@@ -44,8 +43,8 @@ from ..setup_legal_validators import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_JOINT = RentaDeclaracionType.JOINT.value
-_INDIVIDUAL = RentaDeclaracionType.INDIVIDUAL.value
+_JOINT = "2"
+_INDIVIDUAL = "1"
 
 _FAMILIA_SECTION_ID = "familia"
 _TAXATION_TYPE_PAGE = "taxation-type"

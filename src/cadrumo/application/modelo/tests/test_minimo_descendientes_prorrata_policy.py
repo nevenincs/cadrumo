@@ -13,12 +13,12 @@ import pytest
 from cadrumo.domain.contribuyente.renta_codes import RentaMaritalStatus
 
 from ..profile_derived_facts import (
-    MARRIED_STATUS_TOKENS,
-    PARTNERED_STATUS_TOKENS,
-    UNMARRIED_STATUS_TOKENS,
+    married_status_codes,
+    partnered_status_codes,
+    unmarried_status_codes,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_the_partnered_tokens_carry_no_foreign_vocabulary() -> None:
@@ -29,13 +29,13 @@ def test_the_partnered_tokens_carry_no_foreign_vocabulary() -> None:
     unnoticed. Deriving the sets from the enum makes that unrepresentable, and
     this asserts the derivation rather than the current contents.
     """
-    storable = {member.value for member in RentaMaritalStatus}
+    storable = set(RentaMaritalStatus.form_codes().values())
     for name, tokens in (
-        ("married", MARRIED_STATUS_TOKENS),
-        ("partnered", PARTNERED_STATUS_TOKENS),
-        ("unmarried", UNMARRIED_STATUS_TOKENS),
+        ("married", married_status_codes()),
+        ("partnered", partnered_status_codes()),
+        ("unmarried", unmarried_status_codes()),
     ):
         assert tokens <= storable, f"{name} set carries tokens the schema cannot store: {sorted(tokens - storable)}"
     # Married and unmarried partition the enum: no code is both, none is neither.
-    assert storable == MARRIED_STATUS_TOKENS | UNMARRIED_STATUS_TOKENS
-    assert not MARRIED_STATUS_TOKENS & UNMARRIED_STATUS_TOKENS
+    assert storable == married_status_codes() | unmarried_status_codes()
+    assert not married_status_codes() & unmarried_status_codes()

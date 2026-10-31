@@ -18,13 +18,12 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.renta_declaracion_type import RentaDeclaracionType
 from ... import contribuyente
 from ...calculations.registry.tests.published_authority import published_profile_schema
-from ...contribuyente.renta_codes import RentaMaritalStatus, RentaSexCode
+from ...contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus, RentaSexCode
 from ..errors import UserProfileNotFoundError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 
 SEX_PATHS: tuple[str, ...] = ("renta_taxpayer.sex", "renta_spouse.sex")
 
@@ -38,7 +37,7 @@ def test_every_sex_field_declares_the_runtime_code_set() -> None:
     """
 
     schema = published_profile_schema()
-    expected = {member.value for member in RentaSexCode}
+    expected = set(RentaSexCode.form_codes().values())
 
     for path in SEX_PATHS:
         assert set(schema.field(path).enum_values) == expected, (
@@ -55,7 +54,7 @@ def test_the_sex_code_set_is_the_aeat_declared_pair() -> None:
     AEAT design documents.
     """
 
-    assert {member.value for member in RentaSexCode} == {"H", "M"}
+    assert set(RentaSexCode.form_codes().values()) == {"H", "M"}
 
 
 def test_marital_status_declares_the_runtime_code_set() -> None:
@@ -68,15 +67,15 @@ def test_marital_status_declares_the_runtime_code_set() -> None:
     """
 
     schema = published_profile_schema()
-    expected = {member.value for member in RentaMaritalStatus}
+    expected = set(RentaMaritalStatus.form_codes().values())
 
     assert set(schema.field("renta_taxpayer.marital_status").enum_values) == expected
 
 
-def test_renta_declaration_type_has_one_core_owner_and_canonical_profile_path() -> None:
+def test_renta_declaration_type_has_one_domain_owner_and_canonical_profile_path() -> None:
     schema = published_profile_schema()
 
-    assert {member.value for member in RentaDeclaracionType} == {"1", "2"}
+    assert set(RentaDeclaracionType.form_codes().values()) == {"1", "2"}
     assert not hasattr(contribuyente, "RentaDeclaracionType")
     assert schema.field("renta_filing.declaration_type").key == "declaration_type"
     with pytest.raises(UserProfileNotFoundError):
