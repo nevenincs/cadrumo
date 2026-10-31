@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ine-codigos-comunidades-autonomas.html",
+  "source_sha256": "7eef080756423405e404a18ae279e7daad3b325ea5b613cff14f277f8e942851",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Instituto Nacional de Estadística (INE). Reused with attribution.",
+  "units": [
+    {
+      "text": "INEbase/ Clasificaciones /Relación de municipios, provincias, comunidades y ciudades autónomas con sus códigos / Relación de comunidades y ciudades autónomas con sus códigos\nEnglish\nCenso Electoral\nSede electrónica\nCompartir\nX\nFacebook\nLinkedin\nWhatsApp\nCorreo Electrónico\nCopiar al portapapeles\nINEbase\nDemografía y población\nPadrón. Población por municipios\nRelación de municipios y sus códigos por provincias\nRelación de comunidades y ciudades autónomas con sus códigos\nCódigo\nLiteral\n01\nAndalucía\n02\nAragón\n03\nAsturias, Principado de\n04\nBalears, Illes\n05\nCanarias\n06\nCantabria\n07\nCastilla y León\n08\nCastilla - La Mancha\n09\nCataluña\n10\nComunitat Valenciana\n11\nExtremadura\n12\nGalicia\n13\nMadrid, Comunidad de\n14\nMurcia, Región de\n15\nNavarra, Comunidad Foral de\n16\nPaís Vasco\n17\nRioja, La\n18\nCeuta\n19\nMelilla",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

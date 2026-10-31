@@ -22,6 +22,7 @@ Exercises real corpus HTML through the production extractor (no mocks):
 
 from __future__ import annotations
 
+import hashlib
 from decimal import Decimal
 from pathlib import Path
 
@@ -72,6 +73,42 @@ _ORDINAL_PARAGRAPH_HTML = _NORMATIVES / "html" / "boe-a-2011-208-modelo-145.html
 # A real single-article slice whose heading names an ordinal beyond the
 # derivation's recognised set, and which carries no bloque marker of its own.
 _UNMARKED_ORDINAL_SLICE_HTML = _NORMATIVES / "html" / "ley-37-1992-art-163-vicies.html"
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    ('<meta charset="ISO-8859-15">', '<meta http-equiv="content-type" content="text/html; charset=ISO-8859-15">'),
+)
+def test_declared_latin9_preserves_accents_euro_and_source_bytes(tmp_path: Path, declaration: str) -> None:
+    source = tmp_path / "ine-codigos-comunidades-autonomas.html"
+    markup = f'{declaration}<h5 class="articulo">Artículo 1.</h5><p>Relación de códigos: 1 €.</p>'
+    original = markup.encode("iso8859-15")
+    source.write_bytes(original)
+
+    records = build_outputs(source, repo_root=tmp_path)
+
+    assert len(records) == 1
+    assert "Relación de códigos: 1 €." in records[0].units[0].text
+    assert records[0].source_sha256 == hashlib.sha256(original).hexdigest()
+    assert "Instituto Nacional de Estadística" in records[0].attribution
+    assert "Boletin Oficial" not in records[0].attribution
+    assert source.read_bytes() == original
+
+
+def test_declared_utf8_does_not_silently_repair_invalid_bytes(tmp_path: Path) -> None:
+    source = tmp_path / "invalid.html"
+    source.write_bytes(b'<meta charset="utf-8"><p>Relaci\xf3n</p>')
+
+    with pytest.raises(UnicodeDecodeError):
+        build_outputs(source, repo_root=tmp_path)
+
+
+def test_unsupported_declared_html_encoding_is_refused(tmp_path: Path) -> None:
+    source = tmp_path / "unsupported.html"
+    source.write_bytes(b'<meta charset="unicode_escape"><p>Text</p>')
+
+    with pytest.raises(ValueError, match="Unsupported declared HTML charset"):
+        build_outputs(source, repo_root=tmp_path)
 
 
 def test_worked_example_files_exist() -> None:

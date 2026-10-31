@@ -61,11 +61,18 @@ HTML_EXTRACTOR_VERSION = "1.4"
 XML_EXTRACTOR_ID = "boe-legal-xml"
 XML_EXTRACTOR_VERSION = "1.0"
 _UTF_8: Final[str] = UTF_8
+_HTML_CHARSET: Final = re.compile(rb"<meta\b[^>]*\bcharset\s*=\s*[\"']?([A-Za-z0-9._-]+)", re.IGNORECASE)
+_HTML_ENCODINGS: Final = {"utf-8": _UTF_8, "utf8": _UTF_8, "iso-8859-15": "iso8859-15"}
 
 #: Standing BOE/AEAT attribution used when no canonical link pins a permalink.
 _BASE_ATTRIBUTION = (
     "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution."
 )
+_SOURCE_ATTRIBUTIONS: Final = {
+    "ine-codigos-comunidades-autonomas.html": (
+        "Source: Instituto Nacional de Estadística (INE). Reused with attribution."
+    )
+}
 
 # The BOE legal text lives inside <div id="textoxslt">; the page footer
 # (<div id="pie">) carries site chrome (Aviso legal, Mapa, the AEBOE postal
@@ -503,11 +510,11 @@ def _document_boe_url(markup: str) -> str:
     return html_entities.unescape(match.group("href")).strip()
 
 
-def _attribution_for(boe_url: str) -> str:
+def _attribution_for(boe_url: str, source: Path) -> str:
     """Compose the attribution string for a normatives document."""
     if boe_url:
         return f"{_BASE_ATTRIBUTION} Official source: {boe_url}"
-    return _BASE_ATTRIBUTION
+    return _SOURCE_ATTRIBUTIONS.get(source.name, _BASE_ATTRIBUTION)
 
 
 def legal_markup_units(markup: str) -> list[PreprocessUnit]:
@@ -558,6 +565,19 @@ def build_xml_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput
     ]
 
 
+def _read_html_markup(source: Path) -> str:
+    """Honor the enrolled HTML encodings without repairing or transcoding source bytes."""
+    raw = source.read_bytes()
+    declared = _HTML_CHARSET.search(raw)
+    charset = declared[1].decode("ascii").lower() if declared is not None else _UTF_8
+    try:
+        encoding = _HTML_ENCODINGS[charset]
+    except KeyError:
+        raise ValueError(f"Unsupported declared HTML charset: {charset}") from None
+    # Match read_text's universal-newline behavior for the existing UTF-8 corpus.
+    return raw.decode(encoding).replace("\r\n", "\n").replace("\r", "\n")
+
+
 def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     """Extract a BOE normatives HTML file into one or more records.
 
@@ -575,7 +595,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     Returns:
         A list of validated records (one per sidecar pair to write).
     """
-    markup = source.read_text(encoding=_UTF_8)
+    markup = _read_html_markup(source)
     if re.match(r"\s*(?:<\?xml\b|<response(?:\s|>)|<!DOCTYPE\s+response\b)", markup):
         return build_xml_outputs(source, repo_root=repo_root)
     boe_url = _document_boe_url(markup)
@@ -587,7 +607,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
 
     relpath = source.resolve().relative_to(repo_root.resolve()).as_posix()
     digest = sha256_of(source)
-    attribution = _attribution_for(boe_url)
+    attribution = _attribution_for(boe_url, source)
 
     units = _legal_html_units(markup, container_anchor, source)
 
