@@ -112,7 +112,7 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   await kind(target, "received");
   await draft(target).locator(".ledger-draft-country-read").click();
   await expect(draft(target).locator(".ledger-draft-country")).toHaveValue(
-    "ES",
+    /^ES/,
   );
   // The button that answered the country went away: confirming is next.
   await expect(confirm).toBeFocused();
@@ -358,7 +358,7 @@ test("an evidence record is corrected and removed one at a time", async ({
   await supplier.fill("Arroyo Asesores SL");
   await detail
     .getByLabel(label("desktop.ledger.documents.record.taxable_base"))
-    .fill("60,00");
+    .fill("sixty");
   await expect(detail.locator(".ledger-record-save")).toBeDisabled();
   await detail
     .getByLabel(label("desktop.ledger.documents.record.taxable_base"))

@@ -1,12 +1,12 @@
 import { useId, useRef, useState } from "react";
 import { NotesEditor } from "@/components/editors/NotesEditor";
+import { TypedField } from "@/components/editors/TypedField";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { facts } from "../../../shell/compose";
 import {
@@ -31,12 +31,14 @@ import {
 } from "../WritePause";
 import { extractionLanding, recordLanding } from "./documentLanding";
 import {
+  entrySpec,
   EVIDENCE_SHAPES,
   fieldWidth,
   fileName,
   holdsUpdate,
   recordUpdate,
   recordValue,
+  seeded,
 } from "./documentsModel";
 
 type Notice =
@@ -93,7 +95,8 @@ function RecordDetail({
     });
   const refused = new Set(planned.kind === "refused" ? planned.fields : []);
   const shown = (field: EvidenceUpdateField) =>
-    typed[field] ?? recordValue(record, field) ?? "";
+    typed[field] ??
+    seeded(EVIDENCE_SHAPES[field], recordValue(record, field) ?? "");
 
   async function save() {
     if (planned.kind !== "update") return;
@@ -268,22 +271,28 @@ function RecordDetail({
               <FieldLabel htmlFor={`${base}-${field}`}>
                 {t(`desktop.ledger.documents.record.${field}`)}
               </FieldLabel>
-              <Input
-                id={`${base}-${field}`}
-                controlSize="sm"
-                className={`ledger-record-input tabular-nums ${fieldWidth(
+              <div
+                className={`ledger-record-input ${fieldWidth(
                   EVIDENCE_SHAPES[field],
                   field === "supplier",
                 )}`}
-                maxLength={1024}
-                aria-invalid={refused.has(field) || undefined}
-                value={shown(field)}
-                onChange={(event) =>
-                  setTyped((held) => ({ ...held, [field]: event.target.value }))
-                }
-              />
+              >
+                <TypedField
+                  field={entrySpec(EVIDENCE_SHAPES[field])}
+                  id={`${base}-${field}`}
+                  controlSize="sm"
+                  invalid={refused.has(field) || undefined}
+                  describedBy={
+                    refused.has(field) ? `${base}-${field}-error` : undefined
+                  }
+                  value={shown(field)}
+                  onChange={(value) =>
+                    setTyped((held) => ({ ...held, [field]: value }))
+                  }
+                />
+              </div>
               {refused.has(field) && (
-                <FieldError>
+                <FieldError id={`${base}-${field}-error`}>
                   {t("desktop.ledger.documents.record_refused")}
                 </FieldError>
               )}

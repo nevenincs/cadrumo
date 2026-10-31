@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { CountryEditor } from "@/components/editors/CountryEditor";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -10,10 +11,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
-import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
   Popover,
@@ -1221,25 +1226,24 @@ function WhatStep({
             <FieldLabel htmlFor={`${ids}-country`}>
               {t("desktop.ledger.import.country")}
             </FieldLabel>
-            <Input
+            <CountryEditor
               id={`${ids}-country`}
               value={country}
               maxLength={2}
-              autoComplete="off"
-              aria-invalid={!countryValid || undefined}
-              aria-describedby={`${ids}-country-hint`}
-              className="w-control-lg uppercase"
-              onChange={(event) =>
-                onCountry(event.target.value.toUpperCase().trim())
-              }
+              invalid={!countryValid || undefined}
+              describedBy={`${ids}-country-hint`}
+              className="w-control-lg"
+              onChange={onCountry}
             />
-            <FieldDescription id={`${ids}-country-hint`}>
-              {countryValid
-                ? t("desktop.ledger.import.country_hint")
-                : t("desktop.ledger.import.country_invalid", {
-                    value: country,
-                  })}
-            </FieldDescription>
+            {countryValid ? (
+              <FieldDescription id={`${ids}-country-hint`}>
+                {t("desktop.ledger.import.country_hint")}
+              </FieldDescription>
+            ) : (
+              <FieldError id={`${ids}-country-hint`}>
+                {t("desktop.ledger.import.country_invalid", { value: country })}
+              </FieldError>
+            )}
           </Field>
         </div>
       )}

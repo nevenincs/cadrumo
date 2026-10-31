@@ -7,8 +7,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { CountryEditor } from "@/components/editors/CountryEditor";
+import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
 import { NotesEditor } from "@/components/editors/NotesEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
+import { TypedField } from "@/components/editors/TypedField";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -22,7 +25,6 @@ import {
 } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
-import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import {
@@ -74,6 +76,7 @@ import {
   confirmation,
   countryAdmitted,
   duplicateOf,
+  entrySpec,
   fieldWidth,
   provenanceOf,
   readCorrection,
@@ -83,6 +86,7 @@ import {
   type ReadingRow,
   referenceFields,
   resolutionOf,
+  seeded,
   sameAsRead,
   sameReading,
   type CorrectionField,
@@ -1160,25 +1164,34 @@ export function DraftReview({
                   />
                 </td>
                 <td className="py-1 pr-2">
-                  <Input
-                    controlSize="sm"
-                    className={`ledger-draft-input tabular-nums ${fieldWidth(
+                  <div
+                    className={`ledger-draft-input ${fieldWidth(
                       CORRECTION_SHAPES[row.field],
                       row.field === "counterparty_name",
                     )}`}
-                    aria-label={fieldLabel(t, row.field)}
-                    aria-invalid={refused ? true : undefined}
-                    maxLength={1024}
-                    value={facts.typed ?? facts.read ?? ""}
-                    onChange={(event) =>
-                      setCorrections((held) => ({
-                        ...held,
-                        [row.field]: event.target.value,
-                      }))
-                    }
-                  />
+                  >
+                    <TypedField
+                      field={entrySpec(CORRECTION_SHAPES[row.field], row.field)}
+                      controlSize="sm"
+                      aria-label={fieldLabel(t, row.field)}
+                      invalid={refused ? true : undefined}
+                      describedBy={
+                        refused ? `${countryId}-${row.field}-error` : undefined
+                      }
+                      value={
+                        facts.typed ??
+                        seeded(CORRECTION_SHAPES[row.field], facts.read ?? "")
+                      }
+                      onChange={(value) =>
+                        setCorrections((held) => ({
+                          ...held,
+                          [row.field]: value,
+                        }))
+                      }
+                    />
+                  </div>
                   {refused && (
-                    <FieldError>
+                    <FieldError id={`${countryId}-${row.field}-error`}>
                       {problemText(t, { kind: "grammar", refusal: refused })}
                     </FieldError>
                   )}
@@ -1275,16 +1288,16 @@ export function DraftReview({
             <FieldLabel htmlFor={countryId}>
               {t("desktop.ledger.documents.country")}
             </FieldLabel>
-            <Input
+            <CountryEditor
               id={countryId}
               controlSize="sm"
-              className="ledger-draft-country uppercase"
+              className="ledger-draft-country"
               maxLength={2}
-              aria-invalid={
+              invalid={
                 country !== "" && !countryAdmitted(country) ? true : undefined
               }
               value={country}
-              onChange={(event) => setCountry(event.target.value.toUpperCase())}
+              onChange={setCountry}
             />
             {readCountry && country !== readCountry && (
               <Button
@@ -1308,17 +1321,12 @@ export function DraftReview({
               <FieldLabel htmlFor={currencyId}>
                 {t("desktop.ledger.documents.field.currency")}
               </FieldLabel>
-              <Input
+              <CurrencyEditor
                 id={currencyId}
                 controlSize="sm"
-                className="uppercase"
-                maxLength={3}
                 value={corrections.currency ?? ""}
-                onChange={(event) =>
-                  setCorrections((held) => ({
-                    ...held,
-                    currency: event.target.value.toUpperCase(),
-                  }))
+                onChange={(currency) =>
+                  setCorrections((held) => ({ ...held, currency }))
                 }
               />
               <FieldDescription>

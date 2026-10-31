@@ -6,6 +6,8 @@
 // value, and nothing is assumed where the reading or the person says
 // nothing. Nothing here reads or writes the ledger.
 
+import type { FieldSpec } from "../../../shared/fieldKind";
+import { heldDecimal } from "../../../shared/numbers";
 import type {
   CatalogueInvoice,
   ConfirmationBlocker,
@@ -26,11 +28,10 @@ import {
   parseDecimal,
   parseIsoDate,
   parseLine,
-  parsePercent,
-  percentOf,
   sameDecimal,
   type Parsed,
 } from "../../../shell/ledgerGrammar";
+import { parsePoints } from "../setup/setupModel";
 
 /** The longest label the confirmation and evidence contracts take. */
 export const LABEL_MAX = 1024;
@@ -56,6 +57,30 @@ export function fieldWidth(shape: FieldShape | "note", name = false): string {
             ? "w-full"
             : "w-field";
   return `${width} max-w-full`;
+}
+
+const SPECS: Record<FieldShape | "note", FieldSpec> = {
+  text: { kind: "text", maxLength: LABEL_MAX },
+  date: { kind: "date" },
+  amount: { kind: "money" },
+  percent: { kind: "percent", unit: "points" },
+  currency: { kind: "currency" },
+  note: { kind: "notes", maxLength: NOTE_MAX },
+};
+
+/** Which editor a field of `shape` is typed in. The tax id is text by shape
+ * and has an editor of its own. */
+export function entrySpec(
+  shape: FieldShape | "note",
+  field?: string,
+): FieldSpec {
+  return field === "counterparty_tax_id" ? { kind: "taxId" } : SPECS[shape];
+}
+
+/** A stored value as an editor holds it: a figure or a rate is seeded through
+ * `heldDecimal`. */
+export function seeded(shape: FieldShape | "note", text: string): string {
+  return shape === "amount" || shape === "percent" ? heldDecimal(text) : text;
 }
 
 /** A field the reading table shows. `party` fields belong to the
@@ -208,12 +233,8 @@ export function readCorrection(
         ? { kind: "value", value: canonicalDecimal(parsed.value)! }
         : parsed;
     }
-    case "percent": {
-      const parsed = parsePercent(raw);
-      return parsed.kind === "value"
-        ? { kind: "value", value: percentOf(parsed.value)! }
-        : parsed;
-    }
+    case "percent":
+      return parsePoints(raw);
     case "currency": {
       const text = raw.trim().toUpperCase();
       if (text === "") return { kind: "empty" };
@@ -532,12 +553,7 @@ function readRecordField(
       : shape === "date"
         ? parseIsoDate(raw)
         : shape === "percent"
-          ? (() => {
-              const percent = parsePercent(raw);
-              return percent.kind === "value"
-                ? ({ kind: "value", value: percentOf(percent.value)! } as const)
-                : percent;
-            })()
+          ? parsePoints(raw)
           : (() => {
               const amount = parseDecimal(raw, TAX_AMOUNT_RULE);
               return amount.kind === "value"

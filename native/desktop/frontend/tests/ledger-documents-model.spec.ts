@@ -106,6 +106,16 @@ test("only corrections that change the reading are sent, in the confirmation's s
   ).toEqual({ kind: "ok", values: {} });
 });
 
+test("a rate is read as points, so half a point is not mistaken for a fraction", () => {
+  expect(
+    correctionValues(draft, "received", { retention_rate: "0.5" }),
+  ).toEqual({ kind: "ok", values: { retention_rate: "0.5" } });
+  expect(correctionValues(draft, "received", { iva_rate: "100.5" })).toEqual({
+    kind: "refused",
+    fields: ["iva_rate"],
+  });
+});
+
 test("a finding is answered by a candidate it offers, a value, or an attestation with a reason", () => {
   expect(resolutionOf(blocker, undefined)).toBeNull();
   expect(
