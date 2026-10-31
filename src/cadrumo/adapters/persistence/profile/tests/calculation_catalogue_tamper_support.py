@@ -8,14 +8,18 @@ encrypted payload of the real row under its unchanged binding.
 
 from __future__ import annotations
 
+import json
+from collections.abc import Callable
 from typing import Any
 
 from sqlalchemy import select
 
+from .....core.classification.policies import SensitivityClass
 from .....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.engine import get_engine
 from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.secure_sql import mutate_encrypted_secure_object_json
 
 
@@ -44,4 +48,29 @@ def plant_calculation_revision_unchecked(
     mutate_encrypted_secure_object_json(get_engine(), row_statement=statement, mutate=replace_payload)
 
 
-__all__ = ["plant_calculation_revision_unchecked"]
+def rewrite_stored_revision_catalogue(
+    secure_objects: SecureObjectRepository,
+    mutate: Callable[[dict[str, Any]], None],
+) -> None:
+    """Decode the stored catalogue envelope, let ``mutate`` edit it, and persist it again."""
+    namespace = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+    record = secure_objects.load(
+        namespace.namespace,
+        namespace.require_default_object_key(),
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=namespace.schema_version,
+    )
+    assert record is not None
+    envelope = json.loads(record.payload.decode("utf-8"))
+    mutate(envelope)
+    secure_objects.save(
+        namespace=namespace.namespace,
+        object_key=namespace.require_default_object_key(),
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
+
+
+__all__ = ["plant_calculation_revision_unchecked", "rewrite_stored_revision_catalogue"]
