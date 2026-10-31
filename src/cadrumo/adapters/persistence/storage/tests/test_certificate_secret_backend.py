@@ -435,8 +435,8 @@ class TestSecretStoreNaturalKey:
 
     def test_overlength_name_is_refused(self) -> None:
         with pytest.raises(ValidationError):
-            _backend_module._secret_store_key(bucket_id="bucket", name="x" * 161)
-        assert _backend_module._secret_store_key(bucket_id="bucket", name="x" * 160)
+            _backend_module._secret_store_key(bucket_id="bucket", name="x" * 257)
+        assert _backend_module._secret_store_key(bucket_id="bucket", name="x" * 256)
 
     def test_distinct_names_stay_distinct(self) -> None:
         """Canonicalisation must not collapse genuinely different sources."""

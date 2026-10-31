@@ -64,11 +64,11 @@ class ProfileOverviewInteractionMixin:
     @staticmethod
     def _row_key_for_field(section: ProfileSectionView, field: ProfileFieldView) -> str:
         """Recover the stored row key from a schema-expanded fact path."""
-        parts = field.path.split(".")
-        if len(parts) == 2 and parts[0] == section.key:
-            return ""
-        if len(parts) == 3 and parts[0] == section.key:
-            return parts[1]
+        match field.path.split("."):
+            case [owner, _] if owner == section.key:
+                return ""
+            case [owner, row_key, _] if owner == section.key:
+                return row_key
         # A projected repeatable field must have one of these shapes.  Do not
         # guess from display position if a malformed projection reaches TUI.
         raise ValueError(f"cannot determine row identity from {field.path!r}")

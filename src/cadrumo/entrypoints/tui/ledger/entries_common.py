@@ -107,7 +107,7 @@ def read_period(year_text: str, code: str | None, *, required: bool = False) -> 
         return None
     if not year_text or code is None:
         raise ValueError(tr("tui.ledger.entry_tools.period.pair"))
-    if not year_text.isdigit() or len(year_text) != 4:
+    if not (year_text.isdigit() and 1000 <= int(year_text) <= 9999):
         raise ValueError(tr("tui.ledger.entry_tools.period.invalid"))
     try:
         return PublicPeriod.from_period(Period.from_year_and_code(int(year_text), code))

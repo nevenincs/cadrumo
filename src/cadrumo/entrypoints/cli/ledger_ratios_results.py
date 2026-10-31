@@ -27,8 +27,8 @@ from ...core.text_bounds import NonEmptyStr
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import validate_usage_ratio_bound
 
-_CategoryValue = Annotated[str, Field(min_length=1, max_length=96)]
-_ProportionalityKindValue = Annotated[str, Field(min_length=1, max_length=96)]
+_CategoryValue = Annotated[str, Field(min_length=1, max_length=128)]
+_ProportionalityKindValue = Annotated[str, Field(min_length=1, max_length=128)]
 
 
 def _validated_ratio_text(value: str, *, field: str) -> str:

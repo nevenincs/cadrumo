@@ -7,6 +7,7 @@ policy can enforce the expected storage classification.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime
 
 from pydantic import BaseModel, Field, NonNegativeInt
@@ -14,6 +15,9 @@ from pydantic import BaseModel, Field, NonNegativeInt
 from .....core.classification.policies import SensitivityClass
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
+_HASHED_KEY_BYTES = hashlib.sha256().digest_size
+"""The size of the keyed natural-identifier hash a secure object is stored under."""
 
 # Every digest-shaped column below is written by ``core.hashing.sha256_hex``
 # (directly, or via ``derive_revision_id``), so the canonical
@@ -77,7 +81,7 @@ class SecureObjectDeletion(BaseModel):
     model_config = _STRICT_FROZEN
 
     namespace: str = Field(min_length=1)
-    hashed_object_key: bytes = Field(min_length=32, max_length=32)
+    hashed_object_key: bytes = Field(min_length=_HASHED_KEY_BYTES, max_length=_HASHED_KEY_BYTES)
     expected_revision_id: ContentDigest | None = None
     """Optional opened-baseline guard for a record removed by an identity edit."""
 

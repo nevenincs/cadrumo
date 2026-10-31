@@ -126,12 +126,14 @@ class AmbiguousRole(BaseModel):
     model_config = _STRICT_FROZEN
 
     role: FieldRole
-    column_indexes: tuple[int, ...] = Field(min_length=2)
-    headers: tuple[str, ...] = Field(min_length=2)
+    column_indexes: tuple[int, ...]
+    headers: tuple[str, ...]
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _index_and_header_counts_agree(self) -> AmbiguousRole:
+        if len(self.column_indexes) < 2:
+            raise ValueError("an ambiguous role is claimed by more than one column")
         if len(self.column_indexes) != len(self.headers):
             raise ValueError("column_indexes and headers must describe the same columns")
         return self

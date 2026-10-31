@@ -111,7 +111,7 @@ def test_modelo_reconciliation_diff_payload_refuses_malformed_field(field: str, 
         "Ley 37/1992 art. 164",
         "",
         "   ",
-        "x" * 161,
+        "x" * 257,
     ),
 )
 def test_modelo_reconciliation_diff_payload_refuses_a_ref_that_is_not_a_registry_id(bad_ref: str) -> None:

@@ -701,7 +701,7 @@ class InventoryLedgerHistoryEntry(BaseModel):
         return self
 
 
-InventoryYear = Annotated[int, Field(ge=1)]
+InventoryYear = Annotated[int, Field(ge=1900, le=9999)]
 """The calendar year an inventory ledger or movement covers.
 
 Deliberately NOT the filing-year window. An inventory record may reach back

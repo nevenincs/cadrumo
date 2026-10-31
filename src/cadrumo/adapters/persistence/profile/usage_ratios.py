@@ -126,9 +126,13 @@ def load_usage_ratios(
 
 def _unknown_ratio_key_line(error: ErrorDetails, loc: Sequence[object]) -> str | None:
     """Render the canonical eligible-category detail for an enum key error."""
-    if error.get("type") != "enum" or len(loc) < 3 or loc[0] != "ratios" or loc[-1] != "[key]":
+    if error.get("type") != "enum":
         return None
-    offending_key = loc[1]
+    match loc:
+        case ["ratios", offending_key, *_, "[key]"]:
+            pass
+        case _:
+            return None
     eligible = ", ".join(sorted(category.value for category in ELIGIBLE_USAGE_RATIO_CATEGORIES))
     return f"  - ratios.{offending_key}: unknown ratio key; eligible categories are: {eligible}"
 

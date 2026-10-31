@@ -9,7 +9,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal, Protocol
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
@@ -242,7 +242,7 @@ class LedgerImportRequestV1(BaseModel):
     path: Path
     source_kind: LedgerImportSourceKind
     provider: LedgerProviderID = LedgerProviderID.AUTO
-    country: str | None = Field(default=None, min_length=2, max_length=2)
+    country: CountryCodeAlpha2 | None = None
     own_account_id: OwnAccountId | None = None
     previewed_sources: tuple[LedgerImportSourceBindingV1, ...] | None = None
     """Set only to apply: exactly the files a preview read, each refused if its bytes changed since."""

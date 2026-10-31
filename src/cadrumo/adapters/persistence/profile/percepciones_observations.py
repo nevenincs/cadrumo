@@ -48,7 +48,7 @@ class _PercepcionObservationEnvelopePayload(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: Period
     observation: WithholdingObservation

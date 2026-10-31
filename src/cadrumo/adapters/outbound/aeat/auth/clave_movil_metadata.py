@@ -40,7 +40,9 @@ class ClaveMovilSessionMetadata(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: int = Field(default=AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION, ge=2)
+    schema_version: int = Field(
+        default=AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION, ge=AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION
+    )
     provider_kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
     identity_nif: str = Field(min_length=1)
     authenticated_at: datetime

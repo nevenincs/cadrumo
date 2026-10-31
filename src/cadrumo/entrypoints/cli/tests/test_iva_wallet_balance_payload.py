@@ -101,7 +101,7 @@ def test_payload_refuses_a_negative_lot_count(bad_count: int) -> None:
         _report(lot_count=bad_count)
 
 
-@pytest.mark.parametrize("bad_expiry", [1999, 2201])
+@pytest.mark.parametrize("bad_expiry", [1899, 10000])
 def test_payload_refuses_an_out_of_range_next_expiry_year(bad_expiry: int) -> None:
     with pytest.raises(ValidationError):
         _payload(next_expiry_year=bad_expiry)

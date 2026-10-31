@@ -33,6 +33,7 @@ from pydantic import Field
 
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
+from .....core.country_code import COUNTRY_CODE_LENGTH
 from .....core.errors.hierarchy import SiteHealthError
 from .....core.identity.nif_iva import normalise_nif_iva
 from .....core.identity_check_verdict import IdentityCheckVerdictValue
@@ -445,7 +446,7 @@ def _split_vies_nif(nif: str) -> tuple[str, str]:
     ``0123.456.789`` to VIES with the dots intact.
     """
     normalized_nif = normalise_nif_iva(nif)
-    if len(normalized_nif) < 3 or not normalized_nif[:2].isalpha():
+    if len(normalized_nif) <= COUNTRY_CODE_LENGTH or not normalized_nif[:2].isalpha():
         raise RegistryValidationError(f"NIF-IVA value {nif!r} must start with a two-letter EU country code")
     iva_number = normalized_nif[2:]
     if not iva_number:

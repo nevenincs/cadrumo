@@ -123,10 +123,10 @@ def test_ratio_keys_are_grounded_before_the_frontend_projects_bounded_worker_tok
     with pytest.raises(RegistryValidationError, match="is not declared"):
         require_proportionality_kind("bogus")
 
-    for category in ("", "x" * 97):
+    for category in ("", "x" * 129):
         with pytest.raises(ValidationError):
             RatiosRowPayload(category=category, ratio="0.5")
-    for kind in ("", "x" * 97):
+    for kind in ("", "x" * 129):
         with pytest.raises(ValidationError):
             RatiosEligibleRowPayload(
                 category="worker-category",

@@ -43,6 +43,7 @@ PROFILE_CUSTODY_ENVELOPE_FILENAME: Final = "envelope.v1.json"
 #: predecessor digest, and the ten-digit maximum password generation.
 PROFILE_CUSTODY_ENVELOPE_MAX_BYTES: Final = 704
 PROFILE_CUSTODY_PASSWORD_GENERATION_MAX: Final = 2_147_483_647
+_FIRST_PASSWORD_GENERATION: Final = 1
 
 _KEY_SCHEDULE: Final = "profile-password-dek-wrap/v1"
 
@@ -103,10 +104,12 @@ class ProfileCustodyWrappedDek(BaseModel):
         return canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
 
 
-PasswordGeneration = Annotated[int, Field(ge=1, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
+PasswordGeneration = Annotated[int, Field(ge=_FIRST_PASSWORD_GENERATION, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
 """A profile password generation counter: at least the first, never past the ceiling."""
 
-PostChangePasswordGeneration = Annotated[int, Field(ge=2, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
+PostChangePasswordGeneration = Annotated[
+    int, Field(ge=_FIRST_PASSWORD_GENERATION + 1, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)
+]
 """The generation a profile reaches after a passphrase change.
 
 Narrower than :obj:`PasswordGeneration` at the bottom only: a profile starts at

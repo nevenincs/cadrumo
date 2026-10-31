@@ -180,7 +180,7 @@ def test_preview_is_the_default_posture() -> None:
     [
         ("bad", CENSO_SOURCE_TAG),
         ("", CENSO_SOURCE_TAG),
-        ("contact.postcode", "x" * 81),
+        ("contact.postcode", "x" * 129),
     ],
 )
 def test_censo_pull_fact_payload_refuses_noncanonical_path_or_provenance(path: str, source: str) -> None:
