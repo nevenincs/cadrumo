@@ -34,8 +34,11 @@ that inherits `macos-arm64` (for example from `xcrun -f clang`,
 `CADRUMO_RUST_ROOT`, `CADRUMO_ZSTD`, `CADRUMO_INSTALL_NAME_TOOL`,
 `CADRUMO_CODESIGN`, `CADRUMO_CARGO_DENY` and the agent source directory. The
 binary directory's cache retains them, so the `just` native recipes reuse the
-same reviewed inputs. The signing identity `-` produces an ad-hoc signed local
-build that is not a distributable release.
+same reviewed inputs. `CADRUMO_NATIVE_SIGNING_IDENTITY` defaults to `-`, the
+ad-hoc identity, which is also the signature Cadrumo distributes: the project is
+open source, holds no Apple Developer ID or other code-signing certificate, and
+its builds are not notarized. Another local identity changes only the seal on
+that builder's own images.
 
 `CADRUMO_CONFIGURE_PAYLOAD=OFF` configures native component targets and their tests
 without the full product/documentation/desktop assembly graph. It supports backend
@@ -66,8 +69,8 @@ executable. Its content hash and canonical source provenance enter
 `generated/build-toolchain.json`; the path is not a target SDK pin. Standalone
 provisioning accepts `--build-toolchain <file>` with that configured decoder.
 Linux assembly requires explicit `CADRUMO_READELF` and `CADRUMO_PATCHELF` tools;
-macOS requires `CADRUMO_INSTALL_NAME_TOOL`, `CADRUMO_CODESIGN` and an explicit
-`CADRUMO_NATIVE_SIGNING_IDENTITY`. Native tools are checked against configured
+macOS requires `CADRUMO_INSTALL_NAME_TOOL` and `CADRUMO_CODESIGN`, and records
+`CADRUMO_NATIVE_SIGNING_IDENTITY`, `-` unless set. Native tools are checked against configured
 content identities and are never discovered through the runtime PATH.
 
 The selected host interpreter, compiler, linker, Rust tools, uv and toolchain file
@@ -647,7 +650,7 @@ scripts. Each entry carries:
 | `target` | CMake target that builds the image; the stage depends on it |
 | `artifact` | CMake variable, defined in the root or `native/` directory scope, holding the image's absolute build path; a generator expression is allowed |
 | `desktop` | Marks the one image that receives desktop registration; that image needs the bundled documentation |
-| `signed` | The image belongs to the release signing inventory; no signing step consumes it yet |
+| `signed` | The image belongs to the signing inventory; no step consumes the flag, because macOS assembly ad-hoc signs every Mach-O image and Windows images carry no Authenticode signature |
 | `startup` | Optional, default false; `true` adds the image to `startup_files` |
 | `version_arguments` | Arguments that make the image print the product version |
 
@@ -2225,7 +2228,8 @@ its `native-package` target. Windows also builds and supplies the installer-only
 DLL and maintenance runner. Set `CADRUMO_WIX_EXECUTABLE` on the source configure
 when WiX is not on PATH. The channel, builder interpreter, configuration-specific
 payload and staged desktop image are passed explicitly. This target creates
-unsigned artifacts; it does not install them or bypass lifecycle acceptance gates.
+artifacts without a publisher signature (a macOS bundle carries its ad-hoc seal);
+it does not install them or bypass lifecycle acceptance gates.
 The distribution preset owns its own outputs and cleanup targets. A process-held
 lock serializes its configure-and-package operation across source build trees.
 Standalone distribution configure/build/clean commands must not overlap that
@@ -2292,7 +2296,9 @@ for MSI; current WiX 7 also requires operator acceptance of its OSMF EULA. CPack
 `CPACK_WIX_VERSION=4` selects the WiX XML/tool interface, not a claim that WiX 4
 is the latest release. Set `CPACK_WIX_PRODUCT_ICON` to the generated product ICO
 when producing the Windows installer. DEB requires dpkg tooling; RPM requires
-rpmbuild. Signing, notarization and native launch/upgrade tests remain release gates.
+rpmbuild. Native launch/upgrade tests remain release gates. Publisher signing and
+notarization are not: Windows artifacts carry no Authenticode signature, and macOS
+artifacts carry the ad-hoc seal and are never notarized.
 
 Linux desktop packages use distribution-managed GTK 3 and WebKitGTK 4.1.
 `dev/packaging/native/linux_desktop_runtime.py` owns the provider minimums and
@@ -2473,10 +2479,25 @@ data cannot lie beneath `Contents/Frameworks` or `Contents/MacOS`; its nested
 images are sealed as signed resources beneath `Contents/Resources/app`. Splitting
 code from data across nested-code and resource directories would require the
 package-root containment checks to accept the joining links. Nested images carry
-ad-hoc signatures without the hardened runtime. The ad-hoc identity `-` is a local
-seal, not a distributable release: Developer ID signing, notarization, the
-hardened runtime and its entitlements for the nested images and Gatekeeper
-acceptance remain release gates.
+ad-hoc signatures without the hardened runtime. The ad-hoc seal is the
+distribution signature, and `codesign --verify --deep --strict` is its gate. With
+no Developer ID and no notarization, Gatekeeper refuses a downloaded copy until
+the user approves it once; the user documentation's installation page describes
+that first run. A locally built bundle carries no quarantine and opens directly.
+
+The bundle carries `Contents/Library/LaunchAgents/<manager_id>.plist`, an Aqua
+agent that runs the payload's manager with `--sign-in`. Packaging never registers
+it. The manager registers it with `SMAppService` for its own user only when its
+bundle lies directly in `/Applications` or `~/Applications`, it runs on the
+default storage root, the bundle holds exactly that one agent declaration and the
+system provides `SMAppService`; anywhere else the menu's start-at-sign-in row is
+disabled. At each start it reconciles registration with the per-user
+`manager-preferences.json`: it registers an unregistered agent while start is on,
+and removes the agent when the user has turned start off. An agent the user
+disabled in the system's login items is left alone while start is on. Turning
+start on registers before storing the preference, so a refusal changes nothing;
+turning it off stores the opt-out first, and a sign-in start that finds it exits
+at once. A refused registration never stops supervision.
 
 For development, `cmake --install <build> --prefix <absolute-test-prefix>` uses
 relative installation definitions. Set `CADRUMO_UNINSTALL_PREFIX` to that exact

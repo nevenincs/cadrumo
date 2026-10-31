@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#standalone-executable-tier'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:5d32031b0db1f7948f16eab839022267fd8d43bc57bb36683c7a2ba6e5ea7999'
+modified: '2026-10-31'
+body_hash: 'sha256:ba8c1b8a0d34c05df02ff741d5368c137035b0c9bb17227b3dc3486ff86f5021'
 related:
   - "[[2026-07-25-standalone-executable-tier-research]]"
   - "[[2026-07-25-account-distribution-standard-adr]]"
@@ -182,3 +182,9 @@ provide, the account rule selects both tiers independently, and dropping one for
 alone would fork the standard. The one interaction worth revisiting separately is whether
 the Scoop manifest should eventually point at the binary rather than at a Python install;
 that is a simplification this record neither makes nor forecloses.
+
+## Amendment 2026-10-31 - signing is settled
+
+Basis: the user's ruling of 2026-10-31 that Cadrumo, an open-source project, will never hold an Apple Developer ID or any other real code-signing certificate and will never be notarized, and that this was never planned. The ad-hoc identity `-`, with a seal that `codesign --verify --deep --strict` accepts as a build gate, is the permanent macOS distribution signature. The ruling names any real code-signing certificate, so it covers Windows Authenticode equally: Windows images and installers ship without a publisher signature. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S19`.
+
+Constraints: "Code signing and notarization are unexamined." is settled. Any standalone binary ships without a publisher signature and without notarization; on macOS it may carry an ad-hoc seal. The operating-system warnings this record names are a permanent cost, met by the documented first-run path on the user installation page rather than by signing.

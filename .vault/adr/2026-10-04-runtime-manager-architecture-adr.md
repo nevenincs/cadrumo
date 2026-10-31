@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d1cb6c671334cb6297b2f9c64db39d6203e7160d92205b503ad9888dbb552ca'
+body_hash: 'sha256:827ca1dee6e30a170887ce1ea04bdc3d0b904edc45c4be7ec981f224def89d34'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -392,3 +392,23 @@ Superseded sentences:
 - Amendment 2026-10-31, "Still open": both items are resolved by this amendment.
 
 Unchanged: the per-root start claim under `.runtime/`, the Quit and failed-version markers, peer admission at exact package images, the strict runtime environment and the refusal of an authority override. A caller-owned `--configured-root` runtime takes no manager session lock; single-owner endpoint convergence still keeps a second runtime off its root (`2026-10-12-runtime-manager-architecture-caller-owned-root-adr`). Windows dispatch, cutover and the Windows hosts were changed without being built or run on Windows in this Step.
+
+## Amendment 2026-10-31 - permanent ad-hoc signing and macOS login start
+
+Basis: the user's ruling of 2026-10-31 that Cadrumo, an open-source project, will never hold an Apple Developer ID or any other real code-signing certificate and will never be notarized, and that this was never planned. The ad-hoc identity `-`, with a seal that `codesign --verify --deep --strict` accepts as a build gate, is the permanent macOS distribution signature. The ruling names any real code-signing certificate, so it covers Windows Authenticode equally: Windows images and installers ship without a publisher signature. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S19`.
+
+Implemented in commits 42c502037f (manager login start) and 74ac6a6943 (contract and release wording).
+
+What changed:
+
+- Login start on macOS is decided on its own merits under rule 04, which gives user installation unprivileged login startup. The current macOS delivery is one bundle dragged into an Applications folder, with no installer to register anything. The installed manager therefore registers the bundle's own Aqua agent, `SMAppService.agent` with the bundled `Contents/Library/LaunchAgents/<manager_id>.plist` of the plist profile above, for its own user (`native/manager/src/macos/login_start.rs`).
+- Registration is admitted only when the bundle lies directly in `/Applications` or `~/Applications`, the manager runs on the default storage root, the bundle holds exactly one agent declaration and the system provides `SMAppService`. The default root is required because launchd starts the agent without the operator's environment, so it can only reach the default root. Development, test and CI images never meet these conditions, and tests reach no native registration.
+- Start is on by default. Each manager start reconciles registration with the per-user preference: an unregistered agent is registered while start is on, and the agent is removed once the user turns start off. An agent the user disabled in the system's login items is not registered again. The menu's Start at sign-in row is enabled only where registration is admitted. Turning it on registers before storing the preference, so a refusal changes nothing. Turning it off stores the opt-out first, and that alone stops a sign-in start. A refused registration never stops supervision. Removing the bundle takes its registration with it, which is uninstall for this delivery.
+
+Superseded sentences:
+
+- Versions: "A version is complete only once its package manifest verifies, and, when signing exists, its signature too." now reads: "A version is complete only once its package manifest verifies and, on macOS, its bundle seal verifies." No publisher signature is checked.
+- Platform placement, macOS: "No login start until signing exists. The desktop app opens the manager through LaunchServices." now reads: "The installed manager registers the bundled agent for its own user as the 2026-10-31 amendment describes. The desktop app opens the manager through LaunchServices."
+- Accepted costs: "One more signed binary." now reads "One more sealed binary." "macOS ships without login start until signing exists, and Linux waits for the POSIX platform crate." now reads "Linux waits for the POSIX platform crate."
+
+Unchanged: installed-scope login defaults, the per-user opt-out under the user data root, that installers never write it, and that development builds never register login start. "`SMAppService` proves unworkable for unsigned or ad-hoc builds" stays under Reconsider if, now as an open acceptance question: registration of an ad-hoc sealed agent has not been observed on a disposable Mac. If it fails there, the fallback is a per-user agent under `~/Library/LaunchAgents`, as `2026-10-08-application-distribution-darwin-versioned-installation-adr` proposes, not a wait for signing. Disposable-host acceptance of registration, the first sign-in start, opt-out and bundle removal is still outstanding.

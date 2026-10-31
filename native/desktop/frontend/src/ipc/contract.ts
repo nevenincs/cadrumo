@@ -2256,6 +2256,9 @@ export type WindowPresentation = {
   fullscreen: boolean;
   /** Who draws the minimise, maximise and close controls. */
   chrome: "custom" | "native";
+  /** Where the system draws the controls: the header row's height and the
+   * leading inset that clears them, in CSS pixels, as the host seated them. */
+  nativeControls: { height: number; inset: number } | null;
 };
 export type WindowAction =
   | "minimize"

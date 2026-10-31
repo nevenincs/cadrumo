@@ -51,7 +51,7 @@ if(CADRUMO_TARGET MATCHES "^macos-" AND CADRUMO_DESKTOP_EXECUTABLE)
   # Staging seals the bundle once, after every member is written, so the stage, a
   # prefix installation and every package copy carry the same receipt-bound seal.
   set(CADRUMO_CODESIGN "" CACHE FILEPATH "Reviewed absolute codesign tool that seals the application bundle")
-  set(CADRUMO_NATIVE_SIGNING_IDENTITY "" CACHE STRING "Explicit bundle signing identity; - is an ad-hoc local seal")
+  set(CADRUMO_NATIVE_SIGNING_IDENTITY "-" CACHE STRING "Bundle signing identity; - is the ad-hoc seal")
   if(NOT IS_ABSOLUTE "${CADRUMO_CODESIGN}" OR NOT EXISTS "${CADRUMO_CODESIGN}"
       OR CADRUMO_NATIVE_SIGNING_IDENTITY STREQUAL "")
     message(FATAL_ERROR "Supply CADRUMO_CODESIGN and CADRUMO_NATIVE_SIGNING_IDENTITY to seal the application bundle")

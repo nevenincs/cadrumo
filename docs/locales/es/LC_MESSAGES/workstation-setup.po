@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 15:23+0100\n"
+"POT-Creation-Date: 2026-10-31 11:25+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -119,28 +119,101 @@ msgid "Confirm the command is on your path:"
 msgstr "Confirma que el comando está en tu PATH:"
 
 #: ../../workstation-setup.md:53
+msgid "Open the macOS app"
+msgstr "Abrir la app de macOS"
+
+#: ../../workstation-setup.md:55
+msgid ""
+"The macOS app, `Cadrumo.app`, is not notarized by Apple. Cadrumo is an "
+"open-source project with no Apple Developer ID, and it will not get one, "
+"so every copy carries only an ad-hoc signature. That signature lets macOS"
+" check that the app has not changed since it was built. It does not tell "
+"macOS who built it."
+msgstr ""
+"La app de macOS, `Cadrumo.app`, no está notarizada por Apple. Cadrumo es "
+"un proyecto de código abierto sin Apple Developer ID y no va a tenerlo, "
+"así que cada copia lleva solo una firma ad hoc. Esa firma permite a macOS"
+" comprobar que la app no ha cambiado desde que se compiló. No le indica a"
+" macOS quién la compiló."
+
+#: ../../workstation-setup.md:60
+msgid ""
+"If you build the app yourself from a source checkout, macOS opens it "
+"without a warning. The native build and its prerequisites are described "
+"in `native/CONTRACT.md` in the source repository."
+msgstr ""
+"Si compilas la app tú mismo a partir de una copia del código fuente, "
+"macOS la abre sin ningún aviso. La compilación nativa y sus requisitos se"
+" describen en `native/CONTRACT.md`, en el repositorio del código fuente."
+
+#: ../../workstation-setup.md:64
+msgid ""
+"macOS quarantines a copy that you download as a disk image (DMG) or ZIP, "
+"and refuses to open it the first time. Drag `Cadrumo.app` to your "
+"Applications folder, then do one of the following:"
+msgstr ""
+"macOS pone en cuarentena una copia que descargas como imagen de disco "
+"(DMG) o ZIP, y se niega a abrirla la primera vez. Arrastra `Cadrumo.app` "
+"a tu carpeta Aplicaciones y haz una de estas dos cosas:"
+
+#: ../../workstation-setup.md:68
+msgid ""
+"Open the app once and choose **Done** in the warning. Go to **System "
+"Settings** > **Privacy & Security**, choose **Open Anyway** next to the "
+"message about Cadrumo, and confirm with your password."
+msgstr ""
+"Abre la app una vez y cierra el aviso con **Done** (o el botón "
+"equivalente en tu idioma). Ve a **Ajustes del Sistema** > **Privacidad y "
+"seguridad**, elige **Abrir igualmente** junto al mensaje sobre Cadrumo y "
+"confirma con tu contraseña."
+
+#: ../../workstation-setup.md:71
+msgid "Remove the quarantine in Terminal:"
+msgstr "Quita la cuarentena en Terminal:"
+
+#: ../../workstation-setup.md:77
+msgid ""
+"Do this only for a copy that comes from Cadrumo's own release channel. "
+"After the first run, the app opens normally."
+msgstr ""
+"Hazlo solo con una copia que proceda del canal de publicación propio de "
+"Cadrumo. Después de la primera ejecución, la app se abre con normalidad."
+
+#: ../../workstation-setup.md:80
+msgid ""
+"When the app runs from an Applications folder, its background manager "
+"starts when you sign in to your Mac, and macOS lists it under Login "
+"Items. To stop that, turn off **Start at sign-in** in the manager's menu "
+"bar item."
+msgstr ""
+"Cuando la app se ejecuta desde una carpeta Aplicaciones, su gestor en "
+"segundo plano se inicia al iniciar sesión en tu Mac, y macOS lo muestra "
+"entre los ítems de inicio de sesión. Para evitarlo, desactiva **Iniciar "
+"al iniciar sesión** en el elemento de la barra de menús del gestor."
+
+#: ../../workstation-setup.md:84
 msgid "Install optional extras"
 msgstr "Instalar extras opcionales"
 
-#: ../../workstation-setup.md:55
+#: ../../workstation-setup.md:86
 msgid "The core install is lean. Each optional extra adds one capability:"
 msgstr "La instalación básica es ligera. Cada extra opcional añade una capacidad:"
 
-#: ../../workstation-setup.md:57
+#: ../../workstation-setup.md:88
 msgid "`google` - Google Drive and Sheets export."
 msgstr "`google`: exportación a Google Drive y Google Sheets."
 
-#: ../../workstation-setup.md:58
+#: ../../workstation-setup.md:89
 msgid "`browser` - live AEAT reads through browser automation."
 msgstr ""
 "`browser`: lecturas en vivo de la AEAT mediante automatización del "
 "navegador."
 
-#: ../../workstation-setup.md:59
+#: ../../workstation-setup.md:90
 msgid "`ofx` - OFX and QFX bank-statement import."
 msgstr "`ofx`: importación de extractos bancarios OFX y QFX."
 
-#: ../../workstation-setup.md:60
+#: ../../workstation-setup.md:91
 msgid ""
 "`pdf` - writing the calculation-summary PDF. Reading and verifying a "
 "summary needs no extra."
@@ -148,11 +221,11 @@ msgstr ""
 "`pdf`: generación del PDF del resumen del cálculo. Leer y verificar un "
 "resumen no requiere ningún extra."
 
-#: ../../workstation-setup.md:62
+#: ../../workstation-setup.md:93
 msgid "`all` - every extra in this list."
 msgstr "`all`: todos los extras de esta lista."
 
-#: ../../workstation-setup.md:64
+#: ../../workstation-setup.md:95
 msgid ""
 "Name the extras you need when you install: in your channel's install "
 "command, write the package as `cadrumo[google,browser]` instead of "
@@ -166,7 +239,7 @@ msgstr ""
 " que usa el canal con el que lo instalaste. En una copia del código "
 "fuente, añade extras con `uv sync --extra google --extra browser`."
 
-#: ../../workstation-setup.md:69
+#: ../../workstation-setup.md:100
 msgid ""
 "Install a missing extra by repeating your channel's install command with "
 "that extra named."
@@ -174,11 +247,11 @@ msgstr ""
 "Instala el extra que falte repitiendo el comando de instalación de tu "
 "canal con ese extra indicado."
 
-#: ../../workstation-setup.md:72
+#: ../../workstation-setup.md:103
 msgid "Connect an AI assistant"
 msgstr "Conectar un asistente de IA"
 
-#: ../../workstation-setup.md:74
+#: ../../workstation-setup.md:105
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
@@ -193,7 +266,7 @@ msgstr ""
 "que está en tu ruta de búsqueda. En una copia de trabajo del código "
 "fuente, comprueba el punto de entrada instalado con:"
 
-#: ../../workstation-setup.md:85
+#: ../../workstation-setup.md:116
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
@@ -201,11 +274,11 @@ msgstr ""
 "[Conectar un agente](how-to/connect-an-agent.md) muestra las dos formas "
 "de conectarse y el flujo de solicitud de autorizaciones."
 
-#: ../../workstation-setup.md:88
+#: ../../workstation-setup.md:119
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../workstation-setup.md:90
+#: ../../workstation-setup.md:121
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -213,7 +286,7 @@ msgstr ""
 "[Guía rápida](how-to/quickstart.md): de un perfil vacío a un fichero de "
 "modelo exportado."
 
-#: ../../workstation-setup.md:92
+#: ../../workstation-setup.md:123
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -222,10 +295,10 @@ msgstr ""
 "capacidades de servicio por perfil (exportación a Google, visión LLM, "
 "subida de evidencias a la nube)."
 
-#: ../../workstation-setup.md:94
+#: ../../workstation-setup.md:125
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Conectar un agente](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:95
+#: ../../workstation-setup.md:126
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolución de problemas](how-to/troubleshooting.md)"

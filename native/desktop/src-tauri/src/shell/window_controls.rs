@@ -12,6 +12,18 @@ pub struct Presentation {
     maximized: bool,
     fullscreen: bool,
     chrome: Chrome,
+    /// The header geometry the system's controls are seated in, when the
+    /// system draws them.
+    native_controls: Option<NativeControls>,
+}
+
+/// The page's header row height and the leading inset that clears the
+/// system's controls, in logical points. The host seats the controls in that
+/// row, so the page lays its header out from the same numbers.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+pub struct NativeControls {
+    pub height: f64,
+    pub inset: f64,
 }
 
 /// Who draws the window's minimise, maximise and close controls.
@@ -117,6 +129,9 @@ fn presentation<R: Runtime>(window: &Window<R>) -> Result<Presentation> {
         maximized: window.is_maximized().map_err(failure)?,
         fullscreen: window.is_fullscreen().map_err(failure)?,
         chrome: Chrome::of_platform(),
+        native_controls: window
+            .try_state::<NativeControls>()
+            .map(|controls| *controls.inner()),
     })
 }
 

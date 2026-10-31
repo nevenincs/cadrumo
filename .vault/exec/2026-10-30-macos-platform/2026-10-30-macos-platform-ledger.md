@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:e0a8e3ab8dc5357b8bdd57aa3f7c8da64e6e851ee4e668297b46658a909a4d3f'
+body_hash: 'sha256:c53153f600ae7b9b49011df40824cfc6929d42f135445d2668a8dfc1d5fa34c6'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -308,6 +308,31 @@ native/manager/src/supervision/supervisor.rs`
 - `S17` `M` `native/desktop/src-tauri/src/startup.rs`
 - `S17` `verify:` `build.sh Debug desktop-host-unit-test (708)` -> `pass`
 - `S17` `verify:` `build.sh Debug desktop-frontend-test (1601)` -> `pass`
+- `S19` `A` `native/manager/src/macos/login_start.rs`
+- `S19` `M` `native/manager/src/macos/menu/effects.rs`
+- `S19` `M` `native/manager/src/macos.rs`
+- `S19` `M` `native/manager/src/main.rs`
+- `S19` `M` `native/manager/Cargo.toml`
+- `S19` `M` `dev/packaging/native/macos_launchagent.py`
+- `S19` `M` `native/cmake/AssemblyTools.cmake`
+- `S19` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S19` `M` `native/CONTRACT.md`
+- `S19` `M` `RELEASING.md`
+- `S19` `M` `docs/workstation-setup.md`
+- `S19` `M` `docs/locales/es/LC_MESSAGES/workstation-setup.po`
+- `S19` `M` `docs/locales/ca/LC_MESSAGES/workstation-setup.po`
+- `S19` `M` `docs/locales/hu/LC_MESSAGES/workstation-setup.po`
+- `S19` `M` `.vault/adr/2026-10-04-runtime-manager-architecture-adr.md`
+- `S19` `M` `.vault/adr/2026-10-08-application-distribution-darwin-versioned-installation-adr.md`
+- `S19` `M` `.vault/adr/2026-10-04-application-distribution-adr.md`
+- `S19` `M` `.vault/adr/2026-10-07-application-distribution-windows-versioned-msi-adr.md`
+- `S19` `M` `.vault/adr/2026-07-18-mcpb-signing-publisher-adr.md`
+- `S19` `M` `.vault/adr/2026-07-25-standalone-executable-tier-adr.md`
+- `S19` `verify:` `build.sh Debug rust_manager` -> `pass`
+- `S19` `verify:` `ctest manager.rust manager.fmt manager.clippy` -> `pass`
+- `S19` `verify:` `pytest dev/docs/tests/test_docs_catalogue_drift.py` -> `pass`
+- `S19` `verify:` `vaultspec-core vault check all (no findings on amended ADRs)` -> `pass`
+- `S18` `M` `.vault/plan/2026-10-30-macos-platform-plan.md`
 
 ## Notes
 
@@ -317,3 +342,6 @@ native/manager/src/supervision/supervisor.rs`
 - `S12` Windows dispatch, cutover, session mutex, pipe and desktop host changes were not compiled or run: no Windows target on this Mac.
 - `S12` macOS process tests still claim in the real per-user Darwin transport directory, as the existing ones do; Step S16 isolates it.
 - `S14` The Windows-only real-worker drain test `(test_runtime_drain.py)` was updated for the new terminal outcome but not run here; no packaged GUI launch verified SIGTERM end to end
+- `S19` SMAppService registration of the ad-hoc sealed agent was not exercised: no login item may be created on this non-disposable Mac; tests cover policy, bundle admission and agent discovery only
+- `S19` CMake signing-identity default changed without a reconfigure; the existing cache already holds -
+- `S18` Evaluated and not needed: the ad-hoc sealed bundle with the payload in Contents/Resources/app passes codesign --verify --deep --strict, loads libpython and its extensions under the hardened runtime and reaches runtime ready (S15 evidence); notarization is never planned, so the split brings no benefit and would break package-root containment checks.

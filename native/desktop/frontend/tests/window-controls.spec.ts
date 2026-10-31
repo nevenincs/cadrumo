@@ -256,6 +256,36 @@ test("window controls use authenticated commands and native presentation", async
       brand.evaluate((element) => getComputedStyle(element).paddingInlineStart),
     )
     .toBe(windowed);
+  // The header takes the row the host seated its controls in, and clears them
+  // by the inset the host measured.
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: { publish: (next: Record<string, unknown>) => void };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: false,
+      chrome: "native",
+      nativeControls: { height: 38, inset: 76 },
+    });
+  });
+  await expect
+    .poll(() =>
+      page
+        .locator("header.titlebar")
+        .evaluate((element) => element.getBoundingClientRect().height),
+    )
+    .toBe(38);
+  await expect
+    .poll(() =>
+      brand.evaluate((element) => getComputedStyle(element).paddingInlineStart),
+    )
+    .toBe("76px");
+  await expect(brand.locator('[data-slot="logo"] img')).toHaveCSS(
+    "width",
+    "16px",
+  );
   await page.evaluate(() => {
     (
       window as unknown as {

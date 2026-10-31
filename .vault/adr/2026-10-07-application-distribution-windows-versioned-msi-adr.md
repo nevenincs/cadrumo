@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-07'
-modified: '2026-10-16'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:dca1bde3ee6960d357974ebb49578f5279865ea79140cf799a2b8b254ac5a56c'
+body_hash: 'sha256:bab839c6d0368c352df71cadc1b86098b250e9fc55fa995f262c54057a9266b0'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -110,3 +110,9 @@ All scope isolation, immutable version inventory, independent registration lifet
 ## 2026-10-16 package identity registration amendment
 
 Accepted with 2026-10-16-application-distribution-windows-package-identity-adr on the operator's ruling that the application must be registered. Constraint 3's shared-registration resources additionally include the channel's Windows package identity registration, with the external location at the canonical prefix. Version products never register or remove it. A failed registration is reported as incomplete registration work and does not roll back a committed installation. No other obligation in this record changes.
+
+## Amendment 2026-10-31 - no Authenticode gate
+
+Basis: the user's ruling of 2026-10-31 that Cadrumo, an open-source project, will never hold an Apple Developer ID or any other real code-signing certificate and will never be notarized, and that this was never planned. The ad-hoc identity `-`, with a seal that `codesign --verify --deep --strict` accepts as a build gate, is the permanent macOS distribution signature. The ruling names any real code-signing certificate, so it covers Windows Authenticode equally: Windows images and installers ship without a publisher signature. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S19`.
+
+Constraint 10: "Signing, matching WiX tools/extensions, any applicable tool terms, real release-payload proof and disposable-host acceptance remain separate gates." now reads: "Matching WiX tools/extensions, any applicable tool terms, real release-payload proof and disposable-host acceptance remain separate gates." An artifact is never refused as manager-shippable for lacking an Authenticode signature. Users may meet SmartScreen warnings, which `RELEASING.md` acknowledges. The signed-`.msix` registration of the 2026-10-16 package identity amendment had already lapsed with its superseded record.

@@ -67,6 +67,7 @@
   /* ── The brand mark beside the name: sm in the title bar, md at the head
      of a dialog, lg on the loading page. A mark is artwork, not a control,
      so it does not grow under a coarse pointer. ───────────────────────── */
+  --spacing-mark-xs: 1rem;
   --spacing-mark-sm: 1.5rem;
   --spacing-mark-md: 2.25rem;
   --spacing-mark-lg: 4rem;

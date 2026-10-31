@@ -188,6 +188,9 @@ fn run_macos(intent: Intent, diagnostics: Arc<Diagnostics>) -> io::Result<()> {
         return Ok(());
     }
     let effects = PackageEffects::new(&locations)?;
+    // Login start is a convenience: a refused registration never stops supervision, and
+    // the menu row still reports the stored preference.
+    let _ = effects.reconcile_login(preferences);
     let server = ipc::Server::bind_installed(locations.package_root(), &session_lock)?;
     diagnostics.host_event(EventKind::StageStarted, HostStage::Package);
     let installed = InstalledRuntime::inspect(&locations)
