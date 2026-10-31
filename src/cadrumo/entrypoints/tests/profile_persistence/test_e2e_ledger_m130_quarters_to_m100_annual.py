@@ -79,6 +79,7 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import Period
@@ -185,6 +186,8 @@ _MESH_RESOLVED_OR_LOCKED_SOURCES = frozenset(
         # Mesh-resolved rather than locked.
         "profile",
         _RELATION_PREFILL_SOURCE,
+        # The register-resolved sale rows hold dates and marks a zero cannot stand for.
+        BindingSourceKind.ACTIVITY_ASSET_DISPOSAL.value,
     },
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
