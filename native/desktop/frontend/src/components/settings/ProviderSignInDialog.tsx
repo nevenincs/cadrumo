@@ -333,8 +333,8 @@ function AuthorizationCodeField({
       onChange={(event) => onChange(event.target.value)}
       revealed={revealed}
       onRevealedChange={setRevealed}
-      showLabel={t("desktop.signin.show_password")}
-      hideLabel={t("desktop.signin.hide_password")}
+      showLabel={t("desktop.signin.show_code")}
+      hideLabel={t("desktop.signin.hide_code")}
       autoComplete="one-time-code"
       maxLength={2048}
     />
