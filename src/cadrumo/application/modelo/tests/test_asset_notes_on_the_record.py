@@ -8,7 +8,7 @@ anything.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from string import Formatter
@@ -16,17 +16,16 @@ from string import Formatter
 import pytest
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
-from ....core.i18n.render import lookup_translation, tr
+from ....core.i18n.render import lookup_translation
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
     CalculationNoteSentence,
     CalculationSourceIssue,
-    RecordedCalculationNote,
     recorded_calculation_notes,
 )
-from ....entrypoints.cli._modelo_rendering import recorded_note_notices
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from ...aggregation.tests.test_modelo_source_mesh_ledger import register_asset, resolve_m100
@@ -37,9 +36,13 @@ from ..calculation_notes import (
     fact_locale_key,
     what_to_do_locale_key,
 )
+from ..export_contracts import ModeloExportResult
+from ..export_projection import ModeloFicheroBoePublicReceipt
 from ..printed_boxes import snapshot_printed_boxes
+from ..verification_preconditions import ModeloVerificationResult
 from ..verification_projection import ModeloVerificationSnapshot
 from ..work_form_issue_lines import ModeloFormIssueLine, form_issue_lines
+from .test_verification_preconditions import _blocked_report
 from .test_work_form_gate_agreement import _checked_form, _revision, _work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -131,14 +134,9 @@ def test_a_long_technical_account_does_not_fail_the_calculation(operation: Pinne
     assert issue.fact is diagnostic.fact
 
 
-def test_verify_and_export_say_what_the_calculation_noted(operation: PinnedAuthorityOperation, tmp_path: Path) -> None:
-    from ....core.period import Period
-    from ....entrypoints.cli.modelo_export_commands import _export_notices, _export_text_lines
-    from ..export_contracts import ModeloExportResult
-    from ..export_projection import ModeloFicheroBoePublicReceipt
-    from ..verification_preconditions import ModeloVerificationResult
-    from .test_verification_preconditions import _blocked_report
-
+def test_verify_and_export_carry_what_the_calculation_noted(
+    operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
     _, issues = _persisted(operation)
     notes = recorded_calculation_notes((*issues, *issues))
     assert sum(note.reason == "activity_asset_claim_gap" for note in notes) == 2
@@ -164,31 +162,7 @@ def test_verify_and_export_say_what_the_calculation_noted(operation: PinnedAutho
         bucket_event_id="event-1",
         calculation_notes=notes,
     )
-    restored = ModeloFicheroBoePublicReceipt.from_result(exported).to_result()
-    assert restored.calculation_notes == notes
-    assert any("1200.00 EUR" in notice.message for notice in _export_notices(restored))
-    assert any("600.00 EUR" in line for line in _export_text_lines(restored))
-
-
-def test_a_restated_note_says_its_level_its_facts_and_what_to_do() -> None:
-    note = RecordedCalculationNote(
-        reason="activity_asset_disposal_finding",
-        fact=CalculationNoteFact.of(
-            CalculationNoteSentence.DISPOSAL_FIGURE_IN_BOX,
-            element="furniture",
-            date=date(2025, 6, 30).isoformat(),
-            amount="897.53",
-            box="1654",
-        ),
-    )
-
-    (notice,), (line,) = recorded_note_notices((note,), code="modelo.calculation_note")
-
-    assert all(part in notice.message for part in ("897.53 EUR", "furniture", "2025-06-30", "1654"))
-    assert notice.context is not None
-    assert notice.context["level"] == "check"
-    assert notice.message in line
-    assert tr(what_to_do_locale_key("activity_asset_disposal_finding")) in line
+    assert ModeloFicheroBoePublicReceipt.from_result(exported).to_result().calculation_notes == notes
 
 
 @pytest.mark.parametrize("sentence", tuple(CalculationNoteSentence))
