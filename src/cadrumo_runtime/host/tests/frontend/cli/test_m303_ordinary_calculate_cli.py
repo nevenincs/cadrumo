@@ -30,7 +30,6 @@ from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OP
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.period import Period
@@ -49,14 +48,8 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import OrdinaryM303SecureEvidence, joint_return_options
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_schema_envelope
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [
@@ -86,51 +79,14 @@ def _ordinary_m303_profile_facts() -> dict[str, str]:
     return facts
 
 
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant the Modelo 303 work lifecycle the calculate route submits."""
-    operation_ids = frozenset(
-        {
-            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
-            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
-        }
-    )
-    return AccessScope(
-        operations=operation_ids,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in operation_ids
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
+_OPERATIONS = frozenset(
+    {
+        MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+    }
+)
 
 
 def _no_sources(_bucket_id: str) -> None:
@@ -164,7 +120,7 @@ def _operator_session(
     return native_api_cli_session(
         tmp_path,
         invoke_cli=invoke_cli,
-        scope_for_destination=_scope,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
         prepare_profile=prepare,
     )
 

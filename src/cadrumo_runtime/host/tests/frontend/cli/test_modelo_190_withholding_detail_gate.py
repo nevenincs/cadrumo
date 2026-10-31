@@ -46,7 +46,6 @@ from cadrumo.application.modelo.operation_shared import (
 )
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -54,14 +53,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [
@@ -79,55 +72,18 @@ _ALL_QUARTERS_ATTESTED = "2022:1T,2022:2T,2022:3T,2022:4T"
 _LEDGER_EVIDENCE_FINDING_KEY = "application.modelo.findings.withholding_detail_absent_against_ledger_evidence"
 
 
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant source creation and the Modelo 190 lifecycle across all periods."""
-    operation_ids = frozenset(
-        {
-            INVOICE_ADD_OPERATION_DEFINITION_ID,
-            LEDGER_ADD_OPERATION_DEFINITION_ID,
-            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
-            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-            MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
-            MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-            MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
-        }
-    )
-    return AccessScope(
-        operations=operation_ids,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in operation_ids
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
+_OPERATIONS = frozenset(
+    {
+        INVOICE_ADD_OPERATION_DEFINITION_ID,
+        LEDGER_ADD_OPERATION_DEFINITION_ID,
+        MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+        MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+        MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+    }
+)
 
 
 def _profile_session(
@@ -174,7 +130,7 @@ def _profile_session(
 
     return native_api_cli_session(
         tmp_path,
-        scope_for_destination=_scope,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
         prepare_profile=prepare,
         invoke_cli=invoke_cli,
     )

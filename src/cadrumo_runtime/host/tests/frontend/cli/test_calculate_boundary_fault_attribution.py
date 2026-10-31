@@ -42,21 +42,14 @@ from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METAD
 from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 
 from .cli_runner import semantic_cli_output
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 
 pytestmark = [
     pytest.mark.integration,
@@ -104,45 +97,6 @@ _OPERATIONS = frozenset(
 )
 
 
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant the Modelo 200 work lifecycle these commands submit."""
-    return AccessScope(
-        operations=_OPERATIONS,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in _OPERATIONS
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
-
-
 @contextmanager
 def _legal_entity_session(
     tmp_path: Path,
@@ -166,7 +120,7 @@ def _legal_entity_session(
 
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_scope,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
         prepare_profile=prepare,
         profile_label=profile_label,
         invoke_cli=invoke_cli,

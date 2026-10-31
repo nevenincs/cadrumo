@@ -61,7 +61,6 @@ from cadrumo.application.modelo.profile_readiness_gate import (
 )
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.capsule_record import LoadedProfileRecord, ProfileRecordStore
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
@@ -77,13 +76,11 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
 )
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
+from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import (
+    NativeApiCliSession,
+    native_api_cli_session,
+    operation_lifecycle_scope,
 )
-from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 pytestmark = [
     pytest.mark.integration,
@@ -120,45 +117,6 @@ def profile_decrypts(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     return decrypts
 
 
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant the work lifecycle and the evidence captures these commands submit."""
-    return AccessScope(
-        operations=_OPERATIONS,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in _OPERATIONS
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
-
-
 @contextmanager
 def _operator_session(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, run_cadrumo_cli
@@ -180,7 +138,10 @@ def _operator_session(
         assert ready.setup_state is ProfileSetupState.COMPLETE
 
     with native_api_cli_session(
-        tmp_path, scope_for_destination=_scope, prepare_profile=prepare, invoke_cli=run_cadrumo_cli
+        tmp_path,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
+        prepare_profile=prepare,
+        invoke_cli=run_cadrumo_cli,
     ) as session:
         yield session
 
