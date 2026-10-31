@@ -6,7 +6,7 @@ date: '2026-10-30'
 tier: L1
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:c87f426c28d3c4f587260d9d0089df70ed22e6ebc81ba40152010530cc992d5e'
+body_hash: 'sha256:42c703c10e329c84daf243743e8e1db1ba5f49604447cb8779a824850d879ecc'
 ---
 
 # `registry-owned-facts` plan
@@ -22,10 +22,10 @@ Move every remaining tax number, limit, period rule and form code from productio
 - [x] `S01` - Replace code copies of values the registry already holds: the DT12 threshold, Modelo 190 and 280 offsets, Modelo 720 subclaves; `src/cadrumo/application/modelo/dt12_advisory.py, src/cadrumo/application/filing/, src/cadrumo/domain/foreign_assets/register.py`.
 - [x] `S02` - Derive box lists from registry declarations per revision; `src/cadrumo/application/modelo/projection.py, src/cadrumo/application/calculations/, src/cadrumo/domain/calculations/registry/`.
 - [x] `S03` - Move form claves and code tables into registry vocabularies; `src/cadrumo/application/filing/, src/cadrumo/domain/contribuyente/renta_codes.py, src/cadrumo/application/wizard/, src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
-- [ ] `S04` - Move modelo routing rules and sets into registry declarations; `src/cadrumo/application/aggregation/, src/cadrumo/domain/calculations/registry/applicability.py, src/cadrumo/domain/deadlines/`.
+- [x] `S04` - Move modelo routing rules and sets into registry declarations; `src/cadrumo/application/aggregation/, src/cadrumo/domain/calculations/registry/applicability.py, src/cadrumo/domain/deadlines/`.
 - [x] `S05` - Move period rules with legal force into the registry; `src/cadrumo/domain/period.py, src/cadrumo/domain/renta/maritime_exemption.py`.
 - [ ] `S06` - Extend the literal gate across domain and application, covering field bounds, box ids and letter claves, and republish the authority; `dev/quality/tests/`.
-- [ ] `S07` - Bind the Modelo 100 elemento patrimonial rows as repeated rows per sale; `src/cadrumo/domain/calculations/registry/actividad_asset_disposal_bindings.py, src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [x] `S07` - Bind the Modelo 100 elemento patrimonial rows as repeated rows per sale; `src/cadrumo/domain/calculations/registry/actividad_asset_disposal_bindings.py, src/cadrumo/_data/registry/aeat/modelos/100/`.
 
 ## Parallelization
 
