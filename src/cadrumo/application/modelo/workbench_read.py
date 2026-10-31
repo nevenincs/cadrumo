@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
@@ -23,6 +23,7 @@ from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.identity.documents import SpanishTaxIdFormat
 from ...domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.modelos.work_unit import WorkUnit
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -53,8 +54,6 @@ if TYPE_CHECKING:
     from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
     from ..live.borrador_100 import Borrador100SnapshotRepository
     from ..operations.registry import OperationPublicContractSetV1
-
-_M303: Final[str] = "303"
 
 
 @dataclass(frozen=True, slots=True)
@@ -218,7 +217,7 @@ def read_modelo_workbench_form(
         if head_id is None
         else granting_verification_report(ports.verifications.load(operation=operation), head_id)
     )
-    is_m303 = str(unit.modelo) == _M303
+    is_m303 = str(unit.modelo) == form_for_role("iva.periodic")
     return ModeloWorkbenchFormReadV1(
         load=loaded,
         admission=admission,

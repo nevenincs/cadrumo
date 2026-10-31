@@ -860,6 +860,28 @@ def enroll_spelling_cell(
             locale_words[word].add((locale, key))
 
 
+# Exact Spanish dictionary gaps also used in the bilingual legal references:
+# IVA's Modelo 349 notes and citations use the intracomunitaria family and
+# recapitulativa; IRPF uses Minoración, impatriados and bloqueantes; the Modelo
+# 038/296 references use registral/subclave, and the IS notes use fiscalmente.
+# Do not reuse the entire Spanish project vocabulary here: it
+# includes literal option IDs such as modificacion, which is a typo in prose.
+_SPANISH_LEGAL_REFERENCE_SPELLINGS = frozenset(
+    {
+        "Minoración",
+        "intracomunitaria",
+        "intracomunitarias",
+        "intracomunitario",
+        "recapitulativa",
+        "impatriados",
+        "subclave",
+        "bloqueantes",
+        "registral",
+        "fiscalmente",
+    }
+)
+
+
 def _spanish_legal_note_word(
     dictionary_locale: str, key: str, word: str, dictionaries: Mapping[str, DictionaryLike]
 ) -> bool:
@@ -868,7 +890,7 @@ def _spanish_legal_note_word(
         dictionary_locale == "en"
         and key.startswith("parallel:docs/_generated/legal/")
         and ".rst:line[" in key
-        and dictionaries["es"].lookup(word)
+        and (word in _SPANISH_LEGAL_REFERENCE_SPELLINGS or dictionaries["es"].lookup(word))
     )
 
 

@@ -58,7 +58,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Caracter del procedimiento de apremio. Exclusively administrative, driven ex officio through all its steps, and not cumulative with judicial or other execution procedures. Conflicts of jurisdiction with judges and courts are resolved under Ley Organica 2/1987 de Conflictos Jurisdiccionales. The framing article for the whole enforcement chapter."
+notes = "Carácter del procedimiento de apremio. Exclusively administrative, driven ex officio through all its steps, and not cumulative with judicial or other execution procedures. Conflicts of jurisdiction with judges and courts are resolved under Ley Organica 2/1987 de Conflictos Jurisdiccionales. The framing article for the whole enforcement chapter."
 required_text = [
     "no será acumulable a los judiciales ni a otros procedimientos de ejecución",
     "se iniciará e impulsará de oficio en todos sus trámites",
@@ -104,7 +104,7 @@ effective_from = 2004-07-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
-notes = "Ejecucion de garantias. Where the debt is secured, the garantia is executed first through the apremio procedure. The Administracion may instead seize and sell other assets beforehand where the garantia is disproportionate to the secured debt or where the obligado so requests and points to sufficient assets; in that case the garantia lapses to the extent covered by the seizures."
+notes = "Ejecucion de garantías. Where the debt is secured, the garantía is executed first through the apremio procedure. The Administración may instead seize and sell other assets beforehand where the garantía is disproportionate to the secured debt or where the obligado so requests and points to sufficient assets; in that case the garantía lapses to the extent covered by the seizures."
 required_text = [
     "la garantía prestada quedará sin efecto en la parte asegurada por los embargos",
 ]
@@ -151,8 +151,8 @@ review_status = "operator_reviewed"
 reviewed_at = 2026-08-12
 reviewed_by = "operator"
 notes = """\
-Diligencia de embargo y anotacion preventiva. Each seizure is documented in its own diligencia, \
-notified to the obligado, and where the asset is registrable the Administracion is entitled to a \
+Diligencia de embargo y anotación preventiva. Each seizure is documented in its own diligencia, \
+notified to the obligado, and where the asset is registrable the Administración is entitled to a \
 preventive annotation of the seizure in the corresponding register. Apartado 3 closes the grounds of \
 opposition to the diligencia (extinción or prescripción, lack of notification of the providencia, \
 breach of the seizure rules, and suspension of the procedure). Apartado 6 allows a prohibicion de \

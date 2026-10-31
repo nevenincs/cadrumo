@@ -44,6 +44,7 @@ import {
   answer,
   fieldsFor,
   formKeyOf,
+  FURTHER_PURCHASE,
   initialOf,
   type FormDraft,
   type FormField,
@@ -542,9 +543,10 @@ type Act = {
   landing(context: Context): LandingCheck;
 };
 
-/** The revision a correction would make, once it lands. */
-const nextRevision = (asset: AssetListRow | null) =>
-  (asset?.revision_number ?? 0) + 1;
+/** The revision a correction supersedes: the one the element stands at when
+ * the form sends it. */
+const supersededRevision = (asset: AssetListRow | null) =>
+  asset?.revision_number ?? 0;
 
 const never = async (): Promise<SetupCall<unknown>> => ({
   kind: "failed",
@@ -590,7 +592,8 @@ const ACTS: Record<ActKind, Act> = {
       c.correct === null
         ? never()
         : setupCall(c.port, "ledger.actividad-asset.correct", c.correct, true),
-    landing: (c) => correctionLanding(c.port, c.assetId, nextRevision(c.asset)),
+    landing: (c) =>
+      correctionLanding(c.port, c.assetId, supersededRevision(c.asset)),
   },
   baja: {
     title: ASSET_KEYS.action.dispose,
@@ -605,7 +608,8 @@ const ACTS: Record<ActKind, Act> = {
         { asset_id: c.assetId, disposal: disposalOf(c.values)! },
         true,
       ),
-    landing: (c) => correctionLanding(c.port, c.assetId, nextRevision(c.asset)),
+    landing: (c) =>
+      correctionLanding(c.port, c.assetId, supersededRevision(c.asset)),
   },
   baja_change: {
     title: "desktop.ledger.assets.action.change_baja",
@@ -620,7 +624,8 @@ const ACTS: Record<ActKind, Act> = {
         ? never()
         : setupCall(c.port, "ledger.actividad-asset.correct", request, true);
     },
-    landing: (c) => correctionLanding(c.port, c.assetId, nextRevision(c.asset)),
+    landing: (c) =>
+      correctionLanding(c.port, c.assetId, supersededRevision(c.asset)),
   },
 };
 
@@ -764,6 +769,9 @@ export function AssetForm({
   const picked = candidates.find(
     (candidate) => candidate.transaction_id === form.draft.acquisition,
   );
+  const further = candidates.find(
+    (candidate) => candidate.transaction_id === form.draft[FURTHER_PURCHASE],
+  );
   const answered = answer(fields, form.draft, act.delta ? form.initial : null);
   const view = viewOf(write.last, neverReused);
   const [tried, setTried] = useState(false);
@@ -785,6 +793,7 @@ export function AssetForm({
     assetId: id,
     regime: loaded?.regime ?? null,
     candidate: picked ?? null,
+    further: further ?? null,
     base,
     options: loaded,
   };
@@ -813,7 +822,7 @@ export function AssetForm({
       [field.key]: value,
       // A purchase fills the figures it knows; what it does not know stays
       // as it is, and is never read as zero.
-      ...(field.control === "candidate"
+      ...(field.control === "candidate" && field.key === "acquisition"
         ? Object.fromEntries(
             Object.entries(
               purchaseValues(

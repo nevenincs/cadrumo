@@ -1402,8 +1402,7 @@ desktop:
       claimed: Az értékcsökkenési leírás rögzítve.
       column:
         amount: Összeg
-        casilla: Mező
-        target: Bevallás
+        casilla: Rovat
         unavailable: Nincs kiszámítva
       correct:
         claim_item: '{year}. · {amount} · {from} – {until}'
@@ -1417,6 +1416,9 @@ desktop:
         missing: 'Értékcsökkenési leírás nélküli évek, minden évben: {count}'
         stale: 'Az ütemezéssel már nem egyező értékcsökkenési leírások, minden évben:
           {count}'
+        unsupported: 'Évek olyan módszerrel, amelyet a Cadrumo még nem támogat, minden
+          évben: {count}'
+        without_tables: 'Hivatalos táblázatok nélküli évek, minden évben: {count}'
       detail:
         baja_reason: A kivezetés oka
         close: Bezárás
@@ -1455,6 +1457,10 @@ desktop:
         disposal_reason: Ok
         document_kind: Okmány fajtája
         document_number: Okmány száma
+        further_purchase: Későbbi kifizetés ebből a könyvből (nem kötelező)
+        further_purchase_hint: Olyan kifizetés, amelyet itt könyveltél, miután máshol
+          megvetted, például egy részlet.
+        further_shape: Mi ez a kifizetés
         in_service_date: Üzembe helyezés napja
         kind: Típus
         land_cost: A telek költsége
@@ -1466,7 +1472,7 @@ desktop:
         name: Név
         non_deductible_iva: Le nem vonható IVA
         non_deductible_iva_hint: Írj 0-t, ha az IVA-ból semmi nem zárható ki a levonásból.
-          Az üres mező nem ugyanaz, mint a 0.
+          Az üresen hagyott érték nem ugyanaz, mint a 0.
         not_known: 'Ennél a beszerzésnél nem ismert: add meg te.'
         office_area: A tevékenységre használt terület (m²)
         opening_amount: Már elszámolt értékcsökkenés
@@ -1562,7 +1568,7 @@ desktop:
         not_applicable: Nem alkalmazandó
         nothing_recorded: Nincs rögzítve
       not_known: Nem ismert
-      opening_unknown: 'Töltsd ki a következő mezőt a kiszámításhoz: „{field}”.'
+      opening_unknown: 'A kiszámításhoz add meg ezt: „{field}”.'
       plan:
         baja: 'Kivezetés: {date}, {reason}'
         claimable: 'Értékcsökkenési leírás még rögzíthető: {from} – {until}'
@@ -1621,15 +1627,11 @@ desktop:
         correct: Javítás mentése
         create: Eszköz létrehozása
         forecast: A leírás kiszámítása
-      target:
-        intangible_m100: 100-as · immateriális
-        intangible_m130: 130-as · immateriális
-        material_m100: 100-as · tárgyi
-        material_m130: 130-as · tárgyi
       timeline:
         change_added: '{field}: {after}'
         change_cleared: '{field}: {before} törölve'
         change_to: erre
+        claim_span: '{year}. évi értékcsökkenési leírás: {from} és {through} között'
         column:
           changes: Változások
           effect: Hatálybalépés napja
@@ -5212,10 +5214,14 @@ ledger:
         mérhető naptári évek átlagaival.
       workforce_year_not_declared: A(z) %{year}. évi átlagos létszám nincs megadva.
     event_kind:
-      baja: Kivezetés rögzítve
-      claim: Értékcsökkenés rögzítve
-      descriptor: Leírás hozzáadva
-      revision: Adóadatok rögzítve
+      baja_changed: Kivezetés módosítva
+      baja_recorded: Kivezetés rögzítve
+      baja_removed: Kivezetés törölve
+      claim_recorded: Értékcsökkenési leírás rögzítve
+      claim_replaced: Értékcsökkenési leírás lecserélve
+      corrected: Adatok javítva
+      created: Felvéve a nyilvántartásba
+      described: Leírás frissítve
     field:
       acquired_condition: Állapot a beszerzéskor
       acquisition:
@@ -9526,7 +9532,6 @@ workspace:
       lead: Ez nem akadályozza a fájlt. Azt mondja el, mit hagynak ki az elemeid értékcsökkenési
         leírásai, hogy eldönthesd, mit adj hozzá.
       title: Érdemes tudni a benyújtás előtt
-      unworded: A számítás megjegyzett valamit az elemeidről, amit itt nem lehet megmutatni.
     operation:
       calculated: 'Kiszámítva. {direction}: {value}.'
       checked:

@@ -112,7 +112,7 @@ _MAX_CONTEXT_VALUE_LENGTH = 32768
 
 _MAX_REFUSAL_MESSAGE_LENGTH = 32768
 
-_M145Year = Annotated[int, Field(ge=2012, le=2099)]
+_M145Year = Annotated[int, Field(ge=2000, le=2099)]
 
 
 def _canonical_m145_identity(

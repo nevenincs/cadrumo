@@ -119,8 +119,10 @@ def _start_peer(how: str, path: str) -> subprocess.Popen[bytes]:
 def _accepted(how: str) -> Generator[PosixChannel]:
     """Yield the runtime side of a real socket whose peer is a fresh process."""
     assert sys.platform != "win32"
-    with tempfile.TemporaryDirectory(dir="/tmp") as base:
+    with tempfile.TemporaryDirectory(prefix="s") as base:
         path = str(Path(base) / "r.sock")
+        if len(os.fsencode(path)) >= 104:
+            pytest.fail("macOS Unix socket path exceeds 103 bytes; use a shorter worktree path", pytrace=False)
         listener = socket.socket(socket.AF_UNIX)
         listener.bind(path)
         listener.listen(1)

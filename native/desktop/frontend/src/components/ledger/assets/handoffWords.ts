@@ -42,9 +42,8 @@ export function leftOutNotes(
   names: ReadonlyMap<string, string>,
 ): string[] {
   const notes: string[] = [];
-  const gaps = "m100_gaps" in handoff ? handoff.m100_gaps : [];
   let unnamed = 0;
-  for (const gap of gaps) {
+  for (const gap of handoff.m100_gaps) {
     const name = names.get(gap.asset_id);
     if (name === undefined) {
       unnamed += 1;
@@ -71,11 +70,7 @@ export function leftOutNotes(
   for (const field of Object.keys(
     LEFT_OUT_KEYS,
   ) as (keyof typeof LEFT_OUT_KEYS)[]) {
-    const ids = [
-      ...new Set(
-        quarter.flatMap((found) => (field in found ? found[field] : [])),
-      ),
-    ];
+    const ids = [...new Set(quarter.flatMap((found) => found[field]))];
     if (ids.length === 0) continue;
     const known = ids.flatMap((id) => names.get(id) ?? []);
     notes.push(

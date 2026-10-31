@@ -14,6 +14,7 @@ from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.period import Period
 from ...iva.establishment import SPAIN_COUNTRY_CODE
 from .errors import RegistryValidationError
+from .form_codes import resolve_form_codes_leased
 from .ids import BindingId
 from .nif_iva_catalogue import resolve_nif_iva_catalogue
 
@@ -379,7 +380,7 @@ def _m347_declarado_identification(party_tax_id: str, country_code: str) -> dict
         "declarado_tax_id": "",
         "residence_country_code": country_code,
         "community_iva_number": _community_iva_number(party_tax_id, country_code),
-        "provincia_code": _M347_NON_RESIDENT_PROVINCIA,
+        "provincia_code": resolve_form_codes_leased("form-row-codes").code("m347.non_resident_provincia"),
     }
 
 
@@ -468,7 +469,6 @@ def _build_arrendamiento_inmueble_rows(
 
 #: CÓDIGO PROVINCIA for a declarado observed outside Spain (both 347 designs, pos.
 #: 77-78): "En el caso de no residentes sin establecimiento permanente se consignará 99."
-_M347_NON_RESIDENT_PROVINCIA = "99"
 
 
 def _community_iva_number(party_tax_id: str, country_code: str) -> str:

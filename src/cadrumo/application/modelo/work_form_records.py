@@ -231,7 +231,9 @@ def _saved_row_column_records(
     A box total with no rows behind it comes from a calculation saved before the rows were
     recorded, so those rows stay unknown rather than read as none.
     """
-    columns = tuple(column for column in block.columns if column.binding_id is not None and column.casilla_id)
+    columns = tuple(
+        column for column in block.columns if column.binding_id is not None and column.casilla_id is not None
+    )
     if not columns:
         return False, ()
     data_types = {casilla.id: str(casilla.data_type) for casilla in snapshot.revision.casillas}

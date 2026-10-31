@@ -829,8 +829,12 @@ export type ActivityAssetRevision = JsonObject & {
   revision_number: number;
   supersedes_revision_id?: string | null;
 };
+/** What a reason fact's value is, so a screen draws it by type: a date is an
+ * ISO date, an amount a plain decimal, a percent a fraction, a count a whole
+ * number such as a tax year, and a text is shown as it stands. */
+export type ReasonFactKind = "text" | "date" | "amount" | "percent" | "count";
 /** One fact that fills a reason's sentence. */
-export type ReasonFact = { key: string; value: string };
+export type ReasonFact = { key: string; value: string; kind: ReasonFactKind };
 /** Why the backend refused: a coarse code, and the catalogue key that says
  * why with the facts that fill it in. */
 export type ActivityAssetRefusal = {
@@ -866,8 +870,17 @@ export type ActivityAssetCreateRequest = {
   revision: ActivityAssetRevision;
   descriptor: DescriptorFacts;
 };
+/** The revision a correction states: the one it supersedes, whole, with what
+ * the person changed. Its number is left out, since the register numbers it;
+ * its baja is always stated, another baja to replace the recorded one and null
+ * to remove it. */
+export type ActivityAssetCorrection = JsonObject & {
+  asset_id: string;
+  supersedes_revision_id: string;
+  disposal: JsonObject | null;
+};
 export type ActivityAssetCorrectRequest = {
-  revision: ActivityAssetRevision;
+  revision: ActivityAssetCorrection;
   superseding_claims: ActivityAssetSupersedingClaim[];
 };
 export type ActivityAssetChangeResult = ActivityAssetResultBase & {
@@ -980,6 +993,10 @@ export type AssetCounts = {
   missing: number;
   incomplete: number;
   conflict: number;
+  /** Years of an election the register cannot work out yet. */
+  unsupported: number;
+  /** Years no Modelo 100 edition covers, which have no table to work from. */
+  without_tables: number;
   stale: number;
 };
 
@@ -999,7 +1016,13 @@ export type AssetListRow = {
   accumulated: Amount;
   /** The basis left to amortize; null where `accumulated` is. */
   pending: Amount;
+  /** False once a baja is recorded: nothing is left to amortize, so `pending`
+   * is not drawn. */
+  pending_applies: boolean;
   findings: AssetCounts;
+  /** The year a dotación form opens on; null where no year has anything left
+   * to record. */
+  default_claim_year: number | null;
   /** The tax years the element can be read in. */
   years: number[];
   /** The later service years, whose figures are an estimate until the
@@ -1016,8 +1039,13 @@ export type ListDisposal = {
   reason_key: string;
 };
 
-/** `years` are the register's: every year of any element, in order. */
-export type AssetListResult = { rows: AssetListRow[] | null; years: number[] };
+/** `years` are the register's: every year of any element, in order.
+ * `default_year` is the year the register opens on, null where it has none. */
+export type AssetListResult = {
+  rows: AssetListRow[] | null;
+  years: number[];
+  default_year: number | null;
+};
 
 // ---- The amortization plan -----------------------------------------------
 
@@ -1060,8 +1088,12 @@ export type ClaimableInterval = {
 
 export type PlanRow = {
   /** Minimum amortization from entry to this year's end, which reduces cost at
-   * a baja; `minimum_complete` is false where an earlier year has none. */
+   * a baja. Null while an earlier year has no minimum, with the reason in
+   * `minimum_reason_key`. */
   minimum_through: Amount;
+  /** The catalogue key of the sentence that says why `minimum_through` is
+   * null. */
+  minimum_reason_key: string | null;
   minimum_complete: boolean;
   tax_year: number;
   method: string;
@@ -1076,7 +1108,7 @@ export type PlanRow = {
   claim_state: string;
   claimable_intervals: ClaimableInterval[];
   claimable_refusal_key: string | null;
-  claimable_refusal_facts?: ReasonFact[];
+  claimable_refusal_facts: ReasonFact[];
   edition: PlanEdition | null;
   service_days: number | null;
   calendar_days: number | null;
@@ -1093,7 +1125,11 @@ export type ElectionLimits = {
   maximum_coefficient: Amount;
   minimum_coefficient: Amount;
   maximum_period_years: Amount;
+  /** The first day after the maximum period; the day the schedule works to,
+   * not the one a reader sees it end on. */
   maximum_period_ends_on: string | null;
+  /** The last day of the maximum period, which is the day it ends on. */
+  maximum_period_last_day: string | null;
   /** The provisions behind the figures, each with its official link. */
   legal_citations: LegalCitation[];
   /** False where a cited provision could not be resolved, so the list is
@@ -1101,7 +1137,7 @@ export type ElectionLimits = {
   legal_citations_complete: boolean;
   not_table_bound: string | null;
   unavailable_reason_key: string | null;
-  unavailable_reason_facts?: ReasonFact[];
+  unavailable_reason_facts: ReasonFact[];
 };
 
 /** A warning on the plan that changes no figure and refuses nothing; the
@@ -1139,16 +1175,30 @@ export type TimelineClaimUse = {
   used_by: string[];
   matches_current_schedule: boolean;
   stale_reason: string | null;
+  /** False for a dotación a later one replaced; only one in effect can
+   * disagree with the schedule. */
+  in_effect: boolean;
+  tax_year: number | null;
+  covered_from: string | null;
+  /** The last day the dotación covers. */
+  covered_through: string | null;
 };
 
 export type TimelineEvent = {
   sequence: number;
   /** Null for a record written before time was kept. */
   recorded_at: string | null;
+  /** What kind of record this is in the register's storage. */
   kind: string;
+  /** What the record did to the element: created, corrected, a baja recorded,
+   * changed or removed, a dotación recorded or replaced, or a description. */
+  event_kind: string | null;
   asset_id: string;
   /** The record's identity: a claim's id for a claim event. */
   record_id: string;
+  /** The day the record takes effect: the day the element entered service for a
+   * creation or correction, the baja's day for a baja, the first day a
+   * dotación covers. */
   effect_date: string | null;
   /** The operation that wrote the record; free text, null when none stated. */
   origin: string | null;
@@ -1180,7 +1230,6 @@ export type TableGroup = {
 /** One reason a baja is accepted with, and the catalogue key that words it. */
 export type DisposalReasonOption = { reason: string; label_key: string };
 
-/** What the registry admits for one asset kind and tax year. */
 /** One fact an election of a method states, as the options serve it. */
 export type MethodFact = {
   /** From the election down to the fact. */
@@ -1193,6 +1242,20 @@ export type MethodFact = {
   tokens: string[];
 };
 
+/** One stage a basis can be stated at, with the facts only that stage states. */
+export type BasisStageOption = {
+  stage: string;
+  /** The names of the basis facts this stage states. */
+  facts: string[];
+  /** Whether the basis is the whole property's, which makes the element a
+   * property. */
+  is_property: boolean;
+};
+
+/** One status an opening history can have, with the facts it can state. */
+export type OpeningStatusOption = { status: string; facts: string[] };
+
+/** What the registry admits for one asset kind and tax year. */
 export type FormOptions = {
   tax_year: number;
   asset_kind: string;
@@ -1206,6 +1269,10 @@ export type FormOptions = {
   /** The reasons a baja is accepted with, in the order the backend admits
    * them. */
   disposal_reasons: DisposalReasonOption[];
+  basis_stages: BasisStageOption[];
+  opening_statuses: OpeningStatusOption[];
+  /** The Modelo 130 periods the registry serves for the tax year. */
+  m130_periods: string[];
 };
 
 /** A ledger payment an element could name as its acquisition. What the

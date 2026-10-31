@@ -7,7 +7,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -18,6 +18,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
 from ...core.unit_proportion import UnitProportion
+from ..calculations.registry.form_codes import resolve_form_codes_leased
 from ..calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 from ..filing_evidence import FilingEvidenceReference
 from .errors import ModeloValidationError
@@ -71,10 +72,18 @@ class M303Exonerado390ActivityRowEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    slot: int = Field(ge=1, le=6)
+    slot: int = Field(ge=1)
     codigo_actividad: _M303Exonerado390CodigoActividad
     epigrafe_iae: _M303Exonerado390EpigrafeIae
     evidence_reference: FilingEvidenceReference
+
+    @field_validator("slot")
+    @classmethod
+    @pydantic_validation_boundary
+    def _slot_is_a_declared_row(cls, slot: int) -> int:
+        if slot > int(resolve_form_codes_leased("form-row-codes").code("m303.exonerado_390.activity_slots")):
+            raise ValueError(f"activity row slot {slot} is past the form's declared rows")
+        return slot
 
 
 class M303Exonerado390FilingEvidence(BaseModel):
@@ -116,7 +125,7 @@ def _validate_applicable_m303_exonerado_evidence(evidence: M303Exonerado390Filin
     row_slots = tuple(row.slot for row in evidence.activity_rows)
     if row_slots != tuple(range(1, len(row_slots) + 1)):
         raise ModeloValidationError(
-            "M303 exonerado-390 activity rows must use contiguous ordered slots 1-6",
+            "M303 exonerado-390 activity rows must use contiguous ordered slots from 1",
         )
     if evidence.operaciones_terceros_declarables is None or evidence.operaciones_terceros_reference is None:
         raise ModeloValidationError("applicable M303 exonerado-390 evidence requires the Modelo 347 decision")

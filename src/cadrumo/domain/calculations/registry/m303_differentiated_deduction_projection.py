@@ -20,6 +20,7 @@ from ....core.prorrata_register import ProrrataRegisterRegime
 from ...bienes_inversion.register import RegistroRegularizacionResult
 from ...prorrata_register.register import ProrrataRegister
 from .errors import RegistryValidationError
+from .form_codes import resolve_form_codes_leased
 from .iva_deduction_catalogue import is_iva_deduction_kind, iva_deduction_fact_kinds
 from .prorrata_register_catalogue import regime_apportions_deduction
 
@@ -52,7 +53,7 @@ class M303DifferentiatedDeductionRowProjection(BaseModel):
     """A differentiated-sector prorrata deduction row projected across its 18 endpoints."""
 
     model_config = STRICT_FROZEN_CONFIG
-    slot: int = Field(ge=1, le=2)
+    slot: int = Field(ge=1)
     sector_id: str
     regime: ProrrataRegisterRegime
     percentage: Decimal
@@ -260,7 +261,8 @@ def _endpoint_matrix(
                 f"duplicate differentiated deduction projection reference {ref.slot}/{ref.field.value}",
             )
         resolved[ref.slot][ref.field] = ref
-    expected = {1: set(_FIELDS), 2: set(_FIELDS)}
+    row_slots = int(resolve_form_codes_leased("form-row-codes").code("m303.differentiated.row_slots"))
+    expected = {slot: set(_FIELDS) for slot in range(1, row_slots + 1)}
     if {slot: set(fields) for slot, fields in resolved.items()} != expected:
         raise RegistryValidationError(
             "modelo 303 differentiated deduction endpoint matrix is incomplete or malformed",

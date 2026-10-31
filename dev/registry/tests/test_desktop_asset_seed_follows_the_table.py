@@ -17,6 +17,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.renta.actividad_asset.lifecycle import (
+    BASIS_STAGE_FACTS,
+    OPENING_STATUS_FACTS,
+    AssetBasisStage,
+)
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -181,3 +186,50 @@ def test_the_seeded_vehicle_flag_of_each_class_is_the_registrys_classification(k
     assert expected, "the registry lists no class for the kind, so nothing was compared"
     assert len(found) == len(expected), "a seeded class carries no vehicle flag"
     assert seeded == expected
+
+
+def _quoted(block: str) -> tuple[str, ...]:
+    return tuple(re.findall(r'"(\w+)"', block))
+
+
+def test_the_seeded_basis_stages_serve_the_facts_the_domain_table_states() -> None:
+    section = _section(_SEED.read_text(encoding="utf-8"), "BASIS_STAGES")
+    seeded = {
+        match["stage"]: (_quoted(match["facts"]), match["property"] == "true")
+        for match in re.finditer(
+            r'stage:\s*"(?P<stage>\w+)",\s*facts:\s*\[(?P<facts>[^\]]*)\],\s*is_property:\s*(?P<property>true|false)',
+            section,
+        )
+    }
+
+    assert seeded
+    assert seeded == {
+        stage.value: (facts, stage is AssetBasisStage.WHOLE_PROPERTY) for stage, facts in BASIS_STAGE_FACTS.items()
+    }
+
+
+def test_the_seeded_opening_statuses_serve_the_facts_the_domain_table_states() -> None:
+    section = _section(_SEED.read_text(encoding="utf-8"), "OPENING_STATUSES")
+    seeded = {
+        match["status"]: _quoted(match["facts"])
+        for match in re.finditer(r'status:\s*"(?P<status>\w+)",\s*facts:\s*\[(?P<facts>[^\]]*)\]', section)
+    }
+
+    assert seeded
+    assert seeded == {status.value: facts for status, facts in OPENING_STATUS_FACTS.items()}
+
+
+def test_every_seeded_limit_states_its_last_day_as_the_day_before_the_boundary() -> None:
+    from datetime import date, timedelta
+
+    text = _SEED.read_text(encoding="utf-8")
+    pairs = re.findall(
+        r'maximum_period_ends_on:\s*(null|"[^"]+"),\s*maximum_period_last_day:\s*(null|"[^"]+")', text
+    )
+
+    assert pairs
+    for boundary, last in pairs:
+        if boundary == "null":
+            assert last == "null"
+            continue
+        assert last == f'"{(date.fromisoformat(boundary.strip(chr(34))) - timedelta(days=1)).isoformat()}"'

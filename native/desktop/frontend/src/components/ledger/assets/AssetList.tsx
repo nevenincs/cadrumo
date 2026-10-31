@@ -21,6 +21,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import {
   ASSET_KEYS,
+  bajaText,
   COUNT_ICON,
   COUNT_KINDS,
   countWord,
@@ -50,6 +51,8 @@ const COUNT_LEVEL: Record<keyof AssetCounts, ModeloFormAttention> = {
   missing: "missing",
   incomplete: "confirm",
   conflict: "blocks",
+  unsupported: "check",
+  without_tables: "info",
   stale: "check",
 };
 
@@ -242,8 +245,21 @@ export function AssetList({
         key: "pending",
         label: t(ASSET_KEYS.list.column.pending),
         numeric: true,
-        sort: (row) => rankDecimal(row.pending?.decimal),
+        sort: (row) =>
+          rankDecimal(row.pending_applies ? row.pending?.decimal : undefined),
         cell: (row) => {
+          // After a baja nothing is left to amortize: the figure is not
+          // drawn, and the mark says why.
+          if (!row.pending_applies)
+            return (
+              <NotApplicable
+                why={
+                  row.disposal === null
+                    ? null
+                    : bajaText(t, locale, row.disposal)
+                }
+              />
+            );
           const pending = figureText(locale, row.pending);
           return pending === null ? (
             <NotKnown why={openingRemedy(t)} />

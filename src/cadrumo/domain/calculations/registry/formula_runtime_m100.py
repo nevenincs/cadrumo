@@ -30,6 +30,9 @@ if TYPE_CHECKING:
     from .formula_expression import EvalContext as _EvalContext
 
 
+_DAYS_IN_A_LEAP_YEAR = 366
+
+
 @dataclass(frozen=True, slots=True)
 class _M100ResolveImputedRentArgs:
     """Resolved registry ids for the M100 imputed-rent dispatcher."""
@@ -295,11 +298,15 @@ def _m100_validate_imputation_days(
     max_days: Decimal,
     max_days_parameter_id: ParameterId,
 ) -> None:
-    if max_days != max_days.to_integral_value() or max_days <= ZERO or max_days > Decimal("366"):
+    if max_days != max_days.to_integral_value() or max_days <= ZERO or max_days > _DAYS_IN_A_LEAP_YEAR:
         raise RegistryValidationError(
             "M100 Art.85 imputation year-days parameter must be an integer in [1, 366]",
             translated_message="errors.calc.m100_art85_imputation_days_invalid",
-            context={"parameter_id": max_days_parameter_id, "value": str(max_days), "max_days": "366"},
+            context={
+                "parameter_id": max_days_parameter_id,
+                "value": str(max_days),
+                "max_days": str(_DAYS_IN_A_LEAP_YEAR),
+            },
         )
     if days != days.to_integral_value() or days <= ZERO or days > max_days:
         raise RegistryValidationError(

@@ -11,7 +11,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden EHA/3481/2008 articulo 1: aprueba el Modelo 189, declaración informativa anual acerca de valores, seguros y rentas, y sus diseños fisicos y logicos."
+notes = "Orden EHA/3481/2008 articulo 1: aprueba el Modelo 189, declaración informativa anual acerca de valores, seguros y rentas, y sus diseños físicos y lógicos."
 required_text = [
     "Artículo 1. Aprobación del modelo 189",
     "Se aprueba el modelo 189",
@@ -31,7 +31,7 @@ effective_from = 2009-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden EHA/3481/2008 articulo 5: fija el plazo anual del Modelo 189 entre el dia 1 y el 31 de marzo de cada ano."
+notes = "Orden EHA/3481/2008 articulo 5: fija el plazo anual del Modelo 189 entre el día 1 y el 31 de marzo de cada ano."
 required_text = [
     "Artículo 5. Plazo de presentación del modelo 189",
     "entre el día 1 y el 31 del mes de marzo",
@@ -112,7 +112,7 @@ effective_from = 2021-12-04
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-12
 reviewed_by = "agent-review (verbatim against the bundled orden-hfp-1351-2021 excerpt, articulo sexto)"
-notes = """Articulo sexto de la Orden HFP/1351/2021: modifica la Orden EHA/3481/2008, que aprueba el modelo 189. Registrado porque la edicion 189/2022 no es papel que falte sino una frontera de epoca real: NUMERO DE VALORES ocupaba entonces 130-145 y NOMINAL 146-163, frente a 130-146 y 147-164 hoy. Este id cubre la mitad de lo que hace falta; la otra mitad es la Orden HFP/115/2022, aun no adquirida. El id sigue la grafia ordinal del hermano art-octavo, no la numerica. Cita corta a proposito: el excerpt usa espacios duros U+00A0 entre palabra y numero."""
+notes = """Articulo sexto de la Orden HFP/1351/2021: modifica la Orden EHA/3481/2008, que aprueba el modelo 189. Registrado porque la edicion 189/2022 no es papel que falte sino una frontera de epoca real: NUMERO DE VALORES ocupaba entonces 130-145 y NOMINAL 146-163, frente a 130-146 y 147-164 hoy. Este id cubre la mitad de lo que hace falta; la otra mitad es la Orden HFP/115/2022, aun no adquirida. El id sigue la grafia ordinal del hermano art-octavo, no la numerica. Cita corta a propósito: el excerpt usa espacios duros U+00A0 entre palabra y numero."""
 required_text = [
     "Se introducen las siguientes modificaciones en la Orden EHA/3481/2008",
 ]
@@ -130,7 +130,7 @@ effective_from = 2022-02-26
 review_status = "agent_reviewed"
 reviewed_at = 2026-10-01
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block df, single redaction fecha_vigencia 20220226, incorporating the corrections BOE-A-2022-3810 and BOE-A-2022-4629); pending operator re-stamp"
-notes = "Orden HFP/115/2022 disposición final primera: modifica el anexo II de la Orden EHA/3481/2008 (modelo 189). NOMINAL UNITARIO DE LOS VALORES pasa a las posiciones 146-163 del registro de tipo 2 (146-159 parte entera, 160-163 parte decimal) y BLANCOS a 164-500. Es la ultima modificación del anexo II antes de las Ordenes HFP/1180/2023 y HFP/1284/2023, que se aplican por primera vez al ejercicio 2023, según el analisis del BOE de BOE-A-2008-19523; rige por tanto la declaración del ejercicio 2022."
+notes = "Orden HFP/115/2022 disposición final primera: modifica el anexo II de la Orden EHA/3481/2008 (modelo 189). NOMINAL UNITARIO DE LOS VALORES pasa a las posiciones 146-163 del registro de tipo 2 (146-159 parte entera, 160-163 parte decimal) y BLANCOS a 164-500. Es la ultima modificación del anexo II antes de las Ordenes HFP/1180/2023 y HFP/1284/2023, que se aplican por primera vez al ejercicio 2023, según el análisis del BOE de BOE-A-2008-19523; rige por tanto la declaración del ejercicio 2022."
 required_text = [
     "Nominal unitario de los valores.",
     "146-159 Parte entera del importe del nominal unitario de la operación.",

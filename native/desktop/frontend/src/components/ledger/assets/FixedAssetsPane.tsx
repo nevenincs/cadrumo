@@ -18,7 +18,6 @@ import { CorrectForm } from "./CorrectForm";
 import { DescribeForm } from "./DescribeForm";
 import { AssetList, CountPill, callRefusal } from "./AssetList";
 import { type FormKind } from "./assetFields";
-import { openingYear } from "./assetWrites";
 import { ASSET_KEYS, COUNT_KINDS, refusalText } from "./assetsWords";
 import { FilingHandoffPanel } from "./FilingHandoffPanel";
 import { YearStepper } from "./YearStepper";
@@ -75,7 +74,7 @@ const noop = () => undefined;
  * one, a refusal and a failure are each said apart, and none reads as the
  * others. The year chosen above the handoff is the year its amounts go to.
  * The years on offer are the ones the list serves; the pane stands on the
- * latest of them that has begun, else the earliest. A form on an element
+ * year the register says it opens on. A form on an element
  * opens at the top of its panel, and closes when another element is chosen.
  */
 export function FixedAssetsPane({
@@ -125,7 +124,7 @@ export function FixedAssetsPane({
     ...new Set(rows.flatMap((found) => found.projected_years)),
   ].sort((a, b) => a - b);
   const offered = [...official, ...estimated];
-  const year = chosenYear ?? openingYear(offered, new Date().getFullYear());
+  const year = chosenYear ?? loaded?.default_year ?? null;
   const row = rows.find((found) => found.asset_id === selected) ?? null;
   // The names the list holds; an element not yet described has none, and is
   // never said by its id.
@@ -285,6 +284,7 @@ export function FixedAssetsPane({
               reader={reader}
               locale={locale}
               year={year}
+              assetKind={rows[0]?.asset_kind ?? null}
               names={names}
             />
           </section>

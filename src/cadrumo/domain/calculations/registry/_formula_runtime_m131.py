@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ZERO
 from .errors import RegistryValidationError
+from .form_codes import resolve_form_codes_leased
 from .formula_runtime_ops import (
     numeric_casilla_value as _numeric_casilla_value,
 )
@@ -455,7 +456,8 @@ def evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, c
 #: predicates, which flag the a.2/a.4-vs-b.3 half of the same
 #: incompatibilidades clause this frozenset structurally enforces for the
 #: a.2/a.3/a.4/a.5-vs-b.1 half.
-_M131_EPIGRAFES_INDICE_ESPECIAL = frozenset({"721.2", "722"})
+def _m131_epigrafes_indice_especial() -> frozenset[str]:
+    return resolve_form_codes_leased("form-row-codes").codes("m131.special_index_epigrafes")
 
 
 @dataclass(frozen=True, slots=True)
@@ -552,7 +554,7 @@ def _m131_apply_small_dimension_index(
 ) -> tuple[Decimal, bool]:
     """Apply b.1 and report whether it excludes the remaining cascade."""
     pequena_dimension = text_tolerant_casilla_value(args.pequena_dimension_casilla_id, ctx)
-    aplica = pequena_dimension > ZERO and epigrafe not in _M131_EPIGRAFES_INDICE_ESPECIAL
+    aplica = pequena_dimension > ZERO and epigrafe not in _m131_epigrafes_indice_especial()
     if not aplica:
         return rendimiento, False
     return rendimiento * pequena_dimension, True
@@ -649,7 +651,7 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
       los índices correctores especiales" (a.2/a.3/a.4/a.5) — a declared
       pequeña-dimensión índice is IGNORED (never applied) for the two tabled
       epígrafes carrying a documented índice especial
-      (:data:`_M131_EPIGRAFES_INDICE_ESPECIAL`: "721.2" transporte por
+      (:func:`_m131_epigrafes_indice_especial`: transporte por
       autotaxis letra a.2, "722" transporte de mercancías letra a.4). The
       ``modelo-131-2025-modulos-pequena-dimension-ignorado-especial`` ADVISORY
       surfaces this to the operator as a non-blocking prompt (never a silent
@@ -755,7 +757,7 @@ def evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag(
     especiales enumerados en las letras a.2), a.3), a.4) y a.5)." Resolves to
     ``Decimal('1')`` when the operator declared a positive índice de pequeña
     dimensión for an epígrafe carrying a documented índice especial
-    (:data:`_M131_EPIGRAFES_INDICE_ESPECIAL`) — the exact condition
+    (:func:`_m131_epigrafes_indice_especial`) — the exact condition
     :func:`evaluate_m131_resolve_modulos_indices_generales` uses to ignore
     the índice — never fabricating a value, only signalling the ignored
     declaration so the paired ADVISORY (via ``advisory_when_positive``) can
@@ -766,7 +768,7 @@ def evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag(
     ctx.operand_refs.append(args.epigrafe_casilla_id)
     ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
     pequena_dimension = _numeric_casilla_value(args.pequena_dimension_casilla_id, ctx)
-    if pequena_dimension > ZERO and epigrafe in _M131_EPIGRAFES_INDICE_ESPECIAL:
+    if pequena_dimension > ZERO and epigrafe in _m131_epigrafes_indice_especial():
         return Decimal("1")
     return ZERO
 

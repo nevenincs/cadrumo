@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { useTableView } from "@/components/ui/table-view";
 import type { LedgerPort } from "../../../shell/ledger";
@@ -92,27 +93,47 @@ function Recorded({
   );
 }
 
-/** What the rest of the profile makes of a claim: whether it still matches
- * the schedule, why not, and what uses it. */
-function ClaimUse({ event }: { event: TimelineEvent }) {
+/** What the rest of the profile makes of a dotación: the year and the span it
+ * covers, that a later one replaced it, or else whether it still matches the
+ * schedule, why not, and what uses it. A dotación that was replaced is
+ * never said to match or to differ: only one in effect can. */
+function ClaimUse({ event, locale }: { event: TimelineEvent; locale: string }) {
   const t = useStrings();
   const use = event.claim;
   if (use === null) return null;
   return (
     <span className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-      <span className="inline-flex items-center gap-1">
-        <Icon
-          name={use.matches_current_schedule ? "check" : "alert"}
-          size="xs"
-          className={
-            use.matches_current_schedule ? "text-success" : "text-warning"
-          }
-        />
-        {use.matches_current_schedule
-          ? t(ASSET_KEYS.plan.matches)
-          : t(ASSET_KEYS.plan.no_match)}
-      </span>
-      {use.stale_reason !== null && (
+      {use.tax_year !== null &&
+        use.covered_from !== null &&
+        use.covered_through !== null && (
+          <span className="tabular-nums">
+            {t(ASSET_KEYS.timeline.claim_span, {
+              year: use.tax_year,
+              from: dateText(locale, use.covered_from, true),
+              through: dateText(locale, use.covered_through, true),
+            })}
+          </span>
+        )}
+      {use.in_effect ? (
+        <span className="inline-flex items-center gap-1">
+          <Icon
+            name={use.matches_current_schedule ? "check" : "alert"}
+            size="xs"
+            className={
+              use.matches_current_schedule ? "text-success" : "text-warning"
+            }
+          />
+          {use.matches_current_schedule
+            ? t(ASSET_KEYS.plan.matches)
+            : t(ASSET_KEYS.plan.no_match)}
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1">
+          <Icon name="refused" size="xs" />
+          {t(ASSET_KEYS.plan.replaced)}
+        </span>
+      )}
+      {use.in_effect && use.stale_reason !== null && (
         <span>{tokenWord(t, "stale_reason", use.stale_reason)}</span>
       )}
       {use.used_by.length > 0 && (
@@ -167,14 +188,19 @@ function TimelineTable({
           {view.rows.map((event) => (
             <tr
               key={event.sequence}
-              className="border-t border-border align-top"
+              className={cn(
+                "border-t border-border align-top",
+                event.claim !== null &&
+                  !event.claim.in_effect &&
+                  "text-muted-foreground",
+              )}
             >
               <td className="px-2 py-1.5">
                 <Recorded t={t} locale={locale} event={event} />
               </td>
               <td className="px-2 py-1.5">
                 <span className="block">
-                  {tokenWord(t, "event_kind", event.kind)}
+                  {tokenWord(t, "event_kind", event.event_kind)}
                 </span>
                 {!event.affects_calculation && (
                   <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -182,7 +208,7 @@ function TimelineTable({
                     {t(ASSET_KEYS.timeline.not_in_calculation)}
                   </span>
                 )}
-                <ClaimUse event={event} />
+                <ClaimUse event={event} locale={locale} />
               </td>
               <td className="px-2 py-1.5 tabular-nums">
                 {event.effect_date === null ? (

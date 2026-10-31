@@ -18,6 +18,7 @@ import type {
   PlanClaim,
   PlanRow,
   ReasonFact,
+  ReasonFactKind,
   TimelineEvent,
 } from "../../../shell/ledgerSetup";
 import type { Translate } from "../../../shell/strings";
@@ -30,18 +31,6 @@ import {
   type FormValues,
 } from "./assetFields";
 import { fieldWord, reasonText } from "./assetsWords";
-
-/** The year the pane opens on among the years the list serves: the latest that
- * has begun by `thisYear`, else the earliest served. A year to come is never
- * the default, and the pane invents none. */
-export function openingYear(
-  offered: readonly number[],
-  thisYear: number,
-): number | null {
-  if (offered.length === 0) return null;
-  const begun = offered.filter((year) => year <= thisYear);
-  return begun.length > 0 ? Math.max(...begun) : Math.min(...offered);
-}
 
 const textOf = (found: FormValue | undefined): string | null =>
   typeof found === "string" ? found : null;
@@ -171,8 +160,8 @@ export const elementLanding = (port: LedgerPort, assetId: string) =>
 export const correctionLanding = (
   port: LedgerPort,
   assetId: string,
-  revision: number,
-) => listLanding(port, (list) => correctionLanded(list, assetId, revision));
+  superseded: number,
+) => listLanding(port, (list) => correctionLanded(list, assetId, superseded));
 
 /** A description landed if the element's history holds as many as the write
  * would have made. */
@@ -221,16 +210,16 @@ export function elementLanded(
     : "not_saved";
 }
 
-/** A correction landed if the element stands at the revision it would have
- * made; an element the register no longer lists cannot be told. */
+/** A correction landed if the element stands past the revision it
+ * superseded; an element the register no longer lists cannot be told. */
 export function correctionLanded(
   list: ActivityAssetListResult,
   assetId: string,
-  revision: number,
+  superseded: number,
 ): Landing {
   const found = (list.rows ?? []).find((row) => row.asset_id === assetId);
   if (!found) return "untold";
-  return found.revision_number >= revision ? "saved" : "not_saved";
+  return found.revision_number > superseded ? "saved" : "not_saved";
 }
 
 /** A description landed if the element's history holds at least `count`. */
@@ -324,6 +313,16 @@ const asRecord = (found: unknown): Record<string, unknown> | null =>
     ? (found as Record<string, unknown>)
     : null;
 
+const FACT_KINDS: readonly string[] = [
+  "text",
+  "date",
+  "amount",
+  "percent",
+  "count",
+];
+const isFactKind = (found: unknown): found is ReasonFactKind =>
+  typeof found === "string" && FACT_KINDS.includes(found);
+
 /** The refusal in a result or in the detail of a refused outcome. */
 export function refusalOf(body: unknown): Refusal {
   const result = asRecord(body);
@@ -337,8 +336,10 @@ export function refusalOf(body: unknown): Refusal {
   const facts = Array.isArray(refusal?.reason_facts)
     ? refusal.reason_facts.flatMap((fact): ReasonFact[] => {
         const found = asRecord(fact);
-        return typeof found?.key === "string" && typeof found.value === "string"
-          ? [{ key: found.key, value: found.value }]
+        return typeof found?.key === "string" &&
+          typeof found.value === "string" &&
+          isFactKind(found.kind)
+          ? [{ key: found.key, value: found.value, kind: found.kind }]
           : [];
       })
     : [];

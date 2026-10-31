@@ -8,6 +8,7 @@
 import type {
   AcquisitionCandidate,
   ActivityAssetCorrectRequest,
+  ActivityAssetCorrection,
   ActivityAssetCreateRequest,
   ActivityAssetRevision,
   DescriptorFacts,
@@ -16,6 +17,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import {
   factsOf,
+  FURTHER_SHAPE,
   OUTSIDE,
   revisionPathOf,
   VEHICLE_DECLARED,
@@ -36,6 +38,8 @@ export type RevisionContext = {
   regime: string | null;
   /** The purchase a new element names as its acquisition. */
   candidate: AcquisitionCandidate | null;
+  /** The later ledger payment an element bought outside the ledger owns. */
+  further?: AcquisitionCandidate | null;
   /** The revision a correction supersedes; null when creating. */
   base: RevisionBase | null;
   /** What the registry admits, which says the facts each method takes. */
@@ -101,36 +105,55 @@ function descriptorOf(values: FormValues): DescriptorFacts | null {
   };
 }
 
-/** The basis flag that says the element is a property follows its stage. */
-function tidyBasis(revision: Tree): void {
+/** The basis as the stage chosen states it: the property flag the options
+ * serve for the stage, and none of the facts only another stage states. The
+ * date the building was built is a fact of an element bought used. Without
+ * the options, nothing is judged. */
+function tidyBasis(revision: Tree, options: FormOptions | null): void {
   const basis = revision.basis as Tree | undefined;
   if (basis === undefined) return;
-  basis.is_property = basis.stage === "whole_property";
-  if (basis.stage !== "taxpayer_owned") delete basis.business_use_share;
-  if (basis.stage !== "business_allocated")
-    delete basis.prior_allocation_provenance;
-  if (basis.stage !== "whole_property") {
-    for (const name of [
-      "construction_cost",
-      "land_cost",
-      "ownership_mode",
-      "ownership_share",
-      "office_area",
-      "total_area",
-    ])
-      delete basis[name];
+  if (revision.acquired_condition !== "used")
     delete revision.building_construction_date;
-  }
+  const stages = options?.basis_stages ?? [];
+  const chosen = stages.find((found) => found.stage === basis.stage);
+  if (chosen === undefined) return;
+  basis.is_property = chosen.is_property;
+  for (const other of stages)
+    for (const name of other.facts)
+      if (!chosen.facts.includes(name)) delete basis[name];
 }
 
-/** The opening history without the facts a missing history cannot carry. */
-function tidyOpening(revision: Tree): void {
+/** The opening history without the facts its status cannot state, as the
+ * options serve them. */
+function tidyOpening(revision: Tree, options: FormOptions | null): void {
   const opening = revision.opening_history as Tree | undefined;
-  if (opening !== undefined && opening.status === "missing") {
-    delete opening.accumulated_amount;
-    delete opening.amortization_method;
-    delete opening.covered_through_tax_year;
-  }
+  if (opening === undefined) return;
+  const statuses = options?.opening_statuses ?? [];
+  const chosen = statuses.find((found) => found.status === opening.status);
+  if (chosen === undefined) return;
+  for (const other of statuses)
+    for (const name of other.facts)
+      if (!chosen.facts.includes(name)) delete opening[name];
+}
+
+/** The later ledger payment of an element bought outside the ledger, as the
+ * lineage the revision carries it under; none where nothing is chosen. */
+function furtherRows(
+  values: FormValues,
+  further: AcquisitionCandidate | null | undefined,
+): Tree[] {
+  const shape = textOf(values[FURTHER_SHAPE]);
+  if (further === null || further === undefined || shape === null) return [];
+  return [
+    {
+      shape,
+      lineage: {
+        observed_transaction_id: further.transaction_id,
+        invoice_evidence_id: further.invoice_evidence_id ?? "",
+        evidence_fingerprint: further.evidence_fingerprint,
+      },
+    },
+  ];
 }
 
 /**
@@ -172,11 +195,13 @@ export function createRequest(
             invoice_evidence_id: candidate.invoice_evidence_id,
             evidence_fingerprint: candidate.evidence_fingerprint,
           },
-    ...(outside ? { further_acquisitions: [] } : {}),
+    ...(outside
+      ? { further_acquisitions: furtherRows(values, context.further) }
+      : {}),
     amortization: { regime },
   };
   state(revision, values, false);
-  tidyBasis(revision);
+  tidyBasis(revision, context.options ?? null);
   return {
     revision: revision as unknown as ActivityAssetRevision,
     descriptor,
@@ -227,16 +252,18 @@ export function correctRequest(
   const before = structuredClone(base.revision) as unknown as Tree;
   const revision: Tree = {
     ...before,
-    revision_number: Number(before.revision_number) + 1,
     supersedes_revision_id: base.revision_id,
     amortization: electionAfter(before, values, context.options ?? null),
+    disposal: before.disposal ?? null,
   };
+  // The register numbers the revision a correction makes.
+  delete revision.revision_number;
   state(revision, values, true);
   if (values[VEHICLE_DECLARED] === false) delete revision.vehicle_affectation;
-  tidyBasis(revision);
-  tidyOpening(revision);
+  tidyBasis(revision, context.options ?? null);
+  tidyOpening(revision, context.options ?? null);
   return {
-    revision: revision as unknown as ActivityAssetRevision,
+    revision: revision as unknown as ActivityAssetCorrection,
     superseding_claims: supersede.map((claim) => ({
       supersedes_claim_id: claim,
       requested_free_amount: null,
@@ -258,12 +285,12 @@ export function bajaRequest(
   const before = structuredClone(base.revision) as unknown as Tree;
   const revision: Tree = {
     ...before,
-    revision_number: Number(before.revision_number) + 1,
     supersedes_revision_id: base.revision_id,
     disposal,
   };
+  delete revision.revision_number;
   return {
-    revision: revision as unknown as ActivityAssetRevision,
+    revision: revision as unknown as ActivityAssetCorrection,
     superseding_claims: [],
   };
 }

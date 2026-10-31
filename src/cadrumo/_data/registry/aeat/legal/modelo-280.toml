@@ -72,7 +72,7 @@ effective_from = 2016-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/2118/2015 articulo 5: remite la presentación del Modelo 280 a las condiciones generales de presentación electronica de declaraciones informativas."
+notes = "Orden HAP/2118/2015 articulo 5: remite la presentación del Modelo 280 a las condiciones generales de presentación electrónica de declaraciones informativas."
 required_text = [
     "Artículo 5. Formas de presentación del modelo 280",
     "La presentación del modelo 280",
@@ -92,7 +92,7 @@ effective_from = 2016-11-30
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-11251 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1822/2016 articulo sexto: modifica los diseños fisicos y logicos del Modelo 280 para consignar importes cuantitativos en euros."
+notes = "Orden HFP/1822/2016 articulo sexto: modifica los diseños físicos y lógicos del Modelo 280 para consignar importes cuantitativos en euros."
 required_text = [
     "Artículo sexto. Modificación de la Orden HAP/2118/2015",
     "modelo 280",

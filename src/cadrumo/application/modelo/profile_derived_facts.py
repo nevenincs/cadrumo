@@ -34,6 +34,9 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
+_LAST_MONTH = 12
+
+
 class ProfileBindingResolutionError(ModeloError):
     """Raised when a profile-sourced binding cannot be resolved for a calculation."""
 
@@ -194,7 +197,7 @@ def inject_derived_marriage_facts(
     if "renta_taxpayer.marriage_month_start" not in fact_index:
         fact_index["renta_taxpayer.marriage_month_start"] = Decimal(month_start)
     if "renta_taxpayer.marriage_month_end" not in fact_index:
-        fact_index["renta_taxpayer.marriage_month_end"] = Decimal("12")
+        fact_index["renta_taxpayer.marriage_month_end"] = Decimal(_LAST_MONTH)
 
 
 def _authored_year(snapshot: RegistrySnapshot) -> int:

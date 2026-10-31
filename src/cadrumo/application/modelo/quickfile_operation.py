@@ -32,6 +32,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..ledger.commit_fence import LedgerCommitAttemptTracker, run_with_ledger_commit_fence
 from ..operations.access_resolution import (
@@ -143,11 +144,11 @@ def _inputs(payload: QuickfileRequest, ports: QuickfileOperationPorts, work_unit
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     supplied = payload.ordinary_m303_filing_evidence
     evidence = None
-    if payload.modelo == "303":
+    if payload.modelo == form_for_role("iva.periodic"):
         if supplied is None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(
-                    "missing", {"modelo": "303", "evidence_present": False}
+                    "missing", {"modelo": payload.modelo, "evidence_present": False}
                 )
             )
         evidence = author_ordinary_m303_evidence_for_work(

@@ -19,6 +19,7 @@ from ...core.operations import (
     OperationEffect,
 )
 from ...core.period import Period
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -159,7 +160,7 @@ def _require_seed_authority(
         or state.available_end_amount != expected_amount
         or state.available_end_amount < 0
         or state.status is not None
-        or reference.modelo != "303"
+        or reference.modelo != form_for_role("iva.periodic")
         or reference.modelo_year != period.filing_year
         or reference.period != period.registry_token
     ):

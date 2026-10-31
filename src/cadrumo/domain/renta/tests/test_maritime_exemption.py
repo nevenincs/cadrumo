@@ -329,6 +329,20 @@ class TestCalculateArt7pExemption:
         )
         assert obs.value == Decimal(expected)
 
+    def test_a_leap_year_divides_the_same_salary_by_one_day_more(self) -> None:
+        # By hand: 36,500 x 100 / 365 = 10,000.00, and 36,500 x 100 / 366 = 9,972.677... = 9,972.68.
+        in_a_common_year, in_a_leap_year = (
+            calculate_art_7p_exemption(
+                annual_salary=Decimal("36500"),
+                qualifying_days=100,
+                facts=self._BASE_FACTS,
+                filing_period=date(year, 12, 31),
+            ).value
+            for year in (2023, 2024)
+        )
+        assert in_a_common_year.quantize(Decimal("0.01")) == Decimal("10000.00")
+        assert in_a_leap_year.quantize(Decimal("0.01")) == Decimal("9972.68")
+
     def test_only_a_leap_year_admits_a_366th_day(self) -> None:
         obs = calculate_art_7p_exemption(
             annual_salary=Decimal("36600"),

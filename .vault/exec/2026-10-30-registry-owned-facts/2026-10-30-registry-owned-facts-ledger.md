@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:a47b5ef69330668086b8fdf24072ae191bc60b729c28036372813d2dede04249'
+body_hash: 'sha256:eafb4aae42b3e1154baa76aee1077b78bcf0233d7bc9ae63e375bb32cffa7011'
 related:
   - "[[2026-10-30-registry-owned-facts-plan]]"
 ---
@@ -34,6 +34,18 @@ related:
 - `S05` `M` `src/cadrumo/domain/renta/maritime_exemption.py`
 - `S05` `M` `src/cadrumo/domain/renta/tests/test_maritime_exemption.py`
 - `S05` `verify:` `test_maritime_exemption` -> `pass`
+- `S04` `A` `src/cadrumo/_data/registry/aeat/facts/0160-withholding-modelo-routing.toml`
+- `S04` `A` `src/cadrumo/_data/registry/aeat/facts/0161-modelo-applicability-routes.toml`
+- `S04` `A` `src/cadrumo/_data/registry/aeat/facts/0162-deadline-shift-exempt-modelos.toml`
+- `S04` `A` `src/cadrumo/_data/registry/aeat/facts/0165-modelo-role-routing.toml`
+- `S04` `A` `src/cadrumo/_data/registry/aeat/facts/0166-rebeca-eligible-vessel-registries.toml`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/form_codes.py`
+- `S04` `verify:` `test_tax_literal_sweep` -> `pass`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/actividad_asset_disposal_bindings.py`
+- `S07` `M` `src/cadrumo/application/modelo/work_form_records.py`
+- `S07` `M` `dev/registry/form_layout/page_sections.py`
+- `S07` `verify:` `application_modelo_and_aggregation_tests` -> `pass`
 
 ## Notes
 

@@ -31,7 +31,7 @@ effective_from = 2010-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
-notes = "Orden EHA/789/2010 articulo 8: forma y condiciones generales para la presentación telematica por internet del Modelo 361."
+notes = "Orden EHA/789/2010 articulo 8: forma y condiciones generales para la presentación telemática por internet del Modelo 361."
 required_text = [
     "Artículo 8. Forma y condiciones generales",
     "presentación telemática por internet del modelo 361",
@@ -51,7 +51,7 @@ effective_from = 2010-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
-notes = "Orden EHA/789/2010 articulo 9: procedimiento para la presentación telematica por Internet de las solicitudes de devolución correspondientes al Modelo 361."
+notes = "Orden EHA/789/2010 articulo 9: procedimiento para la presentación telemática por Internet de las solicitudes de devolución correspondientes al Modelo 361."
 required_text = [
     "Artículo 9. Procedimiento",
     "presentación telemática por Internet",
@@ -71,7 +71,7 @@ effective_from = 2010-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled official BOE-A-2010-5210 HTML"
-notes = "Orden EHA/789/2010 articulo 10: plazo de presentación del Modelo 361; comienza el dia siguiente al final de cada trimestre natural o ano natural y concluye el 30 de septiembre siguiente al ano natural de las cuotas soportadas."
+notes = "Orden EHA/789/2010 articulo 10: plazo de presentación del Modelo 361; comienza el día siguiente al final de cada trimestre natural o ano natural y concluye el 30 de septiembre siguiente al ano natural de las cuotas soportadas."
 required_text = [
     "Artículo 10. Plazo de presentación del modelo 361",
     "30 de septiembre",

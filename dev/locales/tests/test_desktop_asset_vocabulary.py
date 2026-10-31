@@ -21,6 +21,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetNotTableBoundReason,
     ActivityAssetPlanAdvisoryKind,
     ActivityAssetRegisterState,
+    ActivityAssetTimelineEventKind,
     timeline_field_word_key,
 )
 from cadrumo.application.actividad_asset.fact_wording import ActivityAssetFlag
@@ -48,7 +49,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
     OwnershipMode,
 )
-from cadrumo.domain.renta.actividad_asset.register_records import AcquisitionDocumentKind, ActivityAssetEventKind
+from cadrumo.domain.renta.actividad_asset.register_records import AcquisitionDocumentKind
 from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
     ElectricPropulsion,
     VehicleCategory,
@@ -92,7 +93,7 @@ _SERVED = {
     "disposal_reason": ActivityAssetDisposalReason,
     "document_kind": AcquisitionDocumentKind,
     "electric_propulsion": ElectricPropulsion,
-    "event_kind": ActivityAssetEventKind,
+    "event_kind": ActivityAssetTimelineEventKind,
     "flag": ActivityAssetFlag,
     "method": AmortizationMethod,
     "non_deductible_iva_state": ActivityAssetNonDeductibleIvaState,

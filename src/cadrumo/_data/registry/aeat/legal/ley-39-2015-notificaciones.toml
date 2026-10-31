@@ -68,8 +68,8 @@ contrastado con el texto consolidado vivo BOE-A-2015-10565 (los seis apartados d
 el 2026-08-13 contra el corpus incluido: el apartado 2 del art. 43 dice literalmente 'se entendera \
 rechazada cuando hayan transcurrido diez días naturales desde la puesta a disposición de la \
 notificación sin que se acceda a su contenido', y ambas frases de required_text coinciden verbatim. \
-Ley 39/2015 art. 43.2: régimen de notificaciones por medios electronicos. Una notificación \
-electronica se entiende practicada en el momento del acceso a su contenido; cuando es de caracter \
+Ley 39/2015 art. 43.2: régimen de notificaciones por medios electrónicos. Una notificación \
+electrónica se entiende practicada en el momento del acceso a su contenido; cuando es de carácter \
 obligatorio o elegida por el interesado, se entiende rechazada -legalmente servida pese a no haberse \
 accedido- transcurridos diez días naturales desde la puesta a disposición sin acceso. El plazo corre \
 desde la puesta a disposición (fecha_notificacion), no desde el acceso (leida). No se ha comprobado \

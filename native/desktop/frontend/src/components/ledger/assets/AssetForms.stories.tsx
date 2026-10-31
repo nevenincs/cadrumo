@@ -222,12 +222,42 @@ export const AddElementOutsideLedger: Story = adding({
     (root) => typed(root, "acquisition_reference", "Factura 2024-118"),
   ),
 });
+export const AddElementOutsideLedgerLaterPayment: Story = adding({
+  name: "Add element, bought outside the ledger, with a later payment from the ledger",
+  play: steps(
+    (root) => chosen(root, "asset_kind", 1),
+    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosen(root, "acquisition_shape", 1),
+    (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
+    (root) => chosen(root, "declared_activity", 0),
+    (root) => typed(root, "acquisition_reference", "Factura 2024-118"),
+    (root) => chosen(root, "further_purchase", 0),
+    (root) => chosen(root, "further_shape", 0),
+  ),
+});
 export const AddElementWholeProperty: Story = adding({
   name: "Add element, whole property: its parts",
   play: steps(
     (root) => chosen(root, "asset_kind", 0),
     (root) => typed(root, "in_service_date", "2026-06-15"),
-    (root) => chosen(root, "basis_stage", 2),
+    (root) => chosenValue(root, "basis_stage", "whole_property"),
+  ),
+});
+export const AddElementUsedBuilding: Story = adding({
+  name: "Add element, bought used: the date the building was built",
+  play: steps(
+    (root) => chosen(root, "asset_kind", 0),
+    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosenValue(root, "acquired_condition", "used"),
+    (root) => chosenValue(root, "basis_stage", "whole_property"),
+  ),
+});
+export const AddElementOpeningKnown: Story = adding({
+  name: "Add element, opening history known: the facts it can state",
+  play: steps(
+    (root) => chosen(root, "asset_kind", 0),
+    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosenValue(root, "opening_status", "known"),
   ),
 });
 export const AddElementVehicle: Story = adding({
@@ -557,6 +587,22 @@ const overlap = async (root: Root) => {
 export const Claim: Story = claiming("furgoneta", 2026, {
   name: "Record dotación, a year not claimed",
 });
+export const ClaimOpensOnTheServedYear: Story = form(
+  (props) => <ClaimFlow {...props} assetId="cristaleria" taxYear={2026} />,
+  {
+    name: "Record dotación, opens on the year the register names for the element, not the page's",
+    play: steps(async (root) => {
+      const select = await drawn<HTMLSelectElement>(
+        root,
+        ".ledger-asset-form-claim select",
+      );
+      await waitFor(() => {
+        if (select.value !== "2025")
+          throw new Error("the form did not open on the served year");
+      });
+    }),
+  },
+);
 export const ClaimForecast: Story = claiming("furgoneta", 2026, {
   name: "Record dotación, forecast shown first",
   play: steps(forecast),
