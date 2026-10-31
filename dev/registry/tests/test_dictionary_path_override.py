@@ -96,16 +96,18 @@ def test_the_value_rendering_was_never_the_defect(filing_year: int) -> None:
 
 
 def test_no_other_row_is_overridden() -> None:
-    """One declared exception, not a reconciliation layer.
+    """Declared exceptions, not a reconciliation layer.
 
-    A second override appearing without its own evidence is the drift this design
-    is meant to prevent, so the count is pinned rather than the mere presence of
-    PH18.
+    A further override appearing without its own evidence is the drift this design
+    is meant to prevent, so each edition's list is pinned rather than the mere
+    presence of PH18. EXTRA belongs to 2024 alone: the 2025 dictionary already
+    places that row where the XSD does.
     """
     for filing_year in range(2020, 2026):
         layout = _modelo_100_layout(filing_year)
+        expected = ["PH18", "EXTRA"] if filing_year == 2024 else ["PH18"]
 
-        assert [override.field_id for override in layout.dictionary_path_overrides] == ["PH18"], filing_year
+        assert [override.field_id for override in layout.dictionary_path_overrides] == expected, filing_year
 
 
 def test_every_override_records_why_it_overrules_aeat() -> None:

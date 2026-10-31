@@ -367,10 +367,85 @@ def test_characters_outside_the_declared_pattern_are_refused(operation: PinnedAu
     provider = _provider(operation)
     entry = _named_row(provider, "IDENTCCVH1")
     assert re.fullmatch(_facet("tipo_Iban", "pattern"), "ES12") is not None
+    assert re.fullmatch(_facet("tipo_Iban", "pattern"), "ES-12") is None
 
     assert _written(_render_row(provider, entry, "ES12"), entry) == "ES12"
-    assert re.fullmatch(_facet("tipo_Iban", "pattern"), "es12") is None
-    assert _message(_refused(provider, entry, "es12")) == "xml_value_illegal_characters"
+    assert _message(_refused(provider, entry, "ES-12")) == "xml_value_illegal_characters"
+
+
+def test_ordinary_text_is_capitalized_where_the_type_admits_only_capitals(
+    operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    """A mixed-case, accented value exports through the real route and still verifies."""
+    provider = _provider(operation)
+    entry = _named_row(provider, "C1ICRC")
+    typed = "calle ñu-5 José á"
+    assert re.fullmatch(_facet("tipo_ReferenciaCatastral", "pattern"), typed) is None
+    assert re.fullmatch(_facet("tipo_ReferenciaCatastral", "pattern"), typed.upper()) is not None
+    draft = _draft(provider, {str(entry.casilla_id): typed})
+    output_path = tmp_path / "text.xml"
+
+    _export(provider, draft, output_path)
+
+    assert _written(output_path.read_bytes(), entry) == typed.upper()
+    assert verify_export(draft, file_path=output_path, schema_provider=provider).verdict is (
+        DeclaracionVerifyVerdict.MATCH
+    )
+
+
+def test_a_value_capitals_cannot_make_valid_is_refused_unchanged(operation: PinnedAuthorityOperation) -> None:
+    """Dropping or replacing a character would file text the taxpayer never stated."""
+    provider = _provider(operation)
+    entry = _named_row(provider, "C1ICRC")
+    for typed in ("calle 5ª", "precio 5€"):
+        assert re.fullmatch(_facet("tipo_ReferenciaCatastral", "pattern"), typed.upper()) is None
+        assert _message(_refused(provider, entry, typed)) == "xml_value_illegal_characters"
+
+
+def test_capitalizing_does_not_escape_the_length_limit(operation: PinnedAuthorityOperation) -> None:
+    """A letter that grows when capitalized is measured as the file would hold it."""
+    provider = _provider(operation)
+    entry = _named_row(provider, "C1ICRC")
+    limit = int(_facet("tipo_ReferenciaCatastral", "maxLength"))
+
+    error = _refused(provider, entry, "ß" * limit)
+
+    assert _message(error) == "xml_value_too_long"
+    assert error.context is not None
+    assert error.context["observed"] == 2 * limit
+
+
+def test_a_taxpayer_name_is_capitalized_only_by_its_type(operation: PinnedAuthorityOperation) -> None:
+    provider = _provider(operation)
+    entry = _named_row(provider, "DP_APENOM_D")
+
+    assert _written(_render_row(provider, entry, "Pérez Núñez, José"), entry) == "PÉREZ NÚÑEZ, JOSÉ"
+
+
+def test_a_listed_code_typed_in_lowercase_takes_the_listed_form(operation: PinnedAuthorityOperation) -> None:
+    provider = _provider(operation)
+    entry = _row(provider, xsd_type="tipo_SINO_Exclusivo")
+
+    assert _written(_render_row(provider, entry, "si"), entry) == "SI"
+
+
+def test_a_file_from_elsewhere_in_lowercase_is_not_excused_by_normalization(
+    operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    """Capitalizing belongs to writing. What a file already holds is judged as it stands."""
+    provider = _provider(operation)
+    entry = _named_row(provider, "C1ICRC")
+    typed = "CALLE MAYOR"
+    draft = _draft(provider, {str(entry.casilla_id): typed})
+    good = tmp_path / "good.xml"
+    _export(provider, draft, good)
+    held = tmp_path / "lower.xml"
+    held.write_bytes(good.read_bytes().replace(typed.encode(), typed.lower().encode(), 1))
+
+    with pytest.raises(ModeloApplicationError) as refused:
+        verify_export(draft, file_path=held, schema_provider=provider)
+
+    assert _message(refused.value) == "xml_value_illegal_characters"
 
 
 def test_a_character_xml_cannot_carry_is_refused_by_its_box(operation: PinnedAuthorityOperation) -> None:
@@ -573,16 +648,12 @@ def test_a_facet_this_check_cannot_apply_refuses_rather_than_passes(facet: str) 
 
 
 @pytest.mark.parametrize("year", [2022, 2023, 2024, 2025])
-def test_every_box_the_dictionary_places_has_a_place_in_its_edition(
+def test_every_row_the_dictionary_places_has_a_place_in_its_edition(
     operation: PinnedAuthorityOperation, year: int
 ) -> None:
-    """A box the XSD does not declare would be refused the moment a draft gave it a value."""
+    """A row the XSD does not declare would be refused the moment it carried a value."""
     types = _types_by_path(year)
-    undeclared = [
-        entry.field_id
-        for entry in _entries(_provider(operation, year))
-        if entry.casilla_id is not None and _plain_path(entry) not in types
-    ]
+    undeclared = [entry.field_id for entry in _entries(_provider(operation, year)) if _plain_path(entry) not in types]
 
     assert undeclared == []
 

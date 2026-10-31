@@ -10415,7 +10415,8 @@ family = "export_layouts"
 selector = {revision = "2024", id = "modelo-100-xml-dictionary"}
 fields = {dictionary_source_ref = "aeat-dr-100-2025-dictionary"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_refs = [0, 1]}
+# The 2025 dictionary places EXTRA where the XSD does, so the 2024 correction ends here.
+sequence_removals = {source_refs = [0, 1], dictionary_path_overrides = [1]}
 
 [[revisions."2025".family_overrides]]
 family = "workbook_parity_refs"
