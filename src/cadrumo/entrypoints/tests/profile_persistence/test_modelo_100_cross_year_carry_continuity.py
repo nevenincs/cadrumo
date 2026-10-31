@@ -76,6 +76,7 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
+from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
@@ -154,17 +155,7 @@ def _seed_taxpayer_unit_profile() -> None:
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),

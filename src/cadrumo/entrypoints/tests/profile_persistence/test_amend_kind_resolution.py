@@ -82,6 +82,7 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit
+from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_amendment_action_ports
@@ -106,17 +107,7 @@ _READY_PROFILE_FACTS = (
     UserProfileFact(path="identity.name", value="Ready"),
     UserProfileFact(path="identity.surnames", value="Operator"),
     UserProfileFact(path="activities.description", value="amend-kind-resolution"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
 )
 
 

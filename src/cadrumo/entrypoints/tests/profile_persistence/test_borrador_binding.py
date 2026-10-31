@@ -41,6 +41,7 @@ from ....domain.calculations.registry.binding_targets import casillas_by_binding
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -164,17 +165,7 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
                 UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
                 UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
                 UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),

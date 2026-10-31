@@ -72,6 +72,7 @@ from ....domain.calculations.registry.tests.authored_editions import newest_auth
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
+from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ._fold_in_assertions_support import _assert_distinct_positive
@@ -307,17 +308,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
             UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
             UserProfileFact(path="withholding.colegio_concertado", value=False),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),

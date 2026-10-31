@@ -17,6 +17,8 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import profile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
+from ...domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+
 
 def seed_ready_capital_payer_profile(*, bucket_id: str, at: datetime, tax_id: str = "12345678Z") -> None:
     """Store a complete natural-person profile with an IVA general regime and no employees."""
@@ -29,17 +31,7 @@ def seed_ready_capital_payer_profile(*, bucket_id: str, at: datetime, tax_id: st
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="capital income payer"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
                 UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 UserProfileFact(path="withholding.colegio_concertado", value=False),
             ),

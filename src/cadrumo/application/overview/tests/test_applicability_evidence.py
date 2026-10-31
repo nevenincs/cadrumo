@@ -45,6 +45,7 @@ from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from ....domain.iva.schema import InvoiceKind
+from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...invoices.source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 from ...user_profile.projections import projection_for_taxpayer
@@ -460,17 +461,7 @@ def test_explain_and_the_calendar_decide_a_ledger_yes_alike(
 
 _AUTONOMO_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="X1234567L"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
 )
 
 
