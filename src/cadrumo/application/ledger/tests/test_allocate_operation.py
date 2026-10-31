@@ -36,6 +36,7 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import allocate_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..transaction_projection import LedgerTransactionProjection
+from .transaction_projection_support import ledger_transaction_projection
 from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedAttachmentStore, UnusedBucketEventRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -83,46 +84,7 @@ def _access_context(
 
 
 def _transaction_projection(transaction_id: str = _CURRENT_TRANSACTION_ID) -> LedgerTransactionProjection:
-    return LedgerTransactionProjection.model_validate(
-        {
-            "transaction_id": transaction_id,
-            "date": "2026-04-15",
-            "booked_date": "2026-04-15",
-            "value_date": None,
-            "amount": "121.00",
-            "currency": "EUR",
-            "direction": "OUTFLOW",
-            "counterparty": "Client SL",
-            "description": "Invoice 1",
-            "business_classification": "MIXED",
-            "business_pct": "0.5",
-            "category_id": None,
-            "taxable_base": None,
-            "iva_rate": None,
-            "iva_amount": None,
-            "iva_category": None,
-            "counterparty_country": None,
-            "counterparty_identification_state": None,
-            "irpf_category": None,
-            "m210_income_classification": None,
-            "usage_ratio_id": None,
-            "prorrata_reference": None,
-            "purchase_invoice_evidence_id": None,
-            "invoice_id": None,
-            "attachment_ids": (),
-            "notes": "",
-            "lifecycle_state": "ACTIVE",
-            "classified_by": "manual",
-            "classified_at": None,
-            "classification_reason": "",
-            "classification_confidence": None,
-            "source_jurisdiction": None,
-            "value_in_eur": None,
-            "fx_rate": None,
-            "created_at": "2026-04-15T09:30:00+00:00",
-            "modified_at": "2026-04-15T09:30:00+00:00",
-        }
-    )
+    return ledger_transaction_projection(transaction_id=transaction_id)
 
 
 def test_registered_allocate_request_is_secure_and_requires_commit() -> None:

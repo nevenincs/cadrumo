@@ -31,6 +31,7 @@ from .. import classify_requests, classify_result_contracts
 from ..action_ports import LedgerActionPorts, LedgerActionPortsFactory
 from ..classify_result_projection import project_classify_operation_result
 from ..transaction_projection import LedgerTransactionProjection
+from .transaction_projection_support import ledger_transaction_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -49,45 +50,10 @@ def _request(*, profile_id: UUID = _PROFILE) -> classify_requests.LedgerClassify
 
 
 def _transaction_projection() -> LedgerTransactionProjection:
-    return LedgerTransactionProjection.model_validate(
-        {
-            "transaction_id": _TRANSACTION_ID,
-            "date": "2026-04-15",
-            "booked_date": "2026-04-15",
-            "value_date": None,
-            "amount": "121.00",
-            "currency": "EUR",
-            "direction": "OUTFLOW",
-            "counterparty": "Client SL",
-            "description": "Invoice 1",
-            "business_classification": "PERSONAL",
-            "business_pct": None,
-            "category_id": None,
-            "taxable_base": None,
-            "iva_rate": None,
-            "iva_amount": None,
-            "iva_category": None,
-            "counterparty_country": None,
-            "counterparty_identification_state": None,
-            "irpf_category": None,
-            "m210_income_classification": None,
-            "usage_ratio_id": None,
-            "prorrata_reference": None,
-            "purchase_invoice_evidence_id": None,
-            "invoice_id": None,
-            "attachment_ids": (),
-            "notes": "",
-            "lifecycle_state": "ACTIVE",
-            "classified_by": "manual",
-            "classified_at": None,
-            "classification_reason": "",
-            "classification_confidence": None,
-            "source_jurisdiction": None,
-            "value_in_eur": None,
-            "fx_rate": None,
-            "created_at": "2026-04-15T09:30:00+00:00",
-            "modified_at": "2026-04-15T09:30:00+00:00",
-        },
+    return ledger_transaction_projection(
+        transaction_id=_TRANSACTION_ID,
+        business_classification="PERSONAL",
+        business_pct=None,
     )
 
 
