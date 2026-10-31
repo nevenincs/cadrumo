@@ -178,7 +178,9 @@ def _rst_prose_blocks(
     nodes: Any,
 ) -> tuple[tuple[tuple[int, str], ...], dict[int | None, list[str]], dict[int | None, list[str]]]:
     """Collect visible RST blocks and parsed heading text in document order."""
-    excluded = (nodes.literal, nodes.literal_block, nodes.option_string, nodes.raw)
+    # Docutils embeds its own diagnostics as nodes; they are not authored or
+    # rendered page prose (Sphinx validates its directives separately).
+    excluded = (nodes.literal, nodes.literal_block, nodes.option_string, nodes.raw, nodes.system_message)
     blocks: list[tuple[int, str]] = []
     parsed_headings: dict[int | None, list[str]] = {}
     parsed_titles: dict[int | None, list[str]] = {}

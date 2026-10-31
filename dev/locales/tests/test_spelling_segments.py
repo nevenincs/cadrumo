@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ..signal_document_prose import visible_document_prose
 from ..signal_spelling_segments import locale_spelling_words, spanish_word_context, translation_spelling_segments
 from ..signal_tokens import filtered_translation_text, translation_words
 
@@ -16,6 +17,18 @@ def words_by_language(value: str, locale: str = "en") -> dict[str, set[str]]:
     for language, segment, _excluded in translation_spelling_segments(value, "guide", locale):
         words.setdefault(language, set()).update(segment)
     return words
+
+
+def test_rst_prose_omits_parser_diagnostics_but_keeps_authored_text(tmp_path) -> None:
+    page = tmp_path / "index.rst"
+    page.write_text(
+        "Reference\n=========\n\n.. toctree::\n\n   child\n\n"
+        "Unknown directive type toctree is a sentence with misspeling.\n",
+        encoding="utf-8",
+    )
+    prose = {text for _line, text in visible_document_prose(page)}
+    assert 'Unknown directive type "toctree".' not in prose
+    assert "Unknown directive type toctree is a sentence with misspeling." in prose
 
 
 @pytest.mark.parametrize(

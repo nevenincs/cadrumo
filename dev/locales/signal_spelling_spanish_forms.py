@@ -19,6 +19,8 @@ _SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
         "alinéa",
         "apláza",
         "apruéba",
+        # https://dle.rae.es/asociar
+        "asócia",
         "reinténta",
         "lísta",
         "archíva",

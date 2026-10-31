@@ -1183,15 +1183,7 @@ def check_dictionary_spelling_words(
     """Check dictionary spelling words."""
     dictionary = dictionaries[dictionary_locale]
     for word in words:
-        # Hungarian abbreviations such as "pl." need their final period.
-        # Ordinary sentence-final words instead need the unpunctuated stem;
-        # neither path admits a form the dictionary does not recognise.
-        stem = word.removesuffix(".") if dictionary_locale == "hu" else word
-        if (
-            is_project_spelling(dictionary_locale, stem)
-            or dictionary.lookup(word)
-            or (stem != word and dictionary.lookup(stem))
-        ):
+        if _dictionary_accepts_spelling(dictionary_locale, word, dictionary):
             continue
         for owner_locale, key in words[word]:
             if _spanish_legal_note_word(dictionary_locale, key, word, dictionaries):
@@ -1199,6 +1191,24 @@ def check_dictionary_spelling_words(
             record_unknown_spelling_word(
                 owner_locale, key, word, dictionary_locale, dictionaries, cell_text, unknown_words, unknown_by_cell
             )
+
+
+def _dictionary_accepts_spelling(locale: str, word: str, dictionary: DictionaryLike) -> bool:
+    """Check the original word and narrowly defined orthographic variants."""
+    # Hungarian abbreviations such as "pl." need their final period; ordinary
+    # sentence-final words instead need the unpunctuated stem.
+    stem = word.removesuffix(".") if locale == "hu" else word
+    if is_project_spelling(locale, stem) or dictionary.lookup(word) or (stem != word and dictionary.lookup(stem)):
+        return True
+    # English singular possessives require an independently accepted base;
+    # never make an unknown or misspelled stem valid by adding an apostrophe.
+    # https://dictionary.cambridge.org/grammar/british-grammar/apostrophe
+    return (
+        locale == "en"
+        and word.endswith(("'s", "’s"))
+        and bool(re.fullmatch(r"[^\W\d_]+['’]s", word))
+        and dictionary.lookup(word[:-2])
+    )
 
 
 def record_unknown_spelling_word(

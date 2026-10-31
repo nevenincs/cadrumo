@@ -832,6 +832,7 @@ def test_frequent_attested_spanish_clitic_imperatives_are_exact_and_language_sco
         "impórtalo",
         "Impórtalo",
         "confírmala",
+        "asócialo",
     )
     dictionaries = load_dictionaries(REPO_ROOT)
     for form in forms:
@@ -853,6 +854,8 @@ def test_frequent_attested_spanish_clitic_imperatives_are_exact_and_language_sco
         "importalo",
         "Impórtallo",
         "confirmala",
+        "asocialo",
+        "asócialoo",
     ):
         assert not is_project_spelling("es", near_miss)
 
@@ -1691,6 +1694,13 @@ def test_us_english_behavior_is_recognized_without_accepting_a_typo() -> None:
     assert is_project_spelling("en", "behavior")
     assert not is_project_spelling("en", "behavor")
     assert not is_project_spelling("es", "behavior")
+
+
+def test_english_possessives_require_a_real_dictionary_base() -> None:
+    values = {"en": {"example": "descriptor's resolver’s someone else's descriptorr's resolvver's"}}
+    unknown, inventory, _ = spellcheck_catalogues(set(), {}, REPO_ROOT, additional_values=values)
+    assert not inventory["spelling_tool_failures"]
+    assert set(unknown[("en", "example")]) == {"descriptorr's", "resolvver's"}
 
 
 def test_reference_us_english_forms_are_exact_and_do_not_accept_nearby_typos() -> None:
