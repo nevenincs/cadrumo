@@ -171,7 +171,14 @@ export function servedWord(t: (key: string) => string, served: Served): string {
 
 // ---- The fields a form draws -------------------------------------------------
 
-export type FieldControl = "text" | "choice" | "amount" | "share" | "date";
+export type FieldControl =
+  | "text"
+  | "choice"
+  | "money"
+  | "quantity"
+  | "unit_price"
+  | "share"
+  | "date";
 
 /** One field of a form: what it is called, how it is typed and whether the
  * request cannot be made without it. A field's key is where its text and its
@@ -182,8 +189,6 @@ export type StockField = {
   hint?: string;
   control: FieldControl;
   required: boolean;
-  /** For text that is typed as a number: the keyboard it asks for. */
-  numeric?: boolean;
   /** The most characters it takes, where that is not the usual. */
   max?: number;
 };
@@ -205,10 +210,8 @@ export const BOOK_FIELDS: readonly StockField[] = [
   {
     key: "opening",
     label: "desktop.ledger.inventory.opening",
-    hint: "desktop.ledger.form.amount_hint",
-    control: "amount",
+    control: "money",
     required: true,
-    numeric: true,
   },
 ];
 
@@ -217,7 +220,6 @@ export const MOVEMENT_FIELDS: readonly StockField[] = [
   {
     key: "date",
     label: "desktop.ledger.inventory.date",
-    hint: "desktop.ledger.form.date_hint",
     control: "date",
     required: true,
   },
@@ -230,9 +232,8 @@ export const MOVEMENT_FIELDS: readonly StockField[] = [
   {
     key: "quantity",
     label: "desktop.ledger.inventory.quantity",
-    control: "amount",
+    control: "quantity",
     required: true,
-    numeric: true,
   },
 ];
 
@@ -242,16 +243,14 @@ export const COST_FIELDS: readonly StockField[] = [
     key: "unit_cost",
     label: "desktop.ledger.inventory.unit_cost",
     hint: "desktop.ledger.stock.field.cost_hint",
-    control: "amount",
+    control: "unit_price",
     required: false,
-    numeric: true,
   },
   {
     key: "total_cost",
     label: "desktop.ledger.stock.field.total_cost",
-    control: "amount",
+    control: "money",
     required: false,
-    numeric: true,
   },
 ];
 
@@ -260,25 +259,20 @@ export const PRICE_FIELDS: readonly StockField[] = [
   {
     key: "price",
     label: "desktop.ledger.stock.field.price",
-    hint: "desktop.ledger.form.amount_hint",
-    control: "amount",
+    control: "money",
     required: true,
-    numeric: true,
   },
   {
     key: "iva",
     label: "desktop.ledger.stock.field.iva",
-    control: "amount",
+    control: "money",
     required: true,
-    numeric: true,
   },
   {
     key: "share",
     label: "desktop.ledger.stock.field.share",
-    hint: "desktop.ledger.form.percent_hint",
     control: "share",
     required: true,
-    numeric: true,
   },
 ];
 
@@ -293,25 +287,20 @@ export const EXTRA_FIELDS: readonly StockField[] = [
   {
     key: "price",
     label: "desktop.ledger.stock.extra.price",
-    hint: "desktop.ledger.form.amount_hint",
-    control: "amount",
+    control: "money",
     required: true,
-    numeric: true,
   },
   {
     key: "iva",
     label: "desktop.ledger.stock.extra.iva",
-    control: "amount",
+    control: "money",
     required: true,
-    numeric: true,
   },
   {
     key: "share",
     label: "desktop.ledger.stock.extra.share",
-    hint: "desktop.ledger.form.percent_hint",
     control: "share",
     required: true,
-    numeric: true,
   },
 ];
 
@@ -347,9 +336,8 @@ export const CORRECT_FIELDS: readonly StockField[] = [
     key: "opening",
     label: "desktop.ledger.stock.field.opening_new",
     hint: "desktop.ledger.stock.field.keep_hint",
-    control: "amount",
+    control: "money",
     required: false,
-    numeric: true,
   },
   {
     key: "method",
@@ -416,17 +404,14 @@ export const COUNT_FIELDS: readonly StockField[] = [
   {
     key: "observed_on",
     label: "desktop.ledger.stock.closing.counted_on",
-    hint: "desktop.ledger.form.date_hint",
     control: "date",
     required: true,
   },
   {
     key: "closing_value",
     label: "desktop.ledger.stock.closing.value",
-    hint: "desktop.ledger.form.amount_hint",
-    control: "amount",
+    control: "money",
     required: true,
-    numeric: true,
   },
   {
     key: "basis",

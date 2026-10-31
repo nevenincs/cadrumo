@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { DateEditor } from "@/components/editors/DateEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
@@ -44,7 +52,6 @@ import {
   rankDecimal,
   Reading,
   SetupTable,
-  TextField,
   useSetupDraft,
   useSetupWrite,
   type Column,
@@ -280,6 +287,62 @@ type Choices = Readonly<
   Record<string, readonly { value: string; label: string }[]>
 >;
 
+/** One field of a form, on the editor its kind of value has. */
+function StockEntry({
+  field,
+  value,
+  onValue,
+  error,
+  autoFocus,
+}: {
+  field: StockField;
+  value: string;
+  onValue(value: string): void;
+  error: string | null;
+  autoFocus: boolean;
+}) {
+  const t = useStrings();
+  const id = useId();
+  const hint = field.hint ? t(field.hint) : undefined;
+  const describedBy =
+    [hint ? `${id}-hint` : null, error ? `${id}-error` : null]
+      .filter(Boolean)
+      .join(" ") || undefined;
+  const editor = {
+    id,
+    name: field.key,
+    value,
+    onChange: onValue,
+    invalid: error ? true : undefined,
+    describedBy,
+    required: field.required,
+    autoFocus,
+  };
+  return (
+    <Field data-invalid={error ? true : undefined}>
+      <FieldLabel htmlFor={id}>{t(field.label)}</FieldLabel>
+      {field.control === "date" ? (
+        <DateEditor {...editor} />
+      ) : (
+        <TextEditor
+          {...editor}
+          inputMode={field.control === "text" ? "text" : "decimal"}
+          maxLength={
+            field.max ??
+            (field.control === "text"
+              ? field.key === "description"
+                ? 1024
+                : 120
+              : 40)
+          }
+        />
+      )}
+      {hint && <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>}
+      <FieldError id={`${id}-error`}>{error}</FieldError>
+    </Field>
+  );
+}
+
 /** The fields of a form, each drawn by its control. A refused value shows its
  * reason; one still to give shows so once the person has tried to send. */
 function StockFields({
@@ -326,27 +389,16 @@ function StockFields({
                 placeholder={
                   field.required ? t("desktop.ledger.form.choose") : undefined
                 }
-                hint={error ?? (field.hint ? t(field.hint) : undefined)}
+                hint={field.hint ? t(field.hint) : undefined}
+                error={error}
                 options={choices[field.key] ?? []}
               />
             ) : (
-              <TextField
-                label={t(field.label)}
-                name={field.key}
+              <StockEntry
+                field={field}
                 value={valueOf(field)}
                 onValue={(value) => onValue(field, value)}
-                hint={field.hint ? t(field.hint) : undefined}
                 error={error}
-                required={field.required}
-                inputMode={field.numeric ? "decimal" : "text"}
-                maxLength={
-                  field.max ??
-                  (field.control === "text"
-                    ? field.key === "description"
-                      ? 1024
-                      : 120
-                    : 40)
-                }
                 autoFocus={autoFocus && index === 0}
               />
             )}
