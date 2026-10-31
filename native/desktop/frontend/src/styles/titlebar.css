@@ -3,6 +3,9 @@
     display: flex;
     align-items: center;
     flex: 0 0 var(--titlebar-height);
+    /* The row the system seats its controls in, also where an error fallback
+       mounts the header outside the window's column. */
+    height: var(--titlebar-height);
     min-width: 0;
     background: var(--chrome);
     user-select: none;
@@ -41,20 +44,13 @@
     text-overflow: ellipsis;
   }
   .profile-status {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing);
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-    white-space: nowrap;
-  }
-  .profile-status > span {
+    flex-shrink: 0;
     width: calc(var(--spacing) * 1.5);
     height: calc(var(--spacing) * 1.5);
     border-radius: 50%;
     background: var(--faint);
   }
-  .profile-status.signed-in > span {
+  .profile-status.signed-in {
     background: var(--success);
   }
   .window-controls {
@@ -71,9 +67,6 @@
     border-top: var(--hairline) solid currentColor;
   }
   @variant titlebar-compact {
-    .profile-status {
-      display: none;
-    }
     .profile-name {
       max-width: calc(var(--spacing-field) / 2);
     }

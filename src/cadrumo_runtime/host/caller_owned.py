@@ -1,10 +1,11 @@
 """Serve an explicitly configured storage root for the process that launched this runtime.
 
-The installed manager supervises only the canonical default root. A caller that
-selects another root with ``CADRUMO_STORAGE_ROOT`` owns that root's
-runtime itself: it starts the process, reads one readiness line from standard
-output, and ends the runtime by closing standard input. A caller that exits
-closes that pipe too, so a runtime never outlives the owner of its root.
+The caller form is a caller-held lifetime: the process that launched this runtime
+starts it, reads one readiness line from standard output, and ends it by closing
+standard input. A caller that exits closes that pipe too, so a runtime never
+outlives its caller. This form takes no manager session lock. The manager
+supervises the root that ``CADRUMO_STORAGE_ROOT`` selects in its own environment;
+this form serves the root its caller selects.
 """
 
 from __future__ import annotations

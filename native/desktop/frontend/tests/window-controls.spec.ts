@@ -398,4 +398,26 @@ test("window controls use authenticated commands and native presentation", async
   await expect
     .poll(async () => (await read()).actions.at(-1))
     .toBe("close_now");
+  // The fallback mounts the header outside the window's column. Where the
+  // system draws the controls, nothing in the header is as tall as its row,
+  // and it still keeps the row the host seated the controls in.
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        __windowTest: { publish: (next: Record<string, unknown>) => void };
+      }
+    ).__windowTest.publish({
+      maximized: false,
+      fullscreen: false,
+      chrome: "native",
+      nativeControls: { height: 38, inset: 84 },
+    });
+  });
+  await expect
+    .poll(() =>
+      page
+        .locator("header.titlebar")
+        .evaluate((element) => element.getBoundingClientRect().height),
+    )
+    .toBe(38);
 });

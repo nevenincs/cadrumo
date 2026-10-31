@@ -94,7 +94,7 @@ pub fn claim_session(manager_id: &str, patience: Duration) -> io::Result<Option<
 
 /// Claim the lock in a Darwin transport namespace the caller owns beneath `base`, in
 /// place of the account's, so a fixture never contends with an installed manager.
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", feature = "fixture-test-mode"))]
 pub fn claim_session_beneath(
     manager_id: &str,
     patience: Duration,

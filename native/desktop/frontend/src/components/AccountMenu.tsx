@@ -61,6 +61,8 @@ export function AccountMenu({
           ? "desktop.account.no_profile"
           : (label ?? "desktop.account.unknown"),
     );
+  // The state in words, where the profile's name leaves it unsaid.
+  const status = label && profile ? t(label) : null;
   const choices =
     account.offering && account.profiles?.complete
       ? account.profiles.profiles
@@ -92,17 +94,18 @@ export function AccountMenu({
             {t("desktop.titlebar.profile_menu")}:{" "}
           </span>
           <Icon name="user" />
+          {/* One label: the profile, or the state where there is none. A
+              named profile's state is its dot, and the menu says it in words. */}
+          {status && (
+            <span
+              className={`profile-status ${signedIn ? "signed-in" : "signed-out"}`}
+              aria-hidden="true"
+            />
+          )}
           <span className="profile-name" title={profile ?? undefined}>
             {profileText}
           </span>
-          {label && (
-            <span
-              className={`profile-status ${signedIn ? "signed-in" : "signed-out"}`}
-            >
-              <span aria-hidden="true" />
-              {t(label)}
-            </span>
-          )}
+          {status && <span className="sr-only">, {status}</span>}
           <Icon name="chevronDown" />
         </Button>
       </DropdownMenuTrigger>
@@ -125,8 +128,8 @@ export function AccountMenu({
           <strong className="truncate" title={profile ?? undefined}>
             {profileText}
           </strong>
-          {label && (
-            <span className="text-xs text-muted-foreground">{t(label)}</span>
+          {status && (
+            <span className="text-xs text-muted-foreground">{status}</span>
           )}
         </div>
         <DropdownMenuSeparator />

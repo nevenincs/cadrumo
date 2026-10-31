@@ -45,6 +45,8 @@ ureq = { version = "3", default-features = false }
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
+# The instance-lock tests claim in a namespace of their own, never the account's.
+cadrumo-platform = { path = "../../platform", features = ["test-support"] }
 # The setup host's tests drive a real engine against the local servers the engine's own
 # tests use, and every test that reads the diagnostic log waits for its writer through the
 # helper the same feature exposes.

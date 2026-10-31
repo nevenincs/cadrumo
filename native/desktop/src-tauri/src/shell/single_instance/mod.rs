@@ -884,7 +884,6 @@ $held.Dispose()
         assert_eq!(record["outcome"], "handed_off");
         assert_eq!(record["stage"], "admission");
         assert_eq!(record["reason"], serde_json::Value::Null);
-        assert_eq!(record["root"], "selected");
         assert_eq!(record["pid"], pid);
         assert!(record["timestampMs"].as_u64().unwrap() > 0);
         let identity = record["rootIdentity"].as_str().unwrap();

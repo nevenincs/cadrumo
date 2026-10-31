@@ -19,6 +19,7 @@ use std::{
     fs::{self, File, OpenOptions, TryLockError},
     io::{self, Read, Write},
     os::unix::{
+        ffi::OsStrExt,
         fs::{OpenOptionsExt, PermissionsExt},
         net::{UnixListener, UnixStream},
     },
@@ -40,6 +41,11 @@ const RETRY: Duration = Duration::from_millis(50);
 /// before the holder counts as being in another session. It covers the
 /// moment between a holder taking the lock and binding its socket.
 const HOLDER_GRACE: Duration = Duration::from_millis(500);
+/// The `sun_path` size in bytes, which includes the terminating NUL.
+#[cfg(target_os = "linux")]
+const SOCKET_PATH_LIMIT: usize = 108;
+#[cfg(target_os = "macos")]
+const SOCKET_PATH_LIMIT: usize = cadrumo_platform::RUNTIME_SOCKET_PATH_LIMIT;
 /// The session name used when the login manager sets no `XDG_SESSION_ID`.
 #[cfg(target_os = "linux")]
 const UNNAMED_SESSION: &str = "unnamed";
@@ -100,7 +106,13 @@ fn validate(family: &str, session: &str) -> io::Result<()> {
 /// accounts.
 #[cfg(target_os = "linux")]
 fn runtime_directory() -> io::Result<PathBuf> {
-    let directory = std::env::var_os("XDG_RUNTIME_DIR")
+    runtime_directory_named(std::env::var_os("XDG_RUNTIME_DIR"))
+}
+
+/// `named`, the value of `XDG_RUNTIME_DIR`, as the runtime directory.
+#[cfg(target_os = "linux")]
+fn runtime_directory_named(named: Option<std::ffi::OsString>) -> io::Result<PathBuf> {
+    let directory = named
         .map(PathBuf::from)
         .filter(|path| path.is_absolute())
         .ok_or_else(|| {
@@ -150,20 +162,9 @@ impl Names {
     }
 }
 
-#[cfg(target_os = "linux")]
-fn names(family: &str) -> Names {
-    Names {
-        lock: format!("{family}.desktop.lock"),
-        prefix: format!("{family}.desktop.session."),
-        suffix: ".activate",
-    }
-}
-
-/// `sun_path` holds 104 bytes and the shared transport directory lies deep
-/// under the cache base, so the key, a channel family scoped to one storage
-/// root, enters the names as a short digest. Collisions only matter between
-/// this user's own keys.
-#[cfg(target_os = "macos")]
+/// `sun_path` bounds the socket path, and the key, a channel family scoped to
+/// one storage root, is long, so it enters the names as a short digest.
+/// Collisions only matter between this user's own keys.
 fn names(family: &str) -> Names {
     use sha2::{Digest, Sha256};
     let digest = Sha256::new()
@@ -214,8 +215,6 @@ pub fn claim_instance(family: &str, patience: Duration) -> io::Result<InstanceCl
     let session = format!("{:x}", crate::launch::graphical_session()?);
     validate(family, &session)?;
     let transport = transport()?;
-    // Refuses a socket path at or above the platform bound before anything binds it.
-    transport.socket_path(&names(family).socket(&session))?;
     claim_in(transport.directory(), family, &session, patience, &|| {
         transport.verify()
     })
@@ -323,6 +322,13 @@ fn claim_in(
     private(directory)?;
     let names = names(family);
     let socket = directory.join(names.socket(session));
+    // Refuses a socket path at or above the platform bound before anything binds it.
+    if socket.as_os_str().as_bytes().len() >= SOCKET_PATH_LIMIT {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "the instance socket path exceeds the platform bound",
+        ));
+    }
     let file = OpenOptions::new()
         .read(true)
         .write(true)
@@ -834,7 +840,6 @@ mod tests {
 
     /// The names stay within the socket bound whatever the family's length,
     /// and distinct families keep distinct names.
-    #[cfg(target_os = "macos")]
     #[test]
     fn compact_names_fit_the_bound_and_keep_families_apart() {
         let long = format!("md.{}", "a".repeat(125));
@@ -859,5 +864,76 @@ mod tests {
             assert_ne!(first.lock, different.lock);
         }
         assert_eq!(first.socket(&format!("{:x}", u32::MAX)).len(), 34);
+    }
+
+    /// A directory below `scratch` whose path is `length` bytes, closed to other accounts.
+    fn directory_of_length(scratch: &Scratch, length: usize) -> PathBuf {
+        let stem = scratch.0.join("run-user");
+        let missing = length - stem.as_os_str().as_bytes().len() - 1;
+        let directory = stem.join("d".repeat(missing));
+        fs::create_dir_all(&directory).unwrap();
+        fs::set_permissions(&directory, fs::Permissions::from_mode(0o700)).unwrap();
+        assert_eq!(directory.as_os_str().as_bytes().len(), length);
+        directory
+    }
+
+    /// A storage-root-scoped key of its real length claims under a long runtime
+    /// directory, for both channels, and the two never share a lock.
+    #[test]
+    fn a_root_scoped_key_of_real_length_claims_under_a_long_directory() {
+        let scratch = Scratch::new("long");
+        let directory = directory_of_length(&scratch, 60);
+        let root = "ab".repeat(32);
+        let stable = format!("md.neve.cadrumo.root.{root}");
+        let preview = format!("md.neve.cadrumo.preview.root.{root}");
+        let held = primary(&directory, &stable, SESSION);
+        let widest = names(&stable).socket(&format!("{:x}", u32::MAX));
+        assert!(directory.join(widest).as_os_str().as_bytes().len() < SOCKET_PATH_LIMIT);
+        assert_eq!(claim(&directory, &preview, SESSION).unwrap(), "primary");
+        let contender = claim_in(
+            &directory,
+            &stable,
+            SESSION,
+            Duration::from_millis(600),
+            &unverified,
+        );
+        assert_eq!(contender.err().unwrap().kind(), io::ErrorKind::TimedOut);
+        drop(held);
+    }
+
+    /// A socket path at the platform bound is refused before the lock file opens.
+    #[test]
+    fn a_socket_path_beyond_the_bound_is_refused_before_anything_is_created() {
+        let scratch = Scratch::new("bound");
+        let key = format!("md.neve.cadrumo.root.{}", "ab".repeat(32));
+        let leaf = names(&key).socket(SESSION).len() + 1;
+        let fits = directory_of_length(&scratch, SOCKET_PATH_LIMIT - 1 - leaf);
+        assert_eq!(claim(&fits, &key, SESSION).unwrap(), "primary");
+        let beyond = directory_of_length(&scratch, SOCKET_PATH_LIMIT - leaf);
+        let refused = claim(&beyond, &key, SESSION).err().unwrap();
+        assert_eq!(refused.kind(), io::ErrorKind::InvalidInput);
+        assert!(!beyond.join(names(&key).lock).exists());
+    }
+
+    /// The runtime directory must be named, absolute and closed to other accounts.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn the_runtime_directory_must_be_named_absolute_and_private() {
+        let scratch = Scratch::new("xdg");
+        let named = |path: &Path| runtime_directory_named(Some(path.as_os_str().to_owned()));
+        assert_eq!(named(&scratch.0).unwrap(), scratch.0);
+        assert_eq!(
+            runtime_directory_named(None).err().unwrap().kind(),
+            io::ErrorKind::NotFound
+        );
+        assert_eq!(
+            named(Path::new("relative/run")).err().unwrap().kind(),
+            io::ErrorKind::NotFound
+        );
+        fs::set_permissions(&scratch.0, fs::Permissions::from_mode(0o755)).unwrap();
+        assert_eq!(
+            named(&scratch.0).err().unwrap().kind(),
+            io::ErrorKind::PermissionDenied
+        );
     }
 }

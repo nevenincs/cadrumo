@@ -23,6 +23,9 @@ path = "src/consumer.rs"
 # builds without this feature and links none of it.
 [features]
 webview2 = ["dep:webview2-com", "dep:windows-core"]
+# Fixture hooks that place a transport namespace where the caller chooses. Release builds
+# refuse the feature.
+test-support = []
 
 [dependencies]
 webview2-com = { version = "0.39.1", optional = true }

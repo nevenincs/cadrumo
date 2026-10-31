@@ -147,14 +147,17 @@ export function Titlebar({
         >
           <Icon name="user" className="narrow-only" />
           <span
+            className={cx("profile-status", signedIn && "on")}
+            aria-hidden="true"
+          />
+          <span
             className="truncate"
             style={{ maxWidth: "calc(var(--spacing) * 48)" }}
           >
             {PROFILE.name}
           </span>
-          <span className={cx("profile-status", signedIn && "on")}>
-            <i></i>
-            {signedIn ? "Signed in" : "Signed out"}
+          <span className="sr-only">
+            , {signedIn ? "Signed in" : "Signed out"}
           </span>
           <Icon name="chevronDown" size="xs" />
         </Button>

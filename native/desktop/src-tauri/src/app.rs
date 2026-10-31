@@ -328,7 +328,14 @@ fn quit_on_signal<R: Runtime>(
     kind: tokio::signal::unix::SignalKind,
 ) -> Result<()> {
     let host = handle.clone();
-    let requests = on_signal(kind, move || host.exit(0)).map_err(|cause| {
+    let deadline = CloseDeadline::default();
+    let requests = on_signal(kind, move || {
+        host.exit(0);
+        deadline.arm(cadrumo_application::shutdown::RELAUNCH_PATIENCE, || {
+            std::process::exit(TERMINATED_EXIT_CODE)
+        });
+    })
+    .map_err(|cause| {
         ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Launch).caused_by(cause)
     })?;
     spawn_detached(
@@ -338,6 +345,34 @@ fn quit_on_signal<R: Runtime>(
         requests,
     );
     Ok(())
+}
+
+/// The status of a process a termination request ended after its close stalled: the
+/// conventional 128 plus the signal number.
+#[cfg(unix)]
+const TERMINATED_EXIT_CODE: i32 = 128 + 15;
+
+/// The bound on a close a termination request began. Taking the signal from its default
+/// disposition means a close that stalls no longer ends the process, so the first request
+/// starts a clock that ends it once the declared close budget has passed. A request
+/// during the pending close changes nothing.
+#[cfg(unix)]
+#[derive(Clone, Default)]
+struct CloseDeadline(Arc<std::sync::atomic::AtomicBool>);
+
+#[cfg(unix)]
+impl CloseDeadline {
+    /// Starts the clock on the first call; `expire` runs once `budget` after it.
+    fn arm(&self, budget: std::time::Duration, expire: impl FnOnce() + Send + 'static) {
+        use std::sync::atomic::Ordering;
+        if self.0.swap(true, Ordering::SeqCst) {
+            return;
+        }
+        std::thread::spawn(move || {
+            std::thread::sleep(budget);
+            expire();
+        });
+    }
 }
 
 /// Takes `kind` from its default disposition now and answers each delivery with `act`
@@ -738,6 +773,35 @@ mod tests {
                 .recv_timeout(std::time::Duration::from_secs(10))
                 .expect("the delivery asked the window to close");
         }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_stalled_close_ends_the_process_once_its_budget_passes_whatever_requests_follow() {
+        use std::time::{Duration, Instant};
+        let deadline = super::CloseDeadline::default();
+        let (expired, observed) = std::sync::mpsc::channel();
+        let started = Instant::now();
+        let first = expired.clone();
+        deadline.arm(Duration::from_millis(400), move || {
+            let _ = first.send(Instant::now());
+        });
+        std::thread::sleep(Duration::from_millis(200));
+        // A request during the pending close neither resets the clock nor adds a second one.
+        let second = expired.clone();
+        deadline.arm(Duration::from_secs(60), move || {
+            let _ = second.send(Instant::now());
+        });
+        drop(expired);
+        let at = observed
+            .recv_timeout(Duration::from_secs(10))
+            .expect("the close budget ended the wait");
+        assert!(at.duration_since(started) >= Duration::from_millis(400));
+        assert!(at.duration_since(started) < Duration::from_millis(1500));
+        assert!(
+            observed.recv_timeout(Duration::from_millis(300)).is_err(),
+            "the clock fired once"
+        );
     }
 
     #[test]
