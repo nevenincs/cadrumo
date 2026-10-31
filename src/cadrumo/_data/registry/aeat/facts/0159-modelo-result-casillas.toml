@@ -1,0 +1,68 @@
+[fact]
+fact_id = "modelo-result-casillas"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-result-casillas:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-303-2026", "aeat-modelo-130-instructions", "aeat-dr-131-2026-late", "aeat-dr-111-2019-v18", "aeat-modelo-111-instructions", "aeat-dr-115-2019-v13", "boe-modelo-123-2024-form-text", "aeat-dr-123-2019-2023-v13-form-text", "aeat-modelo-200-manual-2025", "aeat-modelo-202-instructions", "aeat-modelo-210-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2026"
+required_text = ["Resultado - Resultado ( [69] - [70] + [109] - [112] ) [71]"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 19. En esta casilla deberá reflejarse el resultado de restar el importe de la casilla 17 del importe de la casilla 18"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-131-2026-late"
+required_text = ["Resultado de la declaración [15]"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-111-2019-v18"
+required_text = ["Resultado a ingresar"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Casilla 30 consigne en esta casilla el resultado de efectuar la operación indicada en el formulario de autoliquidación"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-115-2019-v13"
+required_text = ["Resultado a ingresar [03] - [04]"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-123-2024-form-text"
+required_text = ["Resultado a ingresar ( [12] - [13] )", "14"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-123-2019-2023-v13-form-text"
+required_text = ["Resultado a ingresar. [08]"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-200-manual-2025"
+required_text = ["Cuota del ejercicio a ingresar o a devolver (casilla 00599)"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["Clave [03]. A ingresar.", "Clave [34]. Cantidad a ingresar"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["Cuota diferencial (31)"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "casillas.303", value = "71" },
+  { key = "casillas.130", value = "19" },
+  { key = "casillas.131", value = "15" },
+  { key = "casillas.111", value = "30" },
+  { key = "casillas.115", value = "05" },
+  { key = "casillas.123", value = "14,08" },
+  { key = "casillas.200", value = "DP200014B:00599" },
+  { key = "casillas.202", value = "03,34" },
+  { key = "casillas.210", value = "cuota_diferencial" },
+]
