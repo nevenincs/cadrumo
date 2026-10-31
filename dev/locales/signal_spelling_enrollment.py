@@ -606,6 +606,12 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "hu": frozenset(
         {
+            # Exact format/tool names in the Hungarian authoring guide;
+            # docs/conf.py declares both source formats and pyproject.toml
+            # pins the Sphinx builder. Ordinary English prose is not enrolled.
+            "Markdown",
+            "reStructuredText",
+            "Sphinx",
             # Exact native, technical and retained tax forms attested in
             # _data/terminology/concepts; no new casing or inflections implied.
             "artefaktumokból",
