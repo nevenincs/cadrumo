@@ -208,8 +208,8 @@ errors:
     error_deadlines_schedule_computation: El motor no ha pogut generar un calendari
       de terminis vàlid. Comprova l'any sol·licitat i les dades del perfil.
     error_deadlines_validation: Un registre de termini no ha superat la validació.
-    error_decimal_format: 'S''ha produït un error de format decimal: el valor és None
-      però no s''ha configurat cap substitut.'
+    error_decimal_format: 'S''ha produït un error de format decimal: falta el valor
+      i no s''ha configurat cap substitut.'
     error_declaracion_template_not_detected: No s'ha pogut detectar automàticament
       la versió de plantilla del PDF de la declaració.
     error_domain_submission: S'ha produït un error en el domini d'enviament.

@@ -213,19 +213,18 @@ adapters:
           namespace_forbidden_characters: El espacio de nombres local {namespace}
             contiene caracteres de ruta prohibidos.
           namespace_not_found: No se encontró el espacio de nombres local {namespace}.
-          object_delete_permission: El almacenamiento local no pudo borrar el payload
-            del objeto.
+          object_delete_permission: El almacenamiento local no pudo eliminar el objeto.
           object_not_found: No se encontró el objeto local {object_key_hmac} en el
             espacio {namespace}.
-          payload_commit_failed: El almacenamiento local no pudo confirmar atómicamente
-            el payload del objeto.
-          payload_read_permission: El almacenamiento local no pudo leer el payload
+          payload_commit_failed: El almacenamiento local no pudo guardar el contenido
+            del objeto mediante una sustitución atómica.
+          payload_read_permission: El almacenamiento local no pudo leer el contenido
             del objeto.
           payload_write_path_too_long: 'El almacenamiento local no pudo escribir la
             carga del objeto: la ruta supera el límite de longitud de ruta de Windows.
             Traslade CADRUMO_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
             (véase `aeat config storage check`).'
-          payload_write_permission: El almacenamiento local no pudo escribir el payload
+          payload_write_permission: El almacenamiento local no pudo escribir el contenido
             del objeto.
           sidecar_malformed: El sidecar local {sidecar_path} no se puede leer o esta
             mal formado.

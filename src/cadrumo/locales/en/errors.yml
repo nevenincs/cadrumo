@@ -192,8 +192,8 @@ errors:
     error_deadlines_schedule_computation: The engine could not produce a valid deadline
       schedule. Check the year requested and the profile facts.
     error_deadlines_validation: A deadline record failed validation.
-    error_decimal_format: 'A decimal formatting error occurred: the value is None
-      but no fallback was configured.'
+    error_decimal_format: 'A decimal formatting error occurred: the value is missing
+      and no fallback was configured.'
     error_declaracion_template_not_detected: The declaration PDF's template revision
       could not be auto-detected.
     error_domain_submission: A submission-domain error occurred.
