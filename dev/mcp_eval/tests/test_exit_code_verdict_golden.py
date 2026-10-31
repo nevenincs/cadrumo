@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Iterator, Sequence
-from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -18,20 +17,12 @@ from typing import Any
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    open_test_profile_session,
-)
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure
 from cadrumo.application.operator_actions.preconditions import no_action_precondition_verdict
-from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import bind_public_cli_runner, invoke_cached_cli
@@ -136,60 +127,10 @@ def _recovery_precondition(*, coverage: LeafConditionScenario, work_unit_id: str
     ).verdict
 
 
-def _seed_m130_income_transaction(*, amount: Decimal, filing_year: int) -> None:
-    """Seed one real actividad-economica income row for source-bound M130 casilla 01."""
-    # Transactions validate against registry facts, as they do under a CLI invocation's lease.
-    with bundled_indexed_authority().operation():
-        bucket_id = resolve_active_bucket_id()
-        assert bucket_id is not None, "test profile must install an active bucket pointer"
-        value_date = date(filing_year, 2, 15)
-        income = Transaction.model_validate(
-            {
-                "raw": RawTransaction(
-                    provider_transaction_id=f"exit-code-golden-income-{filing_year}",
-                    booked_date=value_date,
-                    value_date=value_date,
-                    amount=amount,
-                    currency="EUR",
-                    counterparty="Cliente SA",
-                    description="exit-code golden eval income",
-                    provenance=RawProvenance(
-                        source_path=Path(__file__),
-                        source_sha256="f" * 64,
-                        source_row_index=1,
-                        source_format=SourceFormat.MANUAL,
-                        ingested_at=datetime(filing_year, 2, 16, 12, 0, tzinfo=UTC),
-                        provider_name="manual-ledger",
-                    ),
-                    raw_fields={"source_kind": "m130_exit_code_golden_income", "source_key": "exit-code-golden"},
-                ),
-                "direction": TransactionDirection.INCOMING,
-                "group_label": None,
-                "business_classification": BusinessClassification.BUSINESS,
-                "source_jurisdiction": "ES",
-                "business_pct": None,
-                "category_id": None,
-                "taxable_base": amount,
-                "iva_rate": None,
-                "iva_amount": None,
-                "irpf_category": "actividad_economica",
-                "purchase_invoice_evidence_id": None,
-                "classified_at": datetime(filing_year, 2, 16, 13, 0, tzinfo=UTC),
-                "classified_by": "manual",
-            },
-        )
-        with open_test_profile_session(bucket_id):
-            existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
-            transactions = (*tuple(existing.transactions.values()), income)
-            TransactionCatalogueRepository(bucket_id=bucket_id).save(
-                TransactionCatalogue.from_transactions(transactions),
-            )
-
-
 def _dispatch_m130_verify_with_cross_period_finding(runtime_profile: TestRuntimeProfile) -> tuple[int, dict[str, Any]]:
     """Dispatch a real M130 verify that reaches an explicit operator-decision outcome."""
     seed_natural_person_profile(runtime_profile, name="Exit Code Operator", label="Exit-code golden-eval test profile")
-    _seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=_FILING_YEAR)
+    seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=_FILING_YEAR, source_key="exit-code-golden")
     created = invoke_cached_cli(
         [
             "--format", "json",

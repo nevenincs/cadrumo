@@ -21,7 +21,6 @@ envelope serializer produced.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping
-from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -29,16 +28,11 @@ from typing import Any
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    open_test_profile_session,
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
+    seed_m130_expense_transaction,
+    seed_m130_income_transaction,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from cadrumo.core.bucket_pointer import resolve_active_bucket_id
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_fixture_ports import CliInvocation
@@ -83,62 +77,6 @@ def runtime_profile(
         yield profile
 
 
-def _seed_ledger_row(*, direction: TransactionDirection, amount: Decimal, filing_year: int, label: str) -> None:
-    """Seed one real actividad-economica ledger row for a source-bound M130 casilla.
-
-    Deliberately local to this module rather than importing
-    ``entrypoints.cli.tests._m130_source_support`` (a private helper module scoped
-    to the ``entrypoints.cli.tests`` package) across a package boundary. Writes a
-    genuine row through the real ``TransactionCatalogueRepository``.
-    """
-    # Transactions validate against registry facts, as they do under a CLI invocation's lease.
-    with bundled_indexed_authority().operation():
-        bucket_id = resolve_active_bucket_id()
-        assert bucket_id is not None, "test profile must install an active bucket pointer"
-        value_date = date(filing_year, 2, 15)
-        row = Transaction.model_validate(
-            {
-                "raw": RawTransaction(
-                    provider_transaction_id=f"response-provenance-{label}-{filing_year}",
-                    booked_date=value_date,
-                    value_date=value_date,
-                    amount=amount,
-                    currency="EUR",
-                    counterparty="Contraparte SA",
-                    description=f"response-provenance golden eval {label}",
-                    provenance=RawProvenance(
-                        source_path=Path(__file__),
-                        source_sha256=("d" if direction == TransactionDirection.INCOMING else "e") * 64,
-                        source_row_index=1,
-                        source_format=SourceFormat.MANUAL,
-                        ingested_at=datetime(filing_year, 2, 16, 12, 0, tzinfo=UTC),
-                        provider_name="manual-ledger",
-                    ),
-                    raw_fields={"source_kind": f"m130_response_provenance_{label}", "source_key": label},
-                ),
-                "direction": direction,
-                "group_label": None,
-                "business_classification": BusinessClassification.BUSINESS,
-                "source_jurisdiction": "ES",
-                "business_pct": None,
-                "category_id": None,
-                "taxable_base": amount,
-                "iva_rate": None,
-                "iva_amount": None,
-                "irpf_category": "actividad_economica",
-                "purchase_invoice_evidence_id": None,
-                "classified_at": datetime(filing_year, 2, 16, 13, 0, tzinfo=UTC),
-                "classified_by": "manual",
-            },
-        )
-        with open_test_profile_session(bucket_id):
-            existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
-            transactions = (*tuple(existing.transactions.values()), row)
-            TransactionCatalogueRepository(bucket_id=bucket_id).save(
-                TransactionCatalogue.from_transactions(transactions),
-            )
-
-
 def _dispatch_real_m130_calculate(
     runtime_profile: TestRuntimeProfile,
     *,
@@ -154,18 +92,8 @@ def _dispatch_real_m130_calculate(
     seed_natural_person_profile(
         runtime_profile, name="Response Provenance Operator", label="Response-provenance golden-eval test profile"
     )
-    _seed_ledger_row(
-        direction=TransactionDirection.INCOMING,
-        amount=Decimal("12000.00"),
-        filing_year=filing_year,
-        label="ingresos",
-    )
-    _seed_ledger_row(
-        direction=TransactionDirection.OUTGOING,
-        amount=Decimal("4000.00"),
-        filing_year=filing_year,
-        label="gastos",
-    )
+    seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=filing_year, source_key="ingresos")
+    seed_m130_expense_transaction(amount=Decimal("4000.00"), filing_year=filing_year, source_key="gastos")
 
     work_unit_id = create_m130_work_unit(filing_year=filing_year, period=period, revision=_REVISION)
 
