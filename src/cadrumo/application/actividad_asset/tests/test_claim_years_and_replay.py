@@ -222,15 +222,14 @@ def test_a_replayed_superseded_claim_is_refused_and_never_reported_as_reused() -
     operations.create(_revision(), _NAME)
     charge = _full_year(operations, 2025)
     first = operations.record_claim(charge, creating_operation="test.claim").claim
-    operations.record_claim(
-        operations.forecast(
-            asset_id=_ASSET,
-            covered_from=date(2025, 1, 1),
-            covered_until=date(2026, 1, 1),
-            supersedes_claim_id=first.claim_id,
-        ),
-        creating_operation="test.replacement",
-        supersedes_claim_id=first.claim_id,
+    repository.record_claim(
+        first.model_copy(
+            update={
+                "amount": first.amount - Decimal("10.00"),
+                "supersedes_claim_id": first.claim_id,
+                "creating_operation": "test.replacement",
+            }
+        )
     )
     before = repository.history
 

@@ -178,7 +178,12 @@ def record_claim(
     existing_claims: tuple[AmortizationClaim, ...],
     candidate: AmortizationClaim,
 ) -> ClaimRecordResult:
-    """Apply exact-retry, overlap-conflict, and explicit-supersession rules."""
+    """Apply exact-retry, equal-figure replay, overlap-conflict, and explicit-supersession rules.
+
+    A candidate that states the interval, revision, amount and fingerprint of a claim still in
+    effect is that claim again, whichever generation, source text or operation stamped it, so it
+    is a replay and not a conflicting claim or a supersession of identical figures.
+    """
     reused = _matching_claim_id(existing_claims, candidate.claim_id)
     if reused is not None:
         if any(claim.supersedes_claim_id == reused.claim_id for claim in existing_claims):
@@ -187,9 +192,31 @@ def record_claim(
             )
         return ClaimRecordResult(claims=existing_claims, claim=reused, reused_existing_claim=True)
     matching_superseded = _superseded_claim(existing_claims, candidate)
+    equal_figures = equal_figures_claim(existing_claims, candidate)
+    if equal_figures is not None:
+        return ClaimRecordResult(claims=existing_claims, claim=equal_figures, reused_existing_claim=True)
     _validate_claim_interval(existing_claims, candidate, matching_superseded)
     _require_free_depreciation_cap(existing_claims, candidate)
     return ClaimRecordResult(claims=(*existing_claims, candidate), claim=candidate, reused_existing_claim=False)
+
+
+def equal_figures_claim(
+    existing_claims: tuple[AmortizationClaim, ...],
+    candidate: AmortizationClaim,
+) -> AmortizationClaim | None:
+    """Return the effective claim that already states the candidate's interval, revision, amount and fingerprint."""
+    return next(
+        (
+            claim
+            for claim in effective_claims(existing_claims)
+            if claim.asset_id == candidate.asset_id
+            and _has_same_interval(claim, candidate)
+            and claim.asset_revision_id == candidate.asset_revision_id
+            and claim.amount == candidate.amount
+            and claim.schedule_fingerprint == candidate.schedule_fingerprint
+        ),
+        None,
+    )
 
 
 def _matching_claim_id(claims: tuple[AmortizationClaim, ...], claim_id: str) -> AmortizationClaim | None:
