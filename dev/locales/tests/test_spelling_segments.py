@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ..signal_command_paths import filter_detail_row_examples
 from ..signal_document_prose import visible_document_prose
 from ..signal_spelling_segments import (
     _CATALAN_HYPHENATED_CLITIC_RE,
@@ -142,6 +143,46 @@ def test_complete_review_filter_keys_preserve_glosses_and_reject_malformed_lists
     assert "gloss typo" in prose and "more prose" in prose
     for bad in (value.replace("classification", "classificaton"), value.replace("issue, ", "issue, extra, ")):
         assert _REVIEW_FILTER_LIST_RE.search(bad) is None
+
+
+def test_detail_row_examples_require_actual_wire_fields_and_preserve_prose() -> None:
+    value = (
+        "'miembro' (a misspeling), 'vinculada' (related party) or 'operador' (trader). "
+        "Example: --row 'miembro nif=12345678A porcentaje=40 importe=10000 clave=D'."
+    )
+    prose, excluded = filter_detail_row_examples(value)
+    assert excluded == 1
+    assert "misspeling" in prose and "related party" in prose and "trader" in prose
+    assert all(name in prose for name in ("miembro", "vinculada", "operador"))
+    for example in (
+        "--row 'unknown nif=12345678A'",
+        "--row 'miembro unknown=123'",
+        "--row 'miembro nif=12345678A porcentaje=40 importe=10000'",
+        "--row 'miembro nif='",
+        "--row 'miembro nif=1 nif=2'",
+        "--row 'miembro nif=1 broken'",
+        "--row 'afiliado nif=12345678A numero_afiliacion=1 cotizaciones=[]'",
+        "--row 'agrupacion_renta source_id=1 tipo_renta_code=01 importe=1 tipo_gravamen=1 "
+        "pagador_mode=sin_pagador deriva_de_bien_derecho=false'",
+    ):
+        assert filter_detail_row_examples(example) == (example, 0)
+
+
+def test_complete_row_kind_list_requires_every_wire_discriminator_and_a_real_example() -> None:
+    choices = "'miembro', 'vinculada', 'operador', 'rectificacion'"
+    example = "--row 'miembro nif=12345678A porcentaje=40 importe=10000 clave=D'"
+    prose, excluded = filter_detail_row_examples(f"{choices}: misspeling; {example}")
+    assert excluded == 2 and "misspeling" in prose
+    assert all(name not in prose for name in ("miembro", "vinculada", "operador", "rectificacion"))
+    for malformed in (
+        choices.replace("'operador', ", ""),
+        choices.replace("'operador'", "'operaddor'"),
+        choices + ", 'extra'",
+        choices + ", 'miembro'",
+    ):
+        prose, excluded = filter_detail_row_examples(f"{malformed}: misspeling; {example}")
+        assert excluded == 1 and "miembro" in prose and "misspeling" in prose
+    assert filter_detail_row_examples(choices) == (choices, 0)
 
 
 @pytest.mark.parametrize(

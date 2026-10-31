@@ -47,14 +47,9 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.logging import get_logger
 from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry.ids import BindingId, RelationId
-from ...domain.modelos.row_models import (
-    Modelo184MemberRow,
-    Modelo232VinculadaRow,
-    Modelo349OperadorRow,
-    Modelo349RectificacionRow,
-)
 from ._modelo_rendering import short_id
 from .common import active_bucket_id_or_refuse, active_profile_label
+from .modelo_row_contracts import SUPPORTED_DETAIL_ROW_MODELS
 
 if TYPE_CHECKING:
     pass
@@ -64,13 +59,6 @@ _log = get_logger(__name__)
 
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
-# Routing only: each model owns its row_type, fields, and validation contract.
-_SUPPORTED_ROW_MODELS: tuple[type[BaseModel], ...] = (
-    Modelo184MemberRow,
-    Modelo232VinculadaRow,
-    Modelo349OperadorRow,
-    Modelo349RectificacionRow,
-)
 
 
 def validate_work_unit_id(value: str) -> str:
@@ -268,12 +256,12 @@ def parse_casilla_override(spec: str) -> tuple[CasillaId, str]:
 
 def _supported_row_type_names() -> tuple[str, ...]:
     return tuple(
-        sorted(str(row_model.model_fields["row_type"].default) for row_model in _SUPPORTED_ROW_MODELS),
+        sorted(str(row_model.model_fields["row_type"].default) for row_model in SUPPORTED_DETAIL_ROW_MODELS),
     )
 
 
 def _row_model_for_type(row_type: str) -> type[BaseModel] | None:
-    for row_model in _SUPPORTED_ROW_MODELS:
+    for row_model in SUPPORTED_DETAIL_ROW_MODELS:
         if row_model.model_fields["row_type"].default == row_type:
             return row_model
     return None

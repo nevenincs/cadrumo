@@ -10,7 +10,7 @@ from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.period import accepted_filing_period_codes
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 
-from .signal_command_paths import command_path_pattern
+from .signal_command_paths import command_path_pattern, filter_detail_row_examples
 from .signal_syntax import (
     TRANSLATION_BRACKET_REFERENCE_RE,
     TRANSLATION_CODE_RE,
@@ -187,8 +187,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
     allowlist is consulted.  Link and role callbacks retain explicit visible
     labels, while targets remain outside the dictionary surface.
     """
-    text = value
-    excluded = 0
+    text, excluded = filter_detail_row_examples(value)
     for pattern, replacement in (
         (TRANSLATION_HTML_TAG_RE, " "),
         (TRANSLATION_MARKDOWN_LINK_RE, visible_link_label),

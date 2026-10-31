@@ -2961,6 +2961,7 @@
         "cadrumo.entrypoints.cli.modelo_review_package_commands",
         "cadrumo.entrypoints.cli.modelo_review_package_results",
         "cadrumo.entrypoints.cli.modelo_revision_rendering",
+        "cadrumo.entrypoints.cli.modelo_row_contracts",
         "cadrumo.entrypoints.cli.modelo_spreadsheet_cli",
         "cadrumo.entrypoints.cli.modelo_spreadsheet_results",
         "cadrumo.entrypoints.cli.modelo_work_command_specs",
