@@ -21,8 +21,7 @@ reads, not a literal. Legal basis: RD 1624/1992 art. 30 / Ley 37/1992 art. 116.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
@@ -38,8 +37,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -52,7 +50,7 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 from .....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
-from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
+from .modelo_303_carry_support import calculate_303
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -88,49 +86,9 @@ def _revision() -> str:
 
 
 _CARRY_RELATION: RelationId = "modelo-303-compensacion-pendiente-anteriores"
-_CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
 
 _M303_SALDO_COMPENSACION_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
-
-#: Profile-gap workaround bindings (mirror the carry-continuity contract module;
-#: the direct-calculate path does not run the profile resolver).
-_AUTOCONSUMO_PROMOTOR_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
-_STATE_ATTRIBUTION_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
-_LEDGER_CUOTA_BINDINGS = (
-    "modelo-303-iva-repercutido-general-cuota",
-    "modelo-303-iva-repercutido-reducido-cuota",
-    "modelo-303-iva-repercutido-super-reducido-cuota",
-    "modelo-303-iva-soportado-interiores-cuota",
-    "modelo-303-iva-soportado-importaciones-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base",
-    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
-    "modelo-303-iva-autorepercutido-interior-devengado-cuota",
-    "modelo-303-iva-autorepercutido-interior-deducible-cuota",
-    "modelo-303-casilla-59-entregas-intracomunitarias-base",
-    "modelo-303-casilla-60-exportaciones-base",
-    "modelo-303-casilla-120-no-sujetas-localizacion-base",
-    "modelo-303-casilla-122-inversion-sujeto-pasivo-base",
-    "modelo-303-iva-repercutido-general-base",
-    "modelo-303-iva-repercutido-reducido-base",
-    "modelo-303-iva-repercutido-reducido-transitorio-base",
-    "modelo-303-iva-repercutido-reducido-transitorio-cuota",
-    "modelo-303-iva-repercutido-super-reducido-base",
-    "modelo-303-iva-repercutido-super-reducido-transitorio-base",
-    "modelo-303-iva-repercutido-super-reducido-transitorio-cuota",
-    "modelo-303-iva-soportado-interiores-base",
-    "modelo-303-recargo-equivalencia-general-cuota",
-    "modelo-303-recargo-equivalencia-reducido-cuota",
-    "modelo-303-recargo-equivalencia-super-reducido-cuota",
-    # Criterio-de-caja informational bindings (LIVA arts. 163 decies ff.) for
-    # casillas 62/63/74/75; zero when the fixture has no cash-accounting rows.
-    "modelo-303-criterio-caja-entregas-art75-base",
-    "modelo-303-criterio-caja-entregas-art75-cuota",
-    "modelo-303-criterio-caja-adquisiciones-base",
-    "modelo-303-criterio-caja-adquisiciones-cuota",
-)
 
 #: A general-rate cuota repercutida below the cuota soportada, so the régimen
 #: general result is negative — the IVA credit that becomes the saldo a compensar.
@@ -143,37 +101,6 @@ _YEAR_N_PLUS_1_1T_INPUTS = {
 }
 
 _CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
-
-
-def _calculate_303(
-    *,
-    filing_year: int,
-    period: str,
-    cuota_binding_overrides: Mapping[str, Decimal],
-    relation_values: Mapping[RelationId, Decimal],
-) -> RegistryCalculationResult:
-    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=period)
-    relation_binding_values = relation_prefill_values_as_binding_values(
-        snapshot.revision,
-        dict(relation_values),
-        period=period,
-    )
-    binding_values = {
-        _CARRY_BINDING: Decimal("0"),
-        _AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
-        _STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
-        **{binding: Decimal("0") for binding in _LEDGER_CUOTA_BINDINGS},
-        **cuota_binding_overrides,
-        **relation_binding_values,
-    }
-    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    return calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        binding_values=binding_values,
-        relation_values=dict(relation_values),
-        date_context={"filing_period": date(filing_year, 12, 31)},
-    )
 
 
 def _revision_from_result(
@@ -272,7 +199,7 @@ def test_refunded_4t_period_carries_zero_into_next_period(
     credit is not double-claimed.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result_n = _calculate_303(
+        result_n = calculate_303(
             filing_year=_YEAR_N,
             period="4T",
             cuota_binding_overrides=_YEAR_N_4T_CREDIT_INPUTS,
@@ -316,7 +243,7 @@ def test_carried_4t_period_carries_the_credit_forward_control(
     the standard compensación behaviour every existing carry chain relies on.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result_n = _calculate_303(
+        result_n = calculate_303(
             filing_year=_YEAR_N,
             period="4T",
             cuota_binding_overrides=_YEAR_N_4T_CREDIT_INPUTS,

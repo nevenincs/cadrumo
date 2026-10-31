@@ -66,7 +66,6 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from .....domain.calculations.registry.bindings import (
-    RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
@@ -80,6 +79,13 @@ from ...storage.tests.secure_sql import (
     mutate_encrypted_secure_object_json,
 )
 from ..calculation_observations import CalculationObservationRepository
+from .modelo_303_carry_support import (
+    AUTOCONSUMO_PROMOTOR_BASE_BINDING,
+    CARRY_BINDING,
+    LEDGER_CUOTA_BINDINGS,
+    STATE_ATTRIBUTION_RATIO_BINDING,
+    registry_observation,
+)
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -107,71 +113,12 @@ _LATE_DESIGN_REVISION = str(_LATE_DESIGN.id)
 #: The relation that carries the prior-period saldo into casilla 110, and the
 #: binding/casilla it targets. Declared in the 303 2023+ revision.
 _CARRY_RELATION: RelationId = "modelo-303-compensacion-pendiente-anteriores"
-_CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
 
 _M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
 _M303_COMPENSACION_PENDIENTE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-anteriores")
 _M303_SALDO_COMPENSACION_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
 
-#: WORKAROUND — the 303 2023+ revision carries a ``source = "profile"``
-#: binding ``modelo-303-autoconsumo-promotor-base`` (LIVA art. 9.1.c / 79.4
-#: autoconsumo del promotor). The direct-calculate path does not run the
-#: profile resolver, so the binding is unpopulated and the engine refuses the
-#: unresolved bound casilla. Supplying it as zero (no autoconsumo del
-#: promotor for this filer) lets the engine resolve the dependent casilla.
-#: This is a registry-gap workaround, NOT a fix of the registry file.
-_AUTOCONSUMO_PROMOTOR_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
-
-#: The Administración del Estado attribution ratio (casilla 65). For a
-#: territorio-común filer the whole result is attributable to the central
-#: administration, so the ratio is 100. This is a ``source = "profile"`` binding
-#: the direct-calculate path does not populate; supplying 100 reflects the
-#: standard (non-foral) filer the carry scenario models. Grounded in LIVA art.
-#: 115 and Ley 12/2002 art. 29 (Concierto Económico) — for filers outside the
-#: foral territories [65] = 100 and casilla 66 = casilla 64.
-_STATE_ATTRIBUTION_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
-
-#: The five ``ledger_iva_aggregation`` cuota bindings whose bound casillas the
-#: engine requires a fact for. This scenario drives the result through the
-#: manual section totals (casillas 27/45), not per-rate ledger detail, so each
-#: aggregation binding is supplied as zero (no per-rate ledger line). They feed
-#: the informational devengada/deducible *total* casillas, not the [46]
-#: régimen-general result that the carry depends on.
-_LEDGER_CUOTA_BINDINGS = (
-    "modelo-303-iva-repercutido-general-cuota",
-    "modelo-303-iva-repercutido-reducido-cuota",
-    "modelo-303-iva-repercutido-super-reducido-cuota",
-    "modelo-303-iva-soportado-interiores-cuota",
-    "modelo-303-iva-soportado-importaciones-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base",
-    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
-    "modelo-303-iva-autorepercutido-interior-devengado-cuota",
-    "modelo-303-iva-autorepercutido-interior-deducible-cuota",
-    "modelo-303-casilla-59-entregas-intracomunitarias-base",
-    "modelo-303-casilla-60-exportaciones-base",
-    "modelo-303-casilla-120-no-sujetas-localizacion-base",
-    "modelo-303-casilla-122-inversion-sujeto-pasivo-base",
-    "modelo-303-iva-repercutido-general-base",
-    "modelo-303-iva-repercutido-reducido-base",
-    "modelo-303-iva-repercutido-reducido-transitorio-base",
-    "modelo-303-iva-repercutido-reducido-transitorio-cuota",
-    "modelo-303-iva-repercutido-super-reducido-base",
-    "modelo-303-iva-repercutido-super-reducido-transitorio-base",
-    "modelo-303-iva-repercutido-super-reducido-transitorio-cuota",
-    "modelo-303-iva-soportado-interiores-base",
-    "modelo-303-recargo-equivalencia-general-cuota",
-    "modelo-303-recargo-equivalencia-reducido-cuota",
-    "modelo-303-recargo-equivalencia-super-reducido-cuota",
-    # Criterio-de-caja informational bindings (LIVA arts. 163 decies ff.) for
-    # casillas 62/63/74/75; zero when the fixture has no cash-accounting rows.
-    "modelo-303-criterio-caja-entregas-art75-base",
-    "modelo-303-criterio-caja-entregas-art75-cuota",
-    "modelo-303-criterio-caja-adquisiciones-base",
-    "modelo-303-criterio-caja-adquisiciones-cuota",
-)
 
 _CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
 
@@ -226,10 +173,10 @@ def _calculate_303(
         # year N's 4T — which has no prior period — resolves; the relation
         # materialisation below overrides it for year N+1's 1T with the carried
         # saldo, mirroring the production precedence (relation values win).
-        _CARRY_BINDING: Decimal("0"),
-        _AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
-        _STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
-        **{binding: Decimal("0") for binding in _LEDGER_CUOTA_BINDINGS if binding in declared},
+        CARRY_BINDING: Decimal("0"),
+        AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
+        STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
+        **{binding: Decimal("0") for binding in LEDGER_CUOTA_BINDINGS if binding in declared},
         **cuota_binding_overrides,
         **relation_binding_values,
     }
@@ -242,20 +189,6 @@ def _calculate_303(
         date_context={"filing_period": date(filing_year, 12, 31)},
     )
     return result, len(result.values)
-
-
-def _registry_observation(
-    *,
-    filing_year: int,
-    period: str,
-    result: RegistryCalculationResult,
-) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=filing_year,
-        period=period,
-        observations=result.observations,
-    )
 
 
 # Year-N 4T credit scenario: a general-rate cuota repercutida of 21.00 against
@@ -318,7 +251,7 @@ def test_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_path: P
         assert source_result.values[_M303_SALDO_COMPENSACION_CASILLA] == _EARLY_DESIGN_CARRY
         observation_repository.save(
             observation_repository.prepare_observation_envelope(
-                _registry_observation(
+                registry_observation(
                     filing_year=_SPLIT_DESIGN_EXERCISE,
                     period=_EARLY_DESIGN_PERIOD,
                     result=source_result,
@@ -352,7 +285,7 @@ def test_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_path: P
             relation_values={},
         )
 
-    assert resolved.get(_CARRY_BINDING) == _EARLY_DESIGN_CARRY
+    assert resolved.get(CARRY_BINDING) == _EARLY_DESIGN_CARRY
     assert target_result.values[_M303_COMPENSACION_PENDIENTE_CASILLA] == _EARLY_DESIGN_CARRY
 
 
@@ -371,7 +304,7 @@ def test_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Pa
         )
         observation_repository.save(
             observation_repository.prepare_observation_envelope(
-                _registry_observation(
+                registry_observation(
                     filing_year=_SPLIT_DESIGN_EXERCISE,
                     period=_EARLY_DESIGN_PERIOD,
                     result=source_result,
@@ -416,7 +349,7 @@ def test_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Pa
             operation=_authority_operation_for_test,
         )
 
-    assert _CARRY_BINDING not in resolved
+    assert CARRY_BINDING not in resolved
 
 
 def test_year_n_4t_credit_produces_carry_forward_saldo(tmp_path: Path) -> None:
@@ -480,7 +413,7 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
         carried_saldo = result_n.values[_M303_SALDO_COMPENSACION_CASILLA]
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
-                _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
+                registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
                 result_disposition=ResultDispositionProjection(
                     disposition=ResultDisposition.COMPENSACION,
@@ -489,7 +422,7 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
                 ),
                 captured_at=_CLOCK,
                 stamped_revision_id=revision_id_for_observation(
-                    _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
+                    registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
                 ),
             )
         )
@@ -531,7 +464,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
         carried_saldo = result_n.values[_M303_SALDO_COMPENSACION_CASILLA]
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
-                _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
+                registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
                 result_disposition=ResultDispositionProjection(
                     disposition=ResultDisposition.COMPENSACION,
@@ -540,7 +473,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
                 ),
                 captured_at=_CLOCK,
                 stamped_revision_id=revision_id_for_observation(
-                    _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
+                    registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
                 ),
             )
         )

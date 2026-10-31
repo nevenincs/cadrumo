@@ -29,8 +29,7 @@ hand-computed expectation derived from the formula under test.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -44,16 +43,10 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.bindings import (
-    RegistryModeloObservation,
-    resolve_available_bound_inputs_by_casilla_id,
-)
-from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from .....domain.calculations.registry.ids import RelationId
 from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
+from .modelo_303_carry_support import calculate_303, registry_observation
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -62,7 +55,6 @@ _MODELO = "303"
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
 
-_CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 _CASILLA_110: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores",
     surface="test_modelo_303_compensacion_carry_anti_regression:_CASILLA_110",
@@ -72,91 +64,7 @@ _SALDO_CASILLA: CasillaId = validated_casilla_id(
     surface="test_modelo_303_compensacion_carry_anti_regression:_SALDO_CASILLA",
 )
 
-#: Profile-gap workaround bindings (mirror the companion module; contract-pinned
-#: as MUST-NOT-mutate to mask the diagnostic).
-_AUTOCONSUMO_PROMOTOR_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
-_STATE_ATTRIBUTION_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
-_LEDGER_CUOTA_BINDINGS = (
-    "modelo-303-iva-repercutido-general-cuota",
-    "modelo-303-iva-repercutido-reducido-cuota",
-    "modelo-303-iva-repercutido-super-reducido-cuota",
-    "modelo-303-iva-soportado-interiores-cuota",
-    "modelo-303-iva-soportado-importaciones-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base",
-    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
-    "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
-    "modelo-303-iva-autorepercutido-interior-devengado-cuota",
-    "modelo-303-iva-autorepercutido-interior-deducible-cuota",
-    "modelo-303-casilla-59-entregas-intracomunitarias-base",
-    "modelo-303-casilla-60-exportaciones-base",
-    "modelo-303-casilla-120-no-sujetas-localizacion-base",
-    "modelo-303-casilla-122-inversion-sujeto-pasivo-base",
-    "modelo-303-iva-repercutido-general-base",
-    "modelo-303-iva-repercutido-reducido-base",
-    "modelo-303-iva-repercutido-reducido-transitorio-base",
-    "modelo-303-iva-repercutido-reducido-transitorio-cuota",
-    "modelo-303-iva-repercutido-super-reducido-base",
-    "modelo-303-iva-repercutido-super-reducido-transitorio-base",
-    "modelo-303-iva-repercutido-super-reducido-transitorio-cuota",
-    "modelo-303-iva-soportado-interiores-base",
-    "modelo-303-recargo-equivalencia-general-cuota",
-    "modelo-303-recargo-equivalencia-reducido-cuota",
-    "modelo-303-recargo-equivalencia-super-reducido-cuota",
-    # Criterio-de-caja informational bindings (LIVA arts. 163 decies ff.) for
-    # casillas 62/63/74/75; zero when the fixture has no cash-accounting rows.
-    "modelo-303-criterio-caja-entregas-art75-base",
-    "modelo-303-criterio-caja-entregas-art75-cuota",
-    "modelo-303-criterio-caja-adquisiciones-base",
-    "modelo-303-criterio-caja-adquisiciones-cuota",
-)
-
 _CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
-
-
-def _calculate_303(
-    *,
-    filing_year: int,
-    period: str,
-    cuota_binding_overrides: Mapping[str, Decimal],
-    relation_values: Mapping[RelationId, Decimal],
-) -> RegistryCalculationResult:
-    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=period)
-    relation_binding_values = relation_prefill_values_as_binding_values(
-        snapshot.revision,
-        dict(relation_values),
-        period=period,
-    )
-    binding_values = {
-        _CARRY_BINDING: Decimal("0"),
-        _AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
-        _STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
-        **{binding: Decimal("0") for binding in _LEDGER_CUOTA_BINDINGS},
-        **cuota_binding_overrides,
-        **relation_binding_values,
-    }
-    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    return calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        binding_values=binding_values,
-        relation_values=dict(relation_values),
-        date_context={"filing_period": date(filing_year, 12, 31)},
-    )
-
-
-def _registry_observation(
-    *,
-    filing_year: int,
-    period: str,
-    result: RegistryCalculationResult,
-) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=filing_year,
-        period=period,
-        observations=result.observations,
-    )
 
 
 def _resolve_carry_from_local_store(
@@ -196,7 +104,7 @@ def _run_carry_chain(
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
 
-        result_n = _calculate_303(
+        result_n = calculate_303(
             filing_year=_YEAR_N,
             period="4T",
             cuota_binding_overrides=year_n_4t_inputs,
@@ -205,7 +113,7 @@ def _run_carry_chain(
         carried_saldo = result_n.values[_SALDO_CASILLA]
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
-                _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
+                registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
                 result_disposition=ResultDispositionProjection(
                     disposition=ResultDisposition.COMPENSACION,
@@ -214,14 +122,14 @@ def _run_carry_chain(
                 ),
                 captured_at=_CLOCK,
                 stamped_revision_id=revision_id_for_observation(
-                    _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
+                    registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
                 ),
             )
         )
 
         snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         resolved = _resolve_carry_from_local_store(snapshot_n1, repository=obs_repo, operation=operation)
-        result_n1 = _calculate_303(
+        result_n1 = calculate_303(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
             cuota_binding_overrides={**year_n_plus_1_1t_inputs, **resolved},
