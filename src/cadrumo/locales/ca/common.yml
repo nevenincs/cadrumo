@@ -1843,6 +1843,7 @@ desktop:
       telefonia_movil: telefono movil celular telefonia
       tributos_fiscalmente_deducibles: tasa tributo impuesto ayuntamiento
       vehiculo_combustible: gasolina gasoleo diesel combustible carburante gasolinera
+        coche benzina dièsel cotxe
       vehiculo_mantenimiento: taller revision itv neumaticos coche
       vehiculo_parking: parking aparcamiento estacionamiento
       vehiculo_peaje: peaje autopista
