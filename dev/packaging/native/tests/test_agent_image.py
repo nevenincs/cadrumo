@@ -375,13 +375,14 @@ def test_the_agent_image_keeps_itself_as_the_interpreter_and_is_never_frozen() -
         # Nothing sets sys.frozen: no assignment and no PySys_SetObject("frozen", ...).
         assert not re.search(r'"frozen"|\bfrozen\s*=(?!=)', source.read_text(encoding="utf-8")), source
     assert re.search(r'"frozen"|\bfrozen\s*=(?!=)', 'PySys_SetObject("frozen", Py_True);')
-    # The Windows host selects the bundled branch from its role at run time; POSIX by definition.
-    for host, start, end, branches in (
-        (interpreter / "windows/host.c", "} else if (role->bundled) {\n", "} else if", 2),
-        (interpreter / "posix/host.c", "defined(CADRUMO_BUNDLED_IMAGE)\n", "#else", 3),
-    ):
-        parts = host.read_text(encoding="utf-8").split(start)
-        assert len(parts) == branches, host
-        bundled = parts[-1].split(end, 1)[0]
+    # Both hosts select the bundled behaviour from the role's bundled flag at run time.
+    for host in (interpreter / "windows/host.c", interpreter / "posix/host.c"):
+        text = host.read_text(encoding="utf-8")
+        branches = re.findall(r"else if \(role->bundled\) \{\n(.*?)\n    \} else", text, re.DOTALL)
+        assert len(branches) == 1, host
         # The bundled image runs its own arguments with its own path; only an entrypoint swaps paths[2].
-        assert "run(argc, argv," in bundled and "paths[2]" not in bundled
+        assert re.search(r"\brun\(argc, argv,", branches[0]) and "paths[2]" not in branches[0], host
+    # Only the bundled-image build constructs a bundled role.
+    posix = (interpreter / "posix/host.c").read_text(encoding="utf-8")
+    roles = re.findall(r"#(?:el)?if (defined\([^\n]*)\n\s*static const host_role role = \{[^}]*, (\d)\};", posix)
+    assert {(cond, flag) for cond, flag in roles if flag == "1"} == {("defined(CADRUMO_BUNDLED_IMAGE)", "1")}
