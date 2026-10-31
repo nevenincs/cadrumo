@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:4cf1ac297755d62000d722bb6490426f071addb1657bba4efb5087c7da36a472'
+body_hash: 'sha256:40a97c9c56712951efb2d95072e3c3f764882871d9a3500ae61b34baf453c8ae'
 ---
 
 # `macos-platform` plan
@@ -44,6 +44,7 @@ Bring Cadrumo to a working build, package and run on macOS arm64: configure and 
 - [x] `S17` - Fix the remaining desktop failures: quiet session_unavailable when quitting before the manager stage, the desktop-frontend-test virtual-module import failure, and the failing panicking-synchronous-command and logs host unit tests; `native/desktop/src-tauri/src, native/desktop/frontend`.
 - [x] `S18` - Optional, not notarization-driven: evaluate an Apple-conformant split of the macOS payload into nested code and resources only if it improves ad-hoc launch robustness, keeping package-root containment checks sound; `native/platforms/macos-arm64.json, dev/packaging/native, src/cadrumo_agent_service/host/launch_environment.py, native/desktop/src-tauri/src/docs/request.rs`.
 - [x] `S19` - Make ad-hoc signing the permanent macOS distribution model: amend decisions that defer behaviour until Developer ID signing or notarization (login start, versioned installation activation, release prerequisites), decide macOS login start on its own merits, and document the first-run Gatekeeper path for ad-hoc builds in the user documentation; `.vault/adr, native/manager/src/macos, native/CONTRACT.md, docs/`.
+- [x] `S20` - Make the exec'd macOS desktop image carry the app identity and a hardened signature: embedded Info.plist from one identity source, minimum macOS 14.0, disable-library-validation for ad-hoc libraries, admitted ServiceManagement framework, and a startup trigger that survives a covered window; `native/platforms/macos-arm64.json, native/platforms/macos-desktop.entitlements, dev/packaging/native, native/cmake/DesktopRust.cmake, native/desktop/frontend/src/startup.ts, native/desktop/src-tauri/src/launch.rs`.
 
 ## Parallelization
 
