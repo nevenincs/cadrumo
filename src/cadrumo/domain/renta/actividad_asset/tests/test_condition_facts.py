@@ -41,7 +41,7 @@ def test_the_construction_date_is_stated_exactly_under_the_conditions_that_table
         if "building_construction_date" in facts:
             assert _with_condition(condition, building_construction_date=built).building_construction_date == built
         else:
-            with pytest.raises(ValidationError, match="only a fact of a used asset"):
+            with pytest.raises(ValidationError, match="building_construction_date_requires_used_asset"):
                 _with_condition(condition, building_construction_date=built)
 
 
@@ -56,7 +56,7 @@ def test_a_further_acquisition_row_takes_exactly_the_tabled_shapes() -> None:
         if shape in FURTHER_ACQUISITION_SHAPES:
             assert FurtherAcquisitionRow(shape=shape, lineage=lineage).shape is shape
         else:
-            with pytest.raises(ValidationError, match="split payment or an ancillary cost"):
+            with pytest.raises(ValidationError, match="further_acquisition_shape_invalid"):
                 FurtherAcquisitionRow(shape=shape, lineage=lineage)
 
 

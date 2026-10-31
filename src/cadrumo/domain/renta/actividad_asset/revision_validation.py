@@ -22,9 +22,15 @@ def validate_revision(revision: ActivityAssetRevision) -> None:
 
 def _validate_revision_lineage(revision: ActivityAssetRevision) -> None:
     if revision.revision_number == 1 and revision.supersedes_revision_id is not None:
-        raise ValueError("first asset revision cannot supersede another revision")
+        raise ActividadAssetValidationError(
+            context={"field": "supersedes_revision_id"},
+            translated_message="ledger.actividad_asset.errors.revision_first_cannot_supersede",
+        )
     if revision.revision_number > 1 and revision.supersedes_revision_id is None:
-        raise ValueError("later asset revisions require supersedes_revision_id")
+        raise ActividadAssetValidationError(
+            context={"field": "supersedes_revision_id"},
+            translated_message="ledger.actividad_asset.errors.revision_requires_superseded",
+        )
 
 
 def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
@@ -34,7 +40,10 @@ def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
             context={"legal_reference": "LIS art. 106"},
         )
     if revision.acquisition_shape not in REGISTERABLE_ACQUISITION_SHAPES:
-        raise ValueError("an element is registered as a primary purchase or as acquired outside the ledger")
+        raise ActividadAssetValidationError(
+            context={"field": "acquisition_shape"},
+            translated_message="ledger.actividad_asset.errors.acquisition_shape_not_registerable",
+        )
     if not revision.acquisition.invoice_evidence_id.strip():
         raise ActividadAssetValidationError(
             translated_message="ledger.actividad_asset.errors.acquisition_evidence_reference_required",
@@ -47,8 +56,9 @@ def _validate_primary_purchase(revision: ActivityAssetRevision) -> None:
         or revision.declared_acquisition_date is not None
         or revision.declared_activity is not None
     ):
-        raise ValueError(
-            "a primary purchase names its ledger row and evidence fingerprint and declares no date or activity"
+        raise ActividadAssetValidationError(
+            context={"field": "acquisition"},
+            translated_message="ledger.actividad_asset.errors.primary_purchase_lineage_shape",
         )
 
 
@@ -59,7 +69,10 @@ def _validate_acquired_outside_ledger(revision: ActivityAssetRevision) -> None:
         or lineage.observed_lineage_event_id is not None
         or lineage.evidence_fingerprint is not None
     ):
-        raise ValueError("an element acquired outside the ledger names no ledger row as its primary acquisition")
+        raise ActividadAssetValidationError(
+            context={"field": "acquisition"},
+            translated_message="ledger.actividad_asset.errors.outside_ledger_names_no_row",
+        )
     declared = revision.declared_acquisition_date
     if declared is None:
         raise ActividadAssetValidationError(
@@ -136,17 +149,29 @@ def _validate_opening_year(revision: ActivityAssetRevision) -> None:
 
 def _validate_residual_basis(revision: ActivityAssetRevision) -> None:
     if revision.residual_value >= revision.basis.deductible_basis():
-        raise ValueError("residual_value must be below allocated depreciation basis")
+        raise ActividadAssetValidationError(
+            context={"field": "residual_value"},
+            translated_message="ledger.actividad_asset.errors.residual_value_not_below_basis",
+        )
 
 
 def _validate_building_construction_date(revision: ActivityAssetRevision) -> None:
     if revision.building_construction_date is not None:
         if "building_construction_date" not in ACQUIRED_CONDITION_FACTS[revision.acquired_condition]:
-            raise ValueError("building_construction_date is only a fact of a used asset")
+            raise ActividadAssetValidationError(
+                context={"field": "building_construction_date"},
+                translated_message="ledger.actividad_asset.errors.building_construction_date_requires_used_asset",
+            )
         if revision.building_construction_date > revision.in_service_date:
-            raise ValueError("building_construction_date cannot follow in_service_date")
+            raise ActividadAssetValidationError(
+                context={"field": "building_construction_date"},
+                translated_message="ledger.actividad_asset.errors.building_construction_date_after_service",
+            )
 
 
 def _validate_vehicle_affectation(revision: ActivityAssetRevision) -> None:
     if revision.vehicle_affectation is not None and revision.asset_kind is not AssetKind.MATERIAL:
-        raise ValueError("vehicle_affectation is only a fact of a material asset")
+        raise ActividadAssetValidationError(
+            context={"field": "vehicle_affectation"},
+            translated_message="ledger.actividad_asset.errors.vehicle_affectation_requires_material",
+        )

@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from ..election import AmortizationMethod, require_euro_cents, require_free_depreciation_facts
+from ..errors import ActividadAssetValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -33,11 +34,11 @@ def test_low_value_method_requires_every_election_fact() -> None:
     require_free_depreciation_facts(AmortizationMethod.LOW_VALUE_FREE, facts, subject="claim")
     for index in range(len(facts)):
         incomplete = tuple(None if position == index else fact for position, fact in enumerate(facts))
-        with pytest.raises(ValueError, match="free-depreciation claim requires election and annual-cap provenance"):
+        with pytest.raises(ActividadAssetValidationError, match="free_depreciation_requires_provenance"):
             require_free_depreciation_facts(AmortizationMethod.LOW_VALUE_FREE, incomplete, subject="claim")
 
 
 def test_other_methods_carry_no_election_facts() -> None:
     require_free_depreciation_facts(AmortizationMethod.LINEAR, (None, None, None, None), subject="schedule")
-    with pytest.raises(ValueError, match="only a low-value schedule carries free-depreciation election facts"):
+    with pytest.raises(ActividadAssetValidationError, match="free_depreciation_only_low_value"):
         require_free_depreciation_facts(AmortizationMethod.LINEAR, (None, "evidence", None, None), subject="schedule")

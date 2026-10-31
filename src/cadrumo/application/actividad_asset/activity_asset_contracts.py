@@ -14,7 +14,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period
+from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.renta.actividad_asset.errors import (
     ActividadAssetAcceleratedDa18DepreciationError,
@@ -290,30 +290,33 @@ class ActivityAssetForecastRequest(BaseModel):
     supersedes_claim_id: Hex64Str | None = None
 
     @model_validator(mode="after")
-    @pydantic_validation_boundary
     def _state_both_ends_of_the_interval(self) -> Self:
+        """Settle the end the request left out; an interval that cannot be settled is refused by ``exclusive_end``."""
         until, through = self.covered_until, self.covered_through
-        if until is None:
-            if through is None:
-                raise ValueError("a forecast interval states covered_until or covered_through")
-            if through == date.max:
-                raise ValueError("covered_through has no boundary after it")
+        if until is None and through is not None and through != date.max:
             object.__setattr__(self, "covered_until", covered_until_after(through))
-            return self
-        if until == date.min:
-            raise ValueError("covered_until has no day before it")
-        if through is None:
+        elif until is not None and through is None and until != date.min:
             object.__setattr__(self, "covered_through", last_day_covered(until))
-            return self
-        if through != last_day_covered(until):
-            raise ValueError("covered_through is the day before covered_until")
         return self
 
     def exclusive_end(self) -> date:
         """Return the exclusive boundary of the interval, which decoding always settles."""
-        if self.covered_until is None:
-            raise ValueError("a decoded forecast interval has its boundary")
-        return self.covered_until
+        until, through = self.covered_until, self.covered_through
+        if until is None:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.forecast_interval_end_required"
+                if through is None
+                else "ledger.actividad_asset.errors.covered_through_has_no_boundary",
+            )
+        if until == date.min:
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.covered_until_has_no_day_before"
+            )
+        if through != last_day_covered(until):
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.covered_through_not_day_before_until"
+            )
+        return until
 
 
 class ActivityAssetClaimRequest(BaseModel):
@@ -382,9 +385,14 @@ class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
     output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
     """The language the boxes are named in."""
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_canonical_period(self) -> Self:
-        if self.m130_period is not None:
-            Period.from_year_and_code(self.tax_year, self.m130_period)
-        return self
+    def requested_period(self) -> Period | None:
+        """Read the stated Modelo 130 period, refusing a code that is no period of the tax year."""
+        if self.m130_period is None:
+            return None
+        try:
+            return Period.from_year_and_code(self.tax_year, self.m130_period)
+        except PeriodError as error:
+            raise ActividadAssetValidationError(
+                context={"field": "m130_period"},
+                translated_message="ledger.actividad_asset.errors.m130_period_invalid",
+            ) from error

@@ -101,11 +101,17 @@ class FurtherAcquisitionRow(BaseModel):
     lineage: AcquisitionLineageReference
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_a_further_shape(self) -> Self:
         if self.shape not in FURTHER_ACQUISITION_SHAPES:
-            raise ValueError("a further acquisition row is a split payment or an ancillary cost")
+            raise ActividadAssetValidationError(
+                context={"shape": self.shape.value},
+                translated_message="ledger.actividad_asset.errors.further_acquisition_shape_invalid",
+            )
         if self.lineage.observed_transaction_id is None:
-            raise ValueError("a further acquisition row names a ledger row")
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.further_acquisition_requires_ledger_row",
+            )
         return self
 
 
@@ -129,18 +135,30 @@ class OpeningAmortizationHistory(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_status_shape(self) -> Self:
         if self.status is OpeningHistoryStatus.KNOWN and self.accumulated_amount is None:
-            raise ValueError("known opening history requires accumulated_amount")
+            raise ActividadAssetValidationError(
+                context={"field": "accumulated_amount"},
+                translated_message="ledger.actividad_asset.errors.opening_known_requires_amount",
+            )
         if self.status is OpeningHistoryStatus.MISSING and (
             self.accumulated_amount is not None or self.amortization_method is not None
         ):
-            raise ValueError("missing opening history cannot declare an amount or its method")
+            raise ActividadAssetValidationError(
+                translated_message="ledger.actividad_asset.errors.opening_missing_states_nothing",
+            )
         has_amount = bool(self.accumulated_amount)
         if has_amount and self.covered_through_tax_year is None:
-            raise ValueError("a non-zero opening amount requires covered_through_tax_year")
+            raise ActividadAssetValidationError(
+                context={"field": "covered_through_tax_year"},
+                translated_message="ledger.actividad_asset.errors.opening_amount_requires_covered_year",
+            )
         if not has_amount and self.covered_through_tax_year is not None:
-            raise ValueError("covered_through_tax_year is only a fact of a non-zero opening amount")
+            raise ActividadAssetValidationError(
+                context={"field": "covered_through_tax_year"},
+                translated_message="ledger.actividad_asset.errors.opening_covered_year_requires_amount",
+            )
         return self
 
 
@@ -229,7 +247,10 @@ class ActivityAssetBasis(BaseModel):
     @pydantic_validation_boundary
     def _validate_basis_shape(self) -> Self:
         if self.basis_amount <= Decimal("0"):
-            raise ValueError("basis_amount must be positive")
+            raise ActividadAssetValidationError(
+                context={"field": "basis_amount"},
+                translated_message="ledger.actividad_asset.errors.basis_amount_not_positive",
+            )
         if self.stage is AssetBasisStage.WHOLE_PROPERTY:
             self._require_whole_property_facts()
         elif self.stage is AssetBasisStage.TAXPAYER_OWNED:
@@ -240,23 +261,44 @@ class ActivityAssetBasis(BaseModel):
 
     def _require_whole_property_facts(self) -> None:
         if not self.is_property:
-            raise ValueError("whole-property basis is only valid for property")
+            raise ActividadAssetValidationError(
+                context={"field": "is_property"},
+                translated_message="ledger.actividad_asset.errors.basis_whole_property_only_for_property",
+            )
         self._require_property_components()
         if self.ownership_mode is None:
-            raise ValueError("whole-property basis requires ownership_mode")
+            raise ActividadAssetValidationError(
+                context={"stage": self.stage.value, "field": "ownership_mode"},
+                translated_message="ledger.actividad_asset.errors.basis_stage_requires_fact",
+            )
         if self.business_use_share is not None:
-            raise ValueError("whole-property property basis uses office area, not business_use_share")
+            raise ActividadAssetValidationError(
+                context={"stage": self.stage.value, "field": "business_use_share"},
+                translated_message="ledger.actividad_asset.errors.basis_stage_refuses_fact",
+            )
         if self.prior_allocation_provenance is not None:
-            raise ValueError("whole-property basis cannot declare prior allocation provenance")
+            raise ActividadAssetValidationError(
+                context={"stage": self.stage.value, "field": "prior_allocation_provenance"},
+                translated_message="ledger.actividad_asset.errors.basis_stage_refuses_fact",
+            )
         self._validate_direct_ownership()
 
     def _require_taxpayer_owned_facts(self) -> None:
         if self.ownership_mode is not None or self.ownership_share is not None:
-            raise ValueError("taxpayer-owned basis cannot apply ownership a second time")
+            raise ActividadAssetValidationError(
+                context={"stage": self.stage.value, "field": "ownership_mode"},
+                translated_message="ledger.actividad_asset.errors.basis_stage_refuses_fact",
+            )
         if self.is_property:
-            raise ValueError("mixed-use property must declare a whole-property basis")
+            raise ActividadAssetValidationError(
+                context={"field": "is_property"},
+                translated_message="ledger.actividad_asset.errors.basis_mixed_use_needs_whole_property",
+            )
         if self.prior_allocation_provenance is not None:
-            raise ValueError("taxpayer-owned basis cannot declare prior allocation provenance")
+            raise ActividadAssetValidationError(
+                context={"stage": self.stage.value, "field": "prior_allocation_provenance"},
+                translated_message="ledger.actividad_asset.errors.basis_stage_refuses_fact",
+            )
         ordinary_asset_property_facts = (
             self.construction_cost,
             self.land_cost,
@@ -264,14 +306,23 @@ class ActivityAssetBasis(BaseModel):
             self.total_area,
         )
         if any(value is not None for value in ordinary_asset_property_facts):
-            raise ValueError("construction, land, and office-area facts are only valid for property")
-        self._require_share(self.business_use_share, "taxpayer-owned ordinary asset requires business_use_share")
+            raise ActividadAssetValidationError(
+                context={"stage": self.stage.value, "field": "construction_cost"},
+                translated_message="ledger.actividad_asset.errors.basis_stage_refuses_fact",
+            )
+        self._require_share(self.business_use_share, "business_use_share")
 
     def _require_business_allocated_facts(self) -> None:
         if self.is_property:
-            raise ValueError("mixed-use property must declare a whole-property basis")
+            raise ActividadAssetValidationError(
+                context={"field": "is_property"},
+                translated_message="ledger.actividad_asset.errors.basis_mixed_use_needs_whole_property",
+            )
         if self.prior_allocation_provenance is None:
-            raise ValueError("business-allocated basis requires prior_allocation_provenance")
+            raise ActividadAssetValidationError(
+                context={"stage": self.stage.value, "field": "prior_allocation_provenance"},
+                translated_message="ledger.actividad_asset.errors.basis_stage_requires_fact",
+            )
         if any(
             value is not None
             for value in (
@@ -284,7 +335,10 @@ class ActivityAssetBasis(BaseModel):
                 self.business_use_share,
             )
         ):
-            raise ValueError("business-allocated basis cannot apply allocation facts again")
+            raise ActividadAssetValidationError(
+                context={"stage": self.stage.value, "field": "allocation facts"},
+                translated_message="ledger.actividad_asset.errors.basis_stage_refuses_fact",
+            )
 
     def _require_property_components(self) -> None:
         if (
@@ -293,11 +347,20 @@ class ActivityAssetBasis(BaseModel):
             or self.office_area is None
             or self.total_area is None
         ):
-            raise ValueError("property basis requires construction, land, office_area, and total_area")
+            raise ActividadAssetValidationError(
+                context={"stage": self.stage.value, "field": "construction_cost"},
+                translated_message="ledger.actividad_asset.errors.basis_stage_requires_fact",
+            )
         if self.construction_cost <= Decimal("0") or self.construction_cost + self.land_cost != self.basis_amount:
-            raise ValueError("property construction_cost plus land_cost must equal basis_amount")
+            raise ActividadAssetValidationError(
+                context={"field": "construction_cost"},
+                translated_message="ledger.actividad_asset.errors.basis_property_cost_split_mismatch",
+            )
         if self.office_area <= Decimal("0") or self.total_area <= Decimal("0") or self.office_area > self.total_area:
-            raise ValueError("property office_area must be positive and no greater than total_area")
+            raise ActividadAssetValidationError(
+                context={"field": "office_area"},
+                translated_message="ledger.actividad_asset.errors.basis_property_area_invalid",
+            )
 
     def _validate_direct_ownership(self) -> None:
         if self.ownership_mode is OwnershipMode.SPOUSAL_COMMUNITY:
@@ -306,21 +369,30 @@ class ActivityAssetBasis(BaseModel):
             )
         if self.ownership_mode is OwnershipMode.SOLE:
             if self.ownership_share != Decimal("1"):
-                raise ValueError("sole ownership requires ownership_share of exactly one")
+                raise ActividadAssetValidationError(
+                    context={"field": "ownership_share"},
+                    translated_message="ledger.actividad_asset.errors.basis_sole_share_not_one",
+                )
             return
         if self.ownership_mode is OwnershipMode.FRACTIONAL_DIRECT:
-            self._require_share(self.ownership_share, "fractional direct ownership requires ownership_share")
+            self._require_share(self.ownership_share, "ownership_share")
             if self.ownership_share == Decimal("1"):
-                raise ValueError("fractional direct ownership_share must be below one")
+                raise ActividadAssetValidationError(
+                    context={"field": "ownership_share"},
+                    translated_message="ledger.actividad_asset.errors.basis_fractional_share_not_below_one",
+                )
             return
         raise ActividadAssetValidationError(
             translated_message="ledger.actividad_asset.errors.ownership_treatment_unknown"
         )
 
     @staticmethod
-    def _require_share(value: Decimal | None, message: str) -> None:
+    def _require_share(value: Decimal | None, field: str) -> None:
         if value is None or not Decimal("0") < value <= Decimal("1"):
-            raise ValueError(message)
+            raise ActividadAssetValidationError(
+                context={"field": field},
+                translated_message="ledger.actividad_asset.errors.basis_share_out_of_range",
+            )
 
     def acquisition_cost(self) -> Decimal:
         """Return the price plus non-deductible IVA, before any allocation fact.

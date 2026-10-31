@@ -126,7 +126,7 @@ def test_a_further_row_cannot_repeat_an_owned_row() -> None:
 def test_a_further_row_is_only_an_instalment_or_a_cost() -> None:
     row = acquisition_transaction()
 
-    with pytest.raises(ValueError, match="split payment or an ancillary cost"):
+    with pytest.raises(ValueError, match="further_acquisition_shape_invalid"):
         _further(row, AcquisitionShape.PRIMARY_PURCHASE)
 
 

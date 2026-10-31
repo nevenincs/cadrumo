@@ -16,8 +16,10 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
+from .errors import ActividadAssetValidationError
 from .identity_cache import CachedIdentityModel
 
 
@@ -50,11 +52,16 @@ class ActivityAssetDescriptorFacts(BaseModel):
             raise ValueError("an element's name must not be blank")
         return normalized
 
-    @model_validator(mode="after")
-    def _document_kind_names_a_number(self) -> Self:
+    def require_document_pair(self) -> None:
+        """Refuse a document kind stated without its number, or a number without its kind.
+
+        A request carries the facts unjudged, so the refusal reaches the operator as its reason.
+        """
         if (self.document_kind is None) != (self.document_number is None):
-            raise ValueError("a document number and its kind are stated together")
-        return self
+            raise ActividadAssetValidationError(
+                context={"field": "document_number"},
+                translated_message="ledger.actividad_asset.errors.document_number_and_kind_together",
+            )
 
 
 class ActivityAssetDescriptor(CachedIdentityModel):
@@ -65,6 +72,12 @@ class ActivityAssetDescriptor(CachedIdentityModel):
     asset_id: str = Field(min_length=1, max_length=128)
     descriptor_number: int = Field(ge=1)
     facts: ActivityAssetDescriptorFacts
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _facts_are_consistent(self) -> Self:
+        self.facts.require_document_pair()
+        return self
 
     @cached_property
     def descriptor_id(self) -> str:
