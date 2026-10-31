@@ -214,8 +214,8 @@ def test_pydantic_brand_keeps_code_literal_and_adjacent_typo_distinct() -> None:
             ),
         ),
         ("es", ("idempotencia", "reintentos", "sectorizado", "serialización")),
-        ("ca", ("declarable", "Preomple")),
-        ("hu", ("bájtokkal", "bájtjait", "bájtnál", "felülvizsgálati", "kisvállalati", "tartalmi")),
+        ("ca", ("declarable", "Preomple", "subpaquet", "subpaquets", "Subpaquets")),
+        ("hu", ("bájtokkal", "bájtjait", "bájtnál", "bájtszámát", "felülvizsgálati", "kisvállalati", "tartalmi")),
     ],
 )
 def test_attested_current_terms_are_exact_and_belong_to_their_locale(locale: str, forms: tuple[str, ...]) -> None:

@@ -648,6 +648,11 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # Reference Hunspell accepts this present-tense form; spylls does not.
             # https://www.softcatala.org/conjugador-de-verbs/verb/calcular/
             "calcules",
+            # Software package subdivisions, used by the Institut Obert de Catalunya:
+            # https://ioc.xtec.cat/materials/FP/Recursos/fp_dam_m03_/web/fp_dam_m03_htmlindex/WebContent/u3/a1/continguts.html
+            "subpaquet",
+            "subpaquets",
+            "Subpaquets",
             # Generalitat uses these exact forms in legal and form guidance:
             # https://repositori.justicia.gencat.cat/bitstream/handle/20.500.14226/576/llei_enjudiciament_civil_qdl88.pdf
             # https://canalempresa.gencat.cat/ca/ajuda/ajuda/ajuda-a-larea-privada/preferencies/dades/
@@ -710,7 +715,6 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "tipat",
             "tipats",
             "idempotència",
-            "subpaquets",
             "subcomandament",
             "coteig",
             "indiques",
@@ -803,6 +807,9 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "bájtokkal",
             "bájtjait",
             "bájtnál",
+            # Microsoft uses this exact Hungarian possessive byte-count form:
+            # https://learn.microsoft.com/hu-hu/windows-hardware/drivers/debugger/using-poolmon-to-find-a-kernel-mode-memory-leak
+            "bájtszámát",
             # Exact native, technical and retained tax forms attested in
             # _data/terminology/concepts; no new casing or inflections implied.
             "artefaktumokból",
