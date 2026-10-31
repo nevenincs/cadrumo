@@ -18,8 +18,8 @@ def test_real_pinned_hungarian_dictionary_repairs_affixes_without_accepting_typo
     dictionaries = load_dictionaries(REPO_ROOT)
     hungarian = dictionaries["hu"]
 
-    # These inflections exercise rules whose conditions were damaged by the
-    # literal HTML entities, rather than a list of accepted surface words.
+    # These include original dictionary inflections and pronouns previously
+    # damaged by the npm normalization.
     for word in (
         "összeget",
         "sorok",
@@ -35,6 +35,9 @@ def test_real_pinned_hungarian_dictionary_repairs_affixes_without_accepting_typo
         "általam",
         "általuk",
         "általunk",
+        "őrzésének",
+        "profilőrzéshez",
+        "nekik",
     ):
         assert hungarian.lookup(word), word
     for word in (
@@ -51,6 +54,11 @@ def test_real_pinned_hungarian_dictionary_repairs_affixes_without_accepting_typo
         "általamm",
         "általukk",
         "általunkk",
+        "őketén",
+        "nekedén",
+        "nekemén",
+        "általaáltalaáltal",
+        "profileőrzéshez",
     ):
         assert not hungarian.lookup(word), word
     for locale in ("ca", "en", "es"):

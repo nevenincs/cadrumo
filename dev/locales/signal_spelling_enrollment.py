@@ -671,6 +671,11 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "hu": frozenset(
         {
+            # All three forms are accepted by reference Hunspell with the pinned
+            # original dictionary, but not by the pinned spylls implementation.
+            "felülvizsgálati",
+            "kisvállalati",
+            "tartalmi",
             # Attested Hungarian byte forms, not a general suffix rule:
             # https://people.inf.elte.hu/szlavi/Magamnak/C%2B%2B/ansi_Cpp.pdf
             # https://fbenjih.web.elte.hu/Algoritmusok%20%C3%A9s%20adatszerkezetek%202/El%C5%91ad%C3%A1s%20%28%C3%81sv%C3%A1nyi%29/%C3%81sv%C3%A1nyi%20jegyzet.pdf

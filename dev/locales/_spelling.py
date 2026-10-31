@@ -1,7 +1,7 @@
 """Load the pinned locale dictionaries used by the locale quality signal.
 
-The dictionaries are published as npm Hunspell data packages while the checker
-is the pure-Python ``spylls`` engine.  Keeping discovery and validation here
+The dictionaries are pinned Hunspell data while the checker is the pure-Python
+``spylls`` engine. Keeping discovery and validation here
 gives the signal one deterministic boundary for setup failures: a missing
 Python package, a partial ``node_modules`` tree, or a manually replaced
 dictionary cannot become an unclassified import error or a silent change of
@@ -14,9 +14,8 @@ import hashlib
 import json
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
-from io import StringIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
@@ -30,17 +29,16 @@ class DictionarySpec:
     """Describe one locale dictionary package declared by the repository."""
 
     locale: str
-    package: str
+    package: str | None
 
 
-# These are package identities, not spelling exceptions.  The product locale
-# contract owns the locale set; each locale maps to the upstream Hunspell data
-# package that is installed by ``package-lock.json``.
+# The first three are locked npm packages. Hungarian uses the pinned original
+# source data: the npm normalization merges distinct words with morphology.
 DICTIONARY_SPECS: Final[tuple[DictionarySpec, ...]] = (
     DictionarySpec("ca", "dictionary-ca"),
     DictionarySpec("en", "dictionary-en-gb"),
     DictionarySpec("es", "dictionary-es"),
-    DictionarySpec("hu", "dictionary-hu"),
+    DictionarySpec("hu", None),
 )
 
 
@@ -56,7 +54,14 @@ class SpellingToolError(RuntimeError):
 
 def dictionary_roots(repository: Path) -> dict[str, Path]:
     """Return the Hunspell file stems for every supported locale."""
-    return {spec.locale: repository / "node_modules" / spec.package / "index" for spec in DICTIONARY_SPECS}
+    return {
+        spec.locale: (
+            repository / "node_modules" / spec.package / "index"
+            if spec.package is not None
+            else repository / "dev" / "locales" / "data" / "hunspell-hu" / "hu_HU"
+        )
+        for spec in DICTIONARY_SPECS
+    }
 
 
 def _manifest_versions(repository: Path) -> dict[str, str]:
@@ -78,7 +83,11 @@ def _manifest_versions(repository: Path) -> dict[str, str]:
             next_action="restore package.json and run just setup-locale-spelling",
         )
     versions: dict[str, str] = {}
-    missing = [spec.package for spec in DICTIONARY_SPECS if not isinstance(dependencies.get(spec.package), str)]
+    missing = [
+        spec.package
+        for spec in DICTIONARY_SPECS
+        if spec.package is not None and not isinstance(dependencies.get(spec.package), str)
+    ]
     if missing:
         names = ", ".join(sorted(missing))
         raise SpellingToolError(
@@ -87,7 +96,8 @@ def _manifest_versions(repository: Path) -> dict[str, str]:
             next_action="restore package.json and run just setup-locale-spelling",
         )
     for spec in DICTIONARY_SPECS:
-        versions[spec.package] = dependencies[spec.package]
+        if spec.package is not None:
+            versions[spec.package] = dependencies[spec.package]
     return versions
 
 
@@ -97,30 +107,48 @@ def _validate_dictionary_installation(repository: Path, roots: dict[str, Path]) 
     problems: list[str] = []
     for spec in DICTIONARY_SPECS:
         root = roots[spec.locale]
-        package_root = root.parent
         if not root.with_suffix(".aff").is_file() or not root.with_suffix(".dic").is_file():
-            problems.append(f"{spec.locale} ({spec.package}) is missing index.aff or index.dic")
+            problems.append(f"{spec.locale} dictionary is missing its affix or word data")
             continue
-        metadata = package_root / "package.json"
-        try:
-            package_payload = json.loads(metadata.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, ValueError) as exc:
-            problems.append(f"{spec.package} metadata cannot be read: {exc}")
+        if spec.package is None:
+            _validate_vendored_dictionary(root, problems)
             continue
-        actual_name = package_payload.get("name") if isinstance(package_payload, dict) else None
-        actual_version = package_payload.get("version") if isinstance(package_payload, dict) else None
-        declared_version = declared_versions[spec.package]
-        if actual_name != spec.package or actual_version != declared_version:
-            problems.append(
-                f"{spec.package} metadata is {actual_name!r}@{actual_version!r}, "
-                f"but package.json declares {spec.package!r}@{declared_version!r}"
-            )
+        _validate_package_metadata(root, spec.package, declared_versions[spec.package], problems)
     if problems:
         raise SpellingToolError(
             kind="spelling_tool_unavailable",
             detail="; ".join(problems),
-            next_action="run just setup-locale-spelling to restore the locked dictionaries",
+            next_action="restore the tracked Hungarian data and run just setup-locale-spelling",
         )
+
+
+def _validate_package_metadata(root: Path, package: str, declared_version: str, problems: list[str]) -> None:
+    """Check that an installed npm dictionary is the declared package version."""
+    try:
+        payload = json.loads((root.parent / "package.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError) as exc:
+        problems.append(f"{package} metadata cannot be read: {exc}")
+        return
+    actual_name = payload.get("name") if isinstance(payload, dict) else None
+    actual_version = payload.get("version") if isinstance(payload, dict) else None
+    if actual_name != package or actual_version != declared_version:
+        problems.append(
+            f"{package} metadata is {actual_name!r}@{actual_version!r}, "
+            f"but package.json declares {package!r}@{declared_version!r}"
+        )
+
+
+def _validate_vendored_dictionary(root: Path, problems: list[str]) -> None:
+    """Require both original data files to match their tracked source receipt."""
+    try:
+        receipt = json.loads((root.parent / "source.json").read_text(encoding="utf-8"))
+        for suffix in ("aff", "dic"):
+            expected = receipt[f"{suffix}_sha256"]
+            actual = hashlib.sha256(root.with_suffix(f".{suffix}").read_bytes()).hexdigest()
+            if not isinstance(expected, str) or actual != expected:
+                problems.append(f"Hungarian {suffix} data does not match its source receipt")
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError) as exc:
+        problems.append(f"Hungarian dictionary source receipt cannot be read: {exc}")
 
 
 def locked_spylls_version() -> str:
@@ -134,41 +162,6 @@ def locked_spylls_version() -> str:
             next_action="run uv lock to resolve the declared spell-check engine",
         )
     return versions.pop()
-
-
-def _load_hungarian_dictionary(root: Path) -> Dictionary:
-    """Repair two known npm data defects while parsing the verified package."""
-    from spylls.hunspell import Dictionary, readers
-    from spylls.hunspell.readers.file_reader import BaseReader, FileReader
-
-    class HungarianAffReader(FileReader):
-        @override
-        def readlines(self):
-            # dictionary-hu encodes these characters as HTML entities inside
-            # affix regex classes. Restore only the two upstream characters:
-            # https://github.com/LibreOffice/dictionaries/blob/master/hu_HU/hu_HU.aff
-            for number, line in super().readlines():
-                yield number, line.replace("&agrave;", "à").replace("&ugrave;", "ù")
-
-    aff, context = readers.read_aff(HungarianAffReader(str(root.with_suffix(".aff"))))
-    dic = readers.read_dic(
-        FileReader(str(root.with_suffix(".dic")), encoding=context.encoding), aff=aff, context=context
-    )
-    # The pinned npm dictionary concatenates these pronouns with morphological
-    # metadata (őketén, őkén, teén) and several explicit pronoun forms
-    # (nekedén, nekemén, általaáltalaáltal)). Upstream lists the actual words
-    # explicitly, without affix flags; retain that exact scope. dictionary-hu's
-    # README identifies LibreOffice dictionaries as the upstream source:
-    # https://github.com/wooorm/dictionaries/tree/main
-    # https://github.com/LibreOffice/dictionaries/blob/master/hu_HU/hu_HU.dic
-    supplement = readers.read_dic(
-        BaseReader(StringIO("9\nőket\nők\nte\nneked\nnekem\náltala\náltalam\náltaluk\náltalunk\n")),
-        aff=aff,
-        context=context,
-    )
-    for word in supplement.words:
-        dic.append(word, lower=[word.stem])
-    return Dictionary(aff, dic)
 
 
 def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
@@ -203,10 +196,7 @@ def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
     try:
         from spylls.hunspell import Dictionary
 
-        loaded = {
-            locale: _load_hungarian_dictionary(root) if locale == "hu" else Dictionary.from_files(str(root))
-            for locale, root in roots.items()
-        }
+        loaded = {locale: Dictionary.from_files(str(root)) for locale, root in roots.items()}
     except Exception as exc:  # The checker must fail closed on malformed upstream data.
         raise SpellingToolError(
             kind="spelling_tool_failure",

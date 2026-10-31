@@ -27,6 +27,10 @@ src/cadrumo/_data/corpus/normatives/html/*.html -whitespace
 # sources were `text=auto` when this was written and matched only by luck.
 src/cadrumo/_data/corpus/** -text
 
+# The Hungarian spelling dictionary is an exact pinned upstream data pair;
+# its receipt validates the original bytes on every supported host.
+dev/locales/data/hunspell-hu/hu_HU.* -text
+
 # Binary content, by extension rather than by location.
 #
 # `* text=auto` above asks git to GUESS which files are text and normalise
