@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:ac7f99f6f39326cd17145b7b7326f6bf3bdcd226055067bd21a972bf353c3f97'
+body_hash: 'sha256:2e0088643dcc9976dbbf3461a1bf00eb8d6f89e2971959eccce6e1f302cca214'
 ---
 
 # `macos-platform` plan
@@ -36,7 +36,7 @@ Bring Cadrumo to a working build, package and run on macOS arm64: configure and 
 - [x] `S09` - Remove the native Development-versus-Installed image classification so native storage resolution follows the environment-driven root alone, matching the Python storage owner, and let a Debug manager start against it; `native/platform/src/storage.rs, native/manager/src/main.rs, native/platform/src/conformance_tests.rs`.
 - [x] `S10` - Contain the supervised runtime when the macOS window host dies without a clean quit: bring the runtime's process group under the guardian or an equivalent kqueue-observed owner; `native/manager/src/supervision/launch.rs, native/platform/src`.
 - [ ] `S11` - Render native macOS window chrome (traffic lights, no custom minimise/maximise/close) and correct the stale macOS contract wording, the interpreter executable path join and re-enable user docs in the payload; `native/desktop/frontend, native/desktop/src-tauri, native/CONTRACT.md, native/interpreter/posix/host.c`.
-- [ ] `S12` - Scope the desktop single-instance lock and the manager session lock and identifier by storage root on every host, so launches on different roots never hand off or contend and a standalone manager and desktop host on the same root recognise each other; admit an override root in Windows entry dispatch; amend the desktop-shell and runtime-manager decisions; `native/desktop/src-tauri/src/shell/single_instance, native/manager/src/main.rs, native/manager/src/macos/desktop_host.rs, native/manager/src/installation.rs, .vault/adr`.
+- [x] `S12` - Scope the desktop single-instance lock and the manager session lock and identifier by storage root on every host, so launches on different roots never hand off or contend and a standalone manager and desktop host on the same root recognise each other; admit an override root in Windows entry dispatch; amend the desktop-shell and runtime-manager decisions; `native/desktop/src-tauri/src/shell/single_instance, native/manager/src/main.rs, native/manager/src/macos/desktop_host.rs, native/manager/src/installation.rs, .vault/adr`.
 - [ ] `S13` - Record every pre-log startup outcome (handoff, lock timeout, package refusal) durably and show its reason; align the relaunch wait with the shutdown and drain budget; treat a deterministic early runtime exit as terminal instead of retrying; `native/desktop/src-tauri/src/main.rs, native/desktop/src-tauri/src/startup_logging.rs, native/desktop/src-tauri/src/shell/single_instance, native/manager/src/supervision`.
 - [ ] `S14` - Settle or durably record in-flight operations at quit so interrupted mutations stay UNKNOWN rather than lost, and stop logging session_unavailable as a failure on a normal quit; `native/desktop/src-tauri/src/app.rs, native/application/src/runtime_client.rs, src/cadrumo_runtime/host`.
 - [ ] `S15` - Gate package sealing and the DMG on a runtime-role health check, rebuild the macOS bundle and DMG, and verify S10 containment and S11 window chrome (fullscreen inset, title-bar double-click, standard Window menu shortcuts) in the packaged app; `native/cmake/distribution/CMakeLists.txt, native/cmake/Packaging.cmake, native/desktop`.

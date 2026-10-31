@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0b5e845ab28b60063622417a4a3c7dde6ebff06bd3b90d2808a60fe0684c6ad'
+body_hash: 'sha256:2d1cb6c671334cb6297b2f9c64db39d6203e7160d92205b503ad9888dbb552ca'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -374,3 +374,21 @@ Still open, plan Step `S12` of `2026-10-30-macos-platform-plan`:
 
 - The session lock and the manager IPC identifier are not yet scoped by storage root. A standalone manager and a desktop host on the same override root do not yet recognise each other, and two managers on different roots in one session contend for one lock.
 - Windows entry dispatch still refuses an override root (`native/manager/src/installation.rs`), because the strict successor environment clears the root variable. Until `S12` lands, an installed Windows manager reached through entry dispatch manages only the installed default root.
+
+## Amendment 2026-10-31 - session lock and IPC name scoped by storage root
+
+Basis: the user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S12`, which closes both items left open by the previous amendment. Implemented in commit a91d83dd6a.
+
+What changed:
+
+- The manager component identifier that names the session lock and the manager IPC endpoint is scoped to the managed storage root: `<application-id>.manager.root.<storage identity>`, where the storage identity is the 64-digit hex digest of the root's physical identity that already names the root's runtime and that the runtime reports in its handshake. The grammar and shared vectors are declared once in `src/cadrumo/core/connection_transport.py` and projected into the native contract. `native/manager/src/session/instance.rs` (`manager_id`) derives the identifier from the root for every supervisor: the standalone manager on macOS and Windows, the desktop-hosted core on macOS and Windows, and the Windows cutover coordinator. The root is created owner-only when absent so that a first start has an identity to claim under.
+- Supervisors of one root in one session therefore share one owner whichever path names the root, so a standalone manager and a desktop host on the same root recognise each other. Supervisors of different roots in one session never contend. On macOS the compact manager socket name keeps its digest grammar over the scoped identifier; the Windows session mutex and pipe take the scoped identifier directly. Stable and preview stay separate through the channel-qualified identifier. The Windows desktop host's earlier default-versus-override branch is removed: the default root is scoped like any other.
+- Windows entry dispatch admits an operator-selected root. The successor and the cutover child receive the strict host environment plus the root variable when the environment selected the root (`native/platform/src/storage.rs`, `successor_host_environment`); an installed default is still left for the successor to resolve.
+
+Superseded sentences:
+
+- Sessions: "The session lock and the manager IPC name do not depend on image or scope." now reads: "The session lock and the manager IPC name depend on the managed storage root's identity, and not on image or scope."
+- Sessions: "There is one runtime per OS user and storage root, and one manager per logon session." now reads: "There is one runtime per OS user and storage root, and one supervising owner per logon session and storage root."
+- Amendment 2026-10-31, "Still open": both items are resolved by this amendment.
+
+Unchanged: the per-root start claim under `.runtime/`, the Quit and failed-version markers, peer admission at exact package images, the strict runtime environment and the refusal of an authority override. A caller-owned `--configured-root` runtime takes no manager session lock; single-owner endpoint convergence still keeps a second runtime off its root (`2026-10-12-runtime-manager-architecture-caller-owned-root-adr`). Windows dispatch, cutover and the Windows hosts were changed without being built or run on Windows in this Step.

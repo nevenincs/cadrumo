@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-29'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef3ccda1257693c1a5135e358c2659eb213e30839398e3f5ec9afe46d7e5b11c'
+body_hash: 'sha256:061a37593bfcdb72572572a3bdb14e894bef60c7e5f039412d96de0e73f47625'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -413,3 +413,20 @@ Accepted by the owner on 2026-10-29 with `2026-10-29-desktop-aeat-sync-adr`.
 
 - **AEAT sync run family.** The `aeat-sync` page brings AEAT data into the profile through the host's `aeat_sync_*` commands, which submit only the closed list of read captures in `2026-10-29-desktop-aeat-sync-adr`, a Rust constant checked by test against the contract manifest. The run is held by the host for the signed-in profile, survives page navigation and is discarded on sign-out, profile change and window close. The window receives closed states, outcomes and served wording only. Nothing is submitted to AEAT.
 - **Census entries.** The one Censo flow (the `profile_censo_*` commands and the profile page's band) is reachable from a global command palette action on every page, the profile page, the Modelo page and the AEAT sync page's census area. Each entry opens the same flow; none duplicates it.
+
+## Amendment 2026-10-31 - one window per storage root
+
+Basis: the user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; this is its Step `S12`. The root-cause analysis of the macOS start failures found that a launch on one storage root exited silently because it handed activation to a window open on another root (failure mode F2). Implemented in commit a91d83dd6a.
+
+What changed:
+
+- The single-instance lock key is the channel family scoped to the storage root the launch's environment selects: `<family>.root.<storage identity>`, where the storage identity is the 64-digit hex digest of the root's physical identity that already names the runtime serving that root. The launch resolves the root, and creates it owner-only when it is absent, before it claims. The grammar and its shared vectors are declared once in `src/cadrumo/core/connection_transport.py`, projected into the native contract, and consumed through `native/application/src/instance_scope.rs` by `native/desktop/src-tauri/src/shell/single_instance/mod.rs`. Every platform's lock and activation names (Windows objects, Linux runtime-directory files, macOS transient-transport files) take the scoped key in place of the family.
+- Two paths to one directory give one key, so launches on one root still hand off to its open window across versions and install paths. A launch on another root takes a lock of its own and opens its own window. Stable and preview stay separate through the family.
+- The window that holds a root's lock supervises that root's runtime through the manager session lock scoped to the same root (`2026-10-04-runtime-manager-architecture-adr`, amendment of the same date).
+
+Superseded sentences:
+
+- Constraints: "The lock is per user, keyed by identity family and channel." now reads: "The lock is per user and storage root, keyed by identity family, channel and the root's storage identity."
+- Constraints: "A second GUI launch hands its activation to the open window and exits 0." and "A newer version launched while an older window is open hands activation to that window" now apply to a window open on the same storage root.
+
+Unchanged: the headless CLI passthrough never takes the lock; the other-session report, activation protocol, patience and foreign-object refusal are as before. Outside this amendment: durable recording of pre-log admission outcomes and the close-time relaunch wait (plan Step `S13`), and isolating tests from the real per-user transport directory (plan Step `S16`).

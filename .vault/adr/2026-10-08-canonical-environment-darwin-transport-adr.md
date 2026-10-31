@@ -5,7 +5,7 @@ tags:
 date: '2026-10-08'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:b5d006fbf75afdd232d497b3efc8264c4472dcffc20bb1d0a1dbfc9e46be9f8c'
+body_hash: 'sha256:3614dcb71862c4c25b8ddf70dcc07787637582b099093c799057495839feac76'
 related:
   - "[[2026-10-08-runtime-manager-architecture-darwin-socket-paths-research]]"
   - "[[2026-10-04-canonical-environment-adr]]"
@@ -92,3 +92,9 @@ Superseded sentences:
 - Implementation: "consume it in installed runtime/worker and manager endpoints" now reads "consume it in runtime, worker, manager and desktop instance endpoints".
 
 Still open: the manager filename digest input carries the manager identifier, UID and session, but no storage root. Two managers on different roots in one session therefore map to one manager socket name. Root scoping of the session lock and identifier is plan Step `S12`.
+
+## Amendment 2026-10-31 - root-scoped manager and desktop names
+
+Basis: the user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; plan Step `S12`, implemented in commit a91d83dd6a.
+
+The channel-qualified manager identifier in the manager filename digest input is now scoped to the managed storage root as `<identifier>.root.<storage identity>` (`2026-10-04-runtime-manager-architecture-adr`, amendment "session lock and IPC name scoped by storage root"). The four-string digest input, the `cadrumo-manager-session-v1` tag and the filename grammar are unchanged; the shared vectors gain root-scoped identifiers. The desktop single-instance lock and activation sockets hash the root-scoped family in place of the family, under the unchanged `cadrumo-desktop-instance-v1` tag (`2026-10-04-desktop-shell-adr`, amendment "one window per storage root"). The previous amendment's "Still open" item is resolved: two managers or windows on different roots in one session map to different names.

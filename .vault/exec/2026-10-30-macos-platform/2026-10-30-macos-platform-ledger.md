@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:32bbb61d3582d92684ff413cca6a3f41a96e9145ad91bc3483bb1870e4036205'
+body_hash: 'sha256:a93c1e3eb3818933ab073270cbb2a023ebb6321a6a0e28186062ca657055e9da'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -164,9 +164,41 @@ native/platform/src/storage.rs`
 native/manager/src/supervision/launch.rs
 native/manager/src/supervision/supervisor.rs`
 - `S10` `verify:` `manager.rust SIGKILL-host containment test` -> `pass`
+- `S12` `M` `dev/packaging/native/tests/test_transport_contract.py`
+- `S12` `M` `dev/packaging/native/transport_contract.py`
+- `S12` `M` `native/CONTRACT.md`
+- `S12` `A` `native/application/src/instance_scope.rs`
+- `S12` `M` `native/application/src/lib.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/single_instance/mod.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/single_instance/posix.rs`
+- `S12` `M` `native/manager/Cargo.lock`
+- `S12` `M` `native/manager/Cargo.toml`
+- `S12` `M` `native/manager/src/cutover_coordinator.rs`
+- `S12` `M` `native/manager/src/cutover_parent.rs`
+- `S12` `M` `native/manager/src/desktop_host.rs`
+- `S12` `M` `native/manager/src/installation.rs`
+- `S12` `M` `native/manager/src/ipc/windows.rs`
+- `S12` `M` `native/manager/src/macos/desktop_host.rs`
+- `S12` `M` `native/manager/src/macos/ipc.rs`
+- `S12` `M` `native/manager/src/main.rs`
+- `S12` `M` `native/manager/src/session/instance.rs`
+- `S12` `M` `native/manager/src/windows_lifecycle.rs`
+- `S12` `M` `native/manager/tests/session_ownership.rs`
+- `S12` `M` `native/platform/src/storage.rs`
+- `S12` `M` `src/cadrumo/core/connection_transport.py`
+- `S12` `M` `.vault/adr/2026-10-04-desktop-shell-adr.md`
+- `S12` `M` `.vault/adr/2026-10-04-runtime-manager-architecture-adr.md`
+- `S12` `M` `.vault/adr/2026-10-12-runtime-manager-architecture-caller-owned-root-adr.md`
+- `S12` `M` `.vault/adr/2026-10-08-canonical-environment-darwin-transport-adr.md`
+- `S12` `verify:` `ctest application.rust platform.resolver manager.rust manager.supervision` -> `pass`
+- `S12` `verify:` `ctest fmt and clippy for platform, manager, application and desktop, manager.fixture.clippy, application.features.clippy` -> `pass`
+- `S12` `verify:` `build.sh Debug desktop-host-unit-test and desktop-host-unit-clippy` -> `pass`
+- `S12` `verify:` `pytest test_transport_contract.py test_connection_transport.py test_generator_imports.py` -> `pass`
 
 ## Notes
 
 - `S03` Baseline 396 failures reduced to 15 on rerun; remaining platform and in-progress failures fixed or already fixed by concurrent sessions; Chromium provisioned (581 MB)
 - `S05` payload stage built by a parallel session's app-payload run in the shared build dir; relocation edits owned by that session
 - `S09` manager rust/supervision/clippy blocked by foreign uncommitted unsafe blocks in launch.rs; application diagnostics retry test fails, unrelated; bundle.environment-launch not rerun for disk
+- `S12` Windows dispatch, cutover, session mutex, pipe and desktop host changes were not compiled or run: no Windows target on this Mac.
+- `S12` macOS process tests still claim in the real per-user Darwin transport directory, as the existing ones do; Step S16 isolates it.

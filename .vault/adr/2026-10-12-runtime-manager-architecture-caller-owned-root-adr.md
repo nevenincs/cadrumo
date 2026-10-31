@@ -5,7 +5,7 @@ tags:
 date: '2026-10-12'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:b286214ea9c63fa98635f7f38d83300fb856487aadabdbe43cb3ebe4fbfe2f99'
+body_hash: 'sha256:1db1f531a1b35edef0d6fa3155d789b517aae42bcfe305d7cdaca8b40852bef1'
 related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]"
@@ -82,3 +82,11 @@ Superseded sentences:
 Unchanged: constraints 1 to 6. `--configured-root` still refuses a root that is, contains or lies inside the installed default root (`src/cadrumo_runtime/host/caller_owned.py`), still derives identity and version itself, and still binds its lifetime to standard input.
 
 Still open: a caller-owned runtime and a manager on the same override root are not yet arbitrated by a root-scoped session lock (plan Step `S12`). The runtime's single-owner endpoint convergence still prevents two runtimes from serving one root.
+
+## Amendment 2026-10-31 - root-scoped manager ownership
+
+Basis: the user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`; plan Step `S12`, implemented in commit a91d83dd6a.
+
+The manager session lock and IPC name are now scoped by storage root (`2026-10-04-runtime-manager-architecture-adr`, amendment "session lock and IPC name scoped by storage root"). In the 2026-10-31 amendment above, "a standalone manager on an override root does not yet coordinate with other supervisors of that root (plan Step `S12`)" now reads: "a standalone manager on an override root coordinates only with other supervisors of that root." The caller-owned form is still rejected as the manager option for this use, because the caller needs a lifetime it owns.
+
+Still open, unchanged by `S12`: a caller-owned runtime takes no manager session lock, so it and a manager on the same override root are arbitrated only by the runtime's single-owner endpoint convergence.
