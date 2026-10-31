@@ -42,22 +42,19 @@ arts. 84, 92 (autorepercusión, recargo de equivalencia); RD 1624/1992 art. 71
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....domain.calculations.registry.bindings import (
-    RegistryModeloObservation,
-    resolve_available_bound_inputs_by_casilla_id,
-)
-from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from ._observation_lookup_support import find_observation, save_app_filing_observation
-from .published_authority_support import published_authority_operation
+from .modelo_leaf_calculation_support import calculate_from_bindings, registry_observation_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -93,36 +90,7 @@ def _calculate_309(
     period: str,
     leaf_cuotas: Mapping[str, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
-    """Run the REAL registry 309 calculation; return result + _produced-value count.
-
-    ``leaf_cuotas`` is keyed by binding id. The bound leaves are resolved from
-    those facts and the engine computes ``iva.cuota-no-periodica-total`` via the
-    real ``add`` formula.
-    """
-    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=period)
-    binding_values = dict(leaf_cuotas)
-    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        binding_values=binding_values,
-        date_context={"filing_period": date(filing_year, 12, 31)},
-    )
-    return result, len(result.values)
-
-
-def _registry_observation(
-    *,
-    filing_year: int,
-    period: str,
-    result: RegistryCalculationResult,
-) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=filing_year,
-        period=period,
-        observations=result.observations,
-    )
+    return calculate_from_bindings(_MODELO, filing_year=filing_year, period=period, binding_values=leaf_cuotas)
 
 
 # Year-N: acquisition of a new intracomunitario transport vehicle.
@@ -161,7 +129,7 @@ def test_computed_total_persists_and_reloads_strictly(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         result, _ = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
-        obs = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result)
+        obs = registry_observation_of(_MODELO, filing_year=_YEAR_N, period=_PERIOD, result=result)
         save_app_filing_observation(repo, obs, captured_at=_CLOCK_N)
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
         assert loaded is not None
@@ -176,8 +144,8 @@ def test_both_years_independently_retrievable_no_bleed(tmp_path: Path) -> None:
         repo = CalculationObservationRepository()
         result_n, _ = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
         result_n1, _ = _calculate_309(filing_year=_YEAR_N_PLUS_1, period=_PERIOD, leaf_cuotas=_YEAR_N_PLUS_1_CUOTAS)
-        obs_n = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result_n)
-        obs_n1 = _registry_observation(filing_year=_YEAR_N_PLUS_1, period=_PERIOD, result=result_n1)
+        obs_n = registry_observation_of(_MODELO, filing_year=_YEAR_N, period=_PERIOD, result=result_n)
+        obs_n1 = registry_observation_of(_MODELO, filing_year=_YEAR_N_PLUS_1, period=_PERIOD, result=result_n1)
         save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
         save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
         loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
@@ -197,7 +165,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         result, _ = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
-        obs = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result)
+        obs = registry_observation_of(_MODELO, filing_year=_YEAR_N, period=_PERIOD, result=result)
         obs_missing = RegistryModeloObservation(
             modelo=_MODELO,
             filing_year=_YEAR_N,
