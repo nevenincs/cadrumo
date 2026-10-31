@@ -74,7 +74,6 @@ def project(
     source = {**package_inventory(payload, manifest), "data/package-manifest.json": digest(manifest_file)}
     files, modes = _payload_projection(payload, destination, source)
     controls: dict[str, bytes] = {}
-    metadata: dict[str, bytes] = {}
     _license_controls(versioned, destination, control_root, controls, modes)
     if versioned:
         _versioned_controls(
@@ -91,8 +90,7 @@ def project(
     _linux_controls(target, desktop, value, control_root, controls)
     if wrapper is not None and desktop is not None:
         _macos_controls(wrapper, bundle, desktop, value, managers, manifest["files"], controls, modes)
-    if target.startswith("windows-") and bool(desktop) and not versioned:
-        metadata = windows_metadata(value, managers, destination, desktop, versioned)
+    metadata = _legacy_windows_metadata(target, desktop, versioned, value, managers, destination)
     _include_controls(controls, files, modes)
     helpers = _installation_helper_hashes()
     binding = {
@@ -112,6 +110,19 @@ def project(
         "payload_manifest": source["data/package-manifest.json"],
     }
     return Preparation(destination, files, modes, controls, metadata, identity)
+
+
+def _legacy_windows_metadata(
+    target: str,
+    desktop: str | None,
+    versioned: bool,
+    value: dict[str, Any],
+    managers: list[ApplicationImage],
+    destination: str,
+) -> dict[str, bytes]:
+    if target.startswith("windows-") and bool(desktop) and not versioned:
+        return windows_metadata(value, managers, destination, desktop, versioned)
+    return {}
 
 
 def _license_controls(
