@@ -210,6 +210,84 @@ def test_source_class_qualnames_cover_nested_and_control_flow_declarations() -> 
     }
 
 
+type _ClassDeclaration = tuple[str, str, ast.ClassDef, dict[str, str]]
+
+
+def _class_declarations() -> list[_ClassDeclaration]:
+    declarations: list[_ClassDeclaration] = []
+    for path, tree in production_ast_items():
+        bindings = import_binding_map(tree)
+        qualnames = _source_class_qualnames(tree)
+        declarations.extend(
+            (module_name(path), qualnames[id(node)], node, bindings)
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ClassDef)
+        )
+    return declarations
+
+
+class _ClassIndex:
+    """Production classes addressable by qualified or, when unique, bare name."""
+
+    def __init__(self, declarations: list[_ClassDeclaration]) -> None:
+        self.qualified_names = {f"{module}.{qualname}" for module, qualname, _node, _bindings in declarations}
+        self._by_bare_name: dict[str, list[str]] = {}
+        for key in self.qualified_names:
+            self._by_bare_name.setdefault(key.rsplit(".", 1)[-1], []).append(key)
+
+    def resolve(self, module: str, origin: str) -> str | None:
+        if origin in self.qualified_names:
+            return origin
+        local = f"{module}.{origin.rsplit('.', 1)[-1]}"
+        if local in self.qualified_names:
+            return local
+        candidates = self._by_bare_name.get(origin.rsplit(".", 1)[-1], [])
+        return candidates[0] if len(candidates) == 1 else None
+
+
+def _base_origin(base: ast.expr, bindings: dict[str, str]) -> str:
+    return resolve_dotted_origin(qualified_name(base) or ast.unparse(base), bindings)
+
+
+def _exception_keys(
+    declarations: list[_ClassDeclaration], index: _ClassIndex, base_origins: dict[int, list[str]]
+) -> set[str]:
+    """Close the exception set over source ancestry, starting from the builtin bases."""
+    builtin_exception_names = {base.__name__ for base in _BARE_EXCEPTION_BASES} | {"BaseException"}
+    seed_names = builtin_exception_names | {"Exception"}
+    exception_keys = {key for key in index.qualified_names if key.rsplit(".", 1)[-1] in seed_names}
+    changed = True
+    while changed:
+        changed = False
+        for module, qualname, node, _bindings in declarations:
+            key = f"{module}.{qualname}"
+            if key in exception_keys:
+                continue
+            if any(
+                origin.rsplit(".", 1)[-1] in builtin_exception_names or index.resolve(module, origin) in exception_keys
+                for origin in base_origins[id(node)]
+            ):
+                exception_keys.add(key)
+                changed = True
+    return exception_keys
+
+
+def _bare_base_rationale(node: ast.ClassDef) -> str | None:
+    rationale: str | None = None
+    for statement in node.body:
+        if isinstance(statement, ast.Assign):
+            targets, value = list(statement.targets), statement.value
+        elif isinstance(statement, ast.AnnAssign):
+            targets, value = [statement.target], statement.value
+        else:
+            continue
+        if not any(isinstance(target, ast.Name) and target.id == _BARE_BASE_RATIONALE_ATTR for target in targets):
+            continue
+        if isinstance(value, ast.Constant) and isinstance(value.value, str) and value.value.strip():
+            rationale = value.value
+    return rationale
+
+
 @cache
 def _production_exception_classes() -> tuple[_SourceExceptionClass, ...]:
     """Every exception class declared in the production source tree.
@@ -219,82 +297,22 @@ def _production_exception_classes() -> tuple[_SourceExceptionClass, ...]:
     an exception; this mirrors the old gate's ``issubclass`` subject boundary
     without executing optional modules merely to discover what they define.
     """
-    declarations: list[tuple[str, str, ast.ClassDef, dict[str, str]]] = []
-    for path, tree in production_ast_items():
-        bindings = import_binding_map(tree)
-        qualnames = _source_class_qualnames(tree)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef):
-                declarations.append((module_name(path), qualnames[id(node)], node, bindings))
-
-    by_qualified_name: dict[str, tuple[str, str, ast.ClassDef, dict[str, str]]] = {
-        f"{module}.{qualname}": (module, qualname, node, bindings) for module, qualname, node, bindings in declarations
-    }
-    by_bare_name: dict[str, list[str]] = {}
-    for key in by_qualified_name:
-        by_bare_name.setdefault(key.rsplit(".", 1)[-1], []).append(key)
-
-    def base_origin(module: str, base: ast.expr, bindings: dict[str, str]) -> str:
-        rendered = qualified_name(base) or ast.unparse(base)
-        return resolve_dotted_origin(rendered, bindings)
-
-    def resolve_reference(module: str, origin: str) -> str | None:
-        if origin in by_qualified_name:
-            return origin
-        leaf = origin.rsplit(".", 1)[-1]
-        local = f"{module}.{leaf}"
-        if local in by_qualified_name:
-            return local
-        candidates = by_bare_name.get(leaf, [])
-        return candidates[0] if len(candidates) == 1 else None
-
-    exception_keys = {key for key in by_qualified_name if key.rsplit(".", 1)[-1] in {"BaseException", "Exception"}}
-    exception_keys.update(
-        key for key in by_qualified_name if key.rsplit(".", 1)[-1] in {base.__name__ for base in _BARE_EXCEPTION_BASES}
-    )
-    builtin_exception_names = {base.__name__ for base in _BARE_EXCEPTION_BASES} | {"BaseException"}
-    # Resolved once: the fixed point below revisits every declaration on each
-    # pass, and a base's origin does not change between passes.
+    declarations = _class_declarations()
+    index = _ClassIndex(declarations)
+    # Resolved once: the fixed point revisits every declaration on each pass,
+    # and a base's origin does not change between passes.
     base_origins = {
-        id(node): [base_origin(module, base, bindings) for base in node.bases]
-        for module, _qualname, node, bindings in declarations
+        id(node): [_base_origin(base, bindings) for base in node.bases]
+        for _module, _qualname, node, bindings in declarations
     }
-    changed = True
-    while changed:
-        changed = False
-        for module, qualname, node, _bindings in declarations:
-            key = f"{module}.{qualname}"
-            if key in exception_keys:
-                continue
-            origins = base_origins[id(node)]
-            if any(
-                origin.rsplit(".", 1)[-1] in builtin_exception_names
-                or resolve_reference(module, origin) in exception_keys
-                for origin in origins
-            ):
-                exception_keys.add(key)
-                changed = True
+    exception_keys = _exception_keys(declarations, index, base_origins)
 
     result: list[_SourceExceptionClass] = []
     for module, qualname, node, _bindings in declarations:
         if f"{module}.{qualname}" not in exception_keys:
             continue
         bases = tuple(_SourceBase(origin) for origin in base_origins[id(node)])
-        rationale: str | None = None
-        for statement in node.body:
-            if isinstance(statement, ast.Assign):
-                targets = list(statement.targets)
-                value = statement.value
-            elif isinstance(statement, ast.AnnAssign):
-                targets = [statement.target]
-                value = statement.value
-            else:
-                continue
-            if not any(isinstance(target, ast.Name) and target.id == _BARE_BASE_RATIONALE_ATTR for target in targets):
-                continue
-            if isinstance(value, ast.Constant) and isinstance(value.value, str) and value.value.strip():
-                rationale = value.value
-        result.append(_SourceExceptionClass(module, qualname, bases, rationale))
+        result.append(_SourceExceptionClass(module, qualname, bases, _bare_base_rationale(node)))
     return tuple(result)
 
 
