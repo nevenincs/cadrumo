@@ -460,10 +460,8 @@ def test_resolve_supports_base_amount_sum_fact() -> None:
     assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("1500")}
 
 
-@pytest.mark.usefixtures("governed_fact_scope")
-def test_resolve_filters_by_exemption_article_when_selector_declares_article() -> None:
-    binding = _article_filter_binding()
-    observations = (
+def _domestic_exempt_article_observations() -> tuple[IvaLedgerObservation, ...]:
+    return (
         _observation(
             ledger_id="art-20-14",
             category=_category("domestic_exempt"),
@@ -488,6 +486,12 @@ def test_resolve_filters_by_exemption_article_when_selector_declares_article() -
             iva=Decimal("0"),
         ),
     )
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_resolve_filters_by_exemption_article_when_selector_declares_article() -> None:
+    binding = _article_filter_binding()
+    observations = _domestic_exempt_article_observations()
 
     result = resolve_ledger_iva_aggregation_binding_values(_minimal_revision_with_bindings(binding), observations)
 
@@ -497,31 +501,7 @@ def test_resolve_filters_by_exemption_article_when_selector_declares_article() -
 @pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_without_exemption_article_filter_keeps_broad_domestic_exempt_match() -> None:
     binding = _article_filter_binding(exemption_articles=None)
-    observations = (
-        _observation(
-            ledger_id="art-20-14",
-            category=_category("domestic_exempt"),
-            exemption_article=_exemption("art_20_uno_14"),
-            rate_kind=_rate_kind("exempt"),
-            base=Decimal("400.00"),
-            iva=Decimal("0"),
-        ),
-        _observation(
-            ledger_id="art-20-8",
-            category=_category("domestic_exempt"),
-            exemption_article=_exemption("art_20_uno_8"),
-            rate_kind=_rate_kind("exempt"),
-            base=Decimal("700.00"),
-            iva=Decimal("0"),
-        ),
-        _observation(
-            ledger_id="unknown-article",
-            category=_category("domestic_exempt"),
-            rate_kind=_rate_kind("exempt"),
-            base=Decimal("900.00"),
-            iva=Decimal("0"),
-        ),
-    )
+    observations = _domestic_exempt_article_observations()
 
     result = resolve_ledger_iva_aggregation_binding_values(_minimal_revision_with_bindings(binding), observations)
 
