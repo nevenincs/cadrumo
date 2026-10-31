@@ -27,6 +27,7 @@ from .. import fixtures
 from .._pipeline import sanitize_pdf
 from .._records import NameReplacement, NifReplacement, TokenMap
 from ..errors import AlreadySanitizedError, SanitizerSourceParseError, SignaturePresentError
+from ..residual_identity import decompressed_streams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
@@ -56,28 +57,6 @@ _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
 _SYNTHETIC_NIE = "Y0000001S"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 _SENSITIVE_SOURCE_BASENAME = "12345678Z-sanitizer-source.pdf"
-
-
-def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
-    """Returns the concatenated decompressed content streams of every page.
-
-    pikepdf round-trips the source through FlateDecode by default,
-    so cleartext lives in the *decompressed* stream — the
-    representation an attacker running ``pdftotext`` / ``pdfgrep``
-    sees. The adversarial-absence test must operate on this view.
-    """
-    pdf = pikepdf.Pdf.open(io.BytesIO(pdf_bytes))
-    chunks: list[bytes] = []
-    for page in pdf.pages:
-        contents = page.obj.get("/Contents")
-        if contents is None:
-            continue
-        if isinstance(contents, pikepdf.Array):
-            for index in range(len(contents)):
-                chunks.append(bytes(contents[index].read_bytes()))
-        else:
-            chunks.append(bytes(contents.read_bytes()))
-    return b"\n".join(chunks)
 
 
 def _build_real_world_like_pdf() -> bytes:
@@ -141,7 +120,7 @@ class TestSanitizePdfHappyPath:
         # The cleartext does not leak into the decompressed content
         # streams (the view a ``pdftotext`` / ``pdfgrep`` attacker
         # sees) and the synthetic landed in its place.
-        decompressed = _decompressed_content_bytes(result_a.output_bytes)
+        decompressed = decompressed_streams(result_a.output_bytes)
         assert _REAL_NIE_CANARY.encode("utf-8") not in decompressed
         assert _REAL_NAME_CANARY.encode("utf-8") not in decompressed
         assert _SYNTHETIC_NIE.encode("utf-8") in decompressed

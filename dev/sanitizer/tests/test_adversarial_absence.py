@@ -36,15 +36,15 @@ below, so a new one forces a decision instead of vanishing.
 
 from __future__ import annotations
 
-import io
 import json
 from pathlib import Path
 
-import pikepdf
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests.inventory import FIXTURES_DIR
+
+from ..residual_identity import decompressed_streams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -84,22 +84,6 @@ def _committed_fixtures() -> list[tuple[Path, Path | None]]:
 _FIXTURES = _committed_fixtures()
 
 
-def _decompressed_streams(pdf_bytes: bytes) -> bytes:
-    """Returns the concatenated decompressed content streams of every page."""
-    pdf = pikepdf.Pdf.open(io.BytesIO(pdf_bytes))
-    chunks: list[bytes] = []
-    for page in pdf.pages:
-        contents = page.obj.get("/Contents")
-        if contents is None:
-            continue
-        if isinstance(contents, pikepdf.Array):
-            for index in range(len(contents)):
-                chunks.append(bytes(contents[index].read_bytes()))
-        else:
-            chunks.append(bytes(contents.read_bytes()))
-    return b"\n".join(chunks)
-
-
 def test_committed_fixtures_have_synthetics_and_no_leak_markers() -> None:
     """Every committed fixture exposes synthetics and carries no scaffold markers."""
     assert _FIXTURES, (
@@ -114,7 +98,7 @@ def test_committed_fixtures_have_synthetics_and_no_leak_markers() -> None:
 
     for pdf_path, sidecar_path in _FIXTURES:
         raw_bytes = pdf_path.read_bytes()
-        decompressed = _decompressed_streams(raw_bytes)
+        decompressed = decompressed_streams(raw_bytes)
 
         if sidecar_path is None:
             sidecar_less.append(pdf_path.name)
