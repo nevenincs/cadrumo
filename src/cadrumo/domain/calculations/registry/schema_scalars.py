@@ -271,7 +271,8 @@ PersonOrEntityName = Annotated[str, BeforeValidator(_validate_name_string)]
 """Personal or entity name for the registry boundary."""
 
 
-_NIF_IVA_RE = re.compile(r"[A-Z]{2}[A-Z0-9]{2,12}")
+_NIF_IVA_PREFIX_LENGTH = 2
+_NIF_IVA_RE = re.compile(r"[A-Z]{2}[A-Z0-9]{1,64}")
 
 
 @pydantic_validation_boundary
@@ -282,9 +283,18 @@ def _validate_nif_iva_string(value: object) -> object:
     canonical = normalise_nif_iva(value)
     if _NIF_IVA_RE.fullmatch(canonical) is None:
         raise RegistryValidationError(
-            f"nif_iva value {value!r} must start with a two-letter country code "
-            "followed by 2-12 alphanumeric characters",
+            f"nif_iva value {value!r} must start with a two-letter country code followed by alphanumeric characters",
         )
+    from .form_codes import form_codes_in_scope
+
+    codes = form_codes_in_scope("nif-iva-country-format-catalogue")
+    if codes is not None:
+        shortest, longest = codes.integer("nif_iva.body_min_length"), codes.integer("nif_iva.body_max_length")
+        if not shortest <= len(canonical) - _NIF_IVA_PREFIX_LENGTH <= longest:
+            raise RegistryValidationError(
+                f"nif_iva value {value!r} must start with a two-letter country code "
+                f"followed by {shortest}-{longest} alphanumeric characters",
+            )
     return canonical
 
 

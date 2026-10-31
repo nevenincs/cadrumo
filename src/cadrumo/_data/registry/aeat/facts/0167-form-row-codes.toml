@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "form-row-codes:design"
 date_axis = "filing_period"
 legal_refs = ["ley-37-1992:art-164"]
-source_refs = ["aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026"]
+source_refs = ["aeat-dr-232-2018", "enrolled-modelo-156-layout", "aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026", "aeat-dr-222-2025", "aeat-dr-353-2026", "aeat-dr-296-2024", "aeat-dr-360-2010"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
@@ -46,6 +46,26 @@ required_text = ["Número de grupo", "Pais / territorio foral de la Entidad Domi
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-353-2026"
 required_text = ["Identificación. Nº Grupo"]
+
+# The Modelo 296 declarant record: telefono at positions 59-67, total perceptores at 136-144.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-296-2024"
+required_text = ["59-67 TELÉFONO", "136-144 Numérico NÚMERO TOTAL DE PERCEPTORES"]
+
+# Modelo 360 pagina 1, each field's start and length in the design's own table.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-360-2010"
+required_text = ["10 27 16 An", "13 69 125 An", "15 294 15 An", "16 309 5 An", "17 314 50 An", "18 364 3 An", "19 367 5 Num", "26 390 40 An", "27 430 30 An", "28 460 5 Num", "30 495 2 An", "31 497 148 An", "32 645 30 An", "33 675 10 An", "34 685 30 An", "36 717 10 Num"]
+
+# The Modelo 347 premises record: referencia catastral at positions 116-140.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2025"
+required_text = ["116-140 Alfanumérico REFERENCIA CATASTRAL"]
+
+# The Modelo 303 envelope closer: 18 bytes "</T3030AAAAPP0000>", whose PP is the period's two characters.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2026"
+required_text = ["Constante. </T+ modelo+discriminante+Ejercicio+periodo+Tipo+>", "</T3030AAAAPP0000>"]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -121,4 +141,33 @@ entries = [
   { key = "prorrata.catalogue.transition_kinds", value = "2" },
   { key = "prorrata.catalogue.provenances", value = "4" },
   { key = "prorrata.catalogue.sector_letters", value = "4" },
+  { key = "m296.telefono_max", value = "9" },
+  { key = "m296.numero_total_perceptores_max", value = "9" },
+  { key = "m360.numero_registro_anterior_max", value = "16" },
+  { key = "m360.full_name_max", value = "125" },
+  { key = "m360.phone_max", value = "15" },
+  { key = "m360.address.street_type_max", value = "5" },
+  { key = "m360.address.street_name_max", value = "50" },
+  { key = "m360.address.number_type_max", value = "3" },
+  { key = "m360.address.number_qualifier_max", value = "3" },
+  { key = "m360.address.block_max", value = "3" },
+  { key = "m360.address.portal_max", value = "3" },
+  { key = "m360.address.staircase_max", value = "3" },
+  { key = "m360.address.floor_max", value = "3" },
+  { key = "m360.address.door_max", value = "3" },
+  { key = "m360.address.complement_max", value = "40" },
+  { key = "m360.address.locality_max", value = "30" },
+  { key = "m360.address.municipality_max", value = "30" },
+  { key = "m360.address.province_max", value = "2" },
+  { key = "m360.address.house_number_digits", value = "5" },
+  { key = "m360.address.postal_code_digits", value = "5" },
+  { key = "m360.po_box.number_digits", value = "10" },
+  { key = "m360.foreign_address.street_max", value = "148" },
+  { key = "m360.foreign_address.city_max", value = "30" },
+  { key = "m360.foreign_address.postal_code_max", value = "10" },
+  { key = "m360.foreign_address.region_max", value = "30" },
+  { key = "m360.account.holder_name_max", value = "25" },
+  { key = "m347.inmueble.referencia_catastral_max", value = "25" },
+  { key = "aeat.envelope.closer_extent", value = "18" },
+  { key = "aeat.envelope.period_extent", value = "2" },
 ]

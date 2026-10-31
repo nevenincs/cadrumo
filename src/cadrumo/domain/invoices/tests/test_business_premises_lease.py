@@ -15,6 +15,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry.form_codes import resolve_form_codes
 from ...iva.schema import InvoiceKind
 from ..business_premises import (
     BusinessPremisesLease,
@@ -145,12 +146,20 @@ def test_a_situacion_without_a_spanish_referencia_refuses_one(situacion: str) ->
         )
 
 
-def test_the_referencia_is_bounded_by_the_record_designs_25_positions() -> None:
-    with pytest.raises(ValidationError, match="at most 25 characters"):
+def test_the_referencia_is_bounded_by_the_record_designs_positions() -> None:
+    limit = resolve_form_codes("form-row-codes").integer("m347.inmueble.referencia_catastral_max")
+    accepted = BusinessPremisesLease.model_validate(
+        {
+            "situacion_inmueble": SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE,
+            "referencia_catastral": "X" * limit,
+        }
+    )
+    assert accepted.referencia_catastral == "X" * limit
+    with pytest.raises(ValidationError, match=r"m347\.inmueble\.referencia_catastral_max"):
         BusinessPremisesLease.model_validate(
             {
                 "situacion_inmueble": SituacionInmueble.BASQUE_COUNTRY_OR_NAVARRE,
-                "referencia_catastral": "X" * 26,
+                "referencia_catastral": "X" * (limit + 1),
             }
         )
 

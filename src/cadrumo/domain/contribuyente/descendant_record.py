@@ -19,6 +19,7 @@ from ..calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_default_token,
     descendant_relacion_entitling_tokens,
 )
+from ..calculations.registry.tax_id_format import spanish_tax_id_width_in_scope
 from .errors import ProfileValidationError
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
@@ -511,8 +512,9 @@ class DescendantRecordBase(DescendantRecordFields):
         stripped = value.strip().upper()
         if not stripped:
             raise ProfileValidationError("nif must not be blank when provided")
-        if len(stripped) not in (9,):
-            raise ProfileValidationError(f"nif must be 9 characters, got {len(stripped)!r} for {value!r}")
+        width = spanish_tax_id_width_in_scope()
+        if width is not None and len(stripped) != width:
+            raise ProfileValidationError(f"nif must be {width} characters, got {len(stripped)!r} for {value!r}")
         return stripped
 
     def age_at_year_end(self, filing_year: int) -> int:

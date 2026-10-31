@@ -7,11 +7,12 @@ an identifier too short for the full-width digit slot DR360 prints.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..producer_snapshot_m360 import (
     M360AmbitoEstablecimiento,
     M360CausaPresentacion,
@@ -30,6 +31,13 @@ from ..producer_snapshot_m360 import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so a row reads its design's widths."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _solicitud(

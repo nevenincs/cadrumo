@@ -6,7 +6,7 @@ import re
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import AfterValidator, BaseModel, Field, StringConstraints, model_validator
 
 from cadrumo.domain.calculations.registry.export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
 from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
@@ -17,7 +17,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.package_version import PACKAGE_VERSION
-from ..calculations.registry.form_codes import form_codes_in_scope, resolve_form_codes
+from ..calculations.registry.form_codes import form_codes_in_scope, form_width_validator, resolve_form_codes
 from .errors import FilingExportValidationError
 
 _PACKAGE_VERSION_AEAT_AUX_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$", re.ASCII)
@@ -47,9 +47,10 @@ def aeat_aux_version() -> str:
 
 type AeatProgramIdentifier = Annotated[
     str,
-    StringConstraints(min_length=4, max_length=4, pattern=r"^[A-Z0-9]{4}$"),
+    StringConstraints(min_length=1, max_length=16, pattern=r"^[A-Z0-9]+$"),
+    AfterValidator(form_width_validator("aeat.aux.program_identifier_width")),
 ]
-"""Exact four-byte developer-authored software-version identifier for an AEAT header."""
+"""Developer-authored software-version identifier for an AEAT header, at the width the design declares."""
 
 
 DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID = "aeat-eedd:development-mock-software-identity"

@@ -8,13 +8,14 @@ from typing import Annotated, Final
 
 from pydantic import AfterValidator
 
-from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, SpanishTaxIdFormat
 from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.time.clock import today_madrid
 from .facts.payloads import GovernedFactFamily, MappingFactPayload
 from .facts.resolution import MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from .facts.schema import GovernedFactCatalogue
+from .form_codes import form_codes_in_scope
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
@@ -186,6 +187,23 @@ def runtime_tax_id_format(
     """Resolve the format from the established authority operation or scope."""
     selected_authority = require_governed_fact_authority(authority, subject="Spanish tax-ID format")
     return tax_id_format(selected_authority, effective_date=effective_date or today_madrid())
+
+
+def spanish_tax_id_width_in_scope() -> int | None:
+    """Return the declared identifier width for a model validator, or ``None`` outside every scope.
+
+    Only a validator may use this reader; see :func:`.form_codes.form_codes_in_scope`.
+    """
+    codes = form_codes_in_scope(TAX_ID_FORMAT_FACT_ID)
+    return None if codes is None else codes.integer("tax_id.width")
+
+
+def require_spanish_tax_id_width(value: str | None) -> str | None:
+    """Return ``value`` unless the scope's format fact declares another identifier width."""
+    width = spanish_tax_id_width_in_scope()
+    if value is not None and width is not None and len(value) != width:
+        raise CoreValidationError(f"a Spanish tax identifier has {width} characters")
+    return value
 
 
 @pydantic_validation_boundary

@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ..calculations.registry.form_codes import RegistryCodedEnum
+from ..calculations.registry.form_codes import RegistryCodedEnum, require_form_fit
 from .errors import InvoiceValidationError
 
 
@@ -49,7 +49,7 @@ class BusinessPremisesLease(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     situacion_inmueble: SituacionInmueble | None = None
-    referencia_catastral: str | None = Field(default=None, max_length=25)
+    referencia_catastral: str | None = Field(default=None, max_length=64)
 
     @field_validator("situacion_inmueble", mode="before")
     @classmethod
@@ -65,6 +65,12 @@ class BusinessPremisesLease(BaseModel):
         if not isinstance(value, str):
             return value
         return value.strip().upper() or None
+
+    @field_validator("referencia_catastral")
+    @classmethod
+    @pydantic_validation_boundary
+    def _reference_fits_the_design(cls, value: str | None) -> str | None:
+        return require_form_fit(value, "m347.inmueble.referencia_catastral_max")
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

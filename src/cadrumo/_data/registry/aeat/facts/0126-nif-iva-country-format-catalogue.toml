@@ -17,6 +17,8 @@ required_text = ["Consultar operadores intracomunitarios No españoles"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
+  { key = "nif_iva.body_min_length", value = "2" },
+  { key = "nif_iva.body_max_length", value = "12" },
   { key = "nif_iva.order", value = "AT,BE,BG,CY,CZ,DE,DK,EE,EL,FI,FR,HR,HU,IE,IT,LT,LU,LV,MT,NL,PL,PT,RO,SE,SI,SK,XI" },
 
   { key = "nif_iva.prefix.AT.value", value = "AT" },

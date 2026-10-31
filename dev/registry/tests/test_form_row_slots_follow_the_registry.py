@@ -116,3 +116,53 @@ def test_the_epigraph_digits_fill_the_field_the_record_declares() -> None:
     assert lengths == {
         int(entries["m303.dp30302.iae_whole_digits"]) + int(entries["m303.dp30302.iae_fractional_digits"])
     }
+
+
+_LAYOUT_LENGTH = re.compile(
+    r'^length = (?P<length>\d+)\n(?:kind = "\w+"\n)(?:producer_key|binding) = "(?P<key>[^"]+)"', re.MULTILINE
+)
+
+
+def _layout_lengths(modelo: str, field_key: str) -> set[int]:
+    revisions = bundled_path("registry", "aeat", "modelos", modelo, "revisions")
+    return {
+        int(match["length"])
+        for path in revisions.rglob("export/*.toml")
+        for match in _LAYOUT_LENGTH.finditer(path.read_text(encoding="utf-8"))
+        if match["key"] == field_key
+    }
+
+
+@pytest.mark.parametrize(
+    ("key", "modelo", "field_key"),
+    [
+        ("m296.telefono_max", "296", "m296.dec.telefono"),
+        ("m296.numero_total_perceptores_max", "296", "m296.dec.numero_total_de_perceptores"),
+        ("m347.inmueble.referencia_catastral_max", "347", "modelo-347-inmueble-row-referencia-catastral"),
+        ("m360.numero_registro_anterior_max", "360", "m360.solicitud.numero_registro_declaracion_anterior"),
+        ("m360.full_name_max", "360", "m360.representante.full_name"),
+        ("m360.phone_max", "360", "m360.solicitante.phone"),
+        ("m360.address.street_type_max", "360", "m360.solicitante.domicilio.tipo_via"),
+        ("m360.address.street_name_max", "360", "m360.solicitante.domicilio.nombre_via"),
+        ("m360.address.number_type_max", "360", "m360.solicitante.domicilio.tipo_numeracion"),
+        ("m360.address.number_qualifier_max", "360", "m360.solicitante.domicilio.calificador_numero"),
+        ("m360.address.block_max", "360", "m360.solicitante.domicilio.bloque"),
+        ("m360.address.portal_max", "360", "m360.solicitante.domicilio.portal"),
+        ("m360.address.staircase_max", "360", "m360.solicitante.domicilio.escalera"),
+        ("m360.address.floor_max", "360", "m360.solicitante.domicilio.planta"),
+        ("m360.address.door_max", "360", "m360.solicitante.domicilio.puerta"),
+        ("m360.address.complement_max", "360", "m360.solicitante.domicilio.datos_complementarios"),
+        ("m360.address.locality_max", "360", "m360.solicitante.domicilio.localidad"),
+        ("m360.address.municipality_max", "360", "m360.solicitante.domicilio.nombre_municipio"),
+        ("m360.address.province_max", "360", "m360.solicitante.domicilio.provincia"),
+        ("m360.address.house_number_digits", "360", "m360.solicitante.domicilio.numero_casa"),
+        ("m360.address.postal_code_digits", "360", "m360.solicitante.domicilio.codigo_postal"),
+        ("m360.po_box.number_digits", "360", "m360.solicitante.apartado_correos.numero"),
+        ("m360.foreign_address.street_max", "360", "m360.solicitante.foreign_address.street"),
+        ("m360.foreign_address.city_max", "360", "m360.solicitante.foreign_address.city"),
+        ("m360.foreign_address.postal_code_max", "360", "m360.solicitante.foreign_address.postal_code"),
+        ("m360.foreign_address.region_max", "360", "m360.solicitante.foreign_address.region"),
+    ],
+)
+def test_a_declared_width_is_the_published_layout_s_length(key: str, modelo: str, field_key: str) -> None:
+    assert _layout_lengths(modelo, field_key) == {int(_entries()[key])}

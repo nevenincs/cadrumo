@@ -131,7 +131,7 @@ class TestNifIvaString:
     def test_direct_registry_scalar_uses_canonical_normalisation_and_keeps_direct_error(self) -> None:
         assert validate_registry_text_scalar("nif_iva", " BE 0123.456.789 ") == "BE0123456789"
 
-        with pytest.raises(RegistryValidationError, match="followed by 2-12 alphanumeric characters"):
+        with pytest.raises(RegistryValidationError, match="followed by alphanumeric characters"):
             validate_registry_text_scalar("nif_iva", "BE12!34")
 
         with pytest.raises(RegistryValidationError, match="nif_iva value must be a string, got int"):

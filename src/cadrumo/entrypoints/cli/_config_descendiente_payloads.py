@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import NonNegativeInt, StringConstraints, field_validator, model_validator
+from pydantic import AfterValidator, NonNegativeInt, StringConstraints, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.json_contract import OutputSchema
@@ -47,11 +47,13 @@ from ...domain.calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_adoption_token,
     descendant_relacion_entitling_tokens,
 )
+from ...domain.calculations.registry.tax_id_format import require_spanish_tax_id_width
 from ...domain.contribuyente.descendant_record import DescendantRecordFields
 
 DescendantNif = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, to_upper=True, min_length=9, max_length=9),
+    StringConstraints(strip_whitespace=True, to_upper=True, min_length=1, max_length=64),
+    AfterValidator(pydantic_validation_boundary(require_spanish_tax_id_width)),
 ]
 """Optional descendant NIF/NIE, shaped exactly as :class:`DescendantInfo` validates it."""
 

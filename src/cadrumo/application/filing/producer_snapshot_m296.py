@@ -7,7 +7,7 @@ from typing import Annotated
 from pydantic import AfterValidator, BaseModel, StringConstraints
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry.form_codes import form_width_validator
+from ...domain.calculations.registry.form_codes import form_fit_validator, form_width_validator
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
 _AeatReceiptNumber = Annotated[
@@ -20,7 +20,16 @@ _AeatReceiptNumber = Annotated[
 _M296SupportType = Annotated[str, StringConstraints(pattern=r"^[TC]$")]
 _M296AmendmentMark = Annotated[str, StringConstraints(min_length=1, max_length=16)]
 _FourDigitYear = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
-_DigitString9 = Annotated[str, StringConstraints(pattern=r"^\d{1,9}$")]
+_Telefono = Annotated[
+    str,
+    StringConstraints(pattern=r"^\d+$", max_length=16),
+    AfterValidator(form_fit_validator("m296.telefono_max")),
+]
+_NumeroTotalPerceptores = Annotated[
+    str,
+    StringConstraints(pattern=r"^\d+$", max_length=16),
+    AfterValidator(form_fit_validator("m296.numero_total_perceptores_max")),
+]
 
 
 class Modelo296PerceptorRow(BaseModel):
@@ -226,7 +235,7 @@ class Modelo296ProfileFacts(BaseModel):
     #: Tipo de soporte -- design offset 58, length 1, alfabetico.
     tipo_de_soporte: _M296SupportType | None = None
     #: Persona con quien relacionarse, telefono -- design offset 59, length 9.
-    telefono: _DigitString9 | None = None
+    telefono: _Telefono | None = None
     #: Persona con quien relacionarse, apellidos y nombre -- design offset 68, length 40.
     apellidos_y_nombre: _NonBlankName | None = None
     #: Numero identificativo de la declaracion -- design offset 108, length 13.
@@ -241,7 +250,7 @@ class Modelo296ProfileFacts(BaseModel):
     #: optional here deliberately: once the perceptor record repeats its rows, the count is
     #: derived from them, and a value stated here that disagrees with the rows is a defect
     #: rather than a fact.
-    numero_total_de_perceptores: _DigitString9 | None = None
+    numero_total_de_perceptores: _NumeroTotalPerceptores | None = None
     #: N.I.F. del representante legal -- design offset 391, length 9. See the class note on
     #: why the key tail is ``n``.
     n: _NonBlankName | None = None

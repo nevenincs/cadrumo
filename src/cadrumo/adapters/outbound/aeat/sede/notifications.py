@@ -41,7 +41,7 @@ from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.hashing import sha256_hex
 from .....core.i18n.render import tr
-from .....core.identity.aeat_certificado import AeatCertificadoId
+from .....core.identity.aeat_certificado import AEAT_CERTIFICADO_PATTERN, AeatCertificadoId
 from .....core.identity.digest import ContentDigest
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -126,7 +126,7 @@ _NOTIFICATIONS_PAGE_MARKER: Final = "notificaciones y comunicaciones"
 
 
 # Número de certificado: 13 digits. Captured: 2699101808461 / 2596230606502.
-_CERT_RE: Final[re.Pattern[str]] = re.compile(r"^\d{10,16}$")
+_CERT_RE: Final[re.Pattern[str]] = re.compile(AEAT_CERTIFICADO_PATTERN)
 # _DATE_RE removed — date parsing delegated to core.parsing._dates._parse_ddmmyyyy_date
 
 

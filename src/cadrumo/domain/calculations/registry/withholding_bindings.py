@@ -30,6 +30,7 @@ from .form_codes import exceeds_form_bound, require_form_fit, require_form_width
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
+from .tax_id_format import require_spanish_tax_id_width
 from .withholding_observation_codes import (
     OBSERVATION_CODE_FIELDS,
     WITHHOLDING_CATALOGUE_FACT,
@@ -283,10 +284,10 @@ class WithholdingObservation(BaseModel):
     perceptor_situacion_familiar: int | None = None
     """Perceptor family-situation clave (1-3) per the design's own relation, only
     declared for claves A, B (subclaves 01, 03, 04, 99) and C."""
-    representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
+    representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=64)
     """NIF of the perceptor's legal representative, declared by the design only when
     the perceptor is under 14; every other row writes the design's own spaces."""
-    spouse_or_unit_titular_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
+    spouse_or_unit_titular_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=64)
     """NIF of the perceptor's spouse (situacion familiar 2, claves A/B/C) or of the
     unidad de convivencia's titular (clave L.29 with titular clave 2); spaces elsewhere."""
     disability_clave: int | None = None
@@ -494,7 +495,7 @@ class WithholdingObservation(BaseModel):
     garantias: Decimal = Decimal("0")
     """Modelo 193 garantias (positions 237-248), declared only for prestamo de
     valores rows; the design's own zeros when none."""
-    nif_pagador_anterior: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
+    nif_pagador_anterior: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=64)
     """Modelo 193 NIF of the immediately previous payer in the payment chain
     (positions 322-330), obligatory when pago is 2-5 except where the previous
     payer is foreign without a Spanish NIF -- recorded-when-applicable."""
@@ -609,6 +610,12 @@ class WithholdingObservation(BaseModel):
         if value is not None and exceeds_form_bound(value, "withholding.numero_orden_max"):
             raise ValueError("numero_orden is past the bound the record design declares")
         return value
+
+    @field_validator("representative_tax_id", "spouse_or_unit_titular_tax_id", "nif_pagador_anterior")
+    @classmethod
+    @pydantic_validation_boundary
+    def _tax_id_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_spanish_tax_id_width(value)
 
     @field_validator("codigo_emisor")
     @classmethod
