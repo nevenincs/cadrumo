@@ -58,9 +58,8 @@ def _validate_acquired_outside_ledger(revision: ActivityAssetRevision) -> None:
         lineage.observed_transaction_id is not None
         or lineage.observed_lineage_event_id is not None
         or lineage.evidence_fingerprint is not None
-        or revision.further_acquisitions
     ):
-        raise ValueError("an element acquired outside the ledger names no ledger row")
+        raise ValueError("an element acquired outside the ledger names no ledger row as its primary acquisition")
     declared = revision.declared_acquisition_date
     if declared is None:
         raise ActividadAssetValidationError(

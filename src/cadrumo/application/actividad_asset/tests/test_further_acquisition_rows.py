@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -169,3 +171,53 @@ def test_the_same_instalment_with_no_owner_is_still_named() -> None:
     resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,)), rows=(first, second))
 
     assert reasons(resolution).count(_UNREGISTERED) == 1
+
+
+def _outside_the_ledger_with(*rows: Transaction) -> ActivityAssetRevision:
+    template = register_asset("press", transaction_id="c" * 64)
+    facts = {name: getattr(template, name) for name in type(template).model_fields}
+    facts.update(
+        acquisition=AcquisitionLineageReference(invoice_evidence_id="Factura 2014/118"),
+        acquisition_shape=AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER,
+        declared_acquisition_date=date(2014, 3, 1),
+        declared_activity=next(iter(TipoActividad)),
+        further_acquisitions=tuple(_further(row, AcquisitionShape.ANCILLARY_COST) for row in rows),
+    )
+    return ActivityAssetRevision(**facts)
+
+
+def test_an_element_acquired_outside_the_ledger_owns_a_later_payment_without_a_bound() -> None:
+    # The basis is the 2,000.00 paid before the ledger plus this 300.00; the row alone does not cover it.
+    later = _instalment("later", amount="363.00", base="300.00", iva="63.00")
+    element = _outside_the_ledger_with(later)
+
+    assert element.acquisition_transaction_ids == (later.transaction_id,)
+    assert element.basis.acquisition_cost() > Decimal("363.00")
+    assert require_acquisition_in_ledger(element, MemoryLedger(later)) is None
+
+
+@pytest.mark.parametrize("kind", ["missing", "not_payment"])
+def test_the_later_payment_of_an_element_outside_the_ledger_must_still_be_a_payment_the_ledger_holds(
+    kind: str,
+) -> None:
+    later = acquisition_transaction(
+        provider_id="later",
+        amount=Decimal("363.00"),
+        taxable_base=Decimal("300.00"),
+        iva_amount=Decimal("63.00"),
+        direction=TransactionDirection.INCOMING if kind == "not_payment" else TransactionDirection.OUTGOING,
+    )
+    element = _outside_the_ledger_with(later)
+    ledger = MemoryLedger() if kind == "missing" else MemoryLedger(later)
+
+    with pytest.raises(ActividadAssetValidationError, match="acquisition_transaction"):
+        require_acquisition_in_ledger(element, ledger)
+
+
+def test_the_later_payment_of_an_element_outside_the_ledger_is_withheld_from_the_expense_routes() -> None:
+    later = machine_acquisition_transaction("hardware_amortizable", provider_id="later-instalment")
+    history = ActivityAssetHistory(revisions=(_outside_the_ledger_with(later),))
+
+    for resolution in (resolve_m100(history, rows=(later,)), resolve_m130(history, "2T", rows=(later,))):
+        assert _UNREGISTERED not in reasons(resolution)
+        assert _WITHHELD in reasons(resolution)
