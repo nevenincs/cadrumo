@@ -35,7 +35,7 @@ import io
 import re
 import sys
 from collections.abc import Callable, Generator, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, NoReturn, cast
 
@@ -578,13 +578,19 @@ def run_standalone_with_error_contract(
     from .common import boundary_requested_leaf_scope
 
     captured = tuple(argv) if argv is not None else tuple(sys.argv[1:])
+    if argv_requests_json(captured):
+        from ...core.logging import operator_document_output
+
+        diagnostic_scope = operator_document_output()
+    else:
+        diagnostic_scope = nullcontext()
     token = _INVOCATION_ARGV.set(captured)
     vendored_click_exception, _vendored_usage, vendored_abort = _vendored_exceptions()
     # Bounds the invocation-scoped requested leaf to THIS dispatch, the same
     # ownership `_INVOCATION_ARGV` already has above. Without the bound, a leaf
     # resolved here would still be readable during the next invocation and could
     # name the wrong command on an unrelated error.
-    with boundary_requested_leaf_scope():
+    with boundary_requested_leaf_scope(), diagnostic_scope:
         try:
             result = dispatch()
         except (vendored_click_exception, click.ClickException) as exc:

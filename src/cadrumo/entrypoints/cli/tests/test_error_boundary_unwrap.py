@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 from collections.abc import Callable
 
 import pytest
@@ -91,6 +92,35 @@ def test_terminal_nested_llm_validation_preserves_typed_refusal_in_every_locale(
         text = capsys.readouterr().err
         assert 'action.failed_condition_id: "llm.request.prompt_nonempty"' in text
         assert "action.action: null" in text
+
+
+def test_terminal_json_routes_validation_diagnostic_away_from_stderr(
+    capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture
+) -> None:
+    """A configured diagnostic sink must not precede the error document."""
+    from ....core.logging import DropOperatorDocumentEchoFilter
+    from .._terminal_errors import run_standalone_with_error_contract
+
+    logger = logging.getLogger("cadrumo.entrypoints.cli.errors")
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+    handler.addFilter(DropOperatorDocumentEchoFilter())
+    logger.addHandler(handler)
+    try:
+        with caplog.at_level(logging.ERROR, logger=logger.name), pytest.raises(SystemExit):
+            run_standalone_with_error_contract(lambda: LLMRequest(prompt=" \t"), argv=["--format", "json"])
+        document = json.loads(capsys.readouterr().err)
+        assert document["error"]["code"] == "REFUSED_CLI_VALIDATION_BOUNDARY"
+        record = next(record for record in delivered_records(caplog) if "pydantic ValidationError" in record.message)
+        assert record.exc_info is None
+        assert getattr(record, "_cadrumo_operator_document_output", False) is True
+
+        with pytest.raises(SystemExit):
+            run_standalone_with_error_contract(lambda: LLMRequest(prompt=" \t"), argv=[])
+        assert "pydantic ValidationError" in capsys.readouterr().err
+    finally:
+        logger.removeHandler(handler)
+        handler.close()
 
 
 @pytest.mark.parametrize(
