@@ -53,13 +53,15 @@ impl Parent {
         };
         let server =
             ipc::windows::Server::bind_cutover(&designation.endpoint(), &selected.manager)?;
+        // The successor manages the same root, so an operator-selected root is carried.
+        let environment =
+            cadrumo_platform::storage::successor_host_environment(std::env::vars_os())
+                .map_err(io::Error::from)?;
         let child = cadrumo_application::process::creation::run(|| {
             Command::new(&selected.manager)
                 .args(["--cutover", &designation.argument()])
                 .env_clear()
-                .envs(cadrumo_platform::storage::strict_host_environment(
-                    std::env::vars_os(),
-                ))
+                .envs(environment)
                 .current_dir(&selected.package)
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())

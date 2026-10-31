@@ -1,4 +1,4 @@
-"""Canonical transient transport location and manager filename declarations."""
+"""Canonical transient transport location, instance scope and manager filename declarations."""
 
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ MANAGER_SOCKET_PREFIX: Final = "manager-"
 MANAGER_SOCKET_SUFFIX: Final = ".sock"
 MANAGER_SOCKET_DIGEST_BYTES: Final = 16
 MANAGER_SOCKET_MAX_IDENTIFIER_BYTES: Final = 128
+INSTANCE_ROOT_SCOPE: Final = ".root."
+STORAGE_IDENTITY_HEX_DIGITS: Final = 64
 
 
 def uses_darwin_transport() -> bool:
@@ -43,6 +45,24 @@ def _valid_manager_identifier(manager_id: str) -> bool:
         or manager_id.endswith(".")
         or not all(character.isascii() and (character.isalnum() or character in ".-_") for character in manager_id)
     )
+
+
+def root_scoped_identifier(identifier: str, storage_identity: str) -> str:
+    """Scope a per-user instance identifier to one storage root.
+
+    ``storage_identity`` is the hex digest of the root's physical identity that names the
+    runtime serving the root, so aliases of one directory share a scope and two roots never do.
+    The desktop instance lock and the manager session lock and IPC name use the scoped identifier.
+    """
+    if not _valid_manager_identifier(identifier) or not (
+        len(storage_identity) == STORAGE_IDENTITY_HEX_DIGITS
+        and all(character in "0123456789abcdef" for character in storage_identity)
+    ):
+        raise ValueError("an instance scope requires an ASCII identifier and a lowercase hex storage identity")
+    scoped = f"{identifier}{INSTANCE_ROOT_SCOPE}{storage_identity}"
+    if not _valid_manager_identifier(scoped):
+        raise ValueError("the root-scoped identifier exceeds the identifier bound")
+    return scoped
 
 
 def manager_socket_name(manager_id: str, user: str, session: str) -> str:

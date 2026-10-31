@@ -131,7 +131,11 @@ fn run_macos(intent: Intent, diagnostics: Arc<Diagnostics>) -> io::Result<()> {
             menu::{Controller, effects::PackageEffects},
         },
         preferences::Preferences,
-        session::{ManagerSession, instance::claim_session, ownership::StartKind},
+        session::{
+            ManagerSession,
+            instance::{claim_session, manager_id},
+            ownership::StartKind,
+        },
         strings::Strings,
         supervision::environment::ManagedLocations,
     };
@@ -146,18 +150,25 @@ fn run_macos(intent: Intent, diagnostics: Arc<Diagnostics>) -> io::Result<()> {
         Operation::Manager,
         || ManagedLocations::resolve(&executable),
     )?;
+    let manager_id = stage(
+        &diagnostics,
+        HostStage::Storage,
+        ErrorCode::EnvironmentFailed,
+        Operation::Manager,
+        || manager_id(locations.storage_root()),
+    )?;
     let Some(session_lock) = stage(
         &diagnostics,
         HostStage::Instance,
         ErrorCode::InstanceLockForeign,
         Operation::Manager,
-        || claim_session(identity::MANAGER_ID, std::time::Duration::ZERO),
+        || claim_session(&manager_id, std::time::Duration::ZERO),
     )?
     else {
         diagnostics.host_outcome(HostStage::Instance, HostOutcome::AlreadyRunning);
         if let Some(request) = intent.existing_request() {
             // The session's core may be hosted by this package's desktop instead.
-            let response = ipc::request_host(locations.package_root(), &request)?;
+            let response = ipc::request_host(&manager_id, locations.package_root(), &request)?;
             if intent == Intent::Retry
                 && response.outcome != cadrumo_manager::ipc::Outcome::ReEvaluated
             {
@@ -166,8 +177,6 @@ fn run_macos(intent: Intent, diagnostics: Arc<Diagnostics>) -> io::Result<()> {
         }
         return Ok(());
     };
-    diagnostics.host_event(EventKind::StageStarted, HostStage::Storage);
-    diagnostics.host_event(EventKind::StageCompleted, HostStage::Storage);
     configure(&locations, &diagnostics);
     if intent == Intent::Retry {
         // Only an admitted session owner may clear failures for a fresh launch.
@@ -232,7 +241,10 @@ fn run_windows(
         diagnostics::{configure, inspection_failed, stage},
         installation::DispatchOutcome,
         installed::InstalledRuntime,
-        session::{ManagerSession, instance::claim_session},
+        session::{
+            ManagerSession,
+            instance::{claim_session, manager_id},
+        },
         windows_lifecycle,
     };
     if stage(
@@ -267,12 +279,19 @@ fn run_windows(
         };
         (installation, None)
     };
+    let manager_id = stage(
+        &diagnostics,
+        HostStage::Storage,
+        ErrorCode::EnvironmentFailed,
+        Operation::Manager,
+        || manager_id(installation.locations().storage_root()),
+    )?;
     let Some(session_lock) = stage(
         &diagnostics,
         HostStage::Instance,
         ErrorCode::InstanceLockForeign,
         Operation::Manager,
-        || claim_session(identity::MANAGER_ID, std::time::Duration::ZERO),
+        || claim_session(&manager_id, std::time::Duration::ZERO),
     )?
     else {
         diagnostics.host_outcome(HostStage::Instance, HostOutcome::AlreadyRunning);
@@ -280,7 +299,11 @@ fn run_windows(
             return Err(io::ErrorKind::WouldBlock.into());
         }
         if let Some(request) = intent.existing_request() {
-            let response = cadrumo_manager::ipc::windows::request(&env::current_exe()?, &request)?;
+            let response = cadrumo_manager::ipc::windows::request_host(
+                &manager_id,
+                &env::current_exe()?,
+                &request,
+            )?;
             if intent == Intent::Retry
                 && response.outcome != cadrumo_manager::ipc::Outcome::ReEvaluated
             {
@@ -289,8 +312,6 @@ fn run_windows(
         }
         return Ok(());
     };
-    diagnostics.host_event(EventKind::StageStarted, HostStage::Storage);
-    diagnostics.host_event(EventKind::StageCompleted, HostStage::Storage);
     configure(installation.locations(), &diagnostics);
     if intent == Intent::Retry {
         // Only an admitted session owner may clear failures for a fresh launch.
@@ -308,6 +329,7 @@ fn run_windows(
         cadrumo_manager::windows_tray::Configuration::new(installation.locations(), preferences)?;
     let ipc = cadrumo_manager::ipc::windows::Server::bind_installed(
         installation.locations().package_root(),
+        &manager_id,
     )?;
     diagnostics.host_event(EventKind::StageStarted, HostStage::Package);
     let selected = installation.selection().clone();
@@ -345,7 +367,7 @@ fn run_windows(
         HostStage::Window,
         ErrorCode::ManagerUnavailable,
         Operation::Manager,
-        || windows_lifecycle::run(background, ipc, tray, selected, session_lock),
+        || windows_lifecycle::run(background, ipc, tray, selected, session_lock, manager_id),
     )
 }
 

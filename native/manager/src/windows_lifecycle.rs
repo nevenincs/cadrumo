@@ -447,12 +447,13 @@ pub fn run(
     tray: crate::windows_tray::Configuration,
     selected: cadrumo_application::installation::Selection,
     session: crate::session::instance::SessionLock,
+    manager_id: String,
 ) -> io::Result<()> {
     run_window(
         Box::new(background),
         Some(ipc),
         cadrumo_platform::desktop::available().then_some(tray),
-        Some((selected, session)),
+        Some((selected, session, manager_id)),
         |_| {},
     )
 }
@@ -464,6 +465,7 @@ fn run_window(
     resources: Option<(
         cadrumo_application::installation::Selection,
         crate::session::instance::SessionLock,
+        String,
     )>,
     created: impl FnOnce(Handle),
 ) -> io::Result<()> {
@@ -471,9 +473,11 @@ fn run_window(
         .encode_utf16()
         .chain([0])
         .collect();
-    let (upgrades, session) = resources.map_or((None, None), |(selected, session)| {
+    let (upgrades, session) = resources.map_or((None, None), |(selected, session, manager_id)| {
         (
-            Some(crate::cutover_coordinator::Coordinator::new(selected)),
+            Some(crate::cutover_coordinator::Coordinator::new(
+                selected, manager_id,
+            )),
             Some(session),
         )
     });

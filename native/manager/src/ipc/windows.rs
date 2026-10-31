@@ -440,9 +440,10 @@ pub struct Server {
 
 impl Server {
     /// Call only after package admission. Image members come from the same
-    /// generated layout used to verify the admitted manager package.
-    pub fn bind_installed(package: &Path) -> io::Result<Self> {
-        Self::bind_package(package, false)
+    /// generated layout used to verify the admitted manager package. `manager_id`
+    /// is the root-scoped identifier whose session lock this manager holds.
+    pub fn bind_installed(package: &Path, manager_id: &str) -> io::Result<Self> {
+        Self::bind_package_named(package, false, manager_id)
     }
 
     /// A verified desktop package may host the same owner/session supervisor.
@@ -702,13 +703,10 @@ impl Server {
     }
 }
 
-/// A caller supplies an already-admitted exact manager image. A pipe name alone
-/// never authenticates the server. No automatic runtime/manager launch occurs.
-pub fn request(manager: &Path, request: &Request) -> io::Result<Response> {
-    request_host(crate::identity::MANAGER_ID, manager, request)
-}
-
-/// Qualified embedded roots use the same exact package-image peer admission.
+/// A caller supplies an already-admitted exact manager image and the root-scoped
+/// identifier of its session; a desktop hosting that root's core is admitted too,
+/// only at its exact package image. A pipe name alone never authenticates the
+/// server. No automatic runtime/manager launch occurs.
 pub fn request_host(manager_id: &str, manager: &Path, request: &Request) -> io::Result<Response> {
     match request_to(manager_id, manager, request) {
         Err(error) if error.kind() == io::ErrorKind::PermissionDenied => {

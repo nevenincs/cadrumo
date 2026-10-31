@@ -1,7 +1,8 @@
 //! Desktop-owned hosting of the canonical manager core on macOS, with arbitration
-//! against a manager that already owns the session.
+//! against a manager that already owns the session for the same storage root.
 //!
-//! The desktop claims the same per-session lock the installed manager claims. While
+//! The desktop claims the same per-session lock the installed manager claims for its
+//! root, so a manager or desktop on another root is never consulted. While
 //! another process holds it, that owner keeps the runtime: the desktop observes its
 //! status over the authenticated manager socket and claims again at a steady pace,
 //! taking over once the owner releases the lock. While the desktop holds it, it runs
@@ -16,7 +17,7 @@ use crate::{
     macos::{activity, ipc::Server},
     session::{
         ManagerSession,
-        instance::{SessionLock, claim_session},
+        instance::{SessionLock, claim_session, manager_id},
         ownership::StartKind,
     },
     supervision::environment::ManagedLocations,
@@ -299,6 +300,7 @@ fn run(
     let installed = InstalledRuntime::inspect(locations)
         .map_err(|error| crate::diagnostics::inspection_failed(&diagnostics, error))?;
     let package = locations.package_root().to_path_buf();
+    let manager_id = manager_id(locations.storage_root())?;
     let mut owner: Option<Owner> = None;
     let mut closing = false;
     let mut terminal_error = None;
@@ -357,7 +359,7 @@ fn run(
             return Ok(());
         }
         if retry || Instant::now() >= next_external {
-            if let Some(claim) = claim_session(crate::identity::MANAGER_ID, Duration::ZERO)? {
+            if let Some(claim) = claim_session(&manager_id, Duration::ZERO)? {
                 diagnostics.host_event(EventKind::StageStarted, HostStage::Admission);
                 let server = Server::bind_embedded(&package, &claim)?;
                 let background = Background::new(
@@ -380,7 +382,7 @@ fn run(
             } else {
                 Request::Status { schema: 1 }
             };
-            let response = crate::macos::ipc::request_host(&package, &request);
+            let response = crate::macos::ipc::request_host(&manager_id, &package, &request);
             state.set(response.map_or(Outcome::Waiting, |reply| reply.outcome));
             next_external = Instant::now() + EXTERNAL_PACE;
         }

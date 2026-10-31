@@ -3,12 +3,11 @@
 use crate::{
     background::Background,
     change_watch::ChangeWatch,
-    identity,
     installed::InstalledRuntime,
     ipc::{self, Outcome, Request},
     session::{
         ManagerSession,
-        instance::{SessionRelease, claim_session},
+        instance::{SessionRelease, claim_session, manager_id},
         ownership::StartKind,
         status_cue::{StatusPublisher, owner_publishes, status_cue_directory},
     },
@@ -308,15 +307,7 @@ fn run(
         Err(error) if closed.load(Ordering::Acquire) && error.is_cancelled() => return Ok(()),
         Err(error) => return Err(crate::diagnostics::inspection_failed(&diagnostics, error)),
     };
-    let manager_id = if locations.is_default_root() {
-        identity::MANAGER_ID.to_owned()
-    } else {
-        format!(
-            "{}.root.{}",
-            identity::MANAGER_ID,
-            installed.target.storage_identity()
-        )
-    };
+    let manager_id = manager_id(locations.storage_root())?;
     let contract: cadrumo_application::installation::DiscoveryContract =
         serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).map_err(io::Error::other)?;
     let own_manager = contract

@@ -60,17 +60,15 @@ impl SessionClaim {
         }))
     }
 
-    fn bind_socket(&self, manager_id: &str, session: &Session) -> io::Result<Socket> {
+    /// Binds the listener under the name this claim was acquired for.
+    fn bind_socket(&self, session: &Session) -> io::Result<Socket> {
         self.owner.revalidate(&self.session)?;
         let expected = super::naming::socket_name(
-            manager_id,
+            &self.manager_id,
             &session.uid().to_string(),
             &session.id().to_string(),
         )?;
-        if self.manager_id != manager_id
-            || self.session != *session
-            || self.namespace.name() != expected
-        {
+        if self.session != *session || self.namespace.name() != expected {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
         Socket::bind_claim(Arc::clone(&self.namespace))
@@ -212,9 +210,7 @@ impl Server {
             stream: None,
         };
         owner.revalidate(&session)?;
-        let socket = session_lock
-            .macos()
-            .bind_socket(crate::identity::MANAGER_ID, &session)?;
+        let socket = session_lock.macos().bind_socket(&session)?;
         Ok(Self {
             socket,
             state: None,
@@ -349,25 +345,26 @@ impl Server {
     }
 }
 
-/// Bounded client exchange; authenticate the manager before transmitting a request.
-pub fn request(manager: &Path, request: &Request) -> io::Result<Response> {
-    request_any(&[fs::canonicalize(manager)?], request)
+/// Bounded client exchange with the manager of `manager_id`; authenticate the
+/// manager before transmitting a request.
+pub fn request(manager_id: &str, manager: &Path, request: &Request) -> io::Result<Response> {
+    request_any(manager_id, &[fs::canonicalize(manager)?], request)
 }
 
 /// Bounded client exchange with whichever image of `package` hosts the session's
-/// manager core: its manager, or a desktop running the core itself. The peer is
-/// admitted only at one of those exact canonical images, owner and session.
-pub fn request_host(package: &Path, request: &Request) -> io::Result<Response> {
+/// manager core for `manager_id`: its manager, or a desktop running the core itself.
+/// The peer is admitted only at one of those exact canonical images, owner and session.
+pub fn request_host(manager_id: &str, package: &Path, request: &Request) -> io::Result<Response> {
     let (_, images) = package_images(package)?;
-    request_any(&images, request)
+    request_any(manager_id, &images, request)
 }
 
-fn request_any(images: &[PathBuf], request: &Request) -> io::Result<Response> {
+fn request_any(manager_id: &str, images: &[PathBuf], request: &Request) -> io::Result<Response> {
     let owner = Process::open(std::process::id())?;
     let session = Login::open()?.current(&owner)?;
     let directory = Directory::installed(false)?;
     let name = super::naming::socket_name(
-        crate::identity::MANAGER_ID,
+        manager_id,
         &session.uid().to_string(),
         &session.id().to_string(),
     )?;

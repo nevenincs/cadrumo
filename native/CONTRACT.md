@@ -1383,8 +1383,8 @@ desktop exists, and with 64 when other arguments follow it. On Windows an
 interactive desktop means a visible window station with an input desktop the
 process can open; on Linux a non-empty `WAYLAND_DISPLAY` or `DISPLAY`; on macOS a
 graphical login session the process belongs to. The macOS window uses the system's
-own title bar controls over the page's header. One window runs per user and
-channel; the [Desktop single instance](#desktop-single-instance) section records
+own title bar controls over the page's header. One window runs per user, channel
+and storage root; the [Desktop single instance](#desktop-single-instance) section records
 that contract.
 
 ### Launch projection and storage root
@@ -1919,20 +1919,27 @@ unless the run should use the default root, build `desktop-run`, and check:
 
 ## Desktop single instance
 
-The desktop GUI holds one lock per user and channel, across installed versions and
-install paths. The names and the protocol below are a cross-version contract: a
-version that changed them would take a separate lock, and two versions could open
-windows at once. The headless CLI passthrough (`cadrumo` with arguments, or
-`--headless`) never opens these objects.
+The desktop GUI holds one lock per user, channel and storage root, across installed
+versions and install paths. The names and the protocol below are a cross-version
+contract: a version that changed them would take a separate lock, and two versions
+could open windows on one root at once. The headless CLI passthrough (`cadrumo` with
+arguments, or `--headless`) never opens these objects.
 
 `<family>` is the application identifier of the generated Tauri configuration: the
 identity projection's `application_id` with its channel suffix, such as
-`md.neve.cadrumo` or `md.neve.cadrumo.preview`. Neither the version nor the install
-path enters a name. `native/platform/src/desktop.rs` implements the Windows side and
+`md.neve.cadrumo` or `md.neve.cadrumo.preview`. `<key>` is `<family>.root.<identity>`,
+where `<identity>` is the 64-digit lowercase hex storage identity of the root the
+launch's environment selects: the digest of the root's physical identity that also
+names the runtime serving that root. The launch resolves the root and creates it
+owner-only when absent before it claims. Two paths to one directory give one key;
+two roots give two keys, so a launch on another root never hands off to an open
+window and opens its own. `src/cadrumo/core/connection_transport.py` declares the
+`.root.` grammar and the shared vectors; `native/application/src/instance_scope.rs`
+consumes them. Neither the version nor the install path enters a name. `native/platform/src/desktop.rs` implements the Windows side and
 `native/desktop/src-tauri/src/shell/single_instance/` the Linux side and the
 desktop's use of both.
 
-On Windows, `<base>` is `Global\<family>.desktop.<SID>`, where `<SID>` is the string
+On Windows, `<base>` is `Global\<key>.desktop.<SID>`, where `<SID>` is the string
 form of the process token user's SID. Named mutexes and events in `Global\` need no
 `SeCreateGlobalPrivilege`.
 
@@ -1968,8 +1975,9 @@ form of the process token user's SID. Named mutexes and events in `Global\` need
   for a request it took before that point can still answer the later claim; the
   holder was then still accepting requests.
 
-The names are predictable: the family is public, and any local account can look up
-another account's SID. Another local account can therefore create any of these
+The names are predictable: the family is public, a root's storage identity follows
+from directory metadata other accounts can often read, and any local account can look
+up another account's SID. Another local account can therefore create any of these
 objects first, from any session and without a privilege. A claimant refuses such an
 object, since it cannot open it with full access or does not own it, so the GUI
 launch exits with 77 and `instance_lock_foreign` while the other account keeps a
@@ -1992,13 +2000,13 @@ access, so no other account can create or reach them.
 
 | Object | Name |
 | --- | --- |
-| Lock | `<family>.desktop.lock`, held with an exclusive `flock` |
-| Activation | `<family>.desktop.session.<session>.activate`, a Unix stream socket the holder binds |
+| Lock | `<key>.desktop.lock`, held with an exclusive `flock` |
+| Activation | `<key>.desktop.session.<session>.activate`, a Unix stream socket the holder binds |
 
 - `<session>` is `XDG_SESSION_ID`, or `unnamed` when it is unset. It is letters,
   digits, `-` and `_`.
 - On taking the lock, the holder removes every
-  `<family>.desktop.session.*.activate` socket, then binds its own.
+  `<key>.desktop.session.*.activate` socket, then binds its own.
 - A claimant connects to its own session's socket and writes nothing. The holder
   reads nothing and writes the byte `0x01` for a request it accepted, on the
   connection that carried it, so a late acknowledgement reaches no later claim.
@@ -2008,7 +2016,7 @@ access, so no other account can create or reach them.
 On macOS the lock and the activation sockets live in the private transient transport
 directory the runtime's sockets use, rechecked against replacement. The names are
 `desktop-<digest>.lock` and `desktop-<digest>-<session>.sock`, where `<digest>` is a
-short digest of the family, since `sun_path` bounds the socket path, and `<session>`
+short digest of the key, since `sun_path` bounds the socket path, and `<session>`
 is the kernel audit session of the graphical login. Claiming, activation and the
 other-session report match Linux. The window that holds the lock establishes
 supervision of the runtime.
@@ -2020,7 +2028,13 @@ supervision of the runtime.
 Every installed version of a channel shares the per-user storage root and these
 coordination names. They are not versioned with an immutable package:
 
-- The session mutex is `Local\\<manager-component-id>.<user-SID>.session.<session>.lock`.
+- The session mutex is `Local\\<manager-id>.<user-SID>.session.<session>.lock`, where
+  `<manager-id>` is the manager component identifier `<application-id>.manager`
+  scoped to the managed storage root as `<manager-component-id>.root.<identity>`, in
+  the same grammar as the desktop's `<key>`. The macOS session lock and manager socket
+  name and the Windows manager pipe use the same `<manager-id>`, so a standalone
+  manager and a desktop hosting the manager core on one root share one owner, and
+  supervisors of different roots in one session never contend.
   It grants access only to that user, verifies the object's owner, and uses the
   Windows kernel's abandoned-mutex behavior. A claimed mutex remains on its
   claiming thread; an existing foreign or wrong-type object is refused.
@@ -2118,8 +2132,9 @@ authenticate a publisher or sandbox a concurrent same-user file writer.
 The desktop dispatches the verified stable entry. After job escape, that entry (or
 an older version's manager) redirects to the selected version before taking the
 session lock or runtime ownership. The successor repeats job escape and catalogue
-verification and resolves the canonical installed default; an override never becomes
-managed through environment clearing. Dispatch still acknowledges launch only.
+verification and manages the root the entry selected: the strict host environment
+carries an operator-selected root variable to it and leaves an installed default for it
+to resolve. A cutover successor receives the same environment. Dispatch still acknowledges launch only.
 
 The exact metadata argument `--supports-retry` returns exit code zero without
 output, before job escape, package discovery or runtime launch. Combined

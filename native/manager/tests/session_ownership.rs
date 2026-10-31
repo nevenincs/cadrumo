@@ -8,7 +8,7 @@
 
 use cadrumo_manager::session::ManagerSession;
 use cadrumo_manager::session::claim::StartClaim;
-use cadrumo_manager::session::instance::claim_session;
+use cadrumo_manager::session::instance::{claim_session, manager_id};
 use cadrumo_manager::session::ownership::{
     Located, ObservedRuntime, Ownership, Role, RuntimeLocator, StartKind, WaitReason,
     reserve_restart,
@@ -533,6 +533,17 @@ fn helper() {
                 return;
             }
         },
+        // As every supervisor of a root claims it: the manager identifier scoped to the root.
+        "root" => {
+            let scoped = manager_id(Path::new(&target)).expect("scope");
+            match claim_session(&scoped, Duration::ZERO).expect("claim") {
+                Some(lock) => Box::new(lock),
+                None => {
+                    report("busy");
+                    return;
+                }
+            }
+        }
         "wait" => Box::new(()),
         other => panic!("unknown helper role {other}"),
     };
@@ -567,6 +578,63 @@ fn a_crashed_claim_holder_does_not_block_a_takeover() {
         );
         thread::sleep(Duration::from_millis(20));
     }
+}
+
+/// Supervisors of one storage root in one session share its session lock, whichever
+/// path names the root, while a supervisor of another root holds a lock of its own.
+/// The standalone manager and a desktop hosting the manager core derive the lock
+/// through the same root scope, so a held root refuses either of them.
+#[cfg(any(windows, target_os = "macos"))]
+#[test]
+fn supervisors_share_one_roots_session_lock_and_other_roots_stay_independent() {
+    let base = Root::new("roots");
+    // Reached without links, since an absent root is created only on such a path.
+    #[cfg(unix)]
+    let directory = std::fs::canonicalize(&base.0).expect("resolved base");
+    #[cfg(windows)]
+    let directory = base.0.clone();
+    let first = directory.join("first");
+    let second = directory.join("second");
+    let (holder, report) = Helper::spawn("root", first.to_str().expect("UTF-8 root"));
+    assert_eq!(report, "holding");
+    // The holder created the absent root to read its identity.
+    assert!(first.is_dir());
+    let same = directory.join("second").join("..").join("first");
+    std::fs::create_dir_all(&second).expect("second root");
+    assert_eq!(
+        manager_id(&same).expect("scope"),
+        manager_id(&first).expect("scope")
+    );
+    assert!(
+        claim_session(
+            &manager_id(&same).expect("scope"),
+            Duration::from_millis(80)
+        )
+        .expect("claim")
+        .is_none(),
+        "a second supervisor of the held root took its session lock"
+    );
+    let (other, report) = Helper::spawn("root", second.to_str().expect("UTF-8 root"));
+    assert_eq!(
+        report, "holding",
+        "another root contended for the held lock"
+    );
+    drop(other);
+    drop(holder);
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let released = loop {
+        if let Some(lock) =
+            claim_session(&manager_id(&first).expect("scope"), Duration::ZERO).expect("claim")
+        {
+            break lock;
+        }
+        assert!(
+            Instant::now() < deadline,
+            "the ended holder's lock was not released"
+        );
+        thread::sleep(Duration::from_millis(20));
+    };
+    drop(released);
 }
 
 /// Real processes held by handle: the session mutex, the observer and the locator.

@@ -107,14 +107,10 @@ pub fn dispatch_newest(
 ) -> io::Result<DispatchOutcome> {
     let mut selected = select(image)?;
     let root = ManagedLocations::resolve(&selected.manager)?;
-    // The successor receives the strict host environment, which clears the root variable,
-    // so an operator root is never dispatched: the successor would manage another root.
-    if !root.is_default_root() {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "entry dispatch manages only the installed default root",
-        ));
-    }
+    // The successor manages the root this entry selected: the strict host environment
+    // carries an operator-selected root and leaves the default for it to resolve.
+    let environment = cadrumo_platform::storage::successor_host_environment(std::env::vars_os())
+        .map_err(io::Error::from)?;
     let release = selected.version.map(|part| part.to_string()).join(".");
     if let Some(previous) = restoration(root.storage_root(), &release, intent)? {
         let contract: DiscoveryContract =
@@ -145,9 +141,7 @@ pub fn dispatch_newest(
         Command::new(selected.manager)
             .args(intent.argument())
             .env_clear()
-            .envs(cadrumo_platform::storage::strict_host_environment(
-                std::env::vars_os(),
-            ))
+            .envs(environment)
             .current_dir(selected.package)
             .stdin(Stdio::null())
             .stdout(Stdio::null())

@@ -8,14 +8,24 @@ from typing import Any
 from cadrumo.core import connection_transport as declaration
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
+# Synthetic storage identities: two roots the scope vectors keep apart.
+_ROOTS = ("0" * 63 + "1", "f" * 64)
+
 
 def transport_section() -> dict[str, Any]:
     """Return platform-neutral declarations, without consulting the build host."""
+    application = PRODUCT_IDENTITY.application_id
+    scopes = [
+        (identifier, root)
+        for identifier in (application, f"{application}.preview", f"{application}.manager")
+        for root in _ROOTS
+    ]
     coordinates = (
-        (f"{PRODUCT_IDENTITY.application_id}.manager", "501", "100008"),
-        (f"{PRODUCT_IDENTITY.application_id}.preview.manager", "501", "100008"),
-        (f"{PRODUCT_IDENTITY.application_id}.manager", "502", "100008"),
-        (f"{PRODUCT_IDENTITY.application_id}.manager", "501", "100009"),
+        (f"{application}.manager", "501", "100008"),
+        (f"{application}.preview.manager", "501", "100008"),
+        (f"{application}.manager", "502", "100008"),
+        (f"{application}.manager", "501", "100009"),
+        *((declaration.root_scoped_identifier(f"{application}.manager", root), "501", "100008") for root in _ROOTS),
     )
     return {
         "darwin_directory": PRODUCT_IDENTITY.python_package,
@@ -25,6 +35,15 @@ def transport_section() -> dict[str, Any]:
         "manager_suffix": declaration.MANAGER_SOCKET_SUFFIX,
         "manager_digest_bytes": declaration.MANAGER_SOCKET_DIGEST_BYTES,
         "manager_max_identifier_bytes": declaration.MANAGER_SOCKET_MAX_IDENTIFIER_BYTES,
+        "instance_root_scope": declaration.INSTANCE_ROOT_SCOPE,
+        "instance_scope_vectors": [
+            {
+                "identifier": identifier,
+                "storage_identity": root,
+                "expected_identifier": declaration.root_scoped_identifier(identifier, root),
+            }
+            for identifier, root in scopes
+        ],
         "manager_vectors": [
             {
                 "manager_id": manager,
@@ -44,6 +63,7 @@ def rust_transport(section: dict[str, Any]) -> list[str]:
         "MANAGER_SOCKET_DOMAIN": "manager_domain",
         "MANAGER_SOCKET_PREFIX": "manager_prefix",
         "MANAGER_SOCKET_SUFFIX": "manager_suffix",
+        "INSTANCE_ROOT_SCOPE": "instance_root_scope",
     }
     lines = [f"pub const {name}: &str = {json.dumps(section[key])};" for name, key in strings.items()]
     lines.extend(
@@ -59,5 +79,16 @@ def rust_transport(section: dict[str, Any]) -> list[str]:
     for vector in section["manager_vectors"]:
         fields = ", ".join(f"{key}: {json.dumps(value)}" for key, value in vector.items())
         lines.append(f"ManagerSocketVector {{ {fields} }},")
+    lines.append("];")
+    lines.extend(
+        [
+            "pub struct InstanceScopeVector { pub identifier: &'static str, pub storage_identity: &'static str, "
+            "pub expected_identifier: &'static str }",
+            "pub const INSTANCE_SCOPE_VECTORS: &[InstanceScopeVector] = &[",
+        ]
+    )
+    for vector in section["instance_scope_vectors"]:
+        fields = ", ".join(f"{key}: {json.dumps(value)}" for key, value in vector.items())
+        lines.append(f"InstanceScopeVector {{ {fields} }},")
     lines.append("];")
     return lines

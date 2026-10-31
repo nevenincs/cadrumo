@@ -13,7 +13,8 @@ fixture-test-mode = []
 live-package-tests = []
 
 [dependencies]
-cadrumo-application = { path = "../application" }
+# The platform feature supplies the storage-root scope of the session lock and IPC name.
+cadrumo-application = { path = "../application", features = ["platform"] }
 cadrumo-platform = { path = "../platform" }
 serde = "1"
 serde_json = "1"
@@ -23,7 +24,7 @@ tokio = { version = "1", features = ["rt", "time", "process"] }
 
 [dev-dependencies]
 # The tests wait for the diagnostic writer through the application's shared helper.
-cadrumo-application = { path = "../application", features = ["diagnostics-test-support"] }
+cadrumo-application = { path = "../application", features = ["platform", "diagnostics-test-support"] }
 
 [target.'cfg(unix)'.dependencies]
 # Descriptor-relative, no-follow calls for the custody primitives.

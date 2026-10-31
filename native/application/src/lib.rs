@@ -32,6 +32,8 @@ pub mod component;
 pub mod diagnostics;
 pub mod error;
 pub mod installation;
+#[cfg(feature = "platform")]
+pub mod instance_scope;
 pub mod package;
 #[cfg(feature = "platform")]
 pub mod person_operations;

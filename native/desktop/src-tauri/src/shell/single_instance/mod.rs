@@ -1,13 +1,17 @@
-//! One desktop window per user, across installed versions and paths.
+//! One desktop window per user and storage root, across installed versions and
+//! paths.
 //!
 //! The lock key is the application identifier of the generated Tauri
-//! configuration: the product identity family with its channel suffix.
-//! Neither the install path nor the version enters it, so every installed
-//! version of one channel shares the lock. A second GUI launch hands
-//! activation to the open window and exits; a newer version launched while
-//! an older window is open activates that window, and the switch completes
-//! when the user closes it. The headless CLI passthrough never takes or
-//! contends for the lock.
+//! configuration, the product identity family with its channel suffix,
+//! scoped to the storage root the launch selects by that root's storage
+//! identity. Neither the install path nor the version enters it, so every
+//! installed version of one channel on one root shares the lock, while a
+//! launch on another root holds a lock of its own and opens its own window.
+//! A second GUI launch on a root hands activation to that root's open window
+//! and exits; a newer version launched while an older window is open on the
+//! same root activates that window, and the switch completes when the user
+//! closes it. The headless CLI passthrough never takes or contends for the
+//! lock.
 //!
 //! The lock spans all of the user's sessions. A window can be brought
 //! forward only in its own session, so a launch in another session sends
@@ -140,9 +144,9 @@ struct Identity {
     identifier: String,
 }
 
-/// The lock key of a generated configuration: its application identifier,
+/// The family of a generated configuration: its application identifier,
 /// which carries the identity family and channel. Nothing else in the
-/// configuration enters it.
+/// configuration enters the lock key; the storage root completes it.
 fn family_of(configuration: &str) -> Result<String> {
     serde_json::from_str::<Identity>(configuration)
         .map(|identity| identity.identifier)
@@ -153,17 +157,29 @@ fn family() -> Result<String> {
     family_of(CONFIGURATION)
 }
 
-/// Admits a launch in `mode`. The GUI claims the lock before any per-user
-/// state is opened; the CLI passthrough returns at once.
-pub fn admit(mode: &Mode) -> Result<Admission> {
-    admit_with(mode, family)
+/// The lock key of `family` for the storage root this process's environment
+/// selects. The root is created when absent, so a first launch has an
+/// identity to claim under.
+fn root_key(family: &str) -> Result<String> {
+    let environment = || ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Launch);
+    let root = cadrumo_platform::storage::resolve_storage_root()
+        .map_err(|e| environment().caused_by(std::io::Error::from(e)))?
+        .root;
+    cadrumo_application::instance_scope::scoped_to_root(family, &root)
+        .map_err(|e| environment().caused_by(e))
 }
 
-fn admit_with(mode: &Mode, family: impl FnOnce() -> Result<String>) -> Result<Admission> {
+/// Admits a launch in `mode`. The GUI claims the lock before any other
+/// per-user state is opened; the CLI passthrough returns at once.
+pub fn admit(mode: &Mode) -> Result<Admission> {
+    admit_with(mode, || root_key(&family()?))
+}
+
+fn admit_with(mode: &Mode, key: impl FnOnce() -> Result<String>) -> Result<Admission> {
     if matches!(mode, Mode::Cli(_) | Mode::Health { .. }) {
         return Ok(Admission::Headless);
     }
-    let admission = claim(&family()?)?;
+    let admission = claim(&key()?)?;
     if let Admission::Primary(primary) = &admission
         && ACTIVATION.set(primary.activation.clone()).is_err()
     {
@@ -512,13 +528,15 @@ $held.Dispose()
 
     /// Runs as a launched instance when the parent test selects a family:
     /// reports its admission, and while it holds the lock counts the
-    /// activation requests until its standard input closes.
+    /// activation requests until its standard input closes. Its key is the
+    /// family scoped to the storage root its environment selects, as a real
+    /// launch derives it.
     #[test]
     fn helper() {
         let Ok(family) = std::env::var(FAMILY_VARIABLE) else {
             return;
         };
-        match admit_with(&Mode::Gui, || Ok(family)).unwrap() {
+        match admit_with(&Mode::Gui, || root_key(&family)).unwrap() {
             Admission::Activated => println!("{REPORT}activated"),
             Admission::Headless => panic!("a GUI launch was admitted headless"),
             Admission::Primary(_primary) => {
@@ -550,7 +568,12 @@ $held.Dispose()
         }
     }
 
-    fn launch(executable: &PathBuf, family: &str, stdin: Stdio) -> std::process::Child {
+    fn launch(
+        executable: &PathBuf,
+        family: &str,
+        root: &std::path::Path,
+        stdin: Stdio,
+    ) -> std::process::Child {
         let mut command = Command::new(executable);
         command
             .args([
@@ -560,6 +583,7 @@ $held.Dispose()
                 "--test-threads=1",
             ])
             .env(FAMILY_VARIABLE, family)
+            .env(cadrumo_platform::ROOT_VARIABLE, root)
             .stdin(stdin)
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit());
@@ -582,18 +606,43 @@ $held.Dispose()
             .collect()
     }
 
-    /// Two installations of one channel at different paths, standing in for
-    /// two versions side by side: a launch of the second activates the first
-    /// and exits 0, and once the first exits the second takes the lock.
-    #[test]
-    fn a_launch_from_another_install_path_activates_the_open_instance() {
+    /// A scratch directory reached without links, since a root reached
+    /// through a link is refused.
+    fn scratch(label: &str) -> Scratch {
         let nanos = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
         let scratch = Scratch(
-            std::env::temp_dir().join(format!("cadrumo-instance-{}-{nanos}", std::process::id())),
+            std::fs::canonicalize(std::env::temp_dir())
+                .unwrap()
+                .join(format!("cadrumo-{label}-{}-{nanos}", std::process::id())),
         );
+        std::fs::create_dir_all(&scratch.0).unwrap();
+        scratch
+    }
+
+    /// Waits for the launched holder to report that it took the lock.
+    fn held(child: &mut Running) -> std::io::Lines<BufReader<std::process::ChildStdout>> {
+        let mut lines = BufReader::new(child.0.stdout.take().unwrap()).lines();
+        assert!(
+            lines
+                .by_ref()
+                .map_while(|line| line.ok())
+                .any(|line| report(&line) == Some("primary")),
+            "the instance did not take the lock"
+        );
+        lines
+    }
+
+    /// Two installations of one channel at different paths on one storage
+    /// root, standing in for two versions side by side: a launch of the
+    /// second activates the first and exits 0, and once the first exits the
+    /// second takes the lock.
+    #[test]
+    fn a_launch_from_another_install_path_activates_the_open_instance() {
+        let scratch = scratch("instance");
+        let root = scratch.0.join("storage");
         let current = std::env::current_exe().unwrap();
         let installs: Vec<PathBuf> = ["1.4.0", "2.0.1"]
             .iter()
@@ -607,17 +656,10 @@ $held.Dispose()
             .collect();
         let family = unique_family("installs");
 
-        let mut first = Running(launch(&installs[0], &family, Stdio::piped()));
-        let mut lines = BufReader::new(first.0.stdout.take().unwrap()).lines();
-        assert!(
-            lines
-                .by_ref()
-                .map_while(|line| line.ok())
-                .any(|line| report(&line) == Some("primary")),
-            "the first installation did not take the lock"
-        );
+        let mut first = Running(launch(&installs[0], &family, &root, Stdio::piped()));
+        let lines = held(&mut first);
 
-        let second = launch(&installs[1], &family, Stdio::null())
+        let second = launch(&installs[1], &family, &root, Stdio::null())
             .wait_with_output()
             .unwrap();
         assert!(second.status.success());
@@ -632,10 +674,56 @@ $held.Dispose()
             "{rest:?}"
         );
 
-        let after = launch(&installs[1], &family, Stdio::null())
+        let after = launch(&installs[1], &family, &root, Stdio::null())
             .wait_with_output()
             .unwrap();
         assert!(after.status.success());
         assert_eq!(reports(&after.stdout), ["primary", "activations=0"]);
+    }
+
+    /// Launches on two storage roots in one session each take a lock of their
+    /// own and stay independent, while a further launch on either root,
+    /// through another spelling of its path, activates that root's holder only.
+    #[test]
+    fn launches_on_different_roots_are_independent_and_one_root_hands_off() {
+        let scratch = scratch("roots");
+        let current = std::env::current_exe().unwrap();
+        let family = unique_family("roots");
+        let first_root = scratch.0.join("first");
+        let second_root = scratch.0.join("second");
+
+        let mut first = Running(launch(&current, &family, &first_root, Stdio::piped()));
+        let first_lines = held(&mut first);
+        // Another root does not hand off to the open instance: it holds its own lock.
+        let mut second = Running(launch(&current, &family, &second_root, Stdio::piped()));
+        let second_lines = held(&mut second);
+
+        let again = launch(
+            &current,
+            &family,
+            &scratch.0.join("second").join("..").join("first"),
+            Stdio::null(),
+        )
+        .wait_with_output()
+        .unwrap();
+        assert!(again.status.success());
+        assert_eq!(reports(&again.stdout), ["activated"]);
+
+        drop(second.0.stdin.take());
+        let rest: Vec<String> = second_lines.map_while(|line| line.ok()).collect();
+        assert!(second.0.wait().unwrap().success());
+        assert!(
+            rest.iter()
+                .any(|line| report(line) == Some("activations=0")),
+            "{rest:?}"
+        );
+        drop(first.0.stdin.take());
+        let rest: Vec<String> = first_lines.map_while(|line| line.ok()).collect();
+        assert!(first.0.wait().unwrap().success());
+        assert!(
+            rest.iter()
+                .any(|line| report(line) == Some("activations=1")),
+            "{rest:?}"
+        );
     }
 }

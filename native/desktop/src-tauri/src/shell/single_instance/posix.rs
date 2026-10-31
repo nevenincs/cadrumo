@@ -1,6 +1,9 @@
 //! The POSIX desktop instance lock: an advisory file lock and per-session
 //! Unix sockets in a per-user directory closed to every other account.
 //!
+//! The caller's key is the channel family scoped to one storage root, so each
+//! root has its own lock and sockets.
+//!
 //! The directory belongs to one user, is shared by that user's sessions and
 //! is refused when other accounts can reach it, so the lock is per user and
 //! no other account can reach a socket. The kernel releases the file lock
@@ -157,8 +160,9 @@ fn names(family: &str) -> Names {
 }
 
 /// `sun_path` holds 104 bytes and the shared transport directory lies deep
-/// under the cache base, so the family enters the names as a short digest.
-/// Collisions only matter between this user's own channel families.
+/// under the cache base, so the key, a channel family scoped to one storage
+/// root, enters the names as a short digest. Collisions only matter between
+/// this user's own keys.
 #[cfg(target_os = "macos")]
 fn names(family: &str) -> Names {
     use sha2::{Digest, Sha256};
@@ -541,6 +545,21 @@ mod tests {
         );
     }
 
+    /// The keys of one family on two storage roots hold two locks at once,
+    /// each answering only its own launches.
+    #[test]
+    fn roots_do_not_contend() {
+        let scratch = Scratch::new("roots");
+        let [first, second] = ["0".repeat(63) + "1", "f".repeat(64)]
+            .map(|root| cadrumo_application::instance_scope::root_scoped(FAMILY, &root).unwrap());
+        let mut held = primary(&scratch.0, &first, SESSION);
+        let count = counting(&mut held, true);
+        assert_eq!(claim(&scratch.0, &second, SESSION).unwrap(), "primary");
+        assert_eq!(count.load(Ordering::SeqCst), 0);
+        assert_eq!(claim(&scratch.0, &first, SESSION).unwrap(), "activated");
+        assert_eq!(count.load(Ordering::SeqCst), 1);
+    }
+
     #[test]
     fn released_lock_passes_on_and_stale_sockets_are_swept() {
         let scratch = Scratch::new("release");
@@ -706,5 +725,19 @@ mod tests {
         let widest = names(&long).socket(&format!("{:x}", u32::MAX));
         assert_eq!(widest.len(), 34, "{widest}");
         assert!(file_name_part(&widest, 64));
+        let scoped = |family: &str, root: &str| {
+            names(&cadrumo_application::instance_scope::root_scoped(family, root).unwrap())
+        };
+        let (one, other) = ("0".repeat(63) + "1", "f".repeat(64));
+        let first = scoped("md.neve.cadrumo", &one);
+        for different in [
+            scoped("md.neve.cadrumo", &other),
+            scoped("md.neve.cadrumo.preview", &one),
+            stable,
+        ] {
+            assert_ne!(first.prefix, different.prefix);
+            assert_ne!(first.lock, different.lock);
+        }
+        assert_eq!(first.socket(&format!("{:x}", u32::MAX)).len(), 34);
     }
 }

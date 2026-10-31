@@ -485,6 +485,43 @@ pub fn strict_host_environment(
         .collect()
 }
 
+/// The strict host environment for a successor that must manage the root `ambient`
+/// selects. The root variable is carried when it selected the root, since the strict
+/// classes clear it; an installed default stays for the successor to resolve itself.
+pub fn successor_host_environment(
+    ambient: impl IntoIterator<Item = (OsString, OsString)>,
+) -> Result<Vec<(OsString, OsString)>, Refusal> {
+    let ambient: Vec<(OsString, OsString)> = ambient.into_iter().collect();
+    let resolved = resolve_storage_root_with(&|name| {
+        ambient
+            .iter()
+            .rev()
+            .find(|(key, _)| environment_name_matches(key, name))
+            .map(|(_, value)| value.clone())
+    })?;
+    let mut environment = strict_host_environment(ambient);
+    if resolved.source == RootSource::Override {
+        environment.push((
+            OsString::from(ROOT_VARIABLE),
+            resolved.root.into_os_string(),
+        ));
+    }
+    Ok(environment)
+}
+
+/// Create the selected storage root owner-only when it is absent, so that a first
+/// launch has a physical identity to scope its instance names by. An existing root
+/// is left as it is.
+pub fn create_storage_root(root: &Path) -> std::io::Result<()> {
+    match std::fs::symlink_metadata(root) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            crate::create_private_directory(&crate::normalize_absolute_path(root)?)
+        }
+        Err(error) => Err(error),
+        Ok(_) => Ok(()),
+    }
+}
+
 /// Whether `ambient` carries a host-inherited pin such as the authority root.
 ///
 /// A launcher that must derive authority only from its own package refuses up front.
@@ -810,5 +847,79 @@ mod tests {
             .iter()
             .map(|name| (OsString::from(name), OsString::new()));
         assert!(!authority_override_present(blank));
+    }
+}
+
+#[cfg(test)]
+mod successor_tests {
+    use super::*;
+
+    fn named<'a>(environment: &'a [(OsString, OsString)], name: &str) -> Vec<&'a OsString> {
+        environment
+            .iter()
+            .filter(|(key, _)| environment_name_matches(key, name))
+            .map(|(_, value)| value)
+            .collect()
+    }
+
+    fn home() -> (OsString, OsString) {
+        let name = if cfg!(windows) { "USERPROFILE" } else { "HOME" };
+        (
+            OsString::from(name),
+            env::var_os(name).unwrap_or_else(|| env::temp_dir().into_os_string()),
+        )
+    }
+
+    #[test]
+    fn a_successor_keeps_a_selected_root_and_resolves_the_default_itself() {
+        // Resolved, since a root reached through a link is refused.
+        let root = std::fs::canonicalize(env::temp_dir())
+            .unwrap()
+            .join("cadrumo-successor-root");
+        let selected = successor_host_environment([
+            home(),
+            (OsString::from(ROOT_VARIABLE), root.clone().into_os_string()),
+            (OsString::from("CADRUMO_UNDECLARED"), OsString::from("x")),
+        ])
+        .unwrap();
+        let carried = validated_absolute_path(&root).unwrap().into_os_string();
+        assert_eq!(named(&selected, ROOT_VARIABLE), [&carried]);
+        assert!(named(&selected, "CADRUMO_UNDECLARED").is_empty());
+        assert_eq!(named(&selected, home().0.to_str().unwrap()).len(), 1);
+
+        let default = successor_host_environment([home()]).unwrap();
+        assert!(named(&default, ROOT_VARIABLE).is_empty());
+        // A relative root selects nothing and refuses the successor.
+        assert!(
+            successor_host_environment([
+                home(),
+                (OsString::from(ROOT_VARIABLE), OsString::from("relative"))
+            ])
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn an_absent_root_is_created_owner_only_and_an_existing_one_is_kept() {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let base = std::fs::canonicalize(env::temp_dir())
+            .unwrap()
+            .join(format!("cadrumo-root-{}-{nanos}", std::process::id()));
+        let root = base.join("storage");
+        create_storage_root(&root).unwrap();
+        assert!(root.is_dir());
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = std::fs::metadata(&root).unwrap().permissions().mode();
+            assert_eq!(mode & 0o077, 0, "{mode:o}");
+        }
+        std::fs::write(root.join("kept"), b"").unwrap();
+        create_storage_root(&root).unwrap();
+        assert!(root.join("kept").exists());
+        std::fs::remove_dir_all(&base).unwrap();
     }
 }
