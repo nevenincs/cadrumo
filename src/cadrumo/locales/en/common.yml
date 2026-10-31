@@ -1093,6 +1093,13 @@ desktop:
     not_bundled: Documentation is not available in this installation.
     show: Show the docs
     unavailable: The documentation couldn't be opened. Try again later.
+  editor:
+    date:
+      month: Month
+      next_month: Next month
+      open: Choose date
+      previous_month: Previous month
+      year: Year
   error:
     internal: An internal error occurred. Open Logs for details.
   google:

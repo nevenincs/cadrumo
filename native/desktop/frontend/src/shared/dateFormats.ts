@@ -18,6 +18,14 @@ const makeFormats = (locale: string) => ({
     dateStyle: "medium",
     timeZone: "UTC",
   }),
+  // The same day in the figures a person types it in.
+  isoDayFigures: new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }),
+  monthName: new Intl.DateTimeFormat(locale, { month: "long" }),
   isoDayNoYear: new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
@@ -85,6 +93,44 @@ export function formatDay(
     const named = dateFormats(locale);
     return (withYear ? named.isoDay : named.isoDayNoYear).format(date);
   });
+}
+
+/** A calendar date in the figures a person types it in, in the locale's order.
+ * Text that names no real day is returned as it came. */
+export function formatDayFigures(locale: string, iso: string): string {
+  const date = utcDay(iso);
+  return date ? dateFormats(locale).isoDayFigures.format(date) : iso;
+}
+
+type DayPart = "day" | "month" | "year";
+
+/** The order the locale writes a date's parts in. */
+export function dayOrderOf(locale: string): DayPart[] {
+  return dateFormats(locale)
+    .isoDayFigures.formatToParts(0)
+    .flatMap((part): DayPart[] =>
+      part.type === "day" || part.type === "month" || part.type === "year"
+        ? [part.type]
+        : [],
+    );
+}
+
+const TYPED_DAY = /^(\d+)[-/.\s]+(\d+)[-/.\s]+(\d+)[.\s]*$/;
+
+/** The ISO day a typed date names: in the locale's order, or year first as ISO
+ * writes it. Null when it names no real day, or leaves the century to a guess
+ * by giving fewer than four year digits. */
+export function readLocaleDay(locale: string, raw: string): string | null {
+  const found = TYPED_DAY.exec(raw.trim());
+  if (!found) return null;
+  const figures = [found[1], found[2], found[3]] as string[];
+  const order: DayPart[] =
+    figures[0]?.length === 4 ? ["year", "month", "day"] : dayOrderOf(locale);
+  const at = (part: DayPart) => figures[order.indexOf(part)] ?? "";
+  const [year, month, day] = [at("year"), at("month"), at("day")];
+  if (year.length !== 4 || month.length > 2 || day.length > 2) return null;
+  const iso = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  return utcDay(iso) ? iso : null;
 }
 
 /** A moment, as the person's clock reads it. A date without a time is not a

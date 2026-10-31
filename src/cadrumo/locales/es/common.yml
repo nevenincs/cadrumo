@@ -1132,6 +1132,13 @@ desktop:
     not_bundled: La documentación no está disponible en esta instalación.
     show: Mostrar la documentación
     unavailable: No se ha podido abrir la documentación. Inténtalo más tarde.
+  editor:
+    date:
+      month: Mes
+      next_month: Mes siguiente
+      open: Elige la fecha
+      previous_month: Mes anterior
+      year: Año
   error:
     internal: Se ha producido un error interno. Abre los registros para ver los detalles.
   google:

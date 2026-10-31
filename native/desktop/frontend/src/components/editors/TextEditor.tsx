@@ -1,41 +1,30 @@
 import type { EditorProps } from "@/components/editors/editorProps";
+import { EntryInput } from "@/components/editors/EntryInput";
 import { cn } from "@/components/ui/cn";
-import { Input } from "@/components/ui/input";
+
+const PLAIN = {
+  read: (typed: string) => typed,
+  shown: (value: string) => value,
+  typed: (value: string) => value,
+};
 
 /** One line of free text. Text has nothing to read, so `mode` changes nothing:
  * the value is what was typed, and the model checks it. */
 export function TextEditor({
-  value,
-  onChange,
-  id,
-  invalid,
-  describedBy,
-  disabled,
-  controlSize,
-  maxLength,
   mono,
   type = "text",
-  autoComplete = "off",
+  className,
+  ...editor
 }: EditorProps & {
-  maxLength?: number;
   mono?: boolean;
   type?: "text" | "email" | "tel" | "url";
-  autoComplete?: string;
 }) {
   return (
-    <Input
-      id={id}
+    <EntryInput
+      {...editor}
+      reading={PLAIN}
       type={type}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      controlSize={controlSize}
-      disabled={disabled}
-      maxLength={maxLength}
-      autoComplete={autoComplete}
-      spellCheck={false}
-      aria-invalid={invalid || undefined}
-      aria-describedby={describedBy}
-      className={cn(mono && "font-mono")}
+      className={cn(mono && "font-mono", className)}
     />
   );
 }

@@ -1106,6 +1106,13 @@ desktop:
     not_bundled: A dokumentáció ebben a telepítésben nem érhető el.
     show: Dokumentáció megjelenítése
     unavailable: A dokumentációt nem sikerült megnyitni. Próbáld újra később.
+  editor:
+    date:
+      month: Hónap
+      next_month: Következő hónap
+      open: Válassz dátumot
+      previous_month: Előző hónap
+      year: Év
   error:
     internal: Belső hiba történt. A részleteket a naplóban találod.
   google:

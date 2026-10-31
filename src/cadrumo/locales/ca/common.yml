@@ -1126,6 +1126,13 @@ desktop:
     not_bundled: La documentació no està disponible en aquesta instal·lació.
     show: Mostra la documentació
     unavailable: No s'ha pogut obrir la documentació. Torna-ho a provar més tard.
+  editor:
+    date:
+      month: Mes
+      next_month: Mes següent
+      open: Tria la data
+      previous_month: Mes anterior
+      year: Any
   error:
     internal: S'ha produït un error intern. Obre els registres per veure'n els detalls.
   google:
