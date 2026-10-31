@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
@@ -60,6 +60,7 @@ from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...tests.aeat_literal_fixtures import (
     SEDE_NOTIFICATIONS_URL_FIXTURE,
 )
+from .capture_stand_in_support import RecordingExecutionAuthority, RecordingResources
 from .supervised_operation_rig import run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -116,44 +117,6 @@ class _Cancellation:
             yield
         finally:
             self.events.append("guard-exit")
-
-
-class _ExecutionAuthority:
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-
-    async def require(self, *, identity: object, request: object, action: AccessAction) -> None:
-        assert identity is not None and request is not None
-        self.events.append(f"require:{action.value}")
-
-    @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
-        assert identity is not None
-        self.events.append("guard-enter")
-        try:
-            yield
-        finally:
-            self.events.append("guard-exit")
-
-
-class _Resources:
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self):
-        self.events.append("resources-activate")
-        try:
-            yield
-        finally:
-            self.events.append("resources-deactivate")
-
-    async def close(self) -> None:
-        self.closed = True
-        self.close_calls += 1
-        self.events.append("resources-close")
 
 
 class _Operands:
@@ -240,7 +203,7 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
         browser_session_factory=object(),
         operator_scope_ports=object(),
     )
-    resources = _Resources(events)
+    resources = RecordingResources(events)
 
     with bundled_indexed_authority().operation() as authority:
         context = _Context(events, authority=authority)
@@ -326,7 +289,7 @@ def _supervised_capture(
     OperationRequest[NotificationsCaptureRequest],
     OperationJournalRepository,
     Any,
-    list[_Resources],
+    list[RecordingResources],
 ]:
     """Compose the registered capture under a real supervisor with the given snapshot query."""
     from ...application.live import notifications as notifications_module
@@ -343,7 +306,7 @@ def _supervised_capture(
         browser_session_factory=object(),
         operator_scope_ports=object(),
     )
-    resources: list[_Resources] = []
+    resources: list[RecordingResources] = []
     monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
 
     async def active_session(**kwargs: object) -> tuple[object, object]:
@@ -359,8 +322,8 @@ def _supervised_capture(
         assert pinned_authority is authority
         events.append("provider-preflight")
 
-    def resources_factory() -> _Resources:
-        resource = _Resources(events)
+    def resources_factory() -> RecordingResources:
+        resource = RecordingResources(events)
         resources.append(resource)
         return resource
 
@@ -402,7 +365,7 @@ def _supervised_capture(
         lease_token_factory=lambda: "2" * 64,
         clock=lambda: _NOW,
         lease_duration=timedelta(minutes=5),
-        execution_authority=_ExecutionAuthority(events),
+        execution_authority=RecordingExecutionAuthority(events),
     )
     return supervisor, registry, request, journal, operands, resources
 

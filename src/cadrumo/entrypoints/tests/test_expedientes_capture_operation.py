@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
@@ -57,6 +57,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .capture_stand_in_support import RecordingExecutionAuthority, RecordingResources
 from .supervised_operation_rig import assert_foreign_profile_refused, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -86,44 +87,6 @@ class _SnapshotRepository:
     def save(self, snapshot: PersistedExpedientesSnapshot) -> None:
         self.events.append("snapshot-save")
         self.snapshots[str(snapshot.snapshot_id)] = snapshot
-
-
-class _Resources:
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self):
-        self.events.append("resources-activate")
-        try:
-            yield
-        finally:
-            self.events.append("resources-deactivate")
-
-    async def close(self) -> None:
-        self.closed = True
-        self.close_calls += 1
-        self.events.append("resources-close")
-
-
-class _ExecutionAuthority:
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-
-    async def require(self, *, identity: object, request: object, action: AccessAction) -> None:
-        assert identity is not None and request is not None
-        self.events.append(f"require:{action.value}")
-
-    @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
-        assert identity is not None
-        self.events.append("guard-enter")
-        try:
-            yield
-        finally:
-            self.events.append("guard-exit")
 
 
 def _declaration(modelo: str = "303") -> ExpedientesDeclaration:
@@ -185,7 +148,7 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
             declaration_reader=cast(Any, Reader()),
             snapshot_repository_factory=lambda bucket_id: cast(SnapshotRepository[Any], repository),
         )
-        resources: list[_Resources] = []
+        resources: list[RecordingResources] = []
         provider_calls: list[tuple[UUID, PinnedAuthorityOperation]] = []
 
         async def active_session(**kwargs: object) -> tuple[object, object]:
@@ -201,8 +164,8 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
             provider_calls.append((profile_arg, pinned))
             events.append("provider-preflight")
 
-        def resources_factory() -> _Resources:
-            resource = _Resources(events)
+        def resources_factory() -> RecordingResources:
+            resource = RecordingResources(events)
             resources.append(resource)
             return resource
 
@@ -246,7 +209,7 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
             lease_token_factory=lambda: "2" * 64,
             clock=lambda: _NOW,
             lease_duration=timedelta(minutes=5),
-            execution_authority=_ExecutionAuthority(events),
+            execution_authority=RecordingExecutionAuthority(events),
         )
         result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
@@ -383,7 +346,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
             assert getattr(family, "value", family) == "process"
             events.append("process-owned")
 
-    resources = _Resources(events)
+    resources = RecordingResources(events)
     operands = Operands()
     context = SimpleNamespace(
         identity=identity,
