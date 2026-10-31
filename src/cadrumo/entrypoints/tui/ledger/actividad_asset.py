@@ -44,10 +44,10 @@ from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
 from .actividad_asset_words import (
+    form_options_text,
     limits_line,
     list_row_line,
     plan_row_line,
-    quarters_text,
     reason_text,
     timeline_line,
 )
@@ -606,17 +606,8 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 AssetKind(self.query_one("#asset-options-kind", Input).value),
                 self._stated_filing_year(),
             )
-            message = (
-                f"methods={','.join(method.value for method in options.methods)}"
-                f"\ttable_groups={len(options.table_groups)}\tedition={options.edition.revision_id}"
-            )
-            if not options.m130_periods:
-                return _ActivityAssetScreenResult(message=message)
-            # The latest served quarter shows the most cumulative handoff.
-            return _ActivityAssetScreenResult(
-                message=f"{message}\t{quarters_text(options.m130_periods)}",
-                fills=(("asset-filing-m130-period", options.m130_periods[-1]),),
-            )
+            # The quarter stays the operator's choice: the served ones are listed, none is preselected.
+            return _ActivityAssetScreenResult(message=form_options_text(options))
         if button_id == "asset-acquisition-candidates":
             return _ActivityAssetScreenResult(
                 message="\n".join(

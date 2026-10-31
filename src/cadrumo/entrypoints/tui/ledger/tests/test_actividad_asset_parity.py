@@ -496,7 +496,7 @@ async def test_activity_asset_list_does_not_read_a_pending_that_does_not_apply_a
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(100, 60)) as pilot:
             await _activate(pilot=pilot, screen=screen, selector="#asset-list")
-            listing = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="laptop")
+            listing = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Office laptop")
         not_applicable = tr("desktop.ledger.assets.mark.not_applicable")
         in_service = tr("ledger.actividad_asset.register_state.in_service")
         remedy = tr(
@@ -504,7 +504,7 @@ async def test_activity_asset_list_does_not_read_a_pending_that_does_not_apply_a
             field=tr("ledger.actividad_asset.field.opening_history.accumulated_amount"),
         )
 
-    rows = {line.split("\t")[0]: line for line in listing.splitlines()}
+    rows = {line.split("\t")[-1]: line for line in listing.splitlines()}
     assert "1,480.00" in rows["laptop"]
     assert "[!] 2" in rows["laptop"]
     assert remedy in rows["desk"]
@@ -566,7 +566,7 @@ async def test_activity_asset_screen_opens_with_no_dates_year_or_quarter_of_its_
 
 
 @pytest.mark.asyncio
-async def test_activity_asset_reads_fill_the_year_the_claim_dates_and_the_quarter_from_what_they_serve() -> None:
+async def test_activity_asset_reads_fill_the_year_and_the_claim_dates_but_leave_the_quarter_to_the_operator() -> None:
     revision = activity_asset_revision("laptop")
     options = activity_asset_form_options(m130_periods=("1T", "2T", "3T"))
     actions = ActivityAssetActionStub(
@@ -575,20 +575,26 @@ async def test_activity_asset_reads_fill_the_year_the_claim_dates_and_the_quarte
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
-    async with app.run_test(size=(100, 60)) as pilot:
-        await _activate(pilot=pilot, screen=screen, selector="#asset-list")
-        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="laptop")
-        assert screen.query_one("#asset-filing-tax-year", Input).value == "2031"
+    with override_settings(cadrumo_output_language="en"):
+        async with app.run_test(size=(100, 60)) as pilot:
+            await _activate(pilot=pilot, screen=screen, selector="#asset-list")
+            await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Office laptop")
+            assert screen.query_one("#asset-filing-tax-year", Input).value == "2031"
 
-        screen.query_one("#asset-id", Input).value = "laptop"
-        await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
-        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
-        assert screen.query_one("#asset-covered-from", Input).value == "2025-01-01"
-        assert screen.query_one("#asset-covered-until", Input).value == "2026-01-01"
+            screen.query_one("#asset-id", Input).value = "laptop"
+            await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
+            await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
+            assert screen.query_one("#asset-covered-from", Input).value == "2025-01-01"
+            assert screen.query_one("#asset-covered-until", Input).value == "2026-01-01"
 
-        await _activate(pilot=pilot, screen=screen, selector="#asset-form-options")
-        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="methods=")
-        assert screen.query_one("#asset-filing-m130-period", Input).value == "3T"
+            await _activate(pilot=pilot, screen=screen, selector="#asset-form-options")
+            shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Method")
+            # The served quarters are listed, and none is chosen for the operator.
+            assert "1T, 2T, 3T" in shown
+            assert screen.query_one("#asset-filing-m130-period", Input).value == ""
+            assert "methods=" not in shown
+            assert "edition=" not in shown
+            assert "fixture-edition" not in shown
 
     assert ("form_options", (AssetKind.MATERIAL, 2031)) in actions.requests
 
@@ -603,7 +609,7 @@ async def test_activity_asset_reads_leave_what_the_operator_typed() -> None:
     async with app.run_test(size=(100, 60)) as pilot:
         screen.query_one("#asset-filing-tax-year", Input).value = "2029"
         await _activate(pilot=pilot, screen=screen, selector="#asset-list")
-        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="laptop")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Office laptop")
         assert screen.query_one("#asset-filing-tax-year", Input).value == "2029"
 
 

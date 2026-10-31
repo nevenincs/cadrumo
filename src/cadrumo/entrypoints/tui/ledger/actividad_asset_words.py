@@ -16,6 +16,7 @@ from ....application.actividad_asset.activity_asset_read_models import (
     ACTIVITY_ASSET_LABEL_NAMESPACE,
     ActivityAssetClaimState,
     ActivityAssetElectionLimits,
+    ActivityAssetFormOptionsView,
     ActivityAssetListDisposal,
     ActivityAssetListRow,
     ActivityAssetPlanRow,
@@ -57,6 +58,7 @@ _ASSET_KEYS: Final = {
     "planned_missing": "desktop.ledger.assets.plan.planned_missing",
     "minimum_missing": "desktop.ledger.assets.plan.minimum_missing",
     "claimable_none": "desktop.ledger.assets.plan.claimable_none",
+    "edition": "desktop.ledger.assets.plan.edition",
     "year_estimated": "desktop.ledger.assets.year_estimated",
     "limits_ends_on": "desktop.ledger.assets.plan.limits.ends_on",
     "time_not_recorded": "desktop.ledger.assets.timeline.time_not_recorded",
@@ -177,9 +179,11 @@ def list_row_line(row: ActivityAssetListRow) -> str:
     attention = " ".join(
         f"[{glyph}] {count}" for name, glyph in _FINDING_GLYPHS if (count := getattr(row.findings, name)) > 0
     )
-    fields = [row.asset_id, row.name or _text("no_name"), state, pending]
+    fields = [row.name or _text("no_name"), state, pending]
     if attention:
         fields.append(attention)
+    # The id comes last: it is only what the asset field needs to address the element.
+    fields.append(row.asset_id)
     return "\t".join(fields)
 
 
@@ -260,6 +264,21 @@ def plan_row_line(row: ActivityAssetPlanRow, *, minimum_label: str, minimum_inco
     return "\t".join(fields)
 
 
+def form_options_text(options: ActivityAssetFormOptionsView) -> str:
+    """Say what the registry admits for the kind and year: the methods, table groups and the tables' edition."""
+    fields = [
+        f"{tr('desktop.ledger.assets.field.method')}: "
+        + ", ".join(token_word("method", method.value) for method in options.methods),
+    ]
+    if options.table_groups:
+        groups = ", ".join(group.class_label for group in options.table_groups)
+        fields.append(f"{tr('desktop.ledger.assets.field.class')}: {groups}")
+    fields.append(_text("edition", edition=options.edition.authored_filing_year))
+    if options.m130_periods:
+        fields.append(quarters_text(options.m130_periods))
+    return "\t".join(fields)
+
+
 def quarters_text(periods: tuple[str, ...]) -> str:
     """Say the Modelo 130 periods the registry serves for the year."""
     return f"{_text('quarter')}: {', '.join(periods)}"
@@ -323,6 +342,7 @@ __all__ = [
     "baja_text",
     "claim_state_text",
     "date_text",
+    "form_options_text",
     "limits_line",
     "list_row_line",
     "minimum_text",
