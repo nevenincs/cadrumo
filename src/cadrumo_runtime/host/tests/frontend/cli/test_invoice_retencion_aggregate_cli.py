@@ -50,7 +50,6 @@ from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.i18n.render import lookup_translation
@@ -64,14 +63,8 @@ from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 
-from .native_api_cli_support import native_api_cli_session
+from .native_api_cli_support import native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [
@@ -204,42 +197,6 @@ _M111_PROFILE_FACTS = (
 )
 
 
-def _capture_scope(client_id: UUID) -> AccessScope:
-    """Grant only invoice capture, with all-period catalogue lookup authority."""
-    return AccessScope(
-        operations=frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID}),
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=f"{MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID}.result",
-                    category=DisclosureCategory.TAX_VALUES,
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
-
-
 def _m111_capture_profile_preparer(
     authority_operation: PinnedAuthorityOperation,
     invoice_factory: Callable[[str], Invoice],
@@ -307,7 +264,9 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _professional_services_invoice(bucket_id=bucket_id),
@@ -370,7 +329,9 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _professional_services_invoice(
@@ -524,7 +485,9 @@ def test_issued_invoice_retencion_is_refused_and_not_routed(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _professional_services_invoice(
@@ -584,7 +547,9 @@ def test_an_invoice_with_two_defects_is_refused_naming_both(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _professional_services_invoice(
@@ -698,7 +663,9 @@ def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _producer_created_invoice(
@@ -774,7 +741,9 @@ def test_producer_without_retention_is_excluded_from_m111(
     """
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(
+            frozenset({MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID})
+        ),
         prepare_profile=_m111_capture_profile_preparer(
             authority_operation,
             lambda bucket_id: _producer_created_invoice(

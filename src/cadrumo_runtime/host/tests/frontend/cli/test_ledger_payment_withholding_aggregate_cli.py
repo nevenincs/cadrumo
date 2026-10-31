@@ -34,7 +34,6 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from cadrumo.application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave
 from cadrumo.core.period import Period
@@ -45,14 +44,8 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [
@@ -94,41 +87,6 @@ _M111_PROFILE_FACTS = (
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
     UserProfileFact(path="withholding.colegio_concertado", value=False),
 )
-
-
-def _capture_scope(client_id: UUID) -> AccessScope:
-    return AccessScope(
-        operations=frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID}),
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=f"{MODELO_AGGREGATE_OPERATION_DEFINITION_ID}.result",
-                    category=DisclosureCategory.TAX_VALUES,
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
 
 
 def _payroll_profile_preparer(
@@ -262,7 +220,7 @@ def test_ledger_payroll_payment_reaches_m111_work_casillas_and_replays_idempoten
     """A captured payslip moves casillas 01/02/03, and the identical replay changes nothing."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_payroll_profile_preparer(authority_operation),
         invoke_cli=run_cadrumo_cli,
     ) as session:
@@ -304,7 +262,7 @@ def test_ledger_payroll_capture_refuses_an_unknown_transaction(
     """A transaction id the ledger does not hold writes nothing."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_payroll_profile_preparer(authority_operation),
         invoke_cli=run_cadrumo_cli,
     ) as session:
@@ -321,7 +279,7 @@ def test_ledger_payroll_capture_refuses_a_second_transport_and_other_modelos(
     """The payroll flag cannot share a command with invoice evidence or a second payment, nor leave Modelo 111."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_payroll_profile_preparer(authority_operation),
         invoke_cli=run_cadrumo_cli,
     ) as session:
@@ -365,7 +323,7 @@ def test_ledger_payroll_capture_refuses_a_large_company_whose_modelo_111_is_mont
     """The stored profile makes Modelo 111 monthly, so the quarterly capture is refused and writes nothing."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_payroll_profile_preparer(
             authority_operation,
             extra_facts=(UserProfileFact(path="censo.large_company", value=True),),
