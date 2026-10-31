@@ -112,7 +112,7 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   await kind(target, "received");
   await draft(target).locator(".ledger-draft-country-read").click();
   await expect(draft(target).locator(".ledger-draft-country")).toHaveValue(
-    /^ESb/,
+    /^ES\b/,
   );
   // The button that answered the country went away: confirming is next.
   await expect(confirm).toBeFocused();
