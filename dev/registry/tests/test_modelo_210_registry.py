@@ -424,7 +424,7 @@ def test_modelo_210_interest_rate_is_grounded_in_unconditional_art_25_1_f() -> N
     assert any(
         "Intereses y otros rendimientos obtenidos por la cesion a terceros" in text for text in art_25_1_f.required_text
     )
-    assert "condicion de residencia UE/EEE" in (art_25_1_f.notes or "")
+    assert "condición de residencia UE/EEE" in (art_25_1_f.notes or "")
 
     corpus_paragraph = _trlirnr_corpus_paragraph("a25-1-f")
     assert "Intereses y otros rendimientos obtenidos por la cesion a terceros" in corpus_paragraph
@@ -457,7 +457,7 @@ def test_modelo_210_dividend_rate_is_grounded_in_unconditional_art_25_1_f() -> N
         "Dividendos y otros rendimientos derivados de la participacion en los fondos propios de una entidad" in text
         for text in art_25_1_f.required_text
     )
-    assert "condicion de residencia UE/EEE" in (art_25_1_f.notes or "")
+    assert "condición de residencia UE/EEE" in (art_25_1_f.notes or "")
 
     corpus_paragraph = _trlirnr_corpus_paragraph("a25-1-f")
     assert "Dividendos y otros rendimientos derivados de la participacion en los fondos propios" in corpus_paragraph

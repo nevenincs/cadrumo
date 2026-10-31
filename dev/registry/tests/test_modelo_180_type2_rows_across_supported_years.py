@@ -40,7 +40,7 @@ from cadrumo.domain.calculations.registry.schema import BindingDefinition, Model
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_shared_catalogues
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _MODELO = "180"
 _PERIOD = "0A"
