@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -23,11 +24,13 @@ from dev.docs.language_roots import (
     text_file,
 )
 
+from . import docs_scan
+from .assembly_transaction import AssemblyReuse
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
 from .docs_errors import DocsPackagingError
-from .docs_scan import ServedMediaTypes, csp_hash, scan_page, scan_stylesheet, served_media_types
+from .docs_scan import Refusal, ServedMediaTypes, csp_hash, scan_page, scan_stylesheet, served_media_types
 from .hashing import digest
 from .layout import load_layout
 from .package_inventory import checked_member
@@ -36,6 +39,10 @@ from .package_inventory import checked_member
 # fingerprint and the copied page sources. None of it is read by a reader.
 BUILD_STATE = frozenset({".doctrees", ".buildinfo", "_sources"})
 STAGED_PAYLOAD = "user"
+# Beside the payload: the next payload while it is checked, and the scan findings it reuses.
+CANDIDATE = "next"
+SCAN_CACHE = "scan-cache.json"
+SCAN_CACHE_SCHEMA = 1
 # The owner's language switcher links the default language at the site apex and every
 # other language one directory down, so those stay the addresses the package answers.
 # What it stores is one structure and each language's text; the manifest says which
@@ -103,24 +110,99 @@ def _shippable_files(root: Path) -> list[Path]:
     return sorted(files)
 
 
+def _cached_refusals(value: object) -> list[Refusal] | None:
+    """Decode refusal reasons and source lines from a previous scan."""
+    if not isinstance(value, list):
+        return None
+    decoded: list[Refusal] = []
+    for item in value:
+        if not isinstance(item, list) or len(item) != 2 or not isinstance(item[0], str) or type(item[1]) is not int:
+            return None
+        decoded.append(Refusal(item[0], item[1]))
+    return decoded
+
+
+def _cached_findings(value: object) -> tuple[list[str], list[Refusal]] | None:
+    """Accept only well-formed cached findings; malformed entries must be rescanned."""
+    if not isinstance(value, list) or len(value) != 2:
+        return None
+    hashes, raw_refusals = value
+    if not isinstance(hashes, list) or not all(isinstance(item, str) for item in hashes):
+        return None
+    decoded = _cached_refusals(raw_refusals)
+    if decoded is None:
+        return None
+    return list(hashes), decoded
+
+
+class _ScanMemo:
+    """Each page's and stylesheet's scan findings, keyed by its bytes and by what judged them.
+
+    A rebuild of the documentation rewrites every file but changes few, so a file
+    whose bytes were already judged by this scanner under this media-type table is
+    not parsed again. Only entries a run looked up are written back.
+    """
+
+    def __init__(self, path: Path, declaration: Mapping[str, object]) -> None:
+        self.path = path
+        judge = hashlib.sha256(Path(docs_scan.__file__).read_bytes())
+        judge.update(json.dumps(declaration["media_types"], sort_keys=True).encode("utf-8"))
+        self.judge = judge.hexdigest()
+        self.read = 0
+        self.scanned = 0
+        self.current: dict[str, list[object]] = {}
+        self.previous: dict[str, object] = {}
+        try:
+            stored: object = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            stored = None
+        if isinstance(stored, dict):
+            record = cast(dict[str, object], stored)
+            findings = record.get("findings")
+            if record.get("schema") == SCAN_CACHE_SCHEMA and record.get("judge") == self.judge:
+                self.previous = cast(dict[str, object], findings) if isinstance(findings, dict) else {}
+
+    def findings(self, kind: str, source: Path, media_types: ServedMediaTypes) -> tuple[list[str], list[Refusal]]:
+        """Return a file's inline-script hashes and refusals, scanning it only when its bytes are new."""
+        content = source.read_bytes()
+        self.read += 1
+        key = f"{kind}:{hashlib.blake2b(content, digest_size=32).hexdigest()}"
+        known = _cached_findings(self.previous.get(key))
+        if known is not None:
+            result = known
+        else:
+            # Universal newlines, exactly as reading the file as text gives it.
+            text = content.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+            if kind == "text/html":
+                page = scan_page(text, media_types)
+                result = ([csp_hash(script) for script in page.inline_scripts], page.refused)
+            else:
+                result = (list[str](), scan_stylesheet(text, media_types))
+            self.scanned += 1
+        self.current[key] = [result[0], [[refusal.reason, refusal.line] for refusal in result[1]]]
+        return result
+
+    def save(self) -> None:
+        """Write back the findings this run used."""
+        record = {"schema": SCAN_CACHE_SCHEMA, "judge": self.judge, "findings": self.current}
+        self.path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def _inspect_language_files(
     language: str,
     root: Path,
     files: list[Path],
     media_types: ServedMediaTypes,
+    memo: _ScanMemo,
     hashes: set[str],
     refused: dict[str, list[str]],
 ) -> None:
     for source in files:
         kind = (media_types.of(source.name) or "").split(";")[0]
-        if kind == "text/html":
-            findings = scan_page(source.read_text(encoding="utf-8"), media_types)
-            hashes.update(csp_hash(script) for script in findings.inline_scripts)
-            refusals = findings.refused
-        elif kind == "text/css":
-            refusals = scan_stylesheet(source.read_text(encoding="utf-8"), media_types)
-        else:
+        if kind not in {"text/html", "text/css"}:
             continue
+        script_hashes, refusals = memo.findings(kind, source, media_types)
+        hashes.update(script_hashes)
         relative = f"{package_prefix(language)}{source.relative_to(root).as_posix()}"
         for refusal in refusals:
             refused.setdefault(refusal.reason, []).append(f"{relative}:{refusal.line}")
@@ -144,6 +226,7 @@ def _collect_language(
     entry: str,
     search: str,
     media_types: ServedMediaTypes,
+    memo: _ScanMemo,
     selected: dict[str, list[Path]],
     hashes: set[str],
     problems: list[str],
@@ -160,11 +243,11 @@ def _collect_language(
     if excluded:
         unserved = len(shippable) - len(selected[language])
         BuildLog("user_docs_stage").verbose(f"excluded {unserved} unserved {language} files: {', '.join(excluded)}")
-    _inspect_language_files(language, root, selected[language], media_types, hashes, refused)
+    _inspect_language_files(language, root, selected[language], media_types, memo, hashes, refused)
 
 
 def _collect_roots(
-    roots: dict[str, Path], entry: str, search: str, media_types: ServedMediaTypes
+    roots: dict[str, Path], entry: str, search: str, media_types: ServedMediaTypes, memo: _ScanMemo
 ) -> tuple[dict[str, list[Path]], set[str]]:
     selected: dict[str, list[Path]] = {}
     hashes: set[str] = set()
@@ -174,7 +257,7 @@ def _collect_roots(
         if media_types.of(PurePosixPath(required).name) is None:
             problems.append(f"the documentation scheme does not serve {required}")
     for language, root in roots.items():
-        _collect_language(language, root, entry, search, media_types, selected, hashes, problems, refused)
+        _collect_language(language, root, entry, search, media_types, memo, selected, hashes, problems, refused)
     for reason, locations in sorted(refused.items()):
         problems.append(f"{reason}: {len(locations)} location(s), first {locations[0]}")
     if problems:
@@ -218,23 +301,37 @@ def stage_roots(build: Path, *, target: str | None = None) -> None:
     languages = declared_languages(layout)
     roots = language_roots(paths["user_docs_build"], languages)
     destination = paths["user_docs_stage"]
-    if destination.exists():
-        shutil.rmtree(destination)
+    destination.mkdir(parents=True, exist_ok=True)
+    # Until this run publishes, the stage is not a complete payload.
+    (destination / "ready").unlink(missing_ok=True)
     payload = destination / STAGED_PAYLOAD
+    candidate = destination / CANDIDATE
+    if candidate.exists():
+        shutil.rmtree(candidate)
     media_types = served_media_types(declaration)
     entry, search = declaration["entry"], declaration["search"]
-    selected, hashes = _collect_roots(roots, entry, search, media_types)
+    memo = _ScanMemo(destination / SCAN_CACHE, declaration)
+    try:
+        selected, hashes = _collect_roots(roots, entry, search, media_types, memo)
+    finally:
+        # Findings describe the built bytes alone, so a refused run's are as reusable as any.
+        memo.save()
     built = {
         language: {source.relative_to(roots[language]).as_posix(): source for source in files}
         for language, files in selected.items()
     }
-    stored, inventory = _factor_and_inventory(payload, built)
+    stored, inventory = _factor_and_inventory(candidate, built)
+    manifest_name = cast(str, declaration["manifest"])
+    kept, replaced, removed = _publish(candidate, payload, inventory, manifest_name)
+    shutil.rmtree(candidate)
     built_size = sum(source.stat().st_size for files in selected.values() for source in files)
     stored_size = sum(file.stat().st_size for file in payload.rglob("*") if file.is_file())
     BuildLog("user_docs_stage").status(
         f"staged user documentation in {len(languages)} languages: {sum(map(len, selected.values()))} built "
         f"files, {built_size / 1_000_000:.1f} MB, stored as {len(inventory)} files, "
-        f"{stored_size / 1_000_000:.1f} MB ({len(stored.pages)} pages composed per language) -> {display_path(payload)}"
+        f"{stored_size / 1_000_000:.1f} MB ({len(stored.pages)} pages composed per language) -> "
+        f"{display_path(payload)}; {kept} kept, {replaced} replaced, {removed} removed; "
+        f"{memo.scanned} of {memo.read} pages and stylesheets scanned"
     )
     manifest = {
         "schema": MANIFEST_SCHEMA,
@@ -251,8 +348,58 @@ def stage_roots(build: Path, *, target: str | None = None) -> None:
         "pages": list(stored.pages),
         "files": dict(sorted(inventory.items())),
     }
-    (payload / cast(str, declaration["manifest"])).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (payload / manifest_name).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     (destination / "ready").write_text("complete\n", encoding="utf-8")
+
+
+def _clear_ancestors(payload: Path, target: Path) -> None:
+    """Remove a file standing where ``target`` needs a directory, so a renamed tree can replace it."""
+    for ancestor in reversed(target.relative_to(payload).parents[:-1]):
+        if (payload / ancestor).is_file():
+            (payload / ancestor).unlink()
+
+
+def _publish(candidate: Path, payload: Path, inventory: Mapping[str, str], manifest_name: str) -> tuple[int, int, int]:
+    """Make ``payload`` hold exactly the candidate's inventory, keeping every file it already holds byte for byte.
+
+    A kept file is one the previous manifest records with the new digest and whose
+    bytes still match that record; it is neither rewritten nor moved, so whatever
+    keys on it downstream stays current. Every other member is moved in from the
+    candidate, and a file the inventory no longer names is removed. Returns the
+    kept, replaced and removed counts.
+    """
+    try:
+        reuse = AssemblyReuse(payload, candidate, manifest_name)
+    except ValueError as error:
+        raise DocsPackagingError(str(error)) from None
+    previous = cast(dict[str, object], reuse.manifest.get("files", {}))
+    kept = replaced = 0
+    for member, expected in inventory.items():
+        if previous.get(member) == expected and reuse.verified(member) is not None:
+            kept += 1
+            continue
+        target = payload / member
+        _clear_ancestors(payload, target)
+        if target.is_dir():
+            shutil.rmtree(target)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        os.replace(candidate / member, target)
+        replaced += 1
+    removed = _remove_obsolete_members(payload, inventory, manifest_name)
+    return kept, replaced, removed
+
+
+def _remove_obsolete_members(payload: Path, inventory: Mapping[str, str], manifest_name: str) -> int:
+    """Remove stale files and empty directories after candidate files have been published."""
+    removed = 0
+    for path in sorted(payload.rglob("*"), key=lambda entry: len(entry.parts), reverse=True):
+        relative = path.relative_to(payload).as_posix()
+        if path.is_file() and relative not in inventory and relative != manifest_name:
+            path.unlink()
+            removed += 1
+        elif path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
+    return removed
 
 
 def verified_stage(stage_root: Path, declaration: Mapping[str, object]) -> Path:

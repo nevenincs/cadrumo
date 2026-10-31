@@ -233,3 +233,107 @@ def test_language_declaration_must_be_unique_supported_languages(languages: obje
 def test_assembly_with_documentation_refuses_a_missing_stage_and_names_the_remedy(tmp_path: Path) -> None:
     with pytest.raises(DocsPackagingError, match="has not run for this CMake binary directory"):
         verified_stage(tmp_path / "user-docs/stage", load_layout()["user_docs"])
+
+
+def _identity(path: Path) -> tuple[int, int]:
+    """The file's identity and last write: equal only when the file was neither replaced nor rewritten."""
+    status = path.stat()
+    return status.st_ino, status.st_mtime_ns
+
+
+def test_restaging_keeps_unchanged_files_replaces_changed_ones_and_prunes_removed_ones(tmp_path: Path) -> None:
+    build = _build(tmp_path)
+    for language in _languages():
+        _root(build, language)
+    stage_roots(build)
+    payload, _ = _staged(build)
+    edited = _languages()[-1]
+    stylesheet, structure = payload / "structure/_static/site.css", payload / "structure/index.html"
+    text, removed = payload / "text" / f"{edited}.json", payload / "structure/how-to/modelo-303.html"
+    before = {path: _identity(path) for path in (stylesheet, structure, text)}
+    for language in _languages():
+        root = build / "user-docs/build/html" / language
+        # The build rewrites every file; only one language's prose and one page set change.
+        (root / "_static/site.css").write_text(STYLESHEET, encoding="utf-8")
+        (root / "index.html").write_text(
+            _page(language).replace(f"{edited} prose", f"{edited} revised prose"), encoding="utf-8"
+        )
+        (root / "how-to/modelo-303.html").unlink()
+
+    stage_roots(build)
+
+    payload, manifest = _staged(build)
+    assert _identity(stylesheet) == before[stylesheet], "an unchanged stored file is not copied again"
+    assert _identity(structure) == before[structure], "the structure every language shares did not change"
+    assert _identity(text) != before[text]
+    assert _composed(payload, edited, "index.html").count(f"{edited} revised prose") == 1
+    assert not removed.exists() and not removed.parent.exists()
+    assert "structure/how-to/modelo-303.html" not in manifest["files"]
+    assert not (build / "user-docs/stage/next").exists()
+
+
+def test_restaging_scans_only_pages_whose_bytes_changed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from ..native import docs_stage
+
+    build = _build(tmp_path)
+    for language in _languages():
+        _root(build, language)
+    stage_roots(build)
+    scanned: list[str] = []
+    real_scan = docs_stage.scan_page
+
+    def counted(text: str, media_types: Any) -> Any:
+        scanned.append(text)
+        return real_scan(text, media_types)
+
+    monkeypatch.setattr(docs_stage, "scan_page", counted)
+    edited = build / "user-docs/build/html" / _languages()[0] / "index.html"
+    edited.write_text(_page(_languages()[0]).replace("prose", "changed prose"), encoding="utf-8")
+
+    stage_roots(build)
+
+    assert [text for text in scanned if "changed prose" in text] == scanned and len(scanned) == 1
+    _, manifest = _staged(build)
+    assert manifest["script_hashes"] == [csp_hash(THEME_SNIPPET)], "remembered pages still contribute their hashes"
+
+
+def test_a_remembered_page_is_refused_again_without_rescanning(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from ..native import docs_stage
+
+    build = _build(tmp_path)
+    languages = _languages()
+    _root(build, languages[0], PAGE.replace("<body>", '<body onload="start()">'))
+    for language in languages[1:]:
+        _root(build, language)
+    with pytest.raises(DocsPackagingError, match="<body onload> inline event handler") as first:
+        stage_roots(build)
+
+    def refused_rescan(text: str, media_types: Any) -> Any:
+        raise AssertionError("an unchanged page was scanned again")
+
+    monkeypatch.setattr(docs_stage, "scan_page", refused_rescan)
+    with pytest.raises(DocsPackagingError, match="<body onload> inline event handler") as second:
+        stage_roots(build)
+    assert str(second.value) == str(first.value)
+    assert not (build / "user-docs/stage/ready").exists()
+
+
+def test_malformed_cached_findings_are_rescanned_and_cannot_hide_refusals(tmp_path: Path) -> None:
+    build = _build(tmp_path)
+    languages = _languages()
+    _root(build, languages[0], PAGE.replace("<body>", '<body onload="start()">'))
+    for language in languages[1:]:
+        _root(build, language)
+    with pytest.raises(DocsPackagingError, match="<body onload> inline event handler"):
+        stage_roots(build)
+
+    cache_path = build / "user-docs/stage/scan-cache.json"
+    cache = json.loads(cache_path.read_text(encoding="utf-8"))
+    for key in cache["findings"]:
+        if key.startswith("text/html:"):
+            cache["findings"][key] = [[], [["invalid", "not a line number"]]]
+    cache_path.write_text(json.dumps(cache), encoding="utf-8")
+
+    with pytest.raises(DocsPackagingError, match="<body onload> inline event handler"):
+        stage_roots(build)
+    assert not (build / "user-docs/stage/ready").exists()
