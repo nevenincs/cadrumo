@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:e48a391b44f64cfde1786d70d9aabb22db96f66b27379377d30c77a2eca26fa6'
+body_hash: 'sha256:e0a8e3ab8dc5357b8bdd57aa3f7c8da64e6e851ee4e668297b46658a909a4d3f'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -296,6 +296,18 @@ native/manager/src/supervision/supervisor.rs`
 - `S07` `M` `dev/packaging/native/tests/test_macos_bundle.py`
 - `S07` `M` `native/CONTRACT.md`
 - `S07` `verify:` `packaged Cadrumo.app: runtime ready, Apple Event and SIGTERM clean drain, SIGKILL containment, handoff record` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.stories.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/details/Details.stories.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/form/FormView.stories.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/modelo/workspace/Workspace.stories.tsx`
+- `S17` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S17` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S17` `M` `native/desktop/frontend/tests/modelo-port.spec.ts`
+- `S17` `M` `native/desktop/src-tauri/src/logs/mod.rs`
+- `S17` `M` `native/desktop/src-tauri/src/logs/record.rs`
+- `S17` `M` `native/desktop/src-tauri/src/startup.rs`
+- `S17` `verify:` `build.sh Debug desktop-host-unit-test (708)` -> `pass`
+- `S17` `verify:` `build.sh Debug desktop-frontend-test (1601)` -> `pass`
 
 ## Notes
 

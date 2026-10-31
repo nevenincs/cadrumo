@@ -299,7 +299,7 @@ impl Poller {
         );
         // Every deadline below counts from the same instant.
         let sent = sending();
-        let (deliveries, held) = {
+        let deliveries = {
             let mut inner = shared.lock();
             for record in prepared {
                 inner.aggregate.push(record);
@@ -311,13 +311,19 @@ impl Poller {
                 host: host::source(&self.diagnostics),
             };
             inner.polled = true;
-            let deliveries = inner.aggregate.deliver(sent);
-            (deliveries, inner.aggregate.due(sent))
+            inner.aggregate.deliver(sent)
         };
+        let recipients = record::recipients(&deliveries);
         let refused = record::send(deliveries);
-        if !refused.is_empty() {
-            shared.lock().aggregate.end(&refused);
-        }
+        // The next batch waits out the interval from the end of this one.
+        let held = {
+            let mut inner = shared.lock();
+            inner.aggregate.delivered(&recipients, sending());
+            if !refused.is_empty() {
+                inner.aggregate.end(&refused);
+            }
+            inner.aggregate.due(sending())
+        };
         [held, self.tail.due(sent), self.manager_tail.due(sent)]
             .into_iter()
             .flatten()

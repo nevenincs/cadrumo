@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
+import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract";
 import type { WorkspaceView } from "./Workspace";
@@ -36,6 +37,7 @@ function Screen({
   const port = useRef<ModeloPort | null>(null);
   port.current ??= modeloFixture({
     say: noop,
+    translate: translator,
     wait: async () => undefined,
     signedIn: () => true,
     shape,

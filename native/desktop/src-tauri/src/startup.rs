@@ -71,10 +71,11 @@ impl Startup {
 
     pub fn check_cancelled(&self) -> Result<()> {
         if self.cancelled.load(Ordering::Acquire) {
-            Err(ApplicationError::new(
-                ErrorCode::SessionUnavailable,
-                Operation::Launch,
-            ))
+            // A quit before the manager stage is the host closing, not a launch fault.
+            Err(
+                ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Launch)
+                    .with_reason(cadrumo_application::shutdown::HOST_CLOSING),
+            )
         } else {
             Ok(())
         }
@@ -246,9 +247,8 @@ mod tests {
             app.try_state::<Arc<crate::manager::ManagerStart>>()
                 .is_none()
         );
-        assert_eq!(
-            startup.check_cancelled().unwrap_err().code,
-            ErrorCode::SessionUnavailable
-        );
+        let refusal = startup.check_cancelled().unwrap_err();
+        assert_eq!(refusal.code, ErrorCode::SessionUnavailable);
+        assert!(cadrumo_application::shutdown::is_host_closing(&refusal));
     }
 }

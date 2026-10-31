@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:7365aba62fef51bd38acb4228ce785cede4f2d6d0dbd3a18d8fc423a1be95123'
+body_hash: 'sha256:ca8d68e09f5d6f3aa9bff95b5933790a9b732eb2cf4e4e55d661b0b632652453'
 ---
 
 # `macos-platform` plan
@@ -41,7 +41,7 @@ Bring Cadrumo to a working build, package and run on macOS arm64: configure and 
 - [x] `S14` - Settle or durably record in-flight operations at quit so interrupted mutations stay UNKNOWN rather than lost, and stop logging session_unavailable as a failure on a normal quit; `native/desktop/src-tauri/src/app.rs, native/application/src/runtime_client.rs, src/cadrumo_runtime/host`.
 - [x] `S15` - Gate package sealing and the DMG on a runtime-role health check, rebuild the macOS bundle and DMG, and verify S10 containment and S11 window chrome (fullscreen inset, title-bar double-click, standard Window menu shortcuts) in the packaged app; `native/cmake/distribution/CMakeLists.txt, native/cmake/Packaging.cmake, native/desktop`.
 - [x] `S16` - Give native and Python tests an isolated transport namespace so they never write to the real per-user socket directory, and remove the stale test lock and socket files there; `native/platform/src, native/desktop/src-tauri/src/shell/single_instance, src/cadrumo_client/transport, native/manager/tests`.
-- [ ] `S17` - Fix the remaining desktop failures: quiet session_unavailable when quitting before the manager stage, the desktop-frontend-test virtual-module import failure, and the failing panicking-synchronous-command and logs host unit tests; `native/desktop/src-tauri/src, native/desktop/frontend`.
+- [x] `S17` - Fix the remaining desktop failures: quiet session_unavailable when quitting before the manager stage, the desktop-frontend-test virtual-module import failure, and the failing panicking-synchronous-command and logs host unit tests; `native/desktop/src-tauri/src, native/desktop/frontend`.
 - [ ] `S18` - Optional, not notarization-driven: evaluate an Apple-conformant split of the macOS payload into nested code and resources only if it improves ad-hoc launch robustness, keeping package-root containment checks sound; `native/platforms/macos-arm64.json, dev/packaging/native, src/cadrumo_agent_service/host/launch_environment.py, native/desktop/src-tauri/src/docs/request.rs`.
 - [ ] `S19` - Make ad-hoc signing the permanent macOS distribution model: amend decisions that defer behaviour until Developer ID signing or notarization (login start, versioned installation activation, release prerequisites), decide macOS login start on its own merits, and document the first-run Gatekeeper path for ad-hoc builds in the user documentation; `.vault/adr, native/manager/src/macos, native/CONTRACT.md, docs/`.
 
