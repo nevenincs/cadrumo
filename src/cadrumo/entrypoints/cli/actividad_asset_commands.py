@@ -209,8 +209,8 @@ def actividad_asset_filing_handoff(ctx: typer.Context, tax_year: int, m130_perio
         command="ledger.actividad_asset.filing_handoff",
         result=ActivityAssetFilingHandoffPayload(root=handoff.model_dump(mode="json")),
         lines=(
-            f"m100_material\t{handoff.material_m100.amount}",
-            f"m100_intangible\t{handoff.intangible_m100.amount}",
+            f"m100_material\t{'box_unbound' if handoff.material_m100 is None else handoff.material_m100.amount}",
+            f"m100_intangible\t{'box_unbound' if handoff.intangible_m100 is None else handoff.intangible_m100.amount}",
             f"m130_material\t{handoff.material_m130.amount}",
             f"m130_intangible\t{handoff.intangible_m130.amount}",
         ),

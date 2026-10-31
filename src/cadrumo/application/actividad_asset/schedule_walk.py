@@ -26,6 +26,7 @@ from ...domain.renta.actividad_asset.claims import (
     claims_through_year,
     current_revisions,
     select_effective_claims,
+    service_window,
     uncovered_claim_intervals,
 )
 from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS
@@ -311,6 +312,7 @@ class M100GapKind(StrEnum):
     ACCRUED = "accrued"
     FREE_METHOD = "free_method"
     UNAVAILABLE = "unavailable"
+    BOX_UNBOUND = "box_unbound"
 
 
 @dataclass(frozen=True, slots=True)
@@ -323,6 +325,20 @@ class M100ClaimGap:
     covered_until: date
     accrued: Decimal | None = None
     error: ActividadAssetError | RegistryError | None = None
+
+
+def m100_unbound_box_gap(revision: ActivityAssetRevision, *, tax_year: int) -> M100ClaimGap | None:
+    """Find the part of ``tax_year`` an element was in service when its edition binds no Modelo 100 box for its kind.
+
+    Nothing can be declared for such an element, so the whole service window is left out. An element not
+    in service that year has nothing to leave out.
+    """
+    window = service_window(revision, start=date(tax_year, 1, 1), end=date(tax_year + 1, 1, 1))
+    if window is None:
+        return None
+    return M100ClaimGap(
+        revision=revision, kind=M100GapKind.BOX_UNBOUND, covered_from=window[0], covered_until=window[1]
+    )
 
 
 def m100_claim_gaps(
@@ -516,6 +532,7 @@ __all__ = [
     "WalkedYear",
     "free_base_remains",
     "m100_claim_gaps",
+    "m100_unbound_box_gap",
     "m130_register_accruals",
     "walk_element",
 ]

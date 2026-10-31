@@ -69,6 +69,7 @@ from ..actividad_asset.schedule_walk import (
     M100GapKind,
     M130ElementAccrual,
     m100_claim_gaps,
+    m100_unbound_box_gap,
     m130_register_accruals,
 )
 from ..calculations.actividad_asset_schedule import forecast_activity_asset_charge
@@ -788,10 +789,14 @@ def _m100_gap_diagnostics(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     casilla = forecast.amortization_box(revision.asset_kind)
     if casilla is None:
+        # An element out of service that year has nothing to declare, so the missing box leaves nothing out.
+        if m100_unbound_box_gap(revision, tax_year=tax_year) is None:
+            return ()
         return (_amortization_box_unbound_diagnostic(revision, resolver_id=resolver_id),)
     named_box = None if casilla in reached else casilla
     diagnostics: list[CalculationSourceDiagnostic] = []
     for gap in m100_claim_gaps(revision, history, forecast=forecast, tax_year=tax_year):
+        last_day = (gap.covered_until - timedelta(days=1)).isoformat()
         if gap.error is not None:
             diagnostics.append(
                 accrual_unavailable_diagnostic(revision, gap.error, casilla_id=named_box, resolver_id=resolver_id),
@@ -803,7 +808,7 @@ def _m100_gap_diagnostics(
                 CalculationNoteSentence.CLAIM_GAP_FREE_METHOD,
                 elements=(revision.asset_id,),
                 start=gap.covered_from.isoformat(),
-                end=(gap.covered_until - timedelta(days=1)).isoformat(),
+                end=last_day,
                 box=casilla,
             )
         else:
@@ -812,7 +817,7 @@ def _m100_gap_diagnostics(
                 CalculationNoteSentence.CLAIM_GAP_ACCRUED,
                 elements=(revision.asset_id,),
                 start=gap.covered_from.isoformat(),
-                end=(gap.covered_until - timedelta(days=1)).isoformat(),
+                end=last_day,
                 amount=gap.accrued,
                 box=casilla,
             )
@@ -825,7 +830,7 @@ def _m100_gap_diagnostics(
                 casilla_id=named_box,
                 message=(
                     f"element {revision.asset_id!r} has no effective claim for "
-                    f"{gap.covered_from.isoformat()} to {gap.covered_until.isoformat()} ({accrued}); "
+                    f"{gap.covered_from.isoformat()} to {last_day} ({accrued}); "
                     f"box {casilla} declares only recorded claims"
                 ),
                 remedy="record the amortization charge for that interval to deduct it",

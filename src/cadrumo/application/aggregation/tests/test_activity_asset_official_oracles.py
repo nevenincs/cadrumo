@@ -755,7 +755,7 @@ def test_a_claim_gap_is_a_non_blocking_finding_and_no_deduction_is_invented(
     by_asset = {item.source_ref: item.message for item in gaps}
     # 1.200,00 less the 295,89 claimed; the whole 50,00 of the unclaimed goodwill.
     assert "904.11 EUR accrued" in by_asset["activity-asset:machine"]
-    assert "2025-04-01 to 2026-01-01" in by_asset["activity-asset:machine"]
+    assert "2025-04-01 to 2025-12-31" in by_asset["activity-asset:machine"]
     assert "50.00 EUR accrued" in by_asset["activity-asset:goodwill"]
     # The quarterly form still accrues from the schedule, so a later annual claim stays possible.
     assert _m130(register, "4T")[0] == Decimal("1250.00")

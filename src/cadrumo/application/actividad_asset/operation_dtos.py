@@ -629,8 +629,9 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    material_m100: ClaimProjectionSnapshot
-    intangible_m100: ClaimProjectionSnapshot
+    material_m100: ClaimProjectionSnapshot | None
+    intangible_m100: ClaimProjectionSnapshot | None
+    """Null for a kind the edition binds no Modelo 100 box for; ``m100_gaps`` then names its elements."""
     m100_gaps: tuple[ActivityAssetM100GapSnapshot, ...] = ()
     material_m130: ActivityAssetM130ProjectionSnapshot | None = None
     intangible_m130: ActivityAssetM130ProjectionSnapshot | None = None
@@ -647,12 +648,12 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
     def from_domain(cls, value: ActivityAssetFilingHandoff) -> Self:
         """Project the canonical M100 and, when stated, M130 filing destinations."""
         return cls(
-            material_m100=ClaimProjectionSnapshot.from_domain(
-                value.material_m100, box_name=value.material_m100_box_name
-            ),
-            intangible_m100=ClaimProjectionSnapshot.from_domain(
-                value.intangible_m100, box_name=value.intangible_m100_box_name
-            ),
+            material_m100=None
+            if value.material_m100 is None
+            else ClaimProjectionSnapshot.from_domain(value.material_m100, box_name=value.material_m100_box_name),
+            intangible_m100=None
+            if value.intangible_m100 is None
+            else ClaimProjectionSnapshot.from_domain(value.intangible_m100, box_name=value.intangible_m100_box_name),
             m100_gaps=tuple(ActivityAssetM100GapSnapshot.from_domain(gap) for gap in value.m100_gaps),
             material_m130=None
             if value.material_m130 is None
@@ -665,11 +666,11 @@ class ActivityAssetFilingHandoffSnapshot(BaseModel):
     def to_domain(self) -> ActivityAssetFilingHandoff:
         """Restore all canonical filing projections."""
         return ActivityAssetFilingHandoff(
-            material_m100=self.material_m100.to_domain(),
-            intangible_m100=self.intangible_m100.to_domain(),
+            material_m100=None if self.material_m100 is None else self.material_m100.to_domain(),
+            intangible_m100=None if self.intangible_m100 is None else self.intangible_m100.to_domain(),
             m100_gaps=tuple(gap.to_domain() for gap in self.m100_gaps),
-            material_m100_box_name=self.material_m100.box_name,
-            intangible_m100_box_name=self.intangible_m100.box_name,
+            material_m100_box_name=None if self.material_m100 is None else self.material_m100.box_name,
+            intangible_m100_box_name=None if self.intangible_m100 is None else self.intangible_m100.box_name,
             material_m130=None if self.material_m130 is None else _m130_domain(self.material_m130),
             intangible_m130=None if self.intangible_m130 is None else _m130_domain(self.intangible_m130),
         )

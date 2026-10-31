@@ -47,6 +47,7 @@ from ..modelo_bindings_renta_expenses import (
 )
 from ..source_mesh import (
     CalculationSourceContext,
+    CalculationSourceResolution,
 )
 from .ledger_source_mesh_support import (
     _AMORTIZABLE_CATEGORIES,
@@ -554,7 +555,7 @@ def test_m100_with_no_claims_invents_nothing_and_reports_the_gap_without_refusin
     gaps = [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
     assert len(gaps) == 1
     assert "furniture" in gaps[0].message
-    assert "2025-01-01 to 2026-01-01" in gaps[0].message
+    assert "2025-01-01 to 2025-12-31" in gaps[0].message
     assert "1200.00 EUR accrued" in gaps[0].message
     assert gaps[0].casilla_id == "0208"
     assert "activity_asset_claim_gap" not in GATE_REFUSED_REASONS
@@ -575,7 +576,7 @@ def test_m100_reports_only_the_uncovered_part_of_the_year_at_its_cumulative_amou
 
     gaps = [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
     assert len(gaps) == 1
-    assert "2025-07-01 to 2026-01-01" in gaps[0].message
+    assert "2025-07-01 to 2025-12-31" in gaps[0].message
     # 1.200,00 less the 595,07 the first half rounds to.
     assert "604.93 EUR accrued" in gaps[0].message
     # A box that does carry a claim keeps its figure rather than reading as unworked.
@@ -901,3 +902,67 @@ def test_an_edition_without_a_box_for_a_kind_names_the_element_and_keeps_the_kin
         ),
     ]
     assert not [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
+
+
+def _resolve_without_the_material_box(*assets: ActivityAssetRevision, year: int = 2025) -> CalculationSourceResolution:
+    bound = _m100_revision(year)
+    revision = bound.model_copy(
+        update={
+            "bindings": tuple(
+                binding for binding in bound.bindings if binding.id != _renta_expense_binding_id(bound, "0208")
+            )
+        }
+    )
+    return LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+        ports=catalogue_read_ports(
+            invoice_repository=_InMemoryInvoiceCatalogueRepository(),
+            transaction_repository=InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID),
+        ),
+        prorrata_register_repository=empty_prorrata_repository(),
+        usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
+        activity_asset_history_repository=StaticActivityAssetHistoryRepository(ActivityAssetHistory(revisions=assets)),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=BUCKET_ID,
+            modelo="100",
+            filing_year=year,
+            period=Period.from_year_and_code(year, "0A"),
+            revision=revision,
+        ),
+    )
+
+
+def _unbound_findings(resolution: CalculationSourceResolution) -> list[str]:
+    return [
+        item.source_ref or "" for item in resolution.diagnostics if item.reason == "activity_asset_accrual_unavailable"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("in_service", "flagged"),
+    (
+        (date(2025, 1, 1), True),
+        (date(2025, 12, 31), True),
+        (date(2024, 3, 1), True),
+        (date(2026, 1, 1), False),
+        (date(2030, 5, 1), False),
+    ),
+)
+def test_an_element_is_named_for_a_missing_box_only_when_it_was_in_service_that_year(
+    in_service: date, flagged: bool
+) -> None:
+    asset = register_asset("furniture", transaction_id="c" * 64, in_service=in_service)
+
+    resolution = _resolve_without_the_material_box(asset)
+
+    assert _unbound_findings(resolution) == ([f"activity-asset:{asset.asset_id}"] if flagged else [])
+
+
+def test_a_claim_gap_names_the_last_day_it_covers_in_the_message_as_it_does_in_the_fact() -> None:
+    asset = register_asset("furniture", transaction_id="e" * 64, in_service=date(2025, 1, 1))
+
+    resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,)), year=2025)
+
+    (gap,) = [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
+    assert "2025-01-01 to 2025-12-31" in gap.message
+    assert "2026-01-01" not in gap.message

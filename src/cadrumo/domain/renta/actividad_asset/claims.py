@@ -313,6 +313,16 @@ class ClaimCoverageGap(BaseModel):
     covered_until: date
 
 
+def service_window(revision: ActivityAssetRevision, *, start: date, end: date) -> tuple[date, date] | None:
+    """Return the half-open part of ``[start, end)`` the element is in service, or ``None`` when it is not.
+
+    The window runs from the in-service date to the out-of-service date when one is set.
+    """
+    window_start = max(start, revision.in_service_date)
+    window_end = end if revision.out_of_service_date is None else min(end, revision.out_of_service_date)
+    return (window_start, window_end) if window_start < window_end else None
+
+
 def uncovered_claim_intervals(
     revision: ActivityAssetRevision,
     claims: tuple[AmortizationClaim, ...],
@@ -331,8 +341,10 @@ def uncovered_claim_intervals(
     """
     if end <= start:
         raise ActividadAssetValidationError(translated_message="ledger.actividad_asset.errors.covered_interval_empty")
-    window_start = max(start, revision.in_service_date)
-    window_end = end if revision.out_of_service_date is None else min(end, revision.out_of_service_date)
+    window = service_window(revision, start=start, end=end)
+    if window is None:
+        return ()
+    window_start, window_end = window
     own = tuple(claim for claim in effective_claims(claims) if claim.asset_id == revision.asset_id)
     base_exhausted = _lawful_base_exhausted(revision, own)
     covering = sorted(
@@ -606,5 +618,6 @@ __all__ = [
     "project_m100",
     "record_claim",
     "select_effective_claims",
+    "service_window",
     "uncovered_claim_intervals",
 ]

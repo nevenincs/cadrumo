@@ -6,6 +6,7 @@ Its pinned edition lookup returns the :class:`ModeloRevision` used by each tax-y
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
@@ -103,11 +104,13 @@ from .register_reads import (
 )
 from .register_timeline import element_timeline
 from .schedule_walk import (
+    M100ClaimGap,
     M100GapKind,
     M130ElementAccrual,
     M130ElementOutcome,
     error_reason_facts,
     m100_claim_gaps,
+    m100_unbound_box_gap,
     m130_register_accruals,
 )
 from .service import ActivityAssetHistoryService
@@ -168,13 +171,15 @@ class M100ClaimGapProjection(BaseModel):
 class ActivityAssetFilingHandoff(BaseModel):
     """Non-consuming projections for both supported IRPF filing destinations.
 
-    ``m100_gaps`` says what the Modelo 100 boxes leave out because no claim records it.
+    ``m100_gaps`` says what the Modelo 100 boxes leave out because no claim records it, or because
+    the edition binds no box for the element's kind.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    material_m100: ClaimProjection
-    intangible_m100: ClaimProjection
+    material_m100: ClaimProjection | None
+    intangible_m100: ClaimProjection | None
+    """Absent for a kind the edition binds no Modelo 100 box for; ``m100_gaps`` then names its elements."""
     m100_gaps: tuple[M100ClaimGapProjection, ...] = ()
     material_m100_box_name: str | None = None
     intangible_m100_box_name: str | None = None
@@ -320,7 +325,14 @@ def _m100_gaps(
     history: ActivityAssetHistory,
     forecast: ActivityAssetForecastOperation,
     tax_year: int,
+    bound_kinds: AbstractSet[AssetKind],
 ) -> tuple[M100ClaimGapProjection, ...]:
+    def gaps_of(revision: ActivityAssetRevision) -> tuple[M100ClaimGap, ...]:
+        if revision.asset_kind in bound_kinds:
+            return m100_claim_gaps(revision, history, forecast=forecast, tax_year=tax_year)
+        unbound = m100_unbound_box_gap(revision, tax_year=tax_year)
+        return () if unbound is None else (unbound,)
+
     return tuple(
         M100ClaimGapProjection(
             asset_id=gap.revision.asset_id,
@@ -330,7 +342,7 @@ def _m100_gaps(
             accrued=gap.accrued,
         )
         for revision in current_revisions(history.revisions).values()
-        for gap in m100_claim_gaps(revision, history, forecast=forecast, tax_year=tax_year)
+        for gap in gaps_of(revision)
     )
 
 
@@ -761,20 +773,19 @@ class ActivityAssetOperations:
                 self._require_common_territory(m130_period.end_date)
         m100_boxes = self._authority.m100_amortization_casillas(tax_year)
 
-        def m100(asset_kind: AssetKind) -> ClaimProjection:
+        def m100(asset_kind: AssetKind) -> ClaimProjection | None:
             box = m100_boxes.get(asset_kind)
             if box is None:
-                raise ActividadAssetUnsupportedError(
-                    context={"asset_kind": asset_kind.value, "tax_year": tax_year},
-                    translated_message="ledger.actividad_asset.errors.amortization_box_not_bound",
-                )
+                return None
             return project_m100(history.claims, asset_kind=asset_kind, tax_year=tax_year, target_casilla_id=box)
 
         material_m100 = m100(AssetKind.MATERIAL)
         intangible_m100 = m100(AssetKind.INTANGIBLE)
-        m100_gaps = _m100_gaps(history, self._forecast_operation, tax_year)
+        m100_gaps = _m100_gaps(history, self._forecast_operation, tax_year, frozenset(m100_boxes))
 
-        def m100_name(projection: ClaimProjection) -> str:
+        def m100_name(projection: ClaimProjection | None) -> str | None:
+            if projection is None:
+                return None
             return self._authority.box_name(
                 form_for_role("renta.annual"),
                 tax_year,

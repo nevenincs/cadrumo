@@ -140,7 +140,12 @@ def require_filing_frame(
     if filing_handoff is not None:
         if tax_year is None:
             raise ValueError("activity-asset filing handoff requires its requested filing frame")
-        if (filing_handoff.material_m100.tax_year, filing_handoff.intangible_m100.tax_year) != (tax_year, tax_year):
+        stated_years = {
+            projection.tax_year
+            for projection in (filing_handoff.material_m100, filing_handoff.intangible_m100)
+            if projection is not None
+        }
+        if not stated_years <= {tax_year}:
             raise ValueError("activity-asset filing handoff differs from its requested tax year")
         if (m130_period is None) != (filing_handoff.material_m130 is None):
             raise ValueError("activity-asset filing handoff states Modelo 130 exactly for a requested period")
