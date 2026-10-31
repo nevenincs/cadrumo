@@ -20,7 +20,7 @@ short_description = "(sin curar) draft pendiente de definicion"
 short_description = "Model 345, declaració informativa anual de plans i fons de pensions, mutualitats i sistemes assimilats"
 
 [language.en]
-short_description = "Modelo 345, annual information return on pension plans, funds, mutuals, and equivalent systems"
+short_description = "Modelo 345, annual information return on pension plans, funds, mutual benefit societies, and equivalent systems"
 
 [language.hu]
 short_description = "345-ös modell: nyugdíjprogramok, -alapok, kölcsönös biztosítók és hasonló rendszerek éves tájékoztató bevallása"

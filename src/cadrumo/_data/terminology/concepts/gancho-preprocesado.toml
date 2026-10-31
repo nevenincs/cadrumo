@@ -41,9 +41,9 @@ term_status = "preferred"
 part_of_speech = "noun"
 
 [language.ca]
-short_description = "El contracte upstream per transformar fonts PDF, XLS, HTML o altres abans d'indexar-les."
+short_description = "El contracte del projecte d'origen per transformar fonts PDF, XLS, HTML o altres abans d'indexar-les."
 definition = "Interfície genèrica sol·licitada al servei RAG de desenvolupament per registrar preprocessadors per patró de fitxer, emetre una sortida versionada amb text extret o unitats fragmentades prèviament, incloure la identitat del preprocessador a la clau de memòria cau i declarar els errors explícitament. Aquest contracte permet indexar els corpus del BOE i l'AEAT sense codificar coneixement de l'AEAT a l'indexador."
-scope_note = "Mentre no existeixi el ganxo upstream, aquest projecte utilitza sidecars d'extracció com a via provisional."
+scope_note = "Mentre no existeixi el punt d'extensió del projecte d'origen, aquest projecte utilitza fitxers auxiliars d'extracció com a via provisional."
 
 
 [language.hu]
