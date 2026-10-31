@@ -12,7 +12,6 @@ import {
   callOutcome,
   commonWords,
   correctionOf,
-  ibanProblem,
   parseObject,
   parsePoints,
   patternHits,
@@ -26,6 +25,7 @@ import {
   wholeYear,
   wordsPattern,
 } from "../src/components/ledger/setup/setupModel";
+import { ibanProblem } from "../src/shared/iban";
 import { hexId, movement } from "./support/ledger";
 
 // The Setup sections' pure decisions and the staged rule run. No page is

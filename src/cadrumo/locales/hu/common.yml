@@ -2623,6 +2623,7 @@ desktop:
       country_hint: Két betű, ha a könyvben nincs országoszlop. Nem kötelező.
       country_invalid: „{value}” nem kétbetűs országkód.
       country_none: nincs megadva
+      country_purpose: Akkor használjuk, ha a könyvben nincs ország oszlop. Nem kötelező.
       description: Bankszámlakivonatok, számlakönyvek és dokumentumok a gép fájljaiból.
       diagnostic:
         already_in_ledger: Néhány sor már szerepel a naplóban, ezek kimaradnak.

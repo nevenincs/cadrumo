@@ -2639,6 +2639,7 @@ desktop:
       country_hint: Dos letras, para un libro sin columna de país. Opcional.
       country_invalid: «{value}» no es un código de país de dos letras.
       country_none: sin indicar
+      country_purpose: Se usa cuando el libro no tiene columna de país. Opcional.
       description: Extractos bancarios, libros de facturas y documentos, desde archivos
         de este equipo.
       diagnostic:

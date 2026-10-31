@@ -2641,6 +2641,7 @@ desktop:
       country_hint: Dues lletres, per a un llibre sense columna de país. Opcional.
       country_invalid: «{value}» no és un codi de país de dues lletres.
       country_none: sense indicar
+      country_purpose: S’usa quan el llibre no té columna de país. Opcional.
       description: Extractes bancaris, llibres de factures i documents, des de fitxers
         d'aquest ordinador.
       diagnostic:

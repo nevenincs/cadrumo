@@ -2596,6 +2596,7 @@ desktop:
       country_hint: Two letters, used where the book has no country column. Optional.
       country_invalid: “{value}” is not a two-letter country code.
       country_none: not stated
+      country_purpose: Used where the book has no country column. Optional.
       description: Bank statements, invoice books and documents, from files on this
         computer.
       diagnostic:
