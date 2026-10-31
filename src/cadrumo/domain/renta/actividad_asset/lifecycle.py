@@ -52,6 +52,12 @@ REGISTERABLE_ACQUISITION_SHAPES: Final[tuple[AcquisitionShape, ...]] = (
 )
 """The shapes an element can be registered under, which is all a form may offer."""
 
+FURTHER_ACQUISITION_SHAPES: Final[tuple[AcquisitionShape, ...]] = (
+    AcquisitionShape.SPLIT_PAYMENT,
+    AcquisitionShape.ANCILLARY_COST,
+)
+"""The shapes a later ledger row of an element's acquisition can take, which a registered element names."""
+
 
 class OwnershipMode(StrEnum):
     """Legal ownership treatments for whole-property allocation."""
@@ -96,7 +102,7 @@ class FurtherAcquisitionRow(BaseModel):
 
     @model_validator(mode="after")
     def _require_a_further_shape(self) -> Self:
-        if self.shape not in {AcquisitionShape.SPLIT_PAYMENT, AcquisitionShape.ANCILLARY_COST}:
+        if self.shape not in FURTHER_ACQUISITION_SHAPES:
             raise ValueError("a further acquisition row is a split payment or an ancillary cost")
         if self.lineage.observed_transaction_id is None:
             raise ValueError("a further acquisition row names a ledger row")
@@ -531,6 +537,7 @@ class ActivityAssetRevision(CachedIdentityModel):
 
 __all__ = [
     "BASIS_STAGE_FACTS",
+    "FURTHER_ACQUISITION_SHAPES",
     "OPENING_STATUS_FACTS",
     "REGISTERABLE_ACQUISITION_SHAPES",
     "AcquisitionLineageReference",

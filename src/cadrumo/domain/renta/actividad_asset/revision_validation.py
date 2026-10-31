@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .disposal import ActivityAssetDisposal
-from .election import AcquiredCondition
+from .election import ACQUIRED_CONDITION_FACTS
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
 from .lifecycle import REGISTERABLE_ACQUISITION_SHAPES, AcquisitionShape, ActivityAssetRevision, AssetKind
 
@@ -141,7 +141,7 @@ def _validate_residual_basis(revision: ActivityAssetRevision) -> None:
 
 def _validate_building_construction_date(revision: ActivityAssetRevision) -> None:
     if revision.building_construction_date is not None:
-        if revision.acquired_condition is not AcquiredCondition.USED:
+        if "building_construction_date" not in ACQUIRED_CONDITION_FACTS[revision.acquired_condition]:
             raise ValueError("building_construction_date is only a fact of a used asset")
         if revision.building_construction_date > revision.in_service_date:
             raise ValueError("building_construction_date cannot follow in_service_date")

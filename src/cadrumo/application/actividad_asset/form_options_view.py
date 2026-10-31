@@ -5,10 +5,11 @@ from collections.abc import Callable
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.actividad_asset_form_options import ActivityAssetFormOptions
 from ...domain.renta.actividad_asset.disposal import ADMITTED_DISPOSAL_REASONS, ActivityAssetDisposalReason
-from ...domain.renta.actividad_asset.election import DirectEstimationRegime
+from ...domain.renta.actividad_asset.election import ACQUIRED_CONDITION_FACTS, DirectEstimationRegime
 from ...domain.renta.actividad_asset.election_facts import method_is_statable
 from ...domain.renta.actividad_asset.lifecycle import (
     BASIS_STAGE_FACTS,
+    FURTHER_ACQUISITION_SHAPES,
     OPENING_STATUS_FACTS,
     REGISTERABLE_ACQUISITION_SHAPES,
     AssetBasisStage,
@@ -17,6 +18,7 @@ from ...domain.renta.actividad_asset.lifecycle import (
 from ..operations.public_scalar import project_scalar
 from .activity_asset_read_models import (
     ActivityAssetBasisStageOption,
+    ActivityAssetConditionOption,
     ActivityAssetDisposalReasonOption,
     ActivityAssetEdition,
     ActivityAssetFormOptionsView,
@@ -74,5 +76,10 @@ def form_options_view(
             ActivityAssetOpeningStatusOption(status=status, facts=facts)
             for status, facts in OPENING_STATUS_FACTS.items()
         ),
+        acquired_conditions=tuple(
+            ActivityAssetConditionOption(condition=condition, facts=facts)
+            for condition, facts in ACQUIRED_CONDITION_FACTS.items()
+        ),
+        further_acquisition_shapes=FURTHER_ACQUISITION_SHAPES,
         m130_periods=m130_periods(tax_year),
     )

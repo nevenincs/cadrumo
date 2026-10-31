@@ -19,6 +19,7 @@ from decimal import Decimal
 
 from ....core.money.rounding import round_to_cents
 from ...renta.actividad_asset.election import (
+    ACQUIRED_CONDITION_FACTS,
     AcquiredCondition,
     ActivityAssetAmortizationElection,
     AmortizationMethod,
@@ -499,7 +500,7 @@ def _require_original_price_route(
     """
     election = asset_revision.amortization
     context = {"asset_id": asset_revision.asset_id, "regime": election.regime.value}
-    if asset_revision.acquired_condition is not AcquiredCondition.USED:
+    if "used_original_price" not in ACQUIRED_CONDITION_FACTS[asset_revision.acquired_condition]:
         raise ActividadAssetUnsupportedError(
             context=context,
             translated_message="ledger.actividad_asset.errors.used_original_price_requires_used_asset",

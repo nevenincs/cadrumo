@@ -96,6 +96,15 @@ class AcquiredCondition(StrEnum):
     USED = "used"
 
 
+ACQUIRED_CONDITION_FACTS: Final[Mapping[AcquiredCondition, tuple[str, ...]]] = MappingProxyType(
+    {
+        AcquiredCondition.NEW: (),
+        AcquiredCondition.USED: ("building_construction_date", "used_original_price"),
+    },
+)
+"""The facts an element states only under the condition it was acquired in; under no other may it state them."""
+
+
 class DigitOrder(StrEnum):
     """Sum-of-digits numbering order admitted by RIS art. 6.1.a."""
 
@@ -446,6 +455,7 @@ class ActivityAssetAmortizationElection(CachedIdentityModel):
 
 
 __all__ = [
+    "ACQUIRED_CONDITION_FACTS",
     "ELECTION_FACT_ADMISSION",
     "ELECTION_REQUIRED_FACTS",
     "FREE_AMOUNT_METHODS",

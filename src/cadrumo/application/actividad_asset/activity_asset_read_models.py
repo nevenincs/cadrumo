@@ -20,7 +20,7 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.tipos_actividad import TipoActividad
 from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalFindingKind, ActivityAssetDisposalReason
-from ...domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
+from ...domain.renta.actividad_asset.election import AcquiredCondition, AmortizationMethod, DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import PercentFact
 from ...domain.renta.actividad_asset.fact_leaves import SEQUENCE_STEP, FactKind, indexed_to_step_path
 from ...domain.renta.actividad_asset.lifecycle import (
@@ -545,6 +545,14 @@ class ActivityAssetOpeningStatusOption(_ReadModel):
     facts: tuple[str, ...]
 
 
+class ActivityAssetConditionOption(_ReadModel):
+    """One condition an element can be acquired in, with the facts only that condition carries."""
+
+    condition: AcquiredCondition
+    facts: tuple[str, ...]
+    """Names of the facts an element states only when acquired in this condition."""
+
+
 class ActivityAssetFormOptionsView(_ReadModel):
     """What the registry admits for one asset kind and tax year."""
 
@@ -563,6 +571,9 @@ class ActivityAssetFormOptionsView(_ReadModel):
     """The reasons a baja is accepted with, in the order the record's own check admits them."""
     basis_stages: tuple[ActivityAssetBasisStageOption, ...] = ()
     opening_statuses: tuple[ActivityAssetOpeningStatusOption, ...] = ()
+    acquired_conditions: tuple[ActivityAssetConditionOption, ...] = ()
+    further_acquisition_shapes: tuple[AcquisitionShape, ...] = ()
+    """The shapes a later payment or cost of an element's acquisition takes, which no element is registered under."""
     m130_periods: tuple[str, ...] = ()
     """The Modelo 130 periods the registry serves for the tax year, as the handoff names them."""
 
@@ -621,6 +632,7 @@ __all__ = [
     "ActivityAssetClaimStaleReason",
     "ActivityAssetClaimState",
     "ActivityAssetClaimableInterval",
+    "ActivityAssetConditionOption",
     "ActivityAssetCoveredInterval",
     "ActivityAssetDisposalCalculationView",
     "ActivityAssetDisposalFindingView",
