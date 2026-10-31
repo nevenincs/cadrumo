@@ -119,13 +119,17 @@ function populateFrontend(root, packages, installed) {
 }
 
 function frontend(t, packages = locked(), installed = INSTALLED) {
-  const root = mkdtempSync(join(tmpdir(), "cadrumo-frontend-install-"));
+  const root = mkdtempSync(
+    join(realpathSync(tmpdir()), "cadrumo-frontend-install-"),
+  );
   t.after(() => rmSync(root, { recursive: true, force: true }));
   return populateFrontend(root, packages, installed);
 }
 
 function frontendProject(t, packages = locked(), installed = INSTALLED) {
-  const root = mkdtempSync(join(tmpdir(), "cadrumo-frontend-project-"));
+  const root = mkdtempSync(
+    join(realpathSync(tmpdir()), "cadrumo-frontend-project-"),
+  );
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const desktop = join(root, "native", "desktop");
   const frontendRoot = populateFrontend(
@@ -430,7 +434,9 @@ cpSync("record.json", ${JSON.stringify(RECORD)});
 });
 
 test("setup finds the npm CLI installed beside the selected Node binary", (t) => {
-  const root = mkdtempSync(join(tmpdir(), "cadrumo-frontend-node-"));
+  const root = mkdtempSync(
+    join(realpathSync(tmpdir()), "cadrumo-frontend-node-"),
+  );
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const windows = join(root, "windows");
   const posix = join(root, "posix");
