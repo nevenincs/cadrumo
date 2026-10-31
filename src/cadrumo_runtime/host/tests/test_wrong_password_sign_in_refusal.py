@@ -7,10 +7,7 @@ login observation is a test port.
 from __future__ import annotations
 
 import sys
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from threading import Event
-from uuid import uuid4
 
 import pytest
 
@@ -23,8 +20,7 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import serving_runtime
 from .test_profile_connections import LoginObservation, connect, login
 
 pytestmark = [
@@ -48,42 +44,28 @@ def test_a_wrong_password_is_rejected_as_a_sign_in_reason_and_throttles_the_next
     ) as subject:
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()
-        stop, boot = Event(), uuid4()
         observation = LoginObservation(owner_id())
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
+        with serving_runtime(
+            endpoint,
+            root,
             capture_login=lambda _channel: observation,
             secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            serving = pool.submit(server.serve)
+            ready_seconds=30,
+        ):
+            first, second = connect(endpoint), connect(endpoint)
             try:
-                assert server.ready.wait(30)
-                first, second = connect(endpoint), connect(endpoint)
-                try:
-                    rejected = login(first, profile_id, "password", b"not the profile password")
-                    assert isinstance(rejected, AccessRefusal), rejected
-                    assert rejected.code is AutomationCustodyCode.CREDENTIAL_REJECTED, rejected
-                    assert rejected.sign_in is not None and rejected.sign_in.reason == "credential_rejected"
-                    assert rejected.sign_in.remaining_seconds is None
-                    # The failure was counted before the reply: the right password is held back for its wait.
-                    throttled = login(second, profile_id, "password", PROFILE_INPUT.encode())
-                    assert isinstance(throttled, AccessRefusal), throttled
-                    assert throttled.code is AccessDenialCode.AUTHENTICATION_REQUIRED, throttled
-                    assert throttled.sign_in is not None and throttled.sign_in.reason == "throttled"
-                    assert throttled.sign_in.remaining_seconds is not None
-                    assert throttled.sign_in.remaining_seconds > 0
-                finally:
-                    first.close()
-                    second.close()
+                rejected = login(first, profile_id, "password", b"not the profile password")
+                assert isinstance(rejected, AccessRefusal), rejected
+                assert rejected.code is AutomationCustodyCode.CREDENTIAL_REJECTED, rejected
+                assert rejected.sign_in is not None and rejected.sign_in.reason == "credential_rejected"
+                assert rejected.sign_in.remaining_seconds is None
+                # The failure was counted before the reply: the right password is held back for its wait.
+                throttled = login(second, profile_id, "password", PROFILE_INPUT.encode())
+                assert isinstance(throttled, AccessRefusal), throttled
+                assert throttled.code is AccessDenialCode.AUTHENTICATION_REQUIRED, throttled
+                assert throttled.sign_in is not None and throttled.sign_in.reason == "throttled"
+                assert throttled.sign_in.remaining_seconds is not None
+                assert throttled.sign_in.remaining_seconds > 0
             finally:
-                stop.set()
-                serving.result(timeout=20)
-                endpoint.close()
+                first.close()
+                second.close()

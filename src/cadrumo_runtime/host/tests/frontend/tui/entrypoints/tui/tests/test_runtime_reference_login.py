@@ -23,12 +23,11 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
-from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -43,6 +42,7 @@ from .......frontend.tui.runtime_admission import runtime_login_session
 from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ......served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -51,20 +51,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows runtime workers and pipes"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "tui-reference-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
@@ -97,7 +83,7 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-reference-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()

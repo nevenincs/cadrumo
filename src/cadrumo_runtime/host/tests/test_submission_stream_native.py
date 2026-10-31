@@ -85,7 +85,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .test_modelo_metadata import _admit, _connect, _issue_scoped_key, _LoginObservation, _seed_periods
+from .served_runtime import SyntheticLogin
+from .test_modelo_metadata import _admit, _connect, _issue_scoped_key, _seed_periods
 from .test_modelo_metadata_history import _observe
 
 pytestmark = [
@@ -198,7 +199,7 @@ def native_bulk_runtime(
                 storage_identity=endpoint.storage_identity,
                 runtime_boot_id=boot,
                 stop=stop,
-                capture_login=lambda _channel: _LoginObservation(),
+                capture_login=lambda _channel: SyntheticLogin("native-modelo-metadata-test-login"),
                 secret_store=lambda: subject.native,
             )
             profiles.prepare_registry()

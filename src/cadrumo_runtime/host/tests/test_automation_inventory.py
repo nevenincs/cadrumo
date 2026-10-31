@@ -28,7 +28,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventoryProjection
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
@@ -38,7 +37,6 @@ from cadrumo.core.operations import OperationTerminalCondition, profile_operatio
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
 )
@@ -63,6 +61,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -71,21 +70,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "automation-inventory-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        """Supply only test-owned OS facts to the installed worker."""
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
@@ -189,7 +173,7 @@ def test_password_human_sees_nonsecret_inventory_and_api_key_cannot_submit_or_re
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("automation-inventory-native-login"),
             secret_store=lambda: enrollment.native,
         )
         profiles.prepare_registry()
@@ -351,7 +335,7 @@ def test_pristine_inventory_is_empty_and_missing_optional_store_does_not_block_p
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("automation-inventory-native-login"),
             secret_store=lambda: enrollment.native,
         )
         profiles.prepare_registry()

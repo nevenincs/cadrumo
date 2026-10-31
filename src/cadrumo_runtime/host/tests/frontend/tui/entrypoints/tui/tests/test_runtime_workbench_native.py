@@ -47,7 +47,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmissionState
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationAvailability, WorkbenchGenerationV1
 from cadrumo.application.workbench_generation_identity import WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
 from cadrumo.application.workbench_generation_operation import WorkbenchGenerationOperationRequest
@@ -86,7 +86,6 @@ from cadrumo.entrypoints.workbench_generation_composition import compose_secure_
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
 )
@@ -124,6 +123,7 @@ from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
 from .......frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ......served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -132,20 +132,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "tui-workbench-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
@@ -416,7 +402,7 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-workbench-native-login"),
             secret_store=lambda: subject.native,
         )
         # The installed runtime validates the operation graph before listening.
@@ -822,7 +808,7 @@ def test_installed_launcher_owns_human_and_api_sessions_without_local_custody(
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-workbench-native-login"),
             secret_store=lambda: subject.native,
         )
         # The installed runtime validates the operation graph before listening.

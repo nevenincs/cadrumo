@@ -5,10 +5,8 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from threading import Event
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
@@ -22,7 +20,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.application.modelo.profile_readiness_gate import modelo_work_profile_baseline_missing_paths
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
@@ -35,17 +32,13 @@ from cadrumo.application.user_profile.view_operation import (
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
-from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
-from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,21 +48,6 @@ pytestmark = [
 ]
 
 _STATUS_FACT_PATHS = frozenset({"identity.tax_id", "activities.description", "iva.regime", "tax_residence.ccaa"})
-
-
-class _LoginObservation:
-    login_id = "profile-status-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        """Supply explicit synthetic OS-login facts, never a private profile answer."""
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _status(client: FrontendClient, *, revision: int | None = None, digest: str | None = None):
@@ -153,79 +131,60 @@ def test_native_status_reports_incomplete_and_ready_profiles_with_exact_page_pin
 
         endpoint = WindowsEndpoint(storage_root=root)
         installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
-        stop, boot, native = Event(), uuid4(), MemoryNativePort()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
-            secret_store=lambda: native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        launch = LaunchDoor(
+        native = MemoryNativePort()
+        with serving_runtime(
             endpoint,
-            expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
-            try:
-                assert server.ready.wait(3)
-                for profile_id, label, expected_status, record in (
-                    (incomplete_id, "Worker profile 0", ProfileHealthStatus.INCOMPLETE, incomplete),
-                    (ready_id, "Worker profile 1", ProfileHealthStatus.READY, ready),
-                ):
-                    client = asyncio.run(
-                        FrontendClient.open(launch, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
+            root,
+            capture_login=lambda _channel: SyntheticLogin("profile-status-native-login"),
+            secret_store=lambda: native,
+            drain_seconds=15,
+        ) as served:
+            for profile_id, label, expected_status, record in (
+                (incomplete_id, "Worker profile 0", ProfileHealthStatus.INCOMPLETE, incomplete),
+                (ready_id, "Worker profile 1", ProfileHealthStatus.READY, ready),
+            ):
+                client = asyncio.run(
+                    FrontendClient.open(served.launch, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
+                )
+                with client:
+                    password = bytearray(PROFILE_INPUT.encode())
+                    client.login_password(password)
+                    assert password == bytearray(len(password))
+                    collection, status = _status(client)
+                    assert collection.profile_id == profile_id
+                    assert (collection.record_revision, collection.content_digest) == (
+                        record.record_revision,
+                        record.content_digest,
                     )
-                    with client:
-                        password = bytearray(PROFILE_INPUT.encode())
-                        client.login_password(password)
-                        assert password == bytearray(len(password))
-                        collection, status = _status(client)
-                        assert collection.profile_id == profile_id
-                        assert (collection.record_revision, collection.content_digest) == (
-                            record.record_revision,
-                            record.content_digest,
+                    assert collection.setup_state is (
+                        ProfileSetupState.INCOMPLETE
+                        if expected_status is ProfileHealthStatus.INCOMPLETE
+                        else ProfileSetupState.COMPLETE
+                    )
+                    assert status.health.status is expected_status
+                    _assert_canonical_status(
+                        status, profile_id=profile_id, label=label, record=record, operation=authority_operation
+                    )
+                    assert status.projection_valid is (expected_status is ProfileHealthStatus.READY)
+                    again, repeated = _status(
+                        client, revision=collection.record_revision, digest=collection.content_digest
+                    )
+                    assert repeated == status
+                    assert (again.record_revision, again.content_digest) == (
+                        collection.record_revision,
+                        collection.content_digest,
+                    )
+                    with pytest.raises(FrontendRefusedError, match="stale_revision"):
+                        client.read_profile_view(
+                            (ProfileViewPageKind.STATUS,),
+                            expected_revision=collection.record_revision + 1,
+                            expected_content_digest=collection.content_digest,
+                            timeout=60,
                         )
-                        assert collection.setup_state is (
-                            ProfileSetupState.INCOMPLETE
-                            if expected_status is ProfileHealthStatus.INCOMPLETE
-                            else ProfileSetupState.COMPLETE
+                    foreign_id = ready_id if profile_id == incomplete_id else incomplete_id
+                    with pytest.raises(FrontendRefusedError, match="profile_mismatch"):
+                        client.submit(
+                            ProfileViewOperationRequest(profile_id=foreign_id, page_kind=ProfileViewPageKind.STATUS),
+                            deadline=time.monotonic() + 5,
                         )
-                        assert status.health.status is expected_status
-                        _assert_canonical_status(
-                            status, profile_id=profile_id, label=label, record=record, operation=authority_operation
-                        )
-                        assert status.projection_valid is (expected_status is ProfileHealthStatus.READY)
-                        again, repeated = _status(
-                            client, revision=collection.record_revision, digest=collection.content_digest
-                        )
-                        assert repeated == status
-                        assert (again.record_revision, again.content_digest) == (
-                            collection.record_revision,
-                            collection.content_digest,
-                        )
-                        with pytest.raises(FrontendRefusedError, match="stale_revision"):
-                            client.read_profile_view(
-                                (ProfileViewPageKind.STATUS,),
-                                expected_revision=collection.record_revision + 1,
-                                expected_content_digest=collection.content_digest,
-                                timeout=60,
-                            )
-                        foreign_id = ready_id if profile_id == incomplete_id else incomplete_id
-                        with pytest.raises(FrontendRefusedError, match="profile_mismatch"):
-                            client.submit(
-                                ProfileViewOperationRequest(
-                                    profile_id=foreign_id, page_kind=ProfileViewPageKind.STATUS
-                                ),
-                                deadline=time.monotonic() + 5,
-                            )
-                        client.lock()
-            finally:
-                stop.set()
-                running.result(timeout=15)
-                endpoint.close()
+                    client.lock()

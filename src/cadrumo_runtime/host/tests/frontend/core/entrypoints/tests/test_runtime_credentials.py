@@ -24,10 +24,8 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -36,6 +34,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+
+from .....served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -46,20 +46,6 @@ pytestmark = [
 ]
 
 _REPLACEMENT = "synthetic-credential-successor"
-
-
-class _LoginObservation:
-    login_id = "installed-credential-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 class _BlockedNativePort(MemoryNativePort):
@@ -110,7 +96,7 @@ def test_installed_reference_reauthenticates_only_current_exact_native_credentia
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=uuid4(),
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("installed-credential-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()

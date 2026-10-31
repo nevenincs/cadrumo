@@ -22,9 +22,8 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.config import override_settings
-from cadrumo_client.contracts.access_vocabulary import AuthorityState, Availability
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
@@ -35,6 +34,8 @@ from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransp
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
+from ..served_runtime import SyntheticLogin
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -42,20 +43,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "cli-access-management-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _human(root: Path, profile_id: UUID, *command: str) -> Result:
@@ -141,7 +128,7 @@ def test_cli_session_lock_global_resume_and_key_denial_use_native_authority(tmp_
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("cli-access-management-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()

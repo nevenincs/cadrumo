@@ -18,11 +18,10 @@ from cadrumo.adapters.persistence.storage.custody.automation_profile import curr
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import AutomationReviewProjection, EnrollmentStage
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
@@ -39,6 +38,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -47,20 +47,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "automation-decision-client-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
@@ -130,7 +116,7 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("automation-decision-client-native-login"),
             secret_store=lambda: server_native,
         )
         profiles.prepare_registry()

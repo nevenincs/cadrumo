@@ -23,7 +23,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.config import override_settings
 from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
@@ -32,7 +31,6 @@ from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 from cadrumo.entrypoints.tui.secret.passphrase import PassphraseScreen
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
-from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello, RefusalError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -46,6 +44,7 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from .......frontend.tui.launcher import main
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ......served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -56,20 +55,6 @@ pytestmark = [
 ]
 
 _REPLACEMENT = "s16-new-native-tui-passphrase-do-not-print"
-
-
-class _LoginObservation:
-    login_id = "tui-password-rotation-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
@@ -113,7 +98,7 @@ def test_installed_account_password_change_retires_old_lease_and_reauthenticates
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-password-rotation-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()

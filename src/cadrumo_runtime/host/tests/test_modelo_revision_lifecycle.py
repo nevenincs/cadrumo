@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from threading import Event
 from uuid import UUID, uuid4
 
 import pytest
@@ -69,9 +67,8 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ..profile_connections import RuntimeProfileConnections
-from .test_modelo_metadata import _admit, _connect, _LoginObservation, _submit
+from .served_runtime import SyntheticLogin, serving_runtime
+from .test_modelo_metadata import _admit, _connect, _submit
 from .test_modelo_metadata_history import _observe
 
 pytestmark = [
@@ -238,152 +235,131 @@ def test_native_scoped_revision_verify_and_file_return_actual_receipts(
         key = credential.get_secret_value()
         close_active_bucket_session()
 
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+        with serving_runtime(
+            endpoint,
+            root,
+            capture_login=lambda _channel: SyntheticLogin("native-modelo-metadata-test-login"),
             secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
+        ):
+            client = _connect(endpoint)
             try:
-                assert server.ready.wait(3)
-                client = _connect(endpoint)
-                try:
-                    session_id = _admit(client, profile_id, method="api_key", proof=key)
-                    if calculate_in_runtime:
-                        calculate = ModeloWorkCalculateRequest.model_validate_json(
-                            canonical_json_bytes(
-                                {
-                                    "work_unit_id": unit.work_unit_id,
-                                    "actor": "native-operator",
-                                    "caller_context": "explicit",
-                                    "inputs": {
-                                        "binding_overrides": [
-                                            {"key": key, "value": "0"}
-                                            for key in (
-                                                "irpf.previous_year_economic_activity_net_income",
-                                                "modelo-130-resultados-negativos-anteriores",
-                                                "modelo-130-pagos-fraccionados-anteriores",
-                                            )
-                                        ]
-                                    },
-                                }
-                            )
+                session_id = _admit(client, profile_id, method="api_key", proof=key)
+                if calculate_in_runtime:
+                    calculate = ModeloWorkCalculateRequest.model_validate_json(
+                        canonical_json_bytes(
+                            {
+                                "work_unit_id": unit.work_unit_id,
+                                "actor": "native-operator",
+                                "caller_context": "explicit",
+                                "inputs": {
+                                    "binding_overrides": [
+                                        {"key": key, "value": "0"}
+                                        for key in (
+                                            "irpf.previous_year_economic_activity_net_income",
+                                            "modelo-130-resultados-negativos-anteriores",
+                                            "modelo-130-pagos-fraccionados-anteriores",
+                                        )
+                                    ]
+                                },
+                            }
                         )
-                        calculated, calculate_effect = _run(
-                            client,
-                            profile_id,
-                            session_id,
-                            definition_id="modelo.work.calculate",
-                            subject_ref=unit.work_unit_id,
-                            payload=calculate,
-                            result_type=ModeloWorkCalculatePublicResultV2,
-                        )
-                        assert calculate_effect is OperationEffect.UPDATED
-                        assert calculated.revision_published
-                        assert calculated.calculation.bucket_id == str(profile_id)
-                        assert calculated.unit.work_unit_id == unit.work_unit_id
-                        assert calculated.unit.current_calculation_revision_id == calculated.calculation_revision_id
-                        assert calculated.calculation.registry_snapshot_ref.revision_id == unit.revision_id
-                        assert calculated.calculation.period.to_period() == unit.period
-                        revision_id = calculated.calculation_revision_id
-                        repeated, repeat_effect = _run(
-                            client,
-                            profile_id,
-                            session_id,
-                            definition_id="modelo.work.calculate",
-                            subject_ref=unit.work_unit_id,
-                            payload=calculate,
-                            result_type=ModeloWorkCalculatePublicResultV2,
-                        )
-                        assert repeated.calculation_revision_id == revision_id
-                        assert not repeated.revision_published
-                        # The revision witness does not cover incidental writers.
-                        assert repeat_effect is OperationEffect.UNKNOWN
-                    assert revision_id is not None
-                    selected, read_effect = _run(
-                        client,
-                        profile_id,
-                        session_id,
-                        definition_id="modelo.work.revision",
-                        subject_ref=profile_operation_subject(str(profile_id)),
-                        payload=ModeloWorkRevisionRequest(profile_id=profile_id, calculation_revision_id=revision_id),
-                        result_type=ModeloWorkRevisionProjection,
                     )
-                    assert read_effect is OperationEffect.NONE
-                    assert selected.verification_report_id == report_id
-                    assert selected.unit.work_unit_id == unit.work_unit_id
-                    verified, verify_effect = _run(
+                    calculated, calculate_effect = _run(
                         client,
                         profile_id,
                         session_id,
-                        definition_id="modelo.work.verify",
+                        definition_id="modelo.work.calculate",
                         subject_ref=unit.work_unit_id,
-                        payload=ModeloWorkVerifyRequest(calculation_revision_id=revision_id, actor="native-operator"),
-                        result_type=ModeloWorkVerifyPublicResultV2,
+                        payload=calculate,
+                        result_type=ModeloWorkCalculatePublicResultV2,
                     )
-                    assert verify_effect is (OperationEffect.UPDATED if calculate_in_runtime else OperationEffect.NONE)
-                    if report_id is not None:
-                        assert verified.verification.report.verification_report_id == report_id
-                    assert verified.verification.published is calculate_in_runtime
-                    report_id = verified.verification_report_id
-                    assert verified.advisories.work_unit_id == unit.work_unit_id
-                    assert verified.advisories.calculation_revision_id == revision_id
-                    assert verified.advisories.period == unit.period.registry_token
-                    filing = ModeloWorkFileRequest(
-                        approval=ModeloWorkFileApproval(
-                            calculation_revision_id=revision_id, verification_report_id=report_id
-                        ),
-                        actor="native-operator",
+                    assert calculate_effect is OperationEffect.UPDATED
+                    assert calculated.revision_published
+                    assert calculated.calculation.bucket_id == str(profile_id)
+                    assert calculated.unit.work_unit_id == unit.work_unit_id
+                    assert calculated.unit.current_calculation_revision_id == calculated.calculation_revision_id
+                    assert calculated.calculation.registry_snapshot_ref.revision_id == unit.revision_id
+                    assert calculated.calculation.period.to_period() == unit.period
+                    revision_id = calculated.calculation_revision_id
+                    repeated, repeat_effect = _run(
+                        client,
+                        profile_id,
+                        session_id,
+                        definition_id="modelo.work.calculate",
+                        subject_ref=unit.work_unit_id,
+                        payload=calculate,
+                        result_type=ModeloWorkCalculatePublicResultV2,
                     )
-                    receipts = []
-                    for expected_effect in (OperationEffect.UPDATED, OperationEffect.NONE):
-                        filed, file_effect = _run(
-                            client,
-                            profile_id,
-                            session_id,
-                            definition_id="modelo.work.file",
-                            subject_ref=unit.work_unit_id,
-                            payload=filing,
-                            result_type=ModeloWorkFilePublicResultV2,
-                        )
-                        assert file_effect is expected_effect
-                        assert filed.published is (expected_effect is OperationEffect.UPDATED)
-                        record = filed.record.to_record()
-                        assert record.bucket_id == str(profile_id)
-                        assert record.calculation_revision_id == revision_id
-                        assert not record.aeat_accepted
-                        assert filed.handoff_required
-                        assert filed.advisories == verified.advisories
-                        receipts.append(record)
-                    assert receipts[0] == receipts[1]
-                    denied = _submit(
+                    assert repeated.calculation_revision_id == revision_id
+                    assert not repeated.revision_published
+                    # The revision witness does not cover incidental writers.
+                    assert repeat_effect is OperationEffect.UNKNOWN
+                assert revision_id is not None
+                selected, read_effect = _run(
+                    client,
+                    profile_id,
+                    session_id,
+                    definition_id="modelo.work.revision",
+                    subject_ref=profile_operation_subject(str(profile_id)),
+                    payload=ModeloWorkRevisionRequest(profile_id=profile_id, calculation_revision_id=revision_id),
+                    result_type=ModeloWorkRevisionProjection,
+                )
+                assert read_effect is OperationEffect.NONE
+                assert selected.verification_report_id == report_id
+                assert selected.unit.work_unit_id == unit.work_unit_id
+                verified, verify_effect = _run(
+                    client,
+                    profile_id,
+                    session_id,
+                    definition_id="modelo.work.verify",
+                    subject_ref=unit.work_unit_id,
+                    payload=ModeloWorkVerifyRequest(calculation_revision_id=revision_id, actor="native-operator"),
+                    result_type=ModeloWorkVerifyPublicResultV2,
+                )
+                assert verify_effect is (OperationEffect.UPDATED if calculate_in_runtime else OperationEffect.NONE)
+                if report_id is not None:
+                    assert verified.verification.report.verification_report_id == report_id
+                assert verified.verification.published is calculate_in_runtime
+                report_id = verified.verification_report_id
+                assert verified.advisories.work_unit_id == unit.work_unit_id
+                assert verified.advisories.calculation_revision_id == revision_id
+                assert verified.advisories.period == unit.period.registry_token
+                filing = ModeloWorkFileRequest(
+                    approval=ModeloWorkFileApproval(
+                        calculation_revision_id=revision_id, verification_report_id=report_id
+                    ),
+                    actor="native-operator",
+                )
+                receipts = []
+                for expected_effect in (OperationEffect.UPDATED, OperationEffect.NONE):
+                    filed, file_effect = _run(
                         client,
                         profile_id,
                         session_id,
                         definition_id="modelo.work.file",
-                        subject_ref=revision_id,
-                        payload_json=filing.model_dump_json(),
+                        subject_ref=unit.work_unit_id,
+                        payload=filing,
+                        result_type=ModeloWorkFilePublicResultV2,
                     )
-                    assert isinstance(denied, AccessRefusal)
-                    assert denied.code is AccessDenialCode.OPERATION_DENIED
-                finally:
-                    client.close()
+                    assert file_effect is expected_effect
+                    assert filed.published is (expected_effect is OperationEffect.UPDATED)
+                    record = filed.record.to_record()
+                    assert record.bucket_id == str(profile_id)
+                    assert record.calculation_revision_id == revision_id
+                    assert not record.aeat_accepted
+                    assert filed.handoff_required
+                    assert filed.advisories == verified.advisories
+                    receipts.append(record)
+                assert receipts[0] == receipts[1]
+                denied = _submit(
+                    client,
+                    profile_id,
+                    session_id,
+                    definition_id="modelo.work.file",
+                    subject_ref=revision_id,
+                    payload_json=filing.model_dump_json(),
+                )
+                assert isinstance(denied, AccessRefusal)
+                assert denied.code is AccessDenialCode.OPERATION_DENIED
             finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    running.result(timeout=20)
-                except Exception:
-                    if primary is None:
-                        raise
-                finally:
-                    endpoint.close()
+                client.close()

@@ -17,9 +17,7 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
-from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -32,6 +30,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -42,21 +41,6 @@ pytestmark = [
 ]
 
 _SUCCESSOR = b"synthetic-worker-password-successor"
-
-
-class _LoginObservation:
-    login_id = "profile-rotation-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        """Supply synthetic OS facts while the installed custody path stays real."""
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 @contextmanager
@@ -76,7 +60,7 @@ def _native_runtime(tmp_path: Path) -> Generator[tuple[UUID, UUID, LaunchDoor, U
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("profile-rotation-native-login"),
             secret_store=lambda: native,
         )
         profiles.prepare_registry()

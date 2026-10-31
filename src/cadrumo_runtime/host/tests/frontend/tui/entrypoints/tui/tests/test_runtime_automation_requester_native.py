@@ -35,9 +35,6 @@ from cadrumo.application.user_profile.access_contracts import (
     KEY_ROTATION_MAXIMUM_OVERLAP,
     ApiKeyRecord,
     AutomationGrant,
-    LoginEligibility,
-    OsLockState,
-    OsLoginContext,
 )
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage, EnrollmentTransition
 from cadrumo.core.async_cleanup import AsyncCloseable, await_cancellation_complete, close_async_resources
@@ -47,7 +44,7 @@ from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
@@ -73,6 +70,7 @@ from .......frontend.tui.secret.automation_requester import RuntimeAutomationReq
 from .......frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ......served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -81,20 +79,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "tui-requester-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_approval(
@@ -119,7 +103,7 @@ def test_prelogin_tui_request_delivers_only_to_client_after_separate_human_appro
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-requester-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()
@@ -387,7 +371,7 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-requester-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()

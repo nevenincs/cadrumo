@@ -11,23 +11,21 @@ import os
 import sys
 import time
 from collections.abc import Generator
-from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
 from threading import Event
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import psutil
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.attendance import AttendancePending
-from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -36,9 +34,8 @@ from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
-from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from .. import profile_connection_attendance
-from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -49,51 +46,20 @@ pytestmark = [
 ]
 
 
-class _LoginObservation:
-    login_id = "attendance-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        """Supply synthetic OS facts while transport, custody and authority stay real."""
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
-
-
 @contextmanager
 def _runtime(tmp_path: Path) -> Generator[tuple[UUID, UUID, LaunchDoor]]:
     with worker_profiles(tmp_path) as (root, targets):
         endpoint = WindowsEndpoint(storage_root=root)
         installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
-        stop, native, boot = Event(), MemoryNativePort(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+        native = MemoryNativePort()
+        with serving_runtime(
+            endpoint,
+            root,
+            capture_login=lambda _channel: SyntheticLogin("attendance-native-login"),
             secret_store=lambda: native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        launch = LaunchDoor(
-            endpoint, expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity)
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
-            try:
-                assert server.ready.wait(30), "the runtime transport did not start listening"
-                yield targets[0][0].binding.profile_id, targets[1][0].binding.profile_id, launch
-            finally:
-                stop.set()
-                running.result(timeout=20)
-                endpoint.close()
+            ready_seconds=30,
+        ) as served:
+            yield targets[0][0].binding.profile_id, targets[1][0].binding.profile_id, served.launch
 
 
 def _client(

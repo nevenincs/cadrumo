@@ -33,7 +33,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipi
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.errors.hierarchy import CadrumoError
@@ -52,7 +52,6 @@ from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
 )
@@ -69,6 +68,7 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.installation_runtime import serve_check
 
 from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
+from ......served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -84,20 +84,6 @@ _SETTLE_SECONDS = 180
 _SIZE = (140, 60)
 
 type _Pilot = Pilot[AccountRecomposeRequiredV1 | None]
-
-
-class _LoginObservation:
-    login_id = "tui-restricted-destinations-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
@@ -337,7 +323,7 @@ def test_an_api_key_session_runs_an_admitted_read_is_refused_another_and_reaches
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-restricted-destinations-native-login"),
             secret_store=lambda: subject.native,
             installation_acts=acts,
         )

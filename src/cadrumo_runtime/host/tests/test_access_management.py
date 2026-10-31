@@ -20,7 +20,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo_client.contracts.access_management import (
     AutomationDenied,
@@ -32,7 +31,7 @@ from cadrumo_client.contracts.access_management import (
     SessionInventory,
     SessionInventoryReply,
 )
-from cadrumo_client.contracts.access_vocabulary import AuthorityState, Availability
+from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
@@ -44,6 +43,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -52,20 +52,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "native-access-management-test-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
@@ -142,7 +128,7 @@ def test_native_human_lock_resume_selected_grant_and_revoke_key(tmp_path: Path) 
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("native-access-management-test-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()

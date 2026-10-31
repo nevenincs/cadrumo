@@ -30,7 +30,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -43,7 +42,6 @@ from cadrumo.entrypoints.tui.declarations.picker import NewDeclarationPicker
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
-from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -56,6 +54,7 @@ from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransp
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 from ........frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
+from .......served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -65,20 +64,6 @@ pytestmark = [
 ]
 
 _TARGET = Period.from_year_and_code(2025, "2T")
-
-
-class _LoginObservation:
-    login_id = "tui-declarations-create-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
@@ -224,7 +209,7 @@ def test_installed_creation_opens_a_persisted_new_period_and_returns_to_that_row
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-declarations-create-login"),
             secret_store=lambda: subject.native,
         )
         # The installed runtime validates the operation graph before listening.

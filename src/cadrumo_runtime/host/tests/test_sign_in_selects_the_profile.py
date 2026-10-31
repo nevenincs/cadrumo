@@ -8,9 +8,7 @@ from __future__ import annotations
 
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from threading import Event
 from uuid import UUID, uuid4
 
 import pytest
@@ -28,8 +26,7 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import serving_runtime
 from .test_profile_connections import LoginObservation, connect, login
 
 pytestmark = [
@@ -70,43 +67,28 @@ def test_a_person_sign_in_selects_its_profile_in_the_runtime(tmp_path: Path) -> 
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()
         pointer_path(root).unlink(missing_ok=True)
-        stop, boot = Event(), uuid4()
         observation = LoginObservation(owner_id())
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
+        with serving_runtime(
+            endpoint,
+            root,
             capture_login=lambda _channel: observation,
             secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            serving = pool.submit(server.serve)
+            ready_seconds=30,
+        ):
+            connection = connect(endpoint)
             try:
-                assert server.ready.wait(30)
-                connection = connect(endpoint)
-                try:
-                    before = connection.active_profile(
-                        ActiveProfileRequest(request_id=uuid4()), deadline=exchange_deadline()
-                    )
-                    per_command = login(connection, profile_id, "password", PROFILE_INPUT.encode())
-                    unmoved = read_pointer_selection(root)
-                    admitted = _sign_in(connect(endpoint), profile_id)
-                    written = read_pointer_selection(root)
-                    after = connection.active_profile(
-                        ActiveProfileRequest(request_id=uuid4()), deadline=exchange_deadline()
-                    )
-                finally:
-                    connection.close()
+                before = connection.active_profile(
+                    ActiveProfileRequest(request_id=uuid4()), deadline=exchange_deadline()
+                )
+                per_command = login(connection, profile_id, "password", PROFILE_INPUT.encode())
+                unmoved = read_pointer_selection(root)
+                admitted = _sign_in(connect(endpoint), profile_id)
+                written = read_pointer_selection(root)
+                after = connection.active_profile(
+                    ActiveProfileRequest(request_id=uuid4()), deadline=exchange_deadline()
+                )
             finally:
-                stop.set()
-                serving.result(timeout=20)
-                endpoint.close()
-
+                connection.close()
     assert isinstance(before, ActiveProfileReply) and isinstance(after, ActiveProfileReply)
     assert (before.selected_profile_id, before.presence) == (None, SignInPresence.ABSENT)
     assert isinstance(per_command, ProfileStatus) and per_command.status.denial is None

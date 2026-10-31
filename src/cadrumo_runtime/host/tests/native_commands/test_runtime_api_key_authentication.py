@@ -21,14 +21,12 @@ from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipi
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.user_profile.view_operation import PROFILE_VIEW_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
 )
@@ -40,6 +38,8 @@ from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransp
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
+from ..served_runtime import SyntheticLogin
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -47,20 +47,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "cli-api-key-test-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _view_scope(destination_id: UUID) -> AccessScope:
@@ -184,7 +170,7 @@ def test_enrolled_api_key_and_reference_read_only_their_profile_and_cannot_becom
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("cli-api-key-test-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()

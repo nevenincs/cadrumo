@@ -36,7 +36,8 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .test_access_management import _connect, _LoginObservation
+from .served_runtime import SyntheticLogin
+from .test_access_management import _connect
 
 pytestmark = [
     pytest.mark.integration,
@@ -47,7 +48,7 @@ pytestmark = [
 ]
 
 
-class _MutableLogin(_LoginObservation):
+class _MutableLogin(SyntheticLogin):
     locked = False
 
     @override
@@ -63,7 +64,7 @@ def test_runtime_bootstrap_reset_keeps_proof_and_replay_fences(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     valid_proof = case != "wrong-proof"
-    login = _MutableLogin()
+    login = _MutableLogin("native-access-management-test-login")
     original_rewrap = recovery_custody.rewrap_profile_passphrase_under_lock
     if case == "publication-failure":
 

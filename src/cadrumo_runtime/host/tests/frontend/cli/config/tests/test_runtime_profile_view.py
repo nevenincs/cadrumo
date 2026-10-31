@@ -13,14 +13,14 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.config import override_settings
-from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
+
+from .....served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -29,21 +29,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "cli-runtime-view-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        """Supply only test-owned login facts for the native profile worker."""
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def test_named_profile_view_uses_installed_runtime_and_preserves_cli_envelope(tmp_path: Path, run_cadrumo_cli) -> None:
@@ -59,7 +44,7 @@ def test_named_profile_view_uses_installed_runtime_and_preserves_cli_envelope(tm
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("cli-runtime-view-login"),
             secret_store=lambda: native,
         )
         profiles.prepare_registry()

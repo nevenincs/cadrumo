@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from threading import Event
 from uuid import uuid4
 
 import pytest
@@ -19,8 +17,7 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import serving_runtime
 from .test_profile_connections import LoginObservation, connect, login
 
 pytestmark = [
@@ -45,51 +42,33 @@ def test_cold_and_shared_human_admission_publish_ready_contracts(tmp_path: Path,
     ) as subject:
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()
-        stop, boot = Event(), uuid4()
         observation = LoginObservation(owner_id())
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: observation,
-            secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            serving = pool.submit(server.serve)
+        with serving_runtime(
+            endpoint, root, capture_login=lambda _channel: observation, secret_store=lambda: subject.native
+        ):
+            first, second = connect(endpoint), connect(endpoint)
             try:
-                assert server.ready.wait(3)
-                first, second = connect(endpoint), connect(endpoint)
-                try:
-                    sessions = []
-                    for client in (first, second):
-                        started = time.monotonic()
-                        admitted = login(client, profile_id, "password", PROFILE_INPUT.encode())
-                        print("human_admission_seconds", time.monotonic() - started, flush=True)
-                        assert isinstance(admitted, ProfileStatus)
-                        assert admitted.status.denial is None
-                        session = admitted.status.session_id
-                        assert session is not None
-                        sessions.append(session)
-                        contract = client.operation(
-                            OperationContract(
-                                request_id=uuid4(),
-                                profile_id=profile_id,
-                                session_id=session,
-                                definition_id="user-profile.field-mutation",
-                            ),
-                            deadline=time.monotonic() + 10,
-                        )
-                        assert isinstance(contract, OperationContractReply)
-                    assert sessions[0] != sessions[1]
-                finally:
-                    first.close()
-                    second.close()
+                sessions = []
+                for client in (first, second):
+                    started = time.monotonic()
+                    admitted = login(client, profile_id, "password", PROFILE_INPUT.encode())
+                    print("human_admission_seconds", time.monotonic() - started, flush=True)
+                    assert isinstance(admitted, ProfileStatus)
+                    assert admitted.status.denial is None
+                    session = admitted.status.session_id
+                    assert session is not None
+                    sessions.append(session)
+                    contract = client.operation(
+                        OperationContract(
+                            request_id=uuid4(),
+                            profile_id=profile_id,
+                            session_id=session,
+                            definition_id="user-profile.field-mutation",
+                        ),
+                        deadline=time.monotonic() + 10,
+                    )
+                    assert isinstance(contract, OperationContractReply)
+                assert sessions[0] != sessions[1]
             finally:
-                stop.set()
-                serving.result(timeout=20)
-                endpoint.close()
+                first.close()
+                second.close()

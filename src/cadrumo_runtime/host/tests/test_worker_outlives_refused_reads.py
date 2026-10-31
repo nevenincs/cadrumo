@@ -96,8 +96,9 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin
 from .stored_sign_in_runtime import stored_sign_in_runtime
-from .test_modelo_metadata import _admit, _connect, _LoginObservation, _seed_periods, _submit
+from .test_modelo_metadata import _admit, _connect, _seed_periods, _submit
 
 pytestmark = [
     pytest.mark.integration,
@@ -399,7 +400,7 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
                 storage_identity=endpoint.storage_identity,
                 runtime_boot_id=boot,
                 stop=stop,
-                capture_login=lambda _channel: _LoginObservation(),
+                capture_login=lambda _channel: SyntheticLogin("native-modelo-metadata-test-login"),
                 secret_store=lambda: subject.native,
             )
             profiles.prepare_registry()

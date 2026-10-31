@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Event
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
@@ -15,7 +14,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
@@ -30,19 +28,15 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.domain.user_profile.values import UserProfileRecord
-from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.profile_language import read_profile_language, set_profile_language
 from cadrumo_client.transport.profile_mutations import ProfileMutationRunError, run_profile_mutation
-from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
-from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -51,20 +45,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "profile-patch-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _snapshot(profile_id: UUID, *, root: Path) -> tuple[UserProfileRecord, int]:
@@ -120,127 +100,109 @@ def test_native_patch_is_atomic_noop_and_exact_profile_bound(tmp_path: Path) -> 
         foreign_initial, foreign_initial_events = _snapshot(foreign_id, root=root)
         endpoint = WindowsEndpoint(storage_root=root)
         installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
-        stop, boot, native = Event(), uuid4(), MemoryNativePort()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
-            secret_store=lambda: native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        launch = LaunchDoor(
+        native = MemoryNativePort()
+        with serving_runtime(
             endpoint,
-            expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
-            try:
-                assert server.ready.wait(3)
-                client = asyncio.run(
-                    FrontendClient.open(launch, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+            root,
+            capture_login=lambda _channel: SyntheticLogin("profile-patch-native-login"),
+            secret_store=lambda: native,
+            drain_seconds=15,
+        ) as served:
+            client = asyncio.run(
+                FrontendClient.open(served.launch, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+            )
+            with client:
+                client.login_password(bytearray(PROFILE_INPUT.encode()))
+                first = run_profile_mutation(
+                    client,
+                    _patch(
+                        profile_id,
+                        revision=initial.record_revision,
+                        digest=initial.content_digest,
+                        values=(("output-language", "ca"), ("name", "Ada Example")),
+                    ),
+                    timeout=60,
                 )
-                with client:
-                    client.login_password(bytearray(PROFILE_INPUT.encode()))
-                    first = run_profile_mutation(
-                        client,
-                        _patch(
-                            profile_id,
-                            revision=initial.record_revision,
-                            digest=initial.content_digest,
-                            values=(("output-language", "ca"), ("name", "Ada Example")),
-                        ),
-                        timeout=60,
-                    )
-                    assert first.effect is OperationEffect.UPDATED
-                    assert type(first.projection) is ProfilePatchOperationProjection
-                    assert first.projection.changed
-                    assert first.projection.record_revision == initial.record_revision + 1
-                    revision, digest, facts = _fact_values(client)
-                    assert revision == first.projection.record_revision
-                    assert facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
-                    assert facts["identity.name"] == "Ada Example"
+                assert first.effect is OperationEffect.UPDATED
+                assert type(first.projection) is ProfilePatchOperationProjection
+                assert first.projection.changed
+                assert first.projection.record_revision == initial.record_revision + 1
+                revision, digest, facts = _fact_values(client)
+                assert revision == first.projection.record_revision
+                assert facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
+                assert facts["identity.name"] == "Ada Example"
 
-                    same = run_profile_mutation(
+                same = run_profile_mutation(
+                    client,
+                    _patch(
+                        profile_id,
+                        revision=revision,
+                        digest=digest,
+                        values=(("output-language", "ca"), ("name", "Ada Example")),
+                    ),
+                    timeout=60,
+                )
+                assert same.effect is OperationEffect.NONE
+                assert type(same.projection) is ProfilePatchOperationProjection
+                assert not same.projection.changed
+                assert same.projection.record_revision == revision
+
+                with pytest.raises(ProfileMutationRunError) as invalid:
+                    run_profile_mutation(
                         client,
                         _patch(
                             profile_id,
                             revision=revision,
                             digest=digest,
-                            values=(("output-language", "ca"), ("name", "Ada Example")),
+                            values=(("name", "Unpublished"), ("no-such-question", "bad")),
                         ),
                         timeout=60,
                     )
-                    assert same.effect is OperationEffect.NONE
-                    assert type(same.projection) is ProfilePatchOperationProjection
-                    assert not same.projection.changed
-                    assert same.projection.record_revision == revision
+                assert invalid.value.operation_id
+                assert invalid.value.terminal_condition is OperationTerminalCondition.REFUSED
+                assert invalid.value.effect is not OperationEffect.UPDATED
+                assert _fact_values(client) == (revision, digest, facts)
 
-                    with pytest.raises(ProfileMutationRunError) as invalid:
-                        run_profile_mutation(
-                            client,
-                            _patch(
-                                profile_id,
-                                revision=revision,
-                                digest=digest,
-                                values=(("name", "Unpublished"), ("no-such-question", "bad")),
-                            ),
-                            timeout=60,
-                        )
-                    assert invalid.value.operation_id
-                    assert invalid.value.terminal_condition is OperationTerminalCondition.REFUSED
-                    assert invalid.value.effect is not OperationEffect.UPDATED
-                    assert _fact_values(client) == (revision, digest, facts)
-
-                    with pytest.raises(ProfileMutationRunError) as stale:
-                        run_profile_mutation(
-                            client,
-                            _patch(
-                                profile_id,
-                                revision=initial.record_revision,
-                                digest=initial.content_digest,
-                                values=(("name", "Stale"),),
-                            ),
-                            timeout=60,
-                        )
-                    assert stale.value.reason == "FAIL_PROFILE_RECORD_CONFLICT"
-                    assert _fact_values(client) == (revision, digest, facts)
-
-                    with pytest.raises(FrontendRefusedError):
-                        run_profile_mutation(
-                            client,
-                            _patch(
-                                foreign_id,
-                                revision=revision,
-                                digest=digest,
-                                values=(("name", "Wrong profile"),),
-                            ),
-                            timeout=60,
-                        )
-                    assert _fact_values(client) == (revision, digest, facts)
-
-                    cleared = run_profile_mutation(
+                with pytest.raises(ProfileMutationRunError) as stale:
+                    run_profile_mutation(
                         client,
-                        _patch(profile_id, revision=revision, digest=digest, values=(("name", ""),)),
+                        _patch(
+                            profile_id,
+                            revision=initial.record_revision,
+                            digest=initial.content_digest,
+                            values=(("name", "Stale"),),
+                        ),
                         timeout=60,
                     )
-                    assert cleared.effect is OperationEffect.UPDATED
-                    assert type(cleared.projection) is ProfilePatchOperationProjection
-                    assert cleared.projection.changed
-                    assert cleared.projection.record_revision == revision + 1
-                    final_revision, _, final_facts = _fact_values(client)
-                    assert final_revision == cleared.projection.record_revision
-                    assert "identity.name" not in final_facts
-                    assert final_facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
-            finally:
-                stop.set()
-                running.result(timeout=15)
-                endpoint.close()
+                assert stale.value.reason == "FAIL_PROFILE_RECORD_CONFLICT"
+                assert _fact_values(client) == (revision, digest, facts)
 
+                with pytest.raises(FrontendRefusedError):
+                    run_profile_mutation(
+                        client,
+                        _patch(
+                            foreign_id,
+                            revision=revision,
+                            digest=digest,
+                            values=(("name", "Wrong profile"),),
+                        ),
+                        timeout=60,
+                    )
+                assert _fact_values(client) == (revision, digest, facts)
+
+                cleared = run_profile_mutation(
+                    client,
+                    _patch(profile_id, revision=revision, digest=digest, values=(("name", ""),)),
+                    timeout=60,
+                )
+                assert cleared.effect is OperationEffect.UPDATED
+                assert type(cleared.projection) is ProfilePatchOperationProjection
+                assert cleared.projection.changed
+                assert cleared.projection.record_revision == revision + 1
+                final_revision, _, final_facts = _fact_values(client)
+                assert final_revision == cleared.projection.record_revision
+                assert "identity.name" not in final_facts
+                assert final_facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
         final, final_events = _snapshot(profile_id, root=root)
         assert final.record_revision == initial.record_revision + 2
         assert final_events == initial_events + 2
@@ -261,53 +223,37 @@ def test_canonical_language_bridge_writes_registered_fact_and_notifies_other_fro
         foreign_before, foreign_events = _snapshot(foreign_id, root=root)
         endpoint = WindowsEndpoint(storage_root=root)
         installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
-        stop, boot, native = Event(), uuid4(), MemoryNativePort()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
-            secret_store=lambda: native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        launch = LaunchDoor(
-            endpoint, expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity)
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
-            try:
-                assert server.ready.wait(3)
-                with (
-                    asyncio.run(
-                        FrontendClient.open(launch, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
-                    ) as cli,
-                    asyncio.run(
-                        FrontendClient.open(launch, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
-                    ) as tui,
-                ):
-                    cli.login_password(bytearray(PROFILE_INPUT.encode()))
-                    tui.login_password(bytearray(PROFILE_INPUT.encode()))
-                    dirty = Event()
-                    tui.subscribe_profile_language_changes(lambda _event: dirty.set())
-                    original = read_profile_language(tui)
-                    dirty.clear()
-                    changed = set_profile_language(cli, OutputLanguage.HU)
-                    assert changed.language is OutputLanguage.HU
-                    assert changed.record_revision == original.record_revision + 1
-                    assert dirty.wait(5)
-                    assert read_profile_language(tui).language is OutputLanguage.HU
-                    assert set_profile_language(cli, OutputLanguage.HU).record_revision == changed.record_revision
-                    cli.lock()
-                    with pytest.raises(FrontendRefusedError):
-                        set_profile_language(cli, OutputLanguage.CA)
-            finally:
-                stop.set()
-                running.result(timeout=15)
-                endpoint.close()
+        native = MemoryNativePort()
+        with (
+            serving_runtime(
+                endpoint,
+                root,
+                capture_login=lambda _channel: SyntheticLogin("profile-patch-native-login"),
+                secret_store=lambda: native,
+                drain_seconds=15,
+            ) as served,
+            asyncio.run(
+                FrontendClient.open(served.launch, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
+            ) as cli,
+            asyncio.run(
+                FrontendClient.open(served.launch, profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+            ) as tui,
+        ):
+            cli.login_password(bytearray(PROFILE_INPUT.encode()))
+            tui.login_password(bytearray(PROFILE_INPUT.encode()))
+            dirty = Event()
+            tui.subscribe_profile_language_changes(lambda _event: dirty.set())
+            original = read_profile_language(tui)
+            dirty.clear()
+            changed = set_profile_language(cli, OutputLanguage.HU)
+            assert changed.language is OutputLanguage.HU
+            assert changed.record_revision == original.record_revision + 1
+            assert dirty.wait(5)
+            assert read_profile_language(tui).language is OutputLanguage.HU
+            assert set_profile_language(cli, OutputLanguage.HU).record_revision == changed.record_revision
+            cli.lock()
+            with pytest.raises(FrontendRefusedError):
+                set_profile_language(cli, OutputLanguage.CA)
         persisted, persisted_events = _snapshot(profile_id, root=root)
         assert any(fact.path == PROFILE_OUTPUT_LANGUAGE_PATH and fact.value == "hu" for fact in persisted.facts)
         assert persisted_events == initial_events + 1

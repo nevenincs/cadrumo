@@ -24,11 +24,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.config import override_settings
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.transport import credentials
@@ -44,6 +43,8 @@ from cadrumo_runtime.commands import runtime_automation_request
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
+from ..served_runtime import SyntheticLogin
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -51,20 +52,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "cli-automation-change-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 @pytest.mark.parametrize("kind", [EnrollmentKind.ROTATE, EnrollmentKind.RENEW, EnrollmentKind.CHANGE_SCOPE])
@@ -106,7 +93,7 @@ def test_installed_change_reconciles_without_forwarding_human_receipt(
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("cli-automation-change-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()

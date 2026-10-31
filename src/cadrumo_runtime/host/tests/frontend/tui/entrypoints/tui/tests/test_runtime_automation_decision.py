@@ -22,7 +22,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect
@@ -31,7 +30,6 @@ from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
@@ -50,6 +48,7 @@ from .......frontend.tui.runtime_access_management import RuntimeAccessManagemen
 from .......frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
+from ......served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -58,20 +57,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "tui-automation-decision-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _requester(
@@ -125,7 +110,7 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-automation-decision-native-login"),
             secret_store=lambda: subject.native,
         )
         profiles.prepare_registry()

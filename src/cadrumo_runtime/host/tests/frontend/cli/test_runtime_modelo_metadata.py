@@ -22,18 +22,17 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
 from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
+from ...served_runtime import SyntheticLogin
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -43,20 +42,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "cli-modelo-metadata-test-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _seed_unit(profile_id: str) -> WorkUnit:
@@ -115,7 +100,7 @@ def test_installed_cli_rename_and_discard_use_exact_worker_snapshot(tmp_path: Pa
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("cli-modelo-metadata-test-login"),
             secret_store=lambda: native,
         )
         profiles.prepare_registry()

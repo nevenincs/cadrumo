@@ -26,7 +26,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationReceiptProjection,
@@ -40,7 +39,7 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, exchange_deadline
@@ -68,6 +67,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin
 
 pytestmark = [
     pytest.mark.integration,
@@ -94,20 +94,6 @@ class _ObservedClientPort(MemoryNativePort):
     def replace(self, namespace: str, account: str, value: SecretBytes) -> None:
         self.events.append(("write", namespace, account))
         super().replace(namespace, account, value)
-
-
-class _LoginObservation:
-    login_id = "preunlock-enrollment-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
@@ -261,7 +247,7 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("preunlock-enrollment-native-login"),
             secret_store=lambda: server_native,
         )
         profiles.prepare_registry()
@@ -488,7 +474,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("preunlock-enrollment-native-login"),
             secret_store=lambda: server_native,
         )
         profiles.prepare_registry()
