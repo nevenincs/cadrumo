@@ -29,6 +29,7 @@ const PATH_CRATES = [
 const INTERPRETER_SOURCES = [
   "interpreter/windows/host.manifest",
   "interpreter/windows/host.c",
+  "interpreter/posix/host.c",
   "interpreter/launch_guard.h",
   "interpreter/launch_profile.h",
 ];

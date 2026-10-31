@@ -122,13 +122,9 @@ include("${PROJECT_SOURCE_DIR}/native/cmake/LaunchGuard.cmake")
 include("${PROJECT_SOURCE_DIR}/native/cmake/Manager.cmake")
 include("${PROJECT_SOURCE_DIR}/native/cmake/Installer.cmake")
 # The interpreter host crate is built only inside the desktop image: its build.rs compiles the
-# Windows host with the desktop's identity, so it is linted with that identity and in a target
-# directory no build shares. Elsewhere its build script compiles nothing.
-set(interpreter_host_identity)
-if(WIN32)
-  set(interpreter_host_identity --build-identity desktop)
-endif()
-cadrumo_cargo_command(interpreter_host_cargo ${interpreter_host_identity}
+# platform's C host with the desktop's identity, so it is linted with that identity and in a
+# target directory no build shares.
+cadrumo_cargo_command(interpreter_host_cargo --build-identity desktop
   --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
   --env "CADRUMO_NATIVE_CONTRACT=${CONTRACT_DIR}/contract.json"
   --env "CADRUMO_ID_VERSION=${CADRUMO_ID_VERSION}")
