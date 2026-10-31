@@ -93,6 +93,7 @@ _SPANISH_DIRECT_OBJECT_INFINITIVES = frozenset(
         "indexar",
         "juntar",
         "ofrecer",
+        "previsualizar",
         "rastrear",
         "recargar",
         "reconciliar",
@@ -175,7 +176,21 @@ _INFINITIVES = frozenset({"previsualizar", "contrafirmar"})
 # https://docs.python.org/es/3.11/library/json.html
 # https://dle.rae.es/calcular ; https://dle.rae.es/clasificar
 # https://developer.mozilla.org/es/docs/Learn_web_development/Core/Frameworks_libraries/React_getting_started
-_TECHNICAL_VERB_FORMS = frozenset({"recompila", "serializa", "recalculando", "recalcules", "reclasificas", "renderice"})
+# https://developer.mozilla.org/es/docs/Learn_web_development/Core/Structuring_content/Debugging_HTML
+# https://doclib.siemens-healthineers.com/rest/v1/view?document-id=841490
+_TECHNICAL_VERB_FORMS = frozenset(
+    {
+        "recompila",
+        "serializa",
+        "recalculando",
+        "recalcules",
+        "reclasifica",
+        "reclasificas",
+        "renderice",
+        "renderizó",
+        "reescanea",
+    }
+)
 
 
 def is_reviewed_spanish_form(word: str) -> bool:

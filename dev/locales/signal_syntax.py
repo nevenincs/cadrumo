@@ -150,6 +150,8 @@ TRANSLATION_LEGAL_TITLE_RE: Final[re.Pattern[str]] = re.compile(
 
 TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
     r"\b(?:Agencia (?:Estatal de Administración )?Tributaria|Boletín Oficial del Estado|"
+    # https://gobiernoabierto.navarra.es/es/transparencia/convenio-economico
+    r"Hacienda Foral|"
     # Complete official DEHú service name; its individual words stay local.
     # https://administracion.gob.es/lectura-facil/notificaciones
     r"Dirección Electrónica Habilitada (?:Única|única)|"

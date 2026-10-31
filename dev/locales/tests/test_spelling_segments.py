@@ -410,12 +410,13 @@ def test_hungarian_percentage_suffix_is_structural_but_surrounding_prose_is_chec
         ("`aeat`-tel", "tel"),
         ("`4T`-re", "re"),
         ("`aeat`-nak", "nak"),
+        ("Hacienda Foralnál", "nál"),
     ],
 )
 def test_hungarian_attested_structural_case_endings_keep_the_stem(token: str, ending: str) -> None:
     masked, matches = hungarian_suffix_spelling_text(token)
     assert matches == 1
-    assert masked.startswith(token[: token.rfind("-")])
+    assert masked.startswith(token.removesuffix(ending).removesuffix("-"))
     words, excluded = locale_spelling_words(token + " hibásszó", "hu")
     assert ending not in words
     assert "hibásszó" in words
@@ -425,6 +426,12 @@ def test_hungarian_attested_structural_case_endings_keep_the_stem(token: str, en
 @pytest.mark.parametrize("value", ["FDS-jével", "PDF-jévell", "DEK-jévelx", "NIE-jüketx", "HANDLE-ökett"])
 def test_hungarian_structural_suffixes_reject_unreviewed_stems_and_misspellings(value: str) -> None:
     assert hungarian_suffix_spelling_text(value) == (value, 0)
+
+
+def test_hungarian_case_on_regional_authority_preserves_the_spanish_name() -> None:
+    words = words_by_language("Hacienda Foralnál hibásszó", "hu")
+    assert {"Hacienda", "Foral"} <= words["es"]
+    assert "hibásszó" in words["hu"]
 
 
 @pytest.mark.parametrize("token", ["40%-oss", "100%-ott", "50%-bann", "33%-igg", "33%-tóll"])

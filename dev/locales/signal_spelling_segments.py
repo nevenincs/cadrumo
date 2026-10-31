@@ -101,6 +101,9 @@ _HUNGARIAN_STRUCTURAL_SUFFIX_PATTERNS = tuple(
         r"(?P<stem>UUID)-jával",
         r"(?P<stem>NIF)-(?:jét|jének|jüket)",
         r"(?P<stem>NIE)-jüket",
+        # A case ending on the complete, official regional tax-authority name.
+        # https://gobiernoabierto.navarra.es/es/transparencia/convenio-economico
+        r"(?P<stem>Hacienda[ \t]+Foral)nál",
         r"(?P<stem>URL)-jét",
         r"(?P<stem>Cl@ve)-vel",
         # AEAT's exact service name with the attested Hungarian allative;

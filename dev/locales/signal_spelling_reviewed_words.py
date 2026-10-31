@@ -335,6 +335,25 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "es": frozenset(
         {
+            # Fiscal and technical prose attested by the tax-administration
+            # association, the RAE, Python's glossary, and the software vendor.
+            # https://www.ciat.org/Biblioteca/ConferenciasTecnicas/2010/Espanol/e-book_conferencia_paris_2010.pdf
+            # https://dle.rae.es/heur%C3%ADstico
+            # https://dle.rae.es/discrepante
+            # https://docs.python.org/es/3/glossary.html
+            # https://docs.python.org/es/3/c-api/init_config.html
+            # https://tesiunamdocumentos.dgb.unam.mx/pd2001/299962/299962_A1.pdf
+            # https://www.aistryx.com/es/legal/transparencia
+            "diferimiento",
+            "sublímite",
+            "heurística",
+            "discrepante",
+            "manejador",
+            "inicialización",
+            "recompilación",
+            "derivable",
+            "multicomponente",
+            "notarizada",
             # RAE native nouns used in statistical and typed-data documentation.
             # https://dle.rae.es/extrapolaci%C3%B3n
             # https://dle.rae.es/rehidrataci%C3%B3n
@@ -538,6 +557,9 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "ca": frozenset(
         {
+            # The vendor uses this exact Catalan form for its macOS app:
+            # https://teler.ai/ca/download
+            "notaritzada",
             # Exact name of the recurring Spanish persona in the two lifecycle guides.
             "Ana",
             "García",
@@ -673,6 +695,17 @@ REVIEWED_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "hu": frozenset(
         {
+            # Hungarian accounting and software terminology in primary sources:
+            # https://www.allamkincstar.gov.hu/nem-lakossagi-ugyek/kozponti-koltsegvetes-vegrehajtasat-tamogato-rendszer-kkvtr--ifmis1/oktatasi-anyagok/3_kotelezettsegvallalas/3.3_bizonylatzaras-zaras-evvaltas/%24rppid0x1602400x13_pageNumber/numeral
+            # https://www.nefmi.gov.hu/letolt/minisz/eves_beszamolo_2007/debreceni_egyetem.pdf
+            # https://www.posta.hu/static/internet/download/PUSZ_Archiv_PUSZ_teljes_20160701_20160703.pdf
+            # https://learn.microsoft.com/hu-hu/dotnet/standard/commandline/syntax
+            # https://learn.microsoft.com/hu-hu/connectors/todoconsumer/
+            "áthozata",
+            "áthozatra",
+            "áthozatokat",
+            "alparancsok",
+            "teendőlista",
             # The lifecycle guides retain the Spanish persona's original name.
             "Ana",
             "García",

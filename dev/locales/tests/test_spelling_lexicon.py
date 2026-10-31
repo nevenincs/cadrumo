@@ -45,12 +45,49 @@ def test_english_citation_retains_exact_aeat_terms_and_possessives() -> None:
         assert not is_project_spelling("en", word + "x")
 
 
+@pytest.mark.parametrize(
+    "locale,words",
+    [
+        (
+            "es",
+            (
+                "diferimiento",
+                "sublímite",
+                "heurística",
+                "discrepante",
+                "manejador",
+                "inicialización",
+                "recompilación",
+                "derivable",
+                "multicomponente",
+                "notarizada",
+                "renderizó",
+                "reescanea",
+                "reclasifica",
+                "previsualizarla",
+            ),
+        ),
+        ("ca", ("notaritzada",)),
+        ("hu", ("áthozata", "áthozatra", "áthozatokat", "alparancsok", "teendőlista")),
+    ],
+)
+def test_reviewed_native_forms_keep_language_and_typo_boundaries(locale: str, words: tuple[str, ...]) -> None:
+    for word in words:
+        assert is_project_spelling(locale, word)
+        assert not is_project_spelling(locale, word + "x")
+        for other in {"ca", "en", "es", "hu"} - {locale}:
+            assert not is_project_spelling(other, word)
+
+
 def test_identifier_labels_are_exact_shared_technical_terms() -> None:
     for locale in ("ca", "en", "es", "hu"):
         for form in ("id", "Id", "ids", "Ids", "IDs"):
             assert is_project_spelling(locale, form)
         assert not is_project_spelling(locale, "idd")
         assert not is_project_spelling(locale, "idss")
+        for territory in ("Álava", "Guipúzcoa", "Vizcaya"):
+            assert is_project_spelling(locale, territory)
+            assert not is_project_spelling(locale, territory + "x")
 
 
 @pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
@@ -58,6 +95,7 @@ def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: s
     for name in (
         "Apple",
         "Bizum",
+        "Diátaxis",
         "GitHub",
         "Linux",
         "Markdown",
@@ -74,6 +112,8 @@ def test_software_proper_names_preserve_exact_case_and_stem_boundaries(locale: s
         "Appel",
         "apple",
         "Bizumm",
+        "Diátaxiss",
+        "Diataxis",
         "GitHup",
         "Linuz",
         "Markdwon",

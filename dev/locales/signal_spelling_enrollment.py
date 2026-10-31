@@ -73,10 +73,12 @@ from .signal_tokens import filtered_translation_text
 # https://developer.apple.com/documentation/apple-silicon
 # https://bizum.com/es/sobre-bizum/
 # https://poppler.freedesktop.org/
+# https://diataxis.fr/
 _SOFTWARE_PROPER_NAMES = frozenset(
     {
         "Apple",
         "Bizum",
+        "Diátaxis",
         "GitHub",
         "Linux",
         "Markdown",
@@ -90,7 +92,26 @@ _SOFTWARE_PROPER_NAMES = frozenset(
 )
 _SHARED_SPELLINGS = (
     frozenset(
-        {"Cadrumo", "AEAT", "id", "Id", "ids", "Ids", "IDs", "Pagefind", "Ceuta", "Melilla", "WebP", "ITPyAJD", "LISyD"}
+        {
+            "Cadrumo",
+            "AEAT",
+            "id",
+            "Id",
+            "ids",
+            "Ids",
+            "IDs",
+            "Pagefind",
+            "Ceuta",
+            "Melilla",
+            # Exact Spanish territory names in the Concierto source guidance:
+            # https://www.boe.es/buscar/act.php?id=BOE-A-2002-9352
+            "Álava",
+            "Guipúzcoa",
+            "Vizcaya",
+            "WebP",
+            "ITPyAJD",
+            "LISyD",
+        }
     )
     | _SOFTWARE_PROPER_NAMES
 )
