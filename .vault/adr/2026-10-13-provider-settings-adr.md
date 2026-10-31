@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#provider-settings'
 date: '2026-10-13'
-modified: '2026-10-27'
+modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca280db02253f0fafe2c8b4942622a1cc3a76352bea2b235ee77fb1463369797'
+body_hash: 'sha256:d56988c1160266e4061928bea927cc0707a7cf152e7a7c14ce42e7c4afb18458'
 related:
   - "[[2026-10-13-provider-settings-reference]]"
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
@@ -233,3 +233,22 @@ Accepted 2026-10-19 on operator directive 2026-10-19 under `2026-10-19-google-ap
 Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
 
 - **Former constraint 11, extraction note (history), and constraint 3.** "Cadrumo's own document reading keeps its existing key handling until the owner rules on it" is closed. The owner ruled: tax model reading, local and hosted, goes through the agent, with providers and models from cadrumo-agent's catalogue. The person's local model lists and the model the person picks in the agent's model picker, on any lane, are stored beside the provider records in the service, and every reading runs with that picked model. Cadrumo holds no model list.
+
+## Amendment 2026-10-31
+
+Authorized by the user's pre-approval of ADR changes for the macOS bring-up, recorded in `.vault/plan/2026-10-30-macos-platform-plan.md`, together with the user's ruling that Cadrumo has no development or installed mode and that storage is driven by the environment alone (`CADRUMO_STORAGE_ROOT`). Commit 212247032d removed `detect_storage_mode`.
+
+Superseded sentences, kept as history:
+
+> 5. **Resolution.** Storage mode, as `detect_storage_mode` decides it (`src/cadrumo/core/storage_environment.py:288`), selects the path:
+> - **Development mode.** A provider whose profile record is `unset` takes its key from the Cadrumo environment value constructed for that provider ...
+> - **Installed and release builds** have no environment path at all and no fallback. `unset` means unavailable.
+
+Constraint 6's `{development, providers}` status envelope, its "development mode" status field, and its Reset bullet ("In development this re-enables the fallback; in an installed build `unset` means unavailable"), and the quoted "development storage mode falls back for unset records" in the affected-records handoff, rest on the same removed distinction.
+
+Current rule:
+
+- There is no storage mode. Nothing reads a mode to decide provider resolution; the storage location comes from `CADRUMO_STORAGE_ROOT` alone.
+- The environment fallback for an `unset` provider record is owned by code in the service, through the service's admitted execution lane. Only admitted development service execution may read the declared development variable constructed for a provider. Every other execution, including a packaged copy, a desktop agent lane and any lane that merely runs from a checkout, has no environment path, and `unset` means unavailable.
+- What was called "development mode" in the status envelope, and in Reset's description, now means "the service's admitted lane permits the environment fallback". Reset still returns the provider to `unset`; whether that re-enables a fallback depends on that lane, not on a storage mode.
+- Unchanged: a stored `configured` credential is used first, a persisted `disabled` blocks the fallback, the fallback applies only after profile authentication, and no `.env` file is loaded.
