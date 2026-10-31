@@ -11,7 +11,6 @@ from typing import Any, cast
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
@@ -37,7 +36,6 @@ from ...application.live.verify_capture_operation import (
 )
 from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest
@@ -54,7 +52,7 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from .supervised_operation_rig import run_to_terminal
+from .supervised_operation_rig import cli_submit_context, run_to_terminal, settle_and_project
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -170,6 +168,70 @@ def _supervisor(
     return supervisor, journal, operands
 
 
+def _assert_two_captures_settled_and_projected(
+    first_terminal: OperationPersistedSnapshot,
+    first_frame: object,
+    second_terminal: OperationPersistedSnapshot,
+    second_frame: object,
+    bucket_id: str,
+) -> None:
+    assert first_terminal.lifecycle is second_terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert (
+        first_terminal.terminal_condition is second_terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    )
+    assert first_terminal.effect is OperationEffect.UPDATED
+    assert second_terminal.effect is OperationEffect.NONE
+    assert first_terminal.terminal_receipt is not None
+    assert first_terminal.terminal_receipt.effect is OperationEffect.UPDATED
+    assert second_terminal.terminal_receipt is not None
+    assert second_terminal.terminal_receipt.effect is OperationEffect.NONE
+    assert isinstance(first_frame, OperationResultProjectionSuccessV1)
+    assert isinstance(second_frame, OperationResultProjectionSuccessV1)
+    first_result = first_frame.projection
+    second_result = second_frame.projection
+    assert isinstance(first_result, VerifyCapturePublicResultV1)
+    assert isinstance(second_result, VerifyCapturePublicResultV1)
+    assert first_result.bucket_id == second_result.bucket_id == bucket_id
+    assert first_result.observation_id == second_result.observation_id
+    assert first_result.surface is second_result.surface is VerifySurface.TGVI
+    assert first_result.nif == _NIF
+    assert first_result.expected is IdentityCheckVerdict.VALID
+    assert first_result.matched_expectation is True
+    assert "raw_evidence_locator" not in first_result.model_dump()
+    assert _RAW_EVIDENCE_LOCATOR not in first_result.model_dump_json()
+
+
+def _assert_capture_effects_and_guards(
+    events: list[str],
+    acquisitions: list[tuple[VerifySurface, str, object | None]],
+    execution_authority: _ExecutionAuthority,
+    resources: list[_Resources],
+) -> None:
+    assert acquisitions == [
+        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
+        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
+    ]
+    assert events.count("observation-save") == 1
+    assert events.count("remote-acquire") == 2
+    assert events.index("remote-acquire") < events.index("browser-deactivate") < events.index("commit-guard-enter:1")
+    assert events.index("commit-guard-enter:1") < events.index("observation-save")
+    assert execution_authority.guard_calls == 4  # observation + result operand for each successful operation
+    assert len(resources) == 2
+    assert all(resource.closed and resource.close_calls == 1 for resource in resources)
+
+
+def _assert_wrong_scope_refused_without_effect(
+    wrong_scope_terminal: OperationPersistedSnapshot, events: list[str]
+) -> None:
+    assert wrong_scope_terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert wrong_scope_terminal.terminal_condition is OperationTerminalCondition.REFUSED
+    assert wrong_scope_terminal.effect is OperationEffect.NONE
+    assert wrong_scope_terminal.terminal_receipt is not None
+    assert wrong_scope_terminal.terminal_receipt.refusal_ref is not None
+    assert events.count("remote-acquire") == 2
+    assert events.count("observation-save") == 1
+
+
 def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_effects(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -237,14 +299,8 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         admitted = resolve_operation_access(
             registry=registry,
             request=request,
-            context=OperationAccessContext(
-                profile_id=profile_id,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.CLI,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
-                authority_operation=authority,
+            context=cli_submit_context(
+                profile_id=profile_id, contract=registration.contract, authority_operation=authority
             ),
         )
         assert admitted.request.profile_id == profile_id
@@ -260,24 +316,14 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         )
         result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
-        async def run(operation_id: str) -> tuple[OperationPersistedSnapshot, BaseModel]:
-            submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await run_to_terminal(supervisor, submitted_id)
-            contract = registry.lookup_public_contract(VERIFY_TGVI_CAPTURE_DEFINITION_ID)
-            assert contract.result_schema is not None
-            result = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=submitted_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
-                VerifyCapturePublicResultV1,
+        async def run_successes() -> tuple[tuple[OperationPersistedSnapshot, object], ...]:
+            first = await settle_and_project(
+                supervisor, result_service, registry, request, VerifyCapturePublicResultV1, operation_id="3" * 64
             )
-            return terminal, result
-
-        async def run_successes() -> tuple[tuple[OperationPersistedSnapshot, BaseModel], ...]:
-            return await run("3" * 64), await run("4" * 64)
+            second = await settle_and_project(
+                supervisor, result_service, registry, request, VerifyCapturePublicResultV1, operation_id="4" * 64
+            )
+            return first, second
 
         (first_terminal, first_frame), (second_terminal, second_frame) = asyncio.run(run_successes())
 
@@ -285,50 +331,11 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
         wrong_scope_id = asyncio.run(supervisor.submit(request, operation_id="5" * 64))
         wrong_scope_terminal = asyncio.run(run_to_terminal(supervisor, wrong_scope_id))
 
-    assert first_terminal.lifecycle is second_terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert (
-        first_terminal.terminal_condition is second_terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    _assert_two_captures_settled_and_projected(
+        first_terminal, first_frame, second_terminal, second_frame, profile.bucket_id
     )
-    assert first_terminal.effect is OperationEffect.UPDATED
-    assert second_terminal.effect is OperationEffect.NONE
-    assert first_terminal.terminal_receipt is not None
-    assert first_terminal.terminal_receipt.effect is OperationEffect.UPDATED
-    assert second_terminal.terminal_receipt is not None
-    assert second_terminal.terminal_receipt.effect is OperationEffect.NONE
-    assert isinstance(first_frame, OperationResultProjectionSuccessV1)
-    assert isinstance(second_frame, OperationResultProjectionSuccessV1)
-    first_result = first_frame.projection
-    second_result = second_frame.projection
-    assert isinstance(first_result, VerifyCapturePublicResultV1)
-    assert isinstance(second_result, VerifyCapturePublicResultV1)
-    assert first_result.bucket_id == second_result.bucket_id == profile.bucket_id
-    assert first_result.observation_id == second_result.observation_id
-    assert first_result.surface is second_result.surface is VerifySurface.TGVI
-    assert first_result.nif == _NIF
-    assert first_result.expected is IdentityCheckVerdict.VALID
-    assert first_result.matched_expectation is True
-    assert "raw_evidence_locator" not in first_result.model_dump()
-    assert _RAW_EVIDENCE_LOCATOR not in first_result.model_dump_json()
-
-    assert acquisitions == [
-        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
-        (VerifySurface.TGVI, _NIF, IdentityCheckVerdict.VALID),
-    ]
-    assert events.count("observation-save") == 1
-    assert events.count("remote-acquire") == 2
-    assert events.index("remote-acquire") < events.index("browser-deactivate") < events.index("commit-guard-enter:1")
-    assert events.index("commit-guard-enter:1") < events.index("observation-save")
-    assert execution_authority.guard_calls == 4  # observation + result operand for each successful operation
-    assert len(resources) == 2
-    assert all(resource.closed and resource.close_calls == 1 for resource in resources)
-
-    assert wrong_scope_terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert wrong_scope_terminal.terminal_condition is OperationTerminalCondition.REFUSED
-    assert wrong_scope_terminal.effect is OperationEffect.NONE
-    assert wrong_scope_terminal.terminal_receipt is not None
-    assert wrong_scope_terminal.terminal_receipt.refusal_ref is not None
-    assert events.count("remote-acquire") == 2
-    assert events.count("observation-save") == 1
+    _assert_capture_effects_and_guards(events, acquisitions, execution_authority, resources)
+    _assert_wrong_scope_refused_without_effect(wrong_scope_terminal, events)
 
 
 def _settle_tgvi(
