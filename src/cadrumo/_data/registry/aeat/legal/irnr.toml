@@ -75,7 +75,7 @@ effective_from = 2004-03-13
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "TRLIRNR art 10: obligación de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
+notes = "TRLIRNR art 10: obligación de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantía o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
 required_text = ["no sean residentes en otro Estado miembro de la Union Europea", "persona fisica o juridica con residencia en Espana", "les represente ante la Administracion Tributaria"]
 
 [legal."trlirnr-rdleg-5-2004:art-13.1"]

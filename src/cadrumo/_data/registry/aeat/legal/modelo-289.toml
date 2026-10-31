@@ -107,7 +107,7 @@ effective_from = 2016-10-28
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on 2026-07-01"
-notes = "Orden HAP/1695/2016 articulo 3: delimita el objeto de información del Modelo 289 y regula la comunicacion negativa cuando no existan cuentas que comunicar."
+notes = "Orden HAP/1695/2016 articulo 3: delimita el objeto de información del Modelo 289 y regula la comunicación negativa cuando no existan cuentas que comunicar."
 required_text = [
     "modelo 289, de conformidad",
     "anexo III de la presente orden",
@@ -265,7 +265,7 @@ effective_from = 2021-12-04
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2021-20004 HTML from BOE on 2026-07-01"
-notes = "Orden HFP/1351/2021 articulo octavo: modifica la comunicacion de inexistencia de cuentas que comunicar y los anexos I, II y III del Modelo 289."
+notes = "Orden HFP/1351/2021 articulo octavo: modifica la comunicación de inexistencia de cuentas que comunicar y los anexos I, II y III del Modelo 289."
 required_text = [
     "Orden HAP/1695/2016, de",
     "Se modifica el artículo",

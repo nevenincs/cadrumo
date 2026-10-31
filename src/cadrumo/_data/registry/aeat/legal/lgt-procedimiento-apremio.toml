@@ -82,7 +82,7 @@ Iniciacion del procedimiento de apremio: providencia de apremio. The providencia
 debt, demands payment, states that the periodo ejecutivo surcharge has accrued, and carries the same \
 executive force as a judicial sentence for enforcing the taxpayer's assets. Apartado 3 closes the \
 grounds of opposition to a numbered list (extincion or prescripcion, request for aplazamiento, lack \
-of notification of the liquidacion, annulment, and error or omission in the providencia preventing \
+of notification of the liquidación, annulment, and error or omission in the providencia preventing \
 identification of the debtor or the debt). Where payment is not made within the applicable deadline \
 the taxpayer's assets are seized, and the providencia must warn of this. The deadline itself is \
 art-62.5, not this article."""
@@ -209,7 +209,7 @@ Enajenacion de los bienes embargados. Sale proceeds by public auction, competiti
 Where the assets are not sold the procedure may end with their adjudication to the Hacienda Publica: \
 that adjudication is agreed for the amount of the debt pursued and may never exceed 75 por ciento of \
 the initial price set in the sale procedure -- the one percentage this article establishes. Assets \
-may not be sold until the liquidacion being enforced is firm, save for force majeure, perishable \
+may not be sold until the liquidación being enforced is firm, save for force majeure, perishable \
 goods, or the obligado's express request. The obligado may release the seized assets at any point \
 before adjudication by extinguishing the debt and the costs."""
 required_text = [

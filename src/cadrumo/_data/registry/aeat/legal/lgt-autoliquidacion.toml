@@ -113,10 +113,10 @@ reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = """\
 Autoliquidaciones: declarations in which the obligado tributario performs the calificacion \
-+ cuantificacion necessary to determine the deuda tributaria and either pays, claims a \
++ cuantificación necessary to determine the deuda tributaria and either pays, claims a \
 refund, or claims compensation. AEAT may verify and comprobar. Where the obligado \
 considers the autoliquidacion has harmed their legitimate interests they may instar la \
-rectificacion per the apartado 3 procedure; otherwise the autoliquidacion rectificativa \
+rectificación per the apartado 3 procedure; otherwise the autoliquidacion rectificativa \
 procedure of apartado 4 applies where the tax-specific regulation so establishes."""
 required_text = [
     "Las autoliquidaciones son declaraciones en las que los obligados tributarios",

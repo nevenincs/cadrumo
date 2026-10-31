@@ -623,7 +623,7 @@ effective_from = 2007-11-30
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "Articulo 8 de la Orden EHA/3434/2007: plazo de presentación de los modelos 322 y 353. Treinta días naturales del mes siguiente al periodo de liquidacion mensual; el periodo de enero se presenta hasta el ultimo dia del mes de febrero."
+notes = "Articulo 8 de la Orden EHA/3434/2007: plazo de presentación de los modelos 322 y 353. Treinta días naturales del mes siguiente al periodo de liquidación mensual; el periodo de enero se presenta hasta el ultimo dia del mes de febrero."
 required_text = [
     "Plazo de presentación de los modelos 322 y 353",
     "treinta días naturales del mes siguiente",
@@ -2576,7 +2576,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-21
 reviewed_by = "operator"
-notes = "Articulo 123 LIVA: contenido del régimen simplificado. Determinacion de las cuotas tributarias para las actividades acogidas al régimen simplificado mediante el metodo de indices, módulos o signos."
+notes = "Articulo 123 LIVA: contenido del régimen simplificado. Determinación de las cuotas tributarias para las actividades acogidas al régimen simplificado mediante el método de indices, módulos o signos."
 required_text = [
     "cuotas tributarias",
     "módulos",
@@ -3015,7 +3015,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-08-01
 reviewed_by = "operator"
-notes = """LIVA art 68: lugar de realizacion de las entregas de bienes. Together with \
+notes = """LIVA art 68: lugar de realización de las entregas de bienes. Together with \
 arts. 69 and 70 (prestaciones de servicios, reglas generales y especiales) this is the \
 place-of-supply rule set that decides WHICH IVA category a cross-border operation \
 belongs to. That selection is a declared judgement made by the operator, never derived \
@@ -3307,7 +3307,7 @@ es un diff antes/despues, no una lectura de prosa. PROVENANCIA. Documento adquir
 herramienta de adquisición del corpus consolidado oficial (modo articulo), sha256 \
 1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leido de nuevo desde \
 disco antes de redactar esta entrada. La captura se hizo SIN required_text a proposito: fijar la \
-frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobacion. Entrada \
+frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobación. Entrada \
 preparada por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un \
 operador humano, y reviewed_by lo declara asi."""
 required_text = [

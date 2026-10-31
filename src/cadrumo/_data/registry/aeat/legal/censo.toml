@@ -383,7 +383,7 @@ asimetria resultante dejaba la identificacion del propio declarante solo asertab
 DOCUMENTO CITADO, 2026-08-13. La entrada citaba rd-1065-2007-art-25.xml, una captura del endpoint \
 de articulo que concatena DOS redacciones fechadas (fecha_vigencia 20080101 de BOE-A-2007-15984 y \
 20100303 de BOE-A-2010-3370) en una sola unidad extraida de 8873 caracteres, de modo que la \
-comprobacion de required_text se ejecutaba contra texto derogado y texto vigente fundidos. Se \
+comprobación de required_text se ejecutaba contra texto derogado y texto vigente fundidos. Se \
 repunta al documento consolidado empaquetado rd-1065-2007.html, cuya unidad #a25 contiene el \
 articulo vigente y solo el vigente (4619 caracteres, titulo 'Articulo 25. Especialidades del numero \
 de identificacion fiscal de los empresarios...'). Las tres frases de required_text se han verificado \

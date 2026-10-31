@@ -11,7 +11,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "operator"
-notes = "LIVA art 9: operaciones asimiladas a las entregas de bienes (autoconsumo). El apartado 1.c establece el autoconsumo del promotor cuando afecta a su patrimonio empresarial o profesional bienes inmuebles de su propia construccion o rehabilitacion. La base imponible se determina conforme al art 79 apartado 4."
+notes = "LIVA art 9: operaciones asimiladas a las entregas de bienes (autoconsumo). El apartado 1.c establece el autoconsumo del promotor cuando afecta a su patrimonio empresarial o profesional bienes inmuebles de su propia construcción o rehabilitacion. La base imponible se determina conforme al art 79 apartado 4."
 required_text = [
     "autoconsumo",
     "afectación",
@@ -128,7 +128,7 @@ effective_from = 1993-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-06
 reviewed_by = "operator"
-notes = "LIVA art 88: repercusion del impuesto. Establece la obligación del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operacion gravada, quedando este obligado a soportarlo. Es la base legal del flujo IVA repercutido."
+notes = "LIVA art 88: repercusion del impuesto. Establece la obligación del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operación gravada, quedando este obligado a soportarlo. Es la base legal del flujo IVA repercutido."
 required_text = [
     "Repercusión del impuesto",
     "deberán repercutir íntegramente el importe del impuesto",
@@ -330,7 +330,7 @@ notes = """\
 LIVA art 25: exenciones en las entregas de bienes destinados a otro Estado miembro (entregas \
 intracomunitarias). Exime las entregas de bienes expedidos o transportados al territorio de otro \
 Estado miembro cuando el adquirente disponga de un NIF-IVA asignado por otro Estado miembro y la \
-operacion se incluya en la declaración recapitulativa. Base sustantiva de la clasificacion exenta \
+operación se incluya en la declaración recapitulativa. Base sustantiva de la clasificacion exenta \
 intracomunitaria en el enrutamiento M303 (Tier-2 routing). REDACTION HISTORY, read from the BOE \
 open-data article endpoint (6 redacciones): first vigencia 19930101 by BOE-A-1992-28740, last \
 20200301 by BOE-A-2020-1651. Same authoring inconsistency corrected as on art-22: effective_from had \
@@ -354,7 +354,7 @@ effective_from = 2010-03-03
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-09
 reviewed_by = "operator"
-notes = "LIVA art 26: exenciones en las adquisiciones intracomunitarias de bienes, incluida la operacion triangular. Exime las adquisiciones intracomunitarias cuya entrega interior estaria no sujeta o exenta, las que corresponden a importaciones exentas, las realizadas en el marco de una operacion triangular y aquellas con derecho a devolucion total. Base sustantiva de la exencion intracomunitaria y la triangulacion en el enrutamiento M303 (Tier-2 routing)."
+notes = "LIVA art 26: exenciones en las adquisiciones intracomunitarias de bienes, incluida la operación triangular. Exime las adquisiciones intracomunitarias cuya entrega interior estaria no sujeta o exenta, las que corresponden a importaciones exentas, las realizadas en el marco de una operación triangular y aquellas con derecho a devolucion total. Base sustantiva de la exención intracomunitaria y la triangulacion en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Exenciones en las adquisiciones intracomunitarias de bienes",
     "Las adquisiciones intracomunitarias de bienes cuya entrega en el territorio de aplicación del impuesto hubiera estado",
@@ -490,7 +490,7 @@ effective_from = 1993-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-29
 reviewed_by = "agent-review"
-notes = "LIVA art 121: determinacion del volumen de operaciones. Defines the operation-volume calculation used by regulated thresholds, including the RIVA art 71 large-company monthly liquidation threshold."
+notes = "LIVA art 121: determinación del volumen de operaciones. Defines the operation-volume calculation used by regulated thresholds, including the RIVA art 71 large-company monthly liquidation threshold."
 required_text = [
     "Determinación del volumen de operaciones",
     "se entenderá por volumen de operaciones",
@@ -684,7 +684,7 @@ reviewed_at = 2026-10-03
 reviewed_by = "agent-review"
 notes = """RIVA art 62: libros registros del IVA. El apartado 6 obliga a llevar los libros \
 registro a traves de la Sede electronica de la AEAT, mediante el suministro electronico de \
-los registros de facturacion (SII), a quienes tengan un periodo de liquidacion mensual \
+los registros de facturacion (SII), a quienes tengan un periodo de liquidación mensual \
 conforme al art 71.3, y permite optar por el mismo sistema al resto de sujetos pasivos en los \
 terminos del art 68 bis. Es el supuesto al que remite el art 32.e del RD 1065/2007 para \
 excluir de la declaración anual de operaciones con terceras personas (Modelo 347) tanto a los \

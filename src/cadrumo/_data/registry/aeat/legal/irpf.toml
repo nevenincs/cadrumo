@@ -120,7 +120,7 @@ reviewed_at = 2026-05-15
 reviewed_by = "operator"
 notes = """\
 RIRPF art 86: tipo de retención. Heart of the personalized retention scheme for trabajo \
-rendimientos. Define el tipo como cuota de retención / cuantia total de retribuciones \
+rendimientos. Define el tipo como cuota de retención / cuantía total de retribuciones \
 (art-83.2) expresado con dos decimales. Aplica tipo cero cuando la base menos el minimo \
 personal-familiar es no positiva, reducción de 2 puntos para contribuyentes con \
 vivienda-habitual DT-18 (cifra inferior a 33.007,2 EUR), y un suelo del 2 por ciento para \
@@ -145,7 +145,7 @@ effective_from = 2007-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "RIRPF art 88: comunicacion de datos del perceptor de rentas del trabajo a su pagador. Base reglamentaria del Modelo 145: el perceptor comunica circunstancias personales y familiares al pagador, el pagador conserva la comunicacion firmada, y el contenido se ajusta al modelo aprobado por resolución del Departamento de Gestion Tributaria de la AEAT."
+notes = "RIRPF art 88: comunicación de datos del perceptor de rentas del trabajo a su pagador. Base reglamentaria del Modelo 145: el perceptor comunica circunstancias personales y familiares al pagador, el pagador conserva la comunicación firmada, y el contenido se ajusta al modelo aprobado por resolución del Departamento de Gestion Tributaria de la AEAT."
 required_text = [
     "Comunicación de datos del perceptor de rentas del trabajo a su pagador",
     "deberán comunicar al pagador la situación personal y familiar",
@@ -751,7 +751,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-authored from the BOE consolidated-text excerpt orden-hfp-1335-2021-da-1.html (block da), sliced with the canonical excerpt tool from act.php as served in force; operator to re-stamp"
-notes = "Reducción general del 5 por ciento del rendimiento neto de módulos para 2022, aplicable también para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2022 (apartado 3). El texto consolidado anota dos alteraciones posteriores de la cuantia que esta entrada no cita: el 15 por 100 de la disposición adicional octava de la Orden HFP/1172/2022 (orden-hfp-1172-2022:da-8), también para el pago fraccionado del cuarto trimestre de 2022, y el 25 por ciento para las actividades agricolas, ganaderas y forestales del anexo I que fija el art. 2 de la Orden HFP/405/2023 (BOE-A-2023-9955), no catalogado."
+notes = "Reducción general del 5 por ciento del rendimiento neto de módulos para 2022, aplicable también para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2022 (apartado 3). El texto consolidado anota dos alteraciones posteriores de la cuantía que esta entrada no cita: el 15 por 100 de la disposición adicional octava de la Orden HFP/1172/2022 (orden-hfp-1172-2022:da-8), también para el pago fraccionado del cuarto trimestre de 2022, y el 25 por ciento para las actividades agricolas, ganaderas y forestales del anexo I que fija el art. 2 de la Orden HFP/405/2023 (BOE-A-2023-9955), no catalogado."
 required_text = [
     "Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva",
     "podrán reducir el rendimiento neto de módulos obtenido en 2022 en un 5 por 100",
@@ -815,7 +815,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30."
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30."
 required_text = [
     "b.3) Índice corrector de exceso:",
     "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
@@ -877,7 +877,7 @@ effective_to = 2022-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-30
 reviewed_by = "agent-authored from bundled orden-hfp-1335-2021.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos días del ano, continuos o alternos, sin exceder de 180 días por ano) se aplica el indice que corresponda a la duracion de la temporada. Incompatible con el indice corrector por inicio de nuevas actividades (b.4)."
+notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideración de actividad de temporada (se desarrolla habitualmente solo ciertos días del ano, continuos o alternos, sin exceder de 180 días por ano) se aplica el indice que corresponda a la duracion de la temporada. Incompatible con el indice corrector por inicio de nuevas actividades (b.4)."
 required_text = [
     "b.2) Índice corrector de temporada:",
     "Tendrán la consideración de actividades de temporada las que habitualmente sólo se desarrollen durante ciertos días del año",
@@ -1511,7 +1511,7 @@ effective_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2024, Parte 1 (cuantia 30.586,03 euros, epigrafe 673.1)."
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2024, Parte 1 (cuantía 30.586,03 euros, epigrafe 673.1)."
 required_text = [
     "b.3) Índice corrector de exceso:",
     "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
@@ -1590,7 +1590,7 @@ effective_to = 2024-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-15
 reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos días del ano, continuos o alternos, sin exceder de 180 días por ano) se aplica el indice 1,50 (hasta 60 días), 1,35 (de 61 a 120 días) o 1,25 (de 121 a 180 días). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instrucción 2.3.b.2)."
+notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideración de actividad de temporada (se desarrolla habitualmente solo ciertos días del ano, continuos o alternos, sin exceder de 180 días por ano) se aplica el indice 1,50 (hasta 60 días), 1,35 (de 61 a 120 días) o 1,25 (de 121 a 180 días). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instrucción 2.3.b.2)."
 required_text = [
     "b.2) Índice corrector de temporada:",
     "Tendrán la consideración de actividades de temporada las que habitualmente sólo se desarrollen durante ciertos días del año",
@@ -1898,7 +1898,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-03
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1 (cuantia 30.586,03 euros)."
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, Parte 1, worked example epigrafe 673.1 (cuantía 30.586,03 euros)."
 required_text = [
     "b.3) Índice corrector de exceso:",
     "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
@@ -1984,7 +1984,7 @@ effective_to = 2025-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos días del ano, continuos o alternos, sin exceder de 180 días por ano) se aplica el indice 1,50 (hasta 60 días), 1,35 (de 61 a 120 días) o 1,25 (de 121 a 180 días). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instrucción 2.3.b.2)."
+notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideración de actividad de temporada (se desarrolla habitualmente solo ciertos días del ano, continuos o alternos, sin exceder de 180 días por ano) se aplica el indice 1,50 (hasta 60 días), 1,35 (de 61 a 120 días) o 1,25 (de 121 a 180 días). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the bundled orden-hac-1347-2024.html (Anexo II, instrucción 2.3.b.2)."
 required_text = [
     "b.2) Índice corrector de temporada:",
     "Tendrán la consideración de actividades de temporada las que habitualmente sólo se desarrollen durante ciertos días del año",
@@ -2037,7 +2037,7 @@ independiente, el rendimiento neto previo se obtiene multiplicando el volumen to
 (incluidas subvenciones e indemnizaciones) del cultivo o explotacion por el indice de rendimiento \
 neto que corresponda a ese producto o servicio, por el cuadro codigo-producto de indices aprobado en \
 este mismo Anexo I. Cross-checked byte-identical against the AEAT Manual practico de Renta 2025, \
-Parte 1, Capitulo 9, worked example "Determinacion del rendimiento neto previo de la actividad" \
+Parte 1, Capitulo 9, worked example "Determinación del rendimiento neto previo de la actividad" \
 (Dona M.J.I., manzanas / frutos no citricos, codigo 12: ingresos 18.030,00 euros x indice 0,37 = \
 rendimiento neto previo 6.671,10 euros)."""
 required_text = [
@@ -2276,7 +2276,7 @@ effective_to = 2026-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-07-04
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30. Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:instruccion-2-3-b-3): same indice 1,30 and per-actividad cuantias for every currently tabled epigrafe (972.1, 721.2, 722, 671.4, 671.5, 672.1, 673.1, 673.2)."
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantía tabulada para la actividad, al exceso sobre dicha cuantía se le aplica el indice 1,30. Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:instruccion-2-3-b-3): same indice 1,30 and per-actividad cuantías for every currently tabled epigrafe (972.1, 721.2, 722, 671.4, 671.5, 672.1, 673.1, 673.2)."
 required_text = [
     "b.3) Índice corrector de exceso:",
     "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
@@ -2317,7 +2317,7 @@ effective_to = 2026-12-31
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-12
 reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
-notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos días del ano, continuos o alternos, sin exceder de 180 días por ano) se aplica el indice 1,50 (hasta 60 días), 1,35 (de 61 a 120 días) o 1,25 (de 121 a 180 días). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2): same 27-line b.2 block and the same 1,50/1,35/1,25 tabla."
+notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideración de actividad de temporada (se desarrolla habitualmente solo ciertos días del ano, continuos o alternos, sin exceder de 180 días por ano) se aplica el indice 1,50 (hasta 60 días), 1,35 (de 61 a 120 días) o 1,25 (de 121 a 180 días). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the 2025 instrucción (orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2): same 27-line b.2 block and the same 1,50/1,35/1,25 tabla."
 required_text = [
     "b.2) Índice corrector de temporada:",
     "Tendrán la consideración de actividades de temporada las que habitualmente sólo se desarrollen durante ciertos días del año",
@@ -2458,7 +2458,7 @@ effective_from = 2007-04-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-27
 reviewed_by = "agent-review"
-notes = "RIRPF art 39: entidades en régimen de atribucion. Establece la aplicación del metodo de estimación objetiva a actividades económicas desarrolladas por entidades de atribucion de rentas, con independencia de las circunstancias individuales de sus miembros y con reglas de computo del ámbito de aplicación."
+notes = "RIRPF art 39: entidades en régimen de atribucion. Establece la aplicación del método de estimación objetiva a actividades económicas desarrolladas por entidades de atribucion de rentas, con independencia de las circunstancias individuales de sus miembros y con reglas de computo del ámbito de aplicación."
 required_text = [
     "El método de estimación objetiva",
     "todos sus socios, herederos, comuneros o partícipes sean personas físicas",
@@ -2594,7 +2594,7 @@ effective_from = 2024-02-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Sustituye el anexo II de Orden EHA/3435/2007 para Modelo 123 y desglosa dividendos y otras rentas de participacion frente al resto de rentas."
+notes = "Sustituye el anexo II de Orden EHA/3435/2007 para Modelo 123 y desglosa dividendos y otras rentas de participación frente al resto de rentas."
 required_text = [
     "El anexo II, modelo 123",
     "se sustituye por el anexo I de esta orden",
@@ -4353,7 +4353,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-10
 reviewed_by = "agent-replaced the bundled excerpt with the BOE consolidated text of art. 48, redaction in force BOE-A-2014-12327; operator to re-stamp"
-notes = "Base legal para la integracion y compensación de rentas en la base imponible GENERAL del IRPF (Modelo 100). El saldo negativo de ganancias y pérdidas patrimoniales de la base general se compensa con el saldo positivo de rendimientos e imputaciones con el límite del 25 por ciento; el saldo negativo restante se compensa en los cuatro años siguientes (casillas 1391 saldo pendiente -> 1388 aplicación). Distinto del art.49, que rige la base imponible del AHORRO."
+notes = "Base legal para la integración y compensación de rentas en la base imponible GENERAL del IRPF (Modelo 100). El saldo negativo de ganancias y pérdidas patrimoniales de la base general se compensa con el saldo positivo de rendimientos e imputaciones con el límite del 25 por ciento; el saldo negativo restante se compensa en los cuatro años siguientes (casillas 1391 saldo pendiente -> 1388 aplicación). Distinto del art.49, que rige la base imponible del AHORRO."
 required_text = [
     "La base imponible general será el resultado de sumar los siguientes saldos",
     "con el límite del 25 por ciento",
@@ -4373,7 +4373,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "Base legal para la integracion y compensación de rentas en la base imponible del ahorro en Modelo 100. The current consolidated text, effective from 2015-01-01 after Ley 26/2014, establishes the cross-bucket 25 percent limit and four-year carry-forward for negative savings-base balances. Distinct from art.48, which governs the base imponible general."
+notes = "Base legal para la integración y compensación de rentas en la base imponible del ahorro en Modelo 100. The current consolidated text, effective from 2015-01-01 after Ley 26/2014, establishes the cross-bucket 25 percent limit and four-year carry-forward for negative savings-base balances. Distinct from art.48, which governs the base imponible general."
 required_text = [
     "La base imponible del ahorro estará constituida",
     "con el límite del 25 por ciento",
@@ -4587,7 +4587,7 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-08-05
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a61; operator to re-stamp"
 notes = """\
-LIRPF art 61 norma 4a: the death-in-period flat cuantia. Displacing norma 3a's devengo-date rule, a \
+LIRPF art 61 norma 4a: the death-in-period flat cuantía. Displacing norma 3a's devengo-date rule, a \
 descendiente or ascendiente who dies during the periodo impositivo and generates the entitlement \
 takes a FLAT 2.400 euros (descendiente) or 1.150 euros (ascendiente) instead of the amount that \
 would otherwise correspond. SCOPE, read this before authoring anything adjacent: one clause fixes \
@@ -4600,7 +4600,7 @@ authoring a second legal entry for the same clause. One clause, one legal author
 The 2.400 descendientes figure COINCIDES with art 58.1's first-child tranche but is a legally \
 DISTINCT figure: it is fixed here, applies at any birth order, and would not move if a reform moved \
 the tranche, so the two must never share a parameter. CAUTION, the clause is only half the rule as \
-the AEAT Renta manual applies it: the manual's 'Minimo por descendientes / Cuantias aplicables' \
+the AEAT Renta manual applies it: the manual's 'Minimo por descendientes / Cuantías aplicables' \
 section restates this flat amount AND adds the ordering limb -- the number of orden is assigned by \
 age 'sin computar a estos efectos aquellos descendientes que, en su caso, hubieran fallecido en el \
 ejercicio con anterioridad a la fecha de devengo del impuesto' -- which has no counterpart in the \
@@ -4899,7 +4899,7 @@ effective_from = 2015-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-06-28
 reviewed_by = "agent-review"
-notes = "LIRPF art 80: deducción por doble imposicion internacional para rendimientos o ganancias patrimoniales obtenidos y gravados en el extranjero. The current consolidated text, effective from 2015-01-01 after Ley 26/2014, limits the deduction to the lesser of the foreign tax paid for an identical or analogous tax and the effective average tax rate applied to the foreign-taxed base. Base legal para Modelo 100 casillas 1124, 1127, 1128."
+notes = "LIRPF art 80: deducción por doble imposición internacional para rendimientos o ganancias patrimoniales obtenidos y gravados en el extranjero. The current consolidated text, effective from 2015-01-01 after Ley 26/2014, limits the deduction to the lesser of the foreign tax paid for an identical or analogous tax and the effective average tax rate applied to the foreign-taxed base. Base legal para Modelo 100 casillas 1124, 1127, 1128."
 required_text = [
     "Deducción por doble imposición internacional",
     "rendimientos o ganancias patrimoniales obtenidos y gravados en el extranjero",
@@ -5427,7 +5427,7 @@ effective_from = 2015-01-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularizacion)."
+notes = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularización)."
 required_text = [
     "Deducciones por familia numerosa o personas con discapacidad a cargo",
     "descendiente con discapacidad",
