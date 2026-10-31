@@ -63,13 +63,13 @@ _PAYLOAD_GUARD: Final = 16
 _ORDERED_PAYLOAD_GUARD: Final = 64
 _SHA256_HEX: Final = 64
 _STANDARD_SHAPE_NAME: Final = re.compile(
-    r"(?:^|_)(?:hash|digest|sha\d*|nonce|ciphertext|id|country|pais|iso|currency|nif|tax_id|year|ejercicio|period|"
-    r"modelo|path|state|separator|ref|locale|language|date|on|attachment|generation|public_key|member_?state|"
+    r"(?:^|_)(?:hash|digest|sha256|nonce|ciphertext|id|country|pais|iso|currency|nif|tax_id|year|ejercicio|period|"
+    r"modelo|path|state|periodo|years|update_fields|classify_fields|emisor|selector|separator|ref|locale|language|date|on|attachment|generation|public_key|member_?state|"
     r"isin|intents|normalisations|fields?|filters|parties|reversed|coordinates|components)(?:_|$|\b)",
     re.IGNORECASE,
 )
 _STRUCTURE_LEN_NAME: Final = re.compile(
-    r"(?:^|\.)args$|parts|segments|split|groups?$|tokens?$|head$|pieces|pair|anchors|spans|children|candidates|"
+    r"args$|parts|segments|split|groups?$|tokens?$|head$|pieces|pair|anchors|spans|children|candidates|"
     r"keys$|ids$|boundaries|endpoints|arguments|suffix|outcomes|years$|actions|agenda|digits|"
     r"grant|dek|operator_id|work_unit|_id$|stripped|\\bcase_id",
     re.IGNORECASE,
@@ -143,7 +143,8 @@ def _lawful_bound(owner: str, value: float) -> bool:
 
 def _lawful_length(owner: str, value: int, other: int | None) -> bool:
     """Return whether a ``Field`` length states a structure, a size guard or a standard's shape."""
-    if value in _ARITHMETIC_BOUNDS or _STANDARD_SHAPE_NAME.search(owner):
+    words = re.sub(r"(?<=[a-z])(?=[A-Z])", "_", owner)
+    if value in _ARITHMETIC_BOUNDS or _STANDARD_SHAPE_NAME.search(words):
         return True
     exact = other == value
     if exact:

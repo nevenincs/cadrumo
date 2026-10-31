@@ -149,7 +149,11 @@ TRANSLATION_LEGAL_TITLE_RE: Final[re.Pattern[str]] = re.compile(
 
 
 TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
-    r"\b(?:Agencia (?:Estatal de Administración )?Tributaria|Boletín Oficial del Estado)\b"
+    r"\b(?:Agencia (?:Estatal de Administración )?Tributaria|Boletín Oficial del Estado|"
+    # Retained proper names in profile adoption guidance and the ROI, REDEME
+    # and REBECA guides. Only the complete names change dictionary ownership.
+    r"Registro (?:Civil|de Operadores Intracomunitarios|de Devolución Mensual|"
+    r"Especial de Buques y Empresas Navieras de Canarias))\b"
 )
 
 
@@ -195,6 +199,12 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"código seguro de verificación|"
     r"mínimo por descendientes|anualidades por alimentos|guarda y custodia|"
     r"régimen de atribución de rentas|comunidad de bienes|sociedad civil|"
+    # The Renta/VAT guides retain these complete Spanish box and regime
+    # labels, including the two attested English hyphenated label forms.
+    # Component words stay in their surrounding language elsewhere; matched
+    # labels still require Spanish dictionary recognition word by word.
+    r"(?:base (?:imponible|liquidable)|cuota devengada|régimen(?: |-)general|"
+    r"régimen simplificado|régimen de atribución|régimen-de-atribución)(?![\w-])|"
     r"carácter social|entrega intracomunitaria|"
     r"signos[, ]+índices[, ]+módulos|previsión social|"
     r"código técnico de la edificación|hacienda foral|"
