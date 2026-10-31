@@ -5,21 +5,22 @@ from __future__ import annotations
 import pytest
 
 from . import modelo_303_registry_compensation_scenarios as scenarios
+from ._modelo_303_registry_support import load_modelo_303
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> None:
-    scenarios.check_modelo_303_compensation_chain_uses_current_record_design_casillas()
+    scenarios.check_modelo_303_compensation_chain_uses_current_record_design_casillas(load_modelo_303)
 
 
 def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id() -> None:
-    scenarios.check_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id()
+    scenarios.check_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id(load_modelo_303)
 
 
 def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter() -> None:
-    scenarios.check_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter()
+    scenarios.check_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter(load_modelo_303)
 
 
 def test_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder() -> None:
-    scenarios.check_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder()
+    scenarios.check_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder(load_modelo_303)

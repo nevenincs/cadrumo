@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from .....core.resources.bundled_data import bundled_path
-from ._modelo_303_registry_support import (
-    load_modelo_303,
-)
+from ..schema import ModeloDefinition
+from ..schema_catalogues import RegistryCatalogues
 from .snapshot_support import build_snapshot
 
 
-def check_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
+def check_modelo_303_monthly_snapshot_resolves_for_each_period(
+    load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
+) -> None:
     """Each explicit current record-design revision resolves its monthly periods.
 
     REDEME and large-company taxpayers use monthly Modelo 303 schedules. The
@@ -31,7 +34,9 @@ def check_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
         assert "modelo-303-mensual" in schedule_ids, f"monthly schedule absent for period {period}"
 
 
-def check_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles() -> None:
+def check_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles(
+    load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
+) -> None:
     """The monthly schedule fires for monthly IVA-liquidation triggers only."""
     from ....deadlines.models import (
         IVARegime,

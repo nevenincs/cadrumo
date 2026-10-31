@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
@@ -9,6 +10,8 @@ from .....core.resources.bundled_data import bundled_path
 from ..binding_temporal import TargetPeriodOffset
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import previous_filing_binding_source_casilla_ids
+from ..schema import ModeloDefinition
+from ..schema_catalogues import RegistryCatalogues
 from ._modelo_303_registry_support import (
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -16,13 +19,14 @@ from ._modelo_303_registry_support import (
     _M303_GENERADA_CASILLA,
     _M303_POSTERIOR_CASILLA,
     _M303_RESULTADO_CASILLA,
-    load_modelo_303,
 )
 from .registry_observations import registry_grounded_modelo_observation
 from .snapshot_support import build_snapshot
 
 
-def check_modelo_303_compensation_chain_uses_current_record_design_casillas() -> None:
+def check_modelo_303_compensation_chain_uses_current_record_design_casillas(
+    load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
+) -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions["2022"]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
@@ -42,7 +46,9 @@ def check_modelo_303_compensation_chain_uses_current_record_design_casillas() ->
     assert binding.applicability.kind == "all_revision_contexts"
 
 
-def check_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id() -> None:
+def check_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id(
+    load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
+) -> None:
     from ..bindings_previous_filing import (
         previous_filing_observation_requirements,
         resolve_previous_filing_binding_values,
@@ -72,7 +78,9 @@ def check_modelo_303_previous_quarter_compensation_binding_resolves_from_source_
     ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
 
 
-def check_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter() -> None:
+def check_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter(
+    load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
+) -> None:
     from ..bindings_previous_filing import (
         previous_filing_observation_requirements,
         resolve_previous_filing_binding_values,
@@ -102,7 +110,9 @@ def check_modelo_303_first_quarter_compensation_resolves_from_previous_year_four
     ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
 
 
-def check_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder() -> None:
+def check_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder(
+    load_modelo_303: Callable[[], tuple[ModeloDefinition, RegistryCatalogues]],
+) -> None:
     from ..formula_runtime import calculate_registry_snapshot
 
     modelo, catalogues = load_modelo_303()
