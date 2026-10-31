@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import errno
 import os
+import stat
 import time
 from collections import Counter
 from collections.abc import Generator
@@ -23,6 +24,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 type _FailurePoint = Literal["second_pipe", "mkdir", "temporary_directory", "launch"]
 
 
+def _still_a_pipe(descriptor: int) -> bool:
+    """Whether closing this number releases the pipe end rather than an unrelated reuse of the number.
+
+    A released number is reissued to the next open, such as the directory
+    handle of a recursive removal; closing that handle is not a second close
+    of the pipe. A number that is no longer open at all is still a double close.
+    """
+    try:
+        return stat.S_ISFIFO(os.fstat(descriptor).st_mode)
+    except OSError:
+        return True
+
+
 @pytest.fixture
 def real_pipe_closes(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[list[int], Counter[int]]]:
     """Observe actual closes, then settle any descriptors leaked by a failing regression."""
@@ -37,7 +51,7 @@ def real_pipe_closes(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[list[in
         return descriptors
 
     def tracked_close(descriptor: int) -> None:
-        if descriptor in allocated:
+        if descriptor in allocated and _still_a_pipe(descriptor):
             closes[descriptor] += 1
         close(descriptor)
 
