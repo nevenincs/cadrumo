@@ -52,6 +52,8 @@ const environment = {
     ? resolve(buildPath("desktop_testing"), "backend-cargo")
     : buildPath("desktop_cargo"),
   CADRUMO_NATIVE_CONTRACT: contract,
+  // The icon the desktop sets for itself where the platform takes none from a bundle.
+  CADRUMO_DESKTOP_ICON: resolve(icons, "icon.icns"),
   CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
   // The linked manager crate embeds the process manifest of this build kind on Windows.
   CADRUMO_PROCESS_MANIFEST: resolve(

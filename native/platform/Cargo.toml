@@ -26,6 +26,8 @@ webview2 = ["dep:webview2-com", "dep:windows-core"]
 # Fixture hooks that place a transport namespace where the caller chooses. Release builds
 # refuse the feature.
 test-support = []
+# The desktop's AppKit calls. Only the desktop enables it, so no other host links AppKit.
+appkit = ["dep:objc2", "dep:objc2-app-kit", "dep:objc2-foundation"]
 
 [dependencies]
 webview2-com = { version = "0.39.1", optional = true }
@@ -33,6 +35,11 @@ windows-core = { version = "0.62", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = { version = "0.6.5", optional = true }
+objc2-app-kit = { version = "0.3.2", optional = true, default-features = false, features = ["std", "NSApplication", "NSImage", "NSResponder"] }
+objc2-foundation = { version = "0.3.2", optional = true, default-features = false, features = ["std", "NSData"] }
 
 [lints.rust]
 unsafe_op_in_unsafe_fn = "deny"

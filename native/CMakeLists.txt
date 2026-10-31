@@ -107,7 +107,8 @@ if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET rust_platform DEPENDS rust_platform_static rust_platform_shared)
   cadrumo_register_clean(TARGET rust_platform_consumer PATHS "${platform_consumer}")
 endif()
-# The webview2 feature is the desktop's view of the platform crate and exists only on Windows.
+# The webview2 and appkit features are the desktop's view of the platform crate, on Windows
+# and macOS respectively.
 set(platform_manifest "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml")
 set(platform_clippy_arguments --profile "$<IF:$<CONFIG:Debug>,dev,release>")
 cadrumo_rust_quality(platform MANIFEST "${platform_manifest}"
@@ -115,6 +116,10 @@ cadrumo_rust_quality(platform MANIFEST "${platform_manifest}"
 if(WIN32)
   cadrumo_rust_clippy(platform.webview2 MANIFEST "${platform_manifest}" CARGO platform_cargo
     ARGS ${platform_clippy_arguments} --features webview2)
+endif()
+if(APPLE)
+  cadrumo_rust_clippy(platform.appkit MANIFEST "${platform_manifest}" CARGO platform_cargo
+    ARGS ${platform_clippy_arguments} --features appkit)
 endif()
 add_subdirectory(application)
 include("${PROJECT_SOURCE_DIR}/native/cmake/LaunchGuard.cmake")
