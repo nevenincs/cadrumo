@@ -5923,8 +5923,8 @@ topic:
     title: Calendario de obligaciones
   casilla:
     body: Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales,
-      calculadas (computed) o derivadas de bindings. 'aeat app modelo casillas <modelo>'
-      las lista.
+      calculadas (computed) o derivadas de vinculaciones. 'aeat app modelo casillas
+      <modelo>' las lista.
     title: Casillas
   formats:
     body: La CLI emite salida en texto, JSON, table o csv según '--format'. JSON es

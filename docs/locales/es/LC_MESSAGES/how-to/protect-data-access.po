@@ -105,8 +105,8 @@ msgstr ""
 #: ../../how-to/protect-data-access.md:30
 msgid "Never store it in a shared shell profile, a committed script, or a log."
 msgstr ""
-"No la almacenes en un perfil de shell compartido, en un script versionado"
-" en el repositorio ni en un registro."
+"No la almacenes en un archivo de configuración compartido del intérprete "
+"de comandos, en un script versionado en el repositorio ni en un registro."
 
 #: ../../how-to/protect-data-access.md:32
 msgid ""
@@ -385,7 +385,7 @@ msgstr ""
 "\"new_passphrase\": \"...\", \"new_passphrase_confirmation\": \"...\"}`. "
 "No pases una frase de contraseña como argumento de línea de comandos: los"
 " argumentos son visibles en la lista de procesos y en el historial del "
-"shell."
+"intérprete de comandos."
 
 #: ../../how-to/protect-data-access.md:160
 msgid "Run without a passphrase prompt"
