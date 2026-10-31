@@ -594,6 +594,17 @@ common:
     running: Motor listo
     start_at_sign_in: Iniciar al iniciar sesión
     starting: Iniciando el motor
+    startup_closing_message: La ventana anterior de Cadrumo no terminó de cerrarse
+      a tiempo. Espera un momento y vuelve a abrir Cadrumo.
+    startup_closing_title: Cadrumo todavía se está cerrando
+    startup_dismiss: Aceptar
+    startup_failed_details: El registro de inicio de la carpeta de registros de Cadrumo
+      tiene los detalles.
+    startup_failed_reason: Motivo
+    startup_failed_title: Cadrumo no se pudo iniciar
+    startup_other_session_message: Cadrumo ya está abierto en otra sesión de inicio
+      de esta cuenta. Cambia a esa sesión.
+    startup_other_session_title: Cadrumo está abierto en otra sesión
     stopping: Deteniendo el motor
     unavailable: Motor no disponible
     update_deferred: La actualización espera a que termine el trabajo en curso. No

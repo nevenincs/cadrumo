@@ -564,6 +564,17 @@ common:
     running: Runtime ready
     start_at_sign_in: Start at sign-in
     starting: Runtime starting
+    startup_closing_message: The previous Cadrumo window did not finish closing in
+      time. Wait a moment and open Cadrumo again.
+    startup_closing_title: Cadrumo is still closing
+    startup_dismiss: OK
+    startup_failed_details: The startup record in the Cadrumo logs folder has the
+      details.
+    startup_failed_reason: Reason
+    startup_failed_title: Cadrumo could not start
+    startup_other_session_message: Cadrumo is already open in another login session
+      of this account. Switch to that session.
+    startup_other_session_title: Cadrumo is open in another session
     stopping: Runtime stopping
     unavailable: Runtime unavailable
     update_deferred: The update is waiting for running work to finish. No work has

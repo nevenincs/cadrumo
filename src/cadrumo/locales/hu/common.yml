@@ -569,6 +569,17 @@ common:
     running: A háttérfolyamat készen áll
     start_at_sign_in: Indítás bejelentkezéskor
     starting: A háttérfolyamat indul
+    startup_closing_message: A Cadrumo előző ablaka nem zárult be időben. Várj egy
+      kicsit, majd nyisd meg újra a Cadrumót.
+    startup_closing_title: A Cadrumo még bezárul
+    startup_dismiss: Rendben
+    startup_failed_details: Az indítási napló a Cadrumo naplómappájában tartalmazza
+      a részleteket.
+    startup_failed_reason: Ok
+    startup_failed_title: A Cadrumo nem indult el
+    startup_other_session_message: A Cadrumo már meg van nyitva ennek a fiókodnak
+      egy másik bejelentkezési munkamenetében. Válts át arra a munkamenetre.
+    startup_other_session_title: A Cadrumo egy másik munkamenetben meg van nyitva
     stopping: A háttérfolyamat leáll
     unavailable: A háttérfolyamat nem érhető el
     update_deferred: A frissítés megvárja a folyamatban lévő munka befejezését. Egyetlen

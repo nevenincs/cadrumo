@@ -153,72 +153,6 @@ fn append(file: &LogFile, record: &Record) -> Result<()> {
     Err(last.expect("at least one attempt ran"))
 }
 
-/// The closed, payload-free text the person is shown for `outcome`.
-pub fn notice(outcome: Outcome, reason: Option<ErrorCode>) -> Option<(&'static str, String)> {
-    match outcome {
-        Outcome::HandedOff => None,
-        Outcome::OpenInOtherSession => Some((
-            "Cadrumo is open in another session",
-            "Cadrumo is already open in another login session of this account. Switch to that session."
-                .into(),
-        )),
-        Outcome::TimedOut => Some((
-            "Cadrumo is still closing",
-            "The previous Cadrumo window did not finish closing in time. Wait a moment and open Cadrumo again."
-                .into(),
-        )),
-        Outcome::Refused => Some((
-            "Cadrumo could not start",
-            format!(
-                "Reason: {}. The startup record in the Cadrumo logs folder has the details.",
-                reason.map_or_else(|| "unknown".to_owned(), token)
-            ),
-        )),
-    }
-}
-
-/// The protocol token of `code`.
-fn token(code: ErrorCode) -> String {
-    serde_json::to_value(code)
-        .ok()
-        .and_then(|value| value.as_str().map(str::to_owned))
-        .unwrap_or_else(|| "unknown".to_owned())
-}
-
-/// Shows `notice` to the person where the platform can display one before any window exists
-/// and the launch has no terminal of its own. Returns whether a notice was shown.
-pub fn present(title: &str, message: &str) -> bool {
-    #[cfg(target_os = "macos")]
-    {
-        use std::io::IsTerminal;
-        if std::io::stderr().is_terminal() {
-            return false;
-        }
-        // The text travels as script arguments, never inside the script.
-        std::process::Command::new("/usr/bin/osascript")
-            .args([
-                "-e",
-                "on run argv",
-                "-e",
-                "display alert (item 1 of argv) message (item 2 of argv) giving up after 120",
-                "-e",
-                "end run",
-                title,
-                message,
-            ])
-            .stdin(std::process::Stdio::null())
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .status()
-            .is_ok_and(|status| status.success())
-    }
-    #[cfg(not(target_os = "macos"))]
-    {
-        let _ = (title, message);
-        false
-    }
-}
-
 /// Records `outcome`, then shows the person its notice. Best effort: a launch that cannot
 /// record keeps its standard error report.
 pub fn conclude(
@@ -228,9 +162,8 @@ pub fn conclude(
     reason: Option<ErrorCode>,
 ) -> Option<PathBuf> {
     let written = record(parent, outcome, stage, reason).ok();
-    if let Some((title, message)) = notice(outcome, reason) {
-        present(title, &message);
-    }
+    #[cfg(target_os = "macos")]
+    crate::startup_alert::show(parent, outcome, reason);
     written
 }
 
@@ -307,20 +240,6 @@ mod tests {
             of_admission(&Err(timed_out)),
             Some((Outcome::TimedOut, Some(ErrorCode::TimedOut)))
         );
-    }
-
-    #[test]
-    fn a_notice_names_the_reason_for_each_ended_launch_but_never_for_a_handoff() {
-        assert!(notice(Outcome::HandedOff, None).is_none());
-        for (outcome, reason) in [
-            (Outcome::OpenInOtherSession, None),
-            (Outcome::TimedOut, Some(ErrorCode::TimedOut)),
-            (Outcome::Refused, Some(ErrorCode::LogUnavailable)),
-        ] {
-            assert!(notice(outcome, reason).is_some(), "{outcome:?}");
-        }
-        let (_, message) = notice(Outcome::Refused, Some(ErrorCode::LogUnavailable)).unwrap();
-        assert!(message.contains("log_unavailable"), "{message}");
     }
 
     #[test]

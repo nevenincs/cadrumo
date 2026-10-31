@@ -12,6 +12,8 @@ mod manager;
 mod role;
 mod shell;
 mod startup;
+#[cfg(target_os = "macos")]
+mod startup_alert;
 mod startup_logging;
 mod startup_outcome;
 mod terminal;

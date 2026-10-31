@@ -68,6 +68,9 @@ cadrumo-interpreter-host = { path = "../../interpreter_host" }
 # The graphical login session the window and its instance lock belong to,
 # admitted as the manager admits its own process.
 cadrumo-manager = { path = "../../manager" }
+# The alert a launch that ends before any window shows, as a native modal panel.
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSAlert", "NSApplication", "NSResponder", "NSButton", "NSControl", "NSView", "objc2-core-foundation"] }
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSString"] }
 
 [lints.rust]
 unsafe_code = "forbid"
