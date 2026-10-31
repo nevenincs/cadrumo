@@ -62,7 +62,7 @@ import re
 from collections.abc import Callable, Hashable, Mapping
 from functools import cache, lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING, cast, overload
+from typing import TYPE_CHECKING, Final, cast, overload
 from urllib.parse import urlparse
 
 from ..hashing import sha256_hex as _sha256_hex
@@ -937,7 +937,13 @@ def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
 #: here is a pure function of the text and the reveal flag. Longer strings are
 #: redacted afresh so a rendered report never sits in the cache.
 _CLI_STRING_CACHE_MAX_LENGTH = 512
-_CLI_GOOGLE_SHEET_URL = re.compile(r"https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]+)/edit")
+_SHEET_ID_SHORTEST_CHARACTERS: Final = 10
+_SHEET_ID_LONGEST_CHARACTERS: Final = 200
+# An identifier outside this span is not one Google minted, so its URL keeps no success exemption.
+_CLI_GOOGLE_SHEET_URL = re.compile(
+    r"https://docs\.google\.com/spreadsheets/d/"
+    rf"([A-Za-z0-9_-]{{{_SHEET_ID_SHORTEST_CHARACTERS},{_SHEET_ID_LONGEST_CHARACTERS}}})/edit"
+)
 
 
 def _canonical_google_sheet_id(value: object) -> str | None:

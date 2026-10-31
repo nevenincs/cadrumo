@@ -70,11 +70,6 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "ACCUMULATES the failures, so a bad country must reach the wizard to "
         "be reported alongside a bad NIF rather than refused ahead of it"
     ),
-    "domain/calculations/registry/convenio.py::country_code": (
-        "a treaty file keyed by country and authored by hand, so the anchored "
-        "uppercase pattern fails the author on a sloppy code rather than "
-        "accepting it; the canonical is length-only and would not"
-    ),
 }
 
 
