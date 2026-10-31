@@ -2,21 +2,16 @@
 
 from __future__ import annotations
 
-from base64 import b64encode
 from pathlib import Path
-from uuid import UUID
 
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    create_current_profile_session,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
-from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.custody_transactions import ProfileCustodyTransactionConflictError
-from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
 from .....application.workflow.profile_bucket_scan import resolve_profile_bucket
 from .....application.workflow.profile_health import assess_active_profile_health, repair_active_profile_pointer
@@ -25,62 +20,9 @@ from .....core.bucket_pointer import BucketPointer, pointer_path, read_pointer, 
 from .....core.config import override_settings
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
-from ..custody.records import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-)
-from ..custody.sentinel import create_profile_custody_sentinel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-_PROFILE_DEK = bytes(range(32))
-
-
-def _current_profile_session(profile_id: str, *, root: Path, label: str) -> ProfileRecordSession:
-    """Create one real committed current capsule and return its live record session."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    identity = UUID(profile_id)
-    seed = identity.bytes + identity.bytes
-    envelope = ProfileCustodyEnvelope.create(
-        profile_id=identity,
-        password_generation=1,
-        dek_epoch=b64encode(seed[:16]).decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(seed[16:]).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(seed[:12]).decode("ascii"),
-            ciphertext_b64=b64encode(seed).decode("ascii"),
-            tag_b64=b64encode(seed[:16]).decode("ascii"),
-        ),
-    )
-    session = ProfileRecordSession.from_envelope(
-        envelope=envelope, dek=_PROFILE_DEK, profile_decode_context=_profile_decode_context_for_test
-    )
-    ProfileCapsuleLifecycle(root=root).create(
-        label=label,
-        profile_id=identity,
-        password_envelope=envelope,
-        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_PROFILE_DEK),
-        data_files={},
-        initial_record=_create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=str(identity),
-            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-            context=_profile_create_context_for_test,
-        ),
-        record_session=session,
-    )
-    return session
 
 
 def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(tmp_path: Path) -> None:
@@ -88,7 +30,7 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
         dangling_id = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
-        session = _current_profile_session(bucket_id, root=tmp_path, label="Operator")
+        session = create_current_profile_session(bucket_id, root=tmp_path, label="Operator")
         try:
             write_pointer(tmp_path, BucketPointer.selected(bucket_id=dangling_id, transition_revision=1))
             target = pointer_path(tmp_path)
@@ -153,7 +95,7 @@ def test_resolve_profile_bucket_resolves_an_active_profile_by_display_name(tmp_p
     """A display-name identifier resolves to the UUID bucket via the label fallback."""
 
     uuid = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
-    session = _current_profile_session(uuid, root=tmp_path, label="operator")
+    session = create_current_profile_session(uuid, root=tmp_path, label="operator")
     session.close()
 
     pointer = resolve_profile_bucket("operator", root=tmp_path)
@@ -166,7 +108,7 @@ def test_resolve_profile_bucket_resolves_an_active_profile_by_display_name(tmp_p
 def test_resolve_profile_bucket_returns_none_for_an_unknown_identifier(tmp_path: Path) -> None:
     """Neither a UUID-shaped nor a label-shaped unknown identifier resolves."""
 
-    session = _current_profile_session(
+    session = create_current_profile_session(
         "51c1fa97-28e1-4700-ac1e-ed7cf094d37b",
         root=tmp_path,
         label="operator",
@@ -178,7 +120,7 @@ def test_resolve_profile_bucket_returns_none_for_an_unknown_identifier(tmp_path:
 
 def test_duplicate_label_is_refused_before_a_second_capsule_can_enter_discovery(tmp_path: Path) -> None:
     """Current projections never carry a legacy ambiguous-label state."""
-    first = _current_profile_session(
+    first = create_current_profile_session(
         "51c1fa97-28e1-4700-ac1e-ed7cf094d37b",
         root=tmp_path,
         label="operator",
@@ -186,7 +128,7 @@ def test_duplicate_label_is_refused_before_a_second_capsule_can_enter_discovery(
     first.close()
 
     with pytest.raises(ProfileCustodyTransactionConflictError):
-        _current_profile_session(
+        create_current_profile_session(
             "62d2ab08-39f2-4811-bd2a-fe48fd105e4a",
             root=tmp_path,
             label="operator",

@@ -139,6 +139,63 @@ def publish_test_profile_capsule(
     return initial
 
 
+_CURRENT_PROFILE_DEK = bytes(range(32))
+
+
+def create_current_profile_session(
+    profile_id: str,
+    *,
+    root: Path,
+    label: str,
+    facts: tuple[UserProfileFact, ...] = (UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+) -> ProfileRecordSession:
+    """Publish one complete committed capsule and return its live record session.
+
+    The custody material is fixed by the profile identity, so a separate process
+    that rebuilds the same envelope agrees with this one.
+    """
+    create_context, decode_context = profile_authority_contexts()
+    identity = UUID(profile_id)
+    seed = identity.bytes + identity.bytes
+    envelope = ProfileCustodyEnvelope.create(
+        profile_id=identity,
+        password_generation=1,
+        dek_epoch=b64encode(seed[:16]).decode("ascii"),
+        kdf=ProfileCustodyKdfParameters(
+            algorithm="argon2id",
+            version=19,
+            memory_mib=19,
+            iterations=2,
+            parallelism=1,
+            salt_b64=b64encode(seed[16:]).decode("ascii"),
+            output_bytes=32,
+        ),
+        wrapped_dek=ProfileCustodyWrappedDek(
+            nonce_b64=b64encode(seed[:12]).decode("ascii"),
+            ciphertext_b64=b64encode(seed).decode("ascii"),
+            tag_b64=b64encode(seed[:16]).decode("ascii"),
+        ),
+    )
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=_CURRENT_PROFILE_DEK, profile_decode_context=decode_context
+    )
+    ProfileCapsuleLifecycle(root=root).create(
+        label=label,
+        profile_id=identity,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_CURRENT_PROFILE_DEK),
+        data_files={},
+        initial_record=create_user_profile_record(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=str(identity),
+            facts=facts,
+            context=create_context,
+        ),
+        record_session=session,
+    )
+    return session
+
+
 def provision_test_profile_bucket_session(
     *,
     bucket_id: str,
@@ -412,6 +469,7 @@ def seed_test_profile_record(
 
 __all__ = [
     "bound_test_profile_record",
+    "create_current_profile_session",
     "derive_test_bucket_key",
     "load_test_profile_record",
     "new_test_profile_custody_envelope",

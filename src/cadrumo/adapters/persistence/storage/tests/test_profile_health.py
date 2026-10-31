@@ -6,19 +6,16 @@ import os
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from uuid import UUID
 
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    create_current_profile_session,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....application.state_projection import build_active_profile
 from .....application.user_profile.capsule_record import ProfileRecordSession
-from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....application.user_profile.login_session_port import profile_login_session_port
 from .....application.user_profile.profile_pointer import active_profile_pointer_transaction
 from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
@@ -28,11 +25,9 @@ from .....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from .....core.config import override_settings
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ..custody.sentinel import create_profile_custody_sentinel
 from ..master_key.active_session import close_active_bucket_session
 from ..master_key.bucket_session import BucketSession
-from .locked_profile_support import DEK, PROFILE_ID, PROFILE_LABEL, READY_FACTS, build_envelope
+from .locked_profile_support import DEK, PROFILE_ID, PROFILE_LABEL, READY_FACTS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -46,34 +41,13 @@ def _bucket_relative_path(bucket_id: str, category: StorageCategory) -> Path:
     )
 
 
-def _create_current_profile(*, root: Path, facts: tuple[UserProfileFact, ...] = READY_FACTS) -> ProfileRecordSession:
-    """Publish one real capsule through the production lifecycle owner."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    identity = UUID(PROFILE_ID)
-    envelope = build_envelope()
-    session = ProfileRecordSession.from_envelope(
-        envelope=envelope, dek=DEK, profile_decode_context=_profile_decode_context_for_test
-    )
-    ProfileCapsuleLifecycle(root=root).create(
-        label=PROFILE_LABEL,
-        profile_id=identity,
-        password_envelope=envelope,
-        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
-        data_files={},
-        initial_record=_create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=PROFILE_ID,
-            facts=facts,
-            context=_profile_create_context_for_test,
-        ),
-        record_session=session,
-    )
-    return session
+def _ready_profile_session(root: Path) -> ProfileRecordSession:
+    return create_current_profile_session(PROFILE_ID, root=root, label=PROFILE_LABEL, facts=READY_FACTS)
 
 
 def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_path: Path) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        session = _create_current_profile(root=tmp_path)
+        session = _ready_profile_session(tmp_path)
         try:
             with (
                 override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=PROFILE_ID),
@@ -97,7 +71,7 @@ def test_discovery_only_health_never_probes_private_record_even_when_session_is_
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     with _indexed_authority_for_test().operation() as operation:
-        session = _create_current_profile(root=tmp_path)
+        session = _ready_profile_session(tmp_path)
         try:
 
             def forbidden_private_read(*_args: object, **_kwargs: object) -> None:
@@ -167,7 +141,7 @@ def test_discovery_only_health_preserves_absent_and_dangling_discovery_without_p
 
 def test_inactive_current_capsule_routes_the_operator_to_login(tmp_path: Path) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        session = _create_current_profile(root=tmp_path)
+        session = _ready_profile_session(tmp_path)
         try:
             with active_profile_pointer_transaction(tmp_path) as pointer_transaction:
                 pointer_transaction.clear()
@@ -257,8 +231,8 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
         cold_root = tmp_path / "cold"
         absent_root = tmp_path / "absent"
         malformed_root = tmp_path / "malformed"
-        ready_record_session = _create_current_profile(root=ready_root)
-        cold_record_session = _create_current_profile(root=cold_root)
+        ready_record_session = _ready_profile_session(ready_root)
+        cold_record_session = _ready_profile_session(cold_root)
         ready_record_session.close()
         cold_record_session.close()
 
