@@ -814,6 +814,7 @@
         "dev.quality.quiet",
         "dev.quality.repository_sources",
         "dev.quality.secure_store_write_path",
+        "dev.quality.shared_scan",
         "dev.quality.source_import_analysis",
         "dev.quality.stable_tree_generation",
         "dev.quality.suite",
