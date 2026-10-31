@@ -9,7 +9,7 @@ through ``tr()`` so the operator-facing surface is localised.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -48,8 +48,6 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.transactions.date_partition import LedgerDatePartition
-from ....domain.transactions.models import TransactionCatalogue
 from ...workflow.errors import WorkflowInputMismatchError
 from ..action_errors import ModeloAggregationBindingError
 from ..art20_advisory import art20_reduccion_advisory_finding
@@ -65,6 +63,7 @@ from ..verification_predicates import evaluate_verification_predicates
 from ..verification_required_fields import missing_required_casilla_finding
 from ..verification_revision_findings import collect_revision_verification_findings
 from ..workflow_gate import _RevisionInputsProvider, workflow_period_for_work_unit
+from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepository
 from .invoice_catalogue_fake import InvoiceCatalogueFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -114,41 +113,6 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Lease one authority generation for the advisory resolvers under test."""
     with _indexed_authority_for_test().operation() as operation:
         yield operation
-
-
-class _EmptyTransactionRepository:
-    """Deterministic empty transaction port for the unresolved-snapshot test."""
-
-    @property
-    def bucket_id(self) -> str:
-        return _BUCKET_ID
-
-    @staticmethod
-    def exists() -> bool:
-        return False
-
-    @staticmethod
-    def load() -> TransactionCatalogue:
-        return TransactionCatalogue()
-
-    @staticmethod
-    def load_for_date_range(start: date, end: date) -> TransactionCatalogue:
-        del start, end
-        return TransactionCatalogue()
-
-    @staticmethod
-    def load_by_ids(transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        del transaction_ids
-        return TransactionCatalogue()
-
-    @staticmethod
-    def partition_by_date_range(start: date, end: date) -> LedgerDatePartition:
-        del start, end
-        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
-
-    @staticmethod
-    def save(catalogue: TransactionCatalogue) -> None:
-        del catalogue
 
 
 def _test_casilla_definition(
@@ -498,7 +462,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
             work_unit=work_unit,
             target=target,
             profile=_resident_profile(),
-            transaction_repository=_EmptyTransactionRepository(),
+            transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=_BUCKET_ID),
             invoice_repository=InvoiceCatalogueFake(),
             operation=_authority_operation_for_test,
             work_profile=None,
