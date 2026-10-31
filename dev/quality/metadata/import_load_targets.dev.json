@@ -556,6 +556,7 @@
         "dev.locales.signal_source_inventory",
         "dev.locales.signal_spelling",
         "dev.locales.signal_spelling_enrollment",
+        "dev.locales.signal_spelling_reviewed_words",
         "dev.locales.signal_spelling_segments",
         "dev.locales.signal_spelling_spanish_forms",
         "dev.locales.signal_syntax",
