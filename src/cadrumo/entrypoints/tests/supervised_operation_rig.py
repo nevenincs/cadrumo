@@ -4,17 +4,25 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
+from uuid import uuid4
+
+import pytest
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 
 class SupervisedOperation(NamedTuple):
@@ -60,3 +68,19 @@ async def run_to_terminal(supervisor: OperationSupervisor, operation_id: str) ->
     """Admit the operation and wait for the supervised task that settles it."""
     await supervisor.start(operation_id)
     return await supervisor.settled(operation_id)
+
+
+def assert_foreign_profile_refused(
+    *, registry: OperationRegistry, request: OperationRequest[Any], context: OperationAccessContext
+) -> None:
+    """Assert the same request retargeted at another profile is refused as a profile mismatch."""
+    foreign_profile_id = uuid4()
+    foreign_request = request.model_copy(
+        update={
+            "subject_ref": profile_operation_subject(str(foreign_profile_id)),
+            "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
+        }
+    )
+    with pytest.raises(ProfileAccessRefusedError) as refusal:
+        resolve_operation_access(registry=registry, request=foreign_request, context=context)
+    assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH

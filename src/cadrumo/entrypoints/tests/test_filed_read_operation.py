@@ -46,7 +46,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from cadrumo.core.operations import (
     OperationEffect,
@@ -58,10 +57,9 @@ from cadrumo.core.period import Period
 from cadrumo.core.register_scoping_signal import RegisterScopingSignal
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.models import TaxpayerProfile
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from .supervised_operation_rig import build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -241,21 +239,7 @@ def _assert_exact_external_client_access[RequestPayloadT: BaseModel](
     # Reusing a saved provider session re-publishes it, a local write behind the COMMIT door.
     assert AccessAction.COMMIT in admitted.policy.actions
 
-    foreign_profile_id = uuid4()
-    assert foreign_profile_id != profile_id
-    foreign_request = request.model_copy(
-        update={
-            "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-            "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-        }
-    )
-    with pytest.raises(ProfileAccessRefusedError) as refusal:
-        resolve_operation_access(
-            registry=registry,
-            request=cast(OperationRequest[BaseModel], foreign_request),
-            context=context,
-        )
-    assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+    assert_foreign_profile_refused(registry=registry, request=request, context=context)
 
 
 def test_supervisor_records_filed_list_and_discover_for_exact_external_client_profile(tmp_path: Path) -> None:

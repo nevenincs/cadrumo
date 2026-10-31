@@ -57,7 +57,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from .supervised_operation_rig import build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -339,16 +339,7 @@ def test_registered_justificante_reads_project_only_existing_cli_fields(tmp_path
             assert admitted.policy.requires_all_periods
             assert AccessAction.COMMIT not in admitted.policy.actions
 
-            foreign_profile_id = uuid4()
-            foreign_request = request.model_copy(
-                update={
-                    "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-                    "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-                }
-            )
-            with pytest.raises(ProfileAccessRefusedError) as refusal:
-                resolve_operation_access(registry=registry, request=foreign_request, context=access_context)
-            assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+            assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
         _, _, _, supervisor, result_service = build_supervised_operation(
             tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW

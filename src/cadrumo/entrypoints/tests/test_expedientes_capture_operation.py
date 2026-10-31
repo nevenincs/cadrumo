@@ -57,7 +57,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from .supervised_operation_rig import run_to_terminal
+from .supervised_operation_rig import assert_foreign_profile_refused, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -227,16 +227,7 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
         assert admitted.policy.requires_all_periods
         assert AccessAction.COMMIT in admitted.policy.actions
 
-        foreign_profile_id = uuid4()
-        foreign_request = request.model_copy(
-            update={
-                "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-                "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-            }
-        )
-        with pytest.raises(ProfileAccessRefusedError) as refusal:
-            resolve_operation_access(registry=registry, request=foreign_request, context=access_context)
-        assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+        assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
         from ...application.live import expedientes_capture_operation as capture_module
 

@@ -59,7 +59,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.operations import (
     OperationEffect,
@@ -71,10 +70,9 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.justificante.schema import Justificante
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from .supervised_operation_rig import build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -422,17 +420,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
         assert admitted.policy.requires_all_periods
         assert AccessAction.COMMIT in admitted.policy.actions
 
-        foreign_profile_id = uuid4()
-        assert foreign_profile_id != profile_id
-        foreign_request = request.model_copy(
-            update={
-                "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-                "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-            }
-        )
-        with pytest.raises(ProfileAccessRefusedError) as refusal:
-            resolve_operation_access(registry=registry, request=foreign_request, context=access_context)
-        assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+        assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
         _, _, _, supervisor, result_service = build_supervised_operation(
             tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
