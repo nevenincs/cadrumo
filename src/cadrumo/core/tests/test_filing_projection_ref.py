@@ -63,20 +63,9 @@ def test_every_projection_discriminator_and_payload_field_is_required() -> None:
         assert model_type.model_fields["projection_kind"].is_required(), model_type.__name__
 
 
-def test_all_seven_flat_projection_variants_validate() -> None:
-    references: tuple[FilingProjectionRef, ...] = (
-        M303ProrrataActivityProjectionRef(
-            projection_kind="m303_prorrata_activity",
-            slot=1,
-            field=M303ProrrataActivityProjectionField.CNAE,
-            casilla_id="500",
-        ),
-        M303DifferentiatedDeductionProjectionRef(
-            projection_kind="m303_differentiated_deduction",
-            slot=1,
-            field=M303DifferentiatedDeductionProjectionField.DOMESTIC_CURRENT_BASE,
-            casilla_id="700",
-        ),
+def _casilla_less_references() -> tuple[FilingProjectionRef, ...]:
+    """Projection references that carry no casilla of their own."""
+    return (
         M303RegimenSimplificadoActivityProjectionRef(
             projection_kind="m303_regimen_simplificado_activity",
             cohort=M303RegimenSimplificadoCohort.AGRICOLA,
@@ -104,6 +93,24 @@ def test_all_seven_flat_projection_variants_validate() -> None:
         M303Exonerado390OperacionesTercerosProjectionRef(
             projection_kind="m303_exonerado_390_operaciones_terceros",
         ),
+    )
+
+
+def test_all_seven_flat_projection_variants_validate() -> None:
+    references: tuple[FilingProjectionRef, ...] = (
+        M303ProrrataActivityProjectionRef(
+            projection_kind="m303_prorrata_activity",
+            slot=1,
+            field=M303ProrrataActivityProjectionField.CNAE,
+            casilla_id="500",
+        ),
+        M303DifferentiatedDeductionProjectionRef(
+            projection_kind="m303_differentiated_deduction",
+            slot=1,
+            field=M303DifferentiatedDeductionProjectionField.DOMESTIC_CURRENT_BASE,
+            casilla_id="700",
+        ),
+        *_casilla_less_references(),
     )
 
     adapter: TypeAdapter[FilingProjectionRef] = TypeAdapter(FilingProjectionRef)
@@ -341,35 +348,7 @@ def test_numbered_endpoint_accessor_answers_only_for_casilla_bearing_variants() 
         )
         == "700"
     )
-    for casilla_less in (
-        M303RegimenSimplificadoActivityProjectionRef(
-            projection_kind="m303_regimen_simplificado_activity",
-            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
-            slot=1,
-            field=M303RegimenSimplificadoActivityField.ACTIVITY_CODE,
-        ),
-        M303RegimenSimplificadoFactProjectionRef(
-            projection_kind="m303_regimen_simplificado_fact",
-            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
-            slot=1,
-            fact=M303RegimenSimplificadoFact.INDICE_CUOTA,
-        ),
-        M303RegimenSimplificadoModuleProjectionRef(
-            projection_kind="m303_regimen_simplificado_module",
-            cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
-            slot=1,
-            module_order=1,
-            value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
-        ),
-        M303Exonerado390ActivityProjectionRef(
-            projection_kind="m303_exonerado_390_activity",
-            slot=1,
-            field=M303Exonerado390ActivityField.ACTIVITY_CODE,
-        ),
-        M303Exonerado390OperacionesTercerosProjectionRef(
-            projection_kind="m303_exonerado_390_operaciones_terceros",
-        ),
-    ):
+    for casilla_less in _casilla_less_references():
         assert filing_projection_ref_casilla_id(casilla_less) is None
 
 
