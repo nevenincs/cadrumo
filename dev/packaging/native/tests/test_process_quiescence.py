@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import platform
 import shutil
 import sys
 import time
@@ -20,6 +21,23 @@ from .. import process_quiescence
 from ..process_quiescence import product_process, quiesce, running
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+# The copied interpreter keeps the host's image name, so shutdown recognition
+# must run against the host's own platform mapping.
+_ARCHITECTURE = {"amd64": "x86-64", "x86_64": "x86-64"}.get(platform.machine().lower(), platform.machine().lower())
+HOST_TARGET = f"{ {'win32': 'windows', 'darwin': 'macos'}.get(sys.platform, sys.platform) }-{_ARCHITECTURE}"
+
+
+def _interpreter_environment(**extra: str) -> dict[str, str]:
+    """Environment for a relocated interpreter copy that must still find its shared runtime."""
+    library_directory = str(Path(sys.base_prefix) / "lib")
+    return dict(
+        os.environ,
+        PYTHONHOME=sys.base_prefix,
+        DYLD_FALLBACK_LIBRARY_PATH=library_directory,
+        LD_LIBRARY_PATH=library_directory,
+        **extra,
+    )
 
 
 def test_shutdown_recognition_requires_named_image_inside_owned_build_tree(tmp_path: Path) -> None:
@@ -139,7 +157,7 @@ def test_shutdown_terminates_owned_tree_but_preserves_external_copy_and_unrelate
     (external_package / "data/package-manifest.json").write_text(
         json.dumps({"build": {"application_id": "test.product"}}), encoding="utf-8"
     )
-    environment = dict(os.environ, PYTHONHOME=sys.base_prefix)
+    environment = _interpreter_environment()
     code = (
         "import os,pathlib,sys,time,subprocess; p=pathlib.Path(sys.argv[1]); "
         "child=subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)']) "
@@ -203,7 +221,7 @@ def test_shutdown_terminates_owned_tree_but_preserves_external_copy_and_unrelate
                         )
                         retained.callback(handle.Close)
                 started = time.monotonic()
-                quiesce(build, "windows-x86-64", graceful_timeout=0.2, terminate_timeout=5)
+                quiesce(build, HOST_TARGET, graceful_timeout=0.2, terminate_timeout=5)
                 assert product.result(timeout=5).returncode != 0
                 assert not running(child)
                 assert running(external_process)
@@ -260,7 +278,7 @@ else:
     ready.touch()
     time.sleep(15)
 """
-    environment = dict(os.environ, PYTHONHOME=sys.base_prefix, PYTHONPATH=os.pathsep.join(sys.path))
+    environment = _interpreter_environment(PYTHONPATH=os.pathsep.join(sys.path))
     with ThreadPoolExecutor(max_workers=1) as executor:
         product = executor.submit(
             run_command,
@@ -278,5 +296,5 @@ else:
                 pytest.fail(result.stderr)
             assert time.monotonic() < deadline, "graceful process did not become ready"
             time.sleep(0.01)
-        quiesce(build, "windows-x86-64", graceful_timeout=3, terminate_timeout=3)
+        quiesce(build, HOST_TARGET, graceful_timeout=3, terminate_timeout=3)
         assert product.result(timeout=5).returncode == 0
