@@ -5,7 +5,7 @@ tags:
 date: '2026-10-31'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:3373806d4b85302eda91485d0047645b5b4578003642f47c6ee1ed83816327a9'
+body_hash: 'sha256:a6e4c12a4bf44de480106b4b993f0356ef9286ad750f37f4ef74aad4927ac6e4'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -60,3 +60,5 @@ Static reading found no compile error, but Windows lock, mutex and pipe names ch
 - adhoc-integrity-channel: publish SHA-256 checksums beside the DMG and ZIP and point the first-run section at them.
 - sigterm-absorbed: add a final watchdog that exits once the close exceeds its declared budget.
 - health-gate-transport-and-stderr: capture a bounded stderr tail into the gate's failure and run the gate in an isolated transport namespace.
+
+Resolution 2026-10-31: linux-instance-socket-length fixed in `ae1aa0edd2` (Linux code paths not compiled on this host); test-namespace-hooks-in-release in `872104c9fb`; caller-owned-docstring in `af41de029a`; startup-outcome-fallback-root in `0091422a17`; sigterm-absorbed in `1ccdf4bcf6`; health-gate-transport-and-stderr in `9761d014e5` (stderr tail captured; the transport directory is OS-derived and cannot be redirected, documented at the gate). adhoc-integrity-channel is not a failure and was not pursued. windows-uncompiled is outside this macOS work and remains for its owner.

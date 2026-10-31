@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:c53153f600ae7b9b49011df40824cfc6929d42f135445d2668a8dfc1d5fa34c6'
+body_hash: 'sha256:c29b59e6734483372c05bea283e5c9b5f434d3e2ac76688dd76a1d4763405749'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -333,6 +333,18 @@ native/manager/src/supervision/supervisor.rs`
 - `S19` `verify:` `pytest dev/docs/tests/test_docs_catalogue_drift.py` -> `pass`
 - `S19` `verify:` `vaultspec-core vault check all (no findings on amended ADRs)` -> `pass`
 - `S18` `M` `.vault/plan/2026-10-30-macos-platform-plan.md`
+- `S12` `M` `dev/packaging/native/macos_bundle.py`
+- `S12` `M` `dev/packaging/native/tests/test_macos_bundle.py`
+- `S12` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S12` `M` `native/desktop/src-tauri/src/app.rs`
+- `S12` `M` `native/desktop/src-tauri/src/startup_outcome.rs`
+- `S12` `M` `native/manager/src/macos/ipc/socket.rs`
+- `S12` `M` `native/platform/Cargo.toml`
+- `S12` `M` `native/platform/src/lib.rs`
+- `S12` `M` `native/platform/src/transport.rs`
+- `S12` `M` `src/cadrumo_runtime/host/caller_owned.py`
+- `S12` `verify:` `build.sh Debug desktop-host-unit-test (711)` -> `pass`
+- `S12` `verify:` `ctest -C Debug -R manager (7/7)` -> `pass`
 
 ## Notes
 
@@ -345,3 +357,4 @@ native/manager/src/supervision/supervisor.rs`
 - `S19` SMAppService registration of the ad-hoc sealed agent was not exercised: no login item may be created on this non-disposable Mac; tests cover policy, bundle admission and agent discovery only
 - `S19` CMake signing-identity default changed without a reconfigure; the existing cache already holds -
 - `S18` Evaluated and not needed: the ad-hoc sealed bundle with the payload in Contents/Resources/app passes codesign --verify --deep --strict, loads libpython and its extensions under the hardened runtime and reaches runtime ready (S15 evidence); notarization is never planned, so the split brings no benefit and would break package-root containment checks.
+- `S12` Plan-close review findings fixed: Linux instance names digest-compact with early `sun_path` check; test namespace hooks gated out of release; startup outcome no longer writes into an unselected root; close watchdog; health gate stderr tail. Linux paths not compiled on this host. Checksum publishing not done (not a failure). Windows compile pending its owner.
