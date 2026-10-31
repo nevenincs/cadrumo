@@ -86,6 +86,11 @@ _HUNGARIAN_STRUCTURAL_SUFFIX_PATTERNS = tuple(
         r"(?P<stem>NIF)-(?:jét|jének)",
         r"(?P<stem>URL)-jét",
         r"(?P<stem>Cl@ve)-vel",
+        # AEAT's exact service name with the attested Hungarian allative;
+        # preserve the stem so its own exact-name recognizer still checks it.
+        # https://www3.agenciatributaria.gob.es/Sede/clave.html
+        # https://www.helyesiras.mta.hu/helyesiras/default/akh12
+        r"(?P<stem>Cl@ve[ \t]+Móvil)hoz",
         r"(?P<stem>GitHub)on",
         r"(?P<stem>PowerShell)ben",
         r"(?P<stem>Model[ \t]+Context[ \t]+Protocol)t",

@@ -128,6 +128,34 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     # adapters.yml. Keep only the observed spellings and capitalisation.
     "en": frozenset(
         {
+            # Exact forms attested in Microsoft documentation, the IRS and
+            # European Commission tax guidance, and the cited dictionaries:
+            # https://learn.microsoft.com/en-us/dynamics365/customer-insights/journeys/real-time-marketing-form-prefill
+            # https://learn.microsoft.com/en-us/graph/api/approval-get?view=graph-rest-1.0
+            # https://learn.microsoft.com/en-us/dotnet/api/java.time?view=net-android-36.0
+            # https://learn.microsoft.com/en-us/purview/edisc-ref-partially-indexed-items
+            # https://support.microsoft.com/en-us/onedrive/how-to-remove-an-account-in-onedrive
+            # https://www.irs.gov/pub/irs-pdf/p1693_11.pdf
+            # https://www.irs.gov/irm/part5/irm_05-009-013r
+            # https://taxation-customs.ec.europa.eu/system/files/2021-06/taxation_trends_2021_country_chapter_luxembourg.pdf
+            # https://files.ofsted.gov.uk/v1/file/1831493
+            # https://dictionary.cambridge.org/dictionary/english/checkable
+            # https://www.collinsdictionary.com/dictionary/english/unsupplied
+            "approver",
+            "checkable",
+            "durations",
+            "impatriate",
+            "namespaces",
+            "preadoptive",
+            "prefill",
+            "Prefill",
+            "prefilled",
+            "unassessed",
+            "unindexed",
+            "unlink",
+            "unsupplied",
+            "withholder",
+            "withholders",
             # Exact native, technical and retained tax forms attested in
             # _data/terminology/concepts; no new casing or inflections implied.
             "embeddings",
@@ -337,6 +365,15 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "es": frozenset(
         {
+            # The Spanish technical and fiscal forms are attested by Microsoft
+            # and AEAT, respectively; do not infer unobserved inflections.
+            # https://learn.microsoft.com/es-es/azure/architecture/patterns/retry
+            # https://learn.microsoft.com/es-es/azure/architecture/microservices/design/api-design
+            # https://www3.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr995_2006.pdf
+            "idempotencia",
+            "reintentos",
+            "sectorizado",
+            "serialización",
             # NCI's Spanish dictionary uses this exact plural of heredable:
             # https://www.cancer.gov/espanol/publicaciones/diccionarios/diccionario-cancer/def/heredable
             "heredables",
@@ -523,6 +560,11 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "ca": frozenset(
         {
+            # Generalitat uses these exact forms in legal and form guidance:
+            # https://repositori.justicia.gencat.cat/bitstream/handle/20.500.14226/576/llei_enjudiciament_civil_qdl88.pdf
+            # https://canalempresa.gencat.cat/ca/ajuda/ajuda/ajuda-a-larea-privada/preferencies/dades/
+            "declarable",
+            "Preomple",
             # BOE's Catalan edition uses this exact plural for reportable items:
             # https://www.boe.es/boe_catalan/dias/2020/02/05/pdfs/BOE-A-2020-1653-C.pdf
             "declarables",
@@ -629,6 +671,13 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "hu": frozenset(
         {
+            # Attested Hungarian byte forms, not a general suffix rule:
+            # https://people.inf.elte.hu/szlavi/Magamnak/C%2B%2B/ansi_Cpp.pdf
+            # https://fbenjih.web.elte.hu/Algoritmusok%20%C3%A9s%20adatszerkezetek%202/El%C5%91ad%C3%A1s%20%28%C3%81sv%C3%A1nyi%29/%C3%81sv%C3%A1nyi%20jegyzet.pdf
+            # https://mek.oszk.hu/24200/24233/pdf/24233_1.pdf
+            "bájtokkal",
+            "bájtjait",
+            "bájtnál",
             # Exact native, technical and retained tax forms attested in
             # _data/terminology/concepts; no new casing or inflections implied.
             "artefaktumokból",

@@ -61,6 +61,58 @@ def test_pydantic_brand_keeps_code_literal_and_adjacent_typo_distinct() -> None:
 
 
 @pytest.mark.parametrize(
+    ("locale", "forms"),
+    [
+        (
+            "en",
+            (
+                "approver",
+                "checkable",
+                "durations",
+                "impatriate",
+                "namespaces",
+                "preadoptive",
+                "prefill",
+                "Prefill",
+                "prefilled",
+                "unassessed",
+                "unindexed",
+                "unlink",
+                "unsupplied",
+                "withholder",
+                "withholders",
+            ),
+        ),
+        ("es", ("idempotencia", "reintentos", "sectorizado", "serialización")),
+        ("ca", ("declarable", "Preomple")),
+        ("hu", ("bájtokkal", "bájtjait", "bájtnál")),
+    ],
+)
+def test_attested_current_terms_are_exact_and_belong_to_their_locale(locale: str, forms: tuple[str, ...]) -> None:
+    for form in forms:
+        assert is_project_spelling(locale, form)
+        assert not is_project_spelling(locale, form + "x")
+        assert not is_project_spelling(locale, form.upper())
+        for other in {"en", "es", "ca", "hu"} - {locale}:
+            assert not is_project_spelling(other, form)
+
+
+def test_attested_forms_do_not_hide_nearby_typos_or_untranslated_prose() -> None:
+    values = {
+        "en": {"message": "An approver checks an unindexed item with modificacion and misspeling."},
+        "es": {"message": "Los reintentos requieren idempotencia y idempotensia."},
+        "ca": {"message": "Preomple la dada declarable i declarabll."},
+        "hu": {"message": "A bájtokkal és bájtjait mellett a bájtokkall hibás."},
+    }
+    unknown, inventory, _ = spellcheck_catalogues(set(), {}, REPO_ROOT, additional_values=values)
+    assert not inventory["spelling_tool_failures"]
+    assert {"modificacion", "misspeling"} <= set(unknown[("en", "message")])
+    assert "idempotensia" in unknown[("es", "message")]
+    assert "declarabll" in unknown[("ca", "message")]
+    assert "bájtokkall" in unknown[("hu", "message")]
+
+
+@pytest.mark.parametrize(
     "locale,region,label",
     [
         ("en", "cantabria", "Cantabria"),

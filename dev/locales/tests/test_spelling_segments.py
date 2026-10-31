@@ -415,6 +415,16 @@ def test_misspelled_clave_service_names_keep_unknown_fragments() -> None:
     assert "Móvil" in words_by_language("Cl@vee Móvil misspeling")["en"]
 
 
+def test_hungarian_clave_mobile_suffix_keeps_the_exact_service_name_and_near_misses() -> None:
+    exact = words_by_language("Cl@ve Móvilhoz hibásszó", "hu")
+    assert "Móvilhoz" not in exact["hu"]
+    assert "hibásszó" in exact["hu"]
+    assert "ve" in exact["es"]
+    assert "Móvillhoz" in words_by_language("Cl@ve Móvillhoz hibásszó", "hu")["hu"]
+    assert "Móvilhoz" in words_by_language("Cl@vee Móvilhoz hibásszó", "hu")["hu"]
+    assert "Móvilhoz" in words_by_language("Cl@ve Móvilhoz misspeling", "en")["en"]
+
+
 def test_explicit_language_wins_over_exact_tax_term_recognition() -> None:
     assert words_by_language('<span lang="ca">casillas errror</span> misspeling') == {
         "en": {"misspeling"},
