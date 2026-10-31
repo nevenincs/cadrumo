@@ -48,13 +48,14 @@ from .activity_asset_read_models import (
     ActivityAssetRegisterState,
     activity_asset_label_key,
     project_reason_facts,
+    remedy_field_key,
 )
 from .disposal_calculation import DisposalBoundsReader, year_minimum
 from .fact_wording import token_family
 from .history import ActivityAssetHistory
 from .legal_citations import ResolvedLegalCitations
 from .ports import ActivityAssetForecastOperation
-from .schedule_walk import PlanFigureAbsence, WalkedYear, error_reason_facts, walk_element
+from .schedule_walk import NOT_APPLICABLE_ABSENCES, PlanFigureAbsence, WalkedYear, error_reason_facts, walk_element
 
 _WALK_YEARS_LIMIT = 100
 """How far a plan looks ahead; every method settles long before this."""
@@ -270,11 +271,14 @@ def _plan_row(
         absence=row.absence,
         absence_reason_key=row.reason_key,
         absence_reason_facts=project_reason_facts(row.reason_facts),
+        absence_remedy_field_key=remedy_field_key(row.reason_key),
+        applies=row.absence not in NOT_APPLICABLE_ABSENCES or bool(intervals),
         claimed=_amount(row.claimed),
         claim_state=_claim_state(row, intervals, today=context.today),
         claimable_intervals=intervals,
         claimable_refusal_key=refusal_key,
         claimable_refusal_facts=refusal_facts,
+        claimable_refusal_remedy_field_key=remedy_field_key(refusal_key),
         edition=_edition_or_none(context, row.tax_year),
         service_days=None if row.charge is None else row.charge.service_days,
         calendar_days=None if row.charge is None else row.charge.calendar_days,

@@ -15,6 +15,7 @@ from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
+from typing import Final
 
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.errors import RegistryError
@@ -51,6 +52,17 @@ class PlanFigureAbsence(StrEnum):
     INCOMPLETE = "incomplete"
     UNSUPPORTED = "unsupported"
     CONFLICT = "conflict"
+
+
+NOT_APPLICABLE_ABSENCES: Final[frozenset[PlanFigureAbsence]] = frozenset(
+    {
+        PlanFigureAbsence.BASIS_EXHAUSTED,
+        PlanFigureAbsence.COVERED_BY_OPENING,
+        PlanFigureAbsence.FREE_ELECTION,
+        PlanFigureAbsence.PERIOD_ELAPSED,
+    },
+)
+"""The absences that are a known state with nothing to work out; any other is a figure that cannot be stated."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -494,6 +506,7 @@ def free_base_remains(revision: ActivityAssetRevision, history: ActivityAssetHis
 
 
 __all__ = [
+    "NOT_APPLICABLE_ABSENCES",
     "M100ClaimGap",
     "M100GapKind",
     "M130Contribution",
