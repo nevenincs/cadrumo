@@ -1138,6 +1138,17 @@ fn root_and_elevation_refusals_stand_down_without_restarting() {
 }
 
 #[test]
+fn a_native_host_launch_refusal_stands_down_at_once_while_other_launch_failures_retry() {
+    let refused = cadrumo_manager::contract::LAUNCH_PROFILE_REFUSED_EXIT;
+    let plan = format!("exit code={refused}");
+    let root = Root::new(&[plan.as_str(), "serve"]);
+    let (seen, outcome) = Case::default().run(&root, |_, _| {});
+    assert_eq!(outcome, Outcome::StoodDown(StandDownReason::LaunchRefused));
+    assert!(restarts(&seen).is_empty());
+    assert_eq!(root.launches(), 1);
+}
+
+#[test]
 fn the_crash_loop_ceiling_fails_after_backoff_on_monotonic_time() {
     let root = Root::new(&["exit code=73"]);
     let mut case = Case::default();

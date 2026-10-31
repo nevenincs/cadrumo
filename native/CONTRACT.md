@@ -410,8 +410,12 @@ subject is the declared variable name, or the image for an undeclared invocation
 The value is never written. 125 is the last status of the native-host range 120 to
 125 that the file declares and the generator emits to the hosts as
 `CADRUMO_LAUNCH_PROFILE_REFUSED_EXIT`. The runtime's reserved table equals it,
-which the package-side check verifies. A supervisor reads 125 as a launch failure,
-never as a runtime exit reason; the manager's exit classification does so, and
+which the package-side check verifies. The desktop image's role dispatcher also
+exits 125 when it cannot host a role at all, such as an unsupported platform. A
+supervisor reads 125 as a terminal launch refusal, never as a runtime exit reason:
+the same image and arguments would be refused again, so the manager stands down at
+once with `launch_refused` instead of restarting, while other launch failures
+(1 and 2) keep their bounded backoff. The manager's exit classification does so, and
 runtime exit reasons stay in 64 to 73. When the agent gateway or worker exits 125
 before its ready line, the runtime ends the launch with its existing closed code
 `agent_service_failed`. It reads the last line of the agent's standard error from a
