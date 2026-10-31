@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
-import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import {
   ledgerFailure,
@@ -21,7 +22,7 @@ import {
   type LedgerRow,
 } from "../../../shell/ledger";
 import { askReview, releaseReview } from "../../../shell/ledgerApply";
-import { parsePercent } from "../../../shell/ledgerGrammar";
+import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold } from "../WritePause";
@@ -390,24 +391,26 @@ export function ModelSuggestion({
               {t("desktop.ledger.inspector.model.share_needed")}
             </label>
             <div className="flex gap-2">
-              <Input
-                id={fieldId}
-                controlSize="sm"
-                inputMode="decimal"
-                value={share}
-                aria-invalid={shareError ? true : undefined}
-                aria-describedby={shareError ? `${fieldId}-error` : undefined}
-                onChange={(event) => {
-                  setShare(event.target.value);
-                  setShareError(null);
-                }}
-              />
+              <div className="w-24">
+                <PercentEditor
+                  unit="fraction"
+                  id={fieldId}
+                  controlSize="sm"
+                  value={share}
+                  invalid={shareError !== null}
+                  describedBy={shareError ? `${fieldId}-error` : undefined}
+                  onChange={(next) => {
+                    setShare(next);
+                    setShareError(null);
+                  }}
+                />
+              </div>
               <WriteHold>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const parsed = parsePercent(share);
+                    const parsed = parseFractionPercent(share);
                     if (parsed.kind !== "value") {
                       setShareError(
                         parsed.kind === "refused"
@@ -437,13 +440,13 @@ export function ModelSuggestion({
             <label htmlFor={`${fieldId}-reason`} className="text-sm">
               {t("desktop.ledger.inspector.model.reason")}
             </label>
-            <Input
+            <TextEditor
               id={`${fieldId}-reason`}
               controlSize="sm"
               autoFocus
               maxLength={500}
               value={rejecting}
-              onChange={(event) => setRejecting(event.target.value)}
+              onChange={setRejecting}
             />
             <div className="flex gap-2">
               <WriteHold>

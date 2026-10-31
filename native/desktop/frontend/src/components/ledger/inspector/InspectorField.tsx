@@ -1,8 +1,19 @@
-import { useId, useRef, useState, type ReactNode } from "react";
+import {
+  useId,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
+import { CountryEditor } from "@/components/editors/CountryEditor";
+import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
+import { DateEditor } from "@/components/editors/DateEditor";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
@@ -22,15 +33,18 @@ export type FieldParse =
       suggestion?: string;
     };
 
+/** The typed editor a field is entered in. */
+export type FieldControl =
+  "text" | "date" | "money" | "percent" | "country" | "currency";
+
 export type FieldEditor =
   | {
       kind: "input";
+      control: FieldControl;
       /** The text the editor opens with: the value in its canonical
        * spelling. */
       initial: string;
       parse: (raw: string) => FieldParse;
-      hint?: string;
-      inputMode?: "decimal" | "text";
     }
   | {
       kind: "choice";
@@ -39,6 +53,26 @@ export type FieldEditor =
       /** The choice that clears the field, where it can be cleared. */
       clear?: string;
     };
+
+function Control({
+  control,
+  ...props
+}: { control: FieldControl } & ComponentProps<typeof TextEditor>) {
+  switch (control) {
+    case "date":
+      return <DateEditor {...props} />;
+    case "money":
+      return <MoneyEditor {...props} />;
+    case "percent":
+      return <PercentEditor unit="fraction" {...props} />;
+    case "country":
+      return <CountryEditor {...props} />;
+    case "currency":
+      return <CurrencyEditor {...props} />;
+    case "text":
+      return <TextEditor {...props} />;
+  }
+}
 
 /** The value the clear choice is listed under; no option takes it. */
 const CLEAR = "\u0000clear";
@@ -164,17 +198,32 @@ export function InspectorField({
   let body: ReactNode;
   if (typing !== null && editor?.kind === "input")
     body = (
-      <div className="grid gap-1">
-        <Input
+      <div
+        className="grid gap-1"
+        onBlur={(event) => {
+          // Moving between the editor's own parts, or into its calendar, is
+          // not leaving it.
+          const next = event.relatedTarget;
+          if (
+            next instanceof Element &&
+            (event.currentTarget.contains(next) ||
+              next.closest('[data-slot="popover-content"]'))
+          )
+            return;
+          if (typing === editor.initial) setTyping(null);
+          else commitTyped(typing);
+        }}
+      >
+        <Control
+          control={editor.control}
           controlSize="sm"
           autoFocus
           value={typing}
-          inputMode={editor.inputMode}
           aria-labelledby={`${id}-label`}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error || editor.hint ? `${id}-hint` : undefined}
-          onChange={(event) => {
-            setTyping(event.target.value);
+          invalid={error !== null}
+          describedBy={error ? `${id}-hint` : undefined}
+          onChange={(next) => {
+            setTyping(next);
             setError(null);
           }}
           onKeyDown={(event) => {
@@ -189,28 +238,15 @@ export function InspectorField({
               refocus();
             }
           }}
-          onBlur={() => {
-            if (typing === editor.initial) setTyping(null);
-            else commitTyped(typing);
-          }}
         />
-        {(error || editor.hint) && (
-          <span
-            id={`${id}-hint`}
-            className={
-              error
-                ? "text-sm text-foreground"
-                : "text-xs text-muted-foreground"
-            }
-          >
-            {error && (
-              <Icon
-                name="alert"
-                size="xs"
-                className="mr-1 inline text-destructive"
-              />
-            )}
-            {error ?? editor.hint}
+        {error && (
+          <span id={`${id}-hint`} className="text-sm text-foreground">
+            <Icon
+              name="alert"
+              size="xs"
+              className="mr-1 inline text-destructive"
+            />
+            {error}
           </span>
         )}
         {error && suggestion !== null && (

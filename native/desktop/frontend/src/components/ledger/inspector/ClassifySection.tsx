@@ -1,9 +1,13 @@
 import { useEffect, useId, useState } from "react";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TaxIdEditor } from "@/components/editors/TaxIdEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -20,8 +24,7 @@ import {
 } from "../../../shell/ledgerCommands";
 import {
   canonicalDecimal,
-  parsePercent,
-  percentOf,
+  parseFractionPercent,
 } from "../../../shell/ledgerGrammar";
 import {
   effectiveFacts,
@@ -41,6 +44,7 @@ import { ModelSuggestion } from "./ModelSuggestion";
 import { decidedBy, eventName, ivaCategoryOptions } from "./inspectorWords";
 import { fieldLock, stagedField, type FieldScope } from "./movementFields";
 import { formatTime } from "../../../shared/dateFormats";
+import { heldDecimal } from "../../../shared/numbers";
 
 const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   business: "BUSINESS",
@@ -116,9 +120,7 @@ export function ClassifySection({
   const [share, setShare] = useState("");
   const [shareError, setShareError] = useState<string | null>(null);
   useEffect(() => {
-    setShare(
-      effective.business_pct ? (percentOf(effective.business_pct) ?? "") : "",
-    );
+    setShare(effective.business_pct ? heldDecimal(effective.business_pct) : "");
     setShareError(null);
   }, [id, effective.business_pct]);
   const [deriveCategory, setDeriveCategory] = useState<string | null>(null);
@@ -137,7 +139,7 @@ export function ClassifySection({
   ) => <InspectorField key={name} {...stagedField(scope, name, kind)} />;
 
   const stageShare = () => {
-    const parsed = parsePercent(share);
+    const parsed = parseFractionPercent(share);
     if (parsed.kind === "empty") {
       setShareError(t("desktop.ledger.inspector.share_required"));
       return;
@@ -280,19 +282,18 @@ export function ClassifySection({
             <label htmlFor={shareId} className="text-sm">
               {t("desktop.ledger.inspector.share")}
             </label>
-            <div className="flex items-center gap-1">
-              <Input
+            <div className="w-24">
+              <PercentEditor
+                unit="fraction"
                 id={shareId}
                 data-field="business_pct"
                 controlSize="sm"
-                inputMode="decimal"
-                className="w-24"
                 value={share}
                 disabled={lock !== null}
-                aria-invalid={shareError ? true : undefined}
-                aria-describedby={shareError ? `${shareId}-error` : undefined}
-                onChange={(event) => {
-                  setShare(event.target.value);
+                invalid={shareError !== null}
+                describedBy={shareError ? `${shareId}-error` : undefined}
+                onChange={(next) => {
+                  setShare(next);
                   setShareError(null);
                 }}
                 onKeyDown={(event) => {
@@ -302,7 +303,7 @@ export function ClassifySection({
                   }
                 }}
                 onBlur={() => {
-                  const now = parsePercent(share);
+                  const now = parseFractionPercent(share);
                   if (
                     now.kind !== "value" ||
                     canonicalDecimal(now.value) !==
@@ -311,7 +312,6 @@ export function ClassifySection({
                     if (share.trim() !== "") stageShare();
                 }}
               />
-              <span aria-hidden="true">%</span>
             </div>
             {shareError && (
               <span id={`${shareId}-error`} className="text-sm">
@@ -570,20 +570,40 @@ function M210Form({
           {t("desktop.ledger.inspector.m210.incoming_only")}
         </p>
       )}
-      {M210_FIELDS.map((name) => (
-        <label key={name} className="grid gap-0.5 text-sm">
-          <span className="text-muted-foreground">{t(M210_LABELS[name])}</span>
-          <Input
-            controlSize="sm"
-            value={values[name]}
-            disabled={lock !== null || !incoming}
-            onChange={(event) =>
-              setValues((held) => ({ ...held, [name]: event.target.value }))
-            }
-          />
-        </label>
-      ))}
-      {error && <p className="text-sm">{error}</p>}
+      {M210_FIELDS.map((name) => {
+        const entry = {
+          id: `${formId}-${name}`,
+          controlSize: "sm",
+          value: values[name],
+          disabled: lock !== null || !incoming,
+          invalid: error !== null && name === "tipo_renta_code",
+          describedBy:
+            error !== null && name === "tipo_renta_code"
+              ? `${formId}-error`
+              : undefined,
+          onChange: (next: string) =>
+            setValues((held) => ({ ...held, [name]: next })),
+        } as const;
+        return (
+          <Field key={name} className="gap-0.5">
+            <FieldLabel htmlFor={entry.id} className="font-normal">
+              {t(M210_LABELS[name])}
+            </FieldLabel>
+            {name === "gross_income_amount" ? (
+              <MoneyEditor {...entry} />
+            ) : name === "payer_id" ? (
+              <TaxIdEditor {...entry} />
+            ) : (
+              <TextEditor {...entry} />
+            )}
+          </Field>
+        );
+      })}
+      {error && (
+        <p id={`${formId}-error`} className="text-sm">
+          {error}
+        </p>
+      )}
       <div className="flex gap-2">
         <Button
           type="submit"
@@ -638,7 +658,7 @@ function AllocateForm({
       aria-labelledby={`${formId}-title`}
       onSubmit={(event) => {
         event.preventDefault();
-        const parsed = parsePercent(share);
+        const parsed = parseFractionPercent(share);
         if (parsed.kind !== "value") {
           setError(
             parsed.kind === "refused"
@@ -666,47 +686,55 @@ function AllocateForm({
       <h4 id={`${formId}-title`} className="text-sm font-medium">
         {t("desktop.ledger.inspector.allocate.title")}
       </h4>
-      <label className="grid gap-0.5 text-sm">
-        <span className="text-muted-foreground">
+      <Field className="gap-0.5">
+        <FieldLabel htmlFor={`${formId}-share`} className="font-normal">
           {t("desktop.ledger.inspector.share")}
-        </span>
-        <Input
+        </FieldLabel>
+        <PercentEditor
+          unit="fraction"
+          id={`${formId}-share`}
           controlSize="sm"
-          inputMode="decimal"
           value={share}
           disabled={lock !== null}
-          aria-invalid={error ? true : undefined}
-          onChange={(event) => {
-            setShare(event.target.value);
+          invalid={error !== null}
+          describedBy={error ? `${formId}-error` : undefined}
+          onChange={(next) => {
+            setShare(next);
             setError(null);
           }}
         />
-      </label>
-      <label className="grid gap-0.5 text-sm">
-        <span className="text-muted-foreground">
+      </Field>
+      <Field className="gap-0.5">
+        <FieldLabel htmlFor={`${formId}-ratio`} className="font-normal">
           {fieldName(t, "usage_ratio_id")}
-        </span>
-        <Input
+        </FieldLabel>
+        <TextEditor
+          id={`${formId}-ratio`}
           controlSize="sm"
           value={ratio}
           maxLength={128}
           disabled={lock !== null}
-          onChange={(event) => setRatio(event.target.value)}
+          onChange={setRatio}
         />
-      </label>
-      <label className="grid gap-0.5 text-sm">
-        <span className="text-muted-foreground">
+      </Field>
+      <Field className="gap-0.5">
+        <FieldLabel htmlFor={`${formId}-prorrata`} className="font-normal">
           {t("desktop.ledger.inspector.allocate.prorrata")}
-        </span>
-        <Input
+        </FieldLabel>
+        <TextEditor
+          id={`${formId}-prorrata`}
           controlSize="sm"
           value={prorrata}
           maxLength={256}
           disabled={lock !== null}
-          onChange={(event) => setProrrata(event.target.value)}
+          onChange={setProrrata}
         />
-      </label>
-      {error && <p className="text-sm">{error}</p>}
+      </Field>
+      {error && (
+        <p id={`${formId}-error`} className="text-sm">
+          {error}
+        </p>
+      )}
       <div className="flex gap-2">
         <Button
           type="submit"

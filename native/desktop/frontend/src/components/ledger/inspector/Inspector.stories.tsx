@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { userEvent, waitFor } from "storybook/test";
 import {
   STORY_PERIOD,
   STORY_READER,
@@ -215,6 +216,139 @@ export const Several: Story = {
     ),
   },
 };
+const drawn = <Found extends HTMLElement>(
+  root: ParentNode,
+  selector: string,
+): Promise<Found> =>
+  waitFor(
+    () => {
+      const found = root.querySelector<Found>(selector);
+      if (!found) throw new Error(`${selector} is not drawn yet`);
+      return found;
+    },
+    { timeout: 5000 },
+  );
+
+/** Opens the rarer tax facts, where the Modelo 210 form and the allocation
+ * form are. */
+const openTaxFacts = async (root: HTMLElement) => {
+  const more = await drawn<HTMLDetailsElement>(root, ".ledger-more-tax");
+  more.open = true;
+  more.scrollIntoView({ block: "start" });
+  return more;
+};
+
+/** Types into the field whose label is `label` in the first form in `root`. */
+const typedInto = async (form: HTMLElement, label: string, text: string) => {
+  const target = await waitFor(
+    () => {
+      const found = [...form.querySelectorAll("label")].find(
+        (candidate) => candidate.textContent?.trim() === label,
+      );
+      const input = found?.htmlFor
+        ? form.querySelector<HTMLInputElement>(`[id="${found.htmlFor}"]`)
+        : null;
+      if (!input) throw new Error(`${label} is not drawn yet`);
+      return input;
+    },
+    { timeout: 5000 },
+  );
+  await userEvent.clear(target);
+  await userEvent.type(target, text);
+};
+
+export const IncomeForNonResident: Story = {
+  name: "An incoming movement: the Modelo 210 income form",
+  args: {
+    selected: storyMovementIds(
+      (m) => m.transaction.direction === "INCOMING",
+      1,
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const more = await openTaxFacts(canvasElement);
+    const form = await drawn<HTMLFormElement>(more, "form");
+    const labels = [...form.querySelectorAll("label")].map(
+      (label) => label.textContent?.trim() ?? "",
+    );
+    await typedInto(form, labels[0]!, "01");
+    await typedInto(form, labels[1]!, "12500.5");
+    await typedInto(form, labels[4]!, "b12 345 678");
+  },
+};
+
+export const AllocateShare: Story = {
+  name: "A business movement: allocate a share",
+  args: {
+    selected: storyMovementIds(
+      (m) =>
+        m.transaction.business_classification === "BUSINESS" &&
+        m.transaction.direction === "OUTGOING",
+      1,
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const more = await openTaxFacts(canvasElement);
+    const forms = await waitFor(
+      () => {
+        const found = more.querySelectorAll<HTMLFormElement>("form");
+        if (found.length < 2) throw new Error("the forms are not drawn yet");
+        return found;
+      },
+      { timeout: 5000 },
+    );
+    const form = forms[1]!;
+    const labels = [...form.querySelectorAll("label")].map(
+      (label) => label.textContent?.trim() ?? "",
+    );
+    await typedInto(form, labels[0]!, "35");
+  },
+};
+
+export const DeriveIva: Story = {
+  name: "A business movement: work out its IVA from a category",
+  args: {
+    selected: storyMovementIds(
+      (m) =>
+        m.transaction.business_classification === "BUSINESS" &&
+        m.transaction.direction === "OUTGOING",
+      1,
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const choose = await drawn<HTMLButtonElement>(
+      canvasElement,
+      '[data-field="iva-derive"]',
+    );
+    choose.scrollIntoView({ block: "center" });
+    await userEvent.click(choose);
+    const option = await drawn<HTMLElement>(document.body, '[role="option"]');
+    await userEvent.click(option);
+  },
+};
+
+export const AttachDocument: Story = {
+  name: "A business purchase: attach a document already read",
+  args: {
+    selected: storyMovementIds(
+      (m) =>
+        m.transaction.business_classification === "BUSINESS" &&
+        m.transaction.direction === "OUTGOING" &&
+        m.transaction.purchase_invoice_evidence_id === null,
+      1,
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const attach = await drawn<HTMLButtonElement>(
+      canvasElement,
+      '[data-section-body="documents"] button[aria-haspopup]',
+    );
+    attach.scrollIntoView({ block: "center" });
+    await userEvent.click(attach);
+    await drawn<HTMLElement>(document.body, '[role="option"]');
+  },
+};
+
 export const ToMatch: Story = {
   name: "The queue of movements to match",
   args: { mode: "match" },

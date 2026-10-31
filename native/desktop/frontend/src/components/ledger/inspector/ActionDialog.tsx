@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { listed } from "@/shell/compose";
 import {
@@ -292,12 +292,12 @@ export function ActionDialog({
             <label htmlFor={reasonId} className="text-sm">
               {t("desktop.ledger.inspector.reason")}
             </label>
-            <Input
+            <TextEditor
               id={reasonId}
               autoFocus
               maxLength={500}
               value={reason}
-              onChange={(event) => setReason(event.target.value)}
+              onChange={setReason}
             />
           </div>
           <DialogFooter>

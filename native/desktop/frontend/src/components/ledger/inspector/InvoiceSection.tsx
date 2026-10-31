@@ -1,9 +1,10 @@
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { facts } from "@/shell/compose";
 import type {
   CatalogueInvoice,
@@ -61,7 +62,6 @@ export function InvoiceSection({
   say: (text: string) => void;
 }) {
   const t = useStrings();
-  const name = useId();
   const tx = row.transaction;
   const id = tx.transaction_id;
   const catalogue = useMemo(
@@ -292,27 +292,25 @@ export function InvoiceSection({
           <Alert tone="warning" icon={<Icon name="alert" />}>
             {t("desktop.ledger.inspector.invoice.ambiguous")}
           </Alert>
-          <div
-            role="radiogroup"
+          <RadioGroup
             aria-label={t("desktop.ledger.inspector.invoice.candidates")}
-            className="grid gap-2"
+            className="gap-2"
+            value={choice ?? ""}
+            onValueChange={setChoice}
           >
             {tied.map((pair) => (
               <label
                 key={pair.invoice.invoice_id}
                 className="flex items-start gap-2"
               >
-                <input
-                  type="radio"
-                  name={name}
+                <RadioGroupItem
+                  value={pair.invoice.invoice_id}
                   className="mt-3"
-                  checked={choice === pair.invoice.invoice_id}
-                  onChange={() => setChoice(pair.invoice.invoice_id)}
                 />
                 <span className="min-w-0 flex-1">{card(pair)}</span>
               </label>
             ))}
-          </div>
+          </RadioGroup>
           <Button
             size="sm"
             className="w-fit"

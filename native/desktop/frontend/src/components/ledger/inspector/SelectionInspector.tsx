@@ -6,11 +6,13 @@ import {
   useRef,
   useState,
 } from "react";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -29,6 +31,7 @@ import {
   type ClassifyKind,
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
+import { parseFractionPercent, percentOf } from "../../../shell/ledgerGrammar";
 import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { planApply, SINGLE_WRITE_SECONDS } from "../../../shell/ledgerPlan";
 import {
@@ -639,7 +642,12 @@ export function SelectionInspector({
               disabled={blocked || context === null}
               onValueChange={(value) => {
                 const kind = value as ClassifyKind;
-                const typed = share.trim();
+                // The classify command reads a share in points.
+                const read = parseFractionPercent(share);
+                const typed =
+                  read.kind === "value"
+                    ? (percentOf(read.value) ?? share.trim())
+                    : share.trim();
                 context?.classify(
                   kind,
                   kind === "mixed" && typed
@@ -655,19 +663,19 @@ export function SelectionInspector({
                 </SegmentedControlItem>
               ))}
             </SegmentedControl>
-            <label className="grid gap-0.5 text-sm">
-              <span className="text-muted-foreground">
+            <Field className="w-20 gap-0.5">
+              <FieldLabel htmlFor={`${shareId}-share`} className="font-normal">
                 {t("desktop.ledger.inspector.share")}
-              </span>
-              <Input
+              </FieldLabel>
+              <PercentEditor
+                unit="fraction"
+                id={`${shareId}-share`}
                 controlSize="sm"
-                inputMode="decimal"
-                className="w-20"
                 value={share}
                 disabled={blocked}
-                onChange={(event) => setShare(event.target.value)}
+                onChange={setShare}
               />
-            </label>
+            </Field>
           </div>
           {undecided ? (
             <p className="ledger-classify-first text-sm text-muted-foreground">
@@ -713,18 +721,22 @@ export function SelectionInspector({
                   if (value.trim()) stageSet(field, value.trim());
                 }}
               >
-                <label className="grid min-w-0 flex-1 gap-0.5 text-sm">
-                  <span className="text-muted-foreground">
+                <Field className="min-w-0 flex-1 gap-0.5">
+                  <FieldLabel
+                    htmlFor={`${shareId}-${field}`}
+                    className="font-normal"
+                  >
                     {fieldName(t, field)}
-                  </span>
-                  <Input
+                  </FieldLabel>
+                  <TextEditor
+                    id={`${shareId}-${field}`}
                     controlSize="sm"
                     maxLength={max}
                     value={value}
                     disabled={blocked}
-                    onChange={(event) => setValue(event.target.value)}
+                    onChange={setValue}
                   />
-                </label>
+                </Field>
                 <Button
                   type="submit"
                   variant="outline"

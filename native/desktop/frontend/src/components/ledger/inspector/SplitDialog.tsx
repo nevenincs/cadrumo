@@ -1,4 +1,7 @@
 import { useId, useState } from "react";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
@@ -12,10 +15,10 @@ import {
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { LedgerRow } from "../../../shell/ledger";
-import { parsePercent } from "../../../shell/ledgerGrammar";
+import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import type {
   SplitPartClassification,
   StageEvent,
@@ -68,6 +71,7 @@ export function SplitDialog({
 }) {
   const t = useStrings();
   const reasonId = useId();
+  const partId = useId();
   const tx = row.transaction;
   const [parts, setParts] = useState<Part[]>(() => [
     blank(tx.description),
@@ -138,7 +142,7 @@ export function SplitDialog({
       }
       let share: string | null = null;
       if (part.classification === "MIXED") {
-        const parsed = parsePercent(part.share);
+        const parsed = parseFractionPercent(part.share);
         if (parsed.kind !== "value") {
           setProblem(
             parsed.kind === "refused"
@@ -213,53 +217,53 @@ export function SplitDialog({
             {parts.map((part, at) => (
               <li key={at} className="ledger-split-part grid gap-1.5">
                 <div className="flex items-end gap-2">
-                  <label className="grid w-28 gap-0.5 text-sm">
-                    <span className="text-muted-foreground">
+                  <div className="grid w-28 gap-0.5 text-sm">
+                    <Label
+                      htmlFor={`${partId}-${at}-amount`}
+                      className="font-normal"
+                    >
                       {t("desktop.ledger.inspector.split.part_amount", {
                         part: at + 1,
                       })}
-                    </span>
+                    </Label>
                     {at === last ? (
-                      <Input
-                        controlSize="sm"
-                        readOnly
-                        value={remainder ?? ""}
-                        placeholder={t(
-                          "desktop.ledger.inspector.split.remainder",
-                        )}
-                        aria-description={t(
-                          "desktop.ledger.inspector.split.remainder",
-                        )}
-                      />
+                      <output
+                        id={`${partId}-${at}-amount`}
+                        className="ledger-split-remainder flex h-control-sm items-center tabular-nums"
+                      >
+                        {remainder === null
+                          ? t("desktop.ledger.inspector.split.remainder")
+                          : formatAmount(locale, remainder)}
+                      </output>
                     ) : (
-                      <Input
+                      <MoneyEditor
+                        id={`${partId}-${at}-amount`}
                         controlSize="sm"
-                        inputMode="decimal"
                         className="ledger-split-amount"
                         autoFocus={at === 0}
                         value={part.amount}
-                        onChange={(event) =>
-                          update(at, { amount: event.target.value })
-                        }
+                        onChange={(amount) => update(at, { amount })}
                       />
                     )}
-                  </label>
-                  <label className="grid min-w-0 flex-1 gap-0.5 text-sm">
-                    <span className="text-muted-foreground">
+                  </div>
+                  <div className="grid min-w-0 flex-1 gap-0.5 text-sm">
+                    <Label
+                      htmlFor={`${partId}-${at}-description`}
+                      className="font-normal"
+                    >
                       {t("desktop.ledger.inspector.split.part_description", {
                         part: at + 1,
                       })}
-                    </span>
-                    <Input
+                    </Label>
+                    <TextEditor
+                      id={`${partId}-${at}-description`}
                       controlSize="sm"
                       className="ledger-split-description"
                       maxLength={4096}
                       value={part.description}
-                      onChange={(event) =>
-                        update(at, { description: event.target.value })
-                      }
+                      onChange={(description) => update(at, { description })}
                     />
-                  </label>
+                  </div>
                   <IconButton
                     label={t("desktop.ledger.inspector.split.remove_part", {
                       part: at + 1,
@@ -325,19 +329,21 @@ export function SplitDialog({
                     </Combobox>
                   )}
                   {part.classification === "MIXED" && (
-                    <label className="grid w-24 gap-0.5 text-sm">
-                      <span className="text-muted-foreground">
+                    <div className="grid w-24 gap-0.5 text-sm">
+                      <Label
+                        htmlFor={`${partId}-${at}-share`}
+                        className="font-normal"
+                      >
                         {t("desktop.ledger.inspector.share")}
-                      </span>
-                      <Input
+                      </Label>
+                      <PercentEditor
+                        unit="fraction"
+                        id={`${partId}-${at}-share`}
                         controlSize="sm"
-                        inputMode="decimal"
                         value={part.share}
-                        onChange={(event) =>
-                          update(at, { share: event.target.value })
-                        }
+                        onChange={(share) => update(at, { share })}
                       />
-                    </label>
+                    </div>
                   )}
                 </div>
               </li>
@@ -365,11 +371,11 @@ export function SplitDialog({
             <label htmlFor={reasonId} className="text-sm">
               {t("desktop.ledger.inspector.reason_optional")}
             </label>
-            <Input
+            <TextEditor
               id={reasonId}
               maxLength={500}
               value={reason}
-              onChange={(event) => setReason(event.target.value)}
+              onChange={setReason}
             />
           </div>
           {problem && (

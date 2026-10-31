@@ -6,7 +6,7 @@
 
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { LedgerRow } from "../../../shell/ledger";
-import { percentOf } from "../../../shell/ledgerGrammar";
+import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import {
   effectiveFacts,
   storedFieldValue,
@@ -16,10 +16,12 @@ import {
 } from "../../../shell/ledgerStage";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import type { Translate } from "../../../shell/strings";
+import { heldDecimal } from "../../../shared/numbers";
 import {
   clearRefusal,
   parseCell,
   rowCells,
+  type CellParse,
   type EditKind,
 } from "../editing/editingModel";
 import {
@@ -30,7 +32,7 @@ import {
   valueText,
 } from "../editing/editingWords";
 import { accountLabel } from "../movements/movementWords";
-import type { FieldEditor, FieldParse } from "./InspectorField";
+import type { FieldControl, FieldEditor, FieldParse } from "./InspectorField";
 import {
   accountOptions,
   categoryOptions,
@@ -54,8 +56,39 @@ const TAX_FIELDS: ReadonlySet<StageField> = new Set([
   "investment_asset_id",
   "counterparty_identification_state",
 ]);
+const CONTROL_OF: Partial<Record<FieldKind, FieldControl>> = {
+  date: "date",
+  amount: "money",
+  figure: "money",
+  percent: "percent",
+  country: "country",
+  currency: "currency",
+};
 const COUNTRY = /^[A-Z]{2}$/;
 const CURRENCY = /^[A-Z]{3}$/;
+
+/** A stored value as its editor holds it: a decimal in the spelling the
+ * editor reads back. */
+function heldAs(kind: FieldKind, stored: string): string {
+  return CONTROL_OF[kind] === "money" || CONTROL_OF[kind] === "percent"
+    ? heldDecimal(stored)
+    : stored;
+}
+
+/** What typing in the editor of `kind` stages. A percent editor holds the
+ * fraction the product stores, so it is read as one. */
+function parseEntry(
+  kind: EditKind,
+  field: StageField,
+  raw: string,
+  labels: Parameters<typeof parseCell>[3],
+): CellParse {
+  if (kind !== "percent") return parseCell(kind, field, raw, labels);
+  const fraction = parseFractionPercent(raw);
+  return fraction.kind === "value"
+    ? { kind: "value", value: { value: fraction.value } }
+    : fraction;
+}
 
 export type FieldScope = {
   t: Translate;
@@ -191,7 +224,7 @@ export function stagedField(
                   limit: 128,
                 }),
               };
-        const parsed = parseCell(kind, field, raw, labels);
+        const parsed = parseEntry(kind, field, raw, labels);
         if (parsed.kind === "refused")
           return {
             kind: "refused",
@@ -203,20 +236,11 @@ export function stagedField(
         if (parsed.kind === "empty") return { kind: "clear" };
         return { kind: "value", value: parsed.value.value };
       };
-      const percent = kind === "percent";
       editor = {
         kind: "input",
-        initial:
-          current == null
-            ? ""
-            : percent
-              ? (percentOf(current) ?? current)
-              : current,
+        control: CONTROL_OF[kind] ?? "text",
+        initial: current == null ? "" : heldAs(kind, current),
         parse,
-        inputMode:
-          kind === "amount" || kind === "figure" || percent
-            ? "decimal"
-            : "text",
       };
     }
   }
