@@ -111,7 +111,7 @@ for received catalogue invoices. In Modelo 349, `R` is the call-off-stock
 transfer key; rectification rows use separate rectified-period and base fields.
 
 An invoice is counted in the period of the date you record with
-`--operation-date`, so record the devengo date that LIVA art. 75 sets. For an
+`--operation-date`, so record the accrual date that LIVA art. 75 sets. For an
 intra-community supply of goods, that is the 15th of the month after the
 transport starts, or the invoice date if it is earlier (art. 75.Uno.8.º).
 Without `--operation-date`, the invoice date stands in for it. Modelo 349

@@ -153,7 +153,7 @@ categories, saves a ratio, and allocates the share on a row:
 ```
 
 A row's `--usage-ratio-id` must name a ratio-eligible category (the ones
-`ratios eligible` lists, such as `arrendamiento_vivienda_afecto` or a home-office suministros
+`ratios eligible` lists, such as `arrendamiento_vivienda_afecto` or a home-office utilities
 category), and the same category is passed as `--category-id`. The
 `--business-pct` value must match the saved ratio for that category. The
 classification follows the share automatically: a `0.5` allocation becomes

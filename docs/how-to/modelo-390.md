@@ -91,7 +91,7 @@ Modelo 390 combines two kinds of values:
 
 The values taken from 303 depend on each quarter's recorded filing or AEAT receipt. The check blocks until one is present (see "What each Modelo 303 quarter needs before you check" below). The CLI does not guarantee that the history AEAT holds is current, read, or reconciled.
 
-The rules that fill Modelo 390's boxes include 303 quarter sums for annual devengada, deducible, and régimen general result reconciliation. They also include compensation values copied or summed from the same year's 303 periods.
+The rules that fill Modelo 390's boxes include 303 quarter sums for annual accrued, deducible, and régimen general result reconciliation. They also include compensation values copied or summed from the same year's 303 periods.
 
 (what-each-modelo-303-quarter-needs-before-you-verify)=
 ## What each Modelo 303 quarter needs before you check
@@ -179,7 +179,7 @@ That listing shows totals from your records (source `ledger_iva_aggregation`) an
 
 Check the annual period's records before calculation with the `ledger preflight` and `ledger status` steps in the inspection example.
 
-The annual calculation uses your records for the whole year for the VAT totals in Modelo 390. For values taken from 303, the tax rules define the ids of the values Cadrumo fills in and their source periods. If those values are not already available to the calculation, inspect the list of missing values and supply reviewed values explicitly. The reviewed sums come from your own 303 review. The following example passes the ones this guide's year produces (1470.00 devengada, 105.00 deducible, 1365.00 régimen general), which match the annual totals from your records, and the reconciliation boxes carry the supplied figures:
+The annual calculation uses your records for the whole year for the VAT totals in Modelo 390. For values taken from 303, the tax rules define the ids of the values Cadrumo fills in and their source periods. If those values are not already available to the calculation, inspect the list of missing values and supply reviewed values explicitly. The reviewed sums come from your own 303 review. The following example passes the ones this guide's year produces (1470.00 accrued, 105.00 deducible, 1365.00 régimen general), which match the annual totals from your records, and the reconciliation boxes carry the supplied figures:
 
 ```{cli-sequence} modelo-390-supply-binding
 :verify: Confirm the supplied 303-derived values land on the annual reconciliation boxes.

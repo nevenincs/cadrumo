@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 15:23+0100\n"
+"POT-Creation-Date: 2026-10-31 22:16+0100\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -450,7 +450,7 @@ msgid "What it does not prove"
 msgstr "Amit nem bizonyít"
 
 #: ../../reference/import-export-and-evidence.md
-msgid "AEAT fichero or XML export"
+msgid "AEAT file or XML export"
 msgstr "AEAT fichero- vagy XML-export"
 
 #: ../../reference/import-export-and-evidence.md
@@ -828,7 +828,7 @@ msgstr ""
 "nyomtatványra és időszakra általánosan érvényes lenne."
 
 #: ../../reference/import-export-and-evidence.md:228
-msgid "Filed declaración-PDF extraction requires an exact registered profile."
+msgid "Filed return-PDF extraction requires an exact registered profile."
 msgstr ""
 "A benyújtott bevallási PDF feldolgozásához pontosan regisztrált profil "
 "szükséges."

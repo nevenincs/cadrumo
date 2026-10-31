@@ -128,7 +128,7 @@ If you are filing for the first time and a field asks for a prior-period figure
 you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
 real prior figure only when you have one prepared outside Cadrumo.
 
-### Régimen de atribución de rentas (socios)
+### Régimen de atribución de rentas (members)
 
 If you are a socio, comunero, or partícipe of an entity in the régimen de
 atribución de rentas (a sociedad civil, comunidad de bienes, or herencia

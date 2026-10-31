@@ -141,9 +141,9 @@ is not a disagreement to weigh.
 (import-certificado-situacion-censal)=
 ## Import a Certificado de Situación Censal
 
-The sede issues a *Certificado de Situación Censal* (procedure G313) that
+The AEAT e-office issues a *Certificado de Situación Censal* (procedure G313) that
 states your census facts as AEAT holds them. Download it yourself from the
-sede, then read it into your profile from the file. The first step previews;
+AEAT online portal, then read it into your profile from the file. The first step previews;
 the second records:
 
 ```{cli-sequence} censo-update-certificado-file
@@ -173,7 +173,7 @@ unchanged once reading activates.
 
 ## Record a Modelo 036 filing done outside Cadrumo
 
-If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, record
+If you file a Modelo 036 registration, amendment, or deregistration in AEAT's online portal, record
 that fact locally so later filings can rely on it.
 [Record a Modelo 036 declaration you filed at AEAT](modelo-036.md) owns the
 commands, the success output, and what the record does and does not change.

@@ -94,7 +94,7 @@ the next; go back to change an earlier answer at any time. The first page asks
 for your output language. Answer it and the rest of the wizard renders in the
 language you chose. The pages then walk your identity, fiscal residence,
 economic activity, VAT, enrollment, family situation (including your
-descendientes), recurring obligations, and service preferences, ending on a
+descendants), recurring obligations, and service preferences, ending on a
 review page that shows every answer before anything is saved. Questions are
 conditional: the wizard only asks what applies to the answers you already gave.
 
@@ -236,7 +236,7 @@ For a Spanish IRPF (personal income tax) resident, set the autonomous community
 
 This tool does not model the foral regimes. Setting the community to
 `pais_vasco` or `navarra` is refused, because residents there file with their
-*Hacienda Foral*, under the *Concierto Económico* (País Vasco) or the *Convenio
+*Hacienda Foral*, under the *Concierto Económico* (Basque Country) or the *Convenio
 Económico* (Navarra), not with the AEAT:
 
 ```text
@@ -340,7 +340,7 @@ There is no save-and-exit in edit mode. Finish the walk in one sitting. The
 tool tells you both things at the end of every interactive edit, so an edit
 never silently half-applies.
 
-Descendientes are not part of profile edit. Manage them with the
+Descendants are not part of profile editing. Manage them with the
 [`descendiente` command](#manage-your-descendants). The edit summary
 reminds you of this every time.
 
@@ -350,7 +350,7 @@ every fact you don't name stays as it was.
 (manage-your-descendants)=
 ## Manage your descendants
 
-Descendientes drive the *mínimo por descendientes* in the annual Renta.
+Descendants determine the *minimum allowance for descendants (mínimo por descendientes)* in the annual Renta.
 Declare them during first-time setup; manage them afterwards with the
 `descendiente` command.
 
@@ -359,9 +359,9 @@ Open the paged descendant editor:
 ```{cli-sequence} profile-setup-descendiente-door
 ```
 
-The editor shows your declared descendientes, lets you change any answer, add
+The editor shows your declared descendants, lets you change any answer, add
 one, or reduce the count, and saves the complete set when you confirm. Reducing
-the count removes the descendientes beyond it. The stored set always matches
+the count removes the descendants beyond it. The stored set always matches
 exactly what you confirmed.
 
 Script the same changes with the flag verbs:
@@ -376,7 +376,7 @@ include `RELACION` (`descendiente`, `adoptado`,
 `acogimiento_preadoptivo_o_permanente`, `acogimiento_temporal`, or `tutela`),
 `INSCRIPCION`, `DISCAPACIDAD` (`0`, `33`, or `65`), `CONVIVENCIA`, `CUSTODIA`,
 `MESES_TRABAJO`, `GASTOS_GUARDERIA`, and `NIF`. Run
-`aeat config profile descendiente add --help` for the full list. A descendiente
+`aeat config profile descendiente add --help` for the full list. A descendant
 without a tax identifier is fine. Leave `NIF` out. `remove` takes the position
 from `list`, counting from `0`.
 
@@ -385,7 +385,7 @@ month as two digits, a run as `MM-MM`, and separate entries with `;`. Write
 `MESES_TRABAJO=05-08` for May to August. Write `MESES_TRABAJO=01;03;09-12` for
 January, March, and September to December.
 
-Name the months. The guardería increment counts only the months the mother
+Name the months. The childcare increment counts only the months the mother
 worked *and* the child attended, so a count cannot say whether the two overlap.
 
 ## Maintain your profile

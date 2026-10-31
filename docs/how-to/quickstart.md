@@ -144,7 +144,7 @@ Read the steps in order:
 
 - Create the draft. The command creates the declaration for that modelo if one
   does not exist yet; running it again returns the existing declaration.
-  `--period 1T` means the first quarter (primer trimestre). Other period codes
+  `--period 1T` means the first quarter. Other period codes
   are `2T`, `3T`, `4T` for subsequent quarters and `0A` for an annual filing.
 - Calculate the values. Modelo 130 needs three prior-period figures; for a first
   filing they are all zero, supplied by you so the calculation has no missing

@@ -46,7 +46,7 @@ VAT-liquidation profiles such as REDEME file monthly. Ana is quarterly.
 
 Modelo 303 keeps a running memory between periods: when a quarter leaves you
 with more VAT paid than collected, the difference is a credit
-(*compensación*) the next return can use. The tool tracks that credit in a
+(*carry-forward*) the next return can use. The tool tracks that credit in a
 local wallet built from your Modelo 303 history - and the first time you use
 the tool, that history is empty, so you declare the opening balance once.
 
@@ -148,8 +148,8 @@ The per-box detail is
 ## What you completed
 
 You carried the same taxpayer through a full VAT year: an opening wallet
-balance declared once, a paying quarter, a credit quarter whose compensación
-carried into the next return, an optional recapitulative branch, and an
+balance declared once, a paying quarter, a credit quarter whose balance was
+carried forward into the next return, an optional recapitulative branch, and an
 annual summary that reconciled against the four quarters on your own record.
 
 ## Next steps

@@ -214,7 +214,7 @@ Fill in a declaration box by box in the full-screen interface, then calculate, r
 :link: modelo-036
 :link-type: doc
 
-Record an alta, modificación, or baja you filed at AEAT's sede.
+Record a registration, amendment, or deregistration you filed at AEAT's online portal.
 :::
 
 :::{grid-item-card} Modelo 100 (Renta)

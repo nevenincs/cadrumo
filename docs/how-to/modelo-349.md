@@ -8,7 +8,7 @@ Declaración Informativa. Declaración recapitulativa de operaciones
 intracomunitarias.</span>"
 
 Modelo 349 declares no cuota: it is a pure listing. The declaration carries one
-summary block (how many EU counterparties, the operadores intracomunitarios, you
+summary block (how many EU counterparties, the intra-EU operators, you
 dealt with and for what amounts) and one detail row per counterparty - country
 code, EU VAT number, name, operation key, and base - plus rectification rows when
 you correct a previously declared period.
@@ -30,8 +30,8 @@ profile](profile-setup.md).
   ```
 
 - Record the operations as invoices, not bare entries. The 349 listing is built
-  from your invoices: issued invoices to EU counterparties feed the entregas side,
-  received invoices from EU suppliers feed the adquisiciones side. Each invoice
+  from your invoices: issued invoices to EU counterparties feed the supplies side,
+  received invoices from EU suppliers feed the purchases side. Each invoice
   needs its counterparty's country and EU VAT number. See [Manage
   invoices](manage-invoices.md) and [Attach invoices and receipts to transactions](ledger-evidence.md).
 - Check each counterparty's EU VAT number against the VIES register before relying

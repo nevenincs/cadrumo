@@ -119,7 +119,7 @@ runs the whole second quarter through to its export:
 
 Read the saved calculation and compare it with the first quarter's:
 
-- Box `01` (ingresos) now covers January through June - the records used for `2T`
+- Box `01` (income) now covers January through June - the records used for `2T`
   are the year to date, not the quarter alone.
 - Box `05` (pagos fraccionados anteriores) carries the instalment you paid in the
   first quarter, read from your own recorded filing.

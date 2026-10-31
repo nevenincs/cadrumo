@@ -27,7 +27,7 @@ profile](profile-setup.md).
   is the year the income belongs to (the 2025 declaration is filed in 2026).
   Each filing year automatically uses its own version of the official form.
 - [Set up your taxpayer profile](profile-setup.md) with the Renta-relevant facts:
-  residence comunidad, marital status, spouse and descendant data, disability
+  autonomous community of residence, marital status, spouse and descendant data, disability
   grades. The profile fills dozens of Modelo 100 boxes, and an incomplete profile
   shows up as missing values later. Manage descendants with `aeat config profile
   descendiente add/list/remove`.
@@ -45,7 +45,7 @@ profile](profile-setup.md).
   `aeat app ledger inventory`. Calculation reads that register for boxes 0177,
   0181, and 0182.
 - Record the year's quarterly instalments as filed first. Modelo 100 folds in your
-  Modelo 130/131 payments on account and the retenciones reported on Modelos 111,
+  Modelo 130/131 payments on account and the withholdings reported on Modelos 111,
   123, 190, and 193 where they exist. Check what this declaration expects and what
   blocks it:
 

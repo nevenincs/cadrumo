@@ -183,8 +183,8 @@ that fills the box that needs it.
 Calculation also checks your records for tax readiness for versions of the
 official form that total VAT from your records. The preflight can catch missing
 VAT facts, unclassified entries, non-declarable categories, unsupported
-currencies, and similar issues before a draft is trusted. Regimen simplificado
-is treated differently: those profiles provide the simplificado boxes manually
+currencies, and similar issues before a draft is trusted. The simplified VAT regime
+is handled differently: those profiles provide the simplified boxes manually
 instead of passing the ordinary VAT preflight on your records.
 
 Cadrumo does not silently choose a quarter from today's date. The declaration's

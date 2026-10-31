@@ -48,8 +48,8 @@ Load-bearing details for building this state yourself:
   them from your own earlier recorded filings instead - see [the cumulative
   behaviour](#each-quarter-is-cumulative) below.
 - With the two entries above, calculate reports cumulative income (box `01`) of
-  `1000.00`, rendimiento neto (box `03`) of `500.00` - income base minus expense
-  base - and a pago fraccionado (box `04`) of `100.00`, 20 percent of the net.
+  `1000.00`, net income (box `03`) of `500.00` - income base minus expense
+  base - and a payment instalment (box `04`) of `100.00`, 20 percent of the net.
 - `verify` reports `completeness complete` and `granted true`. `export` then
   writes the local fichero-BOE file and reports its checksum.
 
@@ -72,7 +72,7 @@ Load-bearing details for building this state yourself:
 
 Modelo 130 calculates the quarter's IRPF payment on account from your activity's
 year-to-date figures: cumulative income (box `01`) minus cumulative deductible
-expenses (box `02`) gives the rendimiento neto (box `03`); the instalment (box
+expenses (box `02`) gives the net income (box `03`); the instalment (box
 `04`) is a percentage of that net; prior instalments already paid this year (box
 `05`) and withholdings you suffered (box `06`) come off; the minoración by
 net-income level (box `13`) and negative results from earlier quarters (box `15`)
@@ -82,7 +82,7 @@ adjust the figure; and box `19` is the final result. A negative balance in box
 Your records feed the cumulative income, expense, and withholding figures
 through the rules that fill each box; earlier filings feed the carries. Boxes
 `06`, `08`, `10`, `16`, and `18` are manual inputs for the cases that apply to
-you (withholdings, second-activity volume, vivienda habitual deduction, prior
+you (withholdings, second-activity volume, home habitual deduction, prior
 complementary results). Inspect which boxes are filled in, missing, or manual:
 
 ```{cli-sequence} modelo-130-inspect-boxes

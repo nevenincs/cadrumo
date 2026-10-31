@@ -42,9 +42,9 @@ You need:
 ## 1. Official AEAT notifications (DEHú)
 
 DEHú (Dirección Electrónica Habilitada única) is the official electronic
-address for notifications. Cadrumo reads the notificaciones and comunicaciones
+address for notifications. Cadrumo reads the notifications and communications
 that AEAT has served you, from AEAT's electronic notification service in its
-sede. It does not read notifications from other public bodies.
+AEAT e-office. It does not read notifications from other public bodies.
 The example shows the notification reads: `pull` downloads your notifications and
 saves them as a snapshot, `list` shows your saved snapshots,
 `view` opens a saved snapshot by its ID (or an unambiguous prefix of it), and
@@ -74,8 +74,8 @@ without contacting AEAT, or list the figures reported by each parsed document:
 ```
 
 Treat history as a document record, not as a balance. It does not total the
-figures, state what is currently payable, or replace the recaudación register
-reported by AEAT's debts consulta. A document alone does not establish
+figures, state what is currently payable, or replace the collections register
+reported by AEAT's debts inquiry. A document alone does not establish
 whether its amount was paid, appealed, reduced, or superseded.
 
 ---
@@ -150,7 +150,7 @@ The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes availab
 (8-iva-compensation-balance)=
 ## 8. VAT compensation balance
 
-Your VAT compensation balance (saldo a compensar) is the amount of overpaid VAT from prior quarters that can be deducted from future Modelo 303 filings. The example shows the VAT compensation balance reads. `pull` downloads and tracks your current balance, `pull-history` reconstructs past compensation decisions from prior Modelo 303 filings, `pull-evidence` captures past returns and the current VAT data as proof in a single read-only run, and `history` lists the persisted balances and decisions held locally.
+Your VAT compensation balance (VAT credit carried forward) is the amount of overpaid VAT from prior quarters that can be deducted from future Modelo 303 filings. The example shows the VAT compensation balance reads. `pull` downloads and tracks your current balance, `pull-history` reconstructs past compensation decisions from prior Modelo 303 filings, `pull-evidence` captures past returns and the current VAT data as proof in a single read-only run, and `history` lists the persisted balances and decisions held locally.
 
 ```{cli-sequence} check-notifications-iva-wallet
 ```

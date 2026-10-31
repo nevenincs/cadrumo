@@ -236,10 +236,10 @@ If you act as an authorized tax representative for another taxpayer, record
 locally who you represent and the relevant AEAT apoderamiento scopes. An
 apoderado is an authorized representative, such as a gestor or asesor.
 
-The apoderamiento itself is granted at AEAT. The represented party authorizes
-you through AEAT's own apoderamiento procedures. The commands in this section
+The power of attorney itself is granted at AEAT. The represented party authorizes
+you through AEAT's own power of attorney procedures. The commands in this section
 record that grant in your local profile so read commands know whose data they
-read. They never register, extend, revoke, or renounce an apoderamiento at
+read. They never register, extend, revoke, or renounce a power of attorney at
 AEAT. No command writes representation state to AEAT.
 
 ### See the accepted scopes
@@ -250,7 +250,7 @@ List the scope codes the tool accepts:
 :verify: Confirm the tool lists the accepted apoderamiento scope codes.
 ```
 
-Each scope is an AEAT apoderamiento area. Examples include:
+Each scope is an AEAT power of attorney area. Examples include:
 
 - `RENT` for Modelos 100 and 714.
 - `IVA` for Modelos 303 and 390.
@@ -292,7 +292,7 @@ Remove the configuration when the representation ends:
 :verify: Confirm the tool removes the local apoderado record.
 ```
 
-Clearing removes only the local record. The apoderamiento at AEAT is
+Clearing removes only the local record. The power of attorney at AEAT is
 unaffected. Revoke it through AEAT's own procedures.
 
 ## Next steps

@@ -138,7 +138,7 @@ again.
 
 Publication also projects the shared `floor`, `horizon`, and optional
 `hard_ceiling` support envelope and the typed runtime catalogues for IVA rules,
-place of supply, countries and territories, recargo bands, and apoderamiento
+place of supply, countries and territories, surcharge bands, and power of attorney
 scopes. Every required catalogue must be populated. Modelo and tax-domain
 identifiers accept their stable syntax in code, but membership belongs to this
 validated authority; an identifier absent from its published vocabulary is not

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 16:45+0100\n"
+"POT-Creation-Date: 2026-10-31 22:16+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -70,13 +70,13 @@ msgstr ""
 "bekérik a jelmondatodat."
 
 #: ../../how-to/modelo-036.md:20
-msgid "The date you filed the declaration at the sede."
+msgid "The date you filed the declaration at the AEAT online portal."
 msgstr "A dátum, amikor a bevallást az AEAT online portálján benyújtottad."
 
 #: ../../how-to/modelo-036.md:21
 msgid ""
-"Optional: the AEAT receipt number (justificante) that the sede shows "
-"after you file."
+"Optional: the AEAT receipt number (justificante) that the AEAT online "
+"portal shows after you file."
 msgstr ""
 "Opcionális: az AEAT-igazolás száma, amelyet az online portál a benyújtás "
 "után megjelenít."
@@ -105,11 +105,11 @@ msgid "Pick the command that matches what you filed:"
 msgstr "Válaszd ki azt a parancsot, amely megfelel annak, amit benyújtottál:"
 
 #: ../../how-to/modelo-036.md:34
-msgid "If you registered an activity, record an alta."
+msgid "If you registered an activity, record a registration."
 msgstr "Ha tevékenységet jelentettél be, rögzítsd a tevékenység bejelentését."
 
 #: ../../how-to/modelo-036.md:35
-msgid "If you changed registered facts, record a modificacion."
+msgid "If you changed registered facts, record an amendment."
 msgstr "Ha a nyilvántartott adatokat módosítottad, rögzítsd a módosító bevallást."
 
 #: ../../how-to/modelo-036.md:36
@@ -118,9 +118,10 @@ msgstr "Ha megszüntetted a nyilvántartást, rögzítsd a tevékenység megszü
 
 #: ../../how-to/modelo-036.md:38
 msgid ""
-"Record the declarations in the order you filed them. A modificacion or "
-"baja is refused until the profile has an alta on record. After a baja, no"
-" further declaration is accepted, not even an alta."
+"Record the declarations in the order you filed them. An amendment or baja"
+" is refused until the profile has a registration on record. After a "
+"deregistration, no further declaration is accepted, not even a "
+"registration."
 msgstr ""
 "A bevallásokat abban a sorrendben rögzítsd, ahogy benyújtottad őket. A "
 "rendszer elutasítja a módosítás vagy a megszüntetés rögzítését, ha a "
@@ -128,13 +129,13 @@ msgstr ""
 " egyetlen további bevallást sem fogad el, még új bejelentést sem."
 
 #: ../../how-to/modelo-036.md:42
-msgid "Record an alta:"
+msgid "Record a registration:"
 msgstr "Tevékenységbejelentés rögzítése:"
 
 #: ../../how-to/modelo-036.md:48
 msgid ""
-"Record a modificacion (the same flow as the alta, with a different event "
-"kind):"
+"Record an amendment (the same flow as the registration, with a different "
+"event kind):"
 msgstr ""
 "Módosítás rögzítése (ugyanaz a folyamat, mint a tevékenységbejelentésnél,"
 " más eseményfajtával):"
@@ -146,9 +147,9 @@ msgstr "A tevékenység megszüntetésének rögzítése:"
 #: ../../how-to/modelo-036.md:58
 msgid ""
 "`--declared-on` is required: the ISO date (year-month-day) you filed at "
-"the sede. `--sede-justificante` is optional and accepts up to 128 "
-"characters. `--note` adds an optional note for your own records, up to "
-"512 characters."
+"the AEAT online portal. `--sede-justificante` is optional and accepts up "
+"to 128 characters. `--note` adds an optional note for your own records, "
+"up to 512 characters."
 msgstr ""
 "A `--declared-on` kötelező: az ISO-dátum (év-hónap-nap), amikor "
 "benyújtottad a bevallást az AEAT online portálján. A `--sede-"
@@ -169,7 +170,7 @@ msgid "A `declaration_id` - a long reference number for the record."
 msgstr "Egy `declaration_id`: a bejegyzés hosszú hivatkozási száma."
 
 #: ../../how-to/modelo-036.md:67
-msgid "The event kind - alta, modificacion, or baja."
+msgid "The event kind - alta, amendment, or deregistration."
 msgstr ""
 "Az eseményfajta: tevékenységbejelentés, módosító bevallás vagy "
 "megszüntetés."
@@ -197,8 +198,8 @@ msgstr "Rögzített bevallások listázása és megtekintése"
 #: ../../how-to/modelo-036.md:76
 msgid ""
 "List the declarations you have recorded in the active profile, then open "
-"one by its id (the example starts with an alta already recorded, so the "
-"list has a row):"
+"one by its id (the example starts with a registration already recorded, "
+"so the list has a row):"
 msgstr ""
 "Listázd az aktív profilban rögzített bevallásokat, majd nyiss meg egyet "
 "az azonosítója alapján (a példa egy már rögzített altával indul, ezért a "

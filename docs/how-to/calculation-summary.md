@@ -90,7 +90,7 @@ embeds four files, which any PDF viewer lists as attachments:
 Your NIF and name appear on the pages and in the embedded JSON and CSV, because
 the summary is your own document. They never appear in the document metadata,
 which carries only identifiers, digests, codes and the signing public key. Third
-parties, such as the perceptors behind a withholding, appear only as keyed
+parties, such as the payees behind a withholding, appear only as keyed
 digests. The filing file and your supporting documents are not embedded.
 
 ## What the signature means

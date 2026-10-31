@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 16:45+0100\n"
+"POT-Creation-Date: 2026-10-31 22:16+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -71,13 +71,13 @@ msgstr ""
 "xifrat, de manera que demanen la frase de contrasenya."
 
 #: ../../how-to/modelo-036.md:20
-msgid "The date you filed the declaration at the sede."
+msgid "The date you filed the declaration at the AEAT online portal."
 msgstr "La data en què vas presentar la declaració a la sede."
 
 #: ../../how-to/modelo-036.md:21
 msgid ""
-"Optional: the AEAT receipt number (justificante) that the sede shows "
-"after you file."
+"Optional: the AEAT receipt number (justificante) that the AEAT online "
+"portal shows after you file."
 msgstr ""
 "Opcional: el número del justificant de l'AEAT que mostra la sede després "
 "de presentar."
@@ -105,11 +105,11 @@ msgid "Pick the command that matches what you filed:"
 msgstr "Tria l'ordre que coincideixi amb el que has presentat:"
 
 #: ../../how-to/modelo-036.md:34
-msgid "If you registered an activity, record an alta."
+msgid "If you registered an activity, record a registration."
 msgstr "Si has donat d'alta una activitat, registra una alta."
 
 #: ../../how-to/modelo-036.md:35
-msgid "If you changed registered facts, record a modificacion."
+msgid "If you changed registered facts, record an amendment."
 msgstr "Si has canviat dades registrades, registra una modificacion."
 
 #: ../../how-to/modelo-036.md:36
@@ -118,9 +118,10 @@ msgstr "Si t'has donat de baixa, registra una baja."
 
 #: ../../how-to/modelo-036.md:38
 msgid ""
-"Record the declarations in the order you filed them. A modificacion or "
-"baja is refused until the profile has an alta on record. After a baja, no"
-" further declaration is accepted, not even an alta."
+"Record the declarations in the order you filed them. An amendment or baja"
+" is refused until the profile has a registration on record. After a "
+"deregistration, no further declaration is accepted, not even a "
+"registration."
 msgstr ""
 "Registra les declaracions en l'ordre en què les has presentat. Una "
 "modificacion o una baja es rebutja fins que el perfil tingui una alta "
@@ -128,13 +129,13 @@ msgstr ""
 " sols una alta."
 
 #: ../../how-to/modelo-036.md:42
-msgid "Record an alta:"
+msgid "Record a registration:"
 msgstr "Registra una alta:"
 
 #: ../../how-to/modelo-036.md:48
 msgid ""
-"Record a modificacion (the same flow as the alta, with a different event "
-"kind):"
+"Record an amendment (the same flow as the registration, with a different "
+"event kind):"
 msgstr ""
 "Registra una modificacion (el mateix flux que l'alta, amb un tipus "
 "d'esdeveniment diferent):"
@@ -146,9 +147,9 @@ msgstr "Registra una baja:"
 #: ../../how-to/modelo-036.md:58
 msgid ""
 "`--declared-on` is required: the ISO date (year-month-day) you filed at "
-"the sede. `--sede-justificante` is optional and accepts up to 128 "
-"characters. `--note` adds an optional note for your own records, up to "
-"512 characters."
+"the AEAT online portal. `--sede-justificante` is optional and accepts up "
+"to 128 characters. `--note` adds an optional note for your own records, "
+"up to 512 characters."
 msgstr ""
 "`--declared-on` és obligatori: la data ISO (any-mes-dia) en què vas "
 "presentar a la sede. `--sede-justificante` és opcional i accepta fins a "
@@ -168,7 +169,7 @@ msgid "A `declaration_id` - a long reference number for the record."
 msgstr "Un `declaration_id`: un número de referència llarg per al registre."
 
 #: ../../how-to/modelo-036.md:67
-msgid "The event kind - alta, modificacion, or baja."
+msgid "The event kind - alta, amendment, or deregistration."
 msgstr "El tipus d'esdeveniment: alta, modificacion o baja."
 
 #: ../../how-to/modelo-036.md:68
@@ -196,8 +197,8 @@ msgstr "Llista i consulta les declaracions registrades"
 #: ../../how-to/modelo-036.md:76
 msgid ""
 "List the declarations you have recorded in the active profile, then open "
-"one by its id (the example starts with an alta already recorded, so the "
-"list has a row):"
+"one by its id (the example starts with a registration already recorded, "
+"so the list has a row):"
 msgstr ""
 "Llista les declaracions que has registrat al perfil actiu i obre'n una "
 "pel seu id (l'exemple comença amb una alta ja registrada, de manera que "

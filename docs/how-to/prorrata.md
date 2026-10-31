@@ -98,7 +98,7 @@ regime (LIVA arts. 9.1.c / 101):
 ```
 
 - `--sector-id` is a stable id that the register entries and the entries in your records reference.
-- `--letra` is the LIVA art. 9.1.c letra that makes the sector differentiated:
+- `--letra` is the LIVA art. 9.1.c subparagraph that makes the sector differentiated:
   `a`, `b`, `c`, or `d`.
 - `--activity-code` is a CNAE or IAE code grouped into the sector. Repeat it for
   each code; give at least one.

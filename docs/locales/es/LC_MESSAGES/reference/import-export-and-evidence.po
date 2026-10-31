@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 15:23+0100\n"
+"POT-Creation-Date: 2026-10-31 22:16+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -459,7 +459,7 @@ msgid "What it does not prove"
 msgstr "Qué no prueba"
 
 #: ../../reference/import-export-and-evidence.md
-msgid "AEAT fichero or XML export"
+msgid "AEAT file or XML export"
 msgstr "Exportación de fichero o XML de la AEAT"
 
 #: ../../reference/import-export-and-evidence.md
@@ -832,7 +832,7 @@ msgstr ""
 "universal para todos los modelos y periodos."
 
 #: ../../reference/import-export-and-evidence.md:228
-msgid "Filed declaración-PDF extraction requires an exact registered profile."
+msgid "Filed return-PDF extraction requires an exact registered profile."
 msgstr ""
 "La extracción del PDF de una declaración presentada requiere un perfil "
 "registrado exacto."

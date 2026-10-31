@@ -37,7 +37,7 @@ messages in Spanish unless you [choose another language](profile-setup.md#choose
 
 ## What are my filing obligations?
 
-Start with the agenda. It ranks obligations around a reference date, showing what is due today, what is coming up in the next two weeks, and what is already overdue. Pass `--allow-incomplete` on a profile whose census facts are not yet fully filled in, change the reference date with `--date`, and widen the upcoming window with `--horizon` (the default is 14 days). The example profile is an autónomo whose income comes from an economic activity. On 1 April the next deadline is the first-quarter Modelo 130, due on 20 April. From 15 April, the Modelo 130 and Modelo 303 for that quarter both fall inside the two-week window. Profile facts that are still unset appear as warnings that name the modelos they affect:
+Start with the agenda. It ranks obligations around a reference date, showing what is due today, what is coming up in the next two weeks, and what is already overdue. Pass `--allow-incomplete` on a profile whose census facts are not yet fully filled in, change the reference date with `--date`, and widen the upcoming window with `--horizon` (the default is 14 days). The example profile is a self-employed taxpayer whose income comes from an economic activity. On 1 April the next deadline is the first-quarter Modelo 130, due on 20 April. From 15 April, the Modelo 130 and Modelo 303 for that quarter both fall inside the two-week window. Profile facts that are still unset appear as warnings that name the modelos they affect:
 
 ```{cli-sequence} filing-calendar-agenda
 :verify: Confirm the agenda ranks obligations around each reference date.

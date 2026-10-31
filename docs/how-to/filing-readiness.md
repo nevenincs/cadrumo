@@ -105,7 +105,7 @@ personal circumstances, or specific boxes:
 ```
 
 Withholdings default to zero when not supplied, so a projection without them
-overstates the balance due if you had retenciones. Each projected box carries its
+overstates the balance due if you had withholdings. Each projected box carries its
 formula and legal references in the JSON output, the same legal basis as a real
 calculation.
 

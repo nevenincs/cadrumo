@@ -17,8 +17,8 @@ You need:
   commands below refuse without one.
 - Your passphrase. These commands open the encrypted store, so
   they prompt for the passphrase.
-- The date you filed the declaration at the sede.
-- Optional: the AEAT receipt number (justificante) that the sede shows after you
+- The date you filed the declaration at the AEAT online portal.
+- Optional: the AEAT receipt number (justificante) that the AEAT online portal shows after you
   file.
 
 `aeat` prints its messages in Spanish unless you choose another language. Add
@@ -31,21 +31,21 @@ documentation are recorded in English.
 
 Pick the command that matches what you filed:
 
-- If you registered an activity, record an alta.
-- If you changed registered facts, record a modificacion.
+- If you registered an activity, record a registration.
+- If you changed registered facts, record an amendment.
 - If you deregistered, record a baja.
 
-Record the declarations in the order you filed them. A modificacion or baja is
-refused until the profile has an alta on record. After a baja, no further
-declaration is accepted, not even an alta.
+Record the declarations in the order you filed them. An amendment or baja is
+refused until the profile has a registration on record. After a deregistration, no further
+declaration is accepted, not even a registration.
 
-Record an alta:
+Record a registration:
 
 ```{cli-sequence} modelo-036-record-alta
 :verify: Confirm the recorded alta is saved and readable by its id.
 ```
 
-Record a modificacion (the same flow as the alta, with a different event kind):
+Record an amendment (the same flow as the registration, with a different event kind):
 
 ```{cli-sequence} modelo-036-record-modificacion
 ```
@@ -55,7 +55,7 @@ Record a baja:
 ```{cli-sequence} modelo-036-record-baja
 ```
 
-`--declared-on` is required: the ISO date (year-month-day) you filed at the sede.
+`--declared-on` is required: the ISO date (year-month-day) you filed at the AEAT online portal.
 `--sede-justificante` is optional and accepts up to 128 characters. `--note` adds an
 optional note for your own records, up to 512 characters.
 
@@ -64,7 +64,7 @@ optional note for your own records, up to 512 characters.
 The command prints the saved record:
 
 - A `declaration_id` - a long reference number for the record.
-- The event kind - alta, modificacion, or baja.
+- The event kind - alta, amendment, or deregistration.
 - The declared-on date.
 - When the record was saved.
 - The AEAT receipt number, if you gave one.
@@ -74,7 +74,7 @@ That printed output is your confirmation. Save it with your records.
 ## List and view recorded declarations
 
 List the declarations you have recorded in the active profile, then open one by
-its id (the example starts with an alta already recorded, so the list has a row):
+its id (the example starts with a registration already recorded, so the list has a row):
 
 ```{cli-sequence} modelo-036-list-view
 :verify: Confirm the recorded declaration appears in the list and opens by its id.

@@ -116,7 +116,7 @@ stock inventory for the year, calculation warns and the boxes stay 0.
 
 | Export | Purpose | What it does not prove |
 | --- | --- | --- |
-| AEAT fichero or XML export | Produces the local payload where the selected Modelo revision has a complete export layout in the tax rules: fixed-width fichero-BOE for most modelos, XML for Modelo 100. Files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept; key their values into the portal form | It does not prove submission or acceptance |
+| AEAT file or XML export | Produces the local payload where the selected Modelo revision has a complete export layout in the tax rules: fixed-width fichero-BOE for most modelos, XML for Modelo 100. Files for modelos whose record design reserves a software identity, such as Modelo 303 and 390, carry a development identity that AEAT does not accept; key their values into the portal form | It does not prove submission or acceptance |
 | Google Sheet export | Human review, reconciliation, parity checking, and what-if editing | It is not a file for filing or an authoritative calculation record |
 | Accountant review package | Shares the draft, saved calculation, where each value came from, and supporting documents when present, in a ZIP you can check against its checksums | Checksums alone do not identify who created or approved it |
 | Evidence bundle | Forensic package containing referenced record bytes and a content-addressed manifest | It is not itself AEAT-issued proof |
@@ -225,7 +225,7 @@ authoritative layouts and real evidence. Consequently:
 
 - Import and export support must not be described as universal across all
   Modelos and periods.
-- Filed declaración-PDF extraction requires an exact registered profile.
+- Filed return-PDF extraction requires an exact registered profile.
 - A local observation you supplied, local export, checksum, Google Sheet, or
   review ZIP cannot prove AEAT acceptance. A locally held AEAT receipt
   (justificante) can become official proof. Import it through the workflow for
