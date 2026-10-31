@@ -13,7 +13,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.external_constants import OutputLanguage
-from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -21,7 +20,8 @@ from ....domain.filing.schema import ModeloValueKind
 from ..work_form import build_modelo_work_form
 from ..work_form_models import ModeloFormOrigin, ModeloWorkForm
 from ..work_form_service import modelo_work_form_changes
-from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
+from ..work_review import ModeloWorkReview
+from .work_form_fixture import uncalculated_review
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -36,20 +36,8 @@ def snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
 
 
 def _review(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> ModeloWorkReview:
-    return ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000452",
-        modelo=_MODELO,
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _PERIOD),
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id="b" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
-        findings=(),
-        blockers=(),
+    return uncalculated_review(
+        snapshot, operation, modelo=_MODELO, filing_year=_YEAR, period=Period.from_year_and_code(_YEAR, _PERIOD)
     )
 
 

@@ -88,6 +88,27 @@ def built_form(
     )
 
 
+def uncalculated_review(
+    snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation, *, modelo: str, filing_year: int, period: Period
+) -> ModeloWorkReview:
+    """The review of a work unit that has no calculation yet: every box as the registry declares it."""
+    return ModeloWorkReview(
+        bucket_id="13000000-0000-4000-8000-000000000455",
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        registry_revision_id=snapshot.revision.id,
+        work_unit_id="e" * 64,
+        calculation_revision_id=None,
+        lifecycle_state=None,
+        verification_outcome=None,
+        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
+        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
+        findings=(),
+        blockers=(),
+    )
+
+
 def form_casilla(form: ModeloWorkForm, casilla_id: str) -> ModeloFormField:
     return next(
         field
@@ -96,7 +117,7 @@ def form_casilla(form: ModeloWorkForm, casilla_id: str) -> ModeloFormField:
     )
 
 
-__all__ = ["built_form", "form_casilla", "form_snapshot"]
+__all__ = ["built_form", "form_casilla", "form_snapshot", "uncalculated_review"]
 
 
 def read_before_calculation(

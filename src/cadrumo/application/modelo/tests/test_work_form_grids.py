@@ -20,7 +20,6 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
-from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.modelo_localization import binding_locale_key
@@ -44,7 +43,7 @@ from ..work_form_models import (
     section_fields,
 )
 from ..work_form_service import modelo_form_snapshot
-from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
+from .work_form_fixture import uncalculated_review
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -79,21 +78,7 @@ def _form(
     period = Period.from_year_and_code(year, code)
     revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
     snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000451",
-        modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id="c" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
-        findings=(),
-        blockers=(),
-    )
+    review = uncalculated_review(snapshot, operation, modelo=modelo, filing_year=year, period=period)
     layout = layout_override or _layout(operation, modelo, str(snapshot.revision.id))
     return build_modelo_work_form(
         review=review,

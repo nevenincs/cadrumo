@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 
 from ....core.external_constants import OutputLanguage
-from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.modelo_localization import resolve_modelo_localization
@@ -23,7 +22,7 @@ from ....tests.locales_root_fixture import locales_root_scope
 from ..work_form import build_modelo_work_form
 from ..work_form_localization import names_only_its_box, render_box_locator_patterns
 from ..work_form_models import ModeloFormCasillaAddressV1
-from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
+from .work_form_fixture import uncalculated_review
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -127,20 +126,8 @@ def test_a_published_locator_help_reaches_the_form_as_no_help(
     for casilla_id, stated in ((_LOCATED, located), (_EXPLAINED, explained)):
         keys = tuple(f"{key.removesuffix('.label')}.help" for key in casillas[casilla_id].localization_keys)
         assert resolve_modelo_localization(keys, locale=language.value) == stated
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000151",
-        modelo=_MODELO,
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _PERIOD),
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id="b" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
-        findings=(),
-        blockers=(),
+    review = uncalculated_review(
+        snapshot, operation, modelo=_MODELO, filing_year=_YEAR, period=Period.from_year_and_code(_YEAR, _PERIOD)
     )
     form = build_modelo_work_form(
         review=review,
