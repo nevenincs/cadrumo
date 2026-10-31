@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:72b2f32b9e231f41904cd664c71ced482721f8ac3c3a3047a80776dea9fd8402'
+body_hash: 'sha256:38639ce384398d02ab910ec59ae0ad11cb57507032e3047abfb73df321114c51'
 related:
   - "[[2026-10-30-test-suite-budget-plan]]"
 ---
@@ -57,3 +57,5 @@ related:
 - `S07` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py`
 - `S07` `M` `src/cadrumo_runtime/application/tests/test_session_authority.py`
 - `S07` `verify:` `pytest sealed profile world and consumers` -> `pass`
+- `S07` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/isolated_storage_fixture.py`
+- `S07` `verify:` `pytest test_profile_lifecycle_verbs test_active_profile_env_override_name` -> `pass`

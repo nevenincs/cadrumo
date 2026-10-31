@@ -169,6 +169,7 @@ def native_profile_view_server(
     """Host real native profile workers for explicit password-backed CLI reads."""
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
+    storage_root.mkdir(parents=True, exist_ok=True)
     endpoint = WindowsEndpoint(storage_root=storage_root)
     installation(storage_root=storage_root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
     stop, boot, native = Event(), uuid4(), MemoryNativePort()

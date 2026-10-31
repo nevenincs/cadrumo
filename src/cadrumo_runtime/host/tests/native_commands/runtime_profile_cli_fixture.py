@@ -328,6 +328,7 @@ def native_cli_profile_server(
     """
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
+    storage_root.mkdir(parents=True, exist_ok=True)
     endpoint = WindowsEndpoint(storage_root=storage_root)
     stop, boot, native, verifier = Event(), uuid4(), MemoryNativePort(), ControlledServiceVerifier()
     owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=15)
