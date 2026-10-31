@@ -52,7 +52,11 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
 from cadrumo.adapters.persistence.profile.review_package_signing import ReviewPackageSigningKeypairAdapter
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_path
+from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import (
+    build_package_path,
+    review_package_revision,
+    review_package_work_unit,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from cadrumo.application.modelo.review_package_collab_audit import emit_collab_feedback_countersign_attached_event
 from cadrumo.application.modelo.review_package_counter_sign import counter_sign_review_package
@@ -73,15 +77,10 @@ from cadrumo.application.modelo.review_package_signing import ensure_review_pack
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -120,76 +119,10 @@ _PLACEHOLDER_REVISION_ID = derive_calculation_revision_id(
 )
 
 
-def _work_unit(*, bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "2T")
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        revision_id="2026-y-siguientes",
-    )
-    return WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("303"),
-        filing_year=2026,
-        period=period,
-        revision_id="2026-y-siguientes",
-        name="303-2026-2T",
-        created_at=_NOW,
-        updated_at=_NOW,
-        state=WorkUnitState.BORRADOR,
-    )
-
-
-def _revision(work_unit: WorkUnit) -> CalculationRevision:
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
-        binding_overrides={},
-        casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
-        source_transaction_ids=(),
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    return CalculationRevision(
-        calculation_revision_id=revision_id,
-        work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=work_unit.modelo,
-            revision_id=work_unit.revision_id,
-            modelo_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-        ),
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
-        casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
-        observations=(
-            CasillaObservation(
-                casilla_id=_CUOTA_CASILLA,
-                value=Decimal("21.00"),
-                legal_refs=("ley-37-1992:art-99",),
-                source_refs=("test-review-package-feedback",),
-            ),
-        ),
-        ledger_filing_evidence=None,
-        created_at=_NOW,
-        updated_at=_NOW,
-        verified_at=_NOW,
-        verified_by="operator",
-        filed_at=None,
-        filed_by=None,
-        superseded_at=None,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-
-
 _build_package = functools.partial(
     build_package_path,
-    work_unit_factory=_work_unit,
-    revision_factory=_revision,
+    work_unit_factory=review_package_work_unit,
+    revision_factory=review_package_revision,
     draft_bytes=_DRAFT_BYTES,
     filename_template="review-package-{bucket_id}.zip",
 )
@@ -234,7 +167,7 @@ def test_full_round_trip_originator_signs_accountant_countersigns_and_returns_fe
         # reusing the exact same X25519 ECIES primitive as the forward direction.
         feedback = build_feedback_package(
             bucket_id=runtime.primary.bucket_id,
-            work_unit_id=_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
+            work_unit_id=review_package_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
             calculation_revision_id=signed.calculation_revision_id,
             note="all clear",
             counter_signed_receipt=receipt,
@@ -303,7 +236,7 @@ def test_unstructured_feedback_with_no_counter_signed_receipt_imports_cleanly(tm
 
         feedback = build_feedback_package(
             bucket_id=runtime.primary.bucket_id,
-            work_unit_id=_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
+            work_unit_id=review_package_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
             calculation_revision_id=_PLACEHOLDER_REVISION_ID,
             note="see attached corrections, no formal sign-off yet",
             counter_signed_receipt=None,
@@ -483,7 +416,7 @@ def test_import_feedback_package_refuses_when_archive_tampered_after_countersign
 
         feedback = build_feedback_package(
             bucket_id=runtime.primary.bucket_id,
-            work_unit_id=_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
+            work_unit_id=review_package_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
             calculation_revision_id=signed.calculation_revision_id,
             note="all clear",
             counter_signed_receipt=receipt,
@@ -547,7 +480,7 @@ def test_import_feedback_package_refuses_with_forged_counter_signer_key(tmp_path
 
         feedback = build_feedback_package(
             bucket_id=runtime.primary.bucket_id,
-            work_unit_id=_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
+            work_unit_id=review_package_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
             calculation_revision_id=signed.calculation_revision_id,
             note="all clear",
             counter_signed_receipt=receipt,
@@ -607,7 +540,7 @@ def test_import_feedback_package_raises_when_receipt_present_but_no_counter_sign
 
         feedback = build_feedback_package(
             bucket_id=runtime.primary.bucket_id,
-            work_unit_id=_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
+            work_unit_id=review_package_work_unit(bucket_id=runtime.primary.bucket_id).work_unit_id,
             calculation_revision_id=signed.calculation_revision_id,
             note="all clear",
             counter_signed_receipt=receipt,

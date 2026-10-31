@@ -6,7 +6,6 @@ import contextvars
 import functools
 import threading
 from datetime import UTC, datetime
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -17,7 +16,11 @@ from cadrumo.adapters.persistence.profile.review_package_signing import (
     ReviewPackageSigningKeypairAdapter,
     build_review_package_signing_keypair_reader,
 )
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_path
+from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import (
+    build_package_path,
+    review_package_revision,
+    review_package_work_unit,
+)
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
 )
@@ -30,100 +33,21 @@ from cadrumo.application.modelo.review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
-from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.classification.policies import SensitivityClass
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
-_BASE_CASILLA = validated_casilla_id("base", surface="test_review_package_signing_adapter")
-_CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package_signing_adapter")
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-SIGNING-ADAPTER-TEST"
 _OWNER_BUCKET_ID = "2e510000-0000-4000-8000-000000000001"
 _FOREIGN_BUCKET_ID = "2e510000-0000-4000-8000-000000000002"
 _CONCURRENT_BUCKET_ID = "2e510000-0000-4000-8000-000000000003"
 
 
-def _work_unit(*, bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "2T")
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        revision_id="2026-y-siguientes",
-    )
-    return WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode("303"),
-        filing_year=2026,
-        period=period,
-        revision_id="2026-y-siguientes",
-        name="303-2026-2T",
-        created_at=_NOW,
-        updated_at=_NOW,
-        state=WorkUnitState.BORRADOR,
-    )
-
-
-def _revision(work_unit: WorkUnit) -> CalculationRevision:
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
-        binding_overrides={},
-        casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
-        source_transaction_ids=(),
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    return CalculationRevision(
-        calculation_revision_id=revision_id,
-        work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=work_unit.modelo,
-            revision_id=work_unit.revision_id,
-            modelo_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-        ),
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
-        casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
-        observations=(
-            CasillaObservation(
-                casilla_id=_CUOTA_CASILLA,
-                value=Decimal("21.00"),
-                legal_refs=("ley-37-1992:art-99",),
-                source_refs=("test-review-package-signing-adapter",),
-            ),
-        ),
-        ledger_filing_evidence=None,
-        created_at=_NOW,
-        updated_at=_NOW,
-        verified_at=_NOW,
-        verified_by="operator",
-        filed_at=None,
-        filed_by=None,
-        superseded_at=None,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-
-
 _build_package = functools.partial(
     build_package_path,
-    work_unit_factory=_work_unit,
-    revision_factory=_revision,
+    work_unit_factory=review_package_work_unit,
+    revision_factory=review_package_revision,
     draft_bytes=_DRAFT_BYTES,
 )
 
