@@ -368,9 +368,9 @@ def test_casilla_token_refuses_absence_and_never_infers_segment_identity(token: 
         )
 
 
-def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m130_inspection) -> None:
-    """A complete map resolves through the real M200 source and target revision."""
-    source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
+def _complete_m130_pair(m130_inspection) -> tuple[str, RecordDesignIntermediate, SemanticMap]:
+    """A complete two-literal map over the real M130 design source, with its digest and intermediate."""
+    source_sha256 = _real_source_sha256(m130_inspection, _M130_DESIGN_REF)
     intermediate = RecordDesignIntermediate.model_validate(
         _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
     )
@@ -400,6 +400,12 @@ def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m13
             ),
         ),
     )
+    return source_sha256, intermediate, semantic_map
+
+
+def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m130_inspection) -> None:
+    """A complete map resolves through the real M200 source and target revision."""
+    _, intermediate, semantic_map = _complete_m130_pair(_m130_inspection)
 
     validate_semantic_map(semantic_map, intermediate, _m130_inspection)
 
@@ -716,36 +722,7 @@ def test_projection_admission_uses_the_real_revision_declaration_bijection(_m303
 
 def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(_m130_inspection) -> None:
     """Anomalies name only a source condition and retain the full bijection gate."""
-    source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
-    intermediate = RecordDesignIntermediate.model_validate(
-        _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
-    )
-    semantic_map = SemanticMap.model_validate(
-        _semantic_map_payload(
-            modelo=_M130_MODELO,
-            source_ref=_M130_DESIGN_REF,
-            design_epoch=_M130_EPOCH,
-            source_sha256=source_sha256,
-            entries=(
-                _entry(
-                    legal_ref=_M130_LEGAL_REF,
-                    source_ref=_M130_DESIGN_REF,
-                    row=14,
-                    ordinal=1,
-                    field_id="generated.literal.one",
-                    literal="T",
-                ),
-                _entry(
-                    legal_ref=_M130_LEGAL_REF,
-                    source_ref=_M130_DESIGN_REF,
-                    row=15,
-                    ordinal=2,
-                    field_id="generated.literal.two",
-                    literal="0",
-                ),
-            ),
-        ),
-    )
+    source_sha256, intermediate, semantic_map = _complete_m130_pair(_m130_inspection)
     exception = SemanticMapAnomalyException(
         source_ref=_M130_DESIGN_REF,
         source_sha256=source_sha256,
