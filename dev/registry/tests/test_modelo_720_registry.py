@@ -14,32 +14,23 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .modelo_registry_surface_support import (
+    FORBIDDEN_REMOTE_ACTIONS,
+    assert_authenticated_read_surface_is_read_only,
+    assert_declaration_pdf_profile_legal_refs,
+    assert_review_surfaces_require_snapshot,
+)
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
-_WWW1_HOST = aeat_host("www1")
-_WWW6_HOST = aeat_host("www6")
 
 
 def _load_modelo_720():
     return _committed_modelo("720")
 
 
-_FORBIDDEN_REMOTE_ACTIONS = frozenset(
-    [
-        "server-side-save",
-        "signing",
-        "presentation",
-        "payment",
-        "amendment",
-        "cancellation",
-        "document-submission",
-        "declaration-submission",
-    ],
-)
 _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     [
         "ley-58-2003:art-93",
@@ -204,22 +195,12 @@ def test_committed_modelo_720_static_cross_reference_forbids_remote_writes() -> 
         decision = next(ref for ref in revision.live_cross_references if ref.surface == "static_official_documentation")
         assert decision.requires_authentication is False
         assert decision.synthetic_data_allowed is False
-        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+        assert FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
 
 
 def test_committed_modelo_720_authenticated_read_surface_is_read_only_and_guarded() -> None:
     modelo, _ = _load_modelo_720()
-    for revision in modelo.revisions.values():
-        decision = next(ref for ref in revision.live_cross_references if ref.surface == "authenticated_read_surface")
-        assert decision.requires_authentication is True
-        assert decision.requires_aeat_authorization is True
-        assert decision.synthetic_data_allowed is False
-        assert set(decision.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}, revision.id
-        assert set(decision.allowed_hosts) == {
-            _WWW1_HOST,
-            _WWW6_HOST,
-        }, revision.id
-        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+    assert_authenticated_read_surface_is_read_only(modelo)
 
 
 def test_committed_modelo_720_declaration_pdf_extraction_profile_targets_declarante_casillas() -> None:
@@ -238,18 +219,7 @@ def test_committed_modelo_720_declaration_pdf_extraction_profile_targets_declara
 
 def test_committed_modelo_720_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:
     modelo, _ = _load_modelo_720()
-    for revision in modelo.revisions.values():
-        casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
-        pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
-        assert pdf_profiles, revision.id
-        for profile in pdf_profiles:
-            target_refs = frozenset(
-                legal_ref
-                for target in profile.target_casillas
-                for legal_ref in casillas_by_id[target.casilla_id].legal_refs
-            )
-            assert target_refs == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
-            assert frozenset(profile.legal_refs) == _DECLARATION_PROFILE_TARGET_LEGAL_REFS
+    assert_declaration_pdf_profile_legal_refs(modelo, _DECLARATION_PROFILE_TARGET_LEGAL_REFS)
 
 
 def test_committed_modelo_720_completeness_manifest_legal_refs_match_declarante_closure() -> None:
@@ -397,13 +367,4 @@ def test_committed_modelo_720_construct_includes_revision_members() -> None:
 
 def test_modelo_720_workflow_surfaces_are_snapshot_gated_and_construct_scoped() -> None:
     modelo, _ = _load_modelo_720()
-    required_surfaces = {"review", "approval", "reconciliation", "workflow"}
-    for revision in modelo.revisions.values():
-        construct = revision.constructs[0]
-        linked_by_surface = {link.surface: link for link in revision.application_links}
-        assert required_surfaces <= set(linked_by_surface), revision.id
-        for link in revision.application_links:
-            if link.surface not in required_surfaces:
-                continue
-            assert link.requires_snapshot is True
-            assert link.id in construct.application_links
+    assert_review_surfaces_require_snapshot(modelo)

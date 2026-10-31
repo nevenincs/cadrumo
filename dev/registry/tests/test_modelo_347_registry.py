@@ -10,33 +10,20 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from .authored_edition_support import oldest_authored_edition
+from .modelo_registry_surface_support import (
+    FORBIDDEN_REMOTE_ACTIONS,
+    assert_authenticated_read_surface_is_read_only,
+)
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
-_WWW1_HOST = aeat_host("www1")
-_WWW6_HOST = aeat_host("www6")
 
 
 def _load_modelo_347():
     return _committed_modelo("347")
-
-
-_FORBIDDEN_REMOTE_ACTIONS = frozenset(
-    [
-        "server-side-save",
-        "signing",
-        "presentation",
-        "payment",
-        "amendment",
-        "cancellation",
-        "document-submission",
-        "declaration-submission",
-    ],
-)
 
 
 def test_committed_modelo_347_validates_against_catalogues() -> None:
@@ -166,22 +153,12 @@ def test_committed_modelo_347_static_cross_reference_forbids_remote_writes() -> 
         decision = next(ref for ref in revision.live_cross_references if ref.surface == "static_official_documentation")
         assert decision.requires_authentication is False
         assert decision.synthetic_data_allowed is False
-        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+        assert FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
 
 
 def test_committed_modelo_347_authenticated_read_surface_is_read_only_and_guarded() -> None:
     modelo, _ = _load_modelo_347()
-    for revision in modelo.revisions.values():
-        decision = next(ref for ref in revision.live_cross_references if ref.surface == "authenticated_read_surface")
-        assert decision.requires_authentication is True
-        assert decision.requires_aeat_authorization is True
-        assert decision.synthetic_data_allowed is False
-        assert set(decision.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}, revision.id
-        assert set(decision.allowed_hosts) == {
-            _WWW1_HOST,
-            _WWW6_HOST,
-        }, revision.id
-        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+    assert_authenticated_read_surface_is_read_only(modelo)
 
 
 def test_committed_modelo_347_filing_schedule_is_annual() -> None:
