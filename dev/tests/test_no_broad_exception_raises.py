@@ -20,6 +20,7 @@ from cadrumo.tests.inventory import (
 from dev.quality.cyclic_gc import cyclic_gc_paused
 from dev.quality.unread_inputs import report_unread
 
+from ._broad_exception_aliases import broad_alias_assignments_from_target
 from ._project_inventory import all_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -137,9 +138,9 @@ def _broad_exception_scan_inputs(tree: ast.AST) -> _BroadExceptionScanInputs:
                         broad_exception_names.add(alias.asname or alias.name)
         elif isinstance(node, ast.Assign):
             for target in node.targets:
-                broad_alias_assignments.extend(_broad_alias_assignments_from_target(target, node.value))
+                broad_alias_assignments.extend(broad_alias_assignments_from_target(target, node.value))
         elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.target, ast.Name):
-            broad_alias_assignments.extend(_broad_alias_assignments_from_target(node.target, node.value))
+            broad_alias_assignments.extend(broad_alias_assignments_from_target(node.target, node.value))
 
     return _BroadExceptionScanInputs(
         pytest_aliases=pytest_aliases,
@@ -150,24 +151,6 @@ def _broad_exception_scan_inputs(tree: ast.AST) -> _BroadExceptionScanInputs:
         broad_alias_assignments=broad_alias_assignments,
         call_nodes=call_nodes,
     )
-
-
-def _broad_alias_assignments_from_target(
-    target: ast.expr,
-    value: ast.expr,
-) -> list[tuple[str, tuple[str, ...]]]:
-    """Return broad-exception alias assignments from one target/value pair."""
-    if isinstance(target, ast.Name):
-        if isinstance(value, ast.Tuple | ast.List | ast.Set):
-            return [(qualified_name(element), (target.id,)) for element in value.elts]
-        return [(qualified_name(value), (target.id,))]
-    if isinstance(target, ast.Tuple | ast.List) and isinstance(value, ast.Tuple | ast.List):
-        assignments: list[tuple[str, tuple[str, ...]]] = []
-        for target_element, value_element in zip(target.elts, value.elts, strict=False):
-            if isinstance(target_element, ast.Name):
-                assignments.append((qualified_name(value_element), (target_element.id,)))
-        return assignments
-    return []
 
 
 def _pytest_module_aliases(tree: ast.AST) -> set[str]:

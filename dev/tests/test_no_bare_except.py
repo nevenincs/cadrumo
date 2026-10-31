@@ -28,6 +28,7 @@ import pytest
 
 from cadrumo.tests.inventory import ast_for_path, discover_test_modules, qualified_name, repo_relative
 
+from ._broad_exception_aliases import broad_alias_assignments_from_target
 from ._project_inventory import project_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -105,9 +106,9 @@ def _bare_except_inventory(tree: ast.AST) -> _BareExceptInventory:
                     names.add(alias.asname or alias.name)
         elif isinstance(node, ast.Assign):
             for target in node.targets:
-                alias_assignments.extend(_broad_alias_assignments_from_target(target, node.value))
+                alias_assignments.extend(broad_alias_assignments_from_target(target, node.value))
         elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.target, ast.Name):
-            alias_assignments.extend(_broad_alias_assignments_from_target(node.target, node.value))
+            alias_assignments.extend(broad_alias_assignments_from_target(node.target, node.value))
 
     changed = True
     while changed:
@@ -120,24 +121,6 @@ def _bare_except_inventory(tree: ast.AST) -> _BareExceptInventory:
                     names.add(target_name)
                     changed = True
     return _BareExceptInventory(broad_names=names, try_nodes=try_nodes)
-
-
-def _broad_alias_assignments_from_target(
-    target: ast.expr,
-    value: ast.expr,
-) -> list[tuple[str, tuple[str, ...]]]:
-    """Return broad-exception alias assignments from one target/value pair."""
-    if isinstance(target, ast.Name):
-        if isinstance(value, ast.Tuple | ast.List | ast.Set):
-            return [(qualified_name(element), (target.id,)) for element in value.elts]
-        return [(qualified_name(value), (target.id,))]
-    if isinstance(target, ast.Tuple | ast.List) and isinstance(value, ast.Tuple | ast.List):
-        assignments: list[tuple[str, tuple[str, ...]]] = []
-        for target_element, value_element in zip(target.elts, value.elts, strict=False):
-            if isinstance(target_element, ast.Name):
-                assignments.append((qualified_name(value_element), (target_element.id,)))
-        return assignments
-    return []
 
 
 def _contains_broad_exception_root(node: ast.AST, broad_names: set[str]) -> bool:
