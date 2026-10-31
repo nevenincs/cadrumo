@@ -150,9 +150,9 @@ cli:
         confirm_counterparty_nif_help: Override the extracted supplier tax id.
         confirm_currency_help: ISO-4217 currency code.
         confirm_expected_draft_review_sha256_help: Review digest of the exact draft
-          you inspected, returned by extract.
+          you inspected, returned by `aeat app ledger evidence extract`.
         confirm_expected_source_sha256_help: SHA-256 of the evidence source returned
-          by extract; verifies that the bytes are unchanged.
+          by `aeat app ledger evidence extract`; verifies that the bytes are unchanged.
         confirm_help: Re-extract evidence on-host and confirm it into a real catalogue
           Invoice.
         confirm_invoice_class_help: Declare the invoice class when the document does
@@ -1341,7 +1341,7 @@ cli:
           in the profile folder.
         push:
           capability_disabled: Google export is disabled for this profile; enable
-            it with 'aeat config profile capabilities set google_export on'.
+            it with `aeat config profile capabilities set google_export on`.
           dry_run_help: Preview what this export would clear and rewrite in the workbook,
             without writing anything
           prefill_relations_help: Prefill cross-revision relation values from the
@@ -1506,8 +1506,8 @@ cli:
         dependencies_period_requires_modelo: The --period option requires --modelo.
         discard_help: Mark a declaration as discarded (the state change is kept in
           the audit trail)
-        discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
-          app modelo work discard %{work_unit_id} --yes' to confirm.
+        discard_requires_yes: Discard is an auditable state transition. Re-run `aeat
+          app modelo work discard %{work_unit_id} --yes` to confirm.
         discard_yes_help: Explicitly confirm the discard operation
         document_format_help: 'Document format of the calculation report: `csv`, or
           `pdf` for the signed calculation summary (needs the optional `pdf` extra).'
@@ -2133,7 +2133,7 @@ cli:
           mode for a profile with a real NIF.
         validation: 'The data supplied for Google did not pass validation: {detail}'
       export_capability_disabled: Google export is disabled for this profile; enable
-        it with 'aeat config profile capabilities set google_export on'.
+        it with `aeat config profile capabilities set google_export on`.
       folder:
         help: Show the Google Drive folder created for the active profile
         organize_help: Organize the profile folder inside Cadrumo
@@ -2355,7 +2355,7 @@ cli:
         offers an optional recovery code; skip it, or add it later with 'cadrumo-runtime
         config profile recovery enable'.
       create_login_required: Profile '{profile}' was created, but you do not have
-        a session open on it yet. Sign in with the command 'config login {profile}'
+        a session open on it yet. Sign in with the command `aeat config login {profile}`
         to unlock its data before continuing.
       create_name_required: A profile name is required. Run 'aeat config profile create
         NAME'.
@@ -2369,8 +2369,8 @@ cli:
       create_recovery_offer_prompt: 'Set up a recovery code now? It lets you reset
         a forgotten passphrase, and you can also add it later. [y/N] '
       create_recovery_skipped: Recovery is not set up. Without it a forgotten passphrase
-        cannot be reset; enable it any time with the 'config profile recovery enable'
-        command.
+        cannot be reset; enable it any time with the `cadrumo-runtime config profile
+        recovery enable` command.
       delete:
         expected_digest_help: Require the content fingerprint from the reviewed preflight.
         expected_profile_id_help: Require the profile identity from the reviewed preflight.
@@ -2516,8 +2516,8 @@ cli:
       row:
         invalid_row: '''%{row}'' is not a valid row key; use a non-negative integer
           or base.'
-        row_help: Stable row key shown by aeat config profile view; use base for the
-          unindexed row.
+        row_help: Stable row key shown by `aeat config profile view`; use `base` for
+          the unindexed row.
         section_help: Repeatable profile section key.
       sandbox:
         active_indicator_info: You are operating inside the sandbox %{label}, not

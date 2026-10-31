@@ -7686,7 +7686,7 @@ tui:
       country_required: Add meg a partner országát két betűvel, például ES.
       failure: Az importálás nem fejezhető be.
       invoice_book_unavailable: Számlakönyvet itt még nem lehet előnézni; importáld
-        az app ledger invoice import paranccsal.
+        az `aeat app ledger invoice import` paranccsal.
       kind:
         bank_statement: Bankszámlakivonat
         invoices_issued: Kiállított számlák

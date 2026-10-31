@@ -1181,8 +1181,8 @@ errors:
     refused_modelo_360_solicitud: A Modelo 360 kérelmet nem lehetett a kért módon
       megadni vagy törölni.
     refused_modelo_360_solicitud_account_bic_missing: A(z) {own_account_id} saját
-      számlának nincs SWIFT-BIC kódja, amit a Modelo 360 megkövetel; add meg az app
-      ledger account update paranccsal.
+      számlának nincs SWIFT-BIC kódja, amit a Modelo 360 megkövetel; add meg az `aeat
+      app ledger account update` paranccsal.
     refused_modelo_360_solicitud_account_closed: A(z) {own_account_id} saját számla
       le van zárva, így nem fogadhatja a visszatérítést.
     refused_modelo_360_solicitud_account_invalid: A képviselő számlája nem érvényes

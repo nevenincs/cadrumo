@@ -7557,7 +7557,7 @@ tui:
         ES.
       failure: The import could not be completed.
       invoice_book_unavailable: Invoice books cannot be previewed here yet; import
-        them with app ledger invoice import.
+        them with `aeat app ledger invoice import`.
       kind:
         bank_statement: Bank statement
         invoices_issued: Issued invoices

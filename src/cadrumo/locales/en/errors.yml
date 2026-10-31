@@ -322,8 +322,8 @@ errors:
     error_sede_navigation: A navigation step in the AEAT Sede failed.
     error_storage_bucket: An error occurred in the storage bucket lifecycle.
     error_storage_bucket_path_too_long: The bucket directory path exceeds the Windows
-      MAX_PATH limit. Move CADRUMO_STORAGE_ROOT to a shorter path or enable
-      LongPathsEnabled (see `aeat config storage check`).
+      MAX_PATH limit. Move CADRUMO_STORAGE_ROOT to a shorter path or enable LongPathsEnabled
+      (see `aeat config storage check`).
     error_storage_management: The local storage tree could not be read or reclaimed.
     error_submission_validation: A submission model failed validation.
     error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
@@ -1162,8 +1162,8 @@ errors:
     refused_modelo_360_solicitud: The Modelo 360 solicitud could not be declared or
       removed as asked.
     refused_modelo_360_solicitud_account_bic_missing: Own account {own_account_id}
-      has no SWIFT-BIC, which Modelo 360 requires; add it with app ledger account
-      update.
+      has no SWIFT-BIC, which Modelo 360 requires; add it with `aeat app ledger account
+      update`.
     refused_modelo_360_solicitud_account_closed: Own account {own_account_id} is closed,
       so it cannot receive the refund.
     refused_modelo_360_solicitud_account_invalid: The representante's account is not

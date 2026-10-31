@@ -160,9 +160,9 @@ cli:
         confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraído.
         confirm_currency_help: Código de moneda ISO-4217.
         confirm_expected_draft_review_sha256_help: Huella de revisión del borrador
-          exacto que has revisado, devuelta por extract.
+          exacto que has revisado, devuelta por `aeat app ledger evidence extract`.
         confirm_expected_source_sha256_help: SHA-256 del justificante devuelto por
-          extract; verifica que los bytes no han cambiado.
+          `aeat app ledger evidence extract`; verifica que los bytes no han cambiado.
         confirm_help: Vuelve a extraer el justificante en el equipo local y confírmalo
           como una factura real del catálogo.
         confirm_invoice_class_help: Indica la clase de factura cuando el documento
@@ -1447,8 +1447,8 @@ cli:
           en la carpeta del perfil.
         push:
           capability_disabled: La exportación a Google está desactivada para este
-            perfil; actívala con 'aeat config profile capabilities set google_export
-            on'.
+            perfil; actívala con `aeat config profile capabilities set google_export
+            on`.
           dry_run_help: Previsualiza lo que esta exportación borraría y reescribiría
             en el libro, sin escribir nada
           prefill_relations_help: Prerrellenar valores de relaciones entre revisiones
@@ -1619,7 +1619,7 @@ cli:
         discard_help: Marcar una declaración como descartada (el cambio de estado
           queda en el registro de auditoría)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelve
-          a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
+          a ejecutar `aeat app modelo work discard %{work_unit_id} --yes` para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
         document_format_help: 'Formato de documento del informe de cálculo: `csv`,
           o `pdf` para el resumen del cálculo firmado (requiere el complemento opcional
@@ -2290,7 +2290,7 @@ cli:
         validation: 'Los datos proporcionados para Google no superaron la validación:
           {detail}'
       export_capability_disabled: La exportación a Google está desactivada para este
-        perfil; actívala con 'aeat config profile capabilities set google_export on'.
+        perfil; actívala con `aeat config profile capabilities set google_export on`.
       folder:
         help: Muestra la carpeta de Google Drive creada para el perfil activo
         organize_help: Organiza la carpeta del perfil dentro de Cadrumo
@@ -2537,8 +2537,8 @@ cli:
         después un código de recuperación opcional; puedes omitirlo o añadirlo más
         tarde con 'cadrumo-runtime config profile recovery enable'.
       create_login_required: El perfil '{profile}' se ha creado, pero todavía no tienes
-        una sesión abierta en él. Inicia sesión con el comando 'config login {profile}'
-        para desbloquear sus datos antes de continuar.
+        una sesión abierta en él. Inicia sesión con el comando `aeat config login
+        {profile}` para desbloquear sus datos antes de continuar.
       create_name_required: Se requiere un nombre de perfil. Ejecuta 'aeat config
         profile create NOMBRE'.
       create_passphrase_channel_absent: No hay ningún canal de contraseña disponible.
@@ -2553,7 +2553,7 @@ cli:
         tarde. [y/N] '
       create_recovery_skipped: La recuperación no está configurada. Sin ella no se
         puede restablecer una contraseña olvidada; actívala cuando quieras con el
-        comando 'config profile recovery enable'.
+        comando `cadrumo-runtime config profile recovery enable`.
       delete:
         expected_digest_help: Exige la huella del contenido de la revisión previa.
         expected_profile_id_help: Exige la identidad del perfil de la revisión previa.
@@ -2712,8 +2712,8 @@ cli:
       row:
         invalid_row: '''%{row}'' no es una clave de fila válida; usa un entero no
           negativo o base.'
-        row_help: Clave estable de la fila mostrada por aeat config profile view;
-          usa base para la fila sin índice.
+        row_help: Clave estable de la fila mostrada por `aeat config profile view`;
+          usa `base` para la fila sin índice.
         section_help: Clave de la sección repetible del perfil.
       sandbox:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un

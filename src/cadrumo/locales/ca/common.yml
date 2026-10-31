@@ -7710,7 +7710,7 @@ tui:
         ES.
       failure: No s'ha pogut completar la importació.
       invoice_book_unavailable: Encara no es poden previsualitzar llibres de factures
-        aquí; importa'ls amb app ledger invoice import.
+        aquí; importa'ls amb `aeat app ledger invoice import`.
       kind:
         bank_statement: Extracte bancari
         invoices_issued: Factures emeses

@@ -27,7 +27,7 @@ from cadrumo.domain.renta.actividad_asset.disposal import ADMITTED_DISPOSAL_REAS
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from dev._paths import REPO_ROOT
 
-from ..signal_command_paths import _command_graphs
+from ..signal_command_paths import _command_graphs, executable_command_paths
 from ..signal_spelling_segments import translation_spelling_segments
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -166,3 +166,39 @@ def test_explanations_use_native_prose_and_informal_singular(
     value = tr(key, locale=locale)
     assert required in value
     assert retired not in value
+
+
+@pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
+@pytest.mark.parametrize(
+    "key,command",
+    [
+        (
+            "cli.app.modelo.spreadsheet.push.capability_disabled",
+            "aeat config profile capabilities set google_export on",
+        ),
+        ("cli.config.google.export_capability_disabled", "aeat config profile capabilities set google_export on"),
+        ("errors.refused.refused_modelo_360_solicitud_account_bic_missing", "aeat app ledger account update"),
+        ("cli.config.profile.create_recovery_skipped", "cadrumo-runtime config profile recovery enable"),
+        ("cli.config.profile.create_login_required", "aeat config login profile-example"),
+        ("cli.app.modelo.work.discard_requires_yes", "aeat app modelo work discard work-example --yes"),
+        ("cli.config.profile.row.row_help", "aeat config profile view"),
+        ("tui.ledger.import.invoice_book_unavailable", "aeat app ledger invoice import"),
+        ("cli.app.ledger.evidence.confirm_expected_draft_review_sha256_help", "aeat app ledger evidence extract"),
+        ("cli.app.ledger.evidence.confirm_expected_source_sha256_help", "aeat app ledger evidence extract"),
+    ],
+)
+def test_command_help_preserves_complete_registered_paths_and_interpolated_arguments(
+    locale: str, key: str, command: str
+) -> None:
+    value = tr(
+        key, locale=locale, profile="profile-example", work_unit_id="work-example", own_account_id="account-example"
+    )
+    literals = set(re.findall(r"`([^`]+)`", value))
+    assert command in literals
+    words = tuple(command.split())
+    assert any(words[: len(path)] == path for path in executable_command_paths())
+    assert not extract_placeholders(value)
+    prose_words = {
+        word for _, words, _ in translation_spelling_segments(value + " misspellledd", key, locale) for word in words
+    }
+    assert "misspellledd" in prose_words

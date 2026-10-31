@@ -1263,8 +1263,8 @@ errors:
     refused_modelo_360_solicitud: No s'ha pogut declarar ni eliminar la sol·licitud
       del Model 360 com has demanat.
     refused_modelo_360_solicitud_account_bic_missing: El compte propi {own_account_id}
-      no té SWIFT-BIC, que el Model 360 exigeix; afegeix-lo amb app ledger account
-      update.
+      no té SWIFT-BIC, que el Model 360 exigeix; afegeix-lo amb `aeat app ledger account
+      update`.
     refused_modelo_360_solicitud_account_closed: El compte propi {own_account_id}
       està tancat i no pot rebre la devolució.
     refused_modelo_360_solicitud_account_invalid: El compte del representant no és

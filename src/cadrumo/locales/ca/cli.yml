@@ -158,9 +158,9 @@ cli:
         confirm_counterparty_nif_help: Sobreescriu el NIF del proveïdor extret.
         confirm_currency_help: Codi de moneda ISO-4217.
         confirm_expected_draft_review_sha256_help: Empremta de revisió de l'esborrany
-          exacte que has revisat, retornada per extract.
+          exacte que has revisat, retornada per `aeat app ledger evidence extract`.
         confirm_expected_source_sha256_help: SHA-256 del justificant retornat per
-          extract; verifica que els bytes no han canviat.
+          `aeat app ledger evidence extract`; verifica que els bytes no han canviat.
         confirm_help: Torna a extreure el justificant en local i confirma'l com a
           factura real del catàleg.
         confirm_invoice_class_help: Indica la classe de factura quan el document no
@@ -1435,8 +1435,8 @@ cli:
           a la carpeta del perfil.
         push:
           capability_disabled: L'exportació a Google està desactivada per a aquest
-            perfil; activa-la amb 'aeat config profile capabilities set google_export
-            on'.
+            perfil; activa-la amb `aeat config profile capabilities set google_export
+            on`.
           dry_run_help: Previsualitza el que aquesta exportació esborraria i reescriuria
             al llibre, sense escriure res
           prefill_relations_help: Preomple els valors de relacions entre revisions
@@ -1607,7 +1607,7 @@ cli:
         discard_help: Marcar una declaració com a descartada (el canvi d'estat queda
           al registre d'auditoria)
         discard_requires_yes: El descart és una transició d'estat auditable. Torna
-          a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
+          a executar `aeat app modelo work discard %{work_unit_id} --yes` per confirmar.
         discard_yes_help: Confirmar explícitament l'operació de descart
         document_format_help: 'Format de document de l''informe de càlcul: `csv`,
           o `pdf` per al resum del càlcul signat (requereix el complement opcional
@@ -2276,8 +2276,8 @@ cli:
         validation: 'Les dades proporcionades per a Google no han superat la validació:
           {detail}'
       export_capability_disabled: L'exportació a Google està desactivada per a aquest
-        perfil; activa-la amb 'aeat config profile capabilities set google_export
-        on'.
+        perfil; activa-la amb `aeat config profile capabilities set google_export
+        on`.
       folder:
         help: Mostra la carpeta de Google Drive creada per al perfil actiu
         organize_help: Organitza la carpeta del perfil dins de Cadrumo
@@ -2521,8 +2521,8 @@ cli:
         després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
         amb 'cadrumo-runtime config profile recovery enable'.
       create_login_required: El perfil '{profile}' s'ha creat, però encara no tens
-        cap sessió oberta. Inicia la sessió amb l'ordre 'config login {profile}' per
-        desbloquejar-ne les dades abans de continuar.
+        cap sessió oberta. Inicia la sessió amb l'ordre `aeat config login {profile}`
+        per desbloquejar-ne les dades abans de continuar.
       create_name_required: Cal un nom de perfil. Executa 'aeat config profile create
         NOM'.
       create_passphrase_channel_absent: No hi ha cap canal de contrasenya disponible.
@@ -2536,7 +2536,7 @@ cli:
         restablir una contrasenya oblidada i també pots afegir-lo més tard. [y/N] '
       create_recovery_skipped: La recuperació no està configurada. Sense ella no es
         pot restablir una contrasenya oblidada; activa-la quan vulguis amb l'ordre
-        'config profile recovery enable'.
+        `cadrumo-runtime config profile recovery enable`.
       delete:
         expected_digest_help: Exigeix l’empremta del contingut de la revisió prèvia.
         expected_profile_id_help: Exigeix la identitat del perfil de la revisió prèvia.
@@ -2692,8 +2692,8 @@ cli:
       row:
         invalid_row: '''%{row}'' no és una clau de fila vàlida; fes servir un enter
           no negatiu o base.'
-        row_help: Clau estable de la fila mostrada per aeat config profile view; fes
-          servir base per a la fila sense índex.
+        row_help: Clau estable de la fila mostrada per `aeat config profile view`;
+          fes servir `base` per a la fila sense índex.
         section_help: Clau de la secció repetible del perfil.
       sandbox:
         active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil

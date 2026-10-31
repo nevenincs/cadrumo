@@ -155,9 +155,11 @@ cli:
         confirm_counterparty_nif_help: Írd felül a kinyert szállítói adóazonosítót.
         confirm_currency_help: ISO-4217 pénznemkód.
         confirm_expected_draft_review_sha256_help: Az áttekintett pontos tervezet
-          ellenőrzési lenyomata, amelyet a kinyerés adott vissza.
-        confirm_expected_source_sha256_help: A bizonylatkinyerés során visszaadott
-          SHA-256 lenyomat; ellenőrzi, hogy a bájtok változatlanok.
+          ellenőrzési lenyomata, amelyet az `aeat app ledger evidence extract` parancs
+          adott vissza.
+        confirm_expected_source_sha256_help: Az `aeat app ledger evidence extract`
+          parancs által visszaadott bizonylatforrás SHA-256-lenyomata; ellenőrzi,
+          hogy a bájtok változatlanok.
         confirm_help: Újra kinyeri a bizonylatot helyben, és megerősíti valódi katalógus-számlaként.
         confirm_invoice_class_help: Add meg a számla osztályát, ha a dokumentum nem
           jelöli. A helyesbítő számlát a dokumentumból olvassuk ki, ha megnevezi a
@@ -1416,7 +1418,7 @@ cli:
           a profil mappájában.
         push:
           capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
-            engedélyezd a 'aeat config profile capabilities set google_export on'
+            engedélyezd a `aeat config profile capabilities set google_export on`
             paranccsal.
           dry_run_help: Előnézetben mutatja, mit törölne és írna újra ez az exportálás
             a munkafüzetben, anélkül hogy bármit írna
@@ -2257,7 +2259,7 @@ cli:
         validation: 'A Google-hoz megadott adatok nem feleltek meg az érvényesítésnek:
           {detail}'
       export_capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
-        engedélyezd a 'aeat config profile capabilities set google_export on' paranccsal.
+        engedélyezd a `aeat config profile capabilities set google_export on` paranccsal.
       folder:
         help: Az aktív profilhoz létrehozott Google Drive-mappa megjelenítése.
         organize_help: A profil mappájának rendezése a Cadrumo mappában
@@ -2502,8 +2504,8 @@ cli:
         helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'cadrumo-runtime
         config profile recovery enable' paranccsal.
       create_login_required: A(z) '{profile}' profil elkészült, de még nincs megnyitott
-        munkamenet hozzá. A folytatás előtt lépj be a 'config login {profile}' paranccsal
-        az adatok feloldásához.
+        munkamenet hozzá. A folytatás előtt lépj be a `aeat config login {profile}`
+        paranccsal az adatok feloldásához.
       create_name_required: 'Profilnév szükséges. Futtasd: ''aeat config profile create
         NÉV''.'
       create_passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtasd ezt
@@ -2517,8 +2519,8 @@ cli:
       create_recovery_offer_prompt: 'Beállítasz most helyreállítási kódot? Elfelejtett
         jelszó visszaállítására szolgál, és később is hozzáadható. [y/N] '
       create_recovery_skipped: A helyreállítás nincs beállítva. Nélküle az elfelejtett
-        jelszó nem állítható vissza; bármikor bekapcsolható a 'config profile recovery
-        enable' paranccsal.
+        jelszó nem állítható vissza; bármikor bekapcsolható a `cadrumo-runtime config
+        profile recovery enable` paranccsal.
       delete:
         expected_digest_help: A korábban ellenőrzött adattartalom lenyomatának megkövetelése.
         expected_profile_id_help: A korábban ellenőrzött profilazonosító megkövetelése.
@@ -2676,8 +2678,8 @@ cli:
       row:
         invalid_row: A(z) '%{row}' nem érvényes sorkulcs; használj nemnegatív egész
           számot vagy base értéket.
-        row_help: A aeat config profile view által mutatott stabil sorkulcs; az index
-          nélküli sorhoz használd a base értéket.
+        row_help: A `aeat config profile view` által mutatott stabil sorkulcs; az
+          index nélküli sorhoz használd a `base` értéket.
         section_help: Az ismételhető profilszakasz kulcsa.
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
