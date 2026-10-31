@@ -2627,8 +2627,8 @@ application:
       resume_refused_terminal_reason: La ejecución {run_id} se abortó por {reason},
         que es terminal por diseño y no puede reanudarse.
       resume_revision_selector_invalid: 'Selector no reconocido para el cálculo guardado
-        que se reanuda: {selector}; elige current, latest-draft, latest-verified,
-        filed o explicit.'
+        que se reanuda: {selector}; elige `current`, `latest-draft`, `latest-verified`,
+        `filed` o `explicit`.'
       resume_run_ambiguous: Más de una ejecución de flujo de trabajo coincide con
         el modelo {modelo} período {period}. Elige un id de ejecución exacto. {candidates}
       resume_run_id_invalid: workflow_run_id debe ser un id hexadecimal en minúsculas

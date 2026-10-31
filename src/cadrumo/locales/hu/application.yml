@@ -2584,8 +2584,8 @@ application:
       resume_refused_terminal_reason: A(z) {run_id} futás {reason} miatt megszakadt,
         ami tervezetten terminális és nem folytatható.
       resume_revision_selector_invalid: 'Ismeretlen választó a folytatandó mentett
-        számításhoz: {selector}; válassz: current, latest-draft, latest-verified,
-        filed vagy explicit.'
+        számításhoz: {selector}; válassz: `current`, `latest-draft`, `latest-verified`,
+        `filed` vagy `explicit`.'
       resume_run_ambiguous: Egynél több munkafolyamat-futás illeszkedik a Modelo {modelo}
         nyomtatvány {period} időszakára. Válassz pontos futásazonosítót. {candidates}
       resume_run_id_invalid: 'A workflow_run_id 16 karakteres kisbetűs hexadecimális

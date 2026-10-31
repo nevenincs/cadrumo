@@ -22,7 +22,7 @@ cli:
         opened_on_help: A számla megnyitásának dátuma (ÉÉÉÉ-HH-NN).
         remove_help: Távolíts el egy saját számlát, amelyet egyetlen tétel sem használ,
           és egyetlen kijelölés sem nevez meg.
-        role_help: 'A szerepkör: charge (terhelés) vagy refund (visszatérítés).'
+        role_help: 'A szerepkör: `charge` (terhelés) vagy `refund` (visszatérítés).'
         show_help: Mutass meg egy saját számlát maszkolva, a rá vonatkozó kijelölésekkel.
         undesignate_help: Töröld egy szerepkör kijelölését egy modellnél vagy mindegyiknél.
         update_help: Módosítsd egy saját számla megadott adatait; új IBAN vagy bankadat
@@ -377,7 +377,7 @@ cli:
         movement_date_help: Mozgás dátuma (ÉÉÉÉ-HH-NN).
         movement_group_help: A készletnyilvántartás mozgásainak kezelése.
         movement_id_help: A mozgás azonosítója a készletnyilvántartáson belül.
-        movement_kind_help: Mozgás típusa (opening, purchase, cogs vagy count)
+        movement_kind_help: Mozgás típusa (`opening`, `purchase`, `cogs` vagy `count`)
         movement_reverse_help: Kivesz egy mozgást a készletből; az előzményekben marad.
         opening_stock_help: Nyitókészlet értéke.
         options_help: Megmutatja a készletűrlap által felkínált értékeket, mindegyiket
@@ -400,7 +400,7 @@ cli:
         taxable_base_help: A mozgáshoz kapcsolt adóköteles alap.
         unit_cost_help: Egységár vásárlási mozgásokhoz.
         valuation_group_help: Készletértékelés számítása és előnézete.
-        valuation_method_help: Értékelési módszer (fifo vagy pmp).
+        valuation_method_help: Értékelési módszer (`fifo` vagy `pmp`).
         valuation_preview_help: Zárókészlet és az értékesítési önköltség előnézete.
         year_help: Adóév.
       invoice:
@@ -620,8 +620,8 @@ cli:
         list_help: Mentett Modelo 100 borrador pillanatképek listázása.
         modelo_100_help: Modelo 100 borrador pillanatkép-parancsok.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
-        state_help: 'Pillanatkép-állapot szűrő: active, superseded, discarded vagy
-          all.'
+        state_help: 'Pillanatkép-állapot szűrő: `active`, `superseded`, `discarded`
+          vagy `all`.'
         view_help: Egyetlen Modelo 100 borrador pillanatkép megjelenítése.
       expediente_help: AEAT expediente azonosító.
       expedientes:
@@ -758,9 +758,9 @@ cli:
       to_year_help: Utolsó benyújtási év.
       verify:
         app_help: A NIF-ellenőrzések csak olvasható naplója.
-        expected_help: Opcionális elvárt eredmény (valid, invalid vagy unknown).
+        expected_help: Opcionális elvárt eredmény (`valid`, `invalid` vagy `unknown`).
         expected_values_error: 'Az --expected értéke csak a következők egyike lehet:
-          valid, invalid, unknown.'
+          `valid`, `invalid`, `unknown`.'
         latest_help: A legfrissebb megfigyelés megjelenítése felületre és NIF-re.
         latest_nif_help: A keresett NIF.
         latest_surface_help: 'Ellenőrzés típusa: nif_iva vagy tgvi.'
@@ -898,8 +898,8 @@ cli:
         form_number_help: Mezők szűrése BOE-n nyomtatott nyomtatványszám szerint (pl.
           46).
         help: A kiválasztott nyomtatványváltozat összes rovatának listázása.
-        input_kind_help: Mezők szűrése beviteli típus szerint (manual, bound, computed,
-          informational, projection_only).
+        input_kind_help: Mezők szűrése beviteli típus szerint (`manual`, `bound`,
+          `computed`, `informational`, `projection_only`).
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         number_help: Mezők szűrése nyomtatott mezőszám vagy kanonikus azonosító alapján
           (pl. 0596).
@@ -1136,8 +1136,8 @@ cli:
         seed_period_help: 'A Modelo 303 benyújtásának időszaka: 1T-4T negyedévek (pl.
           4T).'
       list:
-        domain_help: Szűrje a nyomtatványkatalógust egyetlen adónemre (pl. iva, irpf,
-          is).
+        domain_help: Szűrd a nyomtatványkatalógust egyetlen adónemre (pl. `iva`, `irpf`,
+          `is`).
         help: A rendszerben regisztrált összes hivatalos adónyomtatvány listázása.
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
       m036:
@@ -1242,9 +1242,9 @@ cli:
           SHA-256).
         export_work_unit_scope: A kiválasztott bevallás összes mentett egyeztetési
           eltérését exportálja.
-        file_kind_help: 'Bizonyítékdokumentum típusa: justificante (AEAT-igazolás,
-          minden nyomtatvány) vagy declaration (benyújtott bevallás PDF-je, rovatszintű
-          egyeztetés, csak engedélyezett nyomtatványok). Alapértelmezés: justificante.'
+        file_kind_help: 'Bizonyítékdokumentum típusa: `justificante` (AEAT-igazolás,
+          minden nyomtatvány) vagy `declaration` (benyújtott bevallás PDF-je, rovatszintű
+          egyeztetés, csak engedélyezett nyomtatványok). Alapértelmezés: `justificante`.'
         file_path_help: A helyi igazolás vagy bevallás PDF útvonala, amellyel egyeztetni
           kell.
         import_help: Egyeztet egy bevallást egy helyi igazolás- vagy bevallás-PDF-fel.
@@ -1255,9 +1255,9 @@ cli:
           (SHA-256 vagy egyértelmű előtag).
         pull_help: AEAT-bizonyíték letöltése és összehasonlítása a mentett helyi számítással
           (az AEAT-nál csak olvasás).
-        source_help: 'Összehasonlítandó bizonyíték: justificante az azonosítókat és
-          a hozzárendelt összegeket ellenőrzi; declaration a benyújtott mezőket hasonlítja
-          a mentett számításhoz.'
+        source_help: 'Összehasonlítandó bizonyíték: `justificante` az azonosítókat
+          és a hozzárendelt összegeket ellenőrzi; `declaration` a benyújtott mezőket
+          hasonlítja a mentett számításhoz.'
         work_unit_id_help: Bevallásazonosító (SHA-256 vagy egyértelmű előtag).
       requires:
         help: 'Megjeleníti az adott nyomtatványhoz és időszakhoz szükséges adatok
@@ -1591,9 +1591,9 @@ cli:
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtasd újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
-        document_format_help: 'A számítási jelentés dokumentumformátuma: csv, vagy
-          pdf az aláírt számítási összesítőhöz (a nem kötelező pdf kiegészítő szükséges
-          hozzá).'
+        document_format_help: 'A számítási jelentés dokumentumformátuma: `csv`, vagy
+          `pdf` az aláírt számítási összesítőhöz (a nem kötelező `pdf` kiegészítő
+          szükséges hozzá).'
         document_only_help: Csak a dokumentum ellenőrzése, az aktív profil tárolójának
           megnyitása nélkül; --trusted-key nélkül az érvényes eredmény kulcshoz nem
           rögzített marad.
@@ -1938,8 +1938,8 @@ cli:
         verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
           mentett számítás már ellenőrzött; a meglévő ellenőrzési jelentés változatlanul
           lett visszaadva.'
-        verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
-          explicit).
+        verify_selector_help: Piszkozat-revízió választó (`current`, `latest-draft`
+          vagy `explicit`).
         wizard_help: Végigvezet a bevallás hiányzó kézi mezőin, majd kiszámítja az
           eredményt
         wizard_prompt: '%{number}. sz. rovat (%{label})'
@@ -2193,7 +2193,7 @@ cli:
         secrets_stdin_too_large: A gépi titok tartalma meghaladja a megengedett maximális
           méretet.
       profile_auth_method_help: 'A védett profilszekrétum-csatorna hitelesítési módja:
-        password vagy api-key.'
+        `password` vagy `api-key`.'
       profile_credential_ref_help: Hitelesítés a helyi szolgáltatás profiljához a
         védett natív tárolóban lévő hitelesítő adat UUID-jával (--profile-auth-method
         api-key szükséges).
@@ -2394,7 +2394,7 @@ cli:
         change:
           help: Meglévő API-jogosultság kulcscseréjének, megújításának vagy hatókör-módosításának
             kérelmezése.
-          kind_help: 'A módosítás típusa: rotate, renew vagy change_scope.'
+          kind_help: 'A módosítás típusa: `rotate`, `renew` vagy `change_scope`.'
         create:
           help: API-kulcs kiadása teljes kérelemből, amelyet a --secrets-stdin vagy
             --secrets-fd csatornán adsz meg. A kulcs a külön jóváhagyásod után kerül
@@ -2407,7 +2407,7 @@ cli:
         deny:
           help: Automatizálási kulcs, jogosultság vagy az összes automatizált hozzáférés
             visszavonása.
-          kind_help: 'A visszavonás típusa: key, grant vagy all.'
+          kind_help: 'A visszavonás típusa: `key`, `grant` vagy `all`.'
           target_help: A visszavonandó kulcs vagy jogosultság UUID-azonosítója.
           target_mismatch: Kulcs vagy jogosultság visszavonásához szükséges a cél
             UUID-ja; az all típus nem fogad el célt.
@@ -2453,7 +2453,7 @@ cli:
         no_active_profile: Nincs aktív profil; jelentkezz be egybe az 'aeat config
           login <név>' paranccsal a képesség beállítása előtt.
         set_help: Be- vagy kikapcsol egy szolgáltatás-képességet az aktív profilhoz.
-        state_help: A képesség engedélyezése (on) vagy letiltása (off).
+        state_help: A képesség engedélyezése (`on`) vagy letiltása (`off`).
         state_label: állapot
         view_help: Megjeleníti az aktív profil minden szolgáltatási képességének feloldott
           állapotát.
@@ -3437,7 +3437,7 @@ cli:
       offset_help: 'Ennyi sor kihagyása a listázás előtt (alapértelmezett: 0).'
       sort_by_help: A listázott sorok rendezése e mező szerint (date, amount, description,
         created_at, modified_at, ...).
-      sort_order_help: 'Rendezési sorrend: asc (növekvő) vagy desc (csökkenő).'
+      sort_order_help: 'Rendezési sorrend: `asc` (növekvő) vagy `desc` (csökkenő).'
       ungrouped_label: (nincs csoport)
     llm_diagnostics:
       bad_date: A(z) %{option} értéknek ISO dátumnak (ÉÉÉÉ-HH-NN) kell lennie; a kapott
@@ -3959,7 +3959,7 @@ cli:
     detail_help: Részletes kimenet engedélyezése.
     errors:
       did_you_mean_command: 'Erre gondolt: %{command}?'
-    format_help: 'Kimeneti formátum: text, json.'
+    format_help: 'Kimeneti formátum: `text`, `json`.'
     help_help: Súgó megjelenítése.
     landing:
       context_heading: Aktuális környezet

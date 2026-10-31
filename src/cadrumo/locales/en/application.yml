@@ -2483,8 +2483,8 @@ application:
       resume_refused_terminal_reason: Workflow run {run_id} aborted for {reason},
         which is terminal by design and may not be resumed.
       resume_revision_selector_invalid: Unknown selector {selector} for the saved
-        calculation to resume; choose current, latest-draft, latest-verified, filed,
-        or explicit.
+        calculation to resume; choose `current`, `latest-draft`, `latest-verified`,
+        `filed`, or `explicit`.
       resume_run_ambiguous: More than one workflow run matches modelo {modelo} period
         {period}. Choose an exact workflow run id. {candidates}
       resume_run_id_invalid: workflow_run_id must be a 16-character lowercase hex

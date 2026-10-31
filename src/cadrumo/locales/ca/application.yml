@@ -2627,8 +2627,8 @@ application:
       resume_refused_terminal_reason: L'execució {run_id} es va avortar per {reason},
         que és terminal per disseny i no es pot reprendre.
       resume_revision_selector_invalid: 'Selector no reconegut per al càlcul desat
-        que es reprèn: {selector}; tria current, latest-draft, latest-verified, filed
-        o explicit.'
+        que es reprèn: {selector}; tria `current`, `latest-draft`, `latest-verified`,
+        `filed` o `explicit`.'
       resume_run_ambiguous: Més d'una execució de flux de treball coincideix amb el
         model {modelo} període {period}. Tria un id d'execució exacte. {candidates}
       resume_run_id_invalid: workflow_run_id ha de ser un id hexadecimal en minúscules

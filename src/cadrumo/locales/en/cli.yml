@@ -21,7 +21,7 @@ cli:
         new_label_help: A new name for the account.
         opened_on_help: Date the account was opened (YYYY-MM-DD).
         remove_help: Remove an own account that no transaction uses and no role designates.
-        role_help: 'The role: charge (domiciliación) or refund (devolución).'
+        role_help: 'The role: `charge` (direct debit) or `refund` (tax repayment).'
         show_help: Show one own account, masked, and the designations that name it.
         undesignate_help: Remove the designation of a role, for one modelo or for
           all.
@@ -361,7 +361,7 @@ cli:
         movement_date_help: Movement date (YYYY-MM-DD)
         movement_group_help: Manage inventory record book movements
         movement_id_help: Movement id within the inventory record book
-        movement_kind_help: Movement kind (opening, purchase, cogs or count)
+        movement_kind_help: Movement kind (`opening`, `purchase`, `cogs` or `count`)
         movement_reverse_help: Take one movement out of the inventory; it stays in
           the history.
         opening_stock_help: Opening stock value
@@ -384,7 +384,7 @@ cli:
         taxable_base_help: Taxable base linked to the movement
         unit_cost_help: Unit cost for purchase movements
         valuation_group_help: Calculate and preview inventory valuation
-        valuation_method_help: Valuation method (fifo or pmp)
+        valuation_method_help: Valuation method (`fifo` or `pmp`)
         valuation_preview_help: Preview closing stock and cost of sales
         year_help: Tax year
       invoice:
@@ -590,7 +590,8 @@ cli:
         list_help: List persisted Modelo 100 borrador snapshots
         modelo_100_help: Modelo 100 borrador snapshot commands
         snapshot_id_help: Snapshot id (or unambiguous prefix)
-        state_help: 'Snapshot state filter: active, superseded, discarded, or all'
+        state_help: 'Snapshot state filter: `active`, `superseded`, `discarded`, or
+          `all`'
         view_help: Show one Modelo 100 borrador snapshot
       expediente_help: AEAT expediente identifier
       expedientes:
@@ -721,8 +722,8 @@ cli:
       to_year_help: Last filing year
       verify:
         app_help: Read-only log of NIF checks
-        expected_help: Optional expected result (valid, invalid, or unknown)
-        expected_values_error: '--expected must be one of: valid, invalid, unknown.'
+        expected_help: Optional expected result (`valid`, `invalid`, or `unknown`)
+        expected_values_error: '--expected must be one of: `valid`, `invalid`, `unknown`.'
         latest_help: Show the most recent observation for surface and NIF
         latest_nif_help: NIF to look up
         latest_surface_help: 'Check type: nif_iva or tgvi'
@@ -852,8 +853,8 @@ cli:
         explain_help: Include localized help text in the text output.
         form_number_help: Filter casillas by BOE-printed form number (e.g. 46)
         help: List all casillas (fields/boxes) defined for a specific modelo revision.
-        input_kind_help: Filter casillas by input kind (manual, bound, computed, informational,
-          projection_only)
+        input_kind_help: Filter casillas by input kind (`manual`, `bound`, `computed`,
+          `informational`, `projection_only`)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         number_help: Filter casillas by printed casilla number or canonical id (e.g.
           0596).
@@ -1082,8 +1083,8 @@ cli:
         seed_invalid_amount: 'The IVA seed amount is invalid: %{amount}.'
         seed_period_help: 'Period of the Modelo 303 filing: 1T-4T quarters (e.g. 4T).'
       list:
-        domain_help: Filter the modelo catalogue to a single tax family (e.g. iva,
-          irpf, is)
+        domain_help: Filter the modelo catalogue to a single tax family (e.g. `iva`,
+          `irpf`, `is`)
         help: List all official tax forms (modelos) registered in the system.
         year_help: Filter the modelo catalogue to a single fiscal year
       m036:
@@ -1182,9 +1183,9 @@ cli:
         export_work_unit_id_help: Exact saved declaration id (64-character SHA-256).
         export_work_unit_scope: Exports all saved reconciliation differences for the
           selected declaration.
-        file_kind_help: 'Evidence document kind: justificante (AEAT receipt, every
-          modelo) or declaration (filed declaración PDF, box-level reconcile, enrolled
-          modelos only). Defaults to justificante.'
+        file_kind_help: 'Evidence document kind: `justificante` (AEAT receipt, every
+          modelo) or `declaration` (filed tax return PDF, box-level reconcile, enrolled
+          modelos only). Defaults to `justificante`.'
         file_path_help: Path to the local justificante or declaración PDF to reconcile
           against.
         import_help: Reconcile a declaration against a local justificante or declaración
@@ -1195,9 +1196,9 @@ cli:
           or an unambiguous prefix).
         pull_help: Pull AEAT evidence and compare it with the saved local calculation
           (read-only at AEAT).
-        source_help: 'Evidence to compare: justificante checks receipt identity and
-          mapped totals; declaration compares captured filing fields with the saved
-          calculation.'
+        source_help: 'Evidence to compare: `justificante` checks receipt identity
+          and mapped totals; `declaration` compares captured filing fields with the
+          saved calculation.'
         work_unit_id_help: Declaration id (SHA-256 or unambiguous prefix).
       requires:
         help: 'Show the data-inventory checklist for one modelo and period: which
@@ -1508,8 +1509,8 @@ cli:
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
         discard_yes_help: Explicitly confirm the discard operation
-        document_format_help: 'Document format of the calculation report: csv, or
-          pdf for the signed calculation summary (needs the optional pdf extra).'
+        document_format_help: 'Document format of the calculation report: `csv`, or
+          `pdf` for the signed calculation summary (needs the optional `pdf` extra).'
         document_only_help: Check the document alone, without opening the active profile's
           store; without --trusted-key a valid result stays unpinned.
         file:
@@ -1836,7 +1837,8 @@ cli:
           checked and complete
         verify_idempotent_noop: 'Idempotent no-op: saved calculation %{calculation_revision_id}
           is already checked; returned the existing check report without changes.'
-        verify_selector_help: Draft revision selector (current, latest-draft, or explicit).
+        verify_selector_help: Draft revision selector (`current`, `latest-draft`,
+          or `explicit`).
         wizard_help: Walk the declaration's outstanding manual inputs one at a time,
           in plain language, then calculate
         wizard_prompt: Casilla %{number} (%{label})
@@ -2075,7 +2077,7 @@ cli:
         secrets_stdin_too_large: The machine-secret payload exceeds the maximum allowed
           size.
       profile_auth_method_help: 'Authentication method for the protected profile-secret
-        channel: password or api-key.'
+        channel: `password` or `api-key`.'
       profile_credential_ref_help: Authenticate a runtime profile using an opaque
         credential UUID from protected native storage (requires --profile-auth-method
         api-key).
@@ -2251,7 +2253,7 @@ cli:
           request_help: Reviewed request UUID.
         change:
           help: Request rotation, renewal or a scope change for an existing API grant.
-          kind_help: 'The grant change: rotate, renew or change_scope.'
+          kind_help: 'The grant change: `rotate`, `renew` or `change_scope`.'
         create:
           help: Issue an API key from a full proposal supplied through --secrets-stdin
             or --secrets-fd. The key reaches protected storage after your separate
@@ -2263,7 +2265,7 @@ cli:
           request_help: Reviewed request UUID.
         deny:
           help: Revoke an automation key, grant, or all automation access.
-          kind_help: 'Denial kind: key, grant, or all.'
+          kind_help: 'Denial kind: `key`, `grant`, or `all`.'
           target_help: Key or grant UUID for a targeted denial.
           target_mismatch: A key or grant denial requires its target UUID; all does
             not accept a target.
@@ -2307,7 +2309,7 @@ cli:
         no_active_profile: No active profile; log in to one with 'aeat config login
           <name>' before setting a capability.
         set_help: Opt the active profile in or out of one service capability.
-        state_help: Whether to enable (on) or disable (off) the capability.
+        state_help: Whether to enable (`on`) or disable (`off`) the capability.
         state_label: state
         view_help: Show the resolved state of every service capability for the active
           profile.
@@ -3246,7 +3248,7 @@ cli:
       offset_help: 'Skip this many rows before listing (default: 0).'
       sort_by_help: Sort the listed rows by this field (date, amount, description,
         created_at, modified_at, ...).
-      sort_order_help: 'Sort order: asc (ascending) or desc (descending).'
+      sort_order_help: 'Sort order: `asc` (ascending) or `desc` (descending).'
       ungrouped_label: (ungrouped)
     llm_diagnostics:
       bad_date: '%{option} must be an ISO date (YYYY-MM-DD); got %{value}.'
@@ -3743,7 +3745,7 @@ cli:
     detail_help: Enable detailed output.
     errors:
       did_you_mean_command: Did you mean '%{command}'?
-    format_help: 'Output format: text, json.'
+    format_help: 'Output format: `text`, `json`.'
     help_help: Show help.
     landing:
       context_heading: Current context
