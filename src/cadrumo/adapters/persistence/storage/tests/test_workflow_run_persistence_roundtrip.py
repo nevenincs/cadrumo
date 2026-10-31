@@ -101,7 +101,7 @@ def _populated_run() -> WorkflowResult:
     """WorkflowResult with non-default values on every defaultable field."""
 
     return WorkflowResult(
-        run_id="r" * 16,
+        run_id="c" * 16,
         started_at=_RUN_STARTED_AT,
         ended_at=_RUN_ENDED_AT,
         final_stage=WorkflowStage.ABORTED,
@@ -183,7 +183,7 @@ def _operationally_aborted_run() -> WorkflowResult:
         no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
     return WorkflowResult(
-        run_id="o" * 16,
+        run_id="d" * 16,
         started_at=_RUN_STARTED_AT,
         ended_at=_RUN_ENDED_AT,
         final_stage=WorkflowStage.ABORTED,

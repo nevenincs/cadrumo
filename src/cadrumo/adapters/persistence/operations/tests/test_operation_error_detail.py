@@ -314,7 +314,7 @@ def test_a_definition_that_does_not_opt_in_records_no_detail(
 
 @pytest.mark.parametrize("definition_id", ["modelo.work.create", "modelo.readiness"])
 def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
-    tmp_path: Path, definition_id: str
+    tmp_path: Path, definition_id: str, authority_operation: PinnedAuthorityOperation
 ) -> None:
     """Real owner definitions record the registry fault before any result or effect.
 
@@ -359,6 +359,7 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
             owner_id="1" * 64,
             token="2" * 64,
             execution_timeout=timedelta(minutes=1),
+            authority_operation=authority_operation,
         )
 
         async def settle_and_read():
