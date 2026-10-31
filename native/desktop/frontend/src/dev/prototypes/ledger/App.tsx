@@ -12,6 +12,9 @@ import {
 import { clsx as cx } from "clsx";
 import "@/styles/ledger-prototype.css";
 import { Logo } from "@/components/Logo";
+import { IntegerEditor } from "@/components/editors/IntegerEditor";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { useStrings } from "@/shell/strings";
 import { Icon, type IconName } from "./Icon";
 import { PageCtx, usePage } from "./page";
 import {
@@ -30,7 +33,6 @@ import {
   Empty,
   Field,
   IconButton,
-  Input,
   LiveRegion,
   Menu,
   Seg,
@@ -71,7 +73,6 @@ import {
 } from "./Movements";
 import {
   GROUPS,
-  PREFS,
   SAVED_VIEWS,
   canon,
   canonOf,
@@ -90,7 +91,7 @@ import {
   trayCounts,
   tsvEscape,
 } from "./model";
-import { CLASSIFIED } from "./vocab";
+import { CLASSIFIED, PREFS } from "./vocab";
 import { PeriodControl } from "./PeriodSelector";
 import { stageLinkAction } from "./Inspector";
 import {
@@ -1605,6 +1606,45 @@ type DemoItem =
       label: string;
       value: number;
     };
+function DemoValueEditor({
+  label,
+  initial,
+  onCancel,
+  onCommit,
+}: {
+  label: string;
+  initial: string;
+  onCancel: () => void;
+  onCommit: (cents: number) => void;
+}) {
+  const [text, setText] = useState(initial);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <div className="g-editor">
+      <MoneyEditor
+        autoFocus
+        aria-label={label}
+        value={text}
+        invalid={!!error}
+        title={error ?? undefined}
+        onChange={(next) => {
+          setText(next);
+          setError(null);
+        }}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Escape") onCancel();
+          if (e.key === "Enter" || e.key === "Tab") {
+            e.preventDefault();
+            const r = parseAmount(text);
+            if (r.error) return setError(r.error);
+            onCommit(Number(r.value));
+          }
+        }}
+      />
+    </div>
+  );
+}
 export function GridDemo({ onClose }: { onClose: () => void }) {
   const api = useRef<GridApi | null>(null);
   const items = useMemo(() => {
@@ -1653,18 +1693,20 @@ export function GridDemo({ onClose }: { onClose: () => void }) {
       <div className="col g3">
         <div className="row g2">
           <Field label="Jump to box" className="f1">
-            <Input
-              size="sm"
-              placeholder="e.g. 214"
-              value={jump}
-              onChange={(e) => setJump(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const k = "box-" + jump.padStart(3, "0");
-                  if (!api.current?.jumpTo(k, "value")) setJump("");
-                }
-              }}
-            />
+            {(c) => (
+              <IntegerEditor
+                id={c.id}
+                controlSize="sm"
+                value={jump}
+                onChange={setJump}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const k = "box-" + jump.padStart(3, "0");
+                    if (!api.current?.jumpTo(k, "value")) setJump("");
+                  }
+                }}
+              />
+            )}
           </Field>
         </div>
         <div className="demo-grid">
@@ -1691,38 +1733,23 @@ export function GridDemo({ onClose }: { onClose: () => void }) {
             renderCell={(it, c) =>
               it.kind !== "row" ? null : c.key === "value" ? (
                 editing === it.key ? (
-                  <div className="g-editor">
-                    <input
-                      autoFocus
-                      aria-label={it.label}
-                      className="num"
-                      defaultValue={canon(vals[it.key] ?? it.value)}
-                      onKeyDown={(e) => {
-                        e.stopPropagation();
-                        if (e.key === "Escape") {
-                          setEditing(null);
-                          api.current?.focus();
-                        }
-                        if (e.key === "Enter" || e.key === "Tab") {
-                          e.preventDefault();
-                          const field = e.currentTarget;
-                          const r = parseAmount(field.value);
-                          if (r.error) {
-                            field.setAttribute("aria-invalid", "true");
-                            field.title = r.error;
-                            return;
-                          }
-                          setVals({ ...vals, [it.key]: Number(r.value) });
-                          setEditing(null);
-                          const i = items.findIndex((x) => x.key === it.key);
-                          const n = items
-                            .slice(i + 1)
-                            .find((x) => x.kind === "row");
-                          if (n) api.current?.jumpTo(n.key, "value");
-                        }
-                      }}
-                    />
-                  </div>
+                  <DemoValueEditor
+                    label={it.label}
+                    initial={canon(vals[it.key] ?? it.value)}
+                    onCancel={() => {
+                      setEditing(null);
+                      api.current?.focus();
+                    }}
+                    onCommit={(cents) => {
+                      setVals({ ...vals, [it.key]: cents });
+                      setEditing(null);
+                      const i = items.findIndex((x) => x.key === it.key);
+                      const n = items
+                        .slice(i + 1)
+                        .find((x) => x.kind === "row");
+                      if (n) api.current?.jumpTo(n.key, "value");
+                    }}
+                  />
                 ) : (
                   <span className={cx("v tnum", vals[it.key] != null && "fw5")}>
                     {fmtMoney(vals[it.key] ?? it.value)}
@@ -1894,7 +1921,6 @@ export function ProtoPanel({
 }) {
   const [state, dispatch] = useStore();
   const [open, setOpen] = useState(true);
-  const [locale, setLocale] = useState(PREFS.locale);
   const choose = (k: string) => {
     const { actions, focus } = protoActions(k, state);
     actions.forEach(dispatch);
@@ -1972,25 +1998,6 @@ export function ProtoPanel({
           options={[
             { value: "saved", label: "Saved" },
             { value: "notSaved", label: "Not saved" },
-          ]}
-        />
-      </div>
-      <div className="col g1">
-        <span className="t-xs muted">
-          Number display (input stays canonical)
-        </span>
-        <Seg
-          size="sm"
-          label="Number display"
-          value={locale}
-          onChange={(v) => {
-            PREFS.locale = v;
-            setLocale(v);
-            dispatch({ type: "VIEW", patch: {} });
-          }}
-          options={[
-            { value: "en-GB", label: "1,234.50" },
-            { value: "es-ES", label: "1.234,50" },
           ]}
         />
       </div>
@@ -2106,7 +2113,6 @@ export type Scenario = {
 };
 
 function build(scenario: Scenario) {
-  PREFS.locale = "en-GB";
   const fresh = initState();
   const state = (scenario.prepare?.(fresh) ?? []).reduce(reducer, fresh);
   return { state, start: scenario.start?.(state) };
@@ -2126,6 +2132,7 @@ const SHELL_SIDE: Record<string, string> = {
 /** The ledger editor prototype: the Ledger page over synthetic data, every
  * write simulated in memory. */
 export function LedgerPrototype({ scenario = {} }: { scenario?: Scenario }) {
+  PREFS.locale = useStrings().locale ?? "en";
   const seed = useMemo(() => build(scenario), [scenario]);
   const [state, dispatch] = useReducer(reducer, seed.state);
   const [root, setRoot] = useState<HTMLDivElement | null>(null);

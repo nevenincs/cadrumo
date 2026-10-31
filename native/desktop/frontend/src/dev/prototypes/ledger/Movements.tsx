@@ -16,6 +16,8 @@ import {
   type ReactNode,
 } from "react";
 import { clsx as cx } from "clsx";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TypedField } from "@/components/editors/TypedField";
 import {
   ACTION_WORD,
   DRAFT_FIELDS,
@@ -23,7 +25,7 @@ import {
   EMPTY_FILTERS,
   F,
   GROUPS,
-  PREFS,
+  entryKindOf,
   READONLY_REASON,
   REASON_FIX,
   SAVED_VIEWS,
@@ -74,7 +76,6 @@ import {
   Field,
   FilterChip,
   IconButton,
-  Input,
   Kbd,
   Menu,
   type MenuItem,
@@ -100,6 +101,7 @@ import {
   IMPORT_ISSUES,
   LIFECYCLE,
   PAYMENT,
+  PREFS,
   REASONS,
   pct,
 } from "./vocab";
@@ -962,11 +964,12 @@ export function TextEditor({
   const def = F[field]!;
   const [val, setVal] = useState(initial);
   const [err, setErr] = useState<string | null>(null);
-  const ref = useRef<HTMLInputElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const done = useRef(false);
   const hintId = useId();
+  const entry = entryKindOf(field);
   const focusEditor = useEffectEvent(() => {
-    const el = ref.current;
+    const el = ref.current?.querySelector("input");
     if (!el) return;
     el.focus();
     if (initial.length > 1 || initial === canonOfEdit(field, row)) el.select();
@@ -975,8 +978,8 @@ export function TextEditor({
   useEffect(() => {
     focusEditor();
   }, []);
-  const tryParse = () =>
-    parseFor(field, val, {
+  const tryParse = (raw = val) =>
+    parseFor(field, raw, {
       row,
       draft: isDraft,
       draftRequired:
@@ -999,7 +1002,16 @@ export function TextEditor({
     if (r.error || r.empty) return null;
     return grossCheck({ ...row, [field]: r.value });
   }, [val, field, row]);
-  const percent = field === "ivaRate" || field === "share";
+  const settle = (raw: string) => {
+    if (done.current) return;
+    const r = tryParse(raw);
+    done.current = true;
+    if (r.error) {
+      if (raw !== initial) onRefuse(raw, r.error);
+      else onCancel();
+    } else if (raw !== initial) onCommit(r.empty ? null : r.value, null);
+    else onCancel();
+  };
   const quarterMove =
     field === "date" &&
     !isDraft &&
@@ -1012,57 +1024,57 @@ export function TextEditor({
     })();
   return (
     <div
+      ref={ref}
       className={cx(
-        "g-editor",
-        (def.editor === "date" ||
-          field === "date" ||
-          field === "valueDate" ||
-          field === "booked") &&
-          "wide",
+        "absolute inset-0 z-(--layer-grid-editor) flex items-center bg-card shadow-[inset_0_0_0_var(--focus-ring)_var(--ring)] aria-[invalid=true]:shadow-[inset_0_0_0_var(--focus-ring)_var(--destructive)]",
+        entry.kind === "date" &&
+          "right-auto min-w-[max(100%,calc(var(--spacing)*24))]",
       )}
       aria-invalid={err ? "true" : undefined}
       onPointerDown={(e) => e.stopPropagation()}
-    >
-      <input
-        ref={ref}
-        className={def.num ? "num" : ""}
-        value={val}
-        aria-label={`${def.label} for ${row.description || "the new movement"}`}
-        aria-invalid={!!err}
-        aria-describedby={hintId}
-        spellCheck="false"
-        inputMode={def.editor === "amount" || percent ? "decimal" : undefined}
-        onChange={(e) => {
-          setVal(e.target.value);
-          setErr(null);
-        }}
-        onKeyDown={(e) => {
+      onKeyDown={(e) => {
+        if (e.target instanceof HTMLInputElement) {
           if (e.key === "Enter") {
             e.preventDefault();
-            e.stopPropagation();
             commit(e.shiftKey ? "up" : "down");
           } else if (e.key === "Tab") {
             e.preventDefault();
-            e.stopPropagation();
             commit(e.shiftKey ? "left" : "right");
           } else if (e.key === "Escape") {
             e.preventDefault();
-            e.stopPropagation();
             done.current = true;
             onCancel();
-          } else e.stopPropagation();
-        }}
-        onBlur={() => {
-          if (done.current) return;
-          const r = tryParse();
-          done.current = true;
-          if (r.error) {
-            if (val !== initial) onRefuse(val, r.error);
-            else onCancel();
-          } else if (val !== initial) onCommit(r.empty ? null : r.value, null);
-          else onCancel();
-        }}
-      />
+          }
+        }
+        e.stopPropagation();
+      }}
+      onBlur={(e) => {
+        const next = e.relatedTarget;
+        if (
+          next instanceof Element &&
+          (e.currentTarget.contains(next) ||
+            next.closest("[data-slot=popover-content]"))
+        )
+          return;
+        settle(val);
+      }}
+    >
+      <div className="h-full w-full [&>*]:h-full">
+        <TypedField
+          field={entry}
+          controlSize="sm"
+          className="h-full rounded-none border-0 bg-transparent"
+          value={val}
+          aria-label={`${def.label} for ${row.description || "the new movement"}`}
+          invalid={!!err}
+          describedBy={hintId}
+          onChange={(next) => {
+            setVal(next);
+            setErr(null);
+          }}
+          onPicked={settle}
+        />
+      </div>
       <FloatingNote
         id={hintId}
         anchorId={gridCellId(cellKey, field)}
@@ -1371,30 +1383,34 @@ export function ComboEditor({
               hint={
                 ratio != null
                   ? `Your 2026 ratio for ${CATEGORY_LABEL[row.category ?? ""]} is ${pct(ratio)}.`
-                  : "Percent of business use: 50 for 50%."
+                  : "Percent of business use."
               }
               error={shareErr}
             >
-              <Input
-                ref={shareRef}
-                size="sm"
-                value={share}
-                inputMode="decimal"
-                aria-invalid={!!shareErr}
-                onChange={(e) => {
-                  setShare(e.target.value);
-                  setShareErr(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === "Tab") {
-                    e.preventDefault();
-                    commitShare();
-                  } else if (e.key === "Escape") {
-                    e.preventDefault();
-                    setStep("pick");
-                  }
-                }}
-              />
+              {(c) => (
+                <PercentEditor
+                  id={c.id}
+                  describedBy={c.describedBy}
+                  ref={shareRef}
+                  unit="points"
+                  controlSize="sm"
+                  value={share}
+                  invalid={!!shareErr}
+                  onChange={(next) => {
+                    setShare(next);
+                    setShareErr(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === "Tab") {
+                      e.preventDefault();
+                      commitShare();
+                    } else if (e.key === "Escape") {
+                      e.preventDefault();
+                      setStep("pick");
+                    }
+                  }}
+                />
+              )}
             </Field>
             <div className="row g2">
               <Button size="xs" variant="ghost" onClick={() => setStep("pick")}>
@@ -1491,16 +1507,21 @@ export function GroupClassify({
       ) : null}
       {cls === "mixed" ? (
         <Field label="Business share" req error={err}>
-          <Input
-            size="sm"
-            data-autofocus
-            value={share}
-            placeholder="e.g. 50"
-            onChange={(e) => {
-              setShare(e.target.value);
-              setErr(null);
-            }}
-          />
+          {(c) => (
+            <PercentEditor
+              id={c.id}
+              describedBy={c.describedBy}
+              unit="points"
+              controlSize="sm"
+              data-autofocus
+              value={share}
+              invalid={!!err}
+              onChange={(next) => {
+                setShare(next);
+                setErr(null);
+              }}
+            />
+          )}
         </Field>
       ) : null}
       {cls !== "personal" ? (

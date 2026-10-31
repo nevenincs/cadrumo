@@ -6,6 +6,16 @@ import {
   Fragment,
   type ReactNode,
 } from "react";
+import { CountryEditor } from "@/components/editors/CountryEditor";
+import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
+import { DateEditor } from "@/components/editors/DateEditor";
+import { DecimalEditor } from "@/components/editors/DecimalEditor";
+import { IbanEditor } from "@/components/editors/IbanEditor";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TaxIdEditor } from "@/components/editors/TaxIdEditor";
+import { TypedField } from "@/components/editors/TypedField";
+import type { FieldSpec as EntryKind } from "@/shared/fieldKind";
 import { Icon, type IconName } from "./Icon";
 import { usePage } from "./page";
 import type { Account, Doc, Finding, Rule } from "./types";
@@ -19,6 +29,7 @@ import {
   effDate,
   fmtDate,
   fmtDateLong,
+  fmtFigure,
   fmtMoney,
   fmtStamp,
   fmtTime,
@@ -1006,29 +1017,30 @@ export function InvoiceSheet({
                 hint="NIF, NIE, CIF or VAT number. The ledger says when one is required."
                 error={errors.nif}
               >
-                <Input
-                  value={f.nif}
-                  className="mono"
-                  onChange={set("nif")}
-                  aria-invalid={!!errors.nif}
-                />
+                {(c) => (
+                  <TaxIdEditor
+                    id={c.id}
+                    describedBy={c.describedBy}
+                    value={f.nif}
+                    onChange={set("nif")}
+                    invalid={!!errors.nif}
+                  />
+                )}
               </Field>
             ) : (
               ro("Counterparty tax id", inv.nif || "None", true)
             )}
-            <Field
-              label="Country"
-              req
-              hint="Two letters, e.g. ES"
-              error={errors.country}
-            >
-              <Input
-                value={f.country}
-                maxLength={2}
-                placeholder="e.g. ES"
-                onChange={(e) => set("country")(e.target.value.toUpperCase())}
-                aria-invalid={!!errors.country}
-              />
+            <Field label="Country" req error={errors.country}>
+              {(c) => (
+                <CountryEditor
+                  id={c.id}
+                  describedBy={c.describedBy}
+                  value={f.country}
+                  maxLength={2}
+                  onChange={set("country")}
+                  invalid={!!errors.country}
+                />
+              )}
             </Field>
           </div>
         </section>
@@ -1093,18 +1105,16 @@ export function InvoiceSheet({
               ro("Number", inv.number)
             )}
             {isNew ? (
-              <Field
-                label="Issue date"
-                req
-                hint="Year-month-day"
-                error={errors.date}
-              >
-                <Input
-                  value={f.date}
-                  placeholder={TODAY}
-                  onChange={set("date")}
-                  aria-invalid={!!errors.date}
-                />
+              <Field label="Issue date" req error={errors.date}>
+                {(c) => (
+                  <DateEditor
+                    id={c.id}
+                    describedBy={c.describedBy}
+                    value={f.date}
+                    onChange={set("date")}
+                    invalid={!!errors.date}
+                  />
+                )}
               </Field>
             ) : (
               ro("Issue date", fmtDateLong(inv.date))
@@ -1114,11 +1124,15 @@ export function InvoiceSheet({
               hint="If it differs from the issue date (devengo)"
               error={errors.opDate}
             >
-              <Input
-                value={f.opDate}
-                placeholder="Same as issue"
-                onChange={set("opDate")}
-              />
+              {(c) => (
+                <DateEditor
+                  id={c.id}
+                  describedBy={c.describedBy}
+                  value={f.opDate}
+                  onChange={set("opDate")}
+                  invalid={!!errors.opDate}
+                />
+              )}
             </Field>
             {f.cls === "rectificativa" ? (
               <Field label="Rectifies invoice" req error={errors.rectifies}>
@@ -1129,20 +1143,19 @@ export function InvoiceSheet({
               <Field
                 label="Currency"
                 req
-                hint={
-                  prefill?.currency
-                    ? "From the movement"
-                    : "Three letters, e.g. EUR"
-                }
+                hint={prefill?.currency ? "From the movement" : undefined}
                 error={errors.currency}
               >
-                <Input
-                  value={f.currency}
-                  maxLength={3}
-                  onChange={(e) =>
-                    set("currency")(e.target.value.toUpperCase())
-                  }
-                />
+                {(c) => (
+                  <CurrencyEditor
+                    id={c.id}
+                    describedBy={c.describedBy}
+                    value={f.currency}
+                    maxLength={3}
+                    onChange={set("currency")}
+                    invalid={!!errors.currency}
+                  />
+                )}
               </Field>
             ) : (
               ro("Currency", inv.currency)
@@ -1267,41 +1280,30 @@ export function InvoiceSheet({
                       </td>
                       <td className="num">
                         {isNew ? (
-                          <Input
-                            size="sm"
-                            className="tnum"
-                            style={{ textAlign: "right" }}
+                          <DecimalEditor
+                            controlSize="sm"
                             value={l.qty}
-                            inputMode="decimal"
                             aria-label={`Line ${i + 1} quantity`}
-                            aria-invalid={!!qe}
+                            invalid={!!qe}
                             data-tip={qe || undefined}
-                            onChange={(e) =>
-                              setLine(i, { qty: e.target.value })
-                            }
+                            onChange={(qty) => setLine(i, { qty })}
                           />
                         ) : (
-                          l.qty
+                          fmtFigure(l.qty)
                         )}
                       </td>
                       <td className="num">
                         {isNew ? (
-                          <Input
-                            size="sm"
-                            className="tnum"
-                            style={{ textAlign: "right" }}
+                          <MoneyEditor
+                            controlSize="sm"
                             value={l.price}
-                            placeholder="0.00"
-                            inputMode="decimal"
                             aria-label={`Line ${i + 1} unit price`}
-                            aria-invalid={!!pe}
+                            invalid={!!pe}
                             data-tip={pe || undefined}
-                            onChange={(e) =>
-                              setLine(i, { price: e.target.value })
-                            }
+                            onChange={(price) => setLine(i, { price })}
                           />
                         ) : (
-                          l.price
+                          fmtFigure(l.price, 2)
                         )}
                       </td>
                       <td className="num">
@@ -1429,11 +1431,9 @@ export function InvoiceSheet({
                 <dt>Recargo</dt>
                 <dd>
                   {isNew ? (
-                    <Input
-                      size="sm"
-                      className="tnum"
+                    <MoneyEditor
+                      controlSize="sm"
                       value={f.recargo}
-                      placeholder="0.00"
                       aria-label="Recargo"
                       onChange={set("recargo")}
                     />
@@ -1452,12 +1452,16 @@ export function InvoiceSheet({
                   hint="Type the total printed on the invoice to check it closes."
                   error={errors.printed}
                 >
-                  <Input
-                    size="sm"
-                    className="tnum"
-                    value={f.printed}
-                    onChange={set("printed")}
-                  />
+                  {(c) => (
+                    <MoneyEditor
+                      id={c.id}
+                      describedBy={c.describedBy}
+                      controlSize="sm"
+                      value={f.printed}
+                      onChange={set("printed")}
+                      invalid={!!errors.printed}
+                    />
+                  )}
                 </Field>
               ) : null}
             </div>
@@ -1484,21 +1488,21 @@ export function InvoiceSheet({
                 ))}
               </div>
               <div className="row g2">
-                <Field
-                  label="Rate"
-                  className="f1"
-                  hint="Write 15 for 15%"
-                  error={errors.retentionRate}
-                >
-                  <Input
-                    size="sm"
-                    value={f.retentionRate}
-                    placeholder="e.g. 15"
-                    onChange={(e) => {
-                      set("retentionRate")(e);
-                      setRetTouched(false);
-                    }}
-                  />
+                <Field label="Rate" className="f1" error={errors.retentionRate}>
+                  {(c) => (
+                    <PercentEditor
+                      id={c.id}
+                      describedBy={c.describedBy}
+                      unit="points"
+                      controlSize="sm"
+                      value={f.retentionRate}
+                      invalid={!!errors.retentionRate}
+                      onChange={(rate) => {
+                        set("retentionRate")(rate);
+                        setRetTouched(false);
+                      }}
+                    />
+                  )}
                 </Field>
                 <Field
                   label="Amount"
@@ -1510,16 +1514,19 @@ export function InvoiceSheet({
                   }
                   error={errors.retention}
                 >
-                  <Input
-                    size="sm"
-                    className="tnum"
-                    value={retText}
-                    placeholder="0.00"
-                    onChange={(e) => {
-                      setRetTouched(true);
-                      set("retention")(e);
-                    }}
-                  />
+                  {(c) => (
+                    <MoneyEditor
+                      id={c.id}
+                      describedBy={c.describedBy}
+                      controlSize="sm"
+                      value={retText}
+                      invalid={!!errors.retention}
+                      onChange={(amount) => {
+                        setRetTouched(true);
+                        set("retention")(amount);
+                      }}
+                    />
+                  )}
                 </Field>
               </div>
               <span className="t-sm tnum">
@@ -1886,6 +1893,17 @@ export function DocState({ d }: { d: Doc }) {
     </span>
   );
 }
+const DRAFT_FIELD: Record<string, EntryKind> = {
+  supplier_tax_id: { kind: "taxId" },
+  customer_tax_id: { kind: "taxId" },
+  invoice_date: { kind: "date" },
+  taxable_base: { kind: "money" },
+  iva_rate: { kind: "percent", unit: "points" },
+  iva_amount: { kind: "money" },
+  retencion_amount: { kind: "money" },
+  grand_total: { kind: "money" },
+  currency: { kind: "currency" },
+};
 export const DRAFT_LABEL: Record<string, string> = {
   supplier: "Supplier",
   customer: "Customer",
@@ -2281,7 +2299,7 @@ export function DocDetail({ d }: { d: Doc }) {
                 ></span>
               ))}
               <span className="row" style={{ justifyContent: "flex-end" }}>
-                <b className="tnum">{vals.grand_total || ""}</b>
+                <b className="tnum">{fmtFigure(vals.grand_total || "", 2)}</b>
               </span>
             </div>
             <div className="col g3">
@@ -2311,15 +2329,13 @@ export function DocDetail({ d }: { d: Doc }) {
                             {DRAFT_LABEL[k] || k}
                           </td>
                           <td>
-                            <Input
-                              size="sm"
-                              value={vals[k]}
-                              className={
-                                /amount|base|total|rate/.test(k) ? "tnum" : ""
-                              }
+                            <TypedField
+                              field={DRAFT_FIELD[k] ?? { kind: "text" }}
+                              controlSize="sm"
+                              value={vals[k] ?? ""}
                               aria-label={DRAFT_LABEL[k] || k}
-                              onChange={(e) =>
-                                setVals({ ...vals, [k]: e.target.value })
+                              onChange={(value) =>
+                                setVals({ ...vals, [k]: value })
                               }
                             />
                           </td>
@@ -2409,16 +2425,13 @@ export function DocDetail({ d }: { d: Doc }) {
                         ))}
                       </div>
                     ) : r.action === "supply_value" ? (
-                      <Input
-                        size="sm"
+                      <TypedField
+                        field={DRAFT_FIELD[b.field] ?? { kind: "text" }}
+                        controlSize="sm"
                         aria-label="The correct value"
-                        placeholder="The correct value"
                         value={r.value || ""}
-                        onChange={(e) =>
-                          setRes({
-                            ...res,
-                            [b.id]: { ...r, value: e.target.value },
-                          })
+                        onChange={(value) =>
+                          setRes({ ...res, [b.id]: { ...r, value } })
                         }
                       />
                     ) : r.action === "attest" ? (
@@ -2460,17 +2473,16 @@ export function DocDetail({ d }: { d: Doc }) {
                   <option value="issued">An invoice I issued</option>
                 </Select>
               </Field>
-              <Field
-                label="Counterparty country"
-                req
-                hint="Two letters, e.g. ES"
-              >
-                <Input
-                  value={country}
-                  maxLength={2}
-                  placeholder="e.g. ES"
-                  onChange={(e) => setCountry(e.target.value.toUpperCase())}
-                />
+              <Field label="Counterparty country" req>
+                {(c) => (
+                  <CountryEditor
+                    id={c.id}
+                    describedBy={c.describedBy}
+                    value={country}
+                    maxLength={2}
+                    onChange={setCountry}
+                  />
+                )}
               </Field>
               <Field
                 label="Currency"
@@ -2481,12 +2493,15 @@ export function DocDetail({ d }: { d: Doc }) {
                     : "Not on the document: say which"
                 }
               >
-                <Input
-                  value={currency}
-                  maxLength={3}
-                  placeholder="e.g. EUR"
-                  onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-                />
+                {(c) => (
+                  <CurrencyEditor
+                    id={c.id}
+                    describedBy={c.describedBy}
+                    value={currency}
+                    maxLength={3}
+                    onChange={setCurrency}
+                  />
+                )}
               </Field>
             </div>
             {dup ? (
@@ -3099,25 +3114,24 @@ export function RatiosPane() {
               render: (c) =>
                 edit[c] != null ? (
                   <span className="row g1">
-                    <Input
-                      size="sm"
-                      style={{ width: "calc(var(--spacing) * 20)" }}
-                      value={edit[c]}
-                      autoFocus
-                      aria-label={`Ratio for ${CATEGORY_LABEL[c]}, write 50 for 50%`}
-                      onChange={(e) =>
-                        setEdit({ ...edit, [c]: e.target.value })
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") save(c);
-                        if (e.key === "Escape") {
-                          const n = { ...edit };
-                          delete n[c];
-                          setEdit(n);
-                        }
-                      }}
-                    />
-                    <span className="muted">%</span>
+                    <span style={{ width: "calc(var(--spacing) * 24)" }}>
+                      <PercentEditor
+                        unit="points"
+                        controlSize="sm"
+                        value={edit[c] ?? ""}
+                        autoFocus
+                        aria-label={`Ratio for ${CATEGORY_LABEL[c]}`}
+                        onChange={(ratio) => setEdit({ ...edit, [c]: ratio })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") save(c);
+                          if (e.key === "Escape") {
+                            const n = { ...edit };
+                            delete n[c];
+                            setEdit(n);
+                          }
+                        }}
+                      />
+                    </span>
                   </span>
                 ) : ratios[c] != null ? (
                   <span className="tnum fw5">{pct(ratios[c])}</span>
@@ -3269,32 +3283,35 @@ export function CounterpartiesPane() {
             </Alert>
             <div className="formgrid">
               <Field label="Tax id" req>
-                <Input
-                  className="mono"
-                  value={form.taxId}
-                  onChange={(e) => setForm({ ...form, taxId: e.target.value })}
-                />
+                {(c) => (
+                  <TaxIdEditor
+                    id={c.id}
+                    value={form.taxId}
+                    onChange={(taxId) => setForm({ ...form, taxId })}
+                  />
+                )}
               </Field>
               <Field label="Country" req>
-                <Input
-                  value={form.country}
-                  maxLength={2}
-                  onChange={(e) =>
-                    setForm({ ...form, country: e.target.value.toUpperCase() })
-                  }
-                />
+                {(c) => (
+                  <CountryEditor
+                    id={c.id}
+                    value={form.country}
+                    maxLength={2}
+                    onChange={(country) => setForm({ ...form, country })}
+                  />
+                )}
               </Field>
-              <Field
-                label="VAT-identification state"
-                hint="Two letters, e.g. LU"
-              >
-                <Input
-                  value={form.idState}
-                  maxLength={2}
-                  onChange={(e) =>
-                    setForm({ ...form, idState: e.target.value.toLowerCase() })
-                  }
-                />
+              <Field label="VAT-identification state">
+                {(c) => (
+                  <CountryEditor
+                    id={c.id}
+                    value={form.idState.toUpperCase()}
+                    maxLength={2}
+                    onChange={(state) =>
+                      setForm({ ...form, idState: state.toLowerCase() })
+                    }
+                  />
+                )}
               </Field>
               <Field label="Note">
                 <Input
@@ -3587,15 +3604,19 @@ export function AccountsPane() {
                 <Field
                   label="Closed on"
                   req
-                  hint="Year-month-day. Its movements keep the account."
+                  hint="Its movements keep the account."
                   error={act.date && actDate?.error ? actDate.error : null}
                 >
-                  <Input
-                    data-autofocus
-                    value={act.date || ""}
-                    placeholder="e.g. 2026-10-31"
-                    onChange={(e) => setAct({ ...act, date: e.target.value })}
-                  />
+                  {(c) => (
+                    <DateEditor
+                      id={c.id}
+                      describedBy={c.describedBy}
+                      data-autofocus
+                      value={act.date || ""}
+                      invalid={!!(act.date && actDate?.error)}
+                      onChange={(date) => setAct({ ...act, date })}
+                    />
+                  )}
                 </Field>
               ) : (
                 <div className="formgrid">
@@ -3705,7 +3726,6 @@ export function AccountsPane() {
                 <Input
                   value={f.label}
                   onChange={(e) => setF({ ...f, label: e.target.value })}
-                  placeholder="e.g. CaixaBank nómina"
                 />
               </Field>
               <Field label="Bank">
@@ -3720,34 +3740,41 @@ export function AccountsPane() {
                 hint="Sent through the protected channel, checked with its control digits, stored encrypted and shown masked afterwards."
                 error={f.iban && !ibanOk ? "Not an IBAN shape." : null}
               >
-                <Input
-                  type="password"
-                  autoComplete="off"
-                  className="mono"
-                  value={f.iban}
-                  onChange={(e) => setF({ ...f, iban: e.target.value })}
-                />
+                {(c) => (
+                  <IbanEditor
+                    id={c.id}
+                    describedBy={c.describedBy}
+                    secret
+                    value={f.iban}
+                    invalid={!!(f.iban && !ibanOk)}
+                    onChange={(iban) => setF({ ...f, iban })}
+                  />
+                )}
               </Field>
               <Field label="Currency" req>
-                <Input
-                  value={f.currency}
-                  maxLength={3}
-                  onChange={(e) =>
-                    setF({ ...f, currency: e.target.value.toUpperCase() })
-                  }
-                />
+                {(c) => (
+                  <CurrencyEditor
+                    id={c.id}
+                    value={f.currency}
+                    maxLength={3}
+                    onChange={(currency) => setF({ ...f, currency })}
+                  />
+                )}
               </Field>
               <Field
                 label="Opened on"
                 req
-                hint="Year-month-day"
                 error={f.opened && opened.error ? opened.error : null}
               >
-                <Input
-                  value={f.opened}
-                  placeholder="e.g. 2019-03-01"
-                  onChange={(e) => setF({ ...f, opened: e.target.value })}
-                />
+                {(c) => (
+                  <DateEditor
+                    id={c.id}
+                    describedBy={c.describedBy}
+                    value={f.opened}
+                    invalid={!!(f.opened && opened.error)}
+                    onChange={(day) => setF({ ...f, opened: day })}
+                  />
+                )}
               </Field>
               <Field label="You are">
                 <Select
@@ -3874,6 +3901,7 @@ type FieldSpec = {
   req?: boolean;
   h?: string;
   d?: string;
+  kind?: EntryKind;
   opts?: [string, string][];
 };
 export function MiniForm({
@@ -3897,9 +3925,9 @@ export function MiniForm({
       <b className="fw6">{title}</b>
       {note ? <p className="t-xs muted">{note}</p> : null}
       <div className="formgrid">
-        {fields.map((f) => (
-          <Field key={f.k} label={f.l} req={f.req} hint={f.h}>
-            {f.opts ? (
+        {fields.map((f) =>
+          f.opts ? (
+            <Field key={f.k} label={f.l} req={f.req} hint={f.h}>
               <Select
                 size="sm"
                 value={v[f.k]}
@@ -3911,15 +3939,22 @@ export function MiniForm({
                   </option>
                 ))}
               </Select>
-            ) : (
-              <Input
-                size="sm"
-                value={v[f.k]}
-                onChange={(e) => setV({ ...v, [f.k]: e.target.value })}
-              />
-            )}
-          </Field>
-        ))}
+            </Field>
+          ) : (
+            <Field key={f.k} label={f.l} req={f.req} hint={f.h}>
+              {(c) => (
+                <TypedField
+                  field={f.kind ?? { kind: "text" }}
+                  id={c.id}
+                  describedBy={c.describedBy}
+                  controlSize="sm"
+                  value={v[f.k] ?? ""}
+                  onChange={(value) => setV({ ...v, [f.k]: value })}
+                />
+              )}
+            </Field>
+          ),
+        )}
       </div>
       <div>
         <Button
@@ -4133,10 +4168,15 @@ export function ProrrataPane() {
                 {
                   k: "vol",
                   l: "Volume with right to deduct",
-                  h: "e.g. 48200.00",
+                  kind: { kind: "money" },
                   req: true,
                 },
-                { k: "tot", l: "Total volume", req: true },
+                {
+                  k: "tot",
+                  l: "Total volume",
+                  kind: { kind: "money" },
+                  req: true,
+                },
               ]}
               submit="Settle"
               onSubmit={(v) => {
@@ -4209,12 +4249,22 @@ export function CapitalPane() {
                   ["Vehículo", "Vehicle"],
                 ],
               },
-              { k: "y", l: "Acquisition year", req: true, h: "Four digits" },
-              { k: "cuota", l: "Cuota soportada", h: "e.g. 714.00", req: true },
+              {
+                k: "y",
+                l: "Acquisition year",
+                kind: { kind: "year" },
+                req: true,
+              },
+              {
+                k: "cuota",
+                l: "Cuota soportada",
+                kind: { kind: "money" },
+                req: true,
+              },
               {
                 k: "pr",
                 l: "Initial prorrata",
-                h: "Write 92 for 92%",
+                kind: { kind: "percent", unit: "points" },
                 req: true,
               },
             ]}
@@ -4390,7 +4440,7 @@ export function InventoryPane() {
               <MiniForm
                 title="Add a movement"
                 fields={[
-                  { k: "date", l: "Date", req: true, h: "Year-month-day" },
+                  { k: "date", l: "Date", kind: { kind: "date" }, req: true },
                   {
                     k: "kind",
                     l: "Kind",
@@ -4401,8 +4451,13 @@ export function InventoryPane() {
                       ["opening", "Opening stock"],
                     ],
                   },
-                  { k: "qty", l: "Units", req: true },
-                  { k: "unit", l: "Unit cost", h: "e.g. 4.10" },
+                  {
+                    k: "qty",
+                    l: "Units",
+                    kind: { kind: "integer" },
+                    req: true,
+                  },
+                  { k: "unit", l: "Unit cost", kind: { kind: "money" } },
                 ]}
                 submit="Add movement"
                 onSubmit={(v) => {

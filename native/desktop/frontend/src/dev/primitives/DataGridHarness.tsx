@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/data-grid";
 import type { CellRange } from "@/components/ui/dataGridModel";
 import { EmptyState } from "@/components/ui/empty";
+import { formatDay } from "@/shared/dateFormats";
+import { formatDecimal } from "@/shared/numbers";
+import { useStrings } from "@/shell/strings";
 import {
   categoryLabel,
   SAMPLE_CATEGORIES,
@@ -70,6 +73,7 @@ export function DataGridHarness({
   grouped?: boolean;
 }) {
   const grid = useRef<DataGridHandle>(null);
+  const locale = useStrings().locale ?? "en";
   const [data, setData] = useState(() => sampleRows(count));
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   const [sort, setSort] = useState<{
@@ -102,7 +106,9 @@ export function DataGridHarness({
         width: 5.5,
         sticky: "start",
         sortable: true,
-        cell: (row) => <span className="tabular-nums">{row.date}</span>,
+        cell: (row) => (
+          <span className="tabular-nums">{formatDay(locale, row.date)}</span>
+        ),
       },
       {
         id: "description",
@@ -157,7 +163,8 @@ export function DataGridHarness({
         sticky: "end",
         align: "end",
         sortable: true,
-        cell: (row) => row.amount.toFixed(2),
+        cell: (row) =>
+          formatDecimal(locale, row.amount.toFixed(2), { minFraction: 2 }),
         readOnlyReason: (row) =>
           row.locked ? "Sealed by a filed declaration" : undefined,
         editor: (row, context) => (
@@ -177,7 +184,7 @@ export function DataGridHarness({
     );
     if (!order) return sized;
     return order.flatMap((id) => sized.filter((column) => column.id === id));
-  }, [widths, order]);
+  }, [widths, order, locale]);
 
   const sorted = useMemo(() => {
     if (!sort) return data;
@@ -365,6 +372,7 @@ const DECLARATIONS: Declaration[] = [
 /** The plain table over made-up declarations, sorted and grouped by
  * deadline, with one of them open elsewhere. */
 export function DataTableHarness({ current = "130-1T" }: { current?: string }) {
+  const locale = useStrings().locale ?? "en";
   const [sort, setSort] = useState<{
     column: string;
     direction: "asc" | "desc";
@@ -417,7 +425,7 @@ export function DataTableHarness({ current = "130-1T" }: { current?: string }) {
           width: 7,
           align: "end",
           sortable: true,
-          cell: (row) => row.due,
+          cell: (row) => formatDay(locale, row.due),
         },
       ]}
       rows={rows}

@@ -350,7 +350,6 @@ export type Parsed = {
   text?: string;
   error?: string;
   empty?: boolean;
-  maybe?: number;
 };
 
 export type FieldDef = {

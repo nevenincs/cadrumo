@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useId, Fragment } from "react";
+import { CountryEditor } from "@/components/editors/CountryEditor";
+import { MoneyEditor } from "@/components/editors/MoneyEditor";
+import { PercentEditor } from "@/components/editors/PercentEditor";
 import { Icon, type IconName } from "./Icon";
 import { usePage, type DialogProps } from "./page";
 import type {
@@ -1511,20 +1514,23 @@ export function ClassifyDialog({
           <Field
             label="Business share"
             req
-            hint="Write 50 for 50%."
             error={err && kind === "mixed" ? err : null}
           >
-            <Input
-              data-autofocus
-              value={share}
-              inputMode="decimal"
-              placeholder="e.g. 50"
-              onChange={(e) => {
-                setShare(e.target.value);
-                setErr(null);
-              }}
-              onKeyDown={(e) => e.key === "Enter" && stage()}
-            />
+            {(c) => (
+              <PercentEditor
+                id={c.id}
+                describedBy={c.describedBy}
+                unit="points"
+                data-autofocus
+                value={share}
+                invalid={!!(err && kind === "mixed")}
+                onChange={(value) => {
+                  setShare(value);
+                  setErr(null);
+                }}
+                onKeyDown={(e) => e.key === "Enter" && stage()}
+              />
+            )}
           </Field>
         ) : null}
         <Field
@@ -1899,17 +1905,15 @@ export function ActionDialog({
                         {fmtMoney(remainder)}
                       </span>
                     ) : (
-                      <Input
-                        size="sm"
-                        style={{ width: "calc(var(--spacing) * 28)" }}
-                        className="tnum"
-                        placeholder="0.00"
-                        inputMode="decimal"
-                        value={p.amount}
-                        aria-label={`Part ${i + 1} amount`}
-                        aria-invalid={!!(p.amount && fixed[i]?.error)}
-                        onChange={(e) => setPart(i, { amount: e.target.value })}
-                      />
+                      <span style={{ width: "calc(var(--spacing) * 28)" }}>
+                        <MoneyEditor
+                          controlSize="sm"
+                          value={p.amount ?? ""}
+                          aria-label={`Part ${i + 1} amount`}
+                          invalid={!!(p.amount && fixed[i]?.error)}
+                          onChange={(amount) => setPart(i, { amount })}
+                        />
+                      </span>
                     )}
                     <Input
                       size="sm"
@@ -2082,15 +2086,6 @@ export function ActionDialog({
               value={reason}
               maxLength={500}
               onChange={(e) => setReason(e.target.value)}
-              placeholder={
-                type === "archive"
-                  ? "e.g. duplicate of the N26 row"
-                  : type === "exclude"
-                    ? "e.g. tax payment, not an expense"
-                    : type === "split"
-                      ? "e.g. one order, business and personal items"
-                      : "Why"
-              }
             />
           </Field>
         ) : null}
@@ -2462,11 +2457,15 @@ export function RuleDialog({
         {kind === "amount" ? (
           <div className="split2">
             <Field label="From" error={minP.error}>
-              <Input
-                className="tnum"
-                value={min}
-                onChange={(e) => setMin(e.target.value)}
-              />
+              {(c) => (
+                <MoneyEditor
+                  id={c.id}
+                  describedBy={c.describedBy}
+                  value={min}
+                  invalid={!!minP.error}
+                  onChange={setMin}
+                />
+              )}
             </Field>
             <Field
               label="To"
@@ -2474,11 +2473,15 @@ export function RuleDialog({
                 maxP.error || (amountErr && !minP.error ? amountErr : null)
               }
             >
-              <Input
-                className="tnum"
-                value={max}
-                onChange={(e) => setMax(e.target.value)}
-              />
+              {(c) => (
+                <MoneyEditor
+                  id={c.id}
+                  describedBy={c.describedBy}
+                  value={max}
+                  invalid={!!(maxP.error || (amountErr && !minP.error))}
+                  onChange={setMax}
+                />
+              )}
             </Field>
             <Field label="And the counterparty is (optional)">
               <Input value={value} onChange={(e) => setValue(e.target.value)} />
@@ -2827,12 +2830,16 @@ export function SuggestionsDialog({
               req
               hint="Needed to approve a Mixed suggestion."
             >
-              <Input
-                size="sm"
-                value={shares[i] || ""}
-                placeholder="e.g. 50"
-                onChange={(e) => setShares({ ...shares, [i]: e.target.value })}
-              />
+              {(c) => (
+                <PercentEditor
+                  id={c.id}
+                  describedBy={c.describedBy}
+                  unit="points"
+                  controlSize="sm"
+                  value={shares[i] || ""}
+                  onChange={(share) => setShares({ ...shares, [i]: share })}
+                />
+              )}
             </Field>
           ) : null}
           <label className="row g2 t-sm">
@@ -3592,16 +3599,19 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
                 <Field
                   label="Counterparty country"
                   req
-                  hint="Two letters, used when the book has no country column. There is no default."
+                  hint="Used when the book has no country column. There is no default."
                   error={countryErr}
                 >
-                  <Input
-                    value={country}
-                    maxLength={2}
-                    placeholder="e.g. ES"
-                    onChange={(e) => setCountry(e.target.value.toUpperCase())}
-                    aria-invalid={!!countryErr}
-                  />
+                  {(c) => (
+                    <CountryEditor
+                      id={c.id}
+                      describedBy={c.describedBy}
+                      value={country}
+                      maxLength={2}
+                      onChange={setCountry}
+                      invalid={!!countryErr}
+                    />
+                  )}
                 </Field>
               </div>
             ) : (

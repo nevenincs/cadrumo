@@ -1,3 +1,4 @@
+import { formatPercent } from "@/shared/numbers";
 import type { IconName } from "./Icon";
 import type {
   Cls,
@@ -7,6 +8,10 @@ import type {
   Option,
   ReviewStatus,
 } from "./types";
+
+/* The language numbers and dates are drawn in. The page sets it from the
+   window's language before it draws. */
+export const PREFS = { locale: "en", yearInDates: false };
 
 /* ── Vocabularies. Labels are English chrome strings; tokens stay canonical.
    In the product these come from the registry projections and the locale
@@ -306,7 +311,10 @@ IVA_GROUPS.forEach(([g, items]) =>
   }),
 );
 export function pct(f: number) {
-  return `${+(f * 100).toFixed(2)}%`;
+  return formatPercent(PREFS.locale, f.toFixed(6), {
+    unit: "fraction",
+    maxFraction: 2,
+  });
 }
 
 export const IRPF: Record<string, string> = {

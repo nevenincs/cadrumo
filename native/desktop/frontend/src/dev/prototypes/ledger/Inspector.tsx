@@ -11,6 +11,8 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
+import { PercentEditor } from "@/components/editors/PercentEditor";
+import { TypedField } from "@/components/editors/TypedField";
 import { Icon } from "./Icon";
 import { usePage } from "./page";
 import type {
@@ -72,6 +74,7 @@ import {
   diffOf,
   effDate,
   effective,
+  entryKindOf,
   fmtDateLong,
   fmtMoney,
   fmtStamp,
@@ -425,18 +428,9 @@ export function InspField({
         {dt}
         <dd>
           <div className="col g1" style={{ width: "100%" }}>
-            <Input
-              size="sm"
-              autoFocus
-              value={val}
-              aria-invalid={!!err}
-              aria-labelledby={lid}
-              aria-describedby={lid + "-h"}
-              onChange={(e) => {
-                setVal(e.target.value);
-                setErr(null);
-              }}
+            <div
               onKeyDown={(e) => {
+                if (!(e.target instanceof HTMLInputElement)) return;
                 if (e.key === "Enter") {
                   e.preventDefault();
                   commit();
@@ -447,11 +441,33 @@ export function InspField({
                   refocus();
                 }
               }}
-              onBlur={() => {
+              onBlur={(e) => {
+                const next = e.relatedTarget;
+                if (
+                  next instanceof Element &&
+                  (e.currentTarget.contains(next) ||
+                    next.closest("[data-slot=popover-content]"))
+                )
+                  return;
                 if (val === canonOfEdit(k, eff)) setEditing(false);
                 else commit();
               }}
-            />
+            >
+              <TypedField
+                field={entryKindOf(k)}
+                controlSize="sm"
+                autoFocus
+                value={val}
+                invalid={!!err}
+                aria-label={label || def.label}
+                describedBy={lid + "-h"}
+                onChange={(next) => {
+                  setVal(next);
+                  setErr(null);
+                }}
+                onPicked={(picked) => commit(picked)}
+              />
+            </div>
             <span
               id={lid + "-h"}
               className={err ? "danger-t t-sm" : "muted t-xs"}
@@ -1371,41 +1387,43 @@ export function ClassifySection({
             {eff.cls === "mixed" ? (
               <label className="row g1 t-sm">
                 Share{" "}
-                <Input
-                  size="sm"
-                  style={{ width: "calc(var(--spacing) * 18)" }}
-                  value={share}
-                  inputMode="decimal"
-                  aria-label="Business share"
-                  aria-invalid={!!shareErr}
-                  onChange={(e) => {
-                    setShare(e.target.value);
-                    setShareErr(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                <span style={{ width: "calc(var(--spacing) * 24)" }}>
+                  <PercentEditor
+                    unit="points"
+                    controlSize="sm"
+                    value={share}
+                    aria-label="Business share"
+                    invalid={!!shareErr}
+                    onChange={(next) => {
+                      setShare(next);
+                      setShareErr(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const r = parsePercent(share, {
+                          label: "Business share",
+                        });
+                        if (r.error || r.empty)
+                          return setShareErr(r.error || "Required.");
+                        stage(
+                          [{ id: row.id, field: "share", value: r.value }],
+                          "Set share",
+                        );
+                      }
+                    }}
+                    onBlur={() => {
                       const r = parsePercent(share, {
                         label: "Business share",
                       });
-                      if (r.error || r.empty)
-                        return setShareErr(r.error || "Required.");
-                      stage(
-                        [{ id: row.id, field: "share", value: r.value }],
-                        "Set share",
-                      );
-                    }
-                  }}
-                  onBlur={() => {
-                    const r = parsePercent(share, { label: "Business share" });
-                    if (r.value != null && !sameValue(r.value, eff.share))
-                      stage(
-                        [{ id: row.id, field: "share", value: r.value }],
-                        "Set share",
-                      );
-                    else if (r.error) setShareErr(r.error);
-                  }}
-                />
-                %
+                      if (r.value != null && !sameValue(r.value, eff.share))
+                        stage(
+                          [{ id: row.id, field: "share", value: r.value }],
+                          "Set share",
+                        );
+                      else if (r.error) setShareErr(r.error);
+                    }}
+                  />
+                </span>
               </label>
             ) : null}
           </div>
@@ -1573,15 +1591,20 @@ export function ClassifySection({
                 hint="The model proposed Mixed without a share. Enter it to approve."
                 error={suggErr}
               >
-                <Input
-                  size="sm"
-                  value={suggShare}
-                  placeholder="e.g. 50"
-                  onChange={(e) => {
-                    setSuggShare(e.target.value);
-                    setSuggErr(null);
-                  }}
-                />
+                {(c) => (
+                  <PercentEditor
+                    id={c.id}
+                    describedBy={c.describedBy}
+                    unit="points"
+                    controlSize="sm"
+                    value={suggShare}
+                    invalid={!!suggErr}
+                    onChange={(next) => {
+                      setSuggShare(next);
+                      setSuggErr(null);
+                    }}
+                  />
+                )}
               </Field>
             ) : suggErr ? (
               <span className="danger-t t-sm">{suggErr}</span>
@@ -1599,7 +1622,6 @@ export function ClassifySection({
                     data-autofocus
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder="e.g. a personal purchase"
                   />
                 </Field>
                 <div className="row g2">

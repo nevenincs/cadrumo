@@ -477,7 +477,10 @@ export function Select({
   );
 }
 /* A labelled control. The hint and the error describe the control
-   (aria-describedby) instead of joining its name. */
+   (aria-describedby) instead of joining its name. An editor takes the id and
+   the description from a function child, so its own label and description
+   reach its text box. */
+export type FieldControl = { id: string; describedBy: string | undefined };
 export function Field({
   label,
   req,
@@ -490,33 +493,48 @@ export function Field({
   req?: boolean;
   hint?: ReactNode;
   error?: ReactNode;
-  children: ReactNode;
+  children: ReactNode | ((control: FieldControl) => ReactNode);
   className?: string;
 }) {
   const id = useId();
   const described = error || hint ? id + "-d" : undefined;
-  const kids = Children.map(children, (c, i) =>
-    i === 0 && isValidElement(c) && typeof c.type !== "string"
-      ? cloneElement(c as ReactElement<Record<string, unknown>>, {
-          "aria-describedby": described,
-        })
-      : c,
+  const kids =
+    typeof children === "function"
+      ? children({ id: id + "-c", describedBy: described })
+      : Children.map(children, (c, i) =>
+          i === 0 && isValidElement(c) && typeof c.type !== "string"
+            ? cloneElement(c as ReactElement<Record<string, unknown>>, {
+                "aria-describedby": described,
+              })
+            : c,
+        );
+  const name = (
+    <>
+      {label}
+      {req ? (
+        <span className="req" aria-hidden="true">
+          {" "}
+          *
+        </span>
+      ) : null}
+      {req ? <span className="sr-only"> (required)</span> : null}
+    </>
   );
   return (
     <div className={cx("field", className)}>
-      <label className="field-wrap">
-        <span className="field-label">
-          {label}
-          {req ? (
-            <span className="req" aria-hidden="true">
-              {" "}
-              *
-            </span>
-          ) : null}
-          {req ? <span className="sr-only"> (required)</span> : null}
-        </span>
-        {kids}
-      </label>
+      {typeof children === "function" ? (
+        <div className="field-wrap">
+          <label className="field-label" htmlFor={id + "-c"}>
+            {name}
+          </label>
+          {kids}
+        </div>
+      ) : (
+        <label className="field-wrap">
+          <span className="field-label">{name}</span>
+          {kids}
+        </label>
+      )}
       {error ? (
         <span id={described} className="field-error">
           <Icon name="alert" size="xs" />
@@ -1149,6 +1167,7 @@ export function Dialog({
     return () => prev?.focus?.({ preventScroll: true });
   }, [focusFirst]);
   const onKey = (e: ReactKeyboardEvent) => {
+    if (!ref.current?.contains(e.target as Node)) return;
     if (e.key === "Escape") {
       e.stopPropagation();
       onClose();

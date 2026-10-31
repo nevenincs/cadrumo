@@ -1,3 +1,6 @@
+import type { FieldSpec as EntryKind } from "@/shared/fieldKind";
+import { formatDay, formatTime } from "@/shared/dateFormats";
+import { formatDecimal } from "@/shared/numbers";
 import { ACCOUNT_LABEL, ACCOUNTS, daysIn, iso, quarterOf } from "./data";
 import type { IconName } from "./Icon";
 import type {
@@ -39,49 +42,27 @@ import {
   IVA_RATE,
   LIFECYCLE,
   MONTH_LABEL,
-  TODAY,
+  PREFS,
   pct,
 } from "./vocab";
 
 /* ── Formatting and the canonical input grammar. ──────────────────────── */
-export const PREFS = { locale: "en-GB", yearInDates: false };
-export const nf2 = () =>
-  new Intl.NumberFormat(PREFS.locale, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-export const fmtMoney = (c: number | null | undefined) =>
-  c == null ? "" : nf2().format(c / 100);
 export const canon = (c: number | null | undefined) =>
   c == null ? "" : (c / 100).toFixed(2);
+export const fmtMoney = (c: number | null | undefined) =>
+  c == null ? "" : formatDecimal(PREFS.locale, canon(c), { minFraction: 2 });
+export const fmtFigure = (text: string, minFraction = 0) =>
+  formatDecimal(PREFS.locale, text, { minFraction });
 export const fmtDate = (d: string | null | undefined, withYear?: boolean) =>
   d
-    ? new Date(d + "T12:00:00Z").toLocaleDateString(PREFS.locale, {
-        day: "2-digit",
-        month: "short",
-        year: withYear || PREFS.yearInDates ? "numeric" : undefined,
-        timeZone: "UTC",
+    ? formatDay(PREFS.locale, d, {
+        withYear: !!(withYear || PREFS.yearInDates),
       })
     : "";
 export const fmtDateLong = (d: string | null | undefined) =>
-  d
-    ? new Date(d.slice(0, 10) + "T12:00:00Z").toLocaleDateString(PREFS.locale, {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        timeZone: "UTC",
-      })
-    : "";
+  d ? formatDay(PREFS.locale, d.slice(0, 10)) : "";
 export const fmtStamp = (t: string | null | undefined) =>
-  t
-    ? new Date(t).toLocaleString(PREFS.locale, {
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "UTC",
-      })
-    : "";
+  t ? formatTime(PREFS.locale, t) : "";
 export const fmtTime = (t: string | null | undefined) =>
   t
     ? new Date(t).toLocaleTimeString(PREFS.locale, {
@@ -118,7 +99,7 @@ export function numberShapeError(
     return `${q} has more than ${maxDp} decimals. ${what} take at most ${maxDp}.`;
   if (/€|eur/i.test(s))
     return `${q} includes a currency. Write the number only.`;
-  return `${q} is not a number. Use digits and a dot for decimals, e.g. 1234.50.`;
+  return `${q} is not a number.`;
 }
 export function parseAmount(
   raw: Value,
@@ -183,12 +164,12 @@ export function parseDateIso(raw: Value): Parsed {
   const e = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
   if (e)
     return {
-      error: `${q} is not an ISO date. Write ${e[3]}-${e[2]!.padStart(2, "0")}-${e[1]!.padStart(2, "0")} (year-month-day).`,
+      error: `${q} is not a date the ledger can read.`,
     };
-  return { error: `${q} is not a date. Write year-month-day, e.g. ${TODAY}.` };
+  return { error: `${q} is not a date.` };
 }
 /* One percent grammar for every rate and share: typed and pasted values
-   mean the same, 50 is 50%, and a bare 0.5 is refused, never guessed. */
+   mean the same, and 50 is 50%. */
 export function parsePercent(raw: Value, { label = "Rate" } = {}): Parsed {
   const s = String(raw).trim().replace(/\s*%$/, "");
   if (s === "") return { empty: true };
@@ -196,16 +177,9 @@ export function parsePercent(raw: Value, { label = "Rate" } = {}): Parsed {
   if (/,/.test(s))
     return { error: `${q} uses a comma. Write ${s.replace(",", ".")}.` };
   if (!/^\d+(\.\d+)?$/.test(s))
-    return {
-      error: `${q} is not a percentage. Write a number from 0 to 100, e.g. 50.`,
-    };
+    return { error: `${label}: ${q} is not a percentage.` };
   const v = parseFloat(s);
   if (v > 100) return { error: `${q} is above 100%.` };
-  if (v > 0 && v < 1)
-    return {
-      error: `${q} is ambiguous. ${label} is a percent: write ${+(v * 100).toFixed(2)} for ${+(v * 100).toFixed(2)}%, or ${s}% if you mean ${s} percent.`,
-      maybe: v,
-    };
   return { value: +(v / 100).toFixed(6) };
 }
 export function parseText(
@@ -237,7 +211,7 @@ export const F: Record<string, FieldDef> = {
     label: "Date",
     required: true,
     editor: "date",
-    hint: "Year-month-day, e.g. 2026-10-14. This is the date that decides the period.",
+    hint: "This is the date that decides the period.",
   },
   description: {
     label: "Description",
@@ -257,7 +231,7 @@ export const F: Record<string, FieldDef> = {
     required: true,
     editor: "amount",
     num: true,
-    hint: "Dot for decimals, no grouping, up to 2 decimals: 1234.50. Direction says in or out.",
+    hint: "Direction says in or out.",
   },
   cls: { label: "Classification", editor: "combo" },
   share: {
@@ -265,7 +239,7 @@ export const F: Record<string, FieldDef> = {
     editor: "share",
     needsClass: true,
     num: true,
-    hint: "Percent of business use: 50 for 50%.",
+    hint: "Percent of business use.",
   },
   category: {
     label: "Category",
@@ -286,7 +260,7 @@ export const F: Record<string, FieldDef> = {
     clearable: true,
     tax: true,
     num: true,
-    hint: "Base without IVA, in the movement's currency: 1234.50.",
+    hint: "Base without IVA, in the movement's currency.",
   },
   ivaRate: {
     label: "IVA rate",
@@ -294,7 +268,6 @@ export const F: Record<string, FieldDef> = {
     clearable: true,
     tax: true,
     num: true,
-    hint: "Percent: 21 for 21%.",
   },
   ivaAmount: {
     label: "IVA",
@@ -302,7 +275,6 @@ export const F: Record<string, FieldDef> = {
     clearable: true,
     tax: true,
     num: true,
-    hint: "IVA amount: 1234.50.",
   },
   recargo: {
     label: "Recargo",
@@ -343,7 +315,6 @@ export const F: Record<string, FieldDef> = {
     required: true,
     editor: "text",
     max: 3,
-    hint: "Three letters: EUR, USD.",
   },
   usageRatio: {
     label: "Usage ratio",
@@ -389,6 +360,18 @@ export const F: Record<string, FieldDef> = {
     max: 64,
   },
 };
+/* The entry control a column takes, from its editor kind. */
+export function entryKindOf(k: string): EntryKind {
+  const def = F[k];
+  if (def?.editor === "date") return { kind: "date" };
+  if (def?.editor === "amount") return { kind: "money" };
+  if (def?.editor === "rate" || def?.editor === "share")
+    return { kind: "percent", unit: "points" };
+  if (k === "currency") return { kind: "currency" };
+  if (k === "counterpartyCountry" || k === "sourceJurisdiction")
+    return { kind: "country" };
+  return { kind: "text", maxLength: def?.max };
+}
 export const isIdentity = (k: string, r?: Movement | null) =>
   k === "description" ||
   k === "amount" ||
@@ -677,7 +660,7 @@ export function parseFor(
     if (k === "currency") {
       if (!/^[A-Za-z]{3}$/.test(s))
         return {
-          error: `“${raw}” is not a currency code. Use three letters, e.g. EUR or USD.`,
+          error: `“${raw}” is not a currency code.`,
         };
       return { value: s.toUpperCase() };
     }
@@ -685,7 +668,7 @@ export function parseFor(
       if (s === "") return { empty: true };
       if (!/^\d{2}$/.test(s))
         return {
-          error: `“${raw}” is not a Modelo 210 income type: two digits, e.g. 01.`,
+          error: `“${raw}” is not a Modelo 210 income type: two digits.`,
         };
       return { value: s };
     }
@@ -693,7 +676,7 @@ export function parseFor(
       if (s === "") return { empty: true };
       if (!/^[A-Za-z]{2}$/.test(s))
         return {
-          error: `“${raw}” is not a two-letter country code, e.g. ES or LU.`,
+          error: `“${raw}” is not a country code.`,
         };
       return { value: s.toUpperCase() };
     }
