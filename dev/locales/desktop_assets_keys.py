@@ -133,12 +133,23 @@ ASSET_PERCENT_PLACEHOLDER_PREFIXES: Final[tuple[str, ...]] = (ASSET_REASON_FAMIL
 #: The enum behind each token family, for the test that compares them.
 ASSET_ENUM_FAMILIES: Final[Mapping[str, type[Enum]]] = MappingProxyType(_enum_families())
 
+def _backend_reason_keys() -> frozenset[str]:
+    """Return the reason keys the plan serves outside the reason family, which the tab words as they stand."""
+    from cadrumo.application.actividad_asset.activity_asset_read_models import NO_TABLE_MINIMUM_REASON_KEY
+
+    return frozenset({NO_TABLE_MINIMUM_REASON_KEY})
+
+
 #: Words the command line and the terminal workbench already state for the same
-#: figure, which the tab reads rather than words again.
-ASSET_SHARED_KEYS: Final[frozenset[str]] = frozenset(
-    {
-        "tui.ledger.activity_asset.plan_minimum",
-    }
+#: figure, which the tab reads rather than words again, and the reason keys the
+#: plan serves that belong to no enum or reason family.
+ASSET_SHARED_KEYS: Final[frozenset[str]] = (
+    frozenset(
+        {
+            "tui.ledger.activity_asset.plan_minimum",
+        }
+    )
+    | _backend_reason_keys()
 )
 
 #: Every key the tab words, each family member spelled out.

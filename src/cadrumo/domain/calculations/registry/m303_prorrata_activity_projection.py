@@ -11,8 +11,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
@@ -35,12 +36,30 @@ class M303ProrrataActivityEndpointValue(BaseModel):
 
 
 class M303ProrrataActivityRowProjection(BaseModel):
-    """The five reviewed official endpoint values for one persisted row slot."""
+    """The reviewed official endpoint values for one persisted row slot."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     slot: int = Field(ge=1)
-    endpoints: tuple[M303ProrrataActivityEndpointValue, ...] = Field(min_length=5, max_length=5)
+    endpoints: tuple[M303ProrrataActivityEndpointValue, ...]
+
+    @field_validator("slot")
+    @classmethod
+    @pydantic_validation_boundary
+    def _slot_is_a_declared_row(cls, slot: int) -> int:
+        if slot > int(resolve_form_codes_leased("form-row-codes").code("m303.prorrata.activity_slots")):
+            raise RegistryValidationError(f"prorrata activity slot {slot} is past the form's declared rows")
+        return slot
+
+    @field_validator("endpoints")
+    @classmethod
+    @pydantic_validation_boundary
+    def _every_field_has_its_endpoint(
+        cls, endpoints: tuple[M303ProrrataActivityEndpointValue, ...]
+    ) -> tuple[M303ProrrataActivityEndpointValue, ...]:
+        if len(endpoints) != len(_FIELDS):
+            raise RegistryValidationError("a prorrata activity row needs one endpoint per declared field")
+        return endpoints
 
 
 def project_m303_prorrata_activity_rows(

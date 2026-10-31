@@ -17,6 +17,9 @@ import pytest
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
+    from .filing_export_proof_authority import CanonicalTwoChannelFilingExportProofAuthority
+    from .tests.committed_authority_publication import RunPublishedAuthority
+
 
 @pytest.fixture(scope="session", autouse=True)
 def _isolate_registry_caches() -> Iterator[None]:
@@ -58,6 +61,20 @@ def _worker_compiled_authority() -> ValidatedRegistryAuthority:
     return compiled_bundled_authority()
 
 
+@pytest.fixture(scope="session")
+def committed_published_authority() -> RunPublishedAuthority:
+    """The one publication of the committed sources, shared by every worker and kept across runs.
+
+    Published by the first worker that asks while its inputs are unpublished,
+    then admitted by digest. A test reads it in place; one that must write gets
+    a file copy, never a republication. A test whose subject is a different
+    candidate publishes that candidate itself.
+    """
+    from .tests.committed_authority_publication import committed_authority_publication
+
+    return committed_authority_publication()
+
+
 @pytest.fixture
 def governed_fact_scope(_worker_compiled_authority: ValidatedRegistryAuthority) -> Iterator[None]:
     """Resolve registry tokens in one requesting test against the compiled authored facts.
@@ -70,3 +87,29 @@ def governed_fact_scope(_worker_compiled_authority: ValidatedRegistryAuthority) 
 
     with validating_governed_facts(_worker_compiled_authority):
         yield
+
+
+@pytest.fixture(scope="session")
+def canonical_filing_export_proof(
+    _worker_compiled_authority: ValidatedRegistryAuthority,
+) -> CanonicalTwoChannelFilingExportProofAuthority:
+    """Compose the canonical two-channel filing-export proof once per worker.
+
+    Composition derives the strict conformance enrollment over every filing
+    revision, which costs tens of seconds, and several modules assert against
+    the same composition of the committed tree. Consumers only read it; a test
+    whose subject is composing a different candidate composes its own.
+    """
+    from cadrumo.core.resources.bundled_data import bundled_path
+
+    from .._paths import REPO_ROOT
+    from .filing_export_proof_authority import canonical_two_channel_filing_export_proof_authority
+
+    return canonical_two_channel_filing_export_proof_authority(
+        workspace_root=REPO_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        authority=_worker_compiled_authority,
+        secure_replay_source=None,
+        secure_replay_custody=None,
+    )

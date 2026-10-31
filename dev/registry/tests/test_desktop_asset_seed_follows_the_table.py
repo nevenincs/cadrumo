@@ -162,7 +162,7 @@ def test_the_seeded_table_classes_carry_the_registrys_official_names() -> None:
     assert all(official[key] == label for key, label in seeded.items())
 
 
-_VEHICLE_FLAG = re.compile(r'class_key:\s*"(?P<key>[^"]+)",.*?can_hold_vehicle:\s*(?P<flag>true|false)', re.DOTALL)
+_VEHICLE_FLAG = re.compile(r'class_key:\s*"(?P<key>[^"]+)",.*?requires_vehicle_declaration:\s*(?P<flag>true|false)', re.DOTALL)
 
 
 @pytest.mark.parametrize(
@@ -233,3 +233,41 @@ def test_every_seeded_limit_states_its_last_day_as_the_day_before_the_boundary()
             assert last == "null"
             continue
         assert last == f'"{(date.fromisoformat(boundary.strip(chr(34))) - timedelta(days=1)).isoformat()}"'
+
+
+_PLAN_ROW = re.compile(
+    r'absence:\s*(?P<absence>null|"\w+"),\s*'
+    r"absence_reason_key:\s*(?P<key>null|\"[^\"]*\"),\s*"
+    r"absence_reason_facts:\s*(?:\[\]|\[.*?\n {8}\]),\s*"
+    r"absence_remedy_field_key:\s*(?P<remedy>null|\"[^\"]*\"),\s*"
+    r"applies:\s*(?P<applies>true|false),.*?"
+    r"claimable_intervals:\s*(?P<intervals>\[\]|\[)",
+    re.DOTALL,
+)
+
+
+def test_every_seeded_plan_row_states_what_the_backend_derives_of_its_absence_and_open_spans() -> None:
+    from cadrumo.application.actividad_asset.activity_asset_read_models import remedy_field_key
+    from cadrumo.application.actividad_asset.schedule_walk import NOT_APPLICABLE_ABSENCES
+
+    not_applicable = {member.value for member in NOT_APPLICABLE_ABSENCES}
+    rows = list(_PLAN_ROW.finditer(_section(_SEED.read_text(encoding="utf-8"), "SEED_ELEMENTS")))
+
+    assert rows
+    assert {row["applies"] for row in rows} == {"true", "false"}, "the seed exercises one state only"
+    for row in rows:
+        absence = None if row["absence"] == "null" else row["absence"].strip('"')
+        key = None if row["key"] == "null" else row["key"].strip('"')
+        remedy = None if row["remedy"] == "null" else row["remedy"].strip('"')
+        assert (row["applies"] == "true") == (absence not in not_applicable or row["intervals"] == "[")
+        assert remedy == remedy_field_key(key)
+
+
+def test_the_one_reason_the_plan_screen_compares_is_the_backends_no_table_minimum_reason() -> None:
+    from cadrumo.application.actividad_asset.activity_asset_read_models import NO_TABLE_MINIMUM_REASON_KEY
+
+    words = REPO_ROOT / "native" / "desktop" / "frontend" / "src" / "components" / "ledger" / "assets" / "planWords.ts"
+    found = re.search(r'NO_TABLE_MINIMUM\s*=\s*"([^"]+)"', words.read_text(encoding="utf-8"))
+
+    assert found is not None
+    assert found[1] == NO_TABLE_MINIMUM_REASON_KEY

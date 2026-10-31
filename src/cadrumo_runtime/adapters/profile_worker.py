@@ -152,6 +152,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
                 else (str(worker_script.resolve(strict=True)),)
             )
             interpreter, *interpreter_arguments = interpreter_command()
+            interpreter = _direct_windows_interpreter(interpreter, environment)
             self._process = self._scope.launch(
                 executable=Path(interpreter),
                 arguments=(
@@ -384,6 +385,28 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         ready = read_document(channel, ProfileWorkerReady, deadline=deadline)
         if ready.identity != identity:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="worker_ready_identity")
+
+
+_VENV_LAUNCHER_VARIABLE = "__PYVENV_LAUNCHER__"
+
+
+def _direct_windows_interpreter(interpreter: str, environment: dict[str, str]) -> str:
+    """Start a Windows virtual environment's base interpreter directly, inside the same job.
+
+    A virtual environment's ``python.exe`` is a launcher process whose only
+    work is to start the base interpreter with ``__PYVENV_LAUNCHER__`` set to
+    its own path. Setting that here and starting the base interpreter yields
+    the same interpreter configuration with one process creation fewer per
+    worker. A binary-hosted interpreter role, or any interpreter outside a
+    virtual environment, is launched exactly as selected.
+    """
+    if sys.platform != "win32" or sys.prefix == sys.base_prefix or Path(interpreter) != Path(sys.executable):
+        return interpreter
+    base = getattr(sys, "_base_executable", None)
+    if not isinstance(base, str) or not base or Path(base) == Path(sys.executable) or not Path(base).is_file():
+        return interpreter
+    environment[_VENV_LAUNCHER_VARIABLE] = sys.executable
+    return base
 
 
 def _worker_launch_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:

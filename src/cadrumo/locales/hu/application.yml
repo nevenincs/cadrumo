@@ -85,8 +85,9 @@ application:
         refused_certificate_path_unset: 'Nem lehet bejelentkezni: még nem lett kiválasztva
           tanúsítványfájl. Futtasd a `cadrumo-runtime config auth configure --provider
           certificate --file ÚTVONAL` parancsot.'
-        refused_clave_movil_identity_unset: 'Nem lehet bejelentkezni a Cl@ve Móvil használatával:
-          még nincs konfigurálva DNI/NIE. A folytatás előtt konfigurálj egyet.'
+        refused_clave_movil_identity_unset: 'Nem lehet bejelentkezni a Cl@ve Móvil
+          használatával: még nincs konfigurálva DNI/NIE. A folytatás előtt konfigurálj
+          egyet.'
         refused_live_tests_disabled: 'Az élő bejelentkezést a biztonsági kapu letiltja:
           az eszköz csak helyben épít és ellenőriz. Engedélyezd az élő teszteket,
           ha valóban csatlakozni szeretnél az AEAT-hoz, majd futtasd újra a parancsot.
@@ -508,50 +509,40 @@ application:
         összesen {registered_count} ellenőrző van regisztrálva.
   inventory:
     advisories:
-      retired_book_leaves_year_unresolved: "Ez a készlet ki van vezetve, de még vannak tételei, ezért a %{year}. évi D melléklet megoldatlan marad. Állítsd vissza, vagy töröld a tételeit."
+      retired_book_leaves_year_unresolved: Ez a készlet ki van vezetve, de még vannak
+        tételei, ezért a %{year}. évi D melléklet megoldatlan marad. Állítsd vissza,
+        vagy töröld a tételeit.
     labels:
       acquisition_evidence_kind:
-        purchase_invoice: "Beszerzési számla"
-        transport_document: "Szállítási dokumentum"
-        insurance_document: "Biztosítási dokumentum"
-        customs_declaration: "Vámáru-nyilatkozat"
-        contract: "Szerződés"
-        other_acquisition_evidence: "Egyéb beszerzési dokumentum"
-        attributable_cost_review: "Költségellenőrzés"
-        iva_recoverability_review: "ÁFA-ellenőrzés"
+        attributable_cost_review: Költségellenőrzés
+        contract: Szerződés
+        customs_declaration: Vámáru-nyilatkozat
+        insurance_document: Biztosítási dokumentum
+        iva_recoverability_review: ÁFA-ellenőrzés
+        other_acquisition_evidence: Egyéb beszerzési dokumentum
+        purchase_invoice: Beszerzési számla
+        transport_document: Szállítási dokumentum
       attributable_cost_kind:
-        freight: "Fuvardíj"
-        insurance: "Biztosítás"
-        customs_duty: "Vám"
-        handling: "Rakodás"
-        professional_fee: "Szakértői díj"
-        other_directly_attributable: "Egyéb közvetlen költség"
+        customs_duty: Vám
+        freight: Fuvardíj
+        handling: Rakodás
+        insurance: Biztosítás
+        other_directly_attributable: Egyéb közvetlen költség
+        professional_fee: Szakértői díj
       closing_authority:
-        movement_derived: "A mozgásokból számítva"
-        physical_observation: "Fizikai leltár"
+        movement_derived: A mozgásokból számítva
+        physical_observation: Fizikai leltár
       closing_valuation_basis:
-        fifo_acquisition_price: "Beszerzési ár, először be, először ki"
-        pmp_acquisition_price: "Súlyozott átlagos beszerzési ár"
-        coste_medio_acquisition_price: "Átlagköltség beszerzési áron"
-      decision_evidence_role:
-        authority_reconciliation: "Záróérték-ellenőrzés"
-      movement_kind:
-        opening: "Nyitás"
-        purchase: "Beszerzés"
-        cogs: "Eladott áruk költsége"
-        count: "Leltár"
-      physical_evidence_role:
-        physical_count: "Fizikai leltár"
-        acquisition_price_valuation: "Értékelés beszerzési áron"
-      valuation_method:
-        fifo: "Először be, először ki"
-        pmp: "Súlyozott átlagár"
-        coste_medio: "Átlagköltség"
+        coste_medio_acquisition_price: Átlagköltség beszerzési áron
+        fifo_acquisition_price: Beszerzési ár, először be, először ki
+        pmp_acquisition_price: Súlyozott átlagos beszerzési ár
       correction_reason:
         duplicate_entry: Kettős rögzítés
         keying_error: Rögzítési hiba
         operation_did_not_occur: A művelet nem történt meg
         source_document_corrected: A forrásdokumentumot helyesbítették
+      decision_evidence_role:
+        authority_reconciliation: Záróérték-ellenőrzés
       history_kind:
         described: Leírás módosítva
         movement_corrected: Mozgás javítva
@@ -559,36 +550,64 @@ application:
         opening_corrected: Nyitás javítva
         restored: Visszaállítva
         retired: Kivonva
+      movement_kind:
+        cogs: Eladott áruk költsége
+        count: Leltár
+        opening: Nyitás
+        purchase: Beszerzés
+      physical_evidence_role:
+        acquisition_price_valuation: Értékelés beszerzési áron
+        physical_count: Fizikai leltár
       retirement_reason:
         activity_ceased: A tevékenység megszűnt
         created_in_error: Tévedésből létrehozva
         no_stock_held: Nincs készlet
+      valuation_method:
+        coste_medio: Átlagköltség
+        fifo: Először be, először ki
+        pmp: Súlyozott átlagár
     service:
       errors:
-        activity_conflict: "Már létezik készletnyilvántartás ehhez a tevékenységhez és a(z) %{year} évhez. Nyisd meg, ahelyett hogy újat hoznál létre."
-        activity_not_found: "Nincs készletnyilvántartás ehhez a tevékenységhez és a(z) %{year} évhez. Először hozd létre, vagy ellenőrizd a tevékenységet és az évet."
-        closing_authority_conflict: "Ehhez a tevékenységhez és évhez már másik záróérték van rögzítve."
-        evidence_file_not_admitted: "Ezt a fájlt nem lehet megőrizni. Válassz egy megnyitható PDF-et, XML-fájlt vagy képet (PNG, JPEG, TIFF, WebP vagy HEIC), és próbáld újra."
-        closing_authority_invalid: "Ezt a záróértéket nem sikerült rögzíteni, mert az adatai nem egyeznek egymással. Ellenőrizd őket, és próbáld újra."
-        closing_authority_recorded: "Ennek a tevékenységnek a(z) %{year}. évi készletének záróértéke már rögzítve van, ezért a készletadatai már nem módosíthatók."
+        activity_conflict: Már létezik készletnyilvántartás ehhez a tevékenységhez
+          és a(z) %{year} évhez. Nyisd meg, ahelyett hogy újat hoznál létre.
+        activity_not_found: Nincs készletnyilvántartás ehhez a tevékenységhez és a(z)
+          %{year} évhez. Először hozd létre, vagy ellenőrizd a tevékenységet és az
+          évet.
+        closing_authority_conflict: Ehhez a tevékenységhez és évhez már másik záróérték
+          van rögzítve.
+        closing_authority_invalid: Ezt a záróértéket nem sikerült rögzíteni, mert
+          az adatai nem egyeznek egymással. Ellenőrizd őket, és próbáld újra.
+        closing_authority_recorded: Ennek a tevékenységnek a(z) %{year}. évi készletének
+          záróértéke már rögzítve van, ezért a készletadatai már nem módosíthatók.
         correction_changes_nothing: Ez a javítás nem ad meg a jelenlegitől eltérő
           nyitó értéket vagy értékelési módszert.
-        correction_id_conflict: "Ezt a javítást már más adatokkal rögzítették."
+        correction_id_conflict: Ezt a javítást már más adatokkal rögzítették.
         count_would_raise_stock: 'A leltár nem növelheti a készletet: a(z) %{sku}
           tétel a nyilvántartott egységek fölé kerülne.'
-        duplicate_movement_id: "Ez a mozgás már szerepel a készletnyilvántartásban. Mielőtt újra felvennéd, ellenőrizd a rögzített mozgásokat."
+        duplicate_movement_id: Ez a mozgás már szerepel a készletnyilvántartásban.
+          Mielőtt újra felvennéd, ellenőrizd a rögzített mozgásokat.
+        evidence_file_not_admitted: Ezt a fájlt nem lehet megőrizni. Válassz egy megnyitható
+          PDF-et, XML-fájlt vagy képet (PNG, JPEG, TIFF, WebP vagy HEIC), és próbáld
+          újra.
         invalid_valuation_method: 'A készlet értékelési mód nem támogatott: %{valuation_method}.'
-        inventory_already_retired: Ennek a tevékenységnek a(z) %{year}. évi készlete már
-          ki van vonva.
-        inventory_not_retired: Ennek a tevékenységnek a(z) %{year}. évi készlete nincs kivonva.
-        inventory_retired: Ennek a tevékenységnek a(z) %{year}. évi készlete ki van vonva.
-          Állítsd vissza, mielőtt módosítod a készletadatait.
-        inventory_validation: "Ezeket a készletadatokat nem sikerült elfogadni. Ellenőrizd őket, és próbáld újra."
-        later_closing_authority_recorded: "Ennek a tevékenységnek a(z) %{later_year}. évi záróértéke erre a zárásra épül, ezért a(z) %{year}. évi készletadatok már nem módosíthatók."
-        movement_already_superseded: "Ezt a mozgást már javították vagy sztornózták."
-        movement_not_found: "Ennek a tevékenységnek a(z) %{year}. évi készletében nincs ilyen mozgás."
-        movement_outside_year: "Ennek a mozgásnak a dátuma kívül esik a(z) %{year}. évi készleten."
-        prior_closing_document_needed: "Ehhez a záróértékhez szükség van az előző év záró dokumentumára. Add hozzá, és próbáld újra."
+        inventory_already_retired: Ennek a tevékenységnek a(z) %{year}. évi készlete
+          már ki van vonva.
+        inventory_not_retired: Ennek a tevékenységnek a(z) %{year}. évi készlete nincs
+          kivonva.
+        inventory_retired: Ennek a tevékenységnek a(z) %{year}. évi készlete ki van
+          vonva. Állítsd vissza, mielőtt módosítod a készletadatait.
+        inventory_validation: Ezeket a készletadatokat nem sikerült elfogadni. Ellenőrizd
+          őket, és próbáld újra.
+        later_closing_authority_recorded: Ennek a tevékenységnek a(z) %{later_year}.
+          évi záróértéke erre a zárásra épül, ezért a(z) %{year}. évi készletadatok
+          már nem módosíthatók.
+        movement_already_superseded: Ezt a mozgást már javították vagy sztornózták.
+        movement_not_found: Ennek a tevékenységnek a(z) %{year}. évi készletében nincs
+          ilyen mozgás.
+        movement_outside_year: Ennek a mozgásnak a dátuma kívül esik a(z) %{year}.
+          évi készleten.
+        prior_closing_document_needed: Ehhez a záróértékhez szükség van az előző év
+          záró dokumentumára. Add hozzá, és próbáld újra.
         stock_would_go_negative: 'Ettől a készlet nulla alá csökkenne: a(z) %{sku}
           tételből több egység kellene, mint amennyi maradt.'
     workbench:
@@ -926,9 +945,9 @@ application:
         what_to_do: Ellenőrizd, mit mond ez a megjegyzés a kivezetésről, és rögzítsd
           vagy javítsd, ha rád vonatkozik.
       activity_asset_foral_territory:
-        what: Ebben az időszakban önálló adóhatóságú területen élsz, ahol az
-          értékcsökkenésre más szabályok vonatkoznak. Ez kívül esik ezen a
-          számításon, és nem vonunk le összeget.
+        what: Ebben az időszakban önálló adóhatóságú területen élsz, ahol az értékcsökkenésre
+          más szabályok vonatkoznak. Ez kívül esik ezen a számításon, és nem vonunk
+          le összeget.
         what_to_do: Az értékcsökkenést a területed szabályai szerint állapítsd meg,
           és az ottani adóhatóságnál jelentsd be.
       activity_asset_residence_period_unknown:
@@ -1034,14 +1053,16 @@ application:
           hiányzik az igazolás, vagy nem egyeznek.
         what_to_do: Nyisd meg az erre az időszakra vonatkozó nyilvántartásaidat, javítsd
           a megjelölt tételeket, majd számolj újra.
-      ledger_expense_may_be_durable:
-        what: "Egy folyó költségként levont tétel egy évnél tovább használt eszköz lehet. Az?"
-        what_to_do: "Ha igen, vedd fel az eszközt, mert értékcsökkenésen keresztül vonható le, majd számolj újra. Ha fogyóeszköz, hagyd a tételt változatlanul."
       ledger_amortization_row_unregistered:
         what: Egy tétel olyan amortizálható vásárlást rögzít, amely nincs az eszköznyilvántartásodban,
           ezért nem vonható le.
         what_to_do: Vedd fel az eszközt, és jelöld meg ezt a tételt a beszerzéseként,
           vagy sorold át a tételt, majd számolj újra.
+      ledger_expense_may_be_durable:
+        what: Egy folyó költségként levont tétel egy évnél tovább használt eszköz
+          lehet. Az?
+        what_to_do: Ha igen, vedd fel az eszközt, mert értékcsökkenésen keresztül
+          vonható le, majd számolj újra. Ha fogyóeszköz, hagyd a tételt változatlanul.
       m193_settled_row_amounts_unresolved_authority:
         what: Egy későbbi évben teljesített kifizetés tételének egyes összegeit nem
           erősíti meg hivatalos forrás.
@@ -1109,14 +1130,20 @@ application:
         what_to_do: Ellenőrizd a számláid és tételeid áfakulcsát, majd számolj újra.
           A nyilatkozat exportálására addig nem kerülhet sor, amíg ezt nem rendezik.
       register_acquisition_exceeds_ledger:
-        what: "A nyilvántartásodban szereplő eszköz könyvelési tételei kevesebbet fizettek a megadott költségnél."
-        what_to_do: "Javítsd az árat az eszköznyilvántartásban vagy a tételt, majd számolj újra."
+        what: A nyilvántartásodban szereplő eszköz könyvelési tételei kevesebbet fizettek
+          a megadott költségnél.
+        what_to_do: Javítsd az árat az eszköznyilvántartásban vagy a tételt, majd
+          számolj újra.
       register_acquisition_partly_accounted:
-        what: "A nyilvántartásodban szereplő eszköz a könyvelési tételének csak egy részét magyarázza, így a többi nem vonható le."
-        what_to_do: "Vedd fel, mi mást fizetett az a tétel, vagy javítsd az eszköz árát, majd számolj újra."
+        what: A nyilvántartásodban szereplő eszköz a könyvelési tételének csak egy
+          részét magyarázza, így a többi nem vonható le.
+        what_to_do: Vedd fel, mi mást fizetett az a tétel, vagy javítsd az eszköz
+          árát, majd számolj újra.
       register_acquisition_row_missing:
-        what: "A nyilvántartásodban szereplő eszköz olyan könyvelési tételre hivatkozik, amely már nincs a tételeid között."
-        what_to_do: "Vedd fel újra azt a tételt, vagy javítsd az eszközt a nyilvántartásban, majd számolj újra."
+        what: A nyilvántartásodban szereplő eszköz olyan könyvelési tételre hivatkozik,
+          amely már nincs a tételeid között.
+        what_to_do: Vedd fel újra azt a tételt, vagy javítsd az eszközt a nyilvántartásban,
+          majd számolj újra.
       register_owned_capital_acquisition:
         what: Egy eszközvásárlás kimarad a költségei közül, mert az éves értékcsökkenési
           leírásán keresztül vonható le.
@@ -1509,9 +1536,9 @@ application:
         probléma maradt.
       deductible_iva_evidence_missing: 'A nyilvántartásaidban szereplő, levonható
         IVA-t tartalmazó tételekhez kapcsolt beszerzési számla szükséges. Kapcsold
-        a számlát a tételhez, majd futtasd újra a work verify parancsot: az ellenőrzés
-        nem fejeződik be, amíg egy levonható tételhez nincs számla, így a piszkozat
-        nyitva marad, és átveszi a bizonylatot.'
+        a számlát a tételhez, majd futtasd újra a aeat app modelo work verify parancsot:
+        az ellenőrzés nem fejeződik be, amíg egy levonható tételhez nincs számla,
+        így a piszkozat nyitva marad, és átveszi a bizonylatot.'
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
@@ -1745,9 +1772,9 @@ application:
         ehhez a nyomtatványhoz/időszakhoz az aktuális dátumon (az AEAT benyújtási
         kötelezettségi ablaka nincs nyitva). A fichero-exporthoz nem szükséges ez
         a lépés: exportáld az ellenőrzött, teljes számítást az ''aeat app modelo export''
-        paranccsal; ez a helyi befejezési pont. A ''work file'' az opcionális lépés,
-        amely a bevallást benyújtottként rögzíti, amikor a kötelezettségi ablak nyitva
-        van.'
+        paranccsal; ez a helyi befejezési pont. A ''aeat app modelo work file'' az
+        opcionális lépés, amely a bevallást benyújtottként rögzíti, amikor a kötelezettségi
+        ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
     finding_fact:

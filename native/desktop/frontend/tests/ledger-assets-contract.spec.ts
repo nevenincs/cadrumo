@@ -14,7 +14,8 @@ import {
   purchaseValues,
   refusalOf,
   refusalWord,
-  claimsInTheWay,
+  claimInTheWay,
+  CLAIMS_OVERLAP,
   staleClaims,
   viewOf,
 } from "../src/components/ledger/assets/assetWrites";
@@ -63,7 +64,7 @@ import {
 } from "../src/components/ledger/assets/handoffWords";
 import {
   changeValueText,
-  nothingOpenWhy,
+  nothingOpen,
   recordedMark,
 } from "../src/components/ledger/assets/planWords";
 import type { SetupCall } from "../src/components/ledger/setup/setupModel";
@@ -77,7 +78,9 @@ import type { Translate } from "../src/shell/strings";
 import { ledgerClassOf } from "../src/dev/ledgerClassesFixture";
 import {
   ADMITTED_METHODS,
+  ACQUIRED_CONDITIONS,
   BASIS_STAGES,
+  FURTHER_ACQUISITION_SHAPES,
   DISPOSAL_REASONS,
   M130_PERIODS,
   OPENING_STATUSES,
@@ -1131,7 +1134,11 @@ test("a correction names the revision it stands on, and the claims it records ag
 test("the filing handoff reads the seeded claims, and names the element it cannot work out", async () => {
   const port = portOf();
   const handoff = await settled<LedgerResult<typeof HANDOFF>>(
-    port.submit(HANDOFF, { tax_year: 2025, m130_period: "4T" }),
+    port.submit(HANDOFF, {
+      tax_year: 2025,
+      output_language: "en",
+      m130_period: "4T",
+    }),
   );
   const projection = handoff.filing_handoff!;
   const effective = (kind: string) =>
@@ -1168,7 +1175,11 @@ test("the filing handoff reads the seeded claims, and names the element it canno
     ),
   ).toBe(true);
   const quarter = await settled<LedgerResult<typeof HANDOFF>>(
-    port.submit(HANDOFF, { tax_year: 2025, m130_period: "1T" }),
+    port.submit(HANDOFF, {
+      tax_year: 2025,
+      output_language: "en",
+      m130_period: "1T",
+    }),
   );
   expect(
     cents(quarter.filing_handoff!.material_m130!.amount.decimal),
@@ -2009,6 +2020,8 @@ test("each act's fields and requests come from the backend's choices", () => {
     disposal_reasons: [...DISPOSAL_REASONS],
     basis_stages: [...BASIS_STAGES],
     opening_statuses: [...OPENING_STATUSES],
+    acquired_conditions: [...ACQUIRED_CONDITIONS],
+    further_acquisition_shapes: [...FURTHER_ACQUISITION_SHAPES],
     m130_periods: [...M130_PERIODS[2026]!],
   };
   const fields = fieldsFor(
@@ -2649,6 +2662,8 @@ test("a method with a fact that has no form is not offered, and its repeated row
     table_groups: [],
     basis_stages: [],
     opening_statuses: [],
+    acquired_conditions: [],
+    further_acquisition_shapes: [],
     m130_periods: [],
   };
   const fields = fieldsFor({
@@ -2667,7 +2682,7 @@ test("a method with a fact that has no form is not offered, and its repeated row
   expect(unlabelledFacts(options)).toEqual(["invented_fact"]);
 });
 
-test("a dotación in the way of a span is found among the effective ones, and each is shown by its last day", async () => {
+test("the one dotación a refusal names as in the way is offered for correction; several, none or a plain refusal offer none", async () => {
   const port = portOf();
   const furgoneta = (await planOf(port, "furgoneta")).find(
     (row) => row.tax_year === 2026,
@@ -2677,25 +2692,37 @@ test("a dotación in the way of a span is found among the effective ones, and ea
   const first = recorded[0]!;
   // The last day a dotación covers is the day before its exclusive boundary.
   expect(first.covered_through < first.covered_until).toBe(true);
+  // A forecast that meets it is refused with the claim it meets.
+  const refusal = (await refused(
+    port.submit(FORECAST, {
+      asset_id: "furgoneta",
+      covered_from: first.covered_from,
+      covered_through: first.covered_through,
+      requested_free_amount: null,
+      supersedes_claim_id: null,
+    }),
+  )) as Refused;
+  expect(refusal.detail.refusal.reason_key).toBe(CLAIMS_OVERLAP);
+  const named = refusalOf(refusal.detail).reasonFacts;
+  expect(named).toEqual([
+    { key: "conflicting_claim_ids", value: first.claim_id, kind: "text" },
+  ]);
+  expect(claimInTheWay(named)).toBe(first.claim_id);
+  // Several, none, or a refusal without the fact name no single one.
   expect(
-    claimsInTheWay(recorded, first.covered_from, first.covered_through),
-  ).toEqual([first]);
-  // A span that starts on the claim's exclusive boundary day is not in the way.
-  expect(claimsInTheWay(recorded, first.covered_until, "2099-01-01")).toEqual(
-    [],
+    claimInTheWay([
+      { key: "conflicting_claim_ids", value: "a,b", kind: "text" },
+    ]),
+  ).toBeNull();
+  expect(
+    claimInTheWay([{ key: "conflicting_claim_ids", value: "", kind: "text" }]),
+  ).toBeNull();
+  expect(claimInTheWay([])).toBeNull();
+  // The names are for acting on, never for saying.
+  const t = wordsOf({ [CLAIMS_OVERLAP]: "That period is already recorded." });
+  expect(reasonText(t, CLAIMS_OVERLAP, named)).toBe(
+    "That period is already recorded.",
   );
-  // A span that ends on the claim's last day still meets it.
-  expect(
-    claimsInTheWay(recorded, "2000-01-01", first.covered_through),
-  ).toContain(first);
-  // A replaced dotación is not in the way.
-  expect(
-    claimsInTheWay(
-      recorded.map((found) => ({ ...found, effective: false })),
-      first.covered_from,
-      first.covered_through,
-    ),
-  ).toEqual([]);
   for (const interval of furgoneta.claimable_intervals)
     expect(interval.covered_through < interval.covered_until).toBe(true);
 });
@@ -2747,8 +2774,8 @@ test("a forecast states the last day covered, which the backend turns into its b
 
 test("a handoff for a year alone states the Modelo 100 boxes and no Modelo 130 side; a chosen quarter adds it", async () => {
   const port = portOf();
-  const alone = handoffRequest(2025, "");
-  expect(alone).toEqual({ tax_year: 2025 });
+  const alone = handoffRequest(2025, "", "es");
+  expect(alone).toEqual({ tax_year: 2025, output_language: "es" });
   const year = await settled<LedgerResult<typeof HANDOFF>>(
     port.submit(HANDOFF, alone),
   );
@@ -2759,8 +2786,12 @@ test("a handoff for a year alone states the Modelo 100 boxes and no Modelo 130 s
   });
   expect(year.filing_handoff!.material_m100.target_casilla_id).toBe("0208");
   expect(year.filing_handoff!.intangible_m100.target_casilla_id).toBe("0227");
-  const quarter = handoffRequest(2025, "2T");
-  expect(quarter).toEqual({ tax_year: 2025, m130_period: "2T" });
+  const quarter = handoffRequest(2025, "2T", "es");
+  expect(quarter).toEqual({
+    tax_year: 2025,
+    output_language: "es",
+    m130_period: "2T",
+  });
   const chosen = await settled<LedgerResult<typeof HANDOFF>>(
     port.submit(HANDOFF, quarter),
   );
@@ -2772,11 +2803,11 @@ test("a handoff for a year alone states the Modelo 100 boxes and no Modelo 130 s
   );
 });
 
-test("the vehicle declaration is asked only for a table class the options say can hold a vehicle", async () => {
+test("the vehicle declaration is stated, with no question, for a table class the options say requires one, and nothing is drawn for any other", async () => {
   const port = portOf();
   const options = (await optionsOf(port, "material")) as FormOptions;
   const classKey = factKey(["authority_class_key"]);
-  const asks = (chosen: string, assetKind = "material") =>
+  const drawn = (chosen: string, assetKind = "material") =>
     fieldsFor(
       {
         kind: "element",
@@ -2787,22 +2818,32 @@ test("the vehicle declaration is asked only for a table class the options say ca
         options,
       },
       { asset_kind: assetKind, method: "linear", [classKey]: chosen },
-    ).some((found) => found.key === "vehicle_declared");
-  const holds = options.table_groups.filter((group) => group.can_hold_vehicle);
-  const cannot = options.table_groups.filter(
-    (group) => !group.can_hold_vehicle,
+    ).filter((found) => found.key.startsWith("vehicle_"));
+  const requires = options.table_groups.filter(
+    (group) => group.requires_vehicle_declaration,
   );
-  expect(holds.length).toBeGreaterThan(0);
-  expect(cannot.length).toBeGreaterThan(0);
-  for (const group of holds)
-    expect(asks(group.class_key), group.class_key).toBe(true);
-  for (const group of cannot)
-    expect(asks(group.class_key), group.class_key).toBe(false);
-  // No class chosen, or one the options do not list, asks nothing.
-  expect(asks("")).toBe(false);
-  expect(asks("not-a-class")).toBe(false);
+  const not = options.table_groups.filter(
+    (group) => !group.requires_vehicle_declaration,
+  );
+  expect(requires.length).toBeGreaterThan(0);
+  expect(not.length).toBeGreaterThan(0);
+  for (const group of requires) {
+    const fields = drawn(group.class_key);
+    expect(fields.map((found) => found.key)).not.toContain("vehicle_declared");
+    // The declaration opens as required: its category and use are not optional.
+    for (const key of ["vehicle_category", "vehicle_private_use"])
+      expect(
+        fields.find((found) => found.key === key)?.required,
+        `${group.class_key} ${key}`,
+      ).toBe(true);
+  }
+  for (const group of not)
+    expect(drawn(group.class_key), group.class_key).toEqual([]);
+  // No class chosen, or one the options do not list, draws nothing.
+  expect(drawn("")).toEqual([]);
+  expect(drawn("not-a-class")).toEqual([]);
   // The class the options serve decides alone; the kind does not gate it.
-  expect(asks(holds[0]!.class_key, "intangible")).toBe(true);
+  expect(drawn(requires[0]!.class_key, "intangible")).not.toEqual([]);
 });
 
 test("a baja form offers exactly the reasons the options serve, each worded by the key served with it", async () => {
@@ -2933,12 +2974,15 @@ const HANDOFF_WORDS = words({
 
 const projection = (
   casilla: string,
+  assetKind: string,
   facts: {
     free?: string[];
     agrarian?: string[];
   } = {},
 ) => ({
+  asset_kind: assetKind,
   target_casilla_id: casilla,
+  box_name: `Expenses - ${assetKind}`,
   tax_year: 2025,
   amount: { decimal: "0.00" },
   contributions: [],
@@ -2949,6 +2993,7 @@ const projection = (
 
 const claims = (casilla: string) => ({
   target_casilla_id: casilla,
+  box_name: `Box ${casilla}`,
   tax_year: 2025,
   claim_ids: [],
   amount: { decimal: "0.00" },
@@ -2967,14 +3012,16 @@ test("a handoff says what it leaves out by the elements' names, and by their num
         asset_id: "asset-aaa",
         kind: "accrued",
         covered_from: "2025-01-01",
-        covered_until: "2025-03-31",
+        covered_until: "2025-04-01",
+        covered_through: "2025-03-31",
         accrued: { decimal: "412.50" },
       },
       {
         asset_id: "asset-bbb",
         kind: "free_method",
         covered_from: "2025-02-01",
-        covered_until: "2025-03-31",
+        covered_until: "2025-04-01",
+        covered_through: "2025-03-31",
         accrued: null,
       },
       {
@@ -2982,22 +3029,24 @@ test("a handoff says what it leaves out by the elements' names, and by their num
         asset_id: "asset-aaa",
         kind: "accrued",
         covered_from: "2025-04-01",
-        covered_until: "2025-04-30",
+        covered_until: "2025-05-01",
+        covered_through: "2025-04-30",
         accrued: null,
       },
       {
         asset_id: "asset-zzz",
         kind: "unavailable",
         covered_from: "2025-01-01",
-        covered_until: "2025-12-31",
+        covered_until: "2026-01-01",
+        covered_through: "2025-12-31",
         accrued: null,
       },
     ],
-    material_m130: projection("02", {
+    material_m130: projection("02", "material", {
       free: ["asset-aaa", "asset-bbb"],
       agrarian: ["asset-zzz"],
     }),
-    intangible_m130: projection("02", { free: ["asset-bbb"] }),
+    intangible_m130: projection("02", "intangible", { free: ["asset-bbb"] }),
   };
   const said = leftOutNotes(HANDOFF_WORDS, "en", handoff, names);
   expect(said).toEqual([
@@ -3381,39 +3430,27 @@ const wordsOf = (strings: Record<string, string>, locale = "en"): Translate =>
     { locale },
   ) as unknown as Translate;
 
-test("a year with a span still open draws nothing recorded, whatever its absence is, and one with none draws by its absence", async () => {
+test("a year draws nothing recorded where it applies and does not apply where the plan says so, never by its absence", async () => {
   const port = portOf();
-  let open = 0;
+  let applying = 0;
+  let notApplying = 0;
   for (const seed of SEED_ELEMENTS)
     for (const row of await planOf(port, seed.id)) {
-      if (row.claimable_intervals.length > 0) {
-        open += 1;
-        expect(recordedMark(row), `${seed.id} ${row.tax_year}`).toBe(
-          "nothing_recorded",
-        );
-      }
+      expect(recordedMark(row), `${seed.id} ${row.tax_year}`).toBe(
+        row.applies ? "nothing_recorded" : "not_applicable",
+      );
+      if (row.applies) applying += 1;
+      else notApplying += 1;
+      // A year with a span open applies, whatever its absence is.
+      if (row.claimable_intervals.length > 0) expect(row.applies).toBe(true);
     }
-  expect(open).toBeGreaterThan(0);
-  const free = { absence: "free_election", claimable_intervals: [] };
-  expect(recordedMark(free)).toBe("not_applicable");
-  expect(
-    recordedMark({
-      ...free,
-      claimable_intervals: [
-        {
-          covered_from: "2026-01-01",
-          covered_until: "2027-01-01",
-          covered_through: "2026-12-31",
-        },
-      ],
-    }),
-  ).toBe("nothing_recorded");
-  expect(recordedMark({ ...free, absence: "incomplete" })).toBe(
-    "nothing_recorded",
-  );
+  expect(applying).toBeGreaterThan(0);
+  expect(notApplying).toBeGreaterThan(0);
+  expect(recordedMark({ applies: false })).toBe("not_applicable");
+  expect(recordedMark({ applies: true })).toBe("nothing_recorded");
 });
 
-test("a year with nothing open says the plan's own reason, the absence's when the refusal gives none, and never blank", () => {
+test("a year with nothing open says the plan's own reason, the absence's when the refusal gives none, and never blank, each with the entry to fill in where one is served", () => {
   const refusalKey = `${ASSET_REASON_FAMILY}amortization_period_elapsed`;
   const absenceKey = `${ASSET_REASON_FAMILY}opening_history_missing`;
   const t = wordsOf({
@@ -3425,25 +3462,41 @@ test("a year with nothing open says the plan's own reason, the absence's when th
     claimable_intervals: [],
     claimable_refusal_key: null,
     claimable_refusal_facts: [],
+    claimable_refusal_remedy_field_key: null,
     absence_reason_key: null,
     absence_reason_facts: [],
+    absence_remedy_field_key: null,
   };
+  const field =
+    "ledger.actividad_asset.field.opening_history.accumulated_amount";
+  const refusal = nothingOpen(t, {
+    ...none,
+    claimable_refusal_key: refusalKey,
+    claimable_refusal_facts: [
+      { key: "ended_on", value: "2025-12-31", kind: "date" },
+    ],
+    claimable_refusal_remedy_field_key: field,
+    absence_reason_key: absenceKey,
+  })!;
+  expect(refusal.why).toContain("2025");
+  // The remedy is the one served with the sentence that is said.
+  expect(refusal.remedyFieldKey).toBe(field);
   expect(
-    nothingOpenWhy(t, {
+    nothingOpen(t, {
       ...none,
-      claimable_refusal_key: refusalKey,
-      claimable_refusal_facts: [
-        { key: "ended_on", value: "2025-12-31", kind: "date" },
-      ],
       absence_reason_key: absenceKey,
+      absence_remedy_field_key: field,
     }),
-  ).toContain("2025");
-  expect(nothingOpenWhy(t, { ...none, absence_reason_key: absenceKey })).toBe(
-    "The opening amount is not entered.",
-  );
-  expect(nothingOpenWhy(t, none)).toBe("Nothing left to record");
+  ).toEqual({
+    why: "The opening amount is not entered.",
+    remedyFieldKey: field,
+  });
+  expect(nothingOpen(t, none)).toEqual({
+    why: "Nothing left to record",
+    remedyFieldKey: null,
+  });
   expect(
-    nothingOpenWhy(t, {
+    nothingOpen(t, {
       ...none,
       claimable_intervals: [
         {
@@ -3460,7 +3513,11 @@ test("the handoff says what could not be worked out, by name or by count, in the
   const port = portOf();
   const handoff = (
     await settled<LedgerResult<typeof HANDOFF>>(
-      port.submit(HANDOFF, { tax_year: 2025, m130_period: "4T" }),
+      port.submit(HANDOFF, {
+        tax_year: 2025,
+        output_language: "en",
+        m130_period: "4T",
+      }),
     )
   ).filing_handoff!;
   const strings = {
@@ -3497,4 +3554,162 @@ test("the handoff says what could not be worked out, by name or by count, in the
     "1 element couldn't be worked out, so it is left out.",
   ]);
   expect(leftOutNotes(t, "en", only([]), names)).toEqual([]);
+});
+
+// ---- What the backend serves in place of the screens' own rules ----------------
+
+test("the facts of a condition are drawn from the conditions the options serve, so a fact no condition lists is never asked", async () => {
+  const port = portOf();
+  const options = (await optionsOf(port, "material")) as FormOptions;
+  const keys = (served: FormOptions, draft: Record<string, string>) =>
+    fieldsFor(
+      {
+        kind: "element",
+        row: null,
+        descriptor: null,
+        revision: null,
+        tokens: () => [],
+        options: served,
+      },
+      { method: "linear", ...draft },
+    ).map((found) => found.key);
+  const price = factKey(["used_original_price", "original_price"]);
+  const used = options.acquired_conditions.find(
+    (found) => found.condition === "used",
+  )!;
+  expect(used.facts).toEqual([
+    "building_construction_date",
+    "used_original_price",
+  ]);
+  expect(keys(options, { acquired_condition: "used" })).toEqual(
+    expect.arrayContaining(["building_construction_date", price]),
+  );
+  expect(keys(options, { acquired_condition: "new" })).not.toContain(price);
+  expect(keys(options, { acquired_condition: "new" })).not.toContain(
+    "building_construction_date",
+  );
+  // The options alone decide: a used condition that lists no fact asks none.
+  const bare: FormOptions = {
+    ...options,
+    acquired_conditions: options.acquired_conditions.map((found) => ({
+      ...found,
+      facts: [],
+    })),
+  };
+  expect(keys(bare, { acquired_condition: "used" })).toContain(price);
+  expect(keys(bare, { acquired_condition: "used" })).not.toContain(
+    "building_construction_date",
+  );
+  // A fact only the used condition states is left out of a new element's
+  // request, even where it was typed before the condition changed.
+  const request = (await newRequest(
+    port,
+    {
+      ...NEW_ELEMENT,
+      acquired_condition: "new",
+      building_construction_date: "2001-01-01",
+    },
+    "made-cond",
+  ))!;
+  expect(request.revision).not.toHaveProperty("building_construction_date");
+  const built = (await newRequest(
+    port,
+    {
+      ...NEW_ELEMENT,
+      acquired_condition: "used",
+      building_construction_date: "2001-01-01",
+    },
+    "made-cond-2",
+  ))!;
+  expect(built.revision.building_construction_date).toBe("2001-01-01");
+});
+
+test("the shapes of a later payment are the ones the options serve", async () => {
+  const port = portOf();
+  const options = (await optionsOf(port, "material")) as FormOptions;
+  expect(options.further_acquisition_shapes).toEqual([
+    "split_payment",
+    "ancillary_cost",
+  ]);
+  const choices = (served: readonly string[]) =>
+    fieldsFor(
+      {
+        kind: "element",
+        row: null,
+        descriptor: null,
+        revision: null,
+        tokens: () => [],
+        options: { ...options, further_acquisition_shapes: [...served] },
+      },
+      {
+        ...NEW_ELEMENT,
+        acquisition_shape: "acquired_outside_ledger",
+        [FURTHER_PURCHASE]: "t-silla",
+      },
+    )
+      .find((found) => found.key === FURTHER_SHAPE)!
+      .choices.map((choice) => choice.token);
+  expect(choices(options.further_acquisition_shapes)).toEqual([
+    "split_payment",
+    "ancillary_cost",
+  ]);
+  expect(choices(["ancillary_cost"])).toEqual(["ancillary_cost"]);
+});
+
+test("a baja that has not yet left service keeps its pending amount, and one that has leaves none", async () => {
+  const port = portOf();
+  await settled(
+    port.submit(DISPOSE, {
+      asset_id: "furgoneta",
+      disposal: { ...sale, disposal_date: "2027-03-31" },
+    } as never),
+  );
+  const future = (await listOf(port)).find(
+    (found) => found.asset_id === "furgoneta",
+  )!;
+  expect(future.disposal).not.toBeNull();
+  expect(future.pending_applies).toBe(true);
+  await settled(
+    port.submit(DISPOSE, {
+      asset_id: "camara",
+      disposal: sale,
+    } as never),
+  );
+  const gone = (await listOf(port)).find(
+    (found) => found.asset_id === "camara",
+  )!;
+  expect(gone.pending_applies).toBe(false);
+});
+
+test("the handoff names each box in the language asked, tells the two Modelo 130 rows apart by name and kind, and ends each gap on its last day", async () => {
+  const port = portOf();
+  const read = async (language: string) =>
+    (
+      await settled<LedgerResult<typeof HANDOFF>>(
+        port.submit(HANDOFF, {
+          tax_year: 2025,
+          output_language: language,
+          m130_period: "4T",
+        } as never),
+      )
+    ).filing_handoff!;
+  const english = await read("en");
+  const spanish = await read("es");
+  expect(english.material_m100.box_name).not.toBeNull();
+  expect(english.material_m100.box_name).not.toBe(
+    spanish.material_m100.box_name,
+  );
+  const [material, intangible] = [
+    english.material_m130!,
+    english.intangible_m130!,
+  ];
+  expect([material.asset_kind, intangible.asset_kind]).toEqual([
+    "material",
+    "intangible",
+  ]);
+  expect(material.target_casilla_id).toBe(intangible.target_casilla_id);
+  expect(material.box_name).not.toBe(intangible.box_name);
+  expect(english.m100_gaps.length).toBeGreaterThan(0);
+  for (const gap of english.m100_gaps)
+    expect(gap.covered_through < gap.covered_until).toBe(true);
 });

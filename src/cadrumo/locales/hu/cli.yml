@@ -13,8 +13,7 @@ cli:
           egy modellhez vagy mindegyikhez.
         group_help: Állítsd be a saját bankszámláidat, és jelöld ki őket a modellek
           terheléseihez és visszatérítéseihez.
-        holding_help: Egyedül (titular) vagy társtulajdonosként (cotitular) vagy-e
-          a számla tulajdonosa.
+        holding_help: Egyedüli vagy társtulajdonosként vagy-e a számla tulajdonosa.
         label_help: A számla általad választott neve.
         list_help: Listázd a saját számláidat maszkolva, a kijelöléseikkel együtt.
         modelo_help: A háromjegyű modell, amelyre a kijelölés vonatkozik; megadás
@@ -345,19 +344,14 @@ cli:
         acquisition_cost_stdin_help: A teljes beszerzési költség JSON-objektum beolvasása
           a szabványos bemenetről
         actividad_id_help: Gazdasági tevékenység azonosítója.
-        refusal_activity_conflict: "Már létezik készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Futtasd a(z) `aeat app ledger inventory list` parancsot a meglévők megtekintéséhez."
-        refusal_activity_not_found: "Nincs készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Futtasd a(z) `aeat app ledger inventory list` parancsot a meglévők megtekintéséhez."
-        refusal_duplicate_movement_id: "A készletnyilvántartás már tartalmazza a(z) %{movement_id} mozgást. Futtasd a(z) `aeat app ledger inventory list` parancsot a rögzített mozgások megtekintéséhez."
         authority_file_help: A teljes zárókészlet-hatósági JSON-dokumentum beolvasása
           fájlból.
         authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletnyilvántartáshoz.
-        evidence_add_help: "Elmenti a beszerzési dokumentumot ebbe a profilba, és megmutatja azt az azonosítót, amellyel a beszerzés hivatkozik rá."
-        evidence_source_help: "A mentendő beszerzési dokumentum: PDF, kép vagy XML."
-        options_help: "Megmutatja a készletűrlap által felkínált értékeket, mindegyiket a nevével."
-        closing_value_file_help: "JSON-fájl a záróérték adataival."
-        closing_value_file_invalid: "A záróérték fájlja nem érvényes ehhez a készlethez."
-        closing_value_record_help: "Záróérték rögzítése egyszerű adatokból: az érték, a módszer és a dokumentumok."
         closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
+        closing_value_file_help: JSON-fájl a záróérték adataival.
+        closing_value_file_invalid: A záróérték fájlja nem érvényes ehhez a készlethez.
+        closing_value_record_help: 'Záróérték rögzítése egyszerű adatokból: az érték,
+          a módszer és a dokumentumok.'
         correct_help: Javítja a nyitó értéket vagy az értékelési módszert, megőrizve
           a felváltott értékeket.
         corrected_opening_stock_help: A javított nyitó érték euróban.
@@ -368,6 +362,9 @@ cli:
         create_help: Készletnyilvántartás létrehozása egy tevékenységhez és adóévhez.
         describe_help: Módosítja a készlet nevét és leírását; az értékelés nem változik.
         description_help: A készlet leírása.
+        evidence_add_help: Elmenti a beszerzési dokumentumot ebbe a profilba, és megmutatja
+          azt az azonosítót, amellyel a beszerzés hivatkozik rá.
+        evidence_source_help: 'A mentendő beszerzési dokumentum: PDF, kép vagy XML.'
         group_help: Készletnyilvántartások tevékenységek, mozgások és értékelés szerint.
         inspect_help: Megmutat egy készletet az érvényes mozgásaival és a megőrzött
           előzményeivel.
@@ -383,7 +380,18 @@ cli:
         movement_kind_help: Mozgás típusa (opening, purchase, cogs vagy count)
         movement_reverse_help: Kivesz egy mozgást a készletből; az előzményekben marad.
         opening_stock_help: Nyitókészlet értéke.
+        options_help: Megmutatja a készletűrlap által felkínált értékeket, mindegyiket
+          a nevével.
         quantity_help: Mozgás mennyisége, pozitív vagy negatív.
+        refusal_activity_conflict: Már létezik készletnyilvántartás a(z) %{actividad_id}
+          tevékenységhez és a(z) %{year} évhez. Futtasd a(z) `aeat app ledger inventory
+          list` parancsot a meglévők megtekintéséhez.
+        refusal_activity_not_found: Nincs készletnyilvántartás a(z) %{actividad_id}
+          tevékenységhez és a(z) %{year} évhez. Futtasd a(z) `aeat app ledger inventory
+          list` parancsot a meglévők megtekintéséhez.
+        refusal_duplicate_movement_id: A készletnyilvántartás már tartalmazza a(z)
+          %{movement_id} mozgást. Futtasd a(z) `aeat app ledger inventory list` parancsot
+          a rögzített mozgások megtekintéséhez.
         restore_help: Visszahelyez egy kivont készletet az aktív nyilvántartásba.
         retire_help: Kivonja a készletet az aktív nyilvántartásból, minden adatát
           megőrizve.
@@ -477,13 +485,12 @@ cli:
         declare_sector_help: 'Adj meg egy megkülönböztetett szektort (LIVA 9.1.c /
           101. cikk): az art. 9.1.c szerinti felosztásod, sosem a nyilvántartásokból
           kikövetkeztetve.'
-        ejercicio_help: A bevallási év, amelyre a választás vonatkozik.
-        elect_especial_help: 'Válaszd a prorrata especial rezsimet egy ejercicio-ra
-          (LIVA art. 103.Dos.1): a bemeneti levonás tételenként az --input-classification
+        ejercicio_help: Az adóév, amelyre a választás vonatkozik.
+        elect_especial_help: 'Válaszd a prorrata especial rezsimet egy adóévre (LIVA
+          art. 103.Dos.1): a bemeneti levonás tételenként az --input-classification
           alapján történik a nyilvántartásaidban.'
-        elect_general_help: 'Válaszd a prorrata general rezsimet egy ejercicio-ra
-          (LIVA art. 104): egyetlen levonási százalék vonatkozik minden levonható
-          cuota-ra.'
+        elect_general_help: 'Válaszd a prorrata general rezsimet egy adóévre (LIVA
+          art. 104): egyetlen levonási százalék vonatkozik minden levonható cuota-ra.'
         evidence_reference_help: A tárgyidőszaki különleges arányosítási választás
           vagy visszavonás bizonyítékának hivatkozása.
         general_percentage_help: Ideiglenes levonási százalék 0-100 (LIVA art. 104.Uno
@@ -495,7 +502,7 @@ cli:
           ezt a szektort.
         list_help: Listáz minden nyilvántartási bejegyzést és minden bejelentett megkülönböztetett
           szektort az aktív profilon.
-        optional_evidence_reference_help: A saját bizonylatod az ebben az ejercicio-ban
+        optional_evidence_reference_help: A saját bizonylatod az ebben az adóévben
           gyakorolt választásról; hagyd el a már hatályos rezsim kifejezett folytatásának
           rögzítéséhez.
         percentage_help: Közös használatú levonási százalék 0-100 (LIVA art. 106.Uno
@@ -514,8 +521,8 @@ cli:
           forrással engedélyezett.
         reference_required: A(z) {provenance!r} forrás (LIVA art. 105.Dos / 105.Tres)
           megköveteli a --reference kapcsolót.
-        revoke_especial_help: Vond vissza a különleges arányosítást egy ejercicio
-          esetén egy előző évi különleges állapot után (LIVA 103. cikk Dos.1).
+        revoke_especial_help: Vond vissza a különleges arányosítást egy adóévre az
+          előző évi különleges állapot után (LIVA 103. cikk Dos.1).
         sector_help: A bejegyzés által lefedett megkülönböztetett szektor azonosítója;
           hagyd el a teljes tevékenységre vonatkozó bejegyzéshez.
         sector_id_help: Stabil szektorazonosító, amelyre a nyilvántartási bejegyzéseid
@@ -1880,7 +1887,8 @@ cli:
         run_details_help: Egy mentett munkafolyamat-futás záró lépésének típusos adatainak
           megjelenítése.
         run_help: Egy mentett munkafolyamat-futás megjelenítése futásazonosító alapján.
-        run_id_help: A modelo work runs által adott stabil, 16 karakteres futásazonosító.
+        run_id_help: A aeat app modelo work runs által adott stabil, 16 karakteres
+          futásazonosító.
         runs_help: 'Mentett munkafolyamat-futtatások listázása futtatásazonosítókkal,
           legújabb először. Futtatásazonosítót használj: `aeat app modelo work resume`.
           Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'

@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Final, cast
 
 import pytest
-from playwright.async_api import BrowserContext, Dialog, Download, FileChooser, Page, Route, async_playwright
+from playwright.async_api import Browser, BrowserContext, Dialog, Download, FileChooser, Page, Route, async_playwright
 
 from cadrumo_client.contracts.view_stream import (
     KeyAction,
@@ -100,9 +100,9 @@ class _Notices:
 
 @asynccontextmanager
 async def _adapter(
-    page_html: str | None = None, *, on_notice: Callable[[ViewNotice], None] | None = None
+    browser: Browser, page_html: str | None = None, *, on_notice: Callable[[ViewNotice], None] | None = None
 ) -> AsyncGenerator[tuple[ViewInputAdapter, BrowserContext, Page, _Notices]]:
-    async with view_browser() as (context, page):
+    async with view_browser(browser) as (context, page):
         if page_html is not None:
             await page.set_content(page_html)
         collected = _Notices()
@@ -177,9 +177,9 @@ def _kinds(log: list[list[object]]) -> list[object]:
     return [entry[0] for entry in log]
 
 
-@pytest.mark.asyncio
-async def test_input_pointer_click_reaches_the_page_at_the_clicked_position() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_pointer_click_reaches_the_page_at_the_clicked_position(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         assert await _click(adapter, _BUTTON) is ViewInputOutcome.DISPATCHED
         log = await _log(page)
 
@@ -190,9 +190,9 @@ async def test_input_pointer_click_reaches_the_page_at_the_clicked_position() ->
     ]
 
 
-@pytest.mark.asyncio
-async def test_input_double_click_and_secondary_button_reach_the_page() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_double_click_and_secondary_button_reach_the_page(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         await _click(adapter, _BUTTON)
         await _click(adapter, _BUTTON, click_count=2)
         double = await _log(page)
@@ -204,9 +204,9 @@ async def test_input_double_click_and_secondary_button_reach_the_page() -> None:
     assert ["mousedown", 70, 40, 2, 2, 1] in secondary
 
 
-@pytest.mark.asyncio
-async def test_input_pointer_move_reports_the_buttons_held_during_a_drag() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_pointer_move_reports_the_buttons_held_during_a_drag(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         assert await adapter.input(_pointer(PointerAction.MOVE, (30, 30))) is ViewInputOutcome.DISPATCHED
         await adapter.input(_pointer(PointerAction.DOWN, (30, 30)))
         await adapter.input(_pointer(PointerAction.MOVE, (60, 50), button=PointerButton.NONE))
@@ -218,18 +218,18 @@ async def test_input_pointer_move_reports_the_buttons_held_during_a_drag() -> No
     assert [(entry[1], entry[2], entry[4]) for entry in moves] == [(30, 30, 0), (60, 50, 1), (80, 50, 0)]
 
 
-@pytest.mark.asyncio
-async def test_input_clamps_a_coordinate_inside_the_contract_to_the_viewport() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_clamps_a_coordinate_inside_the_contract_to_the_viewport(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         assert await adapter.input(_pointer(PointerAction.MOVE, (4000, 4000))) is ViewInputOutcome.DISPATCHED
         log = await _log(page)
 
     assert [entry[:3] for entry in log if entry[0] == "mousemove"] == [["mousemove", 399, 299]]
 
 
-@pytest.mark.asyncio
-async def test_input_wheel_scrolls_the_page() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_wheel_scrolls_the_page(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         wheel = ViewInput(event=WheelInput(x=100, y=100, delta_x=0, delta_y=400, modifiers=0))
         assert await adapter.input(wheel) is ViewInputOutcome.DISPATCHED
 
@@ -240,9 +240,9 @@ async def test_input_wheel_scrolls_the_page() -> None:
         await asyncio.wait_for(scrolled(), timeout=EVENT_TIMEOUT_SECONDS)
 
 
-@pytest.mark.asyncio
-async def test_input_text_is_inserted_at_the_focus() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_text_is_inserted_at_the_focus(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         await _click(adapter, _FIELD)
         assert await adapter.input(ViewInput(event=TextInput(text="hola ñ €"))) is ViewInputOutcome.DISPATCHED
         value = await page.input_value("#i")
@@ -250,9 +250,9 @@ async def test_input_text_is_inserted_at_the_focus() -> None:
     assert value == "hola ñ €"
 
 
-@pytest.mark.asyncio
-async def test_input_key_events_raise_key_events_and_insert_no_text() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_key_events_raise_key_events_and_insert_no_text(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         await _click(adapter, _FIELD)
         await _log(page)
         await _press(adapter, "a", "KeyA")
@@ -263,9 +263,9 @@ async def test_input_key_events_raise_key_events_and_insert_no_text() -> None:
     assert value == ""
 
 
-@pytest.mark.asyncio
-async def test_input_backspace_and_select_all_edit_the_focused_field() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_backspace_and_select_all_edit_the_focused_field(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         await _click(adapter, _FIELD)
         await adapter.input(ViewInput(event=TextInput(text="abc")))
         await _press(adapter, "Backspace", "Backspace")
@@ -278,9 +278,9 @@ async def test_input_backspace_and_select_all_edit_the_focused_field() -> None:
     assert after_select_all == ""
 
 
-@pytest.mark.asyncio
-async def test_input_meta_select_all_selects_the_focused_field() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_meta_select_all_selects_the_focused_field(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         await _click(adapter, _FIELD)
         await adapter.input(ViewInput(event=TextInput(text="abc")))
         await _press(adapter, "a", "KeyA", _META)
@@ -290,9 +290,9 @@ async def test_input_meta_select_all_selects_the_focused_field() -> None:
     assert value == ""
 
 
-@pytest.mark.asyncio
-async def test_input_enter_submits_a_form_and_tab_moves_the_focus() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_enter_submits_a_form_and_tab_moves_the_focus(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         await _click(adapter, _FIELD)
         await _press(adapter, "Tab", "Tab")
         focused_after_tab = await page.evaluate("document.activeElement.id")
@@ -308,9 +308,9 @@ async def test_input_enter_submits_a_form_and_tab_moves_the_focus() -> None:
     assert _kinds(log) == ["keydown", "keypress", "submit", "keyup"]
 
 
-@pytest.mark.asyncio
-async def test_input_modifiers_reach_the_page_with_the_key() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_modifiers_reach_the_page_with_the_key(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         await _click(adapter, _FIELD)
         await _log(page)
         await _press(adapter, "Enter", "Enter", _CONTROL)
@@ -320,9 +320,9 @@ async def test_input_modifiers_reach_the_page_with_the_key() -> None:
     assert "keypress" not in _kinds(log)
 
 
-@pytest.mark.asyncio
-async def test_input_has_no_rate_bound() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_has_no_rate_bound(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         outcomes = [await adapter.input(_pointer(PointerAction.MOVE, (index % 300, 200))) for index in range(200)]
         log = await _log(page)
 
@@ -335,8 +335,8 @@ def _unchecked(event: object) -> ViewInput:
     return ViewInput.model_construct(kind="view.input", event=event)
 
 
-@pytest.mark.asyncio
-async def test_input_refuses_values_outside_the_contract_and_sends_nothing() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_refuses_values_outside_the_contract_and_sends_nothing(chromium: Browser) -> None:
     pointer = PointerInput(action=PointerAction.DOWN, x=10, y=10, button=PointerButton.LEFT, click_count=1, modifiers=0)
     key = KeyInput(action=KeyAction.DOWN, key="a", code="KeyA", modifiers=0)
     wheel = WheelInput(x=1, y=1, delta_x=0, delta_y=0, modifiers=0)
@@ -359,7 +359,7 @@ async def test_input_refuses_values_outside_the_contract_and_sends_nothing() -> 
         _unchecked(key.model_copy(update={"key": "a\x00"})),
         _unchecked(key.model_copy(update={"modifiers": 99})),
     ]
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         outcomes = [await adapter.input(message) for message in refused]
         log = await _log(page)
 
@@ -368,13 +368,13 @@ async def test_input_refuses_values_outside_the_contract_and_sends_nothing() -> 
     assert log == []
 
 
-@pytest.mark.asyncio
-async def test_input_refuses_an_unknown_variant_and_sends_nothing() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_refuses_an_unknown_variant_and_sends_nothing(chromium: Browser) -> None:
     class _Unknown:
         pass
 
     unknown_event = ViewInput.model_construct(kind="view.input", event=_Unknown())
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         outcomes = [
             await adapter.input(unknown_event),
             await adapter.input(ViewInput.model_construct(kind="view.input", event=None)),
@@ -386,10 +386,10 @@ async def test_input_refuses_an_unknown_variant_and_sends_nothing() -> None:
     assert log == []
 
 
-@pytest.mark.asyncio
-async def test_input_refuses_a_key_it_cannot_translate() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_refuses_a_key_it_cannot_translate(chromium: Browser) -> None:
     keys = ["MediaPlayPause", "Dead", "Unidentified", "AudioVolumeUp", "Process", "ab"]
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         outcomes = [await adapter.input(_key(KeyAction.DOWN, key, "Unknown")) for key in keys]
         log = await _log(page)
 
@@ -398,9 +398,9 @@ async def test_input_refuses_a_key_it_cannot_translate() -> None:
     assert log == []
 
 
-@pytest.mark.asyncio
-async def test_input_translates_named_function_and_shifted_keys() -> None:
-    async with _adapter(_FORM_PAGE) as (adapter, _context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_input_translates_named_function_and_shifted_keys(chromium: Browser) -> None:
+    async with _adapter(chromium, _FORM_PAGE) as (adapter, _context, page, _notices):
         await _click(adapter, _FIELD)
         await _log(page)
         for key, code, modifiers in (
@@ -415,13 +415,13 @@ async def test_input_translates_named_function_and_shifted_keys() -> None:
     assert [entry[1] for entry in log if entry[0] == "keydown"] == ["F5", "ArrowLeft", "!", "ñ"]
 
 
-@pytest.mark.asyncio
-async def test_navigation_verbs_move_through_history_reload_and_home() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_navigation_verbs_move_through_history_reload_and_home(chromium: Browser) -> None:
     site = SyntheticSite()
     first = site.page(f"{_SEDE}/first.html", "<title>first</title>")
     second = site.page(f"{_SEDE}/second.html", "<title>second</title>")
     home = site.page(f"{_SEDE}/", "<title>home</title>")
-    async with _adapter() as (adapter, context, page, _notices):
+    async with _adapter(chromium) as (adapter, context, page, _notices):
         await site.apply(context)
         assert await adapter.navigation_availability() == NavigationAvailability(
             can_go_back=False, can_go_forward=False
@@ -449,9 +449,9 @@ async def test_navigation_verbs_move_through_history_reload_and_home() -> None:
     assert home == f"{_SEDE}/"
 
 
-@pytest.mark.asyncio
-async def test_navigation_reports_a_failed_navigation_and_an_unknown_verb() -> None:
-    async with _adapter() as (adapter, context, page, _notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_navigation_reports_a_failed_navigation_and_an_unknown_verb(chromium: Browser) -> None:
+    async with _adapter(chromium) as (adapter, context, page, _notices):
 
         async def refuse(route: Route) -> None:
             await route.abort()
@@ -463,9 +463,9 @@ async def test_navigation_reports_a_failed_navigation_and_an_unknown_verb() -> N
         assert page.url == "about:blank"
 
 
-@pytest.mark.asyncio
-async def test_dialog_alert_reaches_the_window_and_the_answer_releases_the_page() -> None:
-    async with _adapter(_DIALOG_PAGE) as (adapter, _context, page, notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_dialog_alert_reaches_the_window_and_the_answer_releases_the_page(chromium: Browser) -> None:
+    async with _adapter(chromium, _DIALOG_PAGE) as (adapter, _context, page, notices):
         assert await _click(adapter, _DIALOG_BUTTON["alert"]) is ViewInputOutcome.DISPATCHED
         await until(lambda: len(notices.received) == 1)
         notice = notices.received[0]
@@ -481,10 +481,12 @@ async def test_dialog_alert_reaches_the_window_and_the_answer_releases_the_page(
         assert await adapter.answer_dialog(answer) is DialogOutcome.STALE
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="module")
 @pytest.mark.parametrize(("accept", "expected"), [(True, "confirm:true"), (False, "confirm:false")])
-async def test_dialog_confirm_returns_the_persons_choice_to_the_page(*, accept: bool, expected: str) -> None:
-    async with _adapter(_DIALOG_PAGE) as (adapter, _context, page, notices):
+async def test_dialog_confirm_returns_the_persons_choice_to_the_page(
+    chromium: Browser, *, accept: bool, expected: str
+) -> None:
+    async with _adapter(chromium, _DIALOG_PAGE) as (adapter, _context, page, notices):
         await _click(adapter, _DIALOG_BUTTON["confirm"])
         await until(lambda: len(notices.received) == 1)
         assert notices.received[0].dialog is not None
@@ -494,7 +496,7 @@ async def test_dialog_confirm_returns_the_persons_choice_to_the_page(*, accept: 
         await _until_title(page, expected)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="module")
 @pytest.mark.parametrize(
     ("answer", "expected"),
     [
@@ -503,8 +505,10 @@ async def test_dialog_confirm_returns_the_persons_choice_to_the_page(*, accept: 
         (ViewDialog(dialog_id=1, accept=False), "prompt:null"),
     ],
 )
-async def test_dialog_prompt_returns_the_typed_text_the_default_or_null(answer: ViewDialog, expected: str) -> None:
-    async with _adapter(_DIALOG_PAGE) as (adapter, _context, page, notices):
+async def test_dialog_prompt_returns_the_typed_text_the_default_or_null(
+    chromium: Browser, answer: ViewDialog, expected: str
+) -> None:
+    async with _adapter(chromium, _DIALOG_PAGE) as (adapter, _context, page, notices):
         await _click(adapter, _DIALOG_BUTTON["prompt"])
         await until(lambda: len(notices.received) == 1)
         prompt = notices.received[0].dialog
@@ -515,9 +519,9 @@ async def test_dialog_prompt_returns_the_typed_text_the_default_or_null(answer: 
         await _until_title(page, expected)
 
 
-@pytest.mark.asyncio
-async def test_dialog_blocks_input_and_navigation_until_answered_and_ids_increase() -> None:
-    async with _adapter(_DIALOG_PAGE) as (adapter, _context, page, notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_dialog_blocks_input_and_navigation_until_answered_and_ids_increase(chromium: Browser) -> None:
+    async with _adapter(chromium, _DIALOG_PAGE) as (adapter, _context, page, notices):
         await _click(adapter, _DIALOG_BUTTON["confirm"])
         await until(lambda: len(notices.received) == 1)
 
@@ -541,9 +545,9 @@ async def test_dialog_blocks_input_and_navigation_until_answered_and_ids_increas
         await adapter.answer_dialog(ViewDialog(dialog_id=2, accept=False))
 
 
-@pytest.mark.asyncio
-async def test_dialog_message_is_cut_to_the_contract_bound() -> None:
-    async with _adapter(_DIALOG_PAGE) as (adapter, _context, page, notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_dialog_message_is_cut_to_the_contract_bound(chromium: Browser) -> None:
+    async with _adapter(chromium, _DIALOG_PAGE) as (adapter, _context, page, notices):
         await page.evaluate("document.body.dataset.long = '1'")
         await _click(adapter, _DIALOG_BUTTON["alert"])
         await until(lambda: len(notices.received) == 1)
@@ -552,20 +556,20 @@ async def test_dialog_message_is_cut_to_the_contract_bound() -> None:
         await adapter.answer_dialog(ViewDialog(dialog_id=1, accept=True))
 
 
-@pytest.mark.asyncio
-async def test_dialog_is_dismissed_when_the_window_cannot_be_told() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_dialog_is_dismissed_when_the_window_cannot_be_told(chromium: Browser) -> None:
     def failing(notice: ViewNotice) -> None:
         raise ConnectionResetError("lane closed")
 
-    async with _adapter(_DIALOG_PAGE, on_notice=failing) as (adapter, _context, page, _notices):
+    async with _adapter(chromium, _DIALOG_PAGE, on_notice=failing) as (adapter, _context, page, _notices):
         await _click(adapter, _DIALOG_BUTTON["confirm"])
         await _until_title(page, "confirm:false")
         assert await adapter.input(_pointer(PointerAction.MOVE, (5, 5))) is ViewInputOutcome.DISPATCHED
 
 
-@pytest.mark.asyncio
-async def test_dialog_left_open_is_dismissed_when_the_adapter_closes() -> None:
-    async with _adapter(_DIALOG_PAGE) as (adapter, _context, page, notices):
+@pytest.mark.asyncio(loop_scope="module")
+async def test_dialog_left_open_is_dismissed_when_the_adapter_closes(chromium: Browser) -> None:
+    async with _adapter(chromium, _DIALOG_PAGE) as (adapter, _context, page, notices):
         await _click(adapter, _DIALOG_BUTTON["confirm"])
         await until(lambda: len(notices.received) == 1)
         await adapter.close()
@@ -573,11 +577,11 @@ async def test_dialog_left_open_is_dismissed_when_the_adapter_closes() -> None:
         await adapter.close()
 
 
-@pytest.mark.asyncio
-async def test_dialog_leave_page_confirmation_holds_a_navigation_until_answered() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_dialog_leave_page_confirmation_holds_a_navigation_until_answered(chromium: Browser) -> None:
     site = SyntheticSite()
     home = site.page(f"{_SEDE}/", "<title>home</title>")
-    async with _adapter(_DIALOG_PAGE) as (adapter, context, page, notices):
+    async with _adapter(chromium, _DIALOG_PAGE) as (adapter, context, page, notices):
         await site.apply(context)
         # A leave-page confirmation only opens for a page the person has interacted with.
         await _click(adapter, (70, 120))

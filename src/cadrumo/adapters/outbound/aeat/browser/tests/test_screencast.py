@@ -13,6 +13,7 @@ from typing import Final
 
 import pytest
 from PIL import Image
+from playwright.async_api import Browser
 from playwright.async_api import Error as PlaywrightError
 
 from cadrumo_client.contracts.view_stream import (
@@ -71,10 +72,10 @@ def _is_color(image: ScreencastImage, expected: tuple[int, int, int]) -> bool:
     return all(abs(actual - wanted) < 60 for actual, wanted in zip(_center_pixel(image), expected, strict=True))
 
 
-@pytest.mark.asyncio
-async def test_screencast_delivers_a_jpeg_sized_to_the_viewport() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_delivers_a_jpeg_sized_to_the_viewport(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser(width=800, height=600) as (context, page):
+    async with view_browser(chromium, width=800, height=600) as (context, page):
         await page.set_content(_paint(_RED))
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, sink)
         try:
@@ -96,10 +97,10 @@ async def test_screencast_delivers_a_jpeg_sized_to_the_viewport() -> None:
     assert _is_color(image, _RED)
 
 
-@pytest.mark.asyncio
-async def test_screencast_does_not_claim_a_scale_the_page_did_not_render() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_does_not_claim_a_scale_the_page_did_not_render(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
         screencast = await ViewScreencast.start(
             context, page, ViewResize(css_width=400, css_height=300, scale=2.0), sink
@@ -115,10 +116,10 @@ async def test_screencast_does_not_claim_a_scale_the_page_did_not_render() -> No
     assert announcement.scale == 1.0
 
 
-@pytest.mark.asyncio
-async def test_screencast_caps_the_image_below_the_viewport() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_caps_the_image_below_the_viewport(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
         screencast = await ViewScreencast.start(
             context, page, _VIEWPORT, sink, profile=ScreencastProfile(max_pixel_extent=200)
@@ -136,10 +137,10 @@ async def test_screencast_caps_the_image_below_the_viewport() -> None:
     assert Image.open(io.BytesIO(sink.images[0].data)).size == (200, 150)
 
 
-@pytest.mark.asyncio
-async def test_screencast_sends_no_image_without_credit_and_resumes_with_the_newest() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_sends_no_image_without_credit_and_resumes_with_the_newest(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, sink)
         try:
@@ -169,10 +170,10 @@ async def test_screencast_sends_no_image_without_credit_and_resumes_with_the_new
             await screencast.stop()
 
 
-@pytest.mark.asyncio
-async def test_screencast_acknowledges_every_frame_though_none_can_be_drawn() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_acknowledges_every_frame_though_none_can_be_drawn(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_ANIMATED_PAGE)
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, sink)
         try:
@@ -189,10 +190,10 @@ async def test_screencast_acknowledges_every_frame_though_none_can_be_drawn() ->
             await screencast.stop()
 
 
-@pytest.mark.asyncio
-async def test_screencast_credit_never_exceeds_two_outstanding_images() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_credit_never_exceeds_two_outstanding_images(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_ANIMATED_PAGE)
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, sink)
         try:
@@ -211,10 +212,10 @@ async def test_screencast_credit_never_exceeds_two_outstanding_images() -> None:
             await screencast.stop()
 
 
-@pytest.mark.asyncio
-async def test_screencast_resize_lays_the_page_out_at_the_new_size() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_resize_lays_the_page_out_at_the_new_size(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, sink)
         try:
@@ -247,10 +248,10 @@ async def test_screencast_resize_lays_the_page_out_at_the_new_size() -> None:
     assert Image.open(io.BytesIO(image.data)).size == (600, 200)
 
 
-@pytest.mark.asyncio
-async def test_screencast_discards_an_image_scaled_below_the_contract_minimum() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_discards_an_image_scaled_below_the_contract_minimum(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
         screencast = await ViewScreencast.start(
             context, page, _VIEWPORT, sink, profile=ScreencastProfile(max_pixel_extent=100)
@@ -263,10 +264,10 @@ async def test_screencast_discards_an_image_scaled_below_the_contract_minimum() 
             await screencast.stop()
 
 
-@pytest.mark.asyncio
-async def test_screencast_discards_an_image_over_its_byte_cap_and_keeps_acknowledging() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_discards_an_image_over_its_byte_cap_and_keeps_acknowledging(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
         screencast = await ViewScreencast.start(
             context, page, _VIEWPORT, sink, profile=ScreencastProfile(max_image_bytes=1)
@@ -281,10 +282,10 @@ async def test_screencast_discards_an_image_over_its_byte_cap_and_keeps_acknowle
             await screencast.stop()
 
 
-@pytest.mark.asyncio
-async def test_screencast_stop_ends_delivery_and_is_repeatable() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_stop_ends_delivery_and_is_repeatable(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_ANIMATED_PAGE)
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, sink)
         await until(lambda: screencast.received_frames >= 2)
@@ -301,12 +302,12 @@ async def test_screencast_stop_ends_delivery_and_is_repeatable() -> None:
         assert page.viewport_size == {"width": 400, "height": 300}
 
 
-@pytest.mark.asyncio
-async def test_screencast_reports_a_sink_failure_through_wait_ended() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_reports_a_sink_failure_through_wait_ended(chromium: Browser) -> None:
     async def failing_sink(image: ScreencastImage) -> None:
         raise ConnectionResetError("lane closed")
 
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.set_content(_paint(_RED))
         screencast = await ViewScreencast.start(context, page, _VIEWPORT, failing_sink)
         try:
@@ -317,10 +318,10 @@ async def test_screencast_reports_a_sink_failure_through_wait_ended() -> None:
             await screencast.stop()
 
 
-@pytest.mark.asyncio
-async def test_screencast_start_on_a_closed_page_raises_and_leaves_nothing_open() -> None:
+@pytest.mark.asyncio(loop_scope="module")
+async def test_screencast_start_on_a_closed_page_raises_and_leaves_nothing_open(chromium: Browser) -> None:
     sink = _Sink()
-    async with view_browser() as (context, page):
+    async with view_browser(chromium) as (context, page):
         await page.close()
         with pytest.raises(PlaywrightError):
             await ViewScreencast.start(context, page, _VIEWPORT, sink)

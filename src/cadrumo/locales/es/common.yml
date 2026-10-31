@@ -1439,8 +1439,7 @@ desktop:
         incomplete: 'Años que no se pueden calcular, todos los años: {count}'
         missing: 'Años con algo pendiente de registrar, todos los años: {count}'
         stale: 'Dotaciones que ya no coinciden con el cuadro, todos los años: {count}'
-        unsupported: 'Años con un método que Cadrumo aún no admite, todos los años:
-          {count}'
+        unsupported: 'Años que no se pueden calcular aquí, todos los años: {count}'
         without_tables: 'Años sin tablas oficiales, todos los años: {count}'
       detail:
         baja_reason: Motivo de la baja
@@ -1532,7 +1531,6 @@ desktop:
         useful_life_ends_on: Fin de la vida útil
         useful_life_evidence: Justificante de la vida útil
         vehicle_category: Tipo de vehículo
-        vehicle_declared: ¿Es un vehículo?
         vehicle_evidence: Justificante del uso del vehículo
         vehicle_in_books: Anotado en los libros de la actividad
         vehicle_listed_use: Uso profesional de la lista (si lo hay)

@@ -8,8 +8,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,
@@ -50,14 +51,32 @@ class M303DifferentiatedDeductionEndpointValue(BaseModel):
 
 
 class M303DifferentiatedDeductionRowProjection(BaseModel):
-    """A differentiated-sector prorrata deduction row projected across its 18 endpoints."""
+    """A differentiated-sector prorrata deduction row projected across every endpoint."""
 
     model_config = STRICT_FROZEN_CONFIG
     slot: int = Field(ge=1)
     sector_id: str
     regime: ProrrataRegisterRegime
     percentage: Decimal
-    endpoints: tuple[M303DifferentiatedDeductionEndpointValue, ...] = Field(min_length=18, max_length=18)
+    endpoints: tuple[M303DifferentiatedDeductionEndpointValue, ...]
+
+    @field_validator("slot")
+    @classmethod
+    @pydantic_validation_boundary
+    def _slot_is_a_declared_row(cls, slot: int) -> int:
+        if slot > int(resolve_form_codes_leased("form-row-codes").code("m303.differentiated.row_slots")):
+            raise RegistryValidationError(f"differentiated deduction slot {slot} is past the form's declared rows")
+        return slot
+
+    @field_validator("endpoints")
+    @classmethod
+    @pydantic_validation_boundary
+    def _every_field_has_its_endpoint(
+        cls, endpoints: tuple[M303DifferentiatedDeductionEndpointValue, ...]
+    ) -> tuple[M303DifferentiatedDeductionEndpointValue, ...]:
+        if len(endpoints) != len(_FIELDS):
+            raise RegistryValidationError("a differentiated deduction row needs one endpoint per declared field")
+        return endpoints
 
 
 def project_m303_differentiated_deduction_rows(
@@ -98,8 +117,9 @@ def _sector_ids(register: ProrrataRegister) -> tuple[str, ...]:
     definitions = register.sector_definitions
     if not definitions:
         return ()
-    if len(definitions) != 2:
-        raise RegistryValidationError("modelo 303 differentiated deductions require exactly two sectors")
+    row_slots = int(resolve_form_codes_leased("form-row-codes").code("m303.differentiated.row_slots"))
+    if len(definitions) != row_slots:
+        raise RegistryValidationError(f"modelo 303 differentiated deductions require exactly {row_slots} sectors")
     return tuple(item.sector_id for item in definitions)
 
 

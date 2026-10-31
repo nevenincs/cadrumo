@@ -37,7 +37,7 @@ from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
@@ -266,7 +266,7 @@ def test_worker_hosts_the_canonical_operation_services_and_rechecks_custody(tmp_
             admitted = lease(identity)
             worker.install(admitted, bytearray(key))
             definition = "user-profile.field-mutation"
-            expected = build_production_operation_registry().lookup_public_contract(definition)
+            expected = production_operation_registry().lookup_public_contract(definition)
             assert worker.describe(admitted.session_id, definition).contract == expected
             with pytest.raises(AutomationCustodyError):
                 worker.describe(uuid4(), definition)

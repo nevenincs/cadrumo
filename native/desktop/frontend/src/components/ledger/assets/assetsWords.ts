@@ -262,6 +262,10 @@ const inReasonFamilies = (key: string) =>
   key.startsWith(ASSET_REASON_FAMILY) ||
   Object.values(ASSET_FAMILY).some((family) => key.startsWith(family));
 
+/** Facts a refusal carries for a screen to act on, never to say: the
+ * recorded dotaciones an overlap meets. */
+const NOT_DRAWN_FACTS: ReadonlySet<string> = new Set(["conflicting_claim_ids"]);
+
 /**
  * A reason in words: the catalogue sentence of the key the backend gave,
  * filled in with the facts it gave. Null where the sentence cannot be said
@@ -277,7 +281,11 @@ export function reasonText(
   if (key === null || !inReasonFamilies(key)) return null;
   const said = t(
     key,
-    Object.fromEntries(facts.map((fact) => [fact.key, factText(t, fact)])),
+    Object.fromEntries(
+      facts
+        .filter((fact) => !NOT_DRAWN_FACTS.has(fact.key))
+        .map((fact) => [fact.key, factText(t, fact)]),
+    ),
   );
   return said === key || /\{\w+\}/.test(said) ? null : said;
 }

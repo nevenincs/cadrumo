@@ -168,7 +168,7 @@
           "code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
           "context": {
             "effect": "none",
-            "operation_id": "2792a12562f8a63b0a1cc231a5654a469223da15c7c4b339634d62ffe9af579f",
+            "operation_id": "f28d7deb9520793ec2bb071408948806d055e86e1f2a0ef016376233d6d76431",
             "reason": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
             "refusal_code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
             "terminal_condition": "refused"

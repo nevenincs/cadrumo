@@ -392,7 +392,11 @@ def _declared_read_only(declaration: Path = _DECLARATION) -> dict[str, str]:
 
 def evaluate(roots: tuple[Path, ...] = _SOURCE_ROOTS, declaration: Path = _DECLARATION) -> tuple[str, ...]:
     """Return the verdict lines; an empty tuple is a pass."""
-    usage = collect_store_usage(roots)
+    return verdict_for_usage(collect_store_usage(roots), declaration)
+
+
+def verdict_for_usage(usage: tuple[StoreUsage, ...], declaration: Path = _DECLARATION) -> tuple[str, ...]:
+    """Return the verdict lines for already collected store usage; an empty tuple is a pass."""
     observed = {store.name for store in usage if store.is_read_only}
     declared = _declared_read_only(declaration)
     problems: list[str] = []

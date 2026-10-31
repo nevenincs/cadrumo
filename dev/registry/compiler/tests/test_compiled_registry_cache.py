@@ -11,6 +11,7 @@ test-owned cache directory; only the cache directory is isolated.
 from __future__ import annotations
 
 import pickle
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,7 @@ from cadrumo.core.frozen_mapping import FrozenMapping
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
 
+from .. import loader as loader_module
 from .._compiled_cache import _COMPILED_CACHE_SCHEMA_VERSION, _FRAME_SEPARATOR, _payload_digest
 from ..compiled_cache import (
     CompiledRegistryPayload,
@@ -32,8 +34,12 @@ from ..loader_fingerprints import clear_fingerprint_cache, collect_registry_tree
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _bundled_payload() -> tuple[Path, tuple[tuple[str, int, int, str], ...], CompiledRegistryPayload]:
-    """Compile the real bundled registry once and return its root, fingerprints, and payload."""
+type _BundledPayload = tuple[Path, tuple[tuple[str, int, int, str], ...], CompiledRegistryPayload]
+
+
+@pytest.fixture(scope="module")
+def bundled_payload() -> _BundledPayload:
+    """Compile the real bundled registry once per module and return its root, fingerprints, and payload."""
     clear_fingerprint_cache()
     root = bundled_path("registry", "aeat").resolve()
     fingerprints = collect_registry_tree_fingerprints(root)
@@ -42,9 +48,11 @@ def _bundled_payload() -> tuple[Path, tuple[tuple[str, int, int, str], ...], Com
     return root, fingerprints, payload
 
 
-def test_store_then_load_roundtrips_the_bundled_compiled_registry(tmp_path: Path) -> None:
+def test_store_then_load_roundtrips_the_bundled_compiled_registry(
+    tmp_path: Path, bundled_payload: _BundledPayload
+) -> None:
     """A stored payload loads back strict-equal; an empty cache dir is a cold miss."""
-    root, fingerprints, payload = _bundled_payload()
+    root, fingerprints, payload = bundled_payload
     cache_dir = tmp_path / "compiled-cache"
     cache_dir.mkdir()
 
@@ -62,9 +70,9 @@ def test_store_then_load_roundtrips_the_bundled_compiled_registry(tmp_path: Path
         assert catalogues == payload[1]
 
 
-def test_a_byte_mutation_is_refused_and_the_file_deleted(tmp_path: Path) -> None:
+def test_a_byte_mutation_is_refused_and_the_file_deleted(tmp_path: Path, bundled_payload: _BundledPayload) -> None:
     """Flipping any payload byte breaks the integrity digest, so load refuses and deletes."""
-    root, fingerprints, payload = _bundled_payload()
+    root, fingerprints, payload = bundled_payload
     cache_dir = tmp_path / "compiled-cache"
     cache_dir.mkdir()
 
@@ -80,14 +88,14 @@ def test_a_byte_mutation_is_refused_and_the_file_deleted(tmp_path: Path) -> None
         assert not path.is_file(), "a mutated cache file must be deleted, never served"
 
 
-def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None:
+def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path, bundled_payload: _BundledPayload) -> None:
     """A well-framed, digest-valid file whose payload is not the compiled shape is refused.
 
     This proves the structural type gate: a file that deserialises cleanly but is
     not exactly ``(tuple[ModeloDefinition, ...], RegistryCatalogues)`` never
     reaches a caller as the compiled authority.
     """
-    root, fingerprints, _payload = _bundled_payload()
+    root, fingerprints, _payload = bundled_payload
     cache_dir = tmp_path / "compiled-cache"
     cache_dir.mkdir()
 
@@ -107,7 +115,9 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None
         assert not path.is_file()
 
 
-def test_a_well_framed_pre_schema_pydantic_payload_is_deleted_not_hydrated(tmp_path: Path) -> None:
+def test_a_well_framed_pre_schema_pydantic_payload_is_deleted_not_hydrated(
+    tmp_path: Path, bundled_payload: _BundledPayload
+) -> None:
     """A stale pickle with today's class names cannot bypass current schema shape.
 
     Pickle does not run Pydantic validation when it restores an instance.  Plant
@@ -115,7 +125,7 @@ def test_a_well_framed_pre_schema_pydantic_payload_is_deleted_not_hydrated(tmp_p
     cache whose catalogue object predates that field.  The warm loader must delete
     it, never add the missing default in memory or serve an eventual AttributeError.
     """
-    root, fingerprints, payload = _bundled_payload()
+    root, fingerprints, payload = bundled_payload
     cache_dir = tmp_path / "compiled-cache"
     cache_dir.mkdir()
     modelos, catalogues = payload
@@ -131,9 +141,11 @@ def test_a_well_framed_pre_schema_pydantic_payload_is_deleted_not_hydrated(tmp_p
         assert not path.exists(), "a stale Pydantic object must be deleted, not compatibility-hydrated"
 
 
-def test_a_nested_pre_qualifier_deadline_window_is_deleted_not_served(tmp_path: Path) -> None:
+def test_a_nested_pre_qualifier_deadline_window_is_deleted_not_served(
+    tmp_path: Path, bundled_payload: _BundledPayload
+) -> None:
     """The current-shape walk reaches deadline rows nested below revisions."""
-    root, fingerprints, payload = _bundled_payload()
+    root, fingerprints, payload = bundled_payload
     cache_dir = tmp_path / "compiled-cache"
     cache_dir.mkdir()
     modelos = list(payload[0])
@@ -178,6 +190,21 @@ def test_a_nested_pre_qualifier_deadline_window_is_deleted_not_served(tmp_path: 
         assert not path.exists(), "a pre-qualifier deadline object must never reach validation"
 
 
+@pytest.fixture
+def private_registry_tree_memo(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Give one test its own in-process compiled-tree memo over the real loader body.
+
+    The test must clear the memo to force a disk consult. Clearing the shared one
+    would evict every other root's compiled tree from this worker, so later
+    tests would reload what this one discarded. The loader resolves the memo by
+    module name at call time, so the private instance serves the real
+    ``load_registry_tree`` and ``clear_registry_tree_cache`` alike.
+    """
+    private = lru_cache(maxsize=32)(loader_module.load_registry_tree_cached.__wrapped__)
+    monkeypatch.setattr(loader_module, "load_registry_tree_cached", private)
+
+
+@pytest.mark.usefixtures("private_registry_tree_memo")
 def test_mutating_the_cache_through_the_loader_rebuilds_byte_equivalently_from_toml(tmp_path: Path) -> None:
     """Through the loader: a mutated on-disk cache is refused and TOML is recompiled.
 
@@ -238,14 +265,14 @@ def _with_bumped_mtimes(
     return tuple((path, size, modified_ns + 1_000_000_000, digest) for path, size, modified_ns, digest in fingerprints)
 
 
-def test_an_mtime_only_touch_reuses_the_compiled_payload(tmp_path: Path) -> None:
+def test_an_mtime_only_touch_reuses_the_compiled_payload(tmp_path: Path, bundled_payload: _BundledPayload) -> None:
     """A tree whose bytes are unchanged must not pay a second compile.
 
     Keyed on mtime, the same declarations stored a SECOND 51 MB pickle under a
     new key and evicted a genuinely distinct entry out of the count-bound store,
     while every process that met the touched tree paid a full cold compile.
     """
-    root, fingerprints, payload = _bundled_payload()
+    root, fingerprints, payload = bundled_payload
     touched = _with_bumped_mtimes(fingerprints)
     assert touched != fingerprints, "sanity: the perturbation must change the fingerprint rows"
 
@@ -263,13 +290,15 @@ def test_an_mtime_only_touch_reuses_the_compiled_payload(tmp_path: Path) -> None
         assert len(list(cache_dir.glob("*.pkl"))) == 1, "an mtime touch must not store a second copy"
 
 
-def test_a_content_change_under_an_unchanged_timestamp_is_still_a_miss(tmp_path: Path) -> None:
+def test_a_content_change_under_an_unchanged_timestamp_is_still_a_miss(
+    tmp_path: Path, bundled_payload: _BundledPayload
+) -> None:
     """Detector teeth: dropping mtime must not blind the key to content.
 
     Both perturbations below leave every timestamp alone, so a key that leaned
     on mtime would serve the stale payload for either.
     """
-    root, fingerprints, payload = _bundled_payload()
+    root, fingerprints, payload = bundled_payload
     first_path, first_size, first_modified_ns, first_digest = fingerprints[0]
 
     edited_bytes = ((first_path, first_size, first_modified_ns, f"{first_digest[:-1]}0"), *fingerprints[1:])

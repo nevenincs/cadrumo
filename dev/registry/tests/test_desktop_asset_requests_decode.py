@@ -33,6 +33,7 @@ from cadrumo.application.actividad_asset.activity_asset_contracts import (
 )
 from cadrumo.application.actividad_asset.activity_asset_read_models import (
     ActivityAssetBasisStageOption,
+    ActivityAssetConditionOption,
     ActivityAssetOpeningStatusOption,
     activity_asset_label_key,
 )
@@ -43,16 +44,18 @@ from cadrumo.application.actividad_asset.operation_dtos import (
     ActivityAssetRevisionSnapshot,
 )
 from cadrumo.application.actividad_asset.register_reads import method_facts_view
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ADMITTED_DISPOSAL_REASONS,
     ActivityAssetDisposal,
     ActivityAssetDisposalReason,
 )
-from cadrumo.domain.renta.actividad_asset.election import AmortizationMethod
+from cadrumo.domain.renta.actividad_asset.election import ACQUIRED_CONDITION_FACTS, AmortizationMethod
 from cadrumo.domain.renta.actividad_asset.election_facts import method_is_statable
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     BASIS_STAGE_FACTS,
+    FURTHER_ACQUISITION_SHAPES,
     OPENING_STATUS_FACTS,
     REGISTERABLE_ACQUISITION_SHAPES,
     AcquisitionShape,
@@ -171,7 +174,6 @@ _VEHICLE_CLASS = {"amortization.authority_class_key": "transporte-externo"}
 
 _VEHICLE = {
     **_VEHICLE_CLASS,
-    "vehicle_declared": "yes",
     "vehicle_category": "passenger_car",
     "vehicle_private_use": "none",
     "vehicle_in_books": "yes",
@@ -253,7 +255,7 @@ _CORRECT: dict[str, dict[str, str]] = {
     "method_with_class_kept": {"method": "constant_percentage", "amortization.linear_coefficient": "10"},
     "opening": {"opening_amount": "300.00", "opening_through": "2026", "opening_method": "linear"},
     "elected_coefficient": {"amortization.linear_coefficient": "9"},
-    "vehicle_declared": _VEHICLE,
+    "vehicle_declaration": _VEHICLE,
     "shift_hours": {"amortization.shift_hours_per_day": "16"},
     "residual_value": {"residual_value": "10.00"},
 }
@@ -315,6 +317,11 @@ def _served() -> dict[str, Any]:
             json.loads(ActivityAssetOpeningStatusOption(status=status, facts=facts).model_dump_json())
             for status, facts in OPENING_STATUS_FACTS.items()
         ],
+        "acquired_conditions": [
+            json.loads(ActivityAssetConditionOption(condition=condition, facts=facts).model_dump_json())
+            for condition, facts in ACQUIRED_CONDITION_FACTS.items()
+        ],
+        "further_acquisition_shapes": [shape.value for shape in FURTHER_ACQUISITION_SHAPES],
         # The Modelo 130 periods come from the published registry, which no request builder reads.
         "m130_periods": [],
     }
@@ -671,7 +678,7 @@ def test_a_handoff_for_a_year_alone_sends_no_modelo_130_period_and_a_chosen_quar
         ],
     )
 
-    assert made["year"]["request"] == {"tax_year": 2025}
+    assert made["year"]["request"] == {"tax_year": 2025, "output_language": "es"}
     alone = ActivityAssetFilingHandoffRequest.model_validate_json(
         json.dumps({"profile_id": str(uuid4()), **made["year"]["request"]}),
     )
@@ -680,6 +687,7 @@ def test_a_handoff_for_a_year_alone_sends_no_modelo_130_period_and_a_chosen_quar
     )
     assert alone.m130_period is None
     assert chosen.m130_period == "2T"
+    assert chosen.output_language is OutputLanguage.ES
 
 
 def test_the_reasons_a_baja_form_offers_are_the_ones_the_backend_serves_each_worded_by_its_key(
@@ -719,7 +727,7 @@ def _registry_vehicle_classes() -> dict[str, bool]:
     return {key: flag for key, flag in flags.items() if admits.get(key, False) and key in tabled}
 
 
-def test_the_vehicle_declaration_is_asked_only_for_a_class_that_can_hold_a_vehicle(
+def test_the_vehicle_declaration_is_stated_only_for_a_class_that_requires_one_and_never_asked_as_a_question(
     created: tuple[Path, dict[str, dict[str, Any]]],
 ) -> None:
     expected = _registry_vehicle_classes()

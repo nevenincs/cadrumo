@@ -245,7 +245,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "ecd14f987eff944e244525da74a0ea72a167ea25822ac3e423a04b36355e1682"
+          "value": "188f2260f7685e8a23bcf735cdd2b045c57696cbe9e5c805ac737fb0f349bd82"
         }
       ],
       "envelope": {
@@ -285,7 +285,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "ecd14f987eff944e244525da74a0ea72a167ea25822ac3e423a04b36355e1682",
+          "calculation_revision_id": "188f2260f7685e8a23bcf735cdd2b045c57696cbe9e5c805ac737fb0f349bd82",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -421,7 +421,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision ecd14f987eff944e244525da74a0ea72a167ea25822ac3e423a04b36355e1682 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 188f2260f7685e8a23bcf735cdd2b045c57696cbe9e5c805ac737fb0f349bd82 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -482,7 +482,7 @@
         "modelo",
         "work",
         "revision",
-        "ecd14f987eff944e244525da74a0ea72a167ea25822ac3e423a04b36355e1682"
+        "188f2260f7685e8a23bcf735cdd2b045c57696cbe9e5c805ac737fb0f349bd82"
       ],
       "captures": [],
       "envelope": {
@@ -506,7 +506,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "ecd14f987eff944e244525da74a0ea72a167ea25822ac3e423a04b36355e1682",
+          "calculation_revision_id": "188f2260f7685e8a23bcf735cdd2b045c57696cbe9e5c805ac737fb0f349bd82",
           "casilla_values": {
             "01": "1000",
             "02": "500",

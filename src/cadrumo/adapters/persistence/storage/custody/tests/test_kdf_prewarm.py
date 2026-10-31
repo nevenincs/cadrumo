@@ -11,10 +11,12 @@ from pathlib import Path
 
 import pytest
 
+from ......application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from ......core.config import Settings, override_settings
 from .. import _kdf_process as process_boundary
 from .. import kdf_supervision
 from .._kdf_worker_supervision import _SupervisedKdfWorker
+from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ..kdf_supervision import ProfileKdfPrewarm
 from ..records import ProfileCustodyKdfParameters
 
@@ -125,3 +127,91 @@ def test_an_unbound_operation_never_adopts_a_spare(settings: Settings, launches:
         assert spare._process is not None and spare._process.poll() is None
     finally:
         prewarm.close()
+
+
+def test_an_operation_arriving_while_the_spare_attests_adopts_that_child_instead_of_launching_another(
+    settings: Settings, launches: list[subprocess.Popen[bytes]]
+) -> None:
+    prewarm = ProfileKdfPrewarm(settings=settings)
+    try:
+        prewarm.refill()
+        with (
+            prewarm.bound(),
+            kdf_supervision._supervised_kdf_worker(deadline=time.monotonic() + 60, settings=settings) as worker,
+        ):
+            assert len(launches) == 1
+            assert worker._process is not None and worker._process.pid == launches[0].pid
+            assert worker.calibrate(_kdf()) > 0
+        assert launches[0].returncode == 0
+    finally:
+        prewarm.close()
+
+
+def test_a_spare_that_fails_attestation_leaves_the_waiting_operation_a_fresh_child(
+    settings: Settings, launches: list[subprocess.Popen[bytes]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    verify = _SupervisedKdfWorker._verify_ready_attestation
+    attested: list[_SupervisedKdfWorker] = []
+
+    def refuse_the_spare(worker: _SupervisedKdfWorker, ready: tuple[int, bytes]) -> None:
+        attested.append(worker)
+        if len(attested) == 1:
+            raise ProfileCustodyRefusedError(ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE)
+        verify(worker, ready)
+
+    monkeypatch.setattr(_SupervisedKdfWorker, "_verify_ready_attestation", refuse_the_spare)
+    prewarm = ProfileKdfPrewarm(settings=settings)
+    try:
+        prewarm.refill()
+        with (
+            prewarm.bound(),
+            kdf_supervision._supervised_kdf_worker(deadline=time.monotonic() + 60, settings=settings) as worker,
+        ):
+            assert worker is not attested[0]
+            assert len(launches) == 2
+            assert launches[0].poll() is not None, "the refused spare was contained before the fallback"
+            assert worker.calibrate(_kdf()) > 0
+    finally:
+        prewarm.close()
+
+
+def test_cancelling_an_operation_that_waits_for_the_spare_wakes_it_before_the_spare_settles(
+    settings: Settings, launches: list[subprocess.Popen[bytes]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    verify = _SupervisedKdfWorker._verify_ready_attestation
+    cancellation = ProfileProofCancellation()
+    release = threading.Event()
+
+    def cancel_then_hold(worker: _SupervisedKdfWorker, ready: tuple[int, bytes]) -> None:
+        cancellation.cancel()
+        release.wait()
+        verify(worker, ready)
+
+    monkeypatch.setattr(_SupervisedKdfWorker, "_verify_ready_attestation", cancel_then_hold)
+    prewarm = ProfileKdfPrewarm(settings=settings)
+    try:
+        prewarm.refill()
+        with (
+            pytest.raises(ProfileProofCancelledError),
+            prewarm.bound(),
+            kdf_supervision._supervised_kdf_worker(
+                deadline=time.monotonic() + 600, settings=settings, cancellation=cancellation
+            ),
+        ):
+            pytest.fail("a cancelled operation must not receive a child")
+        assert prewarm._launching, "the wait ended on the cancellation, not on the spare"
+        assert len(launches) == 1
+    finally:
+        release.set()
+        prewarm.close()
+    assert all(process.poll() is not None for process in launches), "close contained the spare it waited for"
+
+
+def test_closing_while_the_spare_launches_contains_it_before_returning(
+    settings: Settings, launches: list[subprocess.Popen[bytes]]
+) -> None:
+    prewarm = ProfileKdfPrewarm(settings=settings)
+    prewarm.refill()
+    prewarm.close()
+    assert not prewarm._launching and prewarm._spare is None
+    assert all(process.poll() is not None for process in launches)

@@ -125,7 +125,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63"
+          "value": "623d92193d27a32fe78f58a8f30923015d127d5a44571a8dba75f79e875bf298"
         }
       ],
       "envelope": {
@@ -159,6 +159,14 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {
+            "renta-activity-asset-disposal-excess-direct-0179": "0",
+            "renta-activity-asset-disposal-excess-objective-1478": "0",
+            "renta-activity-asset-disposal-gain-element-1654": "0",
+            "renta-activity-asset-disposal-gain-no-transmission-0304": "0",
+            "renta-activity-asset-disposal-gain-property-1843": "0",
+            "renta-activity-asset-disposal-loss-element-1639": "0",
+            "renta-activity-asset-disposal-loss-no-transmission-0305": "0",
+            "renta-activity-asset-disposal-loss-property-1832": "0",
             "renta-base-liquidable-negativa-general-anterior": "0",
             "renta-certificado-trabajo-retenciones": "2400",
             "renta-ledger-expense-0183-deductible": "0",
@@ -197,7 +205,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63",
+          "calculation_revision_id": "623d92193d27a32fe78f58a8f30923015d127d5a44571a8dba75f79e875bf298",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -2028,6 +2036,7 @@
           "input_values_by_casilla_id": {
             "0003": "24000",
             "0171": "0",
+            "0179": "0",
             "0183": "0",
             "0186": "0",
             "0191": "0",
@@ -2043,8 +2052,15 @@
             "0208": "0",
             "0217": "0",
             "0227": "0",
+            "0304": "0",
+            "0305": "0",
             "0596": "2400",
             "1388": "0",
+            "1478": "0",
+            "1639": "0",
+            "1654": "0",
+            "1832": "0",
+            "1843": "0",
             "DPNIF_D": "sha256:1c9f9632",
             "DP_APENOM_D": "Sandbox Docs",
             "ECIVIL": "1",
@@ -4131,7 +4147,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 623d92193d27a32fe78f58a8f30923015d127d5a44571a8dba75f79e875bf298 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",
@@ -4181,7 +4197,7 @@
         "modelo",
         "work",
         "verify",
-        "02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63"
+        "623d92193d27a32fe78f58a8f30923015d127d5a44571a8dba75f79e875bf298"
       ],
       "captures": [],
       "envelope": {
@@ -4246,7 +4262,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "02973d2f6d2dffb0048047d8b8d2252543f2ed8bceb1a98bd8b79607f2002b63",
+          "calculation_revision_id": "623d92193d27a32fe78f58a8f30923015d127d5a44571a8dba75f79e875bf298",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4316,7 +4332,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "486ab3ce7b877b0399bad3377fc2404b454480c025cba527ccb171835271c95a",
+          "verification_report_id": "235c6390ef3d8b445d42872680211c43f3261ad57d647fd7bbc43a60a1880928",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

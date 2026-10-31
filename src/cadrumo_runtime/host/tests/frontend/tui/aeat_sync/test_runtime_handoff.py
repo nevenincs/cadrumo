@@ -54,7 +54,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 from cadrumo.entrypoints.tui.aeat_sync.models import AeatSyncOperationRequestV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -292,7 +292,7 @@ def _install_censal_bridge(
 
 
 def _contract(definition_id: str) -> OperationPublicDefinitionContractV1:
-    return build_production_operation_registry().lookup_public_contract(definition_id)
+    return production_operation_registry().lookup_public_contract(definition_id)
 
 
 def test_runtime_handoff_submits_exact_profile_and_starts_before_return(

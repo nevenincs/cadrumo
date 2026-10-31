@@ -6,6 +6,7 @@ This gate reads syntax and judges a literal by the position it stands in:
 
 - a ``Decimal`` other than an arithmetic identity or a power-of-ten rounding quantum;
 - a ``Field`` numeric bound, which can hide a closed set of claves;
+- a ``Field`` length or a ``len()`` comparison, which can hide a form's row count or code shape;
 - a code-shaped string that does not stand where a modelo or period address stands, so a
   modelo id cannot pass for a box id or the reverse;
 - two or more modelo ids held together, which is a routing rule;
@@ -57,6 +58,27 @@ _TECHNICAL_BOUND_NAME: Final = re.compile(
 )
 _NON_TAX_DECIMAL_NAME: Final = re.compile(r"confidence|score|hours_per_day", re.IGNORECASE)
 _COUNTRY_NAME: Final = re.compile(r"country|iso", re.IGNORECASE)
+_LENGTH_BOUNDS: Final = frozenset({"min_length", "max_length"})
+_PAYLOAD_GUARD: Final = 16
+_ORDERED_PAYLOAD_GUARD: Final = 64
+_SHA256_HEX: Final = 64
+_STANDARD_SHAPE_NAME: Final = re.compile(
+    r"(?:^|_)(?:hash|digest|sha\d*|nonce|ciphertext|id|country|pais|iso|currency|nif|tax_id|year|ejercicio|period|"
+    r"modelo|path|state|separator|ref|locale|language|date|on|attachment|generation|public_key|member_?state|"
+    r"isin|intents|normalisations|fields?|filters|parties|reversed|coordinates|components)(?:_|$|\b)",
+    re.IGNORECASE,
+)
+_STRUCTURE_LEN_NAME: Final = re.compile(
+    r"(?:^|\.)args$|parts|segments|split|groups?$|tokens?$|head$|pieces|pair|anchors|spans|children|candidates|"
+    r"keys$|ids$|boundaries|endpoints|arguments|suffix|outcomes|years$|actions|agenda|digits|"
+    r"grant|dek|operator_id|work_unit|_id$|stripped|\\bcase_id",
+    re.IGNORECASE,
+)
+_STANDARD_SHAPE_FUNCTION: Final = re.compile(
+    r"(?:^|_)(?:date|year|month|day|country|currency|iso|member|alpha|amount|number|decimal|modelo_id)(?:_|s?$)",
+    re.IGNORECASE,
+)
+_ORDERING_OPERATORS: Final = (ast.Lt, ast.LtE, ast.Gt, ast.GtE)
 _DAYS_OF_A_YEAR: Final = frozenset({365, 366})
 _MONTHS_OF_A_YEAR: Final = 12
 _QUARTERS_OF_A_YEAR: Final = 4
@@ -119,6 +141,25 @@ def _lawful_bound(owner: str, value: float) -> bool:
     return bool(_QUARTER_NAME.search(owner)) and value <= _QUARTERS_OF_A_YEAR
 
 
+def _lawful_length(owner: str, value: int, other: int | None) -> bool:
+    """Return whether a ``Field`` length states a structure, a size guard or a standard's shape."""
+    if value in _ARITHMETIC_BOUNDS or _STANDARD_SHAPE_NAME.search(owner):
+        return True
+    exact = other == value
+    if exact:
+        return False
+    return value >= _PAYLOAD_GUARD or (other is not None and other >= _PAYLOAD_GUARD) or (other is None and value == 2)
+
+
+def _lawful_len_comparison(subject: str, operator: ast.cmpop, value: int) -> bool:
+    """Return whether ``len(subject)`` against ``value`` states arithmetic, structure or a size guard."""
+    if value in _ARITHMETIC_BOUNDS or value == _SHA256_HEX or _STRUCTURE_LEN_NAME.search(subject):
+        return True
+    if isinstance(operator, _ORDERING_OPERATORS):
+        return value == 2 or value >= _ORDERED_PAYLOAD_GUARD
+    return False
+
+
 def _lawful_decimal(text: str) -> bool:
     try:
         value = Decimal(text)
@@ -156,6 +197,14 @@ class _Sweep(ast.NodeVisitor):
                 return _expression_names(current.name)
             if isinstance(current, ast.stmt):
                 return ""
+        return ""
+
+    def _enclosing_function(self, node: ast.AST) -> str:
+        current = node
+        while current in self._parents:
+            current = self._parents[current]
+            if isinstance(current, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                return current.name
         return ""
 
     def _month_keyed(self, node: ast.Constant) -> bool:
@@ -218,6 +267,33 @@ class _Sweep(ast.NodeVisitor):
                     and not _lawful_bound(self._owner(node), keyword.value.value)
                 ):
                     self._report(f"field_{keyword.arg}", keyword.value.value, keyword.value)
+            lengths = {
+                keyword.arg: keyword.value.value
+                for keyword in node.keywords
+                if keyword.arg in _LENGTH_BOUNDS
+                and isinstance(keyword.value, ast.Constant)
+                and isinstance(keyword.value.value, int)
+            }
+            for bound, value in lengths.items():
+                other = lengths.get("max_length" if bound == "min_length" else "min_length")
+                if not _lawful_length(self._owner(node), value, other):
+                    self._report(f"field_{bound}", value, node)
+        self.generic_visit(node)
+
+    @override
+    def visit_Compare(self, node: ast.Compare) -> None:
+        left = node.left
+        if (
+            len(node.comparators) == 1
+            and isinstance(left, ast.Call)
+            and _called_name(left) == "len"
+            and left.args
+            and isinstance(limit := node.comparators[0], ast.Constant)
+            and isinstance(limit.value, int)
+            and not _lawful_len_comparison(ast.unparse(left.args[0]), node.ops[0], limit.value)
+            and not _STANDARD_SHAPE_FUNCTION.search(self._enclosing_function(node))
+        ):
+            self._report("len_compare", limit.value, node)
         self.generic_visit(node)
 
     def _visit_collection(self, node: ast.Set | ast.Tuple | ast.List) -> None:
@@ -325,6 +401,9 @@ _FAKE_PERIODS: Final = frozenset({"0A", "1T", "01"})
     [
         ("cap = Decimal('300.51')\n", "decimal"),
         ("clave: int = Field(ge=1, le=7)\n", "field_le"),
+        ("rows: tuple[int, ...] = Field(min_length=18, max_length=18)\n", "field_min_length"),
+        ("rows: tuple[int, ...] = Field(max_length=12)\n", "field_max_length"),
+        ("ok = len(row) == 3\n", "len_compare"),
         ("BOX = '0208'\n", "code"),
         ("box = '303'\n", "code"),
         ("ROUTED = frozenset({Modelo('111').value, Modelo('303').value})\n", "modelo_set"),

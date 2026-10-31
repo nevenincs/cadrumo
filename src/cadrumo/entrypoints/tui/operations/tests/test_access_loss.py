@@ -39,7 +39,7 @@ from .....application.operations.interactions import OperationResponseIntent, Op
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....core.operations import OperationEffect, OperationLifecycle
-from ....operation_composition import build_production_operation_registry
+from ....tests.production_operation_registry import production_operation_registry
 from ...tests.settling import settle, settle_until
 from ..controller_port import OperationResponseControlPort
 from ..interactions import OperationModalReviewInteractionV1, resolve_modal_interaction_state
@@ -58,7 +58,7 @@ class _SafeReview(BaseModel):
 
 @lru_cache(maxsize=1)
 def _contracts() -> OperationPublicContractSetV1:
-    return build_production_operation_registry().public_contract_set
+    return production_operation_registry().public_contract_set
 
 
 def _observation() -> OperationObservationSuccessV1:

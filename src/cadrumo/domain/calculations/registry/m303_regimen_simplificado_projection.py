@@ -5,8 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_projection_ref import (
     FilingProjectionRef,
     M303RegimenSimplificadoActivityField,
@@ -157,6 +158,14 @@ class M303RegimenSimplificadoRecordProjection(BaseModel):
     record: int = Field(ge=1)
     fields: tuple[M303RegimenSimplificadoFieldProjection, ...] = Field(min_length=1)
 
+    @field_validator("record")
+    @classmethod
+    @pydantic_validation_boundary
+    def _record_is_a_declared_page(cls, record: int) -> int:
+        if record > int(resolve_form_codes_leased("form-row-codes").code("m303.dp30302.records")):
+            raise RegistryValidationError(f"DP30302 record {record} is past the form's declared pages")
+        return record
+
 
 def project_m303_regimen_simplificado_rows(
     *,
@@ -282,9 +291,10 @@ def m303_iae_epigraph_wire_value(iae_epigrafe: str) -> str:
 
 
 def _is_canonical_dotted_iae_epigraph(whole: str, fractional: str) -> bool:
+    row_codes = resolve_form_codes_leased("form-row-codes")
     return (
-        len(whole) == 3
-        and len(fractional) == 1
+        len(whole) == int(row_codes.code("m303.dp30302.iae_whole_digits"))
+        and len(fractional) == int(row_codes.code("m303.dp30302.iae_fractional_digits"))
         and whole.isascii()
         and fractional.isascii()
         and whole.isdecimal()
@@ -293,7 +303,8 @@ def _is_canonical_dotted_iae_epigraph(whole: str, fractional: str) -> bool:
 
 
 def _is_canonical_plain_iae_epigraph(value: str) -> bool:
-    return len(value) == 3 and value.isascii() and value.isdecimal()
+    whole_digits = int(resolve_form_codes_leased("form-row-codes").code("m303.dp30302.iae_whole_digits"))
+    return len(value) == whole_digits and value.isascii() and value.isdecimal()
 
 
 def _project_fact_ref(

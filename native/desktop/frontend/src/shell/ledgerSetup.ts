@@ -930,6 +930,8 @@ export type ActivityAssetClaimResult = ActivityAssetResultBase & {
 };
 export type ActivityAssetFilingRequest = {
   tax_year: number;
+  /** The language the boxes are named in. */
+  output_language: OutputLanguage;
   /** The Modelo 130 quarter to project; left out, the Modelo 100 boxes alone
    * are stated. */
   m130_period?: string;
@@ -937,6 +939,8 @@ export type ActivityAssetFilingRequest = {
 /** What the effective claims of a year add up to in a Modelo 100 casilla. */
 export type ClaimProjection = {
   target_casilla_id: string;
+  /** The box in the filer's words; null where none is named. */
+  box_name: string | null;
   tax_year: number;
   claim_ids: string[];
   amount: PublicDecimal;
@@ -954,7 +958,13 @@ export type M130Contribution = {
  * whose method leaves an amount to the taxpayer, and those of an agricultural
  * activity, are named too, and are not in `amount` either. */
 export type M130Projection = {
+  /** Which kind of element this accrual states; both kinds share the one
+   * box, so the name tells the two rows apart. */
+  asset_kind: string;
   target_casilla_id: string;
+  /** The box in the filer's words with the asset kind; null where none is
+   * named. */
+  box_name: string | null;
   tax_year: number;
   amount: PublicDecimal;
   contributions: M130Contribution[];
@@ -971,6 +981,9 @@ export type M100ClaimGap = {
   kind: M100GapKind;
   covered_from: string;
   covered_until: string;
+  /** The last day the interval covers, which is what a reader sees as its
+   * end; `covered_until` is the exclusive boundary. */
+  covered_through: string;
   accrued: PublicDecimal | null;
 };
 export type ActivityAssetFilingResult = ActivityAssetResultBase & {
@@ -1104,11 +1117,19 @@ export type PlanRow = {
   absence: string | null;
   absence_reason_key: string | null;
   absence_reason_facts: ReasonFact[];
+  /** The catalogue word of the entry that supplies what the absence lacks,
+   * when filling it in is the remedy; null otherwise. */
+  absence_remedy_field_key: string | null;
+  /** Whether the year has something to work out: false for a known state of
+   * nothing to work out with no span open. */
+  applies: boolean;
   claimed: PublicDecimal;
   claim_state: string;
   claimable_intervals: ClaimableInterval[];
   claimable_refusal_key: string | null;
   claimable_refusal_facts: ReasonFact[];
+  /** As `absence_remedy_field_key`, for the refusal. */
+  claimable_refusal_remedy_field_key: string | null;
   edition: PlanEdition | null;
   service_days: number | null;
   calendar_days: number | null;
@@ -1222,9 +1243,9 @@ export type TableGroup = {
   maximum_coefficient: PublicDecimal;
   minimum_coefficient: PublicDecimal;
   maximum_period_years: PublicDecimal;
-  /** Whether a material element of this class can be a restricted vehicle,
-   * so a vehicle declaration applies to it. */
-  can_hold_vehicle: boolean;
+  /** Whether an element of this class is charged only on a vehicle
+   * declaration, which it then has to state. */
+  requires_vehicle_declaration: boolean;
 };
 
 /** One reason a baja is accepted with, and the catalogue key that words it. */
@@ -1255,6 +1276,10 @@ export type BasisStageOption = {
 /** One status an opening history can have, with the facts it can state. */
 export type OpeningStatusOption = { status: string; facts: string[] };
 
+/** One condition an element can be acquired in, with the facts only that
+ * condition states. */
+export type ConditionOption = { condition: string; facts: string[] };
+
 /** What the registry admits for one asset kind and tax year. */
 export type FormOptions = {
   tax_year: number;
@@ -1271,6 +1296,9 @@ export type FormOptions = {
   disposal_reasons: DisposalReasonOption[];
   basis_stages: BasisStageOption[];
   opening_statuses: OpeningStatusOption[];
+  acquired_conditions: ConditionOption[];
+  /** The shapes a later payment or cost of an element's acquisition takes. */
+  further_acquisition_shapes: string[];
   /** The Modelo 130 periods the registry serves for the tax year. */
   m130_periods: string[];
 };

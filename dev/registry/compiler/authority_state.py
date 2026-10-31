@@ -14,10 +14,11 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from threading import Condition, RLock
+from types import TracebackType
 from typing import TYPE_CHECKING
 
 from cadrumo.core.hashing import content_hash_hex, sha256_file
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistrySnapshotError
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -41,6 +42,8 @@ class _CompilerSlot:
     lock: RLock = field(default_factory=RLock, repr=False)
     receipt: str | None = None
     authority: ValidatedRegistryAuthority | None = None
+    failure: RegistryError | None = None
+    failure_traceback: TracebackType | None = None
     generation: int = 0
 
 
@@ -154,7 +157,14 @@ def cached_compilation(
     compiler_source_tree_digest: str,
     build: Callable[[], ValidatedRegistryAuthority],
 ) -> ValidatedRegistryAuthority:
-    """Compile once for an observed mutable-tree receipt, otherwise rebuild."""
+    """Compile once for an observed mutable-tree receipt, otherwise rebuild.
+
+    A registry refusal is a deterministic function of the same receipt, so it
+    is kept too: every later caller observing identical inputs receives that
+    refusal again instead of recompiling the whole registry to rediscover it.
+    Only :class:`RegistryError` is kept. Any other exception may be transient
+    and is never remembered, and a changed receipt always compiles afresh.
+    """
     global _generation
     receipt = content_hash_hex(
         {
@@ -168,13 +178,28 @@ def cached_compilation(
         with _state_lock:
             slot = _slots.setdefault(pair.key, _CompilerSlot())
         with slot.lock:
-            if slot.receipt == receipt and slot.authority is not None:
-                return slot.authority
-            authority = build()
+            if slot.receipt == receipt:
+                if slot.authority is not None:
+                    return slot.authority
+                if slot.failure is not None:
+                    # Restore the original traceback so repeated refusals do
+                    # not accumulate every earlier caller's frames.
+                    raise slot.failure.with_traceback(slot.failure_traceback)
+            try:
+                authority = build()
+            except RegistryError as failure:
+                with _state_lock:
+                    slot.receipt = receipt
+                    slot.authority = None
+                    slot.failure = failure
+                    slot.failure_traceback = failure.__traceback__
+                raise
             with _state_lock:
                 _generation += 1
                 slot.receipt = receipt
                 slot.authority = authority
+                slot.failure = None
+                slot.failure_traceback = None
                 slot.generation = _generation
             return authority
 

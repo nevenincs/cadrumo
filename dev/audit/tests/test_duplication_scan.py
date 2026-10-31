@@ -19,8 +19,10 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
+from .. import report
 from ..duplication import (
     DuplicationOutcome,
+    DuplicationResult,
     run_duplication_scan,
 )
 from ..report import Status, audit_duplication
@@ -131,7 +133,7 @@ def test_real_failure_diagnostic_reaches_the_reason() -> None:
     )
 
 
-def test_health_report_duplication_dimension_reflects_the_live_scan() -> None:
+def test_health_report_duplication_dimension_reflects_the_live_scan(monkeypatch: pytest.MonkeyPatch) -> None:
     """The D2 dimension must map the live scan's own outcome, never a fixed verdict.
 
     Deliberately NOT an assertion that the product tree is clone-free. That
@@ -147,7 +149,19 @@ def test_health_report_duplication_dimension_reflects_the_live_scan() -> None:
     """
     _require_npx()
     result = run_duplication_scan(REPO_ROOT)
+    # The dimension delegates the measurement to this same runner; hand it the
+    # scan just taken rather than launching a second identical whole-tree jscpd
+    # run, and record that the delegation really asked for this tree.
+    delegated: list[Path] = []
+
+    def scanned(repo_root: Path) -> DuplicationResult:
+        delegated.append(repo_root)
+        return result
+
+    monkeypatch.setattr(report, "run_duplication_scan", scanned)
     dimension = audit_duplication(REPO_ROOT)
+
+    assert delegated == [REPO_ROOT]
 
     assert result.outcome is not DuplicationOutcome.UNAVAILABLE, result.reason
     assert result.files_analyzed > 0, "neither verdict is honest without proof of inspection"

@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "form-row-codes:design"
 date_axis = "filing_period"
 legal_refs = ["ley-37-1992:art-164"]
-source_refs = ["aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority"]
+source_refs = ["aeat-dr-347-2025", "boe-orden-hfp-1335-2021-iva-authority", "aeat-dr-303-2026"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
@@ -19,7 +19,13 @@ required_text = ["no residentes sin establecimiento permanente"]
 # "podran reducir en un 20 por ciento el importe de las cuotas devengadas".
 [[fact.variants.source_citations]]
 source_ref = "boe-orden-hfp-1335-2021-iva-authority"
-required_text = ["Transporte por autotaxis", "Transporte de mercancías por carretera", "20 por ciento"]
+required_text = ["Transporte por autotaxis", "Transporte de mercancías por carretera", "20 por ciento", "siempre que el total no exceda de 180"]
+
+# Page 2 occurrences and pages, the Mesas rows, and the five prorrata rows. The row counts of
+# the three repeating 303 blocks are also pinned to each edition's own declarations by a test.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2026"
+required_text = ["El número máximo de ocurrencias de la página 2 del modelo es 6", "el número máximo de páginas 2 será 3", "Módulo Mesas", "Prorratas - 5 - Código CNAE"]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -37,5 +43,12 @@ entries = [
   { key = "m303.prorrata.activity_slots", value = "5" },
   { key = "m303.exonerado_390.activity_slots", value = "6" },
   { key = "m303.dp30302.activities_per_kind", value = "6" },
+  { key = "m303.dp30302.activities_per_record", value = "2" },
+  { key = "m303.dp30302.records", value = "3" },
   { key = "m303.dp30302.sub_indices", value = "1,2,3,4" },
+  { key = "m303.dp30302.iae_whole_digits", value = "3" },
+  { key = "m303.dp30302.iae_fractional_digits", value = "1" },
+  { key = "m303.orden.modules_per_activity", value = "7" },
+  { key = "m303.orden.seasonal_bands", value = "3" },
+  { key = "m303.orden.seasonal_max_days", value = "180" },
 ]

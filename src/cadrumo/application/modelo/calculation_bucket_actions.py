@@ -643,10 +643,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         detail_rows=detail_rows,
         profile=profile,
     )
-    # The source mesh and the ledger snapshot anchor both consume the same
-    # immutable contributor rows during one calculation. Keep the existing
-    # calculation-scoped read-through cache alive through the anchor so the
-    # latter does not decrypt/validate the exact contributor ids a second time.
+    # Share contributor reads between the source mesh and the ledger snapshot anchor.
     memoized_transaction_repository = MemoizedTransactionCatalogueRepository(ports.transaction_repository)
     source_resolution = _resolve_bucket_aggregation_source_resolution(
         preparation=preparation,
@@ -782,6 +779,10 @@ def _durable_asset_note_reason(diagnostic: CalculationSourceDiagnostic) -> _Dura
         return "activity_asset_agrarian_excluded"
     if diagnostic.reason == "activity_asset_residence_period_unknown":
         return "activity_asset_residence_period_unknown"
+    return _durable_register_note_reason(diagnostic)
+
+
+def _durable_register_note_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     if diagnostic.reason == "activity_asset_disposal_finding":
         return "activity_asset_disposal_finding"
     if diagnostic.reason == "register_acquisition_exceeds_ledger":

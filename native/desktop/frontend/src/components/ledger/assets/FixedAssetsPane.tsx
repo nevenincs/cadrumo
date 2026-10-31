@@ -172,6 +172,7 @@ export function FixedAssetsPane({
         taxYear={year}
         initialYear={request.year ?? null}
         supersedes={request.supersedes ?? null}
+        onCorrectElement={() => ask({ kind: "correction", assetId })}
       />
     );
   };

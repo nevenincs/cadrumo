@@ -1435,8 +1435,7 @@ desktop:
         incomplete: 'Anys que no es poden calcular, tots els anys: {count}'
         missing: 'Anys amb alguna cosa pendent de registrar, tots els anys: {count}'
         stale: 'Dotacions que ja no coincideixen amb el quadre, tots els anys: {count}'
-        unsupported: 'Anys amb un mètode que Cadrumo encara no admet, tots els anys:
-          {count}'
+        unsupported: 'Anys que no es poden calcular aquí, tots els anys: {count}'
         without_tables: 'Anys sense taules oficials, tots els anys: {count}'
       detail:
         baja_reason: Motiu de la baixa
@@ -1528,7 +1527,6 @@ desktop:
         useful_life_ends_on: Final de la vida útil
         useful_life_evidence: Justificant de la vida útil
         vehicle_category: Tipus de vehicle
-        vehicle_declared: És un vehicle?
         vehicle_evidence: Justificant de l'ús del vehicle
         vehicle_in_books: Anotat als llibres de l'activitat
         vehicle_listed_use: Ús professional de la llista (si n'hi ha)

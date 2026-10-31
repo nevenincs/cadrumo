@@ -15,7 +15,7 @@ from cadrumo.core.product_identity import (
 )
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
-from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
+from .._paths import LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..errors import LocaleError
 from ..locale_tree import _flatten_leaf_values
@@ -1033,18 +1033,20 @@ def test_audit_accepts_matching_conversions_escaped_and_literal_braces(tmp_path:
     assert result.placeholder_mismatches == (), result.placeholder_mismatches
 
 
-def test_committed_catalogues_pass_production_audit() -> None:
+def test_committed_catalogues_pass_production_audit(committed_locale_manager: LocaleManager) -> None:
     """The shipped four-language catalogue is accepted by the real validator."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
+    manager = committed_locale_manager
 
     result = manager.audit()
 
     assert result.ok, result
 
 
-def test_committed_catalogues_follow_contextual_product_identity_contract() -> None:
+def test_committed_catalogues_follow_contextual_product_identity_contract(
+    committed_locale_manager: LocaleManager,
+) -> None:
     """Tax and service resources preserve prose, identity, CLI, machine, and authority referents."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
+    manager = committed_locale_manager
 
     assert PRODUCT_IDENTITY.prose_name == "Cadrumo"
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"

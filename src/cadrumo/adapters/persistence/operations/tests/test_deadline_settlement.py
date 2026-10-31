@@ -20,6 +20,7 @@ import asyncio
 import contextlib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import override
 
 import pytest
 from pydantic import BaseModel, Field
@@ -428,6 +429,7 @@ class ScopeObservingExecutor(HeldExecutor):
     observed_scope: GovernedFactSource | None = None
     pinned: GovernedFactSource | None = None
 
+    @override
     async def execute(
         self,
         request: OperationRequest[BaseModel],

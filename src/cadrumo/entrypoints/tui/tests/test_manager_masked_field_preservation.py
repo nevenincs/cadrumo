@@ -24,16 +24,24 @@ matches no token and the dialog can therefore never find the current one.
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from contextlib import contextmanager
+from pathlib import Path
+
 import pytest
 from textual.widgets import Button, Input, OptionList
 
+from ....adapters.persistence.profile.tests.sealed_profile_world import (
+    SealedProfileWorld,
+    copied_profile_world,
+    publish_world_session,
+    sealed_profile_world,
+)
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import (
     MASKED_PLACEHOLDER,
     ProfileFieldChoice,
@@ -69,19 +77,38 @@ _PLAIN_PATH = "identity.name"
 _ENUM_PATH = "renta_taxpayer.sex"
 
 
+def _register() -> str:
+    # Registration validates facts against registry authority, so it runs under a real lease.
+    with bundled_indexed_authority().operation():
+        create, decode = _profile_contexts_for_test()
+        return register_profile_with_credentials(
+            label=_LABEL,
+            passphrase=_CREDENTIAL_INPUT,
+            profile_create_context=create,
+            profile_decode_context=decode,
+        ).profile_id
+
+
+def _world() -> SealedProfileWorld:
+    return sealed_profile_world((__name__, _LABEL, _CREDENTIAL_INPUT), _register)
+
+
+@contextmanager
+def _registered(tmp_path: Path) -> Generator[None]:
+    """Open this test's own copy of the subject profile, registered once per worker."""
+    with copied_profile_world(_world(), tmp_path, profile_decode_context=_profile_contexts_for_test()[1]):
+        yield
+
+
 def _ensure_logged_in() -> None:
     """Unlock the registered profile so the capsule will serve its record.
 
-    Registration closes its own session and the custody capsule is the sole
-    profile authority, so every read or write door below needs an authenticated
-    session. Logging in derives the same DEK the capsule was sealed under.
+    The custody capsule is the sole profile authority and a session is bound to
+    the authority lease it opened under, so every read or write door below
+    needs a session published in the caller's lease. This publishes the key the
+    worker's one registration proved, as a login publishes the key it derives.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    authenticate_profile_for_invocation(
-        name=_LABEL,
-        passphrase_callback=lambda: _CREDENTIAL_INPUT,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
+    publish_world_session(_world(), profile_decode_context=_profile_contexts_for_test()[1])
 
 
 def _live_overview():
@@ -136,16 +163,7 @@ async def test_the_masked_field_under_test_really_is_masked_and_optional(tmp_pat
     already covers the rest. If this field stops being either, these
     tests stop proving anything and must be pointed at one that is.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with _registered(tmp_path):
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         field = next(
@@ -165,16 +183,7 @@ async def test_saving_a_masked_field_without_typing_does_not_clear_it(tmp_path) 
     submitted as a clear and the stored value was destroyed with no
     warning of any kind.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with _registered(tmp_path):
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE, "fixture must start with a value to lose"
 
@@ -201,16 +210,7 @@ async def test_pressing_enter_in_an_untouched_masked_box_does_not_clear_it(tmp_p
     dialog and the likelier one for an operator who opened the row to
     look rather than to edit.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with _registered(tmp_path):
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -228,16 +228,7 @@ async def test_pressing_enter_in_an_untouched_masked_box_does_not_clear_it(tmp_p
 @pytest.mark.asyncio
 async def test_whitespace_typed_into_a_masked_box_does_not_clear_it(tmp_path) -> None:
     """Spaces read as blank everywhere else, so they must not delete here either."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with _registered(tmp_path):
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -261,16 +252,7 @@ async def test_a_masked_field_can_still_be_deliberately_cleared(tmp_path) -> Non
     ever empty a masked field: without it the whole ability could be
     removed and every test above would still pass.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with _registered(tmp_path):
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE
 
@@ -296,16 +278,7 @@ async def test_the_clear_gesture_is_offered_only_where_the_box_cannot_express_it
     and offering it on a field holding nothing would promise a deletion
     with nothing to delete.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with _registered(tmp_path):
         _persist(_PLAIN_PATH, "Ada Lovelace")
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -336,16 +309,7 @@ async def test_an_unmasked_field_is_still_cleared_by_emptying_its_box(tmp_path) 
     guard to every field would turn that into a silent no-op, which is
     the opposite failure and just as surprising.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with _registered(tmp_path):
         _persist(_PLAIN_PATH, "Ada Lovelace")
         assert _stored().get(_PLAIN_PATH) == "Ada Lovelace"
 
@@ -370,16 +334,7 @@ async def test_the_clear_button_is_not_the_one_enter_reaches(tmp_path) -> None:
     save. If clearing were reachable by the same reflex the guard above
     removes, the fix would have moved the accident rather than closed it.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with _registered(tmp_path):
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -408,17 +363,7 @@ async def test_an_enum_dialog_pre_selects_nothing_it_cannot_confirm_is_current(t
     gesture is the same one the masked guard exists to disarm, and the
     operator reads it the same way.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with _registered(tmp_path):
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -446,16 +391,7 @@ async def test_an_enum_dialog_still_pre_selects_the_token_the_field_holds(tmp_pa
     which answer it is. Without this the guard above could be satisfied
     by never highlighting anything.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
+    with _registered(tmp_path):
         _persist(_ENUM_PATH, "M")
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -497,17 +433,7 @@ async def test_a_masked_enum_pre_selects_nothing_so_enter_cannot_overwrite_it(tm
             ProfileFieldChoice(value=token, label=token) for token in ("casilla", "numero_soporte", "fecha_validez")
         ),
     )
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        # Registration validates facts against registry authority, so it runs under a real lease.
-        with bundled_indexed_authority().operation():
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CREDENTIAL_INPUT,
-                profile_create_context=_profile_create_context_for_test,
-                profile_decode_context=_profile_decode_context_for_test,
-            )
-
+    with _registered(tmp_path):
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)

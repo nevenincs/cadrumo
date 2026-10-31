@@ -8,6 +8,7 @@ from datetime import date
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.text_fold import ascii_slug
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.form_codes import resolve_form_codes
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenProjection
@@ -42,6 +43,20 @@ from ._m303_orden_source import annual_orden_raw_activity_identity
 from .m303_orden_raw_models import M303AnnualOrdenRawActivity, M303AnnualOrdenSourceCensus
 
 
+def require_declared_orden_shape(census: M303AnnualOrdenSourceCensus) -> None:
+    """Refuse an annual Orden whose module rows or seasonal bands the registry does not declare."""
+    row_codes = resolve_form_codes("form-row-codes", effective_date=date(census.ejercicio, 1, 1))
+    modules = int(row_codes.code("m303.orden.modules_per_activity"))
+    if any(module.order > modules for activity in census.activities for module in activity.modules):
+        raise RegistryValidationError(f"annual Orden module order is past the {modules} the record declares")
+    bands = int(row_codes.code("m303.orden.seasonal_bands"))
+    if len(census.seasonal_indexes) != bands:
+        raise RegistryValidationError(f"annual Orden must publish exactly {bands} seasonal index bands")
+    max_days = int(row_codes.code("m303.orden.seasonal_max_days"))
+    if any(item.maximum_days > max_days for item in census.seasonal_indexes):
+        raise RegistryValidationError(f"annual Orden seasonal band is past the {max_days} days of a seasonal activity")
+
+
 def compile_m303_annual_orden_projection(
     *,
     census: M303AnnualOrdenSourceCensus,
@@ -51,6 +66,7 @@ def compile_m303_annual_orden_projection(
     legal_refs: Mapping[str, LegalRefId],
 ) -> M303AnnualOrdenProjection:
     """Compile one validated source census into its immutable registry projection."""
+    require_declared_orden_shape(census)
     expected_legal_keys = annual_orden_legal_keys(census)
     if set(legal_refs) != expected_legal_keys:
         raise RegistryValidationError(

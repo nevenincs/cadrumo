@@ -34,11 +34,11 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.overview_read_composition import build_overview_read_ports
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider
 
 from ...domain.iva.schema import InvoiceKind
+from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -134,7 +134,7 @@ def _tui_m347_years(operation: PinnedAuthorityOperation) -> set[int]:
     generation = compose_secure_workbench_generation_provider(
         profile_id=_BUCKET_ID,
         operation=operation,
-        operation_contracts=build_production_operation_registry().public_contract_set,
+        operation_contracts=production_operation_registry().public_contract_set,
         account_session_reader=lambda: HomeAccountSession(
             posture=HomeSessionPosture.ACTIVE,
             profile_label="347 parity",

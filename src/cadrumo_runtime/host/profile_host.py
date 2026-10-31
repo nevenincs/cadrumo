@@ -20,7 +20,7 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     revoke_profile_sign_in,
 )
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
-from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
+from cadrumo.adapters.persistence.storage.custody.automation_profile import CommittedProfileBindingWatch
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
@@ -136,6 +136,12 @@ class RuntimeProfileHost:
         self._wall_clock = wall_clock
         self.guard = TimedRLock(slow_seconds=_GUARD_SLOW_SECONDS, event="profile_guard_slow")
         self._replacement_retirement_guard = Lock()
+        self._committed_binding = CommittedProfileBindingWatch(
+            profile_id=store.binding.profile_id,
+            installation_id=store.binding.installation_id,
+            os_owner_id=store.binding.os_owner_id,
+            root=store.root,
+        )
         self._lock_fence: ProfileGlobalLockState | None = None
         self._password_rotation: OperationIdentity | None = None
         self._locked_logins: set[str] = set()
@@ -619,12 +625,7 @@ class RuntimeProfileHost:
             try:
                 binding = self.store.binding
                 try:
-                    current = current_automation_profile_binding(
-                        profile_id=binding.profile_id,
-                        installation_id=binding.installation_id,
-                        os_owner_id=binding.os_owner_id,
-                        root=self.store.root,
-                    )
+                    current = self._committed_binding.current()
                 except AutomationCustodyError:
                     current = None
                 if current == binding:

@@ -8,7 +8,7 @@ from typing import Final
 
 import pytest
 
-from ..operation_composition import build_production_operation_registry
+from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,7 +51,7 @@ def test_every_declared_operation_definition_is_composed() -> None:
     lifecycle definitions sat dormant until a sweep like this one found them.
     """
     declared = _declared_definition_ids()
-    composed = {definition.definition_id for definition in build_production_operation_registry().definitions}
+    composed = {definition.definition_id for definition in production_operation_registry().definitions}
 
     assert len(declared) >= _PLAUSIBLE_DECLARED_MINIMUM, (
         f"the declaration sweep found only {len(declared)} operation ids; it has stopped seeing the families"

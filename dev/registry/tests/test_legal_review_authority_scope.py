@@ -7,14 +7,12 @@ from datetime import date
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_capability
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_validated_snapshot
 
-from ..compiler.authority import compile_validated_authority
 from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -35,7 +33,7 @@ _M182_AMENDMENT_AGENT_REVIEWED_REFS = frozenset(
 )
 
 
-def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
+def test_authority_refuses_real_m182_through_the_public_accessor(registry_authority) -> None:
     """M182's mixed legal-reference reviews do not promote the revision itself.
 
     The inputs are live rather than assumed: four legacy refs are
@@ -50,7 +48,7 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
     ``build_validated_snapshot``, and it now asserts the refusal M182 actually
     earns today.
     """
-    authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
+    authority = registry_authority
     revision = authority.modelo("182").revisions["2025"]
     assert revision.review_status is RevisionReviewStatus.AUTOMATION_REVIEWED
     assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
@@ -95,6 +93,7 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
     reviewed_by: str | None,
     reviewed_at: date | None,
     refusal: str,
+    registry_authority,
 ) -> None:
     """Both pending and agent review remain typed non-filing revision states.
 
@@ -102,7 +101,7 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
     the refusal it actually earns, so a status silently changing gates is a red
     test rather than a passing one.
     """
-    authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
+    authority = registry_authority
     modelo = authority.modelo("182")
     revision = modelo.revisions["2025"].model_copy(
         update={
@@ -202,7 +201,7 @@ def test_the_filing_capability_check_passes_a_revision_that_can_emit() -> None:
     check_snapshot_filing_capability(modelo, resolved)
 
 
-def test_compile_tier_snapshots_in_this_module_carry_the_published_compiled_catalogues() -> None:
+def test_compile_tier_snapshots_in_this_module_carry_the_published_compiled_catalogues(registry_authority) -> None:
     """The unvalidated tree these snapshots use is the one the authority publishes.
 
     The tests above build snapshots from compile-tier catalogues so they survive a
@@ -212,7 +211,7 @@ def test_compile_tier_snapshots_in_this_module_carry_the_published_compiled_cata
     authority or fact catalogue and pass an assertion here for the wrong reason.
     """
     _modelos, catalogues = _committed_registry()
-    published = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path()).catalogues
+    published = registry_authority.catalogues
 
     assert catalogues.supplementary_ordenes, "compile-tier catalogues carry no compiled Orden authority"
     assert catalogues.supplementary_ordenes == published.supplementary_ordenes

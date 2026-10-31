@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from dataclasses import replace
 from functools import partial
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from pydantic import ValidationError
@@ -38,6 +38,9 @@ from .. import registry_collapse_models as _collapse_models
 from .. import registry_collapse_requests as _collapse_requests
 from .. import registry_collapse_roots as _collapse_roots
 from .. import registry_collapse_run as _collapse_run
+
+if TYPE_CHECKING:
+    from .committed_authority_publication import RunPublishedAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -755,27 +758,12 @@ def test_indexed_revision_and_snapshot_parity_include_form_layout_components(tmp
 
 def test_real_modelo_131_snapshot_parity_preserves_raw_and_effective_export_layouts(
     registry_authority: ValidatedRegistryAuthority,
-    tmp_path: Path,
+    committed_published_authority: RunPublishedAuthority,
 ) -> None:
     """Form composition preserves declared exports beside binding-derived snapshot exports."""
     from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
-    from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
-    from dev.registry.compiler.identity import resolve_registry_identity
-    from dev.registry.compiler.loader_fingerprints import collect_registry_tree_fingerprints
-    from dev.registry.pipeline.authority_publication import install_validated_authority_database
 
-    registry_root = bundled_path("registry", "aeat")
-    identity = resolve_registry_identity(registry_root, collect_fingerprints=collect_registry_tree_fingerprints)
-    artifact = AuthorityArtifact(
-        modelos=registry_authority.modelos,
-        catalogues=registry_authority.catalogues,
-        identity_digest=identity.digest,
-        evidence=registry_authority.evidence,
-        profile_schema=registry_authority.profile_schema(),
-    )
-    indexed_root = tmp_path / "indexed"
-    install_validated_authority_database(artifact, destination=indexed_root, require_current=lambda: None)
-    indexed_authority = IndexedRegistryAuthority(indexed_root / "authority.current.json")
+    indexed_authority = IndexedRegistryAuthority(committed_published_authority.descriptor_path)
 
     coordinate = _collapse_models.RequestCoordinate(
         filing_year=2022,

@@ -1416,8 +1416,7 @@ desktop:
         missing: 'Évek, amelyekben még van mit rögzíteni, minden évben: {count}'
         stale: 'Az ütemezéssel már nem egyező értékcsökkenési leírások, minden évben:
           {count}'
-        unsupported: 'Évek olyan módszerrel, amelyet a Cadrumo még nem támogat, minden
-          évben: {count}'
+        unsupported: 'Évek, amelyeket itt nem lehet kiszámítani, minden évben: {count}'
         without_tables: 'Hivatalos táblázatok nélküli évek, minden évben: {count}'
       detail:
         baja_reason: A kivezetés oka
@@ -1509,7 +1508,6 @@ desktop:
         useful_life_ends_on: A hasznos élettartam vége
         useful_life_evidence: A hasznos élettartam igazolása
         vehicle_category: A jármű fajtája
-        vehicle_declared: Jármű?
         vehicle_evidence: A jármű használatának igazolása
         vehicle_in_books: Szerepel a tevékenység könyveiben
         vehicle_listed_use: Listázott üzleti használat (ha van)

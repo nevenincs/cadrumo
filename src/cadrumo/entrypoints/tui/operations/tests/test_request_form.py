@@ -19,7 +19,7 @@ from .....application.operations.subject_reference import OperationSubjectKind, 
 from .....core.errors.error_codes import build_error_envelope
 from .....core.operations import profile_operation_subject
 from .....core.period import PeriodError
-from ....operation_composition import build_production_operation_registry
+from ....tests.production_operation_registry import production_operation_registry
 from ..catalogue import OperationCatalogueEntryV1, OperationCatalogueV1, build_operation_catalogue
 from ..request_form import (
     RequestFieldKind,
@@ -42,7 +42,7 @@ _VIEW = "user-profile.view"
 
 @lru_cache(maxsize=1)
 def _catalogue() -> OperationCatalogueV1:
-    return build_operation_catalogue(build_production_operation_registry())
+    return build_operation_catalogue(production_operation_registry())
 
 
 def _entry(definition_id: str) -> OperationCatalogueEntryV1:

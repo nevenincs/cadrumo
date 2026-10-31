@@ -27,11 +27,17 @@ import type {
   LedgerDefinitionId,
 } from "../shell/ledger";
 import {
+  ACQUIRED_CONDITIONS,
   ADMITTED_METHODS,
   BASIS_STAGES,
+  BOX_NAMES,
   DISPOSAL_REASONS,
+  FURTHER_ACQUISITION_SHAPES,
   M130_PERIODS,
+  NO_TABLE_MINIMUM_KEY,
+  NOT_APPLICABLE_ABSENCES,
   OPENING_STATUSES,
+  REMEDY_FIELD_KEYS,
   SEED_ELEMENTS,
   TABLE_GROUPS,
   TIMELINE_FACT_PATHS,
@@ -554,8 +560,6 @@ const FIRST_SUPPORTED_YEAR = 2022;
 /** The last year the registry carries official tables for; later years are estimates. */
 const LAST_ADMITTED_YEAR = 2026;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-/** The shapes a later ledger payment of an element can take. */
-const FURTHER_SHAPES = ["split_payment", "ancillary_cost"];
 
 const json = <T>(value: T): JsonObject => value as unknown as JsonObject;
 const dec = (value: string) => ({ decimal: value });
@@ -923,6 +927,22 @@ export function assetOperations(tools: Tools) {
     return { start, end };
   };
 
+  /** What the backend derives of a row once its absence, reasons and open
+   * spans are settled: whether the year applies, and the entry to fill in
+   * where that is the remedy. */
+  const settle = (row: PlanRow) => {
+    row.applies =
+      row.absence === null ||
+      !NOT_APPLICABLE_ABSENCES.includes(row.absence) ||
+      row.claimable_intervals.length > 0;
+    const remedy = (key: string | null) =>
+      key !== null && Object.hasOwn(REMEDY_FIELD_KEYS, key)
+        ? REMEDY_FIELD_KEYS[key]!
+        : null;
+    row.absence_remedy_field_key = remedy(row.absence_reason_key);
+    row.claimable_refusal_remedy_field_key = remedy(row.claimable_refusal_key);
+  };
+
   const restate = (element: Element, row: PlanRow) => {
     const { start, end } = serviceWindow(element, row);
     const effective = row.claims.filter((claim) => claim.effective);
@@ -944,6 +964,7 @@ export function assetOperations(tools: Tools) {
           : row.claims.some((claim) => claim.superseded_by !== null)
             ? "superseded"
             : "claimed";
+    settle(row);
   };
 
   /** The year a dotación form opens on: the latest year up to the scenario's
@@ -1100,6 +1121,8 @@ export function assetOperations(tools: Tools) {
           disposal_reasons: DISPOSAL_REASONS,
           basis_stages: BASIS_STAGES,
           opening_statuses: OPENING_STATUSES,
+          acquired_conditions: ACQUIRED_CONDITIONS,
+          further_acquisition_shapes: FURTHER_ACQUISITION_SHAPES,
           m130_periods: M130_PERIODS[year] ?? [],
         },
       });
@@ -1264,7 +1287,7 @@ export function assetOperations(tools: Tools) {
         if (
           !given ||
           !lineage ||
-          !FURTHER_SHAPES.includes(String(given.shape)) ||
+          !FURTHER_ACQUISITION_SHAPES.includes(String(given.shape)) ||
           typeof lineage.observed_transaction_id !== "string"
         )
           return invalid();
@@ -1289,7 +1312,11 @@ export function assetOperations(tools: Tools) {
       )
         return invalid();
     }
-    if (!["new", "used"].includes(String(revision.acquired_condition)))
+    if (
+      !ACQUIRED_CONDITIONS.some(
+        (found) => found.condition === revision.acquired_condition,
+      )
+    )
       return invalid();
     if (
       decimalOf(basis.basis_amount) === null ||
@@ -1422,7 +1449,13 @@ export function assetOperations(tools: Tools) {
     }
     const used = obj(election.used_original_price);
     if (used !== null) {
-      if (method !== "linear" || revision.acquired_condition !== "used")
+      const condition = ACQUIRED_CONDITIONS.find(
+        (found) => found.condition === revision.acquired_condition,
+      );
+      if (
+        method !== "linear" ||
+        !condition?.facts.includes("used_original_price")
+      )
         return refuse(
           VALIDATION,
           "used_original_price_requires_used_asset",
@@ -1494,6 +1527,17 @@ export function assetOperations(tools: Tools) {
       (method !== "linear" || Number(hours) <= 0 || Number(hours) > 24)
     )
       return invalid();
+    // A class the table charges only on a vehicle declaration needs one.
+    const restricted = TABLE_GROUPS[kind]?.find(
+      (found) => found.class_key === textOf(election.authority_class_key),
+    )?.requires_vehicle_declaration;
+    if (restricted === true && revision.vehicle_affectation == null)
+      return refuse(
+        INCOMPLETE,
+        "vehicle_affectation_required_for_class",
+        {},
+        shape,
+      );
     // A vehicle is an element of a material kind whose declaration admits it.
     const vehicle = obj(revision.vehicle_affectation);
     if (vehicle !== null) {
@@ -1592,7 +1636,9 @@ export function assetOperations(tools: Tools) {
         ? toCents(basis) - toCents(decimalOf(opening.accumulated_amount)!)
         : null;
     let minimum = 0;
-    let minimumComplete = true;
+    // The reason the first year without a minimum has none, kept for every
+    // year after it.
+    let minimumReason: string | null = null;
     const rows: PlanRow[] = [];
     const base = (year: number, days: number | null): PlanRow => {
       const calendar = leap(year) ? 366 : 365;
@@ -1600,8 +1646,12 @@ export function assetOperations(tools: Tools) {
       const start = later(inService, `${year}-01-01`);
       const end = `${year + 1}-01-01`;
       const span = daysBetween(start, end);
-      if (edition === null || !group) minimumComplete = false;
-      else
+      if (edition === null || !group) {
+        minimumReason ??=
+          edition === null
+            ? `${FINDING}minimum_unresolved`
+            : NO_TABLE_MINIMUM_KEY;
+      } else if (minimumReason === null)
         minimum += Math.round(
           (toCents(basis) * Number(group.minimum_coefficient.decimal) * span) /
             calendar,
@@ -1614,24 +1664,26 @@ export function assetOperations(tools: Tools) {
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: dec("0.00"),
         claim_state: year > Number(TODAY.slice(0, 4)) ? "not_due" : "missing",
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition,
         service_days: days,
         calendar_days: days === null ? null : calendar,
         claims: [],
         // A minimum with an earlier year unresolved is unknown, with the
         // reason, and never a partial sum.
-        minimum_through: minimumComplete
-          ? dec(fromCents(Math.min(toCents(basis), minimum)))
-          : null,
-        minimum_reason_key: minimumComplete
-          ? null
-          : `${FINDING}minimum_unresolved`,
-        minimum_complete: minimumComplete,
+        minimum_through:
+          minimumReason === null
+            ? dec(fromCents(Math.min(toCents(basis), minimum)))
+            : null,
+        minimum_reason_key: minimumReason,
+        minimum_complete: minimumReason === null,
       };
     };
     if (left === null) {
@@ -1762,6 +1814,7 @@ export function assetOperations(tools: Tools) {
         ? fromCents(Math.round(toCents(amount) * Number(coefficient)))
         : null;
     const rows = startingRows(revision, annual);
+    rows.forEach(settle);
     const accumulated =
       opening.status === "known" ? decimalOf(opening.accumulated_amount) : null;
     const list: AssetListRow = {
@@ -2049,7 +2102,7 @@ export function assetOperations(tools: Tools) {
    * its recorded claims or else its schedule. An element with a span neither
    * covers is named, never counted as zero. */
   const filingHandoff: Handler = (request) => {
-    exact(request, ["tax_year", "m130_period"]);
+    exact(request, ["tax_year", "m130_period", "output_language"]);
     const year = request.tax_year;
     // Without a quarter the Modelo 100 boxes alone are stated.
     const period =
@@ -2063,6 +2116,14 @@ export function assetOperations(tools: Tools) {
       return invalid();
     const through = `${year}-${PERIOD_END[period ?? "4T"]}`;
     const until = dayAfter(through);
+    const language = request.output_language;
+    const names =
+      BOX_NAMES[
+        String(
+          Math.max(FIRST_SUPPORTED_YEAR, Math.min(year, LAST_ADMITTED_YEAR)),
+        )
+      ]?.[String(language)];
+    if (names === undefined) return invalid();
     const sorted = [...elements.values()].sort((a, b) =>
       a.id.localeCompare(b.id),
     );
@@ -2076,6 +2137,7 @@ export function assetOperations(tools: Tools) {
         );
       return {
         target_casilla_id: M100_CASILLA[kind]!,
+        box_name: names[`${kind}_m100`]!,
         tax_year: year,
         claim_ids: claims.map((claim) => claim.claim_id),
         amount: dec(
@@ -2114,8 +2176,10 @@ export function assetOperations(tools: Tools) {
           return {
             asset_id: element.id,
             kind,
-            covered_from: gap.covered_from,
-            covered_until: gap.covered_until,
+            ...withThrough({
+              covered_from: gap.covered_from,
+              covered_until: gap.covered_until,
+            }),
             accrued:
               kind === "accrued"
                 ? dec(
@@ -2196,7 +2260,9 @@ export function assetOperations(tools: Tools) {
         }
       }
       return {
+        asset_kind: kind,
         target_casilla_id: "02",
+        box_name: names[`${kind}_m130`]!,
         tax_year: year,
         amount: dec(
           fromCents(
@@ -2271,6 +2337,10 @@ export function assetOperations(tools: Tools) {
       refuse(VALIDATION, "disposal_withdrawal_with_amounts", {}, shape);
   };
 
+  /** The claims an overlap meets, comma-joined in history order. */
+  const ids = (claims: readonly PlanClaim[]) =>
+    claims.map((claim) => claim.claim_id).join(",");
+
   const statedDisposal = (request: JsonObject): DisposalFacts => {
     const given = request.disposal;
     if (typeof given !== "object" || given === null || Array.isArray(given))
@@ -2298,8 +2368,9 @@ export function assetOperations(tools: Tools) {
       reason: facts.reason,
       reason_key: `${FAMILY}disposal_reason.${facts.reason}`,
     };
-    // Nothing is left to amortize once the element has a baja.
-    element.list.pending_applies = false;
+    // Nothing is left to amortize once the element has left service: the
+    // day after the baja's last day has come.
+    element.list.pending_applies = dayAfter(facts.disposal_date) > TODAY;
     element.rows = element.rows.filter(
       (row) => row.tax_year <= Number(facts.disposal_date.slice(0, 4)),
     );
@@ -2538,7 +2609,12 @@ export function assetOperations(tools: Tools) {
         from < claim.covered_until,
     );
     if (overlapping.length > 0)
-      return refuse(CLAIM_CONFLICT, "claims_overlap", {}, { forecast: null });
+      return refuse(
+        CLAIM_CONFLICT,
+        "claims_overlap",
+        { conflicting_claim_ids: ids(overlapping) },
+        { forecast: null },
+      );
     const target = row.claims.find((claim) => claim.claim_id === supersedes);
     if (supersedes !== null && (!target || !target.effective))
       return refuse(
@@ -2685,7 +2761,7 @@ export function assetOperations(tools: Tools) {
       return refuse(
         CLAIM_CONFLICT,
         "claims_overlap",
-        {},
+        { conflicting_claim_ids: ids(overlapping) },
         { claim_result: null, claim_id: null },
       );
     const target = row.claims.find((found) => found.claim_id === supersedes);

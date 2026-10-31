@@ -20,7 +20,8 @@ import {
   FURTHER_SHAPE,
   OUTSIDE,
   revisionPathOf,
-  VEHICLE_DECLARED,
+  requiresVehicle,
+  factsOfOtherConditions,
   type FormValue,
   type FormValues,
 } from "./assetFields";
@@ -112,8 +113,6 @@ function descriptorOf(values: FormValues): DescriptorFacts | null {
 function tidyBasis(revision: Tree, options: FormOptions | null): void {
   const basis = revision.basis as Tree | undefined;
   if (basis === undefined) return;
-  if (revision.acquired_condition !== "used")
-    delete revision.building_construction_date;
   const stages = options?.basis_stages ?? [];
   const chosen = stages.find((found) => found.stage === basis.stage);
   if (chosen === undefined) return;
@@ -121,6 +120,30 @@ function tidyBasis(revision: Tree, options: FormOptions | null): void {
   for (const other of stages)
     for (const name of other.facts)
       if (!chosen.facts.includes(name)) delete basis[name];
+}
+
+/** The facts only another condition states, taken out: the options name them,
+ * those of the election and those beside it. Without the options, or with a
+ * condition they do not list, nothing is judged. */
+function tidyCondition(revision: Tree, options: FormOptions | null): void {
+  const elsewhere = factsOfOtherConditions(
+    options,
+    String(revision.acquired_condition ?? ""),
+  );
+  const election = revision.amortization as Tree | undefined;
+  for (const name of elsewhere) {
+    delete revision[name];
+    if (election !== undefined) delete election[name];
+  }
+}
+
+/** The vehicle declaration a class that is not charged on one cannot state.
+ * A class the options do not list is not judged. */
+function tidyVehicle(revision: Tree, options: FormOptions | null): void {
+  const election = revision.amortization as Tree | undefined;
+  const chosen = String(election?.authority_class_key ?? "");
+  if (requiresVehicle(options, chosen) === false)
+    delete revision.vehicle_affectation;
 }
 
 /** The opening history without the facts its status cannot state, as the
@@ -202,6 +225,8 @@ export function createRequest(
   };
   state(revision, values, false);
   tidyBasis(revision, context.options ?? null);
+  tidyCondition(revision, context.options ?? null);
+  tidyVehicle(revision, context.options ?? null);
   return {
     revision: revision as unknown as ActivityAssetRevision,
     descriptor,
@@ -259,8 +284,9 @@ export function correctRequest(
   // The register numbers the revision a correction makes.
   delete revision.revision_number;
   state(revision, values, true);
-  if (values[VEHICLE_DECLARED] === false) delete revision.vehicle_affectation;
   tidyBasis(revision, context.options ?? null);
+  tidyCondition(revision, context.options ?? null);
+  tidyVehicle(revision, context.options ?? null);
   tidyOpening(revision, context.options ?? null);
   return {
     revision: revision as unknown as ActivityAssetCorrection,

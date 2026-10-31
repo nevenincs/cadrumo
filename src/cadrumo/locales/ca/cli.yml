@@ -346,21 +346,17 @@ cli:
         acquisition_cost_stdin_help: Llegeix de l'entrada estàndard l'objecte JSON
           de cost d'adquisició complet
         actividad_id_help: Identificador de l'activitat econòmica
-        refusal_activity_conflict: "Ja existeix un registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory list` per veure els existents."
-        refusal_activity_not_found: "No existeix cap registre d'inventari per a l'activitat %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory list` per veure els existents."
-        refusal_duplicate_movement_id: "El registre d'inventari ja conté el moviment %{movement_id}. Executa `aeat app ledger inventory list` per veure els moviments registrats."
         authority_file_help: Llegeix el document JSON complet d'autoritat de tancament
           des d'un fitxer.
         authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest
           registre d'existències.
-        evidence_add_help: "Desa un document de compra en aquest perfil i mostra la identitat amb què la compra l'anomena."
-        evidence_source_help: "El document de compra que vols desar: PDF, imatge o XML."
-        options_help: "Mostra els valors que ofereix un formulari d'inventari, cadascun amb el seu nom."
-        closing_value_file_help: "Fitxer JSON amb les dades del valor de tancament."
-        closing_value_file_invalid: "El fitxer del valor de tancament no és vàlid per a aquest inventari."
-        closing_value_record_help: "Registra un valor de tancament a partir de dades senzilles: el valor, el mètode i els documents."
         closing_authority_record_help: Registrar atòmicament l'autoritat acreditada
           del tancament d'existències
+        closing_value_file_help: Fitxer JSON amb les dades del valor de tancament.
+        closing_value_file_invalid: El fitxer del valor de tancament no és vàlid per
+          a aquest inventari.
+        closing_value_record_help: 'Registra un valor de tancament a partir de dades
+          senzilles: el valor, el mètode i els documents.'
         correct_help: Corregeix el valor inicial o el mètode de valoració, conservant
           els valors que substitueixen.
         corrected_opening_stock_help: Valor inicial corregit en euros.
@@ -372,6 +368,10 @@ cli:
         describe_help: Canvia el nom i la descripció de l'inventari; la valoració
           no es mou.
         description_help: Descripció de l'inventari.
+        evidence_add_help: Desa un document de compra en aquest perfil i mostra la
+          identitat amb què la compra l'anomena.
+        evidence_source_help: 'El document de compra que vols desar: PDF, imatge o
+          XML.'
         group_help: Registres d'existències per activitat, moviments i valoració
         inspect_help: Mostra un inventari amb els seus moviments vigents i el seu
           historial conservat.
@@ -387,7 +387,18 @@ cli:
         movement_kind_help: Tipus de moviment (opening, purchase, cogs o count)
         movement_reverse_help: Treu un moviment de l'inventari; es queda a l'historial.
         opening_stock_help: Valor inicial d'existències
+        options_help: Mostra els valors que ofereix un formulari d'inventari, cadascun
+          amb el seu nom.
         quantity_help: Quantitat del moviment, positiva o negativa
+        refusal_activity_conflict: Ja existeix un registre d'inventari per a l'activitat
+          %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory
+          list` per veure els existents.
+        refusal_activity_not_found: No existeix cap registre d'inventari per a l'activitat
+          %{actividad_id} i l'exercici %{year}. Executa `aeat app ledger inventory
+          list` per veure els existents.
+        refusal_duplicate_movement_id: El registre d'inventari ja conté el moviment
+          %{movement_id}. Executa `aeat app ledger inventory list` per veure els moviments
+          registrats.
         restore_help: Torna un inventari retirat al registre actiu.
         retire_help: Treu l'inventari del registre actiu conservant totes les seves
           dades.
@@ -818,7 +829,7 @@ cli:
           mesos.'
         received_invoice_retencion_help: 'JSON InvoiceWithholdingEvidenceRequest:
           una assignació de retenció d''una factura rebuda, amb la seva prova de pagament
-          o d''exigibilitat. Una assignació per ordre; l''scheme és un fet legal sobre
+          o d''exigibilitat. Una assignació per ordre; el règim és un fet legal sobre
           l''activitat del perceptor i mai s''infereix de la factura.'
       aggregate_help: Agrega les xifres d'un model i un període. Les observacions
         de contrapartida i de béns a l'estranger es passen com a opcions JSON. Els
@@ -1004,8 +1015,8 @@ cli:
         import_help: Desa una declaració presentada fora de Cadrumo com a registre
           de presentació base, amb evidència oficial importada de l'AEAT
         import_set_required: --set és obligatori almenys una vegada per a una importació.
-        include_superseded_help: Incloure els registres de presentació superats (exclosos per
-          defecte)
+        include_superseded_help: Incloure els registres de presentació superats (exclosos
+          per defecte)
         list_help: Llistar els registres de presentació
         modelo_help: Filtrar per codi de model (p. ex. 303, 130, 100)
         observe_local_clear_help: Elimina la teva substitució perquè es torni a fer
@@ -1886,8 +1897,8 @@ cli:
         run_details_help: Mostra les dades tipades del pas terminal d'una execució
           persistent.
         run_help: Mostra una execució persistent del flux pel seu identificador.
-        run_id_help: Identificador estable de 16 caràcters obtingut de model work
-          runs.
+        run_id_help: Identificador estable de 16 caràcters obtingut de aeat app modelo
+          work runs.
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
           work resume`. Només local; mai contacta amb AEAT.
@@ -3518,9 +3529,8 @@ cli:
     review:
       filter_help: Filtrar files per estat (`status`), període (`period`, un testimoni
         AEAT simple, p. ex. `period=1T`) i any (`year=2026`), incidència (`issue`),
-        importació (`import`), classificació (`classification`), text, direcció
-        (`direction`) o compte (`account`, l'id d'un compte bancari propi, p. ex.
-        `account=acc-01`)
+        importació (`import`), classificació (`classification`), text, direcció (`direction`)
+        o compte (`account`, l'id d'un compte bancari propi, p. ex. `account=acc-01`)
       header: SESSIÓ DE REVISIÓ DELS TEUS REGISTRES
       help: Revisió interactiva i validació d'apunts dels teus registres
       no_rows: No hi ha apunts dels teus registres pendents de revisió

@@ -5,7 +5,7 @@
 // backend; nothing here lists a method, a reason or a year.
 
 import { listed } from "../../../shell/compose";
-import type { LedgerPort } from "../../../shell/ledger";
+import type { LedgerPort, OutputLanguage } from "../../../shell/ledger";
 import { sameDecimal } from "../../../shell/ledgerGrammar";
 import type {
   AcquisitionCandidate,
@@ -118,25 +118,28 @@ export function forecastRequest(
 export const handoffRequest = (
   year: number,
   period: string,
+  language: OutputLanguage,
 ): ActivityAssetFilingRequest => ({
   tax_year: year,
+  output_language: language,
   ...(period === "" ? {} : { m130_period: period }),
 });
 
-/** The recorded claims a span would meet, which the backend refuses it for.
- * Both ends are last days covered, so two spans meet when each starts on or
- * before the other's last day. */
-export const claimsInTheWay = (
-  claims: readonly PlanClaim[],
-  from: string,
-  through: string,
-): PlanClaim[] =>
-  claims.filter(
-    (claim) =>
-      claim.effective &&
-      claim.covered_from <= through &&
-      from <= claim.covered_through,
-  );
+/** The fact of an overlap refusal that names the recorded dotaciones in the
+ * way, comma-joined. It says which one to offer to correct and is never
+ * drawn. */
+export const CONFLICTING_CLAIMS = "conflicting_claim_ids";
+
+/** The one recorded dotación a refusal says is in the way; null where it
+ * names none or several. */
+export function claimInTheWay(
+  reasonFacts: readonly ReasonFact[],
+): string | null {
+  const named = reasonFacts.find((fact) => fact.key === CONFLICTING_CLAIMS);
+  if (named === undefined) return null;
+  const ids = named.value.split(",").filter((id) => id !== "");
+  return ids.length === 1 ? ids[0]! : null;
+}
 
 // ---- What the register says of a write held in doubt ---------------------------
 

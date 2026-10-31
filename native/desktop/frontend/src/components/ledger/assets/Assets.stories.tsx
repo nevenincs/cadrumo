@@ -37,6 +37,8 @@ type Args = {
   servedYear?: number;
   /** Every kind of count stated on the first element. */
   allCounts?: boolean;
+  /** The first element has a baja whose last day is still ahead. */
+  bajaAhead?: boolean;
   /** What the handoff leaves out of its amounts, named by the made-up list,
    * by an element the list holds no name for, or with an accrual not worked out. */
   leftOut?: LeftOut;
@@ -122,7 +124,16 @@ function withPartialHandoff(port: LedgerPort): LedgerPort {
 
 type ListShape = {
   default_year: number | null;
-  rows: { findings: Record<string, number> }[];
+  rows: {
+    findings: Record<string, number>;
+    state: string;
+    pending_applies: boolean;
+    disposal: {
+      disposal_date: string;
+      reason: string;
+      reason_key: string;
+    } | null;
+  }[];
 };
 
 /** The scenario's port, with the list changed as the story asks. */
@@ -148,7 +159,11 @@ function withList(
   };
 }
 
-const SPAN = { covered_from: "2026-07-01", covered_until: "2027-01-01" };
+const SPAN = {
+  covered_from: "2026-07-01",
+  covered_until: "2027-01-01",
+  covered_through: "2026-12-31",
+};
 
 /** The scenario's port, with what the filing handoff leaves out stated as the
  * story asks, whatever the seeded register leaves out of its own. */
@@ -236,6 +251,7 @@ function Stage({
   leftOut,
   servedYear,
   allCounts,
+  bajaAhead,
   locale,
 }: Args) {
   const base = useLedgerPort(shape);
@@ -262,8 +278,23 @@ function Stage({
             stale: 6,
           };
       });
+    // The pending amount follows the day the element leaves service, not the
+    // recording of a baja: one still ahead keeps it.
+    if (bajaAhead)
+      served = withList(served, (list) => {
+        const first = list.rows[0];
+        if (first) {
+          first.state = "in_service";
+          first.pending_applies = true;
+          first.disposal = {
+            disposal_date: "2027-03-31",
+            reason: "sale",
+            reason_key: "ledger.actividad_asset.disposal_reason.sale",
+          };
+        }
+      });
     return withListAnswer(served, answer);
-  }, [base, answer, partial, leftOut, servedYear, allCounts]);
+  }, [base, answer, partial, leftOut, servedYear, allCounts, bajaAhead]);
   return (
     <div className="flex h-full min-h-0 flex-col">
       <AssetsSection
@@ -396,6 +427,11 @@ export const FormAsked: Story = {
     press(context, "button", wordsOf(context)(ASSET_KEYS.action.add)),
 };
 
+export const BajaAheadKeepsThePendingAmount: Story = {
+  name: "Register, a baja whose last day is still ahead keeps the pending amount",
+  args: { bajaAhead: true },
+};
+
 export const FilingHandoffYearAlone: Story = {
   name: "Filing handoff for the year alone: the Modelo 100 boxes",
   play: (context) =>
@@ -423,6 +459,32 @@ export const FilingHandoff: Story = {
       { timeout: 5000 },
     );
     await userEvent.selectOptions(quarter, "4T");
+  },
+};
+
+export const FilingHandoffBoxNames: Story = {
+  name: "Filing handoff for a quarter: each box by its name and casilla, the two Modelo 130 rows told apart by name",
+  play: async (context) => {
+    await FilingHandoff.play?.(context);
+    await waitFor(
+      () => {
+        const rows = [
+          ...context.canvasElement.querySelectorAll(
+            ".ledger-assets-handoff tbody tr",
+          ),
+        ];
+        if (rows.length !== 4) throw new Error("the boxes are not drawn yet");
+        const names = rows.map(
+          (row) => row.querySelector("td span.font-medium")?.textContent ?? "",
+        );
+        if (names.some((name) => name === ""))
+          throw new Error("a box is drawn without its name");
+        // The two rows of one casilla differ by their names alone.
+        if (new Set(names).size !== names.length)
+          throw new Error("two boxes are drawn with the same name");
+      },
+      { timeout: 5000 },
+    );
   },
 };
 
@@ -455,7 +517,7 @@ export const FilingHandoffLeftOutNamed: Story = {
     await openQuarter(context);
     const span = {
       start: dateText(t.locale ?? "en", SPAN.covered_from, true),
-      end: dateText(t.locale ?? "en", SPAN.covered_until, true),
+      end: dateText(t.locale ?? "en", SPAN.covered_through, true),
     };
     await saysLeftOut(
       context,
@@ -553,7 +615,7 @@ export const FilingHandoffAccrualUnknown: Story = {
       t("desktop.ledger.assets.handoff_gap_unavailable", {
         name: "Furgoneta de reparto",
         start: dateText(locale, SPAN.covered_from, true),
-        end: dateText(locale, SPAN.covered_until, true),
+        end: dateText(locale, SPAN.covered_through, true),
       }),
     );
     if (
@@ -561,7 +623,7 @@ export const FilingHandoffAccrualUnknown: Story = {
         t("desktop.ledger.assets.handoff_gap_accrued", {
           name: "Furgoneta de reparto",
           start: dateText(locale, SPAN.covered_from, true),
-          end: dateText(locale, SPAN.covered_until, true),
+          end: dateText(locale, SPAN.covered_through, true),
           amount: amountText(locale, "0"),
         }),
       )

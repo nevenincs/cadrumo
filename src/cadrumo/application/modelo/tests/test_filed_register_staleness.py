@@ -23,7 +23,7 @@ from ....domain.transactions.models import TransactionCatalogue
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.ledger_filing_snapshot import stale_filed_revisions
 from ...aggregation.ledger_membership import LedgerMembershipPorts
-from ...aggregation.tests.test_modelo_bindings_asset_disposal import _disposed
+from ...aggregation.tests.test_modelo_bindings_asset_disposal import disposed_asset_history
 from ...aggregation.tests.test_modelo_source_mesh_ledger import (
     InMemoryTransactionCatalogueRepository,
     activity_asset_ledger_membership,
@@ -215,8 +215,8 @@ def test_the_reader_answers_what_was_recorded_outside_this_profile_and_none_for_
 
 def test_a_claim_of_an_earlier_year_that_moves_a_filed_baja_makes_it_stale() -> None:
     """The 2025 gain goes from 897.53 to 1,200.00 with no 2025 claim and no new baja revision."""
-    unclaimed = _disposed(in_service=date(2024, 1, 1))
-    claimed = _disposed(in_service=date(2024, 1, 1), prior_claim="1200.00")
+    unclaimed = disposed_asset_history(in_service=date(2024, 1, 1))
+    claimed = disposed_asset_history(in_service=date(2024, 1, 1), prior_claim="1200.00")
     work_unit, filed = _filed(unclaimed, state=CalculationRevisionState.PRESENTADO)
 
     ((found, verdict),) = _stale(work_unit, filed, claimed)

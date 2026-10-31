@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from math import ceil
 from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
@@ -377,9 +378,19 @@ class ActividadNoAgricolaSimplificado(BaseModel):
     iae_epigrafe: IaeEpigrafe
     auxiliary_activity_indicator: IndicadorAuxiliarActividad | None
     lorca_eligibility: LorcaActivityEligibility | None = None
-    modulos: tuple[EntradaModuloSimplificado, ...] = Field(min_length=1, max_length=7)
+    modulos: tuple[EntradaModuloSimplificado, ...] = Field(min_length=1)
     facts: tuple[HechoActividadSimplificado, ...] = ()
     evidence_reference: FilingEvidenceReference
+
+    @field_validator("modulos")
+    @classmethod
+    @pydantic_validation_boundary
+    def _modules_fit_the_declared_rows(
+        cls, modulos: tuple[EntradaModuloSimplificado, ...]
+    ) -> tuple[EntradaModuloSimplificado, ...]:
+        if len(modulos) > int(resolve_form_codes_leased("form-row-codes").code("m303.orden.modules_per_activity")):
+            raise IvaValidationError("an activity holds more modules than the record declares")
+        return modulos
 
     @model_validator(mode="after")
     def _entries_are_unique(self) -> ActividadNoAgricolaSimplificado:
@@ -403,7 +414,7 @@ class RegimenSimplificadoFilingRows(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     ejercicio: FilingYear
-    activities: tuple[RegimenSimplificadoActivity, ...] = Field(max_length=12)
+    activities: tuple[RegimenSimplificadoActivity, ...]
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -423,11 +434,13 @@ class RegimenSimplificadoFilingRows(BaseModel):
         return self
 
     def records(self) -> tuple[tuple[RegimenSimplificadoActivity, ...], ...]:
-        """Pack exactly two activities of each kind into at most three records."""
+        """Pack each kind's activities into the page the record design declares for them."""
         agricultural, non_agricultural = _activities_by_kind(self.activities)
-        count = max((len(agricultural) + 1) // 2, (len(non_agricultural) + 1) // 2)
+        per_record = int(resolve_form_codes_leased("form-row-codes").code("m303.dp30302.activities_per_record"))
+        count = max(ceil(len(agricultural) / per_record), ceil(len(non_agricultural) / per_record))
         return tuple(
-            agricultural[index * 2 : index * 2 + 2] + non_agricultural[index * 2 : index * 2 + 2]
+            agricultural[index * per_record : (index + 1) * per_record]
+            + non_agricultural[index * per_record : (index + 1) * per_record]
             for index in range(count)
         )
 

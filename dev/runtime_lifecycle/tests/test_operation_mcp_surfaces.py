@@ -40,7 +40,6 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.access_policy import intersect_scopes
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -54,6 +53,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 from cadrumo_mcp.mcp.access_scope import surface_scope
 from cadrumo_mcp.mcp.protocol_contract import MCP_TOOL_NAMES
 from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
+from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -85,7 +85,7 @@ TEST_CLIENT_NATIVE_BINDING = ProfileAccessBinding(
 
 @cache
 def mcp_operation_registry() -> OperationRegistry:
-    return build_production_operation_registry()
+    return production_operation_registry()
 
 
 @cache

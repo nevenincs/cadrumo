@@ -51,6 +51,7 @@ from __future__ import annotations
 # Development-only record-design corpus gate.
 from pathlib import Path
 
+from functools import cache
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -65,6 +66,7 @@ from ..compiler.record_design import extract_record_design
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@cache
 def _authority() -> ValidatedRegistryAuthority:
     return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 

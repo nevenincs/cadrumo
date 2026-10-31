@@ -483,50 +483,40 @@ application:
         {registered_count} validators are registered.
   inventory:
     advisories:
-      retired_book_leaves_year_unresolved: "This inventory was retired but still holds entries, so the %{year} Anexo D stays unresolved. Restore it, or remove its entries."
+      retired_book_leaves_year_unresolved: This inventory was retired but still holds
+        entries, so the %{year} Anexo D stays unresolved. Restore it, or remove its
+        entries.
     labels:
       acquisition_evidence_kind:
-        purchase_invoice: "Purchase invoice"
-        transport_document: "Transport document"
-        insurance_document: "Insurance document"
-        customs_declaration: "Customs declaration"
-        contract: "Contract"
-        other_acquisition_evidence: "Other purchase document"
-        attributable_cost_review: "Cost check"
-        iva_recoverability_review: "IVA check"
+        attributable_cost_review: Cost check
+        contract: Contract
+        customs_declaration: Customs declaration
+        insurance_document: Insurance document
+        iva_recoverability_review: IVA check
+        other_acquisition_evidence: Other purchase document
+        purchase_invoice: Purchase invoice
+        transport_document: Transport document
       attributable_cost_kind:
-        freight: "Freight"
-        insurance: "Insurance"
-        customs_duty: "Customs duty"
-        handling: "Handling"
-        professional_fee: "Professional fee"
-        other_directly_attributable: "Other direct cost"
+        customs_duty: Customs duty
+        freight: Freight
+        handling: Handling
+        insurance: Insurance
+        other_directly_attributable: Other direct cost
+        professional_fee: Professional fee
       closing_authority:
-        movement_derived: "Worked out from the movements"
-        physical_observation: "Physical count"
+        movement_derived: Worked out from the movements
+        physical_observation: Physical count
       closing_valuation_basis:
-        fifo_acquisition_price: "Purchase price, first in first out"
-        pmp_acquisition_price: "Weighted average purchase price"
-        coste_medio_acquisition_price: "Average cost at purchase price"
-      decision_evidence_role:
-        authority_reconciliation: "Closing value check"
-      movement_kind:
-        opening: "Opening"
-        purchase: "Purchase"
-        cogs: "Cost of goods sold"
-        count: "Count"
-      physical_evidence_role:
-        physical_count: "Physical count"
-        acquisition_price_valuation: "Valuation at purchase price"
-      valuation_method:
-        fifo: "First in, first out"
-        pmp: "Weighted average price"
-        coste_medio: "Average cost"
+        coste_medio_acquisition_price: Average cost at purchase price
+        fifo_acquisition_price: Purchase price, first in first out
+        pmp_acquisition_price: Weighted average purchase price
       correction_reason:
         duplicate_entry: Duplicate entry
         keying_error: Keying error
         operation_did_not_occur: Operation did not occur
         source_document_corrected: Source document corrected
+      decision_evidence_role:
+        authority_reconciliation: Closing value check
       history_kind:
         described: Described
         movement_corrected: Movement corrected
@@ -534,24 +524,44 @@ application:
         opening_corrected: Opening corrected
         restored: Restored
         retired: Retired
+      movement_kind:
+        cogs: Cost of goods sold
+        count: Count
+        opening: Opening
+        purchase: Purchase
+      physical_evidence_role:
+        acquisition_price_valuation: Valuation at purchase price
+        physical_count: Physical count
       retirement_reason:
         activity_ceased: Activity ceased
         created_in_error: Created in error
         no_stock_held: No stock held
+      valuation_method:
+        coste_medio: Average cost
+        fifo: First in, first out
+        pmp: Weighted average price
     service:
       errors:
-        activity_conflict: "An inventory record book already exists for this activity and year %{year}. Open it instead of creating another."
-        activity_not_found: "No inventory record book exists for this activity and year %{year}. Create it first, or check the activity and year."
-        closing_authority_conflict: "A different closing value is already recorded for this activity and year."
-        evidence_file_not_admitted: "This file can't be kept. Choose a PDF, an XML file or an image (PNG, JPEG, TIFF, WebP or HEIC) that opens, and try again."
-        closing_authority_invalid: "This closing value could not be recorded because its details do not agree with each other. Check them and try again."
-        closing_authority_recorded: "The %{year} inventory of this activity has its closing value recorded, so its stock facts can no longer change."
+        activity_conflict: An inventory record book already exists for this activity
+          and year %{year}. Open it instead of creating another.
+        activity_not_found: No inventory record book exists for this activity and
+          year %{year}. Create it first, or check the activity and year.
+        closing_authority_conflict: A different closing value is already recorded
+          for this activity and year.
+        closing_authority_invalid: This closing value could not be recorded because
+          its details do not agree with each other. Check them and try again.
+        closing_authority_recorded: The %{year} inventory of this activity has its
+          closing value recorded, so its stock facts can no longer change.
         correction_changes_nothing: This correction names no opening value or valuation
           method that differs from the current one.
-        correction_id_conflict: "This correction was already recorded with different details."
+        correction_id_conflict: This correction was already recorded with different
+          details.
         count_would_raise_stock: 'A physical count cannot raise stock: %{sku} would
           end above the units on record.'
-        duplicate_movement_id: "This movement is already in the inventory record book. Check the recorded movements before adding it again."
+        duplicate_movement_id: This movement is already in the inventory record book.
+          Check the recorded movements before adding it again.
+        evidence_file_not_admitted: This file can't be kept. Choose a PDF, an XML
+          file or an image (PNG, JPEG, TIFF, WebP or HEIC) that opens, and try again.
         invalid_valuation_method: 'The inventory valuation method is not supported:
           %{valuation_method}.'
         inventory_already_retired: The %{year} inventory of this activity is already
@@ -559,12 +569,17 @@ application:
         inventory_not_retired: The %{year} inventory of this activity is not retired.
         inventory_retired: The %{year} inventory of this activity is retired. Restore
           it before changing its stock facts.
-        inventory_validation: "These inventory details could not be accepted. Check them and try again."
-        later_closing_authority_recorded: "The %{later_year} closing value of this activity starts from this closing, so the %{year} stock facts can no longer change."
-        movement_already_superseded: "This movement was already corrected or reversed."
-        movement_not_found: "The %{year} inventory of this activity does not have this movement."
-        movement_outside_year: "This movement is dated outside the %{year} inventory."
-        prior_closing_document_needed: "This closing value needs the previous year's closing document. Add it and try again."
+        inventory_validation: These inventory details could not be accepted. Check
+          them and try again.
+        later_closing_authority_recorded: The %{later_year} closing value of this
+          activity starts from this closing, so the %{year} stock facts can no longer
+          change.
+        movement_already_superseded: This movement was already corrected or reversed.
+        movement_not_found: The %{year} inventory of this activity does not have this
+          movement.
+        movement_outside_year: This movement is dated outside the %{year} inventory.
+        prior_closing_document_needed: This closing value needs the previous year's
+          closing document. Add it and try again.
         stock_would_go_negative: 'This would take stock below zero: %{sku} would need
           more units than remain.'
     workbench:
@@ -896,10 +911,10 @@ application:
           it if it applies to you.
       activity_asset_foral_territory:
         what: You live in the Basque Country or Navarre in this period, where other
-          rules govern amortisation. It is outside this calculation and no figure is
-          deducted.
-        what_to_do: Work out the amortisation under the foral rules of your
-          territory and declare it with its tax authority.
+          rules govern amortisation. It is outside this calculation and no figure
+          is deducted.
+        what_to_do: Work out the amortisation under the foral rules of your territory
+          and declare it with its tax authority.
       activity_asset_residence_period_unknown:
         what: Your profile records a tax residence, but none for this period, so your
           assets are counted as if this form applies.
@@ -907,8 +922,7 @@ application:
           again.
       activity_asset_residence_unresolved:
         what: Your recorded tax residence could not be read, so the amortisation of
-          your registered assets is outside this calculation and no figure is
-          deducted.
+          your registered assets is outside this calculation and no figure is deducted.
         what_to_do: State your tax residence in your profile, then calculate again.
       administrador_retencion_rate_mismatch:
         what: The withholding rate on a record for a company director differs from
@@ -1009,16 +1023,16 @@ application:
           do not add up.
         what_to_do: Open your records for this period, fix the ones that are marked,
           then calculate again.
-      ledger_expense_may_be_durable:
-        what: A ledger entry deducted as a current expense may be an asset that lasts
-          more than a year. Is it?
-        what_to_do: If it is, register the asset, because it deducts through dotaciones,
-          then calculate again. If it is a consumable, leave the entry as it is.
       ledger_amortization_row_unregistered:
         what: A ledger entry records the purchase of a long-term asset that is not
           in your asset register, so it deducts nothing.
         what_to_do: Register the element, naming that entry as its acquisition, or
           reclassify the entry, then calculate again.
+      ledger_expense_may_be_durable:
+        what: A ledger entry deducted as a current expense may be an asset that lasts
+          more than a year. Is it?
+        what_to_do: If it is, register the asset, because it deducts through dotaciones,
+          then calculate again. If it is a consumable, leave the entry as it is.
       m193_settled_row_amounts_unresolved_authority:
         what: Some amounts in a record of a payment made in a later year have no official
           source that confirms them.
@@ -1082,14 +1096,20 @@ application:
         what_to_do: Check the VAT rate on your invoices and records, then calculate
           again. The declaration cannot be exported until this is fixed.
       register_acquisition_exceeds_ledger:
-        what: "The ledger entries behind an asset in your register paid less than its stated cost."
-        what_to_do: "Correct the price in your asset register or the ledger entry, then calculate again."
+        what: The ledger entries behind an asset in your register paid less than its
+          stated cost.
+        what_to_do: Correct the price in your asset register or the ledger entry,
+          then calculate again.
       register_acquisition_partly_accounted:
-        what: "An asset in your register accounts for only part of its ledger entry, so the rest deducts nothing."
-        what_to_do: "Register what else that entry paid for, or correct the asset's price, then calculate again."
+        what: An asset in your register accounts for only part of its ledger entry,
+          so the rest deducts nothing.
+        what_to_do: Register what else that entry paid for, or correct the asset's
+          price, then calculate again.
       register_acquisition_row_missing:
-        what: "An asset in your register names a ledger entry that is no longer in your ledger."
-        what_to_do: "Enter that ledger entry again, or correct the asset in your register, then calculate again."
+        what: An asset in your register names a ledger entry that is no longer in
+          your ledger.
+        what_to_do: Enter that ledger entry again, or correct the asset in your register,
+          then calculate again.
       register_owned_capital_acquisition:
         what: A purchase of equipment is left out of your expenses, because it is
           deducted through its yearly dotación.
@@ -1463,9 +1483,9 @@ application:
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
         for modelo {modelo} {filing_year} {period}; {finding_count} issue(s) remain.
       deductible_iva_evidence_missing: 'Deductible IVA entries in your records require
-        a linked purchase invoice. Link the invoice to the entry, then run work verify
-        again: the check refuses to complete while a deductible entry has no invoice,
-        so the draft is still open and picks the document up.'
+        a linked purchase invoice. Link the invoice to the entry, then run aeat app
+        modelo work verify again: the check refuses to complete while a deductible
+        entry has no invoice, so the draft is still open and picks the document up.'
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision
@@ -1678,8 +1698,8 @@ application:
         profile at the current date (the AEAT filing-obligation window is not open).
         Filing-to-fichero does not require this step: export the checked, complete
         calculation with ''aeat app modelo export''; that is the local finish line.
-        ''work file'' is the optional step that records the declaration as filed,
-        for when the obligation window is open.'
+        ''aeat app modelo work file'' is the optional step that records the declaration
+        as filed, for when the obligation window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
     finding_fact:

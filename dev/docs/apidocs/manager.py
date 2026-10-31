@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -15,6 +16,28 @@ from .type_aliases import public_type_aliases, type_alias_declarations
 
 class ApiDocsError(RuntimeError):
     """Raised on API documentation stub management errors."""
+
+
+#: The most recent renderings, keyed by the configured roots and the content of
+#: every Python source under their ``src/`` parent. Two entries: a rendering of
+#: the repository tree is a few megabytes, the repository and primary-package
+#: scopes alternate, and a changed tree never reads an older rendering again.
+_EXPECTED_STUB_CONTENTS: dict[tuple[tuple[Path, ...], str], dict[str, str]] = {}
+_RETAINED_RENDERINGS = 2
+
+
+def _python_source_fingerprint(src_parent: Path) -> str:
+    """Name the exact bytes of every Python source under ``src_parent``.
+
+    Content rather than stat metadata, because a rewrite inside one timestamp
+    tick keeps size and modification time and must still change the key.
+    """
+    digest = hashlib.sha256()
+    for path in sorted(scan_directory(src_parent, pattern="*.py", recursive=True)):
+        digest.update(path.relative_to(src_parent).as_posix().encode(_UTF_8))
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
 
 
 @dataclass(frozen=True)
@@ -453,7 +476,21 @@ class ApiStubManager:
         Returns:
             Mapping of ``some_package.some.module.rst`` filenames to generated RST.
         """
-        modules = self.discover_modules() if all_modules is None else all_modules
+        if all_modules is not None:
+            return self._render_stub_contents(all_modules)
+        # Every stub is a pure function of the Python sources under the shared
+        # ``src/`` parent (type resolution follows imports across sibling roots),
+        # so one rendering serves every caller that sees the same bytes.
+        key = (self.source_roots, _python_source_fingerprint(self.source_roots[0].parent))
+        cached = _EXPECTED_STUB_CONTENTS.get(key)
+        if cached is None:
+            cached = self._render_stub_contents(self.discover_modules())
+            while len(_EXPECTED_STUB_CONTENTS) >= _RETAINED_RENDERINGS:
+                del _EXPECTED_STUB_CONTENTS[next(iter(_EXPECTED_STUB_CONTENTS))]
+            _EXPECTED_STUB_CONTENTS[key] = cached
+        return dict(cached)
+
+    def _render_stub_contents(self, modules: list[tuple[str, bool]]) -> dict[str, str]:
         expected: dict[str, str] = {}
         for name, is_pkg in modules:
             if is_pkg:

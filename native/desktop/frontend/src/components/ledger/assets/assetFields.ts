@@ -412,8 +412,14 @@ export function formKeyOf(path: string): string {
 const SHARES = new Set(["business_use_share", "ownership_share"]);
 const FLAGS = new Set(["vehicle_in_books"]);
 
-/** The key of the yes-or-no question whether the element is a vehicle. */
-export const VEHICLE_DECLARED = "vehicle_declared";
+/** What the options say of whether a class is charged only on a vehicle
+ * declaration: true or false for a class they list, null for any other. */
+export const requiresVehicle = (
+  options: FormOptions | null,
+  classKey: string,
+): boolean | null =>
+  options?.table_groups.find((found) => found.class_key === classKey)
+    ?.requires_vehicle_declaration ?? null;
 
 const kindOf = (
   revision: ActivityAssetRevision,
@@ -496,7 +502,6 @@ export function revisionDraft(
             ? copyDecimal(said)
             : said;
   }
-  if (revision.vehicle_affectation) draft[VEHICLE_DECLARED] = "yes";
   return draft;
 }
 
@@ -582,12 +587,56 @@ export function claimFields(
   ];
 }
 
+/** The facts the options say only the condition chosen states: every fact
+ * some condition carries, less those of the chosen one. Without options, or
+ * with a condition the options do not list, none is judged. */
+export const factsOfOtherConditions = (
+  options: FormOptions | null,
+  condition: string,
+): ReadonlySet<string> => {
+  const conditions = options?.acquired_conditions ?? [];
+  const chosen = conditions.find((found) => found.condition === condition);
+  if (chosen === undefined) return new Set();
+  return new Set(
+    conditions
+      .flatMap((found) => found.facts)
+      .filter((name) => !chosen.facts.includes(name)),
+  );
+};
+
+/** How each fact a condition states outside the election is drawn, by the
+ * name the options serve it under. A fact of the election is drawn with the
+ * method's. */
+const CONDITION_FACT: Record<string, () => FormField> = {
+  building_construction_date: () =>
+    date(
+      "building_construction_date",
+      "desktop.ledger.assets.field.building_construction_date",
+    ),
+};
+
+/** The facts of the condition chosen that sit outside the election. */
+function conditionFields(
+  context: FieldContext,
+  condition: string,
+): FormField[] {
+  const chosen = context.options?.acquired_conditions.find(
+    (found) => found.condition === condition,
+  );
+  return (chosen?.facts ?? []).flatMap((name) =>
+    Object.hasOwn(CONDITION_FACT, name) ? [CONDITION_FACT[name]!()] : [],
+  );
+}
+
 /** The facts of the method chosen, as the options serve them. */
 function methodFacts(context: FieldContext, draft: FormDraft): FormField[] {
   const method = draft.method ?? "";
   const { classes } = fromOptions(context.options);
   const said = (key: string) => draft[key] ?? "";
-  const used = said("acquired_condition") === "used";
+  const elsewhere = factsOfOtherConditions(
+    context.options,
+    said("acquired_condition"),
+  );
   const grouped = (group: string) =>
     Object.entries(draft).some(
       ([key, typed]) => key.startsWith(`${ELECTION}${group}.`) && typed !== "",
@@ -596,8 +645,8 @@ function methodFacts(context: FieldContext, draft: FormDraft): FormField[] {
     const dotted = fact.path.join(".");
     const label = FACT_LABEL[dotted];
     if (label === undefined || fact.kind === "rows") return [];
-    // The originating price belongs to an element bought used.
-    if (fact.path[0] === "used_original_price" && !used) return [];
+    // A fact only another condition states is not asked.
+    if (elsewhere.has(fact.path[0]!)) return [];
     const required =
       fact.required || (fact.required_with_group && grouped(fact.path[0]!));
     const key = factKey(fact.path);
@@ -624,22 +673,13 @@ function methodFacts(context: FieldContext, draft: FormDraft): FormField[] {
   });
 }
 
-/** The question whether the element is a vehicle, and the declaration it
- * opens. The class the registry serves says whether it can hold one. */
+/** The vehicle declaration of a class the registry says is charged only on
+ * one: it is stated, with no question whether it applies. Any other class
+ * shows nothing. */
 function vehicleFields(context: FieldContext, draft: FormDraft): FormField[] {
-  // Only a class the registry says can hold a vehicle is asked about one.
   const chosen = draft[factKey(["authority_class_key"])] ?? "";
-  const group = context.options?.table_groups.find(
-    (found) => found.class_key === chosen,
-  );
-  if (group?.can_hold_vehicle !== true) return [];
-  const question = flag(
-    VEHICLE_DECLARED,
-    "desktop.ledger.assets.field.vehicle_declared",
-  );
-  if ((draft[VEHICLE_DECLARED] ?? "") !== "yes") return [question];
+  if (requiresVehicle(context.options, chosen) !== true) return [];
   return [
-    question,
     choice(
       "vehicle_category",
       "desktop.ledger.assets.field.vehicle_category",
@@ -749,6 +789,15 @@ export const undrawableFacts = (options: FormOptions | null): string[] => [
     ...(options?.opening_statuses ?? [])
       .flatMap((status) => status.facts)
       .filter((name) => !Object.hasOwn(OPENING_FACT, name)),
+    ...(options?.acquired_conditions ?? [])
+      .flatMap((condition) => condition.facts)
+      .filter(
+        (name) =>
+          !Object.hasOwn(CONDITION_FACT, name) &&
+          !(options?.method_facts ?? []).some((entry) =>
+            entry.facts.some((fact) => fact.path[0] === name),
+          ),
+      ),
   ]),
 ];
 
@@ -775,11 +824,6 @@ function openingFields(
     Object.hasOwn(OPENING_FACT, name) ? [OPENING_FACT[name]!(methods)] : [],
   );
 }
-
-/** The shapes a later ledger payment of an element bought outside the ledger
- * can take. The options list only the shapes an element is registered under,
- * so these two are not served. */
-const FURTHER_SHAPES: readonly string[] = ["split_payment", "ancillary_cost"];
 
 /** The facts of the revision an element or a correction states. Which of them
  * are drawn follows what the typed text already says. */
@@ -862,10 +906,12 @@ function revisionFields(
                       choice(
                         FURTHER_SHAPE,
                         "desktop.ledger.assets.field.further_shape",
-                        FURTHER_SHAPES.map((token): FieldChoice => ({
-                          token,
-                          family: "acquisition_shape",
-                        })),
+                        (context.options?.further_acquisition_shapes ?? []).map(
+                          (token): FieldChoice => ({
+                            token,
+                            family: "acquisition_shape",
+                          }),
+                        ),
                         true,
                       ),
                     ]),
@@ -886,15 +932,7 @@ function revisionFields(
       tokenChoices(context, "acquired_condition"),
       true,
     ),
-    // The date the building was built is a fact of an element bought used.
-    ...(said("acquired_condition") === "used"
-      ? [
-          date(
-            "building_construction_date",
-            "desktop.ledger.assets.field.building_construction_date",
-          ),
-        ]
-      : []),
+    ...conditionFields(context, said("acquired_condition")),
     choice(
       "basis_stage",
       "desktop.ledger.assets.field.basis_stage",

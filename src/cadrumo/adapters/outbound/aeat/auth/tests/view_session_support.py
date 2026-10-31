@@ -7,6 +7,7 @@ that supplies them is not the behaviour under test.
 
 from __future__ import annotations
 
+import shutil
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import AbstractContextManager, asynccontextmanager, contextmanager
 from pathlib import Path
@@ -82,11 +83,20 @@ class OperationHost:
 
 @contextmanager
 def certificate_profile(
-    tmp_path: Path, operation: PinnedAuthorityOperation, *, tax_id: str = CERTIFICATE_NIF
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    *,
+    tax_id: str = CERTIFICATE_NIF,
+    template: Path | None = None,
 ) -> Generator[None]:
-    """A registered, unlocked profile whose configured provider is a certificate for ``tax_id``'s holder."""
+    """A registered, unlocked profile whose configured provider is a certificate for ``tax_id``'s holder.
+
+    With ``template`` -- the storage root :func:`certificate_profile_template`
+    left behind -- the profile is a copy of that already-registered root rather
+    than a fresh registration, so the password wrap is paid once per template.
+    """
     with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
         override_settings(
             cadrumo_active_profile=None,
             cadrumo_certificate_path=_build_bundle(tmp_path),
@@ -95,9 +105,21 @@ def certificate_profile(
         ),
         open_test_profile_session(PROFILE_ID),
     ):
-        register_minimal_profile(profile_id=PROFILE_ID, overrides={"identity.tax_id": tax_id})
-        configure_operator_auth("certificate", operator_scope_ports=OPERATOR_SCOPE_PORTS, operation=operation)
+        if template is None:
+            register_minimal_profile(profile_id=PROFILE_ID, overrides={"identity.tax_id": tax_id})
+            configure_operator_auth("certificate", operator_scope_ports=OPERATOR_SCOPE_PORTS, operation=operation)
+        else:
+            shutil.copytree(template, storage_root, dirs_exist_ok=True)
         yield
+
+
+def certificate_profile_template(
+    base: Path, operation: PinnedAuthorityOperation, *, tax_id: str = CERTIFICATE_NIF
+) -> Path:
+    """Register a certificate profile once and return its closed, copyable storage root."""
+    with certificate_profile(base, operation, tax_id=tax_id):
+        pass
+    return base / "cadrumo-storage"
 
 
 @contextmanager

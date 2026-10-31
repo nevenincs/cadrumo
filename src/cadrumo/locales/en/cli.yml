@@ -325,21 +325,16 @@ cli:
         acquisition_cost_stdin_help: Read the complete acquisition-cost JSON object
           from stdin
         actividad_id_help: Economic activity identifier
-        refusal_activity_conflict: "An inventory record book already exists for activity %{actividad_id} and year %{year}. Run `aeat app ledger inventory list` to see the existing ones."
-        refusal_activity_not_found: "No inventory record book exists for activity %{actividad_id} and year %{year}. Run `aeat app ledger inventory list` to see the existing ones."
-        refusal_duplicate_movement_id: "The inventory record book already contains movement %{movement_id}. Run `aeat app ledger inventory list` to see the recorded movements."
         authority_file_help: Read the complete closing-authority JSON document from
           a file.
         authority_invalid: The closing-authority object is invalid for this inventory
           record book.
-        evidence_add_help: "Store a purchase document in this profile and show the identity a purchase names it by."
-        evidence_source_help: "The purchase document to store: PDF, image or XML."
-        options_help: "Show the values an inventory form offers, each with its word."
-        closing_value_file_help: "JSON file with the facts of the closing value."
-        closing_value_file_invalid: "The closing value file is invalid for this inventory."
-        closing_value_record_help: "Record a closing value from plain facts: the value, the method and the documents."
         closing_authority_record_help: Atomically record evidenced inventory closing
           authority
+        closing_value_file_help: JSON file with the facts of the closing value.
+        closing_value_file_invalid: The closing value file is invalid for this inventory.
+        closing_value_record_help: 'Record a closing value from plain facts: the value,
+          the method and the documents.'
         correct_help: Correct the opening value or valuation method, keeping the values
           they replace.
         corrected_opening_stock_help: Corrected opening value in euros.
@@ -351,6 +346,9 @@ cli:
         describe_help: Change the inventory's name and description; valuation does
           not move.
         description_help: Description of the inventory.
+        evidence_add_help: Store a purchase document in this profile and show the
+          identity a purchase names it by.
+        evidence_source_help: 'The purchase document to store: PDF, image or XML.'
         group_help: Inventory record books by activity, movements, and valuation
         inspect_help: Show one inventory with its effective movements and retained
           history.
@@ -367,7 +365,17 @@ cli:
         movement_reverse_help: Take one movement out of the inventory; it stays in
           the history.
         opening_stock_help: Opening stock value
+        options_help: Show the values an inventory form offers, each with its word.
         quantity_help: Movement quantity, positive or negative
+        refusal_activity_conflict: An inventory record book already exists for activity
+          %{actividad_id} and year %{year}. Run `aeat app ledger inventory list` to
+          see the existing ones.
+        refusal_activity_not_found: No inventory record book exists for activity %{actividad_id}
+          and year %{year}. Run `aeat app ledger inventory list` to see the existing
+          ones.
+        refusal_duplicate_movement_id: The inventory record book already contains
+          movement %{movement_id}. Run `aeat app ledger inventory list` to see the
+          recorded movements.
         restore_help: Bring a retired inventory back to the active register.
         retire_help: Take the inventory out of the active register with every fact
           kept.
@@ -1781,7 +1789,8 @@ cli:
         run_details_help: Show the typed terminal-step facts for one persisted workflow
           run.
         run_help: Show one persisted workflow run by run id.
-        run_id_help: Stable 16-character workflow run id from modelo work runs.
+        run_id_help: Stable 16-character workflow run id from aeat app modelo work
+          runs.
         runs_help: List persisted workflow runs with their run ids, newest first.
           Use a run id with `aeat app modelo work resume`. Local-only; never contacts
           AEAT.

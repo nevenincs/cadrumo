@@ -20,9 +20,9 @@ def inspected_live_candidate() -> AuthoringCandidateInspection:
     return inspect_authoring_candidate(bundled_path("registry", "aeat"), bundled_path())
 
 
-def test_inspection_does_not_require_a_published_pointer() -> None:
-    inspected_live_candidate = inspect_authoring_candidate(bundled_path("registry", "aeat"), bundled_path())
-
+def test_inspection_does_not_require_a_published_pointer(
+    inspected_live_candidate: AuthoringCandidateInspection,
+) -> None:
     assert inspected_live_candidate.publication_valid
     assert inspected_live_candidate.findings == ()
     assert inspected_live_candidate.registry_fingerprint

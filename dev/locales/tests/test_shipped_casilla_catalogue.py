@@ -21,8 +21,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @cache
+def _catalogue() -> ModeloCasillaCatalogue:
+    """The published catalogue, loaded once; every gate here only reads it."""
+    return ModeloCasillaCatalogue.published(LOCALES_DIR)
+
+
+@cache
 def _findings() -> CatalogueFindings:
-    return ModeloCasillaCatalogue.published(LOCALES_DIR).findings()
+    return _catalogue().findings()
 
 
 def test_the_shipped_casilla_catalogue_stores_each_text_once() -> None:
@@ -117,11 +123,7 @@ def test_no_rendering_stands_for_two_composed_segments() -> None:
 
 def test_every_source_truncation_is_still_stored() -> None:
     """An exemption for a cut official text must name Spanish the catalogue still stores."""
-    stored = {
-        text
-        for text in ModeloCasillaCatalogue.published(LOCALES_DIR).values["es"].values()
-        if (text is not None and text)
-    }
+    stored = {text for text in _catalogue().values["es"].values() if (text is not None and text)}
     assert stored >= SOURCE_TRUNCATED_SPANISH, sorted(SOURCE_TRUNCATED_SPANISH - stored)
 
 
@@ -133,7 +135,7 @@ def test_every_edition_text_is_authored_in_every_locale() -> None:
 
 def test_every_reviewed_equivalence_still_excuses_a_shared_translation() -> None:
     """Each entry must still match a lineage the screen would otherwise report, or it is stale."""
-    catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
+    catalogue = _catalogue()
     unexcused = {
         locale: set(catalogue.stale_translations(locale, excused={}))
         for locale in {locale for locale, _modelo, _lineage in REVIEWED_EQUIVALENT_SPANISH}
@@ -163,7 +165,7 @@ def test_the_product_reads_every_collapsed_value_the_catalogue_resolves() -> Non
     """
     from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
-    catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
+    catalogue = _catalogue()
     resolved = {
         (occurrence.modelo, occurrence.revision, occurrence.casilla, locale): (
             catalogue.resolve(index, "label", locale),

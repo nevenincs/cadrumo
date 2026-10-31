@@ -14,6 +14,7 @@ from ....core.filing_projection_ref import (
 )
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
+from .form_codes import resolve_form_codes_leased
 
 if TYPE_CHECKING:
     from ...modelos.calculation_revision_m303_evidence import (
@@ -38,7 +39,7 @@ class M303Exonerado390RecordProjection(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    fields: tuple[M303Exonerado390FieldProjection, ...] = Field(min_length=13, max_length=13)
+    fields: tuple[M303Exonerado390FieldProjection, ...] = Field(min_length=1)
 
 
 def project_m303_exonerado_390_activity_rows(
@@ -108,7 +109,9 @@ def _validate_projection_refs(refs: tuple[_ExoneradoProjectionRef, ...]) -> tupl
                 slot=slot,
                 field=field,
             )
-            for slot in range(1, 7)
+            for slot in range(
+                1, int(resolve_form_codes_leased("form-row-codes").code("m303.exonerado_390.activity_slots")) + 1
+            )
             for field in M303Exonerado390ActivityField
         ),
         M303Exonerado390OperacionesTercerosProjectionRef(
@@ -116,7 +119,9 @@ def _validate_projection_refs(refs: tuple[_ExoneradoProjectionRef, ...]) -> tupl
         ),
     )
     if len(refs) != len(expected) or any(ref not in expected for ref in refs):
-        raise RegistryValidationError("DP30304 requires six activity-code/IAE pairs and one Modelo 347 marker")
+        raise RegistryValidationError(
+            "DP30304 requires every declared activity-code/IAE pair and one Modelo 347 marker"
+        )
     return refs
 
 

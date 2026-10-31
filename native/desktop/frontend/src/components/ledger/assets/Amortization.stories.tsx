@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { userEvent, waitFor, within } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
+import { NO_TABLE_MINIMUM_KEY, REMEDY_FIELD_KEYS } from "@/dev/assetsSeed";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
   ActivityAssetForecast,
@@ -33,6 +34,7 @@ type Answer = "register" | "empty" | "refused" | "loading" | "unavailable";
 type Tweak =
   | "none"
   | "opening_remedy"
+  | "no_table_minimum"
   | "long_partial_citations"
   | "refusal_facts"
   | "nothing_left";
@@ -59,10 +61,15 @@ type PlanShape = {
     | {
         absence: string | null;
         absence_reason_key: string | null;
+        absence_remedy_field_key: string | null;
         claim_state: string;
         claimable_intervals: unknown[];
         claimable_refusal_key: string | null;
         claimable_refusal_facts: ReasonFact[];
+        claimable_refusal_remedy_field_key: string | null;
+        minimum_through: unknown;
+        minimum_reason_key: string | null;
+        minimum_complete: boolean;
       }[]
     | null;
   limits?: {
@@ -73,6 +80,7 @@ type PlanShape = {
 };
 
 const ELAPSED = "ledger.actividad_asset.errors.amortization_period_elapsed";
+const OPENING_MISSING = "ledger.actividad_asset.errors.opening_history_missing";
 
 /** The baja the register records for the element, as the detail passes it. */
 function useDisposal(port: LedgerPort, assetId: string): ListDisposal | null {
@@ -108,10 +116,22 @@ function withTweak(port: LedgerPort, tweak: Tweak): LedgerPort {
         if (answer.kind !== "settled") return answer;
         const plan = structuredClone(answer.result) as PlanShape;
         if (tweak === "opening_remedy") {
+          // The remedy is the entry the register serves for the reason.
           for (const row of plan.rows ?? [])
-            if (row.absence === "incomplete")
-              row.absence_reason_key =
-                "ledger.actividad_asset.errors.opening_history_missing";
+            if (row.absence === "incomplete") {
+              row.absence_reason_key = OPENING_MISSING;
+              row.absence_remedy_field_key =
+                REMEDY_FIELD_KEYS[OPENING_MISSING]!;
+              row.claimable_refusal_key = OPENING_MISSING;
+              row.claimable_refusal_remedy_field_key =
+                REMEDY_FIELD_KEYS[OPENING_MISSING]!;
+            }
+        } else if (tweak === "no_table_minimum") {
+          for (const row of plan.rows ?? []) {
+            row.minimum_through = null;
+            row.minimum_reason_key = NO_TABLE_MINIMUM_KEY;
+            row.minimum_complete = false;
+          }
         } else if (tweak === "refusal_facts") {
           const first = plan.rows?.[0];
           const facts: ReasonFact[] = [
@@ -311,6 +331,7 @@ function Stage({
           disposal={disposal}
           onOpenLink={() => undefined}
           onCorrectClaim={() => undefined}
+          onCorrectElement={() => undefined}
         />
       ) : (
         <AssetTimeline
@@ -450,6 +471,23 @@ export const PlanYearWithoutOfficialTables: Story = plan({
 export const PlanMissingOpeningAmount: Story = plan({
   name: "Plan, an opening amount never entered says where to enter it",
   args: { assetId: "estanteria", narrow: true, tweak: "opening_remedy" },
+});
+
+export const PlanRemedyOpensTheCorrection: Story = plan({
+  name: "Plan, a year that lacks the opening amount says which entry to fill in, as a button",
+  args: { assetId: "estanteria", narrow: true, tweak: "opening_remedy" },
+  play: async ({ canvasElement }: PlayContext) => {
+    await waitFor(() => {
+      if (!canvasElement.querySelector(".ledger-asset-remedy"))
+        throw new Error("the remedy is not drawn yet");
+    });
+  },
+});
+
+export const PlanMinimumHasNoTable: Story = plan({
+  name: "Plan, a method with no table minimum: Doesn't apply, with its sentence, not Not known",
+  args: { assetId: "servidor", tweak: "no_table_minimum" },
+  play: hint("ledger.actividad_asset.disposal_finding.method_has_no_minimum"),
 });
 
 export const PlanCoveredByOpening: Story = plan({

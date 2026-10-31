@@ -17,6 +17,7 @@ from cadrumo.adapters.persistence.storage.runtime_readiness import StorageRuntim
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.application.inventory.ports import InventoryLedgerServiceRepositoryProtocol
 from cadrumo.domain.buckets.event import BucketEventType
 
 from .....domain.contribuyente.inventory.closing_foundations import (
@@ -1274,7 +1275,7 @@ class TestClosingValueFromPlainFacts:
         real_load = type(repository).load
         reads: list[object] = []
 
-        def stale_first_read(instance: object) -> object:
+        def stale_first_read(instance: InventoryLedgerServiceRepositoryProtocol) -> object:
             reads.append(instance)
             return before_the_commit if len(reads) == 1 else real_load(instance)
 

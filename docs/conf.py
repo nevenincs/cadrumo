@@ -147,6 +147,7 @@ def _skip_generated_output_for_i18n(generator: str) -> bool:
 extensions = [
     "sphinx.ext.autodoc",
     "dev.docs.apidocs.attribute_types",
+    "dev.docs.python_xref_index",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",

@@ -255,7 +255,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "01956e97a497575d9cc016d648576d350ba793774ff0bc0c71784b090e73c15e",
+          "calculation_revision_id": "e0e6367d2dc340b0e462547f32cf043db9e492b2fb3d78b3ceae88ffeba1bf18",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -823,7 +823,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 01956e97a497575d9cc016d648576d350ba793774ff0bc0c71784b090e73c15e (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision e0e6367d2dc340b0e462547f32cf043db9e492b2fb3d78b3ceae88ffeba1bf18 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -937,7 +937,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "01956e97a497575d9cc016d648576d350ba793774ff0bc0c71784b090e73c15e",
+          "calculation_revision_id": "e0e6367d2dc340b0e462547f32cf043db9e492b2fb3d78b3ceae88ffeba1bf18",
           "completeness_status": "complete",
           "findings": [
             {
@@ -988,7 +988,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "0632d1c6b2b671f923d2933b8b4ab9d73d2def40990f285cc6482c75e5fdec05",
+          "verification_report_id": "21c441c90b550a20c86a1a19159676cf2826247cdec8f736254a29cad13f1816",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1020,7 +1020,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\tc25fab29784834fe82b5343b4ad118664182b29802d3d94661e0c258cb824a47\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t01956e97a497575d9cc016d648576d350ba793774ff0bc0c71784b090e73c15e\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\td3ae529bdafeccf3b01474351ceb29a2ce12191ecd0a149c397a8d1e72dcc2b4\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\te0e6367d2dc340b0e462547f32cf043db9e492b2fb3d78b3ceae88ffeba1bf18\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -1077,10 +1077,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "4db7688c8685f123412533b4393c45634a5b59a1935f3ced60cc37aaf78639bc",
+          "bucket_event_id": "be21cd0a4f738926c54573ccc2868a0accfc37d35d5cde83300eb467d93c5629",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "01956e97a497575d9cc016d648576d350ba793774ff0bc0c71784b090e73c15e",
+          "calculation_revision_id": "e0e6367d2dc340b0e462547f32cf043db9e492b2fb3d78b3ceae88ffeba1bf18",
           "file_sha256": "310281eedac7a2d810c82addcf66519d9a522aad42908c40d9739311bf5fb16a",
           "filing_year": 2026,
           "format": "fichero-boe",

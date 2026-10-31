@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
-import type { LedgerPort, PublicDecimal } from "../../../shell/ledger";
+import type {
+  LedgerPort,
+  OutputLanguage,
+  PublicDecimal,
+} from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import { amountText } from "../movements/movementWords";
 import {
@@ -20,6 +24,11 @@ import { ASSET_KEYS, countSentence, refusalText } from "./assetsWords";
 /** One box the handoff states: its casilla, its amount, and how many
  * elements its amount leaves out. */
 type Stated = {
+  /** Tells the rows apart: the declaration, the casilla and, for Modelo 130,
+   * the kind of element. */
+  id: string;
+  /** The box in the filer's words; null where none is named. */
+  name: string | null;
   casilla: string;
   amount: PublicDecimal;
   left: number;
@@ -74,14 +83,16 @@ export function FilingHandoffPanel({
   const period = periods.includes(typedPeriod) ? typedPeriod : "";
   const asked =
     open && reader !== null && year !== null
-      ? handoffRequest(year, period)
+      ? handoffRequest(year, period, locale as OutputLanguage)
       : null;
   const { read } = useSetupRead(
     port,
     reader,
     "ledger.actividad-asset.filing-handoff",
     asked,
-    asked ? `${asked.tax_year}:${asked.m130_period ?? ""}` : "none",
+    asked
+      ? `${asked.tax_year}:${asked.m130_period ?? ""}:${asked.output_language}`
+      : "none",
   );
 
   const note = (key: string) => (
@@ -111,16 +122,22 @@ export function FilingHandoffPanel({
     // A box the backend does not state, because no quarter was asked, is not
     // drawn: it is not unknown, and it is not zero.
     const stated: Stated[] = [
-      ...[handoff.material_m100, handoff.intangible_m100].map((found) => ({
-        casilla: found.target_casilla_id,
-        amount: found.amount,
-        left: 0,
-      })),
+      ...[handoff.material_m100, handoff.intangible_m100].map(
+        (found, index) => ({
+          id: `m100:${index}`,
+          name: found.box_name,
+          casilla: found.target_casilla_id,
+          amount: found.amount,
+          left: 0,
+        }),
+      ),
       ...[handoff.material_m130, handoff.intangible_m130].flatMap((found) =>
         found === null
           ? []
           : [
               {
+                id: `m130:${found.target_casilla_id}:${found.asset_kind}`,
+                name: found.box_name,
                 casilla: found.target_casilla_id,
                 amount: found.amount,
                 left: found.unavailable_asset_ids.length,
@@ -134,12 +151,19 @@ export function FilingHandoffPanel({
         <SetupTable
           label={t("desktop.ledger.assets.handoff")}
           rows={stated}
-          rowKey={(found) => String(stated.indexOf(found))}
+          rowKey={(found) => found.id}
           columns={[
             {
               key: "casilla",
               label: t("desktop.ledger.assets.column.casilla"),
-              cell: (found) => found.casilla,
+              cell: (found) => (
+                <span className="inline-flex flex-col">
+                  {found.name !== null && (
+                    <span className="font-medium">{found.name}</span>
+                  )}
+                  <span className="tabular-nums">{found.casilla}</span>
+                </span>
+              ),
             },
             {
               key: "amount",

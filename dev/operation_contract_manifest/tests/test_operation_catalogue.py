@@ -30,7 +30,9 @@ import pytest
 
 from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.production_operation_registry import (
+    production_operation_registry as _shared_production_operation_registry,
+)
 from cadrumo.entrypoints.tests.source_tree_support import SourceTree, module_level_bindings
 from cadrumo.tests.inventory import package_python_files, python_files_under, releases_parsed_sources
 from dev._paths import REPO_ROOT
@@ -166,10 +168,9 @@ def _definition_id_collections() -> Mapping[tuple[str, str], frozenset[str]]:
     }
 
 
-@cache
 def production_operation_registry() -> OperationRegistry:
-    """The one production registry, composed through the one production seam."""
-    return build_production_operation_registry()
+    """The one production registry, composed once per process through the shared test accessor."""
+    return _shared_production_operation_registry()
 
 
 def _definitions() -> tuple[OperationDefinition, ...]:

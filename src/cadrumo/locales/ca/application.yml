@@ -526,50 +526,40 @@ application:
         {validator_id}; hi ha {registered_count} validadors registrats.
   inventory:
     advisories:
-      retired_book_leaves_year_unresolved: "Aquest inventari està retirat però encara té apunts, de manera que l'Annex D de %{year} queda sense resoldre. Restaura'l o elimina'n els apunts."
+      retired_book_leaves_year_unresolved: Aquest inventari està retirat però encara
+        té apunts, de manera que l'Annex D de %{year} queda sense resoldre. Restaura'l
+        o elimina'n els apunts.
     labels:
       acquisition_evidence_kind:
-        purchase_invoice: "Factura de compra"
-        transport_document: "Document de transport"
-        insurance_document: "Document d'assegurança"
-        customs_declaration: "Declaració duanera"
-        contract: "Contracte"
-        other_acquisition_evidence: "Un altre document de compra"
-        attributable_cost_review: "Comprovació del cost"
-        iva_recoverability_review: "Comprovació de l'IVA"
+        attributable_cost_review: Comprovació del cost
+        contract: Contracte
+        customs_declaration: Declaració duanera
+        insurance_document: Document d'assegurança
+        iva_recoverability_review: Comprovació de l'IVA
+        other_acquisition_evidence: Un altre document de compra
+        purchase_invoice: Factura de compra
+        transport_document: Document de transport
       attributable_cost_kind:
-        freight: "Nòlit"
-        insurance: "Assegurança"
-        customs_duty: "Aranzel"
-        handling: "Manipulació"
-        professional_fee: "Honoraris professionals"
-        other_directly_attributable: "Un altre cost directe"
+        customs_duty: Aranzel
+        freight: Nòlit
+        handling: Manipulació
+        insurance: Assegurança
+        other_directly_attributable: Un altre cost directe
+        professional_fee: Honoraris professionals
       closing_authority:
-        movement_derived: "Calculat a partir dels moviments"
-        physical_observation: "Recompte físic"
+        movement_derived: Calculat a partir dels moviments
+        physical_observation: Recompte físic
       closing_valuation_basis:
-        fifo_acquisition_price: "Preu de compra, primera entrada primera sortida"
-        pmp_acquisition_price: "Preu mitjà ponderat de compra"
-        coste_medio_acquisition_price: "Cost mitjà a preu de compra"
-      decision_evidence_role:
-        authority_reconciliation: "Comprovació del valor de tancament"
-      movement_kind:
-        opening: "Obertura"
-        purchase: "Compra"
-        cogs: "Cost de les vendes"
-        count: "Recompte"
-      physical_evidence_role:
-        physical_count: "Recompte físic"
-        acquisition_price_valuation: "Valoració a preu de compra"
-      valuation_method:
-        fifo: "Primera entrada, primera sortida"
-        pmp: "Preu mitjà ponderat"
-        coste_medio: "Cost mitjà"
+        coste_medio_acquisition_price: Cost mitjà a preu de compra
+        fifo_acquisition_price: Preu de compra, primera entrada primera sortida
+        pmp_acquisition_price: Preu mitjà ponderat de compra
       correction_reason:
         duplicate_entry: Entrada duplicada
         keying_error: Error d'introducció
         operation_did_not_occur: L'operació no es va produir
         source_document_corrected: Document d'origen rectificat
+      decision_evidence_role:
+        authority_reconciliation: Comprovació del valor de tancament
       history_kind:
         described: Descrit
         movement_corrected: Moviment corregit
@@ -577,24 +567,45 @@ application:
         opening_corrected: Obertura corregida
         restored: Restaurat
         retired: Retirat
+      movement_kind:
+        cogs: Cost de les vendes
+        count: Recompte
+        opening: Obertura
+        purchase: Compra
+      physical_evidence_role:
+        acquisition_price_valuation: Valoració a preu de compra
+        physical_count: Recompte físic
       retirement_reason:
         activity_ceased: Activitat cessada
         created_in_error: Creat per error
         no_stock_held: Sense existències
+      valuation_method:
+        coste_medio: Cost mitjà
+        fifo: Primera entrada, primera sortida
+        pmp: Preu mitjà ponderat
     service:
       errors:
-        activity_conflict: "Ja existeix un registre d'inventari per a aquesta activitat i l'exercici %{year}. Obre'l en lloc de crear-ne un altre."
-        activity_not_found: "No existeix cap registre d'inventari per a aquesta activitat i l'exercici %{year}. Crea'l primer o revisa l'activitat i l'exercici."
-        closing_authority_conflict: "Ja hi ha un altre valor de tancament registrat per a aquesta activitat i aquest any."
-        evidence_file_not_admitted: "Aquest fitxer no es pot desar. Tria un PDF, un fitxer XML o una imatge (PNG, JPEG, TIFF, WebP o HEIC) que s'obri i torna-ho a provar."
-        closing_authority_invalid: "Aquest valor de tancament no s'ha pogut registrar perquè les seves dades no concorden entre si. Revisa-les i torna-ho a provar."
-        closing_authority_recorded: "L'inventari %{year} d'aquesta activitat ja té registrat el seu valor de tancament, així que les seves dades d'existències ja no poden canviar."
+        activity_conflict: Ja existeix un registre d'inventari per a aquesta activitat
+          i l'exercici %{year}. Obre'l en lloc de crear-ne un altre.
+        activity_not_found: No existeix cap registre d'inventari per a aquesta activitat
+          i l'exercici %{year}. Crea'l primer o revisa l'activitat i l'exercici.
+        closing_authority_conflict: Ja hi ha un altre valor de tancament registrat
+          per a aquesta activitat i aquest any.
+        closing_authority_invalid: Aquest valor de tancament no s'ha pogut registrar
+          perquè les seves dades no concorden entre si. Revisa-les i torna-ho a provar.
+        closing_authority_recorded: L'inventari %{year} d'aquesta activitat ja té
+          registrat el seu valor de tancament, així que les seves dades d'existències
+          ja no poden canviar.
         correction_changes_nothing: Aquesta correcció no indica cap valor inicial
           ni mètode de valoració diferent de l'actual.
-        correction_id_conflict: "Aquesta correcció ja es va registrar amb altres dades."
+        correction_id_conflict: Aquesta correcció ja es va registrar amb altres dades.
         count_would_raise_stock: 'Un recompte físic no pot augmentar les existències:
           %{sku} quedaria per sobre de les unitats registrades.'
-        duplicate_movement_id: "Aquest moviment ja és al registre d'inventari. Revisa els moviments registrats abans d'afegir-lo de nou."
+        duplicate_movement_id: Aquest moviment ja és al registre d'inventari. Revisa
+          els moviments registrats abans d'afegir-lo de nou.
+        evidence_file_not_admitted: Aquest fitxer no es pot desar. Tria un PDF, un
+          fitxer XML o una imatge (PNG, JPEG, TIFF, WebP o HEIC) que s'obri i torna-ho
+          a provar.
         invalid_valuation_method: 'El mètode de valoració d''inventari no està admès:
           %{valuation_method}.'
         inventory_already_retired: L'inventari %{year} d'aquesta activitat ja està
@@ -602,12 +613,16 @@ application:
         inventory_not_retired: L'inventari %{year} d'aquesta activitat no està retirat.
         inventory_retired: L'inventari %{year} d'aquesta activitat està retirat. Restaura'l
           abans de canviar les seves dades d'existències.
-        inventory_validation: "Aquestes dades d'inventari no s'han pogut acceptar. Revisa-les i torna-ho a provar."
-        later_closing_authority_recorded: "El valor de tancament %{later_year} d'aquesta activitat parteix d'aquest tancament, així que les dades d'existències de %{year} ja no poden canviar."
-        movement_already_superseded: "Aquest moviment ja es va corregir o anul·lar."
-        movement_not_found: "L'inventari %{year} d'aquesta activitat no té aquest moviment."
-        movement_outside_year: "Aquest moviment té una data fora de l'inventari %{year}."
-        prior_closing_document_needed: "Aquest valor de tancament necessita el document de tancament de l'any anterior. Afegeix-lo i torna-ho a provar."
+        inventory_validation: Aquestes dades d'inventari no s'han pogut acceptar.
+          Revisa-les i torna-ho a provar.
+        later_closing_authority_recorded: El valor de tancament %{later_year} d'aquesta
+          activitat parteix d'aquest tancament, així que les dades d'existències de
+          %{year} ja no poden canviar.
+        movement_already_superseded: Aquest moviment ja es va corregir o anul·lar.
+        movement_not_found: L'inventari %{year} d'aquesta activitat no té aquest moviment.
+        movement_outside_year: Aquest moviment té una data fora de l'inventari %{year}.
+        prior_closing_document_needed: Aquest valor de tancament necessita el document
+          de tancament de l'any anterior. Afegeix-lo i torna-ho a provar.
         stock_would_go_negative: 'Això deixaria les existències per sota de zero:
           %{sku} necessitaria més unitats de les que queden.'
     workbench:
@@ -966,8 +981,8 @@ application:
         what: En aquest període resideixes en un territori foral, on l'amortització
           es regeix per altres normes. Queda fora d'aquest càlcul i no es dedueix
           cap xifra.
-        what_to_do: Determina l'amortització segons les normes forals del teu
-          territori i declara-la davant la seva hisenda foral.
+        what_to_do: Determina l'amortització segons les normes forals del teu territori
+          i declara-la davant la seva hisenda foral.
       activity_asset_residence_period_unknown:
         what: El teu perfil recull una residència fiscal, però cap per a aquest període,
           així que els teus elements es compten com si aquest model fos aplicable.
@@ -1075,16 +1090,16 @@ application:
           o no quadren.
         what_to_do: Obre els teus registres d'aquest període, corregeix els que estiguin
           marcats i torna a calcular.
-      ledger_expense_may_be_durable:
-        what: Un moviment deduït com a despesa corrent pot ser un bé que dura més
-          d'un any. Ho és?
-        what_to_do: Si ho és, dona d'alta el bé, perquè es dedueix mitjançant dotacions,
-          i torna a calcular. Si és un consumible, deixa el moviment com està.
       ledger_amortization_row_unregistered:
         what: Un moviment registra una compra amortitzable que no és al teu registre
           de béns, de manera que no dedueix res.
         what_to_do: Dona d'alta l'element indicant aquest moviment com a adquisició,
           o reclassifica el moviment, i torna a calcular.
+      ledger_expense_may_be_durable:
+        what: Un moviment deduït com a despesa corrent pot ser un bé que dura més
+          d'un any. Ho és?
+        what_to_do: Si ho és, dona d'alta el bé, perquè es dedueix mitjançant dotacions,
+          i torna a calcular. Si és un consumible, deixa el moviment com està.
       m193_settled_row_amounts_unresolved_authority:
         what: Alguns imports d'un registre d'un pagament fet en un any posterior no
           tenen una font oficial que els confirmi.
@@ -1153,14 +1168,19 @@ application:
         what_to_do: Revisa el tipus d'IVA de les teves factures i registres i torna
           a calcular. No es podrà exportar la declaració fins que es corregeixi.
       register_acquisition_exceeds_ledger:
-        what: "Els moviments d'un bé del teu registre van pagar menys que el cost que indiques."
-        what_to_do: "Corregeix el preu al teu registre de béns o el moviment i torna a calcular."
+        what: Els moviments d'un bé del teu registre van pagar menys que el cost que
+          indiques.
+        what_to_do: Corregeix el preu al teu registre de béns o el moviment i torna
+          a calcular.
       register_acquisition_partly_accounted:
-        what: "Un bé del teu registre explica només una part del seu moviment, així que la resta no dedueix res."
-        what_to_do: "Dona d'alta la resta del que va pagar aquell moviment, o corregeix el preu del bé, i torna a calcular."
+        what: Un bé del teu registre explica només una part del seu moviment, així
+          que la resta no dedueix res.
+        what_to_do: Dona d'alta la resta del que va pagar aquell moviment, o corregeix
+          el preu del bé, i torna a calcular.
       register_acquisition_row_missing:
-        what: "Un bé del teu registre indica un moviment que ja no és als teus moviments."
-        what_to_do: "Torna a introduir aquell moviment, o corregeix el bé al teu registre, i torna a calcular."
+        what: Un bé del teu registre indica un moviment que ja no és als teus moviments.
+        what_to_do: Torna a introduir aquell moviment, o corregeix el bé al teu registre,
+          i torna a calcular.
       register_owned_capital_acquisition:
         what: Una compra d'equipament es deixa fora de les teves despeses, perquè
           es dedueix mitjançant la seva dotació anual.
@@ -1558,9 +1578,9 @@ application:
         incidència(es).
       deductible_iva_evidence_missing: 'Els apunts amb IVA deduïble dels teus registres
         requereixen una factura de compra vinculada. Vincula la factura a l''apunt
-        i torna a executar work verify: la comprovació no es completa mentre un apunt
-        deduïble no tingui factura, de manera que l''esborrany continua obert i recull
-        el justificant.'
+        i torna a executar aeat app modelo work verify: la comprovació no es completa
+        mentre un apunt deduïble no tingui factura, de manera que l''esborrany continua
+        obert i recull el justificant.'
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió
@@ -1797,9 +1817,9 @@ application:
         pendent per a aquest model/període en la data actual (la finestra d''obligació
         de presentació de l''AEAT no és oberta). La presentació a fitxer no requereix
         aquest pas: exporta el càlcul comprovat i complet amb ''aeat app modelo export'';
-        aquest és el punt final local. ''work file'' és el pas opcional que registra
-        la declaració com a presentada, per a quan la finestra d''obligació sigui
-        oberta.'
+        aquest és el punt final local. ''aeat app modelo work file'' és el pas opcional
+        que registra la declaració com a presentada, per a quan la finestra d''obligació
+        sigui oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
     finding_fact:

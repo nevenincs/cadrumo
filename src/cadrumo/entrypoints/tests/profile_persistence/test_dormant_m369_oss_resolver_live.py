@@ -72,6 +72,11 @@ from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_suppor
     _seed_ready_profile,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.secure_store_baseline import (
+    SeededDurableProfile,
+    provision_seeded_profile,
+    reopened_seeded_profile,
+)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -198,10 +203,20 @@ def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
 
 
+@pytest.fixture(scope="module", name="_m369_seeded_profile")
+def m369_seeded_profile(tmp_path_factory: pytest.TempPathFactory) -> SeededDurableProfile:
+    """Provision and seed the M369 bucket once per module; no global context outlives this call."""
+    return provision_seeded_profile(
+        tmp_path_factory.mktemp("m369-runtime"),
+        _M369_BUCKET,
+        lambda profile: _seed_ready_profile(profile.repository, bucket_id=_M369_BUCKET),
+    )
+
+
 @pytest.fixture
-def m369_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M369_BUCKET) as profile:
-        _seed_ready_profile(profile.repository, bucket_id=_M369_BUCKET)
+def m369_objects(_m369_seeded_profile: SeededDurableProfile) -> Iterator[SecureObjectRepository]:
+    """Re-enter the bucket for this test only, with the seeded rows restored."""
+    with reopened_seeded_profile(_m369_seeded_profile) as profile:
         yield profile.repository
 
 

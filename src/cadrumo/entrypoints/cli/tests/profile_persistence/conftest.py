@@ -1,15 +1,15 @@
 """Fixtures for CLI-composed profile persistence integration tests."""
 
 from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     Repos,
-    file_flow_module_profile,
     file_flow_repositories,
+    file_flow_seeded_profile,
 )
+from cadrumo.entrypoints.tests.profile_persistence.secure_store_baseline import SeededDurableProfile
 
 from .....adapters.persistence.profile.tests import profile_persistence_fixtures
 
@@ -23,7 +23,11 @@ active_bucket_runtime = profile_persistence_fixtures.active_bucket_runtime
 secure_objects = profile_persistence_fixtures.secure_objects
 
 
+@pytest.fixture(scope="module")
+def _file_flow_seeded_profile(tmp_path_factory: pytest.TempPathFactory) -> SeededDurableProfile:
+    return file_flow_seeded_profile(tmp_path_factory.mktemp("file-flow-runtime"))
+
+
 @pytest.fixture
-def repos(tmp_path: Path) -> Iterator[Repos]:
-    for shared in file_flow_module_profile(tmp_path):
-        yield from file_flow_repositories(shared)
+def repos(_file_flow_seeded_profile: SeededDurableProfile) -> Iterator[Repos]:
+    yield from file_flow_repositories(_file_flow_seeded_profile)

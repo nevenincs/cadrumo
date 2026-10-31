@@ -107,7 +107,7 @@ from ...domain.modelos.calculation_repository import CalculationRevisionPersiste
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..adapter_composition_work_ports import build_calculation_action_ports
-from ..operation_composition import build_production_operation_registry
+from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -299,7 +299,7 @@ def test_the_form_read_admits_an_edit_and_restores_the_exact_application_read(
     with seeded_operator_work(tmp_path) as work:
         work.recalculate()
         observations = _OperationLoadObservations()
-        contracts = build_production_operation_registry().public_contract_set
+        contracts = production_operation_registry().public_contract_set
         executor = ModeloWorkbenchFormExecutor(
             ports_factory=_ports_factory(work, observations=observations, monkeypatch=monkeypatch),
             contracts=lambda: contracts,
@@ -376,7 +376,7 @@ def test_an_uncalculated_form_keeps_one_encrypted_catalogue_read(
                 work.work_unit.bucket_id, work.operation, observations=observations, monkeypatch=monkeypatch
             ),
             operation=work.operation,
-            operation_contracts=build_production_operation_registry().public_contract_set,
+            operation_contracts=production_operation_registry().public_contract_set,
             language=OutputLanguage.EN,
         )
 
@@ -408,7 +408,7 @@ def test_the_form_keeps_its_final_encrypted_parent_validation(tmp_path: Path, mo
                 bucket_id=work.work_unit.bucket_id,
                 ports=ports,
                 operation=work.operation,
-                operation_contracts=build_production_operation_registry().public_contract_set,
+                operation_contracts=production_operation_registry().public_contract_set,
                 language=OutputLanguage.EN,
             )
 
@@ -452,7 +452,7 @@ def test_renewal_extends_an_unmoved_baseline_and_names_what_moved_otherwise(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     with seeded_operator_work(tmp_path) as work:
-        contracts = build_production_operation_registry().public_contract_set
+        contracts = production_operation_registry().public_contract_set
         observations = _OperationLoadObservations()
         executor = ModeloEditRenewExecutor(
             ports_factory=_ports_factory(work, observations=observations, monkeypatch=monkeypatch),
@@ -499,7 +499,7 @@ def test_preflight_names_the_address_of_its_findings_without_applying(
         )
         executor = ModeloEditPreflightExecutor(
             ports_factory=_ports_factory(work, observations=observations, monkeypatch=monkeypatch),
-            contracts=lambda: build_production_operation_registry().public_contract_set,
+            contracts=lambda: production_operation_registry().public_contract_set,
         )
         projection, _ = _run(
             work,
@@ -563,7 +563,7 @@ def test_preflight_reads_each_entry_as_typed_through_its_address_grammar(
         )
         executor = ModeloEditPreflightExecutor(
             ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch),
-            contracts=lambda: build_production_operation_registry().public_contract_set,
+            contracts=lambda: production_operation_registry().public_contract_set,
         )
         projection, _ = _run(
             work,
@@ -737,7 +737,7 @@ def test_preflight_reads_a_correction_typed_for_any_box_the_revision_defines(
         )
         executor = ModeloEditPreflightExecutor(
             ports_factory=_ports_factory(work, observations=_OperationLoadObservations(), monkeypatch=monkeypatch),
-            contracts=lambda: build_production_operation_registry().public_contract_set,
+            contracts=lambda: production_operation_registry().public_contract_set,
         )
         projection, _ = _run(
             work,
@@ -772,7 +772,7 @@ def test_preflight_reports_what_becomes_of_each_held_change_by_its_box(
     """
     with seeded_operator_work(tmp_path) as work:
         work.recalculate()
-        contracts = build_production_operation_registry().public_contract_set
+        contracts = production_operation_registry().public_contract_set
         observations = _OperationLoadObservations()
         ports_factory = _ports_factory(work, observations=observations, monkeypatch=monkeypatch)
         read, _ = _run(

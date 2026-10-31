@@ -82,12 +82,12 @@ class M303AnnualOrdenGeneratedSource(RegistryModel):
     source_content_digest: ContentDigest
     activity_table_count: PositiveCount
     module_row_count: PositiveCount
-    module_distribution: tuple[int, ...] = Field(min_length=7, max_length=7)
+    module_distribution: tuple[int, ...] = Field(min_length=1)
     agricultural_index_row_count: PositiveCount
     agricultural_ingreso_a_cuenta_row_count: PositiveCount
     non_agricultural_ingreso_a_cuenta_row_count: PositiveCount
-    seasonal_index_day_bands: tuple[tuple[int, int], ...] = Field(min_length=3, max_length=3)
-    seasonal_index_coefficients: tuple[Decimal, ...] = Field(min_length=3, max_length=3)
+    seasonal_index_day_bands: tuple[tuple[int, int], ...] = Field(min_length=1)
+    seasonal_index_coefficients: tuple[Decimal, ...] = Field(min_length=1)
     difficult_justification_pct: Percentage
     lorca_reduction_pct: Decimal | None = None
 

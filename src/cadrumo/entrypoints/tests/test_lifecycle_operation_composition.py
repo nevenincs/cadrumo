@@ -9,7 +9,7 @@ import pytest
 
 from ...application.modelo import calculation_operation, edit_operation, export_operation, operation_definitions
 from ...application.operations.operation_definition import OperationDefinition
-from ..operation_composition import build_production_operation_registry
+from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -64,7 +64,7 @@ def test_every_exported_definition_reaches_the_production_registry() -> None:
     not exist, except that it still has to be maintained.
     """
     exported = {definition.definition_id for definition in _definitions().values()}
-    composed = {definition.definition_id for definition in build_production_operation_registry().definitions}
+    composed = {definition.definition_id for definition in production_operation_registry().definitions}
 
     assert exported, "no enrolment is exported; this assertion would be vacuous"
     assert exported <= composed, f"exported but never composed: {sorted(exported - composed)}"

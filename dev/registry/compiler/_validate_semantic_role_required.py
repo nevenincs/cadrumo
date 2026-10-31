@@ -23,6 +23,8 @@ from cadrumo.core.i18n.render import MissingTranslationError
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
+from .validation_memoization import ModeloIdentityMemo
+
 type SemanticRoleCasillaOccurrence = tuple[ModeloId, RevisionId, CasillaId]
 
 # Enforced semantic_role requirements: each entry is (label_pattern,
@@ -72,25 +74,36 @@ def _validate_required_role_declarations(
     """
     failures: list[str] = []
     for modelo in modelos:
-        for revision in modelo.revisions.values():
-            for casilla in revision.casillas:
-                try:
-                    label = casilla.label
-                except MissingTranslationError:
-                    # Registry validation can inspect an operator-supplied
-                    # structural root before its shared catalogue is
-                    # enrolled. The bundled corpus coverage gate owns the
-                    # completeness check; this label-derived rule has no
-                    # evidence to evaluate until the catalogue is present.
-                    continue
-                failures.extend(
-                    _required_role_failures_for_label(
-                        location=f"{modelo.id}.{revision.id}.{casilla.id}",
-                        label=label,
-                        declared_role=casilla.semantic_role,
-                    ),
-                )
+        failures.extend(_MODELO_REQUIRED_ROLE_FAILURES.get_or_compute(modelo, _modelo_required_role_failures))
     return tuple(failures)
+
+
+def _modelo_required_role_failures(modelo: ModeloDefinition) -> tuple[str, ...]:
+    failures: list[str] = []
+    for revision in modelo.revisions.values():
+        for casilla in revision.casillas:
+            try:
+                label = casilla.label
+            except MissingTranslationError:
+                # Registry validation can inspect an operator-supplied
+                # structural root before its shared catalogue is
+                # enrolled. The bundled corpus coverage gate owns the
+                # completeness check; this label-derived rule has no
+                # evidence to evaluate until the catalogue is present.
+                continue
+            failures.extend(
+                _required_role_failures_for_label(
+                    location=f"{modelo.id}.{revision.id}.{casilla.id}",
+                    label=label,
+                    declared_role=casilla.semantic_role,
+                ),
+            )
+    return tuple(failures)
+
+
+# The rule reads one modelo's labels only; an unchanged modelo object in a later
+# scope reuses its result instead of resolving every label again.
+_MODELO_REQUIRED_ROLE_FAILURES: ModeloIdentityMemo[tuple[str, ...]] = ModeloIdentityMemo()
 
 
 def _required_role_failures_for_label(

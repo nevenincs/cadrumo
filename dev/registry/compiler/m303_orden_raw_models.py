@@ -23,7 +23,7 @@ from cadrumo.domain.iva.regimen_simplificado_rows import IaeEpigrafe
 class M303AnnualOrdenRawModule(RegistryModel):
     """One directly parsed, position-preserving annual IVA quota module."""
 
-    order: int = Field(ge=1, le=7)
+    order: int = Field(ge=1)
     definition: str = Field(min_length=1)
     unit: str = Field(min_length=1)
     # Positive, matching the seasonal-index coefficient below and the
@@ -82,8 +82,8 @@ class M303AnnualOrdenRawAgriculturalIngresoACuenta(RegistryModel):
 class M303AnnualOrdenRawSeasonalIndex(RegistryModel):
     """One annual seasonal-day coefficient interval."""
 
-    minimum_days: int = Field(ge=1, le=180)
-    maximum_days: int = Field(ge=1, le=180)
+    minimum_days: int = Field(ge=1)
+    maximum_days: int = Field(ge=1)
     coefficient: Decimal = Field(gt=Decimal("0"))
     required_text: str = Field(min_length=1)
 

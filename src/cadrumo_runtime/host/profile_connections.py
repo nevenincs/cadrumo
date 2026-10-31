@@ -12,6 +12,7 @@ from threading import BoundedSemaphore, Condition, Event, RLock, Thread
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from cadrumo.adapters.persistence.storage.bucket.output_language_hint import BucketOutputLanguageHintReader
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.adapters.persistence.storage.custody.paths import profile_custody_path
 from cadrumo.application.operations.models import OperationId
@@ -171,6 +172,7 @@ class RuntimeProfileConnections(
         self._sign_in_watchers: set[UUID] = set()
         self._observed_logins: frozenset[tuple[str, bool, OsLockState]] = frozenset()
         self._language_observations: dict[UUID, tuple[UUID, str | None]] = {}
+        self._language_hints = BucketOutputLanguageHintReader(storage_root=storage_root)
         self._service_descriptors = {
             item.service_id: item
             for item in (installed_service_descriptors() if service_descriptors is None else service_descriptors)
@@ -316,7 +318,7 @@ class RuntimeProfileConnections(
         """
         observe_language(
             profile_id,
-            root=self.root,
+            hints=self._language_hints,
             boot=self.boot,
             guard=self._guard,
             connections=self._connections,

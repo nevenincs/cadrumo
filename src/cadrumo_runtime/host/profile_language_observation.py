@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from _thread import RLock
-from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.bucket.output_language_hint import read_bucket_output_language_hint
+from cadrumo.adapters.persistence.storage.bucket.output_language_hint import BucketOutputLanguageHintReader
 from cadrumo_client.contracts.session_events import ProfileLanguageChanged
 
 from .profile_connection import ProfileConnection
@@ -16,7 +15,7 @@ from .session_events import RuntimeSessionEvents
 def observe_language(
     profile_id: UUID,
     *,
-    root: Path,
+    hints: BucketOutputLanguageHintReader,
     boot: UUID,
     guard: RLock,
     connections: dict[UUID, ProfileConnection],
@@ -26,7 +25,7 @@ def observe_language(
 ) -> None:
     """Publish only changes to the hint observed by an existing session."""
     try:
-        language = read_bucket_output_language_hint(storage_root=root, bucket_id=str(profile_id))
+        language = hints.read(str(profile_id))
     except Exception:
         return
     changed: list[ProfileLanguageChanged] = []

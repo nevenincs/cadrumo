@@ -6,8 +6,9 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:995d7fd223b5c7984a6fc67d740ea5f95bb5c06b517f5282031387ec9171390c'
+body_hash: 'sha256:e7fa440dc7b417caf0c80ef9d0cc78ed9c95c97b45662e8a7502c45f67ae2edd'
 related:
+  - '[[2026-10-30-registry-owned-facts-ledger]]'
   - '[[2026-10-30-registry-owned-facts-plan]]'
 ---
 
@@ -16,6 +17,10 @@ related:
 Auto-generated index of all documents tagged with `#registry-owned-facts`.
 
 ## Documents
+
+### exec
+
+- `2026-10-30-registry-owned-facts-ledger` - `registry-owned-facts` ledger
 
 ### plan
 

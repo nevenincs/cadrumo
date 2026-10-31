@@ -26,6 +26,7 @@ from ._validate_semantic_role_required import (
     collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
 )
 from .validate_semantic_role_typos import grouped_semantic_role_typo_twin_failures
+from .validation_memoization import ModeloIdentityMemo
 
 __all__ = [
     "semantic_role_cardinality_failures",
@@ -103,16 +104,37 @@ def _collect_role_observations(
     if memo is not None and all(held is given for held, given in zip(memo[0], modelo_tuple, strict=True)):
         return memo[1]
     grouped: dict[str, list[_RoleObservation]] = defaultdict(list)
+    # Concatenating each modelo's own grouping in tree order reproduces the
+    # single-pass grouping exactly: role keys keep their first appearance and
+    # every role's observations keep modelo, revision and casilla order.
     for modelo in modelo_tuple:
-        for revision in modelo.revisions.values():
-            for casilla in revision.casillas:
-                if casilla.semantic_role is None:
-                    continue
-                grouped[casilla.semantic_role].append(_RoleObservation(modelo.id, revision.id, casilla))
+        for role, observations in _MODELO_ROLE_OBSERVATIONS.get_or_compute(modelo, _modelo_role_observations):
+            grouped[role].extend(observations)
     while len(_ROLE_OBSERVATION_MEMO) >= _ROLE_OBSERVATION_MEMO_ENTRIES:
         _ROLE_OBSERVATION_MEMO.pop(next(iter(_ROLE_OBSERVATION_MEMO)))
     _ROLE_OBSERVATION_MEMO[key] = (modelo_tuple, grouped)
     return grouped
+
+
+def _modelo_role_observations(
+    modelo: ModeloDefinition,
+) -> tuple[tuple[str, tuple[_RoleObservation, ...]], ...]:
+    """Group one modelo's role-declaring casillas by role, in first-appearance order."""
+    grouped: dict[str, list[_RoleObservation]] = defaultdict(list)
+    for revision in modelo.revisions.values():
+        for casilla in revision.casillas:
+            if casilla.semantic_role is None:
+                continue
+            grouped[casilla.semantic_role].append(_RoleObservation(modelo.id, revision.id, casilla))
+    return tuple((role, tuple(observations)) for role, observations in grouped.items())
+
+
+# Observing a casilla resolves its label, the dominant cost of grouping a tree.
+# A candidate scope differs from the bundled one in a single modelo, so every
+# other modelo object answers from the observations made for it once.
+_MODELO_ROLE_OBSERVATIONS: ModeloIdentityMemo[tuple[tuple[str, tuple[_RoleObservation, ...]], ...]] = (
+    ModeloIdentityMemo()
+)
 
 
 def _constraints_signature(constraints: object) -> tuple[object, ...]:

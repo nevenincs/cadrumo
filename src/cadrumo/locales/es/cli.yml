@@ -354,9 +354,6 @@ cli:
           registro de existencias.
         closing_authority_record_help: Registrar atómicamente la autoridad acreditada
           del cierre de existencias
-        evidence_add_help: "Guarda un documento de compra en este perfil y muestra la identidad con la que la compra lo nombra."
-        evidence_source_help: "El documento de compra que quieres guardar: PDF, imagen o XML."
-        options_help: "Muestra los valores que ofrece un formulario de inventario, cada uno con su nombre."
         closing_value_file_help: Archivo JSON con los datos del valor de cierre.
         closing_value_file_invalid: El archivo del valor de cierre no es válido para
           este inventario.
@@ -373,6 +370,10 @@ cli:
         describe_help: Cambia el nombre y la descripción del inventario; la valoración
           no se mueve.
         description_help: Descripción del inventario.
+        evidence_add_help: Guarda un documento de compra en este perfil y muestra
+          la identidad con la que la compra lo nombra.
+        evidence_source_help: 'El documento de compra que quieres guardar: PDF, imagen
+          o XML.'
         group_help: Registros de existencias por actividad, movimientos y valoración
         inspect_help: Muestra un inventario con sus movimientos vigentes y su historial
           conservado.
@@ -388,6 +389,8 @@ cli:
         movement_kind_help: Tipo de movimiento (opening, purchase, cogs o count)
         movement_reverse_help: Saca un movimiento del inventario; se queda en el historial.
         opening_stock_help: Valor inicial de existencias
+        options_help: Muestra los valores que ofrece un formulario de inventario,
+          cada uno con su nombre.
         quantity_help: Cantidad del movimiento, positiva o negativa
         refusal_activity_conflict: Ya existe un registro de inventario para la actividad
           %{actividad_id} y el ejercicio %{year}. Ejecuta `aeat app ledger inventory
@@ -1906,8 +1909,8 @@ cli:
         run_details_help: Mostrar los datos tipados del paso terminal de una ejecución
           persistida.
         run_help: Mostrar una ejecución persistida del flujo por su identificador.
-        run_id_help: Identificador estable de 16 caracteres obtenido de modelo work
-          runs.
+        run_id_help: Identificador estable de 16 caracteres obtenido de aeat app modelo
+          work runs.
         runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
           de la más reciente a la más antigua. Usa un id de ejecución con `aeat app
           modelo work resume`. Solo local; nunca contacta con AEAT.

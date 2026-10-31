@@ -54,7 +54,7 @@ from dev.docs.terminology_handbook.topics import load_topic_catalogue
 
 from .. import _registry_scanner
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
-from .._paths import LOCALE_SOURCE_EXTRA_DIRS, PRODUCT_SOURCE_DIRS, SRC_DIR
+from .._paths import PRODUCT_SOURCE_DIRS, SRC_DIR
 from .._registry_scanner import LocaleRegistryEnumerationError, scan_detail_row_fields
 from ..fstring_registry import get_registered_keys
 from ..locale_nodes import LocaleNode
@@ -405,7 +405,7 @@ def test_required_optional_badge_keys_remain_scanner_visible() -> None:
         )
 
 
-def test_wizard_descriptor_keys_remain_discoverable_by_the_manager() -> None:
+def test_wizard_descriptor_keys_remain_discoverable_by_the_manager(committed_locale_manager: LocaleManager) -> None:
     """The wizard flow-help keys stay in the manager's codebase-key set.
 
     ``_walk_keys`` builds ``cli.config.<flow id>.help`` by interpolation, so no
@@ -415,8 +415,7 @@ def test_wizard_descriptor_keys_remain_discoverable_by_the_manager() -> None:
     two authorities disagree, and the catalogue entry looks unused while a live
     surface still renders it.
     """
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=_LOCALES_ROOT, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
-    codebase_keys = manager.get_codebase_keys()
+    codebase_keys = committed_locale_manager.get_codebase_keys()
     missing = sorted(key for key in wizard_descriptor_keys() if key not in codebase_keys)
     assert not missing, (
         f"the manager no longer discovers {len(missing)} wizard descriptor key(s): "

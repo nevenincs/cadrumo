@@ -16,6 +16,7 @@ def inventory_dynamic_registrations() -> tuple[FStringKeyRegistration, ...]:
         InventoryLedgerChangeProjection,
     )
     from cadrumo.domain.contribuyente.inventory.corrections import INVENTORY_CORRECTION_REFUSAL_REASONS
+
     from .fstring_registry import FStringKeyRegistration
 
     label_keys = tuple(

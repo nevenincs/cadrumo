@@ -408,13 +408,15 @@ def test_the_reference_map_is_built_once_per_set_of_roots(
         encoding="utf-8",
     )
     monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
-    load_census._reference_map_for.cache_clear()
+    # The planted root is unique to this test, so counting misses against a
+    # baseline proves the same thing without discarding the warm real-tree entry.
+    misses_before = load_census._reference_map_for.cache_info().misses
 
     first = load_census.build_reference_map()
     second = load_census.build_reference_map()
 
     assert first is second, "one set of roots must be scanned once"
-    assert load_census._reference_map_for.cache_info().misses == 1
+    assert load_census._reference_map_for.cache_info().misses - misses_before == 1
 
 
 def test_redirected_roots_are_scanned_separately(
@@ -424,7 +426,7 @@ def test_redirected_roots_are_scanned_separately(
     """Two root sets cannot share one answer, however similar their trees."""
     from ..analysis import load_census
 
-    load_census._reference_map_for.cache_clear()
+    misses_before = load_census._reference_map_for.cache_info().misses
     maps = []
     for name, target in (("one", "module_a"), ("two", "module_b")):
         root = tmp_path / name / "cadrumo"
@@ -438,7 +440,7 @@ def test_redirected_roots_are_scanned_separately(
 
     assert "cadrumo.domain.calculations.registry.module_a" in maps[0].production
     assert "cadrumo.domain.calculations.registry.module_a" not in maps[1].production
-    assert load_census._reference_map_for.cache_info().misses == 2
+    assert load_census._reference_map_for.cache_info().misses - misses_before == 2
 
 
 def test_the_reference_map_reads_the_registry_package_once_per_scan(

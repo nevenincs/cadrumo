@@ -27,7 +27,7 @@ from .....application.operations.frontend_requests import (
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ....operation_composition import build_production_operation_registry
+from ....tests.production_operation_registry import production_operation_registry
 from ...tests.settling import settle_until
 from ..controller_port import OperationChangeSourcePort, OperationResponseControlPort
 from ..modal import OperationModal, OperationModalSettledOutcomeV1
@@ -40,7 +40,7 @@ _NOW = datetime(2026, 10, 17, tzinfo=UTC)
 
 @lru_cache(maxsize=1)
 def _contracts() -> OperationPublicContractSetV1:
-    return build_production_operation_registry().public_contract_set
+    return production_operation_registry().public_contract_set
 
 
 def _observation(*, terminal: bool) -> OperationObservationSuccessV1:

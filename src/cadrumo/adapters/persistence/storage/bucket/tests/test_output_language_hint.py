@@ -10,7 +10,9 @@ import pytest
 
 from ......core.external_constants import OutputLanguage
 from ......tests.log_records import delivered_records
+from .. import output_language_hint
 from ..output_language_hint import (
+    BucketOutputLanguageHintReader,
     bucket_output_language_hint_path,
     clear_bucket_output_language_hint,
     read_bucket_output_language_hint,
@@ -128,3 +130,30 @@ def test_clear_output_language_hint_removes_sidecar(tmp_path: Path) -> None:
     clear_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id)
 
     assert read_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id) is None
+
+
+def test_the_hint_reader_reads_again_only_after_a_write_or_removal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bucket_id = "33333333-3333-4333-8333-333333333333"
+    provision_bucket_directory(tmp_path, bucket_id)
+    reads: list[str] = []
+    read = output_language_hint.read_bucket_output_language_hint
+
+    def counted(*, storage_root: Path, bucket_id: str) -> str | None:
+        reads.append(bucket_id)
+        return read(storage_root=storage_root, bucket_id=bucket_id)
+
+    monkeypatch.setattr(output_language_hint, "read_bucket_output_language_hint", counted)
+    hints = BucketOutputLanguageHintReader(storage_root=tmp_path)
+
+    assert hints.read(bucket_id) is None
+    assert write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id, language="hu")
+    assert hints.read(bucket_id) == hints.read(bucket_id) == "hu"
+    assert len(reads) == 1, "an absent hint needs no read, and an unchanged one is not read twice"
+
+    assert write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id, language="ca")
+    assert hints.read(bucket_id) == "ca"
+    clear_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id)
+    assert hints.read(bucket_id) is None
+    assert len(reads) == 2

@@ -432,10 +432,13 @@ def _compose_every_group(inputs: OperationCompositionInputs) -> tuple[OperationR
             registrations.extend(built.registrations)
             for definition in built.definitions:
                 groups[definition.definition_id] = group
-    registry = OperationRegistry(
-        definitions=tuple(sorted(definitions, key=lambda item: item.definition_id)),
-        public_registrations=tuple(sorted(registrations, key=lambda item: item.contract.definition_id)),
-    )
+        # Registry admission revalidates every definition's request schema; inside
+        # the build scope it reuses the composed schemas after the memo's live
+        # model-graph recheck instead of regenerating them.
+        registry = OperationRegistry(
+            definitions=tuple(sorted(definitions, key=lambda item: item.definition_id)),
+            public_registrations=tuple(sorted(registrations, key=lambda item: item.contract.definition_id)),
+        )
     composed_contracts.append(registry.public_contract_set)
     return registry, groups
 

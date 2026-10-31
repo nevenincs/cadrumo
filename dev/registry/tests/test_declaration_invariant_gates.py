@@ -100,6 +100,49 @@ def own_screen_findings(
     return screen_findings(authority, modelo_ids)
 
 
+@dataclasses.dataclass(frozen=True)
+class _ScreenCensus:
+    """Both runners' rows, with the shipped registry fingerprinted around the run."""
+
+    results: tuple[tuple[str, int, str], ...]
+    registry_before: dict[str, tuple[int, int]]
+    registry_after: dict[str, tuple[int, int]]
+
+
+def _registry_fingerprint() -> dict[str, tuple[int, int]]:
+    """Fingerprint path, size and modification time of every shipped registry file."""
+    import os
+
+    from cadrumo.core.resources.bundled_data import bundled_path
+
+    root = bundled_path("registry")
+    seen: dict[str, tuple[int, int]] = {}
+    for directory, _, names in os.walk(root):
+        for name in names:
+            path = os.path.join(directory, name)
+            stat = os.stat(path)
+            seen[path] = (stat.st_size, stat.st_mtime_ns)
+    return seen
+
+
+@pytest.fixture(scope="module")
+def screen_census(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> _ScreenCensus:
+    """Run both maintainer runners once over the whole corpus, between two fingerprints.
+
+    The full run is the slowest work in this module, and two gates need exactly
+    this one execution: that every screen completes, and that completing them
+    wrote nothing to the shipped registry.
+    """
+    from ..analysis.screens import run_corpus_screens, run_screens
+
+    before = _registry_fingerprint()
+    # The corpus screens read the same shipped tree - the design transcriptions
+    # live inside it - so leaving them out of this fingerprint left the half of
+    # the suite that touches those files unchecked for writes.
+    results = (*run_screens(authority, modelo_ids), *run_corpus_screens())
+    return _ScreenCensus(results=results, registry_before=before, registry_after=_registry_fingerprint())
+
+
 def _python_target_resolves(target: str) -> bool:
     """Return whether a registry-owned ``cadrumo`` target resolves."""
     return target in _FILED_OBSERVATION_CONSUMERS
@@ -375,9 +418,7 @@ def test_every_screen_module_has_a_test_module() -> None:
     assert not untested, f"screens carrying no test module, so their detection is unproven: {untested}"
 
 
-def test_every_enrolled_screen_runs_over_the_whole_corpus(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
-) -> None:
+def test_every_enrolled_screen_runs_over_the_whole_corpus(screen_census: _ScreenCensus) -> None:
     """No screen raises, and each reports a count and what that count means.
 
     The gates above check that a screen is enrolled, documented and tested, and
@@ -391,12 +432,12 @@ def test_every_enrolled_screen_runs_over_the_whole_corpus(
     a contract. What is asserted is that each screen completes and describes
     what it counted.
     """
-    from ..analysis.screens import CORPUS_SCREENS, SCREENS, run_corpus_screens, run_screens
+    from ..analysis.screens import CORPUS_SCREENS, SCREENS
 
     # Both runners. Asserting against the authority table alone left the corpus
     # screens unexercised by the gate whose whole purpose is that a screen
     # crashing on one input should not wait for someone to run it by hand.
-    results = (*run_screens(authority, modelo_ids), *run_corpus_screens())
+    results = screen_census.results
     assert len(results) == len(SCREENS) + len(CORPUS_SCREENS)
     for name, count, meaning in results:
         assert count >= 0, f"{name} returned a negative count"
@@ -483,9 +524,7 @@ def test_the_reassembly_gate_reads_syntax_not_text() -> None:
     assert not _reaches_binding_derivation(f"# never {_BINDING_DERIVATION}{newline}value = 1{newline}")
 
 
-def test_running_every_screen_leaves_the_shipped_registry_untouched(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
-) -> None:
+def test_running_every_screen_leaves_the_shipped_registry_untouched(screen_census: _ScreenCensus) -> None:
     """The screens read the registry and never write to it.
 
     Every screen is documented as reporting rather than gating, and none has any
@@ -499,30 +538,10 @@ def test_running_every_screen_leaves_the_shipped_registry_untouched(
     modification time rather than content, which is enough to catch a write and
     cheap enough to run over the whole tree.
     """
-    import os
-
-    from cadrumo.core.resources.bundled_data import bundled_path
-
-    from ..analysis.screens import run_corpus_screens, run_screens
-
-    def fingerprint() -> dict[str, tuple[int, int]]:
-        root = bundled_path("registry")
-        seen: dict[str, tuple[int, int]] = {}
-        for directory, _, names in os.walk(root):
-            for name in names:
-                path = os.path.join(directory, name)
-                stat = os.stat(path)
-                seen[path] = (stat.st_size, stat.st_mtime_ns)
-        return seen
-
-    before = fingerprint()
+    before = screen_census.registry_before
+    after = screen_census.registry_after
     assert before, "the shipped registry must contain files to fingerprint"
-    run_screens(authority, modelo_ids)
-    # The corpus screens read the same shipped tree - the design transcriptions
-    # live inside it - so leaving them out of this fingerprint left the half of
-    # the suite that touches those files unchecked for writes.
-    run_corpus_screens()
-    after = fingerprint()
+    assert screen_census.results, "no screen ran between the fingerprints, so this gate checked nothing"
 
     changed = sorted(path for path in before if path in after and before[path] != after[path])
     assert not changed, f"screens modified shipped registry files: {changed[:5]}"

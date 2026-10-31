@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:49b94bcd32b1ba99d7806c6e9873d0dd86994ba62b3f4722c3af3cba5ac03ee5'
+body_hash: 'sha256:f8ac8aa554e9925552d6d42d2ef04fb9982b026cfbd169021d53908ca1b6901e'
 related:
   - "[[2026-10-30-desktop-ledger-assets-plan]]"
 ---
@@ -299,6 +299,11 @@ related:
 - `S07` `verify:` `ledger-assets-contract.spec.ts` -> `pass`
 - `S07` `verify:` `ledger-setup and ledger-shell scenarios` -> `pass`
 - `S07` `verify:` `pytest decode, seed and locale vocabulary tests` -> `pass`
+- `S07` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S07` `verify:` `npx tsc --noEmit` -> `pass`
+- `S07` `verify:` `playwright contract 70 stock 38 scenarios 90` -> `pass`
+- `S07` `verify:` `pytest decode seed locales` -> `pass`
+- `S07` `by:` `implementation-engineer`
 
 ## Notes
 

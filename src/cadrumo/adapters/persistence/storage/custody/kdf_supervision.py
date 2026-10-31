@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Literal, cast
 from uuid import UUID
 
-from .....application.user_profile.proof_cancellation import ProfileProofCancellation
+from .....application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from .....core.config import load_settings
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -580,16 +580,22 @@ class ProfileKdfPrewarm:
     launch and attestation, an interpreter start-up that costs far more than
     the derivation itself, off the caller's critical path. A spare is used
     only inside :meth:`bound`, so nothing outside the owner adopts it, and a
-    spare that died while idle is discarded for a fresh launch.
+    spare that died while idle is discarded for a fresh launch. An operation
+    that arrives while its spare is still attesting waits for that one child
+    instead of starting a second; if the spare fails, the operation launches
+    its own.
     """
 
     def __init__(self, *, settings: Settings | None = None) -> None:
         """Bind the owner's settings now: a spare launches on another thread, outside its context."""
         self._settings = settings or load_settings()
         self._lock = threading.Lock()
+        self._settled = threading.Condition(self._lock)
         self._spare: _SupervisedKdfWorker | None = None
         self._launching = False
         self._closed = False
+        # Lets close() abandon a launch that has not attested, so no spare outlives its owner.
+        self._launch_cancellation = ProfileProofCancellation()
         atexit.register(self.close)
 
     def refill(self) -> None:
@@ -599,7 +605,13 @@ class ProfileKdfPrewarm:
                 return
             self._launching = True
         context = contextvars.copy_context()
-        threading.Thread(target=context.run, args=(self._launch,), name="profile-kdf-prewarm", daemon=True).start()
+        try:
+            threading.Thread(target=context.run, args=(self._launch,), name="profile-kdf-prewarm", daemon=True).start()
+        except BaseException:
+            with self._settled:
+                self._launching = False
+                self._settled.notify_all()
+            raise
 
     def _launch(self) -> None:
         spare: _SupervisedKdfWorker | None = None
@@ -607,31 +619,58 @@ class ProfileKdfPrewarm:
             spare = _SupervisedKdfWorker(
                 deadline=time.monotonic() + PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
                 settings=self._settings,
+                cancellation=self._launch_cancellation,
             ).__enter__()
-        except (ProfileCustodyRefusedError, TimeoutError, OSError, ValueError):
+        except (ProfileCustodyRefusedError, ProfileProofCancelledError, TimeoutError, OSError, ValueError):
             # A failed spare already released itself and logged its lifecycle;
             # the next operation launches its own child instead.
             spare = None
         finally:
-            with self._lock:
-                self._launching = False
-                if spare is not None and not self._closed and self._spare is None:
-                    self._spare, spare = spare, None
-            if spare is not None:
-                spare.__exit__(None, None, None)
+            try:
+                with self._settled:
+                    if spare is not None and not self._closed and self._spare is None:
+                        self._spare, spare = spare, None
+                        self._settled.notify_all()
+                if spare is not None:
+                    spare.__exit__(None, None, None)
+            finally:
+                # Settled only once an unwanted spare is contained, so close() never returns ahead of it.
+                with self._settled:
+                    self._launching = False
+                    self._settled.notify_all()
 
     def take(
         self, *, deadline: float, cancellation: ProfileProofCancellation | None = None
     ) -> _SupervisedKdfWorker | None:
-        """Hand the ready spare to one operation, or ``None`` when a fresh launch is needed."""
-        with self._lock:
-            spare, self._spare = self._spare, None
+        """Hand the spare to one operation, or ``None`` when a fresh launch is needed.
+
+        A spare still launching is awaited until the operation's deadline or
+        cancellation; that child's own launch deadline bounds the wait as well.
+        """
+        with ExitStack() as watching:
+            if cancellation is not None:
+                watching.enter_context(cancellation.watch(self._wake))
+            with self._settled:
+                self._wait_for_launch(deadline=deadline, cancellation=cancellation)
+                spare, self._spare = self._spare, None
+        if cancellation is not None and cancellation.cancelled:
+            if spare is not None:
+                spare.__exit__(None, None, None)
+            cancellation.raise_if_cancelled()
         if spare is None:
             return None
         if not spare.adopt(deadline=deadline, cancellation=cancellation):
             spare.__exit__(None, None, None)
             return None
         return spare
+
+    def _wait_for_launch(self, *, deadline: float, cancellation: ProfileProofCancellation | None) -> None:
+        """Wait under ``_settled`` until the launch, deadline, cancellation or close settles the wait."""
+        while self._launching and self._spare is None and not self._closed:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0 or (cancellation is not None and cancellation.cancelled):
+                break
+            self._settled.wait(remaining)
 
     @contextmanager
     def bound(self) -> Generator[None]:
@@ -643,11 +682,19 @@ class ProfileKdfPrewarm:
             _KDF_PREWARM.reset(token)
             self.refill()
 
+    def _wake(self) -> None:
+        with self._settled:
+            self._settled.notify_all()
+
     def close(self) -> None:
-        """Stop launching spares and contain the idle one."""
-        with self._lock:
+        """Stop launching spares and contain the idle one and any still launching."""
+        with self._settled:
             self._closed = True
             spare, self._spare = self._spare, None
+            self._settled.notify_all()
+        self._launch_cancellation.cancel()
+        with self._settled:
+            self._settled.wait_for(lambda: not self._launching)
         atexit.unregister(self.close)
         if spare is not None:
             spare.__exit__(None, None, None)
@@ -663,8 +710,12 @@ def _supervised_kdf_worker(
 ) -> Generator[_SupervisedKdfWorker]:
     """Run one operation in the bound prewarmed child when one is ready, else in a fresh one."""
     prewarm = _KDF_PREWARM.get()
+    waited_from = time.monotonic()
     spare = prewarm.take(deadline=deadline, cancellation=cancellation) if prewarm is not None else None
     if spare is None:
+        if not absolute_deadline:
+            # No child served the wait, so the fresh one keeps the whole relative budget.
+            deadline += time.monotonic() - waited_from
         with _SupervisedKdfWorker(
             deadline=deadline, settings=settings, absolute_deadline=absolute_deadline, cancellation=cancellation
         ) as worker:

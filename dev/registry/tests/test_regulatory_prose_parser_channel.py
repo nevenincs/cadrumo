@@ -17,6 +17,7 @@ import pytest
 from ..analysis.regulatory_prose_parser_channel import (
     ProseChannelLedgerError,
     ProseParserEnrolment,
+    ProseParserModule,
     derive_prose_parsers,
     load_ledger,
     reconcile,
@@ -25,9 +26,19 @@ from ..analysis.regulatory_prose_parser_channel import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_the_derivation_yields_a_non_empty_parser_set() -> None:
+@pytest.fixture(scope="module")
+def derived_parsers() -> tuple[ProseParserModule, ...]:
+    """Derive the committed tree once; the result is an immutable tuple of frozen rows.
+
+    The enrolment gate below still calls the derivation through ``reconcile``'s
+    own default, so the unparameterised path stays exercised.
+    """
+    return derive_prose_parsers()
+
+
+def test_the_derivation_yields_a_non_empty_parser_set(derived_parsers: tuple[ProseParserModule, ...]) -> None:
     """An empty derivation would make the enrolment assertion vacuous."""
-    assert derive_prose_parsers(), (
+    assert derived_parsers, (
         "the regulatory-prose parser derivation yielded nothing; a gate over an empty set is not a green gate"
     )
 
@@ -53,9 +64,9 @@ def test_every_prose_parser_is_declared_in_the_channel() -> None:
     )
 
 
-def test_an_undeclared_parser_refuses() -> None:
+def test_an_undeclared_parser_refuses(derived_parsers: tuple[ProseParserModule, ...]) -> None:
     """Anti-tautology: withhold one enrolment and reconciliation must report it."""
-    parsers = derive_prose_parsers()
+    parsers = derived_parsers
     assert parsers, "no derived parsers to withhold"
     full = {parser.module: ProseParserEnrolment(module=parser.module, corpus="c", reason="r") for parser in parsers}
     withheld = parsers[0].module
@@ -67,9 +78,9 @@ def test_an_undeclared_parser_refuses() -> None:
     assert stale == ()
 
 
-def test_a_stale_enrolment_refuses() -> None:
+def test_a_stale_enrolment_refuses(derived_parsers: tuple[ProseParserModule, ...]) -> None:
     """Anti-tautology: an enrolment for a module the derivation no longer yields is reported."""
-    parsers = derive_prose_parsers()
+    parsers = derived_parsers
     rows = {parser.module: ProseParserEnrolment(module=parser.module, corpus="c", reason="r") for parser in parsers}
     rows["dev/gone.py"] = ProseParserEnrolment(module="dev/gone.py", corpus="c", reason="r")
 
@@ -88,7 +99,7 @@ def test_an_enrolment_must_name_its_corpus_and_reason(tmp_path: Path) -> None:
         load_ledger(ledger)
 
 
-def test_the_largest_shipped_prose_parser_is_enrolled() -> None:
+def test_the_largest_shipped_prose_parser_is_enrolled(derived_parsers: tuple[ProseParserModule, ...]) -> None:
     """Anchor: the heaviest prose reader is enrolled, not silently absent.
 
     Without this, a derivation that stopped yielding its biggest reader would
@@ -102,7 +113,7 @@ def test_the_largest_shipped_prose_parser_is_enrolled() -> None:
     unwatched. Asking the derivation which module carries the most patterns
     survives a rename and a split, and still refuses an empty derivation.
     """
-    derived = derive_prose_parsers()
+    derived = derived_parsers
     rows = load_ledger()
 
     assert derived, "the derivation yielded nothing, so this anchor would hold over an empty set"

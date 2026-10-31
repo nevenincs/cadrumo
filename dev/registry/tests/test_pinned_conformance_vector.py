@@ -19,9 +19,7 @@ from cadrumo.core.resources.bundled_data import bundled_path as _bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 
-from ..compiler.authority import compile_validated_authority
 from ..filing_export_conformance import FilingExportConformanceRequest
-from ..filing_export_conformance_enrollment import derive_filing_export_conformance_enrollment
 from ..filing_export_conformance_vectors import (
     build_pinned_conformance_evidence,
     canonical_filing_export_conformance_vectors,
@@ -30,7 +28,6 @@ from ..filing_export_conformance_vectors import (
 )
 from ..filing_export_proof_authority import (
     CanonicalTwoChannelFilingExportProofAuthority,
-    canonical_two_channel_filing_export_proof_authority,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -39,7 +36,9 @@ _PINNED = Path(__file__).resolve().parents[1] / "conformance_vectors" / "modelo_
 _REGISTRY_ROOT = _bundled_path("registry", "aeat")
 
 
-def test_the_shipped_pin_materializes_against_the_current_generated_tree() -> None:
+def test_the_shipped_pin_materializes_against_the_current_generated_tree(
+    canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
+) -> None:
     """The committed pin admits the tree as generated today."""
     vectors = canonical_filing_export_conformance_vectors(
         registry_root=_REGISTRY_ROOT,
@@ -49,14 +48,9 @@ def test_the_shipped_pin_materializes_against_the_current_generated_tree() -> No
     coordinate = vectors[0].evidence.coordinate
     assert (str(coordinate.modelo), str(coordinate.revision)) == ("200", "2025-y-siguientes")
 
-    authority = compile_validated_authority(_REGISTRY_ROOT, _bundled_path())
-    enrollment = derive_filing_export_conformance_enrollment(
-        workspace_root=Path.cwd(),
-        registry_root=_REGISTRY_ROOT,
-        source_root=_bundled_path(),
-        authority=authority,
-        vectors=vectors,
-    )
+    # The canonical proof derives its enrollment from exactly these vectors and
+    # the validated bundled authority.
+    enrollment = canonical_filing_export_proof.conformance_enrollment
     materialized = {
         (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
         for vector in enrollment.materializable_vectors
@@ -82,17 +76,14 @@ def test_the_shipped_pin_materializes_against_the_current_generated_tree() -> No
     } <= candidates
 
 
-def test_public_proof_uses_the_real_writer_and_restores_candidate_fact_scope(tmp_path: Path) -> None:
+def test_public_proof_uses_the_real_writer_and_restores_candidate_fact_scope(
+    tmp_path: Path,
+    canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
+    registry_authority,
+) -> None:
     """Required rows, typed rate inputs and official probes all reach the production writer."""
-    authority = compile_validated_authority(_REGISTRY_ROOT, _bundled_path())
-    proof = canonical_two_channel_filing_export_proof_authority(
-        workspace_root=Path.cwd(),
-        registry_root=_REGISTRY_ROOT,
-        source_root=_bundled_path(),
-        authority=authority,
-        secure_replay_source=None,
-        secure_replay_custody=None,
-    )
+    authority = registry_authority
+    proof = canonical_filing_export_proof
     vector = proof.conformance_enrollment.materializable_vectors[0]
     before = governed_facts_in_scope()
     render = vector.builder.build(vector.evidence)

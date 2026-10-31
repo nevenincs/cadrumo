@@ -14,8 +14,9 @@ from cadrumo.application.user_profile.censal_preview_operation import (
     resolve_censal_preview_operation_access,
 )
 from cadrumo.core.operations import profile_operation_subject
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
+
+from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -45,7 +46,7 @@ def test_preview_admits_guarded_session_publication(frontend: OperationFrontendP
         destination_id=destination_id,
         action=AccessAction.COMMIT,
         frontend=frontend,
-        contract=build_production_operation_registry().lookup_public_contract(definition_id),
+        contract=production_operation_registry().lookup_public_contract(definition_id),
         published_authority=Availability.AVAILABLE,
         admitted_request=admitted,
     )

@@ -43,8 +43,8 @@ from cadrumo.application.user_profile.automation_lifecycle import AutomationDeni
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests import modelo_operation_test_support
+from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 from cadrumo_client.contracts.access_management import AutomationDenied, AutomationDeny
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
@@ -109,7 +109,7 @@ class _LoginObservation:
 
 
 def _scope(destination_id: UUID) -> AccessScope:
-    schema = build_production_operation_registry().lookup_public_contract(_CREATE).result_schema
+    schema = production_operation_registry().lookup_public_contract(_CREATE).result_schema
     assert schema is not None
     return AccessScope(
         operations=frozenset({_CREATE}),

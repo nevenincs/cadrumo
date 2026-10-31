@@ -25,6 +25,8 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaEvolutionKind,
 )
 
+from .validation_memoization import ModeloIdentityMemo
+
 _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "label",
     "section",
@@ -166,13 +168,24 @@ def iter_cross_revision_casilla_divergences(
     """Compare repeated casillas while retaining their field-specific attestations."""
     divergences: list[CrossRevisionCasillaDivergence] = []
     for modelo in modelos:
-        by_id = _group_casillas_by_id(modelo)
-        evolutions = _evolutions_by_lineage(modelo)
-        for casilla_id, occurrences in by_id.items():
-            if len(occurrences) < 2:
-                continue
-            divergences.extend(_casilla_divergences_for_occurrences(modelo, casilla_id, occurrences, evolutions))
+        divergences.extend(_MODELO_DIVERGENCES.get_or_compute(modelo, _modelo_divergences))
     return tuple(divergences)
+
+
+def _modelo_divergences(modelo: ModeloDefinition) -> tuple[CrossRevisionCasillaDivergence, ...]:
+    by_id = _group_casillas_by_id(modelo)
+    evolutions = _evolutions_by_lineage(modelo)
+    divergences: list[CrossRevisionCasillaDivergence] = []
+    for casilla_id, occurrences in by_id.items():
+        if len(occurrences) < 2:
+            continue
+        divergences.extend(_casilla_divergences_for_occurrences(modelo, casilla_id, occurrences, evolutions))
+    return tuple(divergences)
+
+
+# Divergences depend only on one modelo's own revisions, so every scope that
+# carries an unchanged modelo object reuses them instead of re-comparing it.
+_MODELO_DIVERGENCES: ModeloIdentityMemo[tuple[CrossRevisionCasillaDivergence, ...]] = ModeloIdentityMemo()
 
 
 def _matching_evolution(

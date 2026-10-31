@@ -10,6 +10,7 @@ language data.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
@@ -195,10 +196,14 @@ def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
 
     roots = dictionary_roots(repository)
     _validate_dictionary_installation(repository, roots)
+    content_key = _dictionary_content_key(installed_version, roots)
+    loaded = _LOADED_DICTIONARIES.get(content_key)
+    if loaded is not None:
+        return dict(loaded)
     try:
         from spylls.hunspell import Dictionary
 
-        return {
+        loaded = {
             locale: _load_hungarian_dictionary(root) if locale == "hu" else Dictionary.from_files(str(root))
             for locale, root in roots.items()
         }
@@ -208,6 +213,34 @@ def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
             detail=f"spylls=={locked_version} could not load the pinned Hunspell dictionaries: {exc}",
             next_action="run just setup-locale-spelling; if it persists, inspect the locked dictionary packages",
         ) from exc
+    _LOADED_DICTIONARIES.clear()
+    _LOADED_DICTIONARIES[content_key] = loaded
+    return dict(loaded)
+
+
+# Parsing the four Hunspell packages costs seconds, while hashing their bytes
+# costs milliseconds; every spelling signal and test asks for the same pinned
+# files. The memo is keyed on the engine version and the exact aff/dic bytes,
+# so a replaced or edited dictionary loads afresh, and it holds one generation
+# only so temporary repositories cannot accumulate parsed dictionaries.
+_LOADED_DICTIONARIES: dict[tuple[str, tuple[tuple[str, str, str], ...]], dict[str, Dictionary]] = {}
+
+
+def _dictionary_content_key(
+    engine_version: str, roots: dict[str, Path]
+) -> tuple[str, tuple[tuple[str, str, str], ...]]:
+    """Identify one dictionary load by engine version and the bytes it parses."""
+    return (
+        engine_version,
+        tuple(
+            (
+                locale,
+                hashlib.sha256(root.with_suffix(".aff").read_bytes()).hexdigest(),
+                hashlib.sha256(root.with_suffix(".dic").read_bytes()).hexdigest(),
+            )
+            for locale, root in sorted(roots.items())
+        ),
+    )
 
 
 __all__ = ["DICTIONARY_SPECS", "SpellingToolError", "dictionary_roots", "load_dictionaries", "locked_spylls_version"]

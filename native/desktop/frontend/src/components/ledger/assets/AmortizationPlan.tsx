@@ -25,7 +25,13 @@ import type {
   PlanClaim,
   PlanRow,
 } from "../../../shell/ledgerSetup";
-import { Hint, NotApplicable, NotKnown, NothingRecorded } from "./AssetList";
+import {
+  Hint,
+  NotApplicable,
+  NotKnown,
+  NothingRecorded,
+  Remedy,
+} from "./AssetList";
 import {
   ASSET_KEYS,
   bajaText,
@@ -33,15 +39,14 @@ import {
   refusalText,
   fieldWord,
   keyedText,
-  openingRemedy,
   stateIcon,
   tokenWord,
 } from "./assetsWords";
 import {
-  absenceNotApplicable,
   recordedMark,
   figureText,
   isStatedZero,
+  NO_TABLE_MINIMUM,
   PLAN_KEYS,
   stateTone,
 } from "./planWords";
@@ -73,6 +78,7 @@ function Figure({
   amount,
   why,
   absent,
+  remedy,
   mark = "not_known",
   estimatedYear,
 }: {
@@ -82,6 +88,8 @@ function Figure({
   why?: string;
   /** The reason the backend gives, shown under the mark. */
   absent?: string | null;
+  /** The entry to fill in to work the figure out, when that is the remedy. */
+  remedy?: ReactNode;
   /** Which state the missing figure is. */
   mark?: "not_known" | "nothing_recorded" | "not_applicable";
   /** The year whose tables are estimated, beside a figure drawn from them. */
@@ -110,6 +118,7 @@ function Figure({
           {absent}
         </span>
       )}
+      {remedy && <span className="w-40 text-end">{remedy}</span>}
     </span>
   );
 }
@@ -136,16 +145,8 @@ function Interval({
   );
 }
 
-/** The reasons whose remedy is to enter the amortization already deducted
- * before the element came into the register. */
-const OPENING_REASONS: ReadonlySet<string> = new Set([
-  "ledger.actividad_asset.errors.opening_history_missing",
-  "ledger.actividad_asset.errors.opening_history_amount_missing",
-]);
-
-/** Why a year has no planned figure: the typed absence, the reason the
- * backend gives for it where it gives one, and where to fix it when the fix
- * is entering the earlier amortization. */
+/** Why a year has no planned figure: the typed absence and the reason the
+ * backend gives for it where it gives one. */
 function absentText(t: Translate, planned: PlanRow): string | null {
   if (planned.absence === null) return null;
   const word = tokenWord(t, "plan_absence", planned.absence);
@@ -154,12 +155,7 @@ function absentText(t: Translate, planned: PlanRow): string | null {
     planned.absence_reason_key,
     planned.absence_reason_facts,
   );
-  const key = planned.absence_reason_key;
-  return facts(t, [
-    word,
-    why,
-    key !== null && OPENING_REASONS.has(key) ? openingRemedy(t) : null,
-  ]);
+  return facts(t, [word, why]);
 }
 
 /** Every claim a year holds, the replaced ones with the claim that replaced
@@ -335,7 +331,15 @@ function Claims({
 /** What a year's claim state says beyond its glyph: the glyph carries the
  * state's word in its name and tooltip, and the spans still open to claim are
  * written out beside it. A year not yet due says only from when. */
-function Status({ locale, planned }: { locale: string; planned: PlanRow }) {
+function Status({
+  locale,
+  planned,
+  onCorrectElement,
+}: {
+  locale: string;
+  planned: PlanRow;
+  onCorrectElement?: () => void;
+}) {
   const t = useStrings();
   const state = planned.claim_state;
   const open = state === "missing" || state === "partial";
@@ -399,7 +403,13 @@ function Status({ locale, planned }: { locale: string; planned: PlanRow }) {
           ))}
           {planned.claimable_intervals.length === 0 &&
             (refusal !== null ? (
-              <span className="text-xs text-muted-foreground">{refusal}</span>
+              <span className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                {refusal}
+                <Remedy
+                  fieldKey={planned.claimable_refusal_remedy_field_key}
+                  onCorrect={onCorrectElement}
+                />
+              </span>
             ) : (
               open &&
               planned.claimable_refusal_key === null && (
@@ -583,11 +593,13 @@ function PlanTable({
   rows,
   year,
   onCorrectClaim,
+  onCorrectElement,
 }: {
   locale: string;
   rows: readonly PlanRow[];
   year: number | null;
   onCorrectClaim?: (claimId: string, year: number) => void;
+  onCorrectElement?: () => void;
 }) {
   const t = useStrings();
   const base = useId();
@@ -682,7 +694,7 @@ function PlanTable({
             const current = year === planned.tax_year;
             const kept = planned.claims.some((claim) => claim.effective);
             const estimated = planned.edition?.projected === true;
-            const applies = !absenceNotApplicable(planned.absence);
+            const applies = planned.applies;
             return (
               <Fragment key={planned.tax_year}>
                 {(before === undefined || changed) && (
@@ -742,7 +754,11 @@ function PlanTable({
                     </span>
                   </td>
                   <td className="px-2 py-1.5">
-                    <Status locale={locale} planned={planned} />
+                    <Status
+                      locale={locale}
+                      planned={planned}
+                      onCorrectElement={onCorrectElement}
+                    />
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">
                     {planned.coefficient === null ? (
@@ -766,6 +782,12 @@ function PlanTable({
                       amount={planned.planned}
                       why={t(ASSET_KEYS.plan.planned_missing)}
                       absent={absentText(t, planned)}
+                      remedy={
+                        <Remedy
+                          fieldKey={planned.absence_remedy_field_key}
+                          onCorrect={onCorrectElement}
+                        />
+                      }
                       mark={applies ? "not_known" : "not_applicable"}
                       estimatedYear={estimated ? planned.tax_year : undefined}
                     />
@@ -793,6 +815,11 @@ function PlanTable({
                       why={
                         reasonText(t, planned.minimum_reason_key) ??
                         t(ASSET_KEYS.plan.minimum_missing)
+                      }
+                      mark={
+                        planned.minimum_reason_key === NO_TABLE_MINIMUM
+                          ? "not_applicable"
+                          : "not_known"
                       }
                       estimatedYear={estimated ? planned.tax_year : undefined}
                     />
@@ -839,6 +866,7 @@ export function AmortizationPlan({
   reader,
   onOpenLink,
   onCorrectClaim,
+  onCorrectElement,
   disposal = null,
 }: {
   port: LedgerPort;
@@ -853,6 +881,9 @@ export function AmortizationPlan({
   onOpenLink?: (url: string) => void;
   /** Asks to correct one claim of a year; offered on each claim in effect. */
   onCorrectClaim?: (claimId: string, year: number) => void;
+  /** Opens the form that corrects the element, where a figure says which
+   * entry to fill in. */
+  onCorrectElement?: () => void;
 }) {
   const t = useStrings();
   const { read } = useAssetRead(readPlan, port, reader, assetId);
@@ -920,6 +951,7 @@ export function AmortizationPlan({
         rows={rows}
         year={year}
         onCorrectClaim={onCorrectClaim}
+        onCorrectElement={onCorrectElement}
       />
     </>
   );

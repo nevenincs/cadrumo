@@ -9,13 +9,17 @@ fails here.
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from contextlib import contextmanager
+from pathlib import Path
+
 import pytest
 from textual.widgets import Button, Checkbox, DataTable, Input, OptionList, Static
 
+from ....adapters.persistence.profile.tests.sealed_profile_world import copied_profile_world, sealed_profile_world
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
 from ....application.user_profile.registration import register_profile_with_credentials
@@ -44,15 +48,23 @@ _SYNTHETIC_NIF = "12345678Z"
 """A checksum-valid NIF that belongs to no one."""
 
 
-def _register() -> None:
+def _register() -> str:
     with bundled_indexed_authority().operation():
         create_context, decode_context = _profile_contexts_for_test()
-        register_profile_with_credentials(
+        return register_profile_with_credentials(
             label="Manager Subject",
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=create_context,
             profile_decode_context=decode_context,
-        )
+        ).profile_id
+
+
+@contextmanager
+def _registered(tmp_path: Path) -> Generator[None]:
+    """Open this test's own copy of the subject profile, registered once per worker and not yet set up."""
+    world = sealed_profile_world((__name__, "Manager Subject", _CREDENTIAL_INPUT), _register)
+    with copied_profile_world(world, tmp_path, profile_decode_context=_profile_contexts_for_test()[1]):
+        yield
 
 
 def _complete_setup():
@@ -150,8 +162,7 @@ async def _reach_required(app: ProfileManagerScreen, pilot) -> None:
 @pytest.mark.asyncio
 async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_required(tmp_path) -> None:
     """Navigation never clears a saved fact or bypasses the required-answer gate."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
+    with _registered(tmp_path):
         app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
             await _reach_required(app, pilot)
@@ -182,8 +193,7 @@ async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_req
 @pytest.mark.asyncio
 async def test_a_blank_required_answer_can_be_corrected_without_losing_the_question(tmp_path) -> None:
     """A refused blank stays in the editor and a subsequent valid answer is saved."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
+    with _registered(tmp_path):
         app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
             await _reach_required(app, pilot)
@@ -206,8 +216,7 @@ async def test_a_blank_required_answer_can_be_corrected_without_losing_the_quest
 @pytest.mark.asyncio
 async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path) -> None:
     """The walk asks for what setup requires and folds every other section away."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
+    with _registered(tmp_path):
         overview = _live_overview()
         assert overview.setup_state is ProfileSetupState.INCOMPLETE
         assert overview.missing_required, "the fixture must owe required answers, or this proves nothing"
@@ -241,8 +250,7 @@ async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path
 @pytest.mark.parametrize("size", [(80, 24), (160, 60)])
 async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path, size) -> None:
     """Pressing Continue and answering each question is enough to finish setup."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
+    with _registered(tmp_path):
         overview = _live_overview()
         app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=size) as pilot:
@@ -318,8 +326,7 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
 @pytest.mark.asyncio
 async def test_cancelling_a_question_stops_the_walk(tmp_path) -> None:
     """Escape leaves the walk; nothing reopens until Continue is pressed again."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
+    with _registered(tmp_path):
         app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
@@ -337,8 +344,7 @@ async def test_cancelling_a_question_stops_the_walk(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_search_narrows_the_page_and_says_when_nothing_matches(tmp_path) -> None:
     """A search shows the sections it matches, open, and names an empty result."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
+    with _registered(tmp_path):
         overview = _live_overview()
         app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -366,8 +372,7 @@ async def test_search_narrows_the_page_and_says_when_nothing_matches(tmp_path) -
 @pytest.mark.asyncio
 async def test_a_finished_profile_opens_without_the_walk(tmp_path) -> None:
     """Setup that is already complete shows the plain profile page, every field in reach."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
+    with _registered(tmp_path):
         overview = _live_overview()
         app = ProfileManagerScreen(overview, persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -381,8 +386,7 @@ async def test_a_finished_profile_opens_without_the_walk(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path) -> None:
     """Choices read as labels, and Save with nothing picked asks for a pick instead of cancelling."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
+    with _registered(tmp_path):
         overview = _live_overview()
         app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -419,8 +423,7 @@ async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path
 @pytest.mark.asyncio
 async def test_every_setup_question_explains_itself_and_the_page_explains_the_cursor_row(tmp_path) -> None:
     """Each question shows the setup wizard's copy as its help; so does the page."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
+    with _registered(tmp_path):
         overview = _live_overview()
         app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:

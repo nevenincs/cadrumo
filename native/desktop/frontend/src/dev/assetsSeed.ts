@@ -11,6 +11,7 @@ import type { JsonObject } from "@/shell/ledger";
 import type {
   AssetListRow,
   BasisStageOption,
+  ConditionOption,
   DisposalCalculation,
   DisposalFinding,
   DisposalReasonOption,
@@ -65,6 +66,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "2169.86",
         },
@@ -72,6 +75,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -114,6 +118,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "2880.00",
         },
@@ -121,6 +127,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -163,6 +170,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "2880.00",
         },
@@ -170,6 +179,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -212,6 +222,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "1428.16",
         },
@@ -225,6 +237,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -267,6 +280,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -280,6 +295,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -306,6 +322,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -319,6 +337,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -345,6 +364,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -358,6 +379,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -384,6 +406,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -397,6 +421,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -423,6 +448,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -436,6 +463,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -460,6 +488,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "basis_exhausted",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -467,6 +497,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -1080,6 +1111,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "covered_by_opening",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -1087,6 +1120,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: null,
         service_days: null,
         calendar_days: null,
@@ -1104,6 +1138,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "covered_by_opening",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -1111,6 +1147,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: null,
         service_days: null,
         calendar_days: null,
@@ -1128,6 +1165,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "covered_by_opening",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -1135,6 +1174,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: null,
         service_days: null,
         calendar_days: null,
@@ -1156,6 +1196,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "800.00",
         },
@@ -1163,6 +1205,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2022",
           authored_filing_year: 2022,
@@ -1204,6 +1247,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "400.00",
         },
@@ -1211,6 +1256,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -1250,6 +1296,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "basis_exhausted",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -1257,6 +1305,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -1280,6 +1329,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "basis_exhausted",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -1287,6 +1338,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -1310,6 +1362,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "basis_exhausted",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -1317,6 +1371,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -1903,6 +1958,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "edition_unavailable",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -1910,6 +1967,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: null,
         service_days: null,
         calendar_days: null,
@@ -1927,6 +1985,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "edition_unavailable",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -1934,6 +1994,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: null,
         service_days: null,
         calendar_days: null,
@@ -1951,6 +2012,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "edition_unavailable",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -1958,6 +2021,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: null,
         service_days: null,
         calendar_days: null,
@@ -1979,6 +2043,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "360.00",
         },
@@ -1986,6 +2052,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2022",
           authored_filing_year: 2022,
@@ -2027,6 +2094,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "360.00",
         },
@@ -2034,6 +2103,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -2075,6 +2145,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "360.00",
         },
@@ -2082,6 +2154,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -2123,6 +2196,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "360.00",
         },
@@ -2130,6 +2205,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2171,6 +2247,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "360.00",
         },
@@ -2178,6 +2256,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2219,6 +2298,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -2232,6 +2313,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2257,6 +2339,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -2270,6 +2354,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2295,6 +2380,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -2308,6 +2395,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2333,6 +2421,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -2346,6 +2436,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -2369,6 +2460,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "basis_exhausted",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -2376,6 +2469,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -3082,6 +3176,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "200.00",
         },
@@ -3089,6 +3185,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2022",
           authored_filing_year: 2022,
@@ -3131,6 +3228,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "200.00",
         },
@@ -3138,6 +3237,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -3180,6 +3280,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -3193,6 +3295,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -3219,6 +3322,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -3232,6 +3337,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -3261,6 +3367,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             kind: "date",
           },
         ],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -3268,6 +3376,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -3835,6 +3944,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "edition_unavailable",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -3842,6 +3953,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: null,
         service_days: null,
         calendar_days: null,
@@ -3863,6 +3975,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "720.00",
         },
@@ -3870,6 +3984,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2022",
           authored_filing_year: 2022,
@@ -3911,6 +4026,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "720.00",
         },
@@ -3918,6 +4035,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -3959,6 +4077,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "720.00",
         },
@@ -3966,6 +4086,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -4007,6 +4128,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "357.04",
         },
@@ -4014,6 +4137,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4666,6 +4790,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "329.51",
         },
@@ -4673,6 +4799,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -4715,6 +4842,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "360.00",
         },
@@ -4722,6 +4851,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4764,6 +4894,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -4777,6 +4909,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4803,6 +4936,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -4816,6 +4951,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4842,6 +4978,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -4855,6 +4993,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4881,6 +5020,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -4894,6 +5035,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -4918,6 +5060,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "basis_exhausted",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -4925,6 +5069,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5442,6 +5587,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "146.17",
         },
@@ -5449,6 +5596,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -5491,6 +5639,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "250.00",
         },
@@ -5498,6 +5648,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5540,6 +5691,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "250.00",
         },
@@ -5547,6 +5700,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5589,6 +5743,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -5602,6 +5758,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5628,6 +5785,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -5641,6 +5800,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -5665,6 +5825,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "basis_exhausted",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -5672,6 +5834,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6186,6 +6349,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "1000.00",
         },
@@ -6193,6 +6358,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6235,6 +6401,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -6248,6 +6416,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6274,6 +6443,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -6287,6 +6458,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6313,6 +6485,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: null,
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -6326,6 +6500,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6350,6 +6525,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "basis_exhausted",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "0.00",
         },
@@ -6357,6 +6534,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -6935,6 +7113,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence_reason_key:
           "ledger.actividad_asset.errors.opening_history_missing",
         absence_reason_facts: [],
+        absence_remedy_field_key:
+          "ledger.actividad_asset.field.opening_history.accumulated_amount",
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -6943,6 +7124,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_refusal_key:
           "ledger.actividad_asset.errors.opening_history_missing",
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key:
+          "ledger.actividad_asset.field.opening_history.accumulated_amount",
         edition: {
           revision_id: "2023",
           authored_filing_year: 2023,
@@ -6966,6 +7149,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence_reason_key:
           "ledger.actividad_asset.errors.opening_history_missing",
         absence_reason_facts: [],
+        absence_remedy_field_key:
+          "ledger.actividad_asset.field.opening_history.accumulated_amount",
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -6974,6 +7160,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_refusal_key:
           "ledger.actividad_asset.errors.opening_history_missing",
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key:
+          "ledger.actividad_asset.field.opening_history.accumulated_amount",
         edition: {
           revision_id: "2024",
           authored_filing_year: 2024,
@@ -6997,6 +7185,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence_reason_key:
           "ledger.actividad_asset.errors.opening_history_missing",
         absence_reason_facts: [],
+        absence_remedy_field_key:
+          "ledger.actividad_asset.field.opening_history.accumulated_amount",
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -7005,6 +7196,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_refusal_key:
           "ledger.actividad_asset.errors.opening_history_missing",
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key:
+          "ledger.actividad_asset.field.opening_history.accumulated_amount",
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -7028,6 +7221,9 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence_reason_key:
           "ledger.actividad_asset.errors.opening_history_missing",
         absence_reason_facts: [],
+        absence_remedy_field_key:
+          "ledger.actividad_asset.field.opening_history.accumulated_amount",
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -7036,6 +7232,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_refusal_key:
           "ledger.actividad_asset.errors.opening_history_missing",
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key:
+          "ledger.actividad_asset.field.opening_history.accumulated_amount",
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -7345,6 +7543,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "free_election",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: false,
         claimed: {
           decimal: "280.00",
         },
@@ -7352,6 +7552,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         claimable_intervals: [],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -7790,6 +7991,8 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         absence: "free_election",
         absence_reason_key: null,
         absence_reason_facts: [],
+        absence_remedy_field_key: null,
+        applies: true,
         claimed: {
           decimal: "0.00",
         },
@@ -7803,6 +8006,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
         ],
         claimable_refusal_key: null,
         claimable_refusal_facts: [],
+        claimable_refusal_remedy_field_key: null,
         edition: {
           revision_id: "2025",
           authored_filing_year: 2025,
@@ -8205,7 +8409,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "30",
       },
       class_label: "Almacenes y depósitos (gaseosos, líquidos y sólidos)",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "central-carbon",
@@ -8219,7 +8423,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "50",
       },
       class_label: "Centrales de carbón",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "central-hidraulica",
@@ -8233,7 +8437,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "100",
       },
       class_label: "Centrales hidráulicas",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "central-nuclear",
@@ -8247,7 +8451,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "60",
       },
       class_label: "Centrales nucleares",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "central-otra",
@@ -8261,7 +8465,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "40",
       },
       class_label: "Otras centrales",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "central-renovable",
@@ -8275,7 +8479,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "30",
       },
       class_label: "Centrales renovables",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "cristaleria",
@@ -8289,7 +8493,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "4",
       },
       class_label: "Cristalería",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "edificio-comercial-administrativo-servicios-vivienda",
@@ -8304,7 +8508,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
       },
       class_label:
         "Edificios comerciales, administrativos, de servicios y viviendas",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "edificio-industrial",
@@ -8318,7 +8522,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "68",
       },
       class_label: "Edificios industriales",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "enseres-otros",
@@ -8332,7 +8536,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "14",
       },
       class_label: "Otros enseres",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "equipo-electronico",
@@ -8346,7 +8550,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "10",
       },
       class_label: "Equipos electrónicos",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "equipo-medico",
@@ -8360,7 +8564,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "14",
       },
       class_label: "Equipos médicos y asimilados",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "equipo-proceso-informacion",
@@ -8374,7 +8578,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "8",
       },
       class_label: "Equipos para procesos de información",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "instalacion-cables",
@@ -8388,7 +8592,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "30",
       },
       class_label: "Cables",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "instalacion-resto",
@@ -8402,7 +8606,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Resto instalaciones",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "instalacion-subestacion-red",
@@ -8417,7 +8621,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
       },
       class_label:
         "Subestaciones. Redes de transporte y distribución de energía",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "lenceria",
@@ -8431,7 +8635,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "8",
       },
       class_label: "Lencería",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "maquinaria",
@@ -8445,7 +8649,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "18",
       },
       class_label: "Maquinaria",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "mobiliario",
@@ -8459,7 +8663,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Mobiliario",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "molde-matriz-modelo",
@@ -8473,7 +8677,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "6",
       },
       class_label: "Moldes, matrices y modelos",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "obra-civil-general",
@@ -8487,7 +8691,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "100",
       },
       class_label: "Obra civil general",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "obra-civil-infraestructuras-mineras",
@@ -8501,7 +8705,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "30",
       },
       class_label: "Infraestructuras y obras mineras",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "obra-civil-pavimentos",
@@ -8515,7 +8719,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "34",
       },
       class_label: "Pavimentos",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "otro-elemento",
@@ -8529,7 +8733,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Otros elementos",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "terreno-escombrera",
@@ -8543,7 +8747,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "50",
       },
       class_label: "Terrenos dedicados exclusivamente a escombreras",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "transporte-autocamion",
@@ -8557,7 +8761,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "10",
       },
       class_label: "Autocamiones",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "transporte-buque-aeronave",
@@ -8571,7 +8775,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Buques, aeronaves",
-      can_hold_vehicle: true,
+      requires_vehicle_declaration: true,
     },
     {
       class_key: "transporte-externo",
@@ -8585,7 +8789,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "14",
       },
       class_label: "Elementos de transporte externo",
-      can_hold_vehicle: true,
+      requires_vehicle_declaration: true,
     },
     {
       class_key: "transporte-interno",
@@ -8599,7 +8803,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "20",
       },
       class_label: "Elementos de transporte interno",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "transporte-locomotora-vagon-traccion",
@@ -8613,7 +8817,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "25",
       },
       class_label: "Locomotoras, vagones y equipos de tracción",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "util-herramienta",
@@ -8627,7 +8831,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "8",
       },
       class_label: "Útiles y herramientas",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
   ],
   intangible: [
@@ -8644,7 +8848,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
       },
       class_label:
         "Producciones cinematográficas, fonográficas, videos y series audiovisuales",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
     {
       class_key: "intangible-software",
@@ -8658,7 +8862,7 @@ export const TABLE_GROUPS: Record<string, readonly TableGroup[]> = {
         decimal: "6",
       },
       class_label: "Sistemas y programas informáticos",
-      can_hold_vehicle: false,
+      requires_vehicle_declaration: false,
     },
   ],
 };
@@ -8856,4 +9060,203 @@ export const M130_PERIODS: Record<number, readonly string[]> = {
   "2030": ["1T", "2T", "3T", "4T"],
   "2031": ["1T", "2T", "3T", "4T"],
   "2032": ["1T", "2T", "3T", "4T"],
+};
+
+/** The facts only each condition an element is acquired in states, as the form options serve them. */
+export const ACQUIRED_CONDITIONS: readonly ConditionOption[] = [
+  {
+    condition: "new",
+    facts: [],
+  },
+  {
+    condition: "used",
+    facts: ["building_construction_date", "used_original_price"],
+  },
+];
+
+/** The shapes a later payment or cost of an element's acquisition takes, as the form options serve them. */
+export const FURTHER_ACQUISITION_SHAPES: readonly string[] = [
+  "split_payment",
+  "ancillary_cost",
+];
+
+/** The absences the backend serves as a known state of nothing to work out. */
+export const NOT_APPLICABLE_ABSENCES: readonly string[] = [
+  "basis_exhausted",
+  "covered_by_opening",
+  "free_election",
+  "period_elapsed",
+];
+
+/** Each reason the backend answers with an entry to fill in, and the word of that entry. */
+export const REMEDY_FIELD_KEYS: Record<string, string> = {
+  "ledger.actividad_asset.errors.opening_history_amount_missing":
+    "ledger.actividad_asset.field.opening_history.accumulated_amount",
+  "ledger.actividad_asset.errors.opening_history_missing":
+    "ledger.actividad_asset.field.opening_history.accumulated_amount",
+};
+
+/** The reason the backend gives for a minimum its method has no table for. */
+export const NO_TABLE_MINIMUM_KEY =
+  "ledger.actividad_asset.disposal_finding.method_has_no_minimum";
+
+/** The names the handoff gives its boxes, by registry year and language, as the registry layout words them. */
+export const BOX_NAMES: Record<
+  string,
+  Record<string, Record<string, string>>
+> = {
+  "2022": {
+    es: {
+      material_m100:
+        "Dotaciones del ejercicio para amortización de inmovilizado material",
+      intangible_m100:
+        "Dotaciones del ejercicio para amortización del inmovilizado inmaterial",
+      material_m130: "Gastos - Inmovilizado material",
+      intangible_m130: "Gastos - Inmovilizado intangible",
+    },
+    en: {
+      material_m100:
+        "Current-year allowances for depreciation of tangible fixed assets",
+      intangible_m100:
+        "Current-year allowances for depreciation of intangible fixed assets",
+      material_m130: "Expenses - Tangible asset",
+      intangible_m130: "Expenses - Intangible asset",
+    },
+    ca: {
+      material_m100:
+        "Dotacions de l'exercici per amortització d'immobilitzat material",
+      intangible_m100:
+        "Dotacions de l'exercici per amortització de l'immobilitzat immaterial",
+      material_m130: "Despeses - Immobilitzat material",
+      intangible_m130: "Despeses - Immobilitzat intangible",
+    },
+    hu: {
+      material_m100:
+        "A tárgyi eszközök értékcsökkenésére elszámolt tárgyévi leírások",
+      intangible_m100:
+        "Az immateriális javak értékcsökkenésére elszámolt tárgyévi leírások",
+      material_m130: "Kiadások - Tárgyi eszköz",
+      intangible_m130: "Kiadások - Immateriális eszköz",
+    },
+  },
+  "2023": {
+    es: {
+      material_m100:
+        "Dotaciones del ejercicio para amortización de inmovilizado material",
+      intangible_m100:
+        "Dotaciones del ejercicio para amortización del inmovilizado inmaterial",
+      material_m130: "Gastos - Inmovilizado material",
+      intangible_m130: "Gastos - Inmovilizado intangible",
+    },
+    en: {
+      material_m100:
+        "Current-year allowances for depreciation of tangible fixed assets",
+      intangible_m100:
+        "Current-year allowances for depreciation of intangible fixed assets",
+      material_m130: "Expenses - Tangible asset",
+      intangible_m130: "Expenses - Intangible asset",
+    },
+    ca: {
+      material_m100:
+        "Dotacions de l'exercici per amortització d'immobilitzat material",
+      intangible_m100:
+        "Dotacions de l'exercici per amortització de l'immobilitzat immaterial",
+      material_m130: "Despeses - Immobilitzat material",
+      intangible_m130: "Despeses - Immobilitzat intangible",
+    },
+    hu: {
+      material_m100:
+        "A tárgyi eszközök értékcsökkenésére elszámolt tárgyévi leírások",
+      intangible_m100:
+        "Az immateriális javak értékcsökkenésére elszámolt tárgyévi leírások",
+      material_m130: "Kiadások - Tárgyi eszköz",
+      intangible_m130: "Kiadások - Immateriális eszköz",
+    },
+  },
+  "2024": {
+    es: {
+      material_m100:
+        "Dotaciones del ejercicio para amortización de inmovilizado material",
+      intangible_m100:
+        "Dotaciones del ejercicio para amortización del inmovilizado inmaterial",
+      material_m130: "Gastos - Inmovilizado material",
+      intangible_m130: "Gastos - Inmovilizado intangible",
+    },
+    en: {
+      material_m100:
+        "Current-year allowances for depreciation of tangible fixed assets",
+      intangible_m100:
+        "Current-year allowances for depreciation of intangible fixed assets",
+      material_m130: "Expenses - Tangible asset",
+      intangible_m130: "Expenses - Intangible asset",
+    },
+    ca: {
+      material_m100:
+        "Dotacions de l'exercici per amortització d'immobilitzat material",
+      intangible_m100:
+        "Dotacions de l'exercici per amortització de l'immobilitzat immaterial",
+      material_m130: "Despeses - Immobilitzat material",
+      intangible_m130: "Despeses - Immobilitzat intangible",
+    },
+    hu: {
+      material_m100:
+        "A tárgyi eszközök értékcsökkenésére elszámolt tárgyévi leírások",
+      intangible_m100:
+        "Az immateriális javak értékcsökkenésére elszámolt tárgyévi leírások",
+      material_m130: "Kiadások - Tárgyi eszköz",
+      intangible_m130: "Kiadások - Immateriális eszköz",
+    },
+  },
+  "2025": {
+    es: {
+      material_m100: "Amortización del inmovilizado material",
+      intangible_m100: "Amortización del inmovilizado inmaterial",
+      material_m130: "Gastos - Inmovilizado material",
+      intangible_m130: "Gastos - Inmovilizado intangible",
+    },
+    en: {
+      material_m100: "Depreciation of tangible fixed assets",
+      intangible_m100: "Depreciation of intangible fixed assets",
+      material_m130: "Expenses - Tangible asset",
+      intangible_m130: "Expenses - Intangible asset",
+    },
+    ca: {
+      material_m100: "Amortització de l'immobilitzat material",
+      intangible_m100: "Amortització de l'immobilitzat immaterial",
+      material_m130: "Despeses - Immobilitzat material",
+      intangible_m130: "Despeses - Immobilitzat intangible",
+    },
+    hu: {
+      material_m100: "Tárgyi befektetett eszközök értékcsökkenése",
+      intangible_m100: "Immateriális befektetett eszközök értékcsökkenése",
+      material_m130: "Kiadások - Tárgyi eszköz",
+      intangible_m130: "Kiadások - Immateriális eszköz",
+    },
+  },
+  "2026": {
+    es: {
+      material_m100: "Amortización del inmovilizado material",
+      intangible_m100: "Amortización del inmovilizado inmaterial",
+      material_m130: "Gastos - Inmovilizado material",
+      intangible_m130: "Gastos - Inmovilizado intangible",
+    },
+    en: {
+      material_m100: "Depreciation of tangible fixed assets",
+      intangible_m100: "Depreciation of intangible fixed assets",
+      material_m130: "Expenses - Tangible asset",
+      intangible_m130: "Expenses - Intangible asset",
+    },
+    ca: {
+      material_m100: "Amortització de l'immobilitzat material",
+      intangible_m100: "Amortització de l'immobilitzat immaterial",
+      material_m130: "Despeses - Immobilitzat material",
+      intangible_m130: "Despeses - Immobilitzat intangible",
+    },
+    hu: {
+      material_m100: "Tárgyi befektetett eszközök értékcsökkenése",
+      intangible_m100: "Immateriális befektetett eszközök értékcsökkenése",
+      material_m130: "Kiadások - Tárgyi eszköz",
+      intangible_m130: "Kiadások - Immateriális eszköz",
+    },
+  },
 };

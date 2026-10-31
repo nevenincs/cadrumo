@@ -95,6 +95,7 @@ from __future__ import annotations
 from collections.abc import Collection, Mapping
 from datetime import date
 
+from functools import cache
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -120,6 +121,7 @@ def _open_ended_horizon() -> int:
     return _authority().catalogues.require_supported_filing_years().horizon
 
 
+@cache
 def _authority() -> ValidatedRegistryAuthority:
     return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 

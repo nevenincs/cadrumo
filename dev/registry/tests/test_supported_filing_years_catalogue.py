@@ -18,7 +18,6 @@ from cadrumo.domain.calculations.registry.schema_catalogues import (
 )
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
-from ..compiler.authority import compile_validated_authority
 from ..compiler.loader import load_registry_tree, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -129,8 +128,8 @@ def test_sociedades_manual_coverage_disposition_refuses_ambiguous_states(
         )
 
 
-def test_m303_annual_orden_projection_years_are_driven_by_registry_catalogue() -> None:
-    authority = compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
+def test_m303_annual_orden_projection_years_are_driven_by_registry_catalogue(registry_authority) -> None:
+    authority = registry_authority
     catalogue = authority.catalogues.supported_filing_years
     assert catalogue is not None
 

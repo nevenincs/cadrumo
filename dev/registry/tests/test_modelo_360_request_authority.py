@@ -1,7 +1,9 @@
 """Modelo 360's request-specific eligibility and full-year filing window."""
 
+from __future__ import annotations
+
 from datetime import UTC, date, datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -13,7 +15,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.applicability import derive_modelo_applicability
 from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
-from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
 from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from cadrumo.domain.contribuyente.entity_type import require_entity_type
 from cadrumo.domain.deadlines.models import ObligationStatus, TaxpayerProfile
@@ -21,7 +22,9 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.pipeline.authority_publication import stage_authority_candidate
+
+if TYPE_CHECKING:
+    from dev.registry.tests.committed_authority_publication import RunPublishedAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -74,19 +77,11 @@ def test_full_year_2025_request_window_and_schedule() -> None:
     )
 
 
-def test_calendar_advises_and_local_work_does_not_refuse_unknown_request(tmp_path: Path) -> None:
-    authority = compiled_bundled_authority()
-    artifact = AuthorityArtifact(
-        modelos=authority.modelos,
-        catalogues=authority.catalogues,
-        identity_digest=authority.profile_create_context().generation.logical_generation,
-        profile_schema=authority.profile_schema(),
-        evidence=authority.evidence,
-    )
-    candidate = tmp_path / "candidate"
-    stage_authority_candidate(artifact, candidate)
+def test_calendar_advises_and_local_work_does_not_refuse_unknown_request(
+    committed_published_authority: RunPublishedAuthority,
+) -> None:
     profile = _profile("legal_entity", "GENERAL")
-    indexed = IndexedRegistryAuthority(candidate / "authority.current.json")
+    indexed = IndexedRegistryAuthority(committed_published_authority.descriptor_path)
     with indexed.operation() as operation:
         calendar = build_overview_calendar(
             profile,

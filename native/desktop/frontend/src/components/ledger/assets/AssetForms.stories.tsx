@@ -262,8 +262,39 @@ export const AddElementOpeningKnown: Story = adding({
     (root) => chosenValue(root, "opening_status", "known"),
   ),
 });
+export const AddElementUsedOriginalPrice: Story = adding({
+  name: "Add element, bought used on the linear method: the originating price beside the building date",
+  play: steps(
+    (root) => chosen(root, "asset_kind", 0),
+    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosen(root, "method", 0),
+    (root) => chosenValue(root, "acquired_condition", "used"),
+    (root) =>
+      drawn(
+        root,
+        '[data-field="amortization.used_original_price.original_price"]',
+      ).then(noop),
+  ),
+});
+export const AddElementNewHidesUsedFacts: Story = adding({
+  name: "Add element, bought new: neither the building date nor the originating price is asked",
+  play: steps(
+    (root) => chosen(root, "asset_kind", 0),
+    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => chosen(root, "method", 0),
+    (root) => chosenValue(root, "acquired_condition", "new"),
+    async (root) => {
+      for (const key of [
+        "building_construction_date",
+        "amortization.used_original_price.original_price",
+      ])
+        if (root.querySelector(`[data-field="${key}"]`))
+          throw new Error(`${key} is asked of an element bought new`);
+    },
+  ),
+});
 export const AddElementVehicle: Story = adding({
-  name: "Add element, a class that can hold a vehicle: its declaration",
+  name: "Add element, a class that requires a vehicle declaration: it opens as required, with no question",
   play: steps(
     (root) => chosen(root, "asset_kind", 1),
     (root) => typed(root, "in_service_date", "2026-06-15"),
@@ -274,11 +305,15 @@ export const AddElementVehicle: Story = adding({
         "amortization.authority_class_key",
         "transporte-externo",
       ),
-    (root) => chosen(root, "vehicle_declared", 0),
+    (root) => drawn(root, '[data-field="vehicle_category"]').then(noop),
+    async (root) => {
+      if (root.querySelector('[data-field="vehicle_declared"]'))
+        throw new Error("the declaration is asked as a question");
+    },
   ),
 });
 export const AddElementClassWithoutVehicle: Story = adding({
-  name: "Add element, a class that cannot hold a vehicle: no declaration",
+  name: "Add element, a class that needs no vehicle declaration: nothing is drawn",
   play: steps(
     (root) => chosen(root, "asset_kind", 1),
     (root) => typed(root, "in_service_date", "2026-06-15"),

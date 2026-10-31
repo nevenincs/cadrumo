@@ -197,6 +197,14 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {
+            "renta-activity-asset-disposal-excess-direct-0179": "0",
+            "renta-activity-asset-disposal-excess-objective-1478": "0",
+            "renta-activity-asset-disposal-gain-element-1654": "0",
+            "renta-activity-asset-disposal-gain-no-transmission-0304": "0",
+            "renta-activity-asset-disposal-gain-property-1843": "0",
+            "renta-activity-asset-disposal-loss-element-1639": "0",
+            "renta-activity-asset-disposal-loss-no-transmission-0305": "0",
+            "renta-activity-asset-disposal-loss-property-1832": "0",
             "renta-base-liquidable-negativa-general-anterior": "0",
             "renta-certificado-trabajo-retenciones": "2400",
             "renta-ledger-expense-0183-deductible": "0",
@@ -213,6 +221,7 @@
             "renta-ledger-expense-0206-deductible": "0",
             "renta-ledger-expense-0208-deductible": "0",
             "renta-ledger-expense-0217-deductible": "0",
+            "renta-ledger-expense-0227-deductible": "0",
             "renta-ledger-income-0171": "0",
             "renta-maritime-annual-salary": "0",
             "renta-maritime-gross-navigation-income": "0",
@@ -234,7 +243,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "965073309ddedfdd3b7dc9a602038db3492425b97772e099ac24820d6c0b9ba4",
+          "calculation_revision_id": "f5f1c356302d9212414d5d10cbfff1fb2ece5a0b4ab4999bf7a2a25d19e73383",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -2065,6 +2074,7 @@
           "input_values_by_casilla_id": {
             "0003": "24000",
             "0171": "0",
+            "0179": "0",
             "0183": "0",
             "0186": "0",
             "0191": "0",
@@ -2079,8 +2089,16 @@
             "0206": "0",
             "0208": "0",
             "0217": "0",
+            "0227": "0",
+            "0304": "0",
+            "0305": "0",
             "0596": "2400",
             "1388": "0",
+            "1478": "0",
+            "1639": "0",
+            "1654": "0",
+            "1832": "0",
+            "1843": "0",
             "DPNIF_D": "sha256:1c9f9632",
             "DP_APENOM_D": "Sandbox Docs",
             "ECIVIL": "1",
@@ -4169,7 +4187,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 965073309ddedfdd3b7dc9a602038db3492425b97772e099ac24820d6c0b9ba4 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision f5f1c356302d9212414d5d10cbfff1fb2ece5a0b4ab4999bf7a2a25d19e73383 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "previous_filing",

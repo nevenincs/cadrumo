@@ -72,12 +72,12 @@ from ..adapter_composition_work_ports import (
 from ..justificante_composition import build_justificante_capture_service
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..live_state_composition import compose_notifications_ports
-from ..operation_composition import build_production_operation_registry
 from . import modelo_operation_test_support
 from .ledger_lifecycle_operation_test_support import (
     LedgerLifecycleOperationConformanceCase,
     prepare_ledger_lifecycle_operation_conformance_case,
 )
+from .production_operation_registry import production_operation_registry
 from .prorrata_operation_test_support import (
     ProrrataOperationConformanceCase,
     prepare_prorrata_operation_conformance_case,
@@ -245,7 +245,7 @@ def seeded_modelo_edit_submission(
         work_catalogue=work_catalogue,
         calculation_catalogue=calculation_catalogue,
         operation=operation,
-        operation_contracts=build_production_operation_registry().public_contract_set,
+        operation_contracts=production_operation_registry().public_contract_set,
     )
     assert isinstance(admission, ModeloEditAdmittedV1)
     baseline = admission.baseline

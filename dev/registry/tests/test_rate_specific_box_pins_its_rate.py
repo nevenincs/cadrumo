@@ -62,6 +62,7 @@ share. This module asserts the structural precondition that shape assumes.
 
 from __future__ import annotations
 
+from functools import cache
 import re
 from pathlib import Path
 
@@ -89,6 +90,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _RATE_KEYED_ROW = re.compile(r"Tipo\s+[\d,]+\s*%.*?" + _CASILLA_TAG_RE.pattern)
 
 
+@cache
 def _authority() -> ValidatedRegistryAuthority:
     return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 

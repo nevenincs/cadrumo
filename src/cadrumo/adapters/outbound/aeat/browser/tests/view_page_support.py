@@ -1,9 +1,10 @@
 """Real headless Chromium for the Sede view adapters' tests.
 
-Each view test drives a page in a Chromium it launches itself. A route
-registered before any test route aborts every request, so a test that serves
-no page cannot reach the network; :class:`SyntheticSite` fulfils the pages a
-test stands in for the Sede.
+A module's view tests share one headless Chromium, and each test drives a page
+in its own browser context, so no cookie, route, history, dialog or CDP session
+outlives the test that made it. A route registered before any test route aborts
+every request, so a test that serves no page cannot reach the network;
+:class:`SyntheticSite` fulfils the pages a test stands in for the Sede.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import Final
 
-from playwright.async_api import BrowserContext, Page, Route, async_playwright
+from playwright.async_api import Browser, BrowserContext, Page, Route, async_playwright
 
 from cadrumo_client.contracts.view_stream import ViewClosedReason, ViewImage, ViewNotice, ViewSinkInput, ViewState
 from cadrumo_client.contracts.view_transfer import (
@@ -134,17 +135,28 @@ class RecordingViewSink:
 
 
 @asynccontextmanager
-async def view_browser(*, width: int = 400, height: int = 300) -> AsyncGenerator[tuple[BrowserContext, Page]]:
-    """Launch headless Chromium with one page at the given CSS size and no network."""
+async def launched_chromium() -> AsyncGenerator[Browser]:
+    """Launch the headless Chromium whose contexts a module's view tests open."""
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
         try:
-            context = await browser.new_context(viewport={"width": width, "height": height}, service_workers="block")
-            await context.route("**/*", _abort)
-            page = await context.new_page()
-            yield context, page
+            yield browser
         finally:
             await browser.close()
+
+
+@asynccontextmanager
+async def view_browser(
+    browser: Browser, *, width: int = 400, height: int = 300
+) -> AsyncGenerator[tuple[BrowserContext, Page]]:
+    """Open a fresh context in ``browser`` with one page at the given CSS size and no network."""
+    context = await browser.new_context(viewport={"width": width, "height": height}, service_workers="block")
+    try:
+        await context.route("**/*", _abort)
+        page = await context.new_page()
+        yield context, page
+    finally:
+        await context.close()
 
 
 async def _abort(route: Route) -> None:

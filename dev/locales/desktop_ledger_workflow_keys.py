@@ -598,7 +598,6 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.assets.field.useful_life_ends_on",
         "desktop.ledger.assets.field.useful_life_evidence",
         "desktop.ledger.assets.field.vehicle_category",
-        "desktop.ledger.assets.field.vehicle_declared",
         "desktop.ledger.assets.field.vehicle_evidence",
         "desktop.ledger.assets.field.vehicle_in_books",
         "desktop.ledger.assets.field.vehicle_listed_use",

@@ -47,7 +47,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
@@ -151,7 +151,7 @@ def _seed_periods(profile_id: UUID) -> tuple[WorkUnit, WorkUnit]:
 
 
 def _scope(destination_id: UUID) -> AccessScope:
-    registry = build_production_operation_registry()
+    registry = production_operation_registry()
     disclosures = {
         DisclosurePermission(
             destination_id=destination_id,

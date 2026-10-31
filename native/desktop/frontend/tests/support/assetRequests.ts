@@ -44,6 +44,8 @@ type Served = {
   disposal_reasons: FormOptions["disposal_reasons"];
   basis_stages: FormOptions["basis_stages"];
   opening_statuses: FormOptions["opening_statuses"];
+  acquired_conditions: FormOptions["acquired_conditions"];
+  further_acquisition_shapes: string[];
   m130_periods: string[];
 };
 
@@ -140,7 +142,7 @@ function run(scenario: Scenario, served: Served) {
   if (scenario.kind === "handoff")
     return {
       id: scenario.id,
-      request: handoffRequest(scenario.year, scenario.period),
+      request: handoffRequest(scenario.year, scenario.period, "es"),
     };
   if (scenario.kind === "baja_fields") {
     const options = optionsFor(scenario.asset_kind, served);
@@ -185,7 +187,7 @@ function run(scenario: Scenario, served: Served) {
               method: "linear",
               [classKey]: group.class_key,
             },
-          ).some((found) => found.key === "vehicle_declared"),
+          ).some((found) => found.key === "vehicle_category"),
         ]),
       ),
     };

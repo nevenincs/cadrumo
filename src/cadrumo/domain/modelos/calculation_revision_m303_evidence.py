@@ -190,7 +190,7 @@ class M303RegimenSimplificadoActivityCalculationResult(BaseModel):
 
     activity_id: str
     orden_id: str
-    module_results: tuple[M303RegimenSimplificadoModuleCalculationResult, ...] = Field(min_length=1, max_length=7)
+    module_results: tuple[M303RegimenSimplificadoModuleCalculationResult, ...] = Field(min_length=1)
     evidence_references: tuple[FilingEvidenceReference, ...] = Field(min_length=1)
     cuota_devengada_operaciones_corrientes: Decimal = Field(ge=Decimal("0"))
     cuota_devengada_tras_dana: Decimal = Field(ge=Decimal("0"))
@@ -202,6 +202,18 @@ class M303RegimenSimplificadoActivityCalculationResult(BaseModel):
     cuota_resultante: Decimal = Field(ge=Decimal("0"))
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+
+    @field_validator("module_results")
+    @classmethod
+    @pydantic_validation_boundary
+    def _modules_fit_the_declared_rows(
+        cls, module_results: tuple[M303RegimenSimplificadoModuleCalculationResult, ...]
+    ) -> tuple[M303RegimenSimplificadoModuleCalculationResult, ...]:
+        if len(module_results) > int(
+            resolve_form_codes_leased("form-row-codes").code("m303.orden.modules_per_activity")
+        ):
+            raise ValueError("an activity holds more module results than the record declares")
+        return module_results
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

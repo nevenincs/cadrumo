@@ -24,28 +24,28 @@ the four and is kept; the shared default keeps the artifact bytes unchanged
 for every caller that never varies it.
 
 :func:`client_venv_template` lives here for the same reason: it installs the
-wheel :func:`_real_product_wheel` already builds, so keeping it beside that
-builder is what stops a second, parallel wheel-building path from appearing.
+wheel :func:`_real_product_wheel` serves from the shared content-keyed cohort, so
+keeping it beside that accessor is what stops a second, parallel wheel-building
+path from appearing.
 """
 
 from __future__ import annotations
 
-import atexit
 import functools
+import hashlib
 import os
 import platform
 import shutil
 import sys
-import tempfile
 import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
 from dev._paths import REPO_ROOT
+from dev.cache_root import dev_cache_dir
 from dev.packaging.command_execution import run_command
-from dev.temporary_output import prepare_temp_root
 
-from .acquire_common import venv_bin_dir
+from .acquire_common import venv_bin_dir, venv_executable
 from .cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
@@ -55,7 +55,9 @@ from .cohort_manifest import (
     load_release_cohort,
     write_manifest,
 )
-from .lane_verification_core import build_companion_wheels
+from .installed_wheel_binding import installed_distribution_payload_sha256, sealed_wheel_payload_sha256
+from .native.action_cache import action_lock
+from .shared_cohort import shared_cohort
 
 DEFAULT_COHORT_VERSION = "0.2.1"
 DEFAULT_COHORT_SOURCE_DIGEST = "c" * 64
@@ -72,48 +74,33 @@ def _uv_executable() -> str:
     return uv
 
 
-def _session_scratch_root(prefix: str) -> Path:
-    """Create a scratch directory that is removed when this process exits.
-
-    A bare ``mkdtemp`` here leaks the whole directory on every run, and these
-    fixtures write venvs and wheels measured in hundreds of megabytes, so the
-    finalizer is registered at creation rather than left to the caller.
-    """
-    root = Path(tempfile.mkdtemp(prefix=prefix, dir=prepare_temp_root()))
-    atexit.register(shutil.rmtree, root, ignore_errors=True)
-    return root
-
-
-@functools.lru_cache(maxsize=1)
 def _real_product_wheel() -> Path:
-    """Build the product wheel once; never counterfeit it from installed files.
+    """Return the genuine product wheel; never counterfeit it from installed files.
 
-    One wheel, because the harness ships inside it. A second build against a
-    separate harness project is what this fixture used to do, and there is no
-    such project to build.
+    One wheel, because the harness ships inside it. It comes from the shared,
+    content-keyed cohort, so every process and every packaging proof reading the
+    same source reads the same snapshot-built bytes.
     """
-    output = _session_scratch_root("cadrumo-real-cohort-wheels-")
-    completed = run_command(
-        [_uv_executable(), "build", "--wheel", "--out-dir", str(output)],
-        cwd=REPO_ROOT,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(f"real wheel fixture build failed: {completed.stderr}")
-    candidates = tuple(output.glob("cadrumo-*.whl"))
-    if len(candidates) != 1:
-        raise RuntimeError(f"real wheel fixture expected one cadrumo-*.whl: {candidates!r}")
-    return candidates[0]
+    return shared_cohort().wheel
 
 
-@functools.lru_cache(maxsize=1)
 def _real_companion_wheels() -> tuple[Path, Path, Path]:
-    """Build the mandatory data companions beside the genuine core wheel."""
-    return build_companion_wheels(_real_product_wheel().parent, _uv_executable(), build_root=REPO_ROOT)
+    """Return the mandatory data companions built beside the genuine core wheel."""
+    return shared_cohort().companions
+
+
+def _template_is_intact(template: Path, wheel: Path) -> bool:
+    """Whether a cached template still holds exactly the sealed wheel's installed payload."""
+    try:
+        cli = venv_executable(template, "aeat").resolve(strict=True)
+        return installed_distribution_payload_sha256(cli, "cadrumo") == sealed_wheel_payload_sha256(wheel)
+    except (OSError, RuntimeError):
+        return False
 
 
 @functools.lru_cache(maxsize=1)
 def client_venv_template() -> Path:
-    """Install the real four-wheel product into a minimal venv, once per process.
+    """Install the real four-wheel product into a minimal venv, once per cohort content.
 
     The launcher-facing tests need the genuine installer-generated ``aeat`` and
     ``cadrumo-mcp`` console scripts, the interpreter that owns them, and an
@@ -127,36 +114,55 @@ def client_venv_template() -> Path:
     payload no assertion here reads.
 
     Callers hard-link this template into their own root rather than reinstalling,
-    so the environment is materialised once for the whole process.
+    and treat it as read-only. It is keyed by the cohort's content key and the
+    owning interpreter and kept in the development cache, so every process of a
+    run and every later run over the same content shares one install; a reused
+    template must still attest to the sealed wheel's payload.
     """
-    root = _session_scratch_root("cadrumo-client-venv-")
+    cohort = shared_cohort()
+    cache = dev_cache_dir("packaging-client-venv")
+    cache.mkdir(parents=True, exist_ok=True)
+    key = hashlib.sha256(f"{cohort.key}\0{sys.executable}".encode()).hexdigest()
+    root = cache / key
     template = root / ".venv"
-    # uv reads VIRTUAL_ENV when deciding which environment a command targets;
-    # dropping it keeps the explicit --python selection unambiguous under a
-    # pytest run that is itself executing inside an activated environment.
-    environment = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
-    uv = _uv_executable()
-    interpreter = venv_bin_dir(template) / ("python.exe" if os.name == "nt" else "python")
-    for argv in (
-        [uv, "venv", "--python", sys.executable, str(template)],
-        [
-            uv,
-            "pip",
-            "install",
-            "--python",
-            str(interpreter),
-            str(_real_product_wheel()),
-            *(str(wheel) for wheel in _real_companion_wheels()),
-        ],
-    ):
-        completed = run_command(
-            argv,
-            cwd=REPO_ROOT,
-            environment=environment,
-        )
-        if completed.returncode != 0:
-            raise RuntimeError(f"client venv fixture build failed: {argv!r}\n{completed.stderr}")
+    with action_lock(cache, key):
+        if (root / "complete").is_file() and _template_is_intact(template, cohort.wheel):
+            os.utime(root / "complete")
+            return template
+        shutil.rmtree(root, ignore_errors=True)
+        root.mkdir()
+        # uv reads VIRTUAL_ENV when deciding which environment a command targets;
+        # dropping it keeps the explicit --python selection unambiguous under a
+        # pytest run that is itself executing inside an activated environment.
+        environment = {name: value for name, value in os.environ.items() if name != "VIRTUAL_ENV"}
+        uv = _uv_executable()
+        interpreter = venv_bin_dir(template) / ("python.exe" if os.name == "nt" else "python")
+        for argv in (
+            [uv, "venv", "--python", sys.executable, str(template)],
+            [
+                uv,
+                "pip",
+                "install",
+                "--python",
+                str(interpreter),
+                str(cohort.wheel),
+                *(str(wheel) for wheel in cohort.companions),
+            ],
+        ):
+            completed = run_command(argv, cwd=REPO_ROOT, environment=environment)
+            if completed.returncode != 0:
+                raise RuntimeError(f"client venv fixture build failed: {argv!r}\n{completed.stderr}")
+        (root / "complete").write_text(cohort.key, encoding="utf-8")
+        _prune_templates(cache, keep=key)
     return template
+
+
+def _prune_templates(cache: Path, *, keep: str) -> None:
+    """Keep the newest few templates; each one is a full install of several hundred megabytes."""
+    entries = [path for path in cache.iterdir() if path.name != keep and (path / "complete").is_file()]
+    entries.sort(key=lambda path: (path / "complete").stat().st_mtime_ns, reverse=True)
+    for stale in entries[2:]:
+        shutil.rmtree(stale, ignore_errors=True)
 
 
 def release_cohort(

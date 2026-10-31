@@ -36,7 +36,7 @@ from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....core.i18n.render import tr
 from .....core.operations import OperationEffect, OperationInteractionKind, OperationLifecycle
-from ....operation_composition import build_production_operation_registry
+from ....tests.production_operation_registry import production_operation_registry
 from ...tests.settling import settle_until
 from ..controller_port import OperationResponseControlPort
 from ..interactions import (
@@ -59,7 +59,7 @@ type _Kind = Literal[OperationInteractionKind.INPUT, OperationInteractionKind.CH
 
 @lru_cache(maxsize=1)
 def _contracts() -> OperationPublicContractSetV1:
-    return build_production_operation_registry().public_contract_set
+    return production_operation_registry().public_contract_set
 
 
 def _pending(kind: _Kind) -> OperationUnsupportedInteractionV1:

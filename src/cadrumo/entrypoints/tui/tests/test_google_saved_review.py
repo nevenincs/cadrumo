@@ -54,8 +54,8 @@ from ....core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from ...operation_composition import build_production_operation_registry
 from ...review_publication_labels import GoogleReviewLabels
+from ...tests.production_operation_registry import production_operation_registry
 from ..google_saved_review import GoogleSavedReviewModal, GoogleSavedReviewScreen, validate_saved_google_review
 from ..operations.interactions import OperationModalReviewInteractionV1
 from .settling import settle, settle_until
@@ -69,7 +69,7 @@ _INTERACTION = "b" * 64
 
 @lru_cache(maxsize=1)
 def _contracts() -> OperationPublicContractSetV1:
-    return build_production_operation_registry().public_contract_set
+    return production_operation_registry().public_contract_set
 
 
 def _review(request: GoogleReviewRequest) -> GoogleReviewProjection:

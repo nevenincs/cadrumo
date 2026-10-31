@@ -30,6 +30,7 @@ from .. import filing_export_proof_authority
 from ..compiler.authority import compiled_bundled_authority
 from ..diagnostic_classification import (
     RegistryDiagnosticFilingRevision,
+    UnvalidatedRegistryClassification,
     load_registry_diagnostic_classification,
 )
 from ..export_proof import FilingExportProofChannel
@@ -37,7 +38,6 @@ from ..filing_export_conformance_enrollment import (
     FilingExportConformanceEnrollmentReport,
     _derive_static_filing_export_conformance_enrollment,
     derive_diagnostic_filing_export_conformance_enrollment,
-    derive_filing_export_conformance_enrollment,
 )
 from ..filing_export_conformance_vectors import (
     FilingExportConformanceVector,
@@ -54,6 +54,41 @@ from ..maintenance_support import coverage_assessment_floor, coverage_assessment
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+_STRICT_FAILURE_TEXT = "strict registry validation failed"
+
+
+# Each projection below is a pure read of the committed registry that costs tens
+# of seconds; the tests only read them, so one module-scoped result serves every
+# test that asks for the same inputs.
+@pytest.fixture(scope="module")
+def conformance_vectors() -> tuple[FilingExportConformanceVector, ...]:
+    return canonical_filing_export_conformance_vectors(
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+    )
+
+
+@pytest.fixture(scope="module")
+def diagnostic_classification() -> UnvalidatedRegistryClassification:
+    return load_registry_diagnostic_classification(
+        bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        strict_validation_error=RegistryValidationError(_STRICT_FAILURE_TEXT),
+    )
+
+
+@pytest.fixture(scope="module")
+def diagnostic_enrollment(
+    diagnostic_classification: UnvalidatedRegistryClassification,
+    conformance_vectors: tuple[FilingExportConformanceVector, ...],
+) -> FilingExportConformanceEnrollmentReport:
+    return derive_diagnostic_filing_export_conformance_enrollment(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        classification=diagnostic_classification,
+        vectors=conformance_vectors,
+    )
 
 
 def _blocked_vector_payload() -> object:
@@ -201,13 +236,12 @@ def _invoke_configured_custody(
     custody.persist_secure_replay()
 
 
-def test_diagnostic_classification_has_no_runtime_authority_or_success_path() -> None:
+def test_diagnostic_classification_has_no_runtime_authority_or_success_path(
+    diagnostic_classification: UnvalidatedRegistryClassification,
+    diagnostic_enrollment: FilingExportConformanceEnrollmentReport,
+) -> None:
     """Diagnostic classification remains static residue, never filing authority."""
-    classification = load_registry_diagnostic_classification(
-        bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        strict_validation_error=RegistryValidationError("strict registry validation failed"),
-    )
+    classification = diagnostic_classification
 
     assert not isinstance(classification, ValidatedRegistryAuthority)
     # Derived from the authority type, never transcribed. The list here named
@@ -238,17 +272,8 @@ def test_diagnostic_classification_has_no_runtime_authority_or_success_path() ->
             secure_replay_source=None,
             secure_replay_custody=None,
         )
-    enrollment = derive_diagnostic_filing_export_conformance_enrollment(
-        workspace_root=_REPOSITORY_ROOT,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        classification=classification,
-        vectors=canonical_filing_export_conformance_vectors(
-            registry_root=bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-        ),
-    )
-    assert enrollment.full_registry_validation_error == "strict registry validation failed"
+    enrollment = diagnostic_enrollment
+    assert enrollment.full_registry_validation_error == _STRICT_FAILURE_TEXT
     assert not enrollment.materializable_vectors
     assert enrollment.residues
 
@@ -333,7 +358,11 @@ def _residue_signature(
     )
 
 
-def test_static_projection_preserves_every_strict_disposition_and_fails_closed_on_the_success_set() -> None:
+def test_static_projection_preserves_every_strict_disposition_and_fails_closed_on_the_success_set(
+    diagnostic_classification: UnvalidatedRegistryClassification,
+    diagnostic_enrollment: FilingExportConformanceEnrollmentReport,
+    canonical_filing_export_proof: CanonicalTwoChannelFilingExportProofAuthority,
+) -> None:
     """The degraded read loses no disposition and refuses exactly where the strict read materializes.
 
     Plain residue equality cannot hold once ANY vector is materializable: the
@@ -344,33 +373,11 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
     forbids. This asserts the stronger property: no strict disposition is lost,
     and the only extra degraded residues are exactly the strict success set.
     """
-    registry = compiled_bundled_authority()
-    classification = load_registry_diagnostic_classification(
-        bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        strict_validation_error=RegistryValidationError("forced strict validation failure"),
-    )
-
-    strict_report = derive_filing_export_conformance_enrollment(
-        workspace_root=_REPOSITORY_ROOT,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        authority=registry,
-        vectors=canonical_filing_export_conformance_vectors(
-            registry_root=bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-        ),
-    )
-    diagnostic_report = derive_diagnostic_filing_export_conformance_enrollment(
-        workspace_root=_REPOSITORY_ROOT,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        classification=classification,
-        vectors=canonical_filing_export_conformance_vectors(
-            registry_root=bundled_path("registry", "aeat"),
-            source_root=bundled_path(),
-        ),
-    )
+    classification = diagnostic_classification
+    # The canonical authority derives exactly this strict enrollment: the
+    # validated bundled authority against the canonical vectors.
+    strict_report = canonical_filing_export_proof.conformance_enrollment
+    diagnostic_report = diagnostic_enrollment
 
     static_inspections = tuple(
         selected.inspection for selected in classification.filing_revisions if selected.inspection is not None
@@ -398,7 +405,7 @@ def test_static_projection_preserves_every_strict_disposition_and_fails_closed_o
     assert {row[6] for row in only_degraded} == {str(classification.strict_validation_error)}
 
 
-def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
+def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel(request: pytest.FixtureRequest) -> None:
     """Every public candidate retains its exact refusal residue."""
     try:
         registry = compiled_bundled_authority()
@@ -432,13 +439,9 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
         return
     else:
         full_registry_validation_error = None
-    proof = canonical_two_channel_filing_export_proof_authority(
-        workspace_root=_REPOSITORY_ROOT,
-        registry_root=bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-        authority=registry,
-        secure_replay_source=None,
-        secure_replay_custody=None,
+    proof = cast(
+        CanonicalTwoChannelFilingExportProofAuthority,
+        request.getfixturevalue("canonical_filing_export_proof"),
     )
     assessed = 0
     selected_coordinates = set()

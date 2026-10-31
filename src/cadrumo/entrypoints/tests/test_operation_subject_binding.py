@@ -32,7 +32,7 @@ from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..operation_composition import build_production_operation_registry
+from .production_operation_registry import production_operation_registry
 from .registered_executor_case_support import (
     OperationRuntimeCloseWitness,
     conformance_operation_runtime,
@@ -71,7 +71,7 @@ OPERATION_REVIEW_DIGEST = "d" * 64
 
 
 def _definition_ids(*, resolved: bool) -> tuple[str, ...]:
-    registrations = build_production_operation_registry().public_registrations
+    registrations = production_operation_registry().public_registrations
     return tuple(
         sorted(
             registration.contract.definition_id
@@ -141,7 +141,7 @@ def test_a_reviewed_decision_resolves_on_its_declared_subject_once_it_names_its_
     definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The review is the resolver's other precondition; with it met, the subject alone decides."""
-    registry = build_production_operation_registry()
+    registry = production_operation_registry()
     definition = registry.lookup(definition_id)
     context = _submission_context(registry, definition_id, profile_id=_PROBE_PROFILE, operation=operation)
     fields = {"profile_id": _PROBE_PROFILE, "request_id": UUID(int=1)}

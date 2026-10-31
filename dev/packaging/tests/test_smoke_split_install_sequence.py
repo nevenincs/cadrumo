@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import shutil
 import sys
 import zipfile
 from pathlib import Path
@@ -13,8 +12,6 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ..lane_verification_core import (
-    build_companion_wheels,
-    build_wheel,
     create_pip_venv,
     isolated_product_env,
     run_checked,
@@ -22,6 +19,7 @@ from ..lane_verification_core import (
     venv_cadrumo_path,
     venv_python_path,
 )
+from ..shared_cohort import shared_cohort
 from ..smoke_split_install import _COHORT_PROBE, _install_cohort_with_pip
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -30,41 +28,49 @@ _REPO_ROOT = REPO_ROOT
 
 
 @pytest.fixture(scope="module")
-def real_cohort_wheels(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, tuple[Path, ...]]:
-    """Build the real four-wheel cohort ONCE for this module.
+def real_cohort_wheels() -> tuple[Path, tuple[Path, ...]]:
+    """Return the real four-wheel cohort from the shared content-keyed build.
 
-    Both tests below built the identical cohort from the identical
-    ``build_root``, differing only in the directory it landed in. Measured on
-    this box, ``build_wheel`` costs 16.5s and ``build_companion_wheels`` 38.8s,
-    so each test spent ~55s reproducing the other's artifacts.
-
-    Sharing is safe because the wheels are consumed READ-ONLY: each test opens
-    them with ``zipfile`` and hands their resolved paths to pip. Everything a
-    test mutates -- its venv, its install, its product state -- still comes from
-    that test's own ``tmp_path``, so the tests remain independent in every
-    respect except the bytes they read.
+    The wheels are consumed READ-ONLY: each test opens them with ``zipfile``
+    and hands their resolved paths to pip, so the snapshot-built cohort every
+    other packaging proof reads serves here too.
 
     Returns:
         The root wheel and the companion data wheels.
     """
-    uv = shutil.which("uv")
-    assert uv is not None, "uv must be on PATH to build the real cohort"
+    cohort = shared_cohort()
+    return cohort.wheel, cohort.companions
 
-    build_dir = tmp_path_factory.mktemp("real-cohort-wheels")
-    wheel = build_wheel(_REPO_ROOT, build_dir, uv, build_root=_REPO_ROOT)
-    companions = build_companion_wheels(build_dir, uv, build_root=_REPO_ROOT)
-    return wheel, tuple(companions)
+
+@pytest.fixture(scope="module")
+def pip_installed_cohort(
+    tmp_path_factory: pytest.TempPathFactory,
+    real_cohort_wheels: tuple[Path, tuple[Path, ...]],
+) -> Path:
+    """Install the cohort under real ``pip`` into one venv for this module.
+
+    Both tests installed the identical cohort into an identical fresh venv.
+    Neither mutates the environment: one inspects its scripts directory and
+    the other runs a probe whose product state lives in its own ``tmp_path``.
+
+    Returns:
+        The virtualenv holding the installed cohort.
+    """
+    wheel, companions = real_cohort_wheels
+    work = tmp_path_factory.mktemp("pip-installed-cohort")
+    venv = create_pip_venv(work, f"{sys.version_info.major}.{sys.version_info.minor}")
+    _install_cohort_with_pip(work, wheel, companions, venv)
+    return venv
 
 
 def test_four_wheel_cohort_installs_only_aeat_human_script(
-    tmp_path: Path,
     real_cohort_wheels: tuple[Path, tuple[Path, ...]],
+    pip_installed_cohort: Path,
 ) -> None:
     """The real root wheel installs ``aeat`` without a ``cadrumo`` alias."""
-    wheel, companions = real_cohort_wheels
+    _, companions = real_cohort_wheels
     assert len(companions) == 3
-    venv = create_pip_venv(tmp_path, f"{sys.version_info.major}.{sys.version_info.minor}")
-    _install_cohort_with_pip(tmp_path, wheel, companions, venv)
+    venv = pip_installed_cohort
 
     human_alias = venv_bin_dir(venv) / ("cadrumo.exe" if os.name == "nt" else "cadrumo")
     assert venv_cadrumo_path(venv).is_file()
@@ -75,6 +81,7 @@ def test_four_wheel_cohort_installs_only_aeat_human_script(
 def test_real_wheels_form_one_complete_authority_cohort(
     tmp_path: Path,
     real_cohort_wheels: tuple[Path, tuple[Path, ...]],
+    pip_installed_cohort: Path,
 ) -> None:
     """The compact root artifact and all three data wheels install as one product."""
     wheel, companions = real_cohort_wheels
@@ -91,8 +98,7 @@ def test_real_wheels_form_one_complete_authority_cohort(
     assert any(name.endswith(".docx") for name in official)
     assert any(name.endswith(".zip") for name in official)
 
-    venv = create_pip_venv(tmp_path, f"{sys.version_info.major}.{sys.version_info.minor}")
-    _install_cohort_with_pip(tmp_path, wheel, companions, venv)
+    venv = pip_installed_cohort
     run_checked(
         [str(venv_python_path(venv)), "-c", _COHORT_PROBE],
         cwd=tmp_path,

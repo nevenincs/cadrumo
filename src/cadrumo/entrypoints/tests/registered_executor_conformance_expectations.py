@@ -32,9 +32,9 @@ from ...application.workflow.run_read_operation import (
     WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition
-from ..operation_composition import build_production_operation_registry
 from .conformance_families import CONFORMANCE_FAMILIES
 from .conformance_family_contract import RegisteredExecutorConformanceCase
+from .production_operation_registry import production_operation_registry
 
 
 def _registered_definition_ids() -> tuple[str, ...]:
@@ -49,7 +49,7 @@ def _registered_definition_ids() -> tuple[str, ...]:
     the matrix by existing, and reports a missing scenario rather than
     reconciling quietly.
     """
-    return tuple(sorted(definition.definition_id for definition in build_production_operation_registry().definitions))
+    return tuple(sorted(definition.definition_id for definition in production_operation_registry().definitions))
 
 
 def _expectations_owned_once(

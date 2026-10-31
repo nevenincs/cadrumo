@@ -228,7 +228,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "selected_revision_id",
-          "value": "7fdbcce11586e76d07493db5d8b65614ef1399bf551e963201146476efa04874"
+          "value": "7811af0d5838867a8898e0a754c12c7949182f094a0c7a17595078e21941e70a"
         }
       ],
       "envelope": null,
@@ -323,7 +323,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "7fdbcce11586e76d07493db5d8b65614ef1399bf551e963201146476efa04874",
+          "calculation_revision_id": "7811af0d5838867a8898e0a754c12c7949182f094a0c7a17595078e21941e70a",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1053,7 +1053,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "7fdbcce11586e76d07493db5d8b65614ef1399bf551e963201146476efa04874",
+          "calculation_revision_id": "7811af0d5838867a8898e0a754c12c7949182f094a0c7a17595078e21941e70a",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1707,7 +1707,7 @@
         "modelo",
         "work",
         "revision",
-        "7fdbcce11586e76d07493db5d8b65614ef1399bf551e963201146476efa04874"
+        "7811af0d5838867a8898e0a754c12c7949182f094a0c7a17595078e21941e70a"
       ],
       "captures": [],
       "envelope": {
@@ -1776,7 +1776,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "7fdbcce11586e76d07493db5d8b65614ef1399bf551e963201146476efa04874",
+          "calculation_revision_id": "7811af0d5838867a8898e0a754c12c7949182f094a0c7a17595078e21941e70a",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -2482,7 +2482,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "7fdbcce11586e76d07493db5d8b65614ef1399bf551e963201146476efa04874",
+          "calculation_revision_id": "7811af0d5838867a8898e0a754c12c7949182f094a0c7a17595078e21941e70a",
           "casilla_values": {
             "01": "0.00",
             "02": "0",

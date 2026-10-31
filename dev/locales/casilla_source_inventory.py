@@ -80,12 +80,17 @@ def _published_surface() -> tuple[
 
 
 def load_casilla_values(locales_dir: Path = LOCALES_DIR) -> Values:
-    """Read every casilla leaf of every locale's Modelo schema shards."""
+    """Read every casilla leaf of every locale's Modelo schema shards.
+
+    The shards total roughly 18 MB; libyaml's safe loader reads them into the
+    same document as the pure-Python one about ten times faster, which matters
+    because several gates read them once each.
+    """
     values: Values = {}
     for locale in sorted(discover_locale_codes(locales_dir)):
         leaves: dict[str, str | None] = {}
         for shard in sorted((locales_dir / locale / "modelo" / "schema").glob("*.yml")):
-            raw = yaml.safe_load(shard.read_text(encoding="utf-8")) or {}
+            raw = yaml.load(shard.read_text(encoding="utf-8"), Loader=yaml.CSafeLoader) or {}
             for key, value in _flatten_raw_locale_leaves(raw).items():
                 if is_delta_keyed_leaf(key):
                     leaves[key] = None if value is None else str(value)
@@ -137,7 +142,7 @@ def _edition_labels(locales_dir: Path) -> dict[str, dict[str, str | None]]:
     for locale in sorted(discover_locale_codes(locales_dir)):
         found: dict[str, str | None] = {}
         for shard in sorted((locales_dir / locale / "modelo" / "schema").glob("*.yml")):
-            raw = yaml.safe_load(shard.read_text(encoding="utf-8")) or {}
+            raw = yaml.load(shard.read_text(encoding="utf-8"), Loader=yaml.CSafeLoader) or {}
             for key, value in _flatten_raw_locale_leaves(raw).items():
                 if _EDITION_TEXT.match(key):
                     found[key] = None if value is None else str(value)

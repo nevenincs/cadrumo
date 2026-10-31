@@ -8,6 +8,7 @@ from typing import TypedDict
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import SealedProfileWorld
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     module_scoped_profile_isolated_backend_fixture,
 )
@@ -78,7 +79,7 @@ def recorded_fx_seeded_backend(
     autouse: bool = True,
     name: str = "_isolated_backend",
     origin_name: str = "_isolated_backend_origin",
-) -> tuple[Callable[..., Iterator[Path]], Callable[..., Iterator[None]]]:
+) -> tuple[Callable[..., Iterator[SealedProfileWorld]], Callable[..., Iterator[None]]]:
     """Build the recorded-FX (origin, per-test) pair for a suite with costly seeding.
 
     For suites that DO mutate, where the module-scoped variant above would let

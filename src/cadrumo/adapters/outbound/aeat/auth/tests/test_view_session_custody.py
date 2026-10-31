@@ -9,7 +9,7 @@ host is stood in.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Mapping
+from collections.abc import AsyncGenerator, Callable, Mapping
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -38,7 +38,7 @@ from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.config import Settings, load_settings, override_settings
 from cadrumo.core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from cadrumo.core.operations import OperationEffect
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory
 from .. import session_store
@@ -50,6 +50,7 @@ from .view_session_support import (
     SESSION_COOKIE,
     OperationHost,
     certificate_profile,
+    certificate_profile_template,
     clave_permanente_profile,
     lock_state,
     session_path,
@@ -62,6 +63,26 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 _OTHER_NIF = "00000000T"
 _COOKIE_SCENARIO = "clave-permanente-success"
 _CENSAL_PATH = Settings.external_constants().aeat.sede_paths.censal_datos
+
+
+@pytest.fixture(scope="module")
+def _certificate_templates(tmp_path_factory: pytest.TempPathFactory) -> Callable[[str], Path]:
+    """Register each certificate profile once per module; tests copy the closed root.
+
+    Each template is built inside its own short-lived authority operation and
+    profile context, so nothing process-global is held between tests.
+    """
+    built: dict[str, Path] = {}
+
+    def template_for(tax_id: str) -> Path:
+        if tax_id not in built:
+            with bundled_indexed_authority().operation() as template_operation:
+                built[tax_id] = certificate_profile_template(
+                    tmp_path_factory.mktemp("certificate-template"), template_operation, tax_id=tax_id
+                )
+        return built[tax_id]
+
+    return template_for
 
 
 async def _open(
@@ -153,10 +174,12 @@ def _cookie_names(storage_state: Mapping[str, object] | None) -> set[str]:
 
 @pytest.mark.asyncio
 async def test_a_verified_view_login_is_published_to_the_custody_every_sync_reuses(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
 ) -> None:
     """The view seeds from custody, browses unlocked, and publishes what the next sync adopts."""
-    with certificate_profile(tmp_path, operation):
+    with certificate_profile(tmp_path, operation, template=_certificate_templates(CERTIFICATE_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-auth")
             await _sync(factory, OperationHost(), operation)
@@ -187,8 +210,12 @@ async def test_a_verified_view_login_is_published_to_the_custody_every_sync_reus
 
 
 @pytest.mark.asyncio
-async def test_an_unchanged_capture_writes_nothing(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
-    with certificate_profile(tmp_path, operation):
+async def test_an_unchanged_capture_writes_nothing(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
+) -> None:
+    with certificate_profile(tmp_path, operation, template=_certificate_templates(CERTIFICATE_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-unchanged")
             await _sync(factory, OperationHost(), operation)
@@ -205,10 +232,12 @@ async def test_an_unchanged_capture_writes_nothing(tmp_path: Path, operation: Pi
 
 @pytest.mark.asyncio
 async def test_a_session_whose_identity_is_not_the_active_profile_publishes_nothing(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
 ) -> None:
     """The provider accepts the capture, but its NIF is not the active profile NIF."""
-    with certificate_profile(tmp_path, operation, tax_id=_OTHER_NIF):
+    with certificate_profile(tmp_path, operation, tax_id=_OTHER_NIF, template=_certificate_templates(_OTHER_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-identity")
             settings = load_settings()
@@ -234,10 +263,12 @@ async def test_a_session_whose_identity_is_not_the_active_profile_publishes_noth
 
 @pytest.mark.asyncio
 async def test_a_view_signed_in_as_another_taxpayer_publishes_nothing(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
 ) -> None:
     """The capture unlocks AEAT, but Mis Expedientes names someone other than the profile as signed in."""
-    with certificate_profile(tmp_path, operation):
+    with certificate_profile(tmp_path, operation, template=_certificate_templates(CERTIFICATE_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-other-taxpayer")
             await _sync(factory, OperationHost(), operation)
@@ -257,9 +288,11 @@ async def test_a_view_signed_in_as_another_taxpayer_publishes_nothing(
 
 @pytest.mark.asyncio
 async def test_a_view_signed_in_as_the_profile_taxpayer_reads_it_from_a_request_naming_nobody(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
 ) -> None:
-    with certificate_profile(tmp_path, operation):
+    with certificate_profile(tmp_path, operation, template=_certificate_templates(CERTIFICATE_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-own-taxpayer")
             await _sync(factory, OperationHost(), operation)
@@ -312,9 +345,11 @@ async def test_a_clave_movil_profile_without_its_contraste_publishes_a_manual_vi
 
 @pytest.mark.asyncio
 async def test_a_refused_provider_probe_publishes_and_deletes_nothing(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
 ) -> None:
-    with certificate_profile(tmp_path, operation):
+    with certificate_profile(tmp_path, operation, template=_certificate_templates(CERTIFICATE_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-refused")
             await _sync(factory, OperationHost(), operation)
@@ -331,9 +366,11 @@ async def test_a_refused_provider_probe_publishes_and_deletes_nothing(
 
 @pytest.mark.asyncio
 async def test_a_session_another_acquisition_published_meanwhile_stands(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
 ) -> None:
-    with certificate_profile(tmp_path, operation):
+    with certificate_profile(tmp_path, operation, template=_certificate_templates(CERTIFICATE_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-newer")
             await _sync(factory, OperationHost(), operation)
@@ -355,9 +392,11 @@ async def test_a_session_another_acquisition_published_meanwhile_stands(
 
 @pytest.mark.asyncio
 async def test_a_live_acquisition_holding_the_lock_keeps_its_session(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
 ) -> None:
-    with certificate_profile(tmp_path, operation):
+    with certificate_profile(tmp_path, operation, template=_certificate_templates(CERTIFICATE_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-locked")
             await _sync(factory, OperationHost(), operation)
@@ -376,9 +415,11 @@ async def test_a_live_acquisition_holding_the_lock_keeps_its_session(
 
 @pytest.mark.asyncio
 async def test_an_interruption_after_the_unknown_report_stays_unknown(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
 ) -> None:
-    with certificate_profile(tmp_path, operation):
+    with certificate_profile(tmp_path, operation, template=_certificate_templates(CERTIFICATE_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-unknown")
             await _sync(factory, OperationHost(), operation)
@@ -395,9 +436,11 @@ async def test_an_interruption_after_the_unknown_report_stays_unknown(
 
 @pytest.mark.asyncio
 async def test_a_cancellation_after_the_unknown_report_propagates_with_unknown_standing(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    _certificate_templates: Callable[[str], Path],
 ) -> None:
-    with certificate_profile(tmp_path, operation):
+    with certificate_profile(tmp_path, operation, template=_certificate_templates(CERTIFICATE_NIF)):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-cancelled")
             await _sync(factory, OperationHost(), operation)

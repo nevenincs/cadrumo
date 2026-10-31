@@ -28,6 +28,7 @@ import {
   throughOf,
   type FormField,
 } from "./assetFields";
+import { Remedy } from "./AssetList";
 import {
   FieldsGrid,
   OptionsRead,
@@ -43,13 +44,13 @@ import {
   CLAIMS_OVERLAP,
   claimLanding,
   claimReused,
-  claimsInTheWay,
+  claimInTheWay,
   forecastRequest,
   neverReused,
   viewOf,
 } from "./assetWrites";
 import { ASSET_KEYS } from "./assetsWords";
-import { nothingOpenWhy as nothingOpenWords } from "./planWords";
+import { nothingOpen as nothingOpenWords } from "./planWords";
 
 const NO_FIELDS = new Set<string>();
 const NO_CLAIMS: readonly PlanClaim[] = [];
@@ -74,6 +75,7 @@ export function ClaimFlow({
   taxYear,
   initialYear = null,
   supersedes = null,
+  onCorrectElement,
   onClose,
   onWritten,
 }: ActProps & {
@@ -84,6 +86,9 @@ export function ClaimFlow({
   initialYear?: number | null;
   /** The dotación the new one replaces, in the same write. */
   supersedes?: string | null;
+  /** Opens the form that corrects the element, where the plan says which
+   * entry to fill in. */
+  onCorrectElement?: () => void;
 }) {
   const t = useStrings();
   const [replaces, setReplaces] = useState<string | null>(supersedes);
@@ -112,7 +117,7 @@ export function ClaimFlow({
   const fields = claimFields(row, replaced, span);
   // A year with no span open, and no dotación being replaced, has nothing to
   // record: the plan's own reason is said instead of blank dates.
-  const nothingOpenWhy =
+  const nothingOpen =
     row !== null && spans.length === 0 ? nothingOpenWords(t, row) : null;
   const form = useFieldsDraft(draftOf(fields));
   const [forecast, setForecast] = useState<ActivityAssetForecast | null>(null);
@@ -171,21 +176,17 @@ export function ClaimFlow({
     });
   };
 
-  // The recorded dotación in the way, when the refusal is that one meets another.
-  const meets = [forecastView, wroteView].some(
-    (view) =>
-      view.kind === "refused" &&
-      view.code === CLAIM_CONFLICT &&
-      view.reasonKey === CLAIMS_OVERLAP,
-  );
+  // The recorded dotación in the way: the one the refusal names, when it
+  // names exactly one that is still in effect.
+  const inTheWayId = [forecastView, wroteView].flatMap((view) =>
+    view.kind === "refused" &&
+    view.code === CLAIM_CONFLICT &&
+    view.reasonKey === CLAIMS_OVERLAP
+      ? [claimInTheWay(view.reasonFacts)]
+      : [],
+  )[0];
   const inTheWay =
-    meets && request !== null
-      ? claimsInTheWay(
-          effective,
-          forecast?.covered_from ?? request.covered_from,
-          forecast?.covered_through ?? request.covered_through,
-        )
-      : NO_CLAIMS;
+    effective.find((found) => found.claim_id === inTheWayId) ?? null;
 
   const preview = async () => {
     if (reading || write.busy) return;
@@ -310,13 +311,19 @@ export function ClaimFlow({
             void preview();
           }}
         >
-          {nothingOpenWhy !== null && (
+          {nothingOpen !== null && (
             <Alert
               role="status"
               icon={<Icon name="info" />}
               className="ledger-asset-nothing-open"
             >
-              {nothingOpenWhy}
+              <span className="flex flex-col gap-1">
+                {nothingOpen.why}
+                <Remedy
+                  fieldKey={nothingOpen.remedyFieldKey}
+                  onCorrect={onCorrectElement}
+                />
+              </span>
             </Alert>
           )}
           {yearChoice}
@@ -435,7 +442,7 @@ export function ClaimFlow({
               reusedOf: claimReused,
             }}
           />
-          {inTheWay.length === 1 && (
+          {inTheWay !== null && (
             <div className="flex">
               <Button
                 type="button"
@@ -443,9 +450,9 @@ export function ClaimFlow({
                 variant="outline"
                 className="ledger-asset-correct-that"
                 onClick={() => {
-                  setReplaces(inTheWay[0]!.claim_id);
+                  setReplaces(inTheWay.claim_id);
                   setSpanIndex(0);
-                  startOver(row, inTheWay[0]!.claim_id, 0);
+                  startOver(row, inTheWay.claim_id, 0);
                   changed();
                 }}
               >

@@ -16,8 +16,10 @@ from cadrumo_client.transport.service_client import InstalledServiceClient
 from ..secure_store_write_path import (
     OPAQUE_RECORD_VERBS,
     SecureStoreWritePathError,
+    StoreUsage,
     collect_store_usage,
     evaluate,
+    verdict_for_usage,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -380,20 +382,26 @@ def test_the_opaque_record_verbs_are_the_service_client_s_own() -> None:
     assert all(callable(getattr(InstalledServiceClient, verb, None)) for verb in OPAQUE_RECORD_VERBS)
 
 
-def test_the_shipped_tree_reports_its_stores() -> None:
+@pytest.fixture(scope="module")
+def shipped_store_usage() -> tuple[StoreUsage, ...]:
+    """Parse the shipped tree once; both live gates read the same immutable usage."""
+    return collect_store_usage()
+
+
+def test_the_shipped_tree_reports_its_stores(shipped_store_usage: tuple[StoreUsage, ...]) -> None:
     """The live scan finds repositories at all, so a silent pass cannot be vacuous."""
-    usage = collect_store_usage()
+    usage = shipped_store_usage
     assert len(usage) >= 20
     assert any(store.written_by for store in usage)
     assert any(store.read_by for store in usage)
     assert any(store.owner.startswith("cadrumo_agent_service/") for store in usage)
 
 
-def test_the_shipped_tree_agrees_with_its_declaration() -> None:
+def test_the_shipped_tree_agrees_with_its_declaration(shipped_store_usage: tuple[StoreUsage, ...]) -> None:
     """The live gate, run where CI can see it.
 
     Without this the module is a command nobody invokes: the synthetic cases
     above prove the detector works on trees that do not ship, and a store wired
     for reading with no writer would still reach a release unremarked.
     """
-    assert evaluate() == ()
+    assert verdict_for_usage(shipped_store_usage) == ()

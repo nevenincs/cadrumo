@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import atexit
+import shutil
+import tempfile
 from collections.abc import Awaitable, Callable, Generator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
@@ -33,6 +36,10 @@ from ...adapters.persistence.operations.typed_financial_operand_custody import (
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
+from ...adapters.persistence.storage.master_key.active_session import (
+    close_active_bucket_session,
+    current_active_bucket_session,
+)
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -80,7 +87,8 @@ from ...application.user_profile.censal_operation import (
     build_censal_operation_definition,
 )
 from ...application.user_profile.custody_ports import profile_custody_secure_object_repository
-from ...application.user_profile.login_session import authenticate_profile_for_invocation
+from ...application.user_profile.login_session import publish_created_profile_session
+from ...application.user_profile.profile_record_repository import close_active_profile_record_session
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import override_settings
@@ -89,6 +97,11 @@ from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.operations import OperationLifecycle, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority_artifact import (
+    AuthorityGenerationPin,
+    ProfileCreateContext,
+    ProfileDecodeContext,
+)
 from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
 from ..adapter_composition_ports import build_censal_fetch_port
@@ -525,6 +538,74 @@ def _conformance_registry(
     return _ComposedRegistryCache.registry
 
 
+_TEMPLATE_STORAGE_DIRNAME = "cadrumo-storage"
+
+
+@dataclass(frozen=True, slots=True)
+class _RegisteredProfileTemplate:
+    """One registered profile's storage root, copied whole into each case, and the key it unlocked.
+
+    The key belongs to a synthetic profile that exists only for this worker.
+    """
+
+    storage_root: Path
+    profile_id: UUID
+    dek: bytes
+
+
+_REGISTERED_PROFILE_TEMPLATES: dict[AuthorityGenerationPin, _RegisteredProfileTemplate] = {}
+
+
+def _remove_registered_profile_templates() -> None:
+    for template in _REGISTERED_PROFILE_TEMPLATES.values():
+        shutil.rmtree(template.storage_root.parent, ignore_errors=True)
+    _REGISTERED_PROFILE_TEMPLATES.clear()
+
+
+def _registered_profile_template(
+    create_context: ProfileCreateContext, decode_context: ProfileDecodeContext
+) -> _RegisteredProfileTemplate:
+    """Register the conformance subject once per worker and authority generation.
+
+    Registration wraps the profile key through a supervised KDF child and
+    publishes custody, label and retention records: seconds per profile, and
+    identical for every case. The stored root holds no absolute path and no
+    session, so a copy is the same registered profile in a new place. Each
+    copy is then unlocked by the publication registration itself performs,
+    so it starts where a fresh registration leaves a profile: active and
+    signed in, without a second supervised KDF derivation per case.
+    """
+    template = _REGISTERED_PROFILE_TEMPLATES.get(create_context.generation)
+    if template is not None:
+        return template
+    if not _REGISTERED_PROFILE_TEMPLATES:
+        atexit.register(_remove_registered_profile_templates)
+    base = Path(tempfile.mkdtemp(prefix="conformance-profile-template-"))
+    with (
+        override_settings(cadrumo_auth_provider=AuthProviderKind.CERTIFICATE, cadrumo_certificate_path=None),
+        isolated_profile_storage_root(tmp_path=base) as root,
+    ):
+        try:
+            enrolled = register_profile_with_credentials(
+                label="S45 registered executor subject",
+                passphrase=_CREDENTIAL_INPUT,
+                facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+                profile_create_context=create_context,
+                profile_decode_context=decode_context,
+            )
+            live = current_active_bucket_session()
+            assert live is not None
+            dek = bytes(live.dek)
+        finally:
+            # Close the sessions registration published but keep the pointer it
+            # selected, so every copy starts with the profile active as it did.
+            close_active_bucket_session()
+            close_active_profile_record_session()
+    template = _RegisteredProfileTemplate(storage_root=root, profile_id=UUID(enrolled.profile_id), dek=dek)
+    _REGISTERED_PROFILE_TEMPLATES[create_context.generation] = template
+    return template
+
+
 @contextmanager
 def conformance_operation_runtime(
     tmp_path: Path,
@@ -546,21 +627,18 @@ def conformance_operation_runtime(
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
 
     _ComposedRegistryCache.cleanup = cleanup
+    template = _registered_profile_template(_profile_create_context_for_test, _profile_decode_context_for_test)
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(template.storage_root, tmp_path / _TEMPLATE_STORAGE_DIRNAME)
     with (
         override_settings(cadrumo_auth_provider=AuthProviderKind.CERTIFICATE, cadrumo_certificate_path=None),
         isolated_profile_storage_root(tmp_path=tmp_path) as root,
     ):
-        enrolled = register_profile_with_credentials(
-            label="S45 registered executor subject",
-            passphrase=_CREDENTIAL_INPUT,
-            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
-        profile_id = UUID(enrolled.profile_id)
-        authenticate_profile_for_invocation(
-            name=enrolled.profile_id,
-            passphrase_callback=lambda: _CREDENTIAL_INPUT,
+        assert root == tmp_path / _TEMPLATE_STORAGE_DIRNAME
+        profile_id = template.profile_id
+        publish_created_profile_session(
+            bucket_id=str(profile_id),
+            dek=template.dek,
             profile_decode_context=_profile_decode_context_for_test,
         )
         registry = registry or _conformance_registry(

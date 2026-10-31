@@ -48,7 +48,7 @@ from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
@@ -92,6 +92,12 @@ from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_acti
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
+)
+
+from .secure_store_baseline import (
+    SeededDurableProfile,
+    provision_seeded_profile,
+    reopened_seeded_profile,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -360,24 +366,37 @@ _Repos = tuple[
 ]
 
 
-def file_flow_repositories(tmp_path: Path) -> Iterator[Repos]:
-    """Yield the five catalogue repositories over an encrypted SQLite
-    database through the shared active-profile runtime. Tuple shape:
+def _seed_file_flow_profile_record(profile: TestRuntimeProfile) -> None:
+    seed_test_profile_record(
+        _create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=profile.bucket_id,
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+            context=_profile_creation_context_for_test(),
+        ),
+    )
+
+
+def file_flow_seeded_profile(tmp_path: Path) -> SeededDurableProfile:
+    """Provision and seed the file-flow bucket once, for reuse across a module.
+
+    Nothing process-global outlives this call; :func:`file_flow_repositories`
+    and :func:`_file_flow_runtime` re-enter the bucket for one test at a time.
+    """
+    return provision_seeded_profile(tmp_path, _FILE_FLOW_PROFILE_ID, _seed_file_flow_profile_record)
+
+
+def file_flow_repositories(shared: SeededDurableProfile) -> Iterator[Repos]:
+    """Yield the five catalogue repositories over the module's encrypted store.
+
+    The bucket is re-entered for this test and returned to its seeded rows. Tuple shape:
     ``(work_unit, calculation_revision, filing_record,
     verification_report, bucket_event_history)``."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FILE_FLOW_PROFILE_ID) as profile:
+    with reopened_seeded_profile(shared) as profile:
         objects = profile.repository
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=profile.bucket_id,
-                facts=_READY_PROFILE_FACTS,
-                created_at=_T0,
-                updated_at=_T0,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
         wu = WorkUnitCatalogueRepository(bucket_id=profile.bucket_id, objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
@@ -399,20 +418,10 @@ class _FileFlowRuntime:
     repos: _Repos
 
 
-def _file_flow_runtime(tmp_path: Path) -> Iterator[_FileFlowRuntime]:
+def _file_flow_runtime(shared: SeededDurableProfile) -> Iterator[_FileFlowRuntime]:
     """Yield the file-flow repository bundle alongside its live engine."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FILE_FLOW_PROFILE_ID) as profile:
+    with reopened_seeded_profile(shared) as profile:
         objects = profile.repository
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=profile.bucket_id,
-                facts=_READY_PROFILE_FACTS,
-                created_at=_T0,
-                updated_at=_T0,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
         yield _FileFlowRuntime(
             engine=objects.engine,
             repos=(

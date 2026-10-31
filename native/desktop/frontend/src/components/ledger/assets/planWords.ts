@@ -45,34 +45,22 @@ export const stateTone = (token: string) =>
     ? STATE_TONE[token]!
     : "text-muted-foreground";
 
-/** The typed absences that are a known state with nothing to work out: a
- * year after the basis is spent, under a free election, covered by the
- * opening amount, or past the maximum period. Every other absence is a figure
- * the register cannot state. */
-const NOT_APPLICABLE: ReadonlySet<string> = new Set([
-  "basis_exhausted",
-  "covered_by_opening",
-  "free_election",
-  "period_elapsed",
-]);
-
-export const absenceNotApplicable = (absence: string | null) =>
-  absence !== null && NOT_APPLICABLE.has(absence);
-
-/** The mark of a year's missing recorded figure: a year with a span still open
- * is one with nothing recorded, whatever its absence is; any other year
- * draws by whether its absence is a known state of nothing to work out. */
+/** The mark of a year's missing recorded figure: a year that applies has
+ * nothing recorded; one that does not apply says so. The plan states which. */
 export const recordedMark = (
-  row: Pick<PlanRow, "absence" | "claimable_intervals">,
+  row: Pick<PlanRow, "applies">,
 ): "nothing_recorded" | "not_applicable" =>
-  !absenceNotApplicable(row.absence) || row.claimable_intervals.length > 0
-    ? "nothing_recorded"
-    : "not_applicable";
+  row.applies ? "nothing_recorded" : "not_applicable";
+
+/** The reason a minimum is missing because its method has no table minimum:
+ * a year that adds nothing to the reduction, not a figure left unknown. */
+export const NO_TABLE_MINIMUM =
+  "ledger.actividad_asset.disposal_finding.method_has_no_minimum";
 
 /** Why a year has no span open to record, in the plan's own words: the reason
- * of its refusal, else the reason of its absence, else the generic word.
- * Null where a span is open. */
-export function nothingOpenWhy(
+ * of its refusal, else the reason of its absence, else the generic word, with
+ * the entry to fill in when that is the remedy. Null where a span is open. */
+export function nothingOpen(
   t: Translate,
   row: Pick<
     PlanRow,
@@ -81,14 +69,29 @@ export function nothingOpenWhy(
     | "claimable_refusal_facts"
     | "absence_reason_key"
     | "absence_reason_facts"
+    | "absence_remedy_field_key"
+    | "claimable_refusal_remedy_field_key"
   >,
-): string | null {
+): { why: string; remedyFieldKey: string | null } | null {
   if (row.claimable_intervals.length > 0) return null;
-  return (
-    reasonText(t, row.claimable_refusal_key, row.claimable_refusal_facts) ??
-    reasonText(t, row.absence_reason_key, row.absence_reason_facts) ??
-    t(ASSET_KEYS.plan.claimable_none)
+  const refusal = reasonText(
+    t,
+    row.claimable_refusal_key,
+    row.claimable_refusal_facts,
   );
+  if (refusal !== null)
+    return {
+      why: refusal,
+      remedyFieldKey: row.claimable_refusal_remedy_field_key,
+    };
+  const absence = reasonText(
+    t,
+    row.absence_reason_key,
+    row.absence_reason_facts,
+  );
+  if (absence !== null)
+    return { why: absence, remedyFieldKey: row.absence_remedy_field_key };
+  return { why: t(ASSET_KEYS.plan.claimable_none), remedyFieldKey: null };
 }
 
 /** Whether the backend states this amount as a recorded zero. */

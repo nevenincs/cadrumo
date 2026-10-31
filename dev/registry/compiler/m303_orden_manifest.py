@@ -13,6 +13,7 @@ from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.form_codes import resolve_form_codes
 from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
 from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import (
@@ -111,7 +112,16 @@ def _generated_source_from_census(
         activity_table_count=len(census.activities),
         module_row_count=sum(len(activity.modules) for activity in census.activities),
         module_distribution=tuple(
-            sum(len(activity.modules) == size for activity in census.activities) for size in range(1, 8)
+            sum(len(activity.modules) == size for activity in census.activities)
+            for size in range(
+                1,
+                int(
+                    resolve_form_codes("form-row-codes", effective_date=date(census.ejercicio, 1, 1)).code(
+                        "m303.orden.modules_per_activity"
+                    )
+                )
+                + 1,
+            )
         ),
         agricultural_index_row_count=len(census.agricultural_indexes),
         agricultural_ingreso_a_cuenta_row_count=len(census.agricultural_ingresos_a_cuenta),
@@ -472,7 +482,16 @@ def _validate_generated_source_activity_counts(
     census: M303AnnualOrdenSourceCensus,
 ) -> None:
     actual_distribution = tuple(
-        sum(len(activity.modules) == size for activity in census.activities) for size in range(1, 8)
+        sum(len(activity.modules) == size for activity in census.activities)
+        for size in range(
+            1,
+            int(
+                resolve_form_codes("form-row-codes", effective_date=date(census.ejercicio, 1, 1)).code(
+                    "m303.orden.modules_per_activity"
+                )
+            )
+            + 1,
+        )
     )
     if generated.activity_table_count != len(census.activities):
         raise RegistryValidationError("annual Orden generated source activity count no longer matches the BOE HTML")

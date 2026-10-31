@@ -39,6 +39,11 @@ class ProfileProofCancellation:
         self._lock = RLock()
         self._wakeups: set[_Wakeup] = set()
 
+    @property
+    def cancelled(self) -> bool:
+        """Whether the owner has withdrawn the attempt."""
+        return self._cancelled.is_set()
+
     def raise_if_cancelled(self) -> None:
         """Refuse work before it can consume or publish another proof phase."""
         if self._cancelled.is_set():

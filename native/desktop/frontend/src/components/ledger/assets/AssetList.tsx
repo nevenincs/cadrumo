@@ -12,6 +12,7 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { ATTENTION_TONE } from "../../modelo/workspace/Marks";
 import type { ModeloFormAttention } from "../../../shell/modeloContract";
 import { dateText } from "../movements/movementWords";
+import { WriteHold } from "../WritePause";
 import { rankDecimal, SetupTable, type Column } from "../setup/SetupParts";
 import type { SetupCall } from "../setup/setupModel";
 import type {
@@ -27,6 +28,7 @@ import {
   countWord,
   openingRemedy,
   refusalText,
+  wordOfKey,
   tokenWord,
 } from "./assetsWords";
 import { figureText } from "./planWords";
@@ -95,6 +97,37 @@ export function NotKnown({ why }: { why: string }) {
     <Hint words={facts(t, [t(ASSET_KEYS.not_known), why])}>
       <Icon name="unknown" size="xs" className="text-muted-foreground" />
     </Hint>
+  );
+}
+
+/** Where to fix what a figure lacks: the sentence that names the entry to fill
+ * in, as a button that opens the correction form. Nothing is drawn where there
+ * is no entry to name or the entry has no word. */
+export function Remedy({
+  fieldKey,
+  onCorrect,
+}: {
+  fieldKey: string | null;
+  onCorrect?: () => void;
+}) {
+  const t = useStrings();
+  const field = wordOfKey(t, fieldKey);
+  if (field === null) return null;
+  const words = t(ASSET_KEYS.opening_unknown, { field });
+  if (onCorrect === undefined)
+    return <span className="text-xs text-muted-foreground">{words}</span>;
+  return (
+    <WriteHold>
+      <Button
+        type="button"
+        variant="link"
+        size="xs"
+        className="ledger-asset-remedy h-auto min-w-0 p-0 text-start text-xs whitespace-normal"
+        onClick={onCorrect}
+      >
+        {words}
+      </Button>
+    </WriteHold>
   );
 }
 

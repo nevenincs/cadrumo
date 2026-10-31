@@ -144,6 +144,7 @@ export function AssetDetail({
             disposal={row.disposal}
             onOpenLink={onOpenLink}
             onCorrectClaim={onCorrectClaim}
+            onCorrectElement={() => onAct("correction")}
           />
         </TabsContent>
         <TabsContent value="timeline" className="overflow-y-auto">

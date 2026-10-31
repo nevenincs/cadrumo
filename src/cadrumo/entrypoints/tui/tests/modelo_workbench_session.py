@@ -22,6 +22,7 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -58,7 +59,7 @@ from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
-from ...operation_composition import build_production_operation_registry
+from ...tests.production_operation_registry import production_operation_registry
 from ..modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 from ..modelo.workbench.factory import InstalledModeloWorkbench
 
@@ -297,6 +298,17 @@ def declaration_of(unit: WorkUnit) -> DeclarationsWorkspaceDeclarationRefV1:
     )
 
 
+@cache
+def _production_public_contracts() -> OperationPublicContractSetV1:
+    """The eagerly composed production registry's public contracts, composed once per process.
+
+    Composing every operation group validates every schema and dominates a
+    workbench's construction; the contract set it yields is immutable and
+    depends on no profile, storage root or authority lease.
+    """
+    return production_operation_registry().public_contract_set
+
+
 def application_workbench(
     unit: WorkUnit,
     *,
@@ -306,7 +318,7 @@ def application_workbench(
     door_override: Callable[[ModeloWorkbenchFormReadV1 | None], ModeloWorkspaceLifecycleDoor] | None = None,
 ) -> InstalledModeloWorkbench:
     """The production workbench of one stored declaration, read and acted on through the application."""
-    contracts = build_production_operation_registry().public_contract_set
+    contracts = _production_public_contracts()
     ports = workbench_read_ports(unit.bucket_id, operation)
     recorded = submissions if submissions is not None else RecordedSubmissions()
 

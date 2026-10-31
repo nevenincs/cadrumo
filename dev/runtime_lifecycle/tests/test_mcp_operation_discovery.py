@@ -26,11 +26,11 @@ from cadrumo.application.operations.registry import OperationPublicDefinitionDes
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_PATCH_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_mcp.mcp.protocol_contract import SIGN_IN_REMEDY
 from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import stored_sign_in_runtime
+from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
 
 from .attended_mcp_support import attended_status, holding_person
 
@@ -49,7 +49,7 @@ _UNREGISTERED = "auth.synthetic-unregistered"
 
 @cache
 def _registry() -> OperationRegistry:
-    return build_production_operation_registry()
+    return production_operation_registry()
 
 
 def _adapter() -> RuntimeMcpAdapter:

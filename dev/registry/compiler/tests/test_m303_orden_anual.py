@@ -22,9 +22,11 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFa
 from cadrumo.domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 
 from ...analysis.m303_orden_anual import main
+from .._m303_orden_projection_compiler import require_declared_orden_shape
 from .._m303_orden_source import extract_m303_annual_orden_source
 from ..annual_orden_auxiliary_indicator import resolve_annual_orden_auxiliary_activity_indicators
 from ..loader import load_registry_tree
+from ..m303_orden_raw_models import M303AnnualOrdenSourceCensus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -126,6 +128,44 @@ def test_an_unauthored_reduction_year_still_reports_the_coverage_gap() -> None:
             source=source,
             source_root=bundled_path(),
         )
+
+
+def _extracted_census() -> M303AnnualOrdenSourceCensus:
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    source = catalogues.sources["boe-orden-hfp-1335-2021-iva-authority"]
+    return extract_m303_annual_orden_source(ejercicio=2022, source=source, source_root=bundled_path())
+
+
+def test_the_extracted_orden_has_the_shape_the_registry_declares() -> None:
+    """CONTROL: the refusals below are the mutated value, not the census."""
+    require_declared_orden_shape(_extracted_census())
+
+
+def test_a_module_order_past_the_declared_rows_is_refused() -> None:
+    census = _extracted_census()
+    activity = census.activities[0]
+    module = activity.modules[0].model_copy(update={"order": 8})
+    mutated = census.model_copy(update={"activities": (activity.model_copy(update={"modules": (module,)}),)})
+
+    with pytest.raises(RegistryValidationError, match="module order is past"):
+        require_declared_orden_shape(mutated)
+
+
+def test_a_seasonal_band_past_the_declared_days_is_refused() -> None:
+    census = _extracted_census()
+    last = census.seasonal_indexes[-1].model_copy(update={"maximum_days": 181})
+    mutated = census.model_copy(update={"seasonal_indexes": (*census.seasonal_indexes[:-1], last)})
+
+    with pytest.raises(RegistryValidationError, match="seasonal band is past"):
+        require_declared_orden_shape(mutated)
+
+
+def test_a_missing_seasonal_band_is_refused() -> None:
+    census = _extracted_census()
+    mutated = census.model_copy(update={"seasonal_indexes": census.seasonal_indexes[:-1]})
+
+    with pytest.raises(RegistryValidationError, match="exactly 3 seasonal index bands"):
+        require_declared_orden_shape(mutated)
 
 
 def test_the_auxiliary_indicator_lookup_refuses_when_neither_authority_nor_scope_is_supplied() -> None:

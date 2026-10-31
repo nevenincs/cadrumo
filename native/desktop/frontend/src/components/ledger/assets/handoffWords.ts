@@ -69,7 +69,7 @@ export function leftOutNotes(
       t(GAP_KEYS[kind], {
         name,
         start: dateText(locale, gap.covered_from, true),
-        end: dateText(locale, gap.covered_until, true),
+        end: dateText(locale, gap.covered_through, true),
         amount: gap.accrued ? amountText(locale, gap.accrued.decimal) : "",
       }),
     );

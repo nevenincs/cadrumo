@@ -4998,7 +4998,7 @@ export type ModeloInventoryCasillaV1 = {
 export type ModeloInvoiceWithholdingCaptureProjection = {
   outcome: "captured" | "refused";
   profile_id: string;
-  modelo: "111" | "115";
+  modelo: string;
   period: PublicPeriod;
   provider: "retenciones" | null;
   observation_count: number | null;
@@ -7334,7 +7334,7 @@ export type PublicForeignAssetObservation = {
  * Closed received-invoice command: caller-authored source rows are forbidden.
  */
 export type PublicInvoiceWithholdingCommand = {
-  modelo: "111" | "115";
+  modelo: string;
   period: PublicPeriod;
 };
 

@@ -85,7 +85,8 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_work_lifecycle_ports,
 )
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+
+from .production_operation_registry import production_operation_registry
 
 SEEDED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 _BUCKET_ID = "13000000-0000-4000-8000-000000000730"
@@ -187,7 +188,7 @@ class SeededOperatorWork:
             work_catalogue=self.ports.work_unit_repository.load(),
             calculation_catalogue=self.ports.calculation_repository.load(),
             operation=self.operation,
-            operation_contracts=build_production_operation_registry().public_contract_set,
+            operation_contracts=production_operation_registry().public_contract_set,
             issued_at=issued_at,
         )
 
@@ -198,7 +199,7 @@ class SeededOperatorWork:
             work_catalogue=self.ports.work_unit_repository.load(),
             calculation_catalogue=self.ports.calculation_repository.load(),
             operation=self.operation,
-            operation_contracts=build_production_operation_registry().public_contract_set,
+            operation_contracts=production_operation_registry().public_contract_set,
         )
 
     def sibling(self, period_code: str) -> SeededOperatorWork:
