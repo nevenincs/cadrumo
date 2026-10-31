@@ -132,33 +132,71 @@ async def test_cancellation_stays_primary_when_real_playwright_close_fails() -> 
 
 
 @pytest.mark.asyncio
-async def test_only_failed_real_owner_is_retained_and_retried() -> None:
+async def test_only_failed_real_owner_is_retained_and_retried(monkeypatch: pytest.MonkeyPatch) -> None:
     """Successful concrete owners are dropped while only the failed owner retries."""
     task_name = "test-multiple-real-playwright-owner-close"
     healthy_session, healthy_driver_pid = await _opened_real_session("healthy-cleanup-owner")
     failed_session, failed_driver_pid = await _opened_real_session("failed-cleanup-owner")
+    healthy_entered, release_healthy, failed_entered = asyncio.Event(), asyncio.Event(), asyncio.Event()
+    healthy_close, failed_close = healthy_session.close, failed_session.close
 
+    async def delayed_healthy_close() -> None:
+        healthy_entered.set()
+        await release_healthy.wait()
+        await healthy_close()
+
+    async def observed_failed_close() -> None:
+        failed_entered.set()
+        await failed_close()
+
+    monkeypatch.setattr(healthy_session, "close", delayed_healthy_close)
+    monkeypatch.setattr(failed_session, "close", observed_failed_close)
     await failed_session._close_lock.acquire()
-    cancel_close = asyncio.create_task(
-        _cancel_blocked_cleanup_attempts(
-            task_name=task_name,
-            close_lock=failed_session._close_lock,
-        ),
+    cleanup_task = asyncio.create_task(
+        close_async_resources(healthy_session, failed_session, task_name=task_name),
     )
-    with pytest.raises(AsyncResourceCleanupError) as exc_info:
-        await close_async_resources(
-            healthy_session,
-            failed_session,
-            task_name=task_name,
+    failed_ready = asyncio.create_task(failed_entered.wait())
+    cancellers: list[asyncio.Task[None]] = []
+    try:
+        await healthy_entered.wait()
+        assert not failed_entered.is_set(), "the second owner must wait for the first"
+        release_healthy.set()
+        done, _ = await asyncio.wait({failed_ready, cleanup_task}, return_when=asyncio.FIRST_COMPLETED)
+        assert failed_ready in done, "cleanup finished without attempting the second owner"
+        assert healthy_session.cleanup_complete
+        cancel_close = asyncio.create_task(
+            _cancel_blocked_cleanup_attempts(
+                task_name=task_name,
+                close_lock=failed_session._close_lock,
+            ),
         )
-    await cancel_close
+        cancellers.append(cancel_close)
+        try:
+            with pytest.raises(AsyncResourceCleanupError) as exc_info:
+                await cleanup_task
+        finally:
+            await cancel_close
 
-    cleanup_error = exc_info.value
-    await wait_for_process_exit(healthy_driver_pid, after="cleanup retry")
-    assert cleanup_error._resources == (failed_session,)
-    assert len(cleanup_error._failures) == 1
-    await cleanup_error.retry_cleanup()
-    await wait_for_process_exit(failed_driver_pid, after="cleanup retry")
+        cleanup_error = exc_info.value
+        await wait_for_process_exit(healthy_driver_pid, after="cleanup retry")
+        assert cleanup_error._resources == (failed_session,)
+        assert len(cleanup_error._failures) == 1
+        await cleanup_error.retry_cleanup()
+        await wait_for_process_exit(failed_driver_pid, after="cleanup retry")
+    finally:
+        release_healthy.set()
+        try:
+            if not cancellers:
+                if failed_session._close_lock.locked():
+                    failed_session._close_lock.release()
+            else:
+                await cancellers[0]
+        finally:
+            if not failed_ready.done():
+                failed_ready.cancel()
+            await asyncio.gather(failed_ready, cleanup_task, return_exceptions=True)
+            await healthy_session.close()
+            await failed_session.close()
 
 
 @pytest.mark.asyncio
