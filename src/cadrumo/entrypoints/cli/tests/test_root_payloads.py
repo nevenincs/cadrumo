@@ -5,17 +5,48 @@ from __future__ import annotations
 import sys
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....application.operator_surface.help import build_help_document
-from ....application.operator_surface.help_models import RootLandingReport
+from ....application.operator_surface.help_models import (
+    HelpDocument,
+    HelpLabel,
+    HelpProse,
+    HelpSurface,
+    RootLandingReport,
+)
 from ....application.overview.calendar_models import OverviewStatusReport
+from ....core.config import override_settings
 from ....core.json_contract import strict_round_trip
 from ..root_results import AppRootResult, RootStatusResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+@pytest.mark.parametrize("surface", tuple(HelpSurface))
+def test_real_help_documents_round_trip_in_every_locale(locale: str, surface: HelpSurface) -> None:
+    with override_settings(cadrumo_output_language=locale):
+        document = build_help_document(surface)
+    assert strict_round_trip(HelpDocument, document) == document
+
+
+def test_help_labels_keep_the_short_line_boundary() -> None:
+    adapter = TypeAdapter(HelpLabel)
+    assert adapter.validate_python("x" * 128) == "x" * 128
+    with pytest.raises(ValidationError) as refused:
+        adapter.validate_python("x" * 129)
+    assert refused.value.errors()[0]["type"] == "string_too_long"
+
+
+def test_help_prose_keeps_its_distinct_bounded_room_for_translations() -> None:
+    adapter = TypeAdapter(HelpProse)
+    assert adapter.validate_python("x" * 1024) == "x" * 1024
+    with pytest.raises(ValidationError) as refused:
+        adapter.validate_python("x" * 1025)
+    assert refused.value.errors()[0]["type"] == "string_too_long"
 
 
 @pytest.mark.parametrize(
