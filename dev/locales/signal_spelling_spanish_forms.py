@@ -53,6 +53,7 @@ _SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
         "introdúce",
         "investíga",
         "manten",
+        "modifíca",
         "muéstra",
         "márca",
         "nómbra",
@@ -64,6 +65,7 @@ _SPANISH_DIRECT_OBJECT_IMPERATIVES = frozenset(
         "reanúda",
         "recompíla",
         "reconstrúye",
+        "regenéra",
         "regístra",
         "repíte",
         "respónde",
@@ -126,8 +128,30 @@ def is_reviewed_spanish_enclitic(word: str) -> bool:
 # Observed technical adjectives: typed data, intra-community transactions,
 # stale/malformed state, countersigned records and atomic writes. Agreement
 # changes gender and number, but does not change the reviewed lexical stem.
-_AGREEMENT_STEMS = frozenset({"tipad", "intracomunitari", "desactualizad", "malformad", "contrafirmad", "atómic"})
+# https://www.bizkaia.eus/fitxategiak/05/ogasuna/ereduak/Argitaratu/349CasInst.PDF
+# https://www3.agenciatributaria.gob.es/static_files/Sede/Agencia_Tributaria/Planificacion/Plan_estrategico_2024_2027/Adenda_2026_PLAN_OBJETIVOS.pdf
+# https://docs.python.org/es/3.11/tutorial/modules.html
+# https://docs.python.org/es/3.13/whatsnew/3.2.html
+# https://docs.python.org/es/3.13/using/windows.html
+# https://docs.cloud.google.com/monitoring/api/troubleshooting?hl=es-419
+_AGREEMENT_STEMS = frozenset(
+    {
+        "tipad",
+        "intracomunitari",
+        "desactualizad",
+        "malformad",
+        "contrafirmad",
+        "atómic",
+        "precalculad",
+        "recalculad",
+        "recapitulativ",
+    }
+)
 _NUMBER_ENDINGS = {
+    "editable": "s",
+    "instalable": "s",
+    "reintento": "s",
+    "subpaquete": "s",
     "subcomando": "s",
     "reanudable": "s",
     "auditable": "s",
@@ -136,6 +160,13 @@ _NUMBER_ENDINGS = {
     "sobrescritura": "s",
 }
 _INFINITIVES = frozenset({"previsualizar", "contrafirmar"})
+# Closed, reviewed conjugations of technical verbs in the documentation. Prefix
+# re- is not stripped from arbitrary words, so unrelated accents stay checked.
+# https://www.rae.es/sites/default/files/principales_novedades_de_la_ortografia_de_la_lengua_espanola.pdf
+# https://docs.python.org/es/3.11/tutorial/modules.html
+# https://docs.python.org/es/3.11/library/json.html
+# https://dle.rae.es/calcular ; https://dle.rae.es/clasificar
+_TECHNICAL_VERB_FORMS = frozenset({"recompila", "serializa", "recalculando", "recalcules", "reclasificas"})
 
 
 def is_reviewed_spanish_form(word: str) -> bool:
@@ -146,5 +177,6 @@ def is_reviewed_spanish_form(word: str) -> bool:
         or any(word == stem + ending for stem in _AGREEMENT_STEMS for ending in ("o", "a", "os", "as"))
         or any(word in (stem, stem + ending) for stem, ending in _NUMBER_ENDINGS.items())
         or word in _INFINITIVES
+        or word in _TECHNICAL_VERB_FORMS
         or word == "atómicamente"
     )

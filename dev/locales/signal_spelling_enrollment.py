@@ -366,6 +366,11 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
     ),
     "es": frozenset(
         {
+            # RAE native nouns used in statistical and typed-data documentation.
+            # https://dle.rae.es/extrapolaci%C3%B3n
+            # https://dle.rae.es/rehidrataci%C3%B3n
+            "extrapolación",
+            "rehidratación",
             # The Spanish technical and fiscal forms are attested by Microsoft
             # and AEAT, respectively; do not infer unobserved inflections.
             # https://learn.microsoft.com/es-es/azure/architecture/patterns/retry
@@ -564,6 +569,20 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             # Exact name of the recurring Spanish persona in the two lifecycle guides.
             "Ana",
             "García",
+            # Native second-person verb forms, rather than the accented
+            # adjective homographs, and the noun/adjective in the guides.
+            # https://www.softcatala.org/conjugador-de-verbs/verb/publicar/
+            # https://www.softcatala.org/conjugador-de-verbs/verb/especificar/
+            # https://www.boe.es/boe_catalan/dias/2009/12/29/pdfs/BOE-A-2009-21050-C.pdf
+            # https://catsalut.gencat.cat/web/.content/minisite/catsalut/coneix_catsalut/organitzacio/organs-direccio/Documentacio-aprovada-en-les-sessions-del-Consell-de-Direccio/2025/2025-01-27/CSMS-tarifes-per-particulars-2025.pdf
+            # https://www20.gencat.cat/docs/gecopedia/Temes/Manuals%20dus%20GECO/FormesPresentacio/Arxius/OTGencat_GECO_IMMU_FPs_fil_Ariadna.pdf
+            # https://www.bnc.cat/esl/content/download/617/5190/version/6/file/pcd_011_2024.pdf
+            "publiques",
+            "especifiques",
+            "recapitulatiu",
+            "recomprovació",
+            "enllaçable",
+            "inclusives",
             # Generalitat uses these exact forms in legal and form guidance:
             # https://repositori.justicia.gencat.cat/bitstream/handle/20.500.14226/576/llei_enjudiciament_civil_qdl88.pdf
             # https://canalempresa.gencat.cat/ca/ajuda/ajuda/ajuda-a-larea-privada/preferencies/dades/

@@ -78,6 +78,45 @@ def test_retained_persona_and_hungarian_payment_name_are_exact_and_scoped() -> N
         assert not is_project_spelling(locale, "Bizummal")
 
 
+def test_attested_spanish_technical_forms_are_bounded_by_language_and_spelling() -> None:
+    words = (
+        "Subpaquetes",
+        "subpaquetes",
+        "editables",
+        "recompila",
+        "serializa",
+        "recapitulativo",
+        "precalculado",
+        "extrapolación",
+        "rehidratación",
+        "instalable",
+        "reintentos",
+        "recalculada",
+        "recalculando",
+        "recalcules",
+        "reclasificas",
+        "modifícalos",
+        "regenérala",
+    )
+    for word in words:
+        assert is_project_spelling("es", word)
+        assert not is_project_spelling("es", word + "x")
+        for locale in ("ca", "en", "hu"):
+            assert not is_project_spelling(locale, word)
+    for typo in ("subpaqueetes", "editabless", "recompilla", "serialisa", "recapitulatibo", "reuna", "regenerala"):
+        assert not is_project_spelling("es", typo)
+
+
+def test_attested_catalan_verb_and_technical_forms_keep_exact_language_and_spelling() -> None:
+    for word in ("publiques", "especifiques", "recapitulatiu", "recomprovació", "enllaçable", "inclusives"):
+        assert is_project_spelling("ca", word)
+        assert not is_project_spelling("ca", word + "x")
+        for locale in ("en", "es", "hu"):
+            assert not is_project_spelling(locale, word)
+    for typo in ("publiquess", "especifiqes", "recapitulatiuu", "recomprovacio", "enllacable", "inclusivess"):
+        assert not is_project_spelling("ca", typo)
+
+
 @pytest.mark.parametrize("locale,word", [("ca", "declarables"), ("es", "heredables")])
 def test_attested_native_plurals_are_exact_and_locale_scoped(locale: str, word: str) -> None:
     assert is_project_spelling(locale, word)

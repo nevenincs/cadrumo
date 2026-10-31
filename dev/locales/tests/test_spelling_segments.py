@@ -31,6 +31,7 @@ def words_by_language(value: str, locale: str = "en") -> dict[str, set[str]]:
         ("Google Sheet", "Sheet"),
         ("Google Sheets", "Sheets"),
         ("Apple silicon", "silicon"),
+        ("Apple Developer ID", "Developer"),
         ("Apache License", "License"),
     ],
 )
