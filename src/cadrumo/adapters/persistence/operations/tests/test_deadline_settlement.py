@@ -32,13 +32,7 @@ from cadrumo.adapters.persistence.operations.secure_references import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
     OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
@@ -57,9 +51,7 @@ from cadrumo.application.operations.tests.authority_test_support import unread_a
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
-    OperationClosePolicy,
     OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
@@ -70,7 +62,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
 )
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import operation_repositories
+from .supervisor_test_support import _capabilities, operation_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -197,22 +189,6 @@ class HeldExecutor:
         return None
 
 
-def _capabilities() -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.COOPERATIVE,
-        deadline=OperationDeadline.COOPERATIVE,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
-
-
 def _definition(executor: HeldExecutor) -> OperationDefinition:
     return OperationDefinition(
         definition_id=_DEFINITION_ID,
@@ -226,7 +202,12 @@ def _definition(executor: HeldExecutor) -> OperationDefinition:
         ),
         phase_codes=(_PHASE,),
         interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
+        capabilities=_capabilities(
+            cancellation=OperationCancellation.COOPERATIVE,
+            deadline=OperationDeadline.COOPERATIVE,
+            owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}),
+        ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
     )
 

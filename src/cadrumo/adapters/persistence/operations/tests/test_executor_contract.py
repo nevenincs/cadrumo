@@ -17,13 +17,7 @@ from cadrumo.adapters.persistence.operations.secure_references import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
     OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from cadrumo.application.operations.errors import OperationDeclarationError
 from cadrumo.application.operations.frontend_requests import (
@@ -52,10 +46,6 @@ from cadrumo.application.operations.supervisor_context import SupervisorExecutor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
@@ -63,7 +53,7 @@ from cadrumo.core.operations import (
 from cadrumo.core.operator_progress import OperatorProgress, emit_operator_progress
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import operation_repositories
+from .supervisor_test_support import _capabilities, operation_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -176,23 +166,6 @@ class OperatorProgressExecutor:
         await emit_operator_progress(
             OperatorProgress(notice_code="auth.clave-movil.qr-scan-pending", message=_PROGRESS_MESSAGE)
         )
-
-
-def _capabilities() -> OperationCapabilities:
-    """Declare the narrow valid contract that omits the tested mutations."""
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
 
 
 def _definition(*, executor_type: type[object], build: Callable[[], object]) -> OperationDefinition:

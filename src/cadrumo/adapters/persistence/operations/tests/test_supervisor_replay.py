@@ -14,14 +14,6 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.owner import OperationExecutorContext
@@ -37,15 +29,9 @@ from cadrumo.application.operations.subject_reference import OperationSubjectRef
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-)
 
 from .supervision_support import run_to_settlement
+from .supervisor_test_support import _capabilities
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -86,23 +72,6 @@ class ReplayNoticeExecutor:
         await context.events.notice("operation.replay.notice-two")
         type(self).notices_committed.set()
         await type(self).release.wait()
-
-
-def _capabilities() -> OperationCapabilities:
-    """Declare the exact durable operation behavior exercised in this proof."""
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
 
 
 def _registry() -> OperationRegistry:
