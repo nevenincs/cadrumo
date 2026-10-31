@@ -129,6 +129,60 @@ Catalogue values for dotación, including covered interval and Modelo 100 editio
 
 Plan table 697 px in a 512 px frame.
 
+### handoff-end-date | high | The filing handoff prints the exclusive day as the last day
+
+`handoffWords.ts:58`, `operation_dtos.py:584-590`.
+
+### not-known-remains | high | Three known states still carry the Not known mark
+
+`AmortizationPlan.tsx:418`, `AssetTimeline.tsx:214-215`, `AssetList.tsx:200-203`.
+
+### free-method-recorded | high | An open free-method year says recording does not apply
+
+`AmortizationPlan.tsx:774`, `planWords.ts:43-48`.
+
+### vehicle-question | medium | The vehicle question offers answers that leave the plan unworkable
+
+`assetFields.ts:641-645`, `actividad_asset_bindings.py:873-877`.
+
+### free-minimum-reason | medium | The minimum's reason is false for a free method
+
+`register_reads.py:283`, `actividad_asset_bindings.py:235-236`.
+
+### claim-blank-reason | medium | A claim form with nothing open is blank with no reason
+
+`ClaimFlow.tsx:102,109-111`, `register_reads.py:490`.
+
+### future-baja-pending | medium | A future-dated baja hides the amount still to amortize
+
+`register_reads.py:437`, `AssetList.tsx:253-262`.
+
+### handoff-unavailable-unnamed | medium | Unworkable elements are not named among those left out
+
+`handoffWords.ts:24-33`, `FilingHandoffPanel.tsx:126,155`.
+
+### react-decisions | medium | React still holds decisions outside the known open items
+
+`planWords.ts:43`, `AmortizationPlan.tsx:140`, `assetWrites.ts:129-139`, `assetFields.ts:634`.
+
+### estimated-claim | medium | The claim flow never says a year is estimated
+
+`ClaimFlow.tsx:242-245,375`.
+
+### singular-count | low | Count sentences have no singular
+
+`common.yml:1506-1523`.
+
+### empty-further-line | low | A later payment without an invoice adds an empty timeline line
+
+`assetRevision.ts:152`, `AssetTimeline.tsx:44`.
+
+### partial-count-word | low | A partly recorded year counts as a year without a dotación
+
+`register_reads.py` `_finding_counts`.
+
 ## Recommendations
 
 Backend-owned items go to the amortization and inventory backend owners; frontend items are fixed under S07. The form-options contract serving per-stage facts and the default year, and the timeline's added event kinds, are additive and need no follow-on ADR. The vehicle-class seed matches the registry: `0001-declarations.toml:1483` flags `transporte` only in the simplified table.
+
+Re-review at `251c76b2d1`: of the first pass, 18 findings are fixed; `not-known`, `logic-in-react`, `estimated-mark`, `terminology` and the form half of `vehicle-reason` remain, and the entries above carry them forward.
