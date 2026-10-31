@@ -28,7 +28,6 @@ from .....core.errors.error_codes import build_error_envelope
 from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.period import Period
-from .....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
 from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from .....domain.calculations.registry.binding_temporal import FilingYearOffset
 from .....domain.calculations.registry.bindings import (
@@ -41,6 +40,7 @@ from .....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from .....domain.calculations.registry.result_casillas import derive_result_disposition, result_disposition_casilla_ids
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance

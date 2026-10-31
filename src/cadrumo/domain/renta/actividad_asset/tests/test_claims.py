@@ -79,6 +79,67 @@ def test_exact_retry_reuses_claim_and_changed_same_interval_refuses() -> None:
         record_claim(recorded.claims, _claim(amount=Decimal("201.00")))
 
 
+def test_equal_figures_under_another_generation_replay_the_recorded_claim_with_its_id_unchanged() -> None:
+    original = _claim()
+    recorded = record_claim((), original)
+    identity = original.claim_id
+
+    for stamped in (
+        _claim(authority_generation="next-generation"),
+        _claim(source_reference="tabla-material-2027"),
+        _claim(creating_operation="record-amortization-again"),
+    ):
+        assert stamped.claim_id != identity
+        replayed = record_claim(recorded.claims, stamped)
+
+        assert replayed.reused_existing_claim
+        assert replayed.claim is original
+        assert replayed.claims == recorded.claims
+    assert original.claim_id == identity
+
+
+def test_a_voluntary_supersession_with_equal_figures_replays_instead_of_adding_a_claim() -> None:
+    original = _claim()
+    recorded = record_claim((), original)
+
+    replayed = record_claim(
+        recorded.claims,
+        _claim(authority_generation="next-generation", supersedes_claim_id=original.claim_id),
+    )
+
+    assert replayed.reused_existing_claim
+    assert replayed.claim is original
+    assert effective_claims(replayed.claims) == (original,)
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        {"amount": Decimal("201.00")},
+        {"schedule_fingerprint": "c" * 64},
+        {"asset_revision_id": "d" * 64},
+    ],
+)
+def test_any_other_figure_on_the_same_interval_still_refuses_whatever_the_generation(
+    changed: dict[str, object],
+) -> None:
+    recorded = record_claim((), _claim())
+
+    with pytest.raises(ActividadAssetClaimConflictError, match="interval_has_different_claim"):
+        record_claim(recorded.claims, _claim(authority_generation="next-generation", **changed))
+
+
+def test_a_claim_already_superseded_is_not_a_replay_of_its_equal_figures() -> None:
+    original = _claim()
+    amended = _claim(amount=Decimal("210.00"), supersedes_claim_id=original.claim_id)
+    recorded = record_claim(record_claim((), original).claims, amended)
+
+    with pytest.raises(ActividadAssetClaimConflictError, match="claim_superseded_replay"):
+        record_claim(recorded.claims, original)
+    with pytest.raises(ActividadAssetClaimConflictError, match="interval_has_different_claim"):
+        record_claim(recorded.claims, _claim(authority_generation="next-generation"))
+
+
 def test_overlaps_refuse_but_supersession_allows_a_new_revision_of_same_asset() -> None:
     original = _claim()
     claims = record_claim((), original).claims

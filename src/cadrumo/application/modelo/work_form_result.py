@@ -31,7 +31,8 @@ from typing import Final
 
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
-from ...core.result_disposition import ResultDisposition, derive_result_disposition
+from ...core.result_disposition import ResultDisposition
+from ...domain.calculations.registry.result_casillas import derive_result_disposition
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.filing.schema import ModeloValueKind
 from .settlement_casilla import declaration_result_casillas

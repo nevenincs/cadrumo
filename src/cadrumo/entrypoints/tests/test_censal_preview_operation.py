@@ -88,7 +88,6 @@ class _PreviewBrowserResources:
 
 def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Recorded preview runs under the exact profile and closes its worker-owned resource."""
@@ -137,14 +136,19 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
     registration = build_censal_preview_operation_registration(definition)
     preview_registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
-    def preview_registry_builder(**_kwargs: object) -> OperationRegistry:
-        return preview_registry
-
-    monkeypatch.setattr(conformance, "build_production_operation_registry", preview_registry_builder)
+    # Earlier conformance cases may already have composed the default registry.
+    # The preview's injected ports must reach its worker even in that order.
+    conformance._conformance_registry(
+        before_irreversible_section=None,
+        amendment_action_ports_factory=None,
+        execution_caller_reader=None,
+    )
     profile_decode_context = operation.profile_decode_context()
     cleanup = conformance.OperationRuntimeCloseWitness()
 
-    with conformance.conformance_operation_runtime(tmp_path / "censal-preview", cleanup=cleanup) as (
+    with conformance.conformance_operation_runtime(
+        tmp_path / "censal-preview", cleanup=cleanup, registry=preview_registry
+    ) as (
         driver,
         runtime_registry,
         profile_id,

@@ -21,18 +21,13 @@ from typing import Final
 
 import pytest
 
-from ..casilla_id import CasillaId, validated_casilla_id
-from ..errors.hierarchy import CoreValidationError
-from ..period import Period
-from ..result_disposition import (
-    ResultDisposition,
-    canonical_result_amount,
-    derive_result_disposition,
-    result_disposition_casilla_ids,
-    result_disposition_declares,
-)
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.errors.hierarchy import CoreValidationError
+from .....core.period import Period
+from .....core.result_disposition import ResultDisposition, result_disposition_declares
+from ..result_casillas import canonical_result_amount, derive_result_disposition, result_disposition_casilla_ids
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 _M303_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id("71", surface="test result-disposition casilla id")

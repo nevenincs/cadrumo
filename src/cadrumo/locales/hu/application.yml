@@ -565,12 +565,12 @@ application:
         no_stock_held: Nincs készlet
     service:
       errors:
-        activity_conflict: "Már létezik készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Nyisd meg, ahelyett hogy újat hoznál létre."
-        activity_not_found: "Nincs készletnyilvántartás a(z) %{actividad_id} tevékenységhez és a(z) %{year} évhez. Először hozd létre, vagy ellenőrizd a tevékenységet és az évet."
+        activity_conflict: "Már létezik készletnyilvántartás ehhez a tevékenységhez és a(z) %{year} évhez. Nyisd meg, ahelyett hogy újat hoznál létre."
+        activity_not_found: "Nincs készletnyilvántartás ehhez a tevékenységhez és a(z) %{year} évhez. Először hozd létre, vagy ellenőrizd a tevékenységet és az évet."
         closing_authority_conflict: "Ehhez a tevékenységhez és évhez már másik záróérték van rögzítve."
         evidence_file_not_admitted: "Ezt a fájlt nem lehet megőrizni. Válassz egy megnyitható PDF-et, XML-fájlt vagy képet (PNG, JPEG, TIFF, WebP vagy HEIC), és próbáld újra."
         closing_authority_invalid: "Ezt a záróértéket nem sikerült rögzíteni, mert az adatai nem egyeznek egymással. Ellenőrizd őket, és próbáld újra."
-        closing_authority_recorded: "A(z) %{actividad_id} %{year}. évi készletének záróértéke már rögzítve van, ezért a készletadatai már nem módosíthatók."
+        closing_authority_recorded: "Ennek a tevékenységnek a(z) %{year}. évi készletének záróértéke már rögzítve van, ezért a készletadatai már nem módosíthatók."
         correction_changes_nothing: Ez a javítás nem ad meg a jelenlegitől eltérő
           nyitó értéket vagy értékelési módszert.
         correction_id_conflict: "Ezt a javítást már más adatokkal rögzítették."
@@ -578,15 +578,15 @@ application:
           tétel a nyilvántartott egységek fölé kerülne.'
         duplicate_movement_id: "Ez a mozgás már szerepel a készletnyilvántartásban. Mielőtt újra felvennéd, ellenőrizd a rögzített mozgásokat."
         invalid_valuation_method: 'A készlet értékelési mód nem támogatott: %{valuation_method}.'
-        inventory_already_retired: A(z) %{actividad_id} %{year}. évi készlete már
+        inventory_already_retired: Ennek a tevékenységnek a(z) %{year}. évi készlete már
           ki van vonva.
-        inventory_not_retired: A(z) %{actividad_id} %{year}. évi készlete nincs kivonva.
-        inventory_retired: A(z) %{actividad_id} %{year}. évi készlete ki van vonva.
+        inventory_not_retired: Ennek a tevékenységnek a(z) %{year}. évi készlete nincs kivonva.
+        inventory_retired: Ennek a tevékenységnek a(z) %{year}. évi készlete ki van vonva.
           Állítsd vissza, mielőtt módosítod a készletadatait.
         inventory_validation: "Ezeket a készletadatokat nem sikerült elfogadni. Ellenőrizd őket, és próbáld újra."
-        later_closing_authority_recorded: "A(z) %{actividad_id} %{later_year}. évi záróértéke erre a zárásra épül, ezért a(z) %{year}. évi készletadatok már nem módosíthatók."
+        later_closing_authority_recorded: "Ennek a tevékenységnek a(z) %{later_year}. évi záróértéke erre a zárásra épül, ezért a(z) %{year}. évi készletadatok már nem módosíthatók."
         movement_already_superseded: "Ezt a mozgást már javították vagy sztornózták."
-        movement_not_found: "A(z) %{actividad_id} %{year}. évi készletében nincs ilyen mozgás."
+        movement_not_found: "Ennek a tevékenységnek a(z) %{year}. évi készletében nincs ilyen mozgás."
         movement_outside_year: "Ennek a mozgásnak a dátuma kívül esik a(z) %{year}. évi készleten."
         stock_would_go_negative: 'Ettől a készlet nulla alá csökkenne: a(z) %{sku}
           tételből több egység kellene, mint amennyi maradt.'

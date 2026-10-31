@@ -17,7 +17,6 @@ from cadrumo.application.actividad_asset.operations import ActivityAssetOperatio
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim, record_claim
 from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
 from cadrumo.domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
-from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetEventKind
 from cadrumo.domain.renta.actividad_asset.schedule import (
     AssetScheduleHistory,
@@ -137,7 +136,7 @@ def test_a_claim_identity_stays_exact_across_revisions_sharing_a_fingerprint() -
     assert claim_under_first.claim_id != claim_under_second.claim_id
 
 
-def test_a_held_forecast_replays_after_a_new_generation_and_a_new_one_is_a_different_claim() -> None:
+def test_a_held_forecast_replays_and_so_does_the_same_figure_under_a_new_generation() -> None:
     first = _charge(_authority(generation="generation-1"))
     second = _charge(_authority(generation="generation-2"))
     claim = AmortizationClaim.from_schedule(first, asset_kind=_revision().asset_kind, creating_operation="test")
@@ -150,11 +149,13 @@ def test_a_held_forecast_replays_after_a_new_generation_and_a_new_one_is_a_diffe
 
     assert replay.reused_existing_claim is True
     assert replay.claim.claim_id == claim.claim_id
-    with pytest.raises(ActividadAssetClaimConflictError, match="interval_has_different_claim"):
-        record_claim(
-            recorded.claims,
-            AmortizationClaim.from_schedule(second, asset_kind=claim.asset_kind, creating_operation="test"),
-        )
+    assert first.schedule_fingerprint == second.schedule_fingerprint
+    newer = record_claim(
+        recorded.claims,
+        AmortizationClaim.from_schedule(second, asset_kind=claim.asset_kind, creating_operation="test"),
+    )
+    assert newer.reused_existing_claim is True
+    assert newer.claim.claim_id == claim.claim_id
 
 
 def _operations_under_generation(

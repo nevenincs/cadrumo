@@ -43,8 +43,8 @@ from ...core.amendment_kind_regime import (
 )
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
-from ...core.result_disposition import canonical_result_amount, result_disposition_casilla_ids
 from ...domain.calculations.registry.amendment_regime_policy import resolve_amendment_kind_regime_for_period
+from ...domain.calculations.registry.result_casillas import canonical_result_amount, result_disposition_casilla_ids
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from .action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
 
@@ -123,7 +123,7 @@ def _summed_result(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> 
     """Sum the modelo's declared final-result casilla(s) from a casilla-value map.
 
     Returns ``None`` when the modelo has no declared result-disposition spec
-    (:func:`~core.result_disposition.result_disposition_casilla_ids`); callers must then skip
+    (:func:`result_disposition_casilla_ids`); callers must then skip
     the liability-direction guard rather than compare against a fabricated
     zero baseline.
     """
@@ -152,7 +152,7 @@ def assert_complementaria_liability_direction_permitted(
     applies, both directions route through the unified mechanism and this
     guard is a no-op. For a pre-rectificativa period requesting
     ``COMPLEMENTARIA``, sums the modelo's declared final-result casilla(s)
-    (:func:`~core.result_disposition.result_disposition_casilla_ids`) before and after the
+    (:func:`result_disposition_casilla_ids`) before and after the
     operator's overrides and refuses when the correction lowers the declared
     liability — that correction is legally a ``solicitud de rectificación``
     (LGT art. 120.3), not a complementaria (LGT art. 122.2).

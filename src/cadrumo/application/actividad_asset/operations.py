@@ -38,6 +38,7 @@ from ...domain.renta.actividad_asset.claims import (
     claims_through_year,
     current_revisions,
     effective_claims,
+    equal_figures_claim,
     project_m100,
     record_claim,
 )
@@ -421,8 +422,10 @@ class ActivityAssetOperations:
                 creating_operation=origin or revision.asset_id,
                 supersedes_claim_id=superseded.claim_id,
             )
-            working = record_claim(working, claim).claims
-            recorded.append(claim)
+            result = record_claim(working, claim)
+            working = result.claims
+            if not result.reused_existing_claim:
+                recorded.append(claim)
         return tuple(recorded)
 
     def _baja_supersessions(
@@ -702,7 +705,9 @@ class ActivityAssetOperations:
             creating_operation=creating_operation,
             supersedes_claim_id=supersedes_claim_id,
         )
-        if any(existing.claim_id == claim.claim_id for existing in current_history.claims):
+        if any(existing.claim_id == claim.claim_id for existing in current_history.claims) or (
+            equal_figures_claim(current_history.claims, claim) is not None
+        ):
             return self._service.record_claim(claim)
         last_admitted_year = self._authority.last_admitted_year()
         if forecast.tax_year > last_admitted_year:

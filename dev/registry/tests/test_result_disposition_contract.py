@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.core.period import Period
-from cadrumo.core.result_disposition import (
-    ResultDisposition,
+from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.result_casillas import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
@@ -16,6 +19,12 @@ from cadrumo.core.result_disposition import (
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_generation() -> Iterator[None]:
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        yield
 
 
 _ANY_PERIOD = Period.from_year_and_code(2025, "1T")

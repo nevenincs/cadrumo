@@ -39,7 +39,7 @@ def test_the_cli_sentence_names_the_command_that_lists_the_records(language: str
 
 
 @pytest.mark.parametrize("language", _LANGUAGES)
-def test_the_shared_sentences_carry_no_command_movement_id_or_closing_authority(language: str) -> None:
+def test_the_shared_sentences_carry_no_command_or_id(language: str) -> None:
     errors = _at(_catalogue(language, "application"), "application", "inventory", "service", "errors")
 
     assert isinstance(errors, dict)
@@ -47,6 +47,7 @@ def test_the_shared_sentences_carry_no_command_movement_id_or_closing_authority(
         assert "aeat " not in str(sentence), key
         assert "%{movement_id}" not in str(sentence), key
         assert "%{correction_id}" not in str(sentence), key
+        assert "%{actividad_id}" not in str(sentence), key
 
 
 @pytest.mark.parametrize(

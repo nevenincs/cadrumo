@@ -14,7 +14,7 @@ composer and the cross-period carry persistence both read the disposition from
 submits and the cross-period carry the next period reads can never disagree (a
 period requested as devolución is excluded from compensación carry - never
 both). It reuses the per-modelo result→code derivation
-(:func:`~core.result_disposition.derive_result_disposition`) and the REDEME/last-period
+(:func:`~derive_result_disposition`) and the REDEME/last-period
 eligibility gate (:func:`~domain.iva.refund_eligibility.refund_disposition_available`); it does
 not duplicate either.
 
@@ -27,7 +27,7 @@ Legal basis (Modelo 303 refund election): RD 1624/1992 (RIVA) art. 30 (Registro
 de devolución mensual); Ley 37/1992 (LIVA) art. 116 (the monthly-refund right).
 
 See Also:
-    :func:`core.result_disposition.derive_result_disposition`
+    :func:`derive_result_disposition`
         Diseño-grounded result-to-code derivation used before Modelo 303 refund
         election handling.
     :func:`domain.iva.refund_eligibility.refund_disposition_available`
@@ -51,12 +51,7 @@ from ...core.modelo import Modelo
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.refund_election import RefundElection
-from ...core.result_disposition import (
-    ResultDisposition,
-    derive_result_disposition,
-    result_disposition_casilla_ids,
-    result_disposition_declares,
-)
+from ...core.result_disposition import ResultDisposition, result_disposition_declares
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -65,6 +60,7 @@ from ...domain.calculations.registry.casilla_membership import (
 )
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.result_casillas import derive_result_disposition, result_disposition_casilla_ids
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.deadlines.models import ChargeAccount, TaxpayerProfile
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year, refund_disposition_available
@@ -104,7 +100,7 @@ def resolve_modelo_result_disposition(
     against which the revision's ``casilla_values`` are validated.
 
     Computes the modelo's base disposition from its final-result casilla via
-    :func:`~core.result_disposition.derive_result_disposition`, then — for a Modelo 303
+    :func:`~derive_result_disposition`, then — for a Modelo 303
     credit (``C``) — applies the refund election: a taxpayer inscribed in the
     Registro de devolución mensual (REDEME) is treated as
     requesting devolución (``D``) for eligible negative periods under a standing

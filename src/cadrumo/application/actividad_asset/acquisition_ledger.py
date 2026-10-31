@@ -26,10 +26,12 @@ def require_acquisition_in_ledger(
     business-allocated basis is already reduced to the taxpayer's share.  The
     basis stays the register's; the rows only reconcile against it.
 
-    An element acquired outside the ledger owns no row, so there is nothing to reconcile.
+    An element acquired outside the ledger has no primary row.  Rows it owns, such as a later
+    instalment, must still exist and be payments, but the basis includes what was paid outside
+    the ledger, so neither bound applies.
 
     Returns:
-        The primary acquisition transaction, or ``None`` when the element owns no row.
+        The primary acquisition transaction, or ``None`` when the element owns none.
 
     Raises:
         ActividadAssetValidationError: When a transaction is absent, is not a
@@ -39,6 +41,8 @@ def require_acquisition_in_ledger(
     if not owned:
         return None
     transactions = _acquisition_payments(revision, ledger)
+    if revision.acquisition.observed_transaction_id is None:
+        return None
     basis = revision.basis
     paid = sum((_paid_in_euro(transaction) for transaction in transactions), Decimal("0"))
     if basis.acquisition_cost() > paid:
