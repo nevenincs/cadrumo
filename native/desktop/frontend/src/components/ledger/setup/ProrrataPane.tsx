@@ -14,7 +14,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing, type LandingCheck } from "../WritePause";
-import { amountText } from "../movements/movementWords";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
 import { PeriodSelector } from "../PeriodSelector";
 import {
   CallLine,
@@ -309,7 +309,7 @@ export function ProrrataPane({
       : said;
   };
   const percent = (value: { decimal: string } | null) =>
-    value ? `${value.decimal}%` : "—";
+    value ? formatPercent(locale, value.decimal, { unit: "points" }) : "—";
 
   const columns: Column<ProrrataEntry>[] = [
     {
@@ -379,11 +379,11 @@ export function ProrrataPane({
         entry.definitive_volume_con_derecho &&
         entry.definitive_volume_sin_derecho
           ? t("desktop.ledger.prorrata.volumes_pair", {
-              with_right: amountText(
+              with_right: formatAmount(
                 locale,
                 entry.definitive_volume_con_derecho.decimal,
               ),
-              without_right: amountText(
+              without_right: formatAmount(
                 locale,
                 entry.definitive_volume_sin_derecho.decimal,
               ),

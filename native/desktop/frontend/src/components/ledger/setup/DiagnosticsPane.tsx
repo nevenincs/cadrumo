@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { parseIsoDate, parsePercent } from "../../../shell/ledgerGrammar";
 import type { LedgerLlmDiagnosticsResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
-import { percentText } from "../movements/movementWords";
+import {
+  formatAmount,
+  formatCount,
+  formatPercent,
+} from "../../../shared/numbers";
 import {
   CallLine,
   FormGrid,
@@ -27,7 +31,6 @@ type Usage = LedgerLlmDiagnosticsResult["report"]["usage_providers"][number];
  */
 export function DiagnosticsPane({ port, locale }: SetupProps) {
   const t = useStrings();
-  const numbers = new Intl.NumberFormat(locale);
   const [since, setSince] = useState("");
   const [until, setUntil] = useState("");
   const [threshold, setThreshold] = useState("");
@@ -61,7 +64,7 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
   };
   const found = report?.kind === "done" ? report.result.report : null;
   const decimalPercent = (value: { decimal: string } | null) =>
-    value ? percentText(locale, value.decimal) : "—";
+    value ? formatPercent(locale, value.decimal, { unit: "fraction" }) : "—";
   return (
     <Panel title={t("desktop.ledger.diagnostics.title")}>
       <FormGrid>
@@ -108,20 +111,22 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
           <dl className="grid max-w-md grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
             <dt>{t("desktop.ledger.diagnostics.calls")}</dt>
             <dd className="text-right tabular-nums">
-              {numbers.format(found.total_calls)}
+              {formatCount(locale, found.total_calls)}
             </dd>
             <dt>{t("desktop.ledger.diagnostics.classified")}</dt>
             <dd className="text-right tabular-nums">
-              {numbers.format(found.total_classified)}
+              {formatCount(locale, found.total_classified)}
             </dd>
             <dt>{t("desktop.ledger.diagnostics.low")}</dt>
             <dd className="text-right tabular-nums">
-              {numbers.format(found.total_low_confidence)}
+              {formatCount(locale, found.total_low_confidence)}
             </dd>
             <dt>{t("desktop.ledger.diagnostics.cost")}</dt>
             <dd className="text-right tabular-nums">
               {found.total_cost_estimate_usd
-                ? `${found.total_cost_estimate_usd.decimal} USD`
+                ? formatAmount(locale, found.total_cost_estimate_usd.decimal, {
+                    currency: "USD",
+                  })
                 : t("desktop.ledger.diagnostics.unpriced", {
                     count: found.total_unpriced_calls,
                   })}
@@ -145,14 +150,14 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
                 label: t("desktop.ledger.diagnostics.classified"),
                 numeric: true,
                 sort: (row) => row.classified_count,
-                cell: (row) => numbers.format(row.classified_count),
+                cell: (row) => formatCount(locale, row.classified_count),
               },
               {
                 key: "low",
                 label: t("desktop.ledger.diagnostics.low"),
                 numeric: true,
                 sort: (row) => row.low_confidence_count,
-                cell: (row) => numbers.format(row.low_confidence_count),
+                cell: (row) => formatCount(locale, row.low_confidence_count),
               },
               {
                 key: "mean",
@@ -181,14 +186,14 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
                 label: t("desktop.ledger.diagnostics.calls"),
                 numeric: true,
                 sort: (row) => row.calls,
-                cell: (row) => numbers.format(row.calls),
+                cell: (row) => formatCount(locale, row.calls),
               },
               {
                 key: "tokens",
                 label: t("desktop.ledger.diagnostics.tokens"),
                 numeric: true,
                 sort: (row) => row.total_tokens,
-                cell: (row) => numbers.format(row.total_tokens),
+                cell: (row) => formatCount(locale, row.total_tokens),
               },
             ]}
           />

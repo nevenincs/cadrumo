@@ -5,7 +5,9 @@
 // never raw.
 
 import type { Translate } from "../../../shell/strings";
-import { amountText, dateText, percentText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
+import { canonicalDecimal } from "../../../shell/ledgerGrammar";
 import type {
   Amount,
   PlanRow,
@@ -96,11 +98,11 @@ export function nothingOpen(
 
 /** Whether the backend states this amount as a recorded zero. */
 export const isStatedZero = (amount: Amount) =>
-  amount !== null && Number(amount.decimal) === 0;
+  amount !== null && canonicalDecimal(amount.decimal) === "0";
 
 /** An amount drawn to the cent, or null where it is not stated. */
 export const figureText = (locale: string, amount: Amount) =>
-  amount === null ? null : amountText(locale, amount.decimal);
+  amount === null ? null : formatAmount(locale, amount.decimal);
 
 type ValueKind = "date" | "amount" | "fraction" | "method" | "kind" | "reason";
 
@@ -183,11 +185,11 @@ export function changeValueText(
   const kind = Object.hasOwn(VALUE_KIND, path) ? VALUE_KIND[path] : undefined;
   switch (kind) {
     case "date":
-      return dateText(locale, value, true);
+      return formatDay(locale, value);
     case "amount":
-      return amountText(locale, value);
+      return formatAmount(locale, value);
     case "fraction":
-      return percentText(locale, value);
+      return formatPercent(locale, value, { unit: "fraction" });
     case "method":
       return tokenWord(t, "method", value);
     case "kind":
@@ -197,7 +199,7 @@ export function changeValueText(
     default:
       break;
   }
-  if (DATE.test(value)) return dateText(locale, value, true);
+  if (DATE.test(value)) return formatDay(locale, value);
   if (TEXT_FIELDS.has(path) && change.field_key !== null) return value;
   return looksInternal(value) ? t(ASSET_KEYS.timeline.value_changed) : value;
 }

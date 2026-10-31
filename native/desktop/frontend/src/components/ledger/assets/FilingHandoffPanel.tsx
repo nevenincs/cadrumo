@@ -7,7 +7,7 @@ import type {
   PublicDecimal,
 } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
-import { amountText } from "../movements/movementWords";
+import { formatAmount } from "../../../shared/numbers";
 import {
   CallLine,
   ChoiceField,
@@ -188,7 +188,7 @@ export function FilingHandoffPanel({
                         <span aria-hidden="true">{left}</span>
                       </Hint>
                     )}
-                    {amountText(locale, found.amount.decimal)}
+                    {formatAmount(locale, found.amount.decimal)}
                   </span>
                 );
               },

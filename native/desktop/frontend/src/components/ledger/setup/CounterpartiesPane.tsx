@@ -6,7 +6,7 @@ import { facts } from "@/shell/compose";
 import type { LedgerCounterpartyResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
-import { stampText } from "../movements/movementWords";
+import { formatTime } from "../../../shared/dateFormats";
 import {
   CallLine,
   ChoiceField,
@@ -202,7 +202,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
               </dt>
               <dd>
                 {result.facts
-                  ? stampText(locale, result.facts.asserted_at)
+                  ? formatTime(locale, result.facts.asserted_at)
                   : t("desktop.ledger.counterparty.not_confirmed")}
               </dd>
             </dl>

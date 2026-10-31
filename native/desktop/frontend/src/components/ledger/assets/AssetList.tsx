@@ -11,7 +11,7 @@ import { facts } from "../../../shell/compose";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { ATTENTION_TONE } from "../../modelo/workspace/Marks";
 import type { ModeloFormAttention } from "../../../shell/modeloContract";
-import { dateText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
 import { WriteHold } from "../WritePause";
 import { rankDecimal, SetupTable, type Column } from "../setup/SetupParts";
 import type { SetupCall } from "../setup/setupModel";
@@ -253,7 +253,7 @@ export function AssetList({
         sort: (row) => row.in_service_date,
         cell: (row) => (
           <span className="whitespace-nowrap">
-            {dateText(locale, row.in_service_date, true)}
+            {formatDay(locale, row.in_service_date)}
           </span>
         ),
       },

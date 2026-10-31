@@ -13,7 +13,8 @@ import type {
   ListDisposal,
   ReasonFact,
 } from "../../../shell/ledgerSetup";
-import { amountText, dateText, percentText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
 
 /** The labels the tab's parts name directly. */
 export const ASSET_KEYS = {
@@ -245,11 +246,11 @@ export function factText(t: Translate, fact: ReasonFact): string {
   const locale = t.locale ?? "en";
   switch (fact.kind) {
     case "date":
-      return dateText(locale, fact.value, true);
+      return formatDay(locale, fact.value);
     case "amount":
-      return amountText(locale, fact.value);
+      return formatAmount(locale, fact.value);
     case "percent":
-      return percentText(locale, fact.value);
+      return formatPercent(locale, fact.value, { unit: "fraction" });
     case "count":
     case "text":
       return fact.value;
@@ -357,7 +358,7 @@ export function bajaText(
   disposal: ListDisposal,
 ): string {
   return t(ASSET_KEYS.plan.baja, {
-    date: dateText(locale, disposal.disposal_date, true),
+    date: formatDay(locale, disposal.disposal_date),
     reason:
       wordOfKey(t, disposal.reason_key) ??
       tokenWord(t, "disposal_reason", disposal.reason),

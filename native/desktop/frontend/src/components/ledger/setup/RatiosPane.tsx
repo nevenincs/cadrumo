@@ -22,7 +22,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
-import { percentText } from "../movements/movementWords";
+import { formatPercent } from "../../../shared/numbers";
 import { PeriodSelector } from "../PeriodSelector";
 import {
   CallLine,
@@ -220,7 +220,9 @@ export function RatiosPane({
           );
         const set = overrides.get(row.category);
         return set ? (
-          <span className="font-medium">{percentText(locale, set)}</span>
+          <span className="font-medium">
+            {formatPercent(locale, set, { unit: "fraction" })}
+          </span>
         ) : (
           <span className="text-muted-foreground">
             {t("desktop.ledger.ratios.not_set")}

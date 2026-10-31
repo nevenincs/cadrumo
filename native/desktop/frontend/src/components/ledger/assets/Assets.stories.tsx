@@ -6,7 +6,8 @@ import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
 import { translator, useStrings } from "../../../shell/strings";
 import { AssetsSection } from "./AssetsSection";
-import { amountText, dateText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount } from "../../../shared/numbers";
 import { listOf } from "../../../shared/lists";
 import { ASSET_KEYS } from "./assetsWords";
 
@@ -516,15 +517,15 @@ export const FilingHandoffLeftOutNamed: Story = {
     const t = wordsOf(context);
     await openQuarter(context);
     const span = {
-      start: dateText(t.locale ?? "en", SPAN.covered_from, true),
-      end: dateText(t.locale ?? "en", SPAN.covered_through, true),
+      start: formatDay(t.locale ?? "en", SPAN.covered_from),
+      end: formatDay(t.locale ?? "en", SPAN.covered_through),
     };
     await saysLeftOut(
       context,
       t("desktop.ledger.assets.handoff_gap_accrued", {
         name: "Furgoneta de reparto",
         ...span,
-        amount: amountText(t.locale ?? "en", "1451.84"),
+        amount: formatAmount(t.locale ?? "en", "1451.84"),
       }),
     );
     await saysLeftOut(
@@ -614,17 +615,17 @@ export const FilingHandoffAccrualUnknown: Story = {
       context,
       t("desktop.ledger.assets.handoff_gap_unavailable", {
         name: "Furgoneta de reparto",
-        start: dateText(locale, SPAN.covered_from, true),
-        end: dateText(locale, SPAN.covered_through, true),
+        start: formatDay(locale, SPAN.covered_from),
+        end: formatDay(locale, SPAN.covered_through),
       }),
     );
     if (
       context.canvasElement.textContent?.includes(
         t("desktop.ledger.assets.handoff_gap_accrued", {
           name: "Furgoneta de reparto",
-          start: dateText(locale, SPAN.covered_from, true),
-          end: dateText(locale, SPAN.covered_through, true),
-          amount: amountText(locale, "0"),
+          start: formatDay(locale, SPAN.covered_from),
+          end: formatDay(locale, SPAN.covered_through),
+          amount: formatAmount(locale, "0"),
         }),
       )
     )

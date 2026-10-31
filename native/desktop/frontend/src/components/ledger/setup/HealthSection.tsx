@@ -29,7 +29,8 @@ import {
   stagedClassifyCount,
   type ReadinessFilter,
 } from "../movements/movementsModel";
-import { amountText, reasonShort } from "../movements/movementWords";
+import { reasonShort } from "../movements/movementWords";
+import { formatAmount, formatCount } from "../../../shared/numbers";
 import { ReadinessStrip } from "../movements/ReadinessStrip";
 import {
   CallLine,
@@ -96,8 +97,7 @@ export function HealthSection({
   onReset(): void;
 }) {
   const t = useStrings();
-  const numbers = new Intl.NumberFormat(locale);
-  const count = (value: number) => numbers.format(value);
+  const count = (value: number) => formatCount(locale, value);
   const shown = periodText(t, locale, period);
   const key = period ? `${period.year}:${period.code}` : "all";
   const status = useSetupRead(
@@ -235,15 +235,15 @@ export function HealthSection({
             >
               <dt>{t("desktop.ledger.health.income")}</dt>
               <dd className="text-right tabular-nums">
-                {amountText(locale, read.business_income_total)}
+                {formatAmount(locale, read.business_income_total)}
               </dd>
               <dt>{t("desktop.ledger.health.expense")}</dt>
               <dd className="text-right tabular-nums">
-                {amountText(locale, read.business_expense_total)}
+                {formatAmount(locale, read.business_expense_total)}
               </dd>
               <dt>{t("desktop.ledger.health.net")}</dt>
               <dd className="text-right font-medium tabular-nums">
-                {amountText(locale, read.business_net_total)}
+                {formatAmount(locale, read.business_net_total)}
               </dd>
               <dt>{t("desktop.ledger.health.unconverted")}</dt>
               <dd className="text-right tabular-nums">

@@ -4,7 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { useTableView } from "@/components/ui/table-view";
 import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { dateText, stampText } from "../movements/movementWords";
+import { formatDay, formatTime } from "../../../shared/dateFormats";
 import { CallLine, Reading } from "../setup/SetupParts";
 import type { TimelineChange, TimelineEvent } from "../../../shell/ledgerSetup";
 import {
@@ -89,7 +89,9 @@ function Recorded({
       </span>
     );
   return (
-    <span className="tabular-nums">{stampText(locale, event.recorded_at)}</span>
+    <span className="tabular-nums">
+      {formatTime(locale, event.recorded_at)}
+    </span>
   );
 }
 
@@ -109,8 +111,8 @@ function ClaimUse({ event, locale }: { event: TimelineEvent; locale: string }) {
           <span className="tabular-nums">
             {t(ASSET_KEYS.timeline.claim_span, {
               year: use.tax_year,
-              from: dateText(locale, use.covered_from, true),
-              through: dateText(locale, use.covered_through, true),
+              from: formatDay(locale, use.covered_from),
+              through: formatDay(locale, use.covered_through),
             })}
           </span>
         )}
@@ -219,7 +221,7 @@ function TimelineTable({
                   )
                 ) : (
                   <span className="whitespace-nowrap">
-                    {dateText(locale, event.effect_date, true)}
+                    {formatDay(locale, event.effect_date)}
                   </span>
                 )}
               </td>

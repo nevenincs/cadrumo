@@ -8,7 +8,8 @@ import type {
   M130Projection,
 } from "../../../shell/ledgerSetup";
 import type { Translate } from "../../../shell/strings";
-import { amountText, dateText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount } from "../../../shared/numbers";
 import { ASSET_KEYS, countSentence } from "./assetsWords";
 
 export type Handoff = NonNullable<ActivityAssetFilingResult["filing_handoff"]>;
@@ -68,9 +69,9 @@ export function leftOutNotes(
     notes.push(
       t(GAP_KEYS[kind], {
         name,
-        start: dateText(locale, gap.covered_from, true),
-        end: dateText(locale, gap.covered_through, true),
-        amount: gap.accrued ? amountText(locale, gap.accrued.decimal) : "",
+        start: formatDay(locale, gap.covered_from),
+        end: formatDay(locale, gap.covered_through),
+        amount: gap.accrued ? formatAmount(locale, gap.accrued.decimal) : "",
       }),
     );
   }

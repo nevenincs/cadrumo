@@ -12,11 +12,8 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
-import {
-  categoryLabel,
-  classificationLabel,
-  stampText,
-} from "../movements/movementWords";
+import { categoryLabel, classificationLabel } from "../movements/movementWords";
+import { formatTime } from "../../../shared/dateFormats";
 import { CounterpartiesPane } from "./CounterpartiesPane";
 import { DiagnosticsPane } from "./DiagnosticsPane";
 import { RatiosPane } from "./RatiosPane";
@@ -242,7 +239,7 @@ function RulesPane({
       key: "added",
       label: t("desktop.ledger.rules.column.added"),
       sort: (rule) => rule.created_at,
-      cell: (rule) => stampText(locale, rule.created_at),
+      cell: (rule) => formatTime(locale, rule.created_at),
     },
     {
       key: "actions",

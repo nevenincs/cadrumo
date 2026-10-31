@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { facts } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
-import { dateText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
 import { CallLine, Reading } from "../setup/SetupParts";
 import { setupCall, type SetupCall } from "../setup/setupModel";
 import { callRefusal, NotKnown } from "./AssetList";
@@ -87,7 +87,7 @@ function Figures({
       <p className="text-muted-foreground">
         {facts(t, [
           tokenWord(t, "disposal_reason", calculation.reason),
-          dateText(locale, calculation.disposal_date, true),
+          formatDay(locale, calculation.disposal_date),
         ])}
       </p>
       <dl className="grid grid-cols-[1fr_max-content] gap-x-4 gap-y-0.5">

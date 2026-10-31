@@ -27,7 +27,12 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { tokensOf, useStrings, type Translate } from "../../../shell/strings";
 import { useWritePause, WriteHold, type LandingCheck } from "../WritePause";
-import { amountText, dateText, percentText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
+import {
+  formatAmount,
+  formatDecimal,
+  formatPercent,
+} from "../../../shared/numbers";
 import {
   CallLine,
   ChoiceField,
@@ -227,17 +232,23 @@ const corridorText = (t: Translate, locale: string, group: TableGroup) => {
     labelled(
       t,
       t(text.maximum_coefficient),
-      percentText(locale, group.maximum_coefficient.decimal),
+      formatPercent(locale, group.maximum_coefficient.decimal, {
+        unit: "fraction",
+      }),
     ),
     labelled(
       t,
       t(text.minimum_coefficient),
-      percentText(locale, group.minimum_coefficient.decimal),
+      formatPercent(locale, group.minimum_coefficient.decimal, {
+        unit: "fraction",
+      }),
     ),
     labelled(
       t,
       t(text.maximum_period),
-      t(text.period_years, { years: group.maximum_period_years.decimal }),
+      t(text.period_years, {
+        years: formatDecimal(locale, group.maximum_period_years.decimal),
+      }),
     ),
   ]);
 };
@@ -386,8 +397,8 @@ export function FieldsGrid({
                           "desktop.ledger.assets.field.acquisition_option",
                           {
                             description: candidate.description,
-                            date: dateText(locale, candidate.booked_date, true),
-                            amount: amountText(
+                            date: formatDay(locale, candidate.booked_date),
+                            amount: formatAmount(
                               locale,
                               candidate.amount.decimal,
                             ),
@@ -876,7 +887,8 @@ export function AssetForm({
   };
 
   const waiting =
-    kind === "element" && loaded === null
+    kind === "element" &&
+    (typed.asset_kind === "" || typed.in_service_date === "")
       ? t("desktop.ledger.assets.write.options_wait")
       : null;
   const name = asset.row?.name ?? t(ASSET_KEYS.list.no_name);
@@ -926,6 +938,9 @@ export function AssetForm({
             )
           }
           notes={{
+            opening_status: t(
+              "desktop.ledger.assets.field.opening_status_hint",
+            ),
             method: waiting,
             acquisition_shape: waiting,
             non_deductible_iva:
@@ -969,7 +984,7 @@ export function AssetForm({
                       : "desktop.ledger.assets.baja.confirm",
                     {
                       name,
-                      date: dateText(locale, bajaDate, true),
+                      date: formatDay(locale, bajaDate),
                     },
                   )}
             </span>

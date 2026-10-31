@@ -1293,14 +1293,21 @@ test("a fact of a reason is drawn by its kind: a year as a count is never groupe
     { key: "rate", value: "0.125", kind: "percent" as const },
     { key: "method", value: "linear", kind: "text" as const },
   ];
-  for (const locale of ["en", "es", "ca", "hu"]) {
+  for (const locale of ["en", "es", "ca", "hu"] as const) {
     const said = reasonText(translate(locale), key, facts)!;
     // Digits of a count are never grouped in any language.
     expect(said.startsWith("2026 "), locale).toBe(true);
     expect(said.endsWith(" linear"), locale).toBe(true);
     // The amount is drawn for the language, not as it was stated.
     expect(said, locale).not.toContain("12345.5");
-    expect(said, locale).toContain(locale === "en" ? "12.5%" : "12,5%");
+    expect(said, locale).toContain(
+      {
+        en: "12.5%",
+        es: "12,5 %",
+        ca: "12,5 %",
+        hu: "12,5%",
+      }[locale],
+    );
   }
   // A text stands as it is, even one that looks like a date or a number.
   expect(

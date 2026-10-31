@@ -13,7 +13,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
-import { amountText } from "../movements/movementWords";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
 import {
   CallLine,
   ChoiceField,
@@ -165,21 +165,24 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
       label: t("desktop.ledger.capital.column.cuota"),
       numeric: true,
       sort: (good) => rankDecimal(good.cuota_soportada.decimal),
-      cell: (good) => amountText(locale, good.cuota_soportada.decimal),
+      cell: (good) => formatAmount(locale, good.cuota_soportada.decimal),
     },
     {
       key: "pct",
       label: t("desktop.ledger.capital.column.prorrata"),
       numeric: true,
       sort: (good) => rankDecimal(good.prorrata_inicial_pct.decimal),
-      cell: (good) => `${good.prorrata_inicial_pct.decimal}%`,
+      cell: (good) =>
+        formatPercent(locale, good.prorrata_inicial_pct.decimal, {
+          unit: "points",
+        }),
     },
     {
       key: "deducted",
       label: t("desktop.ledger.capital.column.deducted"),
       numeric: true,
       sort: (good) => rankDecimal(good.deduccion_efectuada.decimal),
-      cell: (good) => amountText(locale, good.deduccion_efectuada.decimal),
+      cell: (good) => formatAmount(locale, good.deduccion_efectuada.decimal),
     },
     {
       key: "disposal",

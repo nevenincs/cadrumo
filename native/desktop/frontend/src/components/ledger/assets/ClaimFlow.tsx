@@ -11,7 +11,8 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
-import { amountText, dateText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount } from "../../../shared/numbers";
 import {
   ChoiceField,
   Panel,
@@ -343,9 +344,9 @@ export function ClaimFlow({
                   value: found.claim_id,
                   label: t("desktop.ledger.assets.correct.claim_item", {
                     year,
-                    amount: amountText(locale, found.amount.decimal),
-                    from: dateText(locale, found.covered_from, true),
-                    until: dateText(locale, throughOf(found), true),
+                    amount: formatAmount(locale, found.amount.decimal),
+                    from: formatDay(locale, found.covered_from),
+                    until: formatDay(locale, throughOf(found)),
                   }),
                 })),
               ]}
@@ -363,8 +364,8 @@ export function ClaimFlow({
               options={spans.map((found, index) => ({
                 value: String(index),
                 label: t("desktop.ledger.assets.claim_period_option", {
-                  from: dateText(locale, found.from, true),
-                  until: dateText(locale, found.through, true),
+                  from: formatDay(locale, found.from),
+                  until: formatDay(locale, found.through),
                 }),
               }))}
             />
@@ -399,10 +400,10 @@ export function ClaimFlow({
               <Alert icon={<Icon name="info" />}>
                 <span className="font-medium tabular-nums">
                   {t("desktop.ledger.assets.forecast", {
-                    amount: amountText(locale, forecast.amount.decimal),
+                    amount: formatAmount(locale, forecast.amount.decimal),
                     days: forecast.service_days,
-                    from: dateText(locale, forecast.covered_from, true),
-                    until: dateText(locale, throughOf(forecast), true),
+                    from: formatDay(locale, forecast.covered_from),
+                    until: formatDay(locale, throughOf(forecast)),
                   })}
                 </span>
                 <span className="text-sm">

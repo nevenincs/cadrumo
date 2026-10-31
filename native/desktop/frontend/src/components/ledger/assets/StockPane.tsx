@@ -33,7 +33,8 @@ import type {
   InventoryValuationResult,
 } from "../../../shell/ledgerSetup";
 import { useStrings, type Translate } from "../../../shell/strings";
-import { amountText, dateText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatAmount, formatDecimal } from "../../../shared/numbers";
 import {
   CallLine,
   ChoiceField,
@@ -569,6 +570,11 @@ function FormButtons({
           {busy ? t("desktop.ledger.form.saving") : submit}
         </Button>
       </WriteHold>
+      {!ready && !busy && (
+        <span className="self-center text-xs text-muted-foreground">
+          {t("desktop.ledger.form.fill_to_continue")}
+        </span>
+      )}
     </div>
   );
 }
@@ -890,9 +896,9 @@ function movementLine(
   movement: InventoryMovement,
 ) {
   return t("desktop.ledger.stock.fact.movement", {
-    date: dateText(locale, movement.movement_date, true),
+    date: formatDay(locale, movement.movement_date),
     kind: wordOf(t, "movement_kind", movement.kind),
-    quantity: movement.quantity.decimal,
+    quantity: formatDecimal(locale, movement.quantity.decimal),
   });
 }
 
@@ -1685,7 +1691,7 @@ function factText(t: Translate, locale: string, fact: HistoryFact): string {
   switch (fact.kind) {
     case "opening":
       return t("desktop.ledger.stock.fact.opening", {
-        value: amountText(locale, fact.value),
+        value: formatAmount(locale, fact.value),
       });
     case "method":
       return t("desktop.ledger.stock.fact.method", {
@@ -1756,7 +1762,7 @@ function History({
           key: "when",
           label: t("desktop.ledger.stock.history.when"),
           sort: (row) => row.position,
-          cell: (row) => dateText(locale, row.day, true),
+          cell: (row) => formatDay(locale, row.day),
         },
         {
           key: "what",
@@ -1811,7 +1817,7 @@ function PurchaseFacts({
   const cost = movement.acquisition_cost ?? null;
   const detail = movement.acquisition_detail ?? null;
   const money = (value: { decimal: string }) =>
-    amountText(locale, value.decimal);
+    formatAmount(locale, value.decimal);
   const lines: FactLine[] = [];
   if (cost !== null) {
     lines.push({
@@ -1858,7 +1864,7 @@ function PurchaseFacts({
   return (
     <Panel
       title={t("desktop.ledger.stock.facts.title", {
-        date: dateText(locale, movement.movement_date, true),
+        date: formatDay(locale, movement.movement_date),
       })}
       className="ledger-stock-form ledger-stock-purchase"
     >
@@ -2110,7 +2116,7 @@ export function StockPane({
       label: t("desktop.ledger.inventory.column.opening"),
       numeric: true,
       sort: (row) => rankDecimal(row.opening_stock.decimal),
-      cell: (row) => amountText(locale, row.opening_stock.decimal),
+      cell: (row) => formatAmount(locale, row.opening_stock.decimal),
     },
     {
       key: "movements",
@@ -2414,8 +2420,7 @@ export function StockPane({
                 key: "date",
                 label: t("desktop.ledger.inventory.column.date"),
                 sort: (movement) => movement.movement_date,
-                cell: (movement) =>
-                  dateText(locale, movement.movement_date, true),
+                cell: (movement) => formatDay(locale, movement.movement_date),
               },
               {
                 key: "kind",
@@ -2428,14 +2433,20 @@ export function StockPane({
                 label: t("desktop.ledger.inventory.column.quantity"),
                 numeric: true,
                 sort: (movement) => rankDecimal(movement.quantity.decimal),
-                cell: (movement) => movement.quantity.decimal,
+                cell: (movement) =>
+                  formatDecimal(locale, movement.quantity.decimal),
               },
               {
                 key: "unit",
                 label: t("desktop.ledger.inventory.column.unit_cost"),
                 numeric: true,
                 sort: (movement) => rankDecimal(movement.unit_cost?.decimal),
-                cell: (movement) => movement.unit_cost?.decimal ?? "—",
+                cell: (movement) =>
+                  movement.unit_cost
+                    ? formatAmount(locale, movement.unit_cost.decimal, {
+                        decimals: 6,
+                      })
+                    : "—",
               },
               {
                 key: "cost",
@@ -2450,7 +2461,7 @@ export function StockPane({
                   const cost =
                     movement.acquisition_cost?.total_acquisition_cost.decimal ??
                     movement.taxable_base?.decimal;
-                  return cost === undefined ? "—" : amountText(locale, cost);
+                  return cost === undefined ? "—" : formatAmount(locale, cost);
                 },
               },
               {
@@ -2590,8 +2601,11 @@ export function StockPane({
           <span className="font-medium tabular-nums">
             {t("desktop.ledger.inventory.valuation", {
               name: bookName(book),
-              closing: amountText(locale, valued.derived_closing_value.decimal),
-              cogs: amountText(locale, valued.cogs.decimal),
+              closing: formatAmount(
+                locale,
+                valued.derived_closing_value.decimal,
+              ),
+              cogs: formatAmount(locale, valued.cogs.decimal),
               method: wordOf(t, "valuation_method", valued.valuation_method),
             })}
           </span>

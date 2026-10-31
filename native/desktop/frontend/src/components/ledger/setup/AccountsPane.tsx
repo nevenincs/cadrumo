@@ -20,7 +20,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold, type Landing } from "../WritePause";
-import { dateText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
 import {
   CallLine,
   ChoiceField,
@@ -360,7 +360,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
         : t("desktop.ledger.accounts.every_modelo"),
     ]);
   const day = (value: string | null) =>
-    value ? dateText(locale, value, true) : null;
+    value ? formatDay(locale, value) : null;
 
   const columns: Column<OwnAccount>[] = [
     {

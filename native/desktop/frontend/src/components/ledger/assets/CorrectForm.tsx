@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useStrings } from "../../../shell/strings";
-import { dateText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
 import { AssetForm, useLedgerRead, type ActProps } from "./AssetForm";
 import { staleClaims } from "./assetWrites";
 import { figureText } from "./planWords";
@@ -56,8 +56,8 @@ export function CorrectForm(props: ActProps & { assetId: string }) {
               {t("desktop.ledger.assets.correct.claim_item", {
                 year,
                 amount: figureText(locale, claim.amount) ?? "",
-                from: dateText(locale, claim.covered_from, true),
-                until: dateText(locale, claim.covered_through, true),
+                from: formatDay(locale, claim.covered_from),
+                until: formatDay(locale, claim.covered_through),
               })}
             </Label>
           ))}

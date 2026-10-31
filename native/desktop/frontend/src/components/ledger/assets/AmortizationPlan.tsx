@@ -16,7 +16,8 @@ import { facts } from "../../../shell/compose";
 import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
-import { dateText, percentText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
+import { formatDecimal, formatPercent } from "../../../shared/numbers";
 import { CallLine, Reading } from "../setup/SetupParts";
 import type {
   ElectionLimits,
@@ -137,10 +138,10 @@ function Interval({
   return (
     <span className="inline-flex items-center gap-1 whitespace-nowrap tabular-nums">
       <span className="sr-only">{t(PLAN_KEYS.from)} </span>
-      {dateText(locale, from, true)}
+      {formatDay(locale, from)}
       <Icon name="arrow" size="xs" className="text-muted-foreground" />
       <span className="sr-only">{t(PLAN_KEYS.until)} </span>
-      {dateText(locale, through, true)}
+      {formatDay(locale, through)}
     </span>
   );
 }
@@ -366,7 +367,7 @@ function Status({
         <span className="inline-flex items-start gap-1 text-xs text-muted-foreground">
           <Icon name="clock" size="xs" className="mt-0.5" />
           {t(ASSET_KEYS.plan.from_date, {
-            date: dateText(locale, first.covered_from, true),
+            date: formatDay(locale, first.covered_from),
           })}
         </span>
       ) : (
@@ -395,8 +396,8 @@ function Status({
                   ? ASSET_KEYS.plan.gap
                   : ASSET_KEYS.plan.claimable,
                 {
-                  from: dateText(locale, interval.covered_from, true),
-                  until: dateText(locale, interval.covered_through, true),
+                  from: formatDay(locale, interval.covered_from),
+                  until: formatDay(locale, interval.covered_through),
                 },
               )}
             </span>
@@ -558,24 +559,28 @@ function Limits({
         )}
         {limits.maximum_coefficient !== null && (
           <Fact label={t(text.maximum_coefficient)}>
-            {percentText(locale, limits.maximum_coefficient.decimal)}
+            {formatPercent(locale, limits.maximum_coefficient.decimal, {
+              unit: "fraction",
+            })}
           </Fact>
         )}
         {limits.minimum_coefficient !== null && (
           <Fact label={t(text.minimum_coefficient)}>
-            {percentText(locale, limits.minimum_coefficient.decimal)}
+            {formatPercent(locale, limits.minimum_coefficient.decimal, {
+              unit: "fraction",
+            })}
           </Fact>
         )}
         {limits.maximum_period_years !== null && (
           <Fact label={t(text.maximum_period)}>
             {t(text.period_years, {
-              years: limits.maximum_period_years.decimal,
+              years: formatDecimal(locale, limits.maximum_period_years.decimal),
             })}
           </Fact>
         )}
         {limits.maximum_period_last_day !== null && (
           <Fact label={t(text.ends_on)}>
-            {dateText(locale, limits.maximum_period_last_day, true)}
+            {formatDay(locale, limits.maximum_period_last_day)}
           </Fact>
         )}
       </dl>
@@ -771,7 +776,9 @@ function PlanTable({
                       <span className="inline-flex items-center gap-1">
                         {estimated && <Estimated year={planned.tax_year} />}
                         <span className="whitespace-nowrap">
-                          {percentText(locale, planned.coefficient.decimal)}
+                          {formatPercent(locale, planned.coefficient.decimal, {
+                            unit: "fraction",
+                          })}
                         </span>
                       </span>
                     )}
@@ -910,9 +917,12 @@ export function AmortizationPlan({
       </p>
     );
   const estimated = rows.some((row) => row.edition?.projected);
+  const unrecorded = rows.some(
+    (row) => row.claim_state === "missing" || row.claim_state === "partial",
+  );
   return (
     <>
-      {(advisories.length > 0 || estimated) && (
+      {(advisories.length > 0 || estimated || unrecorded) && (
         <div className="flex flex-col gap-2 border-b p-3">
           {advisories.map((advisory) => (
             <Alert
@@ -933,6 +943,14 @@ export function AmortizationPlan({
               className="ledger-assets-estimated"
             >
               {t(ASSET_KEYS.plan.projected_summary)}
+            </Alert>
+          )}
+          {unrecorded && (
+            <Alert
+              icon={<Icon name="info" />}
+              className="ledger-assets-unrecorded"
+            >
+              {t("desktop.ledger.assets.plan.unrecorded_note")}
             </Alert>
           )}
         </div>

@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
-import { dateText } from "../movements/movementWords";
+import { formatDay } from "../../../shared/dateFormats";
 import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
 import { NotApplicable, NotKnown, NothingRecorded } from "./AssetList";
@@ -104,6 +104,7 @@ export function AssetDetail({
                     ? t("desktop.ledger.assets.action.change_baja")
                     : t(ASSET_KEYS.action[act.word])
                 }
+                disabled={act.kind === "claim" && year === null}
                 onClick={() => onAct(act.kind)}
               >
                 <Icon name={act.icon} />
@@ -173,7 +174,7 @@ export function AssetDetail({
               {tokenWord(t, "method", row.method)}
             </Fact>
             <Fact label={fieldWord(t, "in_service_date")}>
-              {dateText(locale, row.in_service_date, true)}
+              {formatDay(locale, row.in_service_date)}
             </Fact>
             <Fact label={t(ASSET_KEYS.list.column.state)}>
               {tokenWord(t, "register_state", row.state)}
@@ -181,7 +182,7 @@ export function AssetDetail({
             {row.disposal !== null && (
               <>
                 <Fact label={fieldWord(t, "disposal.disposal_date")}>
-                  {dateText(locale, row.disposal.disposal_date, true)}
+                  {formatDay(locale, row.disposal.disposal_date)}
                 </Fact>
                 <Fact label={t(ASSET_KEYS.detail.baja_reason)}>
                   {wordOfKey(t, row.disposal.reason_key) ??
