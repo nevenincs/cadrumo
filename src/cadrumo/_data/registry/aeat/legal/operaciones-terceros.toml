@@ -479,3 +479,15 @@ published_at = 2011-12-12
 applies_from = 2011-12-13
 source_url = "https://www.boe.es/boe/dias/2011/12/12/pdfs/BOE-A-2011-19397.pdf"
 review_status = "pending_review"
+
+[sources."ine-codigos-comunidades-autonomas"]
+evidence_tier = "official_source_guidance"
+authority = "other"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ine-codigos-comunidades-autonomas.html"
+sha256 = "7eef080756423405e404a18ae279e7daad3b325ea5b613cff14f277f8e942851"
+bytes = 24555
+retrieved_at = 2026-10-31
+applies_from = 2000-01-01
+source_url = "https://www.ine.es/daco/daco42/codmun/cod_ccaa.htm"
+review_status = "pending_review"
