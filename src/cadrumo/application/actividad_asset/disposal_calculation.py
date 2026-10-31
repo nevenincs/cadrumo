@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
+from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.actividad_asset_bindings import (
     ActivityAssetDisposalBounds,
     resolve_activity_asset_disposal_bounds,
@@ -99,7 +99,7 @@ def disposal_calculation_digest(
         outcome = f"{facts.model_dump_json()}\n{calculate_disposal(facts).model_dump_json()}"
     except (ActividadAssetError, RegistryError) as error:
         outcome = f"unresolved\n{type(error).__name__}"
-    return hashlib.sha256(f"{revision.revision_id}\n{outcome}".encode()).hexdigest()
+    return sha256_hex(f"{revision.revision_id}\n{outcome}".encode())
 
 
 def _disposal_facts(
