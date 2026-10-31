@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ._modelo_100_registry_support import (
     _ANEXO_B_INST_AUTO_IMPORTE_PENDIENTE_ANTERIOR_ROLE,
     _ANEXO_B_INST_AUTO_SECTION,
@@ -43,6 +46,19 @@ def test_modelo_100_carry_forward_pending_outliers_are_regional_deductions() -> 
             assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs, (filing_year, casilla_id)
 
 
+def _assert_madrid_deduction_rows(
+    filing_year: int,
+    casillas_by_id: dict[CasillaId, CasillaDefinition],
+    expected_rows: dict[str, tuple[str, str]],
+) -> None:
+    for casilla_id, (expected_label, expected_role) in expected_rows.items():
+        casilla = casillas_by_id[casilla_id]
+        assert casilla.label == expected_label, (filing_year, casilla_id)
+        assert tuple(casilla.section) == _MADRID_DEDUCTION_SECTION, (filing_year, casilla_id)
+        assert casilla.semantic_role == expected_role, (filing_year, casilla_id)
+        assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs, (filing_year, casilla_id)
+
+
 def test_modelo_100_madrid_reused_ids_are_regional_deductions() -> None:
     for filing_year in (2023, 2024, 2025):
         revision = _modelo_100_revision(filing_year)
@@ -54,12 +70,7 @@ def test_modelo_100_madrid_reused_ids_are_regional_deductions() -> None:
 
         assert not legacy_rows, filing_year
         assert set(casillas_by_id) == set(expected_rows), filing_year
-        for casilla_id, (expected_label, expected_role) in expected_rows.items():
-            casilla = casillas_by_id[casilla_id]
-            assert casilla.label == expected_label, (filing_year, casilla_id)
-            assert tuple(casilla.section) == _MADRID_DEDUCTION_SECTION, (filing_year, casilla_id)
-            assert casilla.semantic_role == expected_role, (filing_year, casilla_id)
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs, (filing_year, casilla_id)
+        _assert_madrid_deduction_rows(filing_year, casillas_by_id, expected_rows)
 
 
 def test_modelo_100_madrid_vivienda_acquisition_detail_roles_follow_current_deduction() -> None:
@@ -69,12 +80,7 @@ def test_modelo_100_madrid_vivienda_acquisition_detail_roles_follow_current_dedu
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
 
         assert set(casillas_by_id) == set(expected_rows), filing_year
-        for casilla_id, (expected_label, expected_role) in expected_rows.items():
-            casilla = casillas_by_id[casilla_id]
-            assert casilla.label == expected_label, (filing_year, casilla_id)
-            assert tuple(casilla.section) == _MADRID_DEDUCTION_SECTION, (filing_year, casilla_id)
-            assert casilla.semantic_role == expected_role, (filing_year, casilla_id)
-            assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs, (filing_year, casilla_id)
+        _assert_madrid_deduction_rows(filing_year, casillas_by_id, expected_rows)
 
 
 def test_modelo_100_carry_forward_remaining_inst_auto_rows_use_inst_auto_role() -> None:
