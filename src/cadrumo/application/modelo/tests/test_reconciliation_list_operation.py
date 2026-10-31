@@ -31,7 +31,6 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import reconciliation_list_operation as operation_module
-from ..reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ..reconciliation_list_operation import (
     MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH,
     MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,
@@ -44,11 +43,8 @@ from ..reconciliation_list_operation import (
 )
 from ..reconciliation_records import (
     ModeloReconciliationAdvisory,
-    ModeloReconciliationDiff,
-    ModeloReconciliationDiffKind,
-    ModeloReconciliationHistoryEntry,
-    ModeloReconciliationVerdict,
 )
+from .reconciliation_fixture import reconciliation_history_entry_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -57,37 +53,6 @@ _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _NOW = datetime(2026, 3, 10, 12, tzinfo=UTC)
 _WORK_A = "1" * 64
 _WORK_B = "2" * 64
-
-
-def _history_entry(
-    *,
-    event_id: str,
-    work_unit_id: str = _WORK_A,
-    bucket_id: UUID = _PROFILE,
-    reconciled_at: datetime = _NOW,
-    source_path: str = "C:/synthetic/evidence/receipt.pdf",
-    actor: str = "synthetic-test-operator",
-) -> ModeloReconciliationHistoryEntry:
-    return ModeloReconciliationHistoryEntry(
-        event_id=event_id,
-        bucket_id=str(bucket_id),
-        work_unit_id=work_unit_id,
-        source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
-        source_path=source_path,
-        verdict=ModeloReconciliationVerdict.MISMATCHES,
-        diff_count=1,
-        diffs=(
-            ModeloReconciliationDiff(
-                field_name="total_ingresar",
-                work_unit_value="100.00",
-                evidence_value="101.00",
-                kind="total_ingresar_mismatch",
-                diff_kind=ModeloReconciliationDiffKind.HEADER_FIELD,
-            ),
-        ),
-        actor=actor,
-        reconciled_at=reconciled_at,
-    )
 
 
 def _request(
@@ -136,7 +101,7 @@ def _registered():
 
 def test_public_projection_preserves_stored_differences_and_advisories() -> None:
     reference = RegistrySnapshotRef(modelo="303", revision_id="2026-y-siguientes", modelo_year=2026, period="1t")
-    first = _history_entry(event_id="a" * 64).model_copy(
+    first = reconciliation_history_entry_fixture(event_id="a" * 64).model_copy(
         update={
             "calculation_revision_id": "c" * 64,
             "registry_snapshot_ref": reference,
@@ -150,7 +115,9 @@ def test_public_projection_preserves_stored_differences_and_advisories() -> None
             ),
         }
     )
-    second = _history_entry(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC))
+    second = reconciliation_history_entry_fixture(
+        event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC)
+    )
     projection = ModeloReconciliationListProjection(
         profile_id=_PROFILE,
         work_unit_id=None,
@@ -200,15 +167,17 @@ def test_public_projection_preserves_stored_differences_and_advisories() -> None
 
 
 def test_public_projection_rejects_wrong_scope_duplicates_order_and_unbounded_fields() -> None:
-    first = ModeloReconciliationListEntryProjection.from_history_entry(_history_entry(event_id="a" * 64))
+    first = ModeloReconciliationListEntryProjection.from_history_entry(
+        reconciliation_history_entry_fixture(event_id="a" * 64)
+    )
     later = ModeloReconciliationListEntryProjection.from_history_entry(
-        _history_entry(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC))
+        reconciliation_history_entry_fixture(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC))
     )
     other_profile = ModeloReconciliationListEntryProjection.from_history_entry(
-        _history_entry(event_id="c" * 64, bucket_id=_OTHER)
+        reconciliation_history_entry_fixture(event_id="c" * 64, bucket_id=_OTHER)
     )
     other_unit = ModeloReconciliationListEntryProjection.from_history_entry(
-        _history_entry(event_id="d" * 64, work_unit_id=_WORK_B)
+        reconciliation_history_entry_fixture(event_id="d" * 64, work_unit_id=_WORK_B)
     )
     with pytest.raises(ValidationError):
         ModeloReconciliationListProjection(profile_id=_PROFILE, reconciliation_count=0, reconciliations=(first,))
@@ -225,11 +194,13 @@ def test_public_projection_rejects_wrong_scope_duplicates_order_and_unbounded_fi
                 reconciliation_count=len(rows),
                 reconciliations=rows,
             )
-    too_long = _history_entry(event_id="e" * 64, source_path="x" * (MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH + 1))
+    too_long = reconciliation_history_entry_fixture(
+        event_id="e" * 64, source_path="x" * (MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH + 1)
+    )
     with pytest.raises(ValidationError):
         ModeloReconciliationListEntryProjection.from_history_entry(too_long)
     with pytest.raises(ValidationError):
-        _history_entry(event_id="f" * 64, source_path="ok", actor="x" * 129)
+        reconciliation_history_entry_fixture(event_id="f" * 64, source_path="ok", actor="x" * 129)
 
 
 def test_access_resolves_whole_profile_disclosure_and_requires_all_periods() -> None:
@@ -293,8 +264,8 @@ def test_wrong_profile_is_refused_before_access_is_admitted() -> None:
 
 def test_executor_projects_saved_differences_with_existing_filter_and_order(monkeypatch: pytest.MonkeyPatch) -> None:
     entries = (
-        _history_entry(event_id="a" * 64),
-        _history_entry(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC)),
+        reconciliation_history_entry_fixture(event_id="a" * 64),
+        reconciliation_history_entry_fixture(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC)),
     )
     calls: list[tuple[str, str | None, object]] = []
 
@@ -382,7 +353,7 @@ def test_executor_refuses_active_profile_mismatch_before_read(monkeypatch: pytes
 def test_executor_refuses_oversized_public_result_without_truncating(
     monkeypatch: pytest.MonkeyPatch, oversize_kind: str
 ) -> None:
-    entry = _history_entry(
+    entry = reconciliation_history_entry_fixture(
         event_id="a" * 64,
         source_path=("x" * (MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH + 1))
         if oversize_kind == "path"
