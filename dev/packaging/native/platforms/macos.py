@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from ...runtime_wheelhouse_contract import target_platform
+from ..agent_runtime import STAGED_RECEIPT_NAME, STAGED_RUNTIME_TREES
 from ..build_stamp import BuildStamp
 from ..identity import DistributionIdentity
 from .posix import (
@@ -196,12 +197,40 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
     signing_identity = contract["native_signing_identity"]
     if not isinstance(signing_identity, str) or not signing_identity:
         raise ValueError("Mach-O relocation requires an explicit sealing identity")
-    for path in images:
+    vendor, owned = _split_vendor_images(images, root)
+    for path in owned:
         _select_arm64(path)
-    names = load_targets(images)
+    names = load_targets(owned)
     system = set(contract["native_system_libraries"])
-    for path in images:
+    for path in vendor:
+        _require_relocatable_as_shipped(path, floor, system)
+    for path in owned:
         _relocate_image(path, floor, names, system, tools, signing_identity)
+
+
+def _split_vendor_images(images: list[Path], root: Path) -> tuple[list[Path], list[Path]]:
+    """Separate images inside the trees a runtime receipt pins from the images this build owns.
+
+    The agent runtime ships the vendor's executable under a receipt that names its exact
+    digest, and the package inventory is compared with that receipt. Resealing it would
+    replace the vendor signature and break the digest, so it is kept as shipped.
+    """
+    pinned = [
+        receipt.parent / name
+        for receipt in root.rglob(STAGED_RECEIPT_NAME)
+        if receipt.is_file()
+        for name in STAGED_RUNTIME_TREES
+    ]
+    vendor = [path for path in images if any(path.is_relative_to(directory) for directory in pinned)]
+    return vendor, [path for path in images if path not in vendor]
+
+
+def _require_relocatable_as_shipped(path: Path, floor: tuple[int, ...], system: set[str]) -> None:
+    image = inspect(path)
+    if image.minimum > floor:
+        raise ValueError(f"Mach-O exceeds canonical deployment floor: {path}")
+    if image.rpaths or image.identity is not None or any(dependency not in system for dependency in image.dependencies):
+        raise ValueError(f"Vendor Mach-O needs relocation and cannot ship as pinned: {path}")
 
 
 def load_targets(images: list[Path]) -> dict[str, Path]:
