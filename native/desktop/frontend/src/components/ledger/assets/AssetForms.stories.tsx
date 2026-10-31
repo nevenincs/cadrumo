@@ -267,7 +267,7 @@ export const AddElementUsedOriginalPrice: Story = adding({
   play: steps(
     (root) => chosen(root, "asset_kind", 0),
     (root) => typed(root, "in_service_date", "2026-06-15"),
-    (root) => chosen(root, "method", 0),
+    (root) => chosenValue(root, "method", "linear"),
     (root) => chosenValue(root, "acquired_condition", "used"),
     (root) =>
       drawn(
@@ -281,7 +281,7 @@ export const AddElementNewHidesUsedFacts: Story = adding({
   play: steps(
     (root) => chosen(root, "asset_kind", 0),
     (root) => typed(root, "in_service_date", "2026-06-15"),
-    (root) => chosen(root, "method", 0),
+    (root) => chosenValue(root, "method", "linear"),
     (root) => chosenValue(root, "acquired_condition", "new"),
     async (root) => {
       for (const key of [
