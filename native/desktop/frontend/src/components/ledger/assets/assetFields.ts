@@ -49,6 +49,7 @@ export type FormControl =
   | "share"
   | "quantity"
   | "whole"
+  | "year"
   | "choice"
   | "flag"
   | "candidate";
@@ -102,6 +103,8 @@ const quantity = (key: string, label: string, required = false) =>
   field("quantity", key, label, required);
 const whole = (key: string, label: string, required = false) =>
   field("whole", key, label, required);
+const year = (key: string, label: string, required = false) =>
+  field("year", key, label, required);
 const flag = (key: string, label: string, required = false) =>
   field("flag", key, label, required);
 const choice = (
@@ -253,7 +256,8 @@ export function parseField(found: FormField, raw: string): Parsed<FormValue> {
         ? value({ decimal: parsed.value })
         : parsed;
     }
-    case "whole": {
+    case "whole":
+    case "year": {
       const typed = raw.trim();
       if (typed === "") return { kind: "empty" };
       return /^\d{1,9}$/.test(typed)
@@ -769,10 +773,8 @@ const OPENING_FACT: Record<
       "desktop.ledger.assets.field.opening_amount",
       true,
     ),
-  covered_through_tax_year: () => ({
-    ...whole("opening_through", "desktop.ledger.assets.field.opening_through"),
-    hint_key: "desktop.ledger.form.year_hint",
-  }),
+  covered_through_tax_year: () =>
+    year("opening_through", "desktop.ledger.assets.field.opening_through"),
   amortization_method: (methods) =>
     choice("opening_method", "desktop.ledger.assets.field.opening_method", [
       ...methods,
