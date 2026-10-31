@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:38639ce384398d02ab910ec59ae0ad11cb57507032e3047abfb73df321114c51'
+body_hash: 'sha256:dd71694bd48d6568dc1337426f97143f06644c25f5cc354347e4b9fa608aa0b2'
 related:
   - "[[2026-10-30-test-suite-budget-plan]]"
 ---
@@ -59,3 +59,8 @@ related:
 - `S07` `verify:` `pytest sealed profile world and consumers` -> `pass`
 - `S07` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/isolated_storage_fixture.py`
 - `S07` `verify:` `pytest test_profile_lifecycle_verbs test_active_profile_env_override_name` -> `pass`
+- `S15` `A` `.vault/audit/2026-10-31-test-suite-budget-cli-file-operations-audit.md`
+
+## Notes
+
+- `S15` Diagnosis only, no fix built
