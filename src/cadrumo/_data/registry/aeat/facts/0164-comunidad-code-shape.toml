@@ -1,0 +1,26 @@
+[fact]
+fact_id = "comunidad-code-shape"
+family = "mapping"
+
+# The two-digit codes an authored comunidad value may hold, one per autonomous community
+# plus the two autonomous cities. It binds no code to a community and is no modelo's
+# numbering: Modelo 100 assigns nothing to 14 or 15 and gives 20 to "no residente", so a
+# casilla carrying a Modelo 100 comunidad reads modelo-100-profile-form-codes instead. The
+# Modelo 100 design is the nearest bundled source and does not state this set as such, so the
+# fact stays pending review.
+[[fact.variants]]
+variant_id = "comunidad-code-shape:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-100-2025-xsd"]
+review_status = "pending_review"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ["tipo_CCAA"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "codes", value = "01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19" },
+]

@@ -270,7 +270,11 @@ def _aggregate_invoice_evidence(
 
 
 def _refuse_m123_invoice(modelo: str, received_invoice_retencion: list[str] | None) -> None:
-    if received_invoice_retencion and modelo in ledger_payment_modelos() - invoice_evidence_modelos():
+    if (
+        received_invoice_retencion is not None
+        and len(received_invoice_retencion) > 0
+        and modelo in (ledger_payment_modelos() - invoice_evidence_modelos())
+    ):
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.m123_ledger_payment_only"))
 
 

@@ -1,0 +1,358 @@
+{
+  "application/actividad_asset/activity_asset_contracts.py": {
+    "field_ge:1900": 1,
+    "field_le:9999": 1
+  },
+  "application/actividad_asset/operation_dtos.py": {
+    "field_ge:365": 1,
+    "field_le:100": 1,
+    "field_le:366": 1
+  },
+  "application/aggregation/counterpart.py": {
+    "modelo_set:'347,349'": 1
+  },
+  "application/aggregation/invoice_retencion.py": {
+    "letter_clave:'ES'": 1
+  },
+  "application/aggregation/m193_phase_materialization.py": {
+    "field_ge:2000": 2,
+    "field_le:9999": 2
+  },
+  "application/aggregation/m303_arrivals.py": {
+    "code:'303'": 1
+  },
+  "application/aggregation/retenciones.py": {
+    "field_ge:1900": 1,
+    "field_le:9999": 1
+  },
+  "application/aggregation/withholding_recognition.py": {
+    "field_ge:2000": 1,
+    "field_le:9999": 1
+  },
+  "application/bienes_inversion/registered_requests.py": {
+    "field_le:2099": 2
+  },
+  "application/calculations/bienes_inversion_regularizacion.py": {
+    "modelo_set:'303,390'": 1
+  },
+  "application/connectivity_probe.py": {
+    "field_ge:100": 1,
+    "field_le:599": 1
+  },
+  "application/filing/producer_snapshot_m360.py": {
+    "letter_clave:'GR'": 1
+  },
+  "application/inventory/registered_requests.py": {
+    "field_ge:1900": 7,
+    "field_ge:2000": 1,
+    "field_ge:2001": 1,
+    "field_le:2099": 1,
+    "field_le:2100": 1
+  },
+  "application/inventory/service.py": {
+    "field_ge:1900": 2
+  },
+  "application/invoices/issuer_establishment.py": {
+    "letter_clave:'ES'": 1
+  },
+  "application/invoices/source_advisories.py": {
+    "code:'12'": 1,
+    "letter_clave:'D'": 1,
+    "letter_clave:'E'": 1
+  },
+  "application/invoices/source_observations.py": {
+    "letter_clave:'C'": 2,
+    "letter_clave:'D'": 1,
+    "letter_clave:'E'": 1
+  },
+  "application/ledger/llm_diagnostics.py": {
+    "decimal:'0.5'": 2,
+    "decimal:'0.8'": 1
+  },
+  "application/ledger/llm_review_results.py": {
+    "field_le:128": 1
+  },
+  "application/ledger/ratios_contracts.py": {
+    "field_ge:1900": 1,
+    "field_le:9999": 1
+  },
+  "application/live/borrador_100_import.py": {
+    "code:'100'": 1
+  },
+  "application/modelo/_art109_activity_income.py": {
+    "code:'109'": 1
+  },
+  "application/modelo/edit_apply_row_contracts.py": {
+    "field_le:12": 1,
+    "field_le:366": 2
+  },
+  "application/modelo/edit_value_grammar.py": {
+    "decimal:'999999999999.99'": 1
+  },
+  "application/modelo/finding_message_text.py": {
+    "code:'01'": 1,
+    "code:'02'": 1,
+    "code:'03'": 1,
+    "code:'04'": 1,
+    "code:'05'": 1,
+    "code:'06'": 1,
+    "code:'07'": 1,
+    "code:'08'": 1,
+    "code:'09'": 1,
+    "code:'10'": 1,
+    "code:'11'": 1,
+    "code:'12'": 1
+  },
+  "application/modelo/history_timeline_operation.py": {
+    "field_ge:1900": 2,
+    "field_le:9999": 2
+  },
+  "application/modelo/invoice_withholding_capture_contracts.py": {
+    "modelo_set:'111,115'": 1
+  },
+  "application/modelo/invoice_withholding_capture_public.py": {
+    "field_ge:1900": 3,
+    "field_le:2100": 2,
+    "field_le:9999": 1,
+    "field_le:9999999": 1,
+    "modelo_set:'111,115'": 1
+  },
+  "application/modelo/iva_wallet_override_operation.py": {
+    "code:'303'": 1
+  },
+  "application/modelo/iva_wallet_seed_operation.py": {
+    "code:'303'": 1
+  },
+  "application/modelo/lifecycle_history_operation.py": {
+    "field_ge:1900": 2,
+    "field_le:9999": 2
+  },
+  "application/modelo/m145_communication_contracts.py": {
+    "code:'145'": 1,
+    "field_ge:2012": 1,
+    "field_le:2099": 1
+  },
+  "application/modelo/m145_communication_records.py": {
+    "field_ge:2012": 4,
+    "field_le:2099": 4
+  },
+  "application/modelo/m303_ordinary_evidence_coordinate.py": {
+    "code:'303'": 1
+  },
+  "application/modelo/m303_ordinary_filing_evidence_authoring.py": {
+    "code:'303'": 1
+  },
+  "application/modelo/maritime_preview_operation.py": {
+    "field_le:365": 1
+  },
+  "application/modelo/profile_derived_facts.py": {
+    "decimal:'12'": 1
+  },
+  "application/modelo/profile_readiness_gate.py": {
+    "modelo_set:'130,303'": 1
+  },
+  "application/modelo/projection.py": {
+    "field_le:4": 1
+  },
+  "application/modelo/projection_operation.py": {
+    "field_ge:1900": 4,
+    "field_le:4": 1,
+    "field_le:9999": 4
+  },
+  "application/modelo/quickfile_operation.py": {
+    "code:'303'": 1
+  },
+  "application/modelo/reconciliation.py": {
+    "modelo_set:'100,111,130,190,303,390'": 1
+  },
+  "application/modelo/workbench_read.py": {
+    "code:'303'": 1
+  },
+  "application/operations/contract_manifest.py": {
+    "field_le:3600": 1
+  },
+  "application/operations/financial_operand_contract.py": {
+    "field_le:1800": 1
+  },
+  "application/operations/persistence/journal.py": {
+    "field_le:128": 1
+  },
+  "application/operations/persistence/replay.py": {
+    "field_le:1000": 1
+  },
+  "application/overview/agenda.py": {
+    "field_le:365": 1
+  },
+  "application/prorrata_register/mutation_steps.py": {
+    "code:'303'": 1
+  },
+  "application/storage/calc_sheets/layout.py": {
+    "field_ge:2": 2
+  },
+  "application/storage/calc_sheets/records.py": {
+    "field_ge:2": 1,
+    "field_le:12": 1,
+    "field_le:255": 1,
+    "field_le:409": 1
+  },
+  "application/user_profile/custody_transactions.py": {
+    "field_le:2048": 1
+  },
+  "application/user_profile/passphrase_rotation.py": {
+    "field_ge:2": 1
+  },
+  "application/wizard/descendant_group.py": {
+    "code:'33'": 1,
+    "code:'65'": 1
+  },
+  "application/workflow/run_models.py": {
+    "field_ge:100": 1,
+    "field_le:599": 1
+  },
+  "domain/bienes_inversion/register.py": {
+    "field_le:2099": 2
+  },
+  "domain/calculations/registry/_formula_runtime_m131.py": {
+    "code:'722'": 1
+  },
+  "domain/calculations/registry/_invoice_row_materialization.py": {
+    "code:'99'": 1
+  },
+  "domain/calculations/registry/applicability.py": {
+    "modelo_set:'303,390'": 1
+  },
+  "domain/calculations/registry/formula_runtime_m100.py": {
+    "code:'366'": 1,
+    "decimal:'366'": 1
+  },
+  "domain/calculations/registry/inventory_bindings.py": {
+    "code:'0177'": 1,
+    "code:'0181'": 1,
+    "code:'0182'": 1
+  },
+  "domain/calculations/registry/iva_wallet_carry_targets.py": {
+    "code:'2022'": 1,
+    "code:'2023'": 1,
+    "code:'2025'": 1
+  },
+  "domain/calculations/registry/ledger_iva_screen_bindings.py": {
+    "code:'303'": 1,
+    "code:'390'": 1,
+    "modelo_set:'303,390'": 1
+  },
+  "domain/calculations/registry/ledger_renta_income_bindings.py": {
+    "modelo_set:'100,130,131'": 1
+  },
+  "domain/calculations/registry/m303_differentiated_deduction_projection.py": {
+    "field_le:2": 1
+  },
+  "domain/calculations/registry/m303_orden_constants.py": {
+    "code:'2022'": 1
+  },
+  "domain/calculations/registry/m303_orden_projection_models.py": {
+    "code:'2022'": 1,
+    "decimal:'20'": 1
+  },
+  "domain/calculations/registry/m303_prorrata_activity_projection.py": {
+    "field_le:5": 1
+  },
+  "domain/calculations/registry/m303_regimen_simplificado_projection.py": {
+    "code:'2022'": 2,
+    "code:'2023'": 1,
+    "code:'2025'": 1,
+    "field_le:3": 1
+  },
+  "domain/calculations/registry/schema_catalogues.py": {
+    "field_ge:2000": 1,
+    "field_le:2099": 1
+  },
+  "domain/calculations/registry/schema_exports.py": {
+    "field_ge:1000": 1,
+    "field_le:9999": 1
+  },
+  "domain/calculations/registry/setup_profile_bindings.py": {
+    "code:'2002'": 1,
+    "code:'49'": 1
+  },
+  "domain/calculations/registry/third_party_declaration_roles.py": {
+    "letter_clave:'C'": 1,
+    "letter_clave:'D'": 1,
+    "letter_clave:'E'": 1
+  },
+  "domain/calculations/registry/withholding_bindings.py": {
+    "field_ge:1900": 2,
+    "field_le:2100": 2,
+    "field_le:9999999": 1
+  },
+  "domain/contribuyente/family_types.py": {
+    "field_le:10": 1
+  },
+  "domain/contribuyente/inventory/closing_authority_records.py": {
+    "field_ge:1901": 1
+  },
+  "domain/contribuyente/inventory/records.py": {
+    "field_ge:1900": 1
+  },
+  "domain/deadlines/festivos.py": {
+    "field_ge:2000": 1,
+    "field_le:2100": 1
+  },
+  "domain/deadlines/models.py": {
+    "field_ge:1900": 1,
+    "field_le:2999": 1
+  },
+  "domain/invoices/service.py": {
+    "decimal:'0.5'": 2
+  },
+  "domain/invoices/validators.py": {
+    "letter_clave:'ES'": 1
+  },
+  "domain/iva/establishment.py": {
+    "letter_clave:'ES'": 1
+  },
+  "domain/iva/prorrata.py": {
+    "field_ge:2000": 3,
+    "field_le:2100": 3
+  },
+  "domain/iva/regimen_simplificado_rows.py": {
+    "field_le:180": 2,
+    "field_le:4": 1,
+    "field_le:7": 1
+  },
+  "domain/iva_compensation/balance.py": {
+    "field_ge:2000": 1,
+    "field_le:2200": 1
+  },
+  "domain/modelos/calculation_revision_m303_evidence.py": {
+    "field_le:6": 1
+  },
+  "domain/modelos/calculation_revision_m303_handoff.py": {
+    "code:'303'": 1
+  },
+  "domain/modelos/m156_rows.py": {
+    "field_le:12": 1
+  },
+  "domain/modelos/row_models.py": {
+    "field_le:366": 2,
+    "letter_clave:'A'": 1
+  },
+  "domain/prorrata_register/register.py": {
+    "field_le:5": 1
+  },
+  "domain/renta/actividad_asset/disposal.py": {
+    "field_ge:1900": 1,
+    "field_le:9999": 1
+  },
+  "domain/renta/actividad_asset/election.py": {
+    "decimal:'24'": 1,
+    "field_le:100": 1
+  },
+  "domain/renta/actividad_asset/schedule.py": {
+    "field_ge:365": 1,
+    "field_le:100": 1,
+    "field_le:366": 1
+  },
+  "domain/transactions/m210_income_classification.py": {
+    "code:'35'": 1
+  }
+}

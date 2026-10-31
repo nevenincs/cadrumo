@@ -31,20 +31,13 @@ from ...domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
     AmortizationMethod,
-    ApprovedAmortizationPlan,
     ChargingInfrastructureEvidence,
     DefiniteUsefulLife,
     DigitOrder,
     DirectEstimationRegime,
     ElectionReference,
     EvidenceReference,
-    LowValueElection,
-    OriginalPriceDetermination,
-    PlanAnnualAmount,
-    PlanApprovalKind,
     RenewableSelfConsumptionEvidence,
-    SmallEnterpriseEvidence,
-    UsedAssetOriginalPrice,
 )
 from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import (
@@ -62,6 +55,12 @@ from .acquisition_dtos import (
     OpeningHistorySnapshot,
 )
 from .activity_asset_read_models import ActivityAssetM130Contribution, ActivityAssetM130ProjectionSnapshot
+from .election_fact_dtos import (
+    ApprovedAmortizationPlanSnapshot,
+    LowValueElectionSnapshot,
+    SmallEnterpriseEvidenceSnapshot,
+    UsedAssetOriginalPriceSnapshot,
+)
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from .operations import ActivityAssetFilingHandoff, M100ClaimGapProjection, M130AccrualProjection, M130Contribution
 from .schedule_walk import M100GapKind
@@ -112,115 +111,6 @@ def _domain_charge_fields(snapshot: BaseModel) -> dict[str, object]:
                 raise TypeError("charge decimal must be a public decimal")
             data[name] = _decimal(amount)
     return data
-
-
-class PlanAnnualAmountSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    tax_year: FilingYear
-    amount: PublicDecimal
-
-    @classmethod
-    def from_domain(cls, value: PlanAnnualAmount) -> Self:
-        return cls(tax_year=value.tax_year, amount=project_scalar(value.amount))
-
-    def to_domain(self) -> PlanAnnualAmount:
-        return PlanAnnualAmount(tax_year=self.tax_year, amount=Decimal(self.amount.decimal))
-
-
-class ApprovedAmortizationPlanSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    approval_reference: ElectionReference
-    approval_kind: PlanApprovalKind
-    submitted_on: date
-    resolved_on: date
-    annual_amounts: tuple[PlanAnnualAmountSnapshot, ...] = Field(min_length=1)
-
-    @classmethod
-    def from_domain(cls, value: ApprovedAmortizationPlan) -> Self:
-        return cls(
-            approval_reference=value.approval_reference,
-            approval_kind=value.approval_kind,
-            submitted_on=value.submitted_on,
-            resolved_on=value.resolved_on,
-            annual_amounts=tuple(PlanAnnualAmountSnapshot.from_domain(item) for item in value.annual_amounts),
-        )
-
-    def to_domain(self) -> ApprovedAmortizationPlan:
-        return ApprovedAmortizationPlan(
-            approval_reference=self.approval_reference,
-            approval_kind=self.approval_kind,
-            submitted_on=self.submitted_on,
-            resolved_on=self.resolved_on,
-            annual_amounts=tuple(item.to_domain() for item in self.annual_amounts),
-        )
-
-
-class SmallEnterpriseEvidenceSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    evidence_reference: EvidenceReference
-    made_available_on: date
-    prior_period_net_turnover: PublicDecimal
-
-    @classmethod
-    def from_domain(cls, value: SmallEnterpriseEvidence) -> Self:
-        return cls(
-            evidence_reference=value.evidence_reference,
-            made_available_on=value.made_available_on,
-            prior_period_net_turnover=project_scalar(value.prior_period_net_turnover),
-        )
-
-    def to_domain(self) -> SmallEnterpriseEvidence:
-        return SmallEnterpriseEvidence(
-            evidence_reference=self.evidence_reference,
-            made_available_on=self.made_available_on,
-            prior_period_net_turnover=Decimal(self.prior_period_net_turnover.decimal),
-        )
-
-
-class UsedAssetOriginalPriceSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    determination: OriginalPriceDetermination
-    original_price: PublicDecimal
-    evidence_reference: EvidenceReference | None = None
-
-    @classmethod
-    def from_domain(cls, value: UsedAssetOriginalPrice) -> Self:
-        return cls(
-            determination=value.determination,
-            original_price=project_scalar(value.original_price),
-            evidence_reference=value.evidence_reference,
-        )
-
-    def to_domain(self) -> UsedAssetOriginalPrice:
-        return UsedAssetOriginalPrice(
-            determination=self.determination,
-            original_price=Decimal(self.original_price.decimal),
-            evidence_reference=self.evidence_reference,
-        )
-
-
-class LowValueElectionSnapshot(BaseModel):
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    election_reference: ElectionReference
-    new_material_evidence_reference: EvidenceReference
-
-    @classmethod
-    def from_domain(cls, value: LowValueElection) -> Self:
-        return cls(
-            election_reference=value.election_reference,
-            new_material_evidence_reference=value.new_material_evidence_reference,
-        )
-
-    def to_domain(self) -> LowValueElection:
-        return LowValueElection(
-            election_reference=self.election_reference,
-            new_material_evidence_reference=self.new_material_evidence_reference,
-        )
 
 
 class ActivityAssetAmortizationElectionSnapshot(BaseModel):
@@ -468,6 +358,10 @@ class ActivityAssetRevisionSnapshot(_ActivityAssetRevisionFields):
         return self
 
 
+_ORIGINAL_REVISION_NUMBER: Final = 1
+"""A correction follows at least the original, the number the shape check stands in for when none is stated."""
+
+
 class ActivityAssetCorrectionRevisionSnapshot(_ActivityAssetRevisionFields):
     """The revision a correct request states: its baja is always stated and its number is the backend's to assign.
 
@@ -490,7 +384,7 @@ class ActivityAssetCorrectionRevisionSnapshot(_ActivityAssetRevisionFields):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _canonical(self) -> Self:
-        self._to_domain(self.revision_number or 2)
+        self._to_domain(self.revision_number or _ORIGINAL_REVISION_NUMBER + 1)
         return self
 
 

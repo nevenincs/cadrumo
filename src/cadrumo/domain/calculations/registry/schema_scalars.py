@@ -285,51 +285,16 @@ NifIvaString = Annotated[str, BeforeValidator(_validate_nif_iva_string)]
 """Intracomunitario NIF-IVA string for the registry boundary."""
 
 
-# A general-purpose SHAPE check on a two-digit comunidad code: a contiguous
-# 01-19, one per autonomous community plus the two autonomous cities. It asserts
-# membership only -- it binds no code to any particular community -- so it can
-# confirm that an authoring value looks like a comunidad code and nothing more.
-#
-# It is deliberately not any single modelo's numbering, and the modelos differ.
-# Modelo 100 accepts 01-13 and 16-20: it assigns nothing to 14 or 15, which this
-# set admits, and assigns 20 to "no residente", which this set rejects. So a
-# casilla carrying a Modelo 100 comunidad must take its código from that modelo's
-# own authority (``modelo100_ccaa_codigo`` in ``domain.contribuyente``, grounded
-# in the bundled record-design XSD) rather than from this check, which cannot
-# tell one community from another and would pass a wrong código unchanged.
-_CCAA_CODES = frozenset(
-    {
-        "01",
-        "02",
-        "03",
-        "04",
-        "05",
-        "06",
-        "07",
-        "08",
-        "09",
-        "10",
-        "11",
-        "12",
-        "13",
-        "14",
-        "15",
-        "16",
-        "17",
-        "18",
-        "19",
-    },
-)
-
-
 @pydantic_validation_boundary
 def _validate_ccaa_code(value: object) -> object:
-    """Validate that a value has the shape of a two-digit comunidad code (01-19)."""
+    """Validate that a value has the shape of a comunidad code; it binds no code to a community."""
     if not isinstance(value, str):
         raise RegistryValidationError(f"ccaa_code value must be a string, got {type(value).__name__}")
-    if value not in _CCAA_CODES:
+    from .form_codes import resolve_form_codes_leased
+
+    if value not in resolve_form_codes_leased("comunidad-code-shape").codes("codes"):
         raise RegistryValidationError(
-            f"ccaa_code value {value!r} must be a two-digit Spanish autonomous-community code (01-19)",
+            f"ccaa_code value {value!r} must be a two-digit Spanish autonomous-community code",
         )
     return value
 
