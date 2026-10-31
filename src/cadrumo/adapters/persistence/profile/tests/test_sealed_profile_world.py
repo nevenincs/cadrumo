@@ -18,6 +18,8 @@ from .....application.user_profile.login_session import authenticate_profile_for
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....application.workflow.profile_bucket_scan import resolve_profile_bucket
 from .....core.config import load_settings
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from .....domain.user_profile.values import UserProfileFact
 from ...storage.master_key.active_session import close_active_bucket_session, current_active_bucket_session
 from ...storage.tests.profile_capsule_runtime import (
@@ -64,21 +66,25 @@ def _tree_shape(root: Path) -> set[str]:
 
 
 def test_copy_leaves_only_the_storage_roots_coordination_behind(tmp_path: Path) -> None:
+    """Omit the declared root coordination directory, not the same name inside another subtree."""
+    coordination = storage_location(StorageCategory.RUNTIME_COORDINATION).relative_path()
+    installation = storage_location(StorageCategory.RUNTIME_INSTALLATION_RECORD).relative_path()
+    buckets = storage_location(StorageCategory.BUCKETS).relative_path()
     for root in (tmp_path / "plain", tmp_path / "nested" / "cadrumo-storage"):
-        (root / ".runtime").mkdir(parents=True)
-        (root / ".runtime" / "installation.json").write_text("origin identity")
-        (root / "buckets" / ".runtime").mkdir(parents=True)
-        (root / "buckets" / ".runtime" / "kept").write_text("not coordination")
+        (root / coordination).mkdir(parents=True)
+        (root / installation).write_text("origin identity")
+        (root / buckets / coordination).mkdir(parents=True)
+        (root / buckets / coordination / "kept").write_text("not coordination")
     (tmp_path / "nested" / "sibling-secrets").mkdir()
     (tmp_path / "nested" / "sibling-secrets" / "key").write_text("substrate")
 
     plain = copy_sealed_tree(tmp_path / "plain", tmp_path / "plain-copy")
     nested = copy_sealed_tree(tmp_path / "nested", tmp_path / "nested-copy")
 
-    assert not (plain / ".runtime").exists()
-    assert (plain / "buckets" / ".runtime" / "kept").read_text() == "not coordination"
-    assert not (nested / "cadrumo-storage" / ".runtime").exists()
-    assert (nested / "cadrumo-storage" / "buckets" / ".runtime" / "kept").is_file()
+    assert not (plain / coordination).exists()
+    assert (plain / buckets / coordination / "kept").read_text() == "not coordination"
+    assert not (nested / "cadrumo-storage" / coordination).exists()
+    assert (nested / "cadrumo-storage" / buckets / coordination / "kept").is_file()
     assert (nested / "sibling-secrets" / "key").read_text() == "substrate"
 
 
