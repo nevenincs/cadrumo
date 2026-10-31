@@ -572,9 +572,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           />
         )}
       </EditorField>
-      <EditorField
-        label={t("desktop.ledger.accounts.bank_address")}
-      >
+      <EditorField label={t("desktop.ledger.accounts.bank_address")}>
         {(control) => (
           <TextEditor
             id={control.id}
@@ -586,9 +584,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           />
         )}
       </EditorField>
-      <EditorField
-        label={t("desktop.ledger.accounts.bank_city")}
-      >
+      <EditorField label={t("desktop.ledger.accounts.bank_city")}>
         {(control) => (
           <TextEditor
             id={control.id}
