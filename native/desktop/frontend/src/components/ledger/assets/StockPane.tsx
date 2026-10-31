@@ -328,11 +328,7 @@ function StockEntry({
       ) : field.control === "share" ? (
         <PercentEditor {...editor} unit="fraction" />
       ) : (
-        <TextEditor
-          {...editor}
-          {...field.offers}
-          maxLength={field.max ?? (field.key === "description" ? 1024 : 120)}
-        />
+        <TextEditor {...editor} {...field.offers} />
       )}
       {hint && <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>}
       <FieldError id={`${id}-error`}>{error}</FieldError>

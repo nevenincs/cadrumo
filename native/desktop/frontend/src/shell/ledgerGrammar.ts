@@ -338,7 +338,7 @@ export function parseIsoDate(raw: string): Parsed<string> {
 
 /** A one-line text such as a description or a counterparty. Tabs and line
  * breaks are refused rather than flattened. */
-export function parseLine(raw: string, max: number): Parsed<string> {
+export function parseLine(raw: string, max = Infinity): Parsed<string> {
   if (/[\t\r\n]/.test(raw)) return refuse("line_break", raw);
   const text = raw.trim();
   if (text === "") return { kind: "empty" };

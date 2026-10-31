@@ -1447,3 +1447,13 @@ test("a purchase's files come back named where the book knows the name, and as a
   // A name is shown and never sent.
   expect(JSON.stringify(sent.request)).not.toContain("factura-papeleria");
 });
+
+test("a typed text of any length is the backend's to refuse, not the form's", () => {
+  const book = { actividad_id: "Papelería", year: 2025 };
+  const long = "x".repeat(5000);
+
+  expect(
+    describeRequest(book, "change-1", { label: long, description: long })
+      .request,
+  ).toMatchObject({ label: long, description: long });
+});

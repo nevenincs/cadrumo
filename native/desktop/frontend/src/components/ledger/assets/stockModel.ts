@@ -186,8 +186,6 @@ export type StockField = {
   hint?: string;
   control: FieldControl;
   required: boolean;
-  /** The most characters it takes, where that is not the usual. */
-  max?: number;
   /** The text the field offers as it is typed in, where the form holds any. */
   offers?: SuggestionProps;
 };
@@ -394,7 +392,6 @@ export const CLOSING_FIELDS: readonly StockField[] = [
     hint: "desktop.ledger.stock.closing.reason_hint",
     control: "text",
     required: true,
-    max: 512,
   },
 ];
 
@@ -656,7 +653,7 @@ export function bookRequest(
   vocabulary: Vocabulary,
 ): Built<InventoryCreateRequest> {
   const c = collector();
-  const name = c.need("name", parseLine(draft.name, 120));
+  const name = c.need("name", parseLine(draft.name));
   const method = c.choice(
     "method",
     draft.method,
@@ -925,7 +922,7 @@ export function closingRequest(
     text("authority"),
     vocabulary.values.closing_authority,
   );
-  const reason = c.need("reason", parseLine(text("reason"), 512));
+  const reason = c.need("reason", parseLine(text("reason")));
   const decision = (vocabulary.values.decision_evidence_role ?? []).map(
     (role) => documentOf(c, `decision:${role}`, draft.decision[role], role),
   );
@@ -1026,11 +1023,8 @@ export function describeRequest(
   draft: DescribeDraft,
 ): Built<InventoryDescribeRequest> {
   const c = collector();
-  const label = c.need("label", parseLine(draft.label, 120));
-  const description = c.maybe(
-    "description",
-    parseLine(draft.description, 1024),
-  );
+  const label = c.need("label", parseLine(draft.label));
+  const description = c.maybe("description", parseLine(draft.description));
   return {
     request:
       c.ready() && label !== null

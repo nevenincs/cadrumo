@@ -232,7 +232,7 @@ const SHAPE_WORD: Record<string, string> = {
 export function specOf(found: FormField): FieldSpec | null {
   switch (found.control) {
     case "text":
-      return { kind: "text", maxLength: 200 };
+      return { kind: "text" };
     case "taxid":
       return { kind: "taxId" };
     case "date":
@@ -295,7 +295,7 @@ export function parseField(found: FormField, raw: string): Parsed<FormValue> {
   switch (found.control) {
     case "text":
     case "taxid":
-      return parseLine(raw, 200);
+      return parseLine(raw);
     case "date":
       return parseIsoDate(raw);
     case "amount": {

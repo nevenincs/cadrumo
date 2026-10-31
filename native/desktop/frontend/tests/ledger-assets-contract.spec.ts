@@ -31,6 +31,7 @@ import {
   FURTHER_SHAPE,
   initialOf,
   parseField,
+  specOf,
   undrawableFacts,
   unlabelledFacts,
   type FormField,
@@ -3722,4 +3723,19 @@ test("the handoff names each box in the language asked, tells the two Modelo 130
   expect(english.m100_gaps.length).toBeGreaterThan(0);
   for (const gap of english.m100_gaps)
     expect(gap.covered_through < gap.covered_until).toBe(true);
+});
+
+test("a typed text of any length is the backend's to refuse, not the form's", () => {
+  const description: FormField = {
+    key: "description",
+    label_key: "desktop.ledger.assets.field.description",
+    control: "text",
+    required: false,
+    choices: [],
+  };
+  const long = "x".repeat(5000);
+
+  expect(specOf(description)).toEqual({ kind: "text" });
+  expect(parseField(description, long)).toEqual({ kind: "value", value: long });
+  expect(parseField(description, "a\nb").kind).toBe("refused");
 });
