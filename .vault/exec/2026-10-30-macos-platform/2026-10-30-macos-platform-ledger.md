@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:c29b59e6734483372c05bea283e5c9b5f434d3e2ac76688dd76a1d4763405749'
+body_hash: 'sha256:e82948b2d45a1ec81ba9095eb3447fa005a99f6ce4d45e171f49f1c8572d2b61'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -345,6 +345,33 @@ native/manager/src/supervision/supervisor.rs`
 - `S12` `M` `src/cadrumo_runtime/host/caller_owned.py`
 - `S12` `verify:` `build.sh Debug desktop-host-unit-test (711)` -> `pass`
 - `S12` `verify:` `ctest -C Debug -R manager (7/7)` -> `pass`
+- `S20` `M` `dev/packaging/native/assembly_images.py`
+- `S20` `M` `dev/packaging/native/build_fingerprint.py`
+- `S20` `M` `dev/packaging/native/identity.py`
+- `S20` `M` `dev/packaging/native/installation_plan.py`
+- `S20` `M` `dev/packaging/native/layout.py`
+- `S20` `M` `dev/packaging/native/linux_desktop_runtime.py`
+- `S20` `M` `dev/packaging/native/macos_info.py`
+- `S20` `M` `dev/packaging/native/platforms/macos.py`
+- `S20` `M` `dev/packaging/native/platforms/posix.py`
+- `S20` `M` `dev/packaging/native/tests/test_macos_info.py`
+- `S20` `M` `dev/packaging/native/tests/test_macos_launchagent.py`
+- `S20` `M` `dev/packaging/native/tests/test_platform_enrollment.py`
+- `S20` `M` `native/cmake/AssemblyTools.cmake`
+- `S20` `M` `native/cmake/DesktopRust.cmake`
+- `S20` `M` `native/desktop/CMakeLists.txt`
+- `S20` `M` `native/desktop/frontend/src/startup.ts`
+- `S20` `M` `native/desktop/frontend/tests/startup-loading.spec.ts`
+- `S20` `M` `native/desktop/scripts/configuration.d.mts`
+- `S20` `M` `native/desktop/scripts/configuration.mjs`
+- `S20` `M` `native/desktop/src-tauri/src/launch.rs`
+- `S20` `M` `native/desktop/src-tauri/src/main.rs`
+- `S20` `M` `native/desktop/tests/configuration.test.mjs`
+- `S20` `M` `native/platforms/macos-arm64.json`
+- `S20` `M` `native/platforms/macos-desktop.entitlements`
+- `S20` `verify:` `codesign --verify --deep --strict on rebuilt stage (adhoc,runtime; Identifier md.neve.cadrumo)` -> `pass`
+- `S20` `verify:` `background launch: environment, manager, supervision ready; Apple Event quit drains` -> `pass`
+- `S20` `verify:` `uv run pytest dev/packaging/native/tests (1253)` -> `pass`
 
 ## Notes
 
@@ -358,3 +385,4 @@ native/manager/src/supervision/supervisor.rs`
 - `S19` CMake signing-identity default changed without a reconfigure; the existing cache already holds -
 - `S18` Evaluated and not needed: the ad-hoc sealed bundle with the payload in Contents/Resources/app passes codesign --verify --deep --strict, loads libpython and its extensions under the hardened runtime and reaches runtime ready (S15 evidence); notarization is never planned, so the split brings no benefit and would break package-root containment checks.
 - `S12` Plan-close review findings fixed: Linux instance names digest-compact with early `sun_path` check; test namespace hooks gated out of release; startup outcome no longer writes into an unselected root; close watchdog; health gate stderr tail. Linux paths not compiled on this host. Checksum publishing not done (not a failure). Windows compile pending its owner.
+- `S20` Coordinated with the CADRUMO-UX session, which committed the embedded-plist link step, Dock icon and icon margins (1edde7f719, e0c2edf376).

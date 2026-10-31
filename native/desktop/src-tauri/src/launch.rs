@@ -8,21 +8,30 @@ pub enum Mode {
     Cli(Vec<OsString>),
 }
 
-/// Whether this process runs in a session that can show a window.
-pub fn desktop_available() -> bool {
+/// Whether this process runs in a session that can show a window. A refusal
+/// carries only the kind and OS code of what established it, so a launch that
+/// falls back to the CLI records why.
+pub fn desktop_available() -> Result<()> {
+    let unavailable = || ApplicationError::new(ErrorCode::DesktopUnavailable, Operation::Launch);
     #[cfg(windows)]
     {
         cadrumo_platform::desktop::available()
+            .then_some(())
+            .ok_or_else(unavailable)
     }
     #[cfg(target_os = "linux")]
     {
         ["WAYLAND_DISPLAY", "DISPLAY"]
             .iter()
             .any(|name| std::env::var_os(name).is_some_and(|v| !v.is_empty()))
+            .then_some(())
+            .ok_or_else(unavailable)
     }
     #[cfg(target_os = "macos")]
     {
-        graphical_session().is_ok()
+        graphical_session()
+            .map(drop)
+            .map_err(|error| unavailable().caused_by(error))
     }
 }
 
