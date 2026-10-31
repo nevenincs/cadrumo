@@ -44,7 +44,7 @@ from .agent_resolution import DependencyGateError, ResolvedDistribution, require
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
-from .product import BUNDLED_EXTRAS, _wheel_input_digest
+from .product import BUNDLED_EXTRAS, distribution_input_digest
 from .target import uv_environment, uv_platform
 
 AGENT_DEPENDENCIES = "agent-dependencies.txt"
@@ -371,7 +371,7 @@ def build_agent(output: Path, source: Path, uv: str) -> None:
         raise ValueError("Configured agent directory must contain cadrumo-agent")
     output.mkdir(parents=True, exist_ok=True)
     wheels = output / "wheels"
-    inputs = _wheel_input_digest(source, toolchain={"python": sys.version, "uv": uv})
+    inputs = distribution_input_digest(source, toolchain={"python": sys.version, "uv": uv})
     input_receipt = output / "agent-inputs.json"
     if _agent_build_reusable(output, input_receipt, inputs):
         return
