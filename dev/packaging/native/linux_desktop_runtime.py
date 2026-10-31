@@ -56,8 +56,17 @@ DEPENDENCY_INPUTS = {
     # --target <triple> -e normal,build,features` is unchanged for both enrolled
     # Linux architectures from the previously bound desktop manifest, including
     # native provider features.
-    "native/desktop/src-tauri/Cargo.lock": "17d460237dd1348bd33a812c3efe351b898f9f1bcce6f16a7d377dd53b10d9b2",
-    "native/desktop/src-tauri/Cargo.toml": "3741133cfd83bd6099293f0fe4aeb93a95ff8642888d23010476b25fc767a8b5",
+    # Reviewed against manifest 3b7aac40d8 and lock 32fd3a4072 with cargo tree
+    # --locked --offline --target <triple> -e normal,build,features for both
+    # x86_64-unknown-linux-gnu and aarch64-unknown-linux-gnu. The only added
+    # resolved Linux feature is tokio/signal: tokio 1.54.1 already enables all
+    # its Unix dependency features through process (libc, mio/net, mio/os-ext,
+    # mio/os-poll, signal-hook-registry). No package or native provider feature
+    # changes. Non-root lock records are identical; the root only adds macOS
+    # objc2 dependencies. This refresh admits source drift, not new imported
+    # symbol or minimum-host proof; the native artifact restrictions still apply.
+    "native/desktop/src-tauri/Cargo.lock": "224974233ee997aac6a3fef5aa635569fb1f35b4d2ef5bfa46e8329895fb40b6",
+    "native/desktop/src-tauri/Cargo.toml": "ff6c01cda3117130e4a563fc71d30d59b34e128d7090793aa1964952b0e85126",
     "native/application/Cargo.toml": "45b431600a5da6caa057865bdb39afc3aae4f9512d51d598f9d04e380cc03499",
     "native/platform/Cargo.toml": "45e633cefce86ce0a233670b94839e23bca14aba65b8d1c3b870718f50d01c37",
 }
