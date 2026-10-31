@@ -62,6 +62,7 @@ from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.i18n.translatable import Translatable as tr
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 
 from .supervision_support import run_to_settlement
@@ -139,7 +140,11 @@ class _SettledCase:
 
 
 def _settle_and_read(
-    tmp_path: Path, registry: OperationRegistry, *, result_schema: object | None = None
+    tmp_path: Path,
+    registry: OperationRegistry,
+    *,
+    authority_operation: PinnedAuthorityOperation,
+    result_schema: object | None = None,
 ) -> _SettledCase:
     storage_root = tmp_path / "durable-state"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -153,6 +158,7 @@ def _settle_and_read(
             operands=operands,
             owner_id="1" * 64,
             token="2" * 64,
+            authority_operation=authority_operation,
         )
         operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         terminal = asyncio.run(run_to_settlement(supervisor, operation_id))
@@ -191,9 +197,15 @@ def _executor_registry(executor_type: type[object], build: Callable[[], object])
     return _opted_in(supervisor_registry(executor_type=executor_type, build=build))
 
 
-def test_a_registered_refusal_releases_its_code_key_scrubbed_context_and_verdict(tmp_path: Path) -> None:
+def test_a_registered_refusal_releases_its_code_key_scrubbed_context_and_verdict(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """The refusal a frontend renders is the executor's own, without the journal learning it."""
-    case = _settle_and_read(tmp_path, _executor_registry(_ContextualRefusalExecutor, _ContextualRefusalExecutor))
+    case = _settle_and_read(
+        tmp_path,
+        _executor_registry(_ContextualRefusalExecutor, _ContextualRefusalExecutor),
+        authority_operation=authority_operation,
+    )
 
     receipt = case.terminal.terminal_receipt
     assert case.terminal.terminal_condition is OperationTerminalCondition.REFUSED
@@ -219,9 +231,15 @@ def test_a_registered_refusal_releases_its_code_key_scrubbed_context_and_verdict
     assert _ROW_IDENTITY.encode() not in journal_bytes
 
 
-def test_an_application_record_fault_releases_the_record_and_rule_but_never_the_value(tmp_path: Path) -> None:
+def test_an_application_record_fault_releases_the_record_and_rule_but_never_the_value(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """A record the application built that broke its contract is named, with the value withheld."""
-    case = _settle_and_read(tmp_path, _executor_registry(_RecordFaultExecutor, _RecordFaultExecutor))
+    case = _settle_and_read(
+        tmp_path,
+        _executor_registry(_RecordFaultExecutor, _RecordFaultExecutor),
+        authority_operation=authority_operation,
+    )
 
     receipt = case.terminal.terminal_receipt
     assert case.terminal.terminal_condition is OperationTerminalCondition.FAILED
@@ -240,7 +258,9 @@ def test_an_application_record_fault_releases_the_record_and_rule_but_never_the_
     assert _OFFENDING_VALUE.encode() not in journal_bytes
 
 
-def test_an_unexpected_failure_records_no_detail_and_keeps_its_prose_out_of_storage(tmp_path: Path) -> None:
+def test_an_unexpected_failure_records_no_detail_and_keeps_its_prose_out_of_storage(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """An exception with no public facts leaves only the opaque correlation the journal already had."""
     executor = UnexpectedFailureExecutor()
     registry = _opted_in(
@@ -253,7 +273,7 @@ def test_an_unexpected_failure_records_no_detail_and_keeps_its_prose_out_of_stor
             ),
         )
     )
-    case = _settle_and_read(tmp_path, registry)
+    case = _settle_and_read(tmp_path, registry, authority_operation=authority_operation)
 
     receipt = case.terminal.terminal_receipt
     assert case.terminal.terminal_condition is OperationTerminalCondition.FAILED
@@ -264,11 +284,13 @@ def test_an_unexpected_failure_records_no_detail_and_keeps_its_prose_out_of_stor
     _assert_sensitive_detail_absent_from_operation_bytes(case.storage_root)
 
 
-def test_the_detail_is_read_only_under_its_own_schema_identity(tmp_path: Path) -> None:
+def test_the_detail_is_read_only_under_its_own_schema_identity(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """Asking for the detail under any other schema refuses rather than releasing it."""
     registry = _executor_registry(_ContextualRefusalExecutor, _ContextualRefusalExecutor)
     result_schema = registry.lookup_public_contract("operation.supervisor.test").result_schema
-    case = _settle_and_read(tmp_path, registry, result_schema=result_schema)
+    case = _settle_and_read(tmp_path, registry, result_schema=result_schema, authority_operation=authority_operation)
 
     assert case.terminal.terminal_receipt is not None
     assert case.terminal.terminal_receipt.error_detail_ref is not None
@@ -276,10 +298,12 @@ def test_the_detail_is_read_only_under_its_own_schema_identity(tmp_path: Path) -
     assert case.detail.code is OperationResultProjectionRefusalCode.OPERATION_NOT_SUCCESSFUL
 
 
-def test_a_definition_that_does_not_opt_in_records_no_detail(tmp_path: Path) -> None:
+def test_a_definition_that_does_not_opt_in_records_no_detail(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """Without the opt-in, the same refusal keeps only its registered code, as before."""
     registry = supervisor_registry(executor_type=_ContextualRefusalExecutor, build=_ContextualRefusalExecutor)
-    case = _settle_and_read(tmp_path, registry)
+    case = _settle_and_read(tmp_path, registry, authority_operation=authority_operation)
 
     receipt = case.terminal.terminal_receipt
     assert case.terminal.terminal_condition is OperationTerminalCondition.REFUSED

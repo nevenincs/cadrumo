@@ -80,6 +80,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
 
 from .....tests.log_records import delivered_records
@@ -738,9 +739,10 @@ def operation_supervisor(
     execution_timeout: timedelta | None = None,
     cleanup_timeout: timedelta | None = timedelta(minutes=1),
     execution_authority: OperationExecutionAuthority | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> OperationSupervisor:
     return OperationSupervisor(
-        authority_operation=unread_authority_operation(),
+        authority_operation=unread_authority_operation() if authority_operation is None else authority_operation,
         registry=registry,
         journal=journal,
         event_stream=journal,
