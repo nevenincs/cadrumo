@@ -13,7 +13,7 @@ import type {
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { seriesAndNumber } from "../invoices/invoiceModel";
-import { figureText, paymentLabel } from "../invoices/invoiceWords";
+import { paymentLabel } from "../invoices/invoiceWords";
 import {
   linkPicker,
   reconcile,
@@ -23,8 +23,9 @@ import {
   type MatchPair,
 } from "../matching/matchingModel";
 import { chipText, invoiceLine, settlesText } from "../matching/matchingWords";
-import { dayText } from "../transfer/transferWords";
 import type { InspectorRead } from "./useInspectorReads";
+import { formatAmount } from "../../../shared/numbers";
+import { formatDay } from "../../../shared/dateFormats";
 
 /**
  * The inspector's Invoice section: the invoice the movement is linked to,
@@ -156,7 +157,7 @@ export function InvoiceSection({
                   : t("desktop.ledger.inspector.invoice.received")}
               </Badge>
               <span className="ml-auto font-medium tabular-nums">
-                {figureText(locale, invoice.grand_total.decimal)}{" "}
+                {formatAmount(locale, invoice.grand_total.decimal)}{" "}
                 {invoice.currency}
               </span>
             </p>
@@ -168,7 +169,7 @@ export function InvoiceSection({
               <dt className="text-muted-foreground">
                 {t("desktop.ledger.inspector.invoice.issued_on")}
               </dt>
-              <dd>{dayText(locale, invoice.issued_at)}</dd>
+              <dd>{formatDay(locale, invoice.issued_at)}</dd>
               <dt className="text-muted-foreground">
                 {t("desktop.ledger.inspector.invoice.payment")}
               </dt>
@@ -228,7 +229,7 @@ export function InvoiceSection({
           label: facts(t, [
             seriesAndNumber(option.invoice),
             option.invoice.counterparty_name,
-            figureText(locale, option.invoice.grand_total.decimal),
+            formatAmount(locale, option.invoice.grand_total.decimal),
           ]),
           group:
             group === "settles"

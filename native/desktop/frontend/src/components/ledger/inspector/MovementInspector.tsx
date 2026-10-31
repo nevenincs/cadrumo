@@ -33,8 +33,6 @@ import {
 } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import {
-  amountText,
-  dateText,
   directionLabel,
   lifecycleLabel,
   statusLabel,
@@ -61,6 +59,8 @@ import {
 } from "./inspectorWords";
 import { JumpIndex } from "./JumpIndex";
 import { useLedgerRead } from "./useInspectorReads";
+import { formatAmount } from "../../../shared/numbers";
+import { formatDay } from "../../../shared/dateFormats";
 
 /** How far below the top of the scroll a section's heading counts as
  * reached, in CSS pixels. */
@@ -332,7 +332,7 @@ export function MovementInspector({
               {facts(t, [
                 tx.counterparty ||
                   t("desktop.ledger.inspector.no_counterparty"),
-                dateText(locale, tx.date, true),
+                formatDay(locale, tx.date),
               ])}
             </p>
           </div>
@@ -409,7 +409,7 @@ export function MovementInspector({
         </div>
         <p className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-medium tabular-nums">
-            {amountText(locale, tx.amount)}{" "}
+            {formatAmount(locale, tx.amount)}{" "}
             <span className="text-muted-foreground">{tx.currency}</span>
           </span>
           <span>{directionLabel(t, tx.direction)}</span>

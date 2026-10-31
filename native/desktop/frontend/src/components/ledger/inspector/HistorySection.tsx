@@ -11,10 +11,8 @@ import type { StagedRowChanges } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { fieldName } from "../editing/editingWords";
 import {
-  amountText,
   classificationLabel,
   lifecycleLabel,
-  stampText,
 } from "../movements/movementWords";
 import {
   declarationName,
@@ -23,6 +21,8 @@ import {
   seals,
 } from "./inspectorWords";
 import type { InspectorRead } from "./useInspectorReads";
+import { formatAmount } from "../../../shared/numbers";
+import { formatTime } from "../../../shared/dateFormats";
 
 /**
  * The inspector's History section: what is not saved yet, the movement's
@@ -123,7 +123,7 @@ export function HistorySection({
                 <span className="text-xs text-muted-foreground">
                   {facts(t, [
                     event.actor,
-                    stampText(locale, event.occurred_at),
+                    formatTime(locale, event.occurred_at),
                   ])}
                 </span>
               </li>
@@ -151,7 +151,7 @@ export function HistorySection({
                     {found.description}
                   </span>
                   <span className="tabular-nums">
-                    {amountText(locale, found.amount)}
+                    {formatAmount(locale, found.amount)}
                   </span>
                   <Button
                     variant="ghost"

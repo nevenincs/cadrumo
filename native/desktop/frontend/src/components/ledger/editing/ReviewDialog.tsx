@@ -53,7 +53,6 @@ import {
   categoryOption,
   classificationText,
   ivaCategoryLabel,
-  percentText,
 } from "../movements/movementWords";
 import {
   changeGroups,
@@ -71,6 +70,7 @@ import { fieldName, valueText } from "./editingWords";
 import type { LockProgress, useLedgerApply } from "./useLedgerApply";
 import { useWritePause } from "../WritePause";
 import { WindowedList } from "./WindowedList";
+import { formatCount, formatPercent } from "../../../shared/numbers";
 
 type Apply = ReturnType<typeof useLedgerApply>;
 
@@ -141,7 +141,9 @@ export function actionText(
       });
     case "allocate":
       return t("desktop.ledger.apply.action.allocate", {
-        share: percentText(locale || "en", action.businessPct),
+        share: formatPercent(locale || "en", action.businessPct, {
+          unit: "fraction",
+        }),
       });
     case "attach_file":
       return t("desktop.ledger.apply.action.attach_file", {
@@ -1196,10 +1198,9 @@ function stepTitle(
 
 /** How far a read of the staged movements' locks has got, in words. */
 const lockProgress = (t: Translate, locale: string, locks: LockProgress) => {
-  const numbers = new Intl.NumberFormat(locale);
   return t("desktop.ledger.apply.checking_locks", {
-    done: numbers.format(locks.done),
-    total: numbers.format(locks.total),
+    done: formatCount(locale, locks.done),
+    total: formatCount(locale, locks.total),
   });
 };
 

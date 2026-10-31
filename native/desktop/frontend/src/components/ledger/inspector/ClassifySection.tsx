@@ -35,12 +35,12 @@ import {
   classificationText,
   ivaCategoryLabel,
   reasonDetail,
-  stampText,
 } from "../movements/movementWords";
 import { InspectorField } from "./InspectorField";
 import { ModelSuggestion } from "./ModelSuggestion";
 import { decidedBy, eventName, ivaCategoryOptions } from "./inspectorWords";
 import { fieldLock, stagedField, type FieldScope } from "./movementFields";
+import { formatTime } from "../../../shared/dateFormats";
 
 const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   business: "BUSINESS",
@@ -232,7 +232,7 @@ export function ClassifySection({
             {facts(t, [
               decidedBy(t, row.transaction.classified_by),
               row.transaction.classified_at &&
-                stampText(locale, row.transaction.classified_at),
+                formatTime(locale, row.transaction.classified_at),
             ])}
           </span>
         </p>
@@ -466,7 +466,7 @@ export function ClassifySection({
                 <span className="text-xs text-muted-foreground">
                   {facts(t, [
                     decidedBy(t, event.details.classified_by ?? event.actor),
-                    stampText(locale, event.occurred_at),
+                    formatTime(locale, event.occurred_at),
                   ])}
                 </span>
               </li>

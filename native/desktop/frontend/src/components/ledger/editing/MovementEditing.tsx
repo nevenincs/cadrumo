@@ -36,14 +36,11 @@ import { tsvCell } from "../transfer/tsv";
 import type { ColumnEditing } from "../movements/MovementsGrid";
 import type { ColumnId } from "../movements/movementsModel";
 import {
-  amountText,
   categoryLabel,
   classificationText,
-  dateText,
   directionLabel,
   irpfCategoryLabel,
   ivaCategoryLabel,
-  percentText,
 } from "../movements/movementWords";
 import {
   ChoiceEditor,
@@ -82,6 +79,8 @@ import {
 } from "./editingModel";
 import { choiceLabels, fieldName, lockText, refusalText } from "./editingWords";
 import { CostDialog, PasteDialog } from "./PasteDialog";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
+import { formatDay } from "../../../shared/dateFormats";
 
 /** More saves one at a time than this, added by one change, asks first. */
 
@@ -274,11 +273,11 @@ export function useMovementEditing(input: MovementEditingInput) {
       switch (EDIT_KINDS[column]) {
         case "amount":
         case "figure":
-          return amountText(locale, value);
+          return formatAmount(locale, value);
         case "percent":
-          return percentText(locale, value);
+          return formatPercent(locale, value, { unit: "fraction" });
         case "date":
-          return dateText(locale, value, withYear);
+          return formatDay(locale, value, { withYear });
         case "direction":
           return directionLabel(t, value);
         case "classification":

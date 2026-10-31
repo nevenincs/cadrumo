@@ -7,17 +7,16 @@ import type { Translate } from "../../../shell/strings";
 import type { ColumnId } from "../movements/movementsModel";
 import {
   accountLabel,
-  amountText,
   categoryLabel,
   classificationLabel,
-  dateText,
   directionLabel,
   irpfCategoryLabel,
   ivaCategoryLabel,
   lifecycleLabel,
-  percentText,
 } from "../movements/movementWords";
 import type { ChoiceLabels, EditRefusal, LockReason } from "./editingModel";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
+import { formatDay } from "../../../shared/dateFormats";
 
 /** A refused value, said with what was typed and what it most likely
  * meant. */
@@ -87,12 +86,13 @@ export function valueText(
   value: string | null,
 ): string {
   if (value === null || value === "") return t("desktop.ledger.edit.empty");
-  if (FIGURES.has(field)) return amountText(locale, value);
-  if (PERCENT.has(field)) return percentText(locale, value);
+  if (FIGURES.has(field)) return formatAmount(locale, value);
+  if (PERCENT.has(field))
+    return formatPercent(locale, value, { unit: "fraction" });
   switch (field) {
     case "booked_date":
     case "value_date":
-      return dateText(locale, value, true);
+      return formatDay(locale, value);
     case "direction":
       return directionLabel(t, value);
     case "business_classification":

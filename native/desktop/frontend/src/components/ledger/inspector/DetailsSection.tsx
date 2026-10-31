@@ -3,13 +3,14 @@ import { facts } from "@/shell/compose";
 import type { LedgerTrackResult } from "../../../shell/ledger";
 import { effectiveFacts } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
-import { amountText, dateText, stampText } from "../movements/movementWords";
 import { periodText } from "../ledgerWords";
 import { InspectorField } from "./InspectorField";
 import { quarterMove } from "./inspectorModel";
 import { declarationName } from "./inspectorWords";
 import { stagedField, type FieldScope } from "./movementFields";
 import type { InspectorRead } from "./useInspectorReads";
+import { formatAmount } from "../../../shared/numbers";
+import { formatDay, formatTime } from "../../../shared/dateFormats";
 
 /**
  * The inspector's Details section: every fact of the movement, the ones the
@@ -72,7 +73,7 @@ export function DetailsSection({
           {t("desktop.ledger.inspector.effective_date")}
         </dt>
         <dd className="px-1.5 py-1 text-sm tabular-nums">
-          {dateText(locale, tx.date, true)}
+          {formatDay(locale, tx.date)}
           <span className="block text-xs text-muted-foreground">
             {tx.value_date
               ? t("desktop.ledger.inspector.from_value_date")
@@ -95,7 +96,7 @@ export function DetailsSection({
           ) : tx.value_in_eur !== null ? (
             <span className="grid">
               <span className="font-medium tabular-nums">
-                {amountText(locale, tx.value_in_eur)} EUR
+                {formatAmount(locale, tx.value_in_eur)} EUR
               </span>
               {tx.fx_rate && (
                 <span className="text-xs text-muted-foreground">
@@ -163,17 +164,17 @@ export function DetailsSection({
             <dt className="text-muted-foreground">
               {t("desktop.ledger.inspector.imported")}
             </dt>
-            <dd>{stampText(locale, provenance.ingested_at)}</dd>
+            <dd>{formatTime(locale, provenance.ingested_at)}</dd>
           </>
         )}
         <dt className="text-muted-foreground">
           {t("desktop.ledger.inspector.added")}
         </dt>
-        <dd>{stampText(locale, tx.created_at)}</dd>
+        <dd>{formatTime(locale, tx.created_at)}</dd>
         <dt className="text-muted-foreground">
           {t("desktop.ledger.inspector.last_saved")}
         </dt>
-        <dd>{stampText(locale, tx.modified_at)}</dd>
+        <dd>{formatTime(locale, tx.modified_at)}</dd>
       </dl>
     </div>
   );

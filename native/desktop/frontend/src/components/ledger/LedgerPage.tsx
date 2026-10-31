@@ -74,7 +74,6 @@ import { RowRevealNotice, useLinkedRow } from "./RowReveal";
 import { ExportDialog } from "./transfer/ExportDialog";
 import { useLedgerEditing } from "./editing/LedgerEditing";
 import { ImportDialog } from "./transfer/ImportDialog";
-import { dayText } from "./transfer/transferWords";
 import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
 import { HealthSection } from "./setup/HealthSection";
 import { AssetsSection } from "./assets/AssetsSection";
@@ -100,6 +99,8 @@ import { GridRoomContext } from "./gridRoom";
 import { MatchQueue } from "./matching/MatchQueue";
 import { useSealedMovements } from "./useSealedMovements";
 import { PausedBanner, usePagePause, WritePauseContext } from "./WritePause";
+import { formatDay } from "../../shared/dateFormats";
+import { formatCount } from "../../shared/numbers";
 
 /** How long a page toast stays. */
 const TOAST_MS = 4000;
@@ -306,7 +307,6 @@ export function LedgerPage({
     reader,
     readable,
   );
-  const numbers = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const fallbackYear = Number(today.slice(0, 4));
   const shownPeriod = periodText(t, locale, period);
 
@@ -652,8 +652,8 @@ export function LedgerPage({
       progress.total === null
         ? t("desktop.ledger.loading")
         : t("desktop.ledger.reading", {
-            loaded: numbers.format(progress.loaded),
-            total: numbers.format(progress.total),
+            loaded: formatCount(locale, progress.loaded),
+            total: formatCount(locale, progress.total),
           });
     if (rows === null)
       body = (
@@ -699,8 +699,8 @@ export function LedgerPage({
           {shownImport && (
             <p className="ledger-shown-import flex flex-wrap items-center gap-2 px-3 pt-3 text-sm">
               {t("desktop.ledger.import.shown", {
-                from: dayText(locale, shownImport.span.from),
-                to: dayText(locale, shownImport.span.to),
+                from: formatDay(locale, shownImport.span.from),
+                to: formatDay(locale, shownImport.span.to),
               })}
               <Button
                 variant="link"

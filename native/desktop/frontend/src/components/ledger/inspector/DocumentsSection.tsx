@@ -16,8 +16,8 @@ import {
 } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { fileName } from "../documents/documentsModel";
-import { stampText } from "../movements/movementWords";
 import type { InspectorRead } from "./useInspectorReads";
+import { formatTime } from "../../../shared/dateFormats";
 
 type DocumentAction = Extract<
   StagedAction,
@@ -167,7 +167,7 @@ export function DocumentsSection({
                       {t(
                         "desktop.ledger.inspector.documents.purchase_invoice",
                         {
-                          date: stampText(locale, linked.created_at),
+                          date: formatTime(locale, linked.created_at),
                         },
                       )}
                     </span>

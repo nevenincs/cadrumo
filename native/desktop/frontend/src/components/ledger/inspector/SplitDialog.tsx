@@ -22,11 +22,7 @@ import type {
 } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { refusalText } from "../editing/editingWords";
-import {
-  amountText,
-  categoryLabel,
-  classificationLabel,
-} from "../movements/movementWords";
+import { categoryLabel, classificationLabel } from "../movements/movementWords";
 import {
   SPLIT_PARTS_MAX,
   checkSplit,
@@ -34,6 +30,7 @@ import {
   type SplitProblem,
 } from "./inspectorModel";
 import { categoryOptions } from "./inspectorWords";
+import { formatAmount } from "../../../shared/numbers";
 
 type Part = {
   amount: string;
@@ -113,10 +110,10 @@ export function SplitDialog({
       case "sum":
         return found.over
           ? t("desktop.ledger.inspector.split.over", {
-              amount: amountText(locale, found.difference),
+              amount: formatAmount(locale, found.difference),
             })
           : t("desktop.ledger.inspector.split.under", {
-              amount: amountText(locale, found.difference),
+              amount: formatAmount(locale, found.difference),
             });
     }
   };
@@ -204,7 +201,7 @@ export function SplitDialog({
             </DialogTitle>
             <DialogDescription>
               {t("desktop.ledger.inspector.split.description", {
-                amount: amountText(locale, tx.amount),
+                amount: formatAmount(locale, tx.amount),
                 currency: tx.currency,
               })}
             </DialogDescription>

@@ -75,6 +75,7 @@ import {
 } from "../../../shell/ledgerWindow";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { dateFormats } from "../../../shared/dateFormats";
+import { formatAmount, formatCount } from "../../../shared/numbers";
 import { draftRow, stageTally } from "../editing/editingModel";
 import {
   REVERT_CELL_CHORD,
@@ -118,7 +119,6 @@ import { MovementsToolbar } from "./MovementsToolbar";
 import { monthNames } from "../ledgerWords";
 import {
   accountLabel,
-  amountText,
   categoryLabel,
   classificationLabel,
   classificationText,
@@ -236,7 +236,7 @@ function SumLine({ sums, locale }: { sums: CurrencySum[]; locale: string }) {
           ).map(([side, key]) =>
             sum[side] === null ? null : (
               <span key={side}>
-                {t(key, { amount: amountText(locale, sum[side]) })}
+                {t(key, { amount: formatAmount(locale, sum[side]) })}
               </span>
             ),
           )}
@@ -459,7 +459,6 @@ export function MovementsSection({
 }) {
   const t = useStrings();
   const grid = useRef<DataGridHandle>(null);
-  const numbers = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const {
     filters,
     setFilters: replaceFilters,
@@ -1437,20 +1436,22 @@ export function MovementsSection({
   // ---- What the toolbar and banners say --------------------------------------
   const selectedNote =
     selected.size > 0
-      ? t("desktop.ledger.selected", { count: numbers.format(selected.size) })
+      ? t("desktop.ledger.selected", {
+          count: formatCount(locale, selected.size),
+        })
       : "";
   const shownNote = partial
     ? t("desktop.ledger.loaded_of", {
-        loaded: numbers.format(rows.length),
-        total: numbers.format(held.total),
+        loaded: formatCount(locale, rows.length),
+        total: formatCount(locale, held.total),
       })
     : filtered.length === rows.length
       ? t("desktop.ledger.movements_count", {
-          count: numbers.format(rows.length),
+          count: formatCount(locale, rows.length),
         })
       : t("desktop.ledger.shown_of", {
-          shown: numbers.format(filtered.length),
-          total: numbers.format(rows.length),
+          shown: formatCount(locale, filtered.length),
+          total: formatCount(locale, rows.length),
         });
   const status = facts(t, [shownNote, selectedNote]);
   const unsaved = stageTally(stage.content).units;

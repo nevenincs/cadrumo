@@ -41,7 +41,6 @@ import { COST_WARNING_WRITES } from "../editing/MovementEditing";
 import { fieldName, valueText } from "../editing/editingWords";
 import {
   accountLabel,
-  amountText,
   classificationLabel,
   directionLabel,
   statusLabel,
@@ -74,6 +73,7 @@ import {
 } from "./inspectorWords";
 import { useLedgerRead } from "./useInspectorReads";
 import { useWritePause, WriteHold } from "../WritePause";
+import { formatAmount } from "../../../shared/numbers";
 
 const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   business: "BUSINESS",
@@ -537,7 +537,7 @@ export function SelectionInspector({
                   : [
                       <li key={`${sum.currency}:${side}`}>
                         {t(label, {
-                          amount: `${amountText(locale, sum[side]!)} ${sum.currency}`,
+                          amount: `${formatAmount(locale, sum[side]!)} ${sum.currency}`,
                         })}
                       </li>,
                     ],

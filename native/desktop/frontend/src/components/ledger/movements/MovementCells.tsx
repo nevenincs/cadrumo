@@ -12,13 +12,13 @@ import {
 import type { LedgerRow } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import {
-  amountText,
   directionLabel,
   lifecycleLabel,
   statusLabel,
   statusWord,
   type StatusWord,
 } from "./movementWords";
+import { formatAmount } from "../../../shared/numbers";
 
 /** The glyph each review status draws. */
 export const STATUS_ICONS: Record<StatusWord, IconName> = {
@@ -192,7 +192,7 @@ export const AmountCell = memo(function AmountCell({
   const code = currency !== "EUR" ? currency : null;
   return (
     <span className="inline-flex items-baseline gap-1 tabular-nums">
-      {amountText(locale, amount)}
+      {formatAmount(locale, amount)}
       {currencySlot ? (
         <span className="w-7 shrink-0 text-start text-xs text-muted-foreground">
           {code}
@@ -217,7 +217,7 @@ export const EuroCell = memo(function EuroCell({
   const { currency, value_in_eur: euros } = row.transaction;
   if (currency === "EUR") return null;
   if (euros !== null)
-    return <span className="tabular-nums">{amountText(locale, euros)}</span>;
+    return <span className="tabular-nums">{formatAmount(locale, euros)}</span>;
   return (
     <Tooltip>
       <TooltipTrigger asChild>

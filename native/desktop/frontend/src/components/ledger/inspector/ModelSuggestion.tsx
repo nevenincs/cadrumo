@@ -26,9 +26,9 @@ import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold } from "../WritePause";
 import { fieldName, refusalText, valueText } from "../editing/editingWords";
-import { percentText } from "../movements/movementWords";
 import { needsShare, suggestionWrites } from "./inspectorModel";
 import { modelFailureText } from "./inspectorWords";
+import { formatPercent } from "../../../shared/numbers";
 
 type Ask = "suggest" | "share" | "reject";
 type Shown = {
@@ -334,7 +334,9 @@ export function ModelSuggestion({
           {suggestion.confidence !== null && (
             <span className="text-muted-foreground tabular-nums">
               {t("desktop.ledger.inspector.model.confidence", {
-                value: percentText(locale, suggestion.confidence),
+                value: formatPercent(locale, suggestion.confidence, {
+                  unit: "fraction",
+                }),
               })}
             </span>
           )}

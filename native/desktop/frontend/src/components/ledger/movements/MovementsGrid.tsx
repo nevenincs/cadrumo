@@ -38,20 +38,18 @@ import {
 } from "./movementsModel";
 import {
   accountLabel,
-  amountText,
   categoryLabel,
   classificationText,
   classifiedByLabel,
-  dateText,
   ivaCategoryLabel,
   irpfCategoryLabel,
   lifecycleLabel,
-  percentText,
   reasonDetail,
-  stampText,
   statusLabel,
   statusWord,
 } from "./movementWords";
+import { formatAmount, formatPercent } from "../../../shared/numbers";
+import { formatDay, formatTime } from "../../../shared/dateFormats";
 
 /** What staged editing adds to the columns: each one's editor and why a
  * cell takes none, what a cell draws while a change is staged on it, and
@@ -166,7 +164,9 @@ function movementColumns(
     ),
     date: missingOr("date", (row) => (
       <span className="tabular-nums">
-        {dateText(locale, row.transaction.date, context.withYear)}
+        {formatDay(locale, row.transaction.date, {
+          withYear: context.withYear,
+        })}
       </span>
     )),
     description: (row) => <TextCell text={row.transaction.description} />,
@@ -207,21 +207,23 @@ function movementColumns(
     taxable_base: missingOr("taxable_base", (row) =>
       row.transaction.taxable_base === null ? null : (
         <span className="tabular-nums">
-          {amountText(locale, row.transaction.taxable_base)}
+          {formatAmount(locale, row.transaction.taxable_base)}
         </span>
       ),
     ),
     iva_rate: missingOr("iva_rate", (row) =>
       row.transaction.iva_rate === null ? null : (
         <span className="tabular-nums">
-          {percentText(locale, row.transaction.iva_rate)}
+          {formatPercent(locale, row.transaction.iva_rate, {
+            unit: "fraction",
+          })}
         </span>
       ),
     ),
     iva_amount: missingOr("iva_amount", (row) =>
       row.transaction.iva_amount === null ? null : (
         <span className="tabular-nums">
-          {amountText(locale, row.transaction.iva_amount)}
+          {formatAmount(locale, row.transaction.iva_amount)}
         </span>
       ),
     ),
@@ -270,7 +272,7 @@ function movementColumns(
       />
     ),
     modified: (row) => (
-      <TextCell text={stampText(locale, row.transaction.modified_at)} quiet />
+      <TextCell text={formatTime(locale, row.transaction.modified_at)} quiet />
     ),
   };
   const editing = context.editing;
