@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { Toast } from "@/components/ui/toast";
 import type {
   LedgerPort,
@@ -130,7 +131,6 @@ function MatchItem({
   const [choosing, setChoosing] = useState(false);
   const [chosen, setChosen] = useState<string | null>(null);
   const [showOthers, setShowOthers] = useState(false);
-  const group = useId();
   const row = suggestion.row;
   const id = row.transaction.transaction_id;
   const invoices = tiedInvoices(suggestion);
@@ -190,36 +190,36 @@ function MatchItem({
             {t("desktop.ledger.matching.choose")}
           </Button>
           {choosing && (
-            <fieldset className="ledger-match-chooser grid gap-1.5 rounded-md bg-muted p-2">
-              <legend className="sr-only">
-                {t("desktop.ledger.matching.choose_legend", {
-                  description: row.transaction.description,
-                })}
-              </legend>
+            <div className="ledger-match-chooser grid gap-1.5 rounded-md bg-muted p-2">
               <p className="text-sm">
                 {t("desktop.ledger.matching.choose_note")}
               </p>
-              {invoices.map((pair) => (
-                <label
-                  key={pair.invoice.invoice_id}
-                  className="flex cursor-pointer items-start gap-2"
-                >
-                  <input
-                    type="radio"
-                    name={group}
-                    className="mt-1 size-icon-sm shrink-0 accent-primary"
-                    checked={chosen === pair.invoice.invoice_id}
-                    onChange={() => setChosen(pair.invoice.invoice_id)}
-                  />
-                  <span className="grid gap-1">
-                    <span className="font-medium">
-                      {seriesAndNumber(pair.invoice)}
+              <RadioGroup
+                aria-label={t("desktop.ledger.matching.choose_legend", {
+                  description: row.transaction.description,
+                })}
+                value={chosen ?? ""}
+                onValueChange={setChosen}
+              >
+                {invoices.map((pair) => (
+                  <label
+                    key={pair.invoice.invoice_id}
+                    className="flex cursor-pointer items-start gap-2"
+                  >
+                    <RadioGroupItem
+                      value={pair.invoice.invoice_id}
+                      className="mt-1"
+                    />
+                    <span className="grid gap-1">
+                      <span className="font-medium">
+                        {seriesAndNumber(pair.invoice)}
+                      </span>
+                      <PairLine t={t} locale={locale} pair={pair} />
+                      <Chips t={t} pair={pair} />
                     </span>
-                    <PairLine t={t} locale={locale} pair={pair} />
-                    <Chips t={t} pair={pair} />
-                  </span>
-                </label>
-              ))}
+                  </label>
+                ))}
+              </RadioGroup>
               <Button
                 size="xs"
                 className="ledger-match-chosen w-fit"
@@ -234,7 +234,7 @@ function MatchItem({
                 <Icon name="lock" size="xs" />
                 {t("desktop.ledger.matching.link")}
               </Button>
-            </fieldset>
+            </div>
           )}
         </div>
       )}

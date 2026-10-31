@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from "react";
+import { NotesEditor } from "@/components/editors/NotesEditor";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -293,14 +294,12 @@ function RecordDetail({
           <FieldLabel htmlFor={`${base}-notes`}>
             {t("desktop.ledger.documents.record.notes")}
           </FieldLabel>
-          <Input
+          <NotesEditor
             id={`${base}-notes`}
             controlSize="sm"
             maxLength={16384}
             value={shown("notes")}
-            onChange={(event) =>
-              setTyped((held) => ({ ...held, notes: event.target.value }))
-            }
+            onChange={(notes) => setTyped((held) => ({ ...held, notes }))}
           />
         </Field>
       </div>

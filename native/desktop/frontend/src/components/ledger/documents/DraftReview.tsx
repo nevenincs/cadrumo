@@ -7,6 +7,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { NotesEditor } from "@/components/editors/NotesEditor";
+import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -21,6 +23,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import {
   SegmentedControl,
@@ -353,17 +356,18 @@ function Finding({
             printed: printed ?? "—",
           })}
         </p>
-        <Input
-          controlSize="sm"
-          className="ledger-finding-note"
-          aria-label={t("desktop.ledger.documents.why_right")}
-          placeholder={t("desktop.ledger.documents.why_right")}
-          maxLength={2048}
-          value={answer?.action === "attest" ? answer.note : ""}
-          onChange={(event) =>
-            onAnswer({ action: "attest", value: "", note: event.target.value })
-          }
-        />
+        <Field className="ledger-finding-note">
+          <FieldLabel htmlFor={`${group}-note`}>
+            {t("desktop.ledger.documents.why_right")}
+          </FieldLabel>
+          <TextEditor
+            id={`${group}-note`}
+            controlSize="sm"
+            maxLength={2048}
+            value={answer?.action === "attest" ? answer.note : ""}
+            onChange={(note) => onAnswer({ action: "attest", value: "", note })}
+          />
+        </Field>
       </li>
     );
   return (
@@ -410,54 +414,53 @@ function Finding({
         </SegmentedControlItem>
       </SegmentedControl>
       {answer?.action === "choose_candidate" && (
-        <fieldset className="grid gap-1">
-          <legend className="sr-only">
-            {t("desktop.ledger.documents.readings")}
-          </legend>
+        <RadioGroup
+          aria-label={t("desktop.ledger.documents.readings")}
+          value={answer.value}
+          onValueChange={(value) => onAnswer({ ...answer, value })}
+        >
           {candidates.map((candidate) => (
             <label
               key={candidate.value}
               className="flex cursor-pointer items-center gap-2 text-sm"
             >
-              <input
-                type="radio"
-                name={group}
-                className="size-icon-sm shrink-0 accent-primary"
-                checked={answer.value === candidate.value}
-                onChange={() => onAnswer({ ...answer, value: candidate.value })}
-              />
+              <RadioGroupItem value={candidate.value} />
               <span className="font-mono">{candidate.value}</span>
               {candidate.note && (
                 <span className="text-muted-foreground">{candidate.note}</span>
               )}
             </label>
           ))}
-        </fieldset>
+        </RadioGroup>
       )}
       {answer?.action === "supply_value" && (
-        <Input
-          controlSize="sm"
-          className="ledger-finding-value"
-          aria-label={t("desktop.ledger.documents.the_value")}
-          maxLength={1024}
-          value={answer.value}
-          onChange={(event) =>
-            onAnswer({ ...answer, value: event.target.value })
-          }
-        />
+        <Field className="ledger-finding-value">
+          <FieldLabel htmlFor={`${group}-value`}>
+            {t("desktop.ledger.documents.the_value")}
+          </FieldLabel>
+          <TextEditor
+            id={`${group}-value`}
+            controlSize="sm"
+            maxLength={1024}
+            value={answer.value}
+            onChange={(value) => onAnswer({ ...answer, value })}
+          />
+        </Field>
       )}
       {answer?.action === "attest" && (
-        <Input
-          controlSize="sm"
-          className="ledger-finding-note"
-          aria-label={t("desktop.ledger.documents.why_right")}
-          placeholder={t("desktop.ledger.documents.why_right")}
-          maxLength={2048}
-          value={answer.note}
-          onChange={(event) =>
-            onAnswer({ ...answer, note: event.target.value })
-          }
-        />
+        <Field className="ledger-finding-note">
+          <FieldLabel htmlFor={`${group}-note`}>
+            {t("desktop.ledger.documents.why_right")}
+          </FieldLabel>
+          <NotesEditor
+            id={`${group}-note`}
+            controlSize="sm"
+            rows={2}
+            maxLength={2048}
+            value={answer.note}
+            onChange={(note) => onAnswer({ ...answer, note })}
+          />
+        </Field>
       )}
     </li>
   );
