@@ -143,6 +143,28 @@ def _modificacion_observation() -> RegistryModeloObservation:
     )
 
 
+def _save_both_events(
+    repo: CalculationObservationRepository, obs_n: RegistryModeloObservation, obs_n1: RegistryModeloObservation
+) -> None:
+    """Persist the year-N alta and the year-N+1 modificacion as app filings captured on their own dates."""
+    repo.save(
+        repo.prepare_observation_envelope(
+            obs_n,
+            source_kind="app_filing",
+            captured_at=_CLOCK_N,
+            stamped_revision_id=revision_id_for_observation(obs_n, on=_CLOCK_N.date()),
+        )
+    )
+    repo.save(
+        repo.prepare_observation_envelope(
+            obs_n1,
+            source_kind="app_filing",
+            captured_at=_CLOCK_N_PLUS_1,
+            stamped_revision_id=revision_id_for_observation(obs_n1, on=_CLOCK_N_PLUS_1.date()),
+        )
+    )
+
+
 def test_alta_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
     """Year-N alta casilla values survive the encrypted-SQL roundtrip unchanged.
 
@@ -212,22 +234,7 @@ def test_alta_and_modificacion_are_independently_retrievable(tmp_path: Path) -> 
     obs_n1 = _modificacion_observation()
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n, on=_CLOCK_N.date()),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1, on=_CLOCK_N_PLUS_1.date()),
-            )
-        )
+        _save_both_events(repo, obs_n, obs_n1)
         loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
         loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
 
@@ -259,22 +266,7 @@ def test_vigencia_normativa_is_identical_in_both_annual_contexts(tmp_path: Path)
     obs_n1 = _modificacion_observation()
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n, on=_CLOCK_N.date()),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1, on=_CLOCK_N_PLUS_1.date()),
-            )
-        )
+        _save_both_events(repo, obs_n, obs_n1)
         loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
         loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
 
