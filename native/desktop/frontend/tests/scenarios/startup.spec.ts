@@ -164,3 +164,34 @@ test("only the owner's timeout outcome ends a stalled first read", async ({
   expect(await calls(page, "signInStatus")).toBe(1);
   expect(await calls(page, "signIn")).toBe(0);
 });
+
+test("a stylesheet that never arrives is named instead of mounting the page unstyled", async ({
+  page,
+}) => {
+  await page.route(
+    (url) => url.pathname.endsWith(".css"),
+    (route) => route.abort("failed"),
+  );
+  await page.goto("/scenarios.html?scenario=signed-out&latency=0");
+  await expect(page.getByRole("alert")).toContainText(
+    /Stylesheet did not load: .*\.css/,
+  );
+  await expect(page.locator(".scenario-bar")).toHaveCount(0);
+});
+
+test("a stylesheet arriving after the entry script still mounts the page", async ({
+  page,
+}) => {
+  const entry = page.waitForResponse((response) =>
+    /\/assets\/scenarios-[^/]*\.js$/.test(response.url()),
+  );
+  await page.route(
+    (url) => url.pathname.endsWith(".css"),
+    async (route) => {
+      await (await entry).finished();
+      await route.continue();
+    },
+  );
+  await page.goto("/scenarios.html?scenario=signed-out&latency=0");
+  await expect(page.locator(".scenario-bar")).toBeVisible();
+});

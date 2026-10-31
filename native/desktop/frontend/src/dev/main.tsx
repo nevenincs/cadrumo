@@ -198,6 +198,30 @@ function Scenarios() {
 document.title = `${identity.name} · scenarios`;
 const root = document.getElementById("root");
 if (!root) throw new Error("Application root is missing.");
+// A stylesheet lost to the connection serving it leaves the shell mounted
+// unstyled, with controls off the page and every later failure blaming them.
+// Module scripts run only once linked stylesheets have settled, so a link with
+// no rules here will not get any. A failed link still holds a sheet: reading
+// its rules throws, which is the only sign the browser leaves of the failure.
+function hasRules(link: HTMLLinkElement): boolean {
+  try {
+    return (link.sheet?.cssRules.length ?? 0) > 0;
+  } catch {
+    return false;
+  }
+}
+const undelivered = Array.from(
+  document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'),
+)
+  .filter((link) => !hasRules(link))
+  .map((link) => link.href);
+if (undelivered.length > 0) {
+  const refusal = document.createElement("p");
+  refusal.setAttribute("role", "alert");
+  refusal.textContent = `Stylesheet did not load: ${undelivered.join(", ")}`;
+  root.replaceChildren(refusal);
+  throw new Error(refusal.textContent);
+}
 // Strict mode runs every effect twice in development, which is how a missing
 // cleanup shows itself here instead of in the desktop window.
 const shell = ReactDOM.createRoot(root);
