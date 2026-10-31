@@ -144,7 +144,7 @@ class OverviewExplain(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     year: FilingYear
     applicable: bool
     verdict: ApplicabilityVerdict

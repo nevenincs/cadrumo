@@ -51,7 +51,7 @@ MAX_CENSAL_PREPARE_VALUE_LENGTH = 4_096
 _CENSAL_PREPARE_RESULT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _BoundedEffectiveValue = Annotated[str, Field(max_length=MAX_CENSAL_PREPARE_VALUE_LENGTH)]
-_CensalPath = Annotated[str, Field(min_length=3, max_length=160)]
+_CensalPath = Annotated[str, Field(min_length=1, max_length=256)]
 
 
 class CensalPrepareOperationRequest(CredentialFreeOperationRequest):

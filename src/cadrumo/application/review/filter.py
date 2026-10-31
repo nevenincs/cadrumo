@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from datetime import datetime
 from enum import StrEnum
 from typing import Final
 
@@ -327,12 +328,13 @@ def _filter_year_or_raise(clause: FilterClause) -> int:
         FilterParseError: When the value is not a four-digit year.
     """
     text = clause.value.strip()
-    if len(text) == 4 and text.isdigit():
-        return int(text)
-    raise FilterParseError(
-        f"--filter {clause.key}={clause.value}",
-        reason="invalid-value-ledger-year",
-    )
+    try:
+        return datetime.strptime(text, "%Y").year
+    except ValueError:
+        raise FilterParseError(
+            f"--filter {clause.key}={clause.value}",
+            reason="invalid-value-ledger-year",
+        ) from None
 
 
 def _ledger_filter_values(

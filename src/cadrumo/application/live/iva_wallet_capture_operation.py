@@ -47,7 +47,7 @@ class IvaWalletCaptureRequest(BaseModel):
     model_config = _PUBLIC_CONFIG
     profile_id: UUID
     target_year: FilingYear
-    target_period: str = Field(min_length=1, max_length=8)
+    target_period: str = Field(min_length=1, max_length=16)
     taxpayer_nif: str | None = None
 
 

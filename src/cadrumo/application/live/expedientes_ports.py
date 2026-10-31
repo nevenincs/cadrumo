@@ -35,7 +35,7 @@ class ExpedientesDeclaration(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear
     period: Period
     expediente_id: AeatExpedienteId

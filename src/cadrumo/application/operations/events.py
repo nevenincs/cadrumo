@@ -8,7 +8,7 @@ from pydantic import Field
 type OperationEventSequence = Annotated[int, Field(ge=1)]
 type OperationEventCode = Annotated[
     str,
-    Field(min_length=3, max_length=128, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"),
+    Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"),
 ]
 
 

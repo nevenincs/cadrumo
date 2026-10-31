@@ -182,7 +182,7 @@ class FiledHistoryDiscoveryPair(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
 
@@ -522,7 +522,7 @@ class FiledHistoryPairOutcome(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
     walk_attempted: bool

@@ -113,7 +113,7 @@ class InvoiceAddBusinessPremisesLease(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     situacion_inmueble: str | None = Field(default=None, min_length=1)
-    referencia_catastral: str | None = Field(default=None, max_length=25)
+    referencia_catastral: str | None = Field(default=None, max_length=32)
 
     @classmethod
     def from_inputs(

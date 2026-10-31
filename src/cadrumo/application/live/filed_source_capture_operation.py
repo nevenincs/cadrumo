@@ -51,9 +51,9 @@ class FiledSourceCaptureRequest(BaseModel):
     model_config = _PUBLIC_CONFIG
     profile_id: UUID
     output_root: Path
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     year: FilingYear
-    period: str = Field(min_length=1, max_length=8)
+    period: str = Field(min_length=1, max_length=16)
 
 
 class FiledSourceCapturePublicResultV1(FiledCaptureEvidenceTallyV1):

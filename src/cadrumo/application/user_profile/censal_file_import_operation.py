@@ -49,7 +49,7 @@ CENSAL_FILE_IMPORT_PHASE_RESULT = "user-profile.censo-file-import.result"
 _FILE_FACT_PATH_PATTERN = r"^(?:contact\.fiscal_address|activities(?:\.[1-9][0-9]*)?\.(?:description|iae_epigraph))$"
 _CensalFileFactPath = Annotated[
     str,
-    Field(min_length=3, max_length=160, pattern=_FILE_FACT_PATH_PATTERN),
+    Field(min_length=1, max_length=256, pattern=_FILE_FACT_PATH_PATTERN),
 ]
 _FILE_FACT_PATH_RE = re.compile(_FILE_FACT_PATH_PATTERN)
 _ACTIVITY_FIELD_ORDERS = {"description": 0, "iae_epigraph": 1}

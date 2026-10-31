@@ -19,10 +19,10 @@ class HelpSurface(StrEnum):
     APP = "app"
 
 
-HelpLabel = Annotated[str, StringConstraints(min_length=1, max_length=80)]
+HelpLabel = Annotated[str, StringConstraints(min_length=1, max_length=128)]
 """One line of the help surface: a command, its description, a section title."""
 
-HelpProse = Annotated[str, StringConstraints(min_length=1, max_length=120)]
+HelpProse = Annotated[str, StringConstraints(min_length=1, max_length=128)]
 """A heading or footer, which gets more room than a single help line."""
 
 
@@ -63,8 +63,8 @@ class RootLandingReport(BaseModel):
 
     profile_selected: bool = False
     active_profile: str | None = None
-    command: str = Field(min_length=1, max_length=120)
-    message: str = Field(min_length=1, max_length=160)
+    command: str = Field(min_length=1, max_length=128)
+    message: str = Field(min_length=1, max_length=256)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

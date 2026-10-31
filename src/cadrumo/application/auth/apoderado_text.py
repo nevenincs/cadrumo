@@ -13,7 +13,7 @@ from typing import Annotated
 
 from pydantic import StringConstraints
 
-ApoderadoNotes = Annotated[str, StringConstraints(max_length=500)]
+ApoderadoNotes = Annotated[str, StringConstraints(max_length=512)]
 """Free operator commentary on an apoderamiento. Empty is a legitimate value.
 
 Short by design: this annotates a delegation record, not a filing. Where an

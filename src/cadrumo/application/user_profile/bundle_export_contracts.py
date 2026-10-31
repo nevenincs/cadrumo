@@ -100,7 +100,7 @@ class ProfileBundleExportRequest(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_name: str | None = Field(default=None, min_length=1, max_length=160)
+    profile_name: str | None = Field(default=None, min_length=1, max_length=256)
     destination: Path
     purpose: ProfileBundleExportPurpose
     transport: ProfileBundleExportTransport

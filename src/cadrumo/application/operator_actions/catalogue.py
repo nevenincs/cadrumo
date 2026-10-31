@@ -32,9 +32,9 @@ class ActionArgumentBindingSpecification(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    argument_name: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=120)
+    argument_name: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=128)
     source: ActionArgumentSource
-    source_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    source_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=256)
     source_evidence_id: NamespacedId | None = None
 
     @model_validator(mode="after")
@@ -55,7 +55,7 @@ class ActionCatalogueEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     action_id: NamespacedId
-    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=256)
     argument_specifications: tuple[ActionArgumentBindingSpecification, ...] = ()
     materialisable_without_arguments: bool = False
     """Whether the live target executes with none of the declared arguments bound.

@@ -125,7 +125,7 @@ class CensalReviewedFieldIntent(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    path: str = Field(min_length=3, max_length=160)
+    path: str = Field(min_length=1, max_length=256)
     intent: CensalFieldIntent
 
     @field_validator("path")
@@ -293,7 +293,7 @@ class CensalReviewFieldProjectionV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    path: str = Field(min_length=3, max_length=160)
+    path: str = Field(min_length=1, max_length=256)
     intent: CensalFieldIntent
     observed_value: str | None
 

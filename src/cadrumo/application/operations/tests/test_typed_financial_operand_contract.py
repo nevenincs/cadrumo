@@ -67,7 +67,7 @@ def test_exact_production_batch_including_all_intent_families_has_a_model_identi
     }
 
 
-@pytest.mark.parametrize("lifetime", [0.0, -1.0, 1801.0, float("inf"), float("nan")])
+@pytest.mark.parametrize("lifetime", [0.0, -1.0, 2049.0, float("inf"), float("nan")])
 def test_published_financial_lifetime_is_positive_finite_and_bounded(lifetime: float) -> None:
     declaration = financial_operand_declaration()
     with pytest.raises(ValidationError):

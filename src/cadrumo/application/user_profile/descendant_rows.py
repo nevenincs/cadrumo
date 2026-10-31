@@ -28,7 +28,7 @@ class ProfileDescendantFact(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    field_key: str = Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=96)
+    field_key: str = Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=128)
     value: str = Field(min_length=1, max_length=4096, repr=False)
 
 
@@ -37,7 +37,7 @@ class ProfileDescendantRow(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    facts: tuple[ProfileDescendantFact, ...] = Field(min_length=1, max_length=96, repr=False)
+    facts: tuple[ProfileDescendantFact, ...] = Field(min_length=1, max_length=128, repr=False)
 
     @field_validator("facts")
     @classmethod

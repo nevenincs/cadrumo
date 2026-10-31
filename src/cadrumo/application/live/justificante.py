@@ -187,7 +187,7 @@ class JustificanteCaptureSnapshot(BaseModel):
     superseded_by_snapshot_id: SnapshotId | None = None
     discarded_at: datetime | None = None
     discarded_by: str = Field(default="", max_length=128)
-    discard_reason: str = Field(default="", max_length=500)
+    discard_reason: str = Field(default="", max_length=512)
 
     @field_validator("modelo")
     @classmethod

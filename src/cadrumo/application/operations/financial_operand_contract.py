@@ -106,7 +106,7 @@ class OperationTransientFinancialOperandPublicDeclarationV1(BaseModel):
     protocol_version: Literal[1] = 1
     operand_schema: OperationSchemaIdentityV1
     baseline_schema: OperationSchemaIdentityV1
-    lifetime_seconds: float = Field(gt=0, le=1800, allow_inf_nan=False)
+    lifetime_seconds: float = Field(gt=0, le=2048, allow_inf_nan=False)
 
 
 class OperationTransientFinancialOperandDeclarationV1(BaseModel):

@@ -57,7 +57,7 @@ class IvaRemoteStateCaptureRequest(BaseModel):
     year_from: FilingYear
     year_to: FilingYear
     target_year: FilingYear
-    target_period: str = Field(min_length=1, max_length=8)
+    target_period: str = Field(min_length=1, max_length=16)
     taxpayer_nif: str | None = None
 
     @model_validator(mode="after")

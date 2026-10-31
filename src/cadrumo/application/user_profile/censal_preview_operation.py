@@ -93,7 +93,7 @@ _CENSAL_PREVIEW_PHASES = (
 _CENSAL_PREVIEW_MAX_VALUE_LENGTH = 4_096
 _CENSAL_PREVIEW_RESULT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
-_CensalPath = Annotated[str, Field(min_length=3, max_length=160)]
+_CensalPath = Annotated[str, Field(min_length=1, max_length=256)]
 _CensalValue = Annotated[str, Field(max_length=_CENSAL_PREVIEW_MAX_VALUE_LENGTH)]
 
 

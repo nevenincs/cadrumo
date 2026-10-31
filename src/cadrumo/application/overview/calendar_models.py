@@ -254,7 +254,7 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    modelo: str | None = Field(default=None, min_length=1, max_length=16)
     filing_year: FilingYear | None = None
     period: _CalendarPeriod | None = None
     local_filing_state: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE
@@ -294,7 +294,7 @@ class OverviewCalendarEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: _CalendarPeriod
     opens_on: date
     closes_on: date
@@ -318,7 +318,7 @@ class OverviewCalendarEntry(BaseModel):
     filing_evidence: OverviewCalendarFilingEvidence = Field(default_factory=lambda: OverviewCalendarFilingEvidence())
     source: OverviewCalendarEntrySource = OverviewCalendarEntrySource.REGISTRY_DEADLINE
     local_work_unit_id: WorkUnitId | None = None
-    local_work_unit_name: str | None = Field(default=None, min_length=1, max_length=200)
+    local_work_unit_name: str | None = Field(default=None, min_length=1, max_length=256)
     local_work_unit_revision_id: RevisionId | None = Field(default=None, min_length=1, max_length=128)
 
     @model_validator(mode="after")
@@ -437,7 +437,7 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     summary: _EventSummary
     reference_id: str = Field(min_length=1, max_length=128)
     snapshot_id: SnapshotId | None = None
-    modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    modelo: str | None = Field(default=None, min_length=1, max_length=16)
     filing_year: FilingYear | None = None
     period: _CalendarPeriod | None = None
     status: str | None = Field(default=None, max_length=64)
@@ -500,7 +500,7 @@ class SuppressedCalendarEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     period: _CalendarPeriod
     verdict: ApplicabilityVerdict
     reason: str = Field(min_length=1)

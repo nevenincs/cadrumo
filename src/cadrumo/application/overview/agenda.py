@@ -85,7 +85,7 @@ class OverviewAgenda(BaseModel):
     model_config = _STRICT_FROZEN
 
     as_of: date
-    horizon_days: int = Field(gt=0, le=365)
+    horizon_days: int = Field(ge=1, le=366)
     next_due: OverviewCalendarEntry | None = None
     due_today: tuple[OverviewCalendarEntry, ...] = ()
     due_soon: tuple[OverviewCalendarEntry, ...] = ()

@@ -175,7 +175,7 @@ class ProfileCustodyHoldEvidence(BaseModel):
     owner: ProfileDeletionHoldOwnerValue
     profile_id: UUID
     disposition: Literal["cleared", "held"]
-    source_record_id: str = Field(min_length=3, max_length=256)
+    source_record_id: str = Field(min_length=1, max_length=256)
     source_record_digest: PrefixedContentDigest
     assessed_at: datetime
     authority: HoldEvidenceAuthority

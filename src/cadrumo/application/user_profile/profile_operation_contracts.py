@@ -105,7 +105,7 @@ class ProfileFieldMutationOperationRequest(BaseModel):
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    path: str = Field(min_length=3, max_length=160)
+    path: str = Field(min_length=1, max_length=256)
     value: str
 
 
@@ -114,7 +114,7 @@ class ProfilePatchValue(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    question_id: str = Field(min_length=1, max_length=120)
+    question_id: str = Field(min_length=1, max_length=128)
     value: str = Field(max_length=4096, repr=False)
 
 
@@ -196,7 +196,7 @@ class ProfileRepeatableRowValue(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    field_key: str = Field(min_length=1, max_length=120)
+    field_key: str = Field(min_length=1, max_length=128)
     value: str
 
 
@@ -208,7 +208,7 @@ class ProfileRepeatableRowMutationOperationRequest(BaseModel):
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    section_key: str = Field(min_length=1, max_length=120)
+    section_key: str = Field(min_length=1, max_length=128)
     values: tuple[ProfileRepeatableRowValue, ...] = Field(min_length=1)
 
     @field_validator("values")
@@ -233,8 +233,8 @@ class ProfileRepeatableRowTargetOperationRequest(BaseModel):
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    section_key: str = Field(min_length=1, max_length=120)
-    row_key: str = Field(max_length=20)
+    section_key: str = Field(min_length=1, max_length=128)
+    row_key: str = Field(max_length=32)
 
     @field_validator("row_key")
     @classmethod
@@ -348,15 +348,15 @@ class ProfileDescendantsOperationResult(ProfileMutationOperationResult):
 class ProfileRepeatableRowMutationOperationResult(ProfileMutationOperationResult):
     """Safe row identity and revision witness for a completed row mutation."""
 
-    section_key: str = Field(min_length=1, max_length=120)
+    section_key: str = Field(min_length=1, max_length=128)
     row_index: NonNegativeInt
 
 
 class ProfileRepeatableRowChangeOperationResult(ProfileMutationOperationResult):
     """Safe durable witness for an existing row's update or removal."""
 
-    section_key: str = Field(min_length=1, max_length=120)
-    row_key: str = Field(max_length=20)
+    section_key: str = Field(min_length=1, max_length=128)
+    row_key: str = Field(max_length=32)
     changed: bool
 
 
@@ -397,15 +397,15 @@ class ProfileDescendantsOperationProjection(ProfileMutationOperationProjection):
 class ProfileRepeatableRowMutationOperationProjection(ProfileMutationOperationProjection):
     """Public location of the newly committed profile row."""
 
-    section_key: str = Field(min_length=1, max_length=120)
+    section_key: str = Field(min_length=1, max_length=128)
     row_index: NonNegativeInt
 
 
 class ProfileRepeatableRowChangeOperationProjection(ProfileMutationOperationProjection):
     """Public stable row identity and whether the record changed."""
 
-    section_key: str = Field(min_length=1, max_length=120)
-    row_key: str = Field(max_length=20)
+    section_key: str = Field(min_length=1, max_length=128)
+    row_key: str = Field(max_length=32)
     changed: bool
 
 

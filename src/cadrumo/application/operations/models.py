@@ -34,7 +34,7 @@ type OperationRevision = Annotated[int, Field(ge=0)]
 type OperationDefinitionId = Annotated[
     str,
     Field(
-        min_length=3,
+        min_length=1,
         max_length=128,
         pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$",
     ),

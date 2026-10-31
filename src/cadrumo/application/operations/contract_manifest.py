@@ -68,7 +68,7 @@ class OperationContractManifestEntryV1(BaseModel):
 
     group: str = Field(min_length=1)
     module: str = Field(min_length=1)
-    ephemeral_secret_lifetime_seconds: float | None = Field(default=None, gt=0, le=3600)
+    ephemeral_secret_lifetime_seconds: float | None = Field(default=None, gt=0, le=4096)
     contract: OperationPublicDefinitionContractV1
 
 

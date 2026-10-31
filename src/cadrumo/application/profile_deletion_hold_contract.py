@@ -50,7 +50,7 @@ class ProfileDeletionHoldOwnerProjection(BaseModel):
     owner: ProfileDeletionHoldOwnerValue
     profile_id: UUID
     blocks_local_deletion: bool
-    source_record_id: str = Field(min_length=3, max_length=256)
+    source_record_id: str = Field(min_length=1, max_length=256)
     source_record_digest: PrefixedContentDigest
     assessed_at: datetime
 

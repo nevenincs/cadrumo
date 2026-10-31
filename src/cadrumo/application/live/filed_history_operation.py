@@ -474,7 +474,7 @@ class FiledHistoryPairOutcomePublicV1(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
     walk_attempted: bool

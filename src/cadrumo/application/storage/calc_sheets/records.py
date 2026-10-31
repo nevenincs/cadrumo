@@ -161,7 +161,7 @@ class SheetCellAddress(BaseModel):
     tab: TabName
     row: int = Field(ge=1)
     column: int = Field(ge=1)
-    a1: str = Field(min_length=2)
+    a1: str = Field(min_length=1)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -259,7 +259,7 @@ class SheetFormulaCell(BaseModel):
     address: SheetCellAddress
     formula: str = Field(min_length=1)
     casilla_id: CasillaId | None
-    rounding_scale: int | None = Field(default=None, ge=0, le=12)
+    rounding_scale: int | None = Field(default=None, ge=0, le=16)
     rounding_rule: SheetRoundingRuleValue
     note: str | None = None
     missing_input_condition: str | None = Field(default=None, min_length=1)
@@ -416,7 +416,7 @@ class SheetRowSet(BaseModel):
     grouping: str = Field(min_length=1)
     tab: TabName
     header_row: int = Field(ge=1)
-    first_data_row: int = Field(ge=2)
+    first_data_row: int = Field(gt=1)
     columns: tuple[SheetRowSetColumn, ...] = Field(min_length=1)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
@@ -564,7 +564,7 @@ class SheetRowHeight(BaseModel):
 
     tab: TabName
     row: int = Field(ge=1)
-    height_pixels: int = Field(ge=1, le=409)
+    height_pixels: int = Field(ge=1, le=512)
 
 
 class SheetHiddenRow(BaseModel):
@@ -588,7 +588,7 @@ class SheetColumnWidth(BaseModel):
 
     tab: TabName
     column: int = Field(ge=1)
-    width: int = Field(ge=1, le=255)
+    width: int = Field(ge=1, le=256)
 
 
 class SheetFrozenView(BaseModel):
@@ -985,7 +985,7 @@ class SheetExportMetadata(BaseModel):
     filing_year: FilingYear
     period: Period | SheetAdministrativeFrame
     engine_version: str = Field(min_length=1)
-    registry_sha: str = Field(min_length=8, max_length=64, pattern=r"^[0-9a-f]+$")
+    registry_sha: str = Field(min_length=1, max_length=64, pattern=r"^[0-9a-f]+$")
     exported_at: datetime
 
     @model_validator(mode="after")

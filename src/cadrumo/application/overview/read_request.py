@@ -7,10 +7,11 @@ from enum import StrEnum
 from typing import Self
 from uuid import UUID
 
-from pydantic import Field, model_validator
+from pydantic import model_validator
 
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
+from ...domain.modelos.codes import ModeloCodeText
 from ..operations.models import CredentialFreeOperationRequest
 from ..operations.public_period import PublicPeriod
 
@@ -40,7 +41,7 @@ class OverviewReadRequest(CredentialFreeOperationRequest):
     to_date: date | None = None
     as_of: date | None = None
     horizon_days: int | None = None
-    modelo: str | None = Field(default=None, pattern=r"^[0-9]{3}$", max_length=3)
+    modelo: ModeloCodeText | None = None
     year: FilingYear | None = None
     verbose: bool | None = None
     allow_incomplete: bool | None = None

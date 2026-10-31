@@ -45,7 +45,7 @@ def _requests(name: str) -> tuple[_NamedRequest, ...]:
     )
 
 
-@pytest.mark.parametrize("length", [1, 128, 129, 160])
+@pytest.mark.parametrize("length", [1, 128, 129, 160, 256])
 def test_every_request_admits_each_length_the_record_admits(length: int) -> None:
     name = "n" * length
     assert _record(f"  {name}  ").name == name
@@ -53,7 +53,7 @@ def test_every_request_admits_each_length_the_record_admits(length: int) -> None
         assert request.name == name, type(request).__name__
 
 
-@pytest.mark.parametrize("name", ["n" * 161, "", "   "])
+@pytest.mark.parametrize("name", ["n" * 257, "", "   "])
 def test_every_request_refuses_a_name_the_record_refuses(name: str) -> None:
     with pytest.raises(ValidationError):
         _record(name)

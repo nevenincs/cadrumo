@@ -357,11 +357,12 @@ def _translate_lookup_bracket_by_binding(
     a default branch ``SWITCH`` returns ``#N/A`` for an unmapped key — mirroring
     the runtime's ``RegistryValidationError`` for missing dispatch keys.
     """
-    if len(expression.args) != 3:
+    try:
+        base_expr, binding_arg, dispatch_arg = expression.args
+    except ValueError:
         raise TranslationError(
             op=op,
-        )
-    base_expr, binding_arg, dispatch_arg = expression.args
+        ) from None
     if binding_arg.binding is None:
         raise TranslationError(
             op=op,
@@ -400,11 +401,12 @@ def _translate_lookup_parameter_by_entity_type(
     returns `#N/A` for an unmapped enum key — matching the runtime's
     `RegistryValidationError` semantics.
     """
-    if len(expression.args) != 3:
+    try:
+        _placeholder_expr, binding_arg, dispatch_arg = expression.args
+    except ValueError:
         raise TranslationError(
             op="lookup_parameter_by_entity_type",
-        )
-    _placeholder_expr, binding_arg, dispatch_arg = expression.args
+        ) from None
     if binding_arg.binding is None:
         raise TranslationError(
             op="lookup_parameter_by_entity_type",

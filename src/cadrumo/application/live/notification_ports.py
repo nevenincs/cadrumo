@@ -52,7 +52,7 @@ class RemoteNotification(BaseModel):
     certificado_id: AeatCertificadoId
     tipo: NotificationTypeValue
     concepto: str = Field(default="", max_length=256)
-    titular_nif: str = Field(min_length=4, max_length=32)
+    titular_nif: str = Field(min_length=1, max_length=32)
     titular_nombre: str = Field(max_length=256)
     destinatario_nif: str = Field(max_length=32)
     destinatario_nombre: str = Field(max_length=256)

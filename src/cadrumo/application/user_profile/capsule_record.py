@@ -118,7 +118,7 @@ class ProfileRecordCommandEvent(BaseModel):
     model_config = _RECORD_CONFIG
 
     event_type: BucketEventType
-    occurred_at: str = Field(min_length=20, max_length=64)
+    occurred_at: str = Field(min_length=1, max_length=64)
     payload: Mapping[str, str] = Field(default_factory=dict)
 
 

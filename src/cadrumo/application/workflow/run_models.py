@@ -36,6 +36,7 @@ from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, NonNegati
 from ...core.auth_provider import AuthProviderKind
 from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
+from ...core.hex import Hex16Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -121,8 +122,8 @@ class WorkflowSiteHealthFacts(BaseModel):
 
     alert_code: str = Field(
         pattern=r"^workflow\.site\.[a-z][a-z0-9_]*$",
-        min_length=3,
-        max_length=96,
+        min_length=1,
+        max_length=128,
     )
     state: SiteHealthState
     observed_at: AwareDatetime
@@ -616,7 +617,7 @@ class WorkflowResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    run_id: str = Field(min_length=16, max_length=16)
+    run_id: Hex16Str
     started_at: datetime
     ended_at: datetime
     final_stage: WorkflowStage

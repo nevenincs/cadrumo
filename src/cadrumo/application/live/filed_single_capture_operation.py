@@ -50,9 +50,9 @@ class FiledSingleCaptureRequest(BaseModel):
     model_config = _PUBLIC_CONFIG
     profile_id: UUID
     output_root: Path
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     year: FilingYear
-    period: str | None = Field(default=None, min_length=1, max_length=8)
+    period: str | None = Field(default=None, min_length=1, max_length=16)
     expediente_id: str | None = Field(default=None, min_length=1, max_length=128)
     limit: int | None = Field(default=None, ge=1)
 

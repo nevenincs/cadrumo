@@ -58,7 +58,7 @@ class FiledListRequest(BaseModel):
 
     model_config = _PUBLIC_CONFIG
     profile_id: UUID
-    modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    modelo: str | None = Field(default=None, min_length=1, max_length=16)
     year_from: FilingYear
     year_to: FilingYear
 

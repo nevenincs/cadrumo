@@ -86,7 +86,7 @@ class _CasillaRow(BaseModel):
 
     casilla_id: CasillaId
     tab: Literal[TabName.ENTRADAS, TabName.CALCULOS]
-    row: int = Field(ge=2)
+    row: int = Field(gt=1)
     section_path: tuple[str, ...]
 
 
@@ -95,7 +95,7 @@ class _BindingRow(BaseModel):
 
     binding: BindingId
     tab: Literal[TabName.ENTRADAS]
-    row: int = Field(ge=2)
+    row: int = Field(gt=1)
     label: str
     readonly: bool = False
 
@@ -119,9 +119,9 @@ class BracketRanges(BaseModel):
     model_config = _STRICT_FROZEN
 
     parameter: ParameterId
-    lower_bound: str = Field(min_length=2)
-    fixed_addition: str = Field(min_length=2)
-    marginal_rate: str = Field(min_length=2)
+    lower_bound: str = Field(min_length=1)
+    fixed_addition: str = Field(min_length=1)
+    marginal_rate: str = Field(min_length=1)
     row_count: int = Field(ge=1)
 
 

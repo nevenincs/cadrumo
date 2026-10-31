@@ -268,7 +268,7 @@ class ProfileCustodyTransactionJournal(ProfileCustodyDigestModel):
     expected_custody_digest: PrefixedContentDigest | None = None
     proposed_custody_digest: PrefixedContentDigest | None = None
     proposed_generation: int | None = Field(default=None, ge=1)
-    label: str | None = Field(default=None, min_length=1, max_length=160)
+    label: str | None = Field(default=None, min_length=1, max_length=256)
     label_revision: int | None = Field(default=None, ge=1)
     label_content_digest: PrefixedContentDigest | None = None
     label_self_digest: PrefixedContentDigest | None = None

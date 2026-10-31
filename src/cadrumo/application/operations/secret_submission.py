@@ -18,7 +18,7 @@ from .models import OperationId, OperationIdentity, OperationRevision
 
 type OperationSecretKind = Annotated[
     str,
-    Field(min_length=3, max_length=64, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"),
+    Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"),
 ]
 
 _MAX_SECRET_BYTES = 65_536

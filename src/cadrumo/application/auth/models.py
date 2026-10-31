@@ -26,7 +26,7 @@ fail to match against the operation it was meant to continue.
 
 type CertificateSourceName = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=160),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=256),
 ]
 """Canonical spelling of a named certificate source.
 

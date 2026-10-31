@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Self
+from typing import Final, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
@@ -28,6 +28,9 @@ from .calendar_models import (
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
+
+HOME_PREVIEW_LIMIT: Final = 3
+"""How many next actions and agenda entries the Home zone previews."""
 
 HOME_REASON_BLOCKED_DEPENDENCY: str = "blocked_dependency"
 HOME_REASON_BLOCKED_EVIDENCE: str = "blocked_evidence"
@@ -146,7 +149,7 @@ class HomeAccountSession(BaseModel):
     model_config = _STRICT_FROZEN
 
     posture: HomeSessionPosture
-    profile_label: str | None = Field(default=None, min_length=1, max_length=200)
+    profile_label: str | None = Field(default=None, min_length=1, max_length=256)
     expires_at: datetime | None = None
 
     @model_validator(mode="after")
@@ -193,7 +196,7 @@ class HomeDeclarationResume(BaseModel):
     modelo: ModeloId
     filing_year: FilingYear
     period: Period
-    name: str = Field(min_length=1, max_length=200)
+    name: str = Field(min_length=1, max_length=256)
     state: HomeDeclarationState
     revision_id: RevisionId | None = None
 
@@ -297,7 +300,7 @@ def _validate_messages_claim(state: HomeZoneState, count: NonNegativeInt | None)
 
 
 def _validate_action_preview(actions: tuple[HomeNextAction, ...]) -> None:
-    if len(actions) > 3:
+    if len(actions) > HOME_PREVIEW_LIMIT:
         raise ValueError("Home may preview at most three next actions")
     ranks = tuple(item.rank for item in actions)
     if ranks != tuple(range(len(actions))):
@@ -305,7 +308,7 @@ def _validate_action_preview(actions: tuple[HomeNextAction, ...]) -> None:
 
 
 def _validate_agenda_preview(agenda: tuple[HomeAgendaEntry, ...]) -> None:
-    if len(agenda) > 3:
+    if len(agenda) > HOME_PREVIEW_LIMIT:
         raise ValueError("Home may preview at most three agenda entries")
     addresses = tuple((item.modelo, item.filing_year, item.period.registry_token) for item in agenda)
     if len(set(addresses)) != len(addresses):

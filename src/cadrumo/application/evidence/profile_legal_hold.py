@@ -71,7 +71,7 @@ class LegalHoldCaseSnapshot(BaseModel):
         if value != tuple(sorted(set(value))):
             raise ValueError("legal open case identifiers must be unique and sorted")
         if any(
-            len(case_id) < 3
+            not case_id
             or len(case_id) > 256
             or case_id != case_id.strip()
             or any(character in case_id for character in "\\/\x00")
