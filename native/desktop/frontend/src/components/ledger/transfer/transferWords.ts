@@ -9,8 +9,6 @@ import type {
 } from "../../../shell/ledger";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import type { Translate } from "../../../shell/strings";
-import { dateFormats } from "../../../shared/dateFormats";
-import { isoDay } from "../../../shared/dates";
 
 const IMPORT_REFUSALS = new Set([
   "transaction_validation",
@@ -55,26 +53,6 @@ export const diagnosticText = (
 
 export const providerName = (t: Translate, provider: LedgerProvider) =>
   t(`desktop.ledger.import.provider.${provider.replace("-", "_")}`);
-
-/** An amount with its currency, in the page's language. */
-export function amountText(
-  locale: string,
-  amount: string,
-  currency: string,
-): string {
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-      minimumFractionDigits: 2,
-    }).format(Number(amount));
-  } catch {
-    return `${amount} ${currency}`;
-  }
-}
-
-export const dayText = (locale: string, day: string) =>
-  dateFormats(locale).medium.format(isoDay(day));
 
 /** A file's size as the platform would say it. */
 export function sizeText(locale: string, bytes: number | null): string {

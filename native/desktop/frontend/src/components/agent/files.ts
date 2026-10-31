@@ -50,21 +50,6 @@ export function formatSize(locale: string, bytes: number): string {
   return unitFormat(locale, unit, fraction).format(value);
 }
 
-const percents = new Map<string, Intl.NumberFormat>();
-
-/** A share from 0 to 1 as a whole percentage, in the locale's own form. */
-export function formatPercent(locale: string, share: number): string {
-  let format = percents.get(locale);
-  if (!format) {
-    format = new Intl.NumberFormat(locale, {
-      style: "percent",
-      maximumFractionDigits: 0,
-    });
-    percents.set(locale, format);
-  }
-  return format.format(clampShare(share));
-}
-
 /** A progress share held to 0 to 1; anything unreadable counts as none. */
 export function clampShare(share: number | undefined): number {
   if (share === undefined || !Number.isFinite(share)) return 0;

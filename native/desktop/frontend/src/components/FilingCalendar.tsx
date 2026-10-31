@@ -655,9 +655,7 @@ export function FilingCalendarView({
     );
   } else {
     const { warnings, coverage, generated_at } = state.calendar;
-    const asOf = generated_at
-      ? formatTime(locale, generated_at)
-      : "—";
+    const asOf = generated_at ? formatTime(locale, generated_at) : "—";
     // How the range stands, in the product's own four readings: counted,
     // never combined into a verdict.
     const standing = STATE_ORDER.map(

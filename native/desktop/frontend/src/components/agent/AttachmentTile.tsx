@@ -4,12 +4,7 @@ import { formatPercent } from "../../shared/numbers";
 import { facts, listed } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 import { AgentIconAction } from "./AgentAction";
-import {
-  clampShare,
-  extensionLabel,
-  formatSize,
-  KIND_GLYPH,
-} from "./files";
+import { clampShare, extensionLabel, formatSize, KIND_GLYPH } from "./files";
 import type { StagedAttachment } from "./types";
 
 /** How much of an upload has gone, drawn as a ring with its percentage. */

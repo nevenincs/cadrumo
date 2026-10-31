@@ -18,7 +18,6 @@ import {
   type SpendingCategoryFamily,
 } from "../../../shell/ledgerVocabulary";
 import type { Translate } from "../../../shell/strings";
-import { dateFormats } from "../../../shared/dateFormats";
 
 const lower = (token: string) => token.toLowerCase();
 
@@ -119,80 +118,6 @@ export const reasonShort = (t: Translate, reason: string) =>
   t(`desktop.ledger.reason.${reason}`);
 export const reasonDetail = (t: Translate, reason: string) =>
   t(`desktop.ledger.reason_detail.${reason}`);
-
-const figures = new Map<string, Intl.NumberFormat>();
-function figureFormat(locale: string): Intl.NumberFormat {
-  let held = figures.get(locale);
-  if (!held) {
-    held = new Intl.NumberFormat(locale, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-    figures.set(locale, held);
-  }
-  return held;
-}
-
-/** An amount in the chrome language's grouping, to the cent. The text is
- * canonical decimal; it is drawn, never computed with. */
-export function amountText(locale: string, amount: string): string {
-  // A stored amount has at most two decimals and twelve whole digits, which
-  // a double holds exactly enough to draw to the cent.
-  return figureFormat(locale).format(Number(amount));
-}
-
-const percents = new Map<string, Intl.NumberFormat>();
-/** A stored fraction as a percentage: `0.21` is `21%`. */
-export function percentText(locale: string, fraction: string): string {
-  const percent = percentOf(fraction);
-  if (percent === null) return fraction;
-  let format = percents.get(locale);
-  if (!format) {
-    format = new Intl.NumberFormat(locale, { maximumFractionDigits: 4 });
-    percents.set(locale, format);
-  }
-  return `${format.format(Number(percent))}%`;
-}
-
-const days = new Map<string, string>();
-/** How many drawn dates are kept: a few periods' worth. */
-const DAYS_KEPT = 4096;
-
-/** A calendar date, with its year only where `withYear`. */
-export function dateText(
-  locale: string,
-  day: string,
-  withYear: boolean,
-): string {
-  const key = `${locale} ${withYear ? "y" : "-"} ${day}`;
-  const held = days.get(key);
-  if (held !== undefined) return held;
-  const text = drawDate(locale, day, withYear);
-  if (days.size >= DAYS_KEPT) days.clear();
-  days.set(key, text);
-  return text;
-}
-
-function drawDate(locale: string, day: string, withYear: boolean): string {
-  const found = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
-  if (!found) return day;
-  const date = new Date(
-    Number(found[1]),
-    Number(found[2]) - 1,
-    Number(found[3]),
-  );
-  date.setFullYear(Number(found[1]));
-  const formats = dateFormats(locale);
-  return (withYear ? formats.medium : formats.short).format(date);
-}
-
-/** A moment, as the person's clock reads it. */
-export function stampText(locale: string, stamp: string): string {
-  const time = Date.parse(stamp);
-  return Number.isNaN(time)
-    ? stamp
-    : dateFormats(locale).dateTime.format(new Date(time));
-}
 
 /** An own account by its label in the register, its id where the register
  * was not read or does not hold it, and "No account" for none. */

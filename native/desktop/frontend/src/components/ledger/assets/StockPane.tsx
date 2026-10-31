@@ -2443,8 +2443,9 @@ export function StockPane({
                 sort: (movement) => rankDecimal(movement.unit_cost?.decimal),
                 cell: (movement) =>
                   movement.unit_cost
-                    ? formatAmount(locale, movement.unit_cost.decimal, {
-                        decimals: 6,
+                    ? formatDecimal(locale, movement.unit_cost.decimal, {
+                        minFraction: 0,
+                        maxFraction: 6,
                       })
                     : "—",
               },

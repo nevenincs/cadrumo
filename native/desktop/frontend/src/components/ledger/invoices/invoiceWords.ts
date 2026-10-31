@@ -41,21 +41,6 @@ export function rateLabel(t: Translate, locale: string, slot: string): string {
   return formatPercent(locale, fraction, { unit: "fraction", maxFraction: 1 });
 }
 
-const figures = new Map<string, Intl.NumberFormat>();
-/** A figure to the cent in the page's grouping. It is drawn from exact
- * decimal text, never computed with. */
-export function figureText(locale: string, amount: string): string {
-  let format = figures.get(locale);
-  if (!format) {
-    format = new Intl.NumberFormat(locale, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-    figures.set(locale, format);
-  }
-  return format.format(Number(amount));
-}
-
 /** Why a value was not taken, in plain words, with the spelling meant
  * where one reading is certain. */
 export function problemText(t: Translate, problem: Problem): string {
