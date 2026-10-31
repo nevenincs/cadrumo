@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
-import { dateFormats } from "../../../shared/dateFormats";
+import { formatTime } from "../../../shared/dateFormats";
 import type {
   ModeloAmendmentCorrectionContextV1,
   ModeloWorkHistoryEntryV1,
@@ -207,8 +207,7 @@ export function HistoryView({
   const t = useStrings();
   const [renaming, setRenaming] = useState(false);
   const [discarding, setDiscarding] = useState(false);
-  const when = (iso: string) =>
-    dateFormats(locale).dateTime.format(new Date(iso));
+  const when = (iso: string) => formatTime(locale, iso);
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <Heading

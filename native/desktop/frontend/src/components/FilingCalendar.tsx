@@ -1,4 +1,4 @@
-import { dateFormats } from "../shared/dateFormats";
+import { dateFormats, formatTime } from "../shared/dateFormats";
 import { isoDay as day, localDay } from "../shared/dates";
 import { CalendarEntryRow } from "./calendar/CalendarEntryRow";
 import { CalendarTodayMarker } from "./calendar/CalendarTodayMarker";
@@ -656,7 +656,7 @@ export function FilingCalendarView({
   } else {
     const { warnings, coverage, generated_at } = state.calendar;
     const asOf = generated_at
-      ? dateFormats(locale).dateTime.format(new Date(generated_at))
+      ? formatTime(locale, generated_at)
       : "—";
     // How the range stands, in the product's own four readings: counted,
     // never combined into a verdict.

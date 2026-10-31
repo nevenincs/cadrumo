@@ -35,9 +35,9 @@ import type {
   OutputLanguage,
   RecordedCalculationNote,
 } from "../../../shell/modeloContract";
+import { formatTime } from "../../../shared/dateFormats";
 import { AEAT_SEDE } from "../../../shell/links";
 import { useStrings } from "../../../shell/strings";
-import { stampText } from "../../ledger/movements/movementWords";
 import type { FormSession } from "../form/session";
 import { CalculationNotes } from "../workspace/CalculationNotes";
 import { runOperation, type OperationRun } from "./operationRun";
@@ -452,7 +452,7 @@ export function FilingView({
     },
     {
       word: t("workspace.modelo.filing.file_exported"),
-      when: file ? stampText(language, file.exported_at) : notYet,
+      when: file ? formatTime(language, file.exported_at) : notYet,
       detail: file
         ? file.current
           ? t("workspace.modelo.filing.file_current")
@@ -463,7 +463,7 @@ export function FilingView({
     {
       word: t("workspace.declarations.list.group.recorded"),
       when: recorded?.recorded_at
-        ? stampText(language, recorded.recorded_at)
+        ? formatTime(language, recorded.recorded_at)
         : notYet,
       detail: recorded
         ? t("workspace.modelo.filing.recorded_here")
@@ -473,7 +473,7 @@ export function FilingView({
     {
       word: t("workspace.modelo.filing.at_aeat"),
       when: receipt?.verified_at
-        ? stampText(language, receipt.verified_at)
+        ? formatTime(language, receipt.verified_at)
         : recorded
           ? t("workspace.modelo.filing.not_confirmed_yet")
           : "—",

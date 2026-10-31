@@ -5,6 +5,7 @@ import type {
   TranscriptItem,
 } from "@/components/agent/types";
 import { failureCode } from "../errors";
+import { formatCount } from "../shared/numbers";
 import { effortWords } from "./agentCatalog";
 import { sentFiles } from "./agentDocuments";
 import type {
@@ -735,7 +736,6 @@ export function replyFacts(
   const counted = replies.flatMap((reply) =>
     reply.usage ? [reply.usage] : [],
   );
-  const number = new Intl.NumberFormat(locale);
   return {
     ranWith: ranWith
       ? t("desktop.agent.ran_with", { selection: ranWith })
@@ -743,10 +743,12 @@ export function replyFacts(
     usage:
       counted.length > 0
         ? t("desktop.agent.usage", {
-            input: number.format(
+            input: formatCount(
+              locale,
               counted.reduce((sum, used) => sum + used.input_tokens, 0),
             ),
-            output: number.format(
+            output: formatCount(
+              locale,
               counted.reduce((sum, used) => sum + used.output_tokens, 0),
             ),
           })

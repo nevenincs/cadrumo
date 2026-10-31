@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import type { Attendance, AttendanceCandidate } from "../shell/host";
 import { failureCode } from "../errors";
+import { formatTime } from "../shared/dateFormats";
 import { labelled, listed } from "../shell/compose";
-import { useStrings } from "../shell/strings";
+import { SOURCE_LOCALE, useStrings } from "../shell/strings";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
 
 /** Exact runtime peer requests, read when the runtime says they changed and
@@ -129,7 +130,11 @@ export function AttendanceRequests({
               t("desktop.attendance.executable"),
               candidate.image_path ?? t("desktop.attendance.none"),
             ),
-            labelled(t, t("desktop.attendance.expires"), candidate.expires_at),
+            labelled(
+              t,
+              t("desktop.attendance.expires"),
+              formatTime(t.locale ?? SOURCE_LOCALE, candidate.expires_at),
+            ),
             labelled(
               t,
               t("desktop.attendance.operations"),

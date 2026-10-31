@@ -1,15 +1,14 @@
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { dateFormats } from "../../shared/dateFormats";
+import { formatDay } from "../../shared/dateFormats";
 import type { NotificationRow } from "../../shell/aeatSyncResults";
 import { useStrings } from "../../shell/strings";
 
 function Row({ row, language }: { row: NotificationRow; language: string }) {
   const t = useStrings();
-  const { medium } = dateFormats(language);
-  const received = medium.format(new Date(row.received_on));
-  const readOn = row.read_on ? medium.format(new Date(row.read_on)) : null;
+  const received = formatDay(language, row.received_on);
+  const readOn = row.read_on ? formatDay(language, row.read_on) : null;
   return (
     <li
       data-read={row.read}

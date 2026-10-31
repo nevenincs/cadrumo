@@ -4,6 +4,7 @@ import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Spinner } from "@/components/ui/spinner";
+import { formatDay } from "../../../shared/dateFormats";
 import { listed } from "../../../shell/compose";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
@@ -206,12 +207,14 @@ function Citation({
 
 function CardParts({
   card,
+  language,
   session,
   openLink,
   onOpenSurface,
   canOpenSurface,
 }: {
   card: ModeloCasillaHelpCardV1;
+  language: string;
   session: FormSession;
   openLink: (url: string) => void;
   onOpenSurface?: (surface: OpenableSurface) => void;
@@ -358,7 +361,7 @@ function CardParts({
                   />
                   <span>
                     {t("workspace.modelo.details.retrieved", {
-                      date: quote.retrieved_at,
+                      date: formatDay(language, quote.retrieved_at),
                     })}
                   </span>
                 </span>
@@ -469,6 +472,7 @@ export function Details({
       {read?.kind === "ready" ? (
         <CardParts
           card={read.card}
+          language={language}
           session={session}
           openLink={openLink}
           onOpenSurface={onOpenSurface}

@@ -121,11 +121,7 @@ export function AgentSettingsPopover({
           {way?.capabilities && way.capabilities.length > 0 && (
             <FieldDescription>
               {t("desktop.agent.capabilities", {
-                // In the language the shell shows, which the page carries.
-                list: listOf(
-                  document.documentElement.lang || undefined,
-                  way.capabilities,
-                ),
+                list: listOf(t.locale, way.capabilities),
               })}
             </FieldDescription>
           )}

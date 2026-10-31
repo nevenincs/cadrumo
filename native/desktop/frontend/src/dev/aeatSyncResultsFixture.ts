@@ -24,6 +24,7 @@ export type AeatSyncResultsMode =
 
 const DAY = 24 * 60 * 60 * 1000;
 const ago = (days: number) => new Date(Date.now() - days * DAY).toISOString();
+const dayAgo = (days: number) => ago(days).slice(0, 10);
 
 function summary(
   area: AeatSyncResult["area"],
@@ -117,27 +118,27 @@ const filed: FiledRow[] = [
 const notifications: NotificationRow[] = [
   {
     subject: "Requerimiento de información sobre el modelo 303",
-    received_on: ago(2),
+    received_on: dayAgo(2),
     read: false,
     read_on: null,
   },
   {
     subject: "Aviso de vencimiento de plazo",
-    received_on: ago(6),
+    received_on: dayAgo(6),
     read: false,
     read_on: null,
   },
   {
     subject: "Comunicación sobre el modelo 130",
-    received_on: ago(25),
+    received_on: dayAgo(25),
     read: true,
-    read_on: ago(24),
+    read_on: dayAgo(24),
   },
   {
     subject: "Acuse de recibo de la declaración anual",
-    received_on: ago(80),
+    received_on: dayAgo(80),
     read: true,
-    read_on: ago(79),
+    read_on: dayAgo(79),
   },
 ];
 

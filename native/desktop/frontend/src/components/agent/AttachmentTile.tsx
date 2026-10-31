@@ -1,12 +1,12 @@
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
+import { formatPercent } from "../../shared/numbers";
 import { facts, listed } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 import { AgentIconAction } from "./AgentAction";
 import {
   clampShare,
   extensionLabel,
-  formatPercent,
   formatSize,
   KIND_GLYPH,
 } from "./files";
@@ -24,6 +24,10 @@ function UploadRing({
 }) {
   const t = useStrings();
   const percent = Math.round(share * 100);
+  const shown = formatPercent(locale, share.toFixed(4), {
+    unit: "fraction",
+    maxFraction: 0,
+  });
   return (
     <div
       role="progressbar"
@@ -31,7 +35,7 @@ function UploadRing({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={percent}
-      aria-valuetext={formatPercent(locale, share)}
+      aria-valuetext={shown}
       className="relative flex size-control-lg items-center justify-center"
     >
       <svg
@@ -62,7 +66,7 @@ function UploadRing({
         />
       </svg>
       <span className="text-2xs font-medium text-foreground tabular-nums">
-        {formatPercent(locale, share)}
+        {shown}
       </span>
     </div>
   );
