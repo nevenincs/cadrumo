@@ -43,6 +43,7 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSt
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import verification_report_read_capture as capture_module
 from ..verification_report_public_facts import ModeloVerificationReportProjection
@@ -465,38 +466,24 @@ def test_executor_captures_on_worker_and_publishes_one_complete_projection() -> 
             payload=ModeloVerificationReportListRequest(profile_id=_PROFILE),
         )
         owner_thread = threading.get_ident()
-        phases: list[str] = []
-        effects: list[OperationEffect] = []
-        stored: list[BaseModel] = []
-
-        class Events:
-            async def phase(self, phase_code: str) -> None:
-                phases.append(phase_code)
-
-            async def effect(self, effect: OperationEffect) -> None:
-                effects.append(effect)
-
-        class Operands:
-            async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-                assert written_at.tzinfo is not None
-                stored.append(operand)
-                return _RESULT_REFERENCE
+        events = RecordingEvents()
+        operands = RecordingOperands(_RESULT_REFERENCE)
 
         context = SimpleNamespace(
             authority_operation=operation,
             identity=SimpleNamespace(definition_id=definition.definition_id, subject_ref=request.subject_ref),
-            events=Events(),
-            operands=Operands(),
+            events=events,
+            operands=operands,
         )
         reference = asyncio.run(definition.executor_factory.create().execute(request, context))
 
     assert reference == _RESULT_REFERENCE
-    assert phases == [MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID]
-    assert effects == [OperationEffect.NONE]
-    assert len(stored) == 1
-    assert type(stored[0]) is ModeloVerificationReportListProjection
-    assert stored[0].profile_id == _PROFILE
-    assert stored[0].report_count == 1
+    assert events.phases == [MODELO_VERIFICATION_REPORT_LIST_OPERATION_DEFINITION_ID]
+    assert events.effects == [OperationEffect.NONE]
+    assert len(operands.stored) == 1
+    assert type(operands.stored[0]) is ModeloVerificationReportListProjection
+    assert operands.stored[0].profile_id == _PROFILE
+    assert operands.stored[0].report_count == 1
     assert bundle.calculation.read_threads[0] != owner_thread
     assert factory is not None
 

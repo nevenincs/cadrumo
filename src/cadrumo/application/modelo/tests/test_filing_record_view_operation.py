@@ -44,6 +44,7 @@ from ...calculations.observations_repository import (
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from ..filing_record_view_operation import (
@@ -345,22 +346,8 @@ def test_executor_reads_layers_once_on_worker_and_stores_one_typed_result() -> N
     operation = cast(PinnedAuthorityOperation, object())
     request = _request(record)
     owner_thread = threading.get_ident()
-    phases: list[str] = []
-    effects: list[OperationEffect] = []
-    stored: list[BaseModel] = []
-
-    class Events:
-        async def phase(self, phase_code: str) -> None:
-            phases.append(phase_code)
-
-        async def effect(self, effect: OperationEffect) -> None:
-            effects.append(effect)
-
-    class Operands:
-        async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-            assert written_at.tzinfo is not None
-            stored.append(operand)
-            return _RESULT_REFERENCE
+    events = RecordingEvents()
+    operands = RecordingOperands(_RESULT_REFERENCE)
 
     context = SimpleNamespace(
         authority_operation=operation,
@@ -368,20 +355,20 @@ def test_executor_reads_layers_once_on_worker_and_stores_one_typed_result() -> N
             definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
             subject_ref=request.subject_ref,
         ),
-        events=Events(),
-        operands=Operands(),
+        events=events,
+        operands=operands,
     )
 
     reference = asyncio.run(definition.executor_factory.create().execute(request, context))
 
     assert reference == _RESULT_REFERENCE
-    assert phases == [MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID]
-    assert effects == [OperationEffect.NONE]
+    assert events.phases == [MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID]
+    assert events.effects == [OperationEffect.NONE]
     assert len(observation_repository.calls) == 1
     assert observation_repository.calls[0][:3] == ("303", record.period, None)
     assert observation_repository.calls[0][3] != owner_thread
-    assert type(stored[0]) is ModeloFilingRecordViewProjection
-    assert stored[0].filing_record_id == record.filing_record_id
+    assert type(operands.stored[0]) is ModeloFilingRecordViewProjection
+    assert operands.stored[0].filing_record_id == record.filing_record_id
 
 
 def test_missing_receipt_and_cross_profile_catalogues_fail_closed() -> None:

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import datetime
+
+from pydantic import BaseModel
 
 from ...core.operations import OperationEffect
 
@@ -28,3 +31,16 @@ class IrreversibleSectionGrant:
     @asynccontextmanager
     async def irreversible_section(self) -> AsyncGenerator[None]:
         yield
+
+
+class RecordingOperands:
+    """Keep every operand an operation stores and answer with one fixed reference."""
+
+    def __init__(self, reference: str) -> None:
+        self.reference = reference
+        self.stored: list[BaseModel] = []
+
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
+        assert written_at.tzinfo is not None
+        self.stored.append(operand)
+        return self.reference

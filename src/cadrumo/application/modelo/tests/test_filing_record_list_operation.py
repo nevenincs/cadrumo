@@ -38,6 +38,7 @@ from ....domain.modelos.work_unit import derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..filing_record_list_contracts import (
     ModeloFilingRecordListEntryProjection,
@@ -295,22 +296,8 @@ def test_executor_stores_one_projection_and_reports_none() -> None:
     factory, definition, _registration, _registry = _setup(bundle)
     operation = cast(PinnedAuthorityOperation, object())
     request = _request()
-    phases: list[str] = []
-    effects: list[OperationEffect] = []
-    stored: list[BaseModel] = []
-
-    class Events:
-        async def phase(self, phase_code: str) -> None:
-            phases.append(phase_code)
-
-        async def effect(self, effect: OperationEffect) -> None:
-            effects.append(effect)
-
-    class Operands:
-        async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
-            assert written_at.tzinfo is not None
-            stored.append(operand)
-            return "f" * 64
+    events = RecordingEvents()
+    operands = RecordingOperands("f" * 64)
 
     context = SimpleNamespace(
         authority_operation=operation,
@@ -318,19 +305,19 @@ def test_executor_stores_one_projection_and_reports_none() -> None:
             definition_id=MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID,
             subject_ref=request.subject_ref,
         ),
-        events=Events(),
-        operands=Operands(),
+        events=events,
+        operands=operands,
     )
 
     reference = asyncio.run(definition.executor_factory.create().execute(request, context))
 
     assert reference == "f" * 64
-    assert phases == [MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID]
-    assert effects == [OperationEffect.NONE]
-    assert len(stored) == 1
-    assert type(stored[0]) is ModeloFilingRecordListProjection
-    assert stored[0].profile_id == _PROFILE
-    assert stored[0].record_count == len(records)
+    assert events.phases == [MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID]
+    assert events.effects == [OperationEffect.NONE]
+    assert len(operands.stored) == 1
+    assert type(operands.stored[0]) is ModeloFilingRecordListProjection
+    assert operands.stored[0].profile_id == _PROFILE
+    assert operands.stored[0].record_count == len(records)
     assert factory is not None
 
 
