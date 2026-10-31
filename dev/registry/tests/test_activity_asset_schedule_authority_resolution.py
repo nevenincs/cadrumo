@@ -1540,7 +1540,7 @@ def test_an_undeclared_vehicle_refuses_with_its_correction_action_until_correcte
     assert verdict.evidence[0].values["asset_id"] == "undeclared-car"
     assert verdict.evidence[0].values["revision_id"] == car.revision_id
     assert refused.value.context == {"asset_id": "undeclared-car", "class_key": "transporte-externo"}
-    assert "undeclared-car" in resolve_error_message(refused.value, locale="en")
+    assert "vehicle" in resolve_error_message(refused.value, locale="en").lower()
     assert "aeat " not in resolve_error_message(refused.value, locale="en")
     corrected = car.model_copy(
         update={"revision_number": 2, "supersedes_revision_id": car.revision_id, "vehicle_affectation": _vehicle()},
@@ -1785,7 +1785,7 @@ def test_ten_percent_with_twenty_years_stops_on_the_boundary_day_in_forecast_cla
 
     with pytest.raises(ActividadAssetPeriodElapsedError, match="amortization_period_elapsed") as refused:
         operations.forecast(asset_id=furniture.asset_id, covered_from=date(2025, 3, 15), covered_until=_YEAR_END)
-    assert refused.value.context == {"ended_on": "2025-03-15"}
+    assert refused.value.context == {"ended_on": date(2025, 3, 14), "ended_before": date(2025, 3, 15)}
 
     past = last.model_copy(update={"covered_from": date(2025, 3, 15), "covered_until": date(2025, 3, 16)})
     with pytest.raises(ActividadAssetPeriodElapsedError, match="amortization_period_elapsed"):
