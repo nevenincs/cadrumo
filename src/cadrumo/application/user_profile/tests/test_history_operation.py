@@ -13,7 +13,6 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    AccessScope,
     Availability,
     DisclosureCategory,
     DisclosurePermission,
@@ -38,7 +37,9 @@ from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...tests.access_authority_support import build_access_authority, new_access_binding
+from ...tests.access_authority_support import (
+    disclosure_decision_without_category,
+)
 from ..access_errors import ProfileAccessRefusedError
 from ..history_contracts import ProfileHistoryExecutionResult, ProfileHistoryProjection, ProfileHistoryRequest
 from ..history_operation import (
@@ -270,38 +271,14 @@ def test_history_result_requires_complete_profile_and_tax_disclosure_consent(
             authority_operation=_PIN,
         ),
     )
-    permissions = frozenset(
-        DisclosurePermission(
-            destination_id=destination,
-            projection_id=schema.schema_id,
-            category=category,
-        )
-        for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
+    decision = disclosure_decision_without_category(
+        resolved,
+        registry,
+        profile_id=_PROFILE,
+        destination_id=destination,
+        result_schema_id=schema.schema_id,
+        missing=missing,
     )
-    complete = AccessScope(
-        operations=frozenset({PROFILE_HISTORY_OPERATION_DEFINITION_ID}),
-        actions=frozenset({AccessAction.RESULT}),
-        disclosures=permissions,
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
-    granted = AccessScope(
-        operations=complete.operations,
-        actions=complete.actions,
-        disclosures=frozenset(permission for permission in permissions if permission.category is not missing),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
-    instant = datetime(2026, 10, 1, 12, tzinfo=UTC)
-    authority = build_access_authority(
-        binding=new_access_binding(_PROFILE),
-        now=instant,
-        grant_scope=granted,
-        profile_scope=complete,
-    )
-    decision = authority.evaluate(registry=registry, request=resolved.request, policy=resolved.policy)
     if missing is None:
         assert isinstance(decision, AccessAllowed)
     else:

@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 from cadrumo_client.contracts.access_refusals import AccessDecision
 from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
     AccessScope,
     AuthorityState,
     Availability,
+    DisclosureCategory,
     DisclosurePermission,
     OperationAccessPolicy,
     OperationAccessRequest,
@@ -202,5 +204,44 @@ def scoped_policy_decision(
         now=now,
         grant_scope=scope,
         human=human,
+    )
+    return authority.evaluate(registry=registry, request=resolved.request, policy=resolved.policy)
+
+
+def disclosure_decision_without_category(
+    resolved: ResolvedOperationAccess,
+    registry: OperationRegistry,
+    *,
+    profile_id: UUID,
+    destination_id: UUID,
+    result_schema_id: str,
+    missing: DisclosureCategory | None,
+) -> AccessDecision:
+    """Evaluate a result read whose grant holds the profile and tax disclosures except ``missing``."""
+    permissions = frozenset(
+        DisclosurePermission(destination_id=destination_id, projection_id=result_schema_id, category=category)
+        for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
+    )
+    complete = AccessScope(
+        operations=frozenset({resolved.request.definition_id}),
+        actions=frozenset({AccessAction.RESULT}),
+        disclosures=permissions,
+        periods=None,
+        allow_period_independent=True,
+        allow_delegation=False,
+    )
+    granted = AccessScope(
+        operations=complete.operations,
+        actions=complete.actions,
+        disclosures=frozenset(permission for permission in permissions if permission.category is not missing),
+        periods=None,
+        allow_period_independent=True,
+        allow_delegation=False,
+    )
+    authority = build_access_authority(
+        binding=new_access_binding(profile_id),
+        now=datetime(2026, 10, 1, 12, tzinfo=UTC),
+        grant_scope=granted,
+        profile_scope=complete,
     )
     return authority.evaluate(registry=registry, request=resolved.request, policy=resolved.policy)
