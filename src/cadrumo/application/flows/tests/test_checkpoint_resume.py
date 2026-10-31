@@ -21,23 +21,22 @@ localized prose.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from pathlib import Path
 
 import pytest
 from pydantic import BaseModel
 
 from ....core.flows import (
     CheckpointAvailability,
-    CopyRefKind,
     FlowMode,
     FlowWidgetKind,
     PageStatus,
 )
 from ..checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
-from ..definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowRepeatingGroup, FlowSection
+from ..definition import FlowCondition, FlowDefinition, FlowRepeatingGroup, FlowSection
 from ..engine import answer, page_status, start_flow
 from ..errors import FlowCheckpointError
 from ..resume import resume_flow
+from .flow_definition_support import copy_ref, flow_choice, flow_page
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -67,39 +66,11 @@ class _MemoryCheckpointStore:
         self._data.pop(_flow_id, None)
 
 
-def _copy(ref: str = "wizard.setup.title") -> CopyRef:
-    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=ref)
-
-
-def _page(
-    page_id: str,
-    *,
-    widget: FlowWidgetKind = FlowWidgetKind.TEXT,
-    answer_type: type[str] | type[bool] | type[int] | type[Path] = str,
-    choices: tuple[FlowChoice, ...] = (),
-    visible_when: FlowCondition | None = None,
-    required: bool = True,
-) -> FlowPage:
-    return FlowPage(
-        id=page_id,
-        widget=widget,
-        prompt=_copy(),
-        choices=choices,
-        visible_when=visible_when,
-        required=required,
-        answer_type=answer_type,
-    )
-
-
-def _choice(value: str) -> FlowChoice:
-    return FlowChoice(value=value, label=_copy())
-
-
 def _definition(sections: tuple[FlowSection, ...]) -> FlowDefinition:
     return FlowDefinition(
         id="flows.test.checkpoint",
-        title=_copy(),
-        description=_copy(),
+        title=copy_ref(),
+        description=copy_ref(),
         sections=sections,
         answers_model=_Answers,
         checkpoint=dict(_FULL_CHECKPOINT),
@@ -111,11 +82,13 @@ def _gated_flow() -> FlowDefinition:
         (
             FlowSection(
                 id="s",
-                title=_copy(),
+                title=copy_ref(),
                 items=(
-                    _page("p_gate", widget=FlowWidgetKind.SELECT, choices=(_choice("alpha"), _choice("beta"))),
-                    _page("p_dep", visible_when=FlowCondition(page_id="p_gate", equals="alpha")),
-                    _page("p_last", required=False),
+                    flow_page(
+                        "p_gate", widget=FlowWidgetKind.SELECT, choices=(flow_choice("alpha"), flow_choice("beta"))
+                    ),
+                    flow_page("p_dep", visible_when=FlowCondition(page_id="p_gate", equals="alpha")),
+                    flow_page("p_last", required=False),
                 ),
             ),
         ),
@@ -176,7 +149,11 @@ def test_resume_commits_valid_answers_and_reveals_dependents_to_fixed_point() ->
 
 def test_resume_answer_rejected_by_definition_lands_stale_not_committed() -> None:
     definition = _definition(
-        (FlowSection(id="s", title=_copy(), items=(_page("p_num", widget=FlowWidgetKind.INTEGER, answer_type=int),)),),
+        (
+            FlowSection(
+                id="s", title=copy_ref(), items=(flow_page("p_num", widget=FlowWidgetKind.INTEGER, answer_type=int),)
+            ),
+        ),
     )
     state = resume_flow(definition, {"p_num": "not-an-integer"}, mode=FlowMode.CREATE)
 
@@ -186,7 +163,11 @@ def test_resume_answer_rejected_by_definition_lands_stale_not_committed() -> Non
 
 def test_resume_orphaned_key_lands_stale() -> None:
     definition = _definition(
-        (FlowSection(id="s", title=_copy(), items=(_page("p_num", widget=FlowWidgetKind.INTEGER, answer_type=int),)),),
+        (
+            FlowSection(
+                id="s", title=copy_ref(), items=(flow_page("p_num", widget=FlowWidgetKind.INTEGER, answer_type=int),)
+            ),
+        ),
     )
     # 'ghost' names no page the current definition declares.
     state = resume_flow(definition, {"p_num": "5", "ghost": "orphan-value"}, mode=FlowMode.CREATE)
@@ -200,10 +181,10 @@ def test_resume_repeating_group_count_reseeds_instance_counts() -> None:
         (
             FlowSection(
                 id="s",
-                title=_copy(),
+                title=copy_ref(),
                 items=(
-                    _page("p_count", widget=FlowWidgetKind.INTEGER, answer_type=int),
-                    FlowRepeatingGroup(id="grp", title=_copy(), count_from="p_count", pages=(_page("g_a"),)),
+                    flow_page("p_count", widget=FlowWidgetKind.INTEGER, answer_type=int),
+                    FlowRepeatingGroup(id="grp", title=copy_ref(), count_from="p_count", pages=(flow_page("g_a"),)),
                 ),
             ),
         ),
