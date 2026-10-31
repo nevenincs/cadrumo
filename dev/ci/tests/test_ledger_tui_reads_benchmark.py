@@ -217,6 +217,8 @@ _PROFILE_FACTS: Final = (
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
     UserProfileFact(path="censo.activity_start_date", value=date(2016, 1, 1)),
+    UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
+    UserProfileFact(path="vivienda_office.office_m2", value=Decimal("20")),
 )
 
 
@@ -372,8 +374,8 @@ def _seed_rules(bucket_id: str) -> None:
 
 
 def _seed_ratios(bucket_id: str, operation: PinnedAuthorityOperation) -> None:
-    category = require_spending_category("vehiculo_combustible", authority=operation)
-    save_usage_ratio_profile(UsageRatioProfile(ratios={category: Decimal("0.50")}), bucket_id=bucket_id)
+    category = require_spending_category("suministros_home_office_luz", authority=operation)
+    save_usage_ratio_profile(UsageRatioProfile(ratios={category: Decimal("0.060")}), bucket_id=bucket_id)
 
 
 def _seed_registers(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
