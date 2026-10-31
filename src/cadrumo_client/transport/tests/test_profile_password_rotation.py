@@ -18,26 +18,17 @@ from cadrumo.application.auth.operation_definitions import (
     build_auth_operation_registrations,
 )
 from cadrumo.application.auth.passphrase_operation_access import PROFILE_ROTATION_RESULT_SCHEMA_ID
-from cadrumo.application.operations.frontend_projection import (
-    OperationNoPendingInteractionV1,
-    OperationPublicProjectionV1,
-)
 from cadrumo.application.operations.frontend_requests import (
-    OperationObservationSuccessV1,
-    OperationPublicEventPageV1,
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
-    OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
 )
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
@@ -56,6 +47,7 @@ from ..frontend_client import FrontendClient
 from ..frontend_client_contracts import FrontendRefusedError
 from ..profile_mutations import ProfileMutationRunError
 from ..profile_password_rotation import run_profile_password_rotation
+from .refused_observation import refused_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -72,53 +64,6 @@ def _contract() -> OperationPublicDefinitionContractV1:
     assert registration.contract.result_schema is not None
     assert registration.contract.result_schema.schema_id == PROFILE_ROTATION_RESULT_SCHEMA_ID
     return registration.contract
-
-
-def _refused_observation(
-    *, contract: OperationPublicDefinitionContractV1, profile_id: UUID
-) -> OperationObservationSuccessV1:
-    instant = datetime.now(UTC)
-    operation_id = _OPERATION_ID
-    subject_ref = profile_operation_subject(str(profile_id))
-    contract_set = OperationPublicContractSetV1.build((contract,))
-    projection = OperationPublicProjectionV1(
-        operation_id=operation_id,
-        definition_id=contract.definition_id,
-        subject_ref=subject_ref,
-        revision=3,
-        anchor_cursor=3,
-        definition_contract=contract,
-        contract_set_digest=contract_set.contract_set_digest,
-        lifecycle=OperationLifecycle.TERMINAL,
-        terminal_condition=OperationTerminalCondition.REFUSED,
-        effect=OperationEffect.NONE,
-        phase_code=None,
-        started_at=instant,
-        updated_at=instant,
-        progress=None,
-        close_policy=contract.close_policy,
-        cancellation=contract.cancellation,
-        cancellable_now=False,
-        cancellation_requested=False,
-        cancellation_acknowledged=False,
-        execution_deadline_at=None,
-        cleanup_deadline_at=None,
-        pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref=None,
-        refusal_ref="refusal:rotation.denied",
-        failure_error_code=None,
-        diagnostic_ref=None,
-    )
-    event_page = OperationPublicEventPageV1(
-        operation_id=operation_id,
-        anchor_cursor=3,
-        requested_cursor=3,
-        status=OperationReplayStatus.CAUGHT_UP,
-        events=(),
-        next_cursor=3,
-        restart_cursor=None,
-    )
-    return OperationObservationSuccessV1(projection=projection, event_page=event_page)
 
 
 class _Client:
@@ -188,7 +133,12 @@ class _Client:
             )
         if isinstance(request, OperationObserve):
             if self._terminal_refusal:
-                observation = _refused_observation(contract=self._contract, profile_id=self.profile_id)
+                observation = refused_observation(
+                    contract=self._contract,
+                    operation_id=_OPERATION_ID,
+                    subject_ref=profile_operation_subject(str(self.profile_id)),
+                    refusal_ref="refusal:rotation.denied",
+                )
                 return OperationObserved(
                     request_id=request.request_id,
                     runtime_boot_id=uuid4(),

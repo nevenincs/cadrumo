@@ -10,21 +10,17 @@ import pytest
 from pydantic import JsonValue, TypeAdapter
 
 from cadrumo.application.operations.frontend_projection import (
-    OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
 )
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationSuccessV1,
-    OperationPublicEventPageV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
-    OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
 )
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
@@ -67,6 +63,7 @@ from ...contracts.operation_access import (
 from ..automation_decision import AutomationDecisionRunError, run_automation_decision
 from ..frontend_client import FrontendClient
 from ..frontend_client_contracts import FrontendRefusedError
+from .refused_observation import refused_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -117,51 +114,6 @@ def _contract(decision: Literal["approve", "decline"]) -> OperationPublicDefinit
     )
     definition = next(item for item in build_automation_operation_definitions() if item.definition_id == identity)
     return build_automation_operation_registrations((definition,))[0].contract
-
-
-def _refused_observation(
-    *, contract: OperationPublicDefinitionContractV1, operation_id: str, subject_ref: str, refusal_ref: str
-) -> OperationObservationSuccessV1:
-    instant = now()
-    contract_set = OperationPublicContractSetV1.build((contract,))
-    projection = OperationPublicProjectionV1(
-        operation_id=operation_id,
-        definition_id=contract.definition_id,
-        subject_ref=subject_ref,
-        revision=3,
-        anchor_cursor=3,
-        definition_contract=contract,
-        contract_set_digest=contract_set.contract_set_digest,
-        lifecycle=OperationLifecycle.TERMINAL,
-        terminal_condition=OperationTerminalCondition.REFUSED,
-        effect=OperationEffect.NONE,
-        phase_code=None,
-        started_at=instant,
-        updated_at=instant,
-        progress=None,
-        close_policy=contract.close_policy,
-        cancellation=contract.cancellation,
-        cancellable_now=False,
-        cancellation_requested=False,
-        cancellation_acknowledged=False,
-        execution_deadline_at=None,
-        cleanup_deadline_at=None,
-        pending_interaction=OperationNoPendingInteractionV1(),
-        result_ref=None,
-        refusal_ref=refusal_ref,
-        failure_error_code=None,
-        diagnostic_ref=None,
-    )
-    event_page = OperationPublicEventPageV1(
-        operation_id=operation_id,
-        anchor_cursor=3,
-        requested_cursor=3,
-        status=OperationReplayStatus.CAUGHT_UP,
-        events=(),
-        next_cursor=3,
-        restart_cursor=None,
-    )
-    return OperationObservationSuccessV1(projection=projection, event_page=event_page)
 
 
 class _DecisionClient(FrontendClient):
@@ -224,7 +176,7 @@ class _DecisionClient(FrontendClient):
         if isinstance(request, OperationObserve):
             contract = _contract(self.decision)
             if self.terminal_refusal is not None:
-                observation = _refused_observation(
+                observation = refused_observation(
                     contract=contract,
                     operation_id=self.operation_id,
                     subject_ref=profile_operation_subject(str(self.profile_id)),
