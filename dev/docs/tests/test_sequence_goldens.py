@@ -45,6 +45,8 @@ from sphinx.application import Sphinx
 from sphinx.errors import SphinxError
 
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
 from dev._paths import REPO_ROOT
@@ -152,18 +154,18 @@ _TRANSCRIPT_CHILD_PROGRAM = textwrap.dedent(
     """
     import json
     import sys
-    import tempfile
     from pathlib import Path
 
     from dev.docs.sequences.checks import discover_sequences
     from dev.docs.sequences.runner import execute_sequence
+    from dev.docs.sequences.sandbox import owned_scratch_directory
 
     discovered, problems = discover_sequences(sequence_id=sys.argv[1])
     if problems or len(discovered) != 1:
         raise SystemExit(f"discovery of {sys.argv[1]!r} failed: {problems} ({len(discovered)} found)")
     enrolled = discovered[0]
-    with tempfile.TemporaryDirectory(prefix="cli-sequence-gate-", ignore_cleanup_errors=True) as sandbox:
-        transcript = execute_sequence(enrolled.sequence, sandbox_root=Path(sandbox))
+    with owned_scratch_directory("cli-sequence-gate-") as sandbox:
+        transcript = execute_sequence(enrolled.sequence, sandbox_root=sandbox)
     payload = json.dumps({"page": enrolled.page, "transcript": transcript.model_dump_json()})
     Path(sys.argv[2]).write_text(payload, encoding="utf-8")
     """,
@@ -304,6 +306,7 @@ def _export_result(transcript: SequenceTranscript, index: int) -> Mapping[str, o
 @pytest.fixture(scope="module")
 def export_release_double_run(
     tmp_path_factory: pytest.TempPathFactory,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[tuple[str, SequenceTranscript, bytes], tuple[str, SequenceTranscript, bytes]]:
     """Run the real Modelo 100 export sequence at this release and at another one.
 
@@ -327,7 +330,8 @@ def export_release_double_run(
             root = tmp_path_factory.mktemp(f"export-{label}")
             with pytest.MonkeyPatch.context() as patch:
                 patch.setattr(software_identity, "PACKAGE_VERSION", version)
-                aux = software_identity.aeat_aux_version()
+                with validating_governed_facts(operation):
+                    aux = software_identity.aeat_aux_version()
                 transcript = execute_sequence(item.sequence, sandbox_root=root)
             runs.append((aux, transcript, (root / "workdir" / _EXPORT_FILE).read_bytes()))
     return runs[0], runs[1]
