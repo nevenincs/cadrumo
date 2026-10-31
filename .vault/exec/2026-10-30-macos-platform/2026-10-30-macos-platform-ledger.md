@@ -5,7 +5,7 @@ tags:
 date: '2026-10-30'
 modified: '2026-10-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:d3df3caa839d1f6ede29a0aab0aea0d5e97a6106737012372a6006d03f3f65ba'
+body_hash: 'sha256:c53153f600ae7b9b49011df40824cfc6929d42f135445d2668a8dfc1d5fa34c6'
 related:
   - "[[2026-10-30-macos-platform-plan]]"
 ---
@@ -332,6 +332,7 @@ native/manager/src/supervision/supervisor.rs`
 - `S19` `verify:` `ctest manager.rust manager.fmt manager.clippy` -> `pass`
 - `S19` `verify:` `pytest dev/docs/tests/test_docs_catalogue_drift.py` -> `pass`
 - `S19` `verify:` `vaultspec-core vault check all (no findings on amended ADRs)` -> `pass`
+- `S18` `M` `.vault/plan/2026-10-30-macos-platform-plan.md`
 
 ## Notes
 
@@ -343,3 +344,4 @@ native/manager/src/supervision/supervisor.rs`
 - `S14` The Windows-only real-worker drain test `(test_runtime_drain.py)` was updated for the new terminal outcome but not run here; no packaged GUI launch verified SIGTERM end to end
 - `S19` SMAppService registration of the ad-hoc sealed agent was not exercised: no login item may be created on this non-disposable Mac; tests cover policy, bundle admission and agent discovery only
 - `S19` CMake signing-identity default changed without a reconfigure; the existing cache already holds -
+- `S18` Evaluated and not needed: the ad-hoc sealed bundle with the payload in Contents/Resources/app passes codesign --verify --deep --strict, loads libpython and its extensions under the hardened runtime and reaches runtime ready (S15 evidence); notarization is never planned, so the split brings no benefit and would break package-root containment checks.

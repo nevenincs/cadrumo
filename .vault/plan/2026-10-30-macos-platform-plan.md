@@ -12,7 +12,7 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
 modified: '2026-10-31'
 body_schema: body-v2
-body_hash: 'sha256:20b2df308c0250cbcea79565514ba6770636e226afd95e5365076ee00feae356'
+body_hash: 'sha256:8bc067ecdfda344945b5072d0a78d67248019d3c0fe3daab45c1cb31b17a3ee5'
 ---
 
 # `macos-platform` plan
@@ -42,9 +42,14 @@ Bring Cadrumo to a working build, package and run on macOS arm64: configure and 
 - [x] `S15` - Gate package sealing and the DMG on a runtime-role health check, rebuild the macOS bundle and DMG, and verify S10 containment and S11 window chrome (fullscreen inset, title-bar double-click, standard Window menu shortcuts) in the packaged app; `native/cmake/distribution/CMakeLists.txt, native/cmake/Packaging.cmake, native/desktop`.
 - [x] `S16` - Give native and Python tests an isolated transport namespace so they never write to the real per-user socket directory, and remove the stale test lock and socket files there; `native/platform/src, native/desktop/src-tauri/src/shell/single_instance, src/cadrumo_client/transport, native/manager/tests`.
 - [x] `S17` - Fix the remaining desktop failures: quiet session_unavailable when quitting before the manager stage, the desktop-frontend-test virtual-module import failure, and the failing panicking-synchronous-command and logs host unit tests; `native/desktop/src-tauri/src, native/desktop/frontend`.
-- [ ] `S18` - Optional, not notarization-driven: evaluate an Apple-conformant split of the macOS payload into nested code and resources only if it improves ad-hoc launch robustness, keeping package-root containment checks sound; `native/platforms/macos-arm64.json, dev/packaging/native, src/cadrumo_agent_service/host/launch_environment.py, native/desktop/src-tauri/src/docs/request.rs`.
+- [x] `S18` - Optional, not notarization-driven: evaluate an Apple-conformant split of the macOS payload into nested code and resources only if it improves ad-hoc launch robustness, keeping package-root containment checks sound; `native/platforms/macos-arm64.json, dev/packaging/native, src/cadrumo_agent_service/host/launch_environment.py, native/desktop/src-tauri/src/docs/request.rs`.
 - [x] `S19` - Make ad-hoc signing the permanent macOS distribution model: amend decisions that defer behaviour until Developer ID signing or notarization (login start, versioned installation activation, release prerequisites), decide macOS login start on its own merits, and document the first-run Gatekeeper path for ad-hoc builds in the user documentation; `.vault/adr, native/manager/src/macos, native/CONTRACT.md, docs/`.
 
 ## Parallelization
 
+Steps ran mostly in sequence because this 8 GB host admits one native build at a time and several steps share native/platform, native/manager and the desktop crate. Python-only and documentation work (S03 fixes, ADR amendments, locale and packaging test repairs) ran beside the single building step. S08 waited for S02, S16 and S13 waited for S12, S14 followed S13, and S15 and S07 followed every step that changed the packaged image.
+
 ## Verification
+
+The plan is complete when every Step is closed and the integrated review passes. The evidence is: the backend and desktop graphs build for aarch64-apple-darwin; CTest platform, manager and application cases pass; desktop host unit and frontend suites pass; the Python runtime, client, agent-service and MCP suites pass; the staged bundle, DMG and ZIP pass codesign --verify --deep --strict; the packaged app reaches runtime ready, drains cleanly on quit and SIGTERM, contains its runtime on a killed host and records a handoff; and launches use only background, process-targeted control without synthetic input.
+
