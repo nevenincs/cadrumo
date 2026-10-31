@@ -159,15 +159,12 @@ def test_a_package_without_its_agent_is_a_finding_and_a_checkout_without_one_is_
     assert unchecked == [], _rendered(unchecked)
 
 
-def _first_non_slot_system_name(facts: dict[str, Any]) -> str:
-    slots = set(facts["runtime"]["gateway_slots"]) | set(facts["runtime"]["advertised_variables"])
-    return str(
-        next(
-            name
-            for name in facts["runtime"]["composed"]
-            if name not in slots and name not in {"PATH", "TEMP", "TMP", "TMPDIR"}
-        )
-    )
+def _first_declared_system_name(facts: dict[str, Any]) -> str:
+    """A composed name the gateway profile declares as an operating-system base name."""
+    gateway = gateway_profile(load_reference(REPO_ROOT, _LAYOUT), facts["runtime"]["gateway_arguments"])
+    assert gateway is not None
+    base = set(gateway["base"])
+    return str(next(name for name in facts["runtime"]["composed"] if name in base))
 
 
 _Mutation = Callable[[dict[str, Any]], None]
@@ -193,7 +190,7 @@ def _composer_writes(name: str) -> _Mutation:
 
 
 def _composer_omits_a_system_name(facts: dict[str, Any]) -> None:
-    facts["runtime"]["composed"].remove(_first_non_slot_system_name(facts))
+    facts["runtime"]["composed"].remove(_first_declared_system_name(facts))
 
 
 def _composer_omits_an_advertised_name(facts: dict[str, Any]) -> None:
