@@ -78,6 +78,7 @@ from .activity_asset_read_models import (
     ActivityAssetTableGroup,
     ActivityAssetTimelineEvent,
     activity_asset_label_key,
+    project_reason_facts,
 )
 from .disposal_calculation import calculate_element_disposal
 from .fact_wording import token_family
@@ -97,7 +98,7 @@ from .register_reads import (
     method_facts_view,
 )
 from .register_timeline import element_timeline
-from .schedule_walk import M130ElementOutcome, m130_register_accruals
+from .schedule_walk import M130ElementOutcome, error_reason_facts, m130_register_accruals
 from .service import ActivityAssetHistoryService
 
 
@@ -805,12 +806,15 @@ class ActivityAssetOperations:
             )
         except RegistryError:
             reason_key = "ledger.actividad_asset.errors.tax_year_without_edition"
+            reason_facts = {"tax_year": str(tax_year)}
         except ActividadAssetError as error:
             reason_key = error.translated_message
+            reason_facts = error_reason_facts(error)
         return ActivityAssetElectionLimits(
             class_key=revision.amortization.authority_class_key,
             not_table_bound=ActivityAssetNotTableBoundReason.AUTHORITY_UNAVAILABLE,
             unavailable_reason_key=reason_key,
+            unavailable_reason_facts=project_reason_facts(reason_facts),
         )
 
     def plan_advisories(self, asset_id: str) -> tuple[ActivityAssetPlanAdvisory, ...]:

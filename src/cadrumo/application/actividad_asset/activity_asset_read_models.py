@@ -266,6 +266,7 @@ class ActivityAssetPlanRow(_ReadModel):
     claim_state: ActivityAssetClaimState
     claimable_intervals: tuple[ActivityAssetClaimableInterval, ...] = ()
     claimable_refusal_key: str | None = None
+    claimable_refusal_facts: tuple[ActivityAssetReasonFact, ...] = ()
     edition: ActivityAssetEdition | None = None
     service_days: int | None = None
     calendar_days: int | None = None
@@ -309,6 +310,7 @@ class ActivityAssetElectionLimits(_ReadModel):
     """False when a cited parameter or provision did not resolve, so ``legal_citations`` leaves it out."""
     not_table_bound: ActivityAssetNotTableBoundReason | None = None
     unavailable_reason_key: str | None = None
+    unavailable_reason_facts: tuple[ActivityAssetReasonFact, ...] = ()
 
 
 class ActivityAssetTimelineChange(_ReadModel):
