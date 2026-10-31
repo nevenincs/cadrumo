@@ -306,27 +306,70 @@ def test_workflow_run_text_projects_the_same_canonical_typed_action_dto() -> Non
     )
 
 
-def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
-    """AST guard the complete workflow-run payload and renderer boundary."""
-    cli_root = Path(__file__).parents[1]
-    source_scopes = {
-        cli_root / "_modelo_work_runs_cli.py": {
-            "_render_workflow_step_summary",
-            "_workflow_run_payload",
-            "_workflow_run_summary_payload",
-            "_workflow_run_tab_line",
-            "work_run",
-            "work_run_details",
-            "work_runs",
-        },
-        cli_root / "modelo_aux_payloads.py": {
-            "WorkflowRunPayload",
-            "WorkflowRunSummaryPayload",
-            "WorkRunDetailsResult",
-            "WorkRunResult",
-            "WorkRunsResult",
-        },
-    }
+def _call_violations(name: str, node: ast.Call) -> list[str]:
+    violations: list[str] = []
+    if (
+        isinstance(node.func, ast.Name)
+        and node.func.id == "tr"
+        and any(keyword.arg == "default" for keyword in node.keywords)
+    ):
+        violations.append(f"{name}:{node.lineno}:tr(default=...)")
+    if (
+        isinstance(node.func, ast.Attribute)
+        and node.func.attr == "get"
+        and isinstance(node.func.value, ast.Attribute)
+        and node.func.value.attr == "details"
+    ):
+        violations.append(f"{name}:{node.lineno}:details.get")
+    if any(keyword.arg in {"next_action", "suggestion"} for keyword in node.keywords):
+        violations.append(f"{name}:{node.lineno}:legacy action keyword")
+    return violations
+
+
+def _compare_violations(name: str, node: ast.Compare) -> list[str]:
+    expression = ast.unparse(node)
+    if any(
+        marker in expression for marker in (".summary", ".summary_locale_key", ".action", ".message", "next_action")
+    ) and any(isinstance(item, ast.Constant) and isinstance(item.value, str) for item in ast.walk(node)):
+        return [f"{name}:{node.lineno}:string recovery comparison"]
+    return []
+
+
+def _bool_or_violations(name: str, node: ast.BoolOp) -> list[str]:
+    prose_fallbacks = tuple(
+        item.value
+        for item in ast.walk(node)
+        if isinstance(item, ast.Constant) and isinstance(item.value, str) and item.value != "-"
+    )
+    return [f"{name}:{node.lineno}:prose fallback"] if prose_fallbacks else []
+
+
+def _constant_violations(name: str, node: ast.Constant) -> list[str]:
+    violations: list[str] = []
+    if node.value == "next_action":
+        violations.append(f"{name}:{node.lineno}:next_action field")
+    if _RAW_COMMAND_PATTERN.search(node.value):
+        violations.append(f"{name}:{node.lineno}:raw CLI command")
+    return violations
+
+
+def _node_violations(name: str, node: ast.AST) -> list[str]:
+    if isinstance(node, ast.Call):
+        return _call_violations(name, node)
+    if isinstance(node, ast.Subscript):
+        if isinstance(node.value, ast.Attribute) and node.value.attr == "details":
+            return [f"{name}:{node.lineno}:details subscript"]
+        return []
+    if isinstance(node, ast.Compare):
+        return _compare_violations(name, node)
+    if isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
+        return _bool_or_violations(name, node)
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return _constant_violations(name, node)
+    return []
+
+
+def _scope_violations(source_scopes: dict[Path, set[str]]) -> list[str]:
     violations: list[str] = []
     for path, names in source_scopes.items():
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -336,50 +379,11 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
         assert {scope.name for scope in scopes} == names
         for scope in scopes:
             for node in ast.walk(scope):
-                if isinstance(node, ast.Call):
-                    if (
-                        isinstance(node.func, ast.Name)
-                        and node.func.id == "tr"
-                        and any(keyword.arg == "default" for keyword in node.keywords)
-                    ):
-                        violations.append(f"{path.name}:{node.lineno}:tr(default=...)")
-                    if (
-                        isinstance(node.func, ast.Attribute)
-                        and node.func.attr == "get"
-                        and isinstance(node.func.value, ast.Attribute)
-                        and node.func.value.attr == "details"
-                    ):
-                        violations.append(f"{path.name}:{node.lineno}:details.get")
-                    if any(keyword.arg in {"next_action", "suggestion"} for keyword in node.keywords):
-                        violations.append(f"{path.name}:{node.lineno}:legacy action keyword")
-                elif isinstance(node, ast.Subscript):
-                    if isinstance(node.value, ast.Attribute) and node.value.attr == "details":
-                        violations.append(f"{path.name}:{node.lineno}:details subscript")
-                elif isinstance(node, ast.Compare):
-                    expression = ast.unparse(node)
-                    if any(
-                        marker in expression
-                        for marker in (".summary", ".summary_locale_key", ".action", ".message", "next_action")
-                    ) and any(
-                        isinstance(item, ast.Constant) and isinstance(item.value, str) for item in ast.walk(node)
-                    ):
-                        violations.append(f"{path.name}:{node.lineno}:string recovery comparison")
-                elif isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
-                    prose_fallbacks = tuple(
-                        item.value
-                        for item in ast.walk(node)
-                        if isinstance(item, ast.Constant) and isinstance(item.value, str) and item.value != "-"
-                    )
-                    if prose_fallbacks:
-                        violations.append(f"{path.name}:{node.lineno}:prose fallback")
-                elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-                    if node.value == "next_action":
-                        violations.append(f"{path.name}:{node.lineno}:next_action field")
-                    if _RAW_COMMAND_PATTERN.search(node.value):
-                        violations.append(f"{path.name}:{node.lineno}:raw CLI command")
+                violations.extend(_node_violations(path.name, node))
+    return violations
 
-    assert violations == []
 
+def _assert_renderers_delegate_to_the_canonical_cell(cli_root: Path) -> None:
     canonical_path = cli_root / "_action_rendering.py"
     canonical_tree = ast.parse(canonical_path.read_text(encoding="utf-8"), filename=str(canonical_path))
     canonical_functions = tuple(node for node in canonical_tree.body if isinstance(node, ast.FunctionDef))
@@ -408,3 +412,28 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
             ast.dump(ast.Module(body=function.body, type_ignores=[]), include_attributes=False) != canonical_body
             for function in functions
         )
+
+
+def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
+    """AST guard the complete workflow-run payload and renderer boundary."""
+    cli_root = Path(__file__).parents[1]
+    source_scopes = {
+        cli_root / "_modelo_work_runs_cli.py": {
+            "_render_workflow_step_summary",
+            "_workflow_run_payload",
+            "_workflow_run_summary_payload",
+            "_workflow_run_tab_line",
+            "work_run",
+            "work_run_details",
+            "work_runs",
+        },
+        cli_root / "modelo_aux_payloads.py": {
+            "WorkflowRunPayload",
+            "WorkflowRunSummaryPayload",
+            "WorkRunDetailsResult",
+            "WorkRunResult",
+            "WorkRunsResult",
+        },
+    }
+    assert _scope_violations(source_scopes) == []
+    _assert_renderers_delegate_to_the_canonical_cell(cli_root)
